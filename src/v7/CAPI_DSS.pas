@@ -14,9 +14,7 @@ procedure DSS_ClearAll(); CDECL;
 function DSS_Get_Version(): PAnsiChar; CDECL;
 function DSS_Start(code: Integer): Wordbool; CDECL;
 procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure DSS_Get_Classes_GR(); CDECL;
 procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure DSS_Get_UserClasses_GR(); CDECL;
 function DSS_Get_NumClasses(): Integer; CDECL;
 function DSS_Get_NumUserClasses(): Integer; CDECL;
 function DSS_Get_DataPath(): PAnsiChar; CDECL;
@@ -124,13 +122,6 @@ begin
     end;
 
 end;
-
-procedure DSS_Get_Classes_GR(); CDECL;
-// Same as DSS_Get_Classes but uses global result (GR) pointers
-begin
-    DSS_Get_Classes(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -151,13 +142,6 @@ begin
     else
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
-
-procedure DSS_Get_UserClasses_GR(); CDECL;
-// Same as DSS_Get_UserClasses but uses global result (GR) pointers
-begin
-    DSS_Get_UserClasses(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function DSS_Get_NumClasses(): Integer; CDECL;
 begin

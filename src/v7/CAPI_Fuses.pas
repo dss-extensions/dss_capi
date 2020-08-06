@@ -6,7 +6,6 @@ uses
     CAPI_Utils;
 
 procedure Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Fuses_Get_AllNames_GR(); CDECL;
 function Fuses_Get_Count(): Integer; CDECL;
 function Fuses_Get_First(): Integer; CDECL;
 function Fuses_Get_Name(): PAnsiChar; CDECL;
@@ -87,13 +86,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Fuses, False);
 end;
-
-procedure Fuses_Get_AllNames_GR(); CDECL;
-// Same as Fuses_Get_AllNames but uses global result (GR) pointers
-begin
-    Fuses_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Fuses_Get_Count(): Integer; CDECL;
 begin

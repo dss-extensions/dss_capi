@@ -28,7 +28,6 @@ procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 
 // Extensions below
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure PDElements_Get_AllNames_GR(); CDECL;
 procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
 procedure PDElements_Get_AllMaxCurrents_GR(const AllNodes: WordBool); CDECL;
 procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
@@ -406,13 +405,6 @@ begin
     if (idx_before > 0) and (idx_before <= pList.ListSize) then
         pList.Get(idx_before);
 end;
-
-procedure PDElements_Get_AllNames_GR(); CDECL;
-// Same as PDElements_Get_AllNames but uses global result (GR) pointers
-begin
-    PDElements_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar);
-end;
-
 //------------------------------------------------------------------------------
 function _PDElements_Get_pctCapacity_for(const AllNodes: Boolean; const What: integer; RatingIdx: Integer; pElem: TPDElement; cBuffer: pComplexArray): Double; inline;
 var

@@ -6,7 +6,6 @@ uses
     CAPI_Utils;
 
 procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure GICSources_Get_AllNames_GR(); CDECL;
 function GICSources_Get_Count(): Integer; CDECL;
 function GICSources_Get_First(): Integer; CDECL;
 function GICSources_Get_Next(): Integer; CDECL;
@@ -72,12 +71,6 @@ begin
     if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, GICsourceClass.ElementList, True);
-end;
-
-procedure GICSources_Get_AllNames_GR(); CDECL;
-// Same as GICSources_Get_AllNames but uses global result (GR) pointers
-begin
-    GICSources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Count(): Integer; CDECL;

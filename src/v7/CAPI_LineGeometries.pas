@@ -34,7 +34,6 @@ procedure LineGeometries_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PInteg
 procedure LineGeometries_Get_Ycoords_GR(); CDECL;
 procedure LineGeometries_Set_Ycoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 procedure LineGeometries_Get_Conductors(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure LineGeometries_Get_Conductors_GR(); CDECL;
 function LineGeometries_Get_Reduce(): Wordbool; CDECL;
 procedure LineGeometries_Set_Reduce(Value: Wordbool); CDECL;
 function LineGeometries_Get_RhoEarth(): Double; CDECL;
@@ -44,7 +43,6 @@ procedure LineGeometries_Set_NormAmps(Value: Double); CDECL;
 function LineGeometries_Get_EmergAmps(): Double; CDECL;
 procedure LineGeometries_Set_EmergAmps(Value: Double); CDECL;
 procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure LineGeometries_Get_AllNames_GR(); CDECL;
 
 function LineGeometries_Get_idx(): Integer; CDECL;
 procedure LineGeometries_Set_idx(Value: Integer); CDECL;
@@ -530,13 +528,6 @@ begin
             Result[i - 1] := DSS_CopyStringAsPChar(ConductorName[i]);
     end;
 end;
-
-procedure LineGeometries_Get_Conductors_GR(); CDECL;
-// Same as LineGeometries_Get_Conductors but uses global result (GR) pointers
-begin
-    LineGeometries_Get_Conductors(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -548,13 +539,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, LineGeometryClass.ElementList, False);
 end;
-
-procedure LineGeometries_Get_AllNames_GR(); CDECL;
-// Same as LineGeometries_Get_AllNames but uses global result (GR) pointers
-begin
-    LineGeometries_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function LineGeometries_Get_idx(): Integer; CDECL;
 begin

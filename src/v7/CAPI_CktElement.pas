@@ -6,7 +6,6 @@ uses
     CAPI_Utils;
 
 procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure CktElement_Get_BusNames_GR(); CDECL;
 function CktElement_Get_Name(): PAnsiChar; CDECL;
 function CktElement_Get_NumConductors(): Integer; CDECL;
 function CktElement_Get_NumPhases(): Integer; CDECL;
@@ -38,7 +37,6 @@ procedure CktElement_Set_Enabled(Value: Wordbool); CDECL;
 procedure CktElement_Set_NormalAmps(Value: Double); CDECL;
 function CktElement_IsOpen(Term, Phs: Integer): Wordbool; CDECL;
 procedure CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure CktElement_Get_AllPropertyNames_GR(); CDECL;
 function CktElement_Get_NumProperties(): Integer; CDECL;
 procedure CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_Residuals_GR(); CDECL;
@@ -57,7 +55,6 @@ procedure CktElement_Get_CplxSeqVoltages_GR(); CDECL;
 procedure CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_CplxSeqCurrents_GR(); CDECL;
 procedure CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure CktElement_Get_AllVariableNames_GR(); CDECL;
 procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_AllVariableValues_GR(); CDECL;
 function CktElement_Get_Variable(const MyVarName: PAnsiChar; out Code: Integer): Double; CDECL;
@@ -241,13 +238,6 @@ begin
     end;
 
 end;
-
-procedure CktElement_Get_BusNames_GR(); CDECL;
-// Same as CktElement_Get_BusNames but uses global result (GR) pointers
-begin
-    CktElement_Get_BusNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function CktElement_Get_Name(): PAnsiChar; CDECL;
 begin
@@ -794,13 +784,6 @@ begin
         end;
     end;
 end;
-
-procedure CktElement_Get_AllPropertyNames_GR(); CDECL;
-// Same as CktElement_Get_AllPropertyNames but uses global result (GR) pointers
-begin
-    CktElement_Get_AllPropertyNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function CktElement_Get_NumProperties(): Integer; CDECL;
 begin
@@ -1114,13 +1097,6 @@ begin
             end;
         end;
 end;
-
-procedure CktElement_Get_AllVariableNames_GR(); CDECL;
-// Same as CktElement_Get_AllVariableNames but uses global result (GR) pointers
-begin
-    CktElement_Get_AllVariableNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 {Return array of doubles with values of all variables if PCElement}

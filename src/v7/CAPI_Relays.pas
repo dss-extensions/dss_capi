@@ -6,7 +6,6 @@ uses
     CAPI_Utils;
 
 procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Relays_Get_AllNames_GR(); CDECL;
 function Relays_Get_Count(): Integer; CDECL;
 function Relays_Get_First(): Integer; CDECL;
 function Relays_Get_Name(): PAnsiChar; CDECL;
@@ -77,13 +76,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Relays, False);
 end;
-
-procedure Relays_Get_AllNames_GR(); CDECL;
-// Same as Relays_Get_AllNames but uses global result (GR) pointers
-begin
-    Relays_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Relays_Get_Count(): Integer; CDECL;
 begin

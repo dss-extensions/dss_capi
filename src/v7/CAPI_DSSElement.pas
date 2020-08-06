@@ -6,7 +6,6 @@ uses
     CAPI_Utils;
 
 procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
 function DSSElement_Get_Name(): PAnsiChar; CDECL;
 function DSSElement_Get_NumProperties(): Integer; CDECL;
 
@@ -38,13 +37,6 @@ begin
             end;
         end;
 end;
-
-procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
-// Same as DSSElement_Get_AllPropertyNames but uses global result (GR) pointers
-begin
-    DSSElement_Get_AllPropertyNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function DSSElement_Get_Name(): PAnsiChar; CDECL;
 begin

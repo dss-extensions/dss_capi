@@ -18,7 +18,6 @@ procedure Circuit_Get_AllBusVmag_GR(); CDECL;
 procedure Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Circuit_Get_AllBusVolts_GR(); CDECL;
 procedure Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Circuit_Get_AllElementNames_GR(); CDECL;
 procedure Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Circuit_Get_SubstationLosses_GR(); CDECL;
 procedure Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -30,7 +29,6 @@ function Circuit_FirstPDElement(): Integer; CDECL;
 function Circuit_NextPCElement(): Integer; CDECL;
 function Circuit_NextPDElement(): Integer; CDECL;
 procedure Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Circuit_Get_AllBusNames_GR(); CDECL;
 procedure Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Circuit_Get_AllElementLosses_GR(); CDECL;
 procedure Circuit_Sample(); CDECL;
@@ -42,7 +40,6 @@ procedure Circuit_Get_AllBusVmagPu_GR(); CDECL;
 function Circuit_SetActiveBus(const BusName: PAnsiChar): Integer; CDECL;
 function Circuit_SetActiveBusi(BusIndex: Integer): Integer; CDECL;
 procedure Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Circuit_Get_AllNodeNames_GR(); CDECL;
 procedure Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Circuit_Get_SystemY_GR(); CDECL;
 procedure Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -56,7 +53,6 @@ procedure Circuit_Get_AllNodeVmagByPhase_GR(Phase: Integer); CDECL;
 procedure Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer); CDECL;
 procedure Circuit_Get_AllNodeVmagPUByPhase_GR(Phase: Integer); CDECL;
 procedure Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PInteger; Phase: Integer); CDECL;
-procedure Circuit_Get_AllNodeNamesByPhase_GR(Phase: Integer); CDECL;
 function Circuit_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
 function Circuit_FirstElement(): Integer; CDECL;
 function Circuit_NextElement(): Integer; CDECL;
@@ -64,7 +60,6 @@ procedure Circuit_UpdateStorage(); CDECL;
 function Circuit_Get_ParentPDElement(): Integer; CDECL;
 procedure Circuit_EndOfTimeStepUpdate(); CDECL;
 procedure Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Circuit_Get_YNodeOrder_GR(); CDECL;
 procedure Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Circuit_Get_YCurrents_GR(); CDECL;
 procedure Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -273,13 +268,6 @@ begin
         end;
     end
 end;
-
-procedure Circuit_Get_AllElementNames_GR(); CDECL;
-// Same as Circuit_Get_AllElementNames but uses global result (GR) pointers
-begin
-    Circuit_Get_AllElementNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
@@ -490,13 +478,6 @@ begin
         end;
     end
 end;
-
-procedure Circuit_Get_AllBusNames_GR(); CDECL;
-// Same as Circuit_Get_AllBusNames but uses global result (GR) pointers
-begin
-    Circuit_Get_AllBusNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
@@ -681,14 +662,6 @@ begin
         end;
     end;
 end;
-
-// this calls the compressed column
-procedure Circuit_Get_AllNodeNames_GR(); CDECL;
-// Same as Circuit_Get_AllNodeNames but uses global result (GR) pointers
-begin
-    Circuit_Get_AllNodeNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 {Return System Y matrix, complex form}
@@ -975,13 +948,6 @@ begin
         SetLength(Temp, 0);
     end;
 end;
-
-procedure Circuit_Get_AllNodeNamesByPhase_GR(Phase: Integer); CDECL;
-// Same as Circuit_Get_AllNodeNamesByPhase but uses global result (GR) pointers
-begin
-    Circuit_Get_AllNodeNamesByPhase(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar, Phase)
-end;
-
 //------------------------------------------------------------------------------
 function Circuit_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
 var
@@ -1075,13 +1041,6 @@ begin
     end
 
 end;
-
-procedure Circuit_Get_YNodeOrder_GR(); CDECL;
-// Same as Circuit_Get_YNodeOrder but uses global result (GR) pointers
-begin
-    Circuit_Get_YNodeOrder(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var

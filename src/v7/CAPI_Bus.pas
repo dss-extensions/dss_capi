@@ -56,9 +56,7 @@ function Bus_Get_TotalMiles(): Double; CDECL;
 function Bus_Get_SectionID(): Integer; CDECL;
 function Bus_Get_Next(): Integer; CDECL; // API Extension
 procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Bus_Get_LineList_GR(); CDECL;
 procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Bus_Get_LoadList_GR(); CDECL;
 procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Bus_Get_ZSC012Matrix_GR(); CDECL;
 
@@ -1136,13 +1134,6 @@ begin
         end;
     end;
 end;
-
-procedure Bus_Get_LineList_GR(); CDECL;
-// Same as Bus_Get_LineList but uses global result (GR) pointers
-begin
-    Bus_Get_LineList(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 { Returns list of LOAD elements connected to this bus}
@@ -1193,13 +1184,6 @@ begin
         end;
     end;
 end;
-
-procedure Bus_Get_LoadList_GR(); CDECL;
-// Same as Bus_Get_LoadList but uses global result (GR) pointers
-begin
-    Bus_Get_LoadList(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL; //TODO: remove duplication between this and DoZsc012Cmd
 var

@@ -6,7 +6,6 @@ uses
     CAPI_Utils;
 
 procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Capacitors_Get_AllNames_GR(); CDECL;
 function Capacitors_Get_First(): Integer; CDECL;
 function Capacitors_Get_IsDelta(): Wordbool; CDECL;
 function Capacitors_Get_kV(): Double; CDECL;
@@ -87,13 +86,6 @@ begin
 
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.ShuntCapacitors, False);
 end;
-
-procedure Capacitors_Get_AllNames_GR(); CDECL;
-// Same as Capacitors_Get_AllNames but uses global result (GR) pointers
-begin
-    Capacitors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Capacitors_Get_First(): Integer; CDECL;
 var

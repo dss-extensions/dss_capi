@@ -6,7 +6,6 @@ uses
     CAPI_Utils;
 
 procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure ActiveClass_Get_AllNames_GR(); CDECL;
 function ActiveClass_Get_First(): Integer; CDECL;
 function ActiveClass_Get_Next(): Integer; CDECL;
 function ActiveClass_Get_Name(): PAnsiChar; CDECL;
@@ -54,13 +53,6 @@ begin
         end;
     end;
 end;
-
-procedure ActiveClass_Get_AllNames_GR(); CDECL;
-// Same as ActiveClass_Get_AllNames but uses global result (GR) pointers
-begin
-    ActiveClass_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function ActiveClass_Get_First(): Integer; CDECL;
 begin

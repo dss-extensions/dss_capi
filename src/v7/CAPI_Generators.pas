@@ -6,12 +6,10 @@ uses
     CAPI_Utils;
 
 procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Generators_Get_AllNames_GR(); CDECL;
 function Generators_Get_First(): Integer; CDECL;
 function Generators_Get_Name(): PAnsiChar; CDECL;
 function Generators_Get_Next(): Integer; CDECL;
 procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Generators_Get_RegisterNames_GR(); CDECL;
 procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Generators_Get_RegisterValues_GR(); CDECL;
 function Generators_Get_ForcedON(): Wordbool; CDECL;
@@ -80,13 +78,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Generators, False);
 end;
-
-procedure Generators_Get_AllNames_GR(); CDECL;
-// Same as Generators_Get_AllNames but uses global result (GR) pointers
-begin
-    Generators_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Generators_Get_First(): Integer; CDECL;
 var
@@ -159,13 +150,6 @@ begin
         Result[k] := DSS_CopyStringAsPChar(GeneratorCls.RegisterNames[k + 1]);
     end;
 end;
-
-procedure Generators_Get_RegisterNames_GR(); CDECL;
-// Same as Generators_Get_RegisterNames but uses global result (GR) pointers
-begin
-    Generators_Get_RegisterNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
