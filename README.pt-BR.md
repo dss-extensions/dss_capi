@@ -19,7 +19,7 @@ Caso procure integração com outras linguagens de programação:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) para .NET/C#, no momento apenas Windows. Em breve também será possível usá-lo via COM.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) permite integração multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM, de fato contorna algumas dificuldades de COM.
 
-Esta é a versão 0.10.6, baseada no OpenDSS SVN r2909 (em torno do OpenDSS v9.0.0.3).
+Esta é a versão 0.11.0, ainda em desenvolvimento, baseada no OpenDSS SVN r2909 (em torno do OpenDSS v9.0.0.3).
 
 Apesar de o objetivo principal (compatibilidade com COM) ter sido alcançado, este é um sempre um trabalho em andamento.
 *Observe que, enquanto a interface clássica (v7 + aprimoramentos) é estável, a interface para o OpenDSS-PM (v8, baseada em atores e execução paralela) ainda é experimental.* A partir da versão 0.10, a interface v8 está bem mais estável que na versão 0.9.8 da DSS C-API. A partir da versão 0.10.5, o código da pasta `Version8` não é mais compilado -- uma nova versão unificada é esperada para uma futura versão.
@@ -43,6 +43,7 @@ A partir de 2019-03-05, este repositório contém todo o código fonte em lingua
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
+- 2020-08-05: o código atualizado para a série 0.11.x é publicado. Usando a nossa [KLUSolveX](https://github.com/dss-extensions/klusolve), O primeiro preview incluirá funcionalidades avançadas como atualização incremental da matriz esparsa e refatoração rápida, LoadShape estendida (float32 e memória controlável pelo usuário), além de mais extensões de API exponho mais da máquina interna do OpenDSS.
 - **2020-07-31 / version 0.10.6: Novas extensões para a API e alterações do OpenDSS oficial portadas. Inclui algumas correções de bugs, um novo mecanismo de mensagens de erro de validação, além de novos flags de compatibilidade.**
 - 2020-03-03 / version 0.10.5: Principalmente manutenção, com correção de algumas falhas. Inclui alterações portadas da versão COM e do código do OpenDSS oficial. Binários da variação da versão 8 excluidos desta versão.
 - 2019-11-16 / version 0.10.4: Apenas manutenção: Corrige acesso a arquivos com caminho longo no Linux, e inclui alterações portadas da versão COM e do código do OpenDSS oficial.

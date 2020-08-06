@@ -19,7 +19,7 @@ If you are looking for the bindings to other languages:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, also mimics the COM classes, but Windows-only at the moment. Soon it will be possible to use it via COM too.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the COM classes.
 
-Version 0.10.6, based on OpenDSS revision 2909 (around version OpenDSS 9.0.0.3), with many extra/custom features.
+Version 0.11.0 (unreleased), based on OpenDSS revision 2909 (around version OpenDSS 9.0.0.3), with many extra/custom features.
 
 While the main objective of COM compatibility has been reach, this is still a work-in-progress and is subject to changes. 
 *Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.* From version 0.10, the v8 interface is a lot more stable than in 0.9.8. Since version 0.10.5, the parallel-machine code from Version 8 is not built for binary releases anymore -- stay tuned for a future unified version.
@@ -41,6 +41,7 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/changelog.md) for a detailed list.
 
+- 2020-08-05: the updated code for the 0.11.x series is published. Using our new [KLUSolveX](https://github.com/dss-extensions/klusolve), the first preview release will include advanced features like incremental sparse matrix updates and refactoring speedups, extended LoadShape (float32 and user-handled memory), and API extensions exposing more OpenDSS internals.
 - **2020-07-31 / version 0.10.6: New API extensions, and ported changes from the official OpenDSS codebase. Includes some bugfixes, a new extended validation error messages and new compatibility toggles.**
 - 2020-03-03 / version 0.10.5: Maintenance release with several minor fixes. Includes changes ported from COM and the official OpenDSS codebase. Version 8 binary releases excluded.
 - 2019-11-16 / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and the official OpenDSS codebase.
@@ -144,6 +145,7 @@ Besides bug fixes, the main funcionality of this library is mostly done. Notable
 
 Other features that may include more invasive changes in the code base will probably be developed in another repository.
 
+Most of the roadmap should be achieved in the 0.11.x release series. We expect to reach version 1.0 after most funcionality is in place.
 
 ## Questions?
 
