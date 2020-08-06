@@ -107,7 +107,7 @@ begin
     writeln('Copyright (c) 2016-2017, Battelle Memorial Institute');
     writeln('All rights reserved.');
 {$ELSE}
-    writeln('OpenDSS (Electric Power Distribution System Simulator), DSS C-API library version, v7/classic branch');
+    writeln('OpenDSS (Electric Power Distribution System Simulator), DSS C-API library version');
     writeln(VersionString);
     writeln('Copyright (c) 2008-2019, Electric Power Research Institute, Inc.');
     writeln('Copyright (c) 2016-2017, Battelle Memorial Institute');

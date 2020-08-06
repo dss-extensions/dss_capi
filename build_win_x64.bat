@@ -11,17 +11,17 @@ if errorlevel 1 (
     )
 )
 
-rd /s /q build\units_v7_x64
-mkdir .\build\units_v7_x64
+rd /s /q build\units_x64
+mkdir .\build\units_x64
 
 REM if not exist .\build\units_v8_x64 (
     REM mkdir .\build\units_v8_x64
 REM ) 
 
 
-fpc -Px86_64 @src\v7\windows-x64.cfg -B src\v7\dss_capi_v7.lpr
+fpc -Px86_64 @src\windows-x64.cfg -B src\dss_capi.lpr
 if errorlevel 1 exit /B 1
-if exist lib\win_x64\dss_capi_v7.dll (
+if exist lib\win_x64\dss_capi.dll (
     where /q dumpbin
     if errorlevel 1 (
         echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
@@ -29,26 +29,26 @@ if exist lib\win_x64\dss_capi_v7.dll (
         echo          equivalent for your Visual Studio version.
         exit /B 1
     )
-    dumpbin /exports "lib\win_x64\dss_capi_v7.dll" > lib\win_x64\exports.txt
-    echo LIBRARY DSS_CAPI_V7 > lib\win_x64\dss_capi_v7.def
-    echo EXPORTS >> lib\win_x64\dss_capi_v7.def
-    for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi_v7.def
-    lib /def:lib\win_x64\dss_capi_v7.def /out:lib\win_x64\dss_capi_v7.lib /machine:X64
-    dlltool --as-flags=--64 -d lib\win_x64\dss_capi_v7.def -m i386:x86-64 -l lib\win_x64\dss_capi_v7.dll.a
+    dumpbin /exports "lib\win_x64\dss_capi.dll" > lib\win_x64\exports.txt
+    echo LIBRARY DSS_CAPI > lib\win_x64\dss_capi.def
+    echo EXPORTS >> lib\win_x64\dss_capi.def
+    for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi.def
+    lib /def:lib\win_x64\dss_capi.def /out:lib\win_x64\dss_capi.lib /machine:X64
+    dlltool --as-flags=--64 -d lib\win_x64\dss_capi.def -m i386:x86-64 -l lib\win_x64\dss_capi.dll.a
     
-    del /s lib\win_x64\dss_capi_v7.exp
-    del /s lib\win_x64\dss_capi_v7.def
+    del /s lib\win_x64\dss_capi.exp
+    del /s lib\win_x64\dss_capi.def
     del /s lib\win_x64\exports.txt
 ) else (
-    echo ERROR: DSS_CAPI_V7.DLL file not found. Check previous messages for possible causes.
+    echo ERROR: DSS_CAPI.DLL file not found. Check previous messages for possible causes.
     exit /B 1
 )
 
-rd /s /q build\units_v7_x64
-mkdir .\build\units_v7_x64
-fpc -Px86_64 @src\v7\windows-x64-dbg.cfg -B src\v7\dss_capi_v7d.lpr
+rd /s /q build\units_x64
+mkdir .\build\units_x64
+fpc -Px86_64 @src\windows-x64-dbg.cfg -B src\dss_capid.lpr
 if errorlevel 1 exit /B 1
-if exist lib\win_x64\dss_capi_v7d.dll (
+if exist lib\win_x64\dss_capid.dll (
     where /q dumpbin
     if errorlevel 1 (
         echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
@@ -56,15 +56,15 @@ if exist lib\win_x64\dss_capi_v7d.dll (
         echo          equivalent for your Visual Studio version.
         exit /B 1
     )
-    dumpbin /exports "lib\win_x64\dss_capi_v7d.dll" > lib\win_x64\exports.txt
-    echo LIBRARY DSS_CAPI_V7D > lib\win_x64\dss_capi_v7d.def
-    echo EXPORTS >> lib\win_x64\dss_capi_v7d.def
-    for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi_v7d.def
-    lib /def:lib\win_x64\dss_capi_v7d.def /out:lib\win_x64\dss_capi_v7d.lib /machine:X64
-    dlltool --as-flags=--64 -d lib\win_x64\dss_capi_v7d.def -m i386:x86-64 -l lib\win_x64\dss_capi_v7d.dll.a
+    dumpbin /exports "lib\win_x64\dss_capid.dll" > lib\win_x64\exports.txt
+    echo LIBRARY DSS_CAPID > lib\win_x64\dss_capid.def
+    echo EXPORTS >> lib\win_x64\dss_capid.def
+    for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capid.def
+    lib /def:lib\win_x64\dss_capid.def /out:lib\win_x64\dss_capid.lib /machine:X64
+    dlltool --as-flags=--64 -d lib\win_x64\dss_capid.def -m i386:x86-64 -l lib\win_x64\dss_capid.dll.a
     
-    del /s lib\win_x64\dss_capi_v7d.exp
-    del /s lib\win_x64\dss_capi_v7d.def
+    del /s lib\win_x64\dss_capid.exp
+    del /s lib\win_x64\dss_capid.def
     del /s lib\win_x64\exports.txt
     
     where /q cv2pdb
@@ -72,37 +72,12 @@ if exist lib\win_x64\dss_capi_v7d.dll (
         echo WARNING: cv2pdb not found, PDB file will not be created.
     ) else (
         echo Creating PDB file...
-        cv2pdb lib\win_x64\dss_capi_v7d.dll
+        cv2pdb lib\win_x64\dss_capid.dll
     )
 ) else (
-    echo ERROR: DSS_CAPI_V7D.DLL file not found. Check previous messages for possible causes.
+    echo ERROR: DSS_CAPID.DLL file not found. Check previous messages for possible causes.
     exit /B 1
 )
-
-REM fpc -Px86_64 @src\v8\windows-x64.cfg -B src\v8\dss_capi_v8.lpr
-REM if errorlevel 1 exit /B 1
-REM if exist lib\win_x64\dss_capi_v8.dll (
-    REM where /q dumpbin
-    REM if errorlevel 1 (
-        REM echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
-        REM echo          the "x64 Native Tools Command Prompt for VS 2017" or the 
-        REM echo          equivalent for your Visual Studio version.
-        REM exit /B 1
-    REM )
-    REM dumpbin /exports "lib\win_x64\dss_capi_v8.dll" > lib\win_x64\exports.txt
-    REM echo LIBRARY DSS_CAPI_V8 > lib\win_x64\dss_capi_v8.def
-    REM echo EXPORTS >> lib\win_x64\dss_capi_v8.def
-    REM for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi_v8.def
-    REM lib /def:lib\win_x64\dss_capi_v8.def /out:lib\win_x64\dss_capi_v8.lib /machine:X64
-    REM dlltool --as-flags=--64 -d lib\win_x64\dss_capi_v8.def -m i386:x86-64 -l lib\win_x64\dss_capi_v8.dll.a
-    
-    REM del /s lib\win_x64\dss_capi_v8.exp
-    REM del /s lib\win_x64\dss_capi_v8.def
-    REM del /s lib\win_x64\exports.txt
-REM ) else (
-    REM echo ERROR: DSS_CAPI_V8.DLL file not found. Check previous messages for possible causes.
-REM )
-
 
 SETLOCAL ENABLEEXTENSIONS
 
@@ -114,7 +89,7 @@ IF DEFINED APPVEYOR (
     REM xcopy /E examples release\dss_capi\examples\
     copy LICENSE release\dss_capi\
     copy OPENDSS_LICENSE release\dss_capi\
-    copy klusolve\LICENSE release\dss_capi\KLUSOLVE_LICENSE
+    copy klusolvex\LICENSE release\dss_capi\KLUSOLVEX_LICENSE
     cd release
     7z a "dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x64.zip" dss_capi
     cd ..

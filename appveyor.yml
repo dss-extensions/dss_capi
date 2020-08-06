@@ -8,19 +8,19 @@ build_script:
     
     appveyor downloadfile https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.cross.x86_64-win64.exe/download -FileName fpc-3.2.0.i386-win32.cross.x86_64-win64.exe
 
-    appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x86-msvc2017.zip -FileName klusolve_x86.zip
+    appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_win_x86-msvc2017.zip -FileName klusolvex_x86.zip
     
-    appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x64-gcc8.1.zip -FileName klusolve_x64.zip
+    appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_win_x64-gcc8.1.zip -FileName klusolvex_x64.zip
 
     fpc-3.2.0.i386-win32.exe /VERYSILENT
     
     fpc-3.2.0.i386-win32.cross.x86_64-win64.exe /VERYSILENT
 
-    7z x -y -oC:\dss_capi\ klusolve_x86.zip
+    7z x -y -oC:\dss_capi\ klusolvex_x86.zip
 
-    7z x -y -oC:\dss_capi\ klusolve_x64.zip
+    7z x -y -oC:\dss_capi\ klusolvex_x64.zip
     
-    xcopy /E c:\dss_capi\klusolve\lib c:\dss_capi\lib
+    xcopy /E c:\dss_capi\klusolvex\lib c:\dss_capi\lib
 
     set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
     

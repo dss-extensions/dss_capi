@@ -9,22 +9,22 @@ fi
 export DSS_CAPI_REV=`git rev-parse HEAD`
 export DSS_CAPI_SVN_REV=`git log | grep -m 1 -E "trunk@[0-9]+" -o | grep -E "[0-9]+" -o`
 
-# echo 'Updating src/CAPI_Metadata.pas...'
-# cat src/CAPI_Metadata.pas
+# echo 'Updating src/CAPI/CAPI_Metadata.pas...'
+# cat src/CAPI/CAPI_Metadata.pas
 
-echo "UNIT CAPI_metadata;" > src/CAPI_Metadata.pas
-echo "INTERFACE" >> src/CAPI_Metadata.pas
-echo "" >> src/CAPI_Metadata.pas
-echo "Const" >> src/CAPI_Metadata.pas
-echo "   DSS_CAPI_VERSION='${DSS_CAPI_VERSION}';" >> src/CAPI_Metadata.pas
-echo "   DSS_CAPI_REV='${DSS_CAPI_REV}';" >> src/CAPI_Metadata.pas
-echo "   DSS_CAPI_SVN_REV='${DSS_CAPI_SVN_REV}';" >> src/CAPI_Metadata.pas
-echo "" >> src/CAPI_Metadata.pas
-echo "IMPLEMENTATION" >> src/CAPI_Metadata.pas
-echo "" >> src/CAPI_Metadata.pas
-echo "END." >> src/CAPI_Metadata.pas
+echo "UNIT CAPI_metadata;" > src/CAPI/CAPI_Metadata.pas
+echo "INTERFACE" >> src/CAPI/CAPI_Metadata.pas
+echo "" >> src/CAPI/CAPI_Metadata.pas
+echo "Const" >> src/CAPI/CAPI_Metadata.pas
+echo "   DSS_CAPI_VERSION='${DSS_CAPI_VERSION}';" >> src/CAPI/CAPI_Metadata.pas
+echo "   DSS_CAPI_REV='${DSS_CAPI_REV}';" >> src/CAPI/CAPI_Metadata.pas
+echo "   DSS_CAPI_SVN_REV='${DSS_CAPI_SVN_REV}';" >> src/CAPI/CAPI_Metadata.pas
+echo "" >> src/CAPI/CAPI_Metadata.pas
+echo "IMPLEMENTATION" >> src/CAPI/CAPI_Metadata.pas
+echo "" >> src/CAPI/CAPI_Metadata.pas
+echo "END." >> src/CAPI/CAPI_Metadata.pas
 
-echo 'Updated src/CAPI_Metadata.pas'
+echo 'Updated src/CAPI/CAPI_Metadata.pas'
 echo '// --->'
-cat src/CAPI_Metadata.pas
+cat src/CAPI/CAPI_Metadata.pas
 echo '// <---'

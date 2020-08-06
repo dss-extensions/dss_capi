@@ -7,15 +7,15 @@ matrix:
       sudo: required
       env: 
         - DOCKER_IMAGE=pmeira/manylinux_wheel_cmake_fpc320
-        - KLUSOLVE_URL=https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_linux_x64.tar.gz
+        - KLUSOLVEX_URL=https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_linux_x64.tar.gz
       services:
         - docker
       install:
         - docker pull $DOCKER_IMAGE
       script: 
-        - wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
-        - tar zxf klusolve.tar.gz
-        - cp -r klusolve/lib/* ./lib/
+        - wget "${KLUSOLVEX_URL}" -Oklusolvex.tar.gz -q
+        - tar zxf klusolvex.tar.gz
+        - cp -r klusolvex/lib/* ./lib/
         - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x64.sh
         - ls -lR lib
         
@@ -24,22 +24,22 @@ matrix:
       sudo: required
       env: 
         - DOCKER_IMAGE=pmeira/manylinux_wheel_cmake_fpc320_i686
-        - KLUSOLVE_URL=https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_linux_x86.tar.gz
+        - KLUSOLVEX_URL=https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_linux_x86.tar.gz
       services:
         - docker
       install:
         - docker pull $DOCKER_IMAGE
       script: 
-        - wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
-        - tar zxf klusolve.tar.gz
-        - cp -r klusolve/lib/* ./lib/
+        - wget "${KLUSOLVEX_URL}" -Oklusolvex.tar.gz -q
+        - tar zxf klusolvex.tar.gz
+        - cp -r klusolvex/lib/* ./lib/
         - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x86.sh
         - ls -lR lib
         
     - name: "osx_x64"
       os: osx
       env:
-        - KLUSOLVE_URL=https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_darwin_x64.tar.gz
+        - KLUSOLVEX_URL=https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolve_1.0.0a1_darwin_x64.tar.gz
       before_install:
         - |
           wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.0/fpc-3.2.0.intel-macosx.dmg/download -Ofpc.dmg -q
@@ -47,9 +47,9 @@ matrix:
           sudo installer -package /Volumes/fpc-3.2.0.intel-macosx/fpc-3.2.0-intel-macosx.pkg -target /
       install: true
       script: 
-        - wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
-        - tar zxf klusolve.tar.gz
-        - cp -r klusolve/lib/* ./lib/
+        - wget "${KLUSOLVEX_URL}" -Oklusolvex.tar.gz -q
+        - tar zxf klusolvex.tar.gz
+        - cp -r klusolvex/lib/* ./lib/
         - bash make_metadata.sh
         - bash build_macos_x64.sh
         - ls -lR lib
