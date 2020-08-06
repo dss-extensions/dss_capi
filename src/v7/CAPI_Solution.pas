@@ -72,16 +72,16 @@ procedure Solution_SolvePlusControl(); CDECL;
 procedure Solution_SolveSnap(); CDECL;
 procedure Solution_CheckControls(); CDECL;
 procedure Solution_InitSnap(); CDECL;
-function Solution_Get_SystemYChanged(): Wordbool; CDECL;
+function Solution_Get_SystemYChanged(): Boolean; CDECL;
 procedure Solution_BuildYMatrix(BuildOption, AllocateVI: Integer); CDECL;
 procedure Solution_DoControlActions(); CDECL;
 procedure Solution_SampleControlDevices(); CDECL;
-function Solution_Get_Converged(): Wordbool; CDECL;
-procedure Solution_Set_Converged(Value: Wordbool); CDECL;
+function Solution_Get_Converged(): Boolean; CDECL;
+procedure Solution_Set_Converged(Value: Boolean); CDECL;
 function Solution_Get_Totaliterations(): Integer; CDECL;
 function Solution_Get_MostIterationsDone(): Integer; CDECL;
-function Solution_Get_ControlActionsDone(): Wordbool; CDECL;
-procedure Solution_Set_ControlActionsDone(Value: Wordbool); CDECL;
+function Solution_Get_ControlActionsDone(): Boolean; CDECL;
+procedure Solution_Set_ControlActionsDone(Value: Boolean); CDECL;
 procedure Solution_Cleanup(); CDECL;
 procedure Solution_FinishTimeStep(); CDECL;
 function Solution_Get_Process_Time(): Double; CDECL;
@@ -677,7 +677,7 @@ begin
     ActiveCircuit.Solution.SnapShotInit;
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_SystemYChanged(): Wordbool; CDECL;
+function Solution_Get_SystemYChanged(): Boolean; CDECL;
 begin
     Result := False;
     if InvalidCircuit then
@@ -715,7 +715,7 @@ begin
     ActiveCircuit.Solution.SampleControlDevices;
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_Converged(): Wordbool; CDECL;
+function Solution_Get_Converged(): Boolean; CDECL;
 begin
     Result := False;
     if InvalidCircuit then
@@ -723,7 +723,7 @@ begin
     Result := ActiveCircuit.Issolved;
 end;
 //------------------------------------------------------------------------------
-procedure Solution_Set_Converged(Value: Wordbool); CDECL;
+procedure Solution_Set_Converged(Value: Boolean); CDECL;
 {Set the flag directly to force its setting}
 begin
     if InvalidCircuit then
@@ -749,7 +749,7 @@ begin
     Result := ActiveCircuit.Solution.MostIterationsDone
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_ControlActionsDone(): Wordbool; CDECL;
+function Solution_Get_ControlActionsDone(): Boolean; CDECL;
 begin
     Result := False;
     if InvalidCircuit then
@@ -757,7 +757,7 @@ begin
     Result := ActiveCircuit.Solution.ControlActionsDone;
 end;
 //------------------------------------------------------------------------------
-procedure Solution_Set_ControlActionsDone(Value: Wordbool); CDECL;
+procedure Solution_Set_ControlActionsDone(Value: Boolean); CDECL;
 begin
     if InvalidCircuit then
         Exit;

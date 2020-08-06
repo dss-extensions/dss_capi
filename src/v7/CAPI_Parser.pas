@@ -8,8 +8,8 @@ uses
 function Parser_Get_CmdString(): PAnsiChar; CDECL;
 procedure Parser_Set_CmdString(const Value: PAnsiChar); CDECL;
 function Parser_Get_NextParam(): PAnsiChar; CDECL;
-function Parser_Get_AutoIncrement(): Wordbool; CDECL;
-procedure Parser_Set_AutoIncrement(Value: Wordbool); CDECL;
+function Parser_Get_AutoIncrement(): Boolean; CDECL;
+procedure Parser_Set_AutoIncrement(Value: Boolean); CDECL;
 function Parser_Get_DblValue(): Double; CDECL;
 function Parser_Get_IntValue(): Integer; CDECL;
 function Parser_Get_StrValue(): PAnsiChar; CDECL;
@@ -55,12 +55,12 @@ begin
     Result := DSS_GetAsPAnsiChar(ComParser.NextParam);
 end;
 //------------------------------------------------------------------------------
-function Parser_Get_AutoIncrement(): Wordbool; CDECL;
+function Parser_Get_AutoIncrement(): Boolean; CDECL;
 begin
     Result := ComParser.AutoIncrement;
 end;
 //------------------------------------------------------------------------------
-procedure Parser_Set_AutoIncrement(Value: Wordbool); CDECL;
+procedure Parser_Set_AutoIncrement(Value: Boolean); CDECL;
 begin
     ComParser.AutoIncrement := Value;
 end;

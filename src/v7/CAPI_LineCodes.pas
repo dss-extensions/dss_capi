@@ -11,7 +11,7 @@ function LineCodes_Get_First(): Integer; CDECL;
 function LineCodes_Get_Next(): Integer; CDECL;
 function LineCodes_Get_Name(): PAnsiChar; CDECL;
 procedure LineCodes_Set_Name(const Value: PAnsiChar); CDECL;
-function LineCodes_Get_IsZ1Z0(): Wordbool; CDECL;
+function LineCodes_Get_IsZ1Z0(): Boolean; CDECL;
 function LineCodes_Get_Units(): Integer; CDECL;
 procedure LineCodes_Set_Units(Value: Integer); CDECL;
 function LineCodes_Get_Phases(): Integer; CDECL;
@@ -124,7 +124,7 @@ begin
     // Still same active object if not found
 end;
 //------------------------------------------------------------------------------
-function LineCodes_Get_IsZ1Z0(): Wordbool; CDECL;
+function LineCodes_Get_IsZ1Z0(): Boolean; CDECL;
 var
     pLineCode: TLineCodeObj;
 begin

@@ -20,7 +20,7 @@ function CapControls_Get_Next(): Integer; CDECL;
 function CapControls_Get_OFFSetting(): Double; CDECL;
 function CapControls_Get_ONSetting(): Double; CDECL;
 function CapControls_Get_PTratio(): Double; CDECL;
-function CapControls_Get_UseVoltOverride(): Wordbool; CDECL;
+function CapControls_Get_UseVoltOverride(): Boolean; CDECL;
 function CapControls_Get_Vmax(): Double; CDECL;
 function CapControls_Get_Vmin(): Double; CDECL;
 procedure CapControls_Set_Capacitor(const Value: PAnsiChar); CDECL;
@@ -35,7 +35,7 @@ procedure CapControls_Set_Name(const Value: PAnsiChar); CDECL;
 procedure CapControls_Set_OFFSetting(Value: Double); CDECL;
 procedure CapControls_Set_ONSetting(Value: Double); CDECL;
 procedure CapControls_Set_PTratio(Value: Double); CDECL;
-procedure CapControls_Set_UseVoltOverride(Value: Wordbool); CDECL;
+procedure CapControls_Set_UseVoltOverride(Value: Boolean); CDECL;
 procedure CapControls_Set_Vmax(Value: Double); CDECL;
 procedure CapControls_Set_Vmin(Value: Double); CDECL;
 function CapControls_Get_Count(): Integer; CDECL;
@@ -285,7 +285,7 @@ begin
     Result := elem.PTRatioVal;
 end;
 //------------------------------------------------------------------------------
-function CapControls_Get_UseVoltOverride(): Wordbool; CDECL;
+function CapControls_Get_UseVoltOverride(): Boolean; CDECL;
 var
     elem: TCapControlObj;
 begin
@@ -401,7 +401,7 @@ begin
     Set_Parameter('PTratio', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
-procedure CapControls_Set_UseVoltOverride(Value: Wordbool); CDECL;
+procedure CapControls_Set_UseVoltOverride(Value: Boolean); CDECL;
 begin
     if Value = TRUE then
         Set_Parameter('VoltOverride', 'Yes')

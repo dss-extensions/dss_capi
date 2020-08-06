@@ -8,7 +8,7 @@ uses
 function PDElements_Get_Count(): Integer; CDECL;
 function PDElements_Get_FaultRate(): Double; CDECL;
 function PDElements_Get_First(): Integer; CDECL;
-function PDElements_Get_IsShunt(): Wordbool; CDECL;
+function PDElements_Get_IsShunt(): Boolean; CDECL;
 function PDElements_Get_Next(): Integer; CDECL;
 function PDElements_Get_pctPermanent(): Double; CDECL;
 procedure PDElements_Set_FaultRate(Value: Double); CDECL;
@@ -28,12 +28,12 @@ procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 
 // Extensions below
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllMaxCurrents_GR(const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllPctNorm_GR(const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: Boolean); CDECL;
+procedure PDElements_Get_AllMaxCurrents_GR(const AllNodes: Boolean); CDECL;
+procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: Boolean); CDECL;
+procedure PDElements_Get_AllPctNorm_GR(const AllNodes: Boolean); CDECL;
+procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: Boolean); CDECL;
+procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: Boolean); CDECL;
 procedure PDElements_Get_AllCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure PDElements_Get_AllCurrents_GR(); CDECL;
 procedure PDElements_Get_AllCurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -152,7 +152,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_IsShunt(): Wordbool; CDECL;
+function PDElements_Get_IsShunt(): Boolean; CDECL;
 var
     ActivePDElement: TPDElement;
 begin
@@ -532,7 +532,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: Boolean); CDECL;
 begin
     _PDElements_Get_x(ResultPtr, ResultCount, 0, AllNodes);
 end;
@@ -544,24 +544,24 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: Boolean); CDECL;
 begin
     _PDElements_Get_x(ResultPtr, ResultCount, 1, AllNodes);
 end;
 
-procedure PDElements_Get_AllPctNorm_GR(const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctNorm_GR(const AllNodes: Boolean); CDECL;
 // Same as PDElements_Get_AllPctNorm but uses global result (GR) pointers
 begin
     PDElements_Get_AllPctNorm(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: Boolean); CDECL;
 begin
     _PDElements_Get_x(ResultPtr, ResultCount, 2, AllNodes);
 end;
 
-procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: Boolean); CDECL;
 // Same as PDElements_Get_AllPctEmerg but uses global result (GR) pointers
 begin
     PDElements_Get_AllPctEmerg(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)

@@ -16,7 +16,7 @@ procedure CktElement_Get_Currents_GR(); CDECL;
 procedure CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_Voltages_GR(); CDECL;
 function CktElement_Get_EmergAmps(): Double; CDECL;
-function CktElement_Get_Enabled(): Wordbool; CDECL;
+function CktElement_Get_Enabled(): Boolean; CDECL;
 procedure CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_Losses_GR(); CDECL;
 function CktElement_Get_NormalAmps(): Double; CDECL;
@@ -33,9 +33,9 @@ procedure CktElement_Get_SeqVoltages_GR(); CDECL;
 procedure CktElement_Close(Term, Phs: Integer); CDECL;
 procedure CktElement_Open(Term, Phs: Integer); CDECL;
 procedure CktElement_Set_EmergAmps(Value: Double); CDECL;
-procedure CktElement_Set_Enabled(Value: Wordbool); CDECL;
+procedure CktElement_Set_Enabled(Value: Boolean); CDECL;
 procedure CktElement_Set_NormalAmps(Value: Double); CDECL;
-function CktElement_IsOpen(Term, Phs: Integer): Wordbool; CDECL;
+function CktElement_IsOpen(Term, Phs: Integer): Boolean; CDECL;
 procedure CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 function CktElement_Get_NumProperties(): Integer; CDECL;
 procedure CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -48,8 +48,8 @@ function CktElement_Get_Handle(): Integer; CDECL;
 procedure CktElement_Set_DisplayName(const Value: PAnsiChar); CDECL;
 function CktElement_Get_Controller(idx: Integer): PAnsiChar; CDECL;
 function CktElement_Get_EnergyMeter(): PAnsiChar; CDECL;
-function CktElement_Get_HasVoltControl(): Wordbool; CDECL;
-function CktElement_Get_HasSwitchControl(): Wordbool; CDECL;
+function CktElement_Get_HasVoltControl(): Boolean; CDECL;
+function CktElement_Get_HasSwitchControl(): Boolean; CDECL;
 procedure CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_CplxSeqVoltages_GR(); CDECL;
 procedure CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -61,7 +61,7 @@ function CktElement_Get_Variable(const MyVarName: PAnsiChar; out Code: Integer):
 function CktElement_Get_Variablei(Idx: Integer; out Code: Integer): Double; CDECL;
 procedure CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_NodeOrder_GR(); CDECL;
-function CktElement_Get_HasOCPDevice(): Wordbool; CDECL;
+function CktElement_Get_HasOCPDevice(): Boolean; CDECL;
 function CktElement_Get_NumControls(): Integer; CDECL;
 function CktElement_Get_OCPDevIndex(): Integer; CDECL;
 function CktElement_Get_OCPDevType(): Integer; CDECL;
@@ -71,7 +71,7 @@ procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PIn
 procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
 
 // API Extensions
-function CktElement_Get_IsIsolated(): Wordbool; CDECL;
+function CktElement_Get_IsIsolated(): Boolean; CDECL;
 procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_NodeRef_GR(); CDECL;
 
@@ -389,7 +389,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function CktElement_Get_Enabled(): Wordbool; CDECL;
+function CktElement_Get_Enabled(): Boolean; CDECL;
 begin
     Result := FALSE;
     
@@ -723,7 +723,7 @@ begin
             EmergAmps := Value;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Set_Enabled(Value: Wordbool); CDECL;
+procedure CktElement_Set_Enabled(Value: Boolean); CDECL;
 begin
     if InvalidCircuit then
         Exit;
@@ -740,7 +740,7 @@ begin
             NormAmps := Value;
 end;
 //------------------------------------------------------------------------------
-function CktElement_IsOpen(Term, Phs: Integer): Wordbool; CDECL;
+function CktElement_IsOpen(Term, Phs: Integer): Boolean; CDECL;
 var
     i: Integer;
 begin
@@ -940,7 +940,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function CktElement_Get_HasVoltControl(): Wordbool; CDECL;
+function CktElement_Get_HasVoltControl(): Boolean; CDECL;
 // Returns true if any of the controls is a capcontrol or a regcontrol
 var
     ctrl: TDSSCktElement;
@@ -967,7 +967,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function CktElement_Get_HasSwitchControl(): Wordbool; CDECL;
+function CktElement_Get_HasSwitchControl(): Boolean; CDECL;
 var
     ctrl: TDSSCktElement;
 begin
@@ -1223,7 +1223,7 @@ begin
     CktElement_Get_NodeOrder(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
 end;
 //------------------------------------------------------------------------------
-function CktElement_Get_HasOCPDevice(): Wordbool; CDECL;
+function CktElement_Get_HasOCPDevice(): Boolean; CDECL;
 // Check for presence of a fuse, recloser, etc.
 begin
     if InvalidCktElement then
@@ -1362,7 +1362,7 @@ begin
     CktElement_Get_VoltagesMagAng(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 //------------------------------------------------------------------------------
-function CktElement_Get_IsIsolated(): Wordbool; CDECL;
+function CktElement_Get_IsIsolated(): Boolean; CDECL;
 begin
     if InvalidCktElement then
     begin
