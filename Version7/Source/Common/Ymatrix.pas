@@ -42,8 +42,19 @@ uses
     Circuit,
     CktElement,
     Utilities,
-    KLUSolve;
+    KLUSolve,
+    Solution,
+    DSSClassDefs,
+    UcMatrix,
+    GUtil,
+    GSet;
 
+
+type 
+    TCoordLess = TLess<QWord>;
+    TCoordSet = TSet<QWord, TCoordLess>;
+    TNodeLess = TLess<Integer>;
+    TNodeSet = TSet<Integer, TNodeLess>;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ReCalcAllYPrims;
@@ -80,25 +91,36 @@ begin
     begin
         if LogEvents then
             LogThisEvent('Recalc Invalid Yprims');
-        pElem := CktElements.First;
+
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+        pElem := IncrCktElements.First;
         while pElem <> NIL do
         begin
             with pElem do
                 if YprimInvalid then
+                begin
                     CalcYPrim;
+                end;
+            pElem := IncrCktElements.Next;
+        end;
+{$ENDIF}
+        pElem := CktElements.First;
+        while pElem <> NIL do
+        begin
+            with pElem do
+                if YprimInvalid {or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)} then
+                begin
+                    CalcYPrim;
+                end;
             pElem := CktElements.Next;
         end;
     end;
-
 end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ResetSparseMatrix(var hY: NativeUint; size: Integer);
-
-
 begin
-
     if hY <> 0 then
     begin
         if DeleteSparseSet(hY) < 1  {Get rid of existing one beFore making a new one} then
@@ -110,7 +132,7 @@ begin
      // Make a new sparse set
     hY := NewSparseSet(Size);
     if hY < 1 then
-    begin   // Raise and exception
+    begin
         raise EEsolv32Problem.Create('Error Creating System Y Matrix. Problem WITH Sparse matrix solver.');
     end;
 end;
@@ -134,6 +156,164 @@ begin
     end;
 end;
 
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+function UpdateYMatrix(Ckt: TDSSCircuit; BuildOption: Integer; AllocateVI: Boolean): Boolean;
+var
+    IncrYprim: TCMatrix;
+    pElem: TDSSCktElement;
+    changedElements: TCoordSet; // elements from the matrix that have been changed
+    changedNodes: TNodeSet; // nodes which have affected elements
+    coordIt: TCoordSet.TIterator;
+    
+    i, j, inode, jnode: Integer;
+    abortIncremental: Boolean;
+    val: Complex;
+begin
+    changedElements := TCoordSet.Create;
+    changedNodes := TNodeSet.Create;
+    Result := False;
+    IncrYprim := NIL;
+    abortIncremental := False;
+
+    // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
+    pElem := Ckt.IncrCktElements.First;
+    while pElem <> NIL do with pElem do
+    begin
+        if (Enabled and (Yprim = NIL)) then
+        begin
+            abortIncremental := True;
+            break;
+        end;
+
+        if (Enabled and (Yprim <> NIL)) then
+        begin
+            if IncrYprim <> NIL then
+            begin
+                IncrYprim.Free;
+                IncrYprim := NIL;
+            end;
+            
+            IncrYprim := TCmatrix.CreateMatrix(Yprim.order);
+            IncrYprim.CopyFrom(Yprim);
+            IncrYprim.Negate;
+            
+            CalcYPrim;
+            
+
+            if (Yprim = NIL) or (IncrYprim.order <> Yprim.order) then
+            begin
+                abortIncremental := True;
+                break;
+            end;
+            
+            IncrYprim.AddFrom(YPrim);
+            for i := 1 to Yprim.order do
+            begin
+                inode := NodeRef[i];
+                if inode = 0 then continue;
+                for j := 1 to Yprim.order do
+                begin
+                    jnode := NodeRef[j];
+                    if jnode = 0 then continue;
+                    
+                    val := IncrYprim.GetElement(i, j);
+                    if (val.re <> 0) or (val.im <> 0) then
+                    begin
+                        changedNodes.Insert(inode);
+                        changedNodes.Insert(jnode);
+                        // Encode the coordinates as a 64-bit integer
+                        changedElements.Insert((QWord(inode) shl 32) or QWord(jnode));
+                    end;
+                end;
+            end;
+        end;
+        pElem := Ckt.IncrCktElements.Next;
+    end;
+
+    if IncrYprim <> NIL then
+    begin
+        IncrYprim.Free;
+        IncrYprim := NIL;
+    end;
+
+    if not abortIncremental then
+    begin
+        coordIt := changedElements.Min;
+        if coordIt <> nil then
+        repeat
+            // Zeroise only the exact elements affected to make it faster
+            if ZeroiseMatrixElement(Ckt.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF) = 0 then
+            begin
+                // If the element doesn't exist in the current compressed matrix, abort!
+                abortIncremental := True;
+                break;
+            end;
+        until not coordIt.Next;
+    end;
+
+    pElem := Ckt.CktElements.First;
+    while (not abortIncremental) and (pElem <> NIL) do with pElem do
+    begin
+        if (not Enabled) or (Yprim = NIL) then
+        begin
+            pElem := Ckt.CktElements.Next;
+            continue;
+        end;
+
+        for i := 1 to Yprim.order do
+        begin
+            inode := NodeRef[i];
+            if inode = 0 then continue;
+            if changedNodes.Find(inode) = NIL then
+                // nothing changed for node "inode", we can skip it completely
+                continue;
+
+            for j := 1 to Yprim.order do
+            begin
+                jnode := NodeRef[j];
+                if jnode = 0 then continue;
+
+                if (changedElements.Find((QWord(inode) shl 32) or (QWord(jnode))) = nil) then
+                    continue;
+
+                val := Yprim.GetElement(i, j);
+                if (val.re = 0) and (val.im = 0) then continue;
+
+                if IncrementMatrixElement(Ckt.Solution.hYsystem, inode, jnode, val.re, val.im) = 0 then
+                begin
+                    abortIncremental := True;
+                    break;
+                end;
+            end;
+
+            if abortIncremental then break;
+        end;
+
+        if abortIncremental then break;
+
+        pElem := Ckt.CktElements.Next;
+    end;
+
+    if abortIncremental then
+    begin
+        Result := False;
+
+        // Retry with the full matrix
+        Ckt.Solution.SystemYChanged := True;
+        BuildYMatrix(BuildOption, AllocateVI);
+        Ckt.IncrCktElements.Clear;
+    end
+    else
+    begin
+        Ckt.IncrCktElements.Clear;
+        Result := True;
+    end;
+
+    changedElements.Free;
+    changedNodes.Free;
+end;
+{$ENDIF} //DSS_CAPI_INCREMENTAL_Y
+
 procedure BuildYMatrix(BuildOption: Integer; AllocateVI: Boolean);
 
 {Builds designated Y matrix for system and allocates solution arrays}
@@ -142,12 +322,16 @@ var
     YMatrixsize: Integer;
     CmatArray: pComplexArray;
     pElem: TDSSCktElement;
-
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+    Incremental: Boolean;
+{$ENDIF}
    //{****} FTrace: TextFile;
 
 
 begin
-
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+    Incremental := False;
+{$ENDIF}
   //{****} AssignFile(Ftrace, 'YmatrixTrace.txt');
   //{****} Rewrite(FTrace);
 
@@ -170,21 +354,44 @@ begin
         case BuildOption of
             WHOLEMATRIX:
             begin
-                ResetSparseMatrix(hYsystem, YMatrixSize);
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+                Incremental := (SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
+                    (not SystemYChanged) and 
+                    (IncrCktElements.ListSize <> 0) and 
+                    (not AllocateVI) and 
+                    (not FrequencyChanged);
+
+                if not Incremental then
+                begin
+                    if IncrCktElements.ListSize <> 0 then
+                        SystemYChanged := True;
+{$ENDIF}
+                    ResetSparseMatrix(hYsystem, YMatrixSize);
+                    KLUSolve.SetOptions(hYsystem, SolverOptions);
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+                end;
+{$ENDIF}
                 hY := hYsystem;
             end;
             SERIESONLY:
             begin
                 ResetSparseMatrix(hYseries, YMatrixSize);
+                KLUSolve.SetOptions(hYsystem, SolverOptions);
                 hY := hYSeries;
             end;
         end;
 
      // tune up the Yprims if necessary
-        if (FrequencyChanged) then
-            ReCalcAllYPrims
-        else
-            ReCalcInvalidYPrims;
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+        if not Incremental then 
+{$ENDIF}
+        begin
+            if (FrequencyChanged) then
+                ReCalcAllYPrims
+            else
+                ReCalcInvalidYPrims;
+        end;
+        
 
         if SolutionAbort then
         begin
@@ -198,11 +405,23 @@ begin
         if LogEvents then
             case BuildOption of
                 WHOLEMATRIX:
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+                    if Incremental then
+                        LogThisEvent('Building Whole Y Matrix -- using incremental method')
+                    else
+{$ENDIF}
                     LogThisEvent('Building Whole Y Matrix');
                 SERIESONLY:
                     LogThisEvent('Building Series Y Matrix');
             end;
           // Add in Yprims for all devices
+          
+        // Full method, handles all elements
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+        if not Incremental then
+        begin
+{$ENDIF}
+            // Full method, handles all elements
         pElem := CktElements.First;
         while pElem <> NIL do
         begin
@@ -222,6 +441,14 @@ begin
                 end;   // If Enabled
             pElem := CktElements.Next;
         end;
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+        end // if not Incremental
+        else
+        begin // if Incremental 
+            if not UpdateYMatrix(ActiveCircuit, BuildOption, AllocateVI) then
+                Exit;
+        end;
+{$ENDIF}
 
      //{****} CloseFile(Ftrace);
      //{****} FireOffEditor(  'YmatrixTrace.txt');

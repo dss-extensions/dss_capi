@@ -175,6 +175,7 @@ uses
     DSSGlobals,
     SysUtils,
     Utilities,
+    Solution,
     Math;
 
 var
@@ -666,6 +667,8 @@ begin
     if YPrim <> NIL then
         DoYPrimCalcs(YPrim);
 
+    if ((ActiveCircuit.Solution.SolverOptions and ord(TSolverOptions.AlwaysResetYPrimInvalid)) <> 0) then
+        YPrimInvalid := False;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

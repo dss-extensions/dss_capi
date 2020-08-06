@@ -254,7 +254,8 @@ uses
     DSSGlobals,
     Sysutils,
     Utilities,
-    XfmrCode;
+    XfmrCode,
+    Solution;
 
 var
     XfmrCodeClass: TXfmrCode;
@@ -664,7 +665,24 @@ begin
 
          //YPrim invalidation on anything that changes impedance values
             case ParamPointer of
-                5..19:
+                5..7:
+                    YprimInvalid := TRUE;
+                8: // tap:
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+                    // Try to handle tap changes incrementally
+                    if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
+                       (not ActiveCircuit.Solution.SystemYChanged) and 
+                       (YPrim <> NIL) and 
+                       (not YPrimInvalid)
+                    then
+                        // Mark this to incrementally update the matrix.
+                        // If the matrix is already being rebuilt, there is 
+                        // no point in doing this, just rebuild it as usual.
+                        ActiveCircuit.IncrCktElements.Add(ActiveTransfObj) 
+                    else
+{$ENDIF}
+                    YprimInvalid := TRUE;
+                9..19:
                     YprimInvalid := TRUE;
                 26..27:
                     YprimInvalid := TRUE;
@@ -1344,8 +1362,7 @@ var
     FreqMultiplier: Double;
 
 begin
-
-    if YPrimInvalid then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
     begin
          // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Series <> NIL then
@@ -1609,7 +1626,20 @@ begin
             if TempVal <> puTap then
             begin    {Only if there's been a change}
                 puTap := TempVal;
-                YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+                if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
+                   (not ActiveCircuit.Solution.SystemYChanged) and 
+                   (YPrim <> NIL) and 
+                   (not YPrimInvalid)
+                then
+                    // Mark this to incrementally update the matrix.
+                    // If the matrix is already being rebuilt, there is 
+                    // no point in doing this, just rebuild it as usual.
+                    ActiveCircuit.IncrCktElements.Add(Self) 
+                else
+{$ENDIF}
+                    YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
+
                 RecalcElementData;
             end;
         end;

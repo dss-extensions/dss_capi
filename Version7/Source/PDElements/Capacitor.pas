@@ -108,6 +108,11 @@ type
 
         procedure set_NumSteps(const Value: Integer); // 1=kvar, 2=Cuf, 3=Cmatrix
 
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+    PROTECTED
+        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE; 
+//        procedure Set_Enabled(Value: Boolean); OVERRIDE;
+{$ENDIF}
 
     PUBLIC
 
@@ -150,7 +155,8 @@ uses
     DSSGlobals,
     Sysutils,
     Ucomplex,
-    Utilities;
+    Utilities,
+    Solution;
 
 const
     NumPropsThisClass = 13;
@@ -460,7 +466,18 @@ begin
                 3..8:
                     YprimInvalid := TRUE;
                 12, 13:
-                    YprimInvalid := TRUE;
+                // Numsteps, states:
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+                    // For changes in NumSteps and States, try to handle it incrementally
+                    if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
+                       (not ActiveCircuit.Solution.SystemYChanged) and 
+                       (YPrim <> NIL) and 
+                       (not YPrimInvalid)
+                    then
+                       ActiveCircuit.IncrCktElements.Add(ActiveCapacitorObj)
+                    else
+{$ENDIF}
+                        YprimInvalid := TRUE;
             else
             end;
 
@@ -716,7 +733,7 @@ begin
 // Bus1 <> Bus 2
 
 
-    if YPrimInvalid then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
     begin    // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;
@@ -933,6 +950,19 @@ begin
     if FStates^[Idx] <> Value then
     begin
         FStates^[Idx] := Value;
+
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+        if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
+           (not ActiveCircuit.Solution.SystemYChanged) and 
+           (YPrim <> NIL) and 
+           (not YPrimInvalid)
+        then
+            // Mark this to incrementally update the matrix.
+            // If the matrix is already being rebuilt, there is 
+            // no point in doing this, just rebuild it as usual.
+           ActiveCircuit.IncrCktElements.Add(Self)
+        else
+{$ENDIF}        
         YprimInvalid := TRUE;
     end;
 end;
@@ -1066,7 +1096,16 @@ begin
 
      // Force rebuild of YPrims if necessary.
     if Value <> FLastStepInService then
-        YprimInvalid := TRUE;
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+        if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
+           (not ActiveCircuit.Solution.SystemYChanged) and 
+           (YPrim <> NIL) and 
+           (not YPrimInvalid)
+        then
+           ActiveCircuit.IncrCktElements.Add(Self)
+{$ENDIF}
+        else
+            YprimInvalid := TRUE;
 
     FLastStepInService := Value;
 end;
@@ -1277,5 +1316,62 @@ function TCapacitorObj.AvailableSteps: Integer;
 begin
     Result := FNumsteps - LastStepInService;
 end;
+
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+procedure TCapacitorObj.Set_ConductorClosed(Index: Integer; Value: Boolean);
+var
+    i: Integer;
+begin
+    if (Index = 0) then
+    begin  // Do all conductors
+        for i := 1 to Fnphases do
+            Terminals^[ActiveTerminalIdx].Conductors^[i].Closed := Value;
+        
+        if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
+           (not ActiveCircuit.Solution.SystemYChanged) and 
+           (YPrim <> NIL) and 
+           (not YPrimInvalid)
+        then
+            // Mark this to incrementally update the matrix.
+            // If the matrix is already being rebuilt, there is 
+            // no point in doing this, just rebuild it as usual.
+           ActiveCircuit.IncrCktElements.Add(Self)
+        else
+            YPrimInvalid := TRUE; // this also sets the global SystemYChanged flag
+    end
+    else
+    if (Index > 0) and (Index <= Fnconds) then
+    begin
+        Terminals^[ActiveTerminalIdx].Conductors^[index].Closed := Value;
+            
+        if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
+           (not ActiveCircuit.Solution.SystemYChanged) and 
+           (YPrim <> NIL) and 
+           (not YPrimInvalid)
+        then
+           ActiveCircuit.IncrCktElements.Add(Self)
+        else
+            YPrimInvalid := TRUE;
+    end;
+end;
+
+// procedure TCapacitorObj.Set_Enabled(Value: Boolean);
+// begin
+//     if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+//        (not ActiveCircuit.Solution.SystemYChanged) and 
+//        (YPrim <> NIL) and 
+//        (not YPrimInvalid) and
+//        (NumTerm = 1) // Assumes disabling shunt capacitors have no ill-effects
+//     begin
+//        ActiveCircuit.IncrCktElements.Add(Self);
+//         FEnabled := Value;
+//         Exit;
+//     end;
+// 
+//     // Fallback to the inherited CktElement procedure
+//     Inherited Set_Enabled(Value);
+// end;
+
+{$ENDIF}
 
 end.

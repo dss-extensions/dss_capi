@@ -70,6 +70,21 @@ const
 
 type
 
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+{$SCOPEDENUMS ON}
+    TSolverOptions = (
+        // The values themselves are subject to change in future versions,
+        // use this enum for easier upgrades
+        ReuseNothing = 0,
+        ReuseCompressedMatrix = 1, // Reuse only the prepared CSC matrix
+        ReuseSymbolicFactorization = 2, // Reuse the symbolic factorization, implies ReuseCompressedMatrix
+        ReuseNumericFactorization = 3, // Reuse the numeric factorization, implies ReuseSymbolicFactorization
+        
+        AlwaysResetYPrimInvalid = $100000000 // Bit flag, see CktElement.pas
+    );
+{$SCOPEDENUMS OFF}
+{$ENDIF}
+
     EControlProblem = class(Exception);
     ESolveError = class(Exception);  // Raised when solution aborted
 
@@ -100,7 +115,6 @@ type
         dV: pNodeVArray;   // Array of delta V for Newton iteration
         FFrequency: Double;
 
-        function Converged: Boolean;
         function OK_for_Dynamics(const Value: Integer): Boolean;
         function OK_for_Harmonics(const Value: Integer): Boolean;
 
@@ -108,7 +122,6 @@ type
         procedure DoNewtonSolution;
         procedure DoNormalSolution;
 //       PROCEDURE GetMachineInjCurrents;
-        procedure SetGeneratordQdV;
         procedure SumAllCurrents;
         procedure Set_Frequency(const Value: Double);
         procedure Set_Mode(const Value: Integer);
@@ -163,7 +176,8 @@ type
         UseAuxCurrents: Boolean;
         VmagSaved: pDoubleArray;
         VoltageBaseChanged: Boolean;
-
+        SolverOptions: Uint64;   // KLUSolveX options
+        
         {Voltage and Current Arrays}
         NodeV: pNodeVArray;    // Main System Voltage Array   allows NodeV^[0]=0
         Currents: pNodeVArray;      // Main System Currents Array
@@ -206,6 +220,9 @@ type
 //******************************************************************************
         constructor Create(ParClass: TDSSClass; const solutionname: String);
         destructor Destroy; OVERRIDE;
+
+        function Converged: Boolean;
+        procedure SetGeneratordQdV;
 
         procedure ZeroAuxCurrents;
         function SolveZeroLoadSnapShot: Integer;
@@ -867,7 +884,7 @@ begin
             GetPCInjCurr;  // Get the injection currents from all the power conversion devices and feeders
 
        // The above call could change the primitive Y matrix, so have to check
-            if SystemYChanged then
+            if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (ActiveCircuit.IncrCktElements.ListSize <> 0){$ENDIF} then
             begin
                 BuildYMatrix(WHOLEMATRIX, FALSE);  // Does not realloc V, I
             end;
@@ -1115,7 +1132,7 @@ begin
             ControlActionsDone := TRUE; // Stop solution process if failure to converge
     end;
 
-    if SystemYChanged then
+    if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (ActiveCircuit.IncrCktElements.ListSize <> 0){$ENDIF} then
     begin
         BuildYMatrix(WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
     end;
@@ -1183,7 +1200,7 @@ begin
     QueryPerformanceCounter(SolveStartTime);
 {$ENDIF}
 
-    if SystemYChanged then
+    if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (ActiveCircuit.IncrCktElements.ListSize <> 0){$ENDIF} then
     begin
         BuildYMatrix(WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
     end;

@@ -6045,6 +6045,64 @@ extern "C" {
     DSS_CAPI_V7_DLL void LoadShapes_SetMaxPandQ(void);
 
 
+    /*
+    Update and return the convergence flag. Used for external solver loops.
+    */
+    DSS_CAPI_V7_DLL uint16_t YMatrix_CheckConvergence(void);
+    DSS_CAPI_V7_DLL void YMatrix_SetGeneratordQdV(void);
+
+    DSS_CAPI_V7_DLL uint16_tuint16_t YMatrix_Get_LoadsNeedUpdating(void);
+    DSS_CAPI_V7_DLL void YMatrix_Set_LoadsNeedUpdating(uint16_t Value);
+    DSS_CAPI_V7_DLL uint16_t YMatrix_Get_SolutionInitialized(void);
+    DSS_CAPI_V7_DLL void YMatrix_Set_SolutionInitialized(uint16_t Value);
+
+    DSS_CAPI_V7_DLL int32_t YMatrix_Get_Iteration(void);
+    DSS_CAPI_V7_DLL void YMatrix_Set_Iteration(int32_t Value);
+    DSS_CAPI_V7_DLL void *YMatrix_Get_Handle(void);
+
+    DSS_CAPI_V7_DLL void YMatrix_Set_SolverOptions(uint64_t opts);
+    DSS_CAPI_V7_DLL uint64_t YMatrix_Get_SolverOptions(void);
+
+    /*
+    Selected KLUSolveX functions, re-exported through DSS C-API.
+    See KLUSolveX for details.
+    */
+    DSS_CAPI_V7_DLL void* NewSparseSet(int nBus);
+    DSS_CAPI_V7_DLL int ZeroSparseSet(void* handle);
+    DSS_CAPI_V7_DLL int FactorSparseMatrix(void* handle);
+    DSS_CAPI_V7_DLL int SolveSparseSet(void* handle, double* acxX, double* acxB);
+    DSS_CAPI_V7_DLL int DeleteSparseSet(void* handle);
+    DSS_CAPI_V7_DLL int AddMatrixElement(void* handle, int i, int j, double* pcxVal);
+    DSS_CAPI_V7_DLL int GetMatrixElement(void* handle, int i, int j, double* pcxVal);
+    DSS_CAPI_V7_DLL int GetSize(void* handle, int* pResult);
+    DSS_CAPI_V7_DLL int GetNNZ(void* handle, int* pResult);
+    DSS_CAPI_V7_DLL int GetSparseNNZ(void* handle, int* pResult);
+    DSS_CAPI_V7_DLL int GetRCond(void* handle, double* pResult);
+    DSS_CAPI_V7_DLL int GetRGrowth(void* handle, double* pResult);
+    DSS_CAPI_V7_DLL int GetCondEst(void* handle, double* pResult);
+    DSS_CAPI_V7_DLL int GetFlops(void* handle, double* pResult);
+    DSS_CAPI_V7_DLL int GetSingularCol(void* handle, int* pResult);
+    DSS_CAPI_V7_DLL int AddPrimitiveMatrix(void* handle, int nOrder, int* pNodes, double* pcY);
+    DSS_CAPI_V7_DLL int GetCompressedMatrix(void* handle, int nColP, int nNZ, int* pColP, int* pRowIdx, double* pcY);
+    DSS_CAPI_V7_DLL int GetTripletMatrix(void* handle, int nNZ, int* pRows, int* pCols, double* pcY);
+    DSS_CAPI_V7_DLL int FindIslands(void* handle, int nOrder, int* pNodes);
+    DSS_CAPI_V7_DLL int IncrementMatrixElement(void* handle, int i, int j, double re, double im);
+    DSS_CAPI_V7_DLL int ZeroiseMatrixElement(void* handle, int i, int j);
+    DSS_CAPI_V7_DLL void mvmult(int32_t N, double* b, double* A, double* x);
+
+    enum SolverOptions {
+        // The values themselves are subject to change in future versions,
+        // use this enum for easier upgrades
+        SolverOptions_ReuseNothing = 0,
+        SolverOptions_ReuseCompressedMatrix = 1, // Reuse only the prepared CSC matrix
+        SolverOptions_ReuseSymbolicFactorization = 2, // Reuse the symbolic factorization, implies ReuseCompressedMatrix
+        SolverOptions_ReuseNumericFactorization = 3, // Reuse the numeric factorization, implies ReuseSymbolicFactorization
+        
+        SolverOptions_AlwaysResetYPrimInvalid = 0x100000000 // Bit flag, see CktElement.pas
+    };
+
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

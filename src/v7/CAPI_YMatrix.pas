@@ -23,6 +23,17 @@ function YMatrix_Get_SystemYChanged(): Wordbool; CDECL;
 procedure YMatrix_Set_UseAuxCurrents(arg: Wordbool); CDECL;
 function YMatrix_Get_UseAuxCurrents(): Wordbool; CDECL;
 
+procedure YMatrix_Set_LoadsNeedUpdating(arg: Wordbool); CDECL;
+function YMatrix_Get_LoadsNeedUpdating(): Wordbool; CDECL;
+function YMatrix_CheckConvergence(): Wordbool; CDECL;
+procedure YMatrix_Set_Iteration(Value: Integer); CDECL;
+function YMatrix_Get_Iteration(): Integer; CDECL;
+procedure YMatrix_Set_SolutionInitialized(arg: Wordbool); CDECL;
+function YMatrix_Get_SolutionInitialized(): Wordbool; CDECL;
+procedure YMatrix_SetGeneratordQdV(); CDECL;
+function YMatrix_Get_Handle(): NativeUInt; CDECL;
+procedure YMatrix_Set_SolverOptions(opts: UInt64); CDECL;
+function YMatrix_Get_SolverOptions():UInt64; CDECL;
 
 implementation
 
@@ -106,7 +117,7 @@ begin
     Result := ActiveCircuit.Solution.SystemYChanged;
 end;
 
-procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL;
+procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL; //TODO: boolean
 var
     AllocateV: Boolean;
 begin
@@ -157,7 +168,88 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Solution.SolveSystem(NodeV);
+    if (@NodeV <> NIL) then
+        Result := ActiveCircuit.Solution.SolveSystem(NodeV)
+    else
+        Result := ActiveCircuit.Solution.SolveSystem(ActiveCircuit.Solution.NodeV);
+end;
+
+procedure YMatrix_Set_LoadsNeedUpdating(arg: Wordbool); CDECL;
+begin
+   ActiveCircuit.Solution.LoadsNeedUpdating := arg;
+end;
+
+function YMatrix_Get_LoadsNeedUpdating: Wordbool; CDECL;
+begin
+    Result := ActiveCircuit.Solution.LoadsNeedUpdating;
+end;
+
+procedure YMatrix_Set_SolutionInitialized(arg: Wordbool); CDECL;
+begin
+   ActiveCircuit.Solution.SolutionInitialized := arg;
+end;
+
+function YMatrix_Get_SolutionInitialized: Wordbool; CDECL;
+begin
+    Result := ActiveCircuit.Solution.SolutionInitialized;
+end;
+
+
+function YMatrix_CheckConvergence: Wordbool; CDECL;
+begin
+    Result := ActiveCircuit.Solution.Converged;
+end;
+
+procedure YMatrix_Set_Iteration(Value: Integer); CDECL;
+begin
+    if InvalidCircuit then Exit;
+   ActiveCircuit.Solution.Iteration := Value;
+end;
+
+function YMatrix_Get_Iteration: Integer; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Iteration
+    else
+        Result := -1;
+end;
+
+procedure YMatrix_SetGeneratordQdV; CDECL;
+begin
+    if InvalidCircuit then Exit;
+    try
+       ActiveCircuit.Solution.SetGeneratordQdV;  // Set dQdV for Model 3 generators
+    except
+        ON E: EEsolv32Problem do
+        begin
+            DoSimpleMsg('From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message + CheckYMatrixforZeroes(), 7073);
+        end;
+    end;
+end;
+
+function YMatrix_Get_Handle: NativeUInt; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then Exit;
+    Result := ActiveCircuit.Solution.hY
+end;
+
+procedure YMatrix_Set_SolverOptions(opts: UInt64); CDECL;
+begin
+    if InvalidCircuit then Exit;
+    with ActiveCircuit.Solution do
+    begin
+        SolverOptions := opts;
+        if hY <> 0 then
+            KLUSolve.SetOptions(hY, SolverOptions and $FFFFFFFF);
+    end;
+end;
+
+function YMatrix_Get_SolverOptions:UInt64; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then Exit;
+    Result := ActiveCircuit.Solution.SolverOptions;
 end;
 
 //---------------------------------------------------------------------------------
