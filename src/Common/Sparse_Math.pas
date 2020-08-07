@@ -543,7 +543,7 @@ begin
             while flag and (j >= 0) do
             begin
                 getrow(j, @bcols, @bvals);    // sweeps the matrix bottom up
-                flag := not R_equal(@acols, @avals, @bcols, @bvals);
+                flag := not R_equal(@acols, @bcols, @avals, @bvals);
                 dec(j);
             end;
             if flag then
