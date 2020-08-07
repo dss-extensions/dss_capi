@@ -73,7 +73,7 @@ procedure Solution_SolveSnap(); CDECL;
 procedure Solution_CheckControls(); CDECL;
 procedure Solution_InitSnap(); CDECL;
 function Solution_Get_SystemYChanged(): Boolean; CDECL;
-procedure Solution_BuildYMatrix(BuildOption, AllocateVI: Integer); CDECL;
+procedure Solution_BuildYMatrix(BuildOption: Integer; AllocateVI: Boolean); CDECL;
 procedure Solution_DoControlActions(); CDECL;
 procedure Solution_SampleControlDevices(); CDECL;
 function Solution_Get_Converged(): Boolean; CDECL;
@@ -685,7 +685,7 @@ begin
     Result := ActiveCircuit.Solution.SystemYChanged;
 end;
 //------------------------------------------------------------------------------
-procedure Solution_BuildYMatrix(BuildOption, AllocateVI: Integer); CDECL;
+procedure Solution_BuildYMatrix(BuildOption: Integer; AllocateVI: Boolean); CDECL;
 {
   Build Options
     1 = Series elements only
@@ -698,7 +698,7 @@ procedure Solution_BuildYMatrix(BuildOption, AllocateVI: Integer); CDECL;
 begin
     if InvalidCircuit then
         Exit;
-    Ymatrix.BuildYMatrix(BuildOption, AllocateVI <> 0)
+    Ymatrix.BuildYMatrix(BuildOption, AllocateVI)
 end;
 //------------------------------------------------------------------------------
 procedure Solution_DoControlActions(); CDECL;

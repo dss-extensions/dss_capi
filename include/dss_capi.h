@@ -3206,7 +3206,7 @@ extern "C" {
     /*
     Gets the status of each actor
     */
-    // DSS_CAPI_DLL void Parallel_Get_ActorStatus(int32_t** ResultPtr, int64_t* ResultCount);
+    // DSS_CAPI_DLL void Parallel_Get_ActorStatus(int8_t** ResultPtr, int64_t* ResultCount);
     /*
     Same as Parallel_Get_ActorStatus but using the global buffer interface for results
     */
@@ -3215,22 +3215,22 @@ extern "C" {
     /*
     Sets ON/OFF (1/0) Parallel features of the Engine
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ActiveParallel(void);
+    // DSS_CAPI_DLL int8_t Parallel_Get_ActiveParallel(void);
 
     /*
     Delivers if the Parallel features of the Engine are Active
     */
-    // DSS_CAPI_DLL void Parallel_Set_ActiveParallel(int32_t Value);
+    // DSS_CAPI_DLL void Parallel_Set_ActiveParallel(int8_t Value);
 
     /*
-    Reads the values of the ConcatenateReports option (1=enabled, 0=disabled)
+    Reads the values of the ConcatenateReports option (boolean)
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ConcatenateReports(void);
+    // DSS_CAPI_DLL int8_t Parallel_Get_ConcatenateReports(void);
 
     /*
-    Enable/Disable (1/0) the ConcatenateReports option for extracting monitors data
+    Enable/Disable (boolean state) the ConcatenateReports option for extracting monitors data
     */
-    // DSS_CAPI_DLL void Parallel_Set_ConcatenateReports(int32_t Value);
+    // DSS_CAPI_DLL void Parallel_Set_ConcatenateReports(int8_t Value);
 
 
     /*
@@ -4841,7 +4841,7 @@ extern "C" {
     */
     DSS_CAPI_DLL int8_t Solution_Get_SystemYChanged(void);
 
-    DSS_CAPI_DLL void Solution_BuildYMatrix(int32_t BuildOption, int32_t AllocateVI);
+    DSS_CAPI_DLL void Solution_BuildYMatrix(int32_t BuildOption, int8_t AllocateVI);
 
     DSS_CAPI_DLL void Solution_DoControlActions(void);
 
@@ -5593,7 +5593,7 @@ extern "C" {
     DSS_CAPI_DLL void YMatrix_ZeroInjCurr(void);
     DSS_CAPI_DLL void YMatrix_GetSourceInjCurrents(void);
     DSS_CAPI_DLL void YMatrix_GetPCInjCurr(void);
-    DSS_CAPI_DLL void YMatrix_BuildYMatrixD(int32_t BuildOps, int32_t AllocateVI);
+    DSS_CAPI_DLL void YMatrix_BuildYMatrixD(int32_t BuildOps, int8_t AllocateVI);
     DSS_CAPI_DLL void YMatrix_AddInAuxCurrents(int32_t SType);
     DSS_CAPI_DLL void YMatrix_getIpointer(double **IvectorPtr);
     DSS_CAPI_DLL void YMatrix_getVpointer(double **VvectorPtr);

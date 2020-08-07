@@ -12,7 +12,7 @@ procedure YMatrix_GetCompressedYMatrix(factor: Boolean; var nBus, nNz: Longword;
 procedure YMatrix_ZeroInjCurr; CDECL;
 procedure YMatrix_GetSourceInjCurrents; CDECL;
 procedure YMatrix_GetPCInjCurr; CDECL;
-procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL;
+procedure YMatrix_BuildYMatrixD(BuildOps: Integer; AllocateVI: Boolean); CDECL;
 procedure YMatrix_AddInAuxCurrents(SType: Integer); CDECL;
 procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
@@ -119,14 +119,11 @@ begin
     Result := ActiveCircuit.Solution.SystemYChanged;
 end;
 
-procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL; //TODO: boolean
-var
-    AllocateV: Boolean;
+procedure YMatrix_BuildYMatrixD(BuildOps: Integer; AllocateVI: Boolean); CDECL;
 begin
     if InvalidCircuit then
         Exit;
-    AllocateV := (AllocateVI <> 0);
-    BuildYMatrix(BuildOps, AllocateV);
+    BuildYMatrix(BuildOps, AllocateVI);
 end;
 
 procedure YMatrix_Set_UseAuxCurrents(arg: Boolean); CDECL;

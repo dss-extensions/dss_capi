@@ -18,12 +18,12 @@ function Parallel_Get_NumOfActors(): Integer; CDECL;
 procedure Parallel_Wait(); CDECL;
 procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Parallel_Get_ActorProgress_GR(); CDECL;
-procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
+procedure Parallel_Get_ActorStatus(var ResultPtr: PByte; ResultCount: PAPISize); CDECL;
 procedure Parallel_Get_ActorStatus_GR(); CDECL;
-function Parallel_Get_ActiveParallel(): Integer; CDECL;
-procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
-function Parallel_Get_ConcatenateReports(): Integer; CDECL;
-procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
+function Parallel_Get_ActiveParallel(): Boolean; CDECL;
+procedure Parallel_Set_ActiveParallel(Value: Boolean); CDECL;
+function Parallel_Get_ConcatenateReports(): Boolean; CDECL;
+procedure Parallel_Set_ConcatenateReports(Value: Boolean); CDECL;
 
 implementation
 
@@ -114,12 +114,12 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
+procedure Parallel_Get_ActorStatus(var ResultPtr: PByte; ResultCount: PAPISize); CDECL;
 var
-    Result: PIntegerArray;
+    Result: PByteArray;
     idx: Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NumOfActors);
+    Result := DSS_RecreateArray_PByte(ResultPtr, ResultCount, NumOfActors);
     for idx := 1 to NumOfActors do
     begin
         if ActorHandle[idx].Is_Busy then
@@ -138,28 +138,22 @@ end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ActiveParallel(): Integer; CDECL;
 begin
-    if Parallel_enabled then
-        Result := 1
-    else
-        Result := 0;
+    Result := Parallel_enabled;
 end;
 //------------------------------------------------------------------------------
-procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
+procedure Parallel_Set_ActiveParallel(Value: Boolean); CDECL;
 begin
-    Parallel_enabled := (Value = 1);
+    Parallel_enabled := Value;
 end;
 //------------------------------------------------------------------------------
-function Parallel_Get_ConcatenateReports(): Integer; CDECL;
+function Parallel_Get_ConcatenateReports(): Boolean; CDECL;
 begin
-    if ConcatenateReports then
-        Result := 1
-    else
-        Result := 0;
+    Result := ConcatenateReports;
 end;
 //------------------------------------------------------------------------------
-procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
+procedure Parallel_Set_ConcatenateReports(Value: Boolean); CDECL;
 begin
-    ConcatenateReports := (Value = 1);
+    ConcatenateReports := Value;
 end;
 //------------------------------------------------------------------------------
 end.
