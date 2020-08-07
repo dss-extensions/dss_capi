@@ -911,6 +911,7 @@ exports
     Monitors_Process,
     Monitors_ProcessAll,
     Monitors_Get_Channel,
+    Monitors_Get_ChannelF32, // API Extension
     Monitors_Get_dblFreq,
     Monitors_Get_dblHour,
     Monitors_Get_FileVersion,
@@ -1485,6 +1486,7 @@ exports
     Meters_Get_AllocFactors_GR,
     Monitors_Get_ByteStream_GR,
     Monitors_Get_Channel_GR,
+    Monitors_Get_ChannelF32_GR,
     Monitors_Get_dblFreq_GR,
     Monitors_Get_dblHour_GR,
     Parser_Get_Vector_GR,

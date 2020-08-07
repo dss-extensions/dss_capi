@@ -27,7 +27,9 @@ function Monitors_Get_Count(): Integer; CDECL;
 procedure Monitors_Process(); CDECL;
 procedure Monitors_ProcessAll(); CDECL;
 procedure Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PAPISize; Index: Integer); CDECL;
+procedure Monitors_Get_ChannelF32(var ResultPtr: PSingle; ResultCount: PAPISize; Index: Integer); CDECL;
 procedure Monitors_Get_Channel_GR(Index: Integer); CDECL;
+procedure Monitors_Get_ChannelF32_GR(Index: Integer); CDECL;
 procedure Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Monitors_Get_dblFreq_GR(); CDECL;
 procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -65,8 +67,8 @@ type
         StrBuffer: TMonitorStrBuffer;
     end;
 
-    SingleArray = array[1..100] of Single;
-    pSingleArray = ^SingleArray;
+    SingleArray1 = array[1..100] of Single;
+    pSingleArray1 = ^SingleArray1;
 
 //------------------------------------------------------------------------------
 procedure ReadMonitorHeader(var HeaderRec: THeaderRec; Opt: Boolean);
@@ -343,7 +345,7 @@ var
     Header: THeaderRec;
     i: Integer;
     pMon: TMonitorObj;
-    SngBuffer: pSingleArray;
+    SngBuffer: pSingleArray1;
     AllocSize: Integer;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
@@ -383,6 +385,55 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+procedure Monitors_Get_ChannelF32(var ResultPtr: PSingle; ResultCount: PAPISize; Index: Integer); CDECL;
+// Return an array of singles for selected channel
+var
+    Result: PFloat32Array;
+    Header: THeaderRec;
+    i: Integer;
+    pMon: TMonitorObj;
+    SngBuffer: pSingleArray1;
+    AllocSize: Integer;
+begin
+    Result := DSS_RecreateArray_PSingle(ResultPtr, ResultCount, 1);
+    if not _activeObj(pMon) then
+        Exit;
+    
+    if pMon.SampleCount <= 0 then
+        Exit;
+
+    ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
+
+    if (Index < 1) or (Index > Header.RecordSize {NumChannels}) then
+    begin
+        DoSimpleMsg(Format(
+            'Monitors.ChannelF32: invalid channel index (%d), monitor "%s" has %d channels.',
+            [Index, pMon.Name, Header.RecordSize]
+            ), 5888);
+        Exit;
+    end;
+    Result := DSS_RecreateArray_PSingle(ResultPtr, ResultCount, pMon.SampleCount);
+
+    AllocSize := Sizeof(Single) * (Header.RecordSize + 2); // Include Hour and Second fields
+    Index := Index + 2; // Skip Hour and Second fields
+    SngBuffer := Allocmem(AllocSize); // Need a buffer to convert from float32 to float64
+    for i := 1 to pMon.SampleCount do
+    begin
+        pMon.MonitorStream.Read(sngBuffer^[1], AllocSize);  // read rest of record
+        Result[i - 1] := sngBuffer^[Index];
+    end;
+    Reallocmem(SngBuffer, 0);  // Dispose of buffer
+end;
+
+procedure Monitors_Get_ChannelF32_GR(Index: Integer); CDECL;
+// Same as Monitors_Get_ChannelF32 but uses global result (GR) pointers
+begin
+    Monitors_Get_ChannelF32(GR_DataPtr_PSingle, GR_CountPtr_PSingle, Index)
+end;
+
+//------------------------------------------------------------------------------
+
+
 procedure Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return an array of doubles for frequence for Harmonic solutions
 var
@@ -391,7 +442,7 @@ var
     k, i: Integer;
     FirstCol: String;
     pMon: TMonitorObj;
-    SngBuffer: pSingleArray;
+    SngBuffer: pSingleArray1;
     freq: Single;
     s: Single;
     AllocSize: Integer;
@@ -448,7 +499,7 @@ var
     k, i: Integer;
     FirstCol: String;
     pMon: TMonitorObj;
-    SngBuffer: pSingleArray;
+    SngBuffer: pSingleArray1;
     hr: Single;
     s: Single;
     AllocSize: Integer;

@@ -3073,13 +3073,29 @@ extern "C" {
     DSS_CAPI_DLL void Monitors_ProcessAll(void);
 
     /*
-    Array of doubles for the specified channel  (usage: MyArray = DSSMonitor.Channel(i)) A Save or SaveAll  should be executed first. Done automatically by most standard solution modes.
+    Array of doubles (float64) for the specified channel  (usage: MyArray = DSSMonitor.Channel(i)) 
+    A Save or SaveAll  should be executed first. Done automatically by most standard solution modes.
+    
+    Channels are stored as singles internally. Monitors_Get_Channel just upcasts the values to doubles.
+    Depending on the usage, prefer Monitors_Get_ChannelF32.
     */
     DSS_CAPI_DLL void Monitors_Get_Channel(double** ResultPtr, int64_t* ResultCount, int32_t Index);
     /*
     Same as Monitors_Get_Channel but using the global buffer interface for results
     */
     DSS_CAPI_DLL void Monitors_Get_Channel_GR(int32_t Index);
+
+    /*
+    Array of singles (float32) for the specified channel  (usage: MyArray = DSSMonitor.ChannelF32(i)) 
+    A Save or SaveAll  should be executed first. Done automatically by most standard solution modes.
+    
+    Channels are stored as singles internally. Monitors_Get_Channel just upcasts the values to doubles.
+    */
+    DSS_CAPI_DLL void Monitors_Get_ChannelF32(float** ResultPtr, int64_t* ResultCount, int32_t Index);
+    /*
+    Same as Monitors_Get_ChannelF32 but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void Monitors_Get_ChannelF32_GR(int32_t Index);
 
     /*
     Array of doubles containing frequency values for harmonics mode solutions; Empty for time mode solutions (use dblHour)
