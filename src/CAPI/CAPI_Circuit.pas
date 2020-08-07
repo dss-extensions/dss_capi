@@ -1147,15 +1147,21 @@ begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * ElementsCount);
     CResultPtr := pComplex(ResultPtr);
 
-    for i := 0 to ElementsCount - 1 do
+    i := 0;
+    while i < ElementsCount do
     begin
         pCktElem := ActiveCircuit.CktElements.Get(Elements[i]);
         CResultPtr^ := pCktElem.Losses;
         Inc(CResultPtr);
+        Inc(i);
     end;
-        
-    for i := 0 to 2*ElementsCount - 1 do
+
+    i := 0;
+    while i < 2*ElementsCount do
+    begin
         Result[i] := Result[i] * 0.001;
+        Inc(i);
+    end;
 end;
 
 procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;

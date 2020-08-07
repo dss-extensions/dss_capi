@@ -200,10 +200,12 @@ var
     tmp: PPAnsiChar;
 begin
     tmp := p;
-    for i := 0 to (cnt - 1) do
+    i := 0;
+    while i < cnt do
     begin
         FreeMem(tmp^);
         inc(tmp);
+        inc(i);
     end;
     FreeMem(p);
     p := NIL;
