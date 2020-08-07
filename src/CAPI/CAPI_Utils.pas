@@ -1,5 +1,7 @@
 unit CAPI_Utils;
 
+{$mode objfpc}
+
 interface
 
 uses
@@ -18,40 +20,57 @@ type
     PPByte = ^PByte;
     PPPAnsiChar = ^PPAnsiChar;
 
-    Float32Array = array[0..$effffff] of Single;
+    Float32 = Single;
+    Float32Array = array[0..$effffff] of Float32;
     PFloat32Array = ^Float32Array;
-    PFloat32 = ^Single;
+    PFloat32 = ^Float32;
     PPFloat32 = ^PFloat32;
 
+    SingleArray = Float32Array;
+    PSingleArray = PFloat32Array;
+    PSingle = PFloat32;
+    PPSingle = PPFloat32;
+    
+    TAPISize = Int64;
+    PAPISize = ^Int64;
+    
+
 var
+    GR_DataPtr_PSingle: PSingle;
     GR_DataPtr_PDouble: PDouble;
     GR_DataPtr_PInteger: PInteger;
     GR_DataPtr_PByte: PByte;
 
-    GR_CountPtr_PDouble: PInteger;
-    GR_CountPtr_PInteger: PInteger;
-    GR_CountPtr_PByte: PInteger;
+    GR_CountPtr_PSingle: PAPISize;
+    GR_CountPtr_PDouble: PAPISize;
+    GR_CountPtr_PInteger: PAPISize;
+    GR_CountPtr_PByte: PAPISize;
 
 procedure DSS_GetGRPointers(
     // Pointers to the global variables that contains the actual pointers.
+    var DataPtr_PSingle: PPSingle;
     var DataPtr_PDouble: PPDouble;
     var DataPtr_PInteger: PPInteger;
     var DataPtr_PByte: PPByte;
 
     // These are not reallocated during the execution, can return the actual pointer values
-    var CountPtr_PDouble: PInteger;
-    var CountPtr_PInteger: PInteger;
-    var CountPtr_PByte: PInteger); CDECL;
+    var CountPtr_PSingle: PAPISize;
+    var CountPtr_PDouble: PAPISize;
+    var CountPtr_PInteger: PAPISize;
+    var CountPtr_PByte: PAPISize
+); CDECL;
 
 
 // Separate simple functions for MATLAB, which return the current pointer
 // directly, instead of a pointer to pointer.
+function DSS_GR_DataPtr_PSingle(): PSingle; CDECL;
 function DSS_GR_DataPtr_PDouble(): PDouble; CDECL;
 function DSS_GR_DataPtr_PInteger(): PInteger; CDECL;
 function DSS_GR_DataPtr_PByte(): PByte; CDECL;
-function DSS_GR_CountPtr_PDouble(): PInteger; CDECL;
-function DSS_GR_CountPtr_PInteger(): PInteger; CDECL;
-function DSS_GR_CountPtr_PByte(): PInteger; CDECL;
+function DSS_GR_CountPtr_PSingle(): PAPISize; CDECL;
+function DSS_GR_CountPtr_PDouble(): PAPISize; CDECL;
+function DSS_GR_CountPtr_PInteger(): PAPISize; CDECL;
+function DSS_GR_CountPtr_PByte(): PAPISize; CDECL;
 
 procedure DSS_DisposeGRData(); CDECL;
 
@@ -61,30 +80,34 @@ procedure DSS_ResetStringBuffer(); CDECL;
 function DSS_CopyStringAsPChar(s: Ansistring): PAnsiChar; // TODO: check possible memory leaks for := DSS_CopyStringAsPChar('NONE')
 
 procedure DSS_Dispose_PByte(var p: PByte); CDECL;
+procedure DSS_Dispose_PSingle(var p: PSingle); CDECL;
 procedure DSS_Dispose_PDouble(var p: PDouble); CDECL;
 procedure DSS_Dispose_PInteger(var p: PInteger); CDECL;
-procedure DSS_Dispose_PPAnsiChar(var p: PPAnsiChar; cnt: Integer); CDECL;
+procedure DSS_Dispose_PPAnsiChar(var p: PPAnsiChar; cnt: TAPISize); CDECL;
 
-function DSS_CreateArray_PByte(var p: PByte; cnt: PInteger; const incount: Integer): PByteArray;
-function DSS_CreateArray_PDouble(var p: PDouble; cnt: PInteger; const incount: Integer): PDoubleArray;
-function DSS_CreateArray_PInteger(var p: PInteger; cnt: PInteger; const incount: Integer): PIntegerArray;
-function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; const incount: Integer): PPAnsiCharArray;
+function DSS_CreateArray_PByte(var p: PByte; cnt: PAPISize; const incount: TAPISize): PByteArray;
+function DSS_CreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize): PSingleArray;
+function DSS_CreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize): PDoubleArray;
+function DSS_CreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize): PIntegerArray;
+function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize): PPAnsiCharArray;
 
 // NOTE: these do not copy to copy old values
-procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; cnt: PInteger; const incount: Integer);
-procedure DSS_RecreateArray_PDouble(var res: PDoubleArray; var p: PDouble; cnt: PInteger; const incount: Integer);
-procedure DSS_RecreateArray_PInteger(var res: PIntegerArray; var p: PInteger; cnt: PInteger; const incount: Integer);
-procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray; var p: PPAnsiChar; cnt: PInteger; const incount: Integer);
-function DSS_RecreateArray_PByte(var p: PByte; cnt: PInteger; const incount: Integer): PByteArray;
-function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PInteger; const incount: Integer): PDoubleArray;
-function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PInteger; const incount: Integer): PIntegerArray;
-function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; const incount: Integer): PPAnsiCharArray;
+procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PSingle(var res: PSingleArray; var p: PSingle; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PDouble(var res: PDoubleArray; var p: PDouble; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PInteger(var res: PIntegerArray; var p: PInteger; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray; var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize);
+function DSS_RecreateArray_PByte(var p: PByte; cnt: PAPISize; const incount: TAPISize): PByteArray;
+function DSS_RecreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize): PSingleArray;
+function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize): PDoubleArray;
+function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize): PIntegerArray;
+function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize): PPAnsiCharArray;
 
 // MATLAB doesn't handle pointers that well,
-// this just gets a single string from the pointer of strings
-function DSS_Get_PAnsiChar(var p: Pointer; Index: Integer): PAnsiChar; CDECL;
+// this just gets a Single string from the pointer of strings
+function DSS_Get_PAnsiChar(var p: Pointer; Index: TAPISize): PAnsiChar; CDECL;
 
-procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; const Restore: Boolean); inline;
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pList: TPointerList; const Restore: Boolean); inline;
 
 function InvalidCircuit(): Boolean; inline;
 function MissingSolution(): Boolean; inline;
@@ -153,6 +176,12 @@ begin
     p := NIL;
 end;
 
+procedure DSS_Dispose_PSingle(var p: PSingle); CDECL;
+begin
+    Dispose(p);
+    p := NIL;
+end;
+
 procedure DSS_Dispose_PDouble(var p: PDouble); CDECL;
 begin
     Dispose(p);
@@ -165,9 +194,9 @@ begin
     p := NIL;
 end;
 
-procedure DSS_Dispose_PPAnsiChar(var p: PPAnsiChar; cnt: Integer); CDECL;
+procedure DSS_Dispose_PPAnsiChar(var p: PPAnsiChar; cnt: TAPISize); CDECL;
 var
-    i: Integer;
+    i: TAPISize;
     tmp: PPAnsiChar;
 begin
     tmp := p;
@@ -180,13 +209,13 @@ begin
     p := NIL;
 end;
 
-function DSS_Get_PAnsiChar(var p: Pointer; Index: Integer): PAnsiChar; CDECL;
+function DSS_Get_PAnsiChar(var p: Pointer; Index: TAPISize): PAnsiChar; CDECL;
 begin
     result := PPAnsiChar(p)[Index];
 end;
 
 //------------------------------------------------------------------------------
-function DSS_CreateArray_PByte(var p: PByte; cnt: PInteger; const incount: Integer): PByteArray;
+function DSS_CreateArray_PByte(var p: PByte; cnt: PAPISize; const incount: TAPISize): PByteArray;
 begin
     cnt[0] := incount;
     cnt[1] := incount;
@@ -194,7 +223,15 @@ begin
     result := PByteArray(p);
 end;
 
-function DSS_CreateArray_PDouble(var p: PDouble; cnt: PInteger; const incount: Integer): PDoubleArray;
+function DSS_CreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize): PSingleArray;
+begin
+    cnt[0] := incount;
+    cnt[1] := incount;
+    p := AllocMem(incount * sizeof(Single));
+    result := PSingleArray(p);
+end;
+
+function DSS_CreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize): PDoubleArray;
 begin
     cnt[0] := incount;
     cnt[1] := incount;
@@ -202,7 +239,7 @@ begin
     result := PDoubleArray(p);
 end;
 
-function DSS_CreateArray_PInteger(var p: PInteger; cnt: PInteger; const incount: Integer): PIntegerArray;
+function DSS_CreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize): PIntegerArray;
 begin
     cnt[0] := incount;
     cnt[1] := incount;
@@ -210,7 +247,7 @@ begin
     result := PIntegerArray(p);
 end;
 
-function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; const incount: Integer): PPAnsiCharArray;
+function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize): PPAnsiCharArray;
 begin
     cnt[0] := incount;
     cnt[1] := incount;
@@ -219,7 +256,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PInteger; const incount: Integer): PIntegerArray;
+function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize): PIntegerArray;
 begin
     if (cnt[1] < incount) then
     begin
@@ -234,26 +271,47 @@ begin
     end;
 end;
 
-procedure DSS_RecreateArray_PInteger(var res: PIntegerArray; var p: PInteger; cnt: PInteger; const incount: Integer);
+procedure DSS_RecreateArray_PInteger(var res: PIntegerArray; var p: PInteger; cnt: PAPISize; const incount: TAPISize);
 begin
     res := DSS_RecreateArray_PInteger(p, cnt, incount);
 end;
 
 //------------------------------------------------------------------------------
-function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; const incount: Integer): PPAnsiCharArray;
+function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize): PPAnsiCharArray;
 begin
     // no size optimization for strings yet
     DSS_Dispose_PPAnsiChar(p, cnt[1]);
     Result := DSS_CreateArray_PPAnsiChar(p, cnt, incount);
 end;
 
-procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray; var p: PPAnsiChar; cnt: PInteger; const incount: Integer);
+procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray; var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize);
 begin
     res := DSS_RecreateArray_PPAnsiChar(p, cnt, incount);
 end;
 
 //------------------------------------------------------------------------------
-function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PInteger; const incount: Integer): PDoubleArray;
+function DSS_RecreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize): PSingleArray;
+begin
+    if (cnt[1] < incount) then
+    begin
+        DSS_Dispose_PSingle(p);
+        Result := DSS_CreateArray_PSingle(p, cnt, incount);
+    end
+    else
+    begin
+        cnt[0] := incount;
+        Result := PSingleArray(p);
+        FillByte(Result^, incount * sizeof(Single), 0); // needs to zero it for compatibility
+    end;
+end;
+
+procedure DSS_RecreateArray_PSingle(var res: PSingleArray; var p: PSingle; cnt: PAPISize; const incount: TAPISize);
+begin
+    res := DSS_RecreateArray_PSingle(p, cnt, incount);
+end;
+
+//------------------------------------------------------------------------------
+function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize): PDoubleArray;
 begin
     if (cnt[1] < incount) then
     begin
@@ -268,13 +326,13 @@ begin
     end;
 end;
 
-procedure DSS_RecreateArray_PDouble(var res: PDoubleArray; var p: PDouble; cnt: PInteger; const incount: Integer);
+procedure DSS_RecreateArray_PDouble(var res: PDoubleArray; var p: PDouble; cnt: PAPISize; const incount: TAPISize);
 begin
     res := DSS_RecreateArray_PDouble(p, cnt, incount);
 end;
 
 //------------------------------------------------------------------------------
-function DSS_RecreateArray_PByte(var p: PByte; cnt: PInteger; const incount: Integer): PByteArray;
+function DSS_RecreateArray_PByte(var p: PByte; cnt: PAPISize; const incount: TAPISize): PByteArray;
 begin
     if (cnt[1] < incount) then
     begin
@@ -289,23 +347,30 @@ begin
     end;
 end;
 
-procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; cnt: PInteger; const incount: Integer);
+procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; cnt: PAPISize; const incount: TAPISize);
 begin
     res := DSS_RecreateArray_PByte(p, cnt, incount);
 end;
 
 //------------------------------------------------------------------------------
 procedure DSS_GetGRPointers(
+    // Pointers to the global variables that contains the actual pointers.
+    var DataPtr_PSingle: PPSingle;
     var DataPtr_PDouble: PPDouble;
     var DataPtr_PInteger: PPInteger;
     var DataPtr_PByte: PPByte;
-    var CountPtr_PDouble: PInteger;
-    var CountPtr_PInteger: PInteger;
-    var CountPtr_PByte: PInteger); CDECL;
+
+    // These are not reallocated during the execution, can return the actual pointer values
+    var CountPtr_PSingle: PAPISize;
+    var CountPtr_PDouble: PAPISize;
+    var CountPtr_PInteger: PAPISize;
+    var CountPtr_PByte: PAPISize); CDECL;
 begin
+    if (@DataPtr_PSingle <> nil) then DataPtr_PSingle := @GR_DataPtr_PSingle;
     if (@DataPtr_PDouble <> nil) then DataPtr_PDouble := @GR_DataPtr_PDouble;
     if (@DataPtr_PInteger <> nil) then DataPtr_PInteger := @GR_DataPtr_PInteger;
     if (@DataPtr_PByte <> nil) then DataPtr_PByte := @GR_DataPtr_PByte;
+    if (@CountPtr_PSingle <> nil) then CountPtr_PSingle := GR_CountPtr_PSingle;
     if (@CountPtr_PDouble <> nil) then CountPtr_PDouble := GR_CountPtr_PDouble;
     if (@CountPtr_PInteger <> nil) then CountPtr_PInteger := GR_CountPtr_PInteger;
     if (@CountPtr_PByte <> nil) then CountPtr_PByte := GR_CountPtr_PByte;
@@ -314,6 +379,10 @@ end;
 // Separate simple functions for MATLAB, which return the current pointer
 // directly, instead of a pointer to pointer.
 
+function DSS_GR_DataPtr_PSingle(): PSingle; CDECL;
+begin
+    Result := GR_DataPtr_PSingle;
+end;
 function DSS_GR_DataPtr_PDouble(): PDouble; CDECL;
 begin
     Result := GR_DataPtr_PDouble;
@@ -326,15 +395,19 @@ function DSS_GR_DataPtr_PByte(): PByte; CDECL;
 begin
     Result := GR_DataPtr_PByte;
 end;
-function DSS_GR_CountPtr_PDouble(): PInteger; CDECL;
+function DSS_GR_CountPtr_PSingle(): PAPISize; CDECL;
+begin
+    Result := GR_CountPtr_PSingle;
+end;
+function DSS_GR_CountPtr_PDouble(): PAPISize; CDECL;
 begin
     Result := GR_CountPtr_PDouble;
 end;
-function DSS_GR_CountPtr_PInteger(): PInteger; CDECL;
+function DSS_GR_CountPtr_PInteger(): PAPISize; CDECL;
 begin
     Result := GR_CountPtr_PInteger;
 end;
-function DSS_GR_CountPtr_PByte(): PInteger; CDECL;
+function DSS_GR_CountPtr_PByte(): PAPISize; CDECL;
 begin
     Result := GR_CountPtr_PByte;
 end;
@@ -342,19 +415,22 @@ end;
 procedure DSS_DisposeGRData(); CDECL;
 begin
     DSS_Dispose_PByte(GR_DataPtr_PByte);
+    DSS_Dispose_PSingle(GR_DataPtr_PSingle);
     DSS_Dispose_PDouble(GR_DataPtr_PDouble);
     DSS_Dispose_PInteger(GR_DataPtr_PInteger);
 
+    GR_CountPtr_PSingle[0] := 0;
     GR_CountPtr_PDouble[0] := 0;
     GR_CountPtr_PInteger[0] := 0;
     GR_CountPtr_PByte[0] := 0;
 
+    GR_CountPtr_PSingle[1] := 0;
     GR_CountPtr_PDouble[1] := 0;
     GR_CountPtr_PInteger[1] := 0;
     GR_CountPtr_PByte[1] := 0;
 end;
 //------------------------------------------------------------------------------
-procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; const Restore: Boolean); inline;
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pList: TPointerList; const Restore: Boolean); inline;
 var
     Result: PPAnsiCharArray;
     idx_before, k: Integer;
@@ -365,12 +441,12 @@ begin
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.ListSize);
     idx_before := pList.ActiveIndex;
     k := 0;
-    elem := pList.First;
+    elem := TDSSObject(pList.First);
     while elem <> NIL do
     begin
-        Result[k] := DSS_CopyStringAsPChar(elem.Name);
+        ResultPtr[k] := DSS_CopyStringAsPChar(elem.Name);
         Inc(k);
-        elem := pList.Next;
+        elem := TDSSObject(pList.Next);
     end;
     if Restore and ((idx_before > 0) and (idx_before <= pList.ListSize)) then 
         pList.Get(idx_before);
@@ -378,9 +454,10 @@ end;
 //------------------------------------------------------------------------------
 initialization
     // allocate (and initialize to zero) the global result pointers
-    GR_CountPtr_PDouble := AllocMem(sizeof(Integer) * 2);
-    GR_CountPtr_PInteger := AllocMem(sizeof(Integer) * 2);
-    GR_CountPtr_PByte := AllocMem(sizeof(Integer) * 2);
+    GR_CountPtr_PSingle := AllocMem(sizeof(TAPISize) * 2);
+    GR_CountPtr_PDouble := AllocMem(sizeof(TAPISize) * 2);
+    GR_CountPtr_PInteger := AllocMem(sizeof(TAPISize) * 2);
+    GR_CountPtr_PByte := AllocMem(sizeof(TAPISize) * 2);
 
 finalization
     Dispose(GR_CountPtr_PDouble);

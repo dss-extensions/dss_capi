@@ -304,16 +304,16 @@ begin
     Parser.NextParam;
     OptName := LowerCase(Parser.StrValue);
     if ANSIStartsStr('com', param) then
-        ShowAnyHelp(NumExecCommands, @ExecCommand, @CommandHelp, OptName)
+        ShowAnyHelp(NumExecCommands, pStringArray(@ExecCommand), pStringArray(@CommandHelp), OptName)
     else
     if ANSIStartsStr('op', param) then
-        ShowAnyHelp(NumExecOptions, @ExecOption, @OptionHelp, OptName)
+        ShowAnyHelp(NumExecOptions, pStringArray(@ExecOption), pStringArray(@OptionHelp), OptName)
     else
     if ANSIStartsStr('sh', param) then
-        ShowAnyHelp(NumShowOptions, @ShowOption, @ShowHelp, OptName)
+        ShowAnyHelp(NumShowOptions, pStringArray(@ShowOption), pStringArray(@ShowHelp), OptName)
     else
     if ANSIStartsStr('e', param) then
-        ShowAnyHelp(NumExportOptions, @ExportOption, @ExportHelp, OptName)
+        ShowAnyHelp(NumExportOptions, pStringArray(@ExportOption), pStringArray(@ExportHelp), OptName)
     else
     if ANSIStartsStr('cl', param) then
         ShowClassHelp(OptName)

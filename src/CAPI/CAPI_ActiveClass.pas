@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function ActiveClass_Get_First(): Integer; CDECL;
 function ActiveClass_Get_Next(): Integer; CDECL;
 function ActiveClass_Get_Name(): PAnsiChar; CDECL;
@@ -27,7 +27,7 @@ uses
     MeterClass, 
     ControlClass;
 
-procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     idx: Integer;

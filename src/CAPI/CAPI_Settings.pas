@@ -22,23 +22,23 @@ procedure Settings_Set_EmergVminpu(Value: Double); CDECL;
 procedure Settings_Set_NormVmaxpu(Value: Double); CDECL;
 procedure Settings_Set_NormVminpu(Value: Double); CDECL;
 procedure Settings_Set_ZoneLock(Value: Boolean); CDECL;
-procedure Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Settings_Get_LossRegs_GR(); CDECL;
 function Settings_Get_LossWeight(): Double; CDECL;
 function Settings_Get_Trapezoidal(): Boolean; CDECL;
-procedure Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Settings_Get_UEregs_GR(); CDECL;
 function Settings_Get_UEweight(): Double; CDECL;
-procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 procedure Settings_Set_LossWeight(Value: Double); CDECL;
 procedure Settings_Set_Trapezoidal(Value: Boolean); CDECL;
-procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 procedure Settings_Set_UEweight(Value: Double); CDECL;
 function Settings_Get_ControlTrace(): Boolean; CDECL;
-procedure Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Settings_Get_VoltageBases_GR(); CDECL;
 procedure Settings_Set_ControlTrace(Value: Boolean); CDECL;
-procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function Settings_Get_PriceCurve(): PAnsiChar; CDECL;
 function Settings_Get_PriceSignal(): Double; CDECL;
 procedure Settings_Set_PriceCurve(const Value: PAnsiChar); CDECL;
@@ -204,7 +204,7 @@ begin
     ActiveCircuit.ZonesLocked := Value;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
     if InvalidCircuit then
     begin
@@ -239,7 +239,7 @@ begin
     Result := ActiveCircuit.TrapezoidalIntegration;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
     if InvalidCircuit then
     begin
@@ -265,7 +265,7 @@ begin
     Result := ActiveCircuit.UEWeight
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 begin
     if InvalidCircuit then
         Exit;
@@ -288,7 +288,7 @@ begin
     ActiveCircuit.TrapezoidalIntegration := Value
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 begin
     if InvalidCircuit then
         Exit;
@@ -312,7 +312,7 @@ begin
     Result := ActiveCircuit.ControlQueue.TraceLog;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     i, Count: Integer;
 begin
@@ -350,7 +350,7 @@ begin
     ActiveCircuit.ControlQueue.TraceLog := Value;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 begin
     if InvalidCircuit then
         Exit;

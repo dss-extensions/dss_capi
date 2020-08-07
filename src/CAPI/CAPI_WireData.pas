@@ -16,7 +16,7 @@ function WireData_Get_First(): Integer; CDECL;
 function WireData_Get_Next(): Integer; CDECL;
 function WireData_Get_Name(): PAnsiChar; CDECL;
 procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;
-procedure WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function WireData_Get_Rdc(): Double; CDECL;
 procedure WireData_Set_Rdc(Value: Double); CDECL;
 function WireData_Get_Rac(): Double; CDECL;
@@ -172,7 +172,7 @@ begin
      // Still same active object if not found
 end;
 //------------------------------------------------------------------------------
-procedure WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

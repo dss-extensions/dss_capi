@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Relays_Get_Count(): Integer; CDECL;
 function Relays_Get_First(): Integer; CDECL;
 function Relays_Get_Name(): PAnsiChar; CDECL;
@@ -66,7 +66,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

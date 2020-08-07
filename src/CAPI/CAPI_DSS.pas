@@ -13,8 +13,8 @@ function DSS_Get_NumCircuits(): Integer; CDECL;
 procedure DSS_ClearAll(); CDECL;
 function DSS_Get_Version(): PAnsiChar; CDECL;
 function DSS_Start(code: Integer): Boolean; CDECL;
-procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function DSS_Get_NumClasses(): Integer; CDECL;
 function DSS_Get_NumUserClasses(): Integer; CDECL;
 function DSS_Get_DataPath(): PAnsiChar; CDECL;
@@ -106,7 +106,7 @@ begin
   *)
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i, k: Integer;
@@ -123,7 +123,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i, k: Integer;

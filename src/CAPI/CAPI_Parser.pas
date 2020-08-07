@@ -22,11 +22,11 @@ procedure Parser_Set_EndQuote(const Value: PAnsiChar); CDECL;
 function Parser_Get_Delimiters(): PAnsiChar; CDECL;
 procedure Parser_Set_Delimiters(const Value: PAnsiChar); CDECL;
 procedure Parser_ResetDelimiters(); CDECL;
-procedure Parser_Get_Vector(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedSize: Integer); CDECL;
+procedure Parser_Get_Vector(var ResultPtr: PDouble; ResultCount: PAPISize; ExpectedSize: Integer); CDECL;
 procedure Parser_Get_Vector_GR(ExpectedSize: Integer); CDECL;
-procedure Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer); CDECL;
+procedure Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PAPISize; ExpectedOrder: Integer); CDECL;
 procedure Parser_Get_Matrix_GR(ExpectedOrder: Integer); CDECL;
-procedure Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer); CDECL;
+procedure Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PAPISize; ExpectedOrder: Integer); CDECL;
 procedure Parser_Get_SymMatrix_GR(ExpectedOrder: Integer); CDECL;
 
 implementation
@@ -125,7 +125,7 @@ begin
     ComParser.ResetDelims;
 end;
 //------------------------------------------------------------------------------
-procedure Parser_Get_Vector(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedSize: Integer); CDECL;
+procedure Parser_Get_Vector(var ResultPtr: PDouble; ResultCount: PAPISize; ExpectedSize: Integer); CDECL;
 var
     ActualSize: Integer;
 begin
@@ -141,7 +141,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer); CDECL;
+procedure Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PAPISize; ExpectedOrder: Integer); CDECL;
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedOrder * ExpectedOrder);
     ComParser.ParseAsMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
@@ -154,7 +154,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer); CDECL;
+procedure Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PAPISize; ExpectedOrder: Integer); CDECL;
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedOrder * ExpectedOrder);
     ComParser.ParseAsSymMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));

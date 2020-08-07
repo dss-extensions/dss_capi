@@ -1120,7 +1120,7 @@ begin
         MonitoredElement.ActiveTerminalIdx := MonitoredElementTerminal;
         MonitoredElement.GetCurrents(cBuffer);
         iOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds;  // offset for active terminal
-        Phase2SymComp(@cBuffer^[iOffset + 1], @I012);
+        Phase2SymComp(pComplexArray(@cBuffer^[iOffset + 1]), pComplexArray(@I012));
         NegSeqCurrentMag := Cabs(I012[3]);
         if NegSeqCurrentMag >= PickupAmps46 then
         begin
@@ -1470,7 +1470,7 @@ begin
     with   MonitoredElement do
     begin
         MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cBuffer);
-        Phase2SymComp(cBuffer, @V012); // Phase to symmetrical components
+        Phase2SymComp(cBuffer, pComplexArray(@V012)); // Phase to symmetrical components
         NegSeqVoltageMag := Cabs(V012[3]);
         if NegSeqVoltageMag >= PickupVolts47 then
         begin

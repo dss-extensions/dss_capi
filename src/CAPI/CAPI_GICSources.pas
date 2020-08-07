@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function GICSources_Get_Count(): Integer; CDECL;
 function GICSources_Get_First(): Integer; CDECL;
 function GICSources_Get_Next(): Integer; CDECL;
@@ -62,7 +62,7 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

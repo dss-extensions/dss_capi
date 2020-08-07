@@ -5,9 +5,9 @@ interface
 uses
     CAPI_Utils;
 
-procedure PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure PVSystems_Get_RegisterValues_GR(); CDECL;
 function PVSystems_Get_First(): Integer; CDECL;
 function PVSystems_Get_Next(): Integer; CDECL;
@@ -94,7 +94,7 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -105,7 +105,7 @@ begin
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.PVSystems, False);
 end;
 //------------------------------------------------------------------------------
-procedure PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     k: Integer;
@@ -126,7 +126,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     PVSystem: TPVSystemObj;

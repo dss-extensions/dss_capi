@@ -436,7 +436,7 @@ begin
                     end;
            // new function adding primitive Y matrix to KLU system Y matrix
                     if CMatArray <> NIL then
-                        if AddPrimitiveMatrix(hY, Yorder, @NodeRef[1], @CMatArray[1]) < 1 then
+                        if AddPrimitiveMatrix(hY, Yorder, PLongWord(@NodeRef[1]), @CMatArray[1]) < 1 then
                             raise EEsolv32Problem.Create('Node index out of range adding to System Y Matrix')
                 end;   // If Enabled
             pElem := CktElements.Next;

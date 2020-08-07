@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Reclosers_Get_Count(): Integer; CDECL;
 function Reclosers_Get_First(): Integer; CDECL;
 function Reclosers_Get_Name(): PAnsiChar; CDECL;
@@ -20,7 +20,7 @@ function Reclosers_Get_SwitchedTerm(): Integer; CDECL;
 procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 procedure Reclosers_Set_SwitchedTerm(Value: Integer); CDECL;
 function Reclosers_Get_NumFast(): Integer; CDECL;
-procedure Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Reclosers_Get_RecloseIntervals_GR(); CDECL;
 function Reclosers_Get_Shots(): Integer; CDECL;
 procedure Reclosers_Set_NumFast(Value: Integer); CDECL;
@@ -83,7 +83,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -240,7 +240,7 @@ begin
     Result := elem.NumFast;
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // return reclose intervals in seconds
 var
     Result: PDoubleArray;

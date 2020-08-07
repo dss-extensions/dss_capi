@@ -6,7 +6,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Loads_Get_First(): Integer; CDECL;
 function Loads_Get_idx(): Integer; CDECL;
 function Loads_Get_Name(): PAnsiChar; CDECL;
@@ -76,9 +76,9 @@ procedure Loads_Set_Vminpu(Value: Double); CDECL;
 procedure Loads_Set_xfkVA(Value: Double); CDECL;
 procedure Loads_Set_Xneut(Value: Double); CDECL;
 procedure Loads_Set_Yearly(const Value: PAnsiChar); CDECL;
-procedure Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Loads_Get_ZIPV_GR(); CDECL;
-procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function Loads_Get_pctSeriesRL(): Double; CDECL;
 procedure Loads_Set_pctSeriesRL(Value: Double); CDECL;
 function Loads_Get_RelWeight(): Double; CDECL;
@@ -228,7 +228,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -908,7 +908,7 @@ begin
     LoadPropSideEffects(LoadProps.yearly, elem);
 end;
 //------------------------------------------------------------------------------
-procedure Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TLoadObj;
 begin
@@ -927,7 +927,7 @@ begin
     Loads_Get_ZIPV(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 //------------------------------------------------------------------------------
-procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TLoadObj;
 begin

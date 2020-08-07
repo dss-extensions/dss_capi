@@ -48,7 +48,7 @@ procedure YMatrix_GetCompressedYMatrix(factor: Boolean; var nBus, nNz: Longword;
 var
     Yhandle: NativeUInt;
     NumNZ, NumBuses: Longword;
-    tmpCnt: array[0..1] of Integer;
+    tmpCnt: array[0..1] of TAPISize;
 begin
     if MissingSolution then
         Exit;
@@ -76,7 +76,9 @@ begin
     GetCompressedMatrix(
         Yhandle,
         NumBuses + 1,
-        NumNZ, @ColPtr[0], @RowIdxPtr[0],
+        NumNZ, 
+        PLongWord(@ColPtr[0]),
+        PLongWord(@RowIdxPtr[0]),
         pComplex(cValsPtr)
     );
 end;

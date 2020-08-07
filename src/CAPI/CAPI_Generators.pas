@@ -5,12 +5,12 @@ interface
 uses
     CAPI_Utils;
 
-procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Generators_Get_First(): Integer; CDECL;
 function Generators_Get_Name(): PAnsiChar; CDECL;
 function Generators_Get_Next(): Integer; CDECL;
-procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Generators_Get_RegisterValues_GR(); CDECL;
 function Generators_Get_ForcedON(): Boolean; CDECL;
 procedure Generators_Set_ForcedON(Value: Boolean); CDECL;
@@ -68,7 +68,7 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -137,7 +137,7 @@ begin
     until (Result > 0) or (pGen = NIL);
 end;
 //------------------------------------------------------------------------------
-procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     GeneratorCls: TGenerator;
@@ -151,7 +151,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     Gen: TGeneratorObj;

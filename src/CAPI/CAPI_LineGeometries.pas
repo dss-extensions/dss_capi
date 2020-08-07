@@ -16,24 +16,24 @@ function LineGeometries_Get_Nconds(): Integer; CDECL;
 procedure LineGeometries_Set_Nconds(Value: Integer); CDECL;
 function LineGeometries_Get_Phases(): Integer; CDECL;
 procedure LineGeometries_Set_Phases(Value: Integer); CDECL;
-procedure LineGeometries_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length: Double; Units: Integer); CDECL;
+procedure LineGeometries_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 procedure LineGeometries_Get_Cmatrix_GR(Frequency, Length: Double; Units: Integer); CDECL;
-procedure LineGeometries_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length: Double; Units: Integer); CDECL;
+procedure LineGeometries_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 procedure LineGeometries_Get_Rmatrix_GR(Frequency, Length: Double; Units: Integer); CDECL;
-procedure LineGeometries_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length: Double; Units: Integer); CDECL;
+procedure LineGeometries_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 procedure LineGeometries_Get_Xmatrix_GR(Frequency, Length: Double; Units: Integer); CDECL;
-procedure LineGeometries_Get_Zmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length: Double; Units: Integer); CDECL;
+procedure LineGeometries_Get_Zmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 procedure LineGeometries_Get_Zmatrix_GR(Frequency, Length: Double; Units: Integer); CDECL;
-procedure LineGeometries_Get_Units(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Get_Units(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure LineGeometries_Get_Units_GR(); CDECL;
-procedure LineGeometries_Set_Units(ValuePtr: PInteger; ValueCount: Integer); CDECL;
-procedure LineGeometries_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Set_Units(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
+procedure LineGeometries_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LineGeometries_Get_Xcoords_GR(); CDECL;
-procedure LineGeometries_Set_Xcoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure LineGeometries_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Set_Xcoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure LineGeometries_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LineGeometries_Get_Ycoords_GR(); CDECL;
-procedure LineGeometries_Set_Ycoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure LineGeometries_Get_Conductors(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Set_Ycoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure LineGeometries_Get_Conductors(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function LineGeometries_Get_Reduce(): Boolean; CDECL;
 procedure LineGeometries_Set_Reduce(Value: Boolean); CDECL;
 function LineGeometries_Get_RhoEarth(): Double; CDECL;
@@ -42,7 +42,7 @@ function LineGeometries_Get_NormAmps(): Double; CDECL;
 procedure LineGeometries_Set_NormAmps(Value: Double); CDECL;
 function LineGeometries_Get_EmergAmps(): Double; CDECL;
 procedure LineGeometries_Set_EmergAmps(Value: Double); CDECL;
-procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 
 function LineGeometries_Get_idx(): Integer; CDECL;
 procedure LineGeometries_Set_idx(Value: Integer); CDECL;
@@ -180,7 +180,7 @@ begin
     pLineGeometry.NPhases := Value;
 end;
 //------------------------------------------------------------------------------
-procedure LineGeometries_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length: Double; Units: Integer); CDECL;
+procedure LineGeometries_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -213,7 +213,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineGeometries_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length: Double; Units: Integer); CDECL;
+procedure LineGeometries_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -244,7 +244,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineGeometries_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length: Double; Units: Integer); CDECL;
+procedure LineGeometries_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -275,7 +275,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineGeometries_Get_Zmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length: Double; Units: Integer); CDECL;
+procedure LineGeometries_Get_Zmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 var
     pLineGeometry: TLineGeometryObj;
     mat: Tcmatrix;
@@ -383,7 +383,7 @@ begin
     pLineGeometry.EmergAmps := Value;
 end;
 //------------------------------------------------------------------------------
-procedure LineGeometries_Set_Units(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure LineGeometries_Set_Units(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 var
     pLineGeometry: TLineGeometryObj;
 begin
@@ -401,7 +401,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure LineGeometries_Get_Units(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Get_Units(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     pLineGeometry: TLineGeometryObj;
@@ -425,7 +425,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineGeometries_Set_Ycoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LineGeometries_Set_Ycoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pLineGeometry: TLineGeometryObj;
 begin
@@ -443,7 +443,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure LineGeometries_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pLineGeometry: TLineGeometryObj;
@@ -467,7 +467,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineGeometries_Set_Xcoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LineGeometries_Set_Xcoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pLineGeometry: TLineGeometryObj;
 begin
@@ -485,7 +485,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure LineGeometries_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pLineGeometry: TLineGeometryObj;
@@ -509,7 +509,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineGeometries_Get_Conductors(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Get_Conductors(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     pLineGeometry: TLineGeometryObj;
@@ -529,7 +529,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

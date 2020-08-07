@@ -6,9 +6,9 @@ uses
     CAPI_Utils,
     UComplex;
 
-procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PInteger; Index: PtrUInt); CDECL;
+procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 procedure DSSimComs_BusVoltagepu_GR(Index: PtrUInt); CDECL;
-procedure DSSimComs_BusVoltage(var ResultPtr: PDouble; ResultCount: PInteger; Index: PtrUInt); CDECL;
+procedure DSSimComs_BusVoltage(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 procedure DSSimComs_BusVoltage_GR(Index: PtrUInt); CDECL;
 
 implementation
@@ -21,7 +21,7 @@ uses
     solution,
     CktElement;
 
-procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PInteger; Index: PtrUInt); CDECL;
+procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 var
     Result: PDoubleArray;
     i, j: Integer;
@@ -55,7 +55,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure DSSimComs_BusVoltage(var ResultPtr: PDouble; ResultCount: PInteger; Index: PtrUInt); CDECL;
+procedure DSSimComs_BusVoltage(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;

@@ -105,7 +105,8 @@ uses
     Sysutils,
     Command,
     Energymeter,
-    PDElement;
+    PDElement,
+    ArrayDef;
 
 var
     NumPropsThisClass: Integer;
@@ -331,7 +332,7 @@ begin
         Terminals^[1].BusRef := BranchList.PresentBranch.FromBusReference;
         SetBus(1, RootElement.GetBus(BranchList.Presentbranch.FromTerminal));  // set bus name same as first element
         FromTerminalOffset := (BranchList.Presentbranch.FromTerminal - 1) * FNconds;
-        SetNodeRef(1, @RootElement.Noderef^[1 + FromTerminalOffset]);
+        SetNodeRef(1, ArrayDef.PIntegerArray(@RootElement.Noderef^[1 + FromTerminalOffset]));
 
        // Build The Sequence List  and ShuntList
         pElement := RootElement;

@@ -5,29 +5,29 @@ interface
 uses
     CAPI_Utils;
 
-procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Meters_Get_First(): Integer; CDECL;
 function Meters_Get_Name(): PAnsiChar; CDECL;
 function Meters_Get_Next(): Integer; CDECL;
-procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Meters_Get_RegisterValues_GR(); CDECL;
 procedure Meters_Reset(); CDECL;
 procedure Meters_ResetAll(); CDECL;
 procedure Meters_Sample(); CDECL;
 procedure Meters_Save(); CDECL;
 procedure Meters_Set_Name(const Value: PAnsiChar); CDECL;
-procedure Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Meters_Get_Totals_GR(); CDECL;
-procedure Meters_Get_Peakcurrent(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Get_Peakcurrent(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Meters_Get_Peakcurrent_GR(); CDECL;
-procedure Meters_Set_Peakcurrent(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Set_Peakcurrent(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Meters_Get_CalcCurrent_GR(); CDECL;
-procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Meters_Get_AllocFactors_GR(); CDECL;
-procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function Meters_Get_MeteredElement(): PAnsiChar; CDECL;
 function Meters_Get_MeteredTerminal(): Integer; CDECL;
 procedure Meters_Set_MeteredElement(const Value: PAnsiChar); CDECL;
@@ -37,10 +37,10 @@ procedure Meters_CloseAllDIFiles(); CDECL;
 procedure Meters_OpenAllDIFiles(); CDECL;
 procedure Meters_SampleAll(); CDECL;
 procedure Meters_SaveAll(); CDECL;
-procedure Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Meters_Get_CountEndElements(): Integer; CDECL;
 function Meters_Get_Count(): Integer; CDECL;
-procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Meters_Get_CountBranches(): Integer; CDECL;
 function Meters_Get_SAIFI(): Double; CDECL;
 function Meters_Get_SequenceIndex(): Integer; CDECL;
@@ -105,7 +105,7 @@ begin
     DoSimpleMsg('Invalid active section. Has SetActiveSection been called?', 5055);
 end;
 //------------------------------------------------------------------------------
-procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -174,7 +174,7 @@ begin
     until (Result > 0) or (pMeterObj = NIL);
 end;
 //------------------------------------------------------------------------------
-procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     pMeterObj: TEnergyMeterObj;
@@ -193,7 +193,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
@@ -266,7 +266,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 begin
     if InvalidCircuit then
     begin
@@ -289,7 +289,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Meters_Get_Peakcurrent(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Get_Peakcurrent(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
@@ -310,7 +310,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Meters_Set_Peakcurrent(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Meters_Set_Peakcurrent(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
@@ -325,7 +325,7 @@ begin
     Move(ValuePtr^, pMeterObj.SensorCurrent[1], ValueCount * SizeOf(Double));    
 end;
 //------------------------------------------------------------------------------
-procedure Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pMeterObj: TEnergyMeterObj;
@@ -349,7 +349,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     pMeterObj: TEnergyMeterObj;
@@ -369,7 +369,7 @@ begin
         pMeterObj.CalculatedCurrent^[i] := cmplx(Value[i - 1], 0.0);   // Just set the real part
 end;
 //------------------------------------------------------------------------------
-procedure Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
@@ -390,7 +390,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     pMeterObj: TEnergyMeterObj;
@@ -494,7 +494,7 @@ begin
     EnergyMeterClass.SaveAll;
 end;
 //------------------------------------------------------------------------------
-procedure Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     pMeterObj: TEnergyMeterObj;
@@ -547,7 +547,7 @@ begin
     Result := ActiveCircuit.EnergyMeters.ListSize;
 end;
 //------------------------------------------------------------------------------
-procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     pMeterObj: TEnergyMeterObj;

@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function CapControls_Get_Capacitor(): PAnsiChar; CDECL;
 function CapControls_Get_CTratio(): Double; CDECL;
 function CapControls_Get_DeadTime(): Double; CDECL;
@@ -90,7 +90,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

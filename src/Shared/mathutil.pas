@@ -15,6 +15,10 @@ uses
     uComplex,
     uCmatrix;
 
+type 
+    Complex3 = Array[1..3] of Complex;
+    PComplex3 = ^Complex3;
+
 Var
    As2p, Ap2s, ClarkeF, ClarkeR: TcMatrix; {Symmetrical Component Conversion Matrices}
 
@@ -27,7 +31,8 @@ function Gauss(Mean, StdDev: Double): Double;
 function GetXR(const A: Complex): Double;
 function ParallelZ(const Z1, Z2: Complex): Complex;
 procedure Phase2AB0(Vph, VaB0: pComplexArray);     // Forward Clarke
-procedure Phase2SymComp(Vph, V012: pComplexArray);
+procedure Phase2SymComp(Vph, V012: PComplex3); overload;
+procedure Phase2SymComp(Vph, V012: pComplexArray); overload;
 function QuasiLogNormal(Mean: Double): Double;
 procedure RCDMeanAndStdDev(pData: Pointer; Ndata: Integer; var Mean, StdDev: Double);
 procedure RCDMeanAndStdDevSingle(pData: Pointer; Ndata: Integer; var Mean, StdDev: Double);
@@ -36,8 +41,9 @@ procedure CurveMeanAndStdDevSingle(pY: pSingleArray; pX: pSingleArray; N: Intege
 
 //         function  RCDSum( Data:Pointer; Count:Integer): Extended; register;
 procedure SymComp2Phase(Vph, V012: pComplexArray);
+procedure SymComp2Phase(Vph, V012: PComplex3);
 function TerminalPowerIn(V, I: pComplexArray; Nphases: Integer): Complex;
-function PctNemaUnbalance(Vph: pComplexArray): Double;
+function PctNemaUnbalance(Vph: PComplex3): Double;
 procedure DblInc(var x: Double; const y: Double); inline; // increment a double
 
 implementation
@@ -154,12 +160,21 @@ end; {Proc Invert}
 
 
 {-------------------------------------------------------------}
+procedure Phase2SymComp(Vph, V012: PComplex3);
+begin
+    Ap2s.MvMult(PComplexArray(V012), PComplexArray(Vph)); // TODO: dedicated/optimized version?
+end;
 procedure Phase2SymComp(Vph, V012: pComplexArray);
 begin
     Ap2s.MvMult(V012, Vph);
 end;
 
 {-------------------------------------------------------------}
+procedure SymComp2Phase(Vph, V012: PComplex3);
+begin
+    As2p.MvMult(PComplexArray(Vph), PComplexArray(V012)); // TODO: dedicated/optimized version?
+end;
+
 procedure SymComp2Phase(Vph, V012: pComplexArray);
 begin
     As2p.MvMult(Vph, V012);
@@ -563,7 +578,7 @@ begin
 
 end;
 
-function PctNemaUnbalance(Vph: pComplexArray): Double;
+function PctNemaUnbalance(Vph: PComplex3): Double;
 
 {Return Nema unbalance }
 var

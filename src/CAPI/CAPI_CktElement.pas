@@ -5,30 +5,30 @@ interface
 uses
     CAPI_Utils;
 
-procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function CktElement_Get_Name(): PAnsiChar; CDECL;
 function CktElement_Get_NumConductors(): Integer; CDECL;
 function CktElement_Get_NumPhases(): Integer; CDECL;
 function CktElement_Get_NumTerminals(): Integer; CDECL;
-procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: Integer); CDECL;
-procedure CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
+procedure CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_Currents_GR(); CDECL;
-procedure CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_Voltages_GR(); CDECL;
 function CktElement_Get_EmergAmps(): Double; CDECL;
 function CktElement_Get_Enabled(): Boolean; CDECL;
-procedure CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_Losses_GR(); CDECL;
 function CktElement_Get_NormalAmps(): Double; CDECL;
-procedure CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_PhaseLosses_GR(); CDECL;
-procedure CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_Powers_GR(); CDECL;
-procedure CktElement_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_SeqCurrents_GR(); CDECL;
-procedure CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_SeqPowers_GR(); CDECL;
-procedure CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_SeqVoltages_GR(); CDECL;
 procedure CktElement_Close(Term, Phs: Integer); CDECL;
 procedure CktElement_Open(Term, Phs: Integer); CDECL;
@@ -36,11 +36,11 @@ procedure CktElement_Set_EmergAmps(Value: Double); CDECL;
 procedure CktElement_Set_Enabled(Value: Boolean); CDECL;
 procedure CktElement_Set_NormalAmps(Value: Double); CDECL;
 function CktElement_IsOpen(Term, Phs: Integer): Boolean; CDECL;
-procedure CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function CktElement_Get_NumProperties(): Integer; CDECL;
-procedure CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_Residuals_GR(); CDECL;
-procedure CktElement_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_Yprim_GR(); CDECL;
 function CktElement_Get_DisplayName(): PAnsiChar; CDECL;
 function CktElement_Get_GUID(): PAnsiChar; CDECL;
@@ -50,29 +50,29 @@ function CktElement_Get_Controller(idx: Integer): PAnsiChar; CDECL;
 function CktElement_Get_EnergyMeter(): PAnsiChar; CDECL;
 function CktElement_Get_HasVoltControl(): Boolean; CDECL;
 function CktElement_Get_HasSwitchControl(): Boolean; CDECL;
-procedure CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_CplxSeqVoltages_GR(); CDECL;
-procedure CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_CplxSeqCurrents_GR(); CDECL;
-procedure CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_AllVariableValues_GR(); CDECL;
 function CktElement_Get_Variable(const MyVarName: PAnsiChar; out Code: Integer): Double; CDECL;
 function CktElement_Get_Variablei(Idx: Integer; out Code: Integer): Double; CDECL;
-procedure CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_NodeOrder_GR(); CDECL;
 function CktElement_Get_HasOCPDevice(): Boolean; CDECL;
 function CktElement_Get_NumControls(): Integer; CDECL;
 function CktElement_Get_OCPDevIndex(): Integer; CDECL;
 function CktElement_Get_OCPDevType(): Integer; CDECL;
-procedure CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_CurrentsMagAng_GR(); CDECL;
-procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
 
 // API Extensions
 function CktElement_Get_IsIsolated(): Boolean; CDECL;
-procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_NodeRef_GR(); CDECL;
 
 implementation
@@ -96,7 +96,7 @@ procedure _CalcSeqCurrents(pActiveElement: TDSSCktElement; i012: pComplexArray);
 {Assumes V012 is properly allocated before call.}
 var
     Nvalues, i, j, k, iV: Integer;
-    IPh, I012a: array[1..3] of Complex;
+    IPh, I012a: Complex3;
     cBuffer: pComplexArray;
 begin
     with pActiveElement, ActiveCircuit do
@@ -157,7 +157,7 @@ procedure CalcSeqVoltages(pActiveElement: TDSSCktElement; V012: pComplexArray);
 {Assumes V012 is properly allocated before call.}
 var
     Nvalues, i, j, k, iV: Integer;
-    VPh, V012a: array[1..3] of Complex;
+    VPh, V012a: Complex3;
 begin
     with pActiveElement, ActiveCircuit do
     begin
@@ -221,7 +221,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i: Integer;
@@ -280,7 +280,7 @@ begin
     Result := ActiveCircuit.ActiveCktElement.NTerms
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: Integer); CDECL;
+procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
 var
     Value: PPAnsiCharArray;
     i: Integer;
@@ -312,7 +312,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     NValues: Integer;
@@ -337,7 +337,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Bus Voltages at active terminal
 var
     Result: PDoubleArray;
@@ -400,7 +400,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     LossValue: complex;
@@ -440,7 +440,7 @@ begin
                 Result := NormAmps;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Returns Phase losses in kW, kVar
 var
     Result: PDoubleArray;
@@ -472,7 +472,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return complex kW, kvar in each conductor for each terminal
 var
     Result: PDoubleArray;
@@ -501,7 +501,7 @@ begin
     CktElement_Get_Powers(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // All sequence currents of active ciruit element
 // returns magnitude only.
 var
@@ -551,15 +551,15 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // All seq Powers of active 3-phase circuit element
 // returns kW + j kvar
 var
     Result: PDoubleArray;
     Nvalues, i, j, k, n, icount: Integer;
     S: Complex;
-    VPh, V012: array[1..3] of Complex;
-    IPh, I012: array[1..3] of Complex;
+    VPh, V012: Complex3;
+    IPh, I012: Complex3;
     cBuffer: pComplexArray;
 
 begin
@@ -634,7 +634,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // All voltages of active ciruit element
 // magnitude only
 // returns a set of seq voltages (3) for each terminal
@@ -767,7 +767,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     k: Integer;
@@ -797,7 +797,7 @@ begin
     Result := ActiveCircuit.ActiveCktElement.ParentClass.NumProperties;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     cBuffer: pComplexArray;
@@ -842,7 +842,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CktElement_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 { Return the YPrim matrix for this element }
 
 var
@@ -992,7 +992,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 {returns Seq Voltages as array of complex values}
 var
     S: String;
@@ -1033,7 +1033,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 {returns Seq Voltages as array of complex values}
 var
     Result: PDoubleArray;
@@ -1075,7 +1075,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     k: Integer;
@@ -1100,7 +1100,7 @@ begin
         end;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 {Return array of doubles with values of all variables if PCElement}
 var
     Result: PDoubleArray;
@@ -1180,7 +1180,7 @@ begin
         end;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     k: Integer;
@@ -1284,7 +1284,7 @@ begin
     Result := GetOCPDeviceType(ActiveCircuit.ActiveCktElement);     // see Utilities.pas
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // return currents in magnitude, angle array
 var
     Result: PDoubleArray;
@@ -1323,7 +1323,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Bus Voltages in magnitude, angle at all terminal
 var
     Result: PDoubleArray;
@@ -1373,7 +1373,7 @@ begin
     Result := ActiveCircuit.ActiveCktElement.IsIsolated;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;    
+procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;    
 begin
     DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
     if InvalidCktElement then 

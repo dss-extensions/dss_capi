@@ -54,7 +54,7 @@ function Solution_Get_DefaultDaily(): PAnsiChar; CDECL;
 function Solution_Get_DefaultYearly(): PAnsiChar; CDECL;
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar); CDECL;
 procedure Solution_Set_DefaultYearly(const Value: PAnsiChar); CDECL;
-procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Solution_Get_dblHour(): Double; CDECL;
 procedure Solution_Set_dblHour(Value: Double); CDECL;
 procedure Solution_Set_StepsizeHr(Value: Double); CDECL;
@@ -95,14 +95,14 @@ procedure Solution_Set_MinIterations(Value: Integer); CDECL;
 {V8-ONLY>
 procedure Solution_SolveAll();cdecl;
 <V8-ONLY}
-procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_IncMatrix_GR(); CDECL;
-procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_Laplacian_GR(); CDECL;
-procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_BusLevels_GR(); CDECL;
-procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 
 implementation
 
@@ -525,7 +525,7 @@ begin
     ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
 end;
 //------------------------------------------------------------------------------
-procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i: Integer;
@@ -859,7 +859,7 @@ begin
 end;
 <V8-ONLY}
 //------------------------------------------------------------------------------
-procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     i,
@@ -897,7 +897,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     i,
@@ -935,7 +935,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
     if InvalidCircuit then
     begin
@@ -958,7 +958,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     IMIdx,
@@ -980,7 +980,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i,

@@ -18,7 +18,7 @@ function CtrlQueue_Get_PopAction(): Integer; CDECL;
 procedure CtrlQueue_Set_Action(Param1: Integer); CDECL;
 function CtrlQueue_Get_QueueSize(): Integer; CDECL;
 procedure CtrlQueue_DoAllQueue(); CDECL;
-procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 
 implementation
 
@@ -154,7 +154,7 @@ begin
     ActiveCircuit.ControlQueue.DoAllActions;
 end;
 //------------------------------------------------------------------------------
-procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 // returns entire queue in CSV file format as a variant array of strings
 var
     Result: PPAnsiCharArray;

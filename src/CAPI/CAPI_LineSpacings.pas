@@ -17,13 +17,13 @@ function LineSpacings_Get_Phases(): Integer; CDECL;
 procedure LineSpacings_Set_Phases(Value: Integer); CDECL;
 function LineSpacings_Get_Units(): Integer; CDECL;
 procedure LineSpacings_Set_Units(Value: Integer); CDECL;
-procedure LineSpacings_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineSpacings_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LineSpacings_Get_Xcoords_GR(); CDECL;
-procedure LineSpacings_Set_Xcoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure LineSpacings_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineSpacings_Set_Xcoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure LineSpacings_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LineSpacings_Get_Ycoords_GR(); CDECL;
-procedure LineSpacings_Set_Ycoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure LineSpacings_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LineSpacings_Set_Ycoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure LineSpacings_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 
 function LineSpacings_Get_idx(): Integer; CDECL;
 procedure LineSpacings_Set_idx(Value: Integer); CDECL;
@@ -178,7 +178,7 @@ begin
     Result := pLineSpacing.Units;
 end;
 //------------------------------------------------------------------------------
-procedure LineSpacings_Set_Ycoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LineSpacings_Set_Ycoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
@@ -200,7 +200,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure LineSpacings_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineSpacings_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
@@ -224,7 +224,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineSpacings_Set_Xcoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LineSpacings_Set_Xcoords(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
@@ -246,7 +246,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure LineSpacings_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineSpacings_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
@@ -270,7 +270,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineSpacings_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LineSpacings_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

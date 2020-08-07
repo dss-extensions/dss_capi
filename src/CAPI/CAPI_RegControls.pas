@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function RegControls_Get_CTPrimary(): Double; CDECL;
 function RegControls_Get_Delay(): Double; CDECL;
 function RegControls_Get_First(): Integer; CDECL;
@@ -103,7 +103,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

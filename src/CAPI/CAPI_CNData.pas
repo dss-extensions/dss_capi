@@ -19,7 +19,7 @@ function CNData_Get_First(): Integer; CDECL;
 function CNData_Get_Next(): Integer; CDECL;
 function CNData_Get_Name(): PAnsiChar; CDECL;
 procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;
-procedure CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function CNData_Get_idx(): Integer; CDECL;
 procedure CNData_Set_idx(Value: Integer); CDECL;
 
@@ -195,7 +195,7 @@ begin
      // Still same active object if not found
 end;
 //------------------------------------------------------------------------------
-procedure CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

@@ -6,7 +6,7 @@ uses
     CAPI_Utils;
 
 function SwtControls_Get_Action(): Integer; CDECL;
-procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function SwtControls_Get_Delay(): Double; CDECL;
 function SwtControls_Get_First(): Integer; CDECL;
 function SwtControls_Get_IsLocked(): Boolean; CDECL;
@@ -90,7 +90,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

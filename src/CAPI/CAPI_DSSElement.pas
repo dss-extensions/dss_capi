@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function DSSElement_Get_Name(): PAnsiChar; CDECL;
 function DSSElement_Get_NumProperties(): Integer; CDECL;
 
@@ -16,7 +16,7 @@ uses
     DSSGlobals,
     Sysutils;
 
-procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     k: Integer;

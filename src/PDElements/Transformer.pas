@@ -2210,7 +2210,7 @@ begin
        {Load up auxiliary parser}
             AuxParser.CmdString := GetBus(iW);
             AuxParser.NextParam;
-            S := AuxParser.ParseAsBusName(N, @Nodes);
+            S := AuxParser.ParseAsBusName(N, pIntegerArray(@Nodes));
             if N = 0 then
                 OnPhase1 := TRUE;
             for i := 1 to N do

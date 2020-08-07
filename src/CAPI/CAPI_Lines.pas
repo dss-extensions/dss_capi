@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Lines_Get_Bus1(): PAnsiChar; CDECL;
 function Lines_Get_Bus2(): PAnsiChar; CDECL;
 function Lines_Get_First(): Integer; CDECL;
@@ -27,21 +27,21 @@ procedure Lines_Set_R1(Value: Double); CDECL;
 procedure Lines_Set_X1(Value: Double); CDECL;
 function Lines_Get_C0(): Double; CDECL;
 function Lines_Get_C1(): Double; CDECL;
-procedure Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Lines_Get_Cmatrix_GR(); CDECL;
 function Lines_Get_R0(): Double; CDECL;
-procedure Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Lines_Get_Rmatrix_GR(); CDECL;
 function Lines_Get_X0(): Double; CDECL;
-procedure Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Lines_Get_Xmatrix_GR(); CDECL;
 procedure Lines_Set_C0(Value: Double); CDECL;
 procedure Lines_Set_C1(Value: Double); CDECL;
-procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 procedure Lines_Set_R0(Value: Double); CDECL;
-procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 procedure Lines_Set_X0(Value: Double); CDECL;
-procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function Lines_Get_EmergAmps(): Double; CDECL;
 function Lines_Get_NormAmps(): Double; CDECL;
 procedure Lines_Set_EmergAmps(Value: Double); CDECL;
@@ -54,9 +54,9 @@ function Lines_Get_Xg(): Double; CDECL;
 procedure Lines_Set_Rg(Value: Double); CDECL;
 procedure Lines_Set_Rho(Value: Double); CDECL;
 procedure Lines_Set_Xg(Value: Double); CDECL;
-procedure Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Lines_Get_Yprim_GR(); CDECL;
-procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function Lines_Get_NumCust(): Integer; CDECL;
 function Lines_Get_TotalCust(): Integer; CDECL;
 function Lines_Get_Parent(): Integer; CDECL;
@@ -125,7 +125,7 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -367,7 +367,7 @@ begin
     Result := elem.C1 / elem.UnitsConvert * 1.0e9;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -410,7 +410,7 @@ begin
     Result := elem.R0 / elem.UnitsConvert;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -451,7 +451,7 @@ begin
     Result := elem.X0 / elem.UnitsConvert;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -509,7 +509,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     i, j, k: Integer;
@@ -556,7 +556,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     i, j, k: Integer;
@@ -603,7 +603,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     i, j, k: Integer;
@@ -770,7 +770,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 { Return the YPrim matrix for this element }
 var
     NValues: Integer;
@@ -804,7 +804,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TLineObj;
 begin

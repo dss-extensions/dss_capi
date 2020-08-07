@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Capacitors_Get_First(): Integer; CDECL;
 function Capacitors_Get_IsDelta(): Boolean; CDECL;
 function Capacitors_Get_kV(): Double; CDECL;
@@ -22,9 +22,9 @@ function Capacitors_Get_Count(): Integer; CDECL;
 function Capacitors_AddStep(): Boolean; CDECL;
 function Capacitors_SubtractStep(): Boolean; CDECL;
 function Capacitors_Get_AvailableSteps(): Integer; CDECL;
-procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Capacitors_Get_States_GR(); CDECL;
-procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 procedure Capacitors_Open(); CDECL;
 procedure Capacitors_Close(); CDECL;
 
@@ -75,7 +75,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -265,7 +265,7 @@ begin
     Result := elem.AvailableSteps;
 end;
 //------------------------------------------------------------------------------
-procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     elem: TCapacitorObj;
@@ -287,7 +287,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 var
     Value: PIntegerArray;
     elem: TCapacitorObj;

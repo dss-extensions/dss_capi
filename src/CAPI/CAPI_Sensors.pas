@@ -5,17 +5,17 @@ interface
 uses
     CAPI_Utils;
 
-procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 function Sensors_Get_Count(): Integer; CDECL;
-procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Sensors_Get_Currents_GR(); CDECL;
 function Sensors_Get_First(): Integer; CDECL;
 function Sensors_Get_IsDelta(): Boolean; CDECL;
-procedure Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Sensors_Get_kVARS_GR(); CDECL;
-procedure Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Sensors_Get_kVS_GR(); CDECL;
-procedure Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Sensors_Get_kWS_GR(); CDECL;
 function Sensors_Get_MeteredElement(): PAnsiChar; CDECL;
 function Sensors_Get_MeteredTerminal(): Integer; CDECL;
@@ -26,11 +26,11 @@ function Sensors_Get_ReverseDelta(): Boolean; CDECL;
 function Sensors_Get_Weight(): Double; CDECL;
 procedure Sensors_Reset(); CDECL;
 procedure Sensors_ResetAll(); CDECL;
-procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 procedure Sensors_Set_IsDelta(Value: Boolean); CDECL;
-procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 procedure Sensors_Set_MeteredElement(const Value: PAnsiChar); CDECL;
 procedure Sensors_Set_MeteredTerminal(Value: Integer); CDECL;
 procedure Sensors_Set_Name(const Value: PAnsiChar); CDECL;
@@ -88,7 +88,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -107,7 +107,7 @@ begin
     Result := ActiveCircuit.Sensors.ListSize;
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TSensorObj;
 begin
@@ -163,7 +163,7 @@ begin
     Result := (elem.Conn > 0);
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TSensorObj;
 begin
@@ -183,7 +183,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TSensorObj;
 begin
@@ -203,7 +203,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TSensorObj;
 begin
@@ -324,7 +324,7 @@ begin
     SensorClass.ResetAll();
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TSensorObj;
 begin
@@ -348,7 +348,7 @@ begin
     elem.Conn := Integer(Value);
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TSensorObj;
 begin
@@ -363,7 +363,7 @@ begin
     Move(ValuePtr^, elem.SensorQ[1], elem.NPhases * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TSensorObj;
 begin
@@ -378,7 +378,7 @@ begin
     Move(ValuePtr^, elem.SensorVoltage[1], elem.NPhases * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TSensorObj;
 begin

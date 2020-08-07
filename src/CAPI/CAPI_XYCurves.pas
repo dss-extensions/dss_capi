@@ -13,17 +13,17 @@ function XYCurves_Get_Name(): PAnsiChar; CDECL;
 function XYCurves_Get_Next(): Integer; CDECL;
 procedure XYCurves_Set_Name(const Value: PAnsiChar); CDECL;
 function XYCurves_Get_Npts(): Integer; CDECL;
-procedure XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure XYCurves_Get_Xarray_GR(); CDECL;
 procedure XYCurves_Set_Npts(Value: Integer); CDECL;
-procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function XYCurves_Get_x(): Double; CDECL;
 function XYCurves_Get_y(): Double; CDECL;
-procedure XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure XYCurves_Get_Yarray_GR(); CDECL;
 procedure XYCurves_Set_x(Value: Double); CDECL;
 procedure XYCurves_Set_y(Value: Double); CDECL;
-procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function XYCurves_Get_Xscale(): Double; CDECL;
 function XYCurves_Get_Xshift(): Double; CDECL;
 function XYCurves_Get_Yscale(): Double; CDECL;
@@ -32,7 +32,7 @@ procedure XYCurves_Set_Xscale(Value: Double); CDECL;
 procedure XYCurves_Set_Xshift(Value: Double); CDECL;
 procedure XYCurves_Set_Yscale(Value: Double); CDECL;
 procedure XYCurves_Set_Yshift(Value: Double); CDECL;
-procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 
 // API Extensions
 function XYCurves_Get_idx(): Integer; CDECL;
@@ -133,7 +133,7 @@ begin
     Result := pXYCurve.NumPoints;
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pXYCurve: TXYCurveObj;
@@ -169,10 +169,10 @@ begin
     pXYCurve.NumPoints := Value;
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pXYCurve: TXYCurveObj;
-    ActualValueCount: Integer;
+    ActualValueCount: TAPISize;
     Value: PDoubleArray;
 begin
     if not _activeObj(pXYCurve) then
@@ -225,7 +225,7 @@ begin
     Result := pXYCurve.Y;
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pXYCurve: TXYCurveObj;
@@ -273,10 +273,10 @@ begin
     pXYCurve.Y := Value;
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pXYCurve: TXYCurveObj;
-    ActualValueCount: Integer;
+    ActualValueCount: TAPISize;
 begin
     if not _activeObj(pXYCurve) then
     begin
@@ -422,7 +422,7 @@ begin
         DoSimpleMsg('Invalid XYCurve index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

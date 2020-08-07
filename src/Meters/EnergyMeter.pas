@@ -4105,7 +4105,7 @@ procedure TEnergyMeter.InterpretRegisterMaskArray(var Mask: TRegisterArray);
 var
     i, n: Integer;
 begin
-    n := Parser.ParseAsVector(NumEMRegisters, @Mask);
+    n := Parser.ParseAsVector(NumEMRegisters, pDoubleArray(@Mask));
     for i := n + 1 to NumEMRegisters do
         Mask[i] := 1.0;  // Set the rest to 1
 end;

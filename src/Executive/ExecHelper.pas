@@ -1129,7 +1129,7 @@ VAR
    TimeArray:Array[1..2] of double;
 
 Begin
-     Parser.ParseAsVector(2, @TimeArray);
+     Parser.ParseAsVector(2, pDoubleArray(@TimeArray));
      WITH ActiveCircuit.Solution DO
      Begin
         DynaVars.intHour := Round(TimeArray[1]);
@@ -2046,7 +2046,7 @@ Begin
             Begin
               Iph[i] := cBuffer^[k+i];
             End;
-            Phase2SymComp(@Iph, @I012);
+            Phase2SymComp(pComplexArray(@Iph), pComplexArray(@I012));
             For i := 1 to 3 DO
             Begin
               GlobalResult := GlobalResult + Format('%10.5g, ',[Cabs(I012[i])]);
@@ -2094,8 +2094,8 @@ Begin
          For i := 1 to  3 DO Begin
            Iph[i] := cBuffer^[k+i];
          End;
-         Phase2SymComp(@Iph, @I012);
-         Phase2SymComp(@Vph, @V012);
+         Phase2SymComp(pComplexArray(@Iph), pComplexArray(@I012));
+         Phase2SymComp(pComplexArray(@Vph), pComplexArray(@V012));
          For i := 1 to 3 DO  Begin
            S := Cmul(V012[i], conjg(I012[i]));
            GlobalResult := GlobalResult+ Format('%10.5g, %10.5g,',[S.re*0.003, S.im*0.003]); // 3-phase kW conversion
@@ -2148,7 +2148,7 @@ Begin
           Begin
              Vph[i] := Solution.NodeV^[NodeRef^[i+k]];
           End;
-          Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
+          Phase2SymComp(pComplexArray(@Vph), pComplexArray(@V012));   // Compute Symmetrical components
 
           For i := 1 to 3 DO  // Stuff it in the result
           Begin
@@ -3817,7 +3817,7 @@ Begin
     // Get first node voltage
     AuxParser.Token := sNode1;
     NodeBuffer[1] := 1;
-    sBusName := AuxParser.ParseAsBusName (numNodes,  @NodeBuffer);
+    sBusName := AuxParser.ParseAsBusName (numNodes, pIntegerArray(@NodeBuffer));
     iBusidx := ActiveCircuit.Buslist.Find(sBusName);
     If iBusidx>0 Then Begin
         B1Ref := ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
@@ -3831,7 +3831,7 @@ Begin
     // Get 2nd node voltage
     AuxParser.Token := sNode2;
     NodeBuffer[1] := 1;
-    sBusName := AuxParser.ParseAsBusName (numNodes,  @NodeBuffer);
+    sBusName := AuxParser.ParseAsBusName (numNodes, pIntegerArray(@NodeBuffer));
     iBusidx := ActiveCircuit.Buslist.Find(sBusName);
     If iBusidx>0 Then Begin
         B2Ref := ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
