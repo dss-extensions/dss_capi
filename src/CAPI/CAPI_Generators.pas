@@ -77,26 +77,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_First(): Integer; CDECL;
-var
-    pGen: TGeneratorObj;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    pGen := ActiveCircuit.Generators.First;
-    if pGen = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.Generators);
+end;
+//------------------------------------------------------------------------------
+function Generators_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-        
-    repeat
-        if pGen.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pGen;
-            Result := 1;
-        end
-        else
-            pGen := ActiveCircuit.Generators.Next;
-    until (Result = 1) or (pGen = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.Generators);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Name(): PAnsiChar; CDECL;
@@ -108,30 +101,6 @@ begin
         Exit;
 
     Result := DSS_GetAsPAnsiChar(pGen.Name);
-end;
-//------------------------------------------------------------------------------
-function Generators_Get_Next(): Integer; CDECL;
-var
-    pGen: TGeneratorObj;
-begin
-    Result := 0;
-
-    if InvalidCircuit then
-        Exit;
-    
-    pGen := ActiveCircuit.Generators.Next;
-    if pGen = NIL then
-        Exit;
-
-    repeat
-        if pGen.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pGen;
-            Result := ActiveCircuit.Generators.ActiveIndex;
-        end
-        else
-            pGen := ActiveCircuit.Generators.Next;
-    until (Result > 0) or (pGen = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

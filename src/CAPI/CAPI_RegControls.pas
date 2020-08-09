@@ -134,28 +134,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_First(): Integer; CDECL;
-var
-    elem: TRegControlObj;
-    lst: TPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    lst := ActiveCircuit.RegControls;
-    elem := lst.First;
-    if elem = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.RegControls);
+end;
+//------------------------------------------------------------------------------
+function RegControls_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := 1;
-        end
-        else
-            elem := lst.Next;
-    until (Result = 1) or (elem = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.RegControls);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ForwardBand(): Double; CDECL;
@@ -246,31 +237,6 @@ begin
     if not _activeObj(elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
-end;
-//------------------------------------------------------------------------------
-function RegControls_Get_Next(): Integer; CDECL;
-var
-    elem: TRegControlObj;
-    lst: TPointerList;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-    
-    lst := ActiveCircuit.RegControls;
-    elem := lst.Next;
-    if elem = NIL then
-        Exit;
-        
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := lst.ActiveIndex;
-        end
-        else
-            elem := lst.Next;
-    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_PTratio(): Double; CDECL;

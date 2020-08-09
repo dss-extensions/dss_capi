@@ -133,24 +133,20 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_First(): Integer; CDECL;
-var
-    pMon: TMonitorObj;
 begin
     Result := 0;  // signify no more
     if InvalidCircuit then
         Exit;
-    pMon := ActiveCircuit.Monitors.First;
-    if pMon = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.Monitors);
+end;
+//------------------------------------------------------------------------------
+function Monitors_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;  // signify no more
+    if InvalidCircuit then
         Exit;
-    repeat
-        if pMon.enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pMon;
-            Result := 1;
-        end
-        else
-            pMon := ActiveCircuit.Monitors.Next;
-    until (Result = 1) or (pMon = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.Monitors);
+    if Result <> 0 then Result := 1; //TODO: inconsistent with the rest
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_Mode(): Integer; CDECL;
@@ -171,28 +167,6 @@ begin
     if not _activeObj(pMon) then
         Exit;
     Result := DSS_GetAsPAnsiChar(PMon.Name)
-end;
-//------------------------------------------------------------------------------
-function Monitors_Get_Next(): Integer; CDECL;
-var
-    pMon: TMonitorObj;
-begin
-    Result := 0;  // signify no more
-    if InvalidCircuit then
-        Exit;
-    pMon := ActiveCircuit.Monitors.Next;
-    if pMon = NIL then
-        Exit;
-
-    repeat
-        if pMon.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pMon;
-            Result := 1;
-        end
-        else
-            pMon := ActiveCircuit.Monitors.Next;
-    until (Result > 0) or (pMon = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Reset(); CDECL;

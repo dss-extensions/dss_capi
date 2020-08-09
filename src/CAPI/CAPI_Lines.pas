@@ -154,24 +154,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_First(): Integer; CDECL;
-var
-    pLine: TLineObj;
 begin
     Result := 0;  // signify no more
     if InvalidCircuit then
         Exit;
-    pLine := ActiveCircuit.Lines.First;
-    if pLine = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.Lines);
+end;
+//------------------------------------------------------------------------------
+function Lines_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;  // signify no more
+    if InvalidCircuit then
         Exit;
-    repeat
-        if pLine.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pLine;
-            Result := 1;
-        end
-        else
-            pLine := ActiveCircuit.Lines.Next;
-    until (Result = 1) or (pLine = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.Lines);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Length(): Double; CDECL;
@@ -202,26 +197,6 @@ begin
     if not _activeObj(elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
-end;
-//------------------------------------------------------------------------------
-function Lines_Get_Next(): Integer; CDECL;
-var
-    pLine: TLineObj;
-begin
-    Result := 0;  // signify no more
-    if InvalidCircuit then
-        Exit;
-    pLine := ActiveCircuit.Lines.Next;
-    if pLine = NIL then Exit;
-    repeat
-        if pLine.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pLine;
-            Result := ActiveCircuit.Lines.ActiveIndex;
-        end
-        else
-            pLine := ActiveCircuit.Lines.Next;
-    until (Result > 0) or (pLine = NIL);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Phases(): Integer; CDECL;

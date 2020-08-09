@@ -93,25 +93,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_First(): Integer; CDECL;
-var
-    pElem: TFuseObj;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    pElem := ActiveCircuit.Fuses.First;
-    if pElem = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.Fuses);
+end;
+//------------------------------------------------------------------------------
+function Fuses_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := 1;
-        end
-        else
-            pElem := ActiveCircuit.Fuses.Next;
-    until (Result = 1) or (pElem = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.Fuses);
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_Name(): PAnsiChar; CDECL;
@@ -123,28 +117,6 @@ begin
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.Name);
-end;
-//------------------------------------------------------------------------------
-function Fuses_Get_Next(): Integer; CDECL;
-var
-    pElem: TFuseObj;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-    pElem := ActiveCircuit.Fuses.Next;
-    if pElem = NIL then
-        Exit;
-        
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := ActiveCircuit.Fuses.ActiveIndex;
-        end
-        else
-            pElem := ActiveCircuit.Fuses.Next;
-    until (Result > 0) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_Name(const Value: PAnsiChar); CDECL;

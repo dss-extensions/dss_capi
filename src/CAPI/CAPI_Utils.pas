@@ -108,6 +108,8 @@ function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const in
 function DSS_Get_PAnsiChar(var p: Pointer; Index: TAPISize): PAnsiChar; CDECL;
 
 procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pList: TPointerList; const Restore: Boolean); inline;
+function Generic_CktElement_Get_First(pList: TPointerList): Integer; inline;
+function Generic_CktElement_Get_Next(pList: TPointerList): Integer; inline;
 
 function InvalidCircuit(): Boolean; inline;
 function MissingSolution(): Boolean; inline;
@@ -120,7 +122,7 @@ procedure DefaultResult(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Value:
 
 implementation
 
-Uses DSSObject, DSSGlobals;
+Uses DSSObject, DSSGlobals, CktElement;
 
 var
     tempBuffer: Ansistring;
@@ -513,6 +515,46 @@ begin
     end;
     if Restore and ((idx_before > 0) and (idx_before <= pList.ListSize)) then 
         pList.Get(idx_before);
+end;
+//------------------------------------------------------------------------------
+function Generic_CktElement_Get_First(pList: TPointerList): Integer; inline;
+var
+    elem: TDSSCktElement;
+begin
+    Result := 0;
+    elem := TDSSCktElement(pList.First);
+    if elem = NIL then
+        Exit;
+        
+    repeat
+        if (DSS_CAPI_ITERATE_DISABLED = 1) or elem.Enabled then
+        begin
+            ActiveCircuit.ActiveCktElement := elem;
+            Result := 1;
+        end
+        else
+            elem := TDSSCktElement(pList.Next);
+    until (Result = 1) or (elem = NIL);
+end;
+//------------------------------------------------------------------------------
+function Generic_CktElement_Get_Next(pList: TPointerList): Integer; inline;
+var
+    elem: TDSSCktElement;
+begin
+    Result := 0;
+    elem := TDSSCktElement(pList.Next);
+    if elem = NIL then
+        Exit;
+        
+    repeat
+        if (DSS_CAPI_ITERATE_DISABLED = 1) or elem.Enabled then
+        begin
+            ActiveCircuit.ActiveCktElement := elem;
+            Result := pList.ActiveIndex;
+        end
+        else
+            elem := TDSSCktElement(pList.Next);
+    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 initialization

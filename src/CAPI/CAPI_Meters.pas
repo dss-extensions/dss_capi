@@ -114,27 +114,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_First(): Integer; CDECL;
-var
-    pMeter: TEnergyMeterObj;
-
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    pMeter := ActiveCircuit.EnergyMeters.First;
-    if pMeter = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.EnergyMeters);
+end;
+//------------------------------------------------------------------------------
+function Meters_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-        
-    repeat
-        if pMeter.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pMeter;
-            Result := 1;
-        end
-        else
-            pMeter := ActiveCircuit.EnergyMeters.Next;
-    until (Result = 1) or (pMeter = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.EnergyMeters);        
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_Name(): PAnsiChar; CDECL;
@@ -146,29 +138,6 @@ begin
         Exit;
     
     Result := DSS_GetAsPAnsiChar(pMeterObj.name);
-end;
-//------------------------------------------------------------------------------
-function Meters_Get_Next(): Integer; CDECL;
-var
-    pMeterObj: TEnergyMeterObj;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-        
-    pMeterObj := ActiveCircuit.EnergyMeters.next;
-    if pMeterObj = NIL then
-        Exit;
-           
-    repeat   // Find an Enabled Meter
-        if pMeterObj.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pMeterObj;
-            Result := ActiveCircuit.EnergyMeters.ActiveIndex;
-        end
-        else
-            pMeterObj := ActiveCircuit.EnergyMeters.next;
-    until (Result > 0) or (pMeterObj = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

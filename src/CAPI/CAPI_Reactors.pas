@@ -183,28 +183,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_First(): Integer; CDECL;
-var
-    elem: TReactorObj;
-    lst: TPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-
-    lst := ActiveCircuit.Reactors;
-    elem := lst.First;
-    if elem = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.Reactors);
+end;
+//------------------------------------------------------------------------------
+function Reactors_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := 1;
-        end
-        else
-            elem := lst.Next;
-    until (Result = 1) or (elem = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.Reactors);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Name(): PAnsiChar; CDECL;
@@ -230,31 +221,6 @@ begin
     begin
         DoSimpleMsg('Reactor "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
-end;
-//------------------------------------------------------------------------------
-function Reactors_Get_Next(): Integer; CDECL;
-var
-    elem: TReactorObj;
-    lst: TPointerList;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-        
-    lst := ActiveCircuit.Reactors;
-    elem := lst.Next;
-    if elem = NIL then
-        Exit;
-        
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := lst.ActiveIndex;
-        end
-        else
-            elem := lst.Next;
-    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Count(): Integer; CDECL;

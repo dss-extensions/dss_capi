@@ -1090,6 +1090,7 @@ initialization
    // Default is False, enable at initialization when DSS_CAPI_LEGACY_MODELS = 1
    DSS_CAPI_LEGACY_MODELS := (GetEnvironmentVariable('DSS_CAPI_LEGACY_MODELS') = '1');
    DSS_CAPI_LEGACY_MODELS_PREV := DSS_CAPI_LEGACY_MODELS;
+   
    DSS_CAPI_COM_DEFAULTS := (GetEnvironmentVariable('DSS_CAPI_COM_DEFAULTS') = '1');;
 {$ENDIF}
 

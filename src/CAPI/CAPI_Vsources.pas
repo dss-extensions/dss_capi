@@ -74,49 +74,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Vsources_Get_First(): Integer; CDECL;
-var
-    pElem: TVsourceObj;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    pElem := VsourceClass.ElementList.First;
-    if pElem = NIL then
-        Exit;
-        
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := 1;
-        end
-        else
-            pElem := VsourceClass.ElementList.Next;
-    until (Result = 1) or (pElem = NIL);
+    Result := Generic_CktElement_Get_First(VsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function Vsources_Get_Next(): Integer; CDECL;
-var
-    pElem: TVsourceObj;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    pElem := VsourceClass.ElementList.Next;
-    if pElem = NIL then
-        Exit;
-        
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := VsourceClass.ElementList.ActiveIndex;
-        end
-        else
-            pElem := VsourceClass.ElementList.Next;
-    until (Result > 0) or (pElem = NIL);
+    Result := Generic_CktElement_Get_Next(VsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function Vsources_Get_Name(): PAnsiChar; CDECL;
