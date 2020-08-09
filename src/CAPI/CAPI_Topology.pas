@@ -114,7 +114,6 @@ var
     k, i: Integer;
 begin
     SetLength(Result, 1);
-    Result[0] := 'NONE';
     k := 0;
     elm := NIL;
     if ActiveTree(topo) then
@@ -131,8 +130,14 @@ begin
         end;
         elm := ActiveCircuit.PDElements.Next;
     end;
+    if k = 0 then
+    begin
+        SetLength(Result, 0);
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
 
-    ActualResult := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(Result));
+    ActualResult := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(Result));
     for i := 0 to Length(Result) - 1 do
     begin
         ActualResult[i] := DSS_CopyStringAsPChar(Result[i]);
@@ -150,7 +155,6 @@ var
     found: Boolean;
 begin
     SetLength(Result, 1);
-    Result[0] := 'NONE';
     k := -1;  // because we always increment by 2!
     PDElem := NIL;
     if ActiveTree(topo) then
@@ -182,8 +186,16 @@ begin
         end;
         PDElem := topo.GoForward;
     end;
+    
+    if k = -1 then
+    begin
+        SetLength(Result, 0);
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+    
 
-    ActualResult := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(Result));
+    ActualResult := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(Result));
     for i := 0 to Length(Result) - 1 do
     begin
         ActualResult[i] := DSS_CopyStringAsPChar(Result[i]);
@@ -346,7 +358,6 @@ var
     k, i: Integer;
 begin
     SetLength(Result, 1);
-    Result[0] := 'NONE';
     k := 0;
     if ActiveTree(topo) then
     begin
@@ -363,8 +374,15 @@ begin
             elm := ActiveCircuit.PCElements.Next;
         end;
     end;
+    
+    if k = 0 then
+    begin
+        SetLength(Result, 0);
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
 
-    ActualResult := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(Result));
+    ActualResult := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(Result));
     for i := 0 to Length(Result) - 1 do
     begin
         ActualResult[i] := DSS_CopyStringAsPChar(Result[i]);

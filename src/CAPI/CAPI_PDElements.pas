@@ -370,8 +370,7 @@ var
     elem: TPDElement;
     pList: TPointerList;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
+    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit then
         Exit;
 
@@ -464,8 +463,7 @@ begin
     cBuffer := NIL;
     if (MissingSolution) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-        Result[0] := -1;
+        DefaultResult(ResultPtr, ResultCount, -1.0);
         Exit;
     end;
 
@@ -582,7 +580,7 @@ var
 begin
     if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     pList := ActiveCircuit.PDElements;
@@ -667,7 +665,7 @@ var
 begin
     if (MissingSolution) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
@@ -796,7 +794,7 @@ var
 begin
     if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     pList := ActiveCircuit.PDElements;
@@ -858,7 +856,7 @@ var
 begin
     if (MissingSolution) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     pList := ActiveCircuit.PDElements;
@@ -973,7 +971,6 @@ end;
 //------------------------------------------------------------------------------
 procedure _PDElements_Get_AllNum_x(var ResultPtr: PInteger; ResultCount: PAPISize; const what: Integer);
 var
-    Result: PIntegerArray;
     idx_before, numEnabled: Integer;
     pElem: TPDElement;
     pList: TPointerList;
@@ -981,15 +978,13 @@ var
 begin
     if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
-        Result[0] := -1;
+        DefaultResult(ResultPtr, ResultCount, -1);
         Exit;
     end;
     pList := ActiveCircuit.PDElements;
     if pList.ListSize <= 0 then
     begin
-        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
-        Result[0] := -1;
+        DefaultResult(ResultPtr, ResultCount, -1);
         Exit;
     end;
     
@@ -1004,7 +999,7 @@ begin
 //    end;
     pElem := pList.First;
     
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, numEnabled);
+    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, numEnabled);
     pval := ResultPtr;
     
     case what of

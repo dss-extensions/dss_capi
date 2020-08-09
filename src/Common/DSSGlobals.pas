@@ -156,6 +156,7 @@ VAR
    DSS_CAPI_EXT_ERRORS: Boolean = True;
    DSS_CAPI_LEGACY_MODELS: Boolean = False;
    DSS_CAPI_LEGACY_MODELS_PREV: Boolean = False;
+   DSS_CAPI_COM_DEFAULTS: Boolean = False;
 {$ENDIF}
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
@@ -1089,6 +1090,7 @@ initialization
    // Default is False, enable at initialization when DSS_CAPI_LEGACY_MODELS = 1
    DSS_CAPI_LEGACY_MODELS := (GetEnvironmentVariable('DSS_CAPI_LEGACY_MODELS') = '1');
    DSS_CAPI_LEGACY_MODELS_PREV := DSS_CAPI_LEGACY_MODELS;
+   DSS_CAPI_COM_DEFAULTS := (GetEnvironmentVariable('DSS_CAPI_COM_DEFAULTS') = '1');;
 {$ENDIF}
 
 Finalization

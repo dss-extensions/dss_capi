@@ -84,11 +84,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
+    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Reclosers, False);
@@ -249,8 +246,7 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-        Result[0] := -1.0;
+        DefaultResult(ResultPtr, ResultCount, -1.0);
         Exit;
     end;
     

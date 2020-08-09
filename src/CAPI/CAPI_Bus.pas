@@ -135,7 +135,7 @@ begin
     if (InvalidCircuit) or 
         (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -186,7 +186,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -230,7 +230,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -271,7 +271,7 @@ begin
     if (InvalidCircuit) or 
         (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -292,7 +292,7 @@ begin
             end;
         end
         else
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+            DefaultResult(ResultPtr, ResultCount);
     end
 end;
 
@@ -314,7 +314,7 @@ begin
     if (InvalidCircuit) or 
         (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -335,7 +335,7 @@ begin
             end;
         end
         else
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+            DefaultResult(ResultPtr, ResultCount);
     end
 end;
 
@@ -368,7 +368,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -415,7 +415,7 @@ begin
     if (InvalidCircuit) or 
         (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -443,7 +443,7 @@ begin
     if (InvalidCircuit) or 
         (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
@@ -470,7 +470,7 @@ var
     Z: Complex;
 
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if (InvalidCircuit) or 
         (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) then
         Exit;
@@ -525,7 +525,7 @@ var
     Y1: Complex;
 
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if (InvalidCircuit) or 
         (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) then
         Exit;
@@ -654,7 +654,7 @@ begin
     if (InvalidCircuit) or 
         (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -767,7 +767,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -819,7 +819,7 @@ begin
                     if NodeIdxj = 0 then
                     begin
                         // Could not find appropriate node
-                        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+                        DefaultResult(ResultPtr, ResultCount);
                         Exit;
                     end;
 //------------------------------------------------------------------------------------------------
@@ -857,7 +857,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -903,7 +903,7 @@ begin
                     if NodeIdxj = 0 then
                     begin
                         // Could not find appropriate node
-                        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+                        DefaultResult(ResultPtr, ResultCount);
                         Exit;
                     end;
 //------------------------------------------------------------------------------------------------
@@ -942,7 +942,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -994,7 +994,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
@@ -1095,7 +1095,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
 
@@ -1114,7 +1114,7 @@ begin
 
         if LineCount <= 0 then
         begin
-            DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+            DefaultResult(ResultPtr, ResultCount, '');
             Exit;
         end;
 
@@ -1145,7 +1145,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
 
@@ -1164,7 +1164,7 @@ begin
 
         if LoadCount <= 0 then
         begin
-            DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+            DefaultResult(ResultPtr, ResultCount, '');
             Exit;
         end;
         
@@ -1194,7 +1194,7 @@ var
 begin
     if not _activeObj(pBus) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
@@ -1202,7 +1202,7 @@ begin
     begin
         if NumNodesThisBus <> 3 then
         begin
-            DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+            DefaultResult(ResultPtr, ResultCount);
             Exit;
         end;
         

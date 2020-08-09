@@ -28,6 +28,8 @@ function DSS_Get_AllowEditor: Boolean; CDECL;
 procedure DSS_Set_AllowEditor(Value: Boolean); CDECL;
 function DSS_Get_LegacyModels(): Boolean; CDECL;
 procedure DSS_Set_LegacyModels(Value: Boolean); CDECL;
+function DSS_Get_COMErrorResults(): Boolean; CDECL;
+procedure DSS_Set_COMErrorResults(Value: Boolean); CDECL;
 
 implementation
 
@@ -113,7 +115,7 @@ var
 
 begin
 
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumIntrinsicClasses - 1) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumIntrinsicClasses);
     k := 0;
     for i := 1 to NumIntrinsicClasses do
     begin
@@ -131,7 +133,7 @@ var
 begin
     if NumUserClasses > 0 then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumUserClasses - 1) + 1);
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumUserClasses);
         k := 0;
         for i := NumIntrinsicClasses + 1 to DSSClassList.ListSize do
         begin
@@ -140,7 +142,7 @@ begin
         end;
     end
     else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+        DefaultResult(ResultPtr, ResultCount, '');
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumClasses(): Integer; CDECL;
@@ -203,6 +205,16 @@ begin
         DSS_CAPI_LEGACY_MODELS := Value;
         DSSExecutive.Command := 'clear';
     end;
+end;
+//------------------------------------------------------------------------------
+function DSS_Get_COMErrorResults(): Boolean; CDECL;
+begin
+    Result := DSS_CAPI_COM_DEFAULTS;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_Set_COMErrorResults(Value: Boolean); CDECL;
+begin
+    DSS_CAPI_COM_DEFAULTS := Value;
 end;
 //------------------------------------------------------------------------------
 end.

@@ -208,7 +208,7 @@ procedure Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PAPISize);
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ActiveCircuit.NumLossRegs);
@@ -243,7 +243,7 @@ procedure Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PAPISize); C
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ActiveCircuit.NumUERegs);
@@ -318,7 +318,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 

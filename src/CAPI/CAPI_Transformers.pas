@@ -107,11 +107,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
+    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Transformers, False);
@@ -498,7 +495,7 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
@@ -508,7 +505,7 @@ begin
         elem.GetWindingVoltages(elem.ActiveWinding, pComplexArray(ResultPtr));
         Exit;
     end;
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
 end;
 
 procedure Transformers_Get_WdgVoltages_GR(); CDECL;
@@ -525,7 +522,7 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -608,7 +605,7 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
@@ -635,8 +632,7 @@ var
 begin
     if (InvalidCircuit) or (ActiveCircuit.Transformers.ListSize <= 0) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-        Result[0] := 0;
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     

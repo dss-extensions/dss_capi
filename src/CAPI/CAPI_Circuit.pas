@@ -163,7 +163,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -188,7 +188,7 @@ var
 begin
     if MissingSolution then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -222,7 +222,7 @@ var
 begin
     if MissingSolution then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -258,7 +258,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
     
@@ -470,7 +470,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
     with ActiveCircuit do
@@ -492,7 +492,7 @@ var
 begin
     if MissingSolution then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -582,7 +582,7 @@ var
 begin
     if MissingSolution then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -648,7 +648,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1); 
+        DefaultResult(ResultPtr, ResultCount, ''); 
         Exit;
     end;
     with ActiveCircuit do
@@ -684,7 +684,7 @@ begin
     { Return zero length Array if no circuit or no Y matrix}
     if (InvalidCircuit) or (ActiveCircuit.Solution.hY = 0) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -736,7 +736,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -765,7 +765,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -797,7 +797,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
@@ -837,7 +837,7 @@ var
 begin
     if MissingSolution then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -877,7 +877,7 @@ var
 begin
     if MissingSolution then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
@@ -923,7 +923,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
     
@@ -1028,7 +1028,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
     
@@ -1053,7 +1053,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -1082,7 +1082,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
         with ActiveCircuit do
@@ -1139,7 +1139,7 @@ var
 begin
     if MissingSolution then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     

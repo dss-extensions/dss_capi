@@ -532,10 +532,10 @@ var
 begin
     if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (EventStrings.Count - 1) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, EventStrings.Count);
     for i := 0 to EventStrings.Count - 1 do
     begin
         Result[i] := DSS_CopyStringAsPChar(EventStrings.Strings[i]);
@@ -887,7 +887,7 @@ begin
             Exit;
         end;
     end;
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
 end;
 
 procedure Solution_Get_Laplacian_GR(); CDECL;
@@ -910,7 +910,7 @@ begin
         with ActiveCircuit.Solution do
         begin
             ArrSize := IncMat.NZero * 3;
-            Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
+            Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); // TODO: remove +1?
             Counter := 0;
             IMIdx := 0;
             while IMIdx < ArrSize do
@@ -925,7 +925,7 @@ begin
             Exit;
         end;
     end;
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
 end;
 
 procedure Solution_Get_IncMatrix_GR(); CDECL;
@@ -939,7 +939,7 @@ procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PAPISize)
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
         
@@ -966,7 +966,7 @@ var
 begin
     if InvalidCircuit or (ActiveCircuit.Solution.Inc_Mat_Rows = NIL) then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
     with ActiveCircuit.Solution do
@@ -987,7 +987,7 @@ var
     IMIdx,
     ArrSize: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount, '');
     if InvalidCircuit then
         Exit;
     with ActiveCircuit.Solution, ActiveCircuit do

@@ -162,13 +162,12 @@ var
     Qsize: Integer;
 
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     if not InvalidCircuit then
     begin
         QSize := CtrlQueue_Get_QueueSize();
         if QSize > 0 then
         begin
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (QSize) + 1);
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, QSize + 1);
             Result[0] := DSS_CopyStringAsPChar('Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
             for i := 0 to QSize - 1 do
             begin
@@ -177,7 +176,7 @@ begin
             Exit;
         end;
     end;
-    Result[0] := DSS_CopyStringAsPChar('No events');
+    DefaultResult(ResultPtr, ResultCount, 'No events');
 end;
 //------------------------------------------------------------------------------
 { TCOMControlProxyObj }

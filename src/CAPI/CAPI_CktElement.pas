@@ -228,7 +228,7 @@ var
 begin
     if InvalidCktElement then
     begin
-        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
 
@@ -317,7 +317,7 @@ var
     Result: PDoubleArray;
     NValues: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement or MissingSolution then
         Exit;
@@ -345,7 +345,7 @@ var
     Volts: Complex;
 begin
     // Return voltages for all terminals
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
         Exit;
@@ -405,7 +405,7 @@ var
     Result: PDoubleArray;
     LossValue: complex;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement or MissingSolution then
         Exit;
@@ -448,7 +448,7 @@ var
 begin
     if InvalidCktElement or MissingSolution then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -481,7 +481,7 @@ var
 begin
     if InvalidCktElement or MissingSolution then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -510,7 +510,7 @@ var
     i012: pComplexArray;
     S: String;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
@@ -563,7 +563,7 @@ var
     cBuffer: pComplexArray;
 
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) {or (not ActiveCircuit.ActiveCktElement.Enabled)} then
         Exit;
@@ -645,7 +645,7 @@ var
     V012: pComplexArray;
     S: String;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement 
         or MissingSolution 
@@ -772,10 +772,11 @@ var
     Result: PPAnsiCharArray;
     k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    
     if InvalidCktElement then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
+    end;
     
     with ActiveCircuit.ActiveCktElement, ParentClass do
     begin
@@ -807,7 +808,7 @@ var
 begin
     if InvalidCktElement or MissingSolution then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -848,7 +849,7 @@ procedure CktElement_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize); C
 var
     cValues: pComplexArray;
 begin
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement then
         Exit;
@@ -997,7 +998,7 @@ procedure CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PA
 var
     S: String;
 begin
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
 
     if InvalidCktElement 
         or MissingSolution 
@@ -1041,7 +1042,7 @@ var
     S: String;
 
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
@@ -1082,8 +1083,7 @@ var
     pPCElem: TPCElement;
 
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := nil;
+    DefaultResult(ResultPtr, ResultCount, '');
     
     if InvalidCktElement then
         Exit;
@@ -1108,7 +1108,7 @@ var
     pPCElem: TPCElement;
 
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement then
         Exit;
@@ -1190,7 +1190,7 @@ begin
     if InvalidCktElement then
     begin
         // Just ignore as the original code did
-        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
@@ -1200,7 +1200,7 @@ begin
         begin
             // Warn and exit
             DoSimpleMsg('Nodes are not initialized. Try solving the system first.', 15013);
-            Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+            DefaultResult(ResultPtr, ResultCount);
             Exit;
         end;
 
@@ -1294,7 +1294,7 @@ var
 begin
     if InvalidCktElement or MissingSolution then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -1334,7 +1334,7 @@ begin
     // Return voltages for all terminals
     if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -1375,7 +1375,7 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;    
 begin
-    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if InvalidCktElement then 
         Exit;
         

@@ -515,6 +515,8 @@ exports
     DSS_Set_AllowEditor,  // API extension
     DSS_Get_LegacyModels, // API extension
     DSS_Set_LegacyModels, // API extension
+    DSS_Get_COMErrorResults, // API extension
+    DSS_Set_COMErrorResults, // API extension
     DSSElement_Get_AllPropertyNames,
     DSSElement_Get_Name,
     DSSElement_Get_NumProperties,

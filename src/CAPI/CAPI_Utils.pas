@@ -112,13 +112,74 @@ procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize;
 function InvalidCircuit(): Boolean; inline;
 function MissingSolution(): Boolean; inline;
 
+procedure DefaultResult(var ResultPtr: PByte; ResultCount: PAPISize; Value: Byte = 0); overload; inline;
+procedure DefaultResult(var ResultPtr: PInteger; ResultCount: PAPISize; Value: Integer = 0); overload; inline;
+procedure DefaultResult(var ResultPtr: PDouble; ResultCount: PAPISize; Value: Double = 0); overload; inline;
+procedure DefaultResult(var ResultPtr: PSingle; ResultCount: PAPISize; Value: Single = 0); overload; inline;
+procedure DefaultResult(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Value: String = 'NONE'); overload; inline;
+
 implementation
 
 Uses DSSObject, DSSGlobals;
 
 var
     tempBuffer: Ansistring;
-
+    
+//------------------------------------------------------------------------------
+procedure DefaultResult(var ResultPtr: PByte; ResultCount: PAPISize; Value: Byte = 0); overload; inline;
+begin
+    if not DSS_CAPI_COM_DEFAULTS then
+    begin
+        DSS_RecreateArray_PByte(ResultPtr, ResultCount, 0);
+        Exit;
+    end;
+    DSS_RecreateArray_PByte(ResultPtr, ResultCount, 1);
+    ResultPtr^ := Value;
+end;
+//------------------------------------------------------------------------------
+procedure DefaultResult(var ResultPtr: PInteger; ResultCount: PAPISize; Value: Integer = 0); overload; inline;
+begin
+    if not DSS_CAPI_COM_DEFAULTS then
+    begin
+        DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 0);
+        Exit;
+    end;
+    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+    ResultPtr^ := Value;
+end;
+//------------------------------------------------------------------------------
+procedure DefaultResult(var ResultPtr: PDouble; ResultCount: PAPISize; Value: Double = 0); overload; inline;
+begin
+    if not DSS_CAPI_COM_DEFAULTS then
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 0);
+        Exit;
+    end;
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    ResultPtr^ := Value;
+end;
+//------------------------------------------------------------------------------
+procedure DefaultResult(var ResultPtr: PSingle; ResultCount: PAPISize; Value: Single = 0); overload; inline;
+begin
+    if not DSS_CAPI_COM_DEFAULTS then
+    begin
+        DSS_RecreateArray_PSingle(ResultPtr, ResultCount, 0);
+        Exit;
+    end;
+    DSS_RecreateArray_PSingle(ResultPtr, ResultCount, 1);
+    ResultPtr^ := Value;
+end;
+//------------------------------------------------------------------------------
+procedure DefaultResult(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Value: String = 'NONE'); overload; inline;
+begin
+    if not DSS_CAPI_COM_DEFAULTS then
+    begin
+        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 0);
+        Exit;
+    end;
+    DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+    ResultPtr^ := DSS_CopyStringAsPChar(Value);
+end;
 //------------------------------------------------------------------------------
 function InvalidCircuit(): Boolean; inline;
 begin

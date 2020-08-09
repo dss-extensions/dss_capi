@@ -29,7 +29,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     with ActiveCircuit do
@@ -63,7 +63,7 @@ var
 begin
     if InvalidCircuit then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
         

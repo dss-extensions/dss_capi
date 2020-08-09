@@ -119,11 +119,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
+    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, LoadShapeClass.ElementList, False);
@@ -147,12 +144,12 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     if (not assigned(elem.dblPMultipliers)) and (not assigned(elem.sngPMultipliers)) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     ActualNumPoints := elem.NumPoints;
@@ -176,12 +173,12 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     if (not assigned(elem.dblQMultipliers)) and (not assigned(elem.sngQMultipliers)) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     elem.UseFloat64();
@@ -274,11 +271,9 @@ end;
 procedure LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TLoadshapeObj;
-    Result: PDoubleArray;
     ActualNumPoints: Integer;
-
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(elem) then
         Exit;
 
@@ -286,8 +281,8 @@ begin
     if elem.dblHours = NIL then
         Exit;
     ActualNumPoints := elem.NumPoints;
-    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.dblHours[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ActualNumPoints);
+    Move(elem.dblHours[1], ResultPtr^, ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_TimeArray_GR(); CDECL;

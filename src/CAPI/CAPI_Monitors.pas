@@ -115,11 +115,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
+    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Monitors, False);
@@ -272,7 +269,7 @@ var
 begin
     if not _activeObj(pMon) then
     begin
-        DSS_RecreateArray_PByte(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -348,7 +345,7 @@ var
     SngBuffer: pSingleArray1;
     AllocSize: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pMon) then
         Exit;
     
@@ -395,7 +392,7 @@ var
     SngBuffer: pSingleArray1;
     AllocSize: Integer;
 begin
-    Result := DSS_RecreateArray_PSingle(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pMon) then
         Exit;
     
@@ -504,7 +501,7 @@ var
     s: Single;
     AllocSize: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pMon) then
         Exit;
     if pMon.SampleCount <= 0 then
@@ -572,8 +569,7 @@ var
     SaveWhiteSpace: String;
     pMon: TMonitorObj;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pMon) then
         Exit;
 
