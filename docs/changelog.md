@@ -4,11 +4,12 @@
 
 - **Done**:
     - drop the GR API for strings (bytes, ints and floats will continue)
+    - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using `int32_t` instead -- this was an artifact to ensure initial compatibility with the COM code.
+    - extend the API to work with 64-bit integers where appropriate
+    - extend the API to allow 32-bit floats
 
 - **Planned**:
     - **(WIP)** potentially unify the v7 and v8 codebases into a single library.
-    - **(WIP)** simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using `int32_t` instead -- this was an artifact to ensure initial compatibility with the COM code.
-    - extend the API to work with 64-bit integers where appropriate
     - complement the API with the missing classes
     - initial work on the plotting and extended reporting API
   
