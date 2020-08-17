@@ -1470,7 +1470,7 @@ initialization
    {$ELSE}
    QueryPerformanceFrequency(CPU_Freq);
    {$ENDIF}
-   CPU_Cores        :=  CPUCount;
+//   CPU_Cores        :=  CPUCount;
 
    IsMultithread    :=  True;
    //WriteDLLDebugFile('DSSGlobals');
