@@ -3447,10 +3447,12 @@ Begin
           17:Result := 'VW Oper';
           18:Result := 'DRC Oper';
           19:Result := 'VV_DRC Oper';
-          20:Result := 'kWDesired';
-          21:Result := 'kW VW Limit';
-          22:Result := 'Limit kWOut Function';
-          23:Result := 'kVA Exceeded';
+          20:Result := 'WP Oper';
+          21:Result := 'WV Oper';
+          22:Result := 'kWDesired';
+          23:Result := 'kW VW Limit';
+          24:Result := 'Limit kWOut Function';
+          25:Result := 'kVA Exceeded';
 
 
       ELSE
