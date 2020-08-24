@@ -22,6 +22,7 @@ unit Monitor;
    06-04-18 Added modes 7-9
    11-29-18 Added mode 10; revised mode 8
    12-4-18  Added link to AutoTransformer
+   08-21-20 Added mode 11
 
 }
 
@@ -81,6 +82,7 @@ unit Monitor;
    8: Transformer Winding Currents
    9: Losses (watts and vars)
   10: Transformer Winding Voltages (across winding)
+  11: All terminal V and I, all conductors, mag and angle
 
    +16: Sequence components: V012, I012
    +32: Magnitude Only
@@ -271,8 +273,8 @@ Begin
      PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
                     '1 or 2, typically. For monitoring states, attach monitor to terminal 1.';
      PropertyHelp[3] := 'Bitmask integer designating the values the monitor is to capture: '+CRLF+
-                    '0 = Voltages and currents' + CRLF+
-                    '1 = Powers'+CRLF+
+                    '0 = Voltages and currents at designated terminal' + CRLF+
+                    '1 = Powers at designated terminal'+CRLF+
                     '2 = Tap Position (Transformer Device only)'+CRLF+
                     '3 = State Variables (PCElements only)' +CRLF+
                     '4 = Flicker level and severity index (Pst) for voltages. No adders apply.' +CRLF+
@@ -282,9 +284,10 @@ Begin
                     '6 = Capacitor Switching (Capacitors only)'+CRLF+
                     '7 = Storage state vars (Storage device only)'+CRLF+
                     '8 = All winding currents (Transformer device only)'+CRLF+
-                    '9 = Losses, watts and var (of monitored device)'+CRLF+ CRLF+
-                    '10 = All Winding voltages (Transformer device only)'+CRLF+ CRLF+
+                    '9 = Losses, watts and var (of monitored device)'+CRLF+
+                    '10 = All Winding voltages (Transformer device only)'+CRLF+
                     'Normally, these would be actual phasor quantities from solution.' + CRLF+
+                    '11 = All terminal node voltages and line currents of monitored device' +CRLF+
                     'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF+
                     '+16 = Sequence quantities' + CRLF+
                     '+32 = Magnitude only' + CRLF+
@@ -690,6 +693,10 @@ Begin
                              ReallocMem(WdgVoltagesBuffer, Sizeof(Complex)*NumWindingVoltages);   // total all phases, all windings
                              ReallocMem(PhsVoltagesBuffer, Sizeof(Complex)*nphases);
                          End;
+                     11: Begin
+                             ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
+                             ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.Yorder);
+                         End;
                  Else
                      ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
                      ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.NConds);
@@ -885,6 +892,27 @@ Begin
                       End;
                  End;
         End;
+    11: Begin {All terminal voltages and currents  *****}
+
+            Recordsize := 2 * 2 * MeteredElement.Yorder;  // V and I
+
+            {Voltages}
+            For j := 1 to MeteredElement.NTerms Do
+               For i := 1 to MeteredElement.NConds Do
+               Begin
+                    Str_Temp  :=  AnsiString(Format('V%dT%d,Deg, ', [i,j] ));
+                    strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+               End;
+
+            {Currents}
+            For j := 1 to MeteredElement.NTerms Do
+               For i := 1 to MeteredElement.NConds Do
+               Begin
+                    Str_Temp  :=  AnsiString(Format('I%dT%d,Deg, ', [i,j] ));
+                    strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+               End;
+
+        End
 
      Else Begin
          // Compute RecordSize
@@ -1130,7 +1158,7 @@ Begin
    Hour := ActiveCircuit[ActorID].Solution.DynaVars.intHour;
    Sec :=  ActiveCircuit[ActorID].Solution.Dynavars.t;
 
-   Offset := (MeteredTerminal-1)  * MeteredElement.NConds;
+   Offset := (MeteredTerminal-1)  * MeteredElement.NConds;   // Used to index the CurrentBuffer array
 
    //Save time unless Harmonics mode and then save Frequency and Harmonic
    WITH ActiveCircuit[ActorID].Solution Do
@@ -1309,6 +1337,23 @@ Begin
               End;
               Exit;
          End;
+     11: Begin    {Get all terminal voltages and currents of this device}
+
+            {Get All node voltages at all terminals}
+            MeteredElement.ComputeVterminal(ActorID);
+            For i := 1 to MeteredElement.Yorder Do VoltageBuffer^[i] := MeteredElement.Vterminal^[i];
+            ConvertComplexArrayToPolar( VoltageBuffer, MeteredElement.Yorder);
+            {Put Terminal Voltages into Monitor}
+            AddDblsToBuffer(@VoltageBuffer^[1].re, 2 * MeteredElement.Yorder);
+
+            {Get all terminsl currents}
+            MeteredElement.ComputeIterminal(ActorID);   // only does calc if needed
+            For i := 1 to MeteredElement.Yorder Do CurrentBuffer^[i] := MeteredElement.Iterminal^[i];
+            ConvertComplexArrayToPolar( CurrentBuffer, MeteredElement.Yorder);
+            {Put Terminal currents into Monitor}
+            AddDblsToBuffer(@CurrentBuffer^[1].re, 2 * MeteredElement.Yorder);
+            Exit;
+         End
      Else Exit  // Ignore invalid mask
 
    End;
