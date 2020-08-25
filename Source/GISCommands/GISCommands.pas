@@ -11,6 +11,8 @@ uses
   ShellApi,
   djson,
   VCl.forms,
+  Line,
+  Utilities,
 //   TCP Indy libraries
   IdBaseComponent,
   IdComponent,
@@ -30,6 +32,7 @@ function Get_JSONrouteGIS():  string;
 function WindowLR():  string;
 function WindowRL():  string;
 function ReSizeWindow():  string;
+function GISDrawCircuit():  Integer;
 
 var
   GISTCPClient          : TIdTCPClient;  // ... TIdThreadComponent
@@ -460,5 +463,50 @@ Begin
    result  :=  'OpenDSS-GIS is not installed or initialized'
 
 End;
+
+{*******************************************************************************
+*      Generates the file required by DSS-GIS to draw the model on the map     *
+*******************************************************************************}
+
+function GISDrawCircuit():  Integer;
+Var
+  LineElem  : TLineObj;
+  TxtRow,
+  myBus     : string;
+  k         : Integer;
+  F         : TextFile;
+
+Begin
+  IF ActiveCircuit[ActiveActor] <> Nil THEN
+  Begin
+    WITH ActiveCircuit[ActiveActor] DO
+    begin
+      If Lines.ListSize>0 Then
+      Begin
+        Assignfile(F, 'GIS_desc.csv');
+        ReWrite(F);
+        LineElem := Lines.First;
+        WHILE LineElem<>Nil DO
+        Begin
+          TxtRow    :=  '';
+          for k := 1 to 2 do
+          Begin
+            myBus   :=  StripExtension(LineElem.GetBus(k));
+            DSSGlobals.SetActiveBus(myBus);
+            IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].GISCoordDefined) Then
+              TxtRow  :=  TxtRow + floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Long) +
+              ',' + floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Lat) + ',';
+
+          End;
+          Writeln(F, TxtRow);
+          LineElem := Lines.Next;
+
+        End;
+        CloseFile(F);
+      End;
+    end;
+  End;
+  Result  :=  1;
+end;
 
 end.
