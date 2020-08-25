@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 134;
+     NumExecCommands = 135;
 
 Var
 
@@ -183,6 +183,7 @@ Begin
      ExecCommand[132] := 'ExportOverloads';
      ExecCommand[133] := 'ExportVViolations';
      ExecCommand[134] := 'Zsc012';
+     ExecCommand[135] := 'GISDrawCircuit';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -591,6 +592,11 @@ Begin
      CommandHelp[132] := 'Exports the overloads report with the content avaiable at the moment of the call. It only affects the overloads report for the active actor.';
      CommandHelp[133] := 'Exports the voltage violations1 report with the content avaiable at the moment of the call. It only affects the voltage violations report for the active actor.';
      CommandHelp[134] := 'Returns symmetrical component short circuit impedances Z0, Z1, and Z2 for the ACTIVE 3-PHASE BUS. Determined from Zsc matrix.';
+     CommandHelp[135] := 'Draws the circuit on top of the map displayed in OpenDSS-GIS. The following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
 
 End;
 
@@ -922,7 +928,8 @@ Begin
             if VR_MHandle[ActiveActor] <> nil then
             	CloseMHandler(VR_MHandle[ActiveActor],EnergyMeterClass[ActiveActor].DI_Dir+'\DI_VoltExceptions_' + inttostr(ActiveActor) + '.CSV', VR_Append[ActiveActor]);
            End;
-      134: CmdResult := DoZsc012Cmd; // Get full symmetrical component transformation of Zsc
+      134: CmdResult  :=  DoZsc012Cmd; // Get full symmetrical component transformation of Zsc
+      135: Cmdresult  :=  GISDrawCircuit;           // Draws the circuit on top of the map in DSS-GIS
      ELSE
        // Ignore excess parameters
      End;
