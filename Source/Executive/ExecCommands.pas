@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 135;
+     NumExecCommands = 138;
 
 Var
 
@@ -183,7 +183,10 @@ Begin
      ExecCommand[132] := 'ExportOverloads';
      ExecCommand[133] := 'ExportVViolations';
      ExecCommand[134] := 'Zsc012';
-     ExecCommand[135] := 'GISDrawCircuit';
+     ExecCommand[135] := 'GISPlotCircuit';
+     ExecCommand[136] := 'GISshowLine';
+     ExecCommand[137] := 'GISExportMap';
+     ExecCommand[138] := 'GISFindTrees';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -597,6 +600,21 @@ Begin
                          '1. OpenDSS-GIS must be installed' + CRLF +
                          '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
                          '3. The model needs to have the correct buscoords file';
+     CommandHelp[136] := 'Shows the line specified int he argument using OpenDSS-GIS. The following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
+     CommandHelp[137] := 'Exports the current map view into the models folder as a PNG file. The following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
+     CommandHelp[138] := 'Returns Tree/No tree if a tree intersects with the line given in the argument. The following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
 
 End;
 
@@ -928,8 +946,17 @@ Begin
             if VR_MHandle[ActiveActor] <> nil then
             	CloseMHandler(VR_MHandle[ActiveActor],EnergyMeterClass[ActiveActor].DI_Dir+'\DI_VoltExceptions_' + inttostr(ActiveActor) + '.CSV', VR_Append[ActiveActor]);
            End;
-      134: CmdResult  :=  DoZsc012Cmd; // Get full symmetrical component transformation of Zsc
-      135: Cmdresult  :=  GISDrawCircuit;           // Draws the circuit on top of the map in DSS-GIS
+      134: CmdResult      :=  DoZsc012Cmd; // Get full symmetrical component transformation of Zsc
+      135: GlobalResult   :=  GISDrawCircuit;           // Draws the circuit on top of the map in DSS-GIS
+      136:  begin
+              Parser[ActiveActor].NextParam;
+              GlobalResult  :=  show_lineGIS(Parser[ActiveActor].StrValue);
+            end;
+      137: GlobalResult   :=  export_mapGIS();           // exports the current map view into the model's folder
+      138:  begin
+              Parser[ActiveActor].NextParam;
+              GlobalResult  :=  find_treesGIS(Parser[ActiveActor].StrValue);
+            end;
      ELSE
        // Ignore excess parameters
      End;
