@@ -32,11 +32,16 @@ function Get_JSONrouteGIS():  string;
 function WindowLR():  string;
 function WindowRL():  string;
 function ReSizeWindow():  string;
-function GISDrawCircuit():  Integer;
+function GISDrawCircuit():  string;
+function show_lineGIS(LineName   : string): string;
+function export_mapGIS(): string;
+function find_treesGIS(LineName : string): string;
+Procedure get_line_Coords(LineName : string);
 
 var
   GISTCPClient          : TIdTCPClient;  // ... TIdThreadComponent
   GISThreadComponent    : TIdThreadComponent;
+  myCoords          : array of double;
 
 implementation
 
@@ -385,7 +390,7 @@ Begin
 End;
 
 {*******************************************************************************
-*            Distributes the windows leaving OpenDSS on the right              *
+*            Distributes the windows leaving OpenDSS to the right              *
 *******************************************************************************}
 
 function WindowRL():  string;
@@ -468,45 +473,234 @@ End;
 *      Generates the file required by DSS-GIS to draw the model on the map     *
 *******************************************************************************}
 
-function GISDrawCircuit():  Integer;
+function GISDrawCircuit():  string;
 Var
-  LineElem  : TLineObj;
+  LineElem      : TLineObj;
   TxtRow,
-  myBus     : string;
-  k         : Integer;
-  F         : TextFile;
+  myBus         : string;
+  k             : Integer;
+  F             : TextFile;
+  InMsg,
+  TempStr,
+  JSONCmd       : String;
+  TCPJSON       : TdJSON;
 
 Begin
   IF ActiveCircuit[ActiveActor] <> Nil THEN
   Begin
-    WITH ActiveCircuit[ActiveActor] DO
-    begin
-      If Lines.ListSize>0 Then
-      Begin
-        Assignfile(F, 'GIS_desc.csv');
-        ReWrite(F);
-        LineElem := Lines.First;
-        WHILE LineElem<>Nil DO
-        Begin
-          TxtRow    :=  '';
-          for k := 1 to 2 do
+    if IsGISON then
+    Begin
+        WITH ActiveCircuit[ActiveActor] DO
+        begin
+          If Lines.ListSize > 0 Then
           Begin
-            myBus   :=  StripExtension(LineElem.GetBus(k));
-            DSSGlobals.SetActiveBus(myBus);
-            IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].GISCoordDefined) Then
-              TxtRow  :=  TxtRow + floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Long) +
-              ',' + floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Lat) + ',';
+            Assignfile(F, 'GIS_desc.csv');
+            ReWrite(F);
+            LineElem := Lines.First;
+            WHILE LineElem<>Nil DO
+            Begin
+              TxtRow    :=  '';
+              for k := 1 to 2 do
+              Begin
+                myBus   :=  StripExtension(LineElem.GetBus(k));
+                DSSGlobals.SetActiveBus(myBus);
+                IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].GISCoordDefined) Then
+                  TxtRow  :=  TxtRow + floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Long) +
+                  ',' + floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Lat) + ',';
+
+              End;
+              Writeln(F, TxtRow);
+              LineElem := Lines.Next;
+
+            End;
+            CloseFile(F);
+            JSONCmd :=  '{"command":"plotcircuit","path":"' +
+            OutputDirectory[ActiveActor] + 'GIS_desc.csv"}';
+            // Sends the command to OpenDSS-GIS
+            try
+              GISTCPClient.IOHandler.WriteLn(JSONCmd);
+              InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,5000);
+              TCPJSON :=  TdJSON.Parse(InMsg);
+              TempStr :=  TCPJSON['plotcircuit'].AsString;
+              Result  :=  TempStr;
+              except
+              on E: Exception do begin
+                IsGISON     :=  False;
+                Result      :=  'Error while communicating to OpenDSS-GIS';
+              end;
+            end;
 
           End;
-          Writeln(F, TxtRow);
-          LineElem := Lines.Next;
-
-        End;
-        CloseFile(F);
-      End;
-    end;
+        end;
+    End
+    else
+      result  :=  'OpenDSS-GIS is not installed or initialized'
   End;
-  Result  :=  1;
+end;
+
+{*******************************************************************************
+*                         Shows the given line on the map                       *
+*******************************************************************************}
+function show_lineGIS(LineName   : string): string;
+Var
+  TCPJSON       : TdJSON;
+  activesave,
+  i             : Integer;
+  InMsg         : String;
+  pLine         : TLineObj;
+Begin
+  if IsGISON then
+  Begin
+  // First have to find the line
+
+    If (ActiveCircuit[ActiveActor] <> Nil) Then
+    begin
+      get_line_Coords(LineName);
+
+      InMsg:=  '{"command":"showline","coords":{"long1":' + floattostr(myCoords[0]) +',"lat1":' + floattostr(myCoords[1]) +
+                ',"long2":' + floattostr(myCoords[2]) + ',"lat2":'+ floattostr(myCoords[3]) + '}}';
+      try
+        GISTCPClient.IOHandler.WriteLn(InMsg);
+        InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,200);
+        TCPJSON :=  TdJSON.Parse(InMsg);
+        Result  :=  TCPJSON['showline'].AsString;
+      except
+        on E: Exception do begin
+          IsGISON     :=  False;
+          Result      :=  'Error while communicating to OpenDSS-GIS';
+        end;
+      end;
+
+    end;
+
+  End
+  else
+    result  :=  'OpenDSS-GIS is not installed or initialized';
+
+End;
+
+{*******************************************************************************
+*             Exports the current map view into the models folder              *
+*******************************************************************************}
+function export_mapGIS(): string;
+Var
+  TCPJSON       : TdJSON;
+  activesave,
+  i             : Integer;
+  InMsg         : String;
+  Found         : Boolean;
+  pLine         : TLineObj;
+Begin
+  if IsGISON then
+  Begin
+      InMsg:=  '{"command":"exportmap", "path":"' + OutputDirectory[ActiveActor] + '"}';
+      try
+        GISTCPClient.IOHandler.WriteLn(InMsg);
+        InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,200);
+        TCPJSON :=  TdJSON.Parse(InMsg);
+        Result  :=  TCPJSON['exportmap'].AsString;
+      except
+        on E: Exception do begin
+          IsGISON     :=  False;
+          Result      :=  'Error while communicating to OpenDSS-GIS';
+        end;
+      end;
+
+  end
+  else
+    result  :=  'OpenDSS-GIS is not installed or initialized';
+End;
+
+{*******************************************************************************
+*             Commands OpenDSS-GIS to verify if there are trees                *
+*                     intersecting with the given line                         *
+*******************************************************************************}
+function find_treesGIS(LineName : string): string;
+Var
+  TCPJSON       : TdJSON;
+  activesave,
+  i             : Integer;
+  InMsg         : String;
+  Found         : Boolean;
+  pLine         : TLineObj;
+Begin
+  if IsGISON then
+  Begin
+  // to be implemented
+
+  //    InMsg:=  '{"command":"exportmap", "path":"' + OutputDirectory[ActiveActor] + '"}';
+  //    try
+  //      GISTCPClient.IOHandler.WriteLn(InMsg);
+  //      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,200);
+  //      TCPJSON :=  TdJSON.Parse(InMsg);
+  //      Result  :=  TCPJSON['exportmap'].AsString;
+  //    except
+  //      on E: Exception do begin
+  //        IsGISON     :=  False;
+  //        Result      :=  'Error while communicating to OpenDSS-GIS';
+  //      end;
+  //    end;
+    result  := 'No tree';
+  end
+  else
+    result  :=  'OpenDSS-GIS is not installed or initialized';
+End;
+
+Procedure get_line_Coords(LineName : string);
+var
+  TCPJSON       : TdJSON;
+  activesave,
+  i             : Integer;
+  myBuses       : Array of String;
+  S,
+  InMsg         : String;
+  Found         : Boolean;
+  pLine         : TLineObj;
+begin
+  setlength(myCoords,4);
+  setlength(myBuses,2);
+
+  S          := LineName;  // Convert to Pascal String
+  Found      := FALSE;
+
+  WITH ActiveCircuit[ActiveActor].Lines DO
+  Begin
+    ActiveSave := ActiveIndex;
+    pLine      := First;
+    While pLine <> NIL Do
+    Begin
+       IF (CompareText(pLine.Name, S) = 0)
+       THEN Begin
+           ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
+           Found := TRUE;
+           Break;
+       End;
+       pLine := Next;
+    End;
+  End;
+  // Get the names of the buses for the line
+  With ActiveCircuit[ActiveActor] Do
+  Begin
+    For i := 1 to  2 Do
+    Begin
+       myBuses[i-1] := StripExtension(pLine.GetBus(i));
+    End;
+
+  // Get the coords of the buses
+    For i := 0 to  1 Do
+    Begin
+      SetActiveBus(myBuses[i]);
+      IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+      Begin
+        IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].GISCoorddefined) Then
+        Begin
+          myCoords[i*2]     :=  Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].long;
+          myCoords[i*2 + 1] :=  Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].lat;
+        End;
+      End;
+    End;
+  End;
+
 end;
 
 end.
