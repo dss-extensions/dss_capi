@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 138;
+     NumExecCommands = 142;
 
 Var
 
@@ -31,6 +31,7 @@ Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
      ExportOptions, ParserDel, LoadShape,
      sysutils, Utilities, SolutionAlgs,
      DSSClassDefs,
+     Arraydef,
 {$IFDEF FPC}
      CmdForms,
 {$ELSE}
@@ -187,6 +188,10 @@ Begin
      ExecCommand[136] := 'GISshowLine';
      ExecCommand[137] := 'GISExportMap';
      ExecCommand[138] := 'GISFindTrees';
+     ExecCommand[139] := 'GISMapView';
+     ExecCommand[140] := 'GISClearMap';
+     ExecCommand[141] := 'GISDrawLine';
+     ExecCommand[142] := 'GISZoomMap';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -615,7 +620,39 @@ Begin
                          '1. OpenDSS-GIS must be installed' + CRLF +
                          '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
                          '3. The model needs to have the correct buscoords file';
-
+     CommandHelp[139] := 'Chenges the map view in OpenDSS-GIS using one of the following arguments:' + CRLF + CRLF +
+                         '- Streets' +  CRLF +
+                         '- StreetsVector' +  CRLF +
+                         '- StreetsNight' +  CRLF +
+                         '- Satellite' +  CRLF +
+                         '- SatelliteLabels' +  CRLF +
+                         '- SatelliteLabelsVector' +  CRLF +
+                         '- DarkGrayCanvas' +  CRLF +
+                         '- LightGrayCanvas' +  CRLF +
+                         '- LightGrayCanvasVector' +  CRLF +
+                         '- Navigation' +  CRLF +
+                         '- OpenStreetMap' +  CRLF + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
+     CommandHelp[140] := 'Clears the Map by removing all the previous draws. The following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
+     CommandHelp[141] := 'Draws a line at the given coordinates using the color and thickness (pix) specified.' + CRLF +
+                         'The line features can be defined using GISCoords, GISColor and GISThickness from the exective options.' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
+     CommandHelp[142] := 'Zooms the map at the area specified at GISCoords.' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
 End;
 
 //----------------------------------------------------------------------------
@@ -623,10 +660,11 @@ PROCEDURE ProcessCommand(Const CmdLine:String);
 VAR
    ParamPointer,
    Temp_int,
-   i:Integer;
-   ParamName:String;
-   Param:String;
-   ObjName, PropName:String;
+   i            : Integer;
+   ParamName,
+   Param,
+   ObjName,
+   PropName     : String;
 
 Begin
 
@@ -957,6 +995,14 @@ Begin
               Parser[ActiveActor].NextParam;
               GlobalResult  :=  find_treesGIS(Parser[ActiveActor].StrValue);
             end;
+      139:  begin
+              Parser[ActiveActor].NextParam;
+              GlobalResult  :=  set_map_View(lowercase(Parser[ActiveActor].StrValue));
+            end;
+      140:  GlobalResult  :=  clear_map();
+      141:  GlobalResult  :=  Draw_line_GIS();
+      142:  GlobalResult  :=  Zoom_area_GIS();
+
      ELSE
        // Ignore excess parameters
      End;

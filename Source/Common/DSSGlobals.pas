@@ -347,6 +347,10 @@ VAR
 
 //************************ OpenDSS-GIS Global defs***************************
   IsGISON                 : Boolean;
+  GISThickness,
+  GISColor                : String;
+  GISCoords               : pDoubleArray;
+
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
@@ -1348,6 +1352,10 @@ initialization
     DSSObjs[ActiveActor]              :=  nil;
     DSSClassList[ActiveActor]         :=  nil;
    end;
+
+   GISThickness           :=  '3';
+   GISColor               :=  'FF0000';
+   GISCoords              :=  AllocMem(Sizeof(Double) * 4);
 
    IsProgressOn           :=  False;
 

@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 132;
+        NumExecOptions = 135;
 
 VAR
          ExecOption,
@@ -167,6 +167,9 @@ Begin
      ExecOption[130] := 'MarkPVSystems2';
      ExecOption[131] := 'GISInstalled';
      ExecOption[132] := 'MarkStorage2';
+     ExecOption[133] := 'GISCoords';
+     ExecOption[134] := 'GISColor';
+     ExecOption[135] := 'GISThickness';
 
 
      OptionHelp[1]  := 'Sets the active DSS class type.  Same as Class=...';
@@ -452,6 +455,9 @@ Begin
      OptionHelp[130] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark PVSystem locations with a symbol. See PVMarkerCode and PVMarkerSize. ';
      OptionHelp[131] := 'Returns Yes/No if the OpenDSS GIS installation is detected in the local machine (Read Only)';
      OptionHelp[132] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark Storage2 locations with a symbol. See StoreMarkerCode and StoreMarkerSize. ';
+     OptionHelp[133] := '[Coords] : An array of doubles defining the longitud and latitude for an area to be used as refrence for the OpenDSS-GIS related commands, long1, lat1, long2, lat2';
+     OptionHelp[134] := 'Color    : A Hex string defining 24 bit color in RGB format, e.g. , red = FF0000';
+     OptionHelp[135] := 'Thickness: An integer defining the thickness (default = 3)';
 
 End;
 //----------------------------------------------------------------------------
@@ -778,6 +784,15 @@ Begin
           128: SeasonSignal   :=  Param;
           130: ActiveCircuit[ActiveActor].MarkPVSystems2   := InterpretYesNo(Param);
           132: ActiveCircuit[ActiveActor].MarkStorage2     := InterpretYesNo(Param);
+          133: Begin
+                Parser[ActiveActor].ParseAsVector(4,GISCoords);
+               End;
+          134: Begin
+                GISColor      :=  Parser[ActiveActor].StrValue;
+               End;
+          135: Begin
+                GISthickness  :=  Parser[ActiveActor].StrValue;
+               End;
          ELSE
            // Ignore excess parameters
          End;
