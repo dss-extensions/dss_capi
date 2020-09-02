@@ -12,10 +12,10 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 98336 $
-// File generated on 7/13/2020 2:57:22 PM from Type Library described below.
+// File generated on 9/2/2020 5:28:49 PM from Type Library described below.
 
 // ************************************************************************  //
-// Type Lib: C:\Users\prdu001\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
+// Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
 // LIBID: {8BFDE413-245A-4514-B151-B16DCC243796}
 // LCID: 0
 // Helpfile:
@@ -24,8 +24,6 @@ unit OpenDSSengine_TLB;
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 //   (2) v1.0 stdole, (stdole32.tlb)
 // SYS_KIND: SYS_WIN32
-// Errors:
-//   Hint: Member 'Class' of 'ILoads' changed to 'Class_'
 // ************************************************************************ //
 {$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
 {$WARN SYMBOL_PLATFORM OFF}
@@ -908,6 +906,10 @@ type
     function Get_LineList: OleVariant; safecall;
     function Get_LoadList: OleVariant; safecall;
     function Get_ZSC012Matrix: OleVariant; safecall;
+    function Get_Latitude: Double; safecall;
+    procedure Set_Latitude(Value: Double); safecall;
+    function Get_Longitude: Double; safecall;
+    procedure Set_Longitude(Value: Double); safecall;
     property Name: WideString read Get_Name;
     property NumNodes: Integer read Get_NumNodes;
     property Voltages: OleVariant read Get_Voltages;
@@ -941,6 +943,8 @@ type
     property LineList: OleVariant read Get_LineList;
     property LoadList: OleVariant read Get_LoadList;
     property ZSC012Matrix: OleVariant read Get_ZSC012Matrix;
+    property Latitude: Double read Get_Latitude write Set_Latitude;
+    property Longitude: Double read Get_Longitude write Set_Longitude;
   end;
 
 // *********************************************************************//
@@ -985,6 +989,8 @@ type
     property LineList: OleVariant readonly dispid 219;
     property LoadList: OleVariant readonly dispid 220;
     property ZSC012Matrix: OleVariant readonly dispid 221;
+    property Latitude: Double dispid 222;
+    property Longitude: Double dispid 223;
   end;
 
 // *********************************************************************//

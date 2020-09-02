@@ -51,6 +51,10 @@ type
     function Get_LineList: OleVariant; safecall;
     function Get_LoadList: OleVariant; safecall;
     function Get_ZSC012Matrix: OleVariant; safecall;
+    function Get_Latitude: Double; safecall;
+    procedure Set_Latitude(Value: Double); safecall;
+    function Get_Longitude: Double; safecall;
+    procedure Set_Longitude(Value: Double); safecall;
   end;
 
 implementation
@@ -1021,6 +1025,47 @@ begin
         End;
     End;
 
+end;
+
+function TBus.Get_Latitude: Double;
+begin
+  Result := 0.0;
+   If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+     IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined) Then
+       Result := Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].lat;
+end;
+
+
+
+procedure TBus.Set_Latitude(Value: Double);
+begin
+  If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+    Begin
+       Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined := TRUE;
+       Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].lat := Value;
+    End;
+end;
+
+
+function TBus.Get_Longitude: Double;
+begin
+  Result := 0.0;
+   If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+     IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined) Then
+       Result := Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].long;
+end;
+
+procedure TBus.Set_Longitude(Value: Double);
+begin
+  If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+    Begin
+       Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined := TRUE;
+       Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].long := Value;
+    End;
 end;
 
 initialization
