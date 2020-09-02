@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 7/13/2020 4:52:29 PM (- $Rev: 12980 $, 15955437).
+// File generated on 9/2/2020 5:29:31 PM (- $Rev: 12980 $, 31680937).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -724,6 +724,14 @@ library OpenDSSengine
     HRESULT _stdcall LoadList([out, retval] VARIANT* Value);
     [propget, id(0x000000DD), helpstring("Variant array of doubles (complex) containing the complete 012 Zsc matrix")]
     HRESULT _stdcall ZSC012Matrix([out, retval] VARIANT* Value);
+    [propget, id(0x000000DE), helpstring("Sets the GIS latitude assigned to this bus")]
+    HRESULT _stdcall Latitude([out, retval] double* Value);
+    [propput, id(0x000000DE), helpstring("Delivers the GIS latitude assigned to this bus (if any)")]
+    HRESULT _stdcall Latitude([in] double Value);
+    [propget, id(0x000000DF), helpstring("Sets the longitude given to the active Bus ")]
+    HRESULT _stdcall Longitude([out, retval] double* Value);
+    [propput, id(0x000000DF), helpstring("Delivers the longitude assigned to the active Bus (if any)")]
+    HRESULT _stdcall Longitude([in] double Value);
   };
 
   [

@@ -167,6 +167,36 @@ begin
         With ActiveCircuit[ActiveActor] Do
           if ActiveBusIndex > 0 then
              Result := Buses^[ActiveBusIndex].BusTotalMiles  ;
+  end;
+  12: begin                                          // Bus.latitude read
+      Result := 0.0;
+       If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+        IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+         IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined) Then
+           Result := Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].lat;
+  end;
+  13: begin                                          // Bus.Latitude write
+      If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+        IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+        Begin
+           Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined := TRUE;
+           Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].lat := arg;
+        End;
+  end;
+  14: begin                                          // Bus.latitude read
+      Result := 0.0;
+       If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+        IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+         IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined) Then
+           Result := Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].long;
+  end;
+  15: begin                                          // Bus.Latitude write
+      If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+        IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+        Begin
+           Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined := TRUE;
+           Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].long := arg;
+        End;
   end
   else
       Result:=-1.0;
