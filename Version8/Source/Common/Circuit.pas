@@ -99,6 +99,7 @@ TYPE
           Function SaveDSSObjects:Boolean;
           Function SaveFeeders:Boolean;
           Function SaveBusCoords:Boolean;
+          Function SaveGISCoords:Boolean;
           Function SaveVoltageBases:Boolean;
 
           procedure ReallocDeviceList(ActorID: integer);
@@ -1968,6 +1969,7 @@ begin
     If Success Then Success := SaveDSSObjects;  // Save rest ot the objects
     If Success Then Success := SaveVoltageBases;
     If Success Then Success := SaveBusCoords;
+    If Success Then Success := SaveGISCoords;
     If Success Then Success := SaveMasterFile;
 
 
@@ -2068,6 +2070,11 @@ begin
          Writeln(F, 'Buscoords buscoords.dss');
       End;
 
+      If FileExists('GIScoords.dss') Then
+      Begin
+         Writeln(F, 'GIScoords GIScoords.dss');
+      End;
+
       CloseFile(F);
       Result := TRUE;
   Except
@@ -2131,6 +2138,35 @@ begin
        For i := 1 to NumBuses Do
        Begin
            If Buses^[i].CoordDefined then Writeln(F, CheckForBlanks(BusList.Get(i)), Format(', %-g, %-g', [Buses^[i].X, Buses^[i].Y]));
+       End;
+
+       Closefile(F);
+
+       Result := TRUE;
+
+   Except
+       On E:Exception Do DoSimpleMsg('Error creating Buscoords.dss.', 437);
+   End;
+
+end;
+
+Function TDSSCircuit.SaveGISCoords:Boolean;
+Var
+        F:TextFile;
+        i:Integer;
+begin
+
+   Result := FALSE;
+
+   Try
+       AssignFile(F, 'GISCoords.dss');
+       Rewrite(F);
+
+
+
+       For i := 1 to NumBuses Do
+       Begin
+           If Buses^[i].CoordDefined then Writeln(F, CheckForBlanks(BusList.Get(i)), Format(', %-g, %-g', [Buses^[i].Lat, Buses^[i].Long]));
        End;
 
        Closefile(F);
