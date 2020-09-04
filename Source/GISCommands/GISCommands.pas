@@ -490,6 +490,7 @@ Var
   TempStr,
   JSONCmd       : String;
   TCPJSON       : TdJSON;
+  Add2file      : Boolean;
 
 Begin
   IF ActiveCircuit[ActiveActor] <> Nil THEN
@@ -506,16 +507,20 @@ Begin
             WHILE LineElem<>Nil DO
             Begin
               TxtRow    :=  '';
+              Add2File  :=  True;
               for k := 1 to 2 do
               Begin
                 myBus   :=  StripExtension(LineElem.GetBus(k));
                 DSSGlobals.SetActiveBus(myBus);
                 IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].GISCoordDefined) Then
+                Begin
                   TxtRow  :=  TxtRow + floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Long) +
                   ',' + floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Lat) + ',';
-
+                End;
+                Add2File  :=  Add2File and (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Long <> 0) and (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Lat <> 0);
               End;
-              Writeln(F, TxtRow);
+              if Add2File then
+                Writeln(F, TxtRow);
               LineElem := Lines.Next;
 
             End;
