@@ -22,6 +22,8 @@ TYPE
 
    TLine = class(TPDClass)
      private
+
+
        PROCEDURE DoRmatrix;
        PROCEDURE DoXmatrix;
        PROCEDURE DoCmatrix;
@@ -39,7 +41,7 @@ TYPE
        FUNCTION Init(Handle:Integer):Integer; override;
        FUNCTION NewObject(const ObjName:String):Integer; override;
 
-   end;
+    end;
 
    TLineObj = class(TPDElement)
       Private
@@ -55,6 +57,7 @@ TYPE
         FLineCodeSpecified :Boolean;
         FEarthModel        :Integer;
         FCapSpecified      :Boolean; // To make sure user specifies C in some form
+        FLineType          :Integer; // Pointer to code for type of line
 
         Procedure FMakeZFromGeometry(f:Double); // make new Z, Zinv, Yc, etc
         Procedure KillGeometrySpecified;
@@ -149,12 +152,13 @@ IMPLEMENTATION
 USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils,  ArrayDef,
       Utilities, Mathutil, ControlElem, LineUnits;
 
-Const NumPropsThisClass = 27;
+Const NumPropsThisClass = 28;
     //  MaxPhases = 20; // for fixed buffers
 
 VAR
    CAP_EPSILON   :Complex;
    LineCodeClass:TLineCode;
+   LineTypeList: TCommandList;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLine.Create;  // Creates superstructure for all Line objects
@@ -171,6 +175,10 @@ Begin
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
+
+     LineTypeList := TCommandList.Create(
+     ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT', 'SWT_REC', 'SWT1_DISC', 'SWT_BRK', 'SWT_ELBOW' ]);
+     LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
 
 End;
 
@@ -220,6 +228,7 @@ Begin
      PropertyName[25] := 'tscables';
      PropertyName[26] := 'B1';
      PropertyName[27] := 'B0';
+     PropertyName[28] := 'LineType';
 
      // define Property help values
 
@@ -296,6 +305,9 @@ Begin
                           'You may later specify "nconds-nphases" wires for separate neutrals';
      PropertyHelp[26] := 'Alternate way to specify C1. MicroS per unit length' ;
      PropertyHelp[27] := 'Alternate way to specify C0. MicroS per unit length' ;
+     PropertyHelp[28] := 'Code designating the type of line. ' +  CRLF +
+                         'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
+                         'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -575,6 +587,7 @@ Begin
            25: FetchTSCableList(Param);
            26: Begin c1 := Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6; FCapSpecified := TRUE; End;
            27: Begin c0 := Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6; FCapSpecified := TRUE; End;
+           28: FLineType := LineTypeList.Getcommand(Param);
          ELSE
             // Inherited Property Edits
              ClassEdit(ActiveLineObj, ParamPointer - NumPropsThisClass)
@@ -767,6 +780,8 @@ Begin
      FLineCodeUnits    := UNITS_NONE;
      FLineCodeSpecified := FALSE;
      FEarthModel        := DefaultEarthModel;
+
+     FLineType          := 1;  // Default to OH  Line
 
      SpacingSpecified := False;
      FLineSpacingObj  := Nil;
@@ -1211,11 +1226,12 @@ begin
            23: Result := GetEarthModel(FEarthModel);
            26: If SymComponentsModel Then Result := Format('%.7g', [twopi * Basefrequency * C1 * 1.0e6]) else Result := '----';
            27: If SymComponentsModel Then Result := Format('%.7g', [twopi * Basefrequency * C0 * 1.0e6]) else Result := '----';
+           28: Result := LineTypeList.Get(FLineType);
 
            // Intercept FaultRate, PctPerm, and HourstoRepair
-           30:Result := Format('%-g', [FaultRate]);
-           31:Result := Format('%-g', [PctPerm]);
-           32:Result := Format('%-g', [HrsToRepair]);
+           31:Result := Format('%-g', [FaultRate]);
+           32:Result := Format('%-g', [PctPerm]);
+           33:Result := Format('%-g', [HrsToRepair]);
 
 
         ELSE
@@ -1301,6 +1317,7 @@ begin
      PropertyValue[25] := '';
      PropertyValue[26] := '1.2818'; // B1  microS
      PropertyValue[27] := '0.60319'; // B0  microS
+     PropertyValue[28] := 'OH'; // Overhead line default
 
 
     inherited InitPropertyValues(NumPropsThisClass);
