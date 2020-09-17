@@ -219,16 +219,17 @@ Type
 
      public
 
-       DI_RegisterTotals      :TRegisterArray;
-       DI_Dir                 :String;
-       FDI_Totals             :TextFile;
-       FMeterTotals           :TextFile;
+       DI_RegisterTotals          : TRegisterArray;
+       DI_Dir                     : String;
+       FDI_Totals                 : TextFile;
+       FMeterTotals               : TextFile;
 
-       SystemMeter                :TSystemMeter;
-       Do_OverloadReport          :Boolean;
-       Do_VoltageExceptionReport  :Boolean;
-       OverLoadFileIsOpen         :Boolean;
-       VoltageFileIsOpen          :Boolean;
+       SystemMeter                : TSystemMeter;
+       Do_OverloadReport          : Boolean;
+       Do_VoltageExceptionReport  : Boolean;
+       OverLoadFileIsOpen         : Boolean;
+       VoltageFileIsOpen          : Boolean;
+
 
 
        constructor Create;
@@ -352,7 +353,7 @@ Type
         SectionCount          : Integer;
         ActiveSection         : Integer;  // For COM interface to index into FeederSections array
         FeederSections        : pFeederSections;
-
+        ZonePCE               : Array of string;
 
         constructor Create(ParClass:TDSSClass; const EnergyMeterName:String);
         destructor Destroy; override;
@@ -374,6 +375,7 @@ Type
         Procedure AllocateLoad(ActorID: integer);
         Procedure ReduceZone(ActorID: integer);  // Reduce Zone by eliminating buses and merging lines
         Procedure SaveZone(const dirname:String);
+        procedure GetPCEatZone;
 
         Procedure CalcReliabilityIndices(AssumeRestoration:Boolean; ActorID : Integer);
 
@@ -2721,7 +2723,7 @@ begin
      cktElem := BranchList.First;
      With ActiveCircuit[ActiveActor] Do
      WHILE cktElem <> NIL Do
-       Begin
+     Begin
          If CktElem.Enabled Then Begin
            ActiveCktElement := cktElem;
 
@@ -2800,10 +2802,10 @@ begin
                  End;
                shuntElement := BranchList.NextObject
              End;
-          End; {if enabled}
+         End; {if enabled}
 
         cktElem := BranchList.GoForward;
-       End;{WHILE}
+     End;{WHILE}
 
      CloseFile(FBranches);
      CloseFile(FXfmrs);
@@ -2835,6 +2837,44 @@ begin
 
 end;
 
+procedure TEnergyMeterObj.GetPCEatZone;
+Var
+
+  cktElem,
+  shuntElement  : TDSSCktElement;
+  myPCEList     : Array of string;
+  pMeter        : TEnergyMeterObj;
+
+Begin
+  If ActiveCircuit[ActiveActor] <> Nil Then
+  Begin
+    setlength(ZonePCE,1);
+    ZonePCE[0]  :=  '';
+    With ActiveCircuit[ActiveActor] Do
+    Begin
+      IF BranchList<>NIL Then
+      Begin
+        cktElem                 := BranchList.First;
+        WHILE cktElem <> NIL Do
+        Begin
+          If CktElem.Enabled Then
+          Begin
+            ActiveCktElement := cktElem;
+            shuntElement               := Branchlist.FirstObject;
+            While shuntElement <> Nil Do
+            Begin
+              ActiveCktElement             := shuntElement;
+              ZonePCE[high(ZonePCE)]   := shuntElement.DSSClassName + '.' + shuntElement.Name;
+              setlength(ZonePCE,length(ZonePCE) + 1);
+              shuntElement                 := BranchList.NextObject;
+            End;
+          End;
+          cktElem := BranchList.GoForward;
+        end;
+      End;
+    End;
+  End;
+End;
 
 procedure TEnergyMeterObj.SetDragHandRegister(Reg: Integer;  const Value: Double);
 begin
