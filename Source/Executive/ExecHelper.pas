@@ -3816,6 +3816,7 @@ Begin
 {$ELSE}
 Begin
   DoSimpleMsg('Error: FNCS only supported in the Free Pascal version', 28728);
+  Result := 0;
 {$ENDIF}
 End;
 
