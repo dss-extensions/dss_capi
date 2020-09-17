@@ -22,9 +22,9 @@ uses EnergyMeter,
 function MetersI(mode: longint; arg: longint):Longint;cdecl;
 
 var
-   pMeter:TEnergyMeterObj;
-   AssumeRestoration: WordBool;
-   PD_Element   :TPDElement;
+   pMeter             : TEnergyMeterObj;
+   AssumeRestoration  : WordBool;
+   PD_Element         : TPDElement;
 
 begin
   Result:=0; // Default return value
@@ -491,14 +491,19 @@ end;
 procedure MetersV(mode: longint; out arg: Variant);cdecl;
 
 Var
-  MeterElem:TEnergyMeterObj;
-  k, i:Integer;
-  pMeterObj :TEnergyMeterObj;
-  last:Integer;
-  elem : TDSSCktElement;
-  node : TCktTreeNode;
-  BranchCount :Integer;
-  pElem       :TDSSCktElement;
+  pMeter,
+  pMeterObj,
+  MeterElem     : TEnergyMeterObj;
+  BranchCount,
+  last,
+  k,
+  i             : Integer;
+  cktElem,
+  shuntElement,
+  pElem,
+  elem          : TDSSCktElement;
+  node          : TCktTreeNode;
+  MyPCEList    : array of string;
 
 begin
   case mode of
@@ -683,6 +688,28 @@ begin
           End;
         end;
       End;
+  end;
+  12: begin  // Meters.ALLPCEinZone
+      arg           := VarArrayCreate([0, 0], varOleStr);
+      arg[0]        := 'NONE';
+
+      If ActiveCircuit[ActiveActor] <> Nil Then
+      Begin
+        With ActiveCircuit[ActiveActor] Do
+        Begin
+          pMeter                  := EnergyMeters.Active;
+          pMeter.GetPCEatZone;
+          // moves the list to the variant output
+          if (length(pMeter.ZonePCE) > 0) and (pMeter.ZonePCE[0] <> '') then
+          Begin
+            VarArrayRedim(arg, length(pMeter.ZonePCE) + 1);
+            for k := 0 to High(pMeter.ZonePCE) do
+              arg[k]   :=  pMeter.ZonePCE[k];
+          End;
+
+        End;
+      End;
+
   end
   else
       arg[0]:='Error, Parameter not recognized';
