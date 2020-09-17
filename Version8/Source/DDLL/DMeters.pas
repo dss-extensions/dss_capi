@@ -698,15 +698,17 @@ begin
         With ActiveCircuit[ActiveActor] Do
         Begin
           pMeter                  := EnergyMeters.Active;
-          pMeter.GetPCEatZone;
-          // moves the list to the variant output
-          if (length(pMeter.ZonePCE) > 0) and (pMeter.ZonePCE[0] <> '') then
+          if pMeter <> nil then
           Begin
-            VarArrayRedim(arg, length(pMeter.ZonePCE) + 1);
-            for k := 0 to High(pMeter.ZonePCE) do
-              arg[k]   :=  pMeter.ZonePCE[k];
+            pMeter.GetPCEatZone;
+            // moves the list to the variant output
+            if (length(pMeter.ZonePCE) > 0) and (pMeter.ZonePCE[0] <> '') then
+            Begin
+              VarArrayRedim(arg, length(pMeter.ZonePCE) + 1);
+              for k := 0 to High(pMeter.ZonePCE) do
+                arg[k]   :=  pMeter.ZonePCE[k];
+            End;
           End;
-
         End;
       End;
 
