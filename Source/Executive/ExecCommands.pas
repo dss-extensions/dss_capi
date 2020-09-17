@@ -549,46 +549,46 @@ Begin
      CommandHelp[121] := 'Shows the bus specified on the map, however, the following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[122] := 'Finds a route between the given buses using roads and geographical information. The buses are described as an array' +
                          ' as follows: GISFindRoute [b1 b2], do not include phases. The following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[123] := 'Returns the GIS coords of the route between 2 buses step by step, however, the following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
                          '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
-                         '4. The model needs to have the correct buscoords file';
+                         '4. The model needs to have the correct GISCoords file';
      CommandHelp[124] := 'Returns the distance (value units) of the last route calculated between 2 buses, however, the following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
                          '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
-                         '4. The model needs to have the correct buscoords file';
+                         '4. The model needs to have the correct GISCoords file';
      CommandHelp[125] := 'Shows the last route calculated between 2 buses in OpenDSS-GIS, however, the following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
                          '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
-                         '4. The model needs to have the correct buscoords file';
+                         '4. The model needs to have the correct GISCoords file';
      CommandHelp[126] := 'Returns the JSON script describing the last route calculated between 2 buses, however, the following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
                          '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
-                         '4. The model needs to have the correct buscoords file';
+                         '4. The model needs to have the correct GISCoords file';
      CommandHelp[127] := 'Redistributes the windows horizontally leaving OpenDSS to the left of the screen and OpenDSS-GIS to the right, however, the following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)';
      CommandHelp[128] := 'Redistributes the windows horizontally leaving OpenDSS to the right of the screen and OpenDSS-GIS to the left, however, the following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)';
      CommandHelp[129] := 'Define x,y coordinates for buses using real GIS Latitude and Longitude values (decimal numbers).  Similar to BusCoords command. ' +
                         'Execute after Solve command or MakeBusList command is executed so that bus lists are defined.' +
                         'Reads coordinates from a CSV file with records of the form: busname, Latitude, Longitude.'+CRLF+CRLF+
@@ -599,30 +599,30 @@ Begin
                          'GISWindowSize 0 0 800 800' + CRLF + CRLF +
                          'The following conditions need to be fulfilled:' + CRLF + CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)';
      CommandHelp[132] := 'Exports the overloads report with the content avaiable at the moment of the call. It only affects the overloads report for the active actor.';
      CommandHelp[133] := 'Exports the voltage violations1 report with the content avaiable at the moment of the call. It only affects the voltage violations report for the active actor.';
      CommandHelp[134] := 'Returns symmetrical component short circuit impedances Z0, Z1, and Z2 for the ACTIVE 3-PHASE BUS. Determined from Zsc matrix.';
      CommandHelp[135] := 'Draws the circuit on top of the map displayed in OpenDSS-GIS. The following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[136] := 'Shows the line specified int he argument using OpenDSS-GIS. The following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[137] := 'Exports the current map view into the models folder as a PNG file. The following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[138] := 'Returns Tree/No tree if a tree intersects with the line given in the argument. The following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[139] := 'Chenges the map view in OpenDSS-GIS using one of the following arguments:' + CRLF + CRLF +
                          '- Streets' +  CRLF +
                          '- StreetsVector' +  CRLF +
@@ -638,29 +638,29 @@ Begin
                          'The following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[140] := 'Clears the Map by removing all the previous draws. The following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[141] := 'Draws a line at the given coordinates using the color and thickness (pix) specified.' + CRLF +
                          'The line features can be defined using GISCoords, GISColor and GISThickness from the exective options.' + CRLF +
                          'The following conditions need to be fulfilled:' + CRLF + CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[142] := 'Zooms the map at the area specified at GISCoords.' + CRLF +
                          'The following conditions need to be fulfilled:' + CRLF + CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
      CommandHelp[143] := 'Plots the content of the file specified in the argument on top of the current map.' + CRLF +
                          'The following conditions need to be fulfilled:' + CRLF + CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
-                         '3. The model needs to have the correct buscoords file';
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
 
 End;
 
