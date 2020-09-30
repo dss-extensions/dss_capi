@@ -82,15 +82,15 @@ TYPE
    TLoadShapeObj = class(TDSSObject)
      private
         LastValueAccessed,
-        FNumPoints :Integer;  // Number of points in curve
-        ArrayPropertyIndex:Integer;
+        FNumPoints          : Integer;  // Number of points in curve
+        ArrayPropertyIndex  : Integer;
 
-        iMaxP:integer;
+        iMaxP               : integer;
 
-        FStdDevCalculated :Boolean;
-        MaxQSpecified     :Boolean;
+        FStdDevCalculated   : Boolean;
+        MaxQSpecified       : Boolean;
         FMean,
-        FStdDev :Double;
+        FStdDev             : Double;
 
         // Function Get_FirstMult:Double;
         // Function Get_NextMult :Double;
@@ -107,17 +107,19 @@ TYPE
 
       public
 
-        Interval:Double;  //=0.0 then random interval     (hr)
+        Interval            : Double;  //=0.0 then random interval     (hr)
         Hours,          // Time values (hr) if Interval > 0.0  Else nil
         PMultipliers,
-        QMultipliers :pDoubleArray;  // Multipliers
+        QMultipliers        : pDoubleArray;  // Multipliers
 
         MaxP,
         MaxQ,
         BaseP,
-        BaseQ :Double;
+        BaseQ               : Double;
 
-        UseActual :Boolean;
+        Enabled,
+        UseActual           : Boolean;
+
 
         constructor Create(ParClass:TDSSClass; const LoadShapeName:String);
         destructor  Destroy; override;
@@ -659,22 +661,23 @@ BEGIN
      Name := LowerCase(LoadShapeName);
      DSSObjType := ParClass.DSSClassType;
 
-     LastValueAccessed := 1;
+     LastValueAccessed  :=  1;
 
-     FNumPoints   := 0;
-     Interval     := 1.0;  // hr
-     Hours        := Nil;
-     PMultipliers := Nil;
-     QMultipliers := Nil;
-     MaxP         := 1.0;
-     MaxQ         := 0.0;
-     BaseP        := 0.0;
-     BaseQ        := 0.0;
-     UseActual    := FALSE;
-     MaxQSpecified := FALSE;
-     FStdDevCalculated := FALSE;  // calculate on demand
+     FNumPoints         :=  0;
+     Interval           :=  1.0;  // hr
+     Hours              :=  Nil;
+     PMultipliers       :=  Nil;
+     QMultipliers       :=  Nil;
+     MaxP               :=  1.0;
+     MaxQ               :=  0.0;
+     BaseP              :=  0.0;
+     BaseQ              :=  0.0;
+     UseActual          :=  FALSE;
+     MaxQSpecified      :=  FALSE;
+     FStdDevCalculated  :=  FALSE;  // calculate on demand
+     Enabled            :=  TRUE;
 
-     ArrayPropertyIndex := 0;
+     ArrayPropertyIndex :=  0;
 
      InitPropertyValues(0);
 
