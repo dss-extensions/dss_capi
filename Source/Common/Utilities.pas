@@ -170,6 +170,7 @@ Uses
      ParserDel,
      Capacitor,  Reactor,  Generator, Load,
      Line,       Fault,    Feeder,    HashList,
+     LoadShape,
      EnergyMeter,PCElement,ControlElem;
 
 Const ZERONULL      :Integer=0;
@@ -1932,10 +1933,11 @@ End;
 Function WriteClassFile(Const DSS_Class:TDSSClass; FileName:String; IsCktElement:Boolean):Boolean;
 
 Var
-   F:TextFile;
-   ClassName:String;
-   Nrecords:Integer;
-
+   F              : TextFile;
+   ClassName      : String;
+   Nrecords       : Integer;
+   ParClass       : TDssClass;
+   IsEnabled      : Boolean;
 
 Begin
 
@@ -1950,19 +1952,22 @@ Begin
      Rewrite(F);
 
      Nrecords:= 0;
-
-      DSS_Class.First;   // Sets ActiveDSSObject
-      Repeat
-
-       // Skip Cktelements that have been checked before and written out by
-       // something else
-       If IsCktElement Then With TDSSCktElement(ActiveDSSObject[ActiveActor]) Do
-                            If HasBeenSaved or (not Enabled) Then Continue;
-
-        WriteActiveDSSObject(F, 'New');  // sets HasBeenSaved := TRUE
-        Inc(Nrecords); // count the actual records
-
-      Until DSS_Class.Next = 0;
+     DSS_Class.First;   // Sets ActiveDSSObject
+     Repeat
+      // Skip Cktelements that have been checked before and written out by
+      // something else
+      If IsCktElement Then With TDSSCktElement(ActiveDSSObject[ActiveActor]) Do
+                           If HasBeenSaved or (not Enabled) Then Continue;
+             IsEnabled       :=  True;
+       ParClass        :=  ActiveDSSObject[ActiveActor].ParentClass;
+       if LowerCase(ParClass.Name) = 'loadshape' then
+         IsEnabled       :=  TLoadShapeObj(ActiveDSSObject[ActiveActor]).Enabled;
+             if IsEnabled then
+       Begin
+         WriteActiveDSSObject(F, 'New');  // sets HasBeenSaved := TRUE
+         Inc(Nrecords); // count the actual records
+       end;
+     Until DSS_Class.Next = 0;
 
      CloseFile(F);
 
