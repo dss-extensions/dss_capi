@@ -55,6 +55,8 @@ type
     procedure Set_Latitude(Value: Double); safecall;
     function Get_Longitude: Double; safecall;
     procedure Set_Longitude(Value: Double); safecall;
+    function Get_AllPCEatBus: OleVariant; safecall;
+    function Get_AllPDEatBus: OleVariant; safecall;
   end;
 
 implementation
@@ -1066,6 +1068,47 @@ begin
        Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined := TRUE;
        Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].long := Value;
     End;
+end;
+
+function TBus.Get_AllPCEatBus: OleVariant;
+var
+  i                 : Integer;
+  myPCEList         : DynStringArray;
+
+begin
+  If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+  Begin
+    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+    Begin
+      myPCEList   :=  getPCEatBus(BusList.Get(ActiveBusIndex));
+      Result      :=  VarArrayCreate([0, length(myPCEList) - 1], varOleStr);
+      for i := 0 to High(myPCEList) do
+        Result[i] :=  myPCEList[i];
+    End
+    else    Result := VarArrayCreate([0, 0], varOleStr);
+  End
+  else   Result := VarArrayCreate([0, 0], varOleStr);
+end;
+
+function TBus.Get_AllPDEatBus: OleVariant;
+var
+  i                 : Integer;
+  myPDEList         : DynStringArray;
+
+begin
+  If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+  Begin
+    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+    Begin
+      myPDEList   :=  getPDEatBus(BusList.Get(ActiveBusIndex));
+      Result      :=  VarArrayCreate([0, length(myPDEList) - 1], varOleStr);
+      for i := 0 to High(myPDEList) do
+        Result[i] :=  myPDEList[i];
+    End
+    else    Result := VarArrayCreate([0, 0], varOleStr);
+  End
+  else   Result := VarArrayCreate([0, 0], varOleStr);
+
 end;
 
 initialization

@@ -55,6 +55,7 @@ TYPE
         FLineCodeSpecified :Boolean;
         FEarthModel        :Integer;
         FCapSpecified      :Boolean; // To make sure user specifies C in some form
+        FLineType          :Integer; // Pointer to code for type of line
 
         Procedure FMakeZFromGeometry(f:Double); // make new Z, Zinv, Yc, etc
         Procedure KillGeometrySpecified;
@@ -152,12 +153,13 @@ IMPLEMENTATION
 USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils,
       Utilities, Mathutil, ControlElem, LineUnits;
 
-Const NumPropsThisClass = 29;
+Const NumPropsThisClass = 30;
     //  MaxPhases = 20; // for fixed buffers
 
 VAR
-   CAP_EPSILON   :Complex;
-   LineCodeClass:TLineCode;
+   CAP_EPSILON      : Complex;
+   LineCodeClass    : TLineCode;
+   LineTypeList     : TCommandList;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLine.Create;  // Creates superstructure for all Line objects
@@ -174,6 +176,10 @@ Begin
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
+
+     LineTypeList := TCommandList.Create(
+     ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT', 'SWT_REC', 'SWT1_DISC', 'SWT_BRK', 'SWT_ELBOW' ]);
+     LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
 
 End;
 
@@ -225,6 +231,7 @@ Begin
      PropertyName[27] := 'B0';
      PropertyName[28] := 'Seasons';
      PropertyName[29] := 'Ratings';
+     PropertyName[30] := 'LineType';
 
      // define Property help values
 
@@ -304,6 +311,9 @@ Begin
      PropertyHelp[28] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
      PropertyHelp[29] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
                          CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
+     PropertyHelp[30] := 'Code designating the type of line. ' +  CRLF +
+                         'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
+                         'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -605,7 +615,8 @@ Begin
                  setlength(AmpRatings,NumAmpRatings);
                  Param := Parser[ActiveActor].StrValue;
                  NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
-               End
+               End;
+           30: FLineType := LineTypeList.Getcommand(Param);
          ELSE
             // Inherited Property Edits
              ClassEdit(ActiveLineObj, ParamPointer - NumPropsThisClass)
@@ -798,6 +809,7 @@ Begin
      FLineCodeUnits    := UNITS_NONE;
      FLineCodeSpecified := FALSE;
      FEarthModel        := DefaultEarthModel;
+     FLineType          := 1;  // Default to OH  Line
 
      SpacingSpecified := False;
      FLineSpacingObj  := Nil;
@@ -1261,11 +1273,12 @@ begin
                    TempStr   :=  TempStr + ']';
                    Result  :=  TempStr;
                  End;
+           30: Result := LineTypeList.Get(FLineType);
 
            // Intercept FaultRate, PctPerm, and HourstoRepair
-           32:Result := Format('%-g', [FaultRate]);
-           33:Result := Format('%-g', [PctPerm]);
-           34:Result := Format('%-g', [HrsToRepair]);
+           33:Result := Format('%-g', [FaultRate]);
+           34:Result := Format('%-g', [PctPerm]);
+           35:Result := Format('%-g', [HrsToRepair]);
 
 
         ELSE
@@ -1353,6 +1366,7 @@ begin
      PropertyValue[27] := '0.60319'; // B0  microS
      PropertyValue[28] := '1';      // 1 Season
      PropertyValue[29] := '[400]';  // 1 Season
+     PropertyValue[30] := 'OH'; // Overhead line default
 
 
     inherited InitPropertyValues(NumPropsThisClass);

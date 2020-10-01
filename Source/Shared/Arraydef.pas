@@ -9,23 +9,25 @@ unit Arraydef;
 interface
 
 Type
-    TRatingsArray = Array of Double;
+    TRatingsArray   = Array of Double;
 { Define arrays with dummy dimension of 100 so we can hard code
   constants for accessing small order elements;  Otherwise, always
   allocate arrays of these types before using}
-    pSmallIntArray = ^SmallIntArray;
-    SmallIntArray = Array[1..100] of SmallInt;
-    pIntegerArray = ^LongIntArray;
-    pLongIntArray = ^LongIntArray;
-    LongIntArray = Array[1..100] of LongInt;
-    pDoubleArray = ^DoubleArray;
-    DoubleArray = Array[1..100] of Double;
-    pSingleArray = ^SingleArray;
-    SingleArray = Array[1..100] of Single;
-    pPointerArray = ^PointerArray;
-    PointerArray = Array[1..100] of Pointer;
-    pStringArray = ^StringArray;
-    StringArray = Array[1..100] of String;
+    pSmallIntArray  = ^SmallIntArray;
+    SmallIntArray   = Array[1..100] of SmallInt;
+    pIntegerArray   = ^LongIntArray;
+    pLongIntArray   = ^LongIntArray;
+    LongIntArray    = Array[1..100] of LongInt;
+    pDoubleArray    = ^DoubleArray;
+    DoubleArray     = Array[1..100] of Double;
+    pSingleArray    = ^SingleArray;
+    SingleArray     = Array[1..100] of Single;
+    pPointerArray   = ^PointerArray;
+    PointerArray    = Array[1..100] of Pointer;
+    pStringArray    = ^StringArray;
+    StringArray     = Array[1..100] of String;
+    DynStringArray  = Array of string;
+    pDynStringArray = ^DynStringArray;
 
     pDouble = ^Double;
     pSingle = ^Single;

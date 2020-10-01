@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 144;
+     NumExecCommands = 146;
 
 Var
 
@@ -195,6 +195,8 @@ Begin
      ExecCommand[142] := 'GISZoomMap';
      ExecCommand[143] := 'GISPlotFile';
      ExecCommand[144] := 'AggregateProfiles';
+     ExecCommand[145] := 'AllPCEatBus';
+     ExecCommand[146] := 'AllPDEatBus';
 
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
@@ -593,7 +595,7 @@ Begin
      CommandHelp[129] := 'Define x,y coordinates for buses using real GIS Latitude and Longitude values (decimal numbers).  Similar to BusCoords command. ' +
                         'Execute after Solve command or MakeBusList command is executed so that bus lists are defined.' +
                         'Reads coordinates from a CSV file with records of the form: busname, Latitude, Longitude.'+CRLF+CRLF+
-                        'Example: LatLongCoords [file=]xxxx.csv' + CRLF + CRLF +
+                        'Example: GISCoords [file=]xxxx.csv' + CRLF + CRLF +
                         'Note: For using only if OpenDSS-GIS is locally installed.';
      CommandHelp[130] := 'Update Storage2 elements based on present solution and time interval. ';
      CommandHelp[131] := 'Resizes the OpenDSS-GIS window, the coordiantes need to be given as: Left, Top, Right, Bottom. For example:'+CRLF+CRLF+
@@ -668,6 +670,14 @@ Begin
                          'The output of this algorithm is a script describing the new load shapes and their application into loads across the model.' + CRLF +
                          'The argument on this command can be: Actual/pu to define the units in which the load profiles are.' + CRLF +
                          'Check the OpenDSS user manual for details';
+     CommandHelp[145] := 'Brings back the names of all PCE connected to the bus specified in the argument.' + CRLF +
+                         'The command goes as follows:' + CRLF  + CRLF +
+                         'AllPCEatBus myBus' + CRLF  + CRLF +
+                         'Where "myBus" is the name of the bus of interest';
+     CommandHelp[146] := 'Brings back the names of all PDE connected to the bus specified in the argument.' + CRLF +
+                         'The command goes as follows:' + CRLF  + CRLF +
+                         'AllPDEatBus myBus' + CRLF  + CRLF +
+                         'Where "myBus" is the name of the bus of interest';
 
 End;
 
@@ -1026,6 +1036,14 @@ Begin
       144:  begin
               Parser[ActiveActor].NextParam;
               ActiveCircuit[Activeactor].AggregateProfiles(Parser[ActiveActor].StrValue);
+            end;
+      145:  begin
+              Parser[ActiveActor].NextParam;
+              GlobalResult  :=  ActiveCircuit[Activeactor].ReportPCEatBus(Parser[ActiveActor].StrValue);
+            end;
+      146:  begin
+              Parser[ActiveActor].NextParam;
+              GlobalResult  :=  ActiveCircuit[Activeactor].ReportPDEatBus(Parser[ActiveActor].StrValue);
             end;
 
      ELSE
