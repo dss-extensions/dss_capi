@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 98336 $
-// File generated on 9/17/2020 2:23:15 PM from Type Library described below.
+// File generated on 10/1/2020 3:29:25 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
@@ -24,8 +24,6 @@ unit OpenDSSengine_TLB;
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 //   (2) v1.0 stdole, (stdole32.tlb)
 // SYS_KIND: SYS_WIN32
-// Errors:
-//   Hint: Member 'Class' of 'ILoads' changed to 'Class_'
 // ************************************************************************ //
 {$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
 {$WARN SYMBOL_PLATFORM OFF}
@@ -912,6 +910,8 @@ type
     procedure Set_Latitude(Value: Double); safecall;
     function Get_Longitude: Double; safecall;
     procedure Set_Longitude(Value: Double); safecall;
+    function Get_AllPCEatBus: OleVariant; safecall;
+    function Get_AllPDEatBus: OleVariant; safecall;
     property Name: WideString read Get_Name;
     property NumNodes: Integer read Get_NumNodes;
     property Voltages: OleVariant read Get_Voltages;
@@ -947,6 +947,8 @@ type
     property ZSC012Matrix: OleVariant read Get_ZSC012Matrix;
     property Latitude: Double read Get_Latitude write Set_Latitude;
     property Longitude: Double read Get_Longitude write Set_Longitude;
+    property AllPCEatBus: OleVariant read Get_AllPCEatBus;
+    property AllPDEatBus: OleVariant read Get_AllPDEatBus;
   end;
 
 // *********************************************************************//
@@ -993,6 +995,8 @@ type
     property ZSC012Matrix: OleVariant readonly dispid 221;
     property Latitude: Double dispid 222;
     property Longitude: Double dispid 223;
+    property AllPCEatBus: OleVariant readonly dispid 224;
+    property AllPDEatBus: OleVariant readonly dispid 225;
   end;
 
 // *********************************************************************//

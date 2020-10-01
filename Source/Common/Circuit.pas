@@ -25,7 +25,7 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree, Monitor,
+     AutoAdd, EnergyMeter, NamedObject, CktTree, Monitor,PCClass, PDClass,
      {$IFNDEF FPC}MeTIS_Exec, {$IFDEF MSWINDOWS}Graphics, vcl.dialogs, {$ENDIF} {$ENDIF}
      math, Sparse_Math;
 
@@ -330,6 +330,10 @@ TYPE
           procedure AggregateProfiles(mode: string);
           procedure Disable_All_DER();
           procedure Save_SubCircuits();
+          function getPCEatBus(BusName: String):  DynStringArray;
+          function getPDEatBus(BusName: String):  DynStringArray;
+          function ReportPCEatBus(BusName: String):  String;
+          function ReportPDEatBus(BusName: String):  String;
           function get_Line_Bus(LName: String; NBus: Integer):String;
           procedure  get_longest_path();
           function Append2PathsArray(New_Path :  array of integer): Integer;//  appends a new path to the array and returns the index(1D)
@@ -1375,7 +1379,126 @@ Begin
     End;
   End;
 
+End;
+{*******************************************************************************
+*    Returns the list of all PDE connected to the bus nam given at BusName     *
+********************************************************************************}
+function TDSSCircuit.getPDEatBus(BusName: String):DynStringArray;
+Var
+   Dss_Class    : TDSSClass;
+   j,
+   i            : integer;
+   myBus        : array of string;
+   myBusList    : DynStringArray;
 
+Begin
+  setlength(myBus,2);
+  setlength(Result,1);
+  Result[0]       :=  'None';
+  BusName         :=  LowerCase(BusName);
+  For i := 1 to DSSClassList[ActiveActor].ListSize Do
+  Begin
+    Dss_Class := DSSClassList[ActiveActor].Get(i);
+    if (DSS_Class is TCktElementClass) then
+    Begin
+      // Checks if it is a PCE class
+      if DSS_Class.ClassType.InheritsFrom(TPDClass) then
+      Begin
+        // If it is, checks all the elements to verify if one or more are
+        // connected to the bus given
+        DSS_Class.First;
+        for j := 1 to DSS_Class.ElementCount do
+        Begin
+          myBus[0]       :=  LowerCase(StripExtension(ActiveCktElement.GetBus(1)));
+          myBus[1]       :=  LowerCase(StripExtension(ActiveCktElement.GetBus(2)));
+          if ((myBus[0] = BusName) or (myBus[1] = BusName)) and (myBus[0] <> myBus[1]) then
+          Begin
+            Result[High(Result)]    :=  DSS_Class.Name + '.' + ActiveCktElement.Name;
+            setlength(Result, length(Result) + 1);
+          End;
+          DSS_Class.Next;
+        End;
+
+      End;
+
+    End;
+
+  End;
+
+End;
+{*******************************************************************************
+*    Returns the list of all PCE connected to the bus nam given at BusName     *
+********************************************************************************}
+function TDSSCircuit.getPCEatBus(BusName: String):DynStringArray;
+Var
+   Dss_Class    : TDSSClass;
+   j,
+   i            : integer;
+   myBus        : String;
+   myBusList    : DynStringArray;
+
+Begin
+  setlength(Result,1);
+  Result[0]       :=  'None';
+  BusName         :=  LowerCase(BusName);
+  For i := 1 to DSSClassList[ActiveActor].ListSize Do
+  Begin
+    Dss_Class := DSSClassList[ActiveActor].Get(i);
+    if (DSS_Class is TCktElementClass) then
+    Begin
+      // Checks if it is a PCE class
+      if (DSS_Class.ClassType.InheritsFrom(TPCClass) or (DSS_Class.Name = 'Capacitor') or (DSS_Class.Name = 'Reactor')) then
+      Begin
+        // If it is, checks all the elements to verify if one or more are
+        // connected to the bus given
+        DSS_Class.First;
+        for j := 1 to DSS_Class.ElementCount do
+        Begin
+          myBus       :=  LowerCase(StripExtension(ActiveCktElement.GetBus(1)));
+          if myBus = BusName then
+          Begin
+            Result[High(Result)]    :=  DSS_Class.Name + '.' + ActiveCktElement.Name;
+            setlength(Result, length(Result) + 1);
+          End;
+          DSS_Class.Next;
+        End;
+
+      End;
+
+    End;
+
+  End;
+
+End;
+
+{*******************************************************************************
+*             Gets all PCE at given bus and returns the list as string         *
+********************************************************************************}
+function TDSSCircuit.ReportPCEatBus(BusName: String):  String;
+var
+  i             : integer;
+  myPCEList     : DynStringArray;
+
+Begin
+  myPCEList     :=  getPCEatBus(BusName);
+  Result        :=  '';
+  for i := 0 to High(myPCEList) do
+    if myPCEList[i] <> '' then  Result  :=  Result + myPCEList[i] + ',';
+End;
+
+{*******************************************************************************
+*             Gets all PDE at given bus and returns the list as string         *
+********************************************************************************}
+function TDSSCircuit.ReportPDEatBus(BusName: String):  String;
+var
+  i             : integer;
+  myPDEList     : DynStringArray;
+
+Begin
+  myPDEList     :=  getPDEatBus(BusName);
+  Result        :=  '';
+  for i := 0 to High(myPDEList) do
+    if myPDEList[i] <> '' then  Result  :=  Result + myPDEList[i] + ',';
 End;
 
 {*******************************************************************************

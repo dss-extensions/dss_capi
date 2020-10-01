@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 9/22/2020 3:40:34 PM (- $Rev: 12980 $, 25547234).
+// File generated on 10/1/2020 5:00:09 PM (- $Rev: 12980 $, 31234500).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -732,6 +732,10 @@ library OpenDSSengine
     HRESULT _stdcall Longitude([out, retval] double* Value);
     [propput, id(0x000000DF), helpstring("Delivers the longitude assigned to the active Bus (if any)")]
     HRESULT _stdcall Longitude([in] double Value);
+    [propget, id(0x000000E0), helpstring("Returns an array with the names of all PCE connected to the active bus")]
+    HRESULT _stdcall AllPCEatBus([out, retval] VARIANT* Value);
+    [propget, id(0x000000E1), helpstring("Returns an array with the names of all PDE connected to the active bus")]
+    HRESULT _stdcall AllPDEatBus([out, retval] VARIANT* Value);
   };
 
   [
