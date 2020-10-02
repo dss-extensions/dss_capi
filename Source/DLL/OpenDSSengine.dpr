@@ -230,7 +230,9 @@ uses
   Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScreen},
   GISCommands in '..\GISCommands\GISCommands.pas',
   djson in '..\Common\djson.pas',
-  NumCPULib in '..\Parallel_Lib\NumCPULib.pas';
+  NumCPULib in '..\Parallel_Lib\NumCPULib.pas',
+  myInfoMsg in '..\Forms\myInfoMsg.pas' {myInfoMessage},
+  StdMessage in '..\Forms\StdMessage.pas' {myStdMsg};
 
 exports
   DllGetClassObject,
