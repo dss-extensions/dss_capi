@@ -198,7 +198,9 @@ uses
   Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScr},
   GISCommands in '..\GISCommands\GISCommands.pas',
   djson in '..\Common\djson.pas',
-  NumCPULib in '..\Parallel_Lib\NumCPULib.pas';
+  NumCPULib in '..\Parallel_Lib\NumCPULib.pas',
+  StdMessage in '..\Forms\StdMessage.pas' {myStdMsg},
+  myInfoMsg in '..\Forms\myInfoMsg.pas' {myInfoMessage};
 
 {$R *.RES}
 
@@ -231,6 +233,8 @@ begin
     Application.CreateForm(TControlPanel, ControlPanel);
   Application.CreateForm(TTViewForm, TViewForm);
   Application.CreateForm(TSplashScreen, SplashScreen);
+  Application.CreateForm(TmyStdMsg, myStdMsg);
+  Application.CreateForm(TmyInfoMessage, myInfoMessage);
   //  Application.CreateForm(TMainEditForm, MainEditForm);
     Application.CreateForm(TProgress, Progress);
     Application.CreateForm(TPlotOptionsForm, PlotOptionsForm);
