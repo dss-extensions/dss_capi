@@ -1521,6 +1521,8 @@ var
   pLine         : TLineObj;
   myWeight,
   myActual,
+  mykW,
+  mykvar,
   TotalkW       : Double;
   myLoadShapes,
   myLoads       : array of string;
@@ -1582,8 +1584,9 @@ Begin
   Solution.MaxControlIterations :=  100;
 
   // solves the circuit
-  IsSolveAll          :=  False;
-  Solution.Solve(ActiveActor);
+  IsSolveAll                    :=  False;
+  solution.Solve(ActiveActor) ;
+
   // Creates the folder for storign the results
   Fileroot              :=  GetCurrentDir;
   Fileroot              :=  Fileroot  + '\Aggregated_model';
@@ -1675,6 +1678,7 @@ Begin
   End;
   // Assigns the new loadshapes to all the loads in the zone
   // also, disables the energy meters created and restores the originals
+//  DSSExecutive[ActiveActor].Command :=  'solve snap';
   k             :=  0;
   EnergyMeters.First;
   for i := 1 to EnergyMeters.ListSize do
@@ -1690,7 +1694,18 @@ Begin
           myPCE             :=  stripextension(EMeter.ZonePCE[j]);
           if myPCE = 'Load' then
           Begin
-            DssExecutive[ActiveActor].Command  := EMeter.ZonePCE[j] + '.yearly=myShape_' + inttostr(k);
+            // Stores the reference values for the loads in memory to be consistent in
+            // the feeder's definition
+            SetElementActive(EMeter.ZonePCE[j]);
+            mykW                                            :=  TLoadObj( ActiveDSSObject[ActiveActor]).kWref;
+            mykvar                                          :=  TLoadObj( ActiveDSSObject[ActiveActor]).kVARref;
+            DSSExecutive[ActiveActor].Command :=  EMeter.ZonePCE[j] + '.yearly=myShape_' + inttostr(k);
+            SetElementActive(EMeter.ZonePCE[j]);
+            // Rstores the nominal values for saving the file
+            TLoadObj( ActiveDSSObject[ActiveActor]).kWBase  := mykW;
+            TLoadObj( ActiveDSSObject[ActiveActor]).kvarBase:= mykvar;
+            TLoadObj( ActiveDSSObject[ActiveActor]).kWref   := mykW;
+            TLoadObj( ActiveDSSObject[ActiveActor]).kVARref := mykvar;
           End;
         End;
         inc(k);
