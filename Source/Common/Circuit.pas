@@ -1705,7 +1705,8 @@ Begin
             TLoadObj( ActiveDSSObject[ActiveActor]).kWBase  := mykW;
             TLoadObj( ActiveDSSObject[ActiveActor]).kvarBase:= mykvar;
             TLoadObj( ActiveDSSObject[ActiveActor]).kWref   := mykW;
-            TLoadObj( ActiveDSSObject[ActiveActor]).kVARref := mykvar;
+            TLoadObj( ActiveDSSObject[ActiveActor]).kvarref := mykvar;
+            TLoadObj( ActiveDSSObject[ActiveActor]).kVABase := mykW / Abs(TLoadObj( ActiveDSSObject[ActiveActor]).PFNominal);
           End;
         End;
         inc(k);
