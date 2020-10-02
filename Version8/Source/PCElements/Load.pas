@@ -177,6 +177,8 @@ TYPE
         HasBeenAllocated   :Boolean;
         kWBase             :Double;
         kVABase            :Double;
+        kWref              :Double;
+        kVARref            :Double;
         kvarBase           :Double;
         kVLoadBase         :Double;
         LoadClass          :Integer;
@@ -629,14 +631,22 @@ Begin
                End;
             3: UpdateVoltageBases;
 
-            4: LoadSpecType := 0;
+            4: Begin
+                  LoadSpecType  :=  0;
+                  kWRef         :=  kWBase;
+               End;
             5: Begin PFChanged := TRUE; PFSpecified := TRUE; End;
     {Set shape objects;  returns nil if not valid}
     {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
             7: Begin
                     YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
                     If Assigned(YearlyShapeObj) then With YearlyShapeObj Do
-                        If UseActual then SetkWkvar(MaxP, MaxQ);
+                        If UseActual then
+                        Begin
+                          kWref     :=  kWBase;
+                          kVARref   :=  kVARbase;
+                          SetkWkvar(MaxP, MaxQ);
+                        End;
                End;
             8: Begin
                     DailyShapeObj := LoadShapeClass[ActorID].Find(DailyShape);
@@ -652,7 +662,11 @@ Begin
                End;
             10: GrowthShapeObj := GrowthShapeClass[ActorID].Find(GrowthShape);
 
-            12: Begin LoadSpecType := 1;  PFSpecified := FALSE; End;// kW, kvar
+            12: Begin
+                  LoadSpecType  :=  1;
+                  PFSpecified   :=  FALSE;
+                  kVARref       :=  kVARbase;
+                End;// kW, kvar
  {*** see set_xfkva, etc           21, 22: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
             23: LoadSpecType := 2;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
@@ -2298,7 +2312,7 @@ begin
      Case Index of
          2:  Result := GetBus(1);
          3:  Result := Format('%-g',   [kVLoadBase]);
-         4:  Result := Format('%-g',   [kwBase]);
+         4:  Result := Format('%-g',   [kWBase]);
          5:  Result := Format('%-.4g', [PFNominal]);
          7:  Result := Yearlyshape;
          8:  Result := Dailyshape;
