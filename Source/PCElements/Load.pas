@@ -251,6 +251,7 @@ TYPE
         Property ExemptLoad:Boolean Read ExemptFromLDCurve;
         Property FixedLoad:Boolean Read Fixed;
         Property nZIPV:Integer read FnZIPV write set_nZIPV;
+        Property IsPFSpecified:Boolean read PFSpecified;
    End;
 
 Var
