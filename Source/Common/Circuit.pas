@@ -1644,20 +1644,30 @@ Begin
           for iElem := 0 to High(myLoadShape) do
           Begin
             myLoadShape[iElem]  :=  myLoadShape[iElem]  + TLoadshapeObj(ActiveDSSObject[ActiveActor]).PMultipliers^[iElem + 1];
-            If PFSpecified and (myPF <> 1.0) Then  // Qmult not specified but PF was
-            Begin  // user specified the PF for this load
-              myWeight  :=  TLoadshapeObj(ActiveDSSObject[ActiveActor]).PMultipliers^[iElem + 1] * SQRT((1.0/SQR(myPF) - 1));
-              If myPF < 0.0 Then // watts and vare are in opposite directions
-                myWeight  :=  -myWeight;
+            if TLoadshapeObj(ActiveDSSObject[ActiveActor]).QMultipliers <> nil then
+            Begin
+              myWeight    :=  TLoadshapeObj(ActiveDSSObject[ActiveActor]).QMultipliers^[iElem + 1];
+              if myWeight = 0 then
+              Begin
+                If PFSpecified and (myPF <> 1.0) Then  // Qmult not specified but PF was
+                Begin  // user specified the PF for this load
+                  myWeight  :=  TLoadshapeObj(ActiveDSSObject[ActiveActor]).PMultipliers^[iElem + 1] * SQRT((1.0/SQR(myPF) - 1));
+                  If myPF < 0.0 Then // watts and vare are in opposite directions
+                    myWeight  :=  -myWeight;
+                End
+              End
             End
             else
             Begin
-              if TLoadshapeObj(ActiveDSSObject[ActiveActor]).QMultipliers <> nil then
-                myWeight    :=  TLoadshapeObj(ActiveDSSObject[ActiveActor]).QMultipliers^[iElem + 1]
-              else
-                myWeight    :=  0.0;
+              myWeight    :=  0.0;
+              If PFSpecified and (myPF <> 1.0) Then  // Qmult not specified but PF was
+              Begin  // user specified the PF for this load
+                myWeight  :=  TLoadshapeObj(ActiveDSSObject[ActiveActor]).PMultipliers^[iElem + 1] * SQRT((1.0/SQR(myPF) - 1));
+                If myPF < 0.0 Then // watts and vare are in opposite directions
+                  myWeight  :=  -myWeight;
+              End
             End;
-              mykvarShape[iElem]  :=  mykvarShape[iElem]  + myWeight;
+            mykvarShape[iElem]  :=  mykvarShape[iElem]  + myWeight;
           End;
         End;
         TotalkW             :=  length(myLoads);
