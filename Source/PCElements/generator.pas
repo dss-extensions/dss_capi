@@ -242,6 +242,12 @@ TYPE
         Vpu             :Double;   // per unit Target voltage for generator with voltage control
         Vmaxpu          :Double;
         Vminpu          :Double;
+// Fuel related variables
+        Refuel,
+        UseFuel         : Boolean;
+        FuelkWh,
+        pctFuel,
+        pctReserve      : Double;
 
 // moved to GeneratorVars        VTarget         :Double;  // Target voltage for generator with voltage control
         YearlyShape     :String;  // ='fixed' means no variation  on all the time
@@ -306,7 +312,7 @@ implementation
 
 USES  ParserDel, Circuit,  Sysutils, Command, Math, MathUtil, DSSClassDefs, DSSGlobals, Utilities;
 
-Const NumPropsThisClass = 39;
+Const NumPropsThisClass = 44;
   // Dispatch modes
       DEFAULT = 0;
       LOADMODE = 1;
@@ -455,7 +461,17 @@ Begin
                           'for each iteration.  Creates a separate file for each generator named "GEN_name.CSV".' );
       AddProperty('Balanced',  38, '{Yes | No*} Default is No.  For Model=7, force balanced current only for 3-phase generators. Force zero- and negative-sequence to zero.');
       AddProperty('XRdp',  39, 'Default is 20. X/R ratio for Xdp property for FaultStudy and Dynamic modes.');
-
+      AddProperty('UseFuel',  40, '{Yes | *No}. Activates the use of fuel for the operation of the generator. When the fuel level' +
+                                  ' reaches the reserve level, the generator stops until it gets refueled. By default, the generator ' +
+                                  'is connected to a continuous fuel supply, Use this mode to mimic dependency on fuel level for different ' +
+                                  'generation technologies.');
+      AddProperty('FuelkWh',  41, '{*0}Is the nominal level of fuel for the generator (kWh). It only applies if UseFuel = Yes/True');
+      AddProperty('%Fuel',  42, 'It is a number between 0 and 100 representing the current amount of fuel avaiable in percentage ' +
+                                'of FuelkWh. It only applies if UseFuel = Yes/True');
+      AddProperty('%Reserve',  43, 'It is a number between 0 and 100 representing the reserve level in percentage of FuelkWh. ' +
+                                   'It only applies if UseFuel = Yes/True');
+      AddProperty('Refuel',  44, 'It is a boolean value (Yes/True, No/False) that can be used to manually refuel the generator when needed. ' +
+                                 'It only applies if UseFuel = Yes/True');
 
 
      ActiveProperty := NumPropsThisClass;
