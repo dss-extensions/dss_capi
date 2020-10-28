@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 98336 $
-// File generated on 10/1/2020 3:29:25 PM from Type Library described below.
+// File generated on 10/28/2020 4:30:00 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
@@ -24,6 +24,8 @@ unit OpenDSSengine_TLB;
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 //   (2) v1.0 stdole, (stdole32.tlb)
 // SYS_KIND: SYS_WIN32
+// Errors:
+//   Hint: Member 'Class' of 'ILoads' changed to 'Class_'
 // ************************************************************************ //
 {$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
 {$WARN SYMBOL_PLATFORM OFF}
@@ -504,6 +506,7 @@ type
     function Get_OCPDevType: Integer; safecall;
     function Get_CurrentsMagAng: OleVariant; safecall;
     function Get_VoltagesMagAng: OleVariant; safecall;
+    function Get_TotalPowers: OleVariant; safecall;
     property Name: WideString read Get_Name;
     property NumTerminals: Integer read Get_NumTerminals;
     property NumConductors: Integer read Get_NumConductors;
@@ -545,6 +548,7 @@ type
     property OCPDevType: Integer read Get_OCPDevType;
     property CurrentsMagAng: OleVariant read Get_CurrentsMagAng;
     property VoltagesMagAng: OleVariant read Get_VoltagesMagAng;
+    property TotalPowers: OleVariant read Get_TotalPowers;
   end;
 
 // *********************************************************************//
@@ -598,6 +602,7 @@ type
     property OCPDevType: Integer readonly dispid 218;
     property CurrentsMagAng: OleVariant readonly dispid 219;
     property VoltagesMagAng: OleVariant readonly dispid 220;
+    property TotalPowers: OleVariant readonly dispid 221;
   end;
 
 // *********************************************************************//

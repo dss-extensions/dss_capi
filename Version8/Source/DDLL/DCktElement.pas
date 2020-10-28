@@ -410,12 +410,19 @@ end;
 procedure CktElementV(mode:longint; out arg:variant);cdecl;
 
 var
-  VPh, V012 : Array[1..3] of Complex;
-  IPh, I012 : Array[1..3] of Complex;
-  j,k: integer;
-  NValues : Integer;
-  cValues : pComplexArray;
-  CMagAng: polar;
+  VPh,
+  V012,
+  IPh,
+  I012        : Array[1..3] of Complex;
+  myInit,
+  myEnd,
+  j,
+  k,
+  i,
+  NValues     : Integer;
+  cValues     : pComplexArray;
+  CMagAng     : polar;
+  myBuffer    : Array of Complex;
 
 begin
   case mode of
@@ -921,6 +928,35 @@ begin
             End;
           End
         ELSE arg := VarArrayCreate([0, 0], varDouble);
+  end;
+  20: begin
+// Return total powers for the active element at all terminals
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+      WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+      Begin
+        NValues := NConds*Nterms;
+        arg := VarArrayCreate([0, 2*Nterms-1], varDouble);
+        cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+        GetPhasePower(cBuffer, Activeactor);
+        iV :=0;
+        setlength(myBuffer,Nterms);
+        for j := 1 to Nterms do
+        Begin
+          myBuffer[j - 1] :=  cmplx(0.0, 0.0);
+          myInit          :=  (j - 1) * NConds + 1;
+          myEnd           :=  (NValues div 2) * j;
+          For i := myInit to myEnd DO
+          Begin
+            myBuffer[j - 1] :=  cadd(myBuffer[j - 1], cBuffer^[i]);
+          End;
+          arg[iV]  :=  myBuffer[j - 1].re*0.001;
+          inc(iV);
+          arg[iV]  :=  myBuffer[j - 1].im*0.001;
+          inc(iV);
+        End;
+        Reallocmem(cBuffer,0);
+      End
+      ELSE arg := VarArrayCreate([0, 0], varDouble);
   end
   else
       arg := VarArrayCreate([0, 0], varOleStr);

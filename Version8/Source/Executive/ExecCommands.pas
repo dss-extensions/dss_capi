@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 146;
+     NumExecCommands = 147;
 
 Var
 
@@ -197,6 +197,7 @@ Begin
      ExecCommand[144] := 'AggregateProfiles';
      ExecCommand[145] := 'AllPCEatBus';
      ExecCommand[146] := 'AllPDEatBus';
+     ExecCommand[147] := 'TotalPowers';
 
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
@@ -678,6 +679,9 @@ Begin
                          'The command goes as follows:' + CRLF  + CRLF +
                          'AllPDEatBus myBus' + CRLF  + CRLF +
                          'Where "myBus" is the name of the bus of interest';
+     CommandHelp[147] := 'Returns the total powers (complex) at ALL terminals of the active circuit element in the Result string. '+
+                         '(See Select command.)' +
+                         'Returned as comma-separated kW and kvar.';
 
 End;
 
@@ -885,7 +889,7 @@ Begin
        {35: CmdResult := DoFileEditCmd;}
        36: CmdResult := DovoltagesCmd(FALSE);
        37: CmdResult := DocurrentsCmd;
-       38: CmdResult := DopowersCmd;
+       38: CmdResult := DopowersCmd(0);
        39: CmdResult := DoseqvoltagesCmd;
        40: CmdResult := DoseqcurrentsCmd;
        41: CmdResult := DoseqpowersCmd;
@@ -1045,6 +1049,7 @@ Begin
               Parser[ActiveActor].NextParam;
               GlobalResult  :=  ActiveCircuit[Activeactor].ReportPDEatBus(Parser[ActiveActor].StrValue);
             end;
+      147: CmdResult := DopowersCmd(1);
 
      ELSE
        // Ignore excess parameters
