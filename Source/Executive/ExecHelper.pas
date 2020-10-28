@@ -68,7 +68,7 @@ interface
 
          FUNCTION DovoltagesCmd(Const PerUnit:Boolean): Integer;
          FUNCTION DocurrentsCmd :Integer;
-         FUNCTION DopowersCmd :Integer;
+         FUNCTION DopowersCmd(Total : Integer) :Integer;
          FUNCTION DoseqvoltagesCmd :Integer;
          FUNCTION DoseqcurrentsCmd :Integer;
          FUNCTION DoseqpowersCmd :Integer;
@@ -1887,27 +1887,52 @@ Begin
 
 end;
 
-FUNCTION DopowersCmd: Integer;
+FUNCTION DopowersCmd(Total : Integer): Integer;
 VAR
-  cBuffer:pComplexArray;
-  NValues, i : Integer;
+  cBuffer     : pComplexArray;
+  NValues,
+  myInit,
+  myEnd,
+  j,
+  i           : Integer;
+  myBuffer    : Array of Complex;
 
 Begin
+  // If Total = 0, returns the powers per phase
+  // If Total = 1, returns the power sum at each terminal
 
  Result := 0;
- IF ActiveCircuit[ActiveActor] <> Nil THEN
-  WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-  Begin
+  IF ActiveCircuit[ActiveActor] <> Nil THEN
+    WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+    Begin
       NValues := NConds*Nterms;
       GlobalResult := '';
       cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
       GetPhasePower(cBuffer, ActiveActor);
-      For i := 1 to  NValues DO Begin
-         GlobalResult := GlobalResult+ Format('%10.5g, %10.5g,', [cBuffer^[i].re*0.001, cBuffer^[i].im*0.001]);
+      if Total = 0 then
+      Begin
+        For i := 1 to  NValues DO Begin
+           GlobalResult := GlobalResult+ Format('%10.5g, %10.5g,', [cBuffer^[i].re*0.001, cBuffer^[i].im*0.001]);
+        End;
+      End
+      else
+      Begin
+        setlength(myBuffer,Nterms);
+        for j := 1 to Nterms do
+        Begin
+          myBuffer[j - 1] :=  cmplx(0.0, 0.0);
+          myInit          :=  (j - 1) * NConds + 1;
+          myEnd           :=  (NValues div 2) * j;
+          For i := myInit to myEnd DO
+          Begin
+            myBuffer[j - 1] :=  cadd(myBuffer[j - 1], cBuffer^[i]);
+          End;
+          GlobalResult := GlobalResult+ Format('%10.5g, %10.5g,', [myBuffer[j - 1].re*0.001, myBuffer[j - 1].im*0.001]);
+        End;
       End;
       Reallocmem(cBuffer,0);
-  End
- ELSE GlobalResult := 'No Active Circuit';
+    End
+  ELSE GlobalResult := 'No Active Circuit';
 
 
 end;

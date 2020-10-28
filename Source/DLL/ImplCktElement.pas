@@ -69,6 +69,7 @@ type
     function Get_OCPDevType: Integer; safecall;
     function Get_CurrentsMagAng: OleVariant; safecall;
     function Get_VoltagesMagAng: OleVariant; safecall;
+    function Get_TotalPowers: OleVariant; safecall;
   end;
 
 implementation
@@ -1365,6 +1366,48 @@ Begin
         End;
       End
     ELSE Result := VarArrayCreate([0, 0], varDouble);
+
+end;
+
+function TCktElement.Get_TotalPowers: OleVariant;
+VAR
+  cBuffer     : pComplexArray;
+  NValues,
+  myInit,
+  myEnd,
+  j,
+  i,
+  iV          : Integer;
+  myBuffer    : Array of Complex;
+
+Begin
+
+ IF ActiveCircuit[ActiveActor] <> Nil THEN
+  WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+  Begin
+    NValues := NConds*Nterms;
+    Result := VarArrayCreate([0, 2*Nterms-1], varDouble);
+    cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+    GetPhasePower(cBuffer, Activeactor);
+    iV :=0;
+    setlength(myBuffer,Nterms);
+    for j := 1 to Nterms do
+    Begin
+      myBuffer[j - 1] :=  cmplx(0.0, 0.0);
+      myInit          :=  (j - 1) * NConds + 1;
+      myEnd           :=  (NValues div 2) * j;
+      For i := myInit to myEnd DO
+      Begin
+        myBuffer[j - 1] :=  cadd(myBuffer[j - 1], cBuffer^[i]);
+      End;
+      Result[iV]  :=  myBuffer[j - 1].re*0.001;
+      inc(iV);
+      Result[iV]  :=  myBuffer[j - 1].im*0.001;
+      inc(iV);
+    End;
+    Reallocmem(cBuffer,0);
+  End
+  ELSE Result := VarArrayCreate([0, 0], varDouble);
 
 end;
 

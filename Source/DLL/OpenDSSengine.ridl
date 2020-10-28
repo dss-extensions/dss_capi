@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 10/1/2020 5:00:09 PM (- $Rev: 12980 $, 31234500).
+// File generated on 10/28/2020 4:30:37 PM (- $Rev: 12980 $, 29296937).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -452,6 +452,8 @@ library OpenDSSengine
     HRESULT _stdcall CurrentsMagAng([out, retval] VARIANT* Value);
     [propget, id(0x000000DC), helpstring("Voltages at each conductor in magnitude, angle form as variant array of doubles.")]
     HRESULT _stdcall VoltagesMagAng([out, retval] VARIANT* Value);
+    [propget, id(0x000000DD), helpstring("Returns the total powers (complex) at ALL terminals of the active circuit element.")]
+    HRESULT _stdcall TotalPowers([out, retval] VARIANT* Value);
   };
 
   [
