@@ -199,6 +199,7 @@ TYPE
         PROCEDURE DoHarmonicMode(ActorID : Integer);
         Procedure DoPVTypeGen(ActorID : Integer);
         Procedure DoUserModel(ActorID : Integer);
+        function CheckOnFuel(const Deriv:Double; Const Interval:Double;ActorID : Integer): Boolean;
 
         Procedure Integrate(Reg:Integer; const Deriv:Double; Const Interval:Double; ActorID: integer);
         Procedure SetDragHandRegister(Reg:Integer; const Value:Double);
@@ -243,7 +244,7 @@ TYPE
         Vmaxpu          :Double;
         Vminpu          :Double;
 // Fuel related variables
-        Refuel,
+        GenActive,
         UseFuel         : Boolean;
         FuelkWh,
         pctFuel,
@@ -606,45 +607,54 @@ Begin
          If ParamPointer > 0 Then
          CASE PropertyIdxMap[ParamPointer] OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
-            1: NPhases    := Parser[ActorID].Intvalue; // num phases
+            1: NPhases              :=  Parser[ActorID].Intvalue; // num phases
             2: SetBus(1, param);
-            3: PresentkV    := Parser[ActorID].DblValue;
-            4: kWBase       := Parser[ActorID].DblValue;
-            5: PFNominal    := Parser[ActorID].DblValue;
-            6: GenModel     := Parser[ActorID].IntValue;
-            7: YearlyShape  := Param;
-            8: DailyDispShape  := Param;
-            9: DutyShape     := Param;
-           10: DispatchMode  := InterpretDispMode(Param);
-           11: DispatchValue := Parser[ActorID].DblValue;
+            3: PresentkV            :=  Parser[ActorID].DblValue;
+            4: kWBase               :=  Parser[ActorID].DblValue;
+            5: PFNominal            :=  Parser[ActorID].DblValue;
+            6: GenModel             :=  Parser[ActorID].IntValue;
+            7: YearlyShape          :=  Param;
+            8: DailyDispShape       :=  Param;
+            9: DutyShape            :=  Param;
+           10: DispatchMode         :=  InterpretDispMode(Param);
+           11: DispatchValue        :=  Parser[ActorID].DblValue;
            12: InterpretConnection(Param);
-           13: Presentkvar   := Parser[ActorID].DblValue;
+           13: Presentkvar          := Parser[ActorID].DblValue;
            14: DoSimpleMsg('Rneut property has been deleted. Use external impedance.', 5611);
            15: DoSimpleMsg('Xneut property has been deleted. Use external impedance.', 5612);
            16: If lowercase(Param[1])='f' Then IsFixed := TRUE ELSE IsFixed := FALSE;
-           17: GenClass     := Parser[ActorID].IntValue;
-           18: Vpu          := Parser[ActorID].DblValue;
-           19: kvarMax      := Parser[ActorID].DblValue;
-           20: kvarMin      := Parser[ActorID].DblValue;
-           21: PVFactor     := Parser[ActorID].DblValue;  //decelaration factor
-           22: DebugTrace   := InterpretYesNo(Param);
-           23: VMinPu       := Parser[ActorID].DblValue;
-           24: VMaxPu       := Parser[ActorID].DblValue;
-           25: FForcedON     := InterpretYesNo(Param);
-           26: GenVars.kVArating   := Parser[ActorID].DblValue;
-           27: GenVars.kVArating   := Parser[ActorID].DblValue * 1000.0;  // 'MVA';
-           28: GenVars.puXd        := Parser[ActorID].DblValue;
-           29: GenVars.puXdp       := Parser[ActorID].DblValue;
-           30: GenVars.puXdpp      := Parser[ActorID].DblValue;
-           31: GenVars.Hmass       := Parser[ActorID].DblValue;
-           32: GenVars.Dpu         := Parser[ActorID].DblValue;
-           33: UserModel.Name      := Parser[ActorID].StrValue;  // Connect to user written models
-           34: UserModel.Edit      := Parser[ActorID].StrValue;  // Send edit string to user model
-           35: ShaftModel.Name     := Parser[ActorID].StrValue;
-           36: ShaftModel.Edit     := Parser[ActorID].StrValue;
-           37: DutyStart           := Parser[ActorID].DblValue;
-           38: ForceBalanced       := InterpretYesNo(Param);
-           39: Genvars.XRdp        := Parser[ActorID].DblValue;  // X/R for dynamics model
+           17: GenClass             :=  Parser[ActorID].IntValue;
+           18: Vpu                  :=  Parser[ActorID].DblValue;
+           19: kvarMax              :=  Parser[ActorID].DblValue;
+           20: kvarMin              :=  Parser[ActorID].DblValue;
+           21: PVFactor             :=  Parser[ActorID].DblValue;  //decelaration factor
+           22: DebugTrace           :=  InterpretYesNo(Param);
+           23: VMinPu               :=  Parser[ActorID].DblValue;
+           24: VMaxPu               :=  Parser[ActorID].DblValue;
+           25: FForcedON            :=  InterpretYesNo(Param);
+           26: GenVars.kVArating    :=  Parser[ActorID].DblValue;
+           27: GenVars.kVArating    :=  Parser[ActorID].DblValue * 1000.0;  // 'MVA';
+           28: GenVars.puXd         :=  Parser[ActorID].DblValue;
+           29: GenVars.puXdp        :=  Parser[ActorID].DblValue;
+           30: GenVars.puXdpp       :=  Parser[ActorID].DblValue;
+           31: GenVars.Hmass        :=  Parser[ActorID].DblValue;
+           32: GenVars.Dpu          :=  Parser[ActorID].DblValue;
+           33: UserModel.Name       :=  Parser[ActorID].StrValue;  // Connect to user written models
+           34: UserModel.Edit       :=  Parser[ActorID].StrValue;  // Send edit string to user model
+           35: ShaftModel.Name      :=  Parser[ActorID].StrValue;
+           36: ShaftModel.Edit      :=  Parser[ActorID].StrValue;
+           37: DutyStart            :=  Parser[ActorID].DblValue;
+           38: ForceBalanced        :=  InterpretYesNo(Param);
+           39: Genvars.XRdp         :=  Parser[ActorID].DblValue;  // X/R for dynamics model
+           40: UseFuel              :=  InterpretYesNo(Param);
+           41: FuelkWh              :=  Parser[ActorID].DblValue;
+           42: pctFuel              :=  Parser[ActorID].DblValue;
+           43: pctReserve           :=  Parser[ActorID].DblValue;
+           44: If InterpretYesNo(Param) then
+               Begin
+                pctFuel   :=  100.0;
+                GenActive :=  True;
+               End
 
          ELSE
            // Inherited parameters
@@ -726,39 +736,43 @@ Begin
        End;
 
        GenVars.kVGeneratorBase := OtherGenerator.GenVars.kVGeneratorBase;
-       Vbase          := OtherGenerator.Vbase;
-       Vminpu         := OtherGenerator.Vminpu;
-       Vmaxpu         := OtherGenerator.Vmaxpu;
-       Vbase95        := OtherGenerator.Vbase95;
-       Vbase105       := OtherGenerator.Vbase105;
-       kWBase         := OtherGenerator.kWBase;
-       kvarBase       := OtherGenerator.kvarBase;
+       Vbase                  := OtherGenerator.Vbase;
+       Vminpu                 := OtherGenerator.Vminpu;
+       Vmaxpu                 := OtherGenerator.Vmaxpu;
+       Vbase95                := OtherGenerator.Vbase95;
+       Vbase105               := OtherGenerator.Vbase105;
+       kWBase                 := OtherGenerator.kWBase;
+       kvarBase               := OtherGenerator.kvarBase;
        Genvars.Pnominalperphase       := OtherGenerator.Genvars.Pnominalperphase;
-       PFNominal      := OtherGenerator.PFNominal;
+       PFNominal              := OtherGenerator.PFNominal;
        Genvars.Qnominalperphase     := OtherGenerator.Genvars.Qnominalperphase;
-       varMin         := OtherGenerator.varMin;
-       varMax         := OtherGenerator.varMax;
-       Connection     := OtherGenerator.Connection;
+       varMin                 := OtherGenerator.varMin;
+       varMax                 := OtherGenerator.varMax;
+       Connection             := OtherGenerator.Connection;
      //  Rneut          := OtherGenerator.Rneut;
       // Xneut          := OtherGenerator.Xneut;
-       YearlyShape    := OtherGenerator.YearlyShape;
-       YearlyShapeObj := OtherGenerator.YearlyShapeObj;
-       DailyDispShape     := OtherGenerator.DailyDispShape;
-       DailyDispShapeObj  := OtherGenerator.DailyDispShapeObj;
-       DutyShape      := OtherGenerator.DutyShape;
-       DutyShapeObj   := OtherGenerator.DutyShapeObj;
-       DutyStart      := OtherGenerator.DutyStart;
-       DispatchMode   := OtherGenerator.DispatchMode;
-       DispatchValue  := OtherGenerator.DispatchValue;
-       GenClass       := OtherGenerator.GenClass;
-       GenModel       := OtherGenerator.GenModel;
-       IsFixed        := OtherGenerator.IsFixed;
+       YearlyShape            := OtherGenerator.YearlyShape;
+       YearlyShapeObj         := OtherGenerator.YearlyShapeObj;
+       DailyDispShape         := OtherGenerator.DailyDispShape;
+       DailyDispShapeObj      := OtherGenerator.DailyDispShapeObj;
+       DutyShape              := OtherGenerator.DutyShape;
+       DutyShapeObj           := OtherGenerator.DutyShapeObj;
+       DutyStart              := OtherGenerator.DutyStart;
+       DispatchMode           := OtherGenerator.DispatchMode;
+       DispatchValue          := OtherGenerator.DispatchValue;
+       GenClass               := OtherGenerator.GenClass;
+       GenModel               := OtherGenerator.GenModel;
+       IsFixed                := OtherGenerator.IsFixed;
        GenVars.VTarget        := OtherGenerator.Genvars.VTarget;
-       Vpu            := OtherGenerator.Vpu;
-       kvarMax        := OtherGenerator.kvarMax;
-       kvarMin        := OtherGenerator.kvarMin;
-       FForcedON      := OtherGenerator.FForcedON;
-       kVANotSet      := OtherGenerator.kVANotSet;
+       Vpu                    := OtherGenerator.Vpu;
+       kvarMax                := OtherGenerator.kvarMax;
+       kvarMin                := OtherGenerator.kvarMin;
+       FForcedON              := OtherGenerator.FForcedON;
+       kVANotSet              := OtherGenerator.kVANotSet;
+       UseFuel                := OtherGenerator.UseFuel;
+       FuelkWh                := OtherGenerator.FuelkWh;
+       pctFuel                := OtherGenerator.pctFuel;
+       pctReserve             := OtherGenerator.pctReserve;
 
        GenVars.kVArating      := OtherGenerator.GenVars.kVArating;
        GenVars.puXd           := OtherGenerator.GenVars.puXd;
@@ -899,7 +913,7 @@ Begin
      {Machine rating stuff}
      GenVars.kVArating  := kWBase *1.2;
      kVANotSet   := TRUE;  // Flag for default value for kVA
-     
+
      //GenVars.Vd         := 7200.0;
 
 
@@ -931,22 +945,27 @@ Begin
 
      DispatchValue    := 0.0;   // Follow curves
 
-     Reg_kWh    := 1;
-     Reg_kvarh  := 2;
-     Reg_MaxkW  := 3;
-     Reg_MaxkVA := 4;
-     Reg_Hours  := 5;
-     Reg_Price  := 6;
+     Reg_kWh        := 1;
+     Reg_kvarh      := 2;
+     Reg_MaxkW      := 3;
+     Reg_MaxkVA     := 4;
+     Reg_Hours      := 5;
+     Reg_Price      := 6;
 
-     PVFactor      := 0.1;
-     DebugTrace    := FALSE;
-     FForcedON     := FALSE;
-     GenSwitchOpen := FALSE;
-     ShapeIsActual := FALSE;
-     ForceBalanced := FALSE;
+     PVFactor       := 0.1;
+     DebugTrace     := FALSE;
+     FForcedON      := FALSE;
+     GenSwitchOpen  := FALSE;
+     ShapeIsActual  := FALSE;
+     ForceBalanced  := FALSE;
 
      Spectrum := 'defaultgen';  // override base class
 
+     UseFuel        :=  False;
+     GenActive      :=  True;
+     FuelkWh        :=  0.0;
+     pctFuel        :=  100.0;
+     pctReserve     :=  20.0;
 
      InitPropertyValues(0);
 
@@ -1400,6 +1419,21 @@ Begin
 
       End;
 End;
+
+function TGeneratorObj.CheckOnFuel(const Deriv:Double; Const Interval:Double;ActorID : Integer): Boolean;
+Begin
+
+  Result  :=  True;
+  pctFuel   :=  ((((pctFuel / 100) * FuelkWh) - Interval * Deriv) / FuelkWh) * 100;
+  if pctFuel <= pctReserve then
+  Begin
+    Result  :=  False;
+    pctFuel :=  pctReserve;
+//    GenON   :=  False;
+  End;
+
+End;
+
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 Procedure TGeneratorObj.DoConstantPQGen(ActorID : Integer);
 
@@ -1492,6 +1526,9 @@ Begin
                     ELSE With Genvars Do Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), V));  // Between 95% -105%, constant PQ
                  End;
              END;
+            // Checks the output in case of using Fuel
+            if UseFuel then
+              if not GenActive then Curr  :=  cmplx(0,0);
 
             StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
             set_ITerminalUpdated(TRUE, ActorID);
@@ -1517,6 +1554,10 @@ Begin
 
      FOR i := 1 to Fnphases Do Begin
           Curr := Cmul(Yeq2, Vterminal^[i]);   // Yeq is always line to neutral
+          // Checks the output in case of using Fuel
+          if UseFuel then
+            if not GenActive then Curr  :=  cmplx(0,0);
+
           StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
           set_ITerminalUpdated(TRUE, ActorID);
           StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
@@ -1566,6 +1607,11 @@ Begin
        // Presumably the var source will take care of the voltage problems
         FOR i := 1 to Fnphases Do Begin
             Curr :=  Conjg( Cdiv( Cmplx(Pnominalperphase, Qnominalperphase), Vterminal^[i])) ;
+
+            // Checks the output in case of using Fuel
+            if UseFuel then
+              if not GenActive then Curr  :=  cmplx(0,0);
+
             StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
             set_ITerminalUpdated(TRUE, ActorID);
             StickCurrInTerminalArray(InjCurrent,Curr, i);  // Put into Terminal array taking into account connection
@@ -1615,9 +1661,14 @@ Begin
                 ELSE Curr := Conjg(Cdiv(Cmplx(Genvars.Pnominalperphase, varBase), V));
                End;
         END;
-          StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
-          set_ITerminalUpdated(TRUE, ActorID);
-          StickCurrInTerminalArray(InjCurrent,Curr, i);  // Put into Terminal array taking into account connection
+
+        // Checks the output in case of using Fuel
+        if UseFuel then
+          if not GenActive then Curr  :=  cmplx(0,0);
+
+        StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
+        set_ITerminalUpdated(TRUE, ActorID);
+        StickCurrInTerminalArray(InjCurrent,Curr, i);  // Put into Terminal array taking into account connection
     End;
 End;
 
@@ -1670,6 +1721,10 @@ Begin
                   End;
                End;
         END;
+
+        // Checks the output in case of using Fuel
+        if UseFuel then
+          if not GenActive then Curr  :=  cmplx(0,0);
 
         StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
         set_ITerminalUpdated(TRUE, ActorID);
@@ -1762,6 +1817,10 @@ Begin
                    If Cabs(DeltaCurr) > Model7MaxPhaseCurr Then
                      DeltaCurr := Conjg( Cdiv( PhaseCurrentLimit, CDivReal(VLL, VMagLL)) );
               end;
+
+              // Checks the output in case of using Fuel
+              if UseFuel then
+                if not GenActive then DeltaCurr  :=  cmplx(0,0);
 
               StickCurrInTerminalArray(ITerminal, Cnegate(DeltaCurr), i);  // Put into Terminal array taking into account connection
               set_ITerminalUpdated(TRUE, ActorID);
@@ -2199,6 +2258,9 @@ Begin
            Integrate            (Reg_Hours, HourValue, IntervalHrs, ActorID);  // Accumulate Hours in operation
            Integrate            (Reg_Price, S.re*ActiveCircuit[ActorID].PriceSignal * 0.001 , IntervalHrs, ActorID);  // Accumulate Hours in operation
            FirstSampleAfterReset := False;
+            // If using fuel
+           if UseFuel then  GenActive  :=  CheckonFuel(S.re, IntervalHrs,ActorID);
+
       End;
    End;
 End;
@@ -2294,7 +2356,9 @@ Begin
      Begin
         idx := PropertyIdxMap[i] ;
         Case idx of
-           34, 36: Writeln(F,'~ ',PropertyName^[i],'=(',PropertyValue[idx],')')
+           34, 36: Writeln(F,'~ ',PropertyName^[i],'=(',PropertyValue[idx],')');
+           44 : Writeln(F,'~ ',PropertyName^[i],'=False')  // This one has no variable associated, not needed
+
         Else
           Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[idx]);
         End;
@@ -2389,6 +2453,11 @@ begin
      PropertyValue[37]     := '0';
      PropertyValue[38]     := 'No';
      PropertyValue[39]     := '20';
+     PropertyValue[40]     := 'No';
+     PropertyValue[41]     := '0.0';
+     PropertyValue[42]     := '100.0';
+     PropertyValue[43]     := '20.0';
+     PropertyValue[44]     := 'No';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -2706,7 +2775,11 @@ begin
                 End;
          37: Result := Format('%.6g', [DutyStart]);
          38: If ForceBalanced Then Result := 'Yes' else Result := 'No';
-
+         40: if UseFuel then Result  :=  'Yes' else Result   :=  'No';
+         41: Result := Format('%.6g', [FuelkWh]);
+         42: Result := Format('%.6g', [pctFuel]);
+         43: Result := Format('%.6g', [pctReserve]);
+         44: Result :=  'No';
       ELSE
          Result := Inherited GetPropertyValue(index);
       END;

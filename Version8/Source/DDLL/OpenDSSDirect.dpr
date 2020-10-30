@@ -1,5 +1,12 @@
 library OpenDSSDirect;
 
+{
+  ----------------------------------------------------------
+  Copyright (c) 2008-2020, Electric Power Research Institute, Inc.
+  All rights reserved.
+  ----------------------------------------------------------
+}
+
 { Important note about DLL memory management: ShareMem must be the
   first unit in your library's USES clause AND your project's (select
   Project-View Source) USES clause if your DLL exports any procedures or
