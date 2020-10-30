@@ -944,7 +944,7 @@ begin
         Begin
           myBuffer[j - 1] :=  cmplx(0.0, 0.0);
           myInit          :=  (j - 1) * NConds + 1;
-          myEnd           :=  (NValues div 2) * j;
+          myEnd           :=  NConds * j;
           For i := myInit to myEnd DO
           Begin
             myBuffer[j - 1] :=  cadd(myBuffer[j - 1], cBuffer^[i]);
