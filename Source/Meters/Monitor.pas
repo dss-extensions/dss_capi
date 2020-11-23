@@ -51,7 +51,7 @@ unit Monitor;
   recent solution is greater than the last time entered in to the monitor buffer,
   the sample is appended to the buffer.  Otherwise, it replaces the last entry.
 
-  Monitor Files are simple binary files of doubles.  The first record
+  Monitor Files are simple binary files of Singles.  The first record
   contains the number of conductors per terminal (NCond). (always use 'round' function
   when converting this to an integer). Then subsequent records consist of time and
   voltage and current samples for each terminal (all complex doubles) in the order
