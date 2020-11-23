@@ -41,6 +41,7 @@ TYPE
 
       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
       PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+      FUNCTION  GetPropertyValue(Index:Integer):String;Override;
    end;
 
 implementation
@@ -183,6 +184,11 @@ END;
 PROCEDURE TWireDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
 Begin
   Inherited DumpProperties(F, Complete);
+end;
+
+function TWireDataObj.GetPropertyValue(Index: Integer): String;
+begin
+      Result := Inherited GetPropertyValue(index);
 end;
 
 procedure TWireDataObj.InitPropertyValues(ArrayOffset: Integer);
