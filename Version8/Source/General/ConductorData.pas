@@ -72,6 +72,7 @@ TYPE
 
       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
       PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+      FUNCTION  GetPropertyValue(Index:Integer):String;Override;
     end;
 
    TConductorDataArray = Array[1..100] of TConductorDataObj;
@@ -134,7 +135,7 @@ Begin
   PropertyHelp^[ActiveProperty + 11]:= 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
   PropertyHelp^[ActiveProperty + 12]:= 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
                                         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
-  PropertyHelp^[ActiveProperty + 13]:= 'Equivalent conductor radius for capacitor calcs. Specify this for bundled conductors. Defaults to same value as radius.';
+  PropertyHelp^[ActiveProperty + 13]:= 'Equivalent conductor radius for capacitance calcs. Specify this for bundled conductors. Defaults to same value as radius. Defined Diam or Radius property first.';
 
   ActiveProperty := ActiveProperty + NumConductorClassProps;
   Inherited DefineProperties;
@@ -179,21 +180,16 @@ BEGIN
         2: If FRDC<0.0        Then FRDC         := FR60 / 1.02;
         4: Begin
               If Fradius<0.0     Then Fradius      := FGMR60 / 0.7788;  // Default to cylindrical conductor
-              if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
            End;
         5: If FradiusUnits =0 Then FradiusUnits := FGMRunits;
-        6: Begin
+        6,10: Begin
              If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
              if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
            End;
         7: If FGMRUnits=0   Then FGMRunits := FradiusUnits;
         8: IF EmergAmps<0.0 Then EmergAmps := 1.5*NormAmps;
         9: If NormAmps<0.0  Then NormAmps := EmergAmps/1.5;
-       10: Begin
-              If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
-              if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
-           End;
-       13: If Fcapradius60<0.0    Then Fcapradius60 := FRadius;
+
       END;
       {Check for critical errors}
       CASE ParamPointer OF
@@ -289,6 +285,39 @@ Begin
       END;
     End;
   End;
+end;
+
+function TConductorDataObj.GetPropertyValue(Index: Integer): String;
+Var
+        i, j:Integer;
+        Tempstr : String;
+begin
+
+    Result := '';
+    CASE Index of  // Special cases
+        1 : Result := Format('%.6g',[FRDC]);
+        2 : Result := Format('%.6g',[FR60]);
+        3 : Result := Format('%s',[LineUnitsStr(FresistanceUnits)]);
+        4 : Result := Format('%.6g',[FGMR60]);
+        5 : Result := Format('%s',[LineUnitsStr(FGMRUnits)]);
+        6 : Result := Format('%.6g',[Fradius]);
+        7 : Result := Format('%s',[LineUnitsStr(FRadiusUnits)]);
+        8 : Result := Format('%.6g',[NormAmps]);
+        9 : Result := Format('%.6g',[EmergAmps]);
+       10 : Result := Format('%.6g',[radius*2.0]);
+       11 : Result := Format('%d',[NumAmpRatings]);
+       12 : Begin
+              TempStr   :=  '[';
+              for  j:= 1 to NumAmpRatings do
+                TempStr :=  TempStr + floattoStrf(AmpRatings[j-1],ffgeneral,8,4) + ',';
+              TempStr   :=  TempStr + ']';
+              Result := TempStr;
+            End;
+       13: Result := Format('%.6g',[Fcapradius60]);
+    ELSE
+       Result := Inherited GetPropertyValue(index);
+    END;
+
 end;
 
 procedure TConductorDataObj.InitPropertyValues(ArrayOffset: Integer);
