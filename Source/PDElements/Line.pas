@@ -434,7 +434,7 @@ Begin
        //Fnconds := Fnphases;
        Yorder := Fnconds * Fnterms;
        // YprimInvalid[ActorID] := True;  (set in Edit; this is redundant)
-
+       FLineType := LineCodeObj.FLineType;
 
    End
    ELSE
@@ -1798,26 +1798,27 @@ Begin
    IF LineGeometryClass.SetActive(Code) THEN
      Begin
          FLineCodeSpecified := FALSE;  // Cancel this flag
-         SpacingSpecified := False;
+         SpacingSpecified   := False;
 
-         FLineGeometryObj := LineGeometryClass.GetActiveObj;
-         FZFrequency      := -1.0;  // Init to signify not computed
+         FLineGeometryObj   := LineGeometryClass.GetActiveObj;
+         FZFrequency        := -1.0;  // Init to signify not computed
 
-         GeometryCode     := LowerCase(Code);
+         GeometryCode       := LowerCase(Code);
 
          If FrhoSpecified Then FlineGeometryObj.rhoearth := rho;
 
-         NormAmps      := FLineGeometryObj.NormAmps;
-         EmergAmps     := FLineGeometryObj.EmergAmps;
+         NormAmps           := FLineGeometryObj.NormAmps;
+         EmergAmps          := FLineGeometryObj.EmergAmps;
          UpdatePDProperties;
 
-         NPhases       := FLineGeometryObj.Nconds;
-         Nconds        := FNPhases;  // Force Reallocation of terminal info
-         Yorder        := Fnconds * Fnterms;
+         NPhases            := FLineGeometryObj.Nconds;
+         Nconds             := FNPhases;  // Force Reallocation of terminal info
+         Yorder             := Fnconds * Fnterms;
          YprimInvalid[ActiveActor]  := True;       // Force Rebuild of Y matrix
 
          NumAmpRatings      :=  FLineGeometryObj.NumAmpRatings;
          AmpRatings         :=  Copy(FLineGeometryObj.AmpRatings);
+         FLineType          :=  FLineGeometryObj.FLineType;
 
      End
    ELSE

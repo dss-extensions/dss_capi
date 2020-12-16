@@ -96,6 +96,7 @@ TYPE
         Xg,
         rho               : Double;
         AmpRatings        : TRatingsArray;
+        FLineType         : Integer; // Pointer to code for type of line
 
         Units:Integer;  {See LineUnits}
 
@@ -111,14 +112,15 @@ TYPE
    end;
 
 VAR
-   LineCodeClass : TLineCode;
-   ActiveLineCodeObj:TLineCodeObj;
+   LineCodeClass    : TLineCode;
+   ActiveLineCodeObj: TLineCodeObj;
+   LineTypeList     : TCommandList;
 
 implementation
 
 USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils, Ucomplex, Utilities, LineUnits;
 
-Const      NumPropsThisClass = 26;
+Const      NumPropsThisClass = 27;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLineCode.Create;  // Creates superstructure for all Line objects
@@ -132,6 +134,10 @@ BEGIN
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
+
+     LineTypeList := TCommandList.Create(
+     ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT', 'SWT_REC', 'SWT1_DISC', 'SWT_BRK', 'SWT_ELBOW' ]);
+     LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
 
      LineCodeClass := Self;
 END;
@@ -178,6 +184,7 @@ Begin
      PropertyName[24] := 'B0';
      PropertyName[25] := 'Seasons';
      PropertyName[26] := 'Ratings';
+     PropertyName[27] := 'LineType';
 
 
      PropertyHelp[1] := 'Number of phases in the line this line code data represents.  Setting this property reinitializes the line code.  Impedance matrix is reset for default symmetrical component.';
@@ -236,6 +243,9 @@ Begin
      PropertyHelp[25] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
      PropertyHelp[26] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
                          CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
+     PropertyHelp[27] := 'Code designating the type of line. ' +  CRLF +
+                         'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
+                         'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -435,7 +445,8 @@ BEGIN
                setlength(AmpRatings,NumAmpRatings);
                Param := Parser[ActiveActor].StrValue;
                NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
-               End
+               End;
+           27: FLineType := LineTypeList.Getcommand(Param);
          ELSE
            ClassEdit(ActiveLineCodeObj, Parampointer - NumPropsThisClass)
          END;
@@ -557,39 +568,40 @@ constructor TLineCodeObj.Create(ParClass:TDSSClass; const LineCodeName:String);
 
 BEGIN
      Inherited Create(ParClass);
-     Name := LowerCase(LineCodeName);
-     DSSObjType := ParClass.DSSClassType;
+     Name               := LowerCase(LineCodeName);
+     DSSObjType         := ParClass.DSSClassType;
 
-     FNPhases := 3;  // Directly set conds and phases
-     FNeutralConductor := FNphases;  // initialize to last conductor
-     R1 := 0.0580;  //ohms per 1000 ft
-     X1 := 0.1206;
-     R0 := 0.1784;
-     X0 := 0.4047;
-     C1 := 3.4e-9;  // nf per 1000ft
-     C0 := 1.6e-9;
-     Z    := nil;
-     Zinv := nil;
-     Yc   := nil;
-     Basefrequency := ActiveCircuit[ActiveActor].Fundamental;
-     Units := UNITS_NONE;  // default to none  (no conversion)
-     Normamps := 400.0;
-     EmergAmps := 600.0;
-     PctPerm := 20.0;
-     FaultRate := 0.1;
+     FNPhases           := 3;  // Directly set conds and phases
+     FNeutralConductor  := FNphases;  // initialize to last conductor
+     R1                 := 0.0580;  //ohms per 1000 ft
+     X1                 := 0.1206;
+     R0                 := 0.1784;
+     X0                 := 0.4047;
+     C1                 := 3.4e-9;  // nf per 1000ft
+     C0                 := 1.6e-9;
+     Z                  := nil;
+     Zinv               := nil;
+     Yc                 := nil;
+     Basefrequency      := ActiveCircuit[ActiveActor].Fundamental;
+     Units              := UNITS_NONE;  // default to none  (no conversion)
+     Normamps           := 400.0;
+     EmergAmps          := 600.0;
+     PctPerm            := 20.0;
+     FaultRate          := 0.1;
+     FLineType          := 1;  // Default to OH  Line
 
-     Rg := 0.01805;  // ohms per 1000'
-     Xg := 0.155081;
-     rho := 100.0;
+     Rg                 := 0.01805;  // ohms per 1000'
+     Xg                 := 0.155081;
+     rho                := 100.0;
 
      SymComponentsModel := TRUE;
-     ReduceByKron := FALSE;
+     ReduceByKron       := FALSE;
      CalcMatricesFromZ1Z0;  // put some reasonable values in
 
     {Initialize dynamic array for ratings}
-    NumAmpRatings  :=  1;
+    NumAmpRatings       :=  1;
     setlength(AmpRatings,NumAmpRatings);
-    AmpRatings[0]  :=  NormAmps;
+    AmpRatings[0]       :=  NormAmps;
 
     InitPropertyValues(0);
 END;
@@ -757,6 +769,7 @@ begin
                   Result :=  Result + floattoStrf(AmpRatings[j-1],ffgeneral,8,4) + ',';
                 Result   :=  Result + ']';
               End;
+        27: Result := LineTypeList.Get(FLineType);
      Else
         Result := Inherited GetPropertyValue(index);
      end;
@@ -791,6 +804,7 @@ begin
      PropertyValue[24] :=  '0.60319'; // B0  microS
      PropertyValue[25] :=  '1'; // 1 season
      PropertyValue[26] :=  '[400]'; // 1 rating
+     PropertyValue[27] :=  'OH'; // 1 rating
 
     inherited  InitPropertyValues(NumPropsThisClass);
 
