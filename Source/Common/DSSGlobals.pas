@@ -1144,6 +1144,16 @@ procedure Delay(TickTime : Integer);
 end;
 //{$ENDIF}
 
+//*********Downloads a file from the internet into the folder specified*********
+function DownLoadInternetFile(Source, Dest : String): Boolean;
+begin
+  try
+    Result := URLDownloadToFile(nil,PChar(Source),PChar(Dest),0,nil) = 0
+  except
+    Result := False;
+  end;
+end;
+
 //*********************Gets the processor information***************************
 procedure Get_Processor_Info();
 var
@@ -1486,7 +1496,12 @@ initialization
 {$IFNDEF FPC}
   DSS_Viz_installed := CheckOpenDSSViewer('OpenDSS_Viewer');  // OpenDSS Viewer (flag for detected installation)
   DSS_GIS_installed := CheckOpenDSSViewer('OpenDSS_GIS');     // OpenDSS GIS (flag for detected installation)
+  if Not IsDLL then
+  Begin
+
+  end;
 {$ENDIF}
+
 
 
 Finalization
