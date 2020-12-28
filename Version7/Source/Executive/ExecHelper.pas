@@ -1172,8 +1172,8 @@ VAR
 
 Begin
 
-     Dummy := AllocMem(Sizeof(Double) * 100); // Big Buffer
-     Num   := Parser.ParseAsVector(100, Dummy);
+     Dummy := AllocMem(Sizeof(Double) * 1000); // Big Buffer
+     Num   := Parser.ParseAsVector(1000, Dummy);
      {Parsing zero-fills the array}
 
      {LegalVoltageBases is a zero-terminated array, so we have to allocate

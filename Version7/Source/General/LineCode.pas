@@ -48,7 +48,8 @@ type
         procedure DefineProperties;
         function MakeLike(const LineName: String): Integer; OVERRIDE;
     PUBLIC
-
+        LineTypeList: TCommandList;
+        
         constructor Create;
         destructor Destroy; OVERRIDE;
 
@@ -100,6 +101,7 @@ type
         Xg,
         rho: Double;
         AmpRatings: array of Double;
+        FLineType: Integer; // Pointer to code for type of line
 
         Units: Integer;  {See LineUnits}
 
@@ -129,7 +131,12 @@ uses
     LineUnits;
 
 const
-    NumPropsThisClass = 26;
+    NumPropsThisClass = 27;
+
+    LINE_TYPES: Array of String = [
+        'oh', 'ug', 'ug_ts', 'ug_cn', 'swt_ldbrk', 'swt_fuse', 
+        'swt_sect', 'swt_rec', 'swt1_disc', 'swt_brk', 'swt_elbow'
+    ];
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLineCode.Create;  // Creates superstructure for all Line objects
@@ -143,12 +150,16 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
+
+    LineTypeList := TCommandList.Create(LINE_TYPES);
+    LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLineCode.Destroy;
-
 begin
+    LineTypeList.Free();
+
     // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
 end;
@@ -187,7 +198,7 @@ begin
     PropertyName[24] := 'B0';
     PropertyName[25] := 'Seasons';
     PropertyName[26] := 'Ratings';
-
+    PropertyName[27] := 'LineType';
 
     PropertyHelp[1] := 'Number of phases in the line this line code data represents.  Setting this property reinitializes the line code.  Impedance matrix is reset for default symmetrical component.';
     PropertyHelp[2] := 'Positive-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
@@ -245,6 +256,9 @@ begin
     PropertyHelp[25] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
     PropertyHelp[26] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
+    PropertyHelp[27] := 'Code designating the type of line. ' +  CRLF +
+                        'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
+                        'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -493,7 +507,9 @@ begin
                     setlength(AmpRatings, NumAmpRatings);
                     Param := Parser.StrValue;
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
-                end
+                end;
+                27: 
+                    FLineType := LineTypeList.Getcommand(Param);
             else
                 ClassEdit(ActiveLineCodeObj, Parampointer - NumPropsThisClass)
             end;
@@ -649,6 +665,7 @@ begin
     EmergAmps := 600.0;
     PctPerm := 20.0;
     FaultRate := 0.1;
+    FLineType := 1;  // Default to OH Line
 
     Rg := 0.01805;  // ohms per 1000'
     Xg := 0.155081;
@@ -889,6 +906,11 @@ begin
                 Result := Result + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
             Result := Result + ']';
         end;
+        27: 
+            if (FLineType >= 1) and (FLineType <= (High(LINE_TYPES) + 1)) then
+                Result := LINE_TYPES[FLineType - 1]
+            else
+                Result := '';
     else
         Result := inherited GetPropertyValue(index);
     end;
@@ -923,6 +945,7 @@ begin
     PropertyValue[24] := '0.60319'; // B0  microS
     PropertyValue[25] := '1'; // 1 season
     PropertyValue[26] := '[400]'; // 1 rating
+    PropertyValue[27] :=  'OH';
 
     inherited  InitPropertyValues(NumPropsThisClass);
 

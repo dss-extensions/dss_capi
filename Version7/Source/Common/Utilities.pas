@@ -194,6 +194,7 @@ uses
     Fault,
     Feeder,
     HashList,
+    LoadShape,
     EnergyMeter,
     PCElement,
     ControlElem;
@@ -2113,8 +2114,7 @@ var
     F: TextFile;
     ClassName: String;
     Nrecords: Integer;
-
-
+    ParClass: TDssClass;
 begin
 
     Result := TRUE;
@@ -2141,9 +2141,13 @@ begin
                     if HasBeenSaved or (not Enabled) then
                         Continue;
 
+            ParClass :=  ActiveDSSObject.ParentClass;
+            if LowerCase(ParClass.Name) = 'loadshape' then
+                if not TLoadShapeObj(ActiveDSSObject).Enabled then
+                    continue;
+
             WriteActiveDSSObject(F, 'New');  // sets HasBeenSaved := TRUE
             Inc(Nrecords); // count the actual records
-
         until DSS_Class.Next = 0;
 
         CloseFile(F);

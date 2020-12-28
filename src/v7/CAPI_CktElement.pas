@@ -72,6 +72,8 @@ procedure CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PIn
 procedure CktElement_Get_CurrentsMagAng_GR(); CDECL;
 procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
+procedure CktElement_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_TotalPowers_GR(); CDECL;
 
 // API Extensions
 function CktElement_Get_IsIsolated(): Wordbool; CDECL;
@@ -1393,6 +1395,53 @@ begin
     end;
 
     Result := ActiveCircuit.ActiveCktElement.IsIsolated;
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    cBuffer: pComplexArray;
+    myInit,
+    myEnd,
+    j,
+    i,
+    iV: Integer;
+    myBuffer: Array of Complex;
+    Result: PDoubleArray;
+begin
+    if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+        Exit;
+    end;
+
+    with ActiveCircuit.ActiveCktElement do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nterms);
+        cBuffer := Allocmem(2 * SizeOf(Double) * NConds * Nterms);
+        GetPhasePower(cBuffer);
+        iV := 0;
+        SetLength(myBuffer, Nterms);
+        for j := 1 to Nterms do
+        Begin
+            myBuffer[j - 1] := cmplx(0, 0);
+            myInit := (j - 1) * NConds + 1;
+            myEnd := NConds * j;
+            for i := myInit to myEnd do
+            begin
+                myBuffer[j - 1] := cadd(myBuffer[j - 1], cBuffer^[i]);
+            end;
+            Result[iV + 0] := myBuffer[j - 1].re * 0.001;
+            Result[iV + 1] := myBuffer[j - 1].im * 0.001; 
+            Inc(iV, 2);
+        End;
+        Reallocmem(cBuffer,0);
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Get_TotalPowers_GR(); CDECL;
+// Same as CktElement_Get_TotalPowers but uses global result (GR) pointers
+begin
+    CktElement_Get_TotalPowers(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 //------------------------------------------------------------------------------
 end.

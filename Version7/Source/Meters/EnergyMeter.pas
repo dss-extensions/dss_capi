@@ -349,6 +349,7 @@ type
         SectionCount: Integer;
         ActiveSection: Integer;  // For COM interface to index into FeederSections array
         FeederSections: pFeederSections;
+        ZonePCE: Array of string;
 
         constructor Create(ParClass: TDSSClass; const EnergyMeterName: String);
         destructor Destroy; OVERRIDE;
@@ -371,6 +372,7 @@ type
         procedure AllocateLoad;
         procedure ReduceZone;  // Reduce Zone by eliminating buses and merging lines
         procedure SaveZone(const dirname: String);
+        procedure GetPCEatZone;
 
         procedure CalcReliabilityIndices(AssumeRestoration: Boolean);
 
@@ -1195,6 +1197,9 @@ begin
 
     FeederSections := NIL;
     ActiveSection := 0;
+
+    SetLength(ZonePCE, 1);
+    ZonePCE[0] := '';
 
     // RecalcElementData;
 end;
@@ -3189,6 +3194,45 @@ begin
 
 end;
 
+
+procedure TEnergyMeterObj.GetPCEatZone;
+var
+    cktElem,
+    shuntElement: TDSSCktElement;
+    pMeter: TEnergyMeterObj;
+begin
+    //TODO: if performance ever becomes an issue, rewrite to use a temporary list,
+    //      or try overallocating the array first
+    if ActiveCircuit = NIL then
+        Exit;
+
+    SetLength(ZonePCE, 1);
+    ZonePCE[0] := '';
+
+    if BranchList = NIL then
+        Exit;
+
+    with ActiveCircuit do
+    begin
+        cktElem := BranchList.First;
+        while cktElem <> NIL do
+        begin
+            if CktElem.Enabled Then
+            begin
+                ActiveCktElement := cktElem;
+                shuntElement := Branchlist.FirstObject;
+                while shuntElement <> NIL do
+                begin
+                    ActiveCktElement := shuntElement;
+                    ZonePCE[high(ZonePCE)] := shuntElement.DSSClassName + '.' + shuntElement.Name;
+                    SetLength(ZonePCE, length(ZonePCE) + 1);
+                    shuntElement := BranchList.NextObject;
+                end;
+            end;
+            cktElem := BranchList.GoForward;
+        end;
+    end;
+end;
 
 procedure TEnergyMeterObj.SetDragHandRegister(Reg: Integer; const Value: Double);
 begin

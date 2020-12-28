@@ -1,6 +1,6 @@
 #ifndef DSS_CAPI_V7_DLL_H
 #define DSS_CAPI_V7_DLL_H
-#define DSS_CAPI_V7_VERSION "0.10.6"
+#define DSS_CAPI_V7_VERSION "0.10.7"
 #ifndef DSS_CAPI_V7_DLL
 //#define DSS_CAPI_V7_DLL __declspec(dllimport)
 #define DSS_CAPI_V7_DLL
@@ -371,6 +371,16 @@ extern "C" {
     Same as Bus_Get_ZSC012Matrix but using the global buffer interface for results
     */
     DSS_CAPI_V7_DLL void Bus_Get_ZSC012Matrix_GR(void);
+
+    /*
+    Returns an array with the names of all PCE connected to the active bus    
+    */
+    DSS_CAPI_V7_DLL void Bus_Get_AllPCEatBus(char*** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Returns an array with the names of all PDE connected to the active bus
+    */
+    DSS_CAPI_V7_DLL void Bus_Get_AllPDEatBus(char*** ResultPtr, int32_t* ResultCount);
 
     /*
     Array of strings with all Capacitor names in the circuit.
@@ -1207,6 +1217,15 @@ extern "C" {
     */
     DSS_CAPI_V7_DLL uint16_t CktElement_Get_IsIsolated(void);
 
+    /*
+    Returns the total powers (complex) at ALL terminals of the active circuit element.
+    */
+    DSS_CAPI_V7_DLL void CktElement_Get_TotalPowers(double** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as CktElement_Get_TotalPowers but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void CktElement_Get_TotalPowers_GR(void);
 
     /*
     Convert real and imaginary doubles to Array of doubles

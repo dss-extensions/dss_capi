@@ -190,6 +190,8 @@ type
         HasBeenAllocated: Boolean;
         kWBase: Double;
         kVABase: Double;
+        kWref: Double;
+        kVARref: Double;
         kvarBase: Double;
         kVLoadBase: Double;
         LoadClass: Integer;
@@ -262,6 +264,7 @@ type
         property ExemptLoad: Boolean READ ExemptFromLDCurve;
         property FixedLoad: Boolean READ Fixed;
         property nZIPV: Integer READ FnZIPV WRITE set_nZIPV;
+        Property IsPFSpecified: Boolean read PFSpecified;
     end;
 
 var
@@ -722,7 +725,10 @@ begin
                     UpdateVoltageBases;
 
                 4:
+                begin
                     LoadSpecType := 0;
+                    kWRef := kWBase;
+                end;
                 5:
                 begin
                     PFChanged := TRUE;
@@ -736,7 +742,11 @@ begin
                     if Assigned(YearlyShapeObj) then
                         with YearlyShapeObj do
                             if UseActual then
+                            begin
+                                kWref := kWBase;
+                                kVARref := kVARbase;
                                 SetkWkvar(MaxP, MaxQ);
+                            end;
                 end;
                 8:
                 begin
@@ -764,6 +774,7 @@ begin
                 begin
                     LoadSpecType := 1;
                     PFSpecified := FALSE;
+                    kVARref := kVARbase;
                 end;// kW, kvar
  {*** see set_xfkva, etc           21, 22: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
                 23:
@@ -1284,7 +1295,9 @@ begin
         2:
         begin  {kVA, PF}
             kWbase := kVABase * Abs(PFNominal);
+            kWref := kWBase;
             kvarBase := kWBase * SQRT(1.0 / SQR(PFNominal) - 1.0);
+            kvarref := kvarbase;
             if PFNominal < 0.0 then
                 kvarBase := -kvarBase;
         end;
@@ -1294,7 +1307,7 @@ begin
                 kvarBase := kWBase * SQRT(1.0 / SQR(PFNominal) - 1.0);
                 if PFNominal < 0.0 then
                     kvarBase := -kvarBase;
-                kVABase := SQRT(SQR(kWbase) + SQR(kvarBase));
+                kVABase := SQRT(SQR(kWref) + SQR(kVARref));
             end;
 
 

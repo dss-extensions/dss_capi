@@ -620,7 +620,6 @@ begin
     MaxError := 0.0;
     for i := 1 to ActiveCircuit.NumNodes do
     begin
-
         VMag := Cabs(NodeV^[i]);
 
     { If base specified, use it; otherwise go on present magnitude  }
@@ -631,12 +630,7 @@ begin
             ErrorSaved^[i] := Abs(1.0 - VmagSaved^[i] / Vmag);
 
         VMagSaved^[i] := Vmag;  // for next go-'round
-{$IFNDEF FPC}
-        MaxError := Max(MaxError, ErrorSaved^[i]);  // update max error
-{$ELSE}
-        if ErrorSaved^[i] > MaxError then
-            MaxError := ErrorSaved^[i]; // TODO - line above used to compile in FPC
-{$ENDIF}
+        MaxError := Math.Max(MaxError, ErrorSaved^[i]);  // update max error
     end;
 
 
@@ -667,7 +661,7 @@ begin
     CloseFile(FDebug);
 {$ENDIF}
     ;
-
+    
     if (MaxError <= ConvergenceTolerance) and (not IsNaN(MaxError)) then
         Result := TRUE
     else
