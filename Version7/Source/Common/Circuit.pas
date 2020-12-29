@@ -318,8 +318,8 @@ TYPE
           procedure AggregateProfiles(mode: string);
           procedure Disable_All_DER();          
           procedure Save_SubCircuits();
-          function getPCEatBus(BusName: String): ArrayOfString;
-          function getPDEatBus(BusName: String): ArrayOfString;
+          function getPCEatBus(BusName: String; useNone: Boolean = True): ArrayOfString;
+          function getPDEatBus(BusName: String; useNone: Boolean = True): ArrayOfString;
           function ReportPCEatBus(BusName: String): String;
           function ReportPDEatBus(BusName: String): String;
           function get_Line_Bus(LName: String; NBus: Integer):String;
@@ -1423,7 +1423,7 @@ End;
 {*******************************************************************************
 *    Returns the list of all PDE connected to the bus name given at BusName    *
 ********************************************************************************}
-function TDSSCircuit.getPDEatBus(BusName: String): ArrayOfString;
+function TDSSCircuit.getPDEatBus(BusName: String; useNone: Boolean): ArrayOfString;
 Var
    Dss_Class: TDSSClass;
    j, i: integer;
@@ -1457,7 +1457,7 @@ Begin
             end;
         end;
     end;
-    if length(Result) = 0 then
+    if (length(Result) = 0) and useNone then
     begin
         SetLength(Result, 1);
         Result[0] := 'None';
@@ -1466,7 +1466,7 @@ end;
 {*******************************************************************************
 *    Returns the list of all PCE connected to the bus nam given at BusName     *
 ********************************************************************************}
-function TDSSCircuit.getPCEatBus(BusName: String): ArrayOfString;
+function TDSSCircuit.getPCEatBus(BusName: String; useNone: Boolean): ArrayOfString;
 var
    Dss_Class: TDSSClass;
    j, i: integer;
@@ -1498,7 +1498,7 @@ begin
             DSS_Class.Next;
         end;
     end;
-    if length(Result) = 0 then
+    if (length(Result) = 0) and useNone then
     begin
         SetLength(Result, 1);
         Result[0] := 'None';

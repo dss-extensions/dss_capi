@@ -1265,7 +1265,7 @@ begin
         DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;
     end;
-    myPCEList := ActiveCircuit.getPCEatBus(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex));
+    myPCEList := ActiveCircuit.getPCEatBus(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex), False);
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(myPCEList));
     for i := 0 to High(myPCEList) do
         Result[i] := DSS_CopyStringAsPChar(myPCEList[i]);
@@ -1282,7 +1282,7 @@ begin
         DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;
     end;
-    myPDEList := ActiveCircuit.getPDEatBus(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex));
+    myPDEList := ActiveCircuit.getPDEatBus(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex), False);
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(myPDEList));
     for i := 0 to High(myPDEList) do
         Result[i] := DSS_CopyStringAsPChar(myPDEList[i]);
