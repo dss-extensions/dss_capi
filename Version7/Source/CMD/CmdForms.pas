@@ -111,7 +111,7 @@ begin
     writeln(VersionString);
     writeln('Copyright (c) 2008-2019, Electric Power Research Institute, Inc.');
     writeln('Copyright (c) 2016-2017, Battelle Memorial Institute');
-    writeln('Copyright (c) 2017-2019, Paulo Meira');
+    writeln('Copyright (c) 2017-2020, Paulo Meira');
     writeln('All rights reserved.');
 {$ENDIF}
 end;
@@ -208,9 +208,6 @@ end;
 
 procedure ShowGeneralHelp;
 begin
-    writeln('This is a console-mode version of OpenDSS, available for Windows, Linux and Mac OS X');
-    writeln('Enter a command at the >> prompt, followed by any required command parameters');
-    writeln('Enter either a carriage return, "exit" or "q(uit)" to exit the program');
     writeln('For specific help, enter:');
     writeln('  "help command [cmd]" lists all executive commands, or');
     writeln('                       if [cmd] provided, details on that command');
@@ -223,7 +220,6 @@ begin
     writeln('  "help class [cls]"   lists the names of all available circuit model classes, or');
     writeln('                       if [cls] provided, details on that class');
     writeln('You may truncate any help topic name, which returns all matching entries');
-    writeln('// begins a comment, which is ignored by the parser (including help)');
 end;
 
 procedure ShowAnyHelp(const num: Integer; cmd: pStringArray; hlp: pStringArray; const opt: String);
@@ -295,6 +291,151 @@ begin
     end;
 end;
 
+{$DEFINE EXPORT_HELP}
+{$IFDEF EXPORT_HELP}
+function StringToMD(const s: String): String;
+begin
+    Result := s;
+    Result := StringReplace(Result, CRLF, '<br>', [rfReplaceAll]);
+    Result := StringReplace(Result, '|', '\|', [rfReplaceAll]);
+    Result := StringReplace(Result, '*', '\*', [rfReplaceAll]);
+    Result := StringReplace(Result, '~', '\~', [rfReplaceAll]);
+end;
+
+procedure AddHelpForClassesMD(BaseClass: Word);
+var
+    HelpList: TList;
+    pDSSClass: TDSSClass;
+    i, j: Integer;
+begin
+    HelpList := TList.Create();
+    pDSSClass := DSSClassList.First;
+    while pDSSClass <> NIL do
+    begin
+        if (pDSSClass.DSSClassType and BASECLASSMASK) = BaseClass then
+            HelpList.Add(pDSSClass);
+        pDSSClass := DSSClassList.Next;
+    end;
+    HelpList.Sort(@CompareClassNames);
+
+
+    for i := 1 to HelpList.Count do
+    begin
+        pDSSClass := HelpList.Items[i - 1];
+        writeln('#### `', pDSSClass.name, '` properties');
+        writeln();
+        writeln('| Number | Name | Description |');
+        writeln('| - | - | - |');
+        
+        for j := 1 to pDSSClass.NumProperties do
+            writeln('| ', IntToStr(j),  ' | ', pDSSClass.PropertyName[j], ' | ', StringToMD(pDSSClass.PropertyHelp^[j]), ' |');
+                
+        writeln();
+        writeln();
+    end;
+    
+    HelpList.Free;
+end;
+
+procedure ShowAnyHelpMD(const num: Integer; cmd: pStringArray; hlp: pStringArray; what: String);
+var
+    i, j: Integer;
+    lst: TStringList;
+begin
+    lst := TStringList.Create;
+    for i := 1 to num do
+        lst.Add(cmd[i]);
+
+    lst.Sort;
+    
+    writeln('| ', what,  ' | Description |');
+    writeln('| - | - |');
+    for i := 1 to num do
+        for j := 1 to num do
+            if cmd[j] = lst[i - 1] then
+            begin
+                writeln('| ', cmd[j], ' | ',  StringToMD(hlp[j]), ' |');
+                break;
+            end;
+    
+    lst.Free;
+    writeln();
+end;
+
+procedure ShowAllHelpMD();
+//var
+//    pDSSClass: TDSSClass;
+//    i: Integer;
+begin
+    writeln('# DSS Extensions: OpenDSS Commands and Properties');
+    writeln();
+    writeln('---');
+    writeln();
+    writeln('**This document was generated from:** `', VersionString, '`');
+    writeln();
+    writeln('*Generated with the legacy models disabled (i.e. OpenDSS v9+ compatibility mode).*');
+    writeln();
+    writeln('---');
+    writeln();
+    writeln('## About this');
+    writeln();
+    writeln('This is a document automatically generated from the commands, options and properties for the DSS language (script level) exposed in the DSS Extensions version of the OpenDSS engine. A separate document will be developed in the future to detail **API** functions and general usage recommendations for the projects under DSS Extensions.');
+    writeln();
+    writeln('Since the extensive majority of properties and elements are compatible, this document can be useful when using either the official OpenDSS implementation or the DSS Extensions version (DSS C-API engine), consumed through the projects DSS Python (`dss_python`), OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp (`dss_sharp`), and DSS MATLAB (`dss_matlab`).  If you are using the official OpenDSS, when in doubt check the official documentation and/or source code.');
+    writeln();
+    writeln('As a final note, keep in mind that not all commands are implemented in the DSS Extensions engine, interactive commands like plots are missing (on purpose).');
+    writeln();
+    
+    writeln('---');
+    writeln('## Commands');
+    writeln();
+    ShowAnyHelpMD(NumExecCommands, @ExecCommand, @CommandHelp, 'Command');
+    
+    writeln('---');
+    writeln('## Execution Options');
+    writeln();
+    ShowAnyHelpMD(NumExecOptions, @ExecOption, @OptionHelp, 'Option');
+    
+    writeln('---');
+    writeln('## `Show` options');
+    writeln();
+    ShowAnyHelpMD(NumShowOptions, @ShowOption, @ShowHelp, 'Option');
+    
+    writeln('---');
+    writeln('## `Export` options');
+    writeln();
+    ShowAnyHelpMD(NumExportOptions, @ExportOption, @ExportHelp, 'Option');
+    
+    writeln('---');
+    writeln('## Elements');
+    writeln();
+    writeln('---');
+    writeln('### Power Delivery Elements');
+    writeln();
+    AddHelpForClassesMD(PD_ELEMENT);
+    writeln('---');
+    writeln('### Power Conversion Elements');
+    writeln();
+    AddHelpForClassesMD(PC_ELEMENT);
+    writeln('---');
+    writeln('###  Control Elements');
+    writeln();
+    AddHelpForClassesMD(CTRL_ELEMENT);
+    writeln('---');
+    writeln('### Metering Elements');
+    writeln();
+    AddHelpForClassesMD(METER_ELEMENT);
+    writeln('---');
+    writeln('### Supporting Elements');
+    writeln();
+    AddHelpForClassesMD(0);
+    writeln('---');
+    writeln('### Other Elements');
+    writeln();
+    AddHelpForClassesMD(NON_PCPD_ELEM);
+end;
+{$ENDIF}
+
 procedure ShowHelpForm;
 var
     Param, OptName: String;
@@ -303,6 +444,12 @@ begin
     Param := LowerCase(Parser.StrValue);
     Parser.NextParam;
     OptName := LowerCase(Parser.StrValue);
+    
+{$IFDEF EXPORT_HELP}
+    if ANSIStartsStr('markdown', param) then
+        ShowAllHelpMD()
+    else
+{$ENDIF}
     if ANSIStartsStr('com', param) then
         ShowAnyHelp(NumExecCommands, @ExecCommand, @CommandHelp, OptName)
     else
