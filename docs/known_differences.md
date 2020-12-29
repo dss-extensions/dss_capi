@@ -16,7 +16,7 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 ## Differences
 
 - There is no direct support for plots from the DSS language or general GUI elements. As a library, DSS C-API can, of course, be integrate with GUI environments. If there are enough users to justify it at some point in the future, optional integration with some plotting system can be investigated.
-- The TCP connection options are disabled.
+- The TCP connection options are disabled as well as GIS features (which require proprietary software)
 - This library contains fixes for user-written DLLs ("UserModels" and "UserControls" for elements like Generators and CapUserControls) which include truncated pointers and correct support for the DSS language `Edit` command.
 - Free Pascal hashlists are used for tracking elements. This means that accessing elements by name is usually faster in DSS C-API and present a linear behavior.
 - A custom version (soon to be renamed) of the KLUSolve library is used. It generalizes the original code to use the upstream SuiteSparse code and adds extra functions to achieve better performance. It is also compatible with MATLAB on Linux.
