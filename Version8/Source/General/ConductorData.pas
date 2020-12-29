@@ -135,7 +135,7 @@ Begin
   PropertyHelp^[ActiveProperty + 11]:= 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
   PropertyHelp^[ActiveProperty + 12]:= 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
                                         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
-  PropertyHelp^[ActiveProperty + 13]:= 'Equivalent conductor radius for capacitance calcs. Specify this for bundled conductors. Defaults to same value as radius. Defined Diam or Radius property first.';
+  PropertyHelp^[ActiveProperty + 13]:= 'Equivalent conductor radius for capacitance calcs. Specify this for bundled conductors. Defaults to same value as radius. Define Diam or Radius property first.';
 
   ActiveProperty := ActiveProperty + NumConductorClassProps;
   Inherited DefineProperties;
