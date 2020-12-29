@@ -60,9 +60,6 @@ type
         FGMRUnits: Integer;
         FResistanceUnits: Integer;
         FRadiusUnits: Integer;
-        FCapRadiusSet: Boolean; // FCapRadius60 explicitly set?
-                                // If not, we can always overwrite it when
-                                // the radius changes
     PUBLIC
         NormAmps: Double;
         EmergAmps: Double;
@@ -202,10 +199,7 @@ begin
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, pointer(AmpRatings));
                 end;
                 13:
-                begin
                     Fcapradius60 := Parser.DblValue;
-                    FCapRadiusSet := True;
-                end
             else
                 inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)
             end;
@@ -220,11 +214,7 @@ begin
                 4: // GMRac
                 begin
                     if Fradius < 0.0 then
-                    begin
                         Fradius := FGMR60 / 0.7788;
-                        if not FCapRadiusSet then
-                            Fcapradius60 := Fradius;
-                    end;
                 end;
                 5:
                     if FradiusUnits = 0 then
@@ -233,8 +223,8 @@ begin
                 begin
                     if FGMR60 < 0.0 then
                         FGMR60 := 0.7788 * FRadius;
-                    if not FCapRadiusSet then
-                        Fcapradius60 := Fradius; // default to radius when not set
+                    if Fcapradius60 < 0.0 then
+                        Fcapradius60 := Fradius;    // default to radius
                 end;
                 7:
                     if FGMRUnits = 0 then
@@ -270,7 +260,6 @@ begin
         FResistanceUnits := OtherConductorData.FResistanceUnits;
         FGMR60 := OtherConductorData.FGMR60;
         Fcapradius60 := OtherConductorData.Fcapradius60;
-        FCapRadiusSet := OtherConductorData.FCapRadiusSet;
         FGMRUnits := OtherConductorData.FGMRUnits;
         FRadius := OtherConductorData.FRadius;
         FRadiusUnits := OtherConductorData.FRadiusUnits;
@@ -296,7 +285,6 @@ begin
     FGMR60 := -1.0;
     Fradius := -1.0;
     Fcapradius60 := -1.0;   // init to not defined
-    FCapRadiusSet := False;
     FGMRUnits := 0;
     FResistanceUnits := 0;
     FRadiusUnits := 0;
