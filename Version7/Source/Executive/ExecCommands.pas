@@ -13,7 +13,7 @@ uses
     Command;
 
 const
-    NumExecCommands = 114;
+    NumExecCommands = 118;
 
 var
 
@@ -170,6 +170,10 @@ begin
     ExecCommand[112] := 'ExportOverloads';
     ExecCommand[113] := 'ExportVViolations';
     ExecCommand[114] := 'Zsc012';
+    ExecCommand[115] := 'AggregateProfiles';
+    ExecCommand[116] := 'AllPCEatBus';
+    ExecCommand[117] := 'AllPDEatBus';
+    ExecCommand[118] := 'TotalPowers';
 
     CommandHelp[1] := 'Create a new object within the DSS. Object becomes the ' +
         'active object' + CRLF +
@@ -509,7 +513,23 @@ begin
     CommandHelp[112] := 'Exports the overloads report with the content available at the moment of the call. It only affects the overloads report for the active actor.';
     CommandHelp[113] := 'Exports the voltage violations report with the content available at the moment of the call. It only affects the voltage violations report for the active actor.';
     CommandHelp[114] := 'Returns symmetrical component short circuit impedances Z0, Z1, and Z2 for the ACTIVE 3-PHASE BUS. Determined from Zsc matrix.';
-
+    CommandHelp[115] := 'Aggregates the load shapes in the model using the number of zones given in the argument.' + CRLF +
+                        'Use this command when the number of load shapes is considerably big, this algorithm will simplify' + CRLF +
+                        'the amount of load shapes in order to make the memory consumption lower for the model.' + CRLF +
+                        'The output of this algorithm is a script describing the new load shapes and their application into loads across the model.' + CRLF +
+                        'The argument on this command can be: Actual/pu to define the units in which the load profiles are.' + CRLF +
+                        'Check the OpenDSS user manual for details';
+    CommandHelp[116] := 'Brings back the names of all PCE connected to the bus specified in the argument.' + CRLF +
+                        'The command goes as follows:' + CRLF  + CRLF +
+                        'AllPCEatBus myBus' + CRLF  + CRLF +
+                        'Where "myBus" is the name of the bus of interest';
+    CommandHelp[117] := 'Brings back the names of all PDE connected to the bus specified in the argument.' + CRLF +
+                        'The command goes as follows:' + CRLF  + CRLF +
+                        'AllPDEatBus myBus' + CRLF  + CRLF +
+                        'Where "myBus" is the name of the bus of interest';
+    CommandHelp[118] := 'Returns the total powers (complex) at ALL terminals of the active circuit element in the Result string. '+
+                        '(See Select command.)' +
+                         'Returned as comma-separated kW and kvar.';
 end;
 
 //----------------------------------------------------------------------------
@@ -755,7 +775,7 @@ begin
             37:
                 CmdResult := DocurrentsCmd;
             38:
-                CmdResult := DopowersCmd;
+                CmdResult := DopowersCmd(0);
             39:
                 CmdResult := DoseqvoltagesCmd;
             40:
@@ -909,6 +929,24 @@ begin
             end;
             114:
                 CmdResult := DoZsc012Cmd; // Get full symmetrical component transformation of Zsc
+            115:
+            begin
+                DoSimpleMsg('AggregateProfiles is not supported in DSS Extensions yet.', 304);
+                // Parser.NextParam;
+                // ActiveCircuit.AggregateProfiles(Parser.StrValue);
+            end;
+            116:
+            begin
+                Parser.NextParam;
+                GlobalResult  :=  ActiveCircuit.ReportPCEatBus(Parser.StrValue);
+            end;
+            117:
+            begin
+                Parser.NextParam;
+                GlobalResult  :=  ActiveCircuit.ReportPDEatBus(Parser.StrValue);
+            end;
+            118: 
+                CmdResult := DopowersCmd(1);
         else
        // Ignore excess parameters
         end;

@@ -1429,9 +1429,8 @@ Var
    j, i: integer;
    myBus: Array of String;
 Begin
-    setlength(myBus, 2);
-    setlength(Result, 1);
-    Result[0] := 'None';
+    SetLength(myBus, 2);
+    SetLength(Result, 0);
     BusName := LowerCase(BusName);
     for i := 1 to DSSClassList.ListSize do
     begin
@@ -1451,12 +1450,17 @@ Begin
                 myBus[1] := LowerCase(StripExtension(ActiveCktElement.GetBus(2)));
                 if ((myBus[0] = BusName) or (myBus[1] = BusName)) and (myBus[0] <> myBus[1]) then
                 begin
+                    SetLength(Result, length(Result) + 1);
                     Result[High(Result)] := DSS_Class.Name + '.' + ActiveCktElement.Name;
-                    setlength(Result, length(Result) + 1);
                 end;
                 DSS_Class.Next;
             end;
         end;
+    end;
+    if length(Result) = 0 then
+    begin
+        SetLength(Result, 1);
+        Result[0] := 'None';
     end;
 end;
 {*******************************************************************************
@@ -1468,8 +1472,7 @@ var
    j, i: integer;
    myBus: String;
 begin
-    setlength(Result, 1);
-    Result[0] := 'None';
+    SetLength(Result, 0);
     BusName :=  LowerCase(BusName);
     for i := 1 to DSSClassList.ListSize do
     begin
@@ -1489,11 +1492,16 @@ begin
             myBus := LowerCase(StripExtension(ActiveCktElement.GetBus(1)));
             if myBus = BusName then
             begin
+                SetLength(Result, length(Result) + 1);
                 Result[High(Result)] := DSS_Class.Name + '.' + ActiveCktElement.Name;
-                setlength(Result, length(Result) + 1);
             end;
             DSS_Class.Next;
         end;
+    end;
+    if length(Result) = 0 then
+    begin
+        SetLength(Result, 1);
+        Result[0] := 'None';
     end;
 end;
 
