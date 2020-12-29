@@ -891,6 +891,7 @@ exports
     Meters_Get_SumBranchFltRates,
     Meters_Get_SectSeqIdx,
     Meters_Get_SectTotalCust,
+    Meters_Get_ZonePCE,
     Monitors_Get_AllNames,
     Monitors_Get_FileName,
     Monitors_Get_First,

@@ -372,7 +372,7 @@ type
         procedure AllocateLoad;
         procedure ReduceZone;  // Reduce Zone by eliminating buses and merging lines
         procedure SaveZone(const dirname: String);
-        procedure GetPCEatZone;
+        procedure GetPCEatZone(const allowEmpty: Boolean = False);
 
         procedure CalcReliabilityIndices(AssumeRestoration: Boolean);
 
@@ -3195,7 +3195,7 @@ begin
 end;
 
 
-procedure TEnergyMeterObj.GetPCEatZone;
+procedure TEnergyMeterObj.GetPCEatZone(const allowEmpty: Boolean);
 var
     cktElem,
     shuntElement: TDSSCktElement;
@@ -3206,8 +3206,13 @@ begin
     if ActiveCircuit = NIL then
         Exit;
 
-    SetLength(ZonePCE, 1);
-    ZonePCE[0] := '';
+    if not allowEmpty then
+    begin
+        SetLength(ZonePCE, 1);
+        ZonePCE[0] := '';
+    end
+    else
+        SetLength(ZonePCE, 0);
 
     if BranchList = NIL then
         Exit;
@@ -3224,13 +3229,19 @@ begin
                 while shuntElement <> NIL do
                 begin
                     ActiveCktElement := shuntElement;
-                    ZonePCE[high(ZonePCE)] := shuntElement.DSSClassName + '.' + shuntElement.Name;
                     SetLength(ZonePCE, length(ZonePCE) + 1);
+                    ZonePCE[high(ZonePCE)] := shuntElement.DSSClassName + '.' + shuntElement.Name;
                     shuntElement := BranchList.NextObject;
                 end;
             end;
             cktElem := BranchList.GoForward;
         end;
+    end;
+
+    if (Length(ZonePCE) = 0) and (not allowEmpty) then
+    begin
+        SetLength(ZonePCE, 1);
+        ZonePCE[0] := '';
     end;
 end;
 

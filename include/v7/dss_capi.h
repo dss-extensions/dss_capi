@@ -3132,6 +3132,12 @@ extern "C" {
     Total Customers downline from this section
     */
     DSS_CAPI_V7_DLL int32_t Meters_Get_SectTotalCust(void);
+    
+    /*
+    Returns the list of all PCE within the area covered by the energy meter
+    */
+    DSS_CAPI_V7_DLL void Meters_Get_ZonePCE(char*** ResultPtr, int32_t* ResultCount);
+    
 
     /*
     Array of all Monitor Names

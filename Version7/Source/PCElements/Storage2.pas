@@ -49,7 +49,7 @@ uses
 
 const
     NumStorage2Registers = 6;    // Number of energy meter registers
-    NumStorage2Variables = 23;    // No state variables
+    NumStorage2Variables = 25;    // No state variables
     VARMODEPF = 0;
     VARMODEKVAR = 1;
 //= = = = = = = = = = = = = = DEFINE STATES = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -3932,14 +3932,17 @@ begin
         19:
             Result := 'VV_DRC Oper';
         20:
-            Result := 'kWDesired';
+            Result := 'WP Oper';
         21:
-            Result := 'kW VW Limit';
+            Result := 'WV Oper';
         22:
-            Result := 'Limit kWOut Function';
+            Result := 'kWDesired';
         23:
+            Result := 'kW VW Limit';
+        24:
+            Result := 'Limit kWOut Function';
+        25:
             Result := 'kVA Exceeded';
-
 
     else
     begin
