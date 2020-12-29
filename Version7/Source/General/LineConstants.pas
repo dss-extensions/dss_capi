@@ -224,7 +224,10 @@ begin
 
     for i := 1 to FnumConds do
     begin
-        FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * Fy^[i] / Fcapradius^[i])));
+        if Fcapradius^[i] < 0 then
+            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * Fy^[i] / Fradius^[i])))
+        else
+            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * Fy^[i] / Fcapradius^[i])));
     end;
 
     for i := 1 to FNumConds do
