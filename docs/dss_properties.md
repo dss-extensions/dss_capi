@@ -2,7 +2,7 @@
 
 ---
 
-**This document was generated from:** `DSS C-API Library version 0.10.7 revision 217973b11bad5e083bbca187a831d63d6e67b644 based on OpenDSS SVN 2963 (v7/classic variation) MVMULT [FPC 3.2.0] (64-bit build)`
+**This document was generated from:** `DSS C-API Library version 0.10.7 revision 47422ccbb833c89de64d8941c520d106c9e7d0d4 based on OpenDSS SVN 2963 (v7/classic variation) MVMULT [FPC 3.2.0] (64-bit build)`
 
 *Generated with the legacy models disabled (i.e. OpenDSS v9+ compatibility mode).*
 
