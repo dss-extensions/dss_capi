@@ -126,6 +126,7 @@ type
         BaseP,
         BaseQ: Double;
 
+        Enabled,
         UseActual: Boolean;
         ExternalMemory:Boolean;
         constructor Create(ParClass: TDSSClass; const LoadShapeName: String);
@@ -133,6 +134,8 @@ type
 
         function GetMult(hr: Double): Complex;  // Get multiplier at specified time
         function Mult(i: Integer): Double;  // get multiplier by index
+        function GetQMult(i: Integer): Double;  // get multiplier by index
+        function GetPMult(i: Integer): Double;  // get multiplier by index
         function Hour(i: Integer): Double;  // get hour corresponding to point index
         procedure Normalize;
         procedure SetMaxPandQ;
@@ -873,6 +876,7 @@ begin
     UseActual := FALSE;
     MaxQSpecified := FALSE;
     FStdDevCalculated := FALSE;  // calculate on demand
+    Enabled := True;
 
     ArrayPropertyIndex := 0;
 
@@ -1249,9 +1253,34 @@ begin
     Result := FStdDev;
 end;
 
+function TLoadShapeObj.GetPMult(i: Integer): Double;
+begin
+    if (i <= FNumPoints) and (i > 0) then
+    begin
+        if dblPMultipliers <> nil then
+            Result := dblPMultipliers^[i]
+        else
+            Result := sngPMultipliers^[i];
+    end
+    else
+        Result := NaN;
+end;
+
+function TLoadShapeObj.GetQMult(i: Integer): Double;
+begin
+    if (i <= FNumPoints) and (i > 0) and ((dblQMultipliers <> nil) or (sngQMultipliers <> nil)) then
+    begin
+        if dblPMultipliers <> nil then
+            Result := dblQMultipliers^[i]
+        else
+            Result := sngQMultipliers^[i];
+    end
+    else
+        Result := NaN;
+end;
+
 function TLoadShapeObj.Mult(i: Integer): Double;
 begin
-
     if (i <= FNumPoints) and (i > 0) then
     begin
         if dblPMultipliers <> nil then
@@ -1263,7 +1292,6 @@ begin
     end
     else
         Result := 0.0;
-
 end;
 
 function TLoadShapeObj.Hour(i: Integer): Double;

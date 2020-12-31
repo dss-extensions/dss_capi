@@ -1736,7 +1736,7 @@ begin
             kWOutIdling := PIdling / (InverterCurveObj.GetYValue(Pidling / (FkVArating)));
         end
         else
-            kWOutIdling := PIdling;
+            kWOutIdling := 0.0; //PIdling; //producing error- removed on 11/05/2020
 
     end;
 
@@ -1950,7 +1950,8 @@ begin
 
     if Fstate = STORE_IDLING then
     begin
-        kW_out := -kWOutIdling;
+        kW_out := 0.0;   // -kWIdlingLosses;     Just use YeqIdling
+        kvar_out := 0.0;
     end;
 
     if OldState <> Fstate then

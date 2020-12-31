@@ -43,14 +43,14 @@ A partir de 2019-03-05, este repositório contém todo o código fonte em lingua
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
-- 2020-08-05: o código atualizado para a série 0.11.x é publicado. Usando a nossa [KLUSolveX](https://github.com/dss-extensions/klusolve), O primeiro preview incluirá funcionalidades avançadas como atualização incremental da matriz esparsa e refatoração rápida, LoadShape estendida (float32 e memória controlável pelo usuário), além de mais extensões de API exponho mais da máquina interna do OpenDSS.
-- **2020-07-31 / version 0.10.6: Novas extensões para a API e alterações do OpenDSS oficial portadas. Inclui algumas correções de bugs, um novo mecanismo de mensagens de erro de validação, além de novos flags de compatibilidade.**
-- 2020-03-03 / version 0.10.5: Principalmente manutenção, com correção de algumas falhas. Inclui alterações portadas da versão COM e do código do OpenDSS oficial. Binários da variação da versão 8 excluidos desta versão.
-- 2019-11-16 / version 0.10.4: Apenas manutenção: Corrige acesso a arquivos com caminho longo no Linux, e inclui alterações portadas da versão COM e do código do OpenDSS oficial.
-- 2019-05-22 / version 0.10.3: Algumas correções importantes, desempenho geral bastante melhorado, novas funções estendidas, e novas funcionalidades portadas do módulo COM e da versão atual do OpenDSS.
+- **2020-12-28 / versão 0.10.7: Versão de manutenção, baseado no OpenDSS r2963. Inclui correções importantes e algumas novas funções do OpenDSS oficial.**
+- 2020-07-31 / versão 0.10.6: Novas extensões para a API e alterações do OpenDSS oficial portadas. Inclui algumas correções de bugs, um novo mecanismo de mensagens de erro de validação, além de novos flags de compatibilidade.
+- 2020-03-03 / versão 0.10.5: Principalmente manutenção, com correção de algumas falhas. Inclui alterações portadas da versão COM e do código do OpenDSS oficial. Binários da variação da versão 8 excluidos desta versão.
+- 2019-11-16 / versão 0.10.4: Apenas manutenção: Corrige acesso a arquivos com caminho longo no Linux, e inclui alterações portadas da versão COM e do código do OpenDSS oficial.
+- 2019-05-22 / versão 0.10.3: Algumas correções importantes, desempenho geral bastante melhorado, novas funções estendidas, e novas funcionalidades portadas do módulo COM e da versão atual do OpenDSS.
 - 2019-03-05: o repositório Git `electricdss-src` foi integrado diretamente em `dss_capi`.
-- 2019-02-28 / version 0.10.2: Implementa a função `CtrlQueue_Push` (faltante na versão anterior); modificações em `LoadShapes` para melhor desempenho e mais validação; introduz `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` para (desa)ativar chamadas ao editor externo.
-- 2019-02-12 / version 0.10.1: Verificação de erros mais ampla, introdução da função `Error_Get_NumberPtr`, correções e melhor tratamento em `Meters`.
+- 2019-02-28 / versão 0.10.2: Implementa a função `CtrlQueue_Push` (faltante na versão anterior); modificações em `LoadShapes` para melhor desempenho e mais validação; introduz `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` para (desa)ativar chamadas ao editor externo.
+- 2019-02-12 / versão 0.10.1: Verificação de erros mais ampla, introdução da função `Error_Get_NumberPtr`, correções e melhor tratamento em `Meters`.
 - 2018-11-17 / versão 0.10.0: Reduz o número de operações de alocação de memória se os buffers atuais forem reutilizados, introduz o mecanismo de Resultado Global, várias extensões de API (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- veja [o documento de uso](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md)(em inglês) e o [ticket #11](https://github.com/dss-extensions/dss_capi/issues/11).
 - 2018-08-10 / versão 0.9.8: Grande reorganização do código fonte, várias pequenas correções, e novos scripts de compilação.
 - 2018-04-05 / versão 0.9.5: Novas funções `Circuit_SetCktElement*` para definir o elemento de circuito ativo.

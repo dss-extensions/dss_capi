@@ -47,6 +47,7 @@ type
         procedure DefineProperties;
         function MakeLike(const LineName: String): Integer; OVERRIDE;
     PUBLIC
+        LineTypeList: TCommandList;
 
         constructor Create;
         destructor Destroy; OVERRIDE;
@@ -120,6 +121,7 @@ type
         EmergAmps: Double;
         NumAmpRatings: Integer;
         AmpRatings: array of Double;
+        FLineType: Integer; // Pointer to code for type of line
 
         constructor Create(ParClass: TDSSClass; const LineGeometryName: String);
         destructor Destroy; OVERRIDE;
@@ -179,7 +181,12 @@ uses
     TSLineConstants;
 
 const
-    NumPropsThisClass = 18;
+    NumPropsThisClass = 19;
+
+    LINE_TYPES: Array of String = [
+        'oh', 'ug', 'ug_ts', 'ug_cn', 'swt_ldbrk', 'swt_fuse', 
+        'swt_sect', 'swt_rec', 'swt1_disc', 'swt_brk', 'swt_elbow'
+    ];
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLineGeometry.Create;  // Creates superstructure for all Line objects
@@ -193,12 +200,17 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
+    
+    LineTypeList := TCommandList.Create(LINE_TYPES);
+    LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLineGeometry.Destroy;
 
 begin
+    LineTypeList.Free();
+    
     // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
 end;
@@ -229,6 +241,7 @@ begin
     PropertyName[16] := 'tscables';
     PropertyName[17] := 'Seasons';
     PropertyName[18] := 'Ratings';
+    PropertyName[19] := 'LineType';
 
     PropertyHelp[1] := 'Number of conductors in this geometry. Default is 3. Triggers memory allocations. Define first!';
     PropertyHelp[2] := 'Number of phases. Default =3; All other conductors are considered neutrals and might be reduced out.';
@@ -264,6 +277,9 @@ begin
     PropertyHelp[17] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
     PropertyHelp[18] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
+    PropertyHelp[19] := 'Code designating the type of line. ' +  CRLF +
+                        'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
+                        'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -443,6 +459,10 @@ begin
                     setlength(AmpRatings, NumAmpRatings);
                     Param := Parser.StrValue;
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
+                end;
+                19:
+                begin
+                    FLineType := LineTypeList.Getcommand(Param);
                 end
             else
            // Inherited parameters
@@ -620,6 +640,7 @@ begin
     FLastUnit := UNITS_FT;
     Normamps := 0.0;
     EmergAmps := 0.0;
+    FLineType := 1;  // Default to OH Line
 
     FReduce := FALSE;
     NumAmpRatings := 1;
@@ -712,6 +733,11 @@ begin
                 Result := Result + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
             Result := Result + ']';
         end;
+        19: 
+            if (FLineType >= 1) and (FLineType <= High(LINE_TYPES)) then
+                Result := LINE_TYPES[FLineType]
+            else
+                Result := '';
     else
      // Inherited parameters
         Result := inherited GetPropertyValue(Index);
@@ -832,6 +858,7 @@ begin
     PropertyValue[9] := '0';
     PropertyValue[17] := '1'; // 1 season
     PropertyValue[18] := '[400]'; // 1 rating
+    PropertyValue[19] := 'OH';
 
     inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -896,7 +923,11 @@ begin
                     TempStr := TempStr + ']';
                     Writeln(F, 'ratings=' + TempStr);
                 end;
-
+                19: 
+                begin
+                    if (FLineType >= 1) and (FLineType <= (High(LINE_TYPES) + 1)) then
+                        Writeln(F, '~ LineType=' + LINE_TYPES[FLineType - 1]);
+                end
             else
                 Writeln(F, Format('~ %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
             end;

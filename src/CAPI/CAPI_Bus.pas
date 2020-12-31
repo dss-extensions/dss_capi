@@ -59,6 +59,8 @@ procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CD
 procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_ZSC012Matrix_GR(); CDECL;
+procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 
 implementation
 
@@ -77,13 +79,11 @@ uses
     Ucmatrix;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TDSSBus): Boolean; inline;
+function _hasActiveBus(): Boolean; inline;
 begin
     Result := False;
-    obj := NIL;
     if InvalidCircuit then
         Exit;
-
 
     if (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) or
        (ActiveCircuit.Buses = NIL) then
@@ -94,11 +94,20 @@ begin
         end;
         Exit;
     end;
-
+    Result := True;
+end;
+//------------------------------------------------------------------------------
+function _activeObj(out obj: TDSSBus): Boolean; inline;
+begin
+    Result := False;
+    obj := NIL;
+    
+    if not _hasActiveBus() then
+        Exit;
+    
     obj := ActiveCircuit.Buses[ActiveCircuit.ActiveBusIndex];
     Result := True;
 end;
-
 //------------------------------------------------------------------------------
 function Bus_Get_Name(): PAnsiChar; CDECL;
 begin
@@ -1228,5 +1237,39 @@ begin
     Bus_Get_ZSC012Matrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
+//------------------------------------------------------------------------------
+procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+var
+    i: Integer;
+    myPCEList: Array of String;
+    Result: PPAnsiCharArray;
+begin
+    if not _hasActiveBus then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
+        Exit;
+    end;
+    myPCEList := ActiveCircuit.getPCEatBus(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex), False);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(myPCEList));
+    for i := 0 to High(myPCEList) do
+        Result[i] := DSS_CopyStringAsPChar(myPCEList[i]);
+end;
+//------------------------------------------------------------------------------
+procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+var
+  i: Integer;
+  myPDEList: Array of String;
+  Result: PPAnsiCharArray;
+begin
+    if not _hasActiveBus then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
+        Exit;
+    end;
+    myPDEList := ActiveCircuit.getPDEatBus(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex), False);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(myPDEList));
+    for i := 0 to High(myPDEList) do
+        Result[i] := DSS_CopyStringAsPChar(myPDEList[i]);
+end;
 //------------------------------------------------------------------------------
 end.

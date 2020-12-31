@@ -1,4 +1,3 @@
-
 unit Monitor;
 
 {
@@ -25,7 +24,6 @@ unit Monitor;
    11-29-18 Added mode 10; revised mode 8
    12-4-18  Added link to AutoTransformer
    08-21-20 Added mode 11
-
 }
 
 {
@@ -53,7 +51,7 @@ unit Monitor;
   recent solution is greater than the last time entered in to the monitor buffer,
   the sample is appended to the buffer.  Otherwise, it replaces the last entry.
 
-  Monitor Files are simple binary files of doubles.  The first record
+  Monitor Files are simple binary files of singles.  The first record
   contains the number of conductors per terminal (NCond). (always use 'round' function
   when converting this to an integer). Then subsequent records consist of time and
   voltage and current samples for each terminal (all complex doubles) in the order
@@ -318,9 +316,9 @@ begin
         '7 = Storage state vars (Storage device only)' + CRLF +
         '8 = All winding currents (Transformer device only)' + CRLF +
         '9 = Losses, watts and var (of monitored device)' + CRLF +
-        '10 = All Winding voltages (Transformer device only)' + CRLF +
+        '10 = All Winding voltages (Transformer device only)' + CRLF + 
+        '11 = All terminal node voltages and line currents of monitored device' +CRLF+
         'Normally, these would be actual phasor quantities from solution.' + CRLF +
-        '11 = All terminal node voltages and line currents of monitored device' + CRLF +
         'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF +
         '+16 = Sequence quantities' + CRLF +
         '+32 = Magnitude only' + CRLF +

@@ -1,5 +1,4 @@
 unit Line;
-
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -11,6 +10,11 @@ unit Line;
    3-13-03  Fixed bug where terminal quantities were not getting reallocated in FetchCondCode
    2018        Added GIC stuff
 }
+
+// TODO: 
+// - remember to add explicit enum for LineType
+// - remove duplicated code across Line.pas, LineCode.pas, LineGeometry.pas
+
 
 interface
 
@@ -41,6 +45,8 @@ type
         function MakeLike(const LineName: String): Integer; OVERRIDE;
 
     PUBLIC
+        LineTypeList: TCommandList;
+        
         constructor Create;
         destructor Destroy; OVERRIDE;
 
@@ -69,6 +75,7 @@ type
         FLineCodeSpecified: Boolean;
         FEarthModel: Integer;
         FCapSpecified: Boolean; // To make sure user specifies C in some form
+        FLineType: Integer; // Pointer to code for type of line
 
         procedure FMakeZFromGeometry(f: Double); // make new Z, Zinv, Yc, etc
         procedure KillGeometrySpecified;
@@ -170,8 +177,13 @@ uses
     LineUnits;
 
 const
-    NumPropsThisClass = 29;
+    NumPropsThisClass = 30;
     //  MaxPhases = 20; // for fixed buffers
+    
+    LINE_TYPES: Array of String = [
+        'oh', 'ug', 'ug_ts', 'ug_cn', 'swt_ldbrk', 'swt_fuse', 
+        'swt_sect', 'swt_rec', 'swt1_disc', 'swt_brk', 'swt_elbow'
+    ];
 
 var
     CAP_EPSILON: Complex;
@@ -191,14 +203,16 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-
+    
+    LineTypeList := TCommandList.Create(LINE_TYPES);
+    LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLine.Destroy;
-
 begin
-
+    LineTypeList.Free();
+    
     // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
 end;
@@ -242,7 +256,8 @@ begin
     PropertyName[27] := 'B0';
     PropertyName[28] := 'Seasons';
     PropertyName[29] := 'Ratings';
-
+    PropertyName[30] := 'LineType';
+    
      // define Property help values
 
     PropertyHelp[1] := 'Name of bus to which first terminal is connected.' + CRLF +
@@ -321,6 +336,9 @@ begin
     PropertyHelp[28] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
     PropertyHelp[29] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
+    PropertyHelp[30] := 'Code designating the type of line. ' +  CRLF +
+                        'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
+                        'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -447,7 +465,7 @@ begin
         Yorder := Fnconds * Fnterms;
        // YPrimInvalid := True;  (set in Edit; this is redundant)
 
-
+        FLineType := LineCodeObj.FLineType;
     end
     else
         DoSimpleMsg('Line Code:' + Code + ' not found.', 180);
@@ -685,7 +703,9 @@ begin
                     setlength(AmpRatings, NumAmpRatings);
                     Param := Parser.StrValue;
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
-                end
+                end;
+                30: 
+                    FLineType := LineTypeList.Getcommand(Param);
             else
             // Inherited Property Edits
                 ClassEdit(ActiveLineObj, ParamPointer - NumPropsThisClass)
@@ -914,6 +934,7 @@ begin
     FLineCodeUnits := UNITS_NONE;
     FLineCodeSpecified := FALSE;
     FEarthModel := DefaultEarthModel;
+    FLineType := 1;  // Default to OH Line
 
     SpacingSpecified := FALSE;
     FLineSpacingObj := NIL;
@@ -1494,8 +1515,13 @@ begin
             TempStr := TempStr + ']';
             Result := TempStr;
         end;
+        30: 
+            if (FLineType >= 1) and (FLineType <= (High(LINE_TYPES) + 1)) then
+                Result := LINE_TYPES[FLineType - 1]
+            else
+                Result := '';
 
-           // Intercept FaultRate, PctPerm, and HourstoRepair
+        // Intercept FaultRate, PctPerm, and HourstoRepair
         (NumPropsThisClass + 3):
             Result := Format('%-g', [FaultRate]);
 
@@ -1592,8 +1618,8 @@ begin
     PropertyValue[26] := '1.2818'; // B1  microS
     PropertyValue[27] := '0.60319'; // B0  microS
     PropertyValue[28] := '1';      // 1 Season
-    PropertyValue[29] := '[400]';  // 1 Season
-
+    PropertyValue[29] := '[400]';  // 1 rating
+    PropertyValue[30] := 'OH'; // Overhead line default
 
     inherited InitPropertyValues(NumPropsThisClass);
 
@@ -2088,6 +2114,7 @@ begin
         for i := 0 to High(AmpRatings) do
             AmpRatings[i] := FLineGeometryObj.AmpRatings[i];
 
+        FLineType := FLineGeometryObj.FLineType;
     end
     else
         DoSimpleMsg('Line Geometry Object:' + Code + ' not found. (LINE.' + Name + ')', 18108);

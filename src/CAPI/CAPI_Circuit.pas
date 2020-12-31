@@ -374,15 +374,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Circuit_NextPDElement(): Integer; CDECL;
-var
-    ActivePDElement: TPDElement;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
     Result := Generic_CktElement_Get_Next(ActiveCircuit.PDElements);
 end;
-//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 function Circuit_FirstPCElement(): Integer; CDECL;
 begin
@@ -393,8 +390,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Circuit_NextPCElement(): Integer; CDECL;
-var
-    p: TDSSCktElement;
 begin
     Result := 0;
     if InvalidCircuit then

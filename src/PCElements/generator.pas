@@ -213,6 +213,7 @@ type
         procedure DoHarmonicMode;
         procedure DoPVTypeGen;
         procedure DoUserModel;
+        function CheckOnFuel(const Deriv: Double; Const Interval: Double): Boolean;
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
@@ -255,6 +256,13 @@ type
         Vpu: Double;   // per unit Target voltage for generator with voltage control
         Vmaxpu: Double;
         Vminpu: Double;
+        
+        // Fuel related variables
+        GenActive,
+        UseFuel: Boolean;
+        FuelkWh,
+        pctFuel,
+        pctReserve: Double;
 
 // moved to GeneratorVars        VTarget         :Double;  // Target voltage for generator with voltage control
         YearlyShape: String;  // ='fixed' means no variation  on all the time
@@ -330,7 +338,7 @@ uses
     Utilities;
 
 const
-    NumPropsThisClass = 39;
+    NumPropsThisClass = 44;
   // Dispatch modes
     DEFAULT = 0;
     LOADMODE = 1;
@@ -480,8 +488,17 @@ begin
         'for each iteration.  Creates a separate file for each generator named "GEN_name.CSV".');
     AddProperty('Balanced', 38, '{Yes | No*} Default is No.  For Model=7, force balanced current only for 3-phase generators. Force zero- and negative-sequence to zero.');
     AddProperty('XRdp', 39, 'Default is 20. X/R ratio for Xdp property for FaultStudy and Dynamic modes.');
-
-
+    AddProperty('UseFuel',  40, '{Yes | *No}. Activates the use of fuel for the operation of the generator. When the fuel level' +
+                                ' reaches the reserve level, the generator stops until it gets refueled. By default, the generator ' +
+                                'is connected to a continuous fuel supply, Use this mode to mimic dependency on fuel level for different ' +
+                                'generation technologies.');
+    AddProperty('FuelkWh',  41, '{*0}Is the nominal level of fuel for the generator (kWh). It only applies if UseFuel = Yes/True');
+    AddProperty('%Fuel',  42, 'It is a number between 0 and 100 representing the current amount of fuel avaiable in percentage ' +
+                              'of FuelkWh. It only applies if UseFuel = Yes/True');
+    AddProperty('%Reserve',  43, 'It is a number between 0 and 100 representing the reserve level in percentage of FuelkWh. ' +
+                                 'It only applies if UseFuel = Yes/True');
+    AddProperty('Refuel',  44, 'It is a boolean value (Yes/True, No/False) that can be used to manually refuel the generator when needed. ' +
+                               'It only applies if UseFuel = Yes/True');
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
@@ -710,7 +727,20 @@ begin
                         ForceBalanced := InterpretYesNo(Param);
                     39:
                         Genvars.XRdp := Parser.DblValue;  // X/R for dynamics model
-
+                    40: 
+                        UseFuel := InterpretYesNo(Param);
+                    41: 
+                        FuelkWh := Parser.DblValue;
+                    42: 
+                        pctFuel := Parser.DblValue;
+                    43: 
+                        pctReserve := Parser.DblValue;
+                    44: 
+                        if InterpretYesNo(Param) then
+                        begin
+                            pctFuel := 100.0;
+                            GenActive := True;
+                        end
                 else
            // Inherited parameters
                     ClassEdit(ActiveGeneratorObj, ParamPointer - NumPropsThisClass)
@@ -843,6 +873,10 @@ begin
             kvarMin := OtherGenerator.kvarMin;
             FForcedON := OtherGenerator.FForcedON;
             kVANotSet := OtherGenerator.kVANotSet;
+            UseFuel := OtherGenerator.UseFuel;
+            FuelkWh := OtherGenerator.FuelkWh;
+            pctFuel := OtherGenerator.pctFuel;
+            pctReserve := OtherGenerator.pctReserve;
 
             GenVars.kVArating := OtherGenerator.GenVars.kVArating;
             GenVars.puXd := OtherGenerator.GenVars.puXd;
@@ -1034,6 +1068,11 @@ begin
 
     Spectrum := 'defaultgen';  // override base class
 
+    UseFuel := False;
+    GenActive := True;
+    FuelkWh := 0.0;
+    pctFuel := 100.0;
+    pctReserve := 20.0;
 
     InitPropertyValues(0);
 
@@ -1575,6 +1614,19 @@ begin
     end;
 end;
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+function TGeneratorObj.CheckOnFuel(const Deriv: Double; Const Interval: Double): Boolean;
+Begin
+    Result := True;
+    pctFuel := ((((pctFuel / 100) * FuelkWh) - Interval * Deriv) / FuelkWh) * 100;
+    
+    if pctFuel <= pctReserve then
+    begin
+        Result  :=  False;
+        pctFuel :=  pctReserve;
+        // GenON   :=  False;
+    end;
+end;
+// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.DoConstantPQGen;
 
 {Compute total terminal current for Constant PQ}
@@ -1677,6 +1729,10 @@ begin
             end;
         end;
 
+        // Checks the output in case of using Fuel
+        if UseFuel and (not GenActive) then
+            Curr := cmplx(0, 0);
+
         StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
@@ -1705,6 +1761,11 @@ begin
     for i := 1 to Fnphases do
     begin
         Curr := Cmul(Yeq2, Vterminal^[i]);   // Yeq is always line to neutral
+
+        // Checks the output in case of using Fuel
+        if UseFuel and (not GenActive) then
+            Curr := cmplx(0, 0);
+
         StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
@@ -1766,6 +1827,11 @@ begin
         for i := 1 to Fnphases do
         begin
             Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), Vterminal^[i]));
+            
+            // Checks the output in case of using Fuel
+            if UseFuel and (not GenActive) then
+                Curr := cmplx(0, 0);
+            
             StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
             IterminalUpdated := TRUE;
             StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
@@ -1823,6 +1889,11 @@ begin
                     Curr := Conjg(Cdiv(Cmplx(Genvars.Pnominalperphase, varBase), V));
             end;
         end;
+        
+        // Checks the output in case of using Fuel
+        if UseFuel and (not GenActive) then
+            Curr := cmplx(0, 0);
+        
         StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
@@ -1885,6 +1956,10 @@ begin
                 end;
             end;
         end;
+
+        // Checks the output in case of using Fuel
+        if UseFuel and (not GenActive) then
+            Curr := cmplx(0, 0);
 
         StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1982,6 +2057,10 @@ begin
                     if Cabs(DeltaCurr) > Model7MaxPhaseCurr then
                         DeltaCurr := Conjg(Cdiv(PhaseCurrentLimit, CDivReal(VLL, VMagLL)));
                 end;
+
+                // Checks the output in case of using Fuel
+                if UseFuel and (not GenActive) then
+                    DeltaCurr := cmplx(0, 0);
 
                 StickCurrInTerminalArray(ITerminal, Cnegate(DeltaCurr), i);  // Put into Terminal array taking into account connection
                 ITerminalUpdated := TRUE;
@@ -2468,6 +2547,9 @@ begin
                 Integrate(Reg_Hours, HourValue, IntervalHrs);  // Accumulate Hours in operation
                 Integrate(Reg_Price, S.re * ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  // Accumulate Hours in operation
                 FirstSampleAfterReset := FALSE;
+                if UseFuel then 
+                    GenActive := CheckonFuel(S.re, IntervalHrs);
+
             end;
     end;
 end;
@@ -2569,7 +2651,9 @@ begin
             idx := PropertyIdxMap[i];
             case idx of
                 34, 36:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')')
+                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')');
+                44:
+                    Writeln(F,'~ ',PropertyName^[i],'=False')  // This one has no variable associated, not needed
             else
                 Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[idx]);
             end;
@@ -2668,6 +2752,11 @@ begin
     PropertyValue[37] := '0';
     PropertyValue[38] := 'No';
     PropertyValue[39] := '20';
+    PropertyValue[40] := 'No';
+    PropertyValue[41] := '0.0';
+    PropertyValue[42] := '100.0';
+    PropertyValue[43] := '20.0';
+    PropertyValue[44] := 'No';
 
     inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -3058,7 +3147,19 @@ begin
                 Result := 'Yes'
             else
                 Result := 'No';
-
+        40: 
+            if UseFuel then 
+                Result := 'Yes'
+            else 
+                Result := 'No';
+        41: 
+            Result := Format('%.6g', [FuelkWh]);
+        42: 
+            Result := Format('%.6g', [pctFuel]);
+        43: 
+            Result := Format('%.6g', [pctReserve]);
+        44: 
+            Result := 'No';
     else
         Result := inherited GetPropertyValue(index);
     end;

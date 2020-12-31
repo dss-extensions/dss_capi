@@ -1,6 +1,6 @@
 #ifndef DSS_CAPI_DLL_H
 #define DSS_CAPI_DLL_H
-#define DSS_CAPI_VERSION "0.11.0-dev1"
+#define DSS_CAPI_VERSION "0.11.0-dev2"
 #ifndef DSS_CAPI_DLL
 //#define DSS_CAPI_DLL __declspec(dllimport)
 #define DSS_CAPI_DLL
@@ -360,6 +360,16 @@ extern "C" {
     Same as Bus_Get_ZSC012Matrix but using the global buffer interface for results
     */
     DSS_CAPI_DLL void Bus_Get_ZSC012Matrix_GR(void);
+
+    /*
+    Returns an array with the names of all PCE connected to the active bus    
+    */
+    DSS_CAPI_DLL void Bus_Get_AllPCEatBus(char*** ResultPtr, int64_t* ResultCount);
+
+    /*
+    Returns an array with the names of all PDE connected to the active bus
+    */
+    DSS_CAPI_DLL void Bus_Get_AllPDEatBus(char*** ResultPtr, int64_t* ResultCount);
 
     /*
     Array of strings with all Capacitor names in the circuit.
@@ -1156,6 +1166,15 @@ extern "C" {
     */
     DSS_CAPI_DLL int8_t CktElement_Get_IsIsolated(void);
 
+    /*
+    Returns the total powers (complex) at ALL terminals of the active circuit element.
+    */
+    DSS_CAPI_DLL void CktElement_Get_TotalPowers(double** ResultPtr, int64_t* ResultCount);
+
+    /*
+    Same as CktElement_Get_TotalPowers but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void CktElement_Get_TotalPowers_GR(void);
 
     /*
     Convert real and imaginary doubles to Array of doubles
@@ -3013,6 +3032,12 @@ extern "C" {
     Total Customers downline from this section
     */
     DSS_CAPI_DLL int32_t Meters_Get_SectTotalCust(void);
+    
+    /*
+    Returns the list of all PCE within the area covered by the energy meter
+    */
+    DSS_CAPI_DLL void Meters_Get_ZonePCE(char*** ResultPtr, int64_t* ResultCount);
+    
 
     /*
     Array of all Monitor Names

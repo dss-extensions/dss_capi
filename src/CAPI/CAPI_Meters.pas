@@ -61,6 +61,7 @@ function Meters_Get_OCPDeviceType(): Integer; CDECL;
 function Meters_Get_SumBranchFltRates(): Double; CDECL;
 function Meters_Get_SectSeqIdx(): Integer; CDECL;
 function Meters_Get_SectTotalCust(): Integer; CDECL;
+procedure Meters_Get_ZonePCE(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 
 // API extensions
 function Meters_Get_idx(): Integer; CDECL;
@@ -867,6 +868,30 @@ begin
         Exit;
     end;
     ActiveCircuit.ActiveCktElement := pEnergyMeter;
+end;
+//------------------------------------------------------------------------------
+procedure Meters_Get_ZonePCE(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+var
+   pMeter: TEnergyMeterObj;
+   k: integer;
+   Result: PPAnsiCharArray;
+begin
+    DefaultResult(ResultPtr, ResultCount, '');
+    if InvalidCircuit then
+        Exit;
+
+    pMeter := ActiveCircuit.EnergyMeters.Active;
+    if pMeter = nil then 
+        Exit;
+
+    pMeter.GetPCEatZone(True);
+    
+    if not ((Length(pMeter.ZonePCE) > 0) and (pMeter.ZonePCE[0] <> '')) then
+        Exit;
+        
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, length(pMeter.ZonePCE));
+    for k := 0 to High(pMeter.ZonePCE) do
+        Result[k] := DSS_CopyStringAsPChar(pMeter.ZonePCE[k]);
 end;
 //------------------------------------------------------------------------------
 end.

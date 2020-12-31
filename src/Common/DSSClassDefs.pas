@@ -83,7 +83,6 @@ uses
     DSSGlobals,
     DSSObject,
     ParserDel,
-    MyDSSClassDefs,
     Solution,
     Bus,
     Line,
@@ -347,7 +346,7 @@ begin
 
 
  { Create Classes for custom implementations }
-    CreateMyDSSClasses;
+    // CreateMyDSSClasses;
 
     NumIntrinsicClasses := DSSClassList.ListSize;
     NumUserClasses := 0;
