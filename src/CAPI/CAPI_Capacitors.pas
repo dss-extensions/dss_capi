@@ -195,7 +195,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.ShuntCapacitors.ListSize;
+    Result := ActiveCircuit.ShuntCapacitors.Count;
 end;
 //------------------------------------------------------------------------------
 function Capacitors_AddStep(): Boolean; CDECL;

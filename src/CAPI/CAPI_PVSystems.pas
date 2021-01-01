@@ -189,7 +189,7 @@ begin
     if InvalidCircuit then
         Exit;
 
-    Result := ActiveCircuit.PVSystems.ListSize;
+    Result := ActiveCircuit.PVSystems.Count;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_idx(): Integer; CDECL;

@@ -548,7 +548,7 @@ var
 
 begin
      // If list is not define, go make one from all generators in circuit
-    if FLocalControlPointerList.ListSize = 0 then
+    if FLocalControlPointerList.Count = 0 then
         MakeLocalControlList;
 
     if FLocalControlListSize > 0 then
@@ -662,7 +662,7 @@ begin
             end;
 
          {Allocate uniform weights}
-            FLocalControlListSize := FLocalControlPointerList.ListSize;
+            FLocalControlListSize := FLocalControlPointerList.Count;
             Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1]) * FLocalControlListSize);
             for i := 1 to FLocalControlListSize do
                 FLocalControlWeights^[i] := 1.0;
@@ -674,7 +674,7 @@ begin
         for i := 1 to FLocalControlListSize do
             TotalWeight := TotalWeight + FLocalControlWeights^[i];
 
-        if FLocalControlPointerList.ListSize > 0 then
+        if FLocalControlPointerList.Count > 0 then
             Result := TRUE;
     end;
 end;

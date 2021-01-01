@@ -2463,7 +2463,7 @@ var
 
 begin
     LoadClass := GetDSSClassPtr('load');
-    Count := LoadClass.ElementList.ListSize;
+    Count := LoadClass.ElementList.Count;
 
     kWEach := kW / Max(1.0, round(Count));
     if ActiveCircuit.PositiveSequence then
@@ -2501,7 +2501,7 @@ var
 
 begin
     LoadClass := GetDSSClassPtr('load');
-    Count := LoadClass.ElementList.ListSize;
+    Count := LoadClass.ElementList.Count;
    {Count enabled loads}
     LoadCount := 0;
     for i := 1 to Count do
@@ -2558,7 +2558,7 @@ var
 begin
 
     LoadClass := GetDSSClassPtr('load');
-    Count := LoadClass.ElementList.ListSize;
+    Count := LoadClass.ElementList.Count;
    {Add up the rated load in the enabled loads where gens will be placed}
     TotalkW := 0.0;
     Skipcount := Skip;
@@ -2622,7 +2622,7 @@ var
 
 begin
     LoadClass := GetDSSClassPtr('load');
-    Count := LoadClass.ElementList.ListSize;
+    Count := LoadClass.ElementList.Count;
    {Add up the rated load in the enabled loads}
     TotalkW := 0.0;
     for i := 1 to Count do
@@ -2761,7 +2761,7 @@ procedure InitializeFeeders;
 begin
     (*    Do Nothing for now
     With ActiveCircuit Do
-    For i := 1 to Feeders.ListSize Do Begin
+    For i := 1 to Feeders.Count Do Begin
         If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).InitForSweep;
     End;
     *)
@@ -2772,7 +2772,7 @@ procedure ForwardSweepAllFeeders;
 begin
     (*    Do Nothing for now
     With ActiveCircuit Do
-    For i := 1 to Feeders.ListSize Do Begin
+    For i := 1 to Feeders.Count Do Begin
         If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).ForwardSweep;
     End;
 *)
@@ -2783,7 +2783,7 @@ procedure BackwardSweepAllFeeders;
 begin
     (*    Do Nothing for now
     With ActiveCircuit Do
-    For i := 1 to Feeders.ListSize Do Begin
+    For i := 1 to Feeders.Count Do Begin
         If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).BackwardSweep;
     End;
     *)
@@ -3309,14 +3309,14 @@ begin
 
     if ActiveCircuit = NIL then
         Exit;
-    if ActiveCircuit.BusList.ListSize <= 0 then
+    if ActiveCircuit.BusList.Count <= 0 then
         Exit;
     with ActiveCircuit do
     begin
-        TempBusList := THashList.Create(BusList.ListSize);
+        TempBusList := THashList.Create(BusList.Count);
 
     {Rename Buses}
-        for i := 1 to BusList.ListSize do
+        for i := 1 to BusList.Count do
             TempBusList.Add(Format('B_%d', [i]));
 
         BusList.Free;
@@ -3417,7 +3417,7 @@ begin
             pCktElem := Cktelements.Next;
         end;
 
-        DevListSize := DeviceList.ListSize;
+        DevListSize := DeviceList.Count;
         DeviceList.Free;
         DeviceList := THashList.Create(DevListSize);
 
@@ -3516,7 +3516,7 @@ begin
 
             end;
         inc(i);
-    until (i > pElem.ControlElementList.listSize) or (Result > 0);
+    until (i > pElem.ControlElementList.Count) or (Result > 0);
 end;
 
 function GetOCPDeviceTypeString(icode: Integer): String;

@@ -98,7 +98,7 @@ begin
     begin
          // Make a new copy of the control element list
         TempList := TPointerList.Create(1);
-        for i := 1 to ControlElementList.ListSize do
+        for i := 1 to ControlElementList.Count do
         begin
             ptr := ControlElementList.Get(i);
             if ptr <> Self then
@@ -129,7 +129,7 @@ begin
         if Assigned(FControlledElement) then
             with FControlledElement do
             begin
-                if ControlElementList.ListSize = 1 then
+                if ControlElementList.Count = 1 then
                     HasControl := FALSE;
                 RemoveSelfFromControlElementList(FControlledElement);
             end;

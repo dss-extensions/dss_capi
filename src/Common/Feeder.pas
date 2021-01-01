@@ -536,12 +536,12 @@ var
     i: Integer;
 
 begin
-    for i := 1 to ShuntList.ListSize do
+    for i := 1 to ShuntList.Count do
     begin
         TDSSCktElement(ShuntList.Get(i)).IsPartofFeeder := Value;
     end;
 
-    for i := 1 to SequenceList.ListSize do
+    for i := 1 to SequenceList.Count do
     begin
         TDSSCktElement(SequenceList.Get(i)).IsPartofFeeder := Value;
     end;

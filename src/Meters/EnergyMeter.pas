@@ -857,7 +857,7 @@ var
 begin
     with ActiveCircuit do
     begin
-        if Energymeters.ListSize = 0 then
+        if Energymeters.Count = 0 then
             Exit;  // Do not do anything
 
     // initialize the Checked Flag FOR all circuit Elements
@@ -903,7 +903,7 @@ begin
         for i := 1 to NumBuses do
             Buses^[i].BusChecked := FALSE;
 
-        for i := 1 to EnergyMeters.ListSize do
+        for i := 1 to EnergyMeters.Count do
         begin
             mtr := EnergyMeters.Get(i);
             if Mtr.Enabled then
@@ -1880,7 +1880,7 @@ begin
 
      // Backward Sweep  -  Order is guaranteed to process end branches first
      // sum numcustomers branch by branch
-    for i := SequenceList.ListSize downto 1 do
+    for i := SequenceList.Count downto 1 do
     begin
         CktElem := SequenceList.Get(i);
         if not CktElem.Checked then    // Avoid double counting
@@ -1915,7 +1915,7 @@ begin
         end;  {WHILE}
     end; {WITH}
 
-    for i := 1 to ActiveCircuit.EnergyMeters.ListSize do
+    for i := 1 to ActiveCircuit.EnergyMeters.Count do
     begin
         ThisMeter := ActiveCircuit.EnergyMeters.Get(i);
         with ThisMeter do
@@ -2740,11 +2740,11 @@ begin
     end;
 
     // Zero reliability accumulators
-    for idx := SequenceList.ListSize downto 1 do
+    for idx := SequenceList.Count downto 1 do
         TPDElement(SequenceList.Get(idx)).ZeroReliabilityAccums;
 
     // Backward sweep calculating failure rates
-    for idx := SequenceList.ListSize downto 1 do
+    for idx := SequenceList.Count downto 1 do
     begin
         with TPDElement(SequenceList.Get(idx)) do
         begin
@@ -2765,7 +2765,7 @@ begin
     SectionCount := 0;
     pBus.BusSectionID := SectionCount; // section before 1st OCP device is zero
 
-    for idx := 1 to SequenceList.ListSize do
+    for idx := 1 to SequenceList.Count do
         TPDElement(SequenceList.Get(idx)).CalcNum_Int(SectionCount, AssumeRestoration);
 
     if SectionCount = 0 then
@@ -2793,7 +2793,7 @@ begin
         end;
 
     // Now do Backward sweep calculating N*Fault rates
-    for idx := SequenceList.ListSize downto 1 do
+    for idx := SequenceList.Count downto 1 do
     begin
         PD_Elem := SequenceList.Get(idx);
         PD_Elem.CalcCustInterrupts;
@@ -2817,7 +2817,7 @@ begin
         end;
 
 {$IFDEF DEBUG}
-        if idx = SequenceList.ListSize then
+        if idx = SequenceList.Count then
             WriteDLLDebugFile
             ('Meter, SectionID, BranchName, FaultRate, AccumulatedBrFltRate, BranchFltRate, RepairHrs, NCustomers, Num_Interrupt');
         with FeederSections^[PD_Elem.BranchSectionID] do
@@ -2871,7 +2871,7 @@ begin
        // Use LoadList for SAIFI calculation
     with ActiveCircuit do
     begin
-        for idx := 1 to LoadList.ListSize do  // all loads in meter zone
+        for idx := 1 to LoadList.Count do  // all loads in meter zone
         begin
       // Compute CustInterrupts based on interrupts at each load
             with TLoadObj(LoadList.Get(idx)) do

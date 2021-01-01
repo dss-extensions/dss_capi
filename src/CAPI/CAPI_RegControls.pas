@@ -480,7 +480,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.RegControls.ListSize;
+    Result := ActiveCircuit.RegControls.Count;
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Reset(); CDECL;

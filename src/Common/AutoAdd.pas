@@ -170,15 +170,15 @@ begin
     BusIdxListCreated := FALSE;
 
     // Autoaddbuslist exists in Active Circuit, use it  (see set Autobuslist=)
-    if ActiveCircuit.AutoAddBusList.ListSize > 0 then
+    if ActiveCircuit.AutoAddBusList.Count > 0 then
         FBusList := ActiveCircuit.AutoAddBusList
     else
 
-    if ActiveCircuit.EnergyMeters.ListSize = 0 then
+    if ActiveCircuit.EnergyMeters.Count = 0 then
     begin
         // No energymeters in circuit
         // Include all buses in the circuit
-        BusIdxListSize := ActiveCircuit.BusList.listsize;
+        BusIdxListSize := ActiveCircuit.BusList.Count;
         BusIdxList := AllocMem(Sizeof(BusIdxList^[1]) * BusIdxListSize);
 
         for i := 1 to BusIdxListSize do
@@ -222,7 +222,7 @@ begin
     end;
 
      // Make busIdxList from FBusList
-    BusIdxListSize := FBusList.listsize;
+    BusIdxListSize := FBusList.Count;
     BusIdxList := AllocMem(Sizeof(BusIdxList^[i]) * BusIdxListSize);
 
     for i := 1 to BusIdxListSize do
@@ -250,7 +250,7 @@ begin
 
     ComputekWLosses_EEN;
 
-    if ActiveCircuit.EnergyMeters.ListSize = 0 then
+    if ActiveCircuit.EnergyMeters.Count = 0 then
     begin
         // No energymeters in circuit
         // Just go by total system losses
@@ -771,7 +771,7 @@ var
 
 begin
 
-    if ActiveCircuit.EnergyMeters.ListSize = 0 then
+    if ActiveCircuit.EnergyMeters.Count = 0 then
     begin
 
         // No energymeters in circuit

@@ -1020,7 +1020,7 @@ var
     i: Integer;
 begin
     Result := 0.0;
-    for I := 1 to FleetPointerList.ListSize do
+    for I := 1 to FleetPointerList.Count do
     begin
         pStorage := FleetPointerList.Get(i);
         Result := Result + pStorage.PresentkW;
@@ -1033,7 +1033,7 @@ var
     i: Integer;
 begin
     Result := 0.0;
-    for I := 1 to FleetPointerList.ListSize do
+    for I := 1 to FleetPointerList.Count do
     begin
         pStorage := FleetPointerList.Get(i);
         Result := Result + pStorage.StorageVars.kWhStored;
@@ -1046,7 +1046,7 @@ var
     i: Integer;
 begin
     Result := 0.0;
-    for I := 1 to FleetPointerList.ListSize do
+    for I := 1 to FleetPointerList.Count do
     begin
         pStorage := FleetPointerList.Get(i);
         Result := Result + pStorage.StorageVars.kWhRating;
@@ -1059,7 +1059,7 @@ var
     i: Integer;
 begin
     Result := 0.0;
-    for I := 1 to FleetPointerList.ListSize do
+    for I := 1 to FleetPointerList.Count do
     begin
         pStorage := FleetPointerList.Get(i);
         Result := Result + pStorage.StorageVars.kWhReserve;
@@ -1179,7 +1179,7 @@ var
 
 begin
     Sum := 0.0;
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
     begin
         pStorage := FleetPointerList.Get(i);
         sum := sum + pStorage.StorageVars.kWhRating;
@@ -1194,7 +1194,7 @@ var
 
 begin
     Sum := 0.0;
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
     begin
         pStorage := FleetPointerList.Get(i);
         sum := sum + pStorage.StorageVars.kWRating;
@@ -1525,7 +1525,7 @@ var
 
 begin
      // If list is not defined, go make one from all storage elements in circuit
-    if FleetPointerList.ListSize = 0 then
+    if FleetPointerList.Count = 0 then
         MakeFleetList;
 
     if FleetSize > 0 then
@@ -1761,7 +1761,7 @@ var
 
 begin
      // If list is not defined, go make one from all storage elements in circuit
-    if FleetPointerList.ListSize = 0 then
+    if FleetPointerList.Count = 0 then
         MakeFleetList;
 
     if (FleetSize > 0) and (not (FleetState = STORE_DISCHARGING)) then
@@ -2031,7 +2031,7 @@ procedure TStorageControllerObj.SetAllFleetValues;
 var
     i: Integer;
 begin
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
         with TStorageObj(FleetPointerList.Get(i)) do
         begin
             pctkWin := pctChargeRate;
@@ -2046,7 +2046,7 @@ procedure TStorageControllerObj.SetFleetChargeRate;
 var
     i: Integer;
 begin
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
         TStorageObj(FleetPointerList.Get(i)).pctkWin := pctChargeRate;
 end;
 
@@ -2056,7 +2056,7 @@ var
     i: Integer;
 begin
     {For side effects see pctkvarout property of Storage element}
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
         TStorageObj(FleetPointerList.Get(i)).pctkvarout := pctkvarRate;
 end;
 
@@ -2065,7 +2065,7 @@ procedure TStorageControllerObj.SetFleetkWRate(pctkw: Double);
 var
     i: Integer;
 begin
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
         TStorageObj(FleetPointerList.Get(i)).pctkWout := pctkw;
 end;
 
@@ -2074,7 +2074,7 @@ procedure TStorageControllerObj.SetFleetToCharge;
 var
     i: Integer;
 begin
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
         TStorageObj(FleetPointerList.Get(i)).StorageState := STORE_CHARGING;
     FleetState := STORE_CHARGING;
 end;
@@ -2084,7 +2084,7 @@ procedure TStorageControllerObj.SetFleetToDisCharge;
 var
     i: Integer;
 begin
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
         TStorageObj(FleetPointerList.Get(i)).StorageState := STORE_DISCHARGING;
     FleetState := STORE_DISCHARGING;
 end;
@@ -2094,7 +2094,7 @@ procedure TStorageControllerObj.SetFleetToIdle;
 var
     i: Integer;
 begin
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
         with TStorageObj(FleetPointerList.Get(i)) do
         begin
             StorageState := STORE_IDLING;
@@ -2114,7 +2114,7 @@ procedure TStorageControllerObj.SetFleetToExternal;
 var
     i: Integer;
 begin
-    for i := 1 to FleetPointerList.ListSize do
+    for i := 1 to FleetPointerList.Count do
         TStorageObj(FleetPointerList.Get(i)).DispatchMode := STORE_EXTERNALMODE;
 end;
 
@@ -2124,7 +2124,7 @@ end;
   VAR
         i   :Integer;
   Begin
-        For i := 1 to FleetPointerList.ListSize Do
+        For i := 1 to FleetPointerList.Count Do
               TStorageObj(FleetPointerList.Get(i)).pctReserve := pctFleetReserve;
   End;
 *)
@@ -2226,7 +2226,7 @@ begin
         end;
 
      {Allocate uniform weights}
-        FleetSize := FleetPointerList.ListSize;
+        FleetSize := FleetPointerList.Count;
         Reallocmem(FWeights, Sizeof(FWeights^[1]) * FleetSize);
         for i := 1 to FleetSize do
             FWeights^[i] := 1.0;
@@ -2238,7 +2238,7 @@ begin
     for i := 1 to FleetSize do
         TotalWeight := TotalWeight + FWeights^[i];
 
-    if FleetPointerList.ListSize > 0 then
+    if FleetPointerList.Count > 0 then
         Result := TRUE;
 
     FleetListChanged := FALSE;

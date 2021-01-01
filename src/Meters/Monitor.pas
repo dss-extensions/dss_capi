@@ -2102,7 +2102,7 @@ begin
     end;
 
      {If none found, exit}
-    if ObjList.ListSize > 0 then
+    if ObjList.Count > 0 then
     begin
 
         Obj := ObjList.First;  {And only}

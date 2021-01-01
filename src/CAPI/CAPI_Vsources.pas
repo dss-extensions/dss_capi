@@ -70,7 +70,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := VsourceClass.ElementList.ListSize;
+    Result := VsourceClass.ElementList.Count;
 end;
 //------------------------------------------------------------------------------
 function Vsources_Get_First(): Integer; CDECL;

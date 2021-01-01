@@ -629,7 +629,7 @@ procedure TPVsystem.UpdateAll;
 var
     i: Integer;
 begin
-    for i := 1 to ElementList.ListSize do
+    for i := 1 to ElementList.Count do
         with TPVsystemObj(ElementList.Get(i)) do
             if Enabled then
                 UpdatePVSystem;
@@ -1009,7 +1009,7 @@ procedure TPVsystem.SampleAll;  // Force all active PV System energy meters  to 
 var
     i: Integer;
 begin
-    for i := 1 to ElementList.ListSize do
+    for i := 1 to ElementList.Count do
         with TPVsystemObj(ElementList.Get(i)) do
             if Enabled then
                 TakeSample;

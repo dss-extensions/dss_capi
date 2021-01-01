@@ -712,14 +712,14 @@ Begin
    // Save monitors and Meters
 
      WITH ActiveCircuit.Monitors Do
-     FOR i := 1 to ListSize Do
+     FOR i := 1 to Count Do
      Begin
          pMon := Get(i);
          pMon.Save;
      End;
 
      WITH ActiveCircuit.EnergyMeters Do
-     FOR i := 1 to ListSize Do
+     FOR i := 1 to Count Do
      Begin
          pMtr := Get(i);
          pMtr.SaveRegisters;
@@ -2607,7 +2607,7 @@ Begin
         AppendGlobalResult('No User Classes Defined.');
     End
     ELSE
-     For i := NumIntrinsicClasses+1 to DSSClassList.ListSize Do Begin
+     For i := NumIntrinsicClasses+1 to DSSClassList.Count Do Begin
        AppendGlobalResult(TDSSClass(DSSClassList.Get(i)).Name);
      End;
 End;
@@ -2998,7 +2998,7 @@ Var i:Integer;
 Begin
     If ActiveCircuit <> Nil Then Begin
        pctNormal := pctNormal * 0.01;  // local copy only
-       For i := 1 to ActiveCircuit.Lines.ListSize Do  Begin
+       For i := 1 to ActiveCircuit.Lines.Count Do  Begin
          pLine := ActiveCircuit.Lines.Get(i);
          pLine.Normamps := pctNormal * pLine.EmergAmps;
        End;
@@ -3709,7 +3709,7 @@ Begin
     pLoad := ActiveCircuit.Loads.Next;
   End;
 
-  For i := 1 to ActiveCircuit.Generators.ListSize Do Begin
+  For i := 1 to ActiveCircuit.Generators.Count Do Begin
     pGen := ActiveCircuit.Generators.Get(i);
     sBus := StripExtension (pGen.GetBus(1));
     iBus := ActiveCircuit.BusList.Find (sBus);

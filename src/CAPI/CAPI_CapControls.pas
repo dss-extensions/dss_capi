@@ -386,7 +386,7 @@ function CapControls_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.CapControls.ListSize;
+        Result := ActiveCircuit.CapControls.Count;
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Reset(); CDECL;

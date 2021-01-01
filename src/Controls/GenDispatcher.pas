@@ -459,7 +459,7 @@ var
 
 begin
      // If list is not define, go make one from all generators in circuit
-    if FGenPointerList.ListSize = 0 then
+    if FGenPointerList.Count = 0 then
         MakeGenList;
 
     if FListSize > 0 then
@@ -576,7 +576,7 @@ begin
         end;
 
      {Allocate uniform weights}
-        FListSize := FGenPointerList.ListSize;
+        FListSize := FGenPointerList.Count;
         Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
         for i := 1 to FListSize do
             FWeights^[i] := 1.0;
@@ -588,7 +588,7 @@ begin
     for i := 1 to FlistSize do
         TotalWeight := TotalWeight + FWeights^[i];
 
-    if FGenPointerList.ListSize > 0 then
+    if FGenPointerList.Count > 0 then
         Result := TRUE;
 end;
 

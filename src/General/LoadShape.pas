@@ -1483,7 +1483,7 @@ begin
     end;
 
      {If none found, exit}
-    if ObjList.ListSize > 0 then
+    if ObjList.Count > 0 then
     begin
 
        {Find Max number of points}
@@ -1500,17 +1500,17 @@ begin
       // SetLength(Xarray, maxPts);
         MaxPts := Round(MaxTime / MinInterval);
 
-        TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16, 'DSS (TM), Electrotek Concepts (R)');
+        TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.Count, 0, 16, 'DSS (TM), Electrotek Concepts (R)');
         TopTransferFile.WriteNames(NameList, CNames);
 
         Hr_Time := 0.0;
 
-        VBuf := AllocMem(Sizeof(Double) * ObjList.ListSize);
+        VBuf := AllocMem(Sizeof(Double) * ObjList.Count);
         CBuf := AllocMem(Sizeof(Double) * 1);   // just a dummy -- Cbuf is ignored here
 
         for i := 1 to MaxPts do
         begin
-            for j := 1 to ObjList.ListSize do
+            for j := 1 to ObjList.Count do
             begin
                 Obj := ObjList.Get(j);
                 VBuf^[j] := Obj.GetMult(Hr_Time).Re;

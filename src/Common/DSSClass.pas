@@ -186,7 +186,7 @@ END;
 
 Procedure TDSSClass.Set_Active(value:Integer);
 BEGIN
-     If (Value > 0) and (Value<= ElementList.ListSize)
+     If (Value > 0) and (Value<= ElementList.Count)
      THEN
        Begin
         ActiveElement := Value;
@@ -216,11 +216,11 @@ BEGIN
     ElementList.New := Obj; // Stuff it in this collection's element list
 {$IFNDEF DSS_CAPI_HASHLIST}
     ElementNameList.Add(TDSSObject(Obj).Name);
-    If Cardinal(ElementList.ListSize) > 2 * ElementNameList.InitialAllocation Then ReallocateElementNameList;
+    If Cardinal(ElementList.Count) > 2 * ElementNameList.InitialAllocation Then ReallocateElementNameList;
 {$ELSE}    
-    ElementNameList.Add(LowerCase(TDSSObject(Obj).Name), Pointer(ElementList.ListSize));
+    ElementNameList.Add(LowerCase(TDSSObject(Obj).Name), Pointer(ElementList.Count));
 {$ENDIF}
-    ActiveElement := ElementList.ListSize;
+    ActiveElement := ElementList.Count;
     Result := ActiveElement; // Return index of object in list
 END;
 
@@ -337,12 +337,12 @@ End;
 
 function TDSSClass.Get_ElementCount: Integer;
 begin
-    Result := ElementList.ListSize;
+    Result := ElementList.Count;
 end;
 
 function TDSSClass.Get_First: Integer;
 begin
-    IF ElementList.ListSize=0   THEN Result := 0
+    IF ElementList.Count=0   THEN Result := 0
 
     ELSE Begin
         ActiveElement := 1;
@@ -358,7 +358,7 @@ end;
 function TDSSClass.Get_Next: Integer;
 begin
     Inc(ActiveElement);
-    IF ActiveElement > ElementList.ListSize
+    IF ActiveElement > ElementList.Count
     THEN Result := 0
     ELSE Begin
         ActiveDSSObject := ElementList.Next;
@@ -401,15 +401,15 @@ Var
 begin
   {Reallocate the device name list to improve the performance of searches}
     ElementNameList.Free; // Throw away the old one.
-    ElementNameList := {$IFDEF DSS_CAPI_HASHLIST}TFPHashList.Create();{$ELSE}THashList.Create(2*ElementList.ListSize);{$ENDIF} // make a new one
+    ElementNameList := {$IFDEF DSS_CAPI_HASHLIST}TFPHashList.Create();{$ELSE}THashList.Create(2*ElementList.Count);{$ENDIF} // make a new one
 
     // Do this using the Names of the Elements rather than the old list because it might be
     // messed up if an element gets renamed
 
     {$IFDEF DSS_CAPI_HASHLIST}
-    For i := 1 to ElementList.ListSize Do ElementNameList.Add(LowerCase(TDSSObject(ElementList.Get(i)).Name), Pointer(i));
+    For i := 1 to ElementList.Count Do ElementNameList.Add(LowerCase(TDSSObject(ElementList.Get(i)).Name), Pointer(i));
     {$ELSE}
-    For i := 1 to ElementList.ListSize Do ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
+    For i := 1 to ElementList.Count Do ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
     {$ENDIF}
 
 end;

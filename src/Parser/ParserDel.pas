@@ -956,7 +956,7 @@ begin
         VarDefinition := VarValue;
 
     VarValues^[idx] := VarDefinition;
-    NumVariables := VarNames.ListSize;
+    NumVariables := VarNames.Count;
     Result := idx;
 
 end;
@@ -987,7 +987,7 @@ begin
     ActiveVariable := VarNames.Add('@result');
     VarValues^[ActiveVariable] := 'null';  // null value
 
-    NumVariables := Varnames.ListSize;
+    NumVariables := Varnames.Count;
 
 end;
 

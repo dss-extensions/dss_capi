@@ -292,7 +292,7 @@ Begin
       NPhases := OtherExpControl.Fnphases;
       NConds  := OtherExpControl.Fnconds; // Force Reallocation of terminal stuff
 
-      for i := 1 to FPVSystemPointerList.ListSize do begin
+      for i := 1 to FPVSystemPointerList.Count do begin
         ControlledElement[i]       := OtherExpControl.ControlledElement[i];
         FWithinTol[i]              := OtherExpControl.FWithinTol[i];
       end;
@@ -406,16 +406,16 @@ VAR
    maxord :Integer;
 Begin
     FOpenTau := FTresponse / 2.3026;
-    IF FPVSystemPointerList.ListSize = 0 Then  MakePVSystemList;
+    IF FPVSystemPointerList.Count = 0 Then  MakePVSystemList;
 
-    IF FPVSystemPointerList.ListSize > 0  Then begin
+    IF FPVSystemPointerList.Count > 0  Then begin
     {Setting the terminal of the ExpControl device to same as the 1st PVSystem element}
          MonitoredElement :=  TDSSCktElement(FPVSystemPointerList.Get(1));   // Set MonitoredElement to 1st PVSystem in lise
          Setbus(1, MonitoredElement.Firstbus);
     End;
 
     maxord := 0; // will be the size of cBuffer
-    for i := 1 to FPVSystemPointerList.ListSize do begin
+    for i := 1 to FPVSystemPointerList.Count do begin
         // User ControlledElement[] as the pointer to the PVSystem elements
          ControlledElement[i] :=  TPVSystemObj(FPVSystemPointerList.Get(i));  // pointer to i-th PVSystem
          Nphases := ControlledElement[i].NPhases;  // TEMC TODO - what if these are different sizes (same concern exists with InvControl)
@@ -433,12 +433,12 @@ End;
 procedure TExpControlObj.MakePosSequence;
 // ***  This assumes the PVSystem devices have already been converted to pos seq
 begin
-  IF FPVSystemPointerList.ListSize = 0 Then  RecalcElementData;
+  IF FPVSystemPointerList.Count = 0 Then  RecalcElementData;
   // TEMC - from here to inherited was copied from InvControl
   Nphases := 3;
   Nconds := 3;
   Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-  IF FPVSystemPointerList.ListSize > 0  Then Begin
+  IF FPVSystemPointerList.Count > 0  Then Begin
     {Setting the terminal of the ExpControl device to same as the 1st PVSystem element}
     { This sets it to a realistic value to avoid crashes later }
     MonitoredElement :=  TDSSCktElement(FPVSystemPointerList.Get(1));   // Set MonitoredElement to 1st PVSystem in lise
@@ -498,7 +498,7 @@ VAR
   dt            :Double;
   PVSys         :TPVSystemObj;
 BEGIN
-  for i := 1 to FPVSystemPointerList.ListSize do begin
+  for i := 1 to FPVSystemPointerList.Count do begin
     PVSys := ControlledElement[i];   // Use local variable in loop
     if PendingChange[i] = CHANGEVARLEVEL then begin
       PVSys.VWmode := FALSE;
@@ -569,12 +569,12 @@ VAR
   PVSys               :TPVSystemObj;
 begin
   // If list is not defined, go make one from all PVSystem in circuit
-  IF FPVSystemPointerList.ListSize=0 Then RecalcElementData;
+  IF FPVSystemPointerList.Count=0 Then RecalcElementData;
 
   If (FListSize>0) then Begin
     // If an ExpControl controls more than one PV, control each one
     // separately based on the PVSystem's terminal voltages, etc.
-    for i := 1 to FPVSystemPointerList.ListSize do begin
+    for i := 1 to FPVSystemPointerList.Count do begin
       PVSys := ControlledElement[i];   // Use local variable in loop
       // Calculate the present average voltage  magnitude
       PVSys.ComputeVTerminal;
@@ -660,7 +660,7 @@ begin
             If PVSys.Enabled Then FPVSystemPointerList.New := PVSys;
             FPVSystemNameList.Add(PVSys.Name);
          End;
-         FListSize := FPVSystemPointerList.ListSize;
+         FListSize := FPVSystemPointerList.Count;
 
          SetLength(ControlledElement,FListSize+1);
 
@@ -689,7 +689,7 @@ begin
     FPendingChange[i] := NONE;
   end; {For}
   RecalcElementData;
-  If FPVSystemPointerList.ListSize>0 Then Result := TRUE;
+  If FPVSystemPointerList.Count>0 Then Result := TRUE;
 end;
 
 procedure TExpControlObj.Reset;
@@ -752,7 +752,7 @@ Var
   PVSys                  : TPVSystemObj;
   dt, Verr: Double; // for DYNAMICVREG
 begin
-  for j := 1 to FPVSystemPointerList.ListSize do begin
+  for j := 1 to FPVSystemPointerList.Count do begin
     PVSys := ControlledElement[j];
     FLastStepQ[j] := PVSys.Presentkvar;
     if FVregTau > 0.0 then begin
@@ -781,7 +781,7 @@ PROCEDURE TExpControl.UpdateAll;
 VAR
   i : Integer;
 Begin
-  For i := 1 to ElementList.ListSize  Do
+  For i := 1 to ElementList.Count  Do
     With TExpControlObj(ElementList.Get(i)) Do
       If Enabled Then UpdateExpControl(i);
 End;

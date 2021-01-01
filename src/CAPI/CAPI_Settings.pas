@@ -77,7 +77,7 @@ begin
     GlobalResult := '';
     with ActiveCircuit.AutoAddBusList do
     begin
-        for i := 1 to ListSize do
+        for i := 1 to Count do
             AppendGlobalResult(Get(i));
         Result := DSS_GetAsPAnsiChar(GlobalResult);
     end

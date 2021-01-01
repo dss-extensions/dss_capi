@@ -942,7 +942,7 @@ begin
                         AppendGlobalResult('No');
                 42:
                     with ActiveCircuit.AutoAddBusList do
-                        for i := 1 to ListSize do
+                        for i := 1 to Count do
                             AppendGlobalResult(Get(i));
                 43:
                     AppendGlobalResult(GetControlModeID);

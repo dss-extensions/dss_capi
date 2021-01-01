@@ -833,7 +833,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Lines.ListSize;
+    Result := ActiveCircuit.Lines.Count;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Spacing(): PAnsiChar; CDECL;

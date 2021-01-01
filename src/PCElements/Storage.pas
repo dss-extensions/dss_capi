@@ -587,7 +587,7 @@ procedure TStorage.UpdateAll;
 var
     i: Integer;
 begin
-    for i := 1 to ElementList.ListSize do
+    for i := 1 to ElementList.Count do
         with TStorageObj(ElementList.Get(i)) do
             if Enabled then
                 UpdateStorage;
@@ -1009,7 +1009,7 @@ procedure TStorage.SampleAll;  // Force all Storage elements in the circuit to t
 var
     i: Integer;
 begin
-    for i := 1 to ElementList.ListSize do
+    for i := 1 to ElementList.Count do
         with TStorageObj(ElementList.Get(i)) do
             if Enabled then
                 TakeSample;

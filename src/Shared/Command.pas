@@ -87,7 +87,7 @@ end;
 
 function TCommandList.Get_NumCommands: Integer;
 begin
-    Result := CommandList.ListSize;
+    Result := CommandList.Count;
 end;
 
 end.

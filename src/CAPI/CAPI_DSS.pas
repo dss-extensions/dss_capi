@@ -135,7 +135,7 @@ begin
     begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumUserClasses);
         k := 0;
-        for i := NumIntrinsicClasses + 1 to DSSClassList.ListSize do
+        for i := NumIntrinsicClasses + 1 to DSSClassList.Count do
         begin
             Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList.Get(i)).Name);
             Inc(k);

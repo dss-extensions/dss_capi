@@ -357,13 +357,13 @@ begin
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
                 Incremental := (SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
                     (not SystemYChanged) and 
-                    (IncrCktElements.ListSize <> 0) and 
+                    (IncrCktElements.Count <> 0) and 
                     (not AllocateVI) and 
                     (not FrequencyChanged);
 
                 if not Incremental then
                 begin
-                    if IncrCktElements.ListSize <> 0 then
+                    if IncrCktElements.Count <> 0 then
                         SystemYChanged := True;
 {$ENDIF}
                     ResetSparseMatrix(hYsystem, YMatrixSize);

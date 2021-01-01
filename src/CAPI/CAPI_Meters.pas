@@ -511,7 +511,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.EnergyMeters.ListSize;
+    Result := ActiveCircuit.EnergyMeters.Count;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -557,7 +557,7 @@ begin
     if pMeterObj.SequenceList = NIL then
         Exit;
         
-    Result := pMeterObj.SequenceList.ListSize;
+    Result := pMeterObj.SequenceList.Count;
     (*
       while pElem <> Nil do   
       Begin
@@ -598,10 +598,10 @@ begin
 
     with pMeterObj do
     begin
-        if (Value > 0) and (Value <= SequenceList.ListSize) then
+        if (Value > 0) and (Value <= SequenceList.Count) then
             ActiveCircuit.ActiveCktElement := SequenceList.Get(Value)
         else
-            DoSimpleMsg(Format('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.ListSize]), 500501);
+            DoSimpleMsg(Format('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.Count]), 500501);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -634,7 +634,7 @@ begin
     if not _activeObj(pMeterObj) then
         Exit;
         
-    Result := pMeterObj.SequenceList.ListSize;
+    Result := pMeterObj.SequenceList.Count;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_TotalCustomers(): Integer; CDECL;

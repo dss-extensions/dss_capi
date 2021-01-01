@@ -289,7 +289,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Generators.ListSize;
+    Result := ActiveCircuit.Generators.Count;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_idx(): Integer; CDECL;

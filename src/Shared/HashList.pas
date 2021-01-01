@@ -76,7 +76,7 @@ type
         procedure Expand(NewSize: Cardinal);   {Expands number of elements}
         procedure DumpToFile(const fname: String);
         procedure Clear;
-        property ListSize: Cardinal READ NumElements;
+        property Count: Cardinal READ NumElements;
     PUBLISHED
 
     end;

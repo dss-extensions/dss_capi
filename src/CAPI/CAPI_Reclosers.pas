@@ -96,7 +96,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Reclosers.ListSize;
+    Result := ActiveCircuit.Reclosers.Count;
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_First(): Integer; CDECL;

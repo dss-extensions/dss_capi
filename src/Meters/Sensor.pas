@@ -438,7 +438,7 @@ begin
         end;  {WHILE}
     end; {WITH}
 
-    for i := 1 to ActiveCircuit.Sensors.ListSize do
+    for i := 1 to ActiveCircuit.Sensors.Count do
     begin
         ThisSensor := ActiveCircuit.Sensors.Get(i);
         with ThisSensor do
