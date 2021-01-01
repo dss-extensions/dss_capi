@@ -62,6 +62,13 @@ type
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TRegControlObj = class(TControlElem)
+{$IFDEF DSS_CAPI}
+    PUBLIC
+{$ELSE}
+    PROTECTED
+{$ENDIF}
+        procedure Set_Enabled(Value: Boolean); OVERRIDE;
+    
     PRIVATE
 
         Vreg,
@@ -1561,6 +1568,13 @@ begin
         Result := TimeDelay / Min(10.0, (2.0 * Abs(Vreg - Vavg) / Bandwidth))
     else
         Result := TimeDelay;
+end;
+
+procedure TRegControlObj.Set_Enabled(Value: Boolean);
+begin
+    // Do nothing else besides toggling the flag,
+    // we don't need BusNameRedefined from CktElement.pas
+    FEnabled := Value;
 end;
 
 initialization

@@ -33,6 +33,13 @@ type
     end;
 
     TSwtControlObj = class(TControlElem)
+{$IFDEF DSS_CAPI}
+    PUBLIC
+{$ELSE}
+    PROTECTED
+{$ENDIF}
+        procedure Set_Enabled(Value: Boolean); OVERRIDE;
+    
     PRIVATE
         FPresentState: EControlAction;
         FNormalState: EControlAction;
@@ -584,6 +591,13 @@ begin
     PropertyValue[7] := 'c';
     PropertyValue[8] := 'n';
     inherited  InitPropertyValues(NumPropsThisClass);
+end;
+
+procedure TSwtControlObj.Set_Enabled(Value: Boolean);
+begin
+    // Do nothing else besides toggling the flag,
+    // we don't need BusNameRedefined from CktElement.pas
+    FEnabled := Value;
 end;
 
 end.

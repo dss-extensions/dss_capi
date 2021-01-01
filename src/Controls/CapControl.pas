@@ -67,6 +67,12 @@ type
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TCapControlObj = class(TControlElem)
+{$IFDEF DSS_CAPI}
+    PUBLIC
+{$ELSE}
+    PROTECTED
+{$ENDIF}
+        procedure Set_Enabled(Value: Boolean); OVERRIDE;
     PRIVATE
         ControlType: ECapControlType;
 
@@ -1414,6 +1420,12 @@ begin
     DblTraceParameter := Integer(Value);
 end;
 
+procedure TCapControlObj.Set_Enabled(Value: Boolean);
+begin
+    // Do nothing else besides toggling the flag,
+    // we don't need BusNameRedefined from CktElement.pas
+    FEnabled := Value;
+end;
 
 initialization
 
