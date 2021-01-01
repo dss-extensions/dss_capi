@@ -23,6 +23,8 @@ uses
     DSSClass,
     Classes{, StdCtrls};
 
+function StrTOrF(const b: Boolean): String; inline;
+function StrYOrN(const b: Boolean): String; inline;
 function CompareTextShortest(const S1, S2: String): Integer;
 procedure FireOffEditor(FileNm: String);
 procedure DoDOSCmd(CmdString: String);
@@ -207,11 +209,26 @@ const
     paddotsString: String = ' .................................................'; //50 dots
 
 
+function StrTOrF(const b: Boolean): String; inline;
+begin
+    if b then
+        Result := 'true'
+    else
+        Result := 'false'
+end;
+
+function StrYOrN(const b: Boolean): String; inline;
+begin
+    if b then
+        Result := 'Yes'
+    else
+        Result := 'No'
+end;
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 function CompareTextShortest(const S1, S2: String): Integer;
 var
     Teststr: String;
 begin
-
     if Length(S1) < Length(S2) then
     begin
         TestStr := Copy(S2, 1, Length(S1));
@@ -224,7 +241,6 @@ begin
     end;
 
 end;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 function Pad(const S: String; Width: Integer): String;
 // Pad out a string with blanks to Width characters
