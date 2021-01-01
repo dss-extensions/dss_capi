@@ -414,7 +414,7 @@ begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumBuses);
         for i := 0 to NumBuses - 1 do
         begin
-            Result[i] := DSS_CopyStringAsPChar(BusList.Get(i + 1));
+            Result[i] := DSS_CopyStringAsPChar(BusList.NameOfIndex(i + 1));
         end;
     end
 end;
@@ -593,7 +593,7 @@ begin
         k := 0;
         for i := 1 to NumBuses do
         begin
-            BusName := BusList.Get(i);
+            BusName := BusList.NameOfIndex(i);
             for j := 1 to Buses^[i].NumNodesThisBus do
             begin
                 Result[k] := DSS_CopyStringAsPChar(BusName + '.' + IntToStr(Buses^[i].GetNum(j)));
@@ -875,7 +875,7 @@ begin
             NodeIdx := Buses^[i].FindIdx(Phase);
             if NodeIdx > 0 then   // Node found with this phase number
             begin
-                Temp[k] := Format('%s.%d', [BusList.Get(i), Phase]);
+                Temp[k] := Format('%s.%d', [BusList.NameOfIndex(i), Phase]);
                 Inc(k);
             end;
         end;
@@ -975,7 +975,7 @@ begin
         for i := 1 to NumNodes do
         begin
             with MapNodeToBus^[i] do
-                Result[k] := DSS_CopyStringAsPChar(Format('%s.%-d', [Uppercase(BusList.Get(Busref)), NodeNum]));
+                Result[k] := DSS_CopyStringAsPChar(Format('%s.%-d', [Uppercase(BusList.NameOfIndex(Busref)), NodeNum]));
             Inc(k);
         end;
     end

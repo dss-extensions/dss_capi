@@ -290,7 +290,7 @@ VAR
    ErrorStrings: TStringList;
 
    DSSClassList       :TDSSPointerList; // pointers to the base class types
-   ClassNames         :THashList;
+   ClassNames         : TClassNamesHashListType;
 
    UpdateRegistry     :Boolean;  // update on program exit
    CPU_Freq           : int64;          // Used to store the CPU frequency

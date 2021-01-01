@@ -516,7 +516,7 @@ begin
             if Cabs(C) = 0.0 then
                 with MapNodeToBus^[i] do
                 begin
-                    Result := Result + Format('%sZero diagonal for bus %s, node %d', [CRLF, BusList.Get(Busref), NodeNum]);
+                    Result := Result + Format('%sZero diagonal for bus %s, node %d', [CRLF, BusList.NameOfIndex(Busref), NodeNum]);
                 end;
         end;
 
@@ -525,7 +525,7 @@ begin
         if sCol > 0 then
             with MapNodeToBus^[sCol] do
             begin
-                Result := Result + Format('%sMatrix singularity at bus %s, node %d', [CRLF, BusList.Get(Busref), sCol]);
+                Result := Result + Format('%sMatrix singularity at bus %s, node %d', [CRLF, BusList.NameOfIndex(Busref), sCol]);
             end;
 
         SetLength(Cliques, NumNodes);
@@ -548,7 +548,7 @@ begin
                 end;
                 with MapNodeToBus^[iFirst] do
                 begin
-                    Result := Result + Format('%s  #%d has %d nodes, including bus %s (node %d)', [CRLF, i, iCount, BusList.Get(Busref), iFirst]);
+                    Result := Result + Format('%s  #%d has %d nodes, including bus %s (node %d)', [CRLF, i, iCount, BusList.NameOfIndex(Busref), iFirst]);
                 end;
             end;
         end;

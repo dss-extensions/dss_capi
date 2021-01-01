@@ -3295,7 +3295,7 @@ var
     i, bref: Integer;
     dotpos: Integer;
     DevListSize: Integer;
-    TempBusList: THashList;
+    TempBusList: TBusHashListType;
     pCktElem: TDSSCktElement;
     pCtrlElem: TDSSCktElement;
     S, Nodes: String;
@@ -3329,7 +3329,7 @@ begin
         Exit;
     with ActiveCircuit do
     begin
-        TempBusList := THashList.Create(BusList.Count);
+        TempBusList := TBusHashListType.Create(BusList.Count);
 
     {Rename Buses}
         for i := 1 to BusList.Count do

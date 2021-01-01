@@ -119,7 +119,7 @@ begin
     k := 0;
     for i := 1 to NumIntrinsicClasses do
     begin
-        Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList.Get(i)).Name);
+        Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSClassList.Get(i)).Name);
         Inc(k);
     end;
 
@@ -137,7 +137,7 @@ begin
         k := 0;
         for i := NumIntrinsicClasses + 1 to DSSClassList.Count do
         begin
-            Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList.Get(i)).Name);
+            Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSClassList.Get(i)).Name);
             Inc(k);
         end;
     end

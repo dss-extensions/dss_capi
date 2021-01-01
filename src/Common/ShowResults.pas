@@ -93,7 +93,7 @@ begin
     MaxBusNameLength := 4;
     with ActiveCircuit do
         for i := 1 to NumBuses do
-            MaxBusNameLength := Max(MaxBusNameLength, Length(BusList.Get(i)));
+            MaxBusNameLength := Max(MaxBusNameLength, Length(BusList.NameOfIndex(i)));
 end;
 
 procedure SetMaxDeviceNameLength;
@@ -106,7 +106,7 @@ begin
     with ActiveCircuit do
         for i := 1 to NumDevices do
         begin
-            DevName := DeviceList.Get(i);
+            DevName := DeviceList.NameOfIndex(i);
             DevClassName := TDSSClass(DSSClassList.Get(DeviceRef^[i].CktElementClass)).Name;
             MaxDeviceNameLength := Max(MaxDeviceNameLength, (Length(DevName) + Length(DevClassName) + 1));
         end;
@@ -186,7 +186,7 @@ begin
             V0V1 := 0.0;
         end;
 
-        Writeln(F, Format('%s %9.4g  %9.4g  %9.4g  %9.4g %9.4g %9.4g', [Pad(BusList.Get(i), MaxBusNameLength), V1, Vpu, V2, V2V1, V0, V0V1]));
+        Writeln(F, Format('%s %9.4g  %9.4g  %9.4g  %9.4g %9.4g %9.4g', [Pad(BusList.NameOfIndex(i), MaxBusNameLength), V1, Vpu, V2, V2V1, V0, V0V1]));
 
     end; {With}
 
@@ -259,7 +259,7 @@ begin
                 NodeName := Format('%d  ', [GetNum(NodeIdx)]);
 
                 if j = 1 then
-                    Bname := Paddots(BusList.Get(i), MaxBusNameLength);
+                    Bname := Paddots(BusList.NameOfIndex(i), MaxBusNameLength);
 
                 if LL then
                 begin
@@ -1868,7 +1868,7 @@ begin
            {Bus Norton Equivalent Current, Isc has been previously computed}
                     with Buses^[iBus] do
                     begin
-                        Write(F, Pad(EncloseQuotes(UpperCase(BusList.Get(iBus))) + ',', MaxBusNameLength + 2));
+                        Write(F, Pad(EncloseQuotes(UpperCase(BusList.NameOfIndex(iBus))) + ',', MaxBusNameLength + 2));
                         for i := 1 to NumNodesThisBus do
                         begin
                             CurrMag := Cabs(BusCurrent^[i]);
@@ -1905,7 +1905,7 @@ begin
                         begin
                             IFault := Cdiv(VBus[iphs], Zsc.GetElement(iphs, iphs));
 
-                            S := Format('%s %4u %12.0f ', [Pad(EncloseQuotes(UpperCase(BusList.Get(iBus))), MaxBusNameLength + 2), GetNum(iphs), Cabs(Ifault)]);
+                            S := Format('%s %4u %12.0f ', [Pad(EncloseQuotes(UpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(iphs), Cabs(Ifault)]);
                             Write(F, S, '   ');
                             for i := 1 to NumNodesThisBus do
                             begin
@@ -1955,7 +1955,7 @@ begin
                             YFault.Invert;
                             YFault.MvMult(VFault, BusCurrent);  {Gets voltage appearing at fault}
 
-                            Write(F, Pad(EncloseQuotes(UpperCase(BusList.Get(iBus))), MaxBusNameLength + 2), GetNum(Iphs): 4, GetNum(Iphs + 1): 4, Cabs(Cmul(Csub(VFault^[iphs], VFault^[iphs + 1]), GFault)): 12: 0, '   ');
+                            Write(F, Pad(EncloseQuotes(UpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(Iphs): 4, GetNum(Iphs + 1): 4, Cabs(Cmul(Csub(VFault^[iphs], VFault^[iphs + 1]), GFault)): 12: 0, '   ');
                             for i := 1 to NumNodesThisBus do
                             begin
                                 Vphs := Cabs(VFault^[i]);
@@ -2170,7 +2170,7 @@ begin
         begin
             for i := 1 to NumBuses do
             begin
-                Write(F, Pad(EncloseQuotes(BusList.Get(i)), MaxBusNameLength), ' ');
+                Write(F, Pad(EncloseQuotes(BusList.NameOfIndex(i)), MaxBusNameLength), ' ');
                 pBus := Buses^[i];
                 if pBus.kVBase > 0.0 then
                     Write(F, (pBus.kVbase * SQRT3): 7: 3)
@@ -2873,7 +2873,7 @@ begin
         begin
             for j := 1 to NumBuses do
                 if not Buses^[j].BusChecked then
-                    Writeln(F, EncloseQuotes(BusList.Get(j)));
+                    Writeln(F, EncloseQuotes(BusList.NameOfIndex(j)));
         end;
 
 
@@ -2952,7 +2952,7 @@ begin
         begin
             for j := 1 to NumBuses do
                 if not Buses^[j].BusChecked then
-                    Writeln(F, EncloseQuotes(BusList.Get(j)));
+                    Writeln(F, EncloseQuotes(BusList.NameOfIndex(j)));
         end;
 
 
@@ -3698,7 +3698,7 @@ begin
                     else
                         pctError := Format('%10.6f', [dTemp / MaxNodeCurrent^[nRef] * 100.0]);
                     if j = 1 then
-                        Bname := Paddots(EncloseQuotes(BusList.Get(i)), MaxBusNameLength)
+                        Bname := Paddots(EncloseQuotes(BusList.NameOfIndex(i)), MaxBusNameLength)
                     else
                         BName := Pad('"   -"', MaxBusNameLength);
                     Writeln(F, Format('%s, %2d, %10.5f,       %s, %10.5f', [Bname, Buses^[i].GetNum(j), dTemp, pctError, MaxNodeCurrent^[nRef]]));
@@ -3746,7 +3746,7 @@ begin
         begin
            {Find Bus To Which Load Connected}
             pBus := ActiveCircuit.Buses^[pLoad.Terminals[0].BusRef];
-            BusName := ActiveCircuit.BusList.Get(pLoad.Terminals[0].BusRef);
+            BusName := ActiveCircuit.BusList.NameOfIndex(pLoad.Terminals[0].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
                 if (pLoad.Nphases = 1) and (pLoad.Connection = 0) then
@@ -3788,7 +3788,7 @@ begin
         begin
            {Find Bus To Which Generator Connected}
             pBus := ActiveCircuit.Buses^[pGen.Terminals[0].BusRef];
-            BusName := ActiveCircuit.BusList.Get(pGen.Terminals[0].BusRef);
+            BusName := ActiveCircuit.BusList.NameOfIndex(pGen.Terminals[0].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
                 if (pGen.Nphases = 1) and (pGen.Connection = 0) then

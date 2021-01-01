@@ -1012,7 +1012,7 @@ begin
             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumBuses);
             for i := 0 to NumBuses - 1 do
             begin
-                Result[i] := DSS_CopyStringAsPChar(BusList.Get(i + 1));
+                Result[i] := DSS_CopyStringAsPChar(BusList.NameOfIndex(i + 1));
             end;
         end;
     end;

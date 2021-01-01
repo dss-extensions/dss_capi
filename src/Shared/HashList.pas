@@ -30,6 +30,7 @@ unit HashList;
 interface
 
 uses
+    {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF}
     ArrayDef;
 
 type
@@ -72,8 +73,8 @@ type
         function Find(const S: String): Integer;
         function FindNext: Integer;  //  repeat find for duplicate string in same hash list
         function FindAbbrev(const S: String): Integer;
-        function Get(i: Cardinal): String;
-        procedure Expand(NewSize: Cardinal);   {Expands number of elements}
+        function NameOfIndex(i: Cardinal): String;
+        // procedure Expand(NewSize: Cardinal);   {Expands number of elements}
         procedure DumpToFile(const fname: String);
         procedure Clear;
         property Count: Cardinal READ NumElements;
@@ -81,6 +82,23 @@ type
 
     end;
 
+{$IFDEF DSS_CAPI_HASHLIST}
+    TAltHashList = class (TFPHashList)
+    PUBLIC
+        constructor Create(const Nelements: Integer);
+        destructor Destroy; OVERRIDE;
+        function Add(const S: String): Integer; inline;
+        function Find(const S: String): Integer; inline;
+        function FindAbbrev(const S: String): Integer;
+        procedure DumpToFile(const fname: String);
+        function NameOfIndex(i: Integer): String; inline;
+    end;
+{$ENDIF}
+
+
+    TBusHashListType = {$IFDEF DSS_CAPI_HASHLIST}TAltHashList;{$ELSE}THashList;{$ENDIF}
+    TCommandHashListType = {$IFDEF DSS_CAPI_HASHLIST}TAltHashList;{$ELSE}THashList;{$ENDIF}
+    TClassNamesHashListType = {$IFDEF DSS_CAPI_HASHLIST}TAltHashList;{$ELSE}THashList;{$ENDIF}
 
 implementation
 
@@ -179,43 +197,8 @@ begin
 
 end;
 
-(*   This one was for AnsiStrings and just moved up to 8 bytes into an integer
-Function THashList.Hash(Const S:String):Integer;
-
-VAR
-    Hashvalue:UInt64;
-
-BEGIN
-   HashValue := Uint64(0);
- // Only hash first 8 characters
-
-   Move(S[1], HashValue, min(8, Length(S)));
-   Result := (Hashvalue mod NumLists) + 1;
-END;
-*)
-
-(* OLD HASH FUNCTION -- only hashes 1st 8 chars
-
-Function THashList.Hash(Const S:String):Cardinal;
-
-VAR
-    Hashvalue:Word;
-    i:Integer;
-
-    {Use Delphi Math function: it is declared as inline}
-    {Function Min(const a,b:Integer):Integer;
-    BEGIN If a<b Then result := a else result := b; END;  }
-BEGIN
-   HashValue := 0;
- // Only hash first 8 characters
-   FOR i := 1 to min(8,Length(S)) DO HashValue := HashValue*2 + ord(S[i]);
-   Result := (Hashvalue mod NumLists) + 1;
-END;
-*)
-
 (*   New supposedly fast hash method      *)
 function THashList.Hash(const S: String): Cardinal;
-
 var
     Hashvalue: Cardinal;
     i: Integer;
@@ -339,32 +322,29 @@ end;
 function THashList.FindAbbrev(const S: String): Integer;
 {Just make a linear search and test each string until a string is found that
  matches all the characters entered in S}
-
 var
     Test1, Test2: String;
     i: Integer;
 begin
-
     Result := 0;
-    if Length(S) > 0 then
-    begin
-        Test1 := LowerCase(S);
+    if Length(S) = 0 then
+        Exit;
+    
+    Test1 := LowerCase(S);
 
-        for i := 1 to NumElements do
+    for i := 1 to NumElements do
+    begin
+        Test2 := Copy(StringPtr^[i], 1, Length(Test1));
+        if CompareStr(Test1, Test2) = 0 then
         begin
-            Test2 := Copy(StringPtr^[i], 1, Length(Test1));
-            if CompareStr(Test1, Test2) = 0 then
-            begin
-                Result := i;
-                Break;
-            end;
+            Result := i;
+            Break;
         end;
     end;
-
 end;
 
 
-function THashList.Get(i: Cardinal): String;
+function THashList.NameOfIndex(i: Cardinal): String;
 begin
     if (i > 0) and (i <= NumElements) then
         Result := StringPtr^[i]
@@ -372,98 +352,6 @@ begin
         Result := '';
 end;
 
-procedure THashList.Expand(NewSize: Cardinal);
-
-{
-  This procedure creates a new set of string lists and copies the
-  old strings into the new, hashing for the new number of lists.
-
-}
-
-var
-    NewStringPtr: pStringArray;
-    NewNumLists: Cardinal;
-    ElementsPerList: Cardinal;
-    NewListPtr: pSubListArray;
-    HashNum: Cardinal;
-    S: String;
-    OldNumLists: Cardinal;
-    i, j: Integer;
-
-begin
-    if NewSize > NumElementsAllocated then
-    begin
-
-        OldNumLists := NumLists;
-
-        NewStringPtr := AllocMem(SizeOf(String) * NewSize);
-        NewNumLists := round(sqrt(NewSize));
-        ElementsPerList := NewSize div NewNumLists + 1;
-        if NewNumLists < 1 then
-            NewNumLists := 1;  // make sure at least one list
-        Getmem(NewListPtr, Sizeof(TSubList) * NewNumLists);
-        for i := 1 to NumLists do
-        begin
-         {Allocate initial Sublists}
-            with NewListPtr^[i] do
-            begin
-                Str := Allocmem(SizeOf(Str^[1]) * ElementsPerList);
-                Idx := Allocmem(SizeOf(Idx^[1]) * ElementsPerList);
-                Nallocated := ElementsPerList;
-                Nelem := 0;
-            end;
-        end;
-
-        NumLists := NewNumLists;  // Has to be set so Hash function will work
-
-{Add elements from old Hash List to New Hash List}
-
-
-        for i := 1 to NumElements do
-        begin
-            S := StringPtr^[i];
-            HashNum := Hash(S);
-
-            with NewListPtr^[hashNum] do
-            begin
-                Inc(Nelem);
-                if Nelem > Nallocated then
-                    ResizeSubList(NewListPtr^[HashNum]);
-            end;
-
-            with NewListPtr^[hashNum] do
-            begin
-                Str^[Nelem] := S;
-                NewStringPtr^[NumElements] := Str^[Nelem];
-                Idx^[Nelem] := i;
-            end;
-
-        end;
-
-{Dump the old StringPtr and ListPtr storage}
-
-        for i := 1 to OldNumLists do
-        begin
-         {DeAllocate  Sublists}
-            with ListPtr^[i] do
-            begin
-                for j := 1 to Nelem do
-                    Str^[j] := ''; // decrement ref count on string
-                Freemem(Str, SizeOf(Str^[1]) * Nallocated);
-                Freemem(Idx, SizeOf(Idx^[1]) * Nallocated);
-            end;
-        end;
-        Freemem(ListPtr, Sizeof(Listptr^[1]) * OldNumLists);
-        Freemem(StringPtr, Sizeof(StringPtr^[1]) * NumElementsAllocated);
-
-{Assign new String and List Pointers}
-
-        StringPtr := NewStringPtr;
-        ListPtr := NewListPtr;
-        NumElementsAllocated := NewSize;
-
-    end;
-end;
 
 procedure THashList.DumpToFile(const fname: String);
 var
@@ -508,7 +396,6 @@ end;
 procedure THashList.Clear;
 var
     i, j: Integer;
-
 begin
     for i := 1 to NumLists do
     begin
@@ -525,5 +412,66 @@ begin
 
     NumElements := 0;
 end;
+
+{$IFDEF DSS_CAPI_HASHLIST}
+constructor TAltHashList.Create(const Nelements: Integer);
+begin
+    inherited Create();
+    Capacity := Nelements;
+end;
+destructor TAltHashList.Destroy;
+begin
+    inherited;
+end;
+function TAltHashList.Add(const S: String): Integer; inline;
+begin
+    inherited Add(LowerCase(s), Pointer(self.Count + 1));
+    Result := self.Count;
+end;
+function TAltHashList.Find(const S: String): Integer; inline;
+begin
+    Result := Integer(inherited Find(LowerCase(s)));
+end;
+function TAltHashList.NameOfIndex(i: Integer): String; inline;
+begin
+    Result := inherited NameOfIndex(i - 1);
+end;
+procedure TAltHashList.DumpToFile(const fname: String);
+var
+    F: TextFile;
+    i, j: Integer;
+begin
+    AssignFile(F, fname);
+    Rewrite(F);
+    Writeln(F, 'LINEAR LISTING...');
+    for i := 1 to Count do
+    begin
+        Writeln(F, i: 3, ' = "', NameOfIndex(i), '"');
+    end;
+    CloseFile(F);
+end;
+
+function TAltHashList.FindAbbrev(const S: String): Integer;
+var
+    Test1, Test2: String;
+    i: Integer;
+begin
+    Result := 0;
+    if Length(S) = 0 then
+        Exit;
+    
+    Test1 := LowerCase(S);
+
+    for i := 1 to Count do
+    begin
+        Test2 := Copy(NameOfIndex(i), 1, Length(Test1));
+        if CompareStr(Test1, Test2) = 0 then
+        begin
+            Result := i;
+            break;
+        end;
+    end;
+end;
+{$ENDIF}
 
 end.

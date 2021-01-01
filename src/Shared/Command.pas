@@ -18,7 +18,7 @@ uses
 type
     TCommandList = class(TObject)
     PRIVATE
-        CommandList: THashList;
+        CommandList: TCommandHashListType;
         AbbrevAllowed: Boolean;
         function Get_NumCommands: Integer;
     PROTECTED
@@ -43,7 +43,7 @@ var
     i: Integer;
 begin
     inherited Create;
-    CommandList := THashList.Create(High(Commands) + 1);
+    CommandList := TCommandHashListType.Create(High(Commands) + 1);
 
     for i := 0 to High(Commands) do
     begin
@@ -82,7 +82,7 @@ end;
 
 function TCommandList.Get(i: Integer): String;
 begin
-    Result := CommandList.Get(i);
+    Result := CommandList.NameOfIndex(i);
 end;
 
 function TCommandList.Get_NumCommands: Integer;

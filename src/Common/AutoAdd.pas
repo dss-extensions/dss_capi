@@ -158,7 +158,7 @@ var
     Bname: String;
     i: Integer;
     PDElem: TPDElement;
-    FBusList: THashList;
+    FBusList: TBusHashListType;
     FBusListCreatedHere: Boolean;
 
 begin
@@ -195,7 +195,7 @@ begin
          // Include only buses in EnergyMeter lists
              // Consider all meters
         FBusListCreatedHere := TRUE;
-        FBusList := THashList.Create(ActiveCircuit.NumBuses);
+        FBusList := TBusHashListType.Create(ActiveCircuit.NumBuses);
         pMeter := ActiveCircuit.EnergyMeters.First;
         while pMeter <> NIL do
         begin
@@ -227,7 +227,7 @@ begin
 
     for i := 1 to BusIdxListSize do
     begin
-        BusIdxList^[i] := ActiveCircuit.BusList.Find(FbusList.Get(i));
+        BusIdxList^[i] := ActiveCircuit.BusList.Find(FBusList.NameOfIndex(i));
     end;
 
     if FBusListCreatedHere then
@@ -480,7 +480,7 @@ begin
                     if BusIndex > 0 then
                     begin
 
-                        TestBus := BusList.Get(BusIndex);
+                        TestBus := BusList.NameOfIndex(BusIndex);
                          // ProgressFormCaption( 'Testing bus ' + TestBus);
                         if ((ProgressCount mod 20) = 0) or (i = BusIdxListSize) then
                         begin
@@ -551,7 +551,7 @@ begin
                         else
                             kVrat := Buses^[MinLossBus].kVBase;
                         CommandString := 'New, generator.' + GetUniqueGenName +
-                            ', bus1="' + BusList.Get(MinLossBus) +
+                            ', bus1="' + BusList.NameOfIndex(MinLossBus) +
                             '", phases=' + IntToStr(MinBusPhases) +
                             ', kv=' + Format('%-g', [kVrat]) +
                             ', kw=' + Format('%-g', [TestGenkW]) +
@@ -567,7 +567,7 @@ begin
                     end;
                    // Return location of added generator so that it can
                    // be picked up through the result string of the COM interface
-                GlobalResult := BusList.Get(MinLossBus) +
+                GlobalResult := BusList.NameOfIndex(MinLossBus) +
                     Format(', %-g', [MaxLossImproveFactor]);
 
                 ProgressHide;
@@ -602,7 +602,7 @@ begin
                     BusIndex := BusIdxList^[i];
                     if BusIndex > 0 then
                     begin
-                        TestBus := BusList.Get(BusIndex);
+                        TestBus := BusList.NameOfIndex(BusIndex);
                         ProgressFormCaption('Testing bus ' + TestBus);
                         ShowPctProgress(Round((100 * ProgressCount) / ProgressMax));
 
@@ -674,7 +674,7 @@ begin
                             kVrat := Buses^[MinLossBus].kVBase;
 
                         CommandString := 'New, Capacitor.' + GetUniqueCapName +
-                            ', bus1="' + BusList.Get(MinLossBus) +
+                            ', bus1="' + BusList.NameOfIndex(MinLossBus) +
                             '", phases=' + IntToStr(MinBusPhases) +
                             ', kvar=' + Format('%-g', [TestCapkvar]) +
                             ', kv=' + Format('%-g', [kVrat]);
@@ -689,7 +689,7 @@ begin
                     end;
                    // Return location of added generator so that it can
                    // be picked up through the result string of the COM interface
-                GlobalResult := BusList.Get(MinLossBus);
+                GlobalResult := BusList.NameOfIndex(MinLossBus);
 
                    // note that the command that added the generator can be
                    // picked up from the Command property of the COM interface.

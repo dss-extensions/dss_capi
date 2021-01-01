@@ -61,7 +61,6 @@ TYPE
     end;
 
     TDSSCircuit = CLASS(TNamedObject)
-
       Private
           NodeBuffer          :pIntegerArray;
           NodeBufferMax       :Integer;
@@ -113,7 +112,7 @@ TYPE
           Control_BusNameRedefined  :Boolean;  // Flag for use by control elements to detect redefinition of buses
 
           BusList,
-          AutoAddBusList,
+          AutoAddBusList: TBusHashListType;
           DeviceList      :THashList;
           DeviceRef       :pCktElementDefArray;  //Type and handle of device
 
@@ -382,9 +381,9 @@ BEGIN
      IncNodes   := 3000;
 
      // Allocate some nominal sizes
-     BusList        := THashList.Create(900);  // Bus name list Nominal size to start; gets reallocated
+     BusList        := TBusHashListType.Create(900);  // Bus name list Nominal size to start; gets reallocated
      DeviceList     := THashList.Create(900);
-     AutoAddBusList := THashList.Create(100);
+     AutoAddBusList := TBusHashListType.Create(100);
 
      NumBuses   := 0;  // Eventually allocate a single source
      NumDevices := 0;
@@ -2206,7 +2205,7 @@ Begin
 
      For i := 1 to NumBuses Do Begin
          SavedBuses^[i] := Buses^[i];
-         SavedBusNames^[i] := BusList.get(i);
+         SavedBusNames^[i] := BusList.NameOfIndex(i);
      End;
      SavedNumBuses := NumBuses;
 
@@ -2269,7 +2268,7 @@ BEGIN
 
      // get rid of old bus lists
      BusList.Free;  // Clears hash list of Bus names for adding more
-     BusList := THashList.Create(NumDevices);  // won't have many more buses than this
+     BusList := TBusHashListType.Create(NumDevices);  // won't have many more buses than this
 
      NumBuses := 0;  // Leave allocations same, but start count over
      NumNodes := 0;
@@ -2338,14 +2337,14 @@ BEGIN
      Writeln(F, 'NumDevices= ', NumDevices:0);
      Writeln(F,'BusList:');
      For i := 1 to NumBuses Do BEGIN
-       Write(F,'  ',Pad(BusList.Get(i),12));
+       Write(F,'  ',Pad(BusList.NameOfIndex(i),12));
        Write(F,' (', Buses^[i].NumNodesThisBus:0,' Nodes)');
        FOR j := 1 to Buses^[i].NumNodesThisBus Do Write(F,' ',Buses^[i].Getnum(j):0);
        Writeln(F);
      END;
      Writeln(F,'DeviceList:');
      For i := 1 to NumDevices Do BEGIN
-        Write(F,'  ',Pad(DeviceList.Get(i),12));
+        Write(F,'  ',Pad(DeviceList.NameOfIndex(i),12));
         ActiveCktElement := CktElements.Get(i);
         If Not ActiveCktElement.Enabled THEN Write(F, '  DISABLED');
         Writeln(F);
@@ -2353,7 +2352,7 @@ BEGIN
      Writeln(F,'NodeToBus Array:');
      For i := 1 to NumNodes DO BEGIN
        j :=  MapNodeToBus^[i].BusRef;
-       Write(F,'  ',i:2,' ',j:2,' (=',BusList.Get(j),'.',MapNodeToBus^[i].NodeNum:0,')');
+       Write(F,'  ',i:2,' ',j:2,' (=',BusList.NameOfIndex(j),'.',MapNodeToBus^[i].NodeNum:0,')');
        Writeln(F);
      END;
 
@@ -2605,7 +2604,7 @@ Begin
 
 //        For i := 1 to NumBuses do
 //          If Buses^[i].kVBase > 0.0 Then
-//            Writeln(F, Format('SetkVBase Bus=%s  kvln=%.7g ', [BusList.Get(i), Buses^[i].kVBase]));
+//            Writeln(F, Format('SetkVBase Bus=%s  kvln=%.7g ', [BusList.NameOfIndex(i), Buses^[i].kVBase]));
         DSSExecutive.Command := 'get voltagebases';
         VBases := GlobalResult;
         Writeln(F, 'Set Voltagebases='+VBases);
@@ -2715,7 +2714,7 @@ begin
 
        For i := 1 to NumBuses Do
        Begin
-           If Buses^[i].CoordDefined then Writeln(F, CheckForBlanks(BusList.Get(i)), Format(', %-g, %-g', [Buses^[i].X, Buses^[i].Y]));
+           If Buses^[i].CoordDefined then Writeln(F, CheckForBlanks(BusList.NameOfIndex(i)), Format(', %-g, %-g', [Buses^[i].X, Buses^[i].Y]));
        End;
 
        Closefile(F);
@@ -2741,7 +2740,7 @@ begin
 
     For i := 1 to DeviceList.Count Do
     Begin
-        Templist.Add(DeviceList.Get(i));
+        Templist.Add(DeviceList.NameOfIndex(i));
     End;
 
     DeviceList.Free; // Throw away the old one.

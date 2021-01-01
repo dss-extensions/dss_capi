@@ -78,7 +78,7 @@ begin
     with ActiveCircuit.AutoAddBusList do
     begin
         for i := 1 to Count do
-            AppendGlobalResult(Get(i));
+            AppendGlobalResult(NameOfIndex(i));
         Result := DSS_GetAsPAnsiChar(GlobalResult);
     end
 end;

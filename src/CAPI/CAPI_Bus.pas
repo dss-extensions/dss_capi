@@ -117,7 +117,7 @@ begin
 
     with ActiveCircuit do
         if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-            Result := DSS_GetAsPAnsiChar(BusList.Get(ActiveBusIndex));
+            Result := DSS_GetAsPAnsiChar(BusList.NameOfIndex(ActiveBusIndex));
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_NumNodes(): Integer; CDECL;
@@ -647,7 +647,7 @@ begin
         
     with ActiveCircuit do
         if ActiveBusIndex > 0 then
-            Result := Utilities.GetUniqueNodeNumber(BusList.Get(ActiveBusIndex), StartNumber);
+            Result := Utilities.GetUniqueNodeNumber(BusList.NameOfIndex(ActiveBusIndex), StartNumber);
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -1249,7 +1249,7 @@ begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
-    myPCEList := ActiveCircuit.getPCEatBus(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex), False);
+    myPCEList := ActiveCircuit.getPCEatBus(ActiveCircuit.BusList.NameOfIndex(ActiveCircuit.ActiveBusIndex), False);
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(myPCEList));
     for i := 0 to High(myPCEList) do
         Result[i] := DSS_CopyStringAsPChar(myPCEList[i]);
@@ -1266,7 +1266,7 @@ begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
-    myPDEList := ActiveCircuit.getPDEatBus(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex), False);
+    myPDEList := ActiveCircuit.getPDEatBus(ActiveCircuit.BusList.NameOfIndex(ActiveCircuit.ActiveBusIndex), False);
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Length(myPDEList));
     for i := 0 to High(myPDEList) do
         Result[i] := DSS_CopyStringAsPChar(myPDEList[i]);

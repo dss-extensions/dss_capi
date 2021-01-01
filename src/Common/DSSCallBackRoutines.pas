@@ -138,13 +138,13 @@ begin
             if BusIdx > 0 then
                 with  ActiveCircuit.Buses^[BusIdx] do
                     if CoordDefined then
-                        StrlCopy(Name1, pAnsiChar(Ansistring(ActiveCircuit.BusList.Get(Busidx))), Len1);
+                        StrlCopy(Name1, pAnsiChar(Ansistring(ActiveCircuit.BusList.NameOfIndex(Busidx))), Len1);
       {Second bus}
             BusIdx := CktElement.Terminals[1].busref;
             if BusIdx > 0 then
                 with  ActiveCircuit.Buses^[BusIdx] do
                     if CoordDefined then
-                        StrlCopy(Name2, pAnsiChar(Ansistring(ActiveCircuit.BusList.Get(Busidx))), Len2);
+                        StrlCopy(Name2, pAnsiChar(Ansistring(ActiveCircuit.BusList.NameOfIndex(Busidx))), Len2);
         end; {If CktElement}
     end;  {If ActiveCircuit}
 end;
