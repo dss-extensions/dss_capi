@@ -211,7 +211,7 @@ type
         property BaseVoltage[i: Integer]: Double READ Get_BaseVoltage;  // Winding VBase
         property BasekVLL[i: Integer]: Double READ Get_BasekVLL;  // Winding VBase
 
-        // CIM accessors
+        // CIM accessors -- TODO: move to Helper class? Better supported since FPC 3.2.0
         property NumTaps[i: Integer]: Integer READ Get_NumTaps;
         property NumberOfWindings: Integer READ NumWindings;
         property WdgResistance[i: Integer]: Double READ Get_WdgResistance;
@@ -1925,7 +1925,13 @@ var
     cTempIterminal: pComplexArray;
     i: Integer;
 begin
-  {inherited;}
+    if not FEnabled then
+    begin
+        TotalLosses := CZERO;
+        LoadLosses := CZERO;
+        NoLoadLosses := CZERO;
+        Exit;
+    end;
 
   {Calculates losses in watts, vars}
     TotalLosses := Losses;   // Side effect: computes Iterminal

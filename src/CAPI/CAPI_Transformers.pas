@@ -608,9 +608,12 @@ begin
     elem := lst.First;
     while elem <> NIL do
     begin
-        elem.GetLosses(CResult[k], CResult[k + 1], CResult[k + 2]);
+        if elem.Enabled or (DSS_CAPI_ITERATE_DISABLED = 1) then
+        begin
+            elem.GetLosses(CResult[k], CResult[k + 1], CResult[k + 2]);
+            Inc(k, 3);
+        end;
         elem := lst.Next;
-        Inc(k, 3);
     end;
     
     // Keep the results in VA (NOT kVA) for consistency with CktElement_Get_Losses
