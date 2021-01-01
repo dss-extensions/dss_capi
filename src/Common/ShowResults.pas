@@ -1320,7 +1320,7 @@ begin
     with cktElem do
         for i := 1 to NTerms do
         begin
-            if Terminals^[i].BusRef = BusReference then
+            if Terminals[i - 1].BusRef = BusReference then
             begin
                 TerminalIndex := i;
                 Result := TRUE;
@@ -2841,7 +2841,7 @@ begin
             begin
                 Checked := FALSE;
                 for i := 1 to Nterms do
-                    Terminals^[i].Checked := FALSE;
+                    TerminalsChecked[i - 1] := FALSE;
             end;
             TestElement := CktElements.Next;
         end;
@@ -3745,8 +3745,8 @@ begin
         while pLoad <> NIL do
         begin
            {Find Bus To Which Load Connected}
-            pBus := ActiveCircuit.Buses^[pLoad.Terminals^[1].BusRef];
-            BusName := ActiveCircuit.BusList.Get(pLoad.Terminals^[1].BusRef);
+            pBus := ActiveCircuit.Buses^[pLoad.Terminals[0].BusRef];
+            BusName := ActiveCircuit.BusList.Get(pLoad.Terminals[0].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
                 if (pLoad.Nphases = 1) and (pLoad.Connection = 0) then
@@ -3787,8 +3787,8 @@ begin
         while pGen <> NIL do
         begin
            {Find Bus To Which Generator Connected}
-            pBus := ActiveCircuit.Buses^[pGen.Terminals^[1].BusRef];
-            BusName := ActiveCircuit.BusList.Get(pGen.Terminals^[1].BusRef);
+            pBus := ActiveCircuit.Buses^[pGen.Terminals[0].BusRef];
+            BusName := ActiveCircuit.BusList.Get(pGen.Terminals[0].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
                 if (pGen.Nphases = 1) and (pGen.Connection = 0) then

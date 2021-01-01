@@ -540,7 +540,7 @@ begin
             begin
                 if Analyze or (not psrc.Checked) then
                 begin
-                    if (psrc.Terminals^[1].BusRef = BusNum) then
+                    if (psrc.Terminals[0].BusRef = BusNum) then
                     begin  // ?Connected to this bus ?
                         if Analyze then
                         begin
@@ -601,7 +601,7 @@ begin
                 begin
                     for j := 1 to p.NTerms do
                     begin
-                        if BusNum = p.Terminals^[j].BusRef then
+                        if BusNum = p.Terminals[j - 1].BusRef then
                         begin
                             if Analyze then
                             begin
@@ -619,7 +619,7 @@ begin
                             if not p.Checked then
                             begin
                                 BranchList.AddNewChild(p, BusNum, j);
-                                p.Terminals^[j].checked := TRUE;
+                                p.TerminalsChecked[j - 1] := TRUE;
                                 p.Checked := TRUE;
                                 Break; {For}
                             end;
@@ -687,11 +687,11 @@ begin
     begin
         for iTerm := 1 to TestBranch.Nterms do
         begin
-            if not TestBranch.Terminals^[iTerm].Checked then
+            if not TestBranch.TerminalsChecked[iTerm - 1] then
             begin
         // Now find all pc Elements connected to the bus on this end of branch
         // attach them as generic objects to cktTree node.
-                TestBusNum := TestBranch.Terminals^[iTerm].BusRef;
+                TestBusNum := TestBranch.Terminals[iTerm - 1].BusRef;
                 BranchList.PresentBranch.ToBusReference := TestBusNum;   // Add this as a "to" bus reference
                 if TestBusNum > 0 then
                 begin
@@ -728,7 +728,7 @@ begin
     begin
         if pCktElement.Enabled then
         begin
-            i := pCktElement.Terminals^[1].BusRef;
+            i := pCktElement.Terminals[0].BusRef;
             lstPC[i].Add(pCktElement);
         end;
         pCktElement := ActiveCircuit.PCElements.Next;
@@ -741,14 +741,14 @@ begin
         if pCktElement.Enabled then
             if IsShuntElement(pCktElement) then
             begin
-                i := pCktElement.Terminals^[1].BusRef;
+                i := pCktElement.Terminals[0].BusRef;
                 lstPC[i].Add(pCktElement);
             end
             else
             if AllTerminalsClosed(pCktElement) then
                 for j := 1 to pCktElement.Nterms do
                 begin
-                    i := pCktElement.Terminals^[j].BusRef;
+                    i := pCktElement.Terminals[j - 1].BusRef;
                     lstPD[i].Add(pCktElement);
                 end;
         pCktElement := ActiveCircuit.PDElements.Next;

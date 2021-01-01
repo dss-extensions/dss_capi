@@ -2011,7 +2011,7 @@ begin
     Result := TRUE;
     for i := 1 to Nterms do
         for j := 1 to NConds do
-            if not Terminals^[i].Conductors^[j].Closed then
+            if not Terminals[i - 1].ConductorsClosed[j - 1] then
             begin
                 Result := FALSE;
                 Exit;
@@ -2148,7 +2148,7 @@ begin
                 begin
                     for j := 1 to Fnconds do
                     begin
-                        if not Terminals^[i].Conductors^[j].Closed then
+                        if not Terminals[i - 1].ConductorsClosed[j - 1] then
                         begin
                             ZeroRow(j + k);
                             ZeroCol(j + k);

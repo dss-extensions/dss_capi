@@ -1950,7 +1950,7 @@ begin
             for j := 1 to ControlledElement[i].Yorder do
               cBuffer[i,j] := ControlledElement[i].Vterminal^[j];
 
-            BasekV := ActiveCircuit.Buses^[ ControlledElement[i].terminals^[1].busRef].kVBase;
+            BasekV := ActiveCircuit.Buses^[ ControlledElement[i].terminals[0].busRef].kVBase;
 
             Vpresent := 0;
 
@@ -2898,7 +2898,7 @@ begin
              FRollAvgWindow[j].Add(solnvoltage,ActiveCircuit.Solution.DynaVars.h,FVAvgWindowLengthSec);
              FDRCRollAvgWindow[j].Add(solnvoltage,ActiveCircuit.Solution.DynaVars.h,FDRCVAvgWindowLengthSec);
 
-             FVpuSolution[j,FVpuSolutionIdx] := solnvoltage/((ActiveCircuit.Buses^[ localcontrolledelement.terminals^[1].busRef].kVBase)*1000.0);
+             FVpuSolution[j,FVpuSolutionIdx] := solnvoltage/((ActiveCircuit.Buses^[ localcontrolledelement.terminals[0].busRef].kVBase)*1000.0);
 
              Reallocmem(tempVbuffer, 0);   // Clean up memory
 
@@ -2983,7 +2983,7 @@ BEGIN
 
 
 
-      basekV := ActiveCircuit.Buses^[ PVSys.terminals^[1].busRef].kVBase;
+      basekV := ActiveCircuit.Buses^[ PVSys.terminals[0].busRef].kVBase;
 
       // calculate deltaV quantity in per-unit from subtracting the rolling average
       // value (in p.u.) from the present p.u. terminal voltage (average of line-ground)

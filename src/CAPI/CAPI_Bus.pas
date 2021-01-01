@@ -1085,7 +1085,7 @@ begin
     with cktElem do
         for i := 1 to NTerms do
         begin
-            if Terminals^[i].BusRef = BusReference then
+            if Terminals[i - 1].BusRef = BusReference then
             begin
                 TerminalIndex := i;
                 Result := TRUE;

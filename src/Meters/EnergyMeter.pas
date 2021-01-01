@@ -869,7 +869,7 @@ begin
                 Checked := FALSE;
                 IsIsolated := TRUE;
                 for i := 1 to NTerms do
-                    Terminals^[i].Checked := FALSE;
+                    TerminalsChecked[i - 1] := FALSE;
             end;
             pCktElement := CktElements.Next;
         end;
@@ -1986,11 +1986,11 @@ begin
         end;
 
 
-    MeteredElement.Terminals^[MeteredTerminal].Checked := TRUE;
+    MeteredElement.TerminalsChecked[MeteredTerminal - 1] := TRUE;
     with BranchList.PresentBranch do
     begin
     // This bus is the head of the feeder or zone; do not mark as radial bus
-        FromBusReference := MeteredElement.Terminals^[MeteredTerminal].BusRef;
+        FromBusReference := MeteredElement.Terminals[MeteredTerminal - 1].BusRef;
         ActiveCircuit.Buses^[FromBusReference].DistFromMeter := 0.0;
         VoltBaseIndex := AddToVoltBaseList(FromBusReference);
         FromTerminal := MeteredTerminal;
@@ -2037,12 +2037,12 @@ begin
 
         for iTerm := 1 to ActiveBranch.Nterms do
         begin
-            if not ActiveBranch.Terminals^[iTerm].Checked then
+            if not ActiveBranch.TerminalsChecked[iTerm - 1] then
                 with ActiveCircuit do
                 begin
         // Now find all loads and generators connected to the bus on this end of branch
         // attach them as generic objects to cktTree node.
-                    TestBusNum := ActiveBranch.Terminals^[iTerm].BusRef;
+                    TestBusNum := ActiveBranch.Terminals[iTerm - 1].BusRef;
                     with BranchList.PresentBranch do
                     begin
                         ToBusReference := TestBusNum;   // Add this as a "to" bus reference
@@ -2102,7 +2102,7 @@ begin
                                 begin  // Stop at other meters  so zones don't interfere
                                     for j := 1 to TestElement.Nterms do
                                     begin     // Check each terminal
-                                        if TestBusNum = TestElement.Terminals^[j].BusRef then
+                                        if TestBusNum = TestElement.Terminals[j - 1].BusRef then
                                         begin
                                             BranchList.PresentBranch.IsDangling := FALSE; // We found something it was connected to
                     {Check for loops and parallel branches and mark them}
@@ -2121,7 +2121,7 @@ begin
                                                 BranchList.AddNewChild(TestElement, TestBusNum, j);  // Add new child to the branchlist
                                                 with TestElement do
                                                 begin
-                                                    Terminals^[j].Checked := TRUE;
+                                                    TerminalsChecked[j - 1] := TRUE;
                                                     FromTerminal := j;
                                                     Checked := TRUE;
                                                     IsIsolated := FALSE;
@@ -2756,7 +2756,7 @@ begin
     // Forward sweep to get number of interruptions
        // Initialize number of interruptions and Duration
     PD_Elem := TPDElement(SequenceList.Get(1));
-    pBus := ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.FromTerminal].BusRef];
+    pBus := ActiveCircuit.Buses^[PD_Elem.Terminals[PD_Elem.FromTerminal - 1].BusRef];
     pBus.Bus_Num_Interrupt := Source_NumInterruptions;
     pBus.BusCustInterrupts := Source_NumInterruptions * pBus.BusTotalNumCustomers;
     pBus.Bus_Int_Duration := Source_IntDuration;
@@ -2805,7 +2805,7 @@ begin
         pSection := @FeederSections^[PD_Elem.BranchSectionID];
         Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
         Inc(pSection.NBranches, 1); // Sum up num branches on this Section
-        pBus := ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
+        pBus := ActiveCircuit.Buses^[PD_Elem.Terminals[PD_Elem.ToTerminal - 1].BusRef];
         DblInc(pSection.SumBranchFltRates, pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
         DblInc(pSection.SumFltRatesXRepairHrs, (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
         if PD_Elem.HasOCPDevice then
@@ -2876,7 +2876,7 @@ begin
       // Compute CustInterrupts based on interrupts at each load
             with TLoadObj(LoadList.Get(idx)) do
             begin
-                pBus := Buses^[Terminals^[1].BusRef]; // pointer to Load's bus
+                pBus := Buses^[Terminals[0].BusRef]; // pointer to Load's bus
                 CustInterrupts := CustInterrupts + (NumCustomers * RelWeighting * pBus.Bus_Num_Interrupt);
                 SAIFIkW := SAIFIkW + kWBase * RelWeighting * pBus.Bus_Num_Interrupt;
                 DblInc(dblNcusts, NumCustomers * RelWeighting);

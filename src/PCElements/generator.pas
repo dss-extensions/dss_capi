@@ -2371,7 +2371,7 @@ begin
            k := 0;
            FOR i := 1 TO Fnterms Do Begin
              FOR j := 1 TO Fnconds Do Begin
-                 If Not Terminals^[i].Conductors^[j].Closed Then Begin
+                 If Not Terminals[i - 1].ConductorsClosed[j - 1] Then Begin
                     ZeroRow(j+k);
                     ZeroCol(j+k);
                     SetElement(j+k, j+k, Cmplx(1.0e-12,0.0));  // In case node gets isolated

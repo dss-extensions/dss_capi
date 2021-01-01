@@ -1325,7 +1325,7 @@ begin
     if (Index = 0) then
     begin  // Do all conductors
         for i := 1 to Fnphases do
-            Terminals^[ActiveTerminalIdx].Conductors^[i].Closed := Value;
+            Terminals[ActiveTerminalIdx - 1].ConductorsClosed[i - 1] := Value; //TODO: why not use the ActiveTerminal directly?
         
         if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not ActiveCircuit.Solution.SystemYChanged) and 
@@ -1342,7 +1342,7 @@ begin
     else
     if (Index > 0) and (Index <= Fnconds) then
     begin
-        Terminals^[ActiveTerminalIdx].Conductors^[index].Closed := Value;
+        Terminals[ActiveTerminalIdx - 1].ConductorsClosed[index - 1] := Value;
             
         if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not ActiveCircuit.Solution.SystemYChanged) and 

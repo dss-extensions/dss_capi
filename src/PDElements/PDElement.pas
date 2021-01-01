@@ -115,9 +115,9 @@ begin
             ToTerminal := 2;
 
         {Get fault Rate for TO bus and add it to this section failure rate}
-        ToBus := Buses^[Terminals^[ToTerminal].BusRef];
+        ToBus := Buses^[Terminals[ToTerminal - 1].BusRef];
         AccumulatedBrFltRate := ToBus.BusFltRate + BranchFltRate;
-        FromBus := Buses^[Terminals^[FromTerminal].BusRef];
+        FromBus := Buses^[Terminals[FromTerminal - 1].BusRef];
         FromBus.BusTotalNumCustomers := FromBus.BusTotalNumCustomers + BranchTotalCustomers;
 
         AccumulatedMilesDownStream := ToBus.BusTotalMiles + MilesThisLine;
@@ -147,7 +147,7 @@ procedure TPDElement.CalcCustInterrupts;
 var
     FromBus: TDSSBus;
 begin
-    FromBus := ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
+    FromBus := ActiveCircuit.Buses^[Terminals[FromTerminal - 1].BusRef];
     with  FromBus do
     begin
         accumsum(BusCustInterrupts, Bus_Num_Interrupt * BranchTotalCustomers);
@@ -168,8 +168,8 @@ begin
             ToTerminal := 1
         else
             ToTerminal := 2;
-        ToBus := Buses^[Terminals^[ToTerminal].BusRef];
-        FromBus := Buses^[Terminals^[FromTerminal].BusRef];
+        ToBus := Buses^[Terminals[ToTerminal - 1].BusRef];
+        FromBus := Buses^[Terminals[FromTerminal - 1].BusRef];
 
         // If no interrupting device then the downline bus will have the same num of interruptions
         ToBus.Bus_Num_Interrupt := FromBus.Bus_Num_Interrupt;
@@ -338,7 +338,7 @@ var
     FromBus: TDSSBus;
 
 begin
-    FromBus := ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
+    FromBus := ActiveCircuit.Buses^[Terminals[FromTerminal - 1].BusRef];
     with  FromBus do
     begin
         BusCustInterrupts := 0.0;

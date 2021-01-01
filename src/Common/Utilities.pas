@@ -2354,14 +2354,14 @@ function CheckParallel(const Line1, Line2: TDSSCktElement): Boolean;
   {Check to see if two lines are in parallel}
 begin
     Result := FALSE;
-    if Line1.Terminals^[1].BusRef = Line2.Terminals^[1].BusRef then
-        if Line1.Terminals^[2].BusRef = Line2.Terminals^[2].BusRef then
+    if Line1.Terminals[0].BusRef = Line2.Terminals[0].BusRef then
+        if Line1.Terminals[1].BusRef = Line2.Terminals[1].BusRef then
         begin
             Result := TRUE;
             Exit;
         end;
-    if Line1.Terminals^[2].BusRef = Line2.Terminals^[1].BusRef then
-        if Line1.Terminals^[1].BusRef = Line2.Terminals^[2].BusRef then
+    if Line1.Terminals[1].BusRef = Line2.Terminals[0].BusRef then
+        if Line1.Terminals[0].BusRef = Line2.Terminals[1].BusRef then
         begin
             Result := TRUE;
             Exit;
@@ -3338,7 +3338,7 @@ begin
                         Nodes := ''
                     else
                         Nodes := Copy(OldBusName, dotpos, length(OldBusName));    // preserve node designations if any
-                    bref := pCktElem.terminals^[i].BusRef;
+                    bref := pCktElem.terminals[i - 1].BusRef;
                     NewBusName := Format('B_%d%s', [bref, Nodes]);
                     //Check for Transformer because that will be an exception
                     case (pCktElem.DSSObjType and CLASSMASK) of

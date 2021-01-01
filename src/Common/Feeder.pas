@@ -329,7 +329,7 @@ begin
         Nterms := 1;
         Yorder := Fnterms * Fnconds;
 
-        Terminals^[1].BusRef := BranchList.PresentBranch.FromBusReference;
+        Terminals[0].BusRef := BranchList.PresentBranch.FromBusReference;
         SetBus(1, RootElement.GetBus(BranchList.Presentbranch.FromTerminal));  // set bus name same as first element
         FromTerminalOffset := (BranchList.Presentbranch.FromTerminal - 1) * FNconds;
         SetNodeRef(1, ArrayDef.PIntegerArray(@RootElement.Noderef^[1 + FromTerminalOffset]));

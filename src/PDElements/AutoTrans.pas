@@ -1079,7 +1079,7 @@ begin
             for i := 1 to Fnphases do
             begin
                 NodeRef^[Fnphases + i] := NodeRef^[i + Fnconds];
-                Terminals^[iTerm].TermNodeRef^[Fnphases + i] := NodeRef^[i + Fnconds];
+                Terminals[iTerm - 1].TermNodeRef[Fnphases + i - 1] := NodeRef^[i + Fnconds];
             end;
         end;
 end;

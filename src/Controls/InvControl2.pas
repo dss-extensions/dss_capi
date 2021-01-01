@@ -3583,7 +3583,7 @@ procedure TInvControl2Obj.UpdateInvControl2(i:integer);
           FRollAvgWindow[j].Add(solnvoltage,ActiveCircuit.Solution.DynaVars.h,FVAvgWindowLengthSec);
           FDRCRollAvgWindow[j].Add(solnvoltage,ActiveCircuit.Solution.DynaVars.h,FDRCVAvgWindowLengthSec);
 
-          FVpuSolution[j,FVpuSolutionIdx] := solnvoltage/((ActiveCircuit.Buses^[ControlledElement[j].terminals^[1].busRef].kVBase)*1000.0);
+          FVpuSolution[j,FVpuSolutionIdx] := solnvoltage/((ActiveCircuit.Buses^[ControlledElement[j].terminals[0].busRef].kVBase)*1000.0);
 
           Reallocmem(tempVbuffer, 0);   // Clean up memory
 

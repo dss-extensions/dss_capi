@@ -1093,7 +1093,7 @@ begin
 
                  for j := 1 to num do
                  begin
-                      i := pElement.Terminals^[1].TermNodeRef^[j];
+                      i := pElement.Terminals[0].TermNodeRef[j - 1];
                       case activecircuit.MapNodeToBus^[i].NodeNum of
                             1: begin vl_P_Di1 := cBuffer^[1].re; vl_Q_Di1 := cBuffer^[1].im;  end;
                             2: begin vl_P_Di1 := cBuffer^[2].re; vl_Q_Di1 := cBuffer^[2].im;  end;
@@ -1113,7 +1113,7 @@ begin
 
                      for j := 1 to num do
                      begin
-                          i := pElement.Terminals^[1].TermNodeRef^[j];
+                          i := pElement.Terminals[0].TermNodeRef[j - 1];
                           case activecircuit.MapNodeToBus^[i].NodeNum of
                                 1: begin vl_P_Di1 := cBuffer^[1].re; vl_Q_Di1 := cBuffer^[1].im;  end;
                                 2: begin vl_P_Di1 := cBuffer^[1].re; vl_Q_Di1 := cBuffer^[1].im;  end;
@@ -1130,7 +1130,7 @@ begin
 
                      for j := 1 to num do
                      begin
-                          i := pElement.Terminals^[1].TermNodeRef^[j];
+                          i := pElement.Terminals[0].TermNodeRef[j - 1];
                           case activecircuit.MapNodeToBus^[i].NodeNum of
                                 1: begin vl_P_Di2 := cBuffer^[1].re; vl_Q_Di2 := cBuffer^[1].im;  end;
                                 2: begin vl_P_Di2 := cBuffer^[1].re; vl_Q_Di2 := cBuffer^[1].im;  end;
@@ -1147,7 +1147,7 @@ begin
 
                      for j := 1 to num do
                      begin
-                          i := pElement.Terminals^[1].TermNodeRef^[j];
+                          i := pElement.Terminals[0].TermNodeRef[j - 1];
                           case activecircuit.MapNodeToBus^[i].NodeNum of
                                 1: begin vl_P_Di3 := cBuffer^[1].re; vl_Q_Di3 := cBuffer^[1].im;  end;
                                 2: begin vl_P_Di3 := cBuffer^[1].re; vl_Q_Di3 := cBuffer^[2].im;  end;
@@ -1285,7 +1285,7 @@ begin
                             end else if num=1 then
 
                             begin
-                                 i := pElem.Terminals^[1].TermNodeRef^[1];
+                                 i := pElem.Terminals[0].TermNodeRef[0];
                                        case activecircuit.MapNodeToBus^[i].NodeNum of
                                              1: ldIdx1 :=  PCindex_ld ;
                                              2: ldIdx2 :=  PCindex_ld ;
@@ -1304,7 +1304,7 @@ begin
 //                            pElem.GetPhasePower(cBuffer);// power
 //                            for j := 1 to num do
 //                                     begin
-//                                       i := pElem.Terminals^[1].TermNodeRef^[j];
+//                                       i := pElem.Terminals[0].TermNodeRef[j - 1];
 //                                       case activecircuit.MapNodeToBus^[i].NodeNum of
 //                                       1: begin vl_P_Di1 := cBuffer^[1].re; vl_Q_Di1 := cBuffer^[1].im;  end;
 //                                       2: begin vl_P_Di1 := cBuffer^[2].re; vl_Q_Di1 := cBuffer^[2].im;  end;
@@ -1413,10 +1413,10 @@ begin
              tempElement := ActiveCircuit.CktElements.Get(DevIndex);
          end;
               //
-         tempTerminal := tempElement.Terminals^[Tern_num];
+         tempTerminal := tempElement.Terminals[Tern_num - 1];
          for j:=1 to tempElement.NPhases do// how many phases of this element
          begin
-              i := tempTerminal.TermNodeRef^[j];  // global node number
+              i := tempTerminal.TermNodeRef[j - 1];  // global node number
               phase_num := ActiveCircuit.MapNodeToBus^[i].NodeNum;
               vabs := cabs (activecircuit.Solution.NodeV^[i]);
               if phase_num=1 then // phase A
@@ -1598,7 +1598,7 @@ Begin
 
                     for i := 1 to Fnphases do
                        begin
-                         Node_Ref := Monitor.ActiveTerminal.TermNodeRef^[i];
+                         Node_Ref := Monitor.ActiveTerminal.TermNodeRef[i - 1];
                          if Node_Ref=NodeNum then  F_Value_one_V^[j] := cabs(ActiveCircuit.Solution.NodeV^[NodeRef^[i]])/ActiveCircuit.Solution.NodeVbase^[NodeRef^[i]];
                        end;
 
@@ -2069,12 +2069,12 @@ var
 begin
       //tempCplx := MeteredElement.power[MeteredTerminal];
       TPDElement(MeteredElement).GetCurrents(MeteredElement.Iterminal); //Curr
-      pTerminal := MeteredElement.Terminals^[MeteredTerminal];
+      pTerminal := MeteredElement.Terminals[MeteredTerminal - 1];
       tempCplx := CZERO;
       k := (MeteredTerminal -1)*MeteredElement.NConds;
       for j:=1 to MeteredElement.NConds do// how many conds of this element
              begin
-                  i := pTerminal.TermNodeRef^[j];  // global node number
+                  i := pTerminal.TermNodeRef[j - 1];  // global node number
                   CACCUM( tempCplx , cmul(activecircuit.Solution.NodeV^[i], Conjg(MeteredElement.Iterminal[k+j])));//power
              end;
       result :=  tempCplx.re ;
@@ -2112,12 +2112,12 @@ begin
       //find the voltage of this phase on this terminal
       for i:=1 to pElem.NPhases do// how many conds of this element
       begin
-           j := pElem.Terminals^[jTempTerminal].TermNodeRef^[i];
+           j := pElem.Terminals[jTempTerminal - 1].TermNodeRef[i - 1];
            if activecircuit.MapNodeToBus^[j].NodeNum = phase_num then
            begin
                 nodeRefj := j;                                   // node ref of the other end of this element and this phase
                 vTemp := activecircuit.Solution.NodeV^[nodeRefj];
-                nodeRefi := pElem.Terminals^[k].TermNodeRef^[i]; // node ref of this node
+                nodeRefi := pElem.Terminals[k - 1].TermNodeRef[i - 1]; // node ref of this node
            end;
       end;
       if phase_num=0 then //  cannot deal with pos seq
@@ -2314,12 +2314,12 @@ begin
       //find the voltage of this phase on this terminal
       for i:=1 to pElem.NPhases do// how many conds of this element
       begin
-           j := pElem.Terminals^[jTempTerminal].TermNodeRef^[i];
+           j := pElem.Terminals[jTempTerminal - 1].TermNodeRef[i - 1];
            if activecircuit.MapNodeToBus^[j].NodeNum = phase_num then
            begin
                 nodeRefj := j;                                   // node ref of the other end of this element and this phase
                 vTemp := activecircuit.Solution.NodeV^[nodeRefj];
-                nodeRefi := pElem.Terminals^[k].TermNodeRef^[i]; // node ref of this node
+                nodeRefi := pElem.Terminals[k - 1].TermNodeRef[i - 1]; // node ref of this node
            end;
       end;
       if phase_num=0 then //  cannot deal with pos seq

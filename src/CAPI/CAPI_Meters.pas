@@ -661,7 +661,7 @@ begin
             Exit;
             
         with PD_Element do
-            Result := Buses^[Terminals^[FromTerminal].BusRef].BusTotalNumCustomers;
+            Result := Buses^[Terminals[FromTerminal - 1].BusRef].BusTotalNumCustomers;
     end;
 end;
 //------------------------------------------------------------------------------

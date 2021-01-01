@@ -307,7 +307,8 @@ begin
     
     with elem do
     begin
-        ActiveTerminal := Terminals^[1];  // make sure terminal 1 is closed
+        //TODO: why is this changing ActiveTerminal directly?
+        ActiveTerminal := @Terminals[0];  // make sure terminal 1 is closed
         Closed[0] := TRUE;    // closes all phases
         for i := 1 to NumSteps do
             States[i] := 1;
