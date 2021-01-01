@@ -97,7 +97,6 @@ uses
     Command in 'src/Shared/Command.pas',
     CNData in 'src/General/CNData.pas',
     CNLineConstants in 'src/General/CNLineConstants.pas',
-    Conductor in 'src/Common/Conductor.pas',
     ConductorData in 'src/General/ConductorData.pas',
     ControlClass in 'src/Controls/ControlClass.pas',
     ControlElem in 'src/Controls/ControlElem.pas',

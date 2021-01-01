@@ -134,13 +134,13 @@ begin
         if CktElement <> NIL then
         begin
      {First bus}
-            BusIdx := CktElement.Terminals^[1].busref;
+            BusIdx := CktElement.Terminals[0].busref;
             if BusIdx > 0 then
                 with  ActiveCircuit.Buses^[BusIdx] do
                     if CoordDefined then
                         StrlCopy(Name1, pAnsiChar(Ansistring(ActiveCircuit.BusList.Get(Busidx))), Len1);
       {Second bus}
-            BusIdx := CktElement.Terminals^[2].busref;
+            BusIdx := CktElement.Terminals[1].busref;
             if BusIdx > 0 then
                 with  ActiveCircuit.Buses^[BusIdx] do
                     if CoordDefined then
@@ -255,7 +255,7 @@ begin
         with ActiveCircuit do
             with ActiveCktElement do
             begin
-                Result := Terminals^[Terminal].BusRef;
+                Result := Terminals[Terminal - 1].BusRef;
             end;
 end;
 

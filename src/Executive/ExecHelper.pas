@@ -1348,7 +1348,7 @@ begin
           pCapElement := TCapacitorObj(ActiveDSSObject);
           If pCapElement.IsShunt Then
           Begin
-             If pCapElement.Enabled Then  ActiveCircuit.Buses^[pCapElement.Terminals^[1].Busref].Keep := TRUE;
+             If pCapElement.Enabled Then  ActiveCircuit.Buses^[pCapElement.Terminals[0].Busref].Keep := TRUE;
           End;
           ObjRef := pClass.Next;
        End;
@@ -1365,7 +1365,7 @@ begin
           pReacElement := TReactorObj(ActiveDSSObject);
           If pReacElement.IsShunt Then
           Try
-             If pReacElement.Enabled Then ActiveCircuit.Buses^[pReacElement.Terminals^[1].Busref].Keep := TRUE;
+             If pReacElement.Enabled Then ActiveCircuit.Buses^[pReacElement.Terminals[0].Busref].Keep := TRUE;
           Except
              On E:Exception Do Begin
                DoSimpleMsg(Format('%s %s Reactor=%s Bus No.=%d ',[E.Message, CRLF, pReacElement.Name, pReacElement.NodeRef^[1] ]), 9999);
@@ -2136,7 +2136,7 @@ Begin
         FOR j := 1 to Nterms Do Begin
          k :=(j-1) * NConds;
          FOR i := 1 to  3 DO Begin
-            Vph[i] := Solution.NodeV^[Terminals^[j].TermNodeRef^[i]];
+            Vph[i] := Solution.NodeV^[Terminals[j - 1].TermNodeRef[i - 1]];
          End;
          For i := 1 to  3 DO Begin
            Iph[i] := cBuffer^[k+i];

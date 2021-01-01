@@ -579,7 +579,7 @@ begin
       // Calculate the present average voltage  magnitude
       PVSys.ComputeVTerminal;
       for j := 1 to PVSys.Yorder do cBuffer[j] := PVSys.Vterminal^[j];
-      BasekV := ActiveCircuit.Buses^[PVSys.terminals^[1].busRef].kVBase;
+      BasekV := ActiveCircuit.Buses^[PVSys.terminals[0].busRef].kVBase;
       Vpresent := 0;
       For j := 1 to PVSys.NPhases Do Vpresent := Vpresent + Cabs(cBuffer[j]);
       FPresentVpu[i] := (Vpresent / PVSys.NPhases) / (basekV * 1000.0);

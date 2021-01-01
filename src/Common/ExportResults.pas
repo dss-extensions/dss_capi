@@ -3723,8 +3723,8 @@ begin
                 if IslineElement(PresentCktElement) then
                     with ActiveCircuit do
                     begin
-                        Bus1 := Buses^[PresentCktElement.Terminals^[1].BusRef];
-                        Bus2 := Buses^[PresentCktElement.Terminals^[2].BusRef];
+                        Bus1 := Buses^[PresentCktElement.Terminals[0].BusRef];
+                        Bus2 := Buses^[PresentCktElement.Terminals[1].BusRef];
             {Now determin which phase to plot}
                         if (Bus1.kVBase > 0.0) and (Bus2.kVBase > 0.0) then
                             case PhasesToPlot of
@@ -4254,7 +4254,7 @@ begin
                 if pElem.Enabled then
                     with pElem do
                     begin
-                        pBus := Buses^[Terminals^[FromTerminal].BusRef];
+                        pBus := Buses^[Terminals[FromTerminal - 1].BusRef];
                         with pBus do
                             if BusTotalNumCustomers > MaxCustomers then
                                 MaxCustomers := BusTotalNumCustomers;
@@ -4270,7 +4270,7 @@ begin
                 if pElem.Enabled then
                     with pElem do
                     begin
-                        pBus := Buses^[Terminals^[FromTerminal].BusRef];
+                        pBus := Buses^[Terminals[FromTerminal - 1].BusRef];
                         with pBus do
                             if BusTotalNumCustomers > 0 then
                                 SAIFI := BusCustInterrupts / BusTotalNumCustomers

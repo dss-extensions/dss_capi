@@ -2763,7 +2763,7 @@ begin
     elem := CktElements.First;
     WHILE assigned (elem) Do Begin
       elem.Checked := False;
-      For i := 1 to elem.Nterms Do elem.Terminals^[i].Checked := FALSE;
+      For i := 1 to elem.Nterms Do elem.TerminalsChecked[i - 1] := FALSE;
       elem.IsIsolated := TRUE; // till proven otherwise
       elem := CktElements.Next;
     End;

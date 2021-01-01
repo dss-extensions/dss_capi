@@ -108,8 +108,9 @@ type
 
         BaseFrequency: Double;
 
-        Terminals: pTerminalList;
-        ActiveTerminal: TPowerTerminal;
+        Terminals: Array of TPowerTerminal;
+        TerminalsChecked: Array of Boolean;
+        ActiveTerminal: ^TPowerTerminal;
 
         PublicDataSize: Integer;  // size of PublicDataStruct
         PublicDataStruct: Pointer;  // Generic Pointer to public data Block that may be access by other classes of elements
@@ -126,7 +127,7 @@ type
         procedure ComputeVterminal;
         procedure ZeroITerminal; inline;
         procedure GetCurrents(Curr: pComplexArray); VIRTUAL; ABSTRACT; //Get present value of terminal Curr for reports
-        procedure GetInjCurrents(Curr: pComplexArray); VIRTUAL; ABSTRACT; // Returns Injextion currents
+        procedure GetInjCurrents(Curr: pComplexArray); VIRTUAL; // Returns Injextion currents
         function InjCurrents: Integer; VIRTUAL; // Applies to PC Elements Puts straight into Solution Array
 
         function GetBus(i: Integer): String;  // Get bus name by index
@@ -191,7 +192,6 @@ begin
     YPrim_Series := NIL;
     YPrim_Shunt := NIL;
     YPrim := NIL;
-    Terminals := NIL;
     FBusNames := NIL;
     Vterminal := NIL;
     Iterminal := NIL;  // present value of terminal current
@@ -241,11 +241,9 @@ var
     i: Integer;
 begin
     for i := 1 to FNTerms do
-        Terminals^[i].Free;
-    for i := 1 to FNTerms do
         FBusNames^[i] := ''; // Free up strings
 
-    Reallocmem(Terminals, 0);
+    SetLength(Terminals, 0);
     Reallocmem(FBusNames, 0);
     Reallocmem(Iterminal, 0);
     Reallocmem(Vterminal, 0);
@@ -287,7 +285,7 @@ begin
     if (Value > 0) and (Value <= fNterms) then
     begin
         FActiveTerminal := Value;
-        ActiveTerminal := Terminals^[Value];
+        ActiveTerminal := @Terminals[Value - 1];
     end;
 end;
 
@@ -297,19 +295,17 @@ begin
 end;
 
 function TDSSCktElement.Get_ConductorClosed(Index: Integer): Boolean;
-
 // return state of selected conductor
 // if index=0 return true if all phases closed, else false
 var
     i: Integer;
-
 begin
     if (Index = 0) then
     begin
         Result := TRUE;
         for i := 1 to Fnphases do
         begin
-            if not Terminals^[FActiveTerminal].Conductors^[i].Closed then
+            if not Terminals[FActiveTerminal - 1].ConductorsClosed[i - 1] then
             begin
                 Result := FALSE;
                 Break;
@@ -318,7 +314,7 @@ begin
     end
     else
     if (Index > 0) and (Index <= Fnconds) then
-        Result := Terminals^[FActiveTerminal].Conductors^[Index].Closed
+        Result := Terminals[FActiveTerminal - 1].ConductorsClosed[Index - 1]
     else
         Result := FALSE;
 end;
@@ -333,7 +329,7 @@ begin
     begin  // Do all conductors
 
         for i := 1 to Fnphases do
-            Terminals^[FActiveTerminal].Conductors^[i].Closed := Value;
+            Terminals[FActiveTerminal - 1].ConductorsClosed[i - 1] := Value;
         ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
         YPrimInvalid := TRUE;
 
@@ -343,7 +339,7 @@ begin
 
         if (Index > 0) and (Index <= Fnconds) then
         begin
-            Terminals^[FActiveTerminal].Conductors^[index].Closed := Value;
+            Terminals[FActiveTerminal - 1].ConductorsClosed[index - 1] := Value;
             ActiveCircuit.Solution.SystemYChanged := TRUE;
             YPrimInvalid := TRUE;
         end;
@@ -441,11 +437,9 @@ begin
         end;
 
          {Reallocate Terminals if Nconds or NTerms changed}
-        if Terminals <> NIL then
-            for i := 1 to FNTerms do
-                Terminals^[i].Free;  // clean up old storage
-
-        ReallocMem(Terminals, Sizeof(Terminals^[1]) * Value);
+        SetLength(Terminals, Value);
+        SetLength(TerminalsChecked, 0);
+        SetLength(TerminalsChecked, Value);
 
         FNterms := Value;    // Set new number of terminals
         Yorder := FNterms * Fnconds;
@@ -454,7 +448,7 @@ begin
         ReallocMem(ComplexBuffer, Sizeof(ComplexBuffer^[1]) * Yorder);    // used by both PD and PC elements
 
         for i := 1 to Value do
-            Terminals^[i] := TPowerTerminal.Create(Fnconds);
+            Terminals[i - 1].Init(Fnconds);
     end;
 end;
 
@@ -503,6 +497,12 @@ begin
     end;
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+procedure TDSSCktElement.GetInjCurrents(Curr: pComplexArray);
+begin
+    DoErrorMsg('Something is Wrong.  Got to base CktElement GetInjCurrents for Object:' + CRLF + DSSClassName + '.' + Name, '****',
+        'Should not be able to get here. Probable Programming Error.', 752);
+end;
+
 procedure TDSSCktElement.GetLosses(var TotalLosses, LoadLosses,
     NoLoadLosses: Complex);
 begin
@@ -532,7 +532,7 @@ begin
     Size2 := SizeOf(NodeRef^[1]) * Fnconds;  // Size for one terminal
     ReallocMem(NodeRef, Size);  // doesn't do anything if already properly allocated
     Move(NodeRefArray^[1], NodeRef^[(iTerm - 1) * Fnconds + 1], Size2);  // Zap
-    Move(NodeRefArray^[1], Terminals^[iTerm].TermNodeRef^[1], Size2);  // Copy in Terminal as well
+    Move(NodeRefArray^[1], Terminals[iTerm - 1].TermNodeRef[0], Size2);  // Copy in Terminal as well
 
 // Allocate temp array used to hold voltages and currents for calcs
     ReallocMem(Vterminal, Yorder * SizeOf(Vterminal^[1]));
@@ -653,7 +653,7 @@ begin
             k := (idxTerm - 1) * Fnconds;
             for i := 1 to Fnconds do     // 11-7-08 Changed from Fnphases - was not accounting for all conductors
             begin
-                n := ActiveTerminal.TermNodeRef^[i]; // don't bother for grounded node
+                n := ActiveTerminal^.TermNodeRef[i - 1]; // don't bother for grounded node
                 if n > 0 then
                     Caccum(cPower, Cmul(NodeV^[n], conjg(Iterminal[k + i])));
             end;
@@ -733,8 +733,8 @@ begin
         end;
 
         ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
-        nref := ActiveTerminal.TermNodeRef^[MaxPhase]; // reference to the phase voltage with the max current
-        nrefN := ActiveTerminal.TermNodeRef^[Fnconds];  // reference to the ground terminal (GND or other phase)
+        nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
+        nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
         with ActiveCircuit.Solution do     // Get power into max phase of active terminal
         begin
 
@@ -787,8 +787,8 @@ begin
 
 
         ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
-        nref := ActiveTerminal.TermNodeRef^[MaxPhase]; // reference to the phase voltage with the max current
-        nrefN := ActiveTerminal.TermNodeRef^[Fnconds];  // reference to the ground terminal (GND or other phase)
+        nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
+        nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
         with ActiveCircuit.Solution do     // Get power into max phase of active terminal
         begin
 
@@ -939,7 +939,7 @@ begin
         for i := 1 to fNTerms do
             for j := 1 to Fnconds do
             begin
-                if Terminals^[i].Conductors^[j].Closed then
+                if Terminals[i - 1].ConductorsClosed[j - 1] then
                     FSWrite(F, 'C ')
                 else
                     FSWrite(F, 'O ');
@@ -949,7 +949,7 @@ begin
         for i := 1 to fNTerms do
             for j := 1 to Fnconds do
             begin
-                FSWrite(F, IntToStr(Terminals^[i].BusRef), ' ');
+                FSWrite(F, IntToStr(Terminals[i - 1].BusRef), ' ');
             end;
         FSWriteln(F, ']');
         FSWriteln(F);
@@ -996,7 +996,7 @@ begin
         begin
             for j := 1 to Fnconds do
             begin
-                if not Terminals^[i].Conductors^[j].Closed then
+                if not Terminals[i - 1].ConductorsClosed[j - 1] then
                 begin
                     if not ElementOpen then
                     begin
@@ -1085,7 +1085,7 @@ begin
 
         with ActiveCircuit.Solution do
             for i := 1 to NCond do
-                Vbuffer^[i] := NodeV^[Terminals^[iTerm].TermNodeRef^[i]];
+                Vbuffer^[i] := NodeV^[Terminals[iTerm - 1].TermNodeRef[i - 1]];
 
     except
         On E: Exception do

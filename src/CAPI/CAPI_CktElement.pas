@@ -708,7 +708,8 @@ begin
 
     with ActiveCircuit.ActiveCktElement do
     begin
-        ActiveTerminal := Terminals^[Term];
+        //TODO: why is this changing ActiveTerminal directly?
+        ActiveTerminal := @Terminals[Term - 1];
         Closed[Phs] := TRUE;
     end;
 end;
@@ -720,7 +721,8 @@ begin
 
     with ActiveCircuit.ActiveCktElement do
     begin
-        ActiveTerminal := Terminals^[Term];
+        //TODO: why is this changing ActiveTerminal directly?
+        ActiveTerminal := @Terminals[Term - 1];
         Closed[Phs] := FALSE;
     end;
 end;
@@ -763,7 +765,8 @@ begin
     with ActiveCircuit do
     begin
         with ActiveCktElement do
-            ActiveTerminal := Terminals^[Term];
+            //TODO: why is this changing ActiveTerminal directly?
+            ActiveTerminal := @Terminals[Term - 1];
         if Phs = 0 then // At least one must be open
         begin
             Result := FALSE;

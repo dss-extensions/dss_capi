@@ -324,10 +324,10 @@ begin
         phs := pElem.NextBus;
     bSec := FALSE;
     if pElem.NPhases = 2 then
-        if ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.25 then
+        if ActiveCircuit.Buses^[pElem.Terminals[bus - 1].BusRef].kVBase < 0.25 then
             bSec := TRUE;
     if pElem.NPhases = 1 then
-        if ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.13 then
+        if ActiveCircuit.Buses^[pElem.Terminals[bus - 1].BusRef].kVBase < 0.13 then
             bSec := TRUE;
 
     dot := pos('.', phs);
@@ -1533,7 +1533,7 @@ begin
     begin
         if IsGroundBus(BusName) = FALSE then
         begin
-            ref := pElem.Terminals^[j].BusRef;
+            ref := pElem.Terminals[j - 1].BusRef;
             StartFreeInstance(GeoPrf, 'PositionPoint', GetDevUuid(PosPt, pElem.ParentClass.Name + '.' + pElem.LocalName, j));
             UuidNode(GeoPrf, 'PositionPoint.Location', geoUUID);
             IntegerNode(GeoPrf, 'PositionPoint.sequenceNumber', j);
@@ -1558,7 +1558,7 @@ begin
     begin
         if IsGroundBus(BusName) = FALSE then
         begin
-            ref := pElem.Terminals^[j].BusRef;
+            ref := pElem.Terminals[j - 1].BusRef;
             TermName := pElem.Name + '_T' + IntToStr(j);
             TermUuid := GetTermUuid(pElem, j);
             StartFreeInstance(FunPrf, 'Terminal', TermUuid);
@@ -1601,7 +1601,7 @@ procedure VbaseNode(prf: ProfileChoice; pElem: TDSSCktElement);
 var
     j: Integer;
 begin
-    j := pElem.Terminals^[1].BusRef;
+    j := pElem.Terminals[0].BusRef;
     UuidNode(prf, 'ConductingEquipment.BaseVoltage',
         GetBaseVUuid(sqrt(3.0) * ActiveCircuit.Buses^[j].kVBase));
 end;
@@ -2129,7 +2129,7 @@ begin
                 begin
                     if pVsrc.Enabled then
                     begin
-                        i := pVsrc.Terminals^[1].BusRef;
+                        i := pVsrc.Terminals[0].BusRef;
                         geoUUID := GetDevUuid(Topo, Buses^[i].localName, 1);
                         pSwing.UUID := geoUUID;
                         StartInstance(TopoPrf, 'TopologicalIsland', pIsland);
@@ -2616,7 +2616,7 @@ begin
                             DoubleNode(EpPrf, 'TransformerEnd.rground', Winding^[i].Rneut);
                             DoubleNode(EpPrf, 'TransformerEnd.xground', Winding^[i].Xneut);
                         end;
-                        j := pXf.Terminals^[i].BusRef;
+                        j := pXf.Terminals[i - 1].BusRef;
                         pName2.LocalName := pXf.Name + '_T' + IntToStr(i);
                         pName2.UUID := GetTermUuid(pXf, i);
                         RefNode(FunPrf, 'TransformerEnd.Terminal', pName2);
