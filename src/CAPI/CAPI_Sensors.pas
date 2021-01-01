@@ -51,7 +51,7 @@ uses
     CAPI_Constants,
     Sensor,
     DSSGlobals,
-    PointerList,
+    DSSPointerList,
     Executive,
     SysUtils;
 

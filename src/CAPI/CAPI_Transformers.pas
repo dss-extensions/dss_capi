@@ -70,7 +70,7 @@ uses
     Executive,
     Transformer,
     SysUtils,
-    PointerList,
+    DSSPointerList,
     ucomplex;
 
 //------------------------------------------------------------------------------
@@ -592,7 +592,7 @@ var
     Result: PDoubleArray;
     CResult: PComplexArray; // this array is one-based, see Ucomplex
     elem: TTransfObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
     k: Integer;
 begin
     if (InvalidCircuit) or (ActiveCircuit.Transformers.Count <= 0) then

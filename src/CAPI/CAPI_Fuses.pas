@@ -39,7 +39,7 @@ uses
     Executive,
     Sysutils,
     Fuse,
-    Pointerlist,
+    DSSPointerlist,
     DSSGlobals;
 
 //------------------------------------------------------------------------------

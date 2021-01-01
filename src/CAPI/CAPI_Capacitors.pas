@@ -40,7 +40,7 @@ uses
     Executive,
     Capacitor,
     SysUtils,
-    PointerList;
+    DSSPointerList;
 
 //------------------------------------------------------------------------------
 function _activeObj(out obj: TCapacitorObj): Boolean; inline;

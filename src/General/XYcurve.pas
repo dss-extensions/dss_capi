@@ -143,8 +143,7 @@ uses
     MathUtil,
     Utilities,
     Classes,
-    Math,
-    PointerList;
+    Math;
 
 const
     NumPropsThisClass = 13;

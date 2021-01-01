@@ -37,7 +37,7 @@ implementation
 uses
     CAPI_Constants,
     GICsource,
-    PointerList,
+    DSSPointerList,
     DSSGlobals,
     CktElement,
     SysUtils;

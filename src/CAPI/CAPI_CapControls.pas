@@ -55,7 +55,7 @@ uses
     CapControl,
     CapControlVars,
     SysUtils,
-    PointerList,
+    DSSPointerList,
     Utilities;
 
 //------------------------------------------------------------------------------

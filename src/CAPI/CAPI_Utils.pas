@@ -6,7 +6,7 @@ interface
 
 uses
     sysutils,
-    PointerList;
+    DSSPointerList;
 
 type
     DoubleArray = array[0..$effffff] of Double;
@@ -107,9 +107,9 @@ function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const in
 // this just gets a Single string from the pointer of strings
 function DSS_Get_PAnsiChar(var p: Pointer; Index: TAPISize): PAnsiChar; CDECL;
 
-procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pList: TPointerList; const Restore: Boolean); inline;
-function Generic_CktElement_Get_First(pList: TPointerList): Integer; inline;
-function Generic_CktElement_Get_Next(pList: TPointerList): Integer; inline;
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pList: TDSSPointerList; const Restore: Boolean); inline;
+function Generic_CktElement_Get_First(pList: TDSSPointerList): Integer; inline;
+function Generic_CktElement_Get_Next(pList: TDSSPointerList): Integer; inline;
 
 function InvalidCircuit(): Boolean; inline;
 function MissingSolution(): Boolean; inline;
@@ -495,7 +495,7 @@ begin
     GR_CountPtr_PByte[1] := 0;
 end;
 //------------------------------------------------------------------------------
-procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pList: TPointerList; const Restore: Boolean); inline;
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pList: TDSSPointerList; const Restore: Boolean); inline;
 var
     Result: PPAnsiCharArray;
     idx_before, k: Integer;
@@ -517,7 +517,7 @@ begin
         pList.Get(idx_before);
 end;
 //------------------------------------------------------------------------------
-function Generic_CktElement_Get_First(pList: TPointerList): Integer; inline;
+function Generic_CktElement_Get_First(pList: TDSSPointerList): Integer; inline;
 var
     elem: TDSSCktElement;
 begin
@@ -537,7 +537,7 @@ begin
     until (Result = 1) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
-function Generic_CktElement_Get_Next(pList: TPointerList): Integer; inline;
+function Generic_CktElement_Get_Next(pList: TDSSPointerList): Integer; inline;
 var
     elem: TDSSCktElement;
 begin

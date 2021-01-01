@@ -68,7 +68,7 @@ uses
     ControlElem,
     RegControl,
     SysUtils,
-    PointerList;
+    DSSPointerList;
 
 //------------------------------------------------------------------------------
 function _activeObj(out obj: TRegControlObj): Boolean; inline;

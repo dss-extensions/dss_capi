@@ -61,7 +61,7 @@ uses
     PDElement,
     PDClass,
     SysUtils,
-    PointerList,
+    DSSPointerList,
     Bus,
     XYCurve,
     ucomplex,
@@ -333,7 +333,7 @@ var
     Result: PPAnsiCharArray;
     idx_before, k, numEnabled: Integer;
     elem: TPDElement;
-    pList: TPointerList;
+    pList: TDSSPointerList;
 begin
     DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit then
@@ -420,7 +420,7 @@ var
     Result: CAPI_Utils.PDoubleArray;
     k, idx_before, maxSize, RatingIdx: Integer;
     pElem: TPDElement;
-    pList: TPointerList;
+    pList: TDSSPointerList;
     LocalPower: Complex;
     cBuffer: pComplexArray;
     RSignal: TXYCurveObj;
@@ -538,7 +538,7 @@ type
 var
     idx_before: Integer;
     pElem: TPDElement;
-    pList: TPointerList;
+    pList: TDSSPointerList;
     cBuffer: pComplexArray;
     NValuesTotal, NValues, i: Integer;
     CResultPtr: PPolar;
@@ -622,7 +622,7 @@ type
 var
     Result: PDoubleArray;
     idx_before: Integer;
-    pList: TPointerList;
+    pList: TDSSPointerList;
     pElem: TPDElement;
     cBuffer: pComplexArray;
     i012v, i012: pComplex;
@@ -753,7 +753,7 @@ var
     Result: PDoubleArray;
     NValuesTotal, NValues, i: Integer;
     idx_before: Integer;
-    pList: TPointerList;
+    pList: TDSSPointerList;
     pElem: TPDElement;
     CResultPtr: PComplex;
 begin
@@ -811,7 +811,7 @@ var
     Result: PDoubleArray;
     NValuesTotal, MaxNValues, i, j, k, n, iCount: Integer;
     idx_before: Integer;
-    pList: TPointerList;
+    pList: TDSSPointerList;
     pElem: TPDElement;
     CResultPtr: PComplex;
     cBuffer: pComplexArray;
@@ -938,7 +938,7 @@ procedure _PDElements_Get_AllNum_x(var ResultPtr: PInteger; ResultCount: PAPISiz
 var
     idx_before, numEnabled: Integer;
     pElem: TPDElement;
-    pList: TPointerList;
+    pList: TDSSPointerList;
     pval: PInteger;
 begin
     if InvalidCircuit then

@@ -145,7 +145,7 @@ uses
     Classes,
     TOPExport,
     Math,
-    PointerList;
+    DSSPointerList;
 
 const
     NumPropsThisClass = 12;
@@ -851,7 +851,7 @@ var
     Obj: TPriceShapeObj;
     MaxPts, i, j: Integer;
     MaxTime, MinInterval, Hr_Time: Double;
-    ObjList: TPointerList;
+    ObjList: TDSSPointerList;
 
 begin
     TOPTransferFile.FileName := GetOutputDirectory + 'TOP_PriceShape.STO';
@@ -872,7 +872,7 @@ begin
 
      {Send only fixed interval data}
 
-    ObjList := TPointerList.Create(10);
+    ObjList := TDSSPointerList.Create(10);
     NameList := TStringList.Create;
     CNames := TStringList.Create;
 

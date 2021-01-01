@@ -36,7 +36,7 @@ uses
     PCElement,
     ucmatrix,
     ucomplex,
-    PointerLIst,
+    DSSPointerList,
     CktElement,
     CktTree;
 
@@ -60,7 +60,7 @@ type
     TFeederObj = class(TPCElement)
     PRIVATE
         SequenceList,
-        ShuntList: TPointerList;
+        ShuntList: TDSSPointerList;
 
         RootElement: TDSSCktElement;
         FromTerminalOffset: Integer;
@@ -286,8 +286,8 @@ begin
     Name := LowerCase(MeterName);
     DSSObjType := ParClass.DSSClassType; // This will be a current source (PCElement)
 
-    SequenceList := TPointerList.Create(50);
-    ShuntList := TPointerList.Create(50);
+    SequenceList := TDSSPointerList.Create(50);
+    ShuntList := TDSSPointerList.Create(50);
 
     IsSynched := FALSE;
 

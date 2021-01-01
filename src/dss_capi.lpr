@@ -155,7 +155,7 @@ uses
     PCElement in 'src/PCElements/PCElement.pas',
     PDClass in 'src/PDElements/PDClass.pas',
     PDElement in 'src/PDElements/PDElement.pas',
-    PointerList in 'src/Shared/PointerList.pas',
+    DSSPointerList in 'src/Shared/DSSPointerList.pas',
     PriceShape in 'src/General/PriceShape.pas',
     Pstcalc in 'src/Shared/Pstcalc.pas',
     PVsystem in 'src/PCElements/PVsystem.pas',

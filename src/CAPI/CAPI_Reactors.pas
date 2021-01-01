@@ -68,7 +68,7 @@ uses
     Executive,
     Reactor,
     SysUtils,
-    PointerList,
+    DSSPointerList,
     Utilities,
     ucomplex;
 

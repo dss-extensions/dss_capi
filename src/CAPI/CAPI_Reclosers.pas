@@ -45,7 +45,7 @@ uses
     Executive,
     Sysutils,
     Recloser,
-    PointerList,
+    DSSPointerList,
     DSSGlobals,
     DSSClassDefs;
 

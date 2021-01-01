@@ -31,7 +31,7 @@ implementation
 uses
     CAPI_Constants,
     Vsource,
-    PointerList,
+    DSSPointerList,
     DSSGlobals,
     CktElement,
     SysUtils;

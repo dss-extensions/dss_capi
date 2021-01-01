@@ -144,7 +144,7 @@ uses
     ucmatrix,
     showresults,
     mathUtil,
-    PointerList, {TOPExport,} Dynamics;
+    {TOPExport,} Dynamics;
 
 const
 

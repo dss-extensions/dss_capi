@@ -40,7 +40,7 @@ uses
     ControlElem,
     SwtControl,
     SysUtils,
-    PointerList;
+    DSSPointerList;
 
 function _activeObj(out obj: TSwtControlObj): Boolean; inline;
 begin

@@ -1,4 +1,4 @@
-unit PointerList;
+unit DSSPointerList;
 
 {$M+}
 {
@@ -15,7 +15,7 @@ uses
     SysUtils;
 
 type
-    TPointerList = class(TObject)
+    TDSSPointerList = class(TObject)
     PRIVATE
         NumInList: Integer;
         MaxAllocated: Integer;
@@ -51,7 +51,7 @@ type
 
 implementation
 
-constructor TPointerList.Create(Size: Integer);
+constructor TDSSPointerList.Create(Size: Integer);
 //-------------------------------------------------------------------------
 begin
     inherited Create;
@@ -66,14 +66,14 @@ begin
 end;
 
 //-------------------------------------------------------------------------
-destructor TPointerList.Destroy;
+destructor TDSSPointerList.Destroy;
 begin
     Freemem(List, Sizeof(List^[1]) * MaxAllocated);
     inherited Destroy;
 end;
 
 //-------------------------------------------------------------------------
-function TPointerList.Add(p: Pointer): Integer;
+function TDSSPointerList.Add(p: Pointer): Integer;
 begin
     Inc(NumInList);
     if NumInList > MaxAllocated then
@@ -87,13 +87,13 @@ begin
 end;
 
 //-------------------------------------------------------------------------
-procedure TPointerList.Set_New(value: Pointer);
+procedure TDSSPointerList.Set_New(value: Pointer);
 begin
     Add(Value);
 end;
 
 //-------------------------------------------------------------------------
-function TPointerList.Get_Active: Pointer;
+function TDSSPointerList.Get_Active: Pointer;
 begin
     if (ActiveItem > 0) and (ActiveItem <= NumInList) then
         Result := Get(ActiveItem)
@@ -102,7 +102,7 @@ begin
 end;
 
 //-------------------------------------------------------------------------
-function TPointerList.Get_First: Pointer;
+function TDSSPointerList.Get_First: Pointer;
 begin
     if NumInList > 0 then
     begin
@@ -117,7 +117,7 @@ begin
 end;
 
 //-------------------------------------------------------------------------
-function TPointerList.Get_Next: Pointer;
+function TDSSPointerList.Get_Next: Pointer;
 begin
     if NumInList > 0 then
     begin
@@ -138,7 +138,7 @@ begin
 end;
 
 //-------------------------------------------------------------------------
-function TPointerList.Get(i: Integer): Pointer;
+function TDSSPointerList.Get(i: Integer): Pointer;
 begin
     if (i < 1) or (i > NumInList) then
         Result := NIL
@@ -149,7 +149,7 @@ begin
     end;
 end;
 
-procedure TPointerList.Clear;
+procedure TDSSPointerList.Clear;
 begin
     ActiveItem := 0;
     NumInList := 0;

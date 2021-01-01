@@ -17,7 +17,7 @@ interface
 
 USES
      Command, MeterClass, Meterelement, DSSClass, Arraydef, ucomplex,
-     utilities, Classes, PointerList,
+     utilities, Classes, DSSPointerList,
      VLNodeVars,LD_fm_infos;
 TYPE
     TFMonitorStrBuffer = Array[1..256] of AnsiChar;
@@ -51,7 +51,7 @@ TYPE
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
    TFMonitorObj = class(TMeterElement)
      private
-       //pTVLeaderVars : TPointerList;   //save all nodes information
+       //pTVLeaderVars : TDSSPointerList;   //save all nodes information
        //VL_node : TVLnodeVars;//  leader node of this cluster
        nodes : integer; //nodes of this cluster  \\default nodes := 33;
        pCommMatrix : pSmallIntArray;// communication matrix of this cluster

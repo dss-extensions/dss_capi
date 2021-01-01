@@ -233,7 +233,7 @@ uses
     ucmatrix,
     showresults,
     mathUtil,
-    PointerList,
+    DSSPointerList,
     TOPExport,
     Dynamics,
     PstCalc,
@@ -2037,7 +2037,7 @@ var
     Obj: TMonitorObj;
     i: Integer;
     MaxTime: Double;
-    ObjList: TPointerList;
+    ObjList: TDSSPointerList;
     Hours: Boolean;
     StrBuffer: TMonitorStrBuffer;
     pStrBuffer: PAnsichar;
@@ -2076,7 +2076,7 @@ begin
 
      {Send only fixed interval data}
 
-    ObjList := TPointerList.Create(10);
+    ObjList := TDSSPointerList.Create(10);
     NameList := TStringList.Create;
     CNames := TStringList.Create;
 

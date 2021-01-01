@@ -21,7 +21,7 @@ uses
     Terminal,
     DSSObject,
     DSSClass,
-    PointerList,
+    DSSPointerList,
     DSSClassDefs;
 
 type
@@ -99,7 +99,7 @@ type
         HasOCPDevice: Boolean; // Fuse, Relay, or Recloser
         HasAutoOCPDevice: Boolean; // Relay or Recloser only
         HasSwtControl: Boolean; // Has a remotely-controlled Switch
-        ControlElementList: TPointerList; //Pointer to control for this device
+        ControlElementList: TDSSPointerList; //Pointer to control for this device
 
         Iterminal: pComplexArray;  // Others need this
         Vterminal: pComplexArray;
@@ -221,7 +221,7 @@ begin
     Drawn := FALSE;
 
      // Make list for a small number of controls with an increment of 1
-    ControlElementList := PointerList.TPointerList.Create(1);
+    ControlElementList := TDSSPointerList.Create(1);
 
     FActiveTerminal := 1;
     LastTerminalChecked := 0;

@@ -26,7 +26,7 @@ implementation
 
 uses
     CAPI_Constants,
-    PointerList,
+    DSSPointerList,
     Isource,
     DSSGlobals,
     CktElement,

@@ -31,7 +31,7 @@ uses
     ucomplex,
     utilities,
     XYcurve,
-    PointerList,
+    DSSPointerList,
     Classes;
 
 type
@@ -71,7 +71,7 @@ type
         ControlActionHandle: Integer;
         FListSize: Integer;
         FGeneratorNameList: TStringList;
-        FGenPointerList: PointerList.TPointerList;
+        FGenPointerList: TDSSPointerList;
         FWeights: pDoubleArray;
         Fvvc_curve_size: Integer;
         Fvvc_curve: TXYcurveObj;
@@ -438,7 +438,7 @@ begin
     MonitoredElement := NIL;
     FGeneratorNameList := TStringList.Create;
     FWeights := NIL;
-    FGenPointerList := PointerList.TPointerList.Create(20);
+    FGenPointerList := TDSSPointerList.Create(20);
   // Default size and increment
     FListSize := 0;
     Fvvc_Vmaxpu := 1.1;

@@ -173,7 +173,7 @@ uses
     Classes,
     TOPExport,
     Math,
-    PointerList;
+    DSSPointerList;
 
 type
     ELoadShapeError = class(Exception);  // Raised to abort solution
@@ -1426,7 +1426,7 @@ var
     Obj: TLoadShapeObj;
     MaxPts, i, j: Integer;
     MaxTime, MinInterval, Hr_Time: Double;
-    ObjList: TPointerList;
+    ObjList: TDSSPointerList;
 
 begin
     TOPTransferFile.FileName := GetOutputDirectory + 'TOP_LoadShape.STO';
@@ -1447,7 +1447,7 @@ begin
 
      {Send only fixed interval data}
 
-    ObjList := TPointerList.Create(10);
+    ObjList := TDSSPointerList.Create(10);
     NameList := TStringList.Create;
     CNames := TStringList.Create;
 
