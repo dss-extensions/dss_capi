@@ -719,7 +719,7 @@ Begin
       NPhases := OtherInvControl.Fnphases;
       NConds  := OtherInvControl.Fnconds; // Force Reallocation of terminal stuff
 
-      for i := 1 to FPVSystemPointerList.ListSize DO
+      for i := 1 to FPVSystemPointerList.Count DO
       begin
 
         ControlledElement[i]       := OtherInvControl.ControlledElement[i];
@@ -994,9 +994,9 @@ VAR
 
 Begin
 
-    IF FPVSystemPointerList.ListSize = 0 Then  MakePVSystemList;
+    IF FPVSystemPointerList.Count = 0 Then  MakePVSystemList;
 
-    IF FPVSystemPointerList.ListSize > 0  Then
+    IF FPVSystemPointerList.Count > 0  Then
     {Setting the terminal of the InvControl device to same as the 1st PVSystem element}
     { This sets it to a realistic value to avoid crashes later }
     Begin
@@ -1004,7 +1004,7 @@ Begin
          Setbus(1, MonitoredElement.Firstbus);
     End;
 
-    for i := 1 to FPVSystemPointerList.ListSize do
+    for i := 1 to FPVSystemPointerList.Count do
     begin
 
         // User ControlledElement[] as the pointer to the PVSystem elements
@@ -1044,12 +1044,12 @@ procedure TInvControlObj.MakePosSequence;
 // ***  This assumes the PVSystem devices have already been converted to pos seq
 
 begin
-    IF FPVSystemPointerList.ListSize = 0 Then  RecalcElementData;
+    IF FPVSystemPointerList.Count = 0 Then  RecalcElementData;
     Nphases := 3;
     Nconds := 3;
     Setbus(1, MonitoredElement.GetBus(ElementTerminal));
 
-    IF FPVSystemPointerList.ListSize > 0  Then
+    IF FPVSystemPointerList.Count > 0  Then
     {Setting the terminal of the InvControl device to same as the 1st PVSystem element}
     { This sets it to a realistic value to avoid crashes later }
     Begin
@@ -1133,7 +1133,7 @@ BEGIN
 
 
 
-  for k := 1 to FPVSystemPointerList.ListSize do
+  for k := 1 to FPVSystemPointerList.Count do
    begin
 
       PVSys := ControlledElement[k];   // Use local variable in loop
@@ -1934,13 +1934,13 @@ VAR
 begin
 
      // If list is not defined, go make one from all PVSystem in circuit
-     IF FPVSystemPointerList.ListSize=0 Then   RecalcElementData;
+     IF FPVSystemPointerList.Count=0 Then   RecalcElementData;
 
      If (FListSize>0) then
      Begin
          // If an InvControl controls more than one PV, control each one
          // separately based on the PVSystem's terminal voltages, etc.
-         for i := 1 to FPVSystemPointerList.ListSize do
+         for i := 1 to FPVSystemPointerList.Count do
          begin
             if(ActiveCircuit.Solution.DynaVars.t = 1) and (ActiveCircuit.Solution.ControlIteration=1) then
                 FWithinTol[i] := False;
@@ -2448,7 +2448,7 @@ begin
          End;
 
 
-         FListSize := FPVSystemPointerList.ListSize;
+         FListSize := FPVSystemPointerList.Count;
 
          SetLength(ControlledElement,FListSize+1);
 
@@ -2578,7 +2578,7 @@ begin
      end; {For}
 
    RecalcElementData;
-   If FPVSystemPointerList.ListSize>0 Then Result := TRUE;
+   If FPVSystemPointerList.Count>0 Then Result := TRUE;
 end;
 
 
@@ -2848,7 +2848,7 @@ Var
 begin
      tempVbuffer := Nil;   // Initialize for Reallocmem
 
-       for j := 1 to FPVSystemPointerList.ListSize do
+       for j := 1 to FPVSystemPointerList.Count do
           begin
              // only update solution idx one time through this routine
              if (j = 1) and (i = 1) then
@@ -3307,7 +3307,7 @@ VAR
 
 Begin
 
-     For i := 1 to ElementList.ListSize  Do
+     For i := 1 to ElementList.Count  Do
         With TInvControlObj(ElementList.Get(i)) Do
         If Enabled Then UpdateInvControl(i);
 

@@ -83,12 +83,11 @@ TYPE
          Procedure ReallocateElementNameList;
          
          Function Edit:Integer;Virtual;      // uses global parser
-         Function Init(Handle:Integer):Integer; Virtual;
          Function NewObject(const ObjName:String):Integer; Virtual;
 
-         Function SetActive(const ObjName:String):Boolean; Virtual;
+         Function SetActive(const ObjName:String):Boolean;
          Function GetActiveObj:Pointer; // Get address of active obj of this class
-         Function Find(const ObjName:String):Pointer; Virtual;  // Find an obj of this class by name
+         Function Find(const ObjName:String; const ChangeActive: Boolean=True): Pointer; virtual;  // Find an obj of this class by name
 
          Function PropertyIndex(Const Prop:String):Integer;
          Property FirstPropertyName:String read Get_FirstPropertyName;
@@ -188,7 +187,7 @@ END;
 
 Procedure TDSSClass.Set_Active(value:Integer);
 BEGIN
-     If (Value > 0) and (Value<= ElementList.ListSize)
+     If (Value > 0) and (Value<= ElementList.Count)
      THEN
        Begin
         ActiveElement := Value;
@@ -206,21 +205,14 @@ BEGIN
     DoSimpleMsg('virtual function TDSSClass.Edit called.  Should be overriden.', 781);
 END;
 
-
-Function TDSSClass.Init(Handle:Integer):Integer;
-BEGIN
-    Result := 0;
-    DoSimpleMsg('virtual function TDSSClass.Init called.  Should be overriden.', 782);
-END;
-
 Function TDSSClass.AddObjectToList(Obj:Pointer):Integer;
 BEGIN
     ElementList.New := Obj; // Stuff it in this collection's element list
     ElementNameList.Add(TDSSObject(Obj).Name);
 {$IFNDEF DSS_CAPI_HASHLIST}
-    If Cardinal(ElementList.ListSize) > 2 * ElementNameList.InitialAllocation Then ReallocateElementNameList;
+    If Cardinal(ElementList.Count) > 2 * ElementNameList.InitialAllocation Then ReallocateElementNameList;
 {$ENDIF}
-    ActiveElement := ElementList.ListSize;
+    ActiveElement := ElementList.Count;
     Result := ActiveElement; // Return index of object in list
 END;
 
@@ -243,7 +235,7 @@ BEGIN
 
 END;
 
-Function TDSSClass.Find(const ObjName:String):Pointer;
+Function TDSSClass.Find(const ObjName:String; const ChangeActive: Boolean):Pointer;
 VAR
     idx: Integer;
 
@@ -255,8 +247,9 @@ BEGIN
     
     If idx>0 Then
     Begin
-        ActiveElement := idx;
         Result := ElementList.Get(idx);
+        if ChangeActive then 
+            ActiveElement := idx;
     End;
 END;
 
@@ -329,12 +322,12 @@ End;
 
 function TDSSClass.Get_ElementCount: Integer;
 begin
-    Result := ElementList.ListSize;
+    Result := ElementList.Count;
 end;
 
 function TDSSClass.Get_First: Integer;
 begin
-    IF ElementList.ListSize=0   THEN Result := 0
+    IF ElementList.Count=0   THEN Result := 0
 
     ELSE Begin
         ActiveElement := 1;
@@ -350,7 +343,7 @@ end;
 function TDSSClass.Get_Next: Integer;
 begin
     Inc(ActiveElement);
-    IF ActiveElement > ElementList.ListSize
+    IF ActiveElement > ElementList.Count
     THEN Result := 0
     ELSE Begin
         ActiveDSSObject := ElementList.Next;
@@ -393,12 +386,12 @@ Var
 begin
   {Reallocate the device name list to improve the performance of searches}
     ElementNameList.Free; // Throw away the old one.
-    ElementNameList := THashListType.Create(2*ElementList.ListSize); // make a new one
+    ElementNameList := THashListType.Create(2*ElementList.Count); // make a new one
 
     // Do this using the Names of the Elements rather than the old list because it might be
     // messed up if an element gets renamed
 
-    For i := 1 to ElementList.ListSize Do ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
+    For i := 1 to ElementList.Count Do ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
 end;
 
 procedure TDSSClass.ResynchElementNameList;

@@ -114,7 +114,7 @@ begin
     if InvalidCircuit then
         Exit;
     
-    Result := ActiveCircuit.PDElements.ListSize;
+    Result := ActiveCircuit.PDElements.Count;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_FaultRate(): Double; CDECL;
@@ -377,12 +377,12 @@ begin
         Exit;
 
     pList := ActiveCircuit.PDElements;
-    if pList.ListSize <= 0 then
+    if pList.Count <= 0 then
         Exit;
     
     idx_before := pList.ActiveIndex;
     k := 0;
-    numEnabled := pList.ListSize;
+    numEnabled := pList.Count;
 //    elem := pList.First;
 //    while elem <> NIL do
 //    begin
@@ -403,7 +403,7 @@ begin
         end;
         elem := pList.Next;
     end;
-    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+    if (idx_before > 0) and (idx_before <= pList.Count) then
         pList.Get(idx_before);
 end;
 
@@ -470,7 +470,7 @@ var
     RSignal: TXYCurveObj;
 begin
     cBuffer := NIL;
-    if (MissingSolution) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (MissingSolution) or (ActiveCircuit.PDElements.Count <= 0) then 
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Result[0] := -1;
@@ -484,7 +484,7 @@ begin
     case What of
     3: 
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.ListSize * 2); // complex
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.Count * 2); // complex
             while pElem <> NIL do
             begin
                 if pElem.Enabled then
@@ -518,7 +518,7 @@ begin
 
             maxSize := GetMaxCktElementSize();
             Getmem(cBuffer, sizeof(Complex) * maxSize);
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.ListSize); // real
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.Count); // real
             while pElem <> NIL do
             begin
                 if pElem.Enabled then
@@ -535,7 +535,7 @@ begin
         end;
     end;
     
-    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+    if (idx_before > 0) and (idx_before <= pList.Count) then
         pList.Get(idx_before);
 end;
 
@@ -588,7 +588,7 @@ var
     NValuesTotal, NValues, i: Integer;
     CResultPtr: PPolar;
 begin
-    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (InvalidCircuit) or (ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -633,7 +633,7 @@ begin
         end;
     end;
     
-    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+    if (idx_before > 0) and (idx_before <= pList.Count) then
         pList.Get(idx_before);
 end;
 
@@ -673,7 +673,7 @@ var
     i012v, i012: pComplex;
     maxSize, NTermsTotal, i, j, k: Integer;
 begin
-    if (MissingSolution) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (MissingSolution) or (ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -763,7 +763,7 @@ begin
 
     ReallocMem(i012v, 0);
     
-    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+    if (idx_before > 0) and (idx_before <= pList.Count) then
         pList.Get(idx_before);
 end;
 
@@ -802,7 +802,7 @@ var
     pElem: TPDElement;
     CResultPtr: PComplex;
 begin
-    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (InvalidCircuit) or (ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -835,7 +835,7 @@ begin
         pElem := pList.Next;
     end;
     
-    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+    if (idx_before > 0) and (idx_before <= pList.Count) then
         pList.Get(idx_before);
 
     for i := 0 to (2 * NValuesTotal) - 1 do
@@ -864,7 +864,7 @@ var
     IPh, I012: array[1..3] of Complex;
     S: Complex;
 begin
-    if (MissingSolution) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (MissingSolution) or (ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -968,7 +968,7 @@ begin
     end;
     ReAllocMem(cBuffer, 0);
 
-    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+    if (idx_before > 0) and (idx_before <= pList.Count) then
         pList.Get(idx_before);
 end;
 
@@ -994,7 +994,7 @@ begin
         Exit;
     end;
     pList := ActiveCircuit.PDElements;
-    if pList.ListSize <= 0 then
+    if pList.Count <= 0 then
     begin
         Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
         Result[0] := -1;
@@ -1002,7 +1002,7 @@ begin
     end;
     
     idx_before := pList.ActiveIndex;
-    numEnabled := pList.ListSize;
+    numEnabled := pList.Count;
 //    pElem := pList.First;
 //    while pElem <> NIL do
 //    begin
@@ -1048,7 +1048,7 @@ begin
             end;
     end;
         
-    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+    if (idx_before > 0) and (idx_before <= pList.Count) then
         pList.Get(idx_before);
 end;
 //------------------------------------------------------------------------------

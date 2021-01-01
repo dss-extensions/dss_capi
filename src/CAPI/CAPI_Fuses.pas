@@ -100,7 +100,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Fuses.ListSize;
+    Result := ActiveCircuit.Fuses.Count;
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_First(): Integer; CDECL;

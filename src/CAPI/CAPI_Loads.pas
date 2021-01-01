@@ -432,7 +432,7 @@ function Loads_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.Loads.ListSize;
+        Result := ActiveCircuit.Loads.Count;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_AllocationFactor(): Double; CDECL;

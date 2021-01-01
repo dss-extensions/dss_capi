@@ -507,7 +507,7 @@ begin
         DoSimpleMsg('Monitored Element in VVCControl.' + Name +
             ' does not exist:"' + ElementName + '"', 372);
 
-    if FGenPointerList.ListSize = 0 then
+    if FGenPointerList.Count = 0 then
         MakeGenList;
 
     DevIndex := GetCktElementIndex('generator.' + FGeneratorNameList.Strings[0]);
@@ -621,7 +621,7 @@ begin
     // PNeeded := FkW_limit*1000 - PMonitoredElement;
         QNeeded := Fkvar_limit * 1000 - QMonitoredElement;
     // If the generator list is not defined, go make one
-        if FGenPointerList.ListSize = 0 then
+        if FGenPointerList.Count = 0 then
             MakeGenList;
 
         ControlledElement.ActiveTerminalIdx := 1; // Set active terminal of generator to terminal 1
@@ -692,7 +692,7 @@ var
 
 begin
   // If list is not defined, go make one for all generators in circuit
-    if FGenPointerList.ListSize = 0 then
+    if FGenPointerList.Count = 0 then
         MakeGenList;
 
     if ((FListSize > 0) and (Fvvc_curve_size > 0)) then
@@ -864,7 +864,7 @@ begin
         end;
 
     { Allocate uniform weights }
-        FListSize := FGenPointerList.ListSize;
+        FListSize := FGenPointerList.Count;
         Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
         for i := 1 to FListSize do
             FWeights^[i] := 1.0;
@@ -876,7 +876,7 @@ begin
     for i := 1 to FListSize do
         TotalWeight := TotalWeight + FWeights^[i];
 
-    if FGenPointerList.ListSize > 0 then
+    if FGenPointerList.Count > 0 then
         Result := TRUE;
 end;
 

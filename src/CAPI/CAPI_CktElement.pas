@@ -937,7 +937,7 @@ begin
 
     with ActiveCircuit do
     begin
-        if (idx > 0) and (idx <= ActiveCktElement.ControlElementList.Listsize) then
+        if (idx > 0) and (idx <= ActiveCktElement.ControlElementList.Count) then
         begin
             ctrl := ActiveCktElement.ControlElementList.Get(idx);
             if ctrl <> NIL then
@@ -1270,7 +1270,7 @@ begin
         Result := 0;
         Exit;
     end;
-    Result := ActiveCircuit.ActiveCktElement.ControlElementList.listSize;
+    Result := ActiveCircuit.ActiveCktElement.ControlElementList.Count;
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_OCPDevIndex(): Integer; CDECL;
@@ -1299,7 +1299,7 @@ begin
                         Result := iControl;
                 end;
             inc(iControl);
-        until (iControl > ActiveCktElement.ControlElementList.listSize) or (Result > 0);
+        until (iControl > ActiveCktElement.ControlElementList.Count) or (Result > 0);
     end;
 end;
 //------------------------------------------------------------------------------

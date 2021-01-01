@@ -2962,9 +2962,9 @@ begin
 
        {Mark all controls, energy meters and monitors as checked so they don't show up}
 
-            for i := 1 to DSSControls.ListSize do
+            for i := 1 to DSSControls.Count do
                 TDSSCktElement(DSSControls.Get(i)).Checked := TRUE;
-            for i := 1 to MeterElements.ListSize do
+            for i := 1 to MeterElements.Count do
                 TDSSCktElement(MeterElements.Get(i)).Checked := TRUE;
 
             TestElement := CktElements.First;
@@ -3766,7 +3766,7 @@ begin
         F := TFileStream.Create(FileNm, fmCreate);
 
         {Check Loads}
-        if ActiveCircuit.Loads.ListSize > 0 then
+        if ActiveCircuit.Loads.Count > 0 then
         begin
             FSWriteln(F);
             FSWriteln(F, '!!!  LOAD VOLTAGE BASE MISMATCHES');
@@ -3808,7 +3808,7 @@ begin
 
         {Check Generators}
 
-        if ActiveCircuit.Generators.ListSize > 0 then
+        if ActiveCircuit.Generators.Count > 0 then
         begin
             FSWriteln(F);
             FSWriteln(F, '!!!  GENERATOR VOLTAGE BASE MISMATCHES');
@@ -3960,7 +3960,7 @@ begin
             begin
                 with pdelem do
                     FSWrite(F, Format('%s.%s', [ParentClass.Name, Name]));
-                for i := 1 to pdelem.ControlElementList.ListSize do
+                for i := 1 to pdelem.ControlElementList.Count do
                 begin
                     pctrlelem := pdelem.ControlElementList.Get(i);
                     with  pctrlelem do

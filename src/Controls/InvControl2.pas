@@ -995,7 +995,7 @@ function TInvControl2.MakeLike(const InvControl2Name:String):Integer;
       NPhases := OtherInvControl.Fnphases;
       NConds  := OtherInvControl.Fnconds; // Force Reallocation of terminal stuff
 
-      for i := 1 to FDERPointerList.ListSize do
+      for i := 1 to FDERPointerList.Count do
         begin
 
           ControlledElement[i]        := OtherInvControl.ControlledElement[i];
@@ -1372,9 +1372,9 @@ procedure TInvControl2Obj.RecalcElementData();
 
   begin
 
-    if FDERPointerList.ListSize = 0 then  MakeDERList;
+    if FDERPointerList.Count = 0 then  MakeDERList;
 
-    if FDERPointerList.ListSize > 0  then
+    if FDERPointerList.Count > 0  then
     {Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element}
     { This sets it to a realistic value to avoid crashes later }
       begin
@@ -1382,7 +1382,7 @@ procedure TInvControl2Obj.RecalcElementData();
         Setbus(1, MonitoredElement.Firstbus);
       end;
 
-    for i := 1 to FDERPointerList.ListSize do
+    for i := 1 to FDERPointerList.Count do
       begin
 
         // User ControlledElement[] as the pointer to the PVSystem/Storage elements
@@ -1426,12 +1426,12 @@ procedure TInvControl2Obj.MakePosSequence();
 
   begin
 
-    if FDERPointerList.ListSize = 0 then  RecalcElementData();
+    if FDERPointerList.Count = 0 then  RecalcElementData();
     Nphases := 3;
     Nconds := 3;
     Setbus(1, MonitoredElement.GetBus(ElementTerminal));
 
-    if FDERPointerList.ListSize > 0  then
+    if FDERPointerList.Count > 0  then
     {Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element}
     { This sets it to a realistic value to avoid crashes later }
       begin
@@ -1493,7 +1493,7 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
 
   begin
 
-    for k := 1 to FDERPointerList.ListSize do
+    for k := 1 to FDERPointerList.Count do
       begin
 
         DERelem := ControlledElement[k];
@@ -2346,13 +2346,13 @@ procedure TInvControl2Obj.Sample();
 
   begin
     // if list is not defined, go make one from all PVSystem/Storage in circuit
-     if FDERPointerList.ListSize=0 then   RecalcElementData();
+     if FDERPointerList.Count=0 then   RecalcElementData();
 
      if (FListSize>0) then
       begin
         // if an InvControl2 controls more than one PVSystem/Storage, control each one
         // separately based on the PVSystem/Storage's terminal voltages, etc.
-        for i := 1 to FDERPointerList.ListSize do
+        for i := 1 to FDERPointerList.Count do
           begin
             UpdateDERParameters(i);
 
@@ -3027,7 +3027,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
             FDERNameList.Add(Storage.QualifiedName);
           end;
 
-        FListSize := FDERPointerList.ListSize;
+        FListSize := FDERPointerList.Count;
 
         SetLength(ControlledElement,FListSize+1);
         SetLength(FAvgpVpuPrior, FListSize+1);
@@ -3227,7 +3227,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
       end; {for}
 
     RecalcElementData();
-    if FDERPointerList.ListSize>0 then Result := TRUE;
+    if FDERPointerList.Count>0 then Result := TRUE;
   end;
 
 procedure TInvControl2Obj.Reset;
@@ -3513,7 +3513,7 @@ procedure TInvControl2Obj.UpdateInvControl2(i:integer);
   begin
     tempVbuffer := Nil;   // Initialize for Reallocmem
 
-      for j := 1 to FDERPointerList.ListSize do
+      for j := 1 to FDERPointerList.Count do
         begin
           // only update solution idx one time through this routine
           if (j = 1) and (i = 1) then
@@ -4179,7 +4179,7 @@ procedure TInvControl2.UpdateAll();
 
   begin
 
-    for i := 1 to ElementList.ListSize  do
+    for i := 1 to ElementList.Count  do
       with TInvControl2Obj(ElementList.Get(i)) do
         if Enabled then UpdateInvControl2(i);
 

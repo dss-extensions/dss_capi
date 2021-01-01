@@ -175,7 +175,7 @@ begin
         FBusList := ActiveCircuit.AutoAddBusList
     else
 
-    if ActiveCircuit.EnergyMeters.ListSize = 0 then
+    if ActiveCircuit.EnergyMeters.Count = 0 then
     begin
         // No energymeters in circuit
         // Include all buses in the circuit
@@ -251,7 +251,7 @@ begin
 
     ComputekWLosses_EEN;
 
-    if ActiveCircuit.EnergyMeters.ListSize = 0 then
+    if ActiveCircuit.EnergyMeters.Count = 0 then
     begin
         // No energymeters in circuit
         // Just go by total system losses
@@ -766,7 +766,7 @@ var
 
 begin
 
-    if ActiveCircuit.EnergyMeters.ListSize = 0 then
+    if ActiveCircuit.EnergyMeters.Count = 0 then
     begin
 
         // No energymeters in circuit

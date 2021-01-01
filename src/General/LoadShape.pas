@@ -90,7 +90,7 @@ type
         function Edit: Integer; OVERRIDE;     // uses global parser
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
-        function Find(const ObjName: String): Pointer; OVERRIDE;  // Find an obj of this class by name
+        function Find(const ObjName: String; const ChangeActive: Boolean=True): Pointer; OVERRIDE;  // Find an obj of this class by name
 
         function CreateMMF(const S: String; Destination: TMMShapeType): Boolean;
        // Set this property to point ActiveLoadShapeObj to the right value
@@ -664,12 +664,12 @@ begin
     end; {WITH}
 end;
 
-function TLoadShape.Find(const ObjName: String): Pointer;
+function TLoadShape.Find(const ObjName: String; const ChangeActive: Boolean): Pointer;
 begin
     if (Length(ObjName) = 0) or (CompareText(ObjName, 'none') = 0) then
         Result := NIL
     else
-        Result := inherited Find(ObjName);
+        Result := inherited Find(ObjName, ChangeActive);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

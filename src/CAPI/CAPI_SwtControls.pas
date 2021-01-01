@@ -297,7 +297,7 @@ function SwtControls_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.SwtControls.ListSize;
+        Result := ActiveCircuit.SwtControls.Count;
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_NormalState(): Integer; CDECL;

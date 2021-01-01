@@ -1933,11 +1933,11 @@ begin
         if not assigned(UuidList) then
         begin  // this may have been done already from the uuids command
             i1 := clsXfCd.ElementCount * 6; // 3 wdg info, 3 sctest
-            i2 := ActiveCircuit.Transformers.ListSize * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
+            i2 := ActiveCircuit.Transformers.Count * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
             StartUuidList(i1 + i2);
         end;
-        StartBankList(ActiveCircuit.Transformers.ListSize);
-        StartOpLimitList(ActiveCircuit.Lines.ListSize);
+        StartBankList(ActiveCircuit.Transformers.Count);
+        StartOpLimitList(ActiveCircuit.Lines.Count);
 
     {$IFDEF FPC}
          // this only works in the command line version

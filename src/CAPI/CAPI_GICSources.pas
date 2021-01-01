@@ -85,7 +85,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := GICsourceClass.ElementList.ListSize;
+    Result := GICsourceClass.ElementList.Count;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_First(): Integer; CDECL;

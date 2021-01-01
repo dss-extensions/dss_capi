@@ -39,7 +39,6 @@ type
 
         property First: Pointer READ Get_First;
         property Next: Pointer READ Get_Next;
-        property ListSize: Integer READ NumInList;
         property Count: Integer READ NumInList;
         property New: Pointer WRITE Set_New;
         property Active: Pointer READ Get_Active;

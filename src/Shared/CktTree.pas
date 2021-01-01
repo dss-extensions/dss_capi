@@ -435,12 +435,12 @@ end;
 
 function TCktTreeNode.Get_NumChildren: Integer;
 begin
-    Result := FChildBranches.ListSize;
+    Result := FChildBranches.Count;
 end;
 
 function TCktTreeNode.Get_NumObjects: Integer;
 begin
-    Result := FShuntObjects.ListSize;
+    Result := FShuntObjects.Count;
 end;
 
 { TZoneEndsList }

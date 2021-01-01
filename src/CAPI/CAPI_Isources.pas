@@ -79,7 +79,7 @@ begin
     if InvalidCircuit then
         Exit;
 
-    Result := IsourceClass.ElementList.ListSize;
+    Result := IsourceClass.ElementList.Count;
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_First(): Integer; CDECL;

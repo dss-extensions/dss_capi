@@ -103,7 +103,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := LoadshapeClass.ElementList.ListSize;
+    Result := LoadshapeClass.ElementList.Count;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_First(): Integer; CDECL;

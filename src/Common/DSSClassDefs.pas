@@ -344,7 +344,7 @@ begin
  { Create Classes for custom implementations }
     CreateMyDSSClasses;
 
-    NumIntrinsicClasses := DSSClassList.ListSize;
+    NumIntrinsicClasses := DSSClassList.Count;
 end;
 
 //----------------------------------------------------------------------------
@@ -360,7 +360,7 @@ begin
 
     try
         SuccessFree := 'First Object';
-        for i := 1 to DSSObjs.ListSize do
+        for i := 1 to DSSObjs.Count do
         begin
             DSSObj := DSSObjs.Get(i);
             TraceName := DSSObj.ParentClass.Name + '.' + DSSObj.Name;
@@ -377,7 +377,7 @@ begin
     end;
 
     try
-        for i := 1 to DSSClassList.ListSize do
+        for i := 1 to DSSClassList.Count do
             TDSSClass(DSSClassList.Get(i)).Free;
         TraceName := '(DSS Class List)';
         DSSClassList.Free;

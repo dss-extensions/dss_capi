@@ -90,7 +90,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Relays.ListSize;
+    Result := ActiveCircuit.Relays.Count;
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_First(): Integer; CDECL;

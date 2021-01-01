@@ -326,7 +326,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Monitors.ListSize;
+    Result := ActiveCircuit.Monitors.Count;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Process(); CDECL;

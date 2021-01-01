@@ -371,9 +371,9 @@ var
     idx_before, k: Integer;
     elem: TDSSObject;
 begin
-    if pList.ListSize <= 0 then
+    if pList.Count <= 0 then
         Exit;
-    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.ListSize);
+    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.Count);
     idx_before := pList.ActiveIndex;
     k := 0;
     elem := pList.First;
@@ -383,7 +383,7 @@ begin
         Inc(k);
         elem := pList.Next;
     end;
-    if Restore and ((idx_before > 0) and (idx_before <= pList.ListSize)) then 
+    if Restore and ((idx_before > 0) and (idx_before <= pList.Count)) then 
         pList.Get(idx_before);
 end;
 //------------------------------------------------------------------------------

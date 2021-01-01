@@ -112,7 +112,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Sensors.ListSize;
+    Result := ActiveCircuit.Sensors.Count;
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;

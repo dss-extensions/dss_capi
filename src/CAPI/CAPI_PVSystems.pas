@@ -191,7 +191,7 @@ var
     pPVSystem: TPCElement;
 begin
     Result := 0;
-    if (InvalidCircuit) or (ActiveCircuit.pVSystems.ListSize = 0) then
+    if (InvalidCircuit) or (ActiveCircuit.pVSystems.Count = 0) then
         Exit;
         
     pPVSystem := ActiveCircuit.pVSystems.First;
@@ -235,7 +235,7 @@ begin
     if InvalidCircuit then
         Exit;
 
-    Result := ActiveCircuit.PVSystems.ListSize;
+    Result := ActiveCircuit.PVSystems.Count;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_idx(): Integer; CDECL;

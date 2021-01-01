@@ -1424,7 +1424,7 @@ Begin
     SetLength(myBus, 2);
     SetLength(Result, 0);
     BusName := LowerCase(BusName);
-    for i := 1 to DSSClassList.ListSize do
+    for i := 1 to DSSClassList.Count do
     begin
         Dss_Class := DSSClassList.Get(i);
         if (DSS_Class is TCktElementClass) then
@@ -1466,7 +1466,7 @@ var
 begin
     SetLength(Result, 0);
     BusName :=  LowerCase(BusName);
-    for i := 1 to DSSClassList.ListSize do
+    for i := 1 to DSSClassList.Count do
     begin
         Dss_Class := DSSClassList.Get(i);
         if not (DSS_Class is TCktElementClass) then
@@ -1625,7 +1625,7 @@ Begin
   // Now starts aggregating the loadshapes per zone
   EnergyMeters.First;
   setlength(myLoadShapes,1);
-  for i := 1 to EnergyMeters.ListSize do
+  for i := 1 to EnergyMeters.Count do
   Begin
 
     EMeter              :=  EnergyMeters.Active;
@@ -1745,7 +1745,7 @@ Begin
 //  DSSExecutive.Command :=  'solve snap';
   k             :=  0;
   EnergyMeters.First;
-  for i := 1 to EnergyMeters.ListSize do
+  for i := 1 to EnergyMeters.Count do
   Begin
     EMeter              :=  EnergyMeters.Active;
     if EMeter.Enabled then
@@ -2153,8 +2153,8 @@ BEGIN
    END;
 
   // AddDeviceHandle(Handle); // Keep Track of this device result is handle
-  AddDeviceHandle(CktElements.ListSize); // Handle is global index into CktElements
-  ActiveCktElement.Handle := CktElements.ListSize;
+  AddDeviceHandle(CktElements.Count); // Handle is global index into CktElements
+  ActiveCktElement.Handle := CktElements.Count;
 
 END;
 
@@ -2420,7 +2420,7 @@ Var
 
 begin
      Result := FALSE;
-     If (EnergyMeters.ListSize = 0) Then Begin
+     If (EnergyMeters.Count = 0) Then Begin
        DoSimpleMsg('Cannot compute system capacity with EnergyMeter objects!', 430);
        Exit;
      End;
@@ -2505,10 +2505,10 @@ begin
     SavedFileList.Clear;  {This list keeps track of all files saved}
 
     // Initialize so we will know when we have saved the circuit elements
-    For i := 1 to CktElements.ListSize Do TDSSCktElement(CktElements.Get(i)).HasBeenSaved := False;
+    For i := 1 to CktElements.Count Do TDSSCktElement(CktElements.Get(i)).HasBeenSaved := False;
 
     // Initialize so we don't save a class twice
-    For i := 1 to DSSClassList.ListSize Do TDssClass(DSSClassList.Get(i)).Saved := FALSE;
+    For i := 1 to DSSClassList.Count Do TDssClass(DSSClassList.Get(i)).Saved := FALSE;
 
     {Ignore Feeder Class -- gets saved with Energymeters}
    // FeederClass.Saved := TRUE;  // will think this class is already saved
@@ -2563,7 +2563,7 @@ begin
   Result := FALSE;
 
   // Write Files for all populated DSS Classes  Except Solution Class
-  For i := 1 to DSSClassList.ListSize Do
+  For i := 1 to DSSClassList.Count Do
    Begin
       Dss_Class := DSSClassList.Get(i);
       If (DSS_Class = SolutionClass) or Dss_Class.Saved Then Continue;   // Cycle to next
@@ -2647,7 +2647,7 @@ begin
    Result := TRUE;
 {Write out all energy meter  zones to separate subdirectories}
    SaveDir := CurrentDSSDir;
-   For i := 1 to EnergyMeters.ListSize Do
+   For i := 1 to EnergyMeters.Count Do
     Begin
         Meter := EnergyMeters.Get(i); // Recast pointer
         CurrDir :=  Meter.Name;
@@ -2719,7 +2719,7 @@ begin
     If LogEvents Then LogThisEvent('Reallocating Device List');
     TempList := THashList.Create(2*NumDevices);
 
-    For i := 1 to DeviceList.ListSize Do
+    For i := 1 to DeviceList.Count Do
     Begin
         Templist.Add(DeviceList.NameOfIndex(i));
     End;

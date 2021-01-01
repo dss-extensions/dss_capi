@@ -779,7 +779,7 @@ var
     NumFaults, i, Whichone: Integer;
     FaultObj: TFaultObj;
 begin
-    NumFaults := ActiveCircuit.Faults.Listsize;
+    NumFaults := ActiveCircuit.Faults.Count;
     Whichone := Trunc(Random * NumFaults) + 1;
     if Whichone > NumFaults then
         Whichone := NumFaults;

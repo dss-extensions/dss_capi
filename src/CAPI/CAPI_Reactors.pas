@@ -273,7 +273,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Reactors.ListSize;
+    Result := ActiveCircuit.Reactors.Count;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Bus1(): PAnsiChar; CDECL;

@@ -497,7 +497,7 @@ function Transformers_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.Transformers.ListSize;
+        Result := ActiveCircuit.Transformers.Count;
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -641,7 +641,7 @@ var
     lst: TDSSPointerList;
     k: Integer;
 begin
-    if (InvalidCircuit) or (ActiveCircuit.Transformers.ListSize <= 0) then
+    if (InvalidCircuit) or (ActiveCircuit.Transformers.Count <= 0) then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Result[0] := 0;
@@ -649,7 +649,7 @@ begin
     end;
     
     lst := ActiveCircuit.Transformers;
-    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, lst.ListSize * 2 * 3);
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, lst.Count * 2 * 3);
     CResult := PComplexArray(ResultPtr);
     k := 1;
     elem := lst.First;

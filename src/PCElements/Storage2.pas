@@ -769,7 +769,7 @@ procedure TStorage2.UpdateAll();
 var
     i: Integer;
 begin
-    for i := 1 to ElementList.ListSize do
+    for i := 1 to ElementList.Count do
         with TStorage2Obj(ElementList.Get(i)) do
             if Enabled then
                 UpdateStorage();
@@ -1093,7 +1093,7 @@ begin
                     propDynaDLL:
                         IsUserModel := DynaModel.Exists;
 
-//                propPFPriority: For i := 1 to ControlElementList.ListSize Do
+//                propPFPriority: For i := 1 to ControlElementList.Count Do
 //                Begin
 //
 //                  if TControlElem(ControlElementList.Get(i)).ClassName = 'InvControl'  Then
@@ -1245,7 +1245,7 @@ procedure TStorage2.SampleAll();  // Force all Storage elements in the circuit t
 var
     i: Integer;
 begin
-    for i := 1 to ElementList.ListSize do
+    for i := 1 to ElementList.Count do
         with TStorage2Obj(ElementList.Get(i)) do
             if Enabled then
                 TakeSample();
