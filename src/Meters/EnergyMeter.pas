@@ -2218,13 +2218,13 @@ begin
                     FSWriteln(F, Format('%d, %s.%s, %s, %s, %10.4f',
                         [BranchList.Level, PDelem.ParentClass.Name, PDelem.Name,
                         PDelem.FirstBus, PDelem.NextBus,
-                  {BusList.Get(BranchList.PresentBranch.ToBusReference),}
+                  {BusList.NameOfIndex(BranchList.PresentBranch.ToBusReference),}
                         Buses^[BranchList.PresentBranch.ToBusReference].DistFromMeter]));
                     LoadElem := Branchlist.FirstObject;
                     while LoadElem <> NIL do
                     begin
                         FSWrite(F, '-1, ');
-                        FSWriteln(F, Format('%s.%s, %s', [LoadElem.ParentClass.Name, LoadElem.Name, LoadElem.Firstbus{ActiveCircuit.BusList.Get(BranchList.PresentBranch.ToBusReference)}]));
+                        FSWriteln(F, Format('%s.%s, %s', [LoadElem.ParentClass.Name, LoadElem.Name, LoadElem.Firstbus{ActiveCircuit.BusList.NameOfIndex(BranchList.PresentBranch.ToBusReference)}]));
                         LoadElem := BranchList.NextObject
                     end;
                     PDElem := BranchList.GoForward;
@@ -4055,8 +4055,8 @@ begin
         WriteintoMem(VR_MHandle, UnderVmin);
         WriteintoMemStr(VR_MHandle, ', ' + inttostr(OverCount));
         WriteintoMem(VR_MHandle, OverVmax);
-        WriteintoMemStr(VR_MHandle, ', ' + BusList.Get(minbus));
-        WriteintoMemStr(VR_MHandle, ', ' + Buslist.Get(maxbus));
+        WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(minbus));
+        WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(maxbus));
 
      // Klugy but it works
      // now repeat for buses under 1 kV
@@ -4116,8 +4116,8 @@ begin
         WriteintoMem(VR_MHandle, UnderVmin);
         WriteintoMemStr(VR_MHandle, ', ' + inttostr(OverCount));
         WriteintoMem(VR_MHandle, OverVmax);
-        WriteintoMemStr(VR_MHandle, ', ' + BusList.Get(minbus));
-        WriteintoMemStr(VR_MHandle, ', ' + Buslist.Get(maxbus));
+        WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(minbus));
+        WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(maxbus));
         WriteintoMemStr(VR_MHandle, Char(10));
     end;
 

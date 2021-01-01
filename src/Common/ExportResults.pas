@@ -264,7 +264,7 @@ begin
 
                 FSWriteln(F,
                     Format('"%s", %10.6g, %9.5g, %8.2f, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
-                    [Uppercase(BusList.Get(i)), V1, Vpu, (Buses^[i].kvbase * SQRT3), V2, V2V1, V0, V0V1, Cabs(Vresidual), V_NEMA]
+                    [Uppercase(BusList.NameOfIndex(i)), V1, Vpu, (Buses^[i].kvbase * SQRT3), V2, V2V1, V0, V0V1, Cabs(Vresidual), V_NEMA]
                     ));
 
 
@@ -318,7 +318,7 @@ begin
         begin
             for i := 1 to NumBuses do
             begin
-                BusName := BusList.Get(i);
+                BusName := BusList.NameOfIndex(i);
                 FSWrite(F, Format('"%s", %.5g', [UpperCase(BusName), Buses^[i].kvbase * SQRT3]));
 
                 jj := 1;
@@ -1703,7 +1703,7 @@ begin
            {Bus Norton Equivalent Current, Isc has been previously computed}
                     with Buses^[iBus] do
                     begin
-                        FSWrite(F, Pad(Uppercase(BusList.Get(iBus)), 12));
+                        FSWrite(F, Pad(Uppercase(BusList.NameOfIndex(iBus)), 12));
                         MaxCurr := 0.0;
                         for i := 1 to NumNodesThisBus do
                         begin
@@ -3355,14 +3355,14 @@ begin
                 FSWriteln(F, Format('%d, ', [NumNodes]));
   (*        For i := 1 to NumNodes DO BEGIN
              j :=  MapNodeToBus^[i].BusRef;
-             FSWrite(F, Format('%s.%-d, +j,',[BusList.Get(j), MapNodeToBus^[i].NodeNum]));
+             FSWrite(F, Format('%s.%-d, +j,',[BusList.NameOfIndex(j), MapNodeToBus^[i].NodeNum]));
           END;
           FSWriteln(F);
   *)
                 for i := 1 to NumNodes do
                 begin
                     j := MapNodeToBus^[i].BusRef;
-                    FSWrite(F, Format('"%s.%-d", ', [Uppercase(BusList.Get(j)), MapNodeToBus^[i].NodeNum]));
+                    FSWrite(F, Format('"%s.%-d", ', [Uppercase(BusList.NameOfIndex(j)), MapNodeToBus^[i].NodeNum]));
                     for j := 1 to NumNodes do
                     begin
                         re := 0.0;
@@ -3425,7 +3425,7 @@ begin
 
                 FSWriteln(F,
                     Format('"%s", %d, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %8.4g, %8.4g',
-                    [Uppercase(BusList.Get(i)), Buses^[i].NumNodesThisBus,
+                    [Uppercase(BusList.NameOfIndex(i)), Buses^[i].NumNodesThisBus,
                     Z1.re, Z1.im, Z0.Re, Z0.im, Cabs(Z1), Cabs(Z0), X1R1, X0R0]
                     ));
 
@@ -3654,7 +3654,7 @@ begin
             for i := 1 to NumBuses do
             begin
                 if Buses^[i].CoordDefined then
-                    FSWriteln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(Uppercase(BusList.Get(i))), Buses^[i].X, Buses^[i].Y]));
+                    FSWriteln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(Uppercase(BusList.NameOfIndex(i))), Buses^[i].X, Buses^[i].Y]));
             end;
 
         GlobalResult := FileNm;
@@ -4217,7 +4217,7 @@ begin
                 with Buses^[i] do
                 begin
                     FSWriteln(F, Format('%s, %-.11g, %-.11g, %d, %-.11g, %-.11g, %-.11g',
-                        [CheckForBlanks(Uppercase(BusList.Get(i))), BusFltRate, Bus_Num_Interrupt, BusTotalNumCustomers, BusCustInterrupts, Bus_Int_Duration, BusTotalMiles]));
+                        [CheckForBlanks(Uppercase(BusList.NameOfIndex(i))), BusFltRate, Bus_Num_Interrupt, BusTotalNumCustomers, BusCustInterrupts, Bus_Int_Duration, BusTotalMiles]));
                 end;
 
         GlobalResult := FileNm;
@@ -4314,7 +4314,7 @@ begin
 
             for i := 1 to NumBuses do
             begin
-                BusName := BusList.Get(i);
+                BusName := BusList.NameOfIndex(i);
                 with Buses^[i] do
                     for j := 1 to NumNodesThisBus do
                     begin
@@ -4421,7 +4421,7 @@ begin
                 for i := 1 to NumNodes do
                 begin
                     with MapNodeToBus^[i] do
-                        FSWriteln(F, Format('"%s.%-d"', [Uppercase(BusList.Get(Busref)), NodeNum]));
+                        FSWriteln(F, Format('"%s.%-d"', [Uppercase(BusList.NameOfIndex(Busref)), NodeNum]));
                 end;
             end;
 

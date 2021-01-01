@@ -14,7 +14,7 @@ unit DSSClass;
 interface
 
 USES
-    Classes, DSSPointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
+    Classes, DSSPointerList, Command,  Arraydef, Hashlist;
 
 TYPE
    // Collection of all DSS Classes
@@ -32,6 +32,8 @@ TYPE
 
    // Base for all collection classes
     TDSSClass = class(TObject)
+     type 
+        THashListType = {$IFDEF DSS_CAPI_HASHLIST}TAltHashList;{$ELSE}THashList;{$ENDIF}
      private
 
           Procedure Set_Active(value:Integer);
@@ -46,7 +48,7 @@ TYPE
         ActiveElement: Integer;   // index of present ActiveElement
         CommandList: TCommandlist;
         ActiveProperty: Integer;
-         ElementNameList:{$IFDEF DSS_CAPI_HASHLIST}TFPHashList;{$ELSE}THashList;{$ENDIF}
+        ElementNameList: THashListType;
 
          Function AddObjectToList(Obj:Pointer):Integer;  // Used by NewObject
          Function Get_FirstPropertyName:String;
@@ -81,6 +83,7 @@ TYPE
          Procedure ReallocateElementNameList;
          
          Function Edit:Integer;Virtual;      // uses global parser
+         Function Init(Handle:Integer):Integer; Virtual;
          Function NewObject(const ObjName:String):Integer; Virtual;
 
          Function SetActive(const ObjName:String):Boolean; Virtual;
@@ -148,7 +151,7 @@ BEGIN
     ActiveProperty := 0;
 
 
-    ElementNameList := {$IFDEF DSS_CAPI_HASHLIST}TFPHashList.Create();{$ELSE}THashList.Create(100);{$ENDIF}
+    ElementNameList := THashListType.Create(100);
     ElementNamesOutOfSynch := FALSE;
 
 END;
@@ -203,14 +206,19 @@ BEGIN
     DoSimpleMsg('virtual function TDSSClass.Edit called.  Should be overriden.', 781);
 END;
 
+
+Function TDSSClass.Init(Handle:Integer):Integer;
+BEGIN
+    Result := 0;
+    DoSimpleMsg('virtual function TDSSClass.Init called.  Should be overriden.', 782);
+END;
+
 Function TDSSClass.AddObjectToList(Obj:Pointer):Integer;
 BEGIN
     ElementList.New := Obj; // Stuff it in this collection's element list
-{$IFNDEF DSS_CAPI_HASHLIST}
     ElementNameList.Add(TDSSObject(Obj).Name);
+{$IFNDEF DSS_CAPI_HASHLIST}
     If Cardinal(ElementList.ListSize) > 2 * ElementNameList.InitialAllocation Then ReallocateElementNameList;
-{$ELSE}    
-    ElementNameList.Add(LowerCase(TDSSObject(Obj).Name), Pointer(ElementList.ListSize));
 {$ENDIF}
     ActiveElement := ElementList.ListSize;
     Result := ActiveElement; // Return index of object in list
@@ -224,16 +232,12 @@ BEGIN
     Result := False;
     // Faster to look in hash list 7/7/03
     If ElementNamesOutOfSynch Then ResynchElementNameList;
-    {$IFDEF DSS_CAPI_HASHLIST}
-    idx := LongInt(ElementNameList.Find(LowerCase(ObjName)));
-    {$ELSE}
     idx := ElementNameList.Find(ObjName);
-    {$ENDIF}
     
     If idx>0 Then
     Begin
         ActiveElement := idx;
-        ActiveDSSObject := ElementList.get(idx);
+        ActiveDSSObject := ElementList.Get(idx);
         Result := TRUE;
     End;
 
@@ -247,16 +251,12 @@ BEGIN
     Result := Nil;
     If ElementNamesOutOfSynch Then ResynchElementNameList;
     // Faster to look in hash list 7/7/03
-    {$IFDEF DSS_CAPI_HASHLIST}
-    idx := LongInt(ElementNameList.Find(LowerCase(ObjName)));
-    {$ELSE}
     idx := ElementNameList.Find(ObjName);
-    {$ENDIF}
     
     If idx>0 Then
     Begin
         ActiveElement := idx;
-        Result := ElementList.get(idx);
+        Result := ElementList.Get(idx);
     End;
 END;
 
@@ -393,17 +393,12 @@ Var
 begin
   {Reallocate the device name list to improve the performance of searches}
     ElementNameList.Free; // Throw away the old one.
-    ElementNameList := {$IFDEF DSS_CAPI_HASHLIST}TFPHashList.Create();{$ELSE}THashList.Create(2*ElementList.ListSize);{$ENDIF} // make a new one
+    ElementNameList := THashListType.Create(2*ElementList.ListSize); // make a new one
 
     // Do this using the Names of the Elements rather than the old list because it might be
     // messed up if an element gets renamed
 
-    {$IFDEF DSS_CAPI_HASHLIST}
-    For i := 1 to ElementList.ListSize Do ElementNameList.Add(LowerCase(TDSSObject(ElementList.Get(i)).Name), Pointer(i));
-    {$ELSE}
     For i := 1 to ElementList.ListSize Do ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
-    {$ENDIF}
-
 end;
 
 procedure TDSSClass.ResynchElementNameList;

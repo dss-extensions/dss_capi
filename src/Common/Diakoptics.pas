@@ -146,7 +146,7 @@ Begin
   Begin
        FOR i := 1 to NumBuses DO
        Begin
-           BusName := BusList.Get(i);
+           BusName := BusList.NameOfIndex(i);
            FOR j := 1 to Buses^[i].NumNodesThisBus DO
            Begin
                 setlength(AllNNames,(length(AllNNames) + 1));
@@ -160,7 +160,7 @@ Begin
 // Then checks the rest of the actors
   for i := 3 to NumOfActors do
   Begin
-    BusName :=  ActiveCircuit[i].BusList.Get(1) + '.1';
+    BusName :=  ActiveCircuit[i].BusList.NameOfIndex(1) + '.1';
     // Looks for the node within all the Node Names in the interconnected model
     for j := 0 to High(AllNNames) do
       if BusName = AllNNames[j] then  Break;
@@ -299,7 +299,7 @@ Begin
     Begin
       setlength(Node_Names,(length(Node_Names) + 1));
       With MapNodeToBus^[i] do
-        Node_Names[High(Node_names)] := Format('%s.%-d',[lowercase(BusList.Get(Busref)), NodeNum]);
+        Node_Names[High(Node_names)] := Format('%s.%-d',[lowercase(BusList.NameOfIndex(Busref)), NodeNum]);
     End;
 
     Contours.sparse_matrix_Cmplx(length(Node_Names),(NLinks - 1)*3);

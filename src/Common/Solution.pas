@@ -1243,7 +1243,7 @@ begin
                     EndFlag := TRUE;
                     while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
                     begin
-                        if LineBus = BusList.Get(ActiveIncCell[1]) then
+                        if LineBus = BusList.NameOfIndex(ActiveIncCell[1]) then
                             EndFlag := FALSE;
                         ActiveIncCell[1] := ActiveIncCell[1] + 1;
                     end;
@@ -1289,7 +1289,7 @@ begin
                     EndFlag := TRUE;
                     while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
                     begin
-                        if LineBus = BusList.Get(ActiveIncCell[1]) then
+                        if LineBus = BusList.NameOfIndex(ActiveIncCell[1]) then
                             EndFlag := FALSE;
                         ActiveIncCell[1] := ActiveIncCell[1] + 1;
                     end;
@@ -1337,7 +1337,7 @@ begin
                         CapEndFlag := TRUE;
                         while (ActiveIncCell[1] <= NumBuses) and (CapEndFlag) do
                         begin
-                            if CapBus = BusList.Get(ActiveIncCell[1]) then
+                            if CapBus = BusList.NameOfIndex(ActiveIncCell[1]) then
                                 CapEndFlag := FALSE;
                             ActiveIncCell[1] := ActiveIncCell[1] + 1;
                         end;
@@ -1388,7 +1388,7 @@ begin
                     EndFlag := TRUE;
                     while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
                     begin
-                        if RBus = BusList.Get(ActiveIncCell[1]) then
+                        if RBus = BusList.NameOfIndex(ActiveIncCell[1]) then
                             EndFlag := FALSE;
                         ActiveIncCell[1] := ActiveIncCell[1] + 1;
                     end;
@@ -1852,7 +1852,7 @@ begin
                 with MapNodeToBus^[i] do
                 begin
                     WriteStr(sout, 
-                        '"', pad((BusList.Get(Busref) + '.' + IntToStr(NodeNum) + '"'), 18),
+                        '"', pad((BusList.NameOfIndex(Busref) + '.' + IntToStr(NodeNum) + '"'), 18),
                         ', ', ErrorSaved^[i]: 10: 5,
                         ', ', VmagSaved^[i]: 14,
                         ', ', NodeVbase^[i]: 14
@@ -2328,7 +2328,7 @@ begin
             with ActiveCircuit do
                 for i := 1 to NumBuses do
                 begin
-                    BusName := BusList.Get(i);
+                    BusName := BusList.NameOfIndex(i);
                     for j := 1 to Buses^[i].NumNodesThisBus do
                     begin
                         Volts := NodeV^[Buses^[i].GetRef(j)];

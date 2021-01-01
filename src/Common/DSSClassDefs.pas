@@ -146,7 +146,7 @@ procedure CreateDSSClasses;
 begin
     DSS_CAPI_LEGACY_MODELS_PREV := DSS_CAPI_LEGACY_MODELS;
     
-    Classnames := THashList.Create(25);   // Makes 5 sub lists
+    Classnames := TClassNamesHashListType.Create(25);   // Makes 5 sub lists
     DSSClassList := TDSSPointerList.Create(10);  // 10 is initial size and increment
     DSSClasses := TDSSClasses.Create;  // class to handle junk for defining DSS classes
 
@@ -423,7 +423,7 @@ end;
 //----------------------------------------------------------------------------
 function GetDSSClassPtr(const ClassName: String): TDSSClass;
 begin
-    Result := TDSSClass(DSSClassList.Get(ClassNames.Find(lowercase(ClassName))));
+    Result := TDSSClass(DSSClassList.Get(ClassNames.Find(ClassName)));
 end;
 
 

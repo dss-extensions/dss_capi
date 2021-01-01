@@ -2098,7 +2098,7 @@ begin
 
             for i := 1 to NumBuses do
             begin
-                Buses^[i].localName := BusList.Get(i);
+                Buses^[i].localName := BusList.NameOfIndex(i);
             end;
 
             // each bus corresponds to a topo node (TODO, do we need topo nodes anymore?) and connectivity node

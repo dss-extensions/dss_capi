@@ -925,7 +925,7 @@ begin
 
     // First, check to see if the varname already exists
     // if so, just change the value
-    idx := Varnames.Find(lowercase(Varname));
+    idx := Varnames.Find(Varname);
 
     if idx = 0 then
     begin
@@ -1012,7 +1012,7 @@ function TParserVar.Get_VarString(Idx: Cardinal): String;
 
 begin
     if (idx > 0) and (idx <= NumVariables) then
-        Result := Format('%s. %s', [Varnames.Get(idx), TestEmpty(VarValues^[idx])])
+        Result := Format('%s. %s', [Varnames.NameOfIndex(idx), TestEmpty(VarValues^[idx])])
     else
         Result := 'Variable index out of range';
 end;

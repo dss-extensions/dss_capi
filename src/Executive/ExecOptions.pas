@@ -942,8 +942,8 @@ begin
                         AppendGlobalResult('No');
                 42:
                     with ActiveCircuit.AutoAddBusList do
-                        for i := 1 to ListSize do
-                            AppendGlobalResult(Get(i));
+                        for i := 1 to Count do
+                            AppendGlobalResult(NameOfIndex(i));
                 43:
                     AppendGlobalResult(GetControlModeID);
                 44:
@@ -984,14 +984,14 @@ begin
                 55:
                     AppendGlobalResult(IntToStr(ActiveCircuit.solution.MaxControlIterations));
                 56:
-                    AppendGlobalResult(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex));
+                    AppendGlobalResult(ActiveCircuit.BusList.NameOfIndex(ActiveCircuit.ActiveBusIndex));
                 57:
                     AppendGlobalResult(DataDirectory); // NOTE - not necessarily output directory
                 58:
                     with ActiveCircuit do
                         for i := 1 to NumBuses do
                             if Buses^[i].Keep then
-                                AppendGlobalResult(BusList.Get(i));
+                                AppendGlobalResult(BusList.NameOfIndex(i));
                 59:
                     AppendGlobalResult(ActiveCircuit.ReductionStrategyString);
                 60:

@@ -61,7 +61,6 @@ TYPE
     end;
 
     TDSSCircuit = CLASS(TNamedObject)
-
       Private
           NodeBuffer          :pIntegerArray;
           NodeBufferMax       :Integer;
@@ -113,7 +112,7 @@ TYPE
           Control_BusNameRedefined  :Boolean;  // Flag for use by control elements to detect redefinition of buses
 
           BusList,
-          AutoAddBusList,
+          AutoAddBusList: TBusHashListType;
           DeviceList      :THashList;
           DeviceRef       :pCktElementDefArray;  //Type and handle of device
 
@@ -379,9 +378,9 @@ BEGIN
      IncNodes   := 3000;
 
      // Allocate some nominal sizes
-     BusList        := THashList.Create(900);  // Bus name list Nominal size to start; gets reallocated
+     BusList        := TBusHashListType.Create(900);  // Bus name list Nominal size to start; gets reallocated
      DeviceList     := THashList.Create(900);
-     AutoAddBusList := THashList.Create(100);
+     AutoAddBusList := TBusHashListType.Create(100);
 
      NumBuses   := 0;  // Eventually allocate a single source
      NumDevices := 0;
@@ -2191,7 +2190,7 @@ Begin
 
      For i := 1 to NumBuses Do Begin
          SavedBuses^[i] := Buses^[i];
-         SavedBusNames^[i] := BusList.get(i);
+         SavedBusNames^[i] := BusList.NameOfIndex(i);
      End;
      SavedNumBuses := NumBuses;
 
@@ -2254,7 +2253,7 @@ BEGIN
 
      // get rid of old bus lists
      BusList.Free;  // Clears hash list of Bus names for adding more
-     BusList := THashList.Create(NumDevices);  // won't have many more buses than this
+     BusList := TBusHashListType.Create(NumDevices);  // won't have many more buses than this
 
      NumBuses := 0;  // Leave allocations same, but start count over
      NumNodes := 0;
@@ -2323,14 +2322,14 @@ BEGIN
      FSWriteln(F, 'NumDevices= ', IntToStr(NumDevices));
      FSWriteln(F,'BusList:');
      For i := 1 to NumBuses Do BEGIN
-       FSWrite(F,'  ',Pad(BusList.Get(i),12));
+       FSWrite(F,'  ',Pad(BusList.NameOfIndex(i),12));
        FSWrite(F,' (', IntToStr(Buses^[i].NumNodesThisBus),' Nodes)');
        FOR j := 1 to Buses^[i].NumNodesThisBus Do FSWrite(F,' ',IntToStr(Buses^[i].Getnum(j)));
        FSWriteln(F);
      END;
      FSWriteln(F,'DeviceList:');
      For i := 1 to NumDevices Do BEGIN
-        FSWrite(F,'  ',Pad(DeviceList.Get(i),12));
+        FSWrite(F,'  ',Pad(DeviceList.NameOfIndex(i),12));
         ActiveCktElement := CktElements.Get(i);
         If Not ActiveCktElement.Enabled THEN FSWrite(F, '  DISABLED');
         FSWriteln(F);
@@ -2339,7 +2338,7 @@ BEGIN
      For i := 1 to NumNodes DO 
      BEGIN
        j :=  MapNodeToBus^[i].BusRef;
-       WriteStr(sout, '  ',i:2,' ',j:2,' (=',BusList.Get(j),'.',MapNodeToBus^[i].NodeNum:0,')');
+       WriteStr(sout, '  ',i:2,' ',j:2,' (=',BusList.NameOfIndex(j),'.',MapNodeToBus^[i].NodeNum:0,')');
        FSWrite(F, sout);
        FSWriteln(F);
      END;
@@ -2694,7 +2693,7 @@ begin
        Begin
            If Buses^[i].CoordDefined then
            begin
-             FSWrite(F, CheckForBlanks(BusList.Get(i)));
+             FSWrite(F, CheckForBlanks(BusList.NameOfIndex(i)));
              FSWriteLn(F, Format(', %-g, %-g', [Buses^[i].X, Buses^[i].Y]));
            end;
        End;
@@ -2722,7 +2721,7 @@ begin
 
     For i := 1 to DeviceList.ListSize Do
     Begin
-        Templist.Add(DeviceList.Get(i));
+        Templist.Add(DeviceList.NameOfIndex(i));
     End;
 
     DeviceList.Free; // Throw away the old one.

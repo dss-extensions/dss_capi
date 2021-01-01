@@ -254,7 +254,7 @@ begin
                                                                     ShuntElement := ParentNode.FirstShuntObject;
                                                                     while ShuntElement <> NIL do
                                                                     begin
-                                                                        Parser.CmdString := 'bus1="' + ActiveCircuit.BusList.Get(PresentBranch.ToBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
+                                                                        Parser.CmdString := 'bus1="' + ActiveCircuit.BusList.NameOfIndex(PresentBranch.ToBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
                           //   {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), Parser.CmdString ]));
                                                                         ShuntElement.Edit;
                                                                         ShuntElement := ParentNode.NextShuntObject;
@@ -305,7 +305,7 @@ begin
                                                             ShuntElement := PresentBranch.FirstShuntObject;
                                                             while ShuntElement <> NIL do
                                                             begin
-                                                                Parser.CmdString := 'bus1="' + ActiveCircuit.BusList.Get(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
+                                                                Parser.CmdString := 'bus1="' + ActiveCircuit.BusList.NameOfIndex(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
                   //  {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), Parser.CmdString ]));
                                                                 ShuntElement.Edit;
                                                                 ShuntElement := PresentBranch.NextShuntObject;

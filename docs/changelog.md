@@ -7,6 +7,8 @@
     - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using `int32_t` instead -- this was an artifact to ensure initial compatibility with the COM code.
     - extend the API to work with 64-bit integers where appropriate
     - extend the API to allow 32-bit floats
+    - rework TPowerTerminal to achieve better memory layout
+    - use `TFPHashList` where possible (replacing the custom, original THashList implementation from OpenDSS)
 
 - **Planned**:
     - **(WIP)** potentially unify the v7 and v8 codebases into a single library.

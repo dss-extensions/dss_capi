@@ -279,7 +279,7 @@ VAR
    ErrorStrings: TStringList;
 
    DSSClassList       :TDSSPointerList; // pointers to the base class types
-   ClassNames         :THashList;
+   ClassNames         : TClassNamesHashListType;
 
    UpdateRegistry     :Boolean;  // update on program exit
    CPU_Freq           : int64;          // Used to store the CPU frequency
@@ -556,7 +556,7 @@ Begin
 
    WITH ActiveCircuit Do
      Begin
-        If BusList.ListSize=0 Then Exit;   // Buslist not yet built
+        If BusList.Count = 0 Then Exit;   // Buslist not yet built
         ActiveBusIndex := BusList.Find(BusName);
         IF   ActiveBusIndex=0 Then
           Begin
