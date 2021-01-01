@@ -55,7 +55,8 @@ uses
     CapControl,
     CapControlVars,
     SysUtils,
-    PointerList;
+    PointerList,
+    Utilities;
 
 //------------------------------------------------------------------------------
 function _activeObj(out obj: TCapControlObj): Boolean; inline;
@@ -366,10 +367,7 @@ end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_UseVoltOverride(Value: Boolean); CDECL;
 begin
-    if Value = TRUE then
-        Set_Parameter('VoltOverride', 'Yes')
-    else
-        Set_Parameter('VoltOverride', 'No');
+    Set_Parameter('VoltOverride', StrYorN(Value = True))
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Vmax(Value: Double); CDECL;

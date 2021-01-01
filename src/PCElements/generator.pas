@@ -3143,15 +3143,9 @@ begin
         37:
             Result := Format('%.6g', [DutyStart]);
         38:
-            if ForceBalanced then
-                Result := 'Yes'
-            else
-                Result := 'No';
+            Result := StrYorN(ForceBalanced);
         40: 
-            if UseFuel then 
-                Result := 'Yes'
-            else 
-                Result := 'No';
+            Result := StrYorN(UseFuel);
         41: 
             Result := Format('%.6g', [FuelkWh]);
         42: 

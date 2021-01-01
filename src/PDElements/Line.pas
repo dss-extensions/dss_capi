@@ -1354,10 +1354,7 @@ begin
         Writeln(F, '"');
 
         Write(F, '~ ', PropertyName^[15], '=');
-        if IsSwitch then
-            Writeln(F, 'true')
-        else
-            writeln(F, 'false');
+        Writeln(F, StrTOrF(IsSwitch));
 
          {Dump the rest by default}
         for i := 16 to NumProperties do
@@ -1481,10 +1478,7 @@ begin
             end;
         end;
         15:
-            if IsSwitch then
-                Result := 'True'
-            else
-                Result := 'False';
+            Result := StrTOrF(IsSwitch);
         16:
             Result := Format('%-g', [Rg]);
         17:

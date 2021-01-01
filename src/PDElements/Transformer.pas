@@ -2048,10 +2048,7 @@ begin
             for i := 1 to NumWindings do
                 Result := Result + Format('%.7g, ', [Winding^[i].rpu * 100.0]);
         40:
-            if XRconst then
-                Result := 'YES'
-            else
-                Result := 'NO';
+            Result := StrYorN(XRconst);
         41:
             Result := Format('%.7g', [XHL * 100.0]);
         42:

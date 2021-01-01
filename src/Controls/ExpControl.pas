@@ -711,7 +711,7 @@ Begin
     8   : Result := Format('%.6g', [FQmaxLead]);
     9   : Result := Format('%.6g', [FQmaxLag]);
     11  : Result := Format('%.6g', [FdeltaQ_factor]);
-    12  : if FPreferQ then Result := 'yes' else Result := 'no';
+    12  : Result := StrYorN(FPreferQ);
     13  : Result := Format('%.6g', [FTresponse]);
     // 10 skipped, EventLog always went to the default handler
   ELSE  // take the generic handler

@@ -1822,15 +1822,9 @@ begin
         end;
     end;
     Write(F, 'Set allowduplicates=');
-    if ActiveCircuit.DuplicatesAllowed then
-        Writeln(F, 'Yes')
-    else
-        Writeln(F, 'No');
+    Writeln(F, StrYorN(ActiveCircuit.DuplicatesAllowed));
     Write(F, 'Set zonelock=');
-    if ActiveCircuit.ZonesLocked then
-        Writeln(F, 'Yes')
-    else
-        Writeln(F, 'No');
+    Writeln(F, StrYorN(ActiveCircuit.ZonesLocked));
     Writeln(F, 'Set ueweight=', ActiveCircuit.UEWeight: 8: 2);
     Writeln(F, 'Set lossweight=', ActiveCircuit.LossWeight: 8: 2);
     Writeln(F, 'Set ueregs=', IntArraytoString(ActiveCircuit.UEregs, ActiveCircuit.NumUERegs));
@@ -1851,10 +1845,7 @@ begin
             Writeln(F, 'Set algorithm=newton');
     end;
     Write(F, 'Set Trapezoidal=');
-    if ActiveCircuit.TrapezoidalIntegration then
-        Writeln(F, 'yes')
-    else
-        Writeln(F, 'no');
+    Writeln(F, StrYorN(ActiveCircuit.TrapezoidalIntegration));
     Writeln(F, 'Set genmult=', Format('%-g', [ActiveCircuit.GenMultiplier]));
 
     Writeln(F, 'Set Basefrequency=', Format('%-g', [ActiveCircuit.Fundamental]));

@@ -979,15 +979,9 @@ begin
         propDUTY:
             Result := DutyShape;
         propEVENTLOG:
-            if ShowEventLog then
-                Result := 'Yes'
-            else
-                Result := 'No';
+            Result := StrYorN(ShowEventLog);
         propVARDISPATCH:
-            if DispatchVars then
-                Result := 'Yes'
-            else
-                Result := 'No';
+            Result := StrYorN(DispatchVars);
         propINHIBITTIME:
             Result := Format('%d', [InhibitHrs]);
         propTUPRAMP:
