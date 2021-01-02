@@ -21,7 +21,7 @@ unit DSSGlobals;
 interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, DSSPointerList,
-     UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC}Graphics, System.IOUtils, {$ENDIF}inifiles,
+     UComplex, Arraydef, CktElement, Circuit, {$IFNDEF FPC}Graphics, System.IOUtils, {$ENDIF}inifiles,
 
      {$IFDEF UNIX}BaseUnix,{$ENDIF}
 
@@ -144,9 +144,6 @@ VAR
    DLLFirstTime   :Boolean=TRUE;
    DLLDebugFile   :TextFile;
    ProgramName    :String;
-{$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
-   DSS_Registry   :TIniRegSave; // Registry   (See Executive)
-{$ENDIF}
 {$IFDEF DSS_CAPI}
    DSS_CAPI_INFO_SPARSE_COND : Boolean;
    DSS_CAPI_EARLY_ABORT : Boolean;
@@ -326,26 +323,10 @@ PROCEDURE AppendGlobalResultCRLF(const S:String);  // Separate by CRLF
 
 PROCEDURE ResetQueryLogFile;
 PROCEDURE WriteQueryLogFile(Const Prop, S:String);
-
-PROCEDURE WriteDLLDebugFile(Const S:String);
-
-{$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
-PROCEDURE ReadDSS_Registry;
-PROCEDURE WriteDSS_Registry;
-{$ENDIF}
-
-FUNCTION IsDSSDLL(Fname:String):Boolean;
-
 Function GetOutputDirectory:String;
-
-Procedure MyReallocMem(Var p:Pointer; newsize:integer);
-Function MyAllocMem(nbytes:Cardinal):Pointer;
-
 
 
 implementation
-
-
 
 USES  {Forms,   Controls,}
      {$IFDEF MSWINDOWS}
@@ -420,27 +401,6 @@ function GetOutputDirectory:String;
 begin
   Result := OutputDirectory;
 end;
-
-{--------------------------------------------------------------}
-FUNCTION IsDSSDLL(Fname:String):Boolean;
-
-Begin
-    Result := FALSE;
-
-    // Ignore if "DSSLIB.DLL"
-    If CompareText(ExtractFileName(Fname),'dsslib.dll')=0 Then Exit;
-
-   LastUserDLLHandle := LoadLibrary(pchar(Fname));
-   IF LastUserDLLHandle <> 0 then BEGIN
-
-   // Assign the address of the DSSRegister proc to DSSRegisterProc variable
-    @DSSRegisterProc := GetProcAddress(LastUserDLLHandle, 'DSSRegister');
-    IF @DSSRegisterProc <> nil THEN Result := TRUE
-    ELSE FreeLibrary(LastUserDLLHandle);
-
-  END;
-
-End;
 
 //----------------------------------------------------------------------------
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause:String; ErrNum:Integer);
@@ -763,21 +723,6 @@ End;
 {$ENDIF}
 {$ENDIF} //IFDEF DSS_CAPI
 
-PROCEDURE WriteDLLDebugFile(Const S:String);
-
-Begin
-
-        AssignFile(DLLDebugFile, OutputDirectory + 'DSSDLLDebug.TXT');
-        If DLLFirstTime then Begin
-           Rewrite(DLLDebugFile);
-           DLLFirstTime := False;
-        end
-        Else Append( DLLDebugFile);
-        Writeln(DLLDebugFile, S);
-        CloseFile(DLLDebugFile);
-
-End;
-
 {$IFNDEF UNIX}
 function IsDirectoryWritable(const Dir: String): Boolean;
 var
@@ -826,62 +771,10 @@ BEGIN
   end;
 END;
 
-{$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
-PROCEDURE ReadDSS_Registry;
-Var  TestDataDirectory:string;
-Begin
-  DSS_Registry.Section := 'MainSect';
-  {$IFDEF Darwin}
-     DefaultEditor    := DSS_Registry.ReadString('Editor', 'open -t');
-     DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '12'));
-     DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'Geneva');
-  {$ENDIF}
-  {$IFDEF Linux}
-     DefaultEditor    := DSS_Registry.ReadString('Editor', 'xdg-open');
-     DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '10'));
-     DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'Arial');
-  {$ENDIF}
-  {$IF (defined(Windows) or defined(MSWindows))}
-     DefaultEditor    := DSS_Registry.ReadString('Editor', 'Notepad.exe' );
-     DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '8' ));
-     DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'MS Sans Serif' );
-  {$ENDIF}
-  {$IFDEF FPC}
-     DefaultFontStyles := 1;
-  {$ELSE}
-     DefaultFontStyles := [];
-     If DSS_Registry.ReadBool('ScriptFontBold', TRUE)    Then DefaultFontStyles := DefaultFontStyles + [fsbold];
-     If DSS_Registry.ReadBool('ScriptFontItalic', FALSE) Then DefaultFontStyles := DefaultFontStyles + [fsItalic];
-  {$ENDIF}
-  DefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
-  LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
-  TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DataDirectory);
-  If SysUtils.DirectoryExists (TestDataDirectory) Then SetDataPath (TestDataDirectory)
-                                        Else SetDataPath (DataDirectory);
-End;
-
-
-PROCEDURE WriteDSS_Registry;
-Begin
-  If UpdateRegistry Then  Begin
-      DSS_Registry.Section := 'MainSect';
-      DSS_Registry.WriteString('Editor',        DefaultEditor);
-      DSS_Registry.WriteString('ScriptFontSize', Format('%d',[DefaultFontSize]));
-      DSS_Registry.WriteString('ScriptFontName', Format('%s',[DefaultFontName]));
-      DSS_Registry.WriteBool('ScriptFontBold', {$IFDEF FPC}False{$ELSE}(fsBold in DefaultFontStyles){$ENDIF});
-      DSS_Registry.WriteBool('ScriptFontItalic', {$IFDEF FPC}False{$ELSE}(fsItalic in DefaultFontStyles){$ENDIF});
-      DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(DefaultBaseFreq)]));
-      DSS_Registry.WriteString('LastFile',      LastFileCompiled);
-      DSS_Registry.WriteString('DataPath', DataDirectory);
-  End;
-End;
-{$ENDIF}
-
 PROCEDURE ResetQueryLogFile;
 Begin
      QueryFirstTime := TRUE;
 End;
-
 
 PROCEDURE WriteQueryLogfile(Const Prop, S:String);
 
@@ -915,56 +808,6 @@ Begin
       ParserVars.Add('@lastfile', Fname);
 End;
 
-Function MyAllocMem(nbytes:Cardinal):Pointer;
-Begin
-    Result := AllocMem(Nbytes);
-    WriteDLLDebugFile(Format('Allocating %d bytes @ %p',[nbytes, Result]));
-End;
-
-Procedure MyReallocMem(Var p:Pointer; newsize:Integer);
-
-Begin
-     WriteDLLDebugFile(Format('Reallocating @ %p, new size= %d', [p, newsize]));
-     ReallocMem(p, newsize);
-End;
-
-// Function to validate the installation and path of the OpenDSS Viewer
-function GetIni(s,k: string; d: string; f: string=''): string; overload;
-var
-  ini: TMemIniFile;
-begin
-  Result := d;
-  if f = '' then
-  begin
-    ini := TMemIniFile.Create(lowercase(ChangeFileExt(ParamStr(0),'.ini')));
-  end
-  else
-  begin
-    if not FileExists(f) then Exit;
-    ini := TMemIniFile.Create(f);
-  end;
-  if ini.ReadString(s,k,'') = '' then
-  begin
-    ini.WriteString(s,k,d);
-    ini.UpdateFile;
-  end;
-  Result := ini.ReadString(s,k,d);
-  FreeAndNil(ini);
-end;
-
-{$IFNDEF FPC}
-// Validates the installation and path of the OpenDSS Viewer
-function CheckOpenDSSViewer: Boolean;
-var FileName: string;
-begin
-  DSS_Viz_path:=GetIni('Application','path','', TPath.GetHomePath+'\OpenDSS_Viewer\settings.ini');
-  // to make it compatible with the function
-  FileName  :=  stringreplace(DSS_Viz_path, '\\' ,'\',[rfReplaceAll, rfIgnoreCase]);
-  FileName  :=  stringreplace(FileName, '"' ,'',[rfReplaceAll, rfIgnoreCase]);
-  // returns true only if the executable exists
-  Result:=fileexists(FileName);
-end;
-{$ENDIF}
 
 initialization
 
@@ -1039,13 +882,7 @@ initialization
    SetDataPath (StartupDirectory);
 {$ENDIF}
 
-{$IFNDEF DSS_CAPI}
-   {$IFNDEF FPC}
-   DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
-   {$ELSE}
-   DSS_Registry     := TIniRegSave.Create(DataDirectory + 'opendsscmd.ini');
-   {$ENDIF}
-{$ELSE}
+{$IFDEF DSS_CAPI}
    IF GetEnvironmentVariable('DSS_BASE_FREQUENCY') <> '' THEN
    BEGIN
       DefaultBaseFreq  := StrToInt(GetEnvironmentVariable('DSS_BASE_FREQUENCY'));
@@ -1092,9 +929,6 @@ initialization
    {$ENDIF}
    CPU_Cores        :=  CPUCount;
 
-
-   //WriteDLLDebugFile('DSSGlobals');
-
    {$IFNDEF FPC}
    DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
    {$ENDIF}
@@ -1127,10 +961,4 @@ Finalization
   With DSSExecutive Do If RecorderOn Then Recorderon := FALSE;
 
   DSSExecutive.Free;  {Writes to Registry}
-{$IFNDEF DSS_CAPI}
-  DSS_Registry.Free;  {Close Registry}
-{$ENDIF}
-
 End.
-
-

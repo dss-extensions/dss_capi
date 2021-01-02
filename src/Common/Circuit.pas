@@ -1634,7 +1634,7 @@ Begin
 
   // Creates the folder for storign the results
   Fileroot              :=  GetCurrentDir;
-  Fileroot              :=  Fileroot  + '\Aggregated_model';
+  Fileroot              :=  Fileroot + PathDelim + 'Aggregated_model';
   CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
   DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
   // Now starts aggregating the loadshapes per zone
