@@ -9,6 +9,7 @@
     - extend the API to allow 32-bit floats
     - rework TPowerTerminal to achieve better memory layout
     - use `TFPHashList` where possible (replacing the custom, original THashList implementation from OpenDSS)
+    - remove CmathLib functions
 
 - **Planned**:
     - **(WIP)** potentially unify the v7 and v8 codebases into a single library.

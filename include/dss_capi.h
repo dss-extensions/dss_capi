@@ -1176,61 +1176,6 @@ extern "C" {
     */
     DSS_CAPI_DLL void CktElement_Get_TotalPowers_GR(void);
 
-    /*
-    Convert real and imaginary doubles to Array of doubles
-    */
-    DSS_CAPI_DLL void CmathLib_Get_cmplx(double** ResultPtr, int64_t* ResultCount, double RealPart, double ImagPart);
-    /*
-    Same as CmathLib_Get_cmplx but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CmathLib_Get_cmplx_GR(double RealPart, double ImagPart);
-
-    /*
-    Return abs value of complex number given in real and imag doubles
-    */
-    DSS_CAPI_DLL double CmathLib_Get_cabs(double realpart, double imagpart);
-
-    /*
-    Returns the angle, in degrees, of a complex number specified as two doubles: Realpart and imagpart.
-    */
-    DSS_CAPI_DLL double CmathLib_Get_cdang(double RealPart, double ImagPart);
-
-    /*
-    Convert complex number to magnitude and angle, degrees. Returns array of two doubles.
-    */
-    DSS_CAPI_DLL void CmathLib_Get_ctopolardeg(double** ResultPtr, int64_t* ResultCount, double RealPart, double ImagPart);
-    /*
-    Same as CmathLib_Get_ctopolardeg but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CmathLib_Get_ctopolardeg_GR(double RealPart, double ImagPart);
-
-    /*
-    Convert magnitude, angle in degrees to a complex number. Returns Array of two doubles.
-    */
-    DSS_CAPI_DLL void CmathLib_Get_pdegtocomplex(double** ResultPtr, int64_t* ResultCount, double magnitude, double angle);
-    /*
-    Same as CmathLib_Get_pdegtocomplex but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CmathLib_Get_pdegtocomplex_GR(double magnitude, double angle);
-
-    /*
-    Multiply two complex numbers: (a1, b1) * (a2, b2). Returns result as a array of two doubles.
-    */
-    DSS_CAPI_DLL void CmathLib_Get_cmul(double** ResultPtr, int64_t* ResultCount, double a1, double b1, double a2, double b2);
-    /*
-    Same as CmathLib_Get_cmul but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CmathLib_Get_cmul_GR(double a1, double b1, double a2, double b2);
-
-    /*
-    Divide two complex number: (a1, b1)/(a2, b2). Returns array of two doubles representing complex result.
-    */
-    DSS_CAPI_DLL void CmathLib_Get_cdiv(double** ResultPtr, int64_t* ResultCount, double a1, double b1, double a2, double b2);
-    /*
-    Same as CmathLib_Get_cdiv but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CmathLib_Get_cdiv_GR(double a1, double b1, double a2, double b2);
-
     DSS_CAPI_DLL void CtrlQueue_ClearQueue(void);
 
     DSS_CAPI_DLL void CtrlQueue_Delete(int32_t ActionHandle);
