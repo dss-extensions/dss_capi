@@ -40,17 +40,6 @@ type
         function Pop: Pointer;
     end;
 
-    TiStack = class(TStackBase)  // simple integer stack
-    PRIVATE
-        Items: pIntegerArray;
-    PUBLIC
-        constructor Create(initSize: Integer);
-        destructor Destroy; OVERRIDE;
-
-        procedure Push(p: Integer);
-        function Pop: Integer;
-    end;
-
 
 implementation
 
@@ -114,41 +103,5 @@ begin
     else
         Result := NIL;
 end;
-
-
-constructor TiStack.Create(initSize: Integer);
-begin
-    inherited Create(initSize);
-    Items := AllocMem(SizeOf(Items^[1]) * MaxItems);
-end;
-
-destructor TiStack.Destroy;
-begin
-    Reallocmem(Items, 0);
-    inherited Destroy;
-end;
-
-procedure TiStack.Push(p: Integer);
-begin
-    Inc(NumItems);
-    if NumItems > MaxItems then
-    begin
-        Inc(MaxItems, Increment);
-        Reallocmem(Items, SizeOf(Items^[1]) * MaxItems);
-    end;
-    Items^[NumItems] := p;
-end;
-
-function TiStack.Pop: Integer;
-begin
-    if NumItems > 0 then
-    begin
-        Result := Items^[NumItems];
-        Dec(NumItems);
-    end
-    else
-        Result := 0;
-end;
-
 
 end.
