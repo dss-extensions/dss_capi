@@ -89,7 +89,6 @@ uses
     DSSPointerList,
     CktTree,
     ucomplex,
-    Feeder,
     Load,
     Generator,
     XYCurve,
@@ -260,7 +259,6 @@ type
         ZoneIsRadial: Boolean;
         VoltageUEOnly: Boolean;
         LocalOnly: Boolean;
-        HasFeeder: Boolean;
 
         FLosses: Boolean;
         FLineLosses: Boolean;
@@ -270,7 +268,6 @@ type
         FVBaseLosses: Boolean;
         FPhaseVoltageReport: Boolean;
 
-        FeederObj: TFeederObj;   // not used at present
         DefinedZoneList: pStringArray;
         DefinedZoneListSize: Integer;
 
@@ -367,7 +364,6 @@ type
         procedure MakeMeterZoneLists;
         procedure ZoneDump;
         procedure InterpolateCoordinates;
-        procedure EnableFeeder;
 
         procedure AllocateLoad;
         procedure ReduceZone;  // Reduce Zone by eliminating buses and merging lines
@@ -755,7 +751,6 @@ begin
                     PropertyValue[23] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
                 24:
                     PropertyValue[24] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
-           (****11: HasFeeder := InterpretYesNo(Param); ***)
             else
                 ClassEdit(ActiveEnergyMeterObj, ParamPointer - NumPropsthisClass)
             end;
@@ -766,7 +761,6 @@ begin
                     MeteredElementChanged := TRUE;
                     DoRecalc := TRUE;
                 end;
-             (****11: If HasFeeder Then DoRecalc := True Else RemoveFeederObj; *)
             end;
 
             ParamName := Parser.NextParam;
@@ -1093,8 +1087,6 @@ begin
 
 
     ZoneIsRadial := TRUE;
-    HasFeeder := FALSE; // Not used; leave as False
-    FeederObj := NIL;  // initialize to not assigned
     DefinedZoneList := NIL;
     DefinedZoneListSize := 0;
 
@@ -1292,8 +1284,6 @@ begin
                 BranchList := NIL;
             end;
 
-             (****If HasFeeder Then MakeFeederObj;  // OK to call multiple times  *)
-
         end;
     end
     else
@@ -1316,7 +1306,6 @@ begin
             BranchList.Free;
         BranchList := NIL;
     end;
-  (***If HasFeeder Then MakeFeederObj;*)
     inherited;
 end;
 
@@ -2174,8 +2163,6 @@ begin
 
     TotalupDownstreamCustomers;
 
-  (****If HasFeeder Then FeederObj.InitializeFeeder(BranchList);   // Synchronize the feeder definition *)
-
     AssignVoltBaseRegisterNames;
 end;
 
@@ -2580,11 +2567,6 @@ begin
        {Default}
         DoReduceDefault(BranchList);
     end;
-(* Feeder Code removed
-    // Resynchronize with Feeders
-    If HasFeeder Then FeederObj.InitializeFeeder (Branchlist);
-*)
-
 end;
 
 function TEnergyMeterObj.CheckBranchList(code: Integer): Boolean;
@@ -4163,46 +4145,6 @@ begin
     n := Parser.ParseAsVector(NumEMRegisters, pDoubleArray(@Mask));
     for i := n + 1 to NumEMRegisters do
         Mask[i] := 1.0;  // Set the rest to 1
-end;
-
-(* Feeder object code commented out
-procedure TEnergyMeterObj.MakeFeederObj;
-begin
-  If Assigned(MeteredElement) Then Begin
-
-    FeederClass.NewObject(Name);  // NewObject creates only if not existent. Else Inits  and desynchs
-    FeederObj := ActiveCircuit.ActiveCktElement as TFeederObj;
-    FeederObj.SetBus (1, MeteredElement.GetBus(MeteredTerminal));
-    FeederObj.Nphases := MeteredElement.NPhases;
-    FeederObj.Nconds  := MeteredElement.Nconds;
-    FeederObj.Enabled := ActiveCircuit.RadialSolution;
-
-  End
-  Else DoSimpleMsg('Error: Attempted to make Feeder Obj without instantiating Metered Element in Energymeter.'+name,544);
-end;
-*)
-(*  Feeder object code commented out
-procedure TEnergyMeterObj.RemoveFeederObj;
-begin
-
-    If Assigned(FeederObj) Then Begin
-       FeederObj.Enabled := FALSE;
-       FeederObj.SetCktElementFeederFlags (FALSE);
-    End;
-
-end;
-*)
-
-procedure TEnergyMeterObj.EnableFeeder;
-// HasFeeder has to be true before feederObj will be re-enabled.
-begin
-(*  Feeder object code commented out  HasFeeder can never be true
-    If HasFeeder Then Begin
-        If Not Assigned(FeederObj) Then MakeFeederObj
-        Else FeederObj.Enabled := TRUE;
-        FeederObj.SetCktElementFeederFlags (TRUE);
-    End;
-*)
 end;
 
 procedure TEnergyMeter.OpenAllDIFiles;

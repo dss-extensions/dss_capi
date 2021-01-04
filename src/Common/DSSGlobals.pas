@@ -36,7 +36,6 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, DSSPointer
      EnergyMeter,
      Sensor,
      TCC_Curve,
-     Feeder,
      WireData,
      CNData,
      TSData,

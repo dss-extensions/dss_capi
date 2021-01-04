@@ -119,7 +119,6 @@ uses
     ExportOptions in 'src/Executive/ExportOptions.pas',
     ExportResults in 'src/Common/ExportResults.pas',
     Fault in 'src/PDElements/Fault.pas',
-    Feeder in 'src/Common/Feeder.pas',
     fuse in 'src/PDElements/fuse.pas',
     UPFCControl in 'src/Controls/UPFCControl.pas',
     GenDispatcher in 'src/Controls/GenDispatcher.pas',

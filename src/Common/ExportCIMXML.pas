@@ -58,7 +58,6 @@ uses
     CapControl,
     CapControlvars,
     Reactor,
-    Feeder,
     ConductorData,
     LineUnits,
     LineGeometry,

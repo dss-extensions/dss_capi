@@ -157,15 +157,6 @@ procedure MakeDistributedGenerators(kW, PF: Double; How: String; Skip: Integer; 
 
 procedure Obfuscate;
 
-
-{Feeder Utilities} // not currently used
-procedure EnableFeeders;
-procedure DisableFeeders;
-procedure InitializeFeeders;
-procedure ForwardSweepAllFeeders;
-procedure BackwardSweepAllFeeders;
-
-
 implementation
 
 uses
@@ -196,7 +187,6 @@ uses
     Load,
     Line,
     Fault,
-    Feeder,
     HashList,
     LoadShape,
     EnergyMeter,
@@ -2729,80 +2719,6 @@ begin
         SetlastResultFile(Fname);
     end;
 
-end;
-
-{Feeder Utilities}
-procedure EnableFeeders;
-
-var
-    pMeter: TEnergyMeterObj;
-
-    // Let EnergyMeter Objects control re-enabling of Feeders
-    // Feeder could have been dumped in meantime by setting Feeder=False in EnergyMeter
-
-begin
-    with ActiveCircuit do
-    begin
-        pMeter := EnergyMeters.First;
-        while pMeter <> NIL do
-        begin
-            pMeter.EnableFeeder; // also sets CktElement feeder flags true   if a valid feeder
-            pMeter := EnergyMeters.Next;
-        end;
-    end;
-end;
-
-procedure DisableFeeders;
-
-var
-    pFeeder: TFeederObj;
-
-begin
-    with ActiveCircuit do
-    begin
-        pFeeder := Feeders.First;
-        while pFeeder <> NIL do
-        begin
-            pFeeder.Enabled := FALSE;
-            pFeeder.SetCktElementFeederFlags(FALSE);
-            pFeeder := Feeders.Next;
-        end;
-    end;
-
-
-end;
-
-procedure InitializeFeeders;
-// Var i:Integer;
-begin
-    (*    Do Nothing for now
-    With ActiveCircuit Do
-    For i := 1 to Feeders.Count Do Begin
-        If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).InitForSweep;
-    End;
-    *)
-end;
-
-procedure ForwardSweepAllFeeders;
-// Var i:Integer;
-begin
-    (*    Do Nothing for now
-    With ActiveCircuit Do
-    For i := 1 to Feeders.Count Do Begin
-        If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).ForwardSweep;
-    End;
-*)
-end;
-
-procedure BackwardSweepAllFeeders;
-// Var i:Integer;
-begin
-    (*    Do Nothing for now
-    With ActiveCircuit Do
-    For i := 1 to Feeders.Count Do Begin
-        If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).BackwardSweep;
-    End;
-    *)
 end;
 
 function GetDSSArray_Real(n: Integer; dbls: pDoubleArray): String;

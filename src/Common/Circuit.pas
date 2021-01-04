@@ -140,7 +140,6 @@ TYPE
           Relays, // added for CIM XML export
           Fuses, // added for CIM XML export
           Reclosers, // added for CIM XML export
-          Feeders,
           SwtControls        : TDSSPointerList;
           CktElements        : TDSSPointerList;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
@@ -405,7 +404,6 @@ BEGIN
      Generators      := TDSSPointerList.Create(5);
      StorageElements := TDSSPointerList.Create(5);
      PVSystems       := TDSSPointerList.Create(5);
-     Feeders         := TDSSPointerList.Create(10);
      Substations     := TDSSPointerList.Create(5);
      Transformers    := TDSSPointerList.Create(10);
      CapControls     := TDSSPointerList.Create(10);
@@ -616,7 +614,6 @@ BEGIN
      Generators.Free;
      StorageElements.Free;
      PVSystems.Free;
-     Feeders.Free;
      Substations.Free;
      Transformers.Free;
      CapControls.Free;
@@ -2161,7 +2158,6 @@ BEGIN
        XFMR_ELEMENT   :Transformers.Add(ActiveCktElement);
        LINE_ELEMENT   :Lines.Add(ActiveCktElement);
        FAULTOBJECT    :Faults.Add(ActiveCktElement);
-       FEEDER_ELEMENT :Feeders.Add(ActiveCktElement);
 
        STORAGE_ELEMENT:StorageElements.Add(ActiveCktElement);
        PVSYSTEM_ELEMENT:PVSystems.Add(ActiveCktElement);
