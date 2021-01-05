@@ -86,9 +86,9 @@ TYPE
          Function Init(Handle:Integer):Integer; Virtual;
          Function NewObject(const ObjName:String):Integer; Virtual;
 
-         Function SetActive(const ObjName:String):Boolean; Virtual;
+         Function SetActive(const ObjName:String):Boolean;
          Function GetActiveObj:Pointer; // Get address of active obj of this class
-         Function Find(const ObjName:String):Pointer; Virtual;  // Find an obj of this class by name
+         Function Find(const ObjName:String; const ChangeActive: Boolean=True): Pointer; virtual;  // Find an obj of this class by name
 
          Function PropertyIndex(Const Prop:String):Integer;
          Property FirstPropertyName:String read Get_FirstPropertyName;
@@ -243,7 +243,7 @@ BEGIN
 
 END;
 
-Function TDSSClass.Find(const ObjName:String):Pointer;
+Function TDSSClass.Find(const ObjName:String; const ChangeActive: Boolean):Pointer;
 VAR
     idx: Integer;
 
@@ -255,8 +255,9 @@ BEGIN
     
     If idx>0 Then
     Begin
-        ActiveElement := idx;
         Result := ElementList.Get(idx);
+        if ChangeActive then 
+            ActiveElement := idx;
     End;
 END;
 

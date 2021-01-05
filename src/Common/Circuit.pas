@@ -36,15 +36,6 @@ TYPE
     ArrayOfString = Array of String;
     TReductionStrategy = (rsDefault, rsShortlines, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
 
-    CktElementDef = RECORD
-        CktElementClass:Integer;
-        devHandle:Integer;
-    END;
-
-    pCktElementDefArray = ^CktElementDefArray;
-    CktElementDefArray = Array[1..1] of CktElementDef;
-
-
      // for adding markers to Plot
     TBusMarker = class(TObject)
     // Must be defined before calling circuit plot
@@ -79,7 +70,6 @@ TYPE
           Branch_List         : TCktTree; // topology from the first source, lazy evaluation
           BusAdjPC, BusAdjPD  : TAdjArray; // bus adjacency lists of PD and PC elements
 
-          Procedure AddDeviceHandle(Handle:Integer);
           Procedure AddABus;
           Procedure AddANodeBus;
           Function  AddBus(const BusName:String; NNodes:Integer):Integer;
@@ -114,7 +104,6 @@ TYPE
           BusList,
           AutoAddBusList: TBusHashListType;
           DeviceList      :THashList;
-          DeviceRef       :pCktElementDefArray;  //Type and handle of device
 
           // lists of pointers to different elements by class
           Faults,
@@ -292,7 +281,7 @@ TYPE
           Constructor Create(const aName:String);
           Destructor Destroy; Override;
 
-          Procedure AddCktElement(Handle:Integer);  // Adds last DSS object created to circuit
+          Procedure AddCktElement();  // Adds last DSS object created to circuit
           Procedure ClearBusMarkers;
 
           Procedure TotalizeMeters;
@@ -419,7 +408,6 @@ BEGIN
 
      Buses        := Allocmem(Sizeof(Buses^[1])        * Maxbuses);
      MapNodeToBus := Allocmem(Sizeof(MapNodeToBus^[1]) * MaxNodes);
-     DeviceRef    := AllocMem(SizeOf(DeviceRef^[1])    * MaxDevices);
 
      ControlQueue := TControlQueue.Create;
 
@@ -586,7 +574,6 @@ BEGIN
 
      FOR i := 1 to NumBuses Do Buses^[i].Free;  // added 10-29-00
 
-     Reallocmem(DeviceRef, 0);
      Reallocmem(Buses,     0);
      Reallocmem(MapNodeToBus, 0);
      Reallocmem(NodeBuffer, 0);
@@ -2055,56 +2042,58 @@ BEGIN
 END;
 
 //----------------------------------------------------------------------------
-Procedure TDSSCircuit.AddDeviceHandle(Handle:Integer);
-BEGIN
-    If NumDevices>MaxDevices THEN BEGIN
-        MaxDevices := MaxDevices + IncDevices;
-        ReallocMem(DeviceRef, Sizeof(DeviceRef^[1]) * MaxDevices);
-    END;
-    DeviceRef^[NumDevices].devHandle := Handle;    // Index into CktElements
-    DeviceRef^[NumDevices].CktElementClass := LastClassReferenced;
-END;
-
-
-//----------------------------------------------------------------------------
-Function TDSSCircuit.SetElementActive(Const FullObjectName:String):Integer;
-
+function TDSSCircuit.SetElementActive(const FullObjectName: String): Integer;
 // Fast way to set a cktelement active
-VAR
-   Devindex      :Integer;
-   DevClassIndex:Integer;
-   DevType,
-   DevName :String;
+var
+    DevIndex: Integer;
+    DevClassIndex: Integer;
+    DevType,
+    DevName: String;
+    DevCls: TDSSClass;
+    element: TDSSCktElement;
+begin
+    Result := 0;
+    ParseObjectClassandName(FullObjectName, DevType, DevName);
+    DevClassIndex := ClassNames.Find(DevType);
+    if DevClassIndex = 0 then 
+        DevClassIndex := LastClassReferenced;
+    DevCls := DSSClassList.At(DevClassIndex);
 
-BEGIN
-
-     Result := 0;
-
-     ParseObjectClassandName(FullObjectName, DevType, DevName);
-     DevClassIndex := ClassNames.Find(DevType);
-     If DevClassIndex = 0 Then DevClassIndex := LastClassReferenced;
-     if DevName <> '' then
-     begin
-       Devindex := DeviceList.Find(DevName);
-       WHILE DevIndex>0 DO BEGIN
-           IF DeviceRef^[Devindex].CktElementClass=DevClassIndex THEN   // we got a match
-            BEGIN
-              ActiveDSSClass := DSSClassList.Get(DevClassIndex);
-              LastClassReferenced := DevClassIndex;
-              Result := DeviceRef^[Devindex].devHandle;
-             // ActiveDSSClass.Active := Result;
-            //  ActiveCktElement := ActiveDSSClass.GetActiveObj;
-              ActiveCktElement := CktElements.Get(Result);
-              Break;
-            END;
-           Devindex := Devicelist.FindNext;   // Could be duplicates
-       END;
-     end;
-
-     CmdResult := Result;
-
-END;
-
+    if DevName = '' then
+    begin
+        CmdResult := Result;
+        Exit;
+    end;
+    
+    if not DuplicatesAllowed then
+    begin
+        element := TDSSCktElement(DevCls.Find(DevName, False));
+        if element <> NIL then
+        begin
+            ActiveDSSClass := DSSClassList.Get(DevClassIndex);
+            LastClassReferenced := DevClassIndex;
+            Result := element.Handle;
+            ActiveCktElement := CktElements.Get(Result);
+        end;
+    end
+    else
+    begin
+        Devindex := DeviceList.Find(DevName);
+        while DevIndex > 0 do 
+        begin
+            if TDSSCktElement(CktElements.At(Devindex)).ParentClass = DevCls then   // we got a match
+            begin
+                ActiveDSSClass := DSSClassList.Get(DevClassIndex);
+                LastClassReferenced := DevClassIndex;
+                Result := Devindex;
+                ActiveCktElement := CktElements.Get(Result);
+                break;
+            end;
+            Devindex := Devicelist.FindNext;   // Could be duplicates
+        end;
+    end;
+    CmdResult := Result;
+end;
 //----------------------------------------------------------------------------
 Procedure TDSSCircuit.Set_ActiveCktElement(Value:TDSSCktElement);
 BEGIN
@@ -2113,7 +2102,7 @@ BEGIN
 END;
 
 //----------------------------------------------------------------------------
-Procedure TDSSCircuit.AddCktElement(Handle:Integer);
+Procedure TDSSCircuit.AddCktElement();
 
 
 BEGIN
@@ -2163,8 +2152,6 @@ BEGIN
        PVSYSTEM_ELEMENT:PVSystems.Add(ActiveCktElement);
    END;
 
-  // AddDeviceHandle(Handle); // Keep Track of this device result is handle
-  AddDeviceHandle(CktElements.Count); // Handle is global index into CktElements
   ActiveCktElement.Handle := CktElements.Count;
 
 END;

@@ -107,7 +107,7 @@ begin
         for i := 1 to NumDevices do
         begin
             DevName := DeviceList.NameOfIndex(i);
-            DevClassName := TDSSClass(DSSClassList.Get(DeviceRef^[i].CktElementClass)).Name;
+            DevClassName := TDSSClass(DSSClassList.Get(TDSSCktElement(CktElements.At(i)).ClassIndex)).Name;
             MaxDeviceNameLength := Max(MaxDeviceNameLength, (Length(DevName) + Length(DevClassName) + 1));
         end;
 end;
