@@ -639,7 +639,18 @@ End;
 
 {$IFDEF DSS_CAPI}
 FUNCTION GetDSSVersion: String;
+var
+    timestamp: String;
 BEGIN
+    timestamp := Format('%.4d%.2d%.2d%.2d%.2d%.2d', [
+        {$include %DATEYEAR%}, 
+        {$include %DATEMONTH%},
+        {$include %DATEDAY%},
+        {$include %TIMEHOUR%},
+        {$include %TIMEMINUTE%},
+        {$include %TIMESECOND%}
+    ]);
+
     Result := 'DSS C-API Library version ' + DSS_CAPI_VERSION +
               ' revision ' + DSS_CAPI_REV +
               ' based on OpenDSS SVN ' + DSS_CAPI_SVN_REV
@@ -651,6 +662,7 @@ BEGIN
     {$IFDEF DSS_CAPI_DEBUG_BUILD}
               + ' DEBUG'
     {$ENDIF}
+              + ' ' + timestamp
               ;
 END;
 {$ELSE}
