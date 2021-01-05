@@ -46,7 +46,7 @@ unit linenoise;
 
 {$MACRO ON}
 {$IFDEF Windows}
-{$DEFINE LINENOISE_CALL:=stdcall;external 'liblinenoise'}
+{$DEFINE LINENOISE_CALL:=stdcall;external 'linenoise'}
 {$ELSE} // Darwin and Unix
 {$linklib linenoise}
 {$DEFINE LINENOISE_CALL:=cdecl;external}

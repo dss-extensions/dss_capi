@@ -4,7 +4,7 @@ unit KLUSolve;
 
 {$MACRO ON}
 {$IFDEF Windows}
-{$DEFINE KLU_CALL:=stdcall;external 'libklusolve'}
+{$DEFINE KLU_CALL:=stdcall;external 'klusolve'}
 {$ELSE} // Darwin and Unix
 {$linklib klusolve}
 {$DEFINE KLU_CALL:=cdecl;external}
