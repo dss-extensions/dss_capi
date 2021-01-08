@@ -83,7 +83,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;      // Definition of the main property editing function
-        function Init(Handle: Integer): Integer; OVERRIDE;  // Initialize by handle (index), if necessary
 
 
         function NewObject(const ObjName: String): Integer; OVERRIDE; // This function is called by the DSS New command
@@ -711,39 +710,6 @@ begin
         DoSimpleMsg('Error in Load MakeLike: "' + OtherIndMach012Name + '" Not Found.', 562);
 
 end;
-
-//----------------------------------------------------------------------------
-function TIndMach012.Init(Handle: Integer): Integer;
-//----------------------------------------------------------------------------
-
-// Optional function if you want to do anything to initialize objects of this class
-
-var
-    p: TIndMach012Obj;
-
-begin
-
-    if (Handle = 0) then
-    begin  // init all
-        p := elementList.First;
-        while (p <> NIL) do
-        begin
-            p.Randomize(0);
-            p := elementlist.Next;
-        end;
-    end
-    else
-    begin
-        Active := Handle;
-        p := GetActiveObj;
-        p.Randomize(0);
-    end;
-
-    DoSimpleMsg('Need to implement TIndMach012.Init', -1);
-    Result := 0;
-
-end;
-
 
 //------------------------- MAIN OBJECT CONSTRUCTOR ---------------------
 constructor TIndMach012Obj.Create(ParClass: TDSSClass; const IndMach012ObjName: String);

@@ -29,7 +29,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
       // Set this property to point ActiveCNDataObj to the right value
@@ -209,12 +208,6 @@ begin
         end
     else
         DoSimpleMsg('Error in Concentric Neutral MakeLike: "' + CNName + '" Not Found.', 102);
-end;
-
-function TCNData.Init(Handle: Integer): Integer;
-begin
-    DoSimpleMsg('Need to implement TCNData.Init', -1);
-    Result := 0;
 end;
 
 function TCNData.Get_Code: String;  // Returns active line code string

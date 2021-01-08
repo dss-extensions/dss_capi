@@ -42,7 +42,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -660,15 +659,6 @@ begin
         DoSimpleMsg('Error in Vsource MakeLike: "' + OtherSource + '" Not Found.', 322);
 
 end;
-
-//----------------------------------------------------------------------------
-function TVsource.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TVsource.Init', -1);
-    Result := 0;
-end;
-
 //=============================================================================
 constructor TVsourceObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin

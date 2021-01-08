@@ -70,7 +70,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -535,15 +534,6 @@ begin
 
 
 end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TCapacitor.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TCapacitor.Init', 452);
-    Result := 0;
-end;
-
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      TCapacitor Obj

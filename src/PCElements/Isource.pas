@@ -46,7 +46,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -382,13 +381,6 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function TIsource.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TIsource.Init', -1);
-    Result := 0;
-end;
-
 procedure TIsource.IsourceSetBus1(const S: String);
 var
     s2: String;

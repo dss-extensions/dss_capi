@@ -118,7 +118,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
         procedure ResetAll; OVERRIDE;
@@ -552,32 +551,6 @@ begin
         DoSimpleMsg('Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
 
 end;
-
-{--------------------------------------------------------------------------}
-function TDSSMonitor.Init(Handle: Integer): Integer;
-var
-    Mon: TMonitorObj;
-
-begin
-    Result := 0;
-
-    if Handle > 0 then
-    begin
-        Mon := ElementList.Get(Handle);
-        Mon.ResetIt;
-    end
-    else
-    begin  // Do 'em all
-        Mon := ElementList.First;
-        while Mon <> NIL do
-        begin
-            Mon.ResetIt;
-            Mon := ElementList.Next;
-        end;
-    end;
-
-end;
-
 
 {==========================================================================}
 {                    TMonitorObj                                           }

@@ -37,7 +37,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
     end;
@@ -388,14 +387,6 @@ begin
     else
         DoSimpleMsg('Error in UPFC MakeLike: "' + OtherSource + '" Not Found.', 322);
 
-end;
-
-//----------------------------------------------------------------------------
-function TUPFC.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TUPFC.Init', -1);
-    Result := 0;
 end;
 
 //=============================================================================

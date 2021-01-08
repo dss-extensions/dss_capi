@@ -88,7 +88,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
         function Find(const ObjName: String): Pointer; OVERRIDE;  // Find an obj of this class by name
@@ -781,12 +780,6 @@ begin
         DoSimpleMsg('Error in LoadShape MakeLike: "' + ShapeName + '" Not Found.', 611);
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TLoadShape.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TLoadShape.Init', -1);
-    REsult := 0;
-end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TLoadShape.Get_Code: String;  // Returns active line code string
 var

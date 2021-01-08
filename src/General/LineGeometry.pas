@@ -54,7 +54,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
 
@@ -568,19 +567,9 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TLineGeometry.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TLineGeometry.Init', -1);
-    Result := 0;
-end;
-
 function TLineGeometry.Get_Code: String;  // Returns active line code string
-
 begin
-
     Result := TLineGeometryObj(ElementList.Active).Name;
-
 end;
 
 procedure TLineGeometry.Set_Code(const Value: String);  // sets the  active LineGeometry

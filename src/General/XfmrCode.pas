@@ -34,7 +34,6 @@ type
         constructor Create;
         destructor Destroy; OVERRIDE;
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
        // Set this property to point ActiveXfmrCodeObj to the right value
@@ -576,12 +575,6 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TXfmrCode.Init(Handle: Integer): Integer;
-begin
-    DoSimpleMsg('Need to implement TXfmrCode.Init', -1);
-    REsult := 0;
-end;
-
 function TXfmrCode.Get_Code: String;  // Returns active line code string
 begin
     Result := TXfmrCodeObj(ElementList.Active).Name;

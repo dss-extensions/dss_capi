@@ -29,7 +29,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
        // Set this property to point ActiveTSDataObj to the right value
@@ -195,12 +194,6 @@ begin
         end
     else
         DoSimpleMsg('Error in TapeShield MakeLike: "' + TSName + '" Not Found.', 102);
-end;
-
-function TTSData.Init(Handle: Integer): Integer;
-begin
-    DoSimpleMsg('Need to implement TTSData.Init', -1);
-    Result := 0;
 end;
 
 function TTSData.Get_Code: String;  // Returns active line code string

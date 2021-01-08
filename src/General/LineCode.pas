@@ -55,7 +55,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
        // Set this property to point ActiveLineCodeObj to the right value
@@ -598,20 +597,9 @@ begin
 
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TLineCode.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TLineCode.Init', -1);
-    REsult := 0;
-end;
-
 function TLineCode.Get_Code: String;  // Returns active line code string
-
 begin
-
     Result := TlineCodeObj(ElementList.Active).Name;
-
 end;
 
 procedure TLineCode.Set_Code(const Value: String);  // sets the  active linecode
