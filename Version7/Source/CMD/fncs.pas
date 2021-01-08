@@ -759,7 +759,11 @@ begin
 
   ET.Clear;
   ET.Start;
+{$IFDEF Windows}
+  FLibHandle := SafeLoadLibrary ('fncs.' + SharedSuffix);
+{$ELSE} // Darwin and Unix
   FLibHandle := SafeLoadLibrary ('libfncs.' + SharedSuffix);
+{$ENDIF}
   topicList:=TList.Create();
   if FLibHandle <> DynLibs.NilHandle then begin
     FuncError := False;
