@@ -55,7 +55,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -412,14 +411,6 @@ begin
     else
         DoSimpleMsg('Error in GICLine MakeLike: "' + OtherLine + '" Not Found.', 322);
 
-end;
-
-//----------------------------------------------------------------------------
-function TGICLine.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TGICLine.Init', -1);
-    Result := 0;
 end;
 
 //=============================================================================

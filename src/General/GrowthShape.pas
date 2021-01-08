@@ -70,7 +70,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
        // Set this property to point ActiveGrowthShapeObj to the right value
@@ -296,15 +295,6 @@ begin
 
 
 end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TGrowthShape.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TGrowthShape.Init', -1);
-    REsult := 0;
-end;
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TGrowthShape.Get_Code: String;  // Returns active line code string
 var

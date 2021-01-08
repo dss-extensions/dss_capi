@@ -83,7 +83,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -602,16 +601,6 @@ begin
 
 
 end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TReactor.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TReactor.Init', -1);
-    REsult := 0;
-end;
-
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      TReactor Obj
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

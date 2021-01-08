@@ -127,7 +127,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
         procedure ResetRegistersAll;
@@ -903,34 +902,6 @@ begin
         end
     else
         DoSimpleMsg('Error in Load MakeLike: "' + OtherGeneratorName + '" Not Found.', 562);
-
-end;
-
-//----------------------------------------------------------------------------
-function TGenerator.Init(Handle: Integer): Integer;
-var
-    p: TGeneratorObj;
-
-begin
-
-    if (Handle = 0) then
-    begin  // init all
-        p := elementList.First;
-        while (p <> NIL) do
-        begin
-            p.Randomize(0);
-            p := elementlist.Next;
-        end;
-    end
-    else
-    begin
-        Active := Handle;
-        p := GetActiveObj;
-        p.Randomize(0);
-    end;
-
-    DoSimpleMsg('Need to implement TGenerator.Init', -1);
-    Result := 0;
 
 end;
 

@@ -37,7 +37,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -325,14 +324,6 @@ begin
     else
         DoSimpleMsg('Error in Equivalent MakeLike: "' + OtherSource + '" Not Found.', 801);
 
-end;
-
-//----------------------------------------------------------------------------
-function TEquivalent.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TEquivalent.Init', -1);
-    Result := 0;
 end;
 
 //----------------------------------------------------------------------------

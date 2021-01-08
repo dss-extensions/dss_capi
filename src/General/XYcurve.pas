@@ -65,7 +65,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
         function Find(const ObjName: String; const ChangeActive: Boolean=True): Pointer; OVERRIDE;  // Find an obj of this class by name
@@ -400,14 +399,6 @@ begin
         DoSimpleMsg('Error in XYCurve MakeLike: "' + CurveName + '" Not Found.', 611);
 
 
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TXYcurve.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TXYcurve.Init', -1);
-    Result := 0;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

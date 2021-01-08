@@ -52,7 +52,6 @@ type
 
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
     end;
@@ -872,16 +871,6 @@ begin
         DoSimpleMsg('Error in Line MakeLike: "' + LineName + '" Not Found.', 182);
 
 end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TLine.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TLine.Init', -1);
-    Result := 0;
-end;
-
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      TLine Obj
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

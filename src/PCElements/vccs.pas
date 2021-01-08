@@ -33,7 +33,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -344,12 +343,6 @@ begin
         end
     else
         DoSimpleMsg('Error in VCCS MakeLike: "' + OtherSource + '" Not Found.', 332);
-end;
-
-function TVCCS.Init(Handle: Integer): Integer;
-begin
-    DoSimpleMsg('Need to implement TVCCS.Init', -1);
-    Result := 0;
 end;
 
 constructor TVCCSObj.Create(ParClass: TDSSClass; const SourceName: String);

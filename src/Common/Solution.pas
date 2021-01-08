@@ -104,7 +104,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
     end;
@@ -1725,16 +1724,6 @@ begin
     else
         Result := idx;
 end;
-
-//----------------------------------------------------------------------------
-function TDSSSolution.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TSolution.Init', -1);
-    Result := 0;
-end;
-
-
 // ===========================================================================================
 procedure TSolutionObj.GetPCInjCurr;
 var

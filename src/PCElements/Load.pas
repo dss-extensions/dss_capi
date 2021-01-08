@@ -67,7 +67,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -874,33 +873,6 @@ begin
     else
         DoSimpleMsg('Error in Load MakeLike: "' + OtherLoadName + '" Not Found.', 581);
 
-end;
-
-//----------------------------------------------------------------------------
-function TLoad.Init(Handle: Integer): Integer;
-var
-    p: TLoadObj;
-
-begin
-
-    if Handle = 0 then
-    begin  // init all load objects
-        p := elementList.First;
-        while p <> NIL do
-        begin
-            p.Randomize(0);
-            p := elementlist.Next;
-        end;
-    end
-    else
-    begin
-        Active := Handle;
-        p := GetActiveObj;
-        p.Randomize(0);
-    end;
-
-    DoSimpleMsg('Need to finish implementation TLoad.Init', -1);
-    Result := 0;
 end;
 
 //----------------------------------------------------------------------------

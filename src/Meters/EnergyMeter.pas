@@ -235,7 +235,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
         procedure ResetMeterZonesAll;
@@ -828,14 +827,6 @@ begin
     else
         DoSimpleMsg('Error in EnergyMeter MakeLike: "' + EnergyMeterName + '" Not Found.', 521);
 
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TEnergyMeter.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TEnergyMeter.Init', -1);
-    Result := 0;
 end;
 
 {--------------------------------------------------------------------------}

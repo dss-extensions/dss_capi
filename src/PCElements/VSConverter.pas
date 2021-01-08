@@ -30,7 +30,6 @@ type
         constructor Create;
         destructor Destroy; OVERRIDE;
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -348,12 +347,6 @@ begin
         end // with
     else
         DoSimpleMsg('Error in VSConverter MakeLike: "' + VSCName + '" Not Found.', 351);
-end;
-
-function TVSConverter.Init(Handle: Integer): Integer;
-begin
-    DoSimpleMsg('Need to implement TVSConverter.Init', -1);
-    Result := 0;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

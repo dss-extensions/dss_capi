@@ -34,7 +34,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
     end;
 
@@ -320,16 +319,6 @@ begin
         DoSimpleMsg('Error in GICsource MakeLike: "' + OtherSource + '" Not Found.', 332);
 
 end;
-
-//----------------------------------------------------------------------------
-function TGICsource.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TGICsource.Init', -1);
-    Result := 0;
-end;
-
-
 //----------------------------------------------------------------------------
 constructor TGICSourceObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin

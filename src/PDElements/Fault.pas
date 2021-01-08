@@ -65,7 +65,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
     end;
@@ -432,15 +431,6 @@ begin
 
 
 end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TFault.Init(Handle: Integer): Integer;
-
-begin
-    DoSimpleMsg('Need to implement TFault.Init', -1);
-    Result := 0;
-end;
-
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      TFault Obj

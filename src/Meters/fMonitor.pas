@@ -36,7 +36,6 @@ TYPE
        destructor  Destroy; override;
 
        Function Edit:Integer;                 override;     // uses global parser
-       Function Init(Handle:Integer):Integer; override;
        Function NewObject(const ObjName:String):Integer;  override;
 
        Procedure ResetAll;   Override;
@@ -624,29 +623,6 @@ Begin
    ELSE  DoSimpleMsg('Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
 
 End;
-
-{--------------------------------------------------------------------------}
-Function TDSSFMonitor.Init(Handle:Integer):Integer;
-VAR
-   Mon:TFMonitorObj;
-
-Begin
-      Result := 0;
-
-      IF Handle>0  THEN Begin
-         Mon := ElementList.Get(Handle);
-         Mon.ResetIt;
-      End
-      ELSE Begin  // Do 'em all
-        Mon := ElementList.First;
-        WHILE Mon<>Nil DO Begin
-            Mon.ResetIt;
-            Mon := ElementList.Next;
-        End;
-      End;
-
-End;
-
 
 {==========================================================================}
 {                    TFMonitorObj                                           }

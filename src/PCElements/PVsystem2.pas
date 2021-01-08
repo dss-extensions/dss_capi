@@ -109,7 +109,6 @@ type
         destructor Destroy; OVERRIDE;
 
         function Edit(): Integer; OVERRIDE;
-        function Init(Handle: Integer): Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
 
         procedure ResetRegistersAll;
@@ -1004,31 +1003,6 @@ begin
     end
     else
         DoSimpleMsg('Error in PVSystem MakeLike: "' + OtherPVsystemObjName + '" Not Found.', 562);
-end;
-
-function TPVsystem2.Init(Handle: Integer): Integer;
-var
-    p: TPVsystem2Obj;
-
-begin
-    if (Handle = 0) then
-    begin  // init all
-        p := elementList.First;
-        while (p <> NIL) do
-        begin
-            p.Randomize(0);
-            p := elementlist.Next;
-        end;
-    end
-    else
-    begin
-        Active := Handle;
-        p := GetActiveObj;
-        p.Randomize(0);
-    end;
-
-    DoSimpleMsg('Need to implement TPVSystem.Init', -1);
-    Result := 0;
 end;
 
 procedure TPVsystem2.ResetRegistersAll;  // Force all EnergyMeters in the circuit to reset
