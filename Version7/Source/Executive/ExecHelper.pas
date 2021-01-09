@@ -4156,83 +4156,120 @@ Begin
 
 End;
 
-FUNCTION DoRemoveCmd:Integer;
-Var
-   ParamName :String;
-   Param     :String;
-   Str       :String;
-   ParamPointer :Integer;
-   DeviceIndex :Integer;
+function DoRemoveCmd:Integer;
+var
+    ParamName: String;
+    Param: String;
+    ParamPointer: Integer;
+    DeviceIndex: Integer;
 
-   FElementName :String;
-   FKeepLoad    :Boolean;
-   FEditString  :String;
+    FElementName: String;
+    FKeepLoad: Boolean;
+    FEditString: String;
 
-   pPDElem      :TPDelement;
-   pMeter       :TEnergyMeterObj;
-   FMeterName   :String;
+    pPDElem: TPDelement;
+    pMeter: TEnergyMeterObj;
+    FMeterName: String;
+begin
+    Result := 0;
+    if ActiveCircuit = nil then
+    begin
+        DoSimpleMsg('Error: There is no active circuit!', 28998);
+        Exit;
+    end;
+    
+    FElementName := '';
+    FEditString := '';
+    FKeepLoad := TRUE;
+    ParamPointer := 0;
+    
+    ParamName := Parser.NextParam;
+    Param := Parser.StrValue;
+    
+    while Length(Param) > 0 do
+    begin
+        if Length(ParamName) = 0 then 
+            Inc(ParamPointer)
+        else 
+            ParamPointer := RemoveCommands.GetCommand(ParamName);
 
-Begin
+        case ParamPointer of
+            1: FElementName := Param; {ElementName}
+            2: FkeepLoad := InterpretYesNo(Param); {KeepLoad}
+            3: FEditString := Param; {EditString}
+        end;
 
-     Result := 0;
+        ParamName := Parser.NextParam;
+        Param := Parser.StrValue;
+    end;
+    
+    // Check for existence of FelementName
+    DeviceIndex := GetCktElementIndex(FElementName);
+    if DeviceIndex = 0 then
+    begin
+        DoSimpleMsg(
+            Format('Error: Element %s does not exist in this circuit.', [FelementName]),
+            28726
+        );
+        Exit;
+    end;
+    
+    // first, checks if the element is not linked to an energy meter, if it does, abort (added 01/06/2021 -DM)
+    with ActiveCircuit do
+    begin
+        pMeter := EnergyMeters.First;
+        while pMeter <> NIL do
+        begin
+            if AnsiLowerCase(pMeter.ElementName) = AnsiLowerCase(FElementName) then
+            begin
+                DoSimpleMsg(
+                    Format('Error: Element %s is tied to an Energy Meter.', [FelementName]),
+                    28800
+                );
+                Exit;
+            end;
+            pMeter := EnergyMeters.Next;
+        end;
+    end;
+    
+    // Set CktElement active
+    SetObject(FelementName);
+    if not (ActiveCircuit.ActiveCktElement is TPDElement) then 
+    begin
+        DoSimpleMsg(
+            Format('Error: Element %s is not a power delivery element (PDElement)', [FelementName]), 
+            28728
+        );
+        Exit;
+    end;
 
-     FKeepLoad := TRUE;
-     ParamPointer := 0;
+    // Get Energymeter associated with this element.
+    pPDElem := ActiveCircuit.ActiveCktElement as TPDElement;
+    if pPDElem.SensorObj = NIL then 
+    begin
+        DoSimpleMsg(Format(
+            'Element %s.%s is not in a meter zone! Add an Energymeter. ', 
+            [pPDelem.Parentclass.Name, pPDelem.name]
+        ), 287261);
+        Exit;
+    end;
+    
+    FMeterName := Format('%s.%s', [pPDElem.SensorObj.ParentClass.Name, pPDElem.SensorObj.Name]);
+    SetObject(FMeterName);
 
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
-
-     WHILE Length(Param)>0 DO
-     Begin
-         IF   (Length(ParamName) = 0)  THEN Inc(ParamPointer)
-         ELSE ParamPointer := RemoveCommands.GetCommand(ParamName);
-
-         CASE ParamPointer OF
-           1: FElementName := Param; {ElementName}
-           2: FkeepLoad := InterpretYesNo(Param); {KeepLoad}
-           3: FEditString := Param; {EditString}
-         ELSE
-
-         End;
-
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
-     End;
-
-     // Check for existence of FelementName
-     DeviceIndex := GetCktElementIndex(FElementName);
-     if DeviceIndex = 0  then
-     Begin
-         DoSimpleMsg('Error: Element '+ FelementName + ' does not exist in this circuit.', 28726);
-     End
-     Else Begin // Element exists  GO!
-
-      // Set CktElement active
-        SetObject(FelementName);
-
-      // Get Energymeter associated with this element.
-        if ActiveCircuit.ActiveCktElement is TPDElement then Begin
-          pPDElem := ActiveCircuit.ActiveCktElement as TPDElement;
-          if pPDElem.SensorObj = Nil then DoSimpleMsg(Format('Element %s.%s is not in a meter zone! Add an Energymeter. ',[pPDelem.Parentclass.Name, pPDelem.name  ]),287261)
-          Else Begin
-            FMeterName := Format('%s.%s',[pPDElem.SensorObj.ParentClass.Name, pPDElem.SensorObj.Name]);
-            SetObject(FMeterName);
-
-            if ActiveCircuit.ActiveCktElement is TEnergyMeterObj then Begin
-                pMeter := ActiveCircuit.ActiveCktElement as TEnergyMeterObj;
-                // in ReduceAlgs
-                DoRemoveBranches(pMeter.BranchList, pPDelem, FKeepLoad, FEditString);
-            End
-            Else DoSimpleMsg('Error: The Sensor Object for '+ FelementName + ' is not an EnergyMeter object', 28727);
-          End;
-        End
-        Else DoSimpleMsg('Error: Element '+ FelementName + ' is not a power delivery element (PDElement)', 28728);
-
-     End;
-
-
-End;
-
+    if not (ActiveCircuit.ActiveCktElement is TEnergyMeterObj) then 
+    begin
+        DoSimpleMsg(
+            Format('Error: The Sensor Object for %s is not an EnergyMeter object', [FelementName]),
+            28727
+        );
+        Exit;
+    end;
+    
+    pMeter := ActiveCircuit.ActiveCktElement as TEnergyMeterObj;
+    // in ReduceAlgs
+    DoRemoveBranches(pMeter.BranchList, pPDelem, FKeepLoad, FEditString);
+end;
 
 initialization
 
