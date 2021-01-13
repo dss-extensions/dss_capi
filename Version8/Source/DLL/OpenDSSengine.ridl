@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 1/6/2021 10:39:19 AM (- $Rev: 12980 $, 8125625).
+// File generated on 1/13/2021 10:43:19 AM (- $Rev: 12980 $, 8585390).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -1190,7 +1190,7 @@ library OpenDSSengine
     HRESULT _stdcall SectSeqIdx([out, retval] long* Value);
     [propget, id(0x000000E9), helpstring("Total Customers downline from this section")]
     HRESULT _stdcall SectTotalCust([out, retval] long* Value);
-    [propget, id(0x000000EA), helpstring("Returns the list of all PCE withint he area covered by the EM")]
+    [propget, id(0x000000EA), helpstring("Returns the list of all PCE within the area covered by the EM")]
     HRESULT _stdcall ZonePCE([out, retval] VARIANT* Value);
   };
 

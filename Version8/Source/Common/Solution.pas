@@ -1203,9 +1203,10 @@ Begin
 
    UNTIL ControlActionsDone or (ControlIteration >= MaxControlIterations);
 
-   If Not ControlActionsDone and (ControlIteration >= MaxControlIterations) then  Begin
-       DoSimpleMsg('Warning Max Control Iterations Exceeded. ' + CRLF + 'Tip: Show Eventlog to debug control settings.', 485);
-       SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
+   If Not ControlActionsDone and (ControlIteration >= MaxControlIterations) then
+   Begin
+    Windows.MessageBox(0,'Warning Max Control Iterations Exceeded. ' + CRLF + 'Tip: Show Eventlog to debug control settings.','Warning',MB_OK);
+    SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
    End;
 
    If ActiveCircuit[ActorID].LogEvents Then LogThisEvent('Solution Done',ActorID);
