@@ -33,6 +33,7 @@ VAR
    Procedure ShowMessageForm(S:TStrings);
    FUNCTION  DSSMessageDlg(const Msg:String;err:boolean):Integer;
    PROCEDURE DSSInfoMessageDlg(const Msg:String);
+
    FUNCTION  GetDSSExeFile: String;
    PROCEDURE CloseDownForms;
    Procedure ShowTreeView(Const Fname:String);
@@ -208,6 +209,7 @@ Begin
 
      SolutionAbort  :=  True;
 End;
+
 
 Procedure DSSInfoMessageDlg(const Msg:String);
 Var
