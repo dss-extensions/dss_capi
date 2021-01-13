@@ -569,7 +569,6 @@ Begin
      AppendGlobalResultCRLF(S);
 End;
 
-
 //----------------------------------------------------------------------------
 PROCEDURE SetObject(const param :string);
 
