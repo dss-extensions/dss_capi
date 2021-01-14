@@ -2022,6 +2022,8 @@ begin
                     NewRatings[j] := FLineWireData^[i].AmpRatings[j];
                 RatingsInc := TRUE;         // Yes, there are seasonal ratings
             end;
+            NormAmps := FLineWireData^[i].NormAmps;
+            EmergAmps := FLineWireData^[i].EmergAmps;
         end
         else
             DoSimpleMsg('Wire "' + AuxParser.StrValue + '" was not defined first (LINE.' + name + ').', 18103);
