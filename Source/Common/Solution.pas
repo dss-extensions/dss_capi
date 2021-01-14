@@ -2742,6 +2742,7 @@ var
                         HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
                     Else
                         DosimpleMsg('Unknown solution mode.', 481);
+                        Windows.MessageBox(0,'Unknown solution mode. ErrorCode 481','Error',MB_OK)
                     End;
                   end;
                   {$IFNDEF FPC}
@@ -2798,7 +2799,7 @@ var
                 ActorActive  :=  False;
               End
               else                       // I don't know what the message is
-              DosimpleMsg('Unknown Message.', 7010);
+                Windows.MessageBox(0,'Unknown message. ErrorCode 7010','Error',MB_OK)
             End;
 
       end;
