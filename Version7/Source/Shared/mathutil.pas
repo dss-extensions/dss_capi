@@ -449,25 +449,25 @@ END {Bessel_I0};
 
 FUNCTION  Bessel_I1 (CONST x:  Complex):  Complex;
 CONST
-    MaxTerm    : Integer  = 1000;
+    MaxTerm    : Double = 1000.0;
     EpsilonSqr : Double = 1.0E-20;
 
-  VAR
-    i      :  Integer;
+VAR
+    i      :  Double;
     term, incterm, newterm : Complex;
     SizeSqr:  Double;
 
 Begin
-    term := CdivReal(x , 2);
-    Result := Term;
+    term    := CdivReal(x , 2.0);
+    Result  := Term;
     incTerm := Term;
-    i:=4;
+    i       := 4.0;
     REPEAT
        newterm := CdivReal(x, i);
        Term := Cmul(term, cmul(incterm, newterm));
        Caccum(Result, Term);
        incterm := newterm;
-       inc(i,2);
+       i := i + 2.0;
        SizeSqr := SQR(term.re) + SQR(term.im)
     UNTIL (i > MaxTerm) OR (SizeSqr < EpsilonSqr)
 
