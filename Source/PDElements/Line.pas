@@ -1742,7 +1742,7 @@ begin
      AmpRatings       := Copy(NewRatings);     {**** NewRatings disappears when it goes out of scope}
      NumAmpRatings    := NewNumRat;
   End;
-
+  UpdatePDProperties;
 end;
 
 procedure TLineObj.FetchCNCableList(const Code: string);
