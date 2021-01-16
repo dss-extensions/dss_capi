@@ -2037,6 +2037,7 @@ begin
             AmpRatings[j] := NewRatings[j];
     end;
 
+    UpdatePDProperties;
 end;
 
 procedure TLineObj.FetchCNCableList(const Code: String);
