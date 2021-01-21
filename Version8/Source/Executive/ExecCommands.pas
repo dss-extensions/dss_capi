@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 148;
+     NumExecCommands = 149;
 
 Var
 
@@ -199,6 +199,7 @@ Begin
      ExecCommand[146] := 'AllPDEatBus';
      ExecCommand[147] := 'TotalPowers';
      ExecCommand[148] := 'GISGoTo';
+     ExecCommand[149] := 'COMHelp';
 
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
@@ -688,6 +689,8 @@ Begin
                          'The following conditions need to be fulfilled:' + CRLF + CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
                          '2. OpenDSS-GIS must be initialized (use GISStart command)';
+     CommandHelp[149] := 'Shows the documentation file for the COM interface.' +
+                         'This file provides guidance on the properties and methods included in the COM interface as well as examples and tips. Use this file to learn more about the COM interface and its different interfaces or just as a reference guide.';
 End;
 
 //----------------------------------------------------------------------------
@@ -819,6 +822,9 @@ Begin
             End;
        148: Begin
               GlobalResult  :=  show_LatLong();
+            end;
+       149: Begin
+              Show_COM_Help();
             end;
 
      ELSE IF ActiveCircuit[ActiveActor]=nil THEN
