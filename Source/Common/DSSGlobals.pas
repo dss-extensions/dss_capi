@@ -393,6 +393,7 @@ procedure DoClone();
 procedure Delay(TickTime : Integer);
 
 procedure GetDefaultPorts();
+procedure Show_COM_Help();
 
 
 
@@ -1189,6 +1190,12 @@ Begin
     ShowMessage('There is a new version of OpenDSS avaialable for download' + CRLF +
                 'The new version can be located at:' + CRLF + CRLF +
                 'https://sourceforge.net/projects/electricdss/');
+End;
+
+//**********************Launches the COM Help file******************************
+procedure Show_COM_Help();
+Begin
+  ShellExecute(0, 'open',pWidechar(DSSDirectory + '\OpenDSS_COM.chm'), nil, nil, SW_SHOWNORMAL);
 End;
 
 //*********************Gets the processor information***************************
