@@ -72,7 +72,7 @@ TYPE
 
       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
       PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-      FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+//      FUNCTION  GetPropertyValue(Index:Integer):String;Override;
     end;
 
    TConductorDataArray = Array[1..100] of TConductorDataObj;
@@ -286,7 +286,7 @@ Begin
     End;
   End;
 end;
-
+{
 function TConductorDataObj.GetPropertyValue(Index: Integer): String;
 Var
         i, j:Integer;
@@ -319,7 +319,7 @@ begin
     END;
 
 end;
-
+}
 procedure TConductorDataObj.InitPropertyValues(ArrayOffset: Integer);
 begin
   PropertyValue[ArrayOffset + 1] := '-1';
