@@ -43,6 +43,7 @@ type
 
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
         PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+//        FUNCTION  GetPropertyValue(Index:Integer):String;Override;
    end;
 
 implementation
@@ -164,7 +165,22 @@ Begin
     End;
   End;
 end;
-
+{
+Function TCableDataObj.GetPropertyValue(Index:Integer):String;
+Var
+  i :Integer;
+Begin
+  Result := '';
+  Case i of
+    1: Result :=  Format('%.3g',[FEpsR]);
+    2: Result :=  Format('%.6g',[FInsLayer]);
+    3: Result :=  Format('%.6g',[FDiaIns]);
+    4: Result :=  Format('%.6g',[FDiaCable]);
+  ELSE
+    Result := Inherited GetPropertyValue(index);
+  END;
+end;
+}
 procedure TCableDataObj.InitPropertyValues(ArrayOffset: Integer);
 begin
   PropertyValue[ArrayOffset + 1] := '2.3';
