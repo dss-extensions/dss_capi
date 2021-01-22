@@ -48,6 +48,7 @@ TYPE
 
       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
       PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+//      FUNCTION  GetPropertyValue(Index:Integer):String;Override;
   end;
 
 implementation
@@ -235,7 +236,22 @@ Begin
     End;
   End;
 end;
-
+{
+FUNCTION TCNDataObj.GetPropertyValue(Index: Integer): String;
+Var
+  i :Integer;
+Begin
+  Result := '';
+  Case i of
+    1: Result :=  Format('%d',[FkStrand]);
+    2: Result :=  Format('%.6g',[FDiaStrand]);
+    3: Result :=  Format('%.6g',[FGmrStrand]);
+    4: Result :=  Format('%.6g',[FRStrand]);
+  ELSE
+    Result := Inherited GetPropertyValue(index);
+  END;
+end;
+}
 procedure TCNDataObj.InitPropertyValues(ArrayOffset: Integer);
 begin
   PropertyValue[1] := '2';
