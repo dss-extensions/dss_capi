@@ -179,6 +179,7 @@ type
       FWVMode                 : Boolean; //boolean indicating if under watt-var mode from InvControl
       FWPMode                 : Boolean; //boolean indicating if under watt-pf mode from InvControl
       FDRCMode                : Boolean; //boolean indicating if under DRC mode from InvControl
+      FAVRMode                : Boolean;
 
       PROCEDURE CalcDailyMult(Hr:double);  // now incorporates DutyStart offset
       PROCEDURE CalcDutyMult(Hr:double);
@@ -247,6 +248,9 @@ type
 
       function  Get_DRCmode: Boolean;
       procedure Set_DRCmode(const Value: Boolean);
+
+      function  Get_AVRmode: Boolean;
+      procedure Set_AVRmode(const Value: Boolean);
 
       procedure kWOut_Calc;
 
@@ -347,6 +351,7 @@ type
       Property VVmode       : Boolean          read Get_VVmode                  Write Set_VVmode;
       Property WPmode       : Boolean          read Get_WPmode                  Write Set_WPmode;
       Property WVmode       : Boolean          read Get_WVmode                  Write Set_WVmode;
+      Property AVRmode      : Boolean          read Get_AVRmode                 Write Set_AVRmode;
       Property DRCmode      : Boolean          read Get_DRCmode                 Write Set_DRCmode;
       Property InverterON   : Boolean          read Get_InverterON              Write Set_InverterON;
       Property VarFollowInverter : Boolean     read Get_VarFollowInverter       Write Set_VarFollowInverter;
@@ -926,6 +931,7 @@ FUNCTION TPVsystem.MakeLike(Const OtherPVSystemObjName:String):Integer;
             FWPMode                         := OtherPVSystemObj.FWPMode;
             FWVMode                         := OtherPVSystemObj.FWPMode;
             FDRCMode                        := OtherPVSystemObj.FDRCMode;
+            FAVRMode                        := OtherPVSystemObj.FAVRMode;
             UserModel.Name                  := OtherPVSystemObj.UserModel.Name;  // Connect to user written models
 
             ForceBalanced                   := OtherPVSystemObj.ForceBalanced;
@@ -1108,6 +1114,7 @@ Constructor TPVsystemObj.Create(ParClass:TDSSClass; const SourceName:String);
     FWVMode                       := FALSE;
     FWPMode                       := FALSE;
     FDRCMode                      := FALSE;
+    FAVRMode                      := FALSE;
     InitPropertyValues(0);
     RecalcElementData(ActiveActor);
 
@@ -1654,7 +1661,7 @@ PROCEDURE TPVsystemObj.ComputeInverterPower;
                     kW_out := abs(kvar_out) * sqrt(1.0/(1.0 - Sqr(Fpf_wp_nominal)) - 1.0) * sign(kW_out);
                   end
                 // Forces constant power factor when kvar limit is exceeded and PF Priority is true. Temp PF is calculated based on kvarRequested
-                else if PF_Priority and (not FVVMode or not FDRCMode or not FWVmode) then
+                else if PF_Priority and (not FVVMode or not FDRCMode or not FWVmode or not FAVRMode) then
                   Begin
                     if abs(kvarRequested) > 0.0  then
                       begin
@@ -1684,7 +1691,7 @@ PROCEDURE TPVsystemObj.ComputeInverterPower;
                 kW_out := FkVArating * abs(Fpf_wp_nominal) * sign(kW_out);
                 kvar_out := FkVArating * abs(sin(ArcCos(Fpf_wp_nominal))) * sign(kvarRequested)
               end
-            Else if (varMode = VARMODEKVAR) and PF_Priority and (not FVVMode or not FDRCMode or not FWVmode) then
+            Else if (varMode = VARMODEKVAR) and PF_Priority and (not FVVMode or not FDRCMode or not FWVmode or not FAVRMode) then
               // Operates under constant power factor (PF implicitly calculated based on kw and kvar)
               Begin
                 if abs(kvar_out) = Fkvarlimit then
@@ -2646,6 +2653,12 @@ function TPVsystemObj.Get_DRCmode: Boolean;
   end;
 
 
+// ============================================================Get_AVRmode===============================
+function TPVsystemObj.Get_AVRmode: Boolean;
+  begin
+    If FAVRmode Then Result := TRUE else Result := FALSE;                                                               //  engaged from InvControl (not ExpControl)
+  end;
+
 // ============================================================kWOut_Calc===============================
 Procedure TPVsystemObj.kWOut_Calc;
 
@@ -2750,6 +2763,12 @@ procedure TPVsystemObj.Set_WPmode(const Value: Boolean);
   procedure TPVsystemObj.Set_DRCmode(const Value: Boolean);
   begin
     FDRCmode := Value;
+  end;
+
+// ===========================================================================================
+procedure TPVsystemObj.Set_AVRmode(const Value: Boolean);
+  begin
+    FAVRmode := Value;
   end;
 
 // ===========================================================================================
@@ -2946,3 +2965,4 @@ initialization
   CDOUBLEONE := Cmplx(1.0, 1.0);
 
 end.
+
