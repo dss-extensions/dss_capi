@@ -355,6 +355,7 @@ VAR
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
+PROCEDURE DoThreadSafeMsg(Const S :String; ErrNum:Integer);
 
 PROCEDURE ClearAllCircuits;
 
@@ -570,6 +571,29 @@ Begin
      AppendGlobalResultCRLF(S);
 End;
 
+//----------------------------------------------------------------------------
+PROCEDURE DoThreadSafeMsg(Const S :String; ErrNum:Integer);
+// generates a dialog window thread safe using windows API
+VAR
+    myret,
+    Retval:Integer;
+Begin
+
+      IF Not NoFormsAllowed Then Begin
+       IF   In_Redirect
+       THEN Begin
+         RetVal := Windows.MessageBox(0,pChar(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S])), 'Error', MB_ABORTRETRYIGNORE);
+         IF   RetVal = 3
+         THEN Redirect_Abort := True;
+       End
+       ELSE
+         Windows.MessageBox(0, PChar(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S])), 'Warning', MB_OK);
+      End;
+
+     LastErrorMessage := S;
+     ErrorNumber := ErrNum;
+     AppendGlobalResultCRLF(S);
+End;
 //----------------------------------------------------------------------------
 PROCEDURE SetObject(const param :string);
 
