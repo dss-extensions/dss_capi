@@ -2430,7 +2430,7 @@ Begin
       If pLine.Enabled Then
       With pLine do begin
         bval := False; // flag to write a "line code" of PULengthPhaseZ
-        v1 := To_Meters (pLine.LengthUnits);
+        v1 := To_Meters (pLine.UserLengthUnits);
         geoUUID := GetDevUuid (LineLoc, pLine.Name, 1);
         if IsSwitch then begin
           ParseSwitchClass (pLine, swtCls, ratedAmps, breakingAmps);
@@ -2597,7 +2597,7 @@ Begin
           while pLine <> nil do begin
             If pLine.Enabled Then Begin
               if pLine.CondCode = pLnCd.LocalName then begin
-                pLnCd.Units := pLine.LengthUnits;
+                pLnCd.Units := pLine.UserLengthUnits;
 //                writeln ('Setting Units on ' + pLnCd.LocalName + ' to ' + LineUnitsStr(pLnCd.Units));
                 break;
               end;
