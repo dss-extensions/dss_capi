@@ -1,13 +1,15 @@
 The Open Distribution System Simulator, OpenDSS
 
-Copyright (c) 2008-2020, Electric Power Research Institute, Inc.
+Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.1.3.4
+Version 9.2.0.1
 
 Changes this version
 ====================
-- Adds LineType property to LineCode and LineGeometry objects.
+- Fixes issue when dumping properties from CNData.
+- Fixes compatibility issues with other OS when using FPC for compiling.
+- Includes COMHelp command to display the COM interface properties and methods, explain them and provide examples.
 
 This version is delivered with parallel processing capabilities in both 32-bit (X86) and 
 64-bit (X64) versions.  The OpenDSSInstaller download includes both X86 and X64 versions, along 
