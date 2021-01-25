@@ -608,7 +608,7 @@ Begin
 {Check of some special conditions that must be met before executing solutions}
 
     If ActiveCircuit[ActorID].EmergMinVolts >= ActiveCircuit[ActorID].NormalMinVolts Then  Begin
-            DoSimpleMsg('Error: Emergency Min Voltage Must Be Less Than Normal Min Voltage!' +
+            DoThreadSafeMsg('Error: Emergency Min Voltage Must Be Less Than Normal Min Voltage!' +
                          CRLF + 'Solution Not Executed.', 480);
             Exit;
     End;
@@ -687,7 +687,7 @@ Try
 Except
 
     On E:Exception Do Begin
-       DoSimpleMsg('Error Encountered in Solve: ' + E.Message, 482);
+       DoThreadSafeMsg('Error Encountered in Solve: ' + E.Message, 482);
        SolutionAbort := TRUE;
     End;
 
@@ -878,7 +878,7 @@ Begin
        THEN  SolveZeroLoadSnapShot(ActorID);
     EXCEPT
         ON E:EEsolv32Problem Do Begin
-          DoSimpleMsg('From SetGenerator DQDV, SolveZeroLoadSnapShot: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7071);
+          DoThreadSafeMsg('From SetGenerator DQDV, SolveZeroLoadSnapShot: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7071);
           Raise ESolveError.Create('Aborting');
         End;
     End;
@@ -1021,7 +1021,7 @@ Begin
         SolveYDirect(ActorID);  // 8-14-06 This should give a better answer than zero load snapshot
       EXCEPT
         ON E:EEsolv32Problem Do Begin
-          DoSimpleMsg('From DoPFLOWsolution.SolveYDirect: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7072);
+          DoThreadSafeMsg('From DoPFLOWsolution.SolveYDirect: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7072);
           Raise ESolveError.Create('Aborting');
         End;
       END;
@@ -1031,7 +1031,7 @@ Begin
         SetGeneratordQdV(ActorID);  // Set dQdV for Model 3 generators
       EXCEPT
         ON E:EEsolv32Problem Do Begin
-          DoSimpleMsg('From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7073);
+          DoThreadSafeMsg('From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7073);
           Raise ESolveError.Create('Aborting');
         End;
       END;
@@ -1194,7 +1194,7 @@ Begin
 
    If Not ControlActionsDone and (ControlIteration >= MaxControlIterations) then
    Begin
-    Windows.MessageBox(0,'Warning Max Control Iterations Exceeded. ' + CRLF + 'Tip: Show Eventlog to debug control settings.','Warning',MB_OK);
+    DoThreadSafeMsg('Warning Max Control Iterations Exceeded. ' + CRLF + 'Tip: Show Eventlog to debug control settings.', 485);
     SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
    End;
 
@@ -1269,7 +1269,7 @@ begin
             EXCEPT
                 ON E:EEsolv32Problem
                 Do Begin
-                  DoSimpleMsg('From SolveSnap.SolveDirect: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7075);
+                  DoThreadSafeMsg('From SolveSnap.SolveDirect: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7075);
                   Raise ESolveError.Create('Aborting');
                 End;
             END
@@ -1287,7 +1287,7 @@ begin
            EXCEPT
              ON E:EEsolv32Problem
              Do Begin
-               DoSimpleMsg('From SolveSnap.DoPflowSolution: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7074);
+               DoThreadSafeMsg('From SolveSnap.DoPflowSolution: ' + CRLF + E.Message  + CheckYMatrixforZeroes(ActorID), 7074);
                Raise ESolveError.Create('Aborting');
              End;
            END
@@ -2060,7 +2060,7 @@ Begin
 
           EXCEPT
              On E: Exception DO  Begin
-             DoSimpleMsg(Format('Error Sampling Control Device "%s.%s" %s  Error = %s',[ControlDevice.ParentClass.Name, ControlDevice.Name, CRLF, E.message]), 484);
+             DoThreadSafeMsg(Format('Error Sampling Control Device "%s.%s" %s  Error = %s',[ControlDevice.ParentClass.Name, ControlDevice.Name, CRLF, E.message]), 484);
              Raise EControlProblem.Create('Solution aborted.');
              End;
           END;
@@ -2461,7 +2461,7 @@ Var
     On E:Exception Do //Raise
     Begin
       myMsg :=  'Error Solving System Y Matrix.  Sparse matrix solver reports numerical error: ' + E.Message;
-      Windows.MessageBox(0, pChar(myMsg),'Error',MB_OK);
+      DoThreadSafeMsg(myMsg,0);
       SolutionAbort := TRUE;
     End;
 
@@ -2736,8 +2736,7 @@ var
                         GENERALTIME    : SolveGeneralTime(ActorID);
                         HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
                     Else
-                        DosimpleMsg('Unknown solution mode.', 481);
-                        Windows.MessageBox(0,'Unknown solution mode. ErrorCode 481','Error',MB_OK)
+                        DoThreadSafeMsg('Unknown solution mode.', 481);
                     End;
                   end;
                   {$IFNDEF FPC}
@@ -2786,7 +2785,7 @@ var
                       if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
                   End;
                 if not Parallel_enabled then
-                  DoSimpleMsg('Error Encountered in Solve: ' + E.Message, 482);
+                  DoThreadSafeMsg('Error Encountered in Solve: ' + E.Message, 482);
                 End;
               End;
               EXIT_ACTOR:                // Terminates the thread
@@ -2794,7 +2793,7 @@ var
                 ActorActive  :=  False;
               End
               else                       // I don't know what the message is
-                Windows.MessageBox(0,'Unknown message. ErrorCode 7010','Error',MB_OK)
+                DoThreadSafeMsg('Unknown message. ', 7010)
             End;
 
       end;
