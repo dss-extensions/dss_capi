@@ -223,7 +223,8 @@ uses
   GISCommands in '..\GISCommands\GISCommands.pas',
   NumCPULib in '..\Parallel_Lib\NumCPULib.pas',
   myInfoMsg in '..\Forms\myInfoMsg.pas' {myInfoMessage},
-  StdMessage in '..\Forms\StdMessage.pas' {myStdMsg};
+  StdMessage in '..\Forms\StdMessage.pas' {myStdMsg},
+  DReduceCkt in 'DReduceCkt.pas';
 
 //**************************end of the functions*************************************
 exports
@@ -267,7 +268,7 @@ exports
    InitAndGetYparams,GetCompressedYMatrix,ZeroInjCurr,GetSourceInjCurrents,GetPCInjCurr,
    SystemYChanged,BuildYMatrixD,UseAuxCurrents,AddInAuxCurrents,getIpointer,
    getVpointer,SolveSystem,ParallelI,ParallelV,LineCodesI,LineCodesF,LineCodesS,
-   LineCodesV, GICSourcesI,GICSourcesF,GICSourcesS,GICSourcesV;
+   LineCodesV, GICSourcesI,GICSourcesF,GICSourcesS,GICSourcesV,ReduceCktI,ReduceCktF,ReduceCktS;
 
    {$R *.RES}
 
