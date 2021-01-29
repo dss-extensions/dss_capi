@@ -56,6 +56,7 @@ TYPE
         FEarthModel        :Integer;
         FCapSpecified      :Boolean; // To make sure user specifies C in some form
         FLineType          :Integer; // Pointer to code for type of line
+        FUserLengthUnits   :Integer; // keep track of the user's input length units
 
         Procedure FMakeZFromGeometry(f:Double); // make new Z, Zinv, Yc, etc
         Procedure KillGeometrySpecified;
@@ -135,6 +136,7 @@ TYPE
         PROCEDURE CalcFltRate; Override;  // Calc failure rates for section and buses
 
         // CIM XML access
+        property UserLengthUnits: Integer read FUserLengthUnits;
         property LineCodeSpecified: Boolean read FLineCodeSpecified;
         Property PhaseChoice: ConductorChoice Read FPhaseChoice;
 
@@ -599,6 +601,7 @@ Begin
                      If FLineCodeSpecified Then FUnitsConvert := ConvertLineUnits(FLineCodeUnits, NewLengthUnits)
                                            Else FUnitsConvert := FUnitsConvert * ConvertLineUnits(LengthUnits, NewLengthUnits);
                      LengthUnits := NewLengthUnits;
+                     FUserLengthUnits := LengthUnits;
                END;
            21: FetchLineSpacing(Param);
            22: FetchWireList(Param);
@@ -805,6 +808,7 @@ Begin
      GeometrySpecified := False;
      GeometryCode      := '';
      LengthUnits       := UNITS_NONE; // Assume everything matches
+     FUserLengthUnits  := UNITS_NONE;
      FUnitsConvert     := 1.0;
      FLineCodeUnits    := UNITS_NONE;
      FLineCodeSpecified := FALSE;
@@ -1968,7 +1972,7 @@ procedure TLineObj.ResetLengthUnits;
 {If specify the impedances always assume the length units match}
 begin
       FUnitsConvert := 1.0;
-      LengthUnits   := UNITS_NONE;
+      LengthUnits   := UNITS_NONE;  // but do not erase FUserLengthUnits, in case of CIM export
 end;
 
 function TLineObj.NumConductorData:Integer;
