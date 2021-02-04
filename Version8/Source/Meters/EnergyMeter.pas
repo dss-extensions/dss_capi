@@ -1992,6 +1992,7 @@ Begin
                   PDelem.FirstBus, PDelem.NextBus,
                   {BusList.Get(BranchList.PresentBranch.ToBusReference),}
                   Buses^[BranchList.PresentBranch.ToBusReference].DistFromMeter]));
+               BranchList.PresentBranch.ResetToBusList;
                LoadElem := Branchlist.FirstObject;
                WHILE LoadElem <> NIL Do
                Begin
