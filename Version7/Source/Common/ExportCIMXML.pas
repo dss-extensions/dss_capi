@@ -250,7 +250,7 @@ begin
 end;
 
 // this returns s1, s2, or a combination of ABCN
-function PhaseString (pElem:TDSSCktElement; bus: Integer):String; // if order doesn't matter
+function PhaseString (pElem:TDSSCktElement; bus: Integer; bAllowSec: Boolean = True):String; // if order doesn't matter
 var
   val, phs: String;
   dot: Integer;
@@ -259,10 +259,12 @@ begin
   phs := pElem.FirstBus;
   for dot:= 2 to bus do phs := pElem.NextBus;
   bSec := false;
-  if pElem.NPhases = 2 then
-    if ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.25 then bSec := true;
-  if pElem.NPhases = 1 then
-    if ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.13 then bSec := true;
+  if bAllowSec then begin
+    if pElem.NPhases = 2 then
+      if ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.25 then bSec := true;
+    if pElem.NPhases = 1 then
+      if ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.13 then bSec := true;
+  end;
 
   dot := pos('.',phs);
   if dot < 1 then begin
@@ -1031,21 +1033,27 @@ var
   i: Integer;
   pPhase: TNamedObject;
   p, q: double;
+  bAllowSec: Boolean;
 begin
   if pLoad.NPhases = 3 then exit;
+  // TODO - use a more robust filter than pLoad.LoadClass, which is > 1 only for PNNL taxonomy imports
+  if pLoad.LoadClass <= 1 then
+    bAllowSec := True
+  else
+    bAllowSec := False;
   p := 1000.0 * pLoad.kWBase / pLoad.NPhases;
   q := 1000.0 * pLoad.kvarBase / pLoad.NPhases;
   if pLoad.Connection = 1 then
     s := DeltaPhaseString(pLoad)
   else
-    s := PhaseString(pLoad, 1);
+    s := PhaseString(pLoad, 1, bAllowSec);
 
   pPhase := TNamedObject.Create('dummy');
   // first, filter out what appear to be split secondary loads
   // these can be 2-phase loads (balanced) nominally 0.208 kV, or
   //  1-phase loads (possibly unbalanced) nominally 0.12 kV
   //  TODO - handle s1 to s2 240-volt loads; these would be s12, which is not a valid SinglePhaseKind
-  if pLoad.kVLoadBase < 0.25 then begin
+  if (pLoad.kVLoadBase < 0.25) and bAllowSec then begin
     if pLoad.NPhases=2 then begin
       AttachSecondaryPhases (pLoad, geoUUID, pPhase, p, q, 's1');
       AttachSecondaryPhases (pLoad, geoUUID, pPhase, p, q, 's2');
