@@ -77,7 +77,7 @@ TYPE
 
             cBuffer :pComplexArray;    // Complexarray buffer
 
-            PROCEDURE InterpretRecloserAction(const Action:String);
+            PROCEDURE InterpretRecloserAction(ActorID : Integer;const Action:String);
 
      public
 
@@ -316,7 +316,7 @@ Begin
            15: NumReclose  := Parser[ActorID].Intvalue -1 ;   // one less than number of shots
            16: NumReclose  := Parser[ActorID].ParseAsVector(4, RecloseIntervals);   // max of 4 allowed
            17: DelayTime   := Parser[ActorID].DblValue;
-           18: InterpretRecloserAction(Param);
+           18: InterpretRecloserAction(ActorID, Param);
            19: TDPhFast    := Parser[ActorID].DblValue;
            20: TDGrFast    := Parser[ActorID].DblValue;
            21: TDPhDelayed    := Parser[ActorID].DblValue;
@@ -641,8 +641,10 @@ end;
 {--------------------------------------------------------------------------}
 
 
-PROCEDURE TRecloserObj.InterpretRecloserAction(const Action:String);
+PROCEDURE TRecloserObj.InterpretRecloserAction(ActorID : Integer;const Action:String);
 Begin
+
+    IF ControlledElement = NIL THEN RecalcElementData(ActorID);  // In case action is performed at obj definition
 
     IF ControlledElement <> NIL
     THEN Begin

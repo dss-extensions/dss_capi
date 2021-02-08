@@ -134,7 +134,7 @@ TYPE
 
             cBuffer         :pComplexArray;    // Complexarray buffer
 
-            PROCEDURE InterpretRelayAction(const Action:String);
+            PROCEDURE InterpretRelayAction(ActorID : Integer;const Action:String);
             PROCEDURE InterpretRelayType(const S:String);
 
             PROCEDURE OvercurrentLogic(ActorID : Integer);
@@ -380,7 +380,7 @@ Begin
            16: UVCurve     := GetTCCCurve(Param);
            17: kVBase      := Parser[ActorID].DblValue;
            18: Breaker_time   := Parser[ActorID].DblValue;
-           19: InterpretRelayAction(Param);
+           19: InterpretRelayAction(ActorID, Param);
            20: MonitorVariable := lowercase(param);  // for pc elements
            21: PctPickup46 := Parser[ActorID].DblValue;
            22: Isqt46   :=  Parser[ActorID].DblValue;
@@ -786,8 +786,10 @@ end;
 {--------------------------------------------------------------------------}
 
 
-PROCEDURE TRelayObj.InterpretRelayAction(const Action:String);
+PROCEDURE TRelayObj.InterpretRelayAction(ActorID : Integer;const Action:String);
 Begin
+
+    IF ControlledElement = NIL THEN RecalcElementData(ActorID);  // In case action is performed at obj definition
 
     IF ControlledElement <> NIL THEN
       Begin
