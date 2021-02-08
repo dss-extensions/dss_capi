@@ -180,7 +180,7 @@ Begin
      CommandList.Abbrev := TRUE;
 
      LineTypeList := TCommandList.Create(
-     ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT', 'SWT_REC', 'SWT1_DISC', 'SWT_BRK', 'SWT_ELBOW' ]);
+     ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT', 'SWT_REC', 'SWT_DISC', 'SWT_BRK', 'SWT_ELBOW' ]);
      LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
 
 End;
