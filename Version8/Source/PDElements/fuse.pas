@@ -60,7 +60,7 @@ TYPE
             CondOffset     :Integer; // Offset for monitored terminal
             cBuffer :pComplexArray;    // Complexarray buffer
 
-            PROCEDURE InterpretFuseAction(const Action:String);
+            PROCEDURE InterpretFuseAction(ActorID : Integer; const Action:String);
 
      public
 
@@ -245,7 +245,7 @@ Begin
             5: FuseCurve := GetTCCCurve(Param);
             6: RatedCurrent   := Parser[ActorID].Dblvalue;
             7: DelayTime   := Parser[ActorID].DblValue;
-            8: InterpretFuseAction(Param);
+            8: InterpretFuseAction(ActorID, Param);
 
          ELSE
            // Inherited parameters
@@ -488,11 +488,13 @@ end;
 {--------------------------------------------------------------------------}
 
 
-PROCEDURE TFuseObj.InterpretFuseAction(const Action:String);
+PROCEDURE TFuseObj.InterpretFuseAction(ActorID : Integer; const Action:String);
 Begin
 
+    IF ControlledElement = NIL THEN RecalcElementData(ActorID);  // In case action is performed at obj definition
+
     IF ControlledElement <> NIL THEN
-     Begin
+    Begin
          ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
          Case LowerCase(Action)[1] of
 
