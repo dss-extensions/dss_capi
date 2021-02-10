@@ -3,7 +3,6 @@
   "name" : "opendss",
   "period" : 0.000000001,
   "loglevel" : 7,
-  "logFile" : "/home/xcosmos/src/OpenDSS/Version7/Source/CMD/test/opendsshelics.log",
   "publications" : [
     {
       "global" : false,
