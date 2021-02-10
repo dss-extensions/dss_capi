@@ -150,7 +150,7 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor, ExportCIMXML, NamedObject,
      {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
-     PDELement, ReduceAlgs, {$IFDEF FPC}Fncs, HELICS{$ENDIF};
+     PDELement, ReduceAlgs{$IFDEF FPC}, Fncs, HELICS{$ENDIF};
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
