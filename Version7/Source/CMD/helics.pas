@@ -1271,7 +1271,7 @@ begin
 
   ET.Clear;
   ET.Start;
-  FLibHandle := SafeLoadLibrary ('libhelicsSharedLibd.' + SharedSuffix);
+  FLibHandle := SafeLoadLibrary ('libhelicsSharedLib.' + SharedSuffix);
   topicList:=TList.Create();
   pub_list := TFPList.Create();
   sub_list := TFPList.Create();
