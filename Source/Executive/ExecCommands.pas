@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 149;
+     NumExecCommands = 151;
 
 Var
 
@@ -200,6 +200,8 @@ Begin
      ExecCommand[147] := 'TotalPowers';
      ExecCommand[148] := 'GISGoTo';
      ExecCommand[149] := 'COMHelp';
+     ExecCommand[150] := 'GISPlotPoints';
+     ExecCommand[151] := 'GISPlotPoint';
 
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
@@ -663,6 +665,7 @@ Begin
                          '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
                          '3. The model needs to have the correct GISCoords file';
      CommandHelp[143] := 'Plots the content of the file specified in the argument on top of the current map.' + CRLF +
+                         'With this function it is expected that the content of the file describes lines, their color and thickness.' + CRLF +
                          'The following conditions need to be fulfilled:' + CRLF + CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
                          '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
@@ -691,6 +694,24 @@ Begin
                          '2. OpenDSS-GIS must be initialized (use GISStart command)';
      CommandHelp[149] := 'Shows the documentation file for the COM interface.' +
                          'This file provides guidance on the properties and methods included in the COM interface as well as examples and tips. Use this file to learn more about the COM interface and its different interfaces or just as a reference guide.';
+     CommandHelp[150] := 'Plots the content of the file specified in the argument on top of the current map.' + CRLF +
+                         'This function plots the content as points, the point shape, color and size must be specified in the file.' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
+     CommandHelp[151] := 'plots the shape specified in the argument in the map at given the coordinates.' +
+                         'The coordiantes must be defined using GISCoords, the size and color can be specified through the options GISColor and GISThickness.' + CRLF +
+                         'The shape can be one fo the following:' + CRLF + CRLF +
+                         '  Circle' + CRLF +
+                         '  + ' + CRLF +
+                         '  Diamond' + CRLF +
+                         '  Square' + CRLF +
+                         '  Triangle' + CRLF +
+                         '  x' + CRLF + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)';
 End;
 
 //----------------------------------------------------------------------------
@@ -1064,7 +1085,14 @@ Begin
               GlobalResult  :=  ActiveCircuit[Activeactor].ReportPDEatBus(Parser[ActiveActor].StrValue);
             end;
       147: CmdResult := DopowersCmd(1);
-
+      150: begin
+             Parser[ActiveActor].NextParam;
+             GlobalResult  :=  GISPlotPoints(lowercase(Parser[ActiveActor].StrValue));
+           end;
+      151: begin
+             Parser[ActiveActor].NextParam;
+             GlobalResult  :=  GISPlotPoint(lowercase(Parser[ActiveActor].StrValue));
+           end
      ELSE
        // Ignore excess parameters
      End;
