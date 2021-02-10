@@ -1,0 +1,72 @@
+{
+  "coreType" : "zmq",
+  "name" : "opendss",
+  "period" : 0.000000001,
+  "loglevel" : 7,
+  "publications" : [
+//    {
+//      "global" : false,
+//      "key" : "helics_output", 
+//      "type" : "string",
+//      "info": "{\"name\":\"opendss\",\"publishInterval\":5,\"publishMode\":\"Text\",\"topics\":{\"Bus\":{\"house\":{\"Voltage\":[\"A\",\"B\"]}},\"Transformer\":{\"REG1\":{\"Power\":[\"A\"],\"TapPosition\":[]}}, \"Line\":{\"671692\":{\"Current\":{\"2\":[\"A\",\"B\",\"C\"]},\"SwitchState\":[]}}}}"
+//    },
+    {
+      "global" : false,
+      "key" : "bus/house/voltage/A", 
+      "type" : "complex"
+    },
+    {
+      "global" : false,
+      "key" : "bus/house/voltage/B", 
+      "type" : "complex"
+    },
+    {
+      "global" : false,
+      "key" : "transformer/reg1/tapposition", 
+      "type" : "integer"
+    },
+    {
+      "global" : false,
+      "key" : "transformer/reg1/power/1/A", 
+      "type" : "complex"
+    },
+    {
+      "global" : false,
+      "key" : "line/671692/switchstate", 
+      "type" : "integer",
+      "required" : true
+    },
+    {
+      "global" : false,
+      "key" : "line/671692/current/2/A", 
+      "type" : "complex"
+    },
+    {
+      "global" : false,
+      "key" : "line/671692/current/2/B", 
+      "type" : "complex"
+    },
+    {
+      "global" : false,
+      "key" : "line/671692/current/2/C", 
+      "type" : "complex"
+    }
+  ],
+  "subscriptions" : [
+    {
+      "key" : "player/command", 
+      "type" : "string",
+      "required" : true
+    },
+    {
+      "key" : "gridlabd/localWeather/solar_flux", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "gridlabd/F1_house_B0/load", 
+      "type" : "complex",
+      "required" : true
+    }
+  ]
+}

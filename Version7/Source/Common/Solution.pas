@@ -238,6 +238,7 @@ USES  SolutionAlgs,
 {$ENDIF}
 {$IFDEF FPC}
       FNCS, // to check for messages at the end of each time step
+      HELICS,
 {$ENDIF}
       Math,  Circuit, Utilities, KLUSolve;
 
@@ -1646,6 +1647,7 @@ procedure TSolutionObj.Increment_time;
 {$IFDEF FPC}
 var
   next_fncs: fncs_time;
+  next_helics: helics_time;
 {$ENDIF}
 begin
   With Dynavars Do Begin
@@ -1662,6 +1664,12 @@ begin
 //				writeln(Format('  requesting %d from FNCS at %g seconds or %g hours', [next_fncs, t, dblHour]));
 //        writeln('Loop time is ' + format('%d', [intHour]) + ':' + format('%d', [Trunc(t)]));
         ActiveFNCS.FncsTimeRequest (next_fncs);
+      end;
+    end;
+    if Assigned (ActiveHELICS) then begin
+      if ActiveHELICS.IsRunning then begin
+        next_helics := intHour * 3600 + Trunc(t);
+        ActiveHELICS.HelicsTimeRequest (next_helics);
       end;
     end;
 {$ENDIF}

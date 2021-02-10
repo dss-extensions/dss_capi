@@ -1,0 +1,9 @@
+{
+  "subscriptions" : [
+    {
+      "key" : "player/command", 
+      "type" : "string",
+      "required" : true
+    }
+  ]
+}

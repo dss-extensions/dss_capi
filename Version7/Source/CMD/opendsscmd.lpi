@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="11"/>
+    <Version Value="10"/>
     <PathDelim Value="\"/>
     <General>
       <SessionStorage Value="InProjectDir"/>
@@ -26,18 +26,21 @@
     </PublishOptions>
     <RunParams>
       <local>
-        <CommandLineParams Value="IEEE13Nodeckt.dss"/>
+        <FormatVersion Value="1"/>
+        <CommandLineParams Value="-l 6h"/>
       </local>
-      <FormatVersion Value="2"/>
-      <Modes Count="1">
-        <Mode0 Name="default">
-          <local>
-            <CommandLineParams Value="IEEE13Nodeckt.dss"/>
-          </local>
-        </Mode0>
-      </Modes>
+      <environment>
+        <UserOverrides Count="6">
+          <Variable0 Name="FNCS_CONFIG_FILE" Value="opendssgld.yaml"/>
+          <Variable1 Name="FNCS_LOG_LEVEL" Value="DEBUG4"/>
+          <Variable2 Name="HELICS_CONFIG_FILE" Value="opendss.json"/>
+          <Variable3 Name="HELICS_LOG_LEVEL" Value="DEBUG4"/>
+          <Variable4 Name="HELICS_CONFIG_FILE2" Value="model_outputs.json"/>
+          <Variable5 Name="HELICS_CONFIG_FILE3" Value="opendsshouseshelics.json"/>
+        </UserOverrides>
+      </environment>
     </RunParams>
-    <Units Count="123">
+    <Units Count="125">
       <Unit0>
         <Filename Value="opendsscmd.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -534,6 +537,15 @@
         <Filename Value="..\PDElements\AutoTrans.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit122>
+      <Unit123>
+        <Filename Value="..\epiktimer\epiktimer.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit123>
+      <Unit124>
+        <Filename Value="helics.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="HELICS"/>
+      </Unit124>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -544,7 +556,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Plot;..\Meters;..\PCElements;..\Executive;..\Parser;$(ProjOutDir)"/>
-      <Libraries Value="lib"/>
+      <Libraries Value="lib;\lib\x86_64-linux-gnu\"/>
       <OtherUnitFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Meters;..\PCElements;..\Executive;..\Parser"/>
       <UnitOutputDirectory Value="units\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
@@ -563,14 +575,19 @@
       </Optimizations>
     </CodeGeneration>
     <Linking>
-      <Debugging>
-        <GenerateDebugInfo Value="False"/>
-      </Debugging>
       <Options>
-        <LinkerOptions Value="-lc -lm -lgcc_s -lstdc++"/>
+        <PassLinkerOptions Value="True"/>
+        <LinkerOptions Value="-lc -lm -lgcc_s -lstdc++ -lpthread"/>
       </Options>
     </Linking>
     <Other>
+      <Verbosity>
+        <ShoLineNum Value="True"/>
+        <ShowAll Value="True"/>
+      </Verbosity>
+      <ConfigFile>
+        <ConfigFilePath Value="linuxopts.cfg"/>
+      </ConfigFile>
       <CustomOptions Value="-dBorland -dVer150 -dDelphi7 -dCompiler6_Up -dPUREPASCAL"/>
     </Other>
   </CompilerOptions>

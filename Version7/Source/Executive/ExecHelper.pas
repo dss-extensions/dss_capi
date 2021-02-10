@@ -117,6 +117,7 @@ interface
          FUNCTION DoRemoveCmd:Integer;
 
          function DoFNCSPubCmd:Integer;
+         function DoHELICSPubCmd:Integer;
 
          PROCEDURE DoSetNormal(pctNormal:Double);
 
@@ -149,12 +150,13 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor, ExportCIMXML, NamedObject,
      {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
-     PDELement, ReduceAlgs{$IFDEF FPC}, Fncs{$ENDIF};
+     PDELement, ReduceAlgs, {$IFDEF FPC}Fncs, HELICS{$ENDIF};
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
    ReconductorCommands, RephaseCommands, AddMarkerCommands,
-   SetBusXYCommands, PstCalcCommands, RemoveCommands, FNCSPubCommands :TCommandList;
+   SetBusXYCommands, PstCalcCommands, RemoveCommands, FNCSPubCommands,
+   HELICSPubCommands :TCommandList;
 
 
 
@@ -3820,6 +3822,82 @@ Begin
 {$ENDIF}
 End;
 
+//FUNCTION DoHELICSPubCmd:Integer;
+//{$IFDEF FPC}
+////Var
+////  Param          :String;
+////  ParamName      :String;
+////  ParamPointer   :Integer;
+////  FileName       :String;
+//Begin
+//  Result := 0;
+//  //ParamName      := Parser.NextParam;
+//  //Param          := Parser.StrValue;
+//  //ParamPointer   := 0;
+//  //while Length(Param) > 0 do Begin
+//  //  IF Length(ParamName) = 0 THEN Inc(ParamPointer)
+//  //  ELSE ParamPointer := HELICSPubCommands.GetCommand(ParamName);
+//  //
+//  //  Case ParamPointer of
+//  //     1: FileName := Param;
+//  //  Else
+//  //     DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28728);
+//  //  End;
+//  //  ParamName := Parser.NextParam;
+//  //  Param := Parser.StrValue;
+//  //End;
+//  if Assigned (ActiveHELICS) then begin
+//    if ActiveHELICS.IsReady then begin
+//      ActiveHELICS.ReadHelicsPubConfig ();
+//    end;
+//  end;
+//{$ELSE}
+//Begin
+//  DoSimpleMsg('Error: HELICS only supported in the Free Pascal version', 28728);
+//  Result := 0;
+//{$ENDIF}
+//End;
+
+
+FUNCTION DoHELICSPubCmd:Integer;
+{$IFDEF FPC}
+Var
+  Param          :String;
+  ParamName      :String;
+  ParamPointer   :Integer;
+  FileName       :String;
+Begin
+  Result := 0;
+  ParamName      := Parser.NextParam;
+  Param          := Parser.StrValue;
+  ParamPointer   := 0;
+  while Length(Param) > 0 do Begin
+    IF Length(ParamName) = 0 THEN Inc(ParamPointer)
+    ELSE ParamPointer := HELICSPubCommands.GetCommand(ParamName);
+
+    Case ParamPointer of
+       1: FileName := Param;
+    Else
+       DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28728);
+    End;
+    ParamName := Parser.NextParam;
+    Param := Parser.StrValue;
+  End;
+  if Assigned (ActiveHELICS) then begin
+    if ActiveHELICS.IsReady then begin
+      if Length(FileName) = 0 then
+          ActiveHELICS.ReadHelicsPubConfig ()
+      else
+          ActiveHELICS.ReadHelicsPubConfigFile (FileName);
+    end;
+  end;
+{$ELSE}
+Begin
+  DoSimpleMsg('Error: HELICS only supported in the Free Pascal version', 28728);
+  Result := 0;
+{$ENDIF}
+End;
+
 FUNCTION DoUpdateStorageCmd:Integer;
 
 Begin
@@ -4095,6 +4173,9 @@ initialization
     FNCSPubCommands := TCommandList.Create(['Fname']);
     FNCSPubCommands.abbrev := True;
 
+    HELICSPubCommands := TCommandList.Create(['Fname']);
+    HELICSPubCommands.abbrev := True;
+
     RemoveCommands := TCommandList.Create(['ElementName', 'KeepLoad', 'Editstring']);
     RemoveCommands.abbrev := True;
 
@@ -4109,6 +4190,7 @@ finalization
     SetBusXYCommands.Free;
     PstCalcCommands.Free;
     FNCSPubCommands.Free;
+    HELICSPubCommands.Free;
     RemoveCommands.Free;
 
 end.

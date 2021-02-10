@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 108;
+     NumExecCommands = 109;
 
 Var
 
@@ -146,6 +146,7 @@ Begin
      ExecCommand[106] := 'Disconnect';
      ExecCommand[107] := 'Remove';
      ExecCommand[108] := 'FNCSPublish';
+     ExecCommand[109] := 'HELICSPublish';
 
 
 
@@ -477,6 +478,7 @@ Begin
                          'Remove Line.L22 Editstring="Daily=Dailycurve Duty=SolarShape' + CRLF +
                          'Remove Line.L333 KeepLoad=No';
      CommandHelp[108] := 'Read FNCS publication topics from a JSON file';
+     CommandHelp[109] := 'Read HELICS publication topics from a JSON file';
 
 End;
 
@@ -712,6 +714,7 @@ Begin
       {$ENDIF}
       107: DoRemoveCmd;
       108: DoFNCSPubCmd;
+      109: DoHELICSPubCmd;
      ELSE
        // Ignore excess parameters
      End;
