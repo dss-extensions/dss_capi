@@ -137,6 +137,7 @@ TYPE
             LockedOut,
             ArmedForClose,
             ArmedForOpen,
+            ArmedForReset,
             PhaseTarget, GroundTarget    :Boolean;
 
             NextTriptime    : Double;
@@ -146,6 +147,8 @@ TYPE
 
             cBuffer         :pComplexArray; // Complexarray buffer for an operating quantity
             cvBuffer        :pComplexArray; // for distance and td21 voltages, using cBuffer for hte currents
+
+            DebugTrace   :Boolean;
 
             PROCEDURE InterpretRelayAction(const Action:String);
             PROCEDURE InterpretRelayType(const S:String);
@@ -199,7 +202,7 @@ USES
 
 CONST
 
-    NumPropsThisClass = 36;
+    NumPropsThisClass = 37;
 
     CURRENT = 0;  {Default}
     VOLTAGE = 1;
@@ -264,11 +267,14 @@ Begin
                   'Number of the terminal of the controlled element in which the switch is controlled by the Relay. '+
                   '1 or 2, typically.  Default is 1.');
      AddProperty( 'type',5, 'One of a legal relay type:' +CRLF+
-                        'Current'+CRLF+'Voltage'+CRLF+'Reversepower'+CRLF+'46 (neg seq current)'+CRLF+
-                        '47 (neg seq voltage)'+CRLF+
-                        'Generic (generic over/under relay)'+CRLF+
-                        'Distance'+CRLF+
-                        'TD21'+CRLF+CRLF+
+                        '  Current'+CRLF+
+                        '  Voltage'+CRLF+
+                        '  Reversepower'+CRLF+
+                        '  46 (neg seq current)'+CRLF+
+                        '  47 (neg seq voltage)'+CRLF+
+                        '  Generic (generic over/under relay)'+CRLF+
+                        '  Distance'+CRLF+
+                        '  TD21'+CRLF+CRLF+
                         'Default is overcurrent relay (Current) ' +
                         'Specify the curve and pickup settings appropriate for each type. '+
                         'Generic relays monitor PC Element Control variables and trip on out of over/under range in definite time.');
@@ -286,7 +292,7 @@ Begin
      AddProperty( 'PhaseInst',10, 'Actual  amps (Current relay) or kW (reverse power relay) for instantaneous phase trip which is assumed to happen in 0.01 sec + Delay Time. Default is 0.0, which signifies no inst trip. '+
                          'Use this value for specifying the Reverse Power threshold (kW) for reverse power relays.');
      AddProperty( 'GroundInst',11, 'Actual  amps for instantaneous ground trip which is assumed to happen in 0.01 sec + Delay Time.Default is 0.0, which signifies no inst trip.');
-     AddProperty( 'Reset',12, 'Reset time in sec for relay.  Default is 15. If ');
+     AddProperty( 'Reset',12, 'Reset time in sec for relay.  Default is 15. If this much time passes between the last pickup event, and the relay has not locked out, the operation counter resets.');
      AddProperty( 'Shots',13, 'Number of shots to lockout.  Default is 4. This is one more than the number of reclose intervals.');
      AddProperty( 'RecloseIntervals',14, 'Array of reclose intervals. If none, specify "NONE". Default for overcurrent relay is (0.5, 2.0, 2.0) seconds. ' +
                          'Default for a voltage relay is (5.0). In a voltage relay, this is  seconds after restoration of ' +
@@ -324,7 +330,8 @@ Begin
      AddProperty('Z0ang', 33, 'Zero sequence reach impedance angle in degrees for Distance and TD21 functions. Default=68.0');
      AddProperty('Mphase', 34, 'Phase reach multiplier in per-unit for Distance and TD21 functions. Default=0.7');
      AddProperty('Mground', 35, 'Ground reach multiplier in per-unit for Distance and TD21 functions. Default=0.7');
-     AddProperty('EventLog', 36, '{Yes/True* | No/False} Default is No for Relay. Log extra details to Eventlog.');
+     AddProperty('EventLog', 36, '{Yes/True* | No/False} Default is Yes for Relay. Write trips, reclose and reset events to EventLog.');
+     AddProperty('DebugTrace', 37, '{Yes/True* | No/False} Default is No for Relay. Write extra details to Eventlog.');
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -423,6 +430,7 @@ Begin
            34: Mphase := Parser.DblValue;
            35: Mground := Parser.DblValue;
            36: ShowEventLog := InterpretYesNo(param);
+           37: DebugTrace   := InterpretYesNo(Param);
          ELSE
            // Inherited parameters
            ClassEdit( ActiveRelayObj, ParamPointer - NumPropsthisClass)
@@ -470,7 +478,7 @@ Begin
 
         NPhases := OtherRelay.Fnphases;
         NConds  := OtherRelay.Fnconds; // Force Reallocation of terminal stuff
-        ShowEventLog := OtherRelay.ShowEventLog;
+        ShowEventLog := OtherRelay.ShowEventLog; // but leave DebugTrace off
 
         ElementName       := OtherRelay.ElementName;
         ElementTerminal   := OtherRelay.ElementTerminal;
@@ -497,6 +505,7 @@ Begin
 
         Reallocmem(RecloseIntervals, SizeOf(RecloseIntervals^[1])*4);      // Always make a max of 4
         FOR i := 1 to NumReclose DO RecloseIntervals^[i] :=  OtherRelay.RecloseIntervals^[i];
+        if DebugTrace then AppendToEventLog ('Relay.'+self.Name, Format ('MakeLike NumReclose=%d',[NumReclose]));
 
         kVBase         := OtherRelay.kVBase;
         LockedOut      := OtherRelay.LockedOut;
@@ -556,8 +565,6 @@ Begin
      Fnconds := 3;
      Nterms := 1;  // this forces allocation of terminals and conductors
                          // in base class
-     ShowEventLog := False;
-
      ElementName   := '';
      ControlledElement := NIL;
      ElementTerminal := 1;
@@ -612,6 +619,7 @@ Begin
      LockedOut        := FALSE;
      ArmedForOpen     := FALSE;
      ArmedForClose    := FALSE;
+     ArmedForReset    := FALSE;
      PhaseTarget      := FALSE;
      GroundTarget     := FALSE;
 
@@ -646,7 +654,9 @@ VAR
    DevIndex :Integer;
 
 Begin
-
+         if DebugTrace then begin
+            AppendToEventLog ('Relay.'+self.Name, Format ('RecalcElementData NumReclose=%d',[NumReclose]));
+         end;
          Devindex := GetCktElementIndex(MonitoredElementName); // Global function
          IF   DevIndex>0 THEN
            Begin
@@ -801,7 +811,12 @@ PROCEDURE TRelayObj.DoPendingAction(Const Code, ProxyHdl:Integer);
 
 
 begin
-    if ShowEventLog then AppendToEventLog (self.Name, Format('DoPendingAction Armed=%s',[BoolToStr (ArmedForOpen)]));
+    if DebugTrace then begin
+      AppendToEventLog ('Relay.'+self.Name,
+        Format('DoPendingAction Code=%d State=%d ArmedOpen=%s Close=%s Reset=%s Count=%d NumReclose=%d',
+          [Integer (Code), Integer (PresentState), BoolToStr (ArmedForOpen), BoolToStr (ArmedForClose), BoolToStr (ArmedForReset),
+          OperationCount, NumReclose]));
+    end;
     WITH   ControlledElement Do
       Begin
          ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
@@ -813,11 +828,11 @@ begin
                                     IF OperationCount > NumReclose THEN
                                       Begin
                                           LockedOut := TRUE;
-                                          AppendtoEventLog('Relay.'+Self.Name, 'Opened on '+RelayTarget+' & Locked Out ');
+                                          if ShowEventLog then AppendtoEventLog('Relay.'+Self.Name, 'Opened on '+RelayTarget+' & Locked Out ');
                                        End
-                                    ELSE AppendtoEventLog('Relay.'+Self.Name, 'Opened on ' + RelayTarget);
-                                    If PhaseTarget Then AppendtoEventLog(' ', 'Phase Target');
-                                    If GroundTarget Then AppendtoEventLog(' ', 'Ground Target');
+                                    ELSE if ShowEventLog then AppendtoEventLog('Relay.'+Self.Name, 'Opened on ' + RelayTarget);
+                                    If PhaseTarget Then if ShowEventLog then AppendtoEventLog(' ', 'Phase Target');
+                                    If GroundTarget Then if ShowEventLog then AppendtoEventLog(' ', 'Ground Target');
                                     ArmedForOpen := FALSE;
                                  END;
                     ELSE {nada}
@@ -827,15 +842,15 @@ begin
                                 Begin
                                   ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
                                   Inc(OperationCount);
-                                  AppendtoEventLog('Relay.'+Self.Name, 'Closed');
+                                  if ShowEventLog then AppendtoEventLog('Relay.'+Self.Name, 'Closed');
                                   ArmedForClose     := FALSE;
                                 End;
                     ELSE {Nada}
                     END;
-            Integer(CTRL_RESET):  CASE PresentState of
-                         CTRL_CLOSE: IF Not ArmedForOpen THEN OperationCount := 1;       // Don't reset if we just rearmed
-                    ELSE  {Nada}
-                    END;
+            Integer(CTRL_RESET): If ArmedForReset and Not LockedOut then begin
+                                  if ShowEventLog then AppendToEventLog('Relay.'+Self.Name, 'Reset');
+                                  Reset;
+                                End
          ELSE
             {Do Nothing }
          END;
@@ -938,12 +953,12 @@ end;
 
 Procedure TRelayObj.Reset;
 Begin
-     if ShowEventLog then AppendToEventLog (self.Name, 'Resetting');
      PresentState   := CTRL_CLOSE;
      Operationcount := 1;
      LockedOut      := FALSE;
      ArmedForOpen   := FALSE;
      ArmedForClose  := FALSE;
+     ArmedForReset  := FALSE;
      PhaseTarget      := FALSE;
      GroundTarget     := FALSE;
 
@@ -996,6 +1011,8 @@ begin
      PropertyValue[33] := '68.0';
      PropertyValue[34] := '0.7';
      PropertyValue[35] := '0.7';
+     PropertyValue[36] := 'Yes';
+     PropertyValue[37] := 'No';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -1248,7 +1265,7 @@ procedure TRelayObj.DistanceLogic;
 var
   i, j: Integer;
   Vloop, Iloop, Zloop, Ires, kIres, Zreach: Complex;
-  i2, min_distance, fault_distance: Double;
+  i2, min_distance, fault_distance, t_event: Double;
   Targets: TStringList;
   PickedUp: Boolean;
 begin
@@ -1282,10 +1299,8 @@ begin
             end;
             if (i = j) then begin
               Targets.Add (Format('G%d', [i]));
-//              GroundTarget := True
             end else begin
               Targets.Add (Format('P%d%d', [i, j]));
-//              PhaseTarget := True;
             end;
             fault_distance := cabs2(zloop) / cabs2 (zreach);
             if fault_distance < min_distance then min_distance := fault_distance;
@@ -1295,19 +1310,35 @@ begin
       end;
     end;
     if PickedUp then begin
+      if DebugTrace then begin
+        AppendToEventLog ('Relay.'+Self.Name, 'Picked up');
+      end;
+      if ArmedForReset then begin
+        ActiveCircuit.ControlQueue.Delete (LastEventHandle);
+        ArmedForReset := FALSE;
+      end;
       if not ArmedForOpen then with ActiveCircuit do begin
         RelayTarget := Format ('21 %.3f pu dist', [min_distance]);
+        t_event := Solution.DynaVars.t + Delay_Time + Breaker_time;
         for i := 0 to pred(Targets.Count) do
           RelayTarget := RelayTarget + ' ' + Targets[i];
-        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t +Delay_Time +  Breaker_time, CTRL_OPEN, 0, Self);
-        Inc(OperationCount);
+        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event, CTRL_OPEN, 0, Self);
         ArmedForOpen := TRUE;
+        if OperationCount <= NumReclose then begin
+          LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
+          ArmedForClose := TRUE;
+        end;
       End;
       Targets.Free();
     end else begin  // not picked up; reset if necessary
-      if ArmedForOpen then with ActiveCircuit Do Begin
-        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
+      if (OperationCount > 1) and (ArmedForReset = FALSE) then begin // this implements the reset, whether picked up or not
+        ArmedForReset := TRUE;
+        with ActiveCircuit do
+          LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
+      end;
+      if ArmedForOpen then begin // this implements the drop-out, if picked up
         ArmedForOpen := FALSE;
+        ArmedForClose := FALSE;
       End;
     end;
   End;  {With MonitoredElement}
