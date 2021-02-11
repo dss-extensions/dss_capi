@@ -46,6 +46,10 @@ function GISPlotfile(myPath : string):  string;
 function show_LatLong(): string;
 function GISPlotPoints(myPath : string):  string;
 function GISPlotPoint(const myShape : string):  string;
+function GISLoadBus(const myBus : string): string;
+function GISShowBuffer():  string;
+function GISFormat(const FormatFrom,FormatTo,Coords : string): string;
+function GISBatchFormat(const FormatFrom,FormatTo,mypath : string): string;
 
 var
   GISTCPClient          : TIdTCPClient;  // ... TIdThreadComponent
@@ -939,22 +943,113 @@ Begin
     InMsg:=  '{"command":"plotpoint","coords":{"long":' + floattostr(GISCoords^[1]) +',"lat":' + floattostr(GISCoords^[2]) +
               '},"color":"' + GISColor +
               '","thickness":' + GISThickness + ',"shape":' + inttostr(myShpCode) + '}';
-      try
-        GISTCPClient.IOHandler.WriteLn(InMsg);
-        InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,200);
-        TCPJSON :=  TdJSON.Parse(InMsg);
-        Result  :=  TCPJSON['plotpoint'].AsString;
-      except
-        on E: Exception do begin
-          IsGISON     :=  False;
-         Result      :=  'Error while communicating to OpenDSS-GIS';
-        end;
+    try
+      GISTCPClient.IOHandler.WriteLn(InMsg);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,1000);
+      TCPJSON :=  TdJSON.Parse(InMsg);
+      Result  :=  TCPJSON['plotpoint'].AsString;
+    except
+      on E: Exception do begin
+        IsGISON     :=  False;
+       Result      :=  'Error while communicating to OpenDSS-GIS';
       end;
+    end;
   end
   else
     result  :=  'OpenDSS-GIS is not installed or initialized';
 End;
 
+{*******************************************************************************
+* Commands openDSS-GIS to convert the coords given in a file into a new format *
+*******************************************************************************}
+function GISBatchFormat(const FormatFrom,FormatTo,mypath : string): string;
+Var
+  myEnd,
+  myStart       : Integer;
+  TCPJSON       : TdJSON;
+  InMsg         : String;
+Begin
+    InMsg:=  '{"command":"batchformat","from":"' + FormatFrom + '","to":"' + FormatTo + '",' +
+              '"path":"' + mypath + '"}';
+    try
+      GISTCPClient.IOHandler.WriteLn(InMsg);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,1000);
+      myStart :=  ansipos('path":"',InMsg) + 6;
+      myEnd   :=  ansipos('"}',InMsg) - 1;
+      Result  :=  InMsg.Substring(myStart, myEnd - myStart);
+    except
+      on E: Exception do begin
+        IsGISON     :=  False;
+       Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
+    end;
+End;
+
+{*******************************************************************************
+*      Commands openDSS-GIS to convert the coords given into a new format      *
+*******************************************************************************}
+function GISFormat(const FormatFrom,FormatTo,Coords : string): string;
+Var
+  TCPJSON       : TdJSON;
+  InMsg         : String;
+Begin
+    InMsg:=  '{"command":"format","from":"' + FormatFrom + '","to":"' + FormatTo + '",' +
+              '"coords":"' + Coords + '"}';
+    try
+      GISTCPClient.IOHandler.WriteLn(InMsg);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,1000);
+      TCPJSON :=  TdJSON.Parse(InMsg);
+      Result  :=  TCPJSON['coords'].AsString;
+    except
+      on E: Exception do begin
+        IsGISON     :=  False;
+       Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
+    end;
+End;
+
+{*******************************************************************************
+*          Returns a string with the content of the coordiantes buffer         *
+*******************************************************************************}
+function GISShowBuffer():  string;
+var
+  idx : Integer;
+Begin
+  Result  :=  '';
+  for idx := 1 to 4 do
+    Result  :=  Result + floattostr(GISCoords^[idx]) + ',';
+End;
+{*******************************************************************************
+*  Loads the bus coordiantes into the first 2 places fo the coordiantes buffer *
+*  shifting it down                                                            *
+*******************************************************************************}
+function GISLoadBus(const myBus : string): string;
+var
+  myLat,
+  myLong  : Double;
+Begin
+  If (ActiveCircuit[ActiveActor] <> Nil) Then With ActiveCircuit[ActiveActor] Do
+  Begin
+    DSSGlobals.SetActiveBus(StripExtension(myBus));
+    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
+    Begin
+      IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].Coorddefined) Then
+      Begin
+        myLong := Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].long;
+        myLat :=  Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].lat;
+      End;
+      GISCoords^[3] :=  GISCoords^[1];
+      GISCoords^[4] :=  GISCoords^[2];
+      GISCoords^[1] :=  myLong;
+      GISCoords^[2] :=  myLat;
+      Result  :=  'done'
+    End
+    else
+      Result  :=  'Invalid bus name';
+  End
+  else
+    Result  :=  'There is no active circuit';
+End;
 {*******************************************************************************
 *             Loads the line Long-lat into the global array "myCoords"         *
 *******************************************************************************}
