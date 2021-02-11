@@ -1241,7 +1241,7 @@ end;
 
 constructor THELICS.Create;
 var
-  s: String;
+  s: String = 'INFO';
 begin
   sep := '/';
   PublishInterval := 1;
@@ -1271,7 +1271,15 @@ begin
 
   ET.Clear;
   ET.Start;
-  FLibHandle := SafeLoadLibrary ('libhelicsSharedLib.' + SharedSuffix);
+{$IFDEF Windows}
+  FLibHandle := SafeLoadLibrary ('helicsSharedLib.' + SharedSuffix);
+{$ELSE} // Darwin and Unix
+  if s = 'INFO' then
+     FLibHandle := SafeLoadLibrary ('libhelicsSharedLib.' + SharedSuffix)
+  else
+     FLibHandle := SafeLoadLibrary ('libhelicsSharedLibd.' + SharedSuffix);
+{$ENDIF}
+
   topicList:=TList.Create();
   pub_list := TFPList.Create();
   sub_list := TFPList.Create();

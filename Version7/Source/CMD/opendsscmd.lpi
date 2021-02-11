@@ -27,16 +27,17 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
+        <HostApplicationFilename Value="\home\xcosmos\src\OpenDSS\Version7\Source\CMD\test\opendsscmd"/>
         <CommandLineParams Value="-l 6h"/>
+        <WorkingDirectory Value="\home\xcosmos\src\OpenDSS\Version7\Source\CMD\test"/>
       </local>
       <environment>
-        <UserOverrides Count="6">
+        <UserOverrides Count="5">
           <Variable0 Name="FNCS_CONFIG_FILE" Value="opendssgld.yaml"/>
           <Variable1 Name="FNCS_LOG_LEVEL" Value="DEBUG4"/>
           <Variable2 Name="HELICS_CONFIG_FILE" Value="opendss.json"/>
-          <Variable3 Name="HELICS_LOG_LEVEL" Value="DEBUG4"/>
-          <Variable4 Name="HELICS_CONFIG_FILE2" Value="model_outputs.json"/>
-          <Variable5 Name="HELICS_CONFIG_FILE3" Value="opendsshouseshelics.json"/>
+          <Variable3 Name="HELICS_CONFIG_FILE2" Value="model_outputs.json"/>
+          <Variable4 Name="HELICS_CONFIG_FILE3" Value="opendsshouseshelics.json"/>
         </UserOverrides>
       </environment>
     </RunParams>
@@ -556,7 +557,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Plot;..\Meters;..\PCElements;..\Executive;..\Parser;$(ProjOutDir)"/>
-      <Libraries Value="lib;\lib\x86_64-linux-gnu\"/>
+      <Libraries Value="\lib\x86_64-linux-gnu\;..\..\..\..\KLUSolve\Lib;lib"/>
       <OtherUnitFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Meters;..\PCElements;..\Executive;..\Parser"/>
       <UnitOutputDirectory Value="units\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
@@ -566,15 +567,15 @@
       </SyntaxOptions>
     </Parsing>
     <CodeGeneration>
-      <Checks>
-        <StackChecks Value="True"/>
-      </Checks>
       <TargetCPU Value="x86_64"/>
       <Optimizations>
-        <OptimizationLevel Value="2"/>
+        <OptimizationLevel Value="0"/>
       </Optimizations>
     </CodeGeneration>
     <Linking>
+      <Debugging>
+        <DebugInfoType Value="dsDwarf2Set"/>
+      </Debugging>
       <Options>
         <PassLinkerOptions Value="True"/>
         <LinkerOptions Value="-lc -lm -lgcc_s -lstdc++ -lpthread"/>
