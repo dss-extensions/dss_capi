@@ -24,6 +24,7 @@ interface
   Function cmplx(const a,b:Double):complex; inline;
   Function cinv(const A:COMPLEX):COMPLEX; inline;
   Function cabs(const a:complex):double; inline;
+  Function cabs2(const a:complex):double; inline; // best when you don't need sqrt
   Function cang(const a:complex):double;
   Function cdang(const a:complex):double; // angle of complex number, degrees
   Function ctopolar(const a:complex):polar;
@@ -75,6 +76,11 @@ Implementation
   Function Cabs(const a:complex):double; inline;
   BEGIN
     Result:=SQRT(A.RE*A.RE+A.IM*A.IM)
+  END;
+
+  Function Cabs2(const a:complex):double; inline;
+  BEGIN
+    Result:=A.RE*A.RE+A.IM*A.IM
   END;
 
   Function Conjg(const a:complex):complex; inline;

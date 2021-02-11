@@ -122,6 +122,9 @@ TYPE
             Z0Ang,
             Mphase,
             Mground: Double;
+            Dist_Z1,
+            Dist_Z0,
+            Dist_K0: Complex;
 
             {Generic Relay}
             OverTrip,
@@ -192,7 +195,7 @@ IMPLEMENTATION
 
 USES
 
-    ParserDel, DSSClassDefs, DSSGlobals, Circuit, PCElement,  Sysutils, uCmatrix, MathUtil;
+    ParserDel, DSSClassDefs, DSSGlobals, Circuit, PCElement,  Sysutils, uCmatrix, MathUtil,Classes;
 
 CONST
 
@@ -739,6 +742,12 @@ Begin
          END;
 
          PickupVolts47 := vbase * PctPickup47 * 0.01;
+
+         if ControlType = DISTANCE then begin
+            Dist_Z1 := pclx (Z1Mag, Z1Ang/RadiansToDegrees);
+            Dist_Z0 := pclx (Z0Mag, Z0Ang/RadiansToDegrees);
+            Dist_K0 := cdiv (cdivreal (csub (Dist_Z0, Dist_Z1), 3.0), Dist_Z1);
+         end;
 End;
 
 procedure TRelayObj.MakePosSequence;
@@ -792,7 +801,7 @@ PROCEDURE TRelayObj.DoPendingAction(Const Code, ProxyHdl:Integer);
 
 
 begin
-  AppendToEventLog (self.Name, Format('DoPendingAction Armed=%s',[BoolToStr (ArmedForOpen)])); // TEMc
+    if ShowEventLog then AppendToEventLog (self.Name, Format('DoPendingAction Armed=%s',[BoolToStr (ArmedForOpen)]));
     WITH   ControlledElement Do
       Begin
          ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
@@ -806,7 +815,7 @@ begin
                                           LockedOut := TRUE;
                                           AppendtoEventLog('Relay.'+Self.Name, 'Opened on '+RelayTarget+' & Locked Out ');
                                        End
-                                    ELSE AppendtoEventLog('Relay.'+Self.Name, 'Opened');
+                                    ELSE AppendtoEventLog('Relay.'+Self.Name, 'Opened on ' + RelayTarget);
                                     If PhaseTarget Then AppendtoEventLog(' ', 'Phase Target');
                                     If GroundTarget Then AppendtoEventLog(' ', 'Ground Target');
                                     ArmedForOpen := FALSE;
@@ -929,7 +938,7 @@ end;
 
 Procedure TRelayObj.Reset;
 Begin
-     AppendToEventLog (self.Name, 'Resetting'); // TEMc
+     if ShowEventLog then AppendToEventLog (self.Name, 'Resetting');
      PresentState   := CTRL_CLOSE;
      Operationcount := 1;
      LockedOut      := FALSE;
@@ -1238,64 +1247,68 @@ end;
 procedure TRelayObj.DistanceLogic;
 var
   i, j: Integer;
-  Vloop, Iloop, Zloop, Zreach: Complex;
-  i2: Double;
+  Vloop, Iloop, Zloop, Ires, kIres, Zreach: Complex;
+  i2, min_distance, fault_distance: Double;
+  Targets: TStringList;
+  PickedUp: Boolean;
 begin
   If Not LockedOut Then with MonitoredElement Do Begin
+    PickedUp := False;
+    min_distance := 1.0e30;
     MonitoredElement.GetCurrents(cBuffer);
-//    for I := 1 to Fnphases do begin
-//      Iloop := cBuffer^[i];
-//      if ShowEventLog then AppendToEventLog ('Relay.' + Self.Name,
-//        Format('CondOffset=%d, I[%d]=%.3g@%.3g', [CondOffset, i, cabs(Iloop), cdang(Iloop)]));
-//    end;
+    Ires := cZERO;
+    for i := 1 to MonitoredElement.Nphases do caccum (Ires, cBuffer^[i+CondOffset]);
+    kIres := cmul (Dist_K0, Ires);
     MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
     for i := 1 to MonitoredElement.NPhases do begin
-      for j := 1 to i do begin
+      for j := i to MonitoredElement.NPhases do begin
         if (i = j) then begin
           Vloop := cvBuffer^[i];
-          Iloop := cBuffer^[i+CondOffset];
+          Iloop := cadd (cBuffer^[i+CondOffset], kIres);
+          Zreach := cmulreal (Dist_Z1, Mground); // not Dist_Z0 because it's included in Dist_K0
         end else begin
           Vloop := csub (cvBuffer^[i], cvBuffer^[j]);
           Iloop := csub (cBuffer^[i+CondOffset], cBuffer^[j+CondOffset]);
+          Zreach := cmulreal (Dist_Z1, Mphase);
         end;
         i2 := Iloop.re * Iloop.re + Iloop.im * Iloop.im;
         if i2 > 0.1 then begin
           Zloop := cdiv (Vloop, Iloop);
-          if (i=j) then begin
-            Zreach.re:= Mground * Z0Mag * cos(Z0Ang/RadiansToDegrees);
-            Zreach.im:= Mground * Z0Mag * sin(Z0Ang/RadiansToDegrees);
-          end else begin
-            Zreach.re:= Mphase * Z1Mag * cos(Z1Ang/RadiansToDegrees);
-            Zreach.im:= Mphase * Z1Mag * sin(Z1Ang/RadiansToDegrees);
-          end;
           // start with a very simple rectangular characteristic
           if (Zloop.re >= 0) and (Zloop.im >= 0.0) and (Zloop.re <= Zreach.re) and (Zloop.im <= Zreach.im) then begin
-            AppendToEventLog ('Relay.' + Self.Name, Format ('Picked up [%d,%d], t=%.4g, Armed=%s', [i, j,
-              Delay_Time + Breaker_Time, BoolToStr(ArmedForOpen)]));
-            if not ArmedForOpen then with ActiveCircuit do begin
-              RelayTarget := '21';
-              LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t +Delay_Time +  Breaker_time, CTRL_OPEN, 0, Self);
-              Inc(OperationCount);
-              ArmedForOpen := TRUE;
-              if (i=j) then
-                GroundTarget := True
-              else
-                PhaseTarget := True;
-            End
-//          end else begin  // not picked up; reset if necessary
-//            if ArmedForOpen then with ActiveCircuit Do Begin
-//              LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
-//              ArmedForOpen := FALSE;
-//            End;
+            if not PickedUp then begin
+              Targets := TStringList.Create();
+              Targets.Sorted := True;
+            end;
+            if (i = j) then begin
+              Targets.Add (Format('G%d', [i]));
+//              GroundTarget := True
+            end else begin
+              Targets.Add (Format('P%d%d', [i, j]));
+//              PhaseTarget := True;
+            end;
+            fault_distance := cabs2(zloop) / cabs2 (zreach);
+            if fault_distance < min_distance then min_distance := fault_distance;
+            PickedUp := True;
           end;
-          if ShowEventLog then
-            AppendToEventLog ('Relay.' + Self.Name,
-              Format('Loop[%d,%d]: V=%.3g@%.3g, I=%.3g@%.3g, Z=%.3g+j%.3g=%.3g@%.3g',
-              [i, j, cabs(Vloop), cdang(Vloop), cabs(Iloop), cdang(Iloop),
-              Zloop.re, Zloop.im, cabs(Zloop), cdang(Zloop)]));
-        end else
-          Zloop := cZERO;
+        end;
       end;
+    end;
+    if PickedUp then begin
+      if not ArmedForOpen then with ActiveCircuit do begin
+        RelayTarget := Format ('21 %.3f pu dist', [min_distance]);
+        for i := 0 to pred(Targets.Count) do
+          RelayTarget := RelayTarget + ' ' + Targets[i];
+        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t +Delay_Time +  Breaker_time, CTRL_OPEN, 0, Self);
+        Inc(OperationCount);
+        ArmedForOpen := TRUE;
+      End;
+      Targets.Free();
+    end else begin  // not picked up; reset if necessary
+      if ArmedForOpen then with ActiveCircuit Do Begin
+        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
+        ArmedForOpen := FALSE;
+      End;
     end;
   End;  {With MonitoredElement}
 end;
