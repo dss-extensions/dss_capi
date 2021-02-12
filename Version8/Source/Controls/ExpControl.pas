@@ -90,7 +90,7 @@ INTERFACE
             // Do the action that is pending from last sample
             PROCEDURE   DoPendingAction(Const Code, ProxyHdl:Integer;ActorID : Integer); Override;
 
-            PROCEDURE   Reset; Override;  // Reset to initial defined state
+            PROCEDURE   Reset(ActorID : Integer); Override;  // Reset to initial defined state
 
             PROCEDURE   GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override;
             PROCEDURE   GetCurrents(Curr: pComplexArray; ActorID : Integer); Override;
@@ -693,7 +693,7 @@ begin
   If FPVSystemPointerList.ListSize>0 Then Result := TRUE;
 end;
 
-procedure TExpControlObj.Reset;
+procedure TExpControlObj.Reset(ActorID : Integer);
 begin
   // inherited;
 end;
