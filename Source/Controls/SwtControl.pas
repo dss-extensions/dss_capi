@@ -47,7 +47,7 @@ TYPE
 
       PROCEDURE Sample(ActorID : Integer);  Override;    // Sample control quantities and set action times in Control Queue
       PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Override;   // Do the action that is pending from last sample
-      PROCEDURE Reset; Override;  // Reset to initial defined state
+      PROCEDURE Reset(ActorID : Integer); Override;  // Reset to initial defined state
 
       PROCEDURE GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present value of terminal Curr
       PROCEDURE GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override;   // Returns Injextion currents
@@ -188,7 +188,7 @@ Begin
                End;
             8: If InterpretYesNo (Param) Then Begin  // force a reset
                   Locked := FALSE;
-                  Reset;
+                  Reset(ActorID);
                   PropertyValue[8]  := 'n';
                End;
 

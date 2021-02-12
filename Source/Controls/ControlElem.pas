@@ -40,7 +40,7 @@ TYPE
 
        PROCEDURE Sample(ActorID : Integer);  Virtual;    // Sample control quantities and set action times in Control Queue
        PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Virtual;   // Do the action that is pending from last sample
-       PROCEDURE Reset; Virtual;
+       PROCEDURE Reset(ActorID : Integer); Virtual;
 
        Property ControlledElement:TDSSCktElement Read FControlledElement Write Set_ControlledElement;
        Property MonitoredElement:TDSSCktElement Read FMonitoredElement Write Set_MonitoredElement;
