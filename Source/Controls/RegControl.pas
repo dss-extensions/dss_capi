@@ -135,7 +135,7 @@ TYPE
 
        PROCEDURE Sample(ActorID : Integer);  Override;    // Sample control quantities and set action times in Control Queue
        PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Override;   // Do the action that is pending from last sample
-       PROCEDURE Reset; Override;  // Reset to initial defined state
+       PROCEDURE Reset(ActorID : Integer); Override;  // Reset to initial defined state
 
 
        PROCEDURE GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present value of terminal Curr
@@ -417,7 +417,7 @@ Begin
             27: RemotePTRatio   := Parser[ActorID].DblValue;
             28: TapNum          := Parser[ActorID].IntValue;
             29: If InterpretYesNo (Param) Then Begin  // force a reset
-                  Reset;
+                  Reset(ActorID);
                   PropertyValue[29]  := 'n'; // so it gets reported properly
                End;
             30: LDC_Z           := Parser[ActorID].DblValue ;

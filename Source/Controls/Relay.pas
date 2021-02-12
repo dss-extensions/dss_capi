@@ -16,6 +16,7 @@ unit Relay;
             Added capability to monitor PC Element variable
     2-16-04 Fixed address bug in symmetrical component transformation in 46 relay
     5-1-06 Added Time Dial to Phase and ground
+    2-9-21  Added distance (21) and incremental distance (TD21) functions
 }
 {
   A Relay is a control element that is connected to a terminal of a
@@ -114,6 +115,17 @@ TYPE
             PickupVolts47,
             PctPickup47:Double;
 
+            {Distance Relay}
+            Z1Mag,
+            Z1Ang,
+            Z0Mag,
+            Z0Ang,
+            Mphase,
+            Mground: Double;
+            Dist_Z1,
+            Dist_Z0,
+            Dist_K0: Complex;
+
             {Generic Relay}
             OverTrip,
             UnderTrip:Double;
@@ -132,7 +144,8 @@ TYPE
 
             CondOffset      :Integer; // Offset for monitored terminal
 
-            cBuffer         :pComplexArray;    // Complexarray buffer
+            cBuffer         :pComplexArray; // Complexarray buffer for an operating quantity
+            cvBuffer        :pComplexArray; // for distance and td21 voltages, using cBuffer for hte currents
 
             PROCEDURE InterpretRelayAction(ActorID : Integer;const Action:String);
             PROCEDURE InterpretRelayType(const S:String);
@@ -143,6 +156,8 @@ TYPE
             PROCEDURE NegSeq46Logic(ActorID : Integer);
             PROCEDURE NegSeq47Logic(ActorID : Integer);
             PROCEDURE GenericLogic(ActorID : Integer);
+            PROCEDURE DistanceLogic(ActorID : Integer);
+            PROCEDURE TD21Logic(ActorID : Integer);
 
      public
 
@@ -158,7 +173,7 @@ TYPE
 
        PROCEDURE Sample(ActorID : Integer);  Override;    // Sample control quantities and set action times in Control Queue
        PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer;ActorID : Integer); Override;   // Do the action that is pending from last sample
-       PROCEDURE Reset; Override;  // Reset to initial defined state
+       PROCEDURE Reset(ActorID : Integer); Override;  // Reset to initial defined state
 
 
        PROCEDURE GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present value of terminal Curr
@@ -180,11 +195,11 @@ IMPLEMENTATION
 
 USES
 
-    ParserDel, DSSClassDefs, DSSGlobals, Circuit, PCElement,  Sysutils, uCmatrix, MathUtil;
+    ParserDel, DSSClassDefs, DSSGlobals, Circuit, PCElement,  Sysutils, uCmatrix, MathUtil, Classes;
 
 CONST
 
-    NumPropsThisClass = 29;
+    NumPropsThisClass = 36;
 
     CURRENT = 0;  {Default}
     VOLTAGE = 1;
@@ -192,6 +207,8 @@ CONST
     NEGCURRENT = 4;
     NEGVOLTAGE = 5;
     GENERIC = 6; {Use this for frequency, etc.  Generic over/under relay}
+    DISTANCE = 7;
+    TD21 = 8;
 
 {--------------------------------------------------------------------------}
 constructor TRelay.Create;  // Creates superstructure for all Relay objects
@@ -249,7 +266,9 @@ Begin
      AddProperty( 'type',5, 'One of a legal relay type:' +CRLF+
                         'Current'+CRLF+'Voltage'+CRLF+'Reversepower'+CRLF+'46 (neg seq current)'+CRLF+
                         '47 (neg seq voltage)'+CRLF+
-                        'Generic (generic over/under relay)'+CRLF+CRLF+
+                        'Generic (generic over/under relay)'+CRLF+
+                        'Distance'+CRLF+
+                        'TD21'+CRLF+CRLF+
                         'Default is overcurrent relay (Current) ' +
                         'Specify the curve and pickup settings appropriate for each type. '+
                         'Generic relays monitor PC Element Control variables and trip on out of over/under range in definite time.');
@@ -299,6 +318,13 @@ Begin
      AddProperty( 'action', 19, '{Trip/Open | Close}  Action that overrides the relay control. Simulates manual control on breaker. ' +
                          '"Trip" or "Open" causes the controlled element to open and lock out. ' +
                          '"Close" causes the controlled element to close and the relay to reset to its first operation.');
+     AddProperty('Z1mag', 30, 'Positive sequence reach impedance in primary ohms for Distance and TD21 functions. Default=0.7');
+     AddProperty('Z1ang', 31, 'Positive sequence reach impedance angle in degrees for Distance and TD21 functions. Default=64.0');
+     AddProperty('Z0mag', 32, 'Zero sequence reach impedance in primary ohms for Distance and TD21 functions. Default=2.1');
+     AddProperty('Z0ang', 33, 'Zero sequence reach impedance angle in degrees for Distance and TD21 functions. Default=68.0');
+     AddProperty('Mphase', 34, 'Phase reach multiplier in per-unit for Distance and TD21 functions. Default=0.7');
+     AddProperty('Mground', 35, 'Ground reach multiplier in per-unit for Distance and TD21 functions. Default=0.7');
+     AddProperty('EventLog', 36, '{Yes/True* | No/False} Default is No for Relay. Log extra details to Eventlog.');
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -331,7 +357,6 @@ End;
 {--------------------------------------------------------------------------}
 FUNCTION TRelay.Edit(ActorID : Integer):Integer;
 VAR
-
    ParamPointer:Integer;
    ParamName:String;
    Param:String;
@@ -391,6 +416,13 @@ Begin
            27: Undertrip := Parser[ActorID].DblValue;
            28: TDPhase :=  Parser[ActorID].DblValue;
            29: TDGround :=  Parser[ActorID].DblValue;
+           30: Z1mag := Parser[ActorID].DblValue;
+           31: Z1ang := Parser[ActorID].DblValue;
+           32: Z0mag := Parser[ActorID].DblValue;
+           33: Z0ang := Parser[ActorID].DblValue;
+           34: Mphase := Parser[ActorID].DblValue;
+           35: Mground := Parser[ActorID].DblValue;
+           36: ShowEventLog := InterpretYesNo(param);
          ELSE
            // Inherited parameters
            ClassEdit( ActiveRelayObj, ParamPointer - NumPropsthisClass)
@@ -437,6 +469,7 @@ Begin
 
         NPhases := OtherRelay.Fnphases;
         NConds  := OtherRelay.Fnconds; // Force Reallocation of terminal stuff
+        ShowEventLog := OtherRelay.ShowEventLog;
 
         ElementName       := OtherRelay.ElementName;
         ElementTerminal   := OtherRelay.ElementTerminal;
@@ -486,6 +519,14 @@ Begin
         OverTrip      := OtherRelay.OverTrip;
         UnderTrip     := OtherRelay.UnderTrip;
 
+        {Distance Relays}
+        Z1Mag   := OtherRelay.Z1Mag;
+        Z1Ang   := OtherRelay.Z1Ang;
+        Z0Mag   := OtherRelay.Z0Mag;
+        Z0Ang   := OtherRelay.Z0Ang;
+        Mphase  := OtherRelay.Mphase;
+        Mground := OtherRelay.Mground;
+
         For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherRelay.PropertyValue[i];
 
      End
@@ -514,8 +555,7 @@ Begin
      Fnconds := 3;
      Nterms := 1;  // this forces allocation of terminals and conductors
                          // in base class
-
-
+     ShowEventLog := False;
 
      ElementName   := '';
      ControlledElement := NIL;
@@ -560,6 +600,13 @@ Begin
      overtrip  := 1.2;
      undertrip := 0.8;
 
+     Z1Mag := 0.7;
+     Z1Ang := 64.0;
+     Z0Mag := 2.1;
+     Z0Ang := 68.0;
+     Mphase := 0.7;
+     Mground := 0.7;
+
      Operationcount   := 1;
      LockedOut        := FALSE;
      ArmedForOpen     := FALSE;
@@ -570,6 +617,7 @@ Begin
      NextTripTime     := -1.0;  // not set to trip
 
      cBuffer := Nil; // Complex buffer
+     cvBuffer := Nil;
 
      DSSObjType := ParClass.DSSClassType; //cap_CONTROL;
 
@@ -586,6 +634,7 @@ Begin
      MonitoredElementName := '';
      ReallocMem(RecloseIntervals, 0);
      if Assigned (cBuffer) then ReallocMem (cBuffer, 0);
+     if Assigned (cvBuffer) then ReallocMem (cvBuffer, 0);
      Inherited Destroy;
 End;
 
@@ -614,6 +663,8 @@ Begin
                  Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
                // Allocate a buffer bigenough to hold everything from the monitored element
                  ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder );
+                 if (ControlType = Distance) or (ControlType = TD21) then
+                   ReAllocMem(cvBuffer, SizeOF(cvBuffer^[1]) * MonitoredElement.Yorder);
                  CondOffset := (MonitoredElementTerminal-1) * MonitoredElement.NConds; // for speedy sampling
 
                  CASE ControlType of
@@ -690,6 +741,12 @@ Begin
          END;
 
          PickupVolts47 := vbase * PctPickup47 * 0.01;
+
+         if ControlType = DISTANCE then begin
+            Dist_Z1 := pclx (Z1Mag, Z1Ang/RadiansToDegrees);
+            Dist_Z0 := pclx (Z0Mag, Z0Ang/RadiansToDegrees);
+            Dist_K0 := cdiv (cdivreal (csub (Dist_Z0, Dist_Z1), 3.0), Dist_Z1);
+         end;
 End;
 
 procedure TRelayObj.MakePosSequence(ActorID : Integer);
@@ -698,8 +755,10 @@ begin
     Nphases := MonitoredElement.NPhases;
     Nconds := FNphases;
     Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-    // Allocate a buffer bigenough to hold everything from the monitored element
+    // Allocate a buffer big enough to hold everything from the monitored element
     ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder );
+    if (ControlType = Distance) or (ControlType = TD21) then
+      ReAllocMem(cvBuffer, SizeOF(cvBuffer^[1]) * MonitoredElement.Yorder );
     CondOffset := (ElementTerminal-1) * MonitoredElement.NConds; // for speedy sampling
   end;
   CASE FNPhases of
@@ -741,7 +800,7 @@ PROCEDURE TRelayObj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID : Integ
 
 
 begin
-
+    if ShowEventLog then AppendToEventLog (self.Name, Format('DoPendingAction Armed=%s',[BoolToStr (ArmedForOpen)]), ActorID);
     WITH   ControlledElement Do
       Begin
          ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
@@ -827,7 +886,9 @@ begin
               REVPOWER:    RevPowerLogic(ActorID);    // one shot to lockout
               NEGCURRENT:  NegSeq46Logic(ActorID); // one shot to lockout
               NEGVOLTAGE:  NegSeq47Logic(ActorID); // one shot to lockout
-              GENERIC:   GenericLogic(ActorID);// one shot to lockout
+              GENERIC:     GenericLogic(ActorID);// one shot to lockout
+              DISTANCE:    DistanceLogic(ActorID);
+              TD21:        TD21Logic(ActorID);
          End;
 end;
 
@@ -876,9 +937,9 @@ begin
 end;
 
 
-Procedure TRelayObj.Reset;
+Procedure TRelayObj.Reset(ActorID : Integer);
 Begin
-
+     if ShowEventLog then AppendToEventLog (self.Name, 'Resetting', ActorID);
      PresentState   := CTRL_CLOSE;
      Operationcount := 1;
      LockedOut      := FALSE;
@@ -930,7 +991,12 @@ begin
      PropertyValue[27] := '0.8';
      PropertyValue[28] := '1.0';
      PropertyValue[29] := '1.0';
-
+     PropertyValue[30] := '0.7';
+     PropertyValue[31] := '64.0';
+     PropertyValue[32] := '2.1';
+     PropertyValue[33] := '68.0';
+     PropertyValue[34] := '0.7';
+     PropertyValue[35] := '0.7';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -948,6 +1014,8 @@ begin
                           '7':ControlType := NEGVOLTAGE;
                          End;
                     'g': ControlType := GENERIC;
+                    'd': ControlType := DISTANCE;
+                    't': ControlType := TD21;
                ELSE
                      ControlType := CURRENT;
                End;
@@ -959,6 +1027,8 @@ begin
                     'r': Delay_Time := 0.1;
                     '4': Delay_Time := 0.1;
                     'g': Delay_Time := 0.1;
+                    'd': Delay_Time := 0.1;
+                    't': Delay_Time := 0.1;
                ELSE
                      Delay_Time := 0.0;
                End;
@@ -1175,6 +1245,80 @@ begin
 
 end;
 
+procedure TRelayObj.DistanceLogic(ActorID : Integer);
+var
+  i, j: Integer;
+  Vloop, Iloop, Zloop, Ires, kIres, Zreach: Complex;
+  i2, min_distance, fault_distance: Double;
+  Targets: TStringList;
+  PickedUp: Boolean;
+
+begin
+  If Not LockedOut Then with MonitoredElement Do Begin
+    PickedUp := False;
+    min_distance := 1.0e30;
+    MonitoredElement.GetCurrents(cBuffer, ActorID);
+    Ires := cZERO;
+    for i := 1 to MonitoredElement.Nphases do caccum (Ires, cBuffer^[i+CondOffset]);
+    kIres := cmul (Dist_K0, Ires);
+    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer, ActorID);
+    for i := 1 to MonitoredElement.NPhases do begin
+      for j := i to MonitoredElement.NPhases do begin
+        if (i = j) then begin
+          Vloop := cvBuffer^[i];
+          Iloop := cadd (cBuffer^[i+CondOffset], kIres);
+          Zreach := cmulreal (Dist_Z1, Mground); // not Dist_Z0 because it's included in Dist_K0
+        end else begin
+          Vloop := csub (cvBuffer^[i], cvBuffer^[j]);
+          Iloop := csub (cBuffer^[i+CondOffset], cBuffer^[j+CondOffset]);
+          Zreach := cmulreal (Dist_Z1, Mphase);
+        end;
+        i2 := Iloop.re * Iloop.re + Iloop.im * Iloop.im;
+        if i2 > 0.1 then begin
+          Zloop := cdiv (Vloop, Iloop);
+          // start with a very simple rectangular characteristic
+          if (Zloop.re >= 0) and (Zloop.im >= 0.0) and (Zloop.re <= Zreach.re) and (Zloop.im <= Zreach.im) then begin
+            if not PickedUp then begin
+              Targets := TStringList.Create();
+              Targets.Sorted := True;
+            end;
+            if (i = j) then begin
+              Targets.Add (Format('G%d', [i]));
+//              GroundTarget := True
+            end else begin
+              Targets.Add (Format('P%d%d', [i, j]));
+//              PhaseTarget := True;
+            end;
+            fault_distance := cabs2(zloop) / cabs2 (zreach);
+            if fault_distance < min_distance then min_distance := fault_distance;
+            PickedUp := True;
+          end;
+        end;
+      end;
+    end;
+    if PickedUp then begin
+      if not ArmedForOpen then with ActiveCircuit[ActorID] do begin
+        RelayTarget := Format ('21 %.3f pu dist', [min_distance]);
+        for i := 0 to pred(Targets.Count) do
+          RelayTarget := RelayTarget + ' ' + Targets[i];
+        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t +Delay_Time +  Breaker_time, CTRL_OPEN, 0, Self, ActorID);
+        Inc(OperationCount);
+        ArmedForOpen := TRUE;
+      End;
+      Targets.Free();
+    end else begin  // not picked up; reset if necessary
+      if ArmedForOpen then with ActiveCircuit[ActorID] Do Begin
+        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self, ActorID);
+        ArmedForOpen := FALSE;
+      End;
+    end;
+  End;  {With MonitoredElement}
+end;
+
+procedure TRelayObj.TD21Logic;
+begin
+
+end;
 procedure TRelayObj.RevPowerLogic(ActorID : Integer);
 
 VAR

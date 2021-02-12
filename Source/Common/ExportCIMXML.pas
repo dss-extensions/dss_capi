@@ -24,9 +24,9 @@ Procedure ExportCDPSM (FileNm:String;
   Substation: String;
   SubGeographicRegion: String;
   GeographicRegion: String;
-  FdrUUID: TUuid; 
+  FdrUUID: TUuid;
   SubUUID: TUuid;
-  SubGeoUUID: TUuid; 
+  SubGeoUUID: TUuid;
   RgnUUID: TUuid;
   prf:CIMProfileChoice = Combined);
 
@@ -34,7 +34,7 @@ procedure StartUuidList (size:Integer);
 procedure FreeUuidList;
 procedure WriteHashedUUIDs (var F: TextFile);
 procedure AddHashedUUID (key: String; UuidVal: String);
-procedure DefaultCircuitUUIDs (var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid); 
+procedure DefaultCircuitUUIDs (var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid);
 
 implementation
 
@@ -487,9 +487,9 @@ begin
     XfLoc: key := 'XfLoc=';
     LoadLoc: key := 'LoadLoc=';
     LineLoc: key := 'LineLoc=';
-		ReacLoc: key := 'ReacLoc=';
+    ReacLoc: key := 'ReacLoc=';
     CapLoc: key := 'CapLoc=';
-		Topo: key := 'Topo=';
+    Topo: key := 'Topo=';
     SolarLoc: key := 'SolarLoc=';
     BatteryLoc: key := 'BatteryLoc=';
     LoadResp: key := 'LoadResp=';

@@ -91,7 +91,7 @@ TYPE
 
        PROCEDURE Sample(ActorID : Integer);  Override;    // Sample control quantities and set action times in Control Queue
        PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Override;   // Do the action that is pending from last sample
-       PROCEDURE Reset; Override;  // Reset to initial defined state
+       PROCEDURE Reset(ActorID : Integer); Override;  // Reset to initial defined state
 
 
        PROCEDURE GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present value of terminal Curr
@@ -329,7 +329,7 @@ Begin
            20: UserModel.Edit := Parser[ActorID].StrValue;  // Send edit string to user model
            21: FpctMinKvar := Parser[ActorID].DblValue;
            22: If InterpretYesNo (Param) Then Begin  // force a reset
-                  Reset;
+                  Reset(ActorID);
                   PropertyValue[22]  := 'n'; // so it gets reported properly
                End;
          ELSE

@@ -1644,7 +1644,7 @@ begin
           ControlDevice := DSSControls.First;
           WHILE ControlDevice <> Nil Do
           Begin
-               IF ControlDevice.Enabled THEN ControlDevice.Reset;
+               IF ControlDevice.Enabled THEN ControlDevice.Reset(ActiveActor);
                ControlDevice := DSSControls.Next;
           End;
        End;  {End With}
