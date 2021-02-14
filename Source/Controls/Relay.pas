@@ -125,6 +125,15 @@ TYPE
             Dist_Z1,
             Dist_Z0,
             Dist_K0: Complex;
+            {TD21 Relay}
+            td21_i,           // present ring buffer index into td21_h
+            td21_next,        // index to one cycle back, and next write location
+            td21_pt: Integer; // number of time samples in td21_h
+            td21_stride: Integer;  // length of a time sample in td21_h
+            td21_quiet: Integer;   // wait this many samples after an operation
+            td21_h: pComplexArray; // VI history pts, vi, phases
+            td21_dV: pComplexArray; // incremental voltages
+            td21_dI: pComplexArray; // incremental currents
 
             {Generic Relay}
             OverTrip,
@@ -614,6 +623,13 @@ Begin
      Z0Ang := 68.0;
      Mphase := 0.7;
      Mground := 0.7;
+     td21_i := -1;
+     td21_h := nil;
+     td21_dV := nil;
+     td21_dI := nil;
+     td21_pt := 0;
+     td21_stride := 0;
+     td21_quiet := 0;
 
      Operationcount   := 1;
      LockedOut        := FALSE;
@@ -644,6 +660,9 @@ Begin
      ReallocMem(RecloseIntervals, 0);
      if Assigned (cBuffer) then ReallocMem (cBuffer, 0);
      if Assigned (cvBuffer) then ReallocMem (cvBuffer, 0);
+     if Assigned (td21_h) then ReallocMem (td21_h, 0);
+     if Assigned (td21_dV) then ReallocMem (td21_dV, 0);
+     if Assigned (td21_dI) then ReallocMem (td21_dI, 0);
      Inherited Destroy;
 End;
 
@@ -651,7 +670,7 @@ End;
 PROCEDURE TRelayObj.RecalcElementData;
 
 VAR
-   DevIndex :Integer;
+   DevIndex: Integer;
 
 Begin
          if DebugTrace then begin
@@ -753,7 +772,7 @@ Begin
 
          PickupVolts47 := vbase * PctPickup47 * 0.01;
 
-         if ControlType = DISTANCE then begin
+         if (ControlType = DISTANCE) or (ControlType = TD21) then begin
             Dist_Z1 := pclx (Z1Mag, Z1Ang/RadiansToDegrees);
             Dist_Z0 := pclx (Z0Mag, Z0Ang/RadiansToDegrees);
             Dist_K0 := cdiv (cdivreal (csub (Dist_Z0, Dist_Z1), 3.0), Dist_Z1);
@@ -834,6 +853,7 @@ begin
                                     If PhaseTarget Then if ShowEventLog then AppendtoEventLog(' ', 'Phase Target');
                                     If GroundTarget Then if ShowEventLog then AppendtoEventLog(' ', 'Ground Target');
                                     ArmedForOpen := FALSE;
+                                    if ControlType = td21 then td21_quiet := td21_pt + 1;
                                  END;
                     ELSE {nada}
                     END;
@@ -844,12 +864,14 @@ begin
                                   Inc(OperationCount);
                                   if ShowEventLog then AppendtoEventLog('Relay.'+Self.Name, 'Closed');
                                   ArmedForClose     := FALSE;
+                                  if ControlType = td21 then td21_quiet := td21_pt div 2;
                                 End;
                     ELSE {Nada}
                     END;
             Integer(CTRL_RESET): If ArmedForReset and Not LockedOut then begin
                                   if ShowEventLog then AppendToEventLog('Relay.'+Self.Name, 'Reset');
                                   Reset;
+                                  if ControlType = td21 then td21_quiet := td21_pt div 2
                                 End
          ELSE
             {Do Nothing }
@@ -1345,8 +1367,167 @@ begin
 end;
 
 procedure TRelayObj.TD21Logic;
+var
+  i, j: Integer;
+  Vloop, Iloop, Zloop, Ires, kIres, Zreach: Complex;
+  i2, min_distance, fault_distance, t_event, dt: Double;
+  Targets: TStringList;
+  PickedUp: Boolean;
+  iia, iib, iic: Integer;
+  ib, iv, ii: Integer;  // base, voltage and current index into td21_h
 begin
-
+  dt := ActiveCircuit.Solution.DynaVars.h;
+  if dt > 0.0 then begin
+    if dt > 1.0 / ActiveCircuit.Solution.Frequency then
+      DoErrorMsg('Relay: "' + Name + '"',
+        'Has type TD21 with time step greater than one cycle.',
+        'Reduce time step, or change type to Distance.', 388);
+    i := round (1.0 / 60.0 / dt + 0.5);
+    if i > td21_pt then begin
+      td21_i := 0; // ring buffer index to be incremented before actual use
+      td21_pt := i;
+      td21_quiet := td21_pt + 1;
+      td21_stride := 2 * Nphases;
+      ReAllocMem(td21_h, SizeOf(td21_h^[1]) * td21_stride * td21_pt);
+      ReAllocMem(td21_dV, SizeOf(td21_dV^[1]) * Nphases);
+      ReAllocMem(td21_dI, SizeOf(td21_dI^[1]) * Nphases);
+      if DebugTrace then
+        AppendToEventLog ('Relay.'+Self.Name, Format ('TD21 prep %d phases, %.3g dt, %d points, %d elements',
+          [NPhases, dt, td21_pt, td21_stride * td21_pt]));
+    end;
+  end;
+  If Not LockedOut Then with MonitoredElement Do Begin
+    MonitoredElement.GetCurrents(cBuffer);
+    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
+    if td21_i < 1 then begin
+      if DebugTrace then AppendToEventLog ('Relay.'+self.Name, 'Initialize cqueue');
+      for i := 1 to td21_pt do begin
+        ib := (i - 1) * td21_stride;
+        for j := 1 to Nphases do begin
+          iv := ib + j;
+          td21_h^[iv] := cvBuffer^[j];
+          ii := ib + Nphases + j;
+          td21_h^[ii] := cBuffer^[j+CondOffset];
+        end;
+      end;
+      td21_i := 1;
+    end;
+    td21_next := (td21_i Mod td21_pt) + 1;  // this points to the oldest sample, and the next write location
+    // calculate the differential currents and voltages
+    ib := (td21_next - 1) * td21_stride;
+    for j := 1 to Nphases do begin
+      iv := ib + j;
+      td21_dV^[j] := csub (cvBuffer^[j], td21_h^[iv]);
+      ii := ib + Nphases + j;
+      td21_dI^[j] := csub (cBuffer^[j+CondOffset], td21_h^[ii]);
+    end;
+    if DebugTrace then begin
+      iia := 1 + CondOffset;
+      iib := 2 + CondOffset;
+      iic := 3 + CondOffset;
+      AppendToEventLog ('Relay.'+self.Name, Format ('Sample len=%d idx=%d next=%d', [td21_pt, td21_i, td21_next]));
+      AppendToEventLog ('Relay.'+self.Name, Format('Vp %10.2f+j%10.2f %10.2f+j%10.2f %10.2f+j%10.2f',
+        [cvBuffer^[1].re, cvBuffer^[1].im, cvBuffer^[2].re, cvBuffer^[2].im, cvBuffer^[3].re, cvBuffer^[3].im]));
+      AppendToEventLog ('Relay.'+self.Name, Format('Ip %10.2f+j%10.2f %10.2f+j%10.2f %10.2f+j%10.2f',
+        [cBuffer^[iia].re, cBuffer^[iia].im, cBuffer^[iib].re, cBuffer^[iib].im, cBuffer^[iic].re, cBuffer^[iic].im]));
+      AppendToEventLog ('Relay.'+self.Name, Format('DV %10.2f+j%10.2f %10.2f+j%10.2f %10.2f+j%10.2f',
+        [td21_dV^[1].re, td21_dV^[1].im, td21_dV^[2].re, td21_dV^[2].im, td21_dV^[3].re, td21_dV^[3].im]));
+      AppendToEventLog ('Relay.'+self.Name, Format('DI %10.2f+j%10.2f %10.2f+j%10.2f %10.2f+j%10.2f',
+        [td21_dI^[1].re, td21_dI^[1].im, td21_dI^[2].re, td21_dI^[2].im, td21_dI^[3].re, td21_dI^[3].im]));
+    end;
+    // do the relay processing
+    if ActiveCircuit.Solution.DynaVars.IterationFlag < 1 then begin
+//      if DebugTrace then AppendToEventLog ('Relay.'+self.Name, 'Advance cqueue write pointer');
+      ib := (td21_i - 1) * td21_stride;
+      for j := 1 to Nphases do begin
+        iv := ib + j;
+        td21_h^[iv] := cvBuffer^[j];
+        ii := ib + Nphases + j;
+        td21_h^[ii] := cBuffer^[j+CondOffset];
+      end;
+      td21_i := td21_next;
+      if td21_quiet > 0 then dec(td21_quiet);
+    end;
+    if td21_quiet <= 0 then begin  // one cycle since we started, or since the last operation
+      PickedUp := False;
+      min_distance := 1.0e30;
+      Ires := cZERO;
+      for i := 1 to MonitoredElement.Nphases do caccum (Ires, td21_dI^[i]);
+      kIres := cmul (Dist_K0, Ires);
+      for i := 1 to MonitoredElement.NPhases do begin
+        for j := i to MonitoredElement.NPhases do begin
+          if (i = j) then begin
+            Vloop := td21_dV^[i];
+            Iloop := cadd (td21_dI^[i], kIres);
+            Zreach := cmulreal (Dist_Z1, Mground); // not Dist_Z0 because it's included in Dist_K0
+          end else begin
+            Vloop := csub (td21_dV^[i], td21_dV^[j]);
+            Iloop := csub (td21_dI^[i], td21_dI^[j]);
+            Zreach := cmulreal (Dist_Z1, Mphase);
+          end;
+          i2 := Iloop.re * Iloop.re + Iloop.im * Iloop.im;
+          if i2 > 0.1 then begin
+            Zloop := cnegate (cdiv (Vloop, Iloop));
+            if DebugTrace then
+              AppendToEventLog ('Relay.'+self.Name, Format ('Zloop[%d,%d] = %.6f + %.6f', [i, j, Zloop.re, Zloop.im]));
+            // start with a very simple rectangular characteristic
+            if (Zloop.re >= 0) and (Zloop.im >= 0.0) and (Zloop.re <= Zreach.re) and (Zloop.im <= Zreach.im) then begin
+              if not PickedUp then begin
+                Targets := TStringList.Create();
+                Targets.Sorted := True;
+              end;
+              if (i = j) then begin
+                Targets.Add (Format('G%d', [i]));
+              end else begin
+                Targets.Add (Format('P%d%d', [i, j]));
+              end;
+              fault_distance := cabs2(zloop) / cabs2 (zreach);
+              if fault_distance < min_distance then min_distance := fault_distance;
+              PickedUp := True;
+            end;
+          end;
+        end;
+      end;
+      if PickedUp then begin
+        if DebugTrace then begin
+          AppendToEventLog ('Relay.'+Self.Name, 'Picked up');
+        end;
+        if ArmedForReset then begin
+          ActiveCircuit.ControlQueue.Delete (LastEventHandle);
+          ArmedForReset := FALSE;
+          if DebugTrace then AppendToEventLog ('Relay.'+self.Name, 'Dropping last event.');
+        end;
+        if not ArmedForOpen then with ActiveCircuit do begin
+          RelayTarget := Format ('TD21 %.3f pu dist', [min_distance]);
+          t_event := Solution.DynaVars.t + Delay_Time + Breaker_time;
+          for i := 0 to pred(Targets.Count) do
+            RelayTarget := RelayTarget + ' ' + Targets[i];
+          LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event, CTRL_OPEN, 0, Self);
+          if DebugTrace then AppendToEventLog ('Relay.'+self.Name, Format ('Pushing trip event for %.3f', [t_event]));
+          ArmedForOpen := TRUE;
+          if OperationCount <= NumReclose then begin
+            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
+            if DebugTrace then AppendToEventLog ('Relay.'+self.Name, Format ('Pushing reclose event for %.3f', [t_event + RecloseIntervals^[OperationCount]]));
+            ArmedForClose := TRUE;
+          end;
+        End;
+        Targets.Free();
+      end else begin  // not picked up; reset if necessary
+        if (OperationCount > 1) and (ArmedForReset = FALSE) then begin // this implements the reset, whether picked up or not
+          ArmedForReset := TRUE;
+          with ActiveCircuit do
+            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
+            if DebugTrace then AppendToEventLog ('Relay.'+self.Name, Format ('Pushing reset event for %.3f', [ActiveCircuit.Solution.DynaVars.t + ResetTime]));
+        end;
+//        if ArmedForOpen then begin // TD21 should not drop out?
+//          ArmedForOpen := FALSE;
+//          ArmedForClose := FALSE;
+//          if DebugTrace then
+//            AppendToEventLog ('Relay.'+self.Name, Format ('Dropping out at %.3f', [ActiveCircuit.Solution.DynaVars.t]));
+//        End;
+      end;
+    end; { td21_quiet}
+  End;  {With MonitoredElement}
 end;
 
 procedure TRelayObj.RevPowerLogic;
