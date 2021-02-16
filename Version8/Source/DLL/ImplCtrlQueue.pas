@@ -61,7 +61,7 @@ Type
        destructor Destroy; override;
 
        PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Override;   // Do the action that is pending from last sample
-       PROCEDURE Reset; Override;  // Reset to initial defined state
+       PROCEDURE Reset(ActorID: Integer); Override;  // Reset to initial defined state
   end;
 
 Var
@@ -161,7 +161,7 @@ begin
     End Else Result := FALSE;
 end;
 
-procedure TCOMControlProxyObj.Reset;
+procedure TCOMControlProxyObj.Reset(ActorID: integer);
 begin
   ClearActionList;
 

@@ -82,7 +82,7 @@ begin
   end;
   6: begin  // Fuse.Close
     elem := FuseClass.GetActiveObj ;
-    if elem <> nil then elem.Reset;
+    if elem <> nil then elem.Reset(ActiveActor);
   end;
   7: begin  // Fuse.IsBlown
       Result :=0;
