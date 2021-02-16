@@ -71,7 +71,7 @@ Begin
     if Not processExists('OpenDSSGIS.exe') then
     begin
      // Starts OpenDSS-GIS if is not running
-      ShellExecute(0, 'open',pWidechar(DSS_GIS_path), nil, nil, SW_SHOWNORMAL);
+      ShellExecute(0, 'open',pChar(DSS_GIS_path), nil, nil, SW_SHOWNORMAL);
       sleep(5000);
       IsGISON      :=  False;
     end;
