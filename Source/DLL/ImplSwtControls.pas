@@ -194,7 +194,7 @@ begin
     Case Value of
       dssActionOpen:  elem.CurrentAction := CTRL_OPEN;
       dssActionClose: elem.CurrentAction := CTRL_CLOSE;
-      dssActionReset: elem.Reset;
+      dssActionReset: elem.Reset(ActiveActor);
       dssActionLock:  elem.Locked := TRUE;
       dssActionUnlock: elem.Locked := FALSE;
       else // TapUp, TapDown, None have no effect
@@ -339,7 +339,7 @@ begin
   elem   := ActiveSwtControl;
   if elem <> nil then begin
       elem.Locked := FALSE;
-      elem.Reset;
+      elem.Reset(ActiveActor);
   end;
 end;
 
