@@ -38,6 +38,7 @@ TYPE
         Ffilter: TXYcurveObj;
         Ffilter_name: String;
         BaseCurr: double; // line current at Ppct
+        BaseVolt: double; // line-to-neutral voltage at Vrated
         FsampleFreq: double; // discretization frequency for Z filter
         Fwinlen: integer;
         Ffiltlen: integer;
@@ -50,7 +51,7 @@ TYPE
         FvrmsTau: double; // LPF time constant sensing Vrms
         FirmsTau: double; // LPF time constant producing Irms
 
-        // Support for Dynamics Mode - PU of Vrated and BaseCurr
+        // Support for Dynamics Mode - PU of BaseVolt and BaseCurr
         // state variables for Dynamics Mode
         s1: double; // Vwave(t), or Vrms in phasor mode
         s2: double; // Iwave(t), or Ipwr in phasor mode
@@ -366,9 +367,13 @@ Begin
   Reallocmem(InjCurrent, SizeOf(InjCurrent^[1])*Yorder);
 
   Irated := Prated / Vrated / FNphases;
-  if FNPhases = 3 then Irated := Irated * sqrt(3);
+  BaseVolt := Vrated;
+  if FNPhases = 3 then begin
+    Irated := Irated * sqrt(3);
+    BaseVolt := BaseVolt / sqrt(3);
+  end;
   BaseCurr := 0.01 * Ppct * Irated;
-  Fkv := 1.0 / Vrated / sqrt(2.0);
+  Fkv := 1.0 / BaseVolt / sqrt(2.0);
   Fki := BaseCurr * sqrt(2.0);
 
   if Length (Ffilter_name) > 0 then begin
@@ -497,13 +502,13 @@ var
   i, k: integer;
 begin
   ComputeIterminal;
-  s1 := cabs(Vterminal^[1]) / Vrated;
+  s1 := cabs(Vterminal^[1]) / BaseVolt;
   s4 := cabs(Iterminal^[1]) / BaseCurr;
   s2 := s4;
   s3 := s4;
   s5 := 0;
   s6 := 0;
-  vlast := cdivreal (Vterminal^[1], Vrated);
+  vlast := cdivreal (Vterminal^[1], BaseVolt);
 
   // initialize the history terms for HW model source convention
   for i := 1 to Ffiltlen do begin
@@ -538,13 +543,13 @@ begin
   ComputeIterminal;
   iang := cang(Iterminal^[1]);
   vang := cang(Vterminal^[1]);
-  s1 := cabs(Vterminal^[1]) / Vrated;
+  s1 := cabs(Vterminal^[1]) / BaseVolt;
   s3 := cabs(Iterminal^[1]) / BaseCurr;
   s2 := s3;
   s4 := s3;
   s5 := 0;
   s6 := 0;
-  vlast := cdivreal (Vterminal^[1], Vrated);
+  vlast := cdivreal (Vterminal^[1], BaseVolt);
 
   // initialize the history terms for HW model source convention
   d := 1 / FsampleFreq;
@@ -577,7 +582,7 @@ var
   iu, i, k, nstep, corrector: integer;
 begin
   ComputeIterminal;
-  vpu := cabs (Vterminal^[1]) / Vrated;
+  vpu := cabs (Vterminal^[1]) / BaseVolt;
   if vpu > 0.0 then begin
     h := ActiveSolutionObj.DynaVars.h;
     corrector := ActiveSolutionObj.DynaVars.IterationFlag;
@@ -647,7 +652,7 @@ begin
   nstep := trunc (1e-6 + h/d);
   w := 2 * Pi * f;
 
-  vnow := cdivreal (Vterminal^[1], Vrated);
+  vnow := cdivreal (Vterminal^[1], BaseVolt);
   vin := 0;
   y := 0;
   iu := sIdxU;
