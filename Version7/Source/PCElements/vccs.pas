@@ -71,6 +71,7 @@ TYPE
         y2sum: double;
         procedure InitPhasorStates;
         procedure IntegratePhasorStates;
+        procedure ShutoffInjections;
 
      protected
         Function  Get_Variable(i: Integer): Double; Override;
@@ -434,6 +435,11 @@ Procedure TVCCSObj.GetInjCurrents(Curr:pComplexArray);
 var
   i:Integer;
 Begin
+  if not Closed[1] then begin
+    for i := 1 to Fnphases do Curr^[i] := CZERO;
+    exit;
+  end;
+
   ComputeVterminal;
 //  IterminalUpdated := FALSE;
   if ActiveSolutionObj.IsDynamicModel then begin
@@ -497,6 +503,25 @@ end;
 
 // support for DYNAMICMODE
 // NB: in phasor mode, use load convention for OpenDSS
+procedure TVCCSObj.ShutoffInjections; // stop injecting if the terminal opens
+var
+  i: integer;
+begin
+  for i:= 1 to FFiltlen do begin
+    whist[i] := 0.0;
+    wlast[i] := 0.0;
+    z[i] := 0.0;
+    zlast[i] := 0.0;
+  end;
+  for i:= 1 to FWinlen do y2[i] := 0.0;
+  s1 := 0;
+  s2 := 0;
+  s3 := 0;
+  s4 := 0;
+  s5 := 0;
+  s6 := 0;
+end;
+
 procedure TVCCSObj.InitPhasorStates;
 var
   i, k: integer;
@@ -637,6 +662,10 @@ var
   vnow: complex;
   iu, iy: integer; // local copies of sIdxU and sIdxY for predictor
 begin
+  if not Closed[1] then begin
+    ShutoffInjections;
+    exit;
+  end;
   if FrmsMode then begin
     IntegratePhasorStates;
     exit;
