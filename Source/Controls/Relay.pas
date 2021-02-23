@@ -125,6 +125,7 @@ TYPE
             Dist_Z1,
             Dist_Z0,
             Dist_K0: Complex;
+            Dist_Reverse: Boolean;
             {TD21 Relay}
             td21_i,                   // present ring buffer index into td21_h
             td21_next,                // index to one cycle back, and next write location
@@ -212,7 +213,7 @@ USES
 
 CONST
 
-    NumPropsThisClass = 37;
+    NumPropsThisClass = 38;
 
     CURRENT = 0;  {Default}
     VOLTAGE = 1;
@@ -342,6 +343,7 @@ Begin
      AddProperty('Mground', 35, 'Ground reach multiplier in per-unit for Distance and TD21 functions. Default=0.7');
      AddProperty('EventLog', 36, '{Yes/True* | No/False} Default is Yes for Relay. Write trips, reclose and reset events to EventLog.');
      AddProperty('DebugTrace', 37, '{Yes/True* | No/False} Default is No for Relay. Write extra details to Eventlog.');
+     AddProperty('DistReverse', 38, '{Yes/True* | No/False} Default is No; reverse direction for distance and td21 types.');
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -441,6 +443,7 @@ Begin
            35: Mground := Parser.DblValue;
            36: ShowEventLog := InterpretYesNo(param);
            37: DebugTrace   := InterpretYesNo(Param);
+           38: Dist_Reverse  := InterpretYesNo(Param);
          ELSE
            // Inherited parameters
            ClassEdit( ActiveRelayObj, ParamPointer - NumPropsthisClass)
@@ -546,6 +549,7 @@ Begin
         Z0Ang   := OtherRelay.Z0Ang;
         Mphase  := OtherRelay.Mphase;
         Mground := OtherRelay.Mground;
+        Dist_Reverse := OtherRelay.Dist_Reverse;
 
         For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherRelay.PropertyValue[i];
 
@@ -632,6 +636,7 @@ Begin
      td21_pt := 0;
      td21_stride := 0;
      td21_quiet := 0;
+     Dist_Reverse := False;
 
      Operationcount   := 1;
      LockedOut        := FALSE;
@@ -1304,6 +1309,9 @@ begin
     PickedUp := False;
     min_distance := 1.0e30;
     MonitoredElement.GetCurrents(cBuffer);
+    if Dist_Reverse then
+      for I := 1 to MonitoredElement.NPhases do
+        cBuffer^[i+CondOffset] := cnegate (cBuffer^[i+CondOffset]);
     Ires := cZERO;
     for i := 1 to MonitoredElement.Nphases do caccum (Ires, cBuffer^[i+CondOffset]);
     kIres := cmul (Dist_K0, Ires);
@@ -1408,6 +1416,9 @@ begin
   If Not LockedOut Then with MonitoredElement Do Begin
     FaultDetected := False;
     MonitoredElement.GetCurrents(cBuffer);
+    if Dist_Reverse then
+      for I := 1 to MonitoredElement.NPhases do
+        cBuffer^[i+CondOffset] := cnegate (cBuffer^[i+CondOffset]);
     i2fault := PhaseTrip * PhaseTrip;
     for I := 1 to Nphases do begin
       i2 := cabs2 (cBuffer^[i+CondOffset]);
