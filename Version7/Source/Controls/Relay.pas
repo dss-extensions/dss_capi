@@ -1208,6 +1208,9 @@ begin
                     Else GroundTime := -1.0;
                  End
                  Else GroundTime := TDGround *  GroundCurve.GetTCCTime(Cmag/ GroundTrip);
+              if DebugTrace then
+                AppendToEventLog ('Relay.'+Self.Name, Format ('Ground Trip: Mag=%.3g, Mult=%.3g, Time=%.3g',
+                  [Cmag, Cmag / GroundTrip, GroundTime]));
            End;
 
            IF Groundtime > 0.0 THEN Begin
@@ -1242,6 +1245,9 @@ begin
                            ELSE PhaseTime := Min(PhaseTime, TimeTest);
                          End;
                      End;
+                    if DebugTrace then
+                      AppendToEventLog ('Relay.'+Self.Name, Format ('Phase %d Trip: Mag=%.3g, Mult=%.3g, Time=%.3g',
+                        [i-CondOffset, Cmag, Cmag / PhaseTrip, PhaseTime]));
                  End;
              End;
            // If PhaseTime > 0 then we have a phase trip
