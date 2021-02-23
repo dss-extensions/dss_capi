@@ -789,7 +789,7 @@ Begin
 
     FOR i := 1 TO EnergyMeters.ListSize DO Begin
       mtr :=  EnergyMeters.Get(i);
-      IF Mtr.Enabled Then mtr.MakeMeterZoneLists(ActorID);
+      mtr.MakeMeterZoneLists(ActorID);
     END;
 
     FreeAndNilBusAdjacencyLists (BusAdjPD, BusAdjPC);
@@ -1707,7 +1707,7 @@ Begin
 
    FOR i := 1 to ActiveCircuit[ActorID].EnergyMeters.ListSize DO Begin
        ThisMeter := ActiveCircuit[ActorID].EnergyMeters.Get(i);
-       With ThisMeter Do If MeteredElement <> Nil Then MeteredElement.HasEnergyMeter := TRUE;
+       With ThisMeter Do if Enabled and (MeteredElement <> Nil) Then MeteredElement.HasEnergyMeter := TRUE;
    End;   {FOR}
 End;
 
@@ -1739,9 +1739,17 @@ Begin
   VBasecount      := 0; {Build the voltage base list over in case a base added or deleted}
   for j := 1 to MaxVBaseCount  do VBaseList^[j] := 0.0;
 
-  // Make a new branch list
   IF BranchList <> NIL Then BranchList.Free;
-  BranchList := TCktTree.Create;     {Instantiates ZoneEndsList, too}
+
+  if Enabled then
+  begin
+    // Make a new branch list
+    BranchList := TCktTree.Create;     {Instantiates ZoneEndsList, too}
+  end
+  Else Begin
+    BranchList := Nil;
+    Exit;
+  End;
 
   // Get Started
   If Assigned(MeteredElement) Then BranchList.New := MeteredElement
