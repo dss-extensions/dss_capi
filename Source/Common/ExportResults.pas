@@ -1871,13 +1871,13 @@ Var
    F  :TextFile;
    i,j:Integer;
    pElem  :TGeneratorObj;
-   GeneratorClass:TGenerator;
+//****   GeneratorClass:TGenerator;
    FileNm,
    Separator :String;
 
 Begin
 
-      GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
+ //*****     GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
       If GeneratorClass = NIL THEN Exit;  // oops somewhere!!
       Separator := ', ';
 
@@ -1929,14 +1929,14 @@ Var
    F  :TextFile;
    i,j:Integer;
    pElem  :TGeneratorObj;
-   GeneratorClass:TGenerator;
+//****   GeneratorClass:TGenerator;
    Separator, TestStr :String;
    ReWriteFile :Boolean;
 
 Begin
 
 
-  GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
+ //**** GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
   If GeneratorClass = NIL THEN Exit;  // oops somewhere!!
   Separator := ', ';
 

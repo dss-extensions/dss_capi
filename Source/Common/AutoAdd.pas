@@ -26,7 +26,7 @@ Uses uComplex, EnergyMeter, HashList, Arraydef, Generator, Capacitor;
 Type
     TAutoAdd = class(TObject)
     private
-      GeneratorClass   :TGenerator;
+  //****    GeneratorClass   :TGenerator;
       CapacitorClass   :TCapacitor;
 
       BusIdxList        :pIntegerArray;
@@ -110,7 +110,7 @@ constructor TAutoAdd.Create;
 Begin
 
     BusIdxListCreated := False;
-    GeneratorClass   := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('generator'));
+ //****   GeneratorClass   := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('generator'));
     CapacitorClass   := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('capacitor'));
 
          // AutoAdd defaults

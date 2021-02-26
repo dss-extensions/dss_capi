@@ -191,7 +191,7 @@ Type
 
    TEnergyMeter = class(TMeterClass)    // derive strait from base class
      private
-        GeneratorClass        : TGenerator;
+ //****       GeneratorClass        : TGenerator;
         FSaveDemandInterval   : Boolean;
         FDI_Verbose           : Boolean;
         FOverLoadFile         : Textfile;
@@ -448,7 +448,7 @@ Begin
      CommandList.Abbrev := TRUE;
 
 //{$IFDEF MSWINDOWS}
-     GeneratorClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('generator'));
+ //****    GeneratorClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('generator'));
 //{$ENDIF}
 
      SystemMeter := TSystemMeter.Create;
