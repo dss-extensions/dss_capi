@@ -519,6 +519,11 @@ begin
   13: begin                                    // Loads.Growth - Write
       Set_Parameter ('Growth', Widestring(arg));
       Result:=pAnsiChar(AnsiString(''));
+  end;
+  14: begin                                    // Loads.Sensor - read
+      Result := pAnsiChar(AnsiString(''));
+      pLoad := ActiveLoad;
+      if pLoad <> nil then Result := pAnsiChar(AnsiString(pLoad.SensorObj.ElementName));
   end
   else
       Result:=pAnsiChar(AnsiString('Error'));

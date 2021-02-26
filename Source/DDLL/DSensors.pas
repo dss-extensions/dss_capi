@@ -283,6 +283,15 @@ begin
           inc(k);
         end;
       end;
+  end;
+  7: begin  // Sensors.AllocFactors read
+      elem :=  ActiveSensor;
+      If elem <> Nil Then
+      Begin
+          arg := VarArrayCreate([0, elem.NPhases -1], varDouble);
+          FOR k := 0 to elem.NPhases-1 DO  arg[k] := elem.PhsAllocationFactor^[k+1];
+      End
+      Else arg := VarArrayCreate([0, 0], varDouble);
   end
   else
       arg[0]:='Error, paremeter not valid';

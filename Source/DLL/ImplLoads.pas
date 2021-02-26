@@ -91,6 +91,7 @@ type
     procedure Set_pctSeriesRL(Value: Double); safecall;
     function Get_RelWeight: Double; safecall;
     procedure Set_RelWeight(Value: Double); stdcall;
+    function Get_Sensor: WideString; safecall;
 
   end;
 
@@ -859,6 +860,23 @@ var
 begin
   elem := ActiveLoad;
   if elem <> nil then elem.RelWeighting := Value;
+end;
+
+function TLoads.Get_Sensor: WideString;
+Var
+   pLoad:TLoadObj;
+
+Begin
+   Result := '';
+   If ActiveCircuit[ActiveActor] <> Nil Then
+   Begin
+        pLoad := ActiveCircuit[ActiveActor].Loads.Active;
+        If pLoad <> Nil Then
+          Result := pLoad.SensorObj.ElementName
+        Else
+            Result := '';  // signify no name
+   End;
+
 end;
 
 initialization
