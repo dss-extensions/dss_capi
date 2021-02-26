@@ -1118,8 +1118,16 @@ begin
            End
          Else
            Begin   // Forward or Cogen Modes
-              VregTest := Vreg;
-              BandTest := Bandwidth;
+              if inCogenMode then
+              Begin
+                VregTest := RevVreg;    // corrected Feb 25, 2021 for Huijuan Li
+                BandTest := RevBandwidth;
+              End
+              Else
+              Begin
+                VregTest := Vreg;
+                BandTest := Bandwidth;
+              End;
            End;
          IF (Abs(VregTest - Vactual) > BandTest / 2.0) Then TapChangeIsNeeded := TRUE
                                                        Else TapChangeIsNeeded := FALSE;
