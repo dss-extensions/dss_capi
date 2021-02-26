@@ -82,8 +82,6 @@ uses
   FrmDoDSSCommand in '..\Forms\FrmDoDSSCommand.pas' {DoDSSCommandForm},
   fuse in '..\PDElements\fuse.pas',
   UPFCControl in '..\Controls\UPFCControl.pas',
-  generator in '..\PCElements\generator.pas',
-  GenUserModel in '..\PCElements\GenUserModel.pas',
   GrowthShape in '..\General\GrowthShape.pas',
   HashList in '..\Shared\HashList.pas',
   HelpForm in '..\Forms\HelpForm.pas' {HelpForm1},
@@ -168,7 +166,6 @@ uses
   DSSGraph in '..\Plot\DSSGraph.pas',
   CapUserControl in '..\Controls\CapUserControl.pas',
   StorageVars in '..\PCElements\StorageVars.pas',
-  GeneratorVars in '..\PCElements\GeneratorVars.pas',
   CapControlVars in '..\Controls\CapControlVars.pas',
   InvControl in '..\Controls\InvControl.pas',
   GICTransformer in '..\PDElements\GICTransformer.pas',
@@ -200,7 +197,13 @@ uses
   djson in '..\Common\djson.pas',
   NumCPULib in '..\Parallel_Lib\NumCPULib.pas',
   StdMessage in '..\Forms\StdMessage.pas' {myStdMsg},
-  myInfoMsg in '..\Forms\myInfoMsg.pas' {myInfoMessage};
+  myInfoMsg in '..\Forms\myInfoMsg.pas' {myInfoMessage},
+  WindGen in '..\PCElements\WindGen.pas',
+  WindGenVars in '..\PCElements\WindGenVars.pas',
+  WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
+  generator in '..\PCElements\generator.pas',
+  GenUserModel in '..\PCElements\GenUserModel.pas',
+  GeneratorVars in '..\PCElements\GeneratorVars.pas';
 
 {$R *.RES}
 

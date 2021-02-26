@@ -72,6 +72,7 @@ CONST
       INV_CONTROL2      = 40 * 8;
       STORAGE2_ELEMENT  = 41 * 8;
       STORAGE2_CONTROL  = 42 * 8;
+      WINDGEN_ELEMENT   = 43 * 8;
 VAR
    NumIntrinsicClasses,
    NumUserClasses     :Integer;
@@ -118,6 +119,7 @@ USES
      Reactor,
      Fault,
      Generator,
+     WindGen,
      RegControl,
      CapControl,
      GenDispatcher,
@@ -212,6 +214,7 @@ Begin
      DSSClasses.New               := TCapControl.Create;
      DSSClasses.New               := TFault.Create;
      DSSClasses.New               := TGenerator.Create;
+     DSSClasses.New               := TWindGen.Create;
      DSSClasses.New               := TGenDispatcher.Create;
      StorageClass[ActiveActor]    := TStorage.Create;
      DSSClasses.New               := StorageClass[ActiveActor];

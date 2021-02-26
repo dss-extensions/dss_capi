@@ -1,4 +1,4 @@
-unit GeneratorVars;
+unit WindGenVars;
 
 {
   ----------------------------------------------------------
@@ -6,7 +6,7 @@ unit GeneratorVars;
   All rights reserved.
   ----------------------------------------------------------
 
-  Definition of Generator Public Data Record for passing to DLLs and other object
+  Definition of WindGen Public Data Record for passing to DLLs and other object
 }
 
 interface
@@ -14,10 +14,10 @@ interface
 Uses  UComplex;
 
 TYPE
-    pTGeneratorVars = ^TGeneratorVars;
+    pTWindGenVars = ^TWindGenVars;
 
-   {Generator public data/state variable structure}
-   TGeneratorVars = packed Record
+   {WindGen public data/state variable structure}
+   TWindGenVars = packed Record
 
         Theta,      {Direct-Axis voltage magnitude & angle}
         Pshaft,
@@ -28,7 +28,7 @@ TYPE
         Mmass,      {Mass constant actual values (Joule-sec/rad}
         D, Dpu,     {Actual and per unit damping factors}
         kVArating,
-        kVGeneratorBase,
+        kVWindGenBase,
         Xd, Xdp, Xdpp,   {machine Reactances, ohms}
         puXd, puXdp, puXdpp,   {machine Reactances, per unit}
         dTheta,
@@ -52,7 +52,7 @@ TYPE
         VthevMag  : Double;    {Thevinen equivalent voltage for dynamic model}
         VThevHarm : Double;    {Thevinen equivalent voltage mag reference for Harmonic model}
         ThetaHarm : Double;    {Thevinen equivalent voltage angle reference for Harmonic model}
-        VTarget   : Double;   // Target voltage for generator with voltage control
+        VTarget   : Double;   // Target voltage for WindGen with voltage control
         Zthev     : Complex;
         XRdp      : Double;  // Assumed X/R for Xd'
    End;
