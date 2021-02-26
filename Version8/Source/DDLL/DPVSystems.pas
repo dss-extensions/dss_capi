@@ -257,7 +257,20 @@ begin
              End;
          End;
   End;
-  end
+  end;
+  2: begin  // PVSystem.Sensor - read
+         Result := pAnsiChar(AnsiString(''));
+         If ActiveCircuit[ActiveActor] <> Nil Then
+         Begin
+              pPVSystem := ActiveCircuit[ActiveActor].PVSystems.Active;
+              If pPVSystem <> Nil Then
+              Begin
+                Result := pAnsiChar(AnsiString(pPVSystem.SensorObj.ElementName));
+              End
+              Else
+                  Result := pAnsiChar(AnsiString(''));  // signify no name
+         End;
+     end
   else
       Result:=pAnsiChar(AnsiString('Error, parameter not valid'));
   end;
