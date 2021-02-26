@@ -290,6 +290,8 @@ type
       procedure   CalcQDRC_desiredpu(j: Integer; ActorID : Integer);
       procedure   CalcQAVR_desiredpu(j: Integer; ActorID : Integer);
       procedure   Check_Qlimits(j: Integer; Q: Double; ActorID : Integer);
+      procedure   Check_Qlimits_WV(j: Integer; Q: Double; ActorID : Integer);
+      procedure   Calc_PQ_WV(j: Integer; ActorID : Integer);
       procedure   Calc_QHeadRoom(j: Integer; ActorID : Integer);
       procedure   CalcVoltVar_vars(j: Integer; ActorID : Integer);
       procedure   CalcAVR_vars(j: Integer; ActorID : Integer);
@@ -1853,16 +1855,20 @@ procedure TInvControlObj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID : 
             CalcQWVcurve_desiredpu(k, ActorID);
 
             // Checks kVA (watt priority) and kvarlimit limits
-            Check_Qlimits(k, QDesireWVpu[k], ActorID);
+            Check_Qlimits_WV(k, QDesireWVpu[k], ActorID);
             QDesireEndpu[k] := Min(abs(QDesireWVpu[k]), abs(QDesireLimitedpu[k])) * sign(QDesireWVpu[k]);
 
-            // Calculates QDesiredWV[k] through the convergence algorithm
-            CalcWATTVAR_vars(k, ActorID);
+            // It checks kVA or Q limits and makes sure the final P and Q stay in the watt-var curve (PauloRadatz - 2/16/2021)
+            Calc_PQ_WV(k, ActorID);
 
             //--------------------------------------------- end Main process ---------------------------------------------//
 
             // Sets PVSystem/Storage's kvar_out
-            if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredWV[k]
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
+              begin
+                TPVSystemObj(DERelem).Presentkvar := QDesiredWV[k];
+                TPVSystemObj(DERelem).PresentkW := PLimitEndpu[k] * Min(FkVARating[k], FDCkWRated[k]);
+              end
             else TStorageObj(DERelem).kvarRequested := QDesiredWV[k];
 
             // Uptates PresentkW and Presentkvar considering watt and var priorities
@@ -4354,7 +4360,8 @@ procedure TInvControlObj.CalcQDRC_desiredpu(j: Integer; ActorID : Integer);
 
   end;
 
-procedure TInvControlObj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer);
+
+procedure TInvControlObj.Check_Qlimits_WV(j: Integer; Q: Double; ActorID : Integer);
   VAR
     Q_Ppriority                              :Double;
     currentkvarlimitpu                       :Double;
@@ -4364,6 +4371,17 @@ procedure TInvControlObj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer)
 
   begin
 
+    // Will organize this part into functions later
+
+    // states
+    error := 0;
+    if (ControlMode = WATTVAR)          then error := 0.005;
+
+    if Q < -error then FOperation := -1.0
+    else if Q > error then  FOperation := 1.0
+    else FOperation := 0.0;
+
+
     QDesireLimitedpu[j] := 1.0; // Not limited
 
     currentkvarlimitpu := FCurrentkvarLimit[j] / QHeadRoom[j];
@@ -4372,6 +4390,92 @@ procedure TInvControlObj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer)
     if currentkvarlimitpu > QDesireLimitedpu[j]  then  currentkvarlimitpu := QDesireLimitedpu[j];
     if currentkvarlimitnegpu > QDesireLimitedpu[j]  then  currentkvarlimitnegpu := QDesireLimitedpu[j];
 
+    // Q curve desiredpu should be less than currentkvarlimit(neg)
+    if (Q > 0.0) and (abs(Q) >= abs(currentkvarlimitpu)) then
+      begin
+        FOperation := 0.2 * sign(Q); // When kvarlimit is exceeded
+        QDesireLimitedpu[j] := currentkvarlimitpu * sign(Q);
+      end
+    else if (Q < 0.0) and (abs(Q) >= abs(currentkvarlimitnegpu))  then
+      begin
+        FOperation := 0.2 * sign(Q); // When kvarlimitneg is exceeded
+        QDesireLimitedpu[j] := currentkvarlimitnegpu * sign(Q);
+      end;
+
+    // States Flags
+    if (ControlMode = WATTVAR)         then FWVOperation[j]    := FOperation;
+
+  end;
+
+procedure TInvControlObj.Calc_PQ_WV(j: Integer; ActorID : Integer);
+  VAR
+    QPratio                                     : Double;
+    coeff                                       : TCoeff;
+    pre_S                                       : Double;
+    var_limit_operation_value                   : Double;
+    Qbase                                       : Double;
+    Qbasesign                                   : Double;
+    Pbase                                       : Double;
+
+    A                                           : Double;
+    B                                           : Double;
+    C                                           : Double;
+    a_line                                      : Double;
+    b_line                                      : Double;
+
+
+  begin
+
+    Pbase := Min(FkVARating[j], FDCkWRated[j]);
+
+    if QDesiredWV[j] >= 0.0 then
+      begin
+        Qbase := QHeadroom[j];
+        Qbasesign := 1.0;
+      end
+    else
+      begin
+        Qbase := QHeadroomNeg[j];
+        Qbasesign := -1.0;
+      end;
+
+    var_limit_operation_value := 0.2;
+    if (abs(FWVOperation[j]) = var_limit_operation_value)  then PLimitEndpu[j] := Fwattvar_curve.GetXValue(QDesireEndpu[j])
+    else PLimitEndpu[j] := 1.0;
+
+    CalcWATTVAR_vars(j, ActorID);
+
+    // Qdesiredpu should be less than the Q avaliable under watt priority  (works just for varmax)
+    if (Sqrt(Sqr(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] * PLimitEndpu[j]) + Sqr(QDesiredWV[j])) > FkVARating[j]) then
+      begin
+         coeff := Fwattvar_curve.GetCoefficients(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] / Pbase);
+
+         a_line := coeff[1] * Qbase / Pbase;
+         b_line := coeff[2] * Qbase;
+
+         A := 1 + Sqr(a_line);
+         B := 2 * a_line * b_line;
+         C := Sqr(b_line) - Sqr(FkVARating[j]);
+
+
+         PLimitEndpu[j] := (-B + Sqrt(sqr(B) - 4 * A * C)) / (2 * A * Pbase);
+         QDesireEndpu[j] := Fwattvar_curve.GetYValue(PLimitEndpu[j]);
+      end;
+
+        CalcWATTVAR_vars(j, ActorID)
+  end;
+
+
+
+procedure TInvControlObj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer);
+  VAR
+    Q_Ppriority                              :Double;
+    currentkvarlimitpu                       :Double;
+    currentkvarlimitnegpu                    :Double;
+    FOperation                               :Double;
+    error                                    :Double;
+
+  begin
     // states
     error := 0;
     if (ControlMode = VOLTVAR)          then error := 0.005;
@@ -4386,7 +4490,16 @@ procedure TInvControlObj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer)
     else if Q > error then  FOperation := 1.0
     else FOperation := 0.0;
 
-    // QVV curve desiredpu should be less than currentkvarlimit(neg)
+
+    QDesireLimitedpu[j] := 1.0; // Not limited
+
+    currentkvarlimitpu := FCurrentkvarLimit[j] / QHeadRoom[j];
+    currentkvarlimitnegpu := FCurrentkvarLimitNeg[j] / QHeadRoomNeg[j];
+
+    if currentkvarlimitpu > QDesireLimitedpu[j]  then  currentkvarlimitpu := QDesireLimitedpu[j];
+    if currentkvarlimitnegpu > QDesireLimitedpu[j]  then  currentkvarlimitnegpu := QDesireLimitedpu[j];
+
+    // Q curve desiredpu should be less than currentkvarlimit(neg)
     if (Q > 0.0) and (abs(Q) >= abs(currentkvarlimitpu)) then
       begin
         FOperation := 0.2 * sign(Q); // When kvarlimit is exceeded
