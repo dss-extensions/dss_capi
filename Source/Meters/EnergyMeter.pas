@@ -2166,7 +2166,10 @@ begin
                   1: WITH LoadElem Do Begin
                           ConnectedPhase := ActiveCircuit[ActorID].MapNodeToBus^[NodeRef^[1]].NodeNum;
                           IF  (ConnectedPhase > 0) and (ConnectedPhase < 4)   // Restrict to phases 1..3
-                          THEN AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[ConnectedPhase];
+                          THEN If SensorObj.NPhases = 1 Then
+                            AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[1]
+                          Else
+                            AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[ConnectedPhase];
                      End;
                ELSE
                   WITH LoadElem Do AllocationFactor := AllocationFactor * SensorObj.AvgAllocFactor;
