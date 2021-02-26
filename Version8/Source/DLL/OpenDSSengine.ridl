@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 1/20/2021 3:59:02 PM (- $Rev: 12980 $, 28351343).
+// File generated on 2/26/2021 4:44:34 PM (- $Rev: 12980 $, 28540171).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -2459,7 +2459,7 @@ library OpenDSSengine
     HRESULT _stdcall GroundInst([out, retval] double* Value);
     [propput, id(0x000000D8), helpstring("Ground (3I0) trip instantaneous multiplier or actual amps")]
     HRESULT _stdcall GroundInst([in] double Value);
-    [id(0x000000D9), helpstring("Open recloser's controlled element and lock out the recloser")]
+    [id(0x000000D9), helpstring("Open recloser's controlled element and lock out the recloser.")]
     HRESULT _stdcall Open(void);
     [id(0x000000DA), helpstring("Close the switched object controlled by the recloser. Resets recloser to first operation.")]
     HRESULT _stdcall Close(void);
@@ -2467,6 +2467,16 @@ library OpenDSSengine
     HRESULT _stdcall idx([out, retval] long* Value);
     [propput, id(0x000000DB), helpstring("Get/Set the Active Recloser by index into the recloser list. 1..Count")]
     HRESULT _stdcall idx([in] long Value);
+    [id(0x000000DC), helpstring("Reset recloser to normal state. If open, lock out the recloser. If closed, resets recloser to first operation.  ")]
+    HRESULT _stdcall Reset(void);
+    [propget, id(0x000000DD), helpstring("Get normal state of recloser.")]
+    HRESULT _stdcall NormalState([out, retval] enum ActionCodes* Value);
+    [propput, id(0x000000DD), helpstring("Set normal state of recloser.")]
+    HRESULT _stdcall NormalState([in] enum ActionCodes Value);
+    [propget, id(0x000000DE), helpstring("Get/Set present state of recloser. If set to open, open recloser's controlled element and lock out the recloser. If set to close, close recloser's controlled and resets recloser to first operation.")]
+    HRESULT _stdcall State([out, retval] enum ActionCodes* Value);
+    [propput, id(0x000000DE), helpstring("Set present state of recloser.")]
+    HRESULT _stdcall State([in] enum ActionCodes Value);
   };
 
   [
@@ -2699,9 +2709,9 @@ library OpenDSSengine
     HRESULT _stdcall Delay([out, retval] double* Value);
     [propput, id(0x000000D4), helpstring("Fixed delay time in seconds added to the fuse blowing time to represent fuse clear or other delay.")]
     HRESULT _stdcall Delay([in] double Value);
-    [id(0x000000D5), helpstring("Manual opening of fuse")]
+    [id(0x000000D5), helpstring("Manual opening of all phases of the fuse.")]
     HRESULT _stdcall Open(void);
-    [id(0x000000D6), helpstring("Close the fuse back in and reset.")]
+    [id(0x000000D6), helpstring("Close all phases of the fuse.")]
     HRESULT _stdcall Close(void);
     [id(0x000000D7), helpstring("Current state of the fuses. TRUE if any fuse on any phase is blown. Else FALSE.")]
     VARIANT_BOOL _stdcall IsBlown(void);
@@ -2711,6 +2721,16 @@ library OpenDSSengine
     HRESULT _stdcall idx([in] long Value);
     [propget, id(0x000000D9), helpstring("Number of phases, this fuse. ")]
     HRESULT _stdcall NumPhases([out, retval] long* Value);
+    [id(0x000000DA), helpstring("Reset fuse to normal state.")]
+    HRESULT _stdcall Reset(void);
+    [propget, id(0x000000DB), helpstring("Variant array of strings indicating the state of each phase of the fuse. 0-based array.")]
+    HRESULT _stdcall State([out, retval] VARIANT* Value);
+    [propput, id(0x000000DB), helpstring("Variant array of strings. Set state of each phase of the fuse.\0\0\0\x10\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\a\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")]
+    HRESULT _stdcall State([in] VARIANT Value);
+    [propget, id(0x000000DC), helpstring("Variant array of strings indicating the normal state of each phase of the fuse. 0-based array.")]
+    HRESULT _stdcall NormalState([out, retval] VARIANT* Value);
+    [propput, id(0x000000DC), helpstring("Variant array of strings. Set normal state of each phase of the fuse.\0\0\0\x10\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\a\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")]
+    HRESULT _stdcall NormalState([in] VARIANT Value);
   };
 
   [
