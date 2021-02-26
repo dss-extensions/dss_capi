@@ -3,22 +3,24 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.2.0.1
+Version 9.2.1.1
 
 Changes this version
 ====================
-- Fixes issue when dumping properties from CNData.
-- Fixes compatibility issues with other OS when using FPC for compiling.
-- Includes COMHelp command to display the COM interface properties and methods, explain them and provide examples.
+- Includes remote relay functionality for relays.
+- Includes the latest improvements on the smart inverter module.
+- Add more instructions for interacting with OpenDSS-GIS
+- Fixes bug found in cogen property of RegControls
 
-This version is delivered with parallel processing capabilities in both 32-bit (X86) and 
-64-bit (X64) versions.  The OpenDSSInstaller download includes both X86 and X64 versions, along 
+The Version 8 was the first to be delivered with parallel processing capabilities in both 32-bit (X86) and 
+64-bit (X64) versions. Version 9 is the latest update. The files are still listed under the 'Version8' folder on Sourceforge.net.
+The OpenDSSInstaller download includes both X86 and X64 versions of Version 9, along 
 with optional documentation and examples.  
 
 If you have 64-bit Windows, you may install both the 64-bit and 32-bit 
 versions.  The 32-bit version is required if you plan to automate OpenDSS 
 from Excel or any other 32-bit program.  The 64-bit version is required to 
-automate OpenDSS from 64-bit MatLab on a 64-bit system.  
+automate OpenDSS from 64-bit MatLab or other 64-bit apps on a 64-bit system.  
 
 Installation
 ============
@@ -73,9 +75,8 @@ through dynamic linking, scripting, or automation.
 Electric Power Research Institute, Inc.  (http://www.epri.com) uses 
 OpenDSS in its research and services work, and continues to enhance the 
 software.  Earlier proprietary versions were used in dozens of studies for 
-electric utility clients, and in a Web-based wind power simulator at 
-http://www.uwig.org/distwind.  There are several goals in making OpenDSS 
-an open-source project at this time: 
+electric utility clients, and in a Web-based wind power simulator.  
+There were several goals in making OpenDSS an open-source project in 2008: 
 
 1 - Enhance the modeling capabilities available to government 
 laboratories, universities, and other researchers engaged in grid 
@@ -92,19 +93,19 @@ university researchers in power distribution system analysis for grid
 modernization efforts.  
 
 5 - Provide a capable testing platform for data and object modeling 
-efforts currently underway in the electric utility industry, at 
-http://cimug.ucaiug.org and http://www.multispeak.org.  
+efforts currently underway in the electric utility industry.
 
 Source Code
 ===========
 
 The programming language for OpenDSS is Delphi 
-(http://www.embarcadero.com), currently version Delphi 10.3.1 Rio.  There is also 
-a Free Pascal (Lazarus) version of the program.  Some of the supporting modules may 
+(http://www.embarcadero.com), currently version Delphi 10.4 Sydney.  A free community version is available
+to certain non-commercial users (see license requirements on Embarcadero site).
+There is also a Free Pascal (Lazarus) version of the program.  Some of the supporting modules may 
 require a C++ compiler to build from source.  OpenDSS source code is 
 available from the following SVN repository: 
 
-http://svn.code.sf.net/p/electricdss/code/trunk/
+https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/
 
 
 Third-party Components
@@ -148,19 +149,22 @@ It was recognized that it is not possible to anticipate everything that users wi
 
 IEEE Test Cases
 
-http://svn.code.sf.net/p/electricdss/code/trunk/Version8/Distrib/IEEETestCases/
+https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/IEEETestCases/
+
+EPRI Test Circuits
+https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/EPRITestCircuits/
 
 Source Code
 
-http://svn.code.sf.net/p/electricdss/code/trunk/Version8/Source/
+https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Source/
 
 Top level of Distribution area (Releases)
 
-http://svn.code.sf.net/p/electricdss/code/trunk/Distrib/
+https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/
 
 Examples
 
-http://svn.code.sf.net/p/electricdss/code/trunk/distrib/Examples/
+https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/Examples/
 
 License
 =======
@@ -170,4 +174,3 @@ Use of this software is subject to a license. The terms are in:
  1 - A file called "license.txt" distributed with the software,
  2 - The user manual, and
  3 - The executable program's Help/About dialog box
-                                                                                                                                                                                                                                                                                                   
