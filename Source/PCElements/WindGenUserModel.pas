@@ -1,29 +1,26 @@
-unit GenUserModel;
+unit WindGenUserModel;
 
 {$M+}
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
-  7-7-10
-  Modified to allow DLLS to retain ANSI string type in Edit function and Var names
-  Nominally all strings passed to DLLS are ASCII to make it easier to write code in other languages
-  and legacy defaults
+
 
 }
 
 interface
 
-USES  GeneratorVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
+USES  WindGenVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
 
 TYPE
 
 
 
 
-    TGenUserModel  = class(TObject)
+    TWindGenUserModel  = class(TObject)
       private
          FHandle: NativeUint;  // Handle to DLL containing user model
          FID : Integer;    // ID of this instance of the user model
@@ -33,7 +30,7 @@ TYPE
 
 
          {These functions should only be called by the object itself}
-         FNew:    Function(Var GenVars:TGeneratorVars; Var DynaData:TDynamicsRec; Var CallBacks:TDSSCallBacks): Integer;  Stdcall;// Make a new instance
+         FNew:    Function(Var GenVars:TWindGenVars; Var DynaData:TDynamicsRec; Var CallBacks:TDSSCallBacks): Integer;  Stdcall;// Make a new instance
          FDelete: Procedure(var x:Integer); Stdcall;  // deletes specified instance
          FSelect: Function (var x:Integer):Integer; Stdcall;    // Select active instance
 
@@ -51,9 +48,9 @@ TYPE
         FInit:         procedure(V, I:pComplexArray);Stdcall;   // For dynamics
         FCalc:         Procedure(V, I:pComplexArray); stdcall; // returns Currents or sets Pshaft
         FIntegrate:    Procedure; stdcall; // Integrates any state vars
-        FUpdateModel:  Procedure; Stdcall; // Called when props of generator updated
+        FUpdateModel:  Procedure; Stdcall; // Called when props of WindGen updated
 
-        FActiveGeneratorVars:pTGeneratorVars;
+        FActiveWindGenVars:pTWindGenVars;
 
         {Save and restore data}
         FSave:    Procedure; Stdcall;
@@ -76,7 +73,7 @@ TYPE
         Procedure Select;
         Procedure Integrate;
         
-        constructor Create(ActiveGeneratorVars:pTGeneratorVars);
+        constructor Create(ActiveWindGenVars:pTWindGenVars);
         destructor  Destroy; override;
       published
 
@@ -87,7 +84,7 @@ TYPE
 implementation
 
 Uses
-  Generator,
+  WindGen,
   DSSGlobals,
   {$IFDEF FPC}
   dynlibs,
@@ -98,28 +95,28 @@ Uses
 
 { TGenUserModel }
 
-function TGenUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Pointer;
+function TWindGenUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Pointer;
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg('Generator User Model Does Not Have Required Function: ' + FuncName, 569);
+            DoSimpleMsg('WindGen User Model Does Not Have Required Function: ' + FuncName, 569);
             FuncError := True;
           End;
         Result := Addr;
 end;
 
-constructor TGenUserModel.Create( ActiveGeneratorVars:pTGeneratorVars);
+constructor TWindGenUserModel.Create( ActiveWindGenVars:pTWindGenVars);
 begin
 
     FID     := 0;
     Fhandle := 0;
     FName   := '';
 
-    FActiveGeneratorVars := ActiveGeneratorVars;
+    FActiveWindGenVars := ActiveWindGenVars;
 
 end;
 
-destructor TGenUserModel.Destroy;
+destructor TWindGenUserModel.Destroy;
 begin
 
   If FID <> 0 Then
@@ -131,7 +128,7 @@ begin
 
 end;
 
-function TGenUserModel.Get_Exists: Boolean;
+function TWindGenUserModel.Get_Exists: Boolean;
 begin
         If FID <> 0 Then
          Begin
@@ -141,24 +138,24 @@ begin
         Else Result := False;
 end;
 
-procedure TGenUserModel.Integrate;
+procedure TWindGenUserModel.Integrate;
 begin
         FSelect(FID);
         Fintegrate;
 end;
 
-procedure TGenUserModel.Select;
+procedure TWindGenUserModel.Select;
 begin
         Fselect(FID);
 end;
 
-procedure TGenUserModel.Set_Edit(const Value: String);
+procedure TWindGenUserModel.Set_Edit(const Value: String);
 begin
         If FID <> 0 Then FEdit(pAnsichar(AnsiString(Value)), Length(Value));
         // Else Ignore
 end;
 
-procedure TGenUserModel.Set_Name(const Value:String);
+procedure TWindGenUserModel.Set_Name(const Value:String);
 
 
 begin
@@ -187,7 +184,7 @@ begin
           End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('Generator User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 570)
+              DoSimpleMsg('WindGen User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 570)
         Else
         Begin
             FName := Value;
@@ -217,7 +214,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew(FActiveGeneratorVars^, ActiveCircuit[ActiveActor].Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew(FActiveWindGenVars^, ActiveCircuit[ActiveActor].Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;
