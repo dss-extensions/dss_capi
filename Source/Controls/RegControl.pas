@@ -912,8 +912,9 @@ begin
 
       ACTION_REVERSE:
         Begin  // Toggle reverse mode or Cogen mode flag
-             If (DebugTrace) Then RegWriteDebugRecord(Format('Handling Reverse Action, ReversePending=%s, InReverseMode=%s',
-                                  [BoolToStr(ReversePending, TRUE), BoolToStr(InReverseMode, TRUE)]));
+             If (DebugTrace) Then With ActiveCircuit[ActorID] do
+                 RegWriteDebugRecord(Format('%-.6g, Handling Reverse Action, ReversePending=%s, InReverseMode=%s, InCogenmode=%s',
+                                  [Solution.dynavars.dblHour,  BoolToStr(ReversePending, TRUE), BoolToStr(InReverseMode, TRUE), BoolToStr(InCogenMode, TRUE)]));
              If ReversePending Then        // check to see if action has reset
              Begin
                 If CogenEnabled then
@@ -968,9 +969,11 @@ begin
          If IsReversible or CogenEnabled Then
          Begin
 
+            If (DebugTrace) Then With Activecircuit[ActorID] Do
+                     RegWriteDebugRecord(Format('%-.6g, 2-Looking forward= %s *** Incogenmode=%s',[Solution.DynaVars.dblHour, BoolToStr(LookingForward, TRUE), BoolToStr(InCogenMode, TRUE)]));
               If LookingForward and (NOT InCogenMode) Then   // If looking forward, check to see if we should reverse
                 Begin
-                  FwdPower := -ControlledTransformer.Power[ElementTerminal,ActorID].re;  // watts
+                  FwdPower := -ControlledTransformer.Power[ElementTerminal, ActorID].re;  // watts
                   If (Not ReversePending) Then  // If reverse is already pending, don't send any more messages
                   Begin
                         If (FwdPower < -RevPowerThreshold) Then
@@ -978,7 +981,8 @@ begin
                             ReversePending := TRUE;
                             WITH ActiveCircuit[ActorID] Do
                                  RevHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + RevDelay, ACTION_REVERSE, 0, Self, ActorID);
-                            If (DebugTrace) Then RegWriteDebugRecord(Format('Pushed Reverse Action, Handle=%d, FwdPower=%.8g',[RevHandle, FwdPower]));
+                            If (DebugTrace) Then WITH ActiveCircuit[ActorID] Do
+                                 RegWriteDebugRecord(Format('%-.6g, 1- Pushed Reverse Action, Handle=%d, FwdPower=%.8g',[Solution.DynaVars.dblHour, RevHandle, FwdPower]));
                         End
                   End;
                   if ReversePending and (FwdPower >= -RevPowerThreshold) then // Reset  reverse pending
@@ -996,7 +1000,10 @@ begin
               Else      // Looking the reverse direction or in cogen mode
 
                 Begin   // If reversed look to see if power is back in forward direction
-                      FwdPower := -ControlledTransformer.Power[ElementTerminal,ActorID].re;  // watts
+                      If (DebugTrace) Then With Activecircuit[ActorID] Do
+                                     RegWriteDebugRecord(Format('%-.6g, 3-Looking Forward=%s *** Incogenmode=%s',[Solution.DynaVars.dblHour, BoolToStr(Lookingforward, TRUE), BoolToStr(InCogenMode, TRUE)]));
+
+                      FwdPower := -ControlledTransformer.Power[ElementTerminal, ActorID].re;  // watts
                       If Not ReversePending Then
                       Begin
                             If (FwdPower > RevPowerThreshold) Then
@@ -1004,7 +1011,8 @@ begin
                                 ReversePending := TRUE;
                                 WITH ActiveCircuit[ActorID] Do
                                      RevBackHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + RevDelay, ACTION_REVERSE, 0, Self, ActorID);
-                                If (DebugTrace) Then RegWriteDebugRecord(Format('Pushed ReverseBack Action to switch back, Handle=%d, FwdPower=%.8g',[RevBackHandle, FwdPower]));
+                                If (DebugTrace) Then With Activecircuit[ActorID] Do
+                                     RegWriteDebugRecord(Format('%-.6g, 4-Pushed ReverseBack Action to switch back, Handle=%d, FwdPower=%.8g',[Solution.DynaVars.dblHour, RevBackHandle, FwdPower]));
                             End
                       End;
                       if ReversePending and (FwdPower <= RevPowerThreshold) then // Reset  reverse pending                            Else
@@ -1120,8 +1128,16 @@ begin
            End
          Else
            Begin   // Forward or Cogen Modes
-              VregTest := Vreg;
-              BandTest := Bandwidth;
+              if inCogenMode then
+              Begin
+                VregTest := RevVreg;    // corrected Feb 25, 2021 for Huijuan Li
+                BandTest := RevBandwidth;
+              End
+              Else
+              Begin
+                VregTest := Vreg;
+                BandTest := Bandwidth;
+              End;
            End;
          IF (Abs(VregTest - Vactual) > BandTest / 2.0) Then TapChangeIsNeeded := TRUE
                                                        Else TapChangeIsNeeded := FALSE;
