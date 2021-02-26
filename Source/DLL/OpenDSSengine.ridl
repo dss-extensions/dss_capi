@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 2/26/2021 4:44:34 PM (- $Rev: 12980 $, 28540171).
+// File generated on 2/26/2021 6:09:18 PM (- $Rev: 12980 $, 33624406).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -1688,6 +1688,8 @@ library OpenDSSengine
     HRESULT _stdcall RelWeight([out, retval] double* Value);
     [propput, id(0x000000F0), helpstring("Relative Weighting factor for the active LOAD")]
     void _stdcall RelWeight([in] double Value);
+    [propget, id(0x000000F1), helpstring("Name of the controlling sensor.")]
+    HRESULT _stdcall Sensor([out, retval] BSTR* Value);
   };
 
   [
@@ -2289,6 +2291,8 @@ library OpenDSSengine
     HRESULT _stdcall kWS([out, retval] VARIANT* Value);
     [propput, id(0x000000DA)]
     HRESULT _stdcall kWS([in] VARIANT Value);
+    [propget, id(0x000000DB), helpstring("Array of doubles for the allocation factors for each phase. ")]
+    HRESULT _stdcall AllocationFactor([out, retval] VARIANT* Value);
   };
 
   [
@@ -2833,6 +2837,8 @@ library OpenDSSengine
     HRESULT _stdcall Pmpp([in] double Value);
     [propget, id(0x000000D7), helpstring("Returns the current irradiance value for the active PVSystem. Use it to know what's the current irradiance value for the PV during a simulation.")]
     HRESULT _stdcall IrradianceNow([out, retval] double* Value);
+    [propget, id(0x000000D8), helpstring("Name of the controlling sensor.")]
+    HRESULT _stdcall Sensor([out, retval] BSTR* Value);
   };
 
   [
