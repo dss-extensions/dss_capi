@@ -224,7 +224,10 @@ uses
   NumCPULib in '..\Parallel_Lib\NumCPULib.pas',
   myInfoMsg in '..\Forms\myInfoMsg.pas' {myInfoMessage},
   StdMessage in '..\Forms\StdMessage.pas' {myStdMsg},
-  DReduceCkt in 'DReduceCkt.pas';
+  DReduceCkt in 'DReduceCkt.pas',
+  WindGen in '..\PCElements\WindGen.pas',
+  WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
+  WindGenVars in '..\PCElements\WindGenVars.pas';
 
 //**************************end of the functions*************************************
 exports
