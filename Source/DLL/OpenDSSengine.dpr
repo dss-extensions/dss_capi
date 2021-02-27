@@ -232,7 +232,10 @@ uses
   djson in '..\Common\djson.pas',
   NumCPULib in '..\Parallel_Lib\NumCPULib.pas',
   myInfoMsg in '..\Forms\myInfoMsg.pas' {myInfoMessage},
-  StdMessage in '..\Forms\StdMessage.pas' {myStdMsg};
+  StdMessage in '..\Forms\StdMessage.pas' {myStdMsg},
+  WindGen in '..\PCElements\WindGen.pas',
+  WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
+  WindGenVars in '..\PCElements\WindGenVars.pas';
 
 exports
   DllGetClassObject,
