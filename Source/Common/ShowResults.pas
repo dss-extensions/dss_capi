@@ -472,6 +472,7 @@ Var
     FromBus:String;
     Ctotal:Complex;
     ResidPolar:Polar;
+    Ntimes :Integer;
 
 BEGIN
 
@@ -489,7 +490,10 @@ BEGIN
     For      j := 1 to NTerm Do
     Begin
       Ctotal := CZERO;
-      For    i := 1 to NCond Do
+      IF (CLASSMASK AND pElem.DSSObjType) =  AUTOTRANS_ELEMENT
+      THEN Ntimes := pElem.Nphases    // Special case for AutoTrans
+      ELSE Ntimes := NCond;
+      For    i := 1 to Ntimes Do
       Begin
          Inc(k);
          If ShowResidual Then Caccum(Ctotal, cBuffer^[k]);
@@ -502,6 +506,8 @@ BEGIN
       End;
       If j<Nterm Then Writeln(F,'------------');
       FromBus := Pad(StripExtension(pElem.Nextbus),MaxBusNameLength);
+      IF (CLASSMASK AND pElem.DSSObjType) =  AUTOTRANS_ELEMENT   Then Inc(k, Ntimes);
+
     End;
     Writeln(F);
 
@@ -729,7 +735,7 @@ Var
     PCElem :TPCElement;
     Volts:Complex;
     S, Saccum:Complex;
-    nref:Integer;
+    nref, Ntimes:Integer;
     Vph, V012:Array[1..3] of Complex;
     Iph, I012:Array[1..3] of Complex;
 
@@ -975,6 +981,7 @@ Begin
         k:=0;
         FromBus := Pad(StripExtension(p_Elem.FirstBus),MaxBusNameLength);
         Writeln(F, 'ELEMENT = ',FullName(P_Elem));
+
         FOR j := 1 to NTerm Do Begin
           Saccum := CZERO;
           For i := 1 to NCond Do Begin
@@ -1009,9 +1016,14 @@ Begin
         k:=0;
         FromBus := Pad(StripExtension(p_Elem.FirstBus),MaxBusNameLength);
         Writeln(F, 'ELEMENT = ', FullName(p_elem));
+
+        IF (CLASSMASK AND P_Elem.DSSObjType) =  AUTOTRANS_ELEMENT
+        THEN Ntimes := P_Elem.Nphases    // Special case for AutoTrans
+        ELSE Ntimes := NCond;
+
         FOR j := 1 to NTerm Do Begin
           Saccum := CZERO;
-          For i := 1 to NCond Do Begin
+          For i := 1 to Ntimes Do Begin
              Inc(k);
              nref := p_Elem.NodeRef^[k];
              Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
@@ -1026,6 +1038,7 @@ Begin
           Write(F,Paddots('   TERMINAL TOTAL', MaxBusNameLength+10),Saccum.re/1000.0:8:1,' +j ',Saccum.im/1000.0:8:1);
           Writeln(F, '   ', Cabs(Saccum)/1000.0:8:1,'     ', PowerFactor(Saccum):8:4);
           FromBus := Pad(StripExtension(p_Elem.Nextbus),MaxBusNameLength);
+          IF (CLASSMASK AND P_Elem.DSSObjType) =  AUTOTRANS_ELEMENT   Then Inc(k, Ntimes);
         End;
         Writeln(F);
        End;
@@ -3184,7 +3197,7 @@ Type
 
 Var
    F     :Textfile;
-   i, j  :Integer;
+   i, j,k  :Integer;
    nRef  :Integer;
    Bname :String;
 
@@ -3203,27 +3216,42 @@ Begin
         With ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].solution Do
         Begin
         // Zero out the nodal current array
-             FOR i := 0 to NumNodes Do Currents^[i] := CZERO;
+           FOR i := 0 to NumNodes Do Currents^[i] := CZERO;
         // Make temp storage for max current at node
-             ReallocMem(MaxNodeCurrent, Sizeof(MaxNodeCurrent^[1]) * (NumNodes + 1));
-             FOR i := 0 to NumNodes Do MaxNodeCurrent^[i] := 0.0;
+           ReallocMem(MaxNodeCurrent, Sizeof(MaxNodeCurrent^[1]) * (NumNodes + 1));
+           FOR i := 0 to NumNodes Do MaxNodeCurrent^[i] := 0.0;
         // Now Sum in each device current, keep track of the largest current at a node.
-            pCktElement := CktElements.First;
-            WHILE pCktElement <> nil  Do
-            Begin
-                IF   pCktElement.Enabled  THEN
-                With pCktElement Do
-                Begin
-                   ComputeIterminal(ActiveActor);
+           pCktElement := CktElements.First;
+           WHILE pCktElement <> nil  Do
+           Begin
+              IF   pCktElement.Enabled  THEN
+              With pCktElement Do
+              Begin
+                 ComputeIterminal(ActiveActor);
+                 IF (CLASSMASK AND pCktElement.DSSObjType) =  AUTOTRANS_ELEMENT   Then Begin
+                       k:=0;              {Special for Autotransformer}
+                       FOR i:= 1 to Nterms do  Begin
+                         FOR j := 1 to Nphases do Begin
+                             Inc(k);
+                             Ctemp :=  Iterminal^[k];
+                             nRef  :=  NodeRef^[k];
+                             Caccum(Currents^[nRef], Ctemp );  // Noderef=0 is OK
+                             If Cabs(Ctemp) > MaxNodeCurrent^[nRef] Then  MaxNodeCurrent^[nRef] := Cabs(Ctemp);
+                         End;
+                         Inc(k,Nphases);
+                       End;
+                 End
+                 Else
+
                    FOR i := 1 to Yorder Do Begin
                        Ctemp :=  Iterminal^[i];
                        nRef  :=  NodeRef^[i];
                        Caccum(Currents^[nRef], Ctemp );  // Noderef=0 is OK
                        If Cabs(Ctemp) > MaxNodeCurrent^[nRef] Then  MaxNodeCurrent^[nRef] := Cabs(Ctemp);
                    End;
-                End;
-                pCktElement := CktElements.Next;
-            End;
+              End;
+              pCktElement := CktElements.Next;
+           End;
 
         // Now write report
 
