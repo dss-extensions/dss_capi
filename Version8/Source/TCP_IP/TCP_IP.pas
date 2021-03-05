@@ -355,7 +355,7 @@ begin
   begin
     if ((UpperCase(ExtractFileName(FProcessEntry32.szExeFile)) =
       UpperCase(ExeFileName)) or (UpperCase(FProcessEntry32.szExeFile) =
-      UpperCase(ExeFileName))) then
+      UpperCase(ExeFileName)))  then
     begin
       Result := True;
     end;
