@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 155;
+     NumExecCommands = 156;
 
 Var
 
@@ -206,6 +206,7 @@ Begin
      ExecCommand[153] := 'GISShowCoords';
      ExecCommand[154] := 'GISFormat';
      ExecCommand[155] := 'GISBatchFormat';
+     ExecCommand[156] := 'GISClose';
 
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
@@ -748,6 +749,7 @@ Begin
                          '1. OpenDSS-GIS must be installed' + CRLF +
                          '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
                          '3. The model needs to have the correct GISCoords file';
+     CommandHelp[156] := 'Closses all the instances of OpenDSS-GIS';
 End;
 
 //----------------------------------------------------------------------------
@@ -1153,7 +1155,8 @@ Begin
              FormatTo :=  lowercase(Parser[ActiveActor].StrValue);
              Parser[ActiveActor].NextParam;
              GlobalResult  :=  GISBatchFormat(FormatFrom,FormatTo,Parser[ActiveActor].StrValue);
-           end
+           end;
+      156: GlobalResult :=  GISClose();
      ELSE
        // Ignore excess parameters
      End;
