@@ -45,8 +45,6 @@ uses
 type
     TByteArr = array of uint8;
 
-var
-    wordBuf: Word;
 // $01A0 is Header for identifying String type data
 // $02A0 is Header for identifying Double type data
 //******************************************************************************
@@ -56,6 +54,7 @@ var
 function Create_Meter_Space(Init_Str: String): TBytesStream; OVERLOAD;
 var
     Mem_Space: TBytesStream;
+    wordBuf: Word;
 begin
     Mem_Space := TBytesStream.Create();
 {$IFNDEF FPC}
@@ -72,6 +71,8 @@ end;
 // Writes a string into the specified BytesStream
 //******************************************************************************
 procedure WriteintoMemStr(Mem_Space: TBytesStream; Content: String); OVERLOAD;
+var
+    wordBuf: Word;
 begin
 {$IFNDEF FPC}
     Mem_Space.WriteData($01A0);   // Header for identifying String type data
@@ -86,6 +87,8 @@ end;
 // Writes a DBL into the specified BytesStream
 //******************************************************************************
 procedure WriteintoMem(Mem_Space: TBytesStream; Content: Double); OVERLOAD;
+var
+    wordBuf: Word;
 begin
 {$IFNDEF FPC}
     Mem_Space.WriteData($02A0);   // Header for identifying a double type data
@@ -196,7 +199,7 @@ begin
                     end
                 else             // Not recognized
                 begin
-                    idx := idx;
+                    // idx := idx;
                 end;
                 end;
             end;
@@ -371,6 +374,8 @@ begin
 {$ELSE}
     for idx := 1 to length(Content) do
         Mem_Space.Write(Content[idx], Length(Content[idx])); // TODO - verify AnsiString vs. unicode
+
+    Mem_Space.WriteByte(0);
 {$ENDIF}
 end;
 
