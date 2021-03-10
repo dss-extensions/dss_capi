@@ -506,7 +506,7 @@ BEGIN
       End;
       If j<Nterm Then Writeln(F,'------------');
       FromBus := Pad(StripExtension(pElem.Nextbus),MaxBusNameLength);
-      IF (CLASSMASK AND pElem.DSSObjType) =  AUTOTRANS_ELEMENT   Then Inc(k, Ntimes);
+      IF (CLASSMASK AND pElem.DSSObjType) =  AUTOTRANS_ELEMENT   Then Inc(k, Ntimes);  // Special case for AutoTrans
 
     End;
     Writeln(F);
@@ -2367,6 +2367,7 @@ Begin
         TermPower := CmulReal(PDelem.power[1,ActiveActor], 0.001);     // Terminal 1 power
 
         IF (CLASSMASK AND PDElem.DSSObjType) =  XFMR_ELEMENT THEN Caccum(TransLosses, kLosses);
+        IF (CLASSMASK AND PDElem.DSSObjType) =  AUTOTRANS_ELEMENT THEN Caccum(TransLosses, kLosses);
         IF (CLASSMASK AND PDElem.DSSObjType) =  LINE_ELEMENT THEN Caccum(LineLosses, kLosses);
 
         Write(F, Pad(FullName(PDelem), MaxDeviceNameLength+2));
