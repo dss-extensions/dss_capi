@@ -691,7 +691,20 @@ FUNCTION TDSSCktElement.Get_Losses(ActorID: Integer):Complex;
 
 VAR
    cLoss:Complex;
-   k,n:Integer;
+   k,i,j,n:Integer;
+
+   {Local nested Procedure}
+   Procedure LossCalc;  // of k-th conductor
+     Begin
+       WITH ActiveCircuit[ActorID].Solution DO Begin
+         n := NodeRef^[k];
+         IF  n > 0 THEN  Begin
+           IF    ActiveCircuit[ActorID].PositiveSequence
+           THEN  Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
+           ELSE  Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
+         End;
+       End;
+     End;
 
 Begin
 
@@ -701,14 +714,23 @@ Begin
        ComputeIterminal(ActorID);
 
     // Method: Sum complex power going into all conductors of all terminals
-       WITH ActiveCircuit[ActorID].Solution DO
-         FOR k := 1 to Yorder Do Begin
-            n := NodeRef^[k];
-            IF  n > 0 THEN Begin
-               IF   ActiveCircuit[ActorID].PositiveSequence
-               THEN  Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
-               ELSE  Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
-            END;
+         {Special for AutoTransformer - sum based on NPhases rather then Yorder}
+         IF (CLASSMASK AND self.DSSObjType) =  AUTOTRANS_ELEMENT Then
+         Begin
+            k:=0;
+            For j := 1 to Nterms  do Begin
+              For i := 1 to Nphases do Begin
+                 inc(k);
+                 LossCalc;
+              End;
+              Inc(k, Nphases)
+            End;
+         End
+         Else  // for all other elements
+         Begin
+             FOR k := 1 to Yorder Do Begin
+                LossCalc;
+             End;
          End;
    End;
 
