@@ -210,11 +210,13 @@ Begin
                     Devindex := GetCktElementIndex(ElementName);   // Set Controlled element
                     IF DevIndex>0 THEN Begin
                       ControlledElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
-                      if ControlledElement <> Nil then
+                      if ControlledElement <> Nil then begin
+                        ControlledElement.ActiveTerminalIdx := ElementTerminal;
                         Case PresentState of     // Force state
                           CTRL_OPEN:  ControlledElement.Closed[0, ActorID] := FALSE;
                           CTRL_CLOSE: ControlledElement.Closed[0, ActorID] := TRUE;
                         End;
+                      end;
                     End;
                 End;
          end;
