@@ -1234,7 +1234,7 @@ function THELICS.find_helics_function (name: String): Pointer;
 begin
   Result := GetProcedureAddress (FLibHandle, name);
   if Result = nil then begin
-    writeln ('FNCS library found, but missing function ', name);
+    writeln ('HELICS library found, but missing function ', name);
     FuncError := True;
   end;
 end;
@@ -1274,7 +1274,7 @@ begin
 {$IFDEF Windows}
   FLibHandle := SafeLoadLibrary ('helicsSharedLib.' + SharedSuffix);
 {$ELSE} // Darwin and Unix
-  if s = 'INFO' then
+  if log_level < helicsLogDebug1 then
      FLibHandle := SafeLoadLibrary ('libhelicsSharedLib.' + SharedSuffix)
   else
      FLibHandle := SafeLoadLibrary ('libhelicsSharedLibd.' + SharedSuffix);
