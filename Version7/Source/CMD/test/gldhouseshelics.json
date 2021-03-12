@@ -2,7 +2,7 @@
   "coreType" : "zmq",
   "name" : "gridlabd",
   "period" : 1,
-  "loglevel" : 7,
+  "loglevel" : 0,
   "publications" : [
     {
       "global" : false,

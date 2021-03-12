@@ -2,7 +2,7 @@
   "coreType" : "zmq",
   "name" : "opendss",
   "period" : 0.000000001,
-  "loglevel" : 7,
+  "loglevel" : 0,
   "publications" : [
 //    {
 //      "global" : false,
