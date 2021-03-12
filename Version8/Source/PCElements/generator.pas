@@ -658,7 +658,7 @@ Begin
                Begin
                 pctFuel   :=  100.0;
                 GenActive :=  True;
-               End
+               End;
 
          ELSE
            // Inherited parameters
