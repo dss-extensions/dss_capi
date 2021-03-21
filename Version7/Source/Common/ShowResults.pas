@@ -3265,7 +3265,8 @@ begin
         Writeln(F, 'Earth Model = ', GetEarthModel(DefaultEarthModel));
         Writeln(F);
 
-        LineCodesFileNm := 'LineConstantsCode.DSS';
+        // DSS C-API change: saves the file in the same folder as FileNm
+        LineCodesFileNm := ExtractFilePath(FileNm) + 'LineConstantsCode.DSS';
         Assignfile(F2, LineCodesFileNm);
         ReWrite(F2);
 

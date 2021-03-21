@@ -355,11 +355,11 @@ begin
                 6:
                     StdDev := Parser.DblValue;
                 7:
-                    DoCSVFile(Param);
+                    DoCSVFile(AdjustInputFilePath(Param));
                 8:
-                    DoSngFile(Param);
+                    DoSngFile(AdjustInputFilePath(Param));
                 9:
-                    DoDblFile(Param);
+                    DoDblFile(AdjustInputFilePath(Param));
                 10:
                     case lowercase(Param)[1] of
                         'n':
@@ -395,7 +395,7 @@ begin
                     NumPoints := InterpretDblArray(Param, NumPoints, pDoubleArray(PMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
                 20:
-                    Do2ColCSVFile(Param);
+                    Do2ColCSVFile(AdjustInputFilePath(Param));
 
             else
            // Inherited parameters
@@ -1270,7 +1270,7 @@ begin
     if Assigned(PMultipliers) then
     begin
         try
-            FName := Format('%s_P.dbl', [Name]);
+            FName := OutputDirectory {CurrentDSSDir} + Format('%s_P.dbl', [Name]);
             AssignFile(F, Fname);
             Rewrite(F);
             for i := 0 to NumPoints - 1 do
@@ -1283,7 +1283,7 @@ begin
         if Assigned(QMultipliers) then
         begin
             try
-                FName := Format('%s_Q.dbl', [Name]);
+                FName := OutputDirectory {CurrentDSSDir} + Format('%s_Q.dbl', [Name]);
                 AssignFile(F, Fname);
                 Rewrite(F);
                 for i := 0 to NumPoints - 1 do
@@ -1311,7 +1311,7 @@ begin
     if Assigned(PMultipliers) then
     begin
         try
-            FName := Format('%s_P.sng', [Name]);
+            FName := OutputDirectory {CurrentDSSDir} + Format('%s_P.sng', [Name]);
             AssignFile(F, Fname);
             Rewrite(F);
             for i := 0 to NumPoints - 1 do
@@ -1327,7 +1327,7 @@ begin
         if Assigned(QMultipliers) then
         begin
             try
-                FName := Format('%s_Q.sng', [Name]);
+                FName := OutputDirectory {CurrentDSSDir} + Format('%s_Q.sng', [Name]);
                 AssignFile(F, Fname);
                 Rewrite(F);
                 for i := 0 to NumPoints - 1 do

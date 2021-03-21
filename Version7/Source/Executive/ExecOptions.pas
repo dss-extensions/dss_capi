@@ -324,7 +324,7 @@ begin
     OptionHelp[57] := 'Set the data path for files written or read by the DSS.' + CRLF +
         'Defaults to the user documents folder.' + CRLF +
         'If the DataPath is not writable, output files will be written to the user application data folder.' + CRLF +
-        'May be Null.  Executes a CHDIR to this path if non-null.' + CRLF +
+        'May be Null.  On DSS-Extensions, with AllowChangeDir enabled, executes a CHDIR to this path if non-null.' + CRLF +
         'Does not require a circuit defined.';
     OptionHelp[58] := 'Array of bus names to keep when performing circuit reductions. You can specify a text file holding the names, one to a line, ' +
         'by using the syntax (file=filename) instead of the actual array elements. ' +

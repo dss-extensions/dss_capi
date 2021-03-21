@@ -384,7 +384,7 @@ begin
 
 // DEBUG file
 {$IF Defined(DEBUG)}
-{****} AssignFile(DebugFile, 'DebugOut.CSV');
+{****} AssignFile(DebugFile, OutputDirectory + 'DebugOut.CSV');
 {****} Rewrite(DebugFile);
 {$IFEND}
 

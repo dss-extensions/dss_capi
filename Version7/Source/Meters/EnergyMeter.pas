@@ -2978,7 +2978,7 @@ begin
     {Open some files:}
 
         try
-            AssignFile(FBranches, 'Branches.dss');     // Both lines and transformers
+            AssignFile(FBranches, CurrentDSSDir + 'Branches.dss');     // Both lines and transformers
             Rewrite(FBranches);
             NBranches := 0;
         except
@@ -2991,7 +2991,7 @@ begin
         end;
 
         try
-            AssignFile(FXfmrs, 'Transformers.dss');     // Both lines and transformers
+            AssignFile(FXfmrs, CurrentDSSDir + 'Transformers.dss');     // Both lines and transformers
             Rewrite(FXfmrs);
             NXfmrs := 0;
         except
@@ -3004,7 +3004,7 @@ begin
         end;
 
         try
-            AssignFile(FShunts, 'Shunts.dss');
+            AssignFile(FShunts, CurrentDSSDir + 'Shunts.dss');
             Rewrite(FShunts);
             NShunts := 0;
         except
@@ -3017,7 +3017,7 @@ begin
         end;
 
         try
-            AssignFile(FLoads, 'Loads.dss');
+            AssignFile(FLoads, CurrentDSSDir + 'Loads.dss');
             Rewrite(FLoads);
             Nloads := 0;
         except
@@ -3030,7 +3030,7 @@ begin
         end;
 
         try
-            AssignFile(FGens, 'Generators.dss');
+            AssignFile(FGens, CurrentDSSDir + 'Generators.dss');
             Rewrite(FGens);
             NGens := 0;
         except
@@ -3043,7 +3043,7 @@ begin
         end;
 
         try
-            AssignFile(FCaps, 'Capacitors.dss');
+            AssignFile(FCaps, CurrentDSSDir + 'Capacitors.dss');
             Rewrite(FCaps);
             Ncaps := 0;
         except

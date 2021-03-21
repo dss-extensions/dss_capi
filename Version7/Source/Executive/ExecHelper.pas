@@ -376,11 +376,17 @@ Begin
     // may fail with relative paths
     ReDirFileExp := ExpandFileName(Parser.StrValue);
     
+    // First check if we need to workaround the SetCurrentDir issues
+    if (not DSS_CAPI_ALLOW_CHANGE_DIR) then
+    begin
+        ReDirFileExp := ExpandFileName(AdjustInputFilePath(Parser.StrValue));
+    end;
+    
     ReDirFile := Parser.StrValue;
     if ReDirFile = '' then 
         exit;  // ignore altogether IF null filename
     
-    SaveDir :=  GetCurrentDir;
+    SaveDir := CurrentDSSDir;
 
     try
         // First try, using the provided name directly
@@ -473,7 +479,7 @@ Begin
             // Change Directory to path specified by file in CASE that
             // loads in more files
             CurrDir := ExtractFileDir(ReDirFile);
-            SetCurrentDir(CurrDir);
+            SetCurrentDSSDir(CurrDir);
             If IsCompile Then SetDataPath(CurrDir);  // change datadirectory
 
             Redirect_Abort := False;
@@ -564,7 +570,7 @@ Begin
         End
         Else 
         Begin
-            SetCurrentDir(SaveDir);    // set back to where we were for redirect, but not compile
+            SetCurrentDSSDir(SaveDir);    // set back to where we were for redirect, but not compile
             ParserVars.Add('@lastredirectfile', ReDirFile);
         End;
     END;
@@ -664,7 +670,7 @@ VAR
 Begin
      Result := 0;
      ObjClass := '';
-     SaveDir := '';
+     SaveDir := OutputDirectory; {CurrentDSSDir;}
      SaveFile := '';
      ParamPointer := 0;
      ParamName := Parser.NextParam;
@@ -1047,7 +1053,7 @@ Begin
   EXCEPT
       On E:Exception DO
       Begin
-        DoErrorMsg('DoPropertyDump - opening '+ GetOutputDirectory +' DSS_PropertyDump.txt for writing in '+Getcurrentdir, E.Message, 'Disk protected or other file error', 255);
+        DoErrorMsg('DoPropertyDump - opening '+ GetOutputDirectory +' DSS_PropertyDump.txt for writing in '+ Getcurrentdir, E.Message, 'Disk protected or other file error', 255);
         Exit;
       End;
   End;
@@ -1756,7 +1762,7 @@ begin
          // load the list from a file
 
          TRY
-             AssignFile(F, Param);
+             AssignFile(F, AdjustInputFilePath(Param));
              Reset(F);
              WHILE Not EOF(F) Do
              Begin         // Fixed 7/8/01 to handle all sorts of bus names
@@ -1818,7 +1824,7 @@ begin
          // load the list from a file
 
          TRY
-             AssignFile(F, Param);
+             AssignFile(F, AdjustInputFilePath(Param));
              Reset(F);
              WHILE Not EOF(F) Do
              Begin         // Fixed 7/8/01 to handle all sorts of bus names
@@ -2755,7 +2761,7 @@ Begin
     Try
       iLine := -1;
       Try
-         AssignFile(F, Param);
+         AssignFile(F, AdjustInputFilePath(Param));
          Reset(F);
          iLine := 0;
          While not EOF(F) Do
@@ -3046,14 +3052,14 @@ Var
 
 Begin
    Result := 0;
-   If FileExists(CircuitName_ + 'SavedVoltages.Txt') Then Begin
+   If FileExists(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt') Then Begin
    Try
     Try
 
-         AssignFile(Fin, CircuitName_ + 'SavedVoltages.Txt');
+         AssignFile(Fin, OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt');
          Reset(Fin);
 
-         AssignFile(Fout, CircuitName_ + 'VDIFF.txt');
+         AssignFile(Fout, OutputDirectory {CurrentDSSDir} + CircuitName_ + 'VDIFF.txt');
          Rewrite(Fout);
 
          While Not EOF(Fin) Do Begin
@@ -3098,7 +3104,7 @@ Begin
    CloseFile(Fin);
    CloseFile(Fout);
 
-   FireOffEditor(CircuitName_ + 'VDIFF.txt');
+   FireOffEditor(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'VDIFF.txt');
 
   End;
 
@@ -3715,7 +3721,7 @@ Begin
   {ParamName :=} Parser.NextParam;
   Param := Parser.StrValue;
   Try
-    AssignFile(F, Param);
+    AssignFile(F, AdjustInputFilePath(Param));
     Reset(F);
     AuxParser.Delimiters := ',';
     While not EOF(F) Do Begin
@@ -3790,7 +3796,7 @@ Begin
 
      LoadShapeClass := GetDSSClassPtr('loadshape') as TLoadShape;
 
-     Fname := 'ReloadLoadshapes.DSS';
+     Fname := OutputDirectory {CurrentDSSDir} + 'ReloadLoadshapes.DSS';
      AssignFile(F, Fname);
      Rewrite(F);
 

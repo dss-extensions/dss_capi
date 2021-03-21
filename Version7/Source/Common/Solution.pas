@@ -2377,7 +2377,7 @@ begin
     try
 
         try
-            AssignFile(F, CircuitName_ + 'SavedVoltages.Txt');
+            AssignFile(F, OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt');
             Rewrite(F);
 
             with ActiveCircuit do
@@ -2403,7 +2403,7 @@ begin
     finally
 
         CloseFile(F);
-        GlobalResult := CircuitName_ + 'SavedVoltages.Txt';
+        GlobalResult := OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt';
 
     end;
 

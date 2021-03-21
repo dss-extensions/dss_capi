@@ -2348,7 +2348,7 @@ begin
             end;
 
  {$IFDEF AUTOTRANDEBUG}
-    AssignFile(F, CircuitName_ + 'AutoTrans_' + Name + '.TXT');
+    AssignFile(F, OutputDirectory + CircuitName_ + 'AutoTrans_' + Name + '.TXT');
     Rewrite(F);
     Writeln(F, 'Y_Term after building...');
     DumpComplexMatrix(F, Y_Term);
@@ -2434,7 +2434,7 @@ begin
 
   {******************************DEBUG******************************************************}
   {$IFDEF AUTOTRANDEBUG}
-        AssignFile(F, CircuitName_ + 'AutoTrans_' + Name + '.TXT');
+        AssignFile(F, OutputDirectory + CircuitName_ + 'AutoTrans_' + Name + '.TXT');
         Rewrite(F);
         Writeln(F, Format('Zbase=%g, VABase=%g, Nphases=%d, Rpu=%g ', [Zbase, VABase, Fnphases, Winding^[1].Rpu]));
         Writeln(F, 'ZB before inverting...');

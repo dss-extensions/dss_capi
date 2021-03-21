@@ -1094,7 +1094,7 @@ var
   Fileroot    : String;
 Begin
     // Prepares everything to save the base of the torn circuit on a separate folder
-    Fileroot              :=  GetCurrentDir;
+    Fileroot              :=  OutputDirectory; {CurrentDSSDir;}
     Fileroot              :=  Fileroot  + PathDelim + 'Torn_Circuit';
     CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
     DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
@@ -1625,8 +1625,8 @@ Begin
   solution.Solve() ;
 
   // Creates the folder for storign the results
-  Fileroot              :=  GetCurrentDir;
-  Fileroot              :=  Fileroot  + '\Aggregated_model';
+  Fileroot              :=  OutputDirectory; {CurrentDSSDir;}
+  Fileroot              :=  Fileroot  + 'Aggregated_model';
   CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
   DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
   // Now starts aggregating the loadshapes per zone
@@ -1713,8 +1713,8 @@ Begin
         End;
 
         // Saves the profile on disk
-        myLoadShapes[High(myLoadShapes)]    :=  GetCurrentDir + '\loadShape_' + EMeter.Name + '.csv';
-        Assignfile(F,myLoadShapes[High(myLoadShapes)]);
+        myLoadShapes[High(myLoadShapes)]    :=  OutputDirectory {CurrentDSSDir} + 'loadShape_' + EMeter.Name + '.csv';
+        Assignfile(F, {CurrentDSSDir} OutputDirectory + myLoadShapes[High(myLoadShapes)]);
         ReWrite(F);
         for j := 0 to High(myLoadShape) do
           Writeln(F,floattostr(myLoadShape[j]) + ',' + floattostr(mykvarShape[j]));
@@ -2465,7 +2465,7 @@ begin
 
 // Make a new subfolder in the present folder based on the circuit name and
 // a unique sequence number
-   SaveDir :=  GetCurrentDir;  // remember where to come back to
+   SaveDir := CurrentDSSDir;  // remember where to come back to
    Success := FALSE;
    If Length(Dir)=0 Then Begin
      dir := Name;
@@ -2477,7 +2477,7 @@ begin
           Begin
               If CreateDir(CurrDir) Then
                Begin
-                  SetCurrentDir(CurrDir);
+                  SetCurrentDSSDir(CurrDir);
                   Success := TRUE;
                   Break;
                End;
@@ -2489,12 +2489,12 @@ begin
           CurrDir :=  dir;
           If CreateDir(CurrDir) Then
            Begin
-              SetCurrentDir(CurrDir);
+              SetCurrentDSSDir(CurrDir);
               Success := TRUE;
            End;
        End Else Begin  // Exists - overwrite
           CurrDir := Dir;
-          SetCurrentDir(CurrDir);
+          SetCurrentDSSDir(CurrDir);
           Success := TRUE;
        End;
     End;
@@ -2543,17 +2543,14 @@ begin
 
     If Success Then
     Begin
-{$IFDEF DSS_CAPI}
-        GlobalResult := 'Circuit saved in directory: ' + GetCurrentDir;
-{$ELSE}
-        DoSimpleMsg('Circuit saved in directory: ' + GetCurrentDir, 433)
-{$ENDIF}
+        GlobalResult := 'Circuit saved in directory: ' + CurrentDSSDir;
+        // DoSimpleMsg('Circuit saved in directory: ' + CurrentDSSDir, 433)
     End
     Else
-        DoSimpleMsg('Error attempting to save circuit in ' + GetCurrentDir, 434);
+        DoSimpleMsg('Error attempting to save circuit in ' + CurrentDSSDir, 434);
 
     // Return to Original directory
-    SetCurrentDir(SaveDir);
+    SetCurrentDSSDir(SaveDir);
 
     Result := TRUE;
 
@@ -2589,7 +2586,7 @@ Begin
 
      Result := FALSE;
      Try
-        AssignFile(F, 'BusVoltageBases.DSS');
+        AssignFile(F, CurrentDSSDir + 'BusVoltageBases.DSS');
         Rewrite(F);
 
 //        For i := 1 to NumBuses do
@@ -2615,7 +2612,7 @@ Var
 begin
   Result := FALSE;
   Try
-      AssignFile(F, 'Master.DSS');
+      AssignFile(F, CurrentDSSDir + 'Master.DSS');
       Rewrite(F);
 
       Writeln(F, 'Clear');
@@ -2656,7 +2653,7 @@ begin
 
    Result := TRUE;
 {Write out all energy meter  zones to separate subdirectories}
-   SaveDir := GetCurrentDir;
+   SaveDir := CurrentDSSDir;
    For i := 1 to EnergyMeters.ListSize Do
     Begin
         Meter := EnergyMeters.Get(i); // Recast pointer
@@ -2666,21 +2663,21 @@ begin
         
         If DirectoryExists(CurrDir) Then
          Begin
-            SetCurrentDir(CurrDir);
+            SetCurrentDSSDir(CurrDir);
             Meter.SaveZone(CurrDir);
-            SetCurrentDir(SaveDir);
+            SetCurrentDSSDir(SaveDir);
          End
         Else Begin
              If CreateDir(CurrDir) Then
              Begin
-                SetCurrentDir(CurrDir);
+                SetCurrentDSSDir(CurrDir);
                 Meter.SaveZone(CurrDir);
-                SetCurrentDir(SaveDir);
+                SetCurrentDSSDir(SaveDir);
              End
              Else Begin
                 DoSimpleMsg('Cannot create directory: '+CurrDir, 436);
                 Result := FALSE;
-                SetCurrentDir(SaveDir);  // back to whence we came
+                SetCurrentDSSDir(SaveDir);  // back to whence we came
                 Break;
              End;
         End;

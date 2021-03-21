@@ -159,6 +159,9 @@ procedure EnableFeeders;
 procedure DisableFeeders;
 
 
+function AdjustInputFilePath(const param: String): String;
+
+
 implementation
 
 uses
@@ -778,7 +781,8 @@ begin
         if compareText(param, '%result%') = 0 then
             CSVFileName := LastResultFile
         else
-            CSVFileName := Param;
+            CSVFileName := AdjustInputFilePath(Param);
+
         if not FileExists(CSVFileName) then
         begin
             DoSimpleMsg(Format('CSV file "%s" does not exist', [CSVFileName]), 70401);
@@ -923,7 +927,7 @@ begin
     begin
          // load the list from a file
         try
-            AssignFile(F, Param);
+            AssignFile(F, AdjustInputFilePath(Param));
             Reset(F);
             for i := 1 to MaxValues do
             begin
@@ -1059,6 +1063,7 @@ begin
 
     if CompareText(Parmname, 'file') = 0 then
     begin
+        Param := AdjustInputFilePath(Param);
          // load the list from a file
 
         try
@@ -1132,6 +1137,7 @@ begin
 
     if CompareText(Parmname, 'file') = 0 then
     begin
+        Param := AdjustInputFilePath(Param);
          // load the list from a file
 
         try
@@ -2078,7 +2084,7 @@ begin
         Exit;
     try
         ClassName := DSS_Class.Name;
-        AssignFile(F, ClassName + '.dss');
+        AssignFile(F, CurrentDSSDir + ClassName + '.dss');
         Rewrite(F);
         SavedFileList.Add(ClassName + '.dss');
         DSS_Class.First;   // Sets ActiveDSSObject
@@ -2122,7 +2128,7 @@ begin
     try
         ClassName := DSS_Class.Name;
         if Length(FileName) = 0 then
-            FileName := ClassName + '.DSS';   // default file name
+            FileName := CurrentDSSDir + ClassName + '.DSS';   // default file name
         AssignFile(F, FileName);
         Rewrite(F);
 
@@ -2668,7 +2674,7 @@ begin
 
     try
         if FileExists(Fname) then
-            DoSimpleMsg('File "' + Fname + '" is about to be overwritten. Rename it now before continuing if you wish to keep it.', 721);
+            DoSimpleMsg('File "' + Fname + '" is about to be overwritten. Rename it now before continuing if you wish to keep it.', 721);//TODO: this is useless without forms
         AssignFile(F, Fname);
         Rewrite(F);
     except
@@ -3473,5 +3479,12 @@ begin
         Result := Copy(BusName, dotpos, length(BusName));    // preserve node designations if any
 end;
 
+function AdjustInputFilePath(const param: String): String;
+begin
+    if (not DSS_CAPI_ALLOW_CHANGE_DIR) and FileExists(CurrentDSSDir + Param) {and (not FileExists(Param))} then
+        Result := CurrentDSSDir + Param
+    else
+        Result := Param;
+end;
 
 end.

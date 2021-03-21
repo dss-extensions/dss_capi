@@ -307,11 +307,11 @@ begin
                 6:
                     StdDev := Parser.DblValue;
                 7:
-                    DoCSVFile(Param);
+                    DoCSVFile(AdjustInputFilePath(Param));
                 8:
-                    DoSngFile(Param);
+                    DoSngFile(AdjustInputFilePath(Param));
                 9:
-                    DoDblFile(Param);
+                    DoDblFile(AdjustInputFilePath(Param));
                 10:
                     Interval := Parser.DblValue / 3600.0;  // Convert seconds to hr
                 11:
@@ -963,7 +963,7 @@ begin
     if Assigned(PriceValues) then
     begin
         try
-            FName := Format('%s.dbl', [Name]);
+            FName := OutputDirectory {CurrentDSSDir} + Format('%s.dbl', [Name]);
             AssignFile(F, Fname);
             Rewrite(F);
             for i := 1 to NumPoints do
@@ -990,7 +990,7 @@ begin
     if Assigned(PriceValues) then
     begin
         try
-            FName := Format('%s.sng', [Name]);
+            FName := OutputDirectory {CurrentDSSDir} + Format('%s.sng', [Name]);
             AssignFile(F, Fname);
             Rewrite(F);
             for i := 1 to NumPoints do

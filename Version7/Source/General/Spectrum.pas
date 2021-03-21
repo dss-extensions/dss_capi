@@ -217,7 +217,7 @@ begin
                     NumHarm := InterpretDblArray(Param, NumHarm, AngleArray);
                 end;
                 5:
-                    DoCSVFile(Param);
+                    DoCSVFile(AdjustInputFilePath(Param));
             else
           // Inherited parameters
                 ClassEdit(ActiveSpectrumObj, Parampointer - NumPropsThisClass)

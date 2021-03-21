@@ -249,11 +249,11 @@ begin
 
                 end;
                 4:
-                    DoCSVFile(Param);
+                    DoCSVFile(AdjustInputFilePath(Param));
                 5:
-                    DoSngFile(Param);
+                    DoSngFile(AdjustInputFilePath(Param));
                 6:
-                    DoDblFile(Param);
+                    DoDblFile(AdjustInputFilePath(Param));
             else
            // Inherited parameters
                 ClassEdit(ActiveGrowthShapeObj, ParamPointer - NumPropsThisClass)

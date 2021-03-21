@@ -574,12 +574,12 @@ Begin
         // Clears everything to create the actors and compile the subsystems
         Parallel_enabled                :=  False;
         DSSExecutive.ClearAll;
-        Fileroot                        :=  GetCurrentDir;    //  Gets the current directory
+        Fileroot                        :=  OutputDirectory {CurrentDSSDir};    //  Gets the current directory
         SolutionAbort                   :=  False;
 
         // Compiles the interconnected Circuit for further calculations on actor 1
         ActiveActor                     :=  1;
-        Proj_Dir                        :=  'compile "' + Fileroot + '\Torn_Circuit\master_interconnected.dss"';
+        Proj_Dir                        :=  'compile "' + Fileroot + 'Torn_Circuit' + PathDelim + 'master_interconnected.dss"';
         DssExecutive.Command            :=  Proj_Dir;
         DssExecutive.Command            :=  'set controlmode=Off';
         // Disables the Energymeters for the zones
@@ -602,8 +602,8 @@ Begin
           New_Actor_Slot();
 
           if DIdx = 2 then  Dir :=  ''
-          else  Dir :=  'zone_' + inttostr(DIdx - 1) + '\';
-          Proj_Dir              :=  'compile "' + Fileroot + '\Torn_Circuit\' + Dir + 'master.dss"';
+          else  Dir :=  'zone_' + inttostr(DIdx - 1) + PathDelim;
+          Proj_Dir              :=  'compile "' + Fileroot + 'Torn_Circuit' + PathDelim + Dir + 'master.dss"';
           DssExecutive.Command  := Proj_Dir;
           if DIdx > 2 then
             DssExecutive.Command  := Links[DIdx - 2] + '.enabled=False';

@@ -30,6 +30,8 @@ function DSS_Get_AllowEditor: Wordbool; CDECL;
 procedure DSS_Set_AllowEditor(Value: Wordbool); CDECL;
 function DSS_Get_LegacyModels(): Wordbool; CDECL;
 procedure DSS_Set_LegacyModels(Value: Wordbool); CDECL;
+function DSS_Get_AllowChangeDir(): Wordbool; CDECL;
+procedure DSS_Set_AllowChangeDir(Value: Wordbool); CDECL;
 
 implementation
 
@@ -218,6 +220,23 @@ begin
     begin
         DSS_CAPI_LEGACY_MODELS := Value;
         DSSExecutive.Command := 'clear';
+    end;
+end;
+//------------------------------------------------------------------------------
+function DSS_Get_AllowChangeDir(): Wordbool; CDECL;
+begin
+    Result := DSS_CAPI_ALLOW_CHANGE_DIR;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_Set_AllowChangeDir(Value: Wordbool); CDECL;
+begin
+    if (Value <> DSS_CAPI_ALLOW_CHANGE_DIR) then
+    begin
+        DSS_CAPI_ALLOW_CHANGE_DIR := Value;
+        if not Value then
+        begin
+            SetCurrentDSSDir(GetCurrentDir());
+        end;
     end;
 end;
 //------------------------------------------------------------------------------

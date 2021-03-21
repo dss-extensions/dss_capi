@@ -2340,7 +2340,7 @@ procedure TIndMach012Obj.InitTraceFile;
 //----------------------------------------------------------------------------
 begin
 
-    AssignFile(TraceFile, Format('%s_IndMach012_Trace.CSV', [Name]));
+    AssignFile(TraceFile, OutputDirectory + Format('%s_IndMach012_Trace.CSV', [Name]));
     Rewrite(TraceFile);
 
     Write(TraceFile, 'Time, Iteration, S1, |IS1|, |IS2|, |E1|, |dE1dt|, |E2|, |dE2dt|, |V1|, |V2|, Pshaft, Pin, Speed, dSpeed');

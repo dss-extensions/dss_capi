@@ -633,7 +633,7 @@ begin
             begin
                 ParamName := Parser.NextParam;
                 Param := Parser.StrValue;
-                if SetCurrentDir(Param) then
+                if DirectoryExists(Param) then
                 begin
                     CmdResult := 0;
                     SetDataPath(Param);  // change datadirectory

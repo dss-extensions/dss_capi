@@ -315,11 +315,11 @@ begin
                     X := Xvalues^[1];
                 end;
                 5:
-                    DoCSVFile(Param);   // file of x,y points, one to a line
+                    DoCSVFile(AdjustInputFilePath(Param));   // file of x,y points, one to a line
                 6:
-                    DoSngFile(Param);
+                    DoSngFile(AdjustInputFilePath(Param));
                 7:
-                    DoDblFile(Param);
+                    DoDblFile(AdjustInputFilePath(Param));
                 8:
                     X := Parser.dblvalue;
                 9:

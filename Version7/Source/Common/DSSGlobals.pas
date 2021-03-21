@@ -156,6 +156,7 @@ VAR
    DSS_CAPI_EXT_ERRORS: Boolean = True;
    DSS_CAPI_LEGACY_MODELS: Boolean = False;
    DSS_CAPI_LEGACY_MODELS_PREV: Boolean = False;
+   DSS_CAPI_ALLOW_CHANGE_DIR : Boolean = True;
 {$ENDIF}
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
@@ -338,6 +339,8 @@ Procedure MyReallocMem(Var p:Pointer; newsize:integer);
 Function MyAllocMem(nbytes:Cardinal):Pointer;
 
 
+function CurrentDSSDir(): String;
+procedure SetCurrentDSSDir(dir: String);
 
 implementation
 
@@ -371,6 +374,7 @@ VAR
 
    LastUserDLLHandle: THandle;
    DSSRegisterProc:TDSSRegister;   // of last library loaded
+   CurrentDSSDir_internal: String = '';
 
 {$IFDEF FPC}
 FUNCTION GetDefaultDataDirectory: String;
@@ -790,7 +794,7 @@ BEGIN
 
   // Put a \ on the end if not supplied. Allow a null specification.
   If Length(DataDirectory) > 0 Then Begin
-    ChDir(DataDirectory);   // Change to specified directory
+    SetCurrentDSSDir(DataDirectory);   // Change to specified directory
     If DataDirectory[Length(DataDirectory)] <> PathDelim Then DataDirectory := DataDirectory + PathDelim;
   End;
 
@@ -944,6 +948,36 @@ begin
 end;
 {$ENDIF}
 
+function CurrentDSSDir(): String;
+begin
+    if DSS_CAPI_ALLOW_CHANGE_DIR then
+    begin
+        Result := GetCurrentDir();
+        If Result[Length(Result)] <> PathDelim Then 
+            Result := Result + PathDelim;
+    end
+    else
+    begin
+        Result := CurrentDSSDir_internal
+    end;
+end;
+
+procedure SetCurrentDSSDir(dir: String);
+begin
+    if DSS_CAPI_ALLOW_CHANGE_DIR then
+    begin
+        SetCurrentDir(dir);
+        Exit;
+    end;
+
+    If dir[Length(dir)] <> PathDelim Then 
+        CurrentDSSDir_internal := dir + PathDelim
+    else
+        CurrentDSSDir_internal := dir;
+end;
+
+
+
 initialization
 
    ADiakoptics      :=    False;  // Disabled by default
@@ -987,11 +1021,7 @@ initialization
 
    {Initialize filenames and directories}
 
-   {$IFDEF FPC}
-   ProgramName      := 'OpenDSSCmd';  // for now...
-   {$ELSE}
-   ProgramName      := 'OpenDSS';
-   {$ENDIF}
+   ProgramName      := 'DSS-Extensions';
    DSSFileName      := GetDSSExeFile;
    DSSDirectory     := ExtractFilePath(DSSFileName);
    // want to know if this was built for 64-bit, not whether running on 64 bits
@@ -1082,13 +1112,16 @@ initialization
    // Default is True, disable at initialization only when DSS_CAPI_EARLY_ABORT = 0
    DSS_CAPI_EARLY_ABORT := (GetEnvironmentVariable('DSS_CAPI_EARLY_ABORT') <> '0');
 
-   // Default is True, enable at initialization when DSS_CAPI_ALLOW_EDITOR = 0
+   // Default is True, disable at initialization when DSS_CAPI_ALLOW_EDITOR = 0
    DSS_CAPI_ALLOW_EDITOR := (GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') <> '0');
    DSS_CAPI_EXT_ERRORS := (GetEnvironmentVariable('DSS_CAPI_EXT_ERRORS') <> '0');
    
    // Default is False, enable at initialization when DSS_CAPI_LEGACY_MODELS = 1
    DSS_CAPI_LEGACY_MODELS := (GetEnvironmentVariable('DSS_CAPI_LEGACY_MODELS') = '1');
    DSS_CAPI_LEGACY_MODELS := DSS_CAPI_LEGACY_MODELS_PREV;
+   
+   // For the 0.10.x branch, default is True, disable at initialization when DSS_CAPI_ALLOW_CHANGE_DIR = 0
+   DSS_CAPI_ALLOW_CHANGE_DIR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_CHANGE_DIR') <> '0');
 {$ENDIF}
 
 Finalization
