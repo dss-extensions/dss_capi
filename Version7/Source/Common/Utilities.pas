@@ -157,9 +157,6 @@ procedure Obfuscate;
 {Feeder Utilities} // not currently used
 procedure EnableFeeders;
 procedure DisableFeeders;
-procedure InitializeFeeders;
-procedure ForwardSweepAllFeeders;
-procedure BackwardSweepAllFeeders;
 
 
 implementation
@@ -2754,39 +2751,6 @@ begin
 
 end;
 
-procedure InitializeFeeders;
-// Var i:Integer;
-begin
-    (*    Do Nothing for now
-    With ActiveCircuit Do
-    For i := 1 to Feeders.ListSize Do Begin
-        If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).InitForSweep;
-    End;
-    *)
-end;
-
-procedure ForwardSweepAllFeeders;
-// Var i:Integer;
-begin
-    (*    Do Nothing for now
-    With ActiveCircuit Do
-    For i := 1 to Feeders.ListSize Do Begin
-        If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).ForwardSweep;
-    End;
-*)
-end;
-
-procedure BackwardSweepAllFeeders;
-// Var i:Integer;
-begin
-    (*    Do Nothing for now
-    With ActiveCircuit Do
-    For i := 1 to Feeders.ListSize Do Begin
-        If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).BackwardSweep;
-    End;
-    *)
-end;
-
 function GetDSSArray_Real(n: Integer; dbls: pDoubleArray): String;
 var
     i: Integer;
@@ -3508,10 +3472,6 @@ begin
     else
         Result := Copy(BusName, dotpos, length(BusName));    // preserve node designations if any
 end;
-
-initialization
-
-finalization
 
 
 end.

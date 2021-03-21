@@ -113,9 +113,6 @@ var
     ResCN, RadCN: Double;
     GmrCN: Double;
     Denom, RadIn, RadOut: Double;
-  {$IFDEF ANDREA}
-  {****} DumpFile: TextFile;
-  {$ENDIF}
 begin
     Frequency := f;  // this has side effects
 
@@ -212,15 +209,6 @@ begin
         end;
     end;
 
-  {$IFDEF ANDREA}
-//***** Special for Andrea to see 6x6 matrix before it is reduced
-    Assignfile(DumpFile, 'CNData-1.txt');
-    Rewrite(Dumpfile);
-    Writeln(DumpFile, 'Before Reduction');
-    DumpComplexMatrix(DumpFile, Zmat);
-//*****
-  {$ENDIF}
-
   // reduce out the CN
     while Zmat.Order > FNumConds do
     begin
@@ -230,15 +218,6 @@ begin
     end;
     FZMatrix.CopyFrom(Zmat);
     Zmat.Free;
-
-  {$IFDEF ANDREA}
-//*****    Special for Andrea
-    Writeln(DumpFile, 'After Reduction');
-    DumpComplexMatrix(DumpFile, FZMatrix);
-    CloseFile(DumpFile);
-    FireOffEditor('CNData-1.txt');
-//*****
-  {$ENDIF}
 
   // for shielded cables, build the capacitance matrix directly
   // assumes the insulation may lie between semicon layers

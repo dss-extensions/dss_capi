@@ -216,23 +216,6 @@ Begin
           Y4.insert(idx,col,value);
       End;
     End;
-{
-//********************Dbug************************************
-    AssignFile(myFile, 'C:\Temp\Y4Mat.csv');
-    ReWrite(myFile);
-    Text        :=  '';
-    for idx := 0 to (length(Y4.CData)- 1) do
-    Begin
-        Text  :=  inttostr(Y4.CData[idx].Row) + ',' + inttostr(Y4.CData[idx].Col) +
-        ',' + floattostr(Y4.CData[idx].Value.re);
-        if Y4.CData[idx].Value.im < 0 then
-          Text  :=  Text  + '-i' +  floattostr(-1*Y4.CData[idx].Value.im)
-        else
-          Text  :=  Text  + '+i' +  floattostr(Y4.CData[idx].Value.im);
-        WriteLn(myFile,Text);
-    End;
-    CloseFile(myFile);
-}
   End;
 End;
 
@@ -295,24 +278,6 @@ Begin
 
     FreeMem(CVector);
     FreeMem(ZVector);
-{
-//********************Dbug************************************
-    AssignFile(myFile, 'C:\Temp\ZCCMat.csv');
-    ReWrite(myFile);
-    Text        :=  '';
-    for idx2 := 0 to (length(ZCC.CData)- 1) do
-    Begin
-        Text  :=  inttostr(ZCC.CData[idx2].Row) + ',' + inttostr(ZCC.CData[idx2].Col) +
-        ',' + floattostr(ZCC.CData[idx2].Value.re);
-        if ZCC.CData[idx2].Value.im < 0 then
-          Text  :=  Text  + '-i' +  floattostr(-1*ZCC.CData[idx2].Value.im)
-        else
-          Text  :=  Text  + '+i' +  floattostr(ZCC.CData[idx2].Value.im);
-        WriteLn(myFile,Text);
-    End;
-    CloseFile(myFile);
-}
-
   End;
 End;
 

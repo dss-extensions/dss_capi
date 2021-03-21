@@ -1003,61 +1003,7 @@ begin
         Result := Yarray^[i]; // Y is undefined, return ith value
 end;
 
-(*************************************************
 
-PROCEDURE TXYcurveObj.SaveToDblFile;
-
-Var
-   F:File of Double;
-   i:Integer;
-   Fname :String;
-Begin
-   If Assigned(TValues) then  Begin
-    TRY
-      FName := Format('%s.dbl',[Name]);
-      AssignFile(F, Fname);
-      Rewrite(F);
-      FOR i := 1 to NumPoints Do  Write(F, TValues^[i]);
-      GlobalResult := 'Temp=[dblfile='+FName+']';
-    FINALLY
-      CloseFile(F);
-    End;
-
-   End
-   ELSE DoSimpleMsg('Tshape.'+Name + ' Temperatures not defined.', 622);
-End;
-
-PROCEDURE TXYcurveObj.SaveToSngFile;
-
-Var
-   F:File of Single;
-   i:Integer;
-   Fname :String;
-   Temp  :Single;
-
-Begin
-   If Assigned(TValues) then  Begin
-    TRY
-        FName := Format('%s.sng',[Name]);
-        AssignFile(F, Fname);
-        Rewrite(F);
-        FOR i := 1 to NumPoints Do  Begin
-            Temp := TValues^[i] ;
-            Write(F, Temp);
-        End;
-        GlobalResult := 'Temp=[sngfile='+FName+']';
-    FINALLY
-      CloseFile(F);
-    End;
-
-
-   End
-   ELSE DoSimpleMsg('Tshape.'+Name + ' Temperatures not defined.', 623);
-
-
-End;
-
-****************************************************)
 procedure TXYcurveObj.Set_X(Value: Double);
 begin
     FX := (Value - FXshift) / FXscale;
