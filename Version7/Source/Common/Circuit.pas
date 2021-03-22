@@ -1714,7 +1714,7 @@ Begin
 
         // Saves the profile on disk
         myLoadShapes[High(myLoadShapes)]    :=  OutputDirectory {CurrentDSSDir} + 'loadShape_' + EMeter.Name + '.csv';
-        Assignfile(F, {CurrentDSSDir} OutputDirectory + myLoadShapes[High(myLoadShapes)]);
+        Assignfile(F, myLoadShapes[High(myLoadShapes)]);
         ReWrite(F);
         for j := 0 to High(myLoadShape) do
           Writeln(F,floattostr(myLoadShape[j]) + ',' + floattostr(mykvarShape[j]));
@@ -2694,7 +2694,7 @@ begin
    Result := FALSE;
 
    Try
-       AssignFile(F, 'BusCoords.dss');
+       AssignFile(F, CurrentDSSDir + 'BusCoords.dss');
        Rewrite(F);
 
 
