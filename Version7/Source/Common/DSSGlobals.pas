@@ -1021,7 +1021,7 @@ initialization
 
    {Initialize filenames and directories}
 
-   ProgramName      := 'DSS-Extensions';
+   ProgramName      := 'dss-extensions';
    DSSFileName      := GetDSSExeFile;
    DSSDirectory     := ExtractFilePath(DSSFileName);
    // want to know if this was built for 64-bit, not whether running on 64 bits
