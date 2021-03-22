@@ -14,6 +14,15 @@
     - initial work on the plotting and extended reporting API
     
 
+# Version 0.10.8
+
+**not released**
+
+- Introduce AllowChangeDir mechanism: defaults to enabled state for backwards compatibility. When disabled, the engine will not change the current working directory in any situation. This is exposed through a new pair of functions
+`DSS_Set_AllowChangeDir` and `DSS_Get_AllowChangeDir`, besides the environment variable `DSS_CAPI_ALLOW_CHANGE_DIR`. Due to Free Pascal legacy limitations, currently this can fail for very long paths (this is tracked in #93).
+- Use `OutputDirectory` more. `OutputDirectory` is set to the current `DataPath` if `DataPath` is writable. If not, it's set to a general location (`%LOCALAPPDATA%/dss-extensions` and `/tmp/dss-extensions` since this release). This should make life easier for a user running files from a read-only location. Note that this is only an issue when running a `compile` command. If the user only uses `redirect` commands, the `DataPath` and `OutputDirectory` are left empty, meaning the files are written to the current working directory (CWD), which the user can control through the programming language driving DSS C-API. Note that the official OpenDSS COM behavior is different, since it loads the `DataPath` saved in the registry and modifies the CWD accordingly when OpenDSS is initialized.
+
+
 # Version 0.10.7
 
 - Simple maintenance release, which includes most changes up to OpenDSS v9.1.3.4 (revision 2963).
