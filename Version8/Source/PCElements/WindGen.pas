@@ -9,13 +9,11 @@ unit WindGen;
 {   Change Log
 
    2/26/21 Created from   Generator.pas
-
+   3/25/21 Removed Generator-related properties  (e.g., Fuel variables)
 
 }
 {
-  The generator is essentially a negative load that can be dispatched.
-
-
+  In power flow modes, the WindGen element is essentially a negative load that can be dispatched.
 }
 
 //  The WindGen is assumed balanced over the no. of phases defined
@@ -136,7 +134,6 @@ TYPE
         PROCEDURE DoHarmonicMode(ActorID : Integer);
         Procedure DoPVTypeGen(ActorID : Integer);
         Procedure DoUserModel(ActorID : Integer);
-        function CheckOnFuel(const Deriv:Double; Const Interval:Double;ActorID : Integer): Boolean;
 
         Procedure Integrate(Reg:Integer; const Deriv:Double; Const Interval:Double; ActorID: integer);
         Procedure SetDragHandRegister(Reg:Integer; const Value:Double);
@@ -180,12 +177,9 @@ TYPE
         Vpu             :Double;   // per unit Target voltage for WindGen with voltage control
         Vmaxpu          :Double;
         Vminpu          :Double;
-// Fuel related variables
-        GenActive,
-        UseFuel         : Boolean;
-        FuelkWh,
-        pctFuel,
-        pctReserve      : Double;
+
+        GenActive: Boolean;
+// Fuel variables from Generator model removed
 
 // moved to WindGenVars        VTarget         :Double;  // Target voltage for WindGen with voltage control
         YearlyShape     :String;  // ='fixed' means no variation  on all the time
@@ -251,7 +245,7 @@ implementation
 
 USES  ParserDel, Circuit,  Sysutils, Command, Math, MathUtil, DSSClassDefs, DSSGlobals, Utilities;
 
-Const NumPropsThisClass = 44;
+Const NumPropsThisClass = 39;  // removed Fuel variables
   // Dispatch modes
       DEFAULT = 0;
       LOADMODE = 1;
@@ -325,24 +319,23 @@ Begin
                     'Valid values are:' +CRLF+CRLF+
                     '1:WindGen injects a constant kW at specified power factor.'+CRLF+
                     '2:WindGen is modeled as a constant admittance.'  +CRLF+
-                    '3:Const kW, constant kV.  Somewhat like a conventional transmission power flow P-V WindGen.'+CRLF+
+                    '3:Const kW, constant kV.  Voltage-regulated model.'+CRLF+
                     '4:Const kW, Fixed Q (Q never varies)'+CRLF+
                     '5:Const kW, Fixed Q(as a constant reactance)'+CRLF+
-                    '6:Compute load injection from User-written Model.(see usage of Xd, Xdp)'+CRLF+
-                    '7:Constant kW, kvar, but current-limited below Vminpu. Approximates a simple inverter. See also Balanced.');
+                    '6:Compute load injection from User-written Model.(see usage of Xd, Xdp)');
      AddProperty('Vminpu', 23,   'Default = 0.90.  Minimum per unit voltage for which the Model is assumed to apply. ' +
                           'Below this value, the load model reverts to a constant impedance model. For model 7, the current is ' +
                           'limited to the value computed for constant power at Vminpu.');
      AddProperty('Vmaxpu', 24, 'Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ' +
                           'Above this value, the load model reverts to a constant impedance model.');
-     AddProperty('yearly', 7,  'Dispatch shape to use for yearly simulations.  Must be previously defined '+
+     AddProperty('yearly', 7,  'Dispatch shape to use for yearly-mode simulations.  Must be previously defined '+
                     'as a Loadshape object. If this is not specified, a constant value is assumed (no variation). '+
                     'If the WindGen is assumed to be ON continuously, specify Status=FIXED, or '+
                     'designate a curve that is 1.0 per unit at all times. '+
                     'Set to NONE to reset to no loadahape. ' +
                     'Nominally for 8760 simulations.  If there are fewer points in the designated shape than '+
                     'the number of points in the solution, the curve is repeated.');
-     AddProperty('daily', 8,  'Dispatch shape to use for daily simulations.  Must be previously defined '+
+     AddProperty('daily', 8,  'Dispatch shape to use for daily-mode simulations.  Must be previously defined '+
                     'as a Loadshape object of 24 hrs, typically.  If WindGen is assumed to be '+
                     'ON continuously, specify Status=FIXED, or designate a Loadshape object'+
                     'that is 1.0 perunit for all hours. ' +
@@ -368,10 +361,10 @@ Begin
      AddProperty('Xneut', 15, 'Removed due to causing confusion - Add neutral impedance externally.');
      AddProperty('status', 16,  '={Fixed | Variable*}.  If Fixed, then dispatch multipliers do not apply. '+
                          'The WindGen is alway at full power when it is ON. '+
-                         ' Default is Variable  (follows curves).');  // fixed or variable
+                         ' Default is Variable  (follows curves or windspeed).');  // fixed or variable
      AddProperty('class', 17,   'An arbitrary integer number representing the class of WindGen so that WindGen values may '+
                          'be segregated by class.'); // integer
-     AddProperty('Vpu', 18,  'Per Unit voltage set point for Model = 3  (typical power flow model).  Default is 1.0. '); // per unit set point voltage for power flow model
+     AddProperty('Vpu', 18,  'Per Unit voltage set point for Model = 3  (Regulated voltage model).  Default is 1.0 pu. '); // per unit set point voltage for power flow model
      AddProperty('maxkvar', 19,  'Maximum kvar limit for Model = 3.  Defaults to twice the specified load kvar.  '+
                           'Always reset this if you change PF or kvar properties.');
      AddProperty('minkvar', 20,  'Minimum kvar limit for Model = 3. Enter a negative number if WindGen can absorb vars.'+
@@ -402,18 +395,8 @@ Begin
                           'for each iteration.  Creates a separate file for each WindGen named "GEN_name.CSV".' );
       AddProperty('Balanced',  38, '{Yes | No*} Default is No.  For Model=7, force balanced current only for 3-phase WindGens. Force zero- and negative-sequence to zero.');
       AddProperty('XRdp',  39, 'Default is 20. X/R ratio for Xdp property for FaultStudy and Dynamic modes.');
-      AddProperty('UseFuel',  40, '{Yes | *No}. Activates the use of fuel for the operation of the WindGen. When the fuel level' +
-                                  ' reaches the reserve level, the WindGen stops until it gets refueled. By default, the WindGen ' +
-                                  'is connected to a continuous fuel supply, Use this mode to mimic dependency on fuel level for different ' +
-                                  'generation technologies.');
-      AddProperty('FuelkWh',  41, '{*0}Is the nominal level of fuel for the WindGen (kWh). It only applies if UseFuel = Yes/True');
-      AddProperty('%Fuel',  42, 'It is a number between 0 and 100 representing the current amount of fuel avaiable in percentage ' +
-                                'of FuelkWh. It only applies if UseFuel = Yes/True');
-      AddProperty('%Reserve',  43, 'It is a number between 0 and 100 representing the reserve level in percentage of FuelkWh. ' +
-                                   'It only applies if UseFuel = Yes/True');
-      AddProperty('Refuel',  44, 'It is a boolean value (Yes/True, No/False) that can be used to manually refuel the WindGen when needed. ' +
-                                 'It only applies if UseFuel = Yes/True');
 
+      {Removed Fuel-related variables 40-44 from Generator model}
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -586,15 +569,8 @@ Begin
            37: DutyStart            :=  Parser[ActorID].DblValue;
            38: ForceBalanced        :=  InterpretYesNo(Param);
            39: WindGenVars.XRdp         :=  Parser[ActorID].DblValue;  // X/R for dynamics model
-           40: UseFuel              :=  InterpretYesNo(Param);
-           41: FuelkWh              :=  Parser[ActorID].DblValue;
-           42: pctFuel              :=  Parser[ActorID].DblValue;
-           43: pctReserve           :=  Parser[ActorID].DblValue;
-           44: If InterpretYesNo(Param) then
-               Begin
-                pctFuel   :=  100.0;
-                GenActive :=  True;
-               End
+
+
 
          ELSE
            // Inherited parameters
@@ -709,10 +685,6 @@ Begin
        kvarMin                := OtherWindGen.kvarMin;
        FForcedON              := OtherWindGen.FForcedON;
        kVANotSet              := OtherWindGen.kVANotSet;
-       UseFuel                := OtherWindGen.UseFuel;
-       FuelkWh                := OtherWindGen.FuelkWh;
-       pctFuel                := OtherWindGen.pctFuel;
-       pctReserve             := OtherWindGen.pctReserve;
 
        WindGenVars.kVArating      := OtherWindGen.WindGenVars.kVArating;
        WindGenVars.puXd           := OtherWindGen.WindGenVars.puXd;
@@ -816,8 +788,6 @@ Begin
      kvarMax      := kvarBase * 2.0;
      kvarMin      :=-kvarmax;
      PFNominal    := 0.88;
-  //   Rneut        := 0.0;
-  //   Xneut        := 0.0;
      YearlyShape    := '';
      YearlyShapeObj := nil;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
      DailyDispShape := '';
@@ -854,8 +824,6 @@ Begin
      WindGenVars.kVArating  := kWBase *1.2;
      kVANotSet   := TRUE;  // Flag for default value for kVA
 
-     //GenVars.Vd         := 7200.0;
-
 
 
      With WindGenVars Do
@@ -885,6 +853,7 @@ Begin
 
      DispatchValue    := 0.0;   // Follow curves
 
+  // Register values inherited from Generator model
      Reg_kWh        := 1;
      Reg_kvarh      := 2;
      Reg_MaxkW      := 3;
@@ -901,11 +870,7 @@ Begin
 
      Spectrum := 'defaultgen';  // override base class
 
-     UseFuel        :=  False;
-     GenActive      :=  True;
-     FuelkWh        :=  0.0;
-     pctFuel        :=  100.0;
-     pctReserve     :=  20.0;
+     GenActive      :=  True;   // variable to use if needed
 
      InitPropertyValues(0);
 
@@ -1360,19 +1325,6 @@ Begin
       End;
 End;
 
-function TWindGenObj.CheckOnFuel(const Deriv:Double; Const Interval:Double;ActorID : Integer): Boolean;
-Begin
-
-  Result  :=  True;
-  pctFuel   :=  ((((pctFuel / 100) * FuelkWh) - Interval * Deriv) / FuelkWh) * 100;
-  if pctFuel <= pctReserve then
-  Begin
-    Result  :=  False;
-    pctFuel :=  pctReserve;
-//    GenON   :=  False;
-  End;
-
-End;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 Procedure TWindGenObj.DoConstantPQGen(ActorID : Integer);
@@ -1466,9 +1418,6 @@ Begin
                     ELSE With WindGenvars Do Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), V));  // Between 95% -105%, constant PQ
                  End;
              END;
-            // Checks the output in case of using Fuel
-            if UseFuel then
-              if not GenActive then Curr  :=  cmplx(0,0);
 
             StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
             set_ITerminalUpdated(TRUE, ActorID);
@@ -1494,9 +1443,6 @@ Begin
 
      FOR i := 1 to Fnphases Do Begin
           Curr := Cmul(Yeq2, Vterminal^[i]);   // Yeq is always line to neutral
-          // Checks the output in case of using Fuel
-          if UseFuel then
-            if not GenActive then Curr  :=  cmplx(0,0);
 
           StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
           set_ITerminalUpdated(TRUE, ActorID);
@@ -1548,10 +1494,6 @@ Begin
         FOR i := 1 to Fnphases Do Begin
             Curr :=  Conjg( Cdiv( Cmplx(Pnominalperphase, Qnominalperphase), Vterminal^[i])) ;
 
-            // Checks the output in case of using Fuel
-            if UseFuel then
-              if not GenActive then Curr  :=  cmplx(0,0);
-
             StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
             set_ITerminalUpdated(TRUE, ActorID);
             StickCurrInTerminalArray(InjCurrent,Curr, i);  // Put into Terminal array taking into account connection
@@ -1601,10 +1543,6 @@ Begin
                 ELSE Curr := Conjg(Cdiv(Cmplx(WindGenvars.Pnominalperphase, varBase), V));
                End;
         END;
-
-        // Checks the output in case of using Fuel
-        if UseFuel then
-          if not GenActive then Curr  :=  cmplx(0,0);
 
         StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
         set_ITerminalUpdated(TRUE, ActorID);
@@ -1661,10 +1599,6 @@ Begin
                   End;
                End;
         END;
-
-        // Checks the output in case of using Fuel
-        if UseFuel then
-          if not GenActive then Curr  :=  cmplx(0,0);
 
         StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
         set_ITerminalUpdated(TRUE, ActorID);
@@ -1757,10 +1691,6 @@ Begin
                    If Cabs(DeltaCurr) > Model7MaxPhaseCurr Then
                      DeltaCurr := Conjg( Cdiv( PhaseCurrentLimit, CDivReal(VLL, VMagLL)) );
               end;
-
-              // Checks the output in case of using Fuel
-              if UseFuel then
-                if not GenActive then DeltaCurr  :=  cmplx(0,0);
 
               StickCurrInTerminalArray(ITerminal, Cnegate(DeltaCurr), i);  // Put into Terminal array taking into account connection
               set_ITerminalUpdated(TRUE, ActorID);
@@ -2198,8 +2128,6 @@ Begin
            Integrate            (Reg_Hours, HourValue, IntervalHrs, ActorID);  // Accumulate Hours in operation
            Integrate            (Reg_Price, S.re*ActiveCircuit[ActorID].PriceSignal * 0.001 , IntervalHrs, ActorID);  // Accumulate Hours in operation
            FirstSampleAfterReset := False;
-            // If using fuel
-           if UseFuel then  GenActive  :=  CheckonFuel(S.re, IntervalHrs,ActorID);
 
       End;
    End;
@@ -2715,11 +2643,6 @@ begin
                 End;
          37: Result := Format('%.6g', [DutyStart]);
          38: If ForceBalanced Then Result := 'Yes' else Result := 'No';
-         40: if UseFuel then Result  :=  'Yes' else Result   :=  'No';
-         41: Result := Format('%.6g', [FuelkWh]);
-         42: Result := Format('%.6g', [pctFuel]);
-         43: Result := Format('%.6g', [pctReserve]);
-         44: Result :=  'No';
       ELSE
          Result := Inherited GetPropertyValue(index);
       END;
