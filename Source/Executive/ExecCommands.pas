@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 156;
+     NumExecCommands = 160;
 
 Var
 
@@ -174,7 +174,7 @@ Begin
      ExecCommand[121] := 'GISShowBus';
      ExecCommand[122] := 'GISFindRoute';
      ExecCommand[123] := 'GISGetRoute';
-     ExecCommand[124] := 'GISGetDistance';
+     ExecCommand[124] := 'GISRouteDistance';
      ExecCommand[125] := 'GISShowRoute';
      ExecCommand[126] := 'GISJSONRoute';
      ExecCommand[127] := 'WindowDistribLR';
@@ -207,6 +207,10 @@ Begin
      ExecCommand[154] := 'GISFormat';
      ExecCommand[155] := 'GISBatchFormat';
      ExecCommand[156] := 'GISClose';
+     ExecCommand[157] := 'GISDistance';
+     ExecCommand[158] := 'GISSelect';
+     ExecCommand[159] := 'GISStopSelect';
+     ExecCommand[160] := 'GISGetSelect';
 
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
@@ -750,6 +754,26 @@ Begin
                          '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
                          '3. The model needs to have the correct GISCoords file';
      CommandHelp[156] := 'Closses all the instances of OpenDSS-GIS';
+     CommandHelp[157] := 'Returns the distance in meters between the coordinates in the buffer.' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
+     CommandHelp[158] := 'Commands OpenDSS-GIS to start the selection mode for allowing users to draw an area on the map.' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
+     CommandHelp[159] := 'Stops the latest select command sent to OpenDSS-GIS. Clears the map from selections and stores the selection coords in OpenDSS-GIS.' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
+     CommandHelp[160] := 'Requests the boundaries of the latest selection. The boundaties are returned as XMin, YMin, XMax and YMax in WGS84 coords format.' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
 End;
 
 //----------------------------------------------------------------------------
@@ -1157,6 +1181,10 @@ Begin
              GlobalResult  :=  GISBatchFormat(FormatFrom,FormatTo,Parser[ActiveActor].StrValue);
            end;
       156: GlobalResult :=  GISClose();
+      157: GlobalResult :=  Get_distance();
+      158: GlobalResult :=  GISStartSelect();
+      159: GlobalResult :=  GISStopSelect();
+      160: GlobalResult :=  GISGetSelect();
      ELSE
        // Ignore excess parameters
      End;
