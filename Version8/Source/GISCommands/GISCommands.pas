@@ -51,6 +51,10 @@ function GISShowBuffer():  string;
 function GISFormat(const FormatFrom,FormatTo,Coords : string): string;
 function GISBatchFormat(const FormatFrom,FormatTo,mypath : string): string;
 function GISClose(): string;
+function Get_distance():  string;
+function GISStartSelect():  string;
+function GISStopSelect():  string;
+function GISGetSelect():  string;
 
 var
   GISTCPClient          : TIdTCPClient;  // ... TIdThreadComponent
@@ -334,12 +338,12 @@ var
 begin
   if IsGISON then
   Begin
-    JSONCmd   :=  '{"command":"distance"}';
+    JSONCmd   :=  '{"command":"routedistance"}';
     try
       GISTCPClient.IOHandler.WriteLn(JSONCmd);
       InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,2000);
       TCPJSON :=  TdJSON.Parse(InMsg);
-      TempStr :=  TCPJSON['distance'].AsString + ' ' + TCPJSON['units'].AsString;
+      TempStr :=  TCPJSON['routedistance'].AsString + ' ' + TCPJSON['units'].AsString;
       Result  :=  TempStr;
       except
       on E: Exception do begin
@@ -848,6 +852,131 @@ Begin
       InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,200);
       TCPJSON :=  TdJSON.Parse(InMsg);
       Result  :=  TCPJSON['zoommap'].AsString;
+    except
+      on E: Exception do begin
+        IsGISON     :=  False;
+        Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
+    end;
+  end
+  else
+    result  :=  'OpenDSS-GIS is not installed or initialized';
+End;
+
+{*******************************************************************************
+*            request the calculation of the distance between 2 points          *
+*******************************************************************************}
+function Get_distance(): string;
+Var
+  TCPJSON       : TdJSON;
+  activesave,
+  i             : Integer;
+  InMsg         : String;
+  Found         : Boolean;
+  pLine         : TLineObj;
+Begin
+  if IsGISON then
+  Begin
+    InMsg:=  '{"command":"distance","coords":{"long1":' + floattostr(GISCoords^[1]) +',"lat1":' + floattostr(GISCoords^[2]) +
+              ',"long2":' + floattostr(GISCoords^[3]) + ',"lat2":'+ floattostr(GISCoords^[4]) + '}}';
+    try
+      GISTCPClient.IOHandler.WriteLn(InMsg);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,200);
+      TCPJSON :=  TdJSON.Parse(InMsg);
+      Result  :=  TCPJSON['distance'].AsString;
+    except
+      on E: Exception do begin
+        IsGISON     :=  False;
+        Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
+    end;
+  end
+  else
+    result  :=  'OpenDSS-GIS is not installed or initialized';
+End;
+
+{*******************************************************************************
+*                 Commands OpenDSS-GIS to start select mode                    *
+*******************************************************************************}
+function GISStartSelect(): string;
+Var
+  TCPJSON       : TdJSON;
+  activesave,
+  i             : Integer;
+  InMsg         : String;
+  Found         : Boolean;
+  pLine         : TLineObj;
+Begin
+  if IsGISON then
+  Begin
+    InMsg:=  '{"command":"select"}';
+    try
+      GISTCPClient.IOHandler.WriteLn(InMsg);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,200);
+      TCPJSON :=  TdJSON.Parse(InMsg);
+      Result  :=  TCPJSON['select'].AsString;
+    except
+      on E: Exception do begin
+        IsGISON     :=  False;
+        Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
+    end;
+  end
+  else
+    result  :=  'OpenDSS-GIS is not installed or initialized';
+End;
+
+{*******************************************************************************
+*                  Commands OpenDSS-GIS to stop select mode                    *
+*******************************************************************************}
+function GISStopSelect(): string;
+Var
+  TCPJSON       : TdJSON;
+  activesave,
+  i             : Integer;
+  InMsg         : String;
+  Found         : Boolean;
+  pLine         : TLineObj;
+Begin
+  if IsGISON then
+  Begin
+    InMsg:=  '{"command":"stopselect"}';
+    try
+      GISTCPClient.IOHandler.WriteLn(InMsg);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,200);
+      TCPJSON :=  TdJSON.Parse(InMsg);
+      Result  :=  TCPJSON['stopselect'].AsString;
+    except
+      on E: Exception do begin
+        IsGISON     :=  False;
+        Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
+    end;
+  end
+  else
+    result  :=  'OpenDSS-GIS is not installed or initialized';
+End;
+
+{*******************************************************************************
+*      gets the boundaries for the latest selection made in OpenDSS-GIS        *
+*******************************************************************************}
+function GISGetSelect(): string;
+Var
+  TCPJSON       : TdJSON;
+  activesave,
+  i             : Integer;
+  InMsg         : String;
+  Found         : Boolean;
+  pLine         : TLineObj;
+Begin
+  if IsGISON then
+  Begin
+    InMsg:=  '{"command":"getselect"}';
+    try
+      GISTCPClient.IOHandler.WriteLn(InMsg);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,200);
+      TCPJSON :=  TdJSON.Parse(InMsg);
+      Result  :=  TCPJSON['getselect'].AsString;
     except
       on E: Exception do begin
         IsGISON     :=  False;
