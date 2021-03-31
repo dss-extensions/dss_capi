@@ -2031,13 +2031,7 @@ Begin
    IF {IsDynamicModel or} IsHarmonicModel Then
      Begin
        {Yeq is computed from %R and %X -- inverse of Rthev + j Xthev}
-           CASE Fstate of
-               STORE_CHARGING:    Y := YeqDischarge;
-               STORE_IDLING:      Y := cmplx(0, 0);
-               STORE_DISCHARGING: Y := cnegate(YeqDischarge);
-
-               // old way Y  := Yeq   // L-N value computed in initialization routines
-           END;
+           Y  := Yeq;     // L-N value computed in initialization routines
 
            IF Connection=1 Then Y := CDivReal(Y, 3.0); // Convert to delta impedance
            Y.im := Y.im / FreqMultiplier;
@@ -3082,31 +3076,24 @@ Begin
 
      Yeq := Cinv(Cmplx(StorageVars.RThev,StorageVars.XThev));      // used for current calcs  Always L-N
 
-     {Compute reference Thevinen voltage from phase 1 current}
+     {Compute reference Thevenin voltage from phase 1 current}
 
-     IF FState = STORE_DISCHARGING Then
-       Begin
-           ComputeIterminal(ActorID);  // Get present value of current
+     ComputeIterminal(ActorID);  // Get present value of current
 
-           With ActiveCircuit[ActorID].solution Do
-           Case Connection of
-             0: Begin {wye - neutral is explicit}
-                     Va := Csub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[Fnconds]]);
-                End;
-             1: Begin  {delta -- assume neutral is at zero}
-                     Va := NodeV^[NodeRef^[1]];
-                End;
-           End;
+     With ActiveCircuit[ActorID].solution Do
+     Case Connection of
+       0: Begin {wye - neutral is explicit}
+               Va := Csub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[Fnconds]]);
+          End;
+       1: Begin  {delta -- assume neutral is at zero}
+               Va := NodeV^[NodeRef^[1]];
+          End;
+     End;
 
-           E := Csub(Va, Cmul(Iterminal^[1], cmplx(StorageVars.Rthev, StorageVars.Xthev)));
-           StorageVars.Vthevharm := Cabs(E);   // establish base mag and angle
-           StorageVars.ThetaHarm := Cang(E);
-       End
-     ELSE
-       Begin
-           StorageVars.Vthevharm := 0.0;
-           StorageVars.ThetaHarm := 0.0;
-       End;
+     E := Csub(Va, Cmul(Iterminal^[1], cmplx(StorageVars.Rthev, StorageVars.Xthev)));
+     StorageVars.Vthevharm := Cabs(E);   // establish base mag and angle
+     StorageVars.ThetaHarm := Cang(E);
+
 End;
 
 
