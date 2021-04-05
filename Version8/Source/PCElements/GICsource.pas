@@ -1,7 +1,7 @@
 unit GICsource;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }

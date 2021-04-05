@@ -1011,6 +1011,7 @@ Begin
           130: If ActiveCircuit[ActiveActor].MarkPVSystems2  Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           131: if DSS_GIS_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           132: If ActiveCircuit[ActiveActor].MarkStorage2    Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          136: If UseMMF Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
          ELSE
            // Ignore excess parameters
          End;
