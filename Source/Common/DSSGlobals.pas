@@ -353,6 +353,9 @@ VAR
   GISColor                : String;
   GISCoords               : pDoubleArray;
 
+//*************** Load shapes memory mapped global variables********************
+  UseMMF                  : Boolean;
+
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
