@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 160;
+     NumExecCommands = 163;
 
 Var
 
@@ -211,6 +211,9 @@ Begin
      ExecCommand[158] := 'GISSelect';
      ExecCommand[159] := 'GISStopSelect';
      ExecCommand[160] := 'GISGetSelect';
+     ExecCommand[161] := 'GISDrawLines';
+     ExecCommand[162] := 'GISStopDraw';
+     ExecCommand[163] := 'GISGetPolyline';
 
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
@@ -774,6 +777,21 @@ Begin
                          '1. OpenDSS-GIS must be installed' + CRLF +
                          '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
                          '3. The model needs to have the correct GISCoords file';
+     CommandHelp[161] := 'Commands OpenDSS-GIS to start line drawing mode for allowing the user to draw a polyline over the map.' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
+     CommandHelp[162] := 'Stops the latest lien drawing mode in OpenDSS-GIS. Clears the map and stores the coordinates of the polyline drawn by the user (if any).' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
+     CommandHelp[163] := 'Requests the coordinates of the latest polyline drawn by the user to OpenDSS-GIS. The are returned in coordiante pairs (Longitude, latitude) in WGS84 coords format.' + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                         '3. The model needs to have the correct GISCoords file';
 End;
 
 //----------------------------------------------------------------------------
@@ -1185,6 +1203,9 @@ Begin
       158: GlobalResult :=  GISStartSelect();
       159: GlobalResult :=  GISStopSelect();
       160: GlobalResult :=  GISGetSelect();
+      161: GlobalResult :=  GISStartDrawLine();
+      162: GlobalResult :=  GISStopDrawLine();
+      163: GlobalResult :=  GISGetPolyline();
      ELSE
        // Ignore excess parameters
      End;
