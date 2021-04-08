@@ -44,6 +44,7 @@ implementation
 
 Uses DSSClassDefs, DSSGlobals, ExecCommands,
      ExecOptions, ShowOptions, PlotOptions,
+     GISCommands,
      ExportOptions, DSSClass;
 
 const TreeSep: String = '== classes ==';
@@ -263,6 +264,13 @@ begin
         Node1 := AddObject(nil, 'Plot' ,nil);
         FOR i := 1 to NumPlotOptions Do  Begin
             AddChildObject(Node1, PlotOption[i], @PlotHelp[i]);
+        End;
+        If rdoAlphabetical.Checked Then Node1.AlphaSort();
+
+      // Do GIS Options
+        Node1 := AddObject(nil, 'GIS' ,nil);
+        FOR i := 1 to NumGISOptions Do  Begin
+            AddChildObject(Node1, GISOption[i], @GISHelp[i]);
         End;
         If rdoAlphabetical.Checked Then Node1.AlphaSort();
 
