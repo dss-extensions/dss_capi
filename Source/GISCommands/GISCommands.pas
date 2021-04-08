@@ -1,8 +1,16 @@
 unit GISCommands;
 
+{
+  ----------------------------------------------------------
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+  All rights reserved.
+  ----------------------------------------------------------
+}
+
 interface
 
 uses
+  Command,
   Tlhelp32,
   DSSGlobals,
   Windows,
@@ -14,14 +22,20 @@ uses
   Line,
   Utilities,
   ArrayDef,
+  DSSForms,
+  ExecHelper,
 //   TCP Indy libraries
   IdBaseComponent,
   IdComponent,
   IdTCPConnection,
   IdTCPClient,
   IdThreadComponent,
-
   TCP_IP;
+
+CONST
+        NumGISOptions = 34;
+
+FUNCTION DoGISCmd:string;
 
 function start_openDSSGIS(): boolean;
 function show_busGIS(BusName   : string): string;
@@ -62,9 +76,379 @@ function GISGetPolyline(): string;
 var
   GISTCPClient          : TIdTCPClient;  // ... TIdThreadComponent
   GISThreadComponent    : TIdThreadComponent;
-  myCoords          : array of double;
+  myCoords              : array of double;
+  GISOption,
+  GISHelp               : Array[1..NumGISOptions] of String;
+  GISCommandList        : TCommandList;
 
 implementation
+
+PROCEDURE DefineOptions;
+
+Begin
+
+
+      GISOption[ 1] := 'Start';
+      GISOption[ 2] := 'ShowBus';
+      GISOption[ 3] := 'FindRoute';
+      GISOption[ 4] := 'GetRoute';
+      GISOption[ 5] := 'RouteDistance';
+      GISOption[ 6] := 'ShowRoute';
+      GISOption[ 7] := 'JSONRoute';
+      GISOption[ 8] := 'WindowDistribLR';
+      GISOption[ 9] := 'WindowDistribRL';
+      GISOption[10] := 'WindowSize';
+      GISOption[11] := 'PlotCircuit';
+      GISOption[12] := 'showLine';
+      GISOption[13] := 'ExportMap';
+      GISOption[14] := 'FindTrees';
+      GISOption[15] := 'MapView';
+      GISOption[16] := 'ClearMap';
+      GISOption[17] := 'DrawLine';
+      GISOption[18] := 'ZoomMap';
+      GISOption[19] := 'PlotFile';
+      GISOption[20] := 'GoTo';
+      GISOption[21] := 'PlotPoints';
+      GISOption[22] := 'PlotPoint';
+      GISOption[23] := 'LoadBus';
+      GISOption[24] := 'ShowCoords';
+      GISOption[25] := 'Format';
+      GISOption[26] := 'BatchFormat';
+      GISOption[27] := 'Close';
+      GISOption[28] := 'Distance';
+      GISOption[29] := 'Select';
+      GISOption[30] := 'StopSelect';
+      GISOption[31] := 'GetSelect';
+      GISOption[32] := 'DrawLines';
+      GISOption[33] := 'StopDraw';
+      GISOption[34] := 'GetPolyline';
+
+
+       GISHelp[1] := 'Starts OpenDSS-GIS only if it is installed in the local machine';
+       GISHelp[2] := 'Shows the bus specified on the map, however, the following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[3] := 'Finds a route between the given buses using roads and geographical information. The buses are described as an array' +
+                           ' as follows: GISFindRoute [b1 b2], do not include phases. The following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[4] := 'Returns the GIS coords of the route between 2 buses step by step, however, the following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
+                           '4. The model needs to have the correct GISCoords file';
+       GISHelp[5] := 'Returns the distance (value units) of the last route calculated between 2 buses, however, the following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
+                           '4. The model needs to have the correct GISCoords file';
+       GISHelp[6] := 'Shows the last route calculated between 2 buses in OpenDSS-GIS, however, the following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
+                           '4. The model needs to have the correct GISCoords file';
+       GISHelp[7] := 'Returns the JSON script describing the last route calculated between 2 buses, however, the following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
+                           '4. The model needs to have the correct GISCoords file';
+       GISHelp[8] := 'Redistributes the windows horizontally leaving OpenDSS to the left of the screen and OpenDSS-GIS to the right, however, the following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)';
+       GISHelp[9] := 'Redistributes the windows horizontally leaving OpenDSS to the right of the screen and OpenDSS-GIS to the left, however, the following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)';
+       GISHelp[10] := 'Resizes the OpenDSS-GIS window, the coordiantes need to be given as: Left, Top, Right, Bottom. For example:'+CRLF+CRLF+
+                           'GISWindowSize 0 0 800 800' + CRLF + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)';
+       GISHelp[11] := 'Draws the circuit on top of the map displayed in OpenDSS-GIS. The following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[12] := 'Shows the line specified int he argument using OpenDSS-GIS. The following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[13] := 'Exports the current map view into the models folder as a PNG file. The following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[14] := 'Returns Tree/No tree if a tree intersects with the line given in the argument. The following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[15] := 'Chenges the map view in OpenDSS-GIS using one of the following arguments:' + CRLF + CRLF +
+                           '- Streets' +  CRLF +
+                           '- StreetsVector' +  CRLF +
+                           '- StreetsNight' +  CRLF +
+                           '- Satellite' +  CRLF +
+                           '- SatelliteLabels' +  CRLF +
+                           '- SatelliteLabelsVector' +  CRLF +
+                           '- DarkGrayCanvas' +  CRLF +
+                           '- LightGrayCanvas' +  CRLF +
+                           '- LightGrayCanvasVector' +  CRLF +
+                           '- Navigation' +  CRLF +
+                           '- OpenStreetMap' +  CRLF + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[16] := 'Clears the Map by removing all the previous draws. The following conditions need to be fulfilled:' + CRLF +
+                           CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[17] := 'Draws a line at the given coordinates using the color and thickness (pix) specified.' + CRLF +
+                           'The line features can be defined using GISCoords, GISColor and GISThickness from the exective options.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[18] := 'Zooms the map at the area specified at GISCoords.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[19] := 'Plots the content of the file specified in the argument on top of the current map.' + CRLF +
+                           'With this function it is expected that the content of the file describes lines, their color and thickness.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[20] := 'Shows the location  in the map at given the coordinates.' +
+                           'The coordiantes must be defined using GISCoords.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)';
+       GISHelp[21] := 'Plots the content of the file specified in the argument on top of the current map.' + CRLF +
+                           'This function plots the content as points, the point shape, color and size must be specified in the file.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[22] := 'plots the shape specified in the argument in the map at given the coordinates.' +
+                           'The coordiantes must be defined using GISCoords, the size and color can be specified through the options GISColor and GISThickness.' + CRLF +
+                           'The shape can be one fo the following:' + CRLF + CRLF +
+                           '  Circle' + CRLF +
+                           '  + ' + CRLF +
+                           '  Diamond' + CRLF +
+                           '  Square' + CRLF +
+                           '  Triangle' + CRLF +
+                           '  x' + CRLF + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)';
+       GISHelp[23] := 'Uploads the coordinates of the bus specified in the argument to the coordinates buffer by pushing the previous down.' +
+                           ' The coordinates buffer has 4 positions, the coordinates of the bus specified will be at the first 2 positions.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[24] := 'Returns the content of the coordinates buffer.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[25] := 'Formats the coordinates located at the first 2 places of the coordiantes buffer. The first argument indicates ' +
+                           'the original format and the second argument the destination format. The format can be one of the following:' + CRLF + CRLF +
+                           '- LatLong (latitude, Longitude - WGS84))' + CRLF +
+                           '- DMS (Degrees, minutes, seconds) ' + CRLF +
+                           '- UTM (Universal Transverse Mercator)' + CRLF +
+                           '- USNG' + CRLF + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[26] := 'Formats the coordinates within the file specified. The first argument indicates ' +
+                           'the original format and the second argument the destination format. The third argument is the path to the source file' +
+                           ' containing the coordinates, which should be organized in 2 columns comma separated. The format can be one of the following:' + CRLF + CRLF +
+                           '- LatLong (latitude, Longitude - WGS84))' + CRLF +
+                           '- DMS (Degrees, minutes, seconds) ' + CRLF +
+                           '- UTM (Universal Transverse Mercator)' + CRLF +
+                           '- USNG' + CRLF + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[27] := 'Closses all the instances of OpenDSS-GIS';
+       GISHelp[28] := 'Returns the distance in meters between the coordinates in the buffer.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[29] := 'Commands OpenDSS-GIS to start the selection mode for allowing users to draw an area on the map.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[30] := 'Stops the latest select command sent to OpenDSS-GIS. Clears the map from selections and stores the selection coords in OpenDSS-GIS.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[31] := 'Requests the boundaries of the latest selection. The boundaties are returned as XMin, YMin, XMax and YMax in WGS84 coords format.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[32] := 'Commands OpenDSS-GIS to start line drawing mode for allowing the user to draw a polyline over the map.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[33] := 'Stops the latest lien drawing mode in OpenDSS-GIS. Clears the map and stores the coordinates of the polyline drawn by the user (if any).' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+       GISHelp[34] := 'Requests the coordinates of the latest polyline drawn by the user to OpenDSS-GIS. The are returned in coordiante pairs (Longitude, latitude) in WGS84 coords format.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
+
+End;
+
+FUNCTION DoGISCmd:string;
+Var
+
+  formatFrom,
+  formatto,
+  ParamName,
+  Param          : String;
+  ParamPointer,
+  i              : Integer;
+  DblBuffer      : Array[0..50] of Double;
+
+Begin
+
+  {Get next parameter on command line}
+  Result        :=  'Unknown GIS command;';
+  ParamPointer  := 0;
+  ParamName     := Uppercase(Parser[ActiveActor].NextParam);
+  Param         := Uppercase(Parser[ActiveActor].StrValue);
+  {Interpret Parameter}
+  IF   (Length(Param) <> 0)  THEN
+  begin
+     ParamPointer := GISCommandList.Getcommand (Param);
+
+    {Check options requiring a solution and abort if no solution or circuit}
+     CASE ParamPointer of
+      1:  if start_openDSSGIS() then Result  :=  'GIS Started succesfully' else Result :=  'Error, check if OpenDSS-GIS is running and your firewall setup';
+      2:  begin
+            Parser[ActiveActor].NextParam;
+            Result  :=  show_busGIS(Parser[ActiveActor].StrValue);
+          end;
+      3:  Result  :=  Get_routeGIS();
+      4:  Result  :=  Get_edgesGIS();
+      5:  Result  :=  Get_distanceGIS();
+      6:  Result  :=  Show_routeGIS();
+      7:  Result  :=  Get_JSONrouteGIS();
+      8:  begin
+            if Not isDLL then
+            Begin
+              Result  := WindowLR();
+              ControlPanel.ResizeWindow(0);
+            end
+            else
+              Result  :=  'Available only for the EXE interface'
+          End;
+      9:  Begin
+            if Not IsDLL then
+            begin
+              Result  :=  WindowRL();
+              ControlPanel.ResizeWindow(1);
+            end
+            else
+              Result  :=  'Available only for the EXE interface'
+          End;
+      10: Begin
+            Result  :=  ReSizeWindow();
+          End;
+      11: Result   :=  GISDrawCircuit;           // Draws the circuit on top of the map in DSS-GIS
+      12: begin
+            Parser[ActiveActor].NextParam;
+            Result  :=  show_lineGIS(Parser[ActiveActor].StrValue);
+          end;
+      13: Result   :=  export_mapGIS();           // exports the current map view into the model's folder
+      14: begin
+           Parser[ActiveActor].NextParam;
+            Result  :=  find_treesGIS(Parser[ActiveActor].StrValue);
+          end;
+      15: begin
+            Parser[ActiveActor].NextParam;
+            Result  :=  set_map_View(lowercase(Parser[ActiveActor].StrValue));
+          end;
+      16: Result  :=  clear_map();
+      17: Result  :=  Draw_line_GIS();
+      18: Result  :=  Zoom_area_GIS();
+      19: begin
+            Parser[ActiveActor].NextParam;
+            Result  :=  GISPlotfile(lowercase(Parser[ActiveActor].StrValue));
+          end;
+      20: Begin
+            Result  :=  show_LatLong();
+          end;
+      21: begin
+            Parser[ActiveActor].NextParam;
+            Result  :=  GISPlotPoints(lowercase(Parser[ActiveActor].StrValue));
+          end;
+      22: begin
+            Parser[ActiveActor].NextParam;
+            Result  :=  GISPlotPoint(lowercase(Parser[ActiveActor].StrValue));
+          end;
+      23: begin
+            Parser[ActiveActor].NextParam;
+            Result  :=  GISLoadBus(lowercase(Parser[ActiveActor].StrValue));
+          end;
+      24: begin
+            Result  :=  GISShowBuffer();
+          end;
+      25: begin
+            Parser[ActiveActor].NextParam;
+            FormatFrom :=  lowercase(Parser[ActiveActor].StrValue);
+            Parser[ActiveActor].NextParam;
+            FormatTo :=  lowercase(Parser[ActiveActor].StrValue);
+            Parser[ActiveActor].NextParam;
+            Result  :=  GISFormat(FormatFrom,FormatTo,Parser[ActiveActor].StrValue);
+          end;
+      26: begin
+            Parser[ActiveActor].NextParam;
+            FormatFrom :=  lowercase(Parser[ActiveActor].StrValue);
+            Parser[ActiveActor].NextParam;
+            FormatTo :=  lowercase(Parser[ActiveActor].StrValue);
+            Parser[ActiveActor].NextParam;
+            Result  :=  GISBatchFormat(FormatFrom,FormatTo,Parser[ActiveActor].StrValue);
+          end;
+      27: Result :=  GISClose();
+      28: Result :=  Get_distance();
+      29: Result :=  GISStartSelect();
+      30: Result :=  GISStopSelect();
+      31: Result :=  GISGetSelect();
+      32: Result :=  GISStartDrawLine();
+      33: Result :=  GISStopDrawLine();
+      34: Result :=  GISGetPolyline();
+      else
+     END;
+  end;
+End;
 
 {*******************************************************************************
 *             Starts openDSS-GIS and gets connected as client                  *
@@ -1357,5 +1741,28 @@ begin
   End;
 
 end;
+
+Procedure DisposeStrings;
+Var i:Integer;
+
+Begin
+    For i := 1 to NumGISOptions Do Begin
+       GISOption[i] := '';
+       GISHelp[i]   := '';
+   End;
+
+End;
+
+Initialization
+
+    DefineOptions;
+
+    GISCommandList := TCommandList.Create(GISOption);
+    GISCommandList.Abbrev := True;
+
+Finalization
+
+    DisposeStrings;
+    GISCommandList.Free;
 
 end.
