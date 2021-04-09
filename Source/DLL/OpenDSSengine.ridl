@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 4/8/2021 9:30:18 PM (- $Rev: 12980 $, 45861625).
+// File generated on 4/8/2021 11:57:35 PM (- $Rev: 12980 $, 54698562).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -3117,6 +3117,32 @@ library OpenDSSengine
   {
     [propget, id(0x000000C9), helpstring("Vairant array of strings with all Storage element names")]
     HRESULT _stdcall AllNames([out, retval] VARIANT* Value);
+    [propget, id(0x000000CA), helpstring("Variant Array of Storage element energy meter register names")]
+    HRESULT _stdcall RegisterNames([out, retval] VARIANT* Value);
+    [propget, id(0x000000CB), helpstring("Variant array of doubles containing values in Storage Elementregisters.")]
+    HRESULT _stdcall RegisterValues([out, retval] VARIANT* Value);
+    [propget, id(0x000000CC), helpstring("Set first Storage element active; returns 0 if none.")]
+    HRESULT _stdcall First([out, retval] long* Value);
+    [propget, id(0x000000CD), helpstring("Sets next Storageelement active; returns 0 if no more.")]
+    HRESULT _stdcall Next([out, retval] long* Value);
+    [propget, id(0x000000CE), helpstring("Number of Storage Elements")]
+    HRESULT _stdcall Count([out, retval] long* Value);
+    [propget, id(0x000000CF), helpstring("Get/Set Active Storage element by index:  1.. Count")]
+    HRESULT _stdcall idx([out, retval] long* Value);
+    [propput, id(0x000000CF), helpstring("Get/Set Active Storage element by index:  1.. Count")]
+    HRESULT _stdcall idx([in] long Value);
+    [propget, id(0x000000D0), helpstring("Name of active Storage element")]
+    HRESULT _stdcall Name([out, retval] BSTR* Value);
+    [propput, id(0x000000D0), helpstring("Name of active Storage element")]
+    HRESULT _stdcall Name([in] BSTR Value);
+    [propget, id(0x000000D1), helpstring("Get/set state: 0=Idling; 1=Discharging; -1=Charging;")]
+    HRESULT _stdcall State([out, retval] long* Value);
+    [propput, id(0x000000D1), helpstring("Get/set state: 0=Idling; 1=Discharging; -1=Charging;")]
+    HRESULT _stdcall State([in] long Value);
+    [propget, id(0x000000D2), helpstring("Per unit state of charge")]
+    HRESULT _stdcall puSOC([out, retval] double* Value);
+    [propput, id(0x000000D2), helpstring("Per unit state of charge")]
+    HRESULT _stdcall puSOC([in] double Value);
   };
 
   [
