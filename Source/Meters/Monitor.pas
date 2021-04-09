@@ -642,7 +642,7 @@ Begin
                           End;
                    end;
                 7: begin                                                // Checking if the element is a storage device
-                          If ((MeteredElement.DSSObjType And CLASSMASK) <> STORAGE_ELEMENT) and ((MeteredElement.DSSObjType And CLASSMASK) <> STORAGE2_ELEMENT)  Then Begin
+                          If ((MeteredElement.DSSObjType And CLASSMASK) <> STORAGE_ELEMENT) {and ((MeteredElement.DSSObjType And CLASSMASK) <> STORAGE2_ELEMENT)}  Then Begin
                             DoSimpleMsg(MeteredElement.Name + ' is not a storage device!', 2016002);
                             Exit;
                           End;
@@ -1256,7 +1256,7 @@ Begin
                   AddDblToBuffer(((StorageVars.kWhStored)/(StorageVars.kWhRating))*100);
                   AddDblToBuffer(StorageState);
                 End;
-              End
+              {End
               Else if (MeteredElement.DSSObjType And CLASSMASK) = STORAGE2_ELEMENT Then Begin   // Storage2 Element
                 With TStorageObj(MeteredElement) Do Begin
                   AddDblToBuffer(PresentkW);
@@ -1264,7 +1264,7 @@ Begin
                   AddDblToBuffer(StorageVars.kWhStored);
                   AddDblToBuffer(((StorageVars.kWhStored)/(StorageVars.kWhRating))*100);
                   AddDblToBuffer(StorageState);
-                End;
+                End; }
               End;
               Exit;  // Done with this mode now.
         End;

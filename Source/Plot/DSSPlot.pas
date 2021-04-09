@@ -65,9 +65,9 @@ Type
       procedure MarkTheCapacitors;
       procedure MarkTheRegulators;
       procedure MarkThePVSystems;
-      procedure MarkThePVSystems2;
+      // procedure MarkThePVSystems2;
       procedure MarkTheStorage;
-      procedure MarkTheStorage2;
+      // procedure MarkTheStorage2;
       procedure MarkTheFuses;
       procedure MarkTheReclosers;
       procedure MarkTheRelays;
@@ -2998,9 +2998,9 @@ begin
      If ActiveCircuit[ActiveActor].MarkCapacitors   Then MarkTheCapacitors;
      If ActiveCircuit[ActiveActor].MarkRegulators   Then MarkTheRegulators;
      If ActiveCircuit[ActiveActor].MarkPVSystems    Then MarkThePVSystems;
-     If ActiveCircuit[ActiveActor].MarkPVSystems2   Then MarkThePVSystems2;
+    // If ActiveCircuit[ActiveActor].MarkPVSystems2   Then MarkThePVSystems2;
      If ActiveCircuit[ActiveActor].MarkStorage      Then MarkTheStorage;
-     If ActiveCircuit[ActiveActor].MarkStorage2     Then MarkTheStorage2;
+     // If ActiveCircuit[ActiveActor].MarkStorage2     Then MarkTheStorage2;
      If ActiveCircuit[ActiveActor].MarkFuses        Then MarkTheFuses;
      If ActiveCircuit[ActiveActor].MarkReclosers    Then MarkTheReclosers;
      If ActiveCircuit[ActiveActor].MarkRelays       Then MarkTheRelays;
@@ -3188,6 +3188,7 @@ begin
    End;
 end;
 
+(*
 procedure TDSSPlot.MarkThePVSystems2;
 Var
      pPVSystem:TPVSystemObj;
@@ -3213,6 +3214,7 @@ begin
       pPVSystem := ActiveCircuit[ActiveActor].PVSystems.Next;
    End;
 end;
+*)
 
 procedure TDSSPlot.MarkTheStorage;
 Var
@@ -3240,6 +3242,7 @@ begin
    End;
 end;
 
+(*
 procedure TDSSPlot.MarkTheStorage2;
 Var
      pStorage2:TStorageObj;
@@ -3265,6 +3268,7 @@ begin
       pStorage2 := ActiveCircuit[ActiveActor].Storage2Elements.Next;
    End;
 end;
+*)
 
 procedure TDSSPlot.MarkTheRegulators;
 Var

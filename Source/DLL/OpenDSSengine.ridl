@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 3/29/2021 12:15:43 PM (- $Rev: 12980 $, 10861031).
+// File generated on 4/8/2021 9:30:18 PM (- $Rev: 12980 $, 45861625).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -107,6 +107,8 @@ library OpenDSSengine
   coclass GICSources;
   interface IReduceCkt;
   coclass ReduceCkt;
+  interface IStorages;
+  coclass Storages;
 
 
   [
@@ -3106,6 +3108,18 @@ library OpenDSSengine
   };
 
   [
+    uuid(36049833-30B6-415A-992A-63CDD6CAE432),
+    helpstring("Dispatch interface for Storages Object"),
+    dual,
+    oleautomation
+  ]
+  interface IStorages: IDispatch
+  {
+    [propget, id(0x000000C9), helpstring("Vairant array of strings with all Storage element names")]
+    HRESULT _stdcall AllNames([out, retval] VARIANT* Value);
+  };
+
+  [
     uuid(AE501F77-F7F0-4201-A9AD-6AB385262203),
     helpstring("Events interface for DSSEvents Object")
   ]
@@ -3531,6 +3545,15 @@ library OpenDSSengine
   coclass ReduceCkt
   {
     [default] interface IReduceCkt;
+  };
+
+  [
+    uuid(E9322B91-C7CA-4573-803E-90AC4B4B1AA0),
+    helpstring("Storages Object")
+  ]
+  coclass Storages
+  {
+    [default] interface IStorages;
   };
 
 };
