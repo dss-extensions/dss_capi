@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 98336 $
-// File generated on 4/8/2021 9:24:49 PM from Type Library described below.
+// File generated on 4/8/2021 11:57:28 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\Users\prdu001\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
@@ -3916,7 +3916,29 @@ type
   IStorages = interface(IDispatch)
     ['{36049833-30B6-415A-992A-63CDD6CAE432}']
     function Get_AllNames: OleVariant; safecall;
+    function Get_RegisterNames: OleVariant; safecall;
+    function Get_RegisterValues: OleVariant; safecall;
+    function Get_First: Integer; safecall;
+    function Get_Next: Integer; safecall;
+    function Get_Count: Integer; safecall;
+    function Get_idx: Integer; safecall;
+    procedure Set_idx(Value: Integer); safecall;
+    function Get_Name: WideString; safecall;
+    procedure Set_Name(const Value: WideString); safecall;
+    function Get_State: Integer; safecall;
+    procedure Set_State(Value: Integer); safecall;
+    function Get_puSOC: Double; safecall;
+    procedure Set_puSOC(Value: Double); safecall;
     property AllNames: OleVariant read Get_AllNames;
+    property RegisterNames: OleVariant read Get_RegisterNames;
+    property RegisterValues: OleVariant read Get_RegisterValues;
+    property First: Integer read Get_First;
+    property Next: Integer read Get_Next;
+    property Count: Integer read Get_Count;
+    property idx: Integer read Get_idx write Set_idx;
+    property Name: WideString read Get_Name write Set_Name;
+    property State: Integer read Get_State write Set_State;
+    property puSOC: Double read Get_puSOC write Set_puSOC;
   end;
 
 // *********************************************************************//
@@ -3927,6 +3949,15 @@ type
   IStoragesDisp = dispinterface
     ['{36049833-30B6-415A-992A-63CDD6CAE432}']
     property AllNames: OleVariant readonly dispid 201;
+    property RegisterNames: OleVariant readonly dispid 202;
+    property RegisterValues: OleVariant readonly dispid 203;
+    property First: Integer readonly dispid 204;
+    property Next: Integer readonly dispid 205;
+    property Count: Integer readonly dispid 206;
+    property idx: Integer dispid 207;
+    property Name: WideString dispid 208;
+    property State: Integer dispid 209;
+    property puSOC: Double dispid 210;
   end;
 
 // *********************************************************************//
