@@ -70,8 +70,8 @@ CONST
       FMON_ELEMENT = 38*8;                        {BY Dahei UCF}
       Generic5OrderMach_ELEMENT = 39 * 8;         {BY Dahei UCF}
       INV_CONTROL2      = 40 * 8;
-      STORAGE2_ELEMENT  = 41 * 8;
-      STORAGE2_CONTROL  = 42 * 8;
+    //  STORAGE2_ELEMENT  = 41 * 8;
+    //  STORAGE2_CONTROL  = 42 * 8;
       WINDGEN_ELEMENT   = 43 * 8;
 VAR
    NumIntrinsicClasses,

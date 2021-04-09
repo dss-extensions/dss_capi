@@ -235,7 +235,8 @@ uses
   StdMessage in '..\Forms\StdMessage.pas' {myStdMsg},
   WindGen in '..\PCElements\WindGen.pas',
   WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
-  WindGenVars in '..\PCElements\WindGenVars.pas';
+  WindGenVars in '..\PCElements\WindGenVars.pas',
+  ImplStorages in 'ImplStorages.pas' {Storages: CoClass};
 
 exports
   DllGetClassObject,

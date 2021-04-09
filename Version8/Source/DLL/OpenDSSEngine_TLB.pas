@@ -12,10 +12,10 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 98336 $
-// File generated on 2/26/2021 6:09:00 PM from Type Library described below.
+// File generated on 4/8/2021 9:24:49 PM from Type Library described below.
 
 // ************************************************************************  //
-// Type Lib: C:\Projects\OpenDSS\OpenDSS-Official\Version8\Source\DLL\OpenDSSengine (1)
+// Type Lib: C:\Users\prdu001\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
 // LIBID: {8BFDE413-245A-4514-B151-B16DCC243796}
 // LCID: 0
 // Helpfile:
@@ -139,6 +139,8 @@ const
   CLASS_GICSources: TGUID = '{D0D4455C-A5CA-4B26-ABB4-2CC3798D260E}';
   IID_IReduceCkt: TGUID = '{02386435-8D77-4804-8ADB-89DDFBBE2BC0}';
   CLASS_ReduceCkt: TGUID = '{553148EA-97CB-4559-933A-A734250E95C6}';
+  IID_IStorages: TGUID = '{36049833-30B6-415A-992A-63CDD6CAE432}';
+  CLASS_Storages: TGUID = '{E9322B91-C7CA-4573-803E-90AC4B4B1AA0}';
 
 // *********************************************************************//
 // Declaration of Enumerations defined in Type Library
@@ -347,6 +349,8 @@ type
   IGICSourcesDisp = dispinterface;
   IReduceCkt = interface;
   IReduceCktDisp = dispinterface;
+  IStorages = interface;
+  IStoragesDisp = dispinterface;
 
 // *********************************************************************//
 // Declaration of CoClasses defined in Type Library
@@ -395,6 +399,7 @@ type
   LineCodes = ILineCodes;
   GICSources = IGICSources;
   ReduceCkt = IReduceCkt;
+  Storages = IStorages;
 
 
 // *********************************************************************//
@@ -3904,6 +3909,27 @@ type
   end;
 
 // *********************************************************************//
+// Interface: IStorages
+// Flags:     (4416) Dual OleAutomation Dispatchable
+// GUID:      {36049833-30B6-415A-992A-63CDD6CAE432}
+// *********************************************************************//
+  IStorages = interface(IDispatch)
+    ['{36049833-30B6-415A-992A-63CDD6CAE432}']
+    function Get_AllNames: OleVariant; safecall;
+    property AllNames: OleVariant read Get_AllNames;
+  end;
+
+// *********************************************************************//
+// DispIntf:  IStoragesDisp
+// Flags:     (4416) Dual OleAutomation Dispatchable
+// GUID:      {36049833-30B6-415A-992A-63CDD6CAE432}
+// *********************************************************************//
+  IStoragesDisp = dispinterface
+    ['{36049833-30B6-415A-992A-63CDD6CAE432}']
+    property AllNames: OleVariant readonly dispid 201;
+  end;
+
+// *********************************************************************//
 // The Class CoText provides a Create and CreateRemote method to
 // create instances of the default interface IText exposed by
 // the CoClass Text. The functions are intended to be used by
@@ -4419,6 +4445,18 @@ type
     class function CreateRemote(const MachineName: string): IReduceCkt;
   end;
 
+// *********************************************************************//
+// The Class CoStorages provides a Create and CreateRemote method to
+// create instances of the default interface IStorages exposed by
+// the CoClass Storages. The functions are intended to be used by
+// clients wishing to automate the CoClass objects exposed by the
+// server of this typelibrary.
+// *********************************************************************//
+  CoStorages = class
+    class function Create: IStorages;
+    class function CreateRemote(const MachineName: string): IStorages;
+  end;
+
 implementation
 
 uses System.Win.ComObj;
@@ -4851,6 +4889,16 @@ end;
 class function CoReduceCkt.CreateRemote(const MachineName: string): IReduceCkt;
 begin
   Result := CreateRemoteComObject(MachineName, CLASS_ReduceCkt) as IReduceCkt;
+end;
+
+class function CoStorages.Create: IStorages;
+begin
+  Result := CreateComObject(CLASS_Storages) as IStorages;
+end;
+
+class function CoStorages.CreateRemote(const MachineName: string): IStorages;
+begin
+  Result := CreateRemoteComObject(MachineName, CLASS_Storages) as IStorages;
 end;
 
 end.

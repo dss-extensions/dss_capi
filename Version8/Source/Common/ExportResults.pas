@@ -2060,7 +2060,7 @@ Begin
 End;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteMultiplePVSystem2MeterFiles;
+(*Procedure WriteMultiplePVSystem2MeterFiles;
 
 Var
    F  :TextFile;
@@ -2113,7 +2113,7 @@ Begin
      End;
 
 End;
-
+*)
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Procedure WriteSinglePVSystemMeterFile(FileNm:String);
 
@@ -2329,6 +2329,7 @@ Begin
 
 End;
 
+(*
 Procedure WriteMultipleStorage2MeterFiles;
 
 Var
@@ -2382,6 +2383,7 @@ Begin
      End;
 
 End;
+*)
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Procedure WriteSingleStorageMeterFile(FileNm:String);
@@ -2463,6 +2465,7 @@ Begin
 
 End;
 
+(*
 Procedure WriteSingleStorage2MeterFile(FileNm:String);
 
 Var
@@ -2541,7 +2544,7 @@ Begin
 
 
 End;
-
+ *)
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Procedure ExportGenMeters(FileNm:String);
