@@ -1,7 +1,7 @@
 unit LoadShape;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -44,13 +44,14 @@ Interface
  }
 
 USES
-   Command, DSSClass, DSSObject, UcMatrix, ucomplex, Arraydef;
+   Command, DSSClass, DSSObject, UcMatrix, ucomplex, Arraydef, Windows;
 
 
 TYPE
 
    TLoadShape = class(TDSSClass)
      private
+
 
        Function Get_Code:String;  // Returns active LoadShape string
        Procedure Set_Code(const Value:String);  // sets the  active LoadShape
@@ -73,7 +74,7 @@ TYPE
        Function Find(const ObjName:String):Pointer; override;  // Find an obj of this class by name
 
        Procedure TOPExport(ObjName:String);
-
+       function CreateMMF(const S: String; Destination : Integer): integer;
        // Set this property to point ActiveLoadShapeObj to the right value
        Property Code:String Read Get_Code  Write Set_Code;
 
@@ -120,15 +121,45 @@ TYPE
         Enabled,
         UseActual           : Boolean;
 
+        {***********************************************************************
+        *                    Memory mapping variables                          *
+        ************************************************************************}
+
+        IsPQ,                                     // To indicate that the file has P and Q (PQCSVFile)
+        UseMMF              : Boolean;            // Flag to indicated that the user wants to use MMF
+        myMMF,                                    // Handle for the memory map (P)
+        myFile,                                   // Handle for the file to be mapped (P)
+        myQMMF,                                   // Handle for the memory map (Q)
+        myQFile             : THandle;            // Handle for the file to be mapped (Q)
+        myFileSizeQ,                              // File size of the file opened (P)
+        myFileSize          : Cardinal;           // File size of the file opened (P)
+        myFileCmdQ,
+        myFileCmd           : String;             // The file definition added by the user (for moving the data window)
+        myViewQ,                                  // Current view of the file mapped (Bytes - Q)
+        myView              : pByte;              // Current view of the file mapped (Bytes - P)
+        myFileType,                               // The file type (P)
+        myFileTypeQ,                              // The file type (Q)
+        myColumn,                                 // The column to read (P)
+        myColumnQ,                                // The column to read (Q)
+        myLineLen,                                // The size of the char line (P)
+        myLineLenQ,                               // The size of the char line (Q)
+        myDataSize,                               // The total data size expected (P)
+        myDataSizeQ,                              // The total data size expected (Q)
+        MyViewLenQ,                               // Memory View size in bytes (Q)
+        MyViewLen           : Integer;            // Memory View size in bytes (P)
+
+        //**********************************************************************
 
         constructor Create(ParClass:TDSSClass; const LoadShapeName:String);
         destructor  Destroy; override;
 
-        Function  GetMult(hr:double):Complex;  // Get multiplier at specified time
-        Function  Mult(i:Integer):Double;  // get multiplier by index
-        Function  Hour(i:Integer):Double;  // get hour corresponding to point index
+        Function  GetMult(hr:double):Complex;           // Get multiplier at specified time
+        Function  Mult(i:Integer):Double;               // get multiplier by index
+        Function  Hour(i:Integer):Double;               // get hour corresponding to point index
         Procedure Normalize;
-
+        // Loads the current view of the MMF into memory for further use
+        Procedure LoadMMFView(const Parmname : string; MMF: THandle; Destination : Integer);
+        procedure LoadFileFeatures(ShapeType : Integer);
 
 
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
@@ -139,6 +170,7 @@ TYPE
         Property PresentInterval :Double Read Get_Interval;
         Property Mean :Double   Read Get_Mean Write Set_Mean;
         Property StdDev :Double  Read Get_StdDev Write Set_StdDev;
+
         {Property FirstMult :Double Read Get_FirstMult;}
         {Property NextMult  :Double Read Get_NextMult;}
 
@@ -151,7 +183,7 @@ implementation
 
 USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils,  MathUtil, Utilities, Classes, TOPExport, Math, PointerList;
 
-Const NumPropsThisClass = 20;
+Const NumPropsThisClass = 21;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLoadShape.Create;  // Creates superstructure for all Line objects
@@ -164,7 +196,7 @@ BEGIN
 
      DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+          CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
 END;
 
@@ -185,26 +217,27 @@ Begin
 
 
      // Define Property names
-     PropertyName[1] := 'npts';     // Number of points to expect
-     PropertyName[2] := 'interval'; // default = 1.0;
-     PropertyName[3] := 'mult';     // vector of power multiplier values
-     PropertyName[4] := 'hour';     // vextor of hour values
-     PropertyName[5] := 'mean';     // set the mean (otherwise computed)
-     PropertyName[6] := 'stddev';   // set the std dev (otherwise computed)
-     PropertyName[7] := 'csvfile';  // Switch input to a csvfile
-     PropertyName[8] := 'sngfile';  // switch input to a binary file of singles
-     PropertyName[9] := 'dblfile';  // switch input to a binary file of singles
-     PropertyName[10] := 'action';  // actions  Normalize
-     PropertyName[11] := 'qmult';   // Q multiplier
-     PropertyName[12] := 'UseActual'; // Flag to signify to use actual value
-     PropertyName[13] := 'Pmax'; // MaxP value
-     PropertyName[14] := 'Qmax'; // MaxQ
-     PropertyName[15] := 'sinterval'; // Interval in seconds
-     PropertyName[16] := 'minterval'; // Interval in minutes
-     PropertyName[17] := 'Pbase'; // for normalization, use peak if 0
-     PropertyName[18] := 'Qbase'; // for normalization, use peak if 0
-     PropertyName[19] := 'Pmult'; // synonym for Mult
-     PropertyName[20] := 'PQCSVFile'; // Redirect to a file with p, q pairs
+     PropertyName[1] := 'npts';           // Number of points to expect
+     PropertyName[2] := 'interval';       // default = 1.0;
+     PropertyName[3] := 'mult';           // vector of power multiplier values
+     PropertyName[4] := 'hour';           // vextor of hour values
+     PropertyName[5] := 'mean';           // set the mean (otherwise computed)
+     PropertyName[6] := 'stddev';         // set the std dev (otherwise computed)
+     PropertyName[7] := 'csvfile';        // Switch input to a csvfile
+     PropertyName[8] := 'sngfile';        // switch input to a binary file of singles
+     PropertyName[9] := 'dblfile';        // switch input to a binary file of singles
+     PropertyName[10] := 'action';        // actions  Normalize
+     PropertyName[11] := 'qmult';         // Q multiplier
+     PropertyName[12] := 'UseActual';     // Flag to signify to use actual value
+     PropertyName[13] := 'Pmax';          // MaxP value
+     PropertyName[14] := 'Qmax';          // MaxQ
+     PropertyName[15] := 'sinterval';     // Interval in seconds
+     PropertyName[16] := 'minterval';     // Interval in minutes
+     PropertyName[17] := 'Pbase';         // for normalization, use peak if 0
+     PropertyName[18] := 'Qbase';         // for normalization, use peak if 0
+     PropertyName[19] := 'Pmult';         // synonym for Mult
+     PropertyName[20] := 'PQCSVFile';     // Redirect to a file with p, q pairs
+     PropertyName[21] := 'MemoryMapping'; // Enable/disable using Memory mapping for this shape
 
      // define Property help values
 
@@ -268,6 +301,8 @@ Begin
      PropertyHelp[19] := 'Synonym for "mult".';
      PropertyHelp[20] := 'Switch input to a CSV text file containing (active, reactive) power (P, Q) multiplier pairs, one per row. '+CRLF+
                          'If the interval=0, there should be 3 items on each line: (hour, Pmult, Qmult)';
+     PropertyHelp[21] := '{Yes | No* | True | False*} Enables the memory mapping functionality for dealing with large amounts of load shapes. '+CRLF+
+                         'By defaul is False. Use it to accelerate the model loading when the containing a large number of load shapes.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -277,21 +312,189 @@ End;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Function TLoadShape.NewObject(const ObjName:String):Integer;
 BEGIN
-   // create a new object of this class and add to list
-   With ActiveCircuit[ActiveActor] Do
-   Begin
-    ActiveDSSObject[ActiveActor] := TLoadShapeObj.Create(Self, ObjName);
-    Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
-   End;
+  // create a new object of this class and add to list
+  With ActiveCircuit[ActiveActor] Do
+  Begin
+  ActiveDSSObject[ActiveActor] := TLoadShapeObj.Create(Self, ObjName);
+  Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
+  End;
 END;
+
+
+{*******************************************************************************
+*      Loads the mapped file features into local variables for further use     *
+********************************************************************************}
+Procedure TLoadShapeObj.LoadFileFeatures(ShapeType : Integer);
+VAR
+  LocalCol,
+  myType    : Integer;
+  ParmName,
+  Param     : String;
+BEGIN
+
+  AuxParser[ActiveActor].CmdString := myFileCmd;
+  ParmName := AuxParser[ActiveActor].NextParam ;
+  Param := AuxParser[ActiveActor].StrValue;
+  LocalCol := 1;
+
+  If CompareText(Parmname, 'file') = 0  THEN
+  Begin
+     {Default values}
+    myType  :=  0;
+     // Default options
+
+    // Look for other options  (may be in either order)
+    ParmName := AuxParser[ActiveActor].NextParam ;
+    Param := AuxParser[ActiveActor].StrValue;
+    While Length(Param) > 0 Do  Begin
+        If CompareTextShortest(ParmName, 'column')= 0 Then LocalCol := AuxParser[ActiveActor].IntValue;
+        ParmName := AuxParser[ActiveActor].NextParam ;
+        Param := AuxParser[ActiveActor].StrValue;
+    End;
+  End
+
+  ELSE   If CompareText(Parmname, 'dblfile') = 0  THEN myType  :=  1
+  ELSE   If CompareText(Parmname, 'sngfile') = 0  THEN myType  :=  2;
+  if ShapeType = 0 then // P
+  Begin
+    myFileType    :=  myType;
+    myColumn      :=  LocalCol;
+  End
+  else
+  Begin
+    myFileTypeQ   :=  myType;
+    myColumnQ     :=  LocalCol;
+  End;
+
+END;
+
+{*******************************************************************************
+*         Uploads the active MMF view into memory for further use              *
+********************************************************************************}
+Procedure TLoadShapeObj.LoadMMFView(const Parmname : string; MMF: THandle; Destination : Integer);
+// Destination
+//  0   : P
+//  1   : Q
+var
+  FirstPos  : Integer;
+  myLastCh  : Byte;
+
+BEGIN
+  // processes the view depending on the file type
+  FirstPos      :=  1;
+  if Destination = 0 then
+  Begin
+    myView        := PByte(MapViewOfFile(MMF,FILE_MAP_READ,0,0,myViewlen));
+    If CompareText(Parmname, 'file') = 0  THEN // starndard csv file
+    Begin
+      myLastCh      :=  myView[FirstPos];
+      while myLastCh <> $0A do
+      Begin
+       inc(FirstPos);
+       myLastCh      := myView[FirstPos];
+      End;
+      myLineLen     :=  FirstPos + 1;
+    End
+    // DBL file
+    ELSE If (Length(Parmname)>0) and (CompareTextShortest(Parmname, 'dblfile') = 0) THEN myLineLen  :=  sizeof(double)
+    // SGL file
+    ELSE IF (Length(Parmname)>0) and (CompareTextShortest(Parmname, 'sngfile') = 0) THEN myLineLen  :=  sizeof(single);
+  End
+  else
+  Begin
+    myViewQ       := PByte(MapViewOfFile(MMF,FILE_MAP_READ,0,0,myViewlen));
+    If CompareText(Parmname, 'file') = 0  THEN // starndard csv file
+    Begin
+      myLastCh      :=  myViewQ[FirstPos];
+      while myLastCh <> $0A do
+      Begin
+       inc(FirstPos);
+       myLastCh      := myViewQ[FirstPos];
+      End;
+      myLineLenQ    :=  FirstPos + 1;
+    End
+    // DBL file
+    ELSE If (Length(Parmname)>0) and (CompareTextShortest(Parmname, 'dblfile') = 0) THEN myLineLenQ :=  sizeof(double)
+    // SGL file
+    ELSE IF (Length(Parmname)>0) and (CompareTextShortest(Parmname, 'sngfile') = 0) THEN myLineLenQ :=  sizeof(single);
+  End;
+
+END;
+
+{*******************************************************************************
+*   Creates the Memory mapping for the file specified, Destination is used to  *
+*   Indicate the destinaton (0 = P, 1 = Q)                                     *
+********************************************************************************}
+
+function TLoadShape.CreateMMF(const S: String; Destination : Integer): integer;
+VAR
+
+  ParmName,
+  Param     : string;
+  myLastCh  : Byte;
+  i         : Integer;
+  myLocalMMF: THandle;
+
+Begin
+
+  WITH ActiveLoadShapeObj DO BEGIN
+    try
+
+      AuxParser[ActiveActor].CmdString := S;
+      ParmName       := AuxParser[ActiveActor].NextParam ;
+      Param          := AuxParser[ActiveActor].StrValue;
+      if fileexists(pChar(Param)) then
+      Begin
+        if Destination = 0 then
+        Begin
+          // Creating mapping for P
+          // Opens the file for this instance
+          myFile        := CreateFile(PChar(Param),GENERIC_READ,FILE_SHARE_READ,nil,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
+          // Creates the memory map for the file
+          myMMF         :=  CreateFileMapping(myFile,nil,PAGE_READONLY,0,0,nil);
+          myLocalMMF    :=  myMMF;  // Assignment for working locally
+          myFileCmd     :=  S;
+          myFileSize    :=  GetFileSize(myFile,nil);
+          myViewLen     :=  myFileSize;
+        End
+        else
+        Begin
+          // Creating mapping for Q
+          // Opens the file for this instance
+          myQFile       := CreateFile(PChar(Param),GENERIC_READ,FILE_SHARE_READ,nil,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
+          // Creates the memory map for the file
+          myQMMF        :=  CreateFileMapping(myQFile,nil,PAGE_READONLY,0,0,nil);
+          myLocalMMF    :=  myQMMF; // Assignment for working locally
+          myFileCmdQ    :=  S;
+          myFileSizeQ   :=  GetFileSize(myFile,nil);
+          myViewLenQ    :=  myFileSizeQ;
+        End;
+
+        LoadMMFView(ParmName, myLocalMMF, Destination);
+        Result        :=  0;
+      End
+      else
+      Begin
+        DoSimpleMsg(Format('The file "%s" does not exist. Process cancelled.', [Param]), 800002);
+        Result      :=  -1;
+      End;
+    Except
+      DoSimpleMsg(Format('There was a proble mapping file "%s". Process cancelled.', [Param]), 800001);
+      Result      :=  -1;
+    end;
+
+  END;
+
+End;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Function TLoadShape.Edit(ActorID : Integer):Integer;
 VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
+   MMFError,
+   ParamPointer : Integer;
+   ParamName,
+   Param        : String;
 
 BEGIN
   Result := 0;
@@ -311,46 +514,91 @@ BEGIN
          If (ParamPointer>0) and (ParamPointer<=NumProperties) Then PropertyValue[ParamPointer]:= Param;
 
          CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 610);
-            1: NumPoints := Parser[ActorID].Intvalue;
-            2: Interval := Parser[ActorID].DblValue;
-            3: BEGIN
-                 ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
-                 // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
-                 NumPoints := InterpretDblArray(Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
-               END;
-            4: BEGIN
-                 ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
-                 NumPoints := InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
-                 Interval := 0.0;
-               END;
-            5: Mean := Parser[ActorID].DblValue;
-            6: StdDev := Parser[ActorID].DblValue;
-            7: DoCSVFile(Param);
-            8: DoSngFile(Param);
-            9: DoDblFile(Param);
-           10: CASE lowercase(Param)[1] of
+            0:  DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 610);
+            1:  NumPoints := Parser[ActorID].Intvalue;
+            2:  Interval := Parser[ActorID].DblValue;
+            3:  BEGIN
+                  if UseMMF then      // A different procedure if the user is working with MMF
+                  begin
+                    MMFError  :=  CreateMMF(Param, 0); // Creates MMF for P
+                    if MMFError = 0 then
+                    Begin
+                      LoadFileFeatures(0);
+                      myDataSize            :=  NumPoints;
+                      ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+                      NumPoints             :=  2;     // For some reason, it's needed in 64Bit
+                    End;
+                  end
+                  else
+                  Begin               // Otherwise, follow the traditional technique for loading up load shapes
+                   ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
+                   // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
+                   NumPoints := InterpretDblArray(Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                  END;
+                END;
+            4:  BEGIN
+                  ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
+                  NumPoints := InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
+                  Interval := 0.0;
+                END;
+            5:  Mean := Parser[ActorID].DblValue;
+            6:  StdDev := Parser[ActorID].DblValue;
+            7:  DoCSVFile(Param);
+            8:  DoSngFile(Param);
+            9:  DoDblFile(Param);
+           10:  CASE lowercase(Param)[1] of
                  'n': Normalize;
                  'd': SaveToDblFile;
                  's': SaveToSngFile;
-               END;
-           11: BEGIN
-                 ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1])*NumPoints);
-                 NumPoints := InterpretDblArray(Param, NumPoints, QMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
-               END;
-           12: UseActual := InterpretYesNo(Param);
-           13: MaxP := Parser[ActorID].DblValue;
-           14: MaxQ := Parser[ActorID].DblValue;
-           15: Interval := Parser[ActorID].DblValue / 3600.0;  // Convert seconds to hr
-           16: Interval := Parser[ActorID].DblValue / 60.0;  // Convert minutes to hr
-           17: BaseP := Parser[ActorID].DblValue;
-           18: BaseQ := Parser[ActorID].DblValue;
-           19: BEGIN   // same as mult
-                 ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
-                 // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
-                 NumPoints := InterpretDblArray(Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
-               END;
-           20: Do2ColCSVFile(Param);
+                END;
+           11:  BEGIN
+                  if UseMMF then      // A different procedure if the user is working with MMF
+                  begin
+                    MMFError  :=  CreateMMF(Param, 1);  // Creates MMF for Q
+                    if MMFError = 0 then
+                    Begin
+                      LoadFileFeatures(1);
+                      if Assigned(PMultipliers) then
+                        myDataSizeQ         :=  myDataSize
+                      else
+                        myDataSizeQ           :=  NumPoints;
+                      ReAllocmem(QMultipliers, sizeof(QMultipliers^[1]) * 2);
+                    End;
+                  end
+                  else
+                  Begin               // Otherwise, follow the traditional technique for loading up load shapes
+                    ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1])*NumPoints);
+                    NumPoints := InterpretDblArray(Param, NumPoints, QMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                  end;
+                END;
+           12:  UseActual := InterpretYesNo(Param);
+           13:  MaxP := Parser[ActorID].DblValue;
+           14:  MaxQ := Parser[ActorID].DblValue;
+           15:  Interval := Parser[ActorID].DblValue / 3600.0;  // Convert seconds to hr
+           16:  Interval := Parser[ActorID].DblValue / 60.0;  // Convert minutes to hr
+           17:  BaseP := Parser[ActorID].DblValue;
+           18:  BaseQ := Parser[ActorID].DblValue;
+           19:  BEGIN   // same as mult
+                  if UseMMF then      // A different procedure if the user is working with MMF
+                  begin
+                    MMFError  :=  CreateMMF(Param, 0); // Creates MMF for P
+                    if MMFError = 0 then
+                    Begin
+                      LoadFileFeatures(0);
+                      myDataSize            :=  NumPoints;
+                      ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+                      NumPoints             :=  2;     // For some reason, it's needed in 64Bit
+                    End;
+                  end
+                  else
+                  Begin               // Otherwise, follow the traditional technique for loading up load shapes
+                   ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
+                   // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
+                   NumPoints := InterpretDblArray(Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                  END;
+                END;
+           20:  Do2ColCSVFile(Param);
+           21:  UseMMF := InterpretYesNo(Param);
 
          ELSE
            // Inherited parameters
@@ -407,8 +655,9 @@ BEGIN
         END;
         SetMaxPandQ;
         UseActual := OtherLoadShape.UseActual;
-        BaseP := OtherLoadShape.BaseP;
-        BaseQ := OtherLoadShape.BaseQ;
+        UseMMF    := OtherLoadShape.UseMMF;
+        BaseP     := OtherLoadShape.BaseP;
+        BaseQ     := OtherLoadShape.BaseQ;
 
 
        { MaxP :=  OtherLoadShape.MaxP;
@@ -474,179 +723,257 @@ procedure TLoadShape.Do2ColCSVFile(const FileName: String);
    Process 2-column CSV file (3-col if time expected)
 }
 VAR
-    F:Textfile;
-    i:Integer;
-    s:String;
+    F         : Textfile;
+    MMFError,
+    i         : Integer;
+    s         : String;
 
 BEGIN
-    TRY
-       AssignFile(F,FileName);
-       Reset(F);
-    EXCEPT
-       DoSimpleMsg('Error Opening File: "' + FileName, 613);
-       CloseFile(F);
-       Exit;
-    END;
+  TRY
+    AssignFile(F,FileName);
+    Reset(F);
+  EXCEPT
+    DoSimpleMsg('Error Opening File: "' + FileName, 613);
+    CloseFile(F);
+    Exit;
+  END;
 
-    TRY
+  WITH ActiveLoadShapeObj DO
+  BEGIN
+    if UseMMF then      // A different procedure if the user is working with MMF
+    begin
+      CloseFile(F);
+      myDataSize            :=  NumPoints;
+      IsPQ                  :=  TRUE;
+      myFileCmd             :=  'file=' + FileName + ' column=1';      // Command for P
+      MMFError              :=  CreateMMF(myFileCmd, 0);               // Creates MMF for the whole file
+      if MMFError = 0 then
+      Begin
+        LoadFileFeatures(0);                                             // Features for P
+        myFileCmd             :=  'file=' + FileName + ' column=2';      // Command for Q
+        LoadFileFeatures(1);                                             // Features for Q
+        myDataSize            :=  NumPoints;
+        ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+        ReAllocmem(QMultipliers, sizeof(QMultipliers^[1]) * 2);
+        NumPoints             :=  2;     // For some reason, it's needed in 64Bit
+      End;
+    END
 
-       WITH ActiveLoadShapeObj DO
-       BEGIN
-         // Allocate both P and Q multipliers
-         ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
-         ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1])*NumPoints);
-         IF Interval=0.0 THEN ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
-         i := 0;
-         WHILE (NOT EOF(F)) AND (i<FNumPoints) DO
-         BEGIN
-            Inc(i);
-            Readln(F, s); // read entire line  and parse with AuxParser
-            {AuxParser allows commas or white space}
-            With AuxParser[ActiveActor] Do Begin
-                CmdString := s;
-                IF Interval=0.0 THEN Begin
-                   NextParam; Hours^[i] := DblValue;
-                End;
-                NextParam; PMultipliers^[i] := DblValue;  // first parm
-                NextParam; QMultipliers^[i] := DblValue;  // second parm
-            End;
-          END;
-         CloseFile(F);
-         If i<>FNumPoints Then NumPoints := i;
+    else
+    Begin
+      TRY
+        // Allocate both P and Q multipliers
+        ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
+        ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1])*NumPoints);
+        IF Interval=0.0 THEN ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
+        i := 0;
+        WHILE (NOT EOF(F)) AND (i<FNumPoints) DO
+        BEGIN
+          Inc(i);
+          Readln(F, s); // read entire line  and parse with AuxParser
+          {AuxParser allows commas or white space}
+          With AuxParser[ActiveActor] Do Begin
+              CmdString := s;
+              IF Interval=0.0 THEN Begin
+                 NextParam; Hours^[i] := DblValue;
+              End;
+              NextParam; PMultipliers^[i] := DblValue;  // first parm
+              NextParam; QMultipliers^[i] := DblValue;  // second parm
+          End;
         END;
+        CloseFile(F);
+        If i<>FNumPoints Then NumPoints := i;
 
-    EXCEPT
-       On E:Exception Do Begin
-         DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message , 614);
-         CloseFile(F);
-         Exit;
-       End;
-    END;
+      EXCEPT
+        On E:Exception Do Begin
+          DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message , 614);
+          CloseFile(F);
+          Exit;
+        End;
+      END;
+    End;
 
+  END;
 end;
 
 Procedure TLoadShape.DoCSVFile(Const FileName:String);
 
 VAR
-    F:Textfile;
-    i:Integer;
-    s:String;
+
+    MMFError,
+    i         : Integer;
+    s         : String;
+    F         : Textfile;
 
 BEGIN
-    TRY
-       AssignFile(F,FileName);
-       Reset(F);
-    EXCEPT
-       DoSimpleMsg('Error Opening File: "' + FileName, 613);
-       CloseFile(F);
-       Exit;
-    END;
 
-    TRY
-
-       WITH ActiveLoadShapeObj DO BEGIN
-         ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
-         IF Interval=0.0 THEN ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
-         i := 0;
-         WHILE (NOT EOF(F)) AND (i<FNumPoints) DO BEGIN
-            Inc(i);
-            Readln(F, s); // read entire line  and parse with AuxParser
-            {AuxParser allows commas or white space}
-            With AuxParser[ActiveActor] Do Begin
-                CmdString := s;
-                IF Interval=0.0 THEN Begin
-                   NextParam; Hours^[i] := DblValue;
-                End;
-                NextParam; PMultipliers^[i] := DblValue;
+  TRY
+    AssignFile(F,FileName);
+    Reset(F);
+  EXCEPT
+    DoSimpleMsg('Error Opening File: "' + FileName, 613);
+    CloseFile(F);
+    Exit;
+  END;
+  WITH ActiveLoadShapeObj DO
+  BEGIN
+    if UseMMF then      // A different procedure if the user is working with MMF
+    begin
+      CloseFile(F);
+      s                     :=  'file=' + FileName;
+      MMFError  :=  CreateMMF(s, 0); // Creates MMF for P
+      if MMFError = 0 then
+      Begin
+        LoadFileFeatures(0);
+        myDataSize            :=  NumPoints;
+        ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+        NumPoints             :=  2;     // For some reason, it's needed in 64Bit
+      End;
+    END
+    else
+    Begin
+      TRY
+       ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
+       IF Interval=0.0 THEN ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
+       i := 0;
+        WHILE (NOT EOF(F)) AND (i<FNumPoints) DO
+        BEGIN
+          Inc(i);
+          Readln(F, s); // read entire line  and parse with AuxParser
+          {AuxParser allows commas or white space}
+          With AuxParser[ActiveActor] Do Begin
+            CmdString := s;
+            IF Interval=0.0 THEN Begin
+               NextParam; Hours^[i] := DblValue;
             End;
-          END;
-         CloseFile(F);
-         If i<>FNumPoints Then NumPoints := i;
+            NextParam; PMultipliers^[i] := DblValue;
+          End;
         END;
+        CloseFile(F);
+        If i<>FNumPoints Then NumPoints := i;
 
-    EXCEPT
-       On E:Exception Do Begin
-         DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message , 614);
-         CloseFile(F);
-         Exit;
-       End;
-    END;
+      EXCEPT
+        On E:Exception Do Begin
+          DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message , 614);
+          CloseFile(F);
+          Exit;
+        End;
+      END;
+    End;
+  END;
 
 END;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Procedure TLoadShape.DoSngFile(Const FileName:String);
 VAR
-    F:File of Single;
-    Hr,M:Single;
-    i:Integer;
+  s         : string;
+  F         : File of Single;
+  Hr,M      : Single;
+  mMFError,
+  i         : Integer;
 
 BEGIN
-    TRY
-       AssignFile(F,FileName);
-       Reset(F);
-    EXCEPT
-       DoSimpleMsg('Error Opening File: "' + FileName, 615);
-       CloseFile(F);
-       Exit;
-    END;
+  TRY
+    AssignFile(F,FileName);
+    Reset(F);
+  EXCEPT
+    DoSimpleMsg('Error Opening File: "' + FileName, 615);
+    CloseFile(F);
+    Exit;
+  END;
 
-    TRY
-       WITH ActiveLoadShapeObj DO BEGIN
-         ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
-         IF Interval=0.0 THEN ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
-         i := 0;
-         WHILE (NOT EOF(F)) AND (i<FNumPoints) DO BEGIN
+  WITH ActiveLoadShapeObj DO
+  BEGIN
+    if UseMMF then      // A different procedure if the user is working with MMF
+    begin
+      CloseFile(F);
+      s                     :=  'sngfile=' + FileName;
+      MMFError  :=  CreateMMF(s, 0); // Creates MMF for P
+      if MMFError = 0 then
+      Begin
+        LoadFileFeatures(0);
+        myDataSize            :=  NumPoints;
+        ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+        NumPoints             :=  2;     // For some reason, it's needed in 64Bit
+      End;
+    END
+    else
+    Begin
+      TRY
+        ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
+        IF Interval=0.0 THEN ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
+        i := 0;
+        WHILE (NOT EOF(F)) AND (i<FNumPoints) DO
+        BEGIN
           Inc(i);
           IF Interval=0.0 THEN BEGIN Read(F, Hr); Hours^[i] := Hr; END;
           Read(F, M ); PMultipliers^[i] := M;
-         END;
-         CloseFile(F);
-         If i<>FNumPoints Then NumPoints := i;
-       END;
-    EXCEPT
-       DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 616);
-       CloseFile(F);
-       Exit;
-    END;
-
+        END;
+        CloseFile(F);
+        If i<>FNumPoints Then NumPoints := i;
+      EXCEPT
+        DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 616);
+        CloseFile(F);
+        Exit;
+      END;
+    End;
+  END;
 END;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Procedure TLoadShape.DoDblFile(Const FileName:String);
 VAR
-    F:File of double;
-    i:Integer;
+  s         : string;
+  F         : File of double;
+  MMFError,
+  i         : Integer;
 
 BEGIN
-    TRY
-       AssignFile(F,FileName);
-       Reset(F);
-    EXCEPT
-       DoSimpleMsg('Error Opening File: "' + FileName, 617);
-       CloseFile(F);
-       Exit;
-    END;
+  TRY
+    AssignFile(F,FileName);
+    Reset(F);
+  EXCEPT
+    DoSimpleMsg('Error Opening File: "' + FileName, 617);
+    CloseFile(F);
+    Exit;
+  END;
 
-    TRY
-       WITH ActiveLoadShapeObj DO BEGIN
-         ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
-         IF Interval=0.0 THEN ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
-         i := 0;
-         WHILE (NOT EOF(F)) AND (i<FNumPoints) DO BEGIN
+  WITH ActiveLoadShapeObj DO
+  BEGIN
+    if UseMMF then      // A different procedure if the user is working with MMF
+    begin
+      CloseFile(F);
+      s                     :=  'dblfile=' + FileName;
+      MMFError  :=  CreateMMF(s, 0); // Creates MMF for P
+      if MMFError = 0 then
+      Begin
+        LoadFileFeatures(0);
+        myDataSize            :=  NumPoints;
+        ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+        NumPoints             :=  2;     // For some reason, it's needed in 64Bit
+      End;
+    END
+    else
+    Begin
+      TRY
+        ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1])*NumPoints);
+        IF Interval=0.0 THEN ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
+        i := 0;
+        WHILE (NOT EOF(F)) AND (i<FNumPoints) DO BEGIN
           Inc(i);
           IF Interval=0.0 THEN Read(F, Hours^[i]);
           Read(F, PMultipliers^[i]);
-         END;
-         CloseFile(F);
-         If i<>FNumPoints Then NumPoints := i;
-       END;
-    EXCEPT
-       DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 618);
-       CloseFile(F);
-       Exit;
-    END;
-
+        END;
+        CloseFile(F);
+        If i<>FNumPoints Then NumPoints := i;
+      EXCEPT
+        DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 618);
+        CloseFile(F);
+        Exit;
+      END;
+    End;
+  END;
 
 END;
 
@@ -673,9 +1000,13 @@ BEGIN
      BaseP              :=  0.0;
      BaseQ              :=  0.0;
      UseActual          :=  FALSE;
+     IsPQ               :=  FALSE;  // No PQ by default (No PQCSVFile)
+     UseMMF             :=  FALSE;  // No memory mapping by default
      MaxQSpecified      :=  FALSE;
      FStdDevCalculated  :=  FALSE;  // calculate on demand
      Enabled            :=  TRUE;
+
+     myViewLen          :=  1000;   // 1kB by default, it may change for not missing a row
 
      ArrayPropertyIndex :=  0;
 
@@ -690,6 +1021,14 @@ BEGIN
     If Assigned(Hours)        Then  ReallocMem(Hours, 0);
     If Assigned(PMultipliers) Then  ReallocMem(PMultipliers, 0);
     If Assigned(QMultipliers) Then  ReallocMem(QMultipliers, 0);
+    if UseMMF then
+    Begin
+      UnmapViewOfFile(myView);
+      CloseHandle(myMMF);
+      CloseHandle(myFile);
+      CloseHandle(myQMMF);
+      CloseHandle(myQFile);
+    End;
     Inherited destroy;
 END;
 
@@ -705,79 +1044,106 @@ Function TLoadShapeObj.GetMult(hr:double):Complex;
 // hour=12.25 and the interval is 1.0, you will get interval 12.
 
 VAR
-   Index, i : Integer;
+  FileType    : string;
+  MMFound     : Boolean;
+  LocalPage,
+  UpLimit,
+  LowLimit,
+  Index,
+  j,
+  i           : Integer;
 
-   Function Set_Result_im(const realpart:double):Double;
-   {Set imaginary part of Result when Qmultipliers not defined}
-   Begin
-         If UseActual Then Set_Result_im := 0.0       // if actual, assume zero
-                      Else Set_Result_im := realpart; // same as real otherwise
-   End;
+  Function Set_Result_im(const realpart:double):Double;
+  {Set imaginary part of Result when Qmultipliers not defined}
+  Begin
+    If UseActual Then Set_Result_im := 0.0       // if actual, assume zero
+                Else Set_Result_im := realpart; // same as real otherwise
+  End;
 
 BEGIN
 
   Result.re := 1.0;
   Result.im := 1.0;    // default return value if no points in curve
 
-  IF FNumPoints>0 THEN         // Handle Exceptional cases
-  IF FNumPoints=1 THEN Begin
-    Result.re := PMultipliers^[1];
-    If Assigned(QMultipliers) Then Result.im := QMultipliers^[1]
-    Else Result.im := Set_Result_im(Result.re);
-  End
-  ELSE
+  IF FNumPoints > 0 THEN         // Handle Exceptional cases
+    IF FNumPoints = 1 THEN
+    Begin
+      Result.re := PMultipliers^[1];
+      If Assigned(QMultipliers) Then Result.im := QMultipliers^[1]
+      Else Result.im := Set_Result_im(Result.re);
+    End
+    ELSE
     BEGIN
-      IF Interval>0.0 THEN  BEGIN
-           Index := round(hr/Interval);
-           IF Index>FNumPoints Then Index := Index Mod FNumPoints;  // Wrap around using remainder
-           IF Index=0 THEN Index := FNumPoints;
-           Result.re     :=  PMultipliers^[Index];
-           If Assigned(QMultipliers) Then Result.im := QMultipliers^[Index]
-           Else  Result.im  := Set_Result_im(Result.re );
-        END
-      ELSE  BEGIN
-          // For random interval
+      IF Interval > 0.0 THEN                                      // Using Interval
+      BEGIN
+        Index         :=  round(hr/Interval);
+        if UseMMF then
+        BEGIN
+          IF Index > myDataSize Then Index := Index Mod myDataSize;  // Wrap around using remainder
+          IF Index = 0 THEN Index := myDataSize;
+          if isPQ then
+          Begin
+            Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
+            Result.im     :=  InterpretDblArrayMMF(myView, myFileTypeQ, myColumnQ, Index, myLineLen);
+          End
 
+          else
+          Begin
+            Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
+            If Assigned(QMultipliers) Then Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, Index, myLineLenQ)
+            Else  Result.im  := Set_Result_im(Result.re );
+          end;
+        END
+        ELSE
+        BEGIN
+          IF Index > FNumPoints Then Index := Index Mod FNumPoints;  // Wrap around using remainder
+          IF Index = 0 THEN Index := FNumPoints;
+          Result.re     :=  PMultipliers^[Index];
+          If Assigned(QMultipliers) Then Result.im := QMultipliers^[Index]
+          Else  Result.im  := Set_Result_im(Result.re );
+        END;
+      END
+      ELSE
+      BEGIN
+      // For random interval
         { Start with previous value accessed under the assumption that most
           of the time, this function will be called sequentially}
+        {Normalize Hr to max hour in curve to get wraparound}
+        If Hr > Hours^[FNumPoints] Then
+          Hr := Hr - Trunc(Hr/Hours^[FNumPoints])*Hours^[FNumPoints];
 
-          {Normalize Hr to max hour in curve to get wraparound}
-          If Hr>Hours^[FNumPoints] Then Begin
-              Hr := Hr - Trunc(Hr/Hours^[FNumPoints])*Hours^[FNumPoints];
-          End;
 
-           IF Hours^[LastValueAccessed] > Hr THEN LastValueAccessed := 1;  // Start over from beginning
-           FOR i := LastValueAccessed+1 TO FNumPoints DO
-             BEGIN
-               IF Abs(Hours^[i]-Hr)<0.00001 THEN  // If close to an actual point, just use it.
-                 BEGIN
-                   Result.re := PMultipliers^[i];
-                   If Assigned(QMultipliers) Then Result.im := QMultipliers^[i]
-                   Else  Result.im := Set_Result_im(Result.re);
-                   LastValueAccessed := i;
-                   Exit;
-                 END
-               ELSE IF Hours^[i]>Hr THEN      // Interpolate for multiplier
-                 BEGIN
-                   LastValueAccessed := i-1;
-                   Result.re := PMultipliers^[LastValueAccessed] +
-                             (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
-                             (PMultipliers^[i] -PMultipliers^[LastValueAccessed]);
-                   If Assigned(QMultipliers) Then
-                        Result.im := QMultipliers^[LastValueAccessed] +
-                             (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
-                             (QMultipliers^[i] -QMultipliers^[LastValueAccessed])
-                   Else Result.im := Set_Result_im(Result.re);
-                   Exit ;
-                 END;
-             END;
-
-           // If we fall through the loop, just use last value
-           LastValueAccessed := FNumPoints-1;
-           Result.re := PMultipliers^[FNumPoints];
-           If Assigned(QMultipliers) Then Result.im := QMultipliers^[FNumPoints]
-           Else  Result.im := Set_Result_im(Result.re);
+        IF Hours^[LastValueAccessed] > Hr THEN LastValueAccessed := 1;  // Start over from beginning
+        FOR i := LastValueAccessed + 1 TO FNumPoints DO
+        BEGIN
+          IF Abs(Hours^[i]-Hr)<0.00001 THEN  // If close to an actual point, just use it.
+          BEGIN
+            Result.re := PMultipliers^[i];
+            If Assigned(QMultipliers) Then Result.im := QMultipliers^[i]
+            Else  Result.im := Set_Result_im(Result.re);
+            LastValueAccessed := i;
+            Exit;
+          END
+          ELSE IF Hours^[i]>Hr THEN      // Interpolate for multiplier
+          BEGIN
+            LastValueAccessed := i-1;
+            Result.re := PMultipliers^[LastValueAccessed] +
+                     (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                     (PMultipliers^[i] -PMultipliers^[LastValueAccessed]);
+            If Assigned(QMultipliers) Then
+                Result.im := QMultipliers^[LastValueAccessed] +
+                     (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                     (QMultipliers^[i] -QMultipliers^[LastValueAccessed])
+            Else Result.im := Set_Result_im(Result.re);
+            Exit ;
+          END;
         END;
+        // If we fall through the loop, just use last value
+        LastValueAccessed := FNumPoints-1;
+        Result.re := PMultipliers^[FNumPoints];
+        If Assigned(QMultipliers) Then Result.im := QMultipliers^[FNumPoints]
+        Else  Result.im := Set_Result_im(Result.re);
+      END;
     END;
 
 END;
@@ -950,6 +1316,7 @@ begin
           17: Result := Format('%.8g', [BaseP ]);
           18: Result := Format('%.8g', [BaseQ ]);
           19: Result := GetDSSArray_Real( FNumPoints, PMultipliers);
+          21: If UseMMF then Result := 'Yes' else Result := 'No';
         ELSE
            Result := Inherited GetPropertyValue(index);
         END;
@@ -979,6 +1346,7 @@ begin
      PropertyValue[18] := '0';
      PropertyValue[19] := '';   // same as 3
      PropertyValue[20] := '';  // switch input to csv file of P, Q pairs
+     PropertyValue[21] := 'No';  // memory mapped load shape
 
 
 
