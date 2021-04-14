@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 134;
+        NumExecOptions = 133;
 
 VAR
          ExecOption,
@@ -168,7 +168,7 @@ Begin
      ExecOption[131] := 'GISCoords';
      ExecOption[132] := 'GISColor';
      ExecOption[133] := 'GISThickness';
-     ExecOption[134] := 'MemoryMapping';
+
      {Deprecated
       ExecOption[130] := 'MarkPVSystems2';
       ExecOption[132] := 'MarkStorage2';
@@ -458,9 +458,7 @@ Begin
      OptionHelp[131] := '[Coords] : An array of doubles defining the longitud and latitude for an area to be used as refrence for the OpenDSS-GIS related commands, long1, lat1, long2, lat2';
      OptionHelp[132] := 'Color    : A Hex string defining 24 bit color in RGB format, e.g. , red = FF0000';
      OptionHelp[133] := 'Thickness: An integer defining the thickness (default = 3)';
-     OptionHelp[134] := '{YES/TRUE | NO/FALSE*). Deafult is NO. Enables load shapes to be defined as memory mapped files instead of loading them into memory directly.' + CRLF +
-                        'Use it when the number and lenght of load profiles in the model is significantly large, requiring long times for compiling the model.' + CRLF +
-                        'Set this property before defining load shapes in the model for takign effect.';
+
     // OptionHelp[132] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark Storage2 locations with a symbol. See StoreMarkerCode and StoreMarkerSize. ';
    //  OptionHelp[130] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark PVSystem locations with a symbol. See PVMarkerCode and PVMarkerSize. ';
 
@@ -798,9 +796,6 @@ Begin
           133: Begin
                 GISthickness  :=  Parser[ActiveActor].StrValue;
                End;
-          134: Begin
-                UseMMF  :=  InterpretYesNo(Param);
-               End;
          ELSE
            // Ignore excess parameters
          End;
@@ -1012,7 +1007,7 @@ Begin
   // deprecated           130: If ActiveCircuit[ActiveActor].MarkPVSystems2  Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           130: if DSS_GIS_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
   // deprecated           132: If ActiveCircuit[ActiveActor].MarkStorage2    Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
-          134: If UseMMF Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+
          ELSE
            // Ignore excess parameters
          End;

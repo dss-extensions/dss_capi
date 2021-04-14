@@ -29,6 +29,7 @@ Type
     DynStringArray  = Array of string;
     pDynStringArray = ^DynStringArray;
 
+
     pDouble = ^Double;
     pSingle = ^Single;
     pSmallInt = ^SmallInt;
