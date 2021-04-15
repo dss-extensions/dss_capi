@@ -526,7 +526,6 @@ BEGIN
                       LoadFileFeatures(0);
                       myDataSize            :=  NumPoints;
                       ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
-                      NumPoints             :=  2;     // For some reason, it's needed in 64Bit
                     End;
                   end
                   else
@@ -587,7 +586,6 @@ BEGIN
                       LoadFileFeatures(0);
                       myDataSize            :=  NumPoints;
                       ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
-                      NumPoints             :=  2;     // For some reason, it's needed in 64Bit
                     End;
                   end
                   else
@@ -755,7 +753,6 @@ BEGIN
         myDataSize            :=  NumPoints;
         ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
         ReAllocmem(QMultipliers, sizeof(QMultipliers^[1]) * 2);
-        NumPoints             :=  2;     // For some reason, it's needed in 64Bit
       End;
     END
 
@@ -827,7 +824,6 @@ BEGIN
         LoadFileFeatures(0);
         myDataSize            :=  NumPoints;
         ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
-        NumPoints             :=  2;     // For some reason, it's needed in 64Bit
       End;
     END
     else
@@ -895,7 +891,6 @@ BEGIN
         LoadFileFeatures(0);
         myDataSize            :=  NumPoints;
         ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
-        NumPoints             :=  2;     // For some reason, it's needed in 64Bit
       End;
     END
     else
@@ -951,7 +946,6 @@ BEGIN
         LoadFileFeatures(0);
         myDataSize            :=  NumPoints;
         ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
-        NumPoints             :=  2;     // For some reason, it's needed in 64Bit
       End;
     END
     else
@@ -1081,13 +1075,13 @@ BEGIN
         BEGIN
           IF Index > myDataSize Then Index := Index Mod myDataSize;  // Wrap around using remainder
           IF Index = 0 THEN Index := myDataSize;
-          if isPQ then
+          if isPQ then                                               // If it's a PQCSV
           Begin
             Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
             Result.im     :=  InterpretDblArrayMMF(myView, myFileTypeQ, myColumnQ, Index, myLineLen);
           End
 
-          else
+          else                                                       // Any other file type
           Begin
             Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
             If Assigned(QMultipliers) Then Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, Index, myLineLenQ)
@@ -1183,7 +1177,7 @@ Procedure TLoadShapeObj.CalcMeanandStdDev;
 
 BEGIN
 
-  If FNumPoints>0 Then
+  If FNumPoints > 0 Then
     if Interval > 0.0 then
       RCDMeanandStdDev(PMultipliers, FNumPoints, FMean, FStdDev)
     else
@@ -1255,11 +1249,14 @@ end;
 Function TLoadShapeObj.Mult(i:Integer) :Double;
 Begin
 
-     If (i <= FNumPoints) and (i > 0) Then Begin
-      Result := PMultipliers^[i];
-      LastValueAccessed := i;
-     End Else
-      Result := 0.0;
+  If (i <= FNumPoints) and (i > 0) Then
+  Begin
+    if UseMMF then Result := InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen)
+    else Result := PMultipliers^[i];
+    LastValueAccessed := i;
+  End
+  Else
+    Result := 0.0;
 
 End;
 
@@ -1299,27 +1296,37 @@ end;
 
 FUNCTION TLoadShapeObj.GetPropertyValue(Index: Integer): String;
 begin
-        Result := '';
+  Result := '';
 
-        CASE Index of
-           2: Result := Format('%.8g', [Interval]);
-           3: Result := GetDSSArray_Real( FNumPoints, PMultipliers);
-           4: IF Hours <> Nil THEN Result := GetDSSArray_Real( FNumPoints, Hours) ;
-           5: Result := Format('%.8g', [Mean ]);
-           6: Result := Format('%.8g', [StdDev ]);
-          11: IF Assigned(QMultipliers) Then  Result := GetDSSArray_Real( FNumPoints, QMultipliers);
-          12: If UseActual then Result := 'Yes' else Result := 'No';
-          13: Result := Format('%.8g', [MaxP ]);
-          14: Result := Format('%.8g', [MaxQ ]);
-          15: Result := Format('%.8g', [Interval * 3600.0 ]);
-          16: Result := Format('%.8g', [Interval * 60.0 ]);
-          17: Result := Format('%.8g', [BaseP ]);
-          18: Result := Format('%.8g', [BaseQ ]);
-          19: Result := GetDSSArray_Real( FNumPoints, PMultipliers);
-          21: If UseMMF then Result := 'Yes' else Result := 'No';
-        ELSE
-           Result := Inherited GetPropertyValue(index);
-        END;
+  CASE Index of
+    2: Result := Format('%.8g', [Interval]);
+    3: Begin
+        if UseMMF then Result := '(' + myFileCmd + ')'
+        else  Result := GetDSSArray_Real( FNumPoints, PMultipliers);
+      End;
+    4: IF Hours <> Nil THEN Result := GetDSSArray_Real( FNumPoints, Hours) ;
+    5: Result := Format('%.8g', [Mean ]);
+    6: Result := Format('%.8g', [StdDev ]);
+    11: Begin
+        IF Assigned(QMultipliers) Then
+          if UseMMF then Result := '(' + myFileCmdQ + ')'
+          else Result := GetDSSArray_Real( FNumPoints, QMultipliers);
+      End;
+    12: If UseActual then Result := 'Yes' else Result := 'No';
+    13: Result := Format('%.8g', [MaxP ]);
+    14: Result := Format('%.8g', [MaxQ ]);
+    15: Result := Format('%.8g', [Interval * 3600.0 ]);
+    16: Result := Format('%.8g', [Interval * 60.0 ]);
+    17: Result := Format('%.8g', [BaseP ]);
+    18: Result := Format('%.8g', [BaseQ ]);
+    19: Begin
+        if UseMMF then Result := '(' + myFileCmd + ')'
+        else  Result := GetDSSArray_Real( FNumPoints, PMultipliers);
+      End;
+    21: If UseMMF then Result := 'Yes' else Result := 'No';
+  ELSE
+     Result := Inherited GetPropertyValue(index);
+  END;
 
 end;
 
@@ -1454,16 +1461,27 @@ end;
 procedure TLoadShapeObj.SaveToDblFile;
 
 Var
-   F:File of Double;
-   i:Integer;
-   Fname :String;
+  myDBL       : Double;
+  F           : File of Double;
+  i           : Integer;
+  Fname       : String;
+
 begin
    If Assigned(PMultipliers) then  Begin
     TRY
       FName := Format('%s_P.dbl',[Name]);
       AssignFile(F, Fname);
       Rewrite(F);
-      For i := 1 to NumPoints Do  Write(F, PMultipliers^[i]);
+      if UseMMF then
+      Begin
+        For i := 1 to NumPoints Do
+        Begin
+          myDBL    :=  InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen);
+          Write(F, myDBL);
+        End;
+      End
+      else
+        For i := 1 to NumPoints Do  Write(F, PMultipliers^[i]);
       GlobalResult := 'mult=[dblfile='+FName+']';
     FINALLY
       CloseFile(F);
@@ -1474,7 +1492,16 @@ begin
           FName := Format('%s_Q.dbl',[Name]);
           AssignFile(F, Fname);
           Rewrite(F);
-          For i := 1 to NumPoints Do  Write(F, QMultipliers^[i]);
+          if UseMMF then
+          Begin
+            For i := 1 to NumPoints Do
+            Begin
+              myDBL    :=  InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, i, myLineLenQ);
+              Write(F, myDBL);
+            End;
+          End
+          else
+            For i := 1 to NumPoints Do  Write(F, QMultipliers^[i]);
           AppendGlobalResult(' Qmult=[dblfile='+FName+']');
         FINALLY
           CloseFile(F);
@@ -1488,19 +1515,23 @@ end;
 procedure TLoadShapeObj.SaveToSngFile;
 
 Var
-   F:File of Single;
-   i:Integer;
-   Fname :String;
-   Temp  :Single;
+
+  F           : File of Single;
+  i           : Integer;
+  Fname       : String;
+  Temp        : Single;
 
 begin
-   If Assigned(PMultipliers) then  Begin
+  If Assigned(PMultipliers) then
+  Begin
     TRY
       FName := Format('%s_P.sng',[Name]);
       AssignFile(F, Fname);
       Rewrite(F);
-      For i := 1 to NumPoints Do  Begin
-          Temp := PMultipliers^[i] ;
+      For i := 1 to NumPoints Do
+      Begin
+          if UseMMF then Temp :=  InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen)
+          else Temp := PMultipliers^[i] ;
           Write(F, Temp);
       End;
       GlobalResult := 'mult=[sngfile='+FName+']';
@@ -1508,36 +1539,40 @@ begin
       CloseFile(F);
     END;
 
-      If Assigned(QMultipliers) then  Begin
-        TRY
-          FName := Format('%s_Q.sng',[Name]);
-          AssignFile(F, Fname);
-          Rewrite(F);
-          For i := 1 to NumPoints Do  Begin
-              Temp := QMultipliers^[i] ;
-              Write(F, Temp);
-          End;
-          AppendGlobalResult(' Qmult=[sngfile='+FName+']');
-        FINALLY
-          CloseFile(F);
-        END;
-      End;
+    If Assigned(QMultipliers) then  Begin
+      TRY
+        FName := Format('%s_Q.sng',[Name]);
+        AssignFile(F, Fname);
+        Rewrite(F);
+        For i := 1 to NumPoints Do
+        Begin
+            if UseMMF then Temp :=  InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, i, myLineLenQ)
+            else Temp := QMultipliers^[i] ;
+            Write(F, Temp);
+        End;
+        AppendGlobalResult(' Qmult=[sngfile='+FName+']');
+      FINALLY
+        CloseFile(F);
+      END;
+    End;
 
-   End
-   Else DoSimpleMsg('Loadshape.'+Name + ' P multipliers not defined.', 623);
-
+  End
+  Else DoSimpleMsg('Loadshape.'+Name + ' P multipliers not defined.', 623);
 
 end;
 
 procedure TLoadShapeObj.SetMaxPandQ;
 begin
-       iMaxP := iMaxAbsdblArrayValue(NumPoints, PMultipliers);
-       If iMaxP > 0 Then Begin
-          MaxP := PMultipliers^[iMaxP];
-          If Not MaxQSpecified Then
-            If Assigned(QMultipliers) then  MaxQ := QMultipliers^[iMaxP]
-            else MaxQ := 0.0;
-       End;
+  if not UseMMF then
+  Begin
+    iMaxP := iMaxAbsdblArrayValue(NumPoints, PMultipliers);
+    If iMaxP > 0 Then Begin
+      MaxP := PMultipliers^[iMaxP];
+      If Not MaxQSpecified Then
+        If Assigned(QMultipliers) then  MaxQ := QMultipliers^[iMaxP]
+        else MaxQ := 0.0;
+    End;
+  End;
 end;
 
 procedure TLoadShapeObj.Set_Mean(const Value: Double);
