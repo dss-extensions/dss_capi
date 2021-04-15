@@ -2042,7 +2042,7 @@ Begin
        ParClass        :=  ActiveDSSObject[ActiveActor].ParentClass;
        if LowerCase(ParClass.Name) = 'loadshape' then
          IsEnabled       :=  TLoadShapeObj(ActiveDSSObject[ActiveActor]).Enabled;
-             if IsEnabled then
+       if IsEnabled then
        Begin
          WriteActiveDSSObject(F, 'New');  // sets HasBeenSaved := TRUE
          Inc(Nrecords); // count the actual records
