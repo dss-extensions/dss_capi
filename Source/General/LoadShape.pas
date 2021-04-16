@@ -125,7 +125,6 @@ TYPE
         *                    Memory mapping variables                          *
         ************************************************************************}
 
-        IsPQ,                                     // To indicate that the file has P and Q (PQCSVFile)
         UseMMF              : Boolean;            // Flag to indicated that the user wants to use MMF
         myMMF,                                    // Handle for the memory map (P)
         myFile,                                   // Handle for the file to be mapped (P)
@@ -742,15 +741,16 @@ BEGIN
     begin
       CloseFile(F);
       myDataSize            :=  NumPoints;
-      IsPQ                  :=  TRUE;
       myFileCmd             :=  'file=' + FileName + ' column=1';      // Command for P
       MMFError              :=  CreateMMF(myFileCmd, 0);               // Creates MMF for the whole file
+      myViewQ               :=  myView;
       if MMFError = 0 then
       Begin
         LoadFileFeatures(0);                                             // Features for P
         myFileCmd             :=  'file=' + FileName + ' column=2';      // Command for Q
         LoadFileFeatures(1);                                             // Features for Q
         myDataSize            :=  NumPoints;
+        myLineLenQ            :=  myLineLen;
         ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
         ReAllocmem(QMultipliers, sizeof(QMultipliers^[1]) * 2);
       End;
@@ -994,7 +994,6 @@ BEGIN
      BaseP              :=  0.0;
      BaseQ              :=  0.0;
      UseActual          :=  FALSE;
-     IsPQ               :=  FALSE;  // No PQ by default (No PQCSVFile)
      UseMMF             :=  FALSE;  // No memory mapping by default
      MaxQSpecified      :=  FALSE;
      FStdDevCalculated  :=  FALSE;  // calculate on demand
@@ -1075,18 +1074,9 @@ BEGIN
         BEGIN
           IF Index > myDataSize Then Index := Index Mod myDataSize;  // Wrap around using remainder
           IF Index = 0 THEN Index := myDataSize;
-          if isPQ then                                               // If it's a PQCSV
-          Begin
-            Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
-            Result.im     :=  InterpretDblArrayMMF(myView, myFileTypeQ, myColumnQ, Index, myLineLen);
-          End
-
-          else                                                       // Any other file type
-          Begin
-            Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
-            If Assigned(QMultipliers) Then Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, Index, myLineLenQ)
-            Else  Result.im  := Set_Result_im(Result.re );
-          end;
+          Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
+          If Assigned(QMultipliers) Then Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, Index, myLineLenQ)
+          Else  Result.im  := Set_Result_im(Result.re );
         END
         ELSE
         BEGIN
@@ -1112,23 +1102,48 @@ BEGIN
         BEGIN
           IF Abs(Hours^[i]-Hr)<0.00001 THEN  // If close to an actual point, just use it.
           BEGIN
-            Result.re := PMultipliers^[i];
-            If Assigned(QMultipliers) Then Result.im := QMultipliers^[i]
-            Else  Result.im := Set_Result_im(Result.re);
+            if UseMMF then
+            BEGIN
+              Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
+              If Assigned(QMultipliers) Then Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, Index, myLineLenQ)
+              Else  Result.im  := Set_Result_im(Result.re );
+            END
+            ELSE
+            BEGIN
+              Result.re := PMultipliers^[i];
+              If Assigned(QMultipliers) Then Result.im := QMultipliers^[i]
+              Else  Result.im := Set_Result_im(Result.re);
+            END;
             LastValueAccessed := i;
             Exit;
           END
           ELSE IF Hours^[i]>Hr THEN      // Interpolate for multiplier
           BEGIN
             LastValueAccessed := i-1;
-            Result.re := PMultipliers^[LastValueAccessed] +
-                     (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
-                     (PMultipliers^[i] -PMultipliers^[LastValueAccessed]);
-            If Assigned(QMultipliers) Then
-                Result.im := QMultipliers^[LastValueAccessed] +
-                     (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
-                     (QMultipliers^[i] -QMultipliers^[LastValueAccessed])
-            Else Result.im := Set_Result_im(Result.re);
+            if UseMMF then
+            BEGIN
+              Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, LastValueAccessed, myLineLen) +
+                        (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                        (InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen) -
+                        InterpretDblArrayMMF(myView, myFileType, myColumn, LastValueAccessed, myLineLen));
+              If Assigned(QMultipliers) Then
+                  Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, LastValueAccessed, myLineLenQ) +
+                        (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                        (InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, i, myLineLenQ) -
+                        InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, LastValueAccessed, myLineLenQ))
+              Else  Result.im  := Set_Result_im(Result.re );
+            END
+            ELSE
+            BEGIN
+              Result.re := PMultipliers^[LastValueAccessed] +
+                       (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                       (PMultipliers^[i] -PMultipliers^[LastValueAccessed]);
+              If Assigned(QMultipliers) Then
+                  Result.im := QMultipliers^[LastValueAccessed] +
+                       (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                       (QMultipliers^[i] -QMultipliers^[LastValueAccessed])
+              Else Result.im := Set_Result_im(Result.re);
+            END;
             Exit ;
           END;
         END;
@@ -1430,7 +1445,7 @@ begin
       // SetLength(Xarray, maxPts);
        MaxPts := Round(MaxTime/MinInterval);
 
-       TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16,  'DSS (TM), Electrotek Concepts (R)');
+       TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16,  'OpenDSS(TM), EPRI (R)');
        TopTransferFile.WriteNames(NameList, CNames);
 
        Hr_Time := 0.0;

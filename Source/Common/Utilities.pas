@@ -815,24 +815,21 @@ Begin
     myByte        :=  0;
     i             :=  OffSet;
     if myMap[i] = $0A then inc(i); // in case we are at the end of the previous line
+    j             :=  0;
     while myByte <> $0A do
     Begin
       myByte      :=  myMap[i];
       // Concatenates avoiding special chars (EOL)
-      if (myByte <> 10) and (myByte <> 13) then myContent  :=  myContent + AnsiChar(myByte);
+      if (myByte >= 46 ) and (myByte < 58 )then myContent  :=  myContent + AnsiChar(myByte);
+      if myByte = 44 then       // a comma char was found
+      Begin                     // If we are at the column, exit, otherwise, keep looking
+        inc(j);                 // discarding the previous number (not needed anyway)
+        if j = Column then break
+        else myContent := '';
+      End;
       inc(i);
     End;
     TRY
-      InputLine   :=  '';
-      for i := 1 to Column do
-      Begin
-        j         :=  AnsiPos(',',myContent);
-        if j > 0 then InputLine :=  myContent.Substring(0, (j - 1))
-        else InputLine  :=  '';    // probably EOL
-
-        myContent :=  myContent.Substring(j, (length(myContent) - j));
-      End;
-      if InputLine <> '' then myContent :=  InputLine;  // This is true if there is more than 1 col
       // checks if the extraction was OK, othwerwise, forces the default value
       if myContent = '' then myContent := '1.0';
       Result    :=  strtofloat(myContent);
