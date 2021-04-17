@@ -160,9 +160,9 @@ begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
-    ActualNumPoints := Min(Length(elem.PMultipliers), elem.NumPoints);
+    ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.PMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.PMultipliers^[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Pmult_GR(); CDECL;
@@ -188,9 +188,9 @@ begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
-    ActualNumPoints := Min(Length(elem.QMultipliers), elem.NumPoints);
+    ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.QMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.QMultipliers^[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Qmult_GR(); CDECL;
@@ -225,9 +225,8 @@ begin
             Exit;
         end;
 
-        SetLength(PMultipliers, 0);
-        SetLength(PMultipliers, ValueCount);
-        Move(ValuePtr[0], PMultipliers[0], ValueCount * SizeOf(Double));
+        ReallocMem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
+        Move(ValuePtr[0], PMultipliers^[1], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -247,9 +246,8 @@ begin
             Exit;
         end;
 
-        SetLength(QMultipliers, 0);
-        SetLength(QMultipliers, ValueCount);
-        Move(ValuePtr[0], QMultipliers[0], ValueCount * SizeOf(Double));
+        ReallocMem(QMultipliers, Sizeof(QMultipliers^[1]) * NumPoints);
+        Move(ValuePtr[0], QMultipliers^[1], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -275,9 +273,9 @@ begin
 
     if elem.Hours = NIL then
         Exit;
-    ActualNumPoints := Min(Length(elem.Hours), elem.NumPoints);
+    ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.Hours[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.Hours^[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_TimeArray_GR(); CDECL;
@@ -303,8 +301,7 @@ begin
             Exit;
         end;
 
-        SetLength(Hours, 0);
-        SetLength(Hours, ValueCount);
+        ReallocMem(Hours, Sizeof(Hours^[1]) * NumPoints);
         Move(ValuePtr[0], Hours[0], ValueCount * SizeOf(Double));
     end;
 end;
