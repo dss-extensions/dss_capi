@@ -5,326 +5,356 @@ unit ImplGICSources;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl;
 
 type
-  TGICSources = class(TAutoObject, IGICSources)
-  protected
-    function Get_AllNames: OleVariant; safecall;
-    function Get_Bus1: WideString; safecall;
-    function Get_Bus2: WideString; safecall;
-    function Get_Name: WideString; safecall;
-    procedure Set_Name(const Value: WideString); safecall;
-    function Get_Phases: Integer; safecall;
-    procedure Set_Phases(Value: Integer); safecall;
-    function Get_EN: Double; safecall;
-    procedure Set_EN(Value: Double); safecall;
-    function Get_EE: Double; safecall;
-    procedure Set_EE(Value: Double); safecall;
-    function Get_Lat1: Double; safecall;
-    procedure Set_Lat1(Value: Double); safecall;
-    function Get_Lat2: Double; safecall;
-    procedure Set_Lat2(Value: Double); safecall;
-    function Get_Lon1: Double; safecall;
-    procedure Set_Lon1(Value: Double); safecall;
-    function Get_Lon2: Double; safecall;
-    procedure Set_Lon2(Value: Double); safecall;
-    function Get_Volts: Double; safecall;
-    procedure Set_Volts(Value: Double); safecall;
-    function Get_Count: Integer; safecall;
-    function Get_First: Integer; safecall;
-    function Get_Next: Integer; safecall;
+    TGICSources = class(TAutoObject, IGICSources)
+    PROTECTED
+        function Get_AllNames: Olevariant; SAFECALL;
+        function Get_Bus1: Widestring; SAFECALL;
+        function Get_Bus2: Widestring; SAFECALL;
+        function Get_Name: Widestring; SAFECALL;
+        procedure Set_Name(const Value: Widestring); SAFECALL;
+        function Get_Phases: Integer; SAFECALL;
+        procedure Set_Phases(Value: Integer); SAFECALL;
+        function Get_EN: Double; SAFECALL;
+        procedure Set_EN(Value: Double); SAFECALL;
+        function Get_EE: Double; SAFECALL;
+        procedure Set_EE(Value: Double); SAFECALL;
+        function Get_Lat1: Double; SAFECALL;
+        procedure Set_Lat1(Value: Double); SAFECALL;
+        function Get_Lat2: Double; SAFECALL;
+        procedure Set_Lat2(Value: Double); SAFECALL;
+        function Get_Lon1: Double; SAFECALL;
+        procedure Set_Lon1(Value: Double); SAFECALL;
+        function Get_Lon2: Double; SAFECALL;
+        procedure Set_Lon2(Value: Double); SAFECALL;
+        function Get_Volts: Double; SAFECALL;
+        procedure Set_Volts(Value: Double); SAFECALL;
+        function Get_Count: Integer; SAFECALL;
+        function Get_First: Integer; SAFECALL;
+        function Get_Next: Integer; SAFECALL;
 
-  end;
+    end;
 
 implementation
 
-uses ComServ, Variants, DSSGlobals, GICSource, PointerList, CktElement;
+uses
+    ComServ,
+    Variants,
+    DSSGlobals,
+    GICSource,
+    PointerList,
+    CktElement;
 
-function TGICSources.Get_AllNames: OleVariant;
-Var
-  GICElem      :TGICSourceObj;
-  ElementList  :Tpointerlist;
-  k:Integer;
+function TGICSources.Get_AllNames: Olevariant;
+var
+    GICElem: TGICSourceObj;
+    ElementList: Tpointerlist;
+    k: Integer;
 
-Begin
+begin
     Result := VarArrayCreate([0, 0], varOleStr);
     Result[0] := 'NONE';
-    IF ActiveCircuit <> Nil THEN
-    Begin
-       ElementList := GICsourceClass.ElementList;
-       If ElementList.ListSize>0 Then
-       Begin
-         VarArrayRedim(Result, ElementList.ListSize-1);
-         k:=0;
-         GICElem := ElementList.First;
-         WHILE GICElem<>Nil DO
-         Begin
-            Result[k] := GICElem.Name;
-            Inc(k);
-            GICElem := ElementList.Next;
-         End;
-       End;
-    End;
+    if ActiveCircuit <> NIL then
+    begin
+        ElementList := GICsourceClass.ElementList;
+        if ElementList.ListSize > 0 then
+        begin
+            VarArrayRedim(Result, ElementList.ListSize - 1);
+            k := 0;
+            GICElem := ElementList.First;
+            while GICElem <> NIL do
+            begin
+                Result[k] := GICElem.Name;
+                Inc(k);
+                GICElem := ElementList.Next;
+            end;
+        end;
+    end;
 
 end;
 
-function TGICSources.Get_Bus1: WideString;
+function TGICSources.Get_Bus1: Widestring;
 begin
     Result := '';
-    IF ActiveCircuit <> NIL
-    THEN Begin
-         Result := ActiveCircuit.ActiveCktElement.GetBus(1);
-    End
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.ActiveCktElement.GetBus(1);
+    end
 end;
 
-function TGICSources.Get_Bus2: WideString;
+function TGICSources.Get_Bus2: Widestring;
 begin
     Result := '';
-    IF ActiveCircuit <> NIL
-    THEN Begin
-         Result := ActiveCircuit.ActiveCktElement.GetBus(2);
-    End
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.ActiveCktElement.GetBus(2);
+    end
 end;
 
-function TGICSources.Get_Name: WideString;
+function TGICSources.Get_Name: Widestring;
 
-Begin
-   Result := '';  // signify no name
-   If ActiveCircuit <> Nil Then
-   Begin
-          Result := ActiveCircuit.ActiveCktElement.Name;
-   End;
+begin
+    Result := '';  // signify no name
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.ActiveCktElement.Name;
+    end;
 
 end;
 
-procedure TGICSources.Set_Name(const Value: WideString);
+procedure TGICSources.Set_Name(const Value: Widestring);
 // Set element active by name
 // Becomes the active circuit element
 
 begin
-     If ActiveCircuit <> Nil Then
-     Begin
-          If GICsourceClass.SetActive(Value) Then
-          Begin
-               ActiveCircuit.ActiveCktElement := GICsourceClass.ElementList.Active ;
-          End
-          Else Begin
-              DoSimpleMsg('Vsource "'+ Value +'" Not Found in Active Circuit.', 77003);
-          End;
-     End;
+    if ActiveCircuit <> NIL then
+    begin
+        if GICsourceClass.SetActive(Value) then
+        begin
+            ActiveCircuit.ActiveCktElement := GICsourceClass.ElementList.Active;
+        end
+        else
+        begin
+            DoSimpleMsg('Vsource "' + Value + '" Not Found in Active Circuit.', 77003);
+        end;
+    end;
 
 end;
 
 function TGICSources.Get_Phases: Integer;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0;
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Begin
-    Result := elem.nphases  ;
-  End;
+    Result := 0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        Result := elem.nphases;
+    end;
 end;
 
 procedure TGICSources.Set_Phases(Value: Integer);
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Begin
-    elem.nphases := Value ;
-    Elem.NConds := Value;  // Force reallocation of terminal info
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.nphases := Value;
+        Elem.NConds := Value;  // Force reallocation of terminal info
+    end;
 end;
 
 function TGICSources.Get_EN: Double;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.ENorth;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.ENorth;
 end;
 
 procedure TGICSources.Set_EN(Value: Double);
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then elem.ENorth := Value ;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        elem.ENorth := Value;
 end;
 
 function TGICSources.Get_EE: Double;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.EEast;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.EEast;
 end;
 
 procedure TGICSources.Set_EE(Value: Double);
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then elem.EEast := Value ;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        elem.EEast := Value;
 end;
 
 function TGICSources.Get_Lat1: Double;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.Lat1;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Lat1;
 
 end;
 
 procedure TGICSources.Set_Lat1(Value: Double);
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Begin
-     elem.Lat1 := Value ;
-     elem.VoltsSpecified := FALSE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Lat1 := Value;
+        elem.VoltsSpecified := FALSE;
+    end;
 end;
 
 function TGICSources.Get_Lat2: Double;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.Lat2;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Lat2;
 
 end;
 
 procedure TGICSources.Set_Lat2(Value: Double);
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Begin
-     elem.Lat2 := Value ;
-     elem.VoltsSpecified := FALSE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Lat2 := Value;
+        elem.VoltsSpecified := FALSE;
+    end;
 
 end;
 
 function TGICSources.Get_Lon1: Double;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.Lon1;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Lon1;
 
 end;
 
 procedure TGICSources.Set_Lon1(Value: Double);
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Begin
-     elem.Lon1 := Value ;
-     elem.VoltsSpecified := FALSE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Lon1 := Value;
+        elem.VoltsSpecified := FALSE;
+    end;
 
 end;
 
 function TGICSources.Get_Lon2: Double;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.Lon2;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Lon2;
 
 end;
 
 procedure TGICSources.Set_Lon2(Value: Double);
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Begin
-     elem.Lon2 := Value ;
-     elem.VoltsSpecified := FALSE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Lon2 := Value;
+        elem.VoltsSpecified := FALSE;
+    end;
 
 end;
 
 function TGICSources.Get_Volts: Double;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.Volts;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Volts;
 end;
 
 procedure TGICSources.Set_Volts(Value: Double);
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active ;
-  if elem <> nil then Begin
-     elem.Volts := Value ;
-     elem.VoltsSpecified := TRUE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Volts := Value;
+        elem.VoltsSpecified := TRUE;
+    end;
 end;
 
 function TGICSources.Get_Count: Integer;
-Begin
-     Result := 0;
-     If ActiveCircuit <> Nil Then
+begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
         Result := GICSourceClass.ElementList.ListSize;
 end;
 
 function TGICSources.Get_First: Integer;
-Var
-   pElem : TGICsourceObj;
+var
+    pElem: TGICsourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
         pElem := GICSourceClass.ElementList.First;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit.ActiveCktElement := pElem;
-              Result := 1;
-          End
-          Else pElem := GICSourceClass.ElementList.Next;
-        Until (Result = 1) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := pElem;
+                    Result := 1;
+                end
+                else
+                    pElem := GICSourceClass.ElementList.Next;
+            until (Result = 1) or (pElem = NIL);
+    end;
 end;
 
 function TGICSources.Get_Next: Integer;
-Var
-   pElem : TGICsourceObj;
+var
+    pElem: TGICsourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
         pElem := GICSourceClass.ElementList.Next;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit.ActiveCktElement := pElem;
-              Result := GICSourceClass.ElementList.ActiveIndex;
-          End
-          Else pElem := GICSourceClass.ElementList.Next;
-        Until (Result > 0) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := pElem;
+                    Result := GICSourceClass.ElementList.ActiveIndex;
+                end
+                else
+                    pElem := GICSourceClass.ElementList.Next;
+            until (Result > 0) or (pElem = NIL);
+    end;
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TGICSources, Class_GICSources,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TGICSources, Class_GICSources,
+        ciInternal, tmApartment);
 end.

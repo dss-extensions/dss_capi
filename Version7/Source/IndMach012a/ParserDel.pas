@@ -1,4 +1,5 @@
 unit ParserDel;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008, Electric Power Research Institute, Inc.
@@ -17,638 +18,754 @@ unit ParserDel;
 
 interface
 
-Uses
-    Arraydef, classes,{controls,}  Sysutils, RPN;
+uses
+    Arraydef,
+    classes,{controls,}  Sysutils,
+    RPN;
 
-Type
-     EParserProblem = class(Exception);
+type
+    EParserProblem = class(Exception);
 
-     TParser = class(TObject)
-     private
-         CmdBuffer:String;
-         FPosition:Integer;
-         ParameterBuffer:String;
-         TokenBuffer:String;
-         DelimChars:String;
-         WhiteSpaceChars:String;
-         FBeginQuoteChars, FEndQuoteChars:String;
-         LastDelimiter:Char;
-         MatrixRowTerminator:Char;
-         FAutoIncrement:Boolean;
-         ConvertError:Boolean;
-         IsQuotedString:Boolean;
-         RPNCalculator:TRPNCalc;
-         Function Get_Remainder:String;
-         Procedure SetCmdString(const Value:String);
-         Function MakeString:String;
-         Function MakeInteger:Integer;
-         Function MakeDouble:Double;
-         Function GetNextParam:String;
-         Procedure SkipWhiteSpace(Const LineBuffer:String; Var LinePos:Integer);
-         Function IsWhiteSpace(ch:Char):Boolean;
-         Function IsDelimiter(Const LineBuffer:String; Var LinePos:Integer):Boolean;
-         Function IsDelimChar(ch:Char):Boolean;
-         Function IsCommentChar(Const LineBuffer:String; Var LinePos:Integer):Boolean;
-         Function GetToken(Const LineBuffer:String; Var LinePos:Integer):String;
-         Function InterpretRPNString(var Code:Integer):Double;
-     protected
+    TParser = class(TObject)
+    PRIVATE
+        CmdBuffer: String;
+        FPosition: Integer;
+        ParameterBuffer: String;
+        TokenBuffer: String;
+        DelimChars: String;
+        WhiteSpaceChars: String;
+        FBeginQuoteChars, FEndQuoteChars: String;
+        LastDelimiter: Char;
+        MatrixRowTerminator: Char;
+        FAutoIncrement: Boolean;
+        ConvertError: Boolean;
+        IsQuotedString: Boolean;
+        RPNCalculator: TRPNCalc;
+        function Get_Remainder: String;
+        procedure SetCmdString(const Value: String);
+        function MakeString: String;
+        function MakeInteger: Integer;
+        function MakeDouble: Double;
+        function GetNextParam: String;
+        procedure SkipWhiteSpace(const LineBuffer: String; var LinePos: Integer);
+        function IsWhiteSpace(ch: Char): Boolean;
+        function IsDelimiter(const LineBuffer: String; var LinePos: Integer): Boolean;
+        function IsDelimChar(ch: Char): Boolean;
+        function IsCommentChar(const LineBuffer: String; var LinePos: Integer): Boolean;
+        function GetToken(const LineBuffer: String; var LinePos: Integer): String;
+        function InterpretRPNString(var Code: Integer): Double;
+    PROTECTED
 
-     public
-       constructor Create;
-       destructor Destroy; override;
-       Property DblValue:Double   read MakeDouble;
-       Property IntValue:Integer  read MakeInteger;
-       Property StrValue:String   read MakeString;
-       Property Token:String      read TokenBuffer   write TokenBuffer;
-       Property Remainder:String  Read Get_Remainder;
-       Property NextParam:String  read GetNextParam;
-       Function ParseAsBusName(Var NumNodes:Integer; NodeArray:pIntegerArray):String;
-       Function ParseAsVector(ExpectedSize:Integer; VectorBuffer:pDoubleArray):Integer;
-       Function ParseAsMatrix(ExpectedOrder:Integer; MatrixBuffer:pDoubleArray):Integer;
-       Function ParseAsSymMatrix(ExpectedOrder:Integer; MatrixBuffer:pDoubleArray):Integer;
-       Procedure ResetDelims;   // resets delimiters to default
-     published
-       Property CmdString:String        read CmdBuffer        write SetCmdString;
-       Property Position:Integer        read FPosition        write FPosition; // to save and restore
-       Property Delimiters:String       read DelimChars       write DelimChars;
-       Property Whitespace:String       read WhiteSpaceChars  write WhiteSpaceChars;
-       Property BeginQuoteChars:string  read FBeginQuoteChars write FBeginQuoteChars;
-       Property EndQuoteChars:string    read FEndQuoteChars   write FEndQuoteChars;
-       Property AutoIncrement:Boolean   read FAutoIncrement   write FAutoIncrement;
-     end;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
+        property DblValue: Double READ MakeDouble;
+        property IntValue: Integer READ MakeInteger;
+        property StrValue: String READ MakeString;
+        property Token: String READ TokenBuffer WRITE TokenBuffer;
+        property Remainder: String READ Get_Remainder;
+        property NextParam: String READ GetNextParam;
+        function ParseAsBusName(var NumNodes: Integer; NodeArray: pIntegerArray): String;
+        function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray): Integer;
+        function ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
+        function ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
+        procedure ResetDelims;   // resets delimiters to default
+    PUBLISHED
+        property CmdString: String READ CmdBuffer WRITE SetCmdString;
+        property Position: Integer READ FPosition WRITE FPosition; // to save and restore
+        property Delimiters: String READ DelimChars WRITE DelimChars;
+        property Whitespace: String READ WhiteSpaceChars WRITE WhiteSpaceChars;
+        property BeginQuoteChars: String READ FBeginQuoteChars WRITE FBeginQuoteChars;
+        property EndQuoteChars: String READ FEndQuoteChars WRITE FEndQuoteChars;
+        property AutoIncrement: Boolean READ FAutoIncrement WRITE FAutoIncrement;
+    end;
 
-     Var  Parser:TParser;
+var
+    Parser: TParser;
 
 implementation
 
 // Uses  Dialogs;
 
-CONST
-  Commentchar = '!';
+const
+    Commentchar = '!';
 
 {=======================================================================================================================}
 
-Function  ProcessRPNCommand(Const TokenBuffer:String; RPN:TRPNCalc):Integer;
+function ProcessRPNCommand(const TokenBuffer: String; RPN: TRPNCalc): Integer;
 
-Var  S :String;
-     Number :Double;
+var
+    S: String;
+    Number: Double;
 
-Begin
+begin
     Result := 0;  // Error Code on conversion error
 
 
      {First Try to make a valid number. If that fails, check for RPN command}
 
     Val(TokenBuffer, Number, Result);
-    If Result=0 Then    RPN.X := Number  // Enters number in X register
+    if Result = 0 then
+        RPN.X := Number  // Enters number in X register
 
-    Else  Begin    {Check for RPN command. }
+    else
+    begin    {Check for RPN command. }
         Result := 0; // reset error return
         S := LowerCase(TokenBuffer);
-        With RPN Do
-          If CompareStr(S, '+')=0    Then Add Else
-          If CompareStr(S, '-')=0    Then Subtract Else
-          If CompareStr(S, '*')=0    Then multiply Else
-          If CompareStr(S, '/')=0    Then Divide Else
-          If CompareStr(S, 'sqrt')=0 Then Sqrt Else
-          If CompareStr(S, 'sqr')=0  Then Square Else
-          If CompareStr(S, '^')=0    Then YToTheXPower Else
-          If CompareStr(S, 'sin')=0  Then SinDeg Else
-          If CompareStr(S, 'cos')=0  Then CosDeg Else
-          If CompareStr(S, 'tan')=0  Then TanDeg Else
-          If CompareStr(S, 'asin')=0 Then aSinDeg Else
-          If CompareStr(S, 'acos')=0 Then aCosDeg Else
-          If CompareStr(S, 'atan')=0 Then aTanDeg Else
-          If CompareStr(S, 'atan2')=0 Then aTan2Deg Else
-          If CompareStr(S, 'swap')=0 Then SwapXY Else
-          If CompareStr(S, 'rollup')=0 Then RollUp Else
-          If CompareStr(S, 'rolldn')=0 Then RollDn Else
-          If CompareStr(S, 'ln')=0   Then Natlog Else
-          If CompareStr(S, 'pi')=0   Then EnterPi Else
-          If CompareStr(S, 'log10')=0 Then TenLog Else
-          If CompareStr(S, 'exp')=0  Then etothex Else
-          If CompareStr(S, 'inv')=0  Then inv Else
-        Begin
-           Raise EParserProblem.Create('Invalid inline math entry: "'+TokenBuffer+'"');
-           Result := 1;  // error
-        End;
-   End;
+        with RPN do
+            if CompareStr(S, '+') = 0 then
+                Add
+            else
+            if CompareStr(S, '-') = 0 then
+                Subtract
+            else
+            if CompareStr(S, '*') = 0 then
+                multiply
+            else
+            if CompareStr(S, '/') = 0 then
+                Divide
+            else
+            if CompareStr(S, 'sqrt') = 0 then
+                Sqrt
+            else
+            if CompareStr(S, 'sqr') = 0 then
+                Square
+            else
+            if CompareStr(S, '^') = 0 then
+                YToTheXPower
+            else
+            if CompareStr(S, 'sin') = 0 then
+                SinDeg
+            else
+            if CompareStr(S, 'cos') = 0 then
+                CosDeg
+            else
+            if CompareStr(S, 'tan') = 0 then
+                TanDeg
+            else
+            if CompareStr(S, 'asin') = 0 then
+                aSinDeg
+            else
+            if CompareStr(S, 'acos') = 0 then
+                aCosDeg
+            else
+            if CompareStr(S, 'atan') = 0 then
+                aTanDeg
+            else
+            if CompareStr(S, 'atan2') = 0 then
+                aTan2Deg
+            else
+            if CompareStr(S, 'swap') = 0 then
+                SwapXY
+            else
+            if CompareStr(S, 'rollup') = 0 then
+                RollUp
+            else
+            if CompareStr(S, 'rolldn') = 0 then
+                RollDn
+            else
+            if CompareStr(S, 'ln') = 0 then
+                Natlog
+            else
+            if CompareStr(S, 'pi') = 0 then
+                EnterPi
+            else
+            if CompareStr(S, 'log10') = 0 then
+                TenLog
+            else
+            if CompareStr(S, 'exp') = 0 then
+                etothex
+            else
+            if CompareStr(S, 'inv') = 0 then
+                inv
+            else
+            begin
+                raise EParserProblem.Create('Invalid inline math entry: "' + TokenBuffer + '"');
+                Result := 1;  // error
+            end;
+    end;
 
-End;
+end;
 
 {=======================================================================================================================}
 
 constructor TParser.Create;
-Begin
-     Inherited Create;
+begin
+    inherited Create;
 
-     DelimChars          := ',=';
-     WhiteSpaceChars     := ' ' + #9;   // blank + tab
-     FBeginQuoteChars    := '("''[{';
-     FEndQuoteChars      := ')"'']}';
-     FPosition           := 1;
-     MatrixRowTerminator := '|';
-     FAutoIncrement      := FALSE;
-     RPNCalculator       := TRPNCalc.Create;
-End;
+    DelimChars := ',=';
+    WhiteSpaceChars := ' ' + #9;   // blank + tab
+    FBeginQuoteChars := '("''[{';
+    FEndQuoteChars := ')"'']}';
+    FPosition := 1;
+    MatrixRowTerminator := '|';
+    FAutoIncrement := FALSE;
+    RPNCalculator := TRPNCalc.Create;
+end;
 
 {=======================================================================================================================}
 
 destructor TParser.Destroy;
-Begin
+begin
     RPNCalculator.Free;
 
     inherited Destroy;
-End;
+end;
 
 {=======================================================================================================================}
 
-Procedure TParser.SetCmdString(Const Value:String);
-Begin
-     CmdBuffer := Value + ' '; // add some white space at end to get last param
-     FPosition  := 1;
-     SkipWhiteSpace(CmdBuffer, FPosition);   // position at first non whitespace character
-End;
+procedure TParser.SetCmdString(const Value: String);
+begin
+    CmdBuffer := Value + ' '; // add some white space at end to get last param
+    FPosition := 1;
+    SkipWhiteSpace(CmdBuffer, FPosition);   // position at first non whitespace character
+end;
 
 {=======================================================================================================================}
 
-Procedure TParser.ResetDelims;
-Begin
-     DelimChars          := ',=';
-     WhiteSpaceChars     := ' ' + #9;
-     MatrixRowTerminator := '|';
-     FBeginQuoteChars    := '("''[{';
-     FEndQuoteChars      := ')"'']}';
-End;
+procedure TParser.ResetDelims;
+begin
+    DelimChars := ',=';
+    WhiteSpaceChars := ' ' + #9;
+    MatrixRowTerminator := '|';
+    FBeginQuoteChars := '("''[{';
+    FEndQuoteChars := ')"'']}';
+end;
 
 {=======================================================================================================================}
 
-Function TParser.IsWhiteSpace(ch:Char):Boolean;
-Var i:Integer;
-Begin
-    Result := False;
-    For i := 1 to Length(WhiteSpaceChars) Do Begin
-        If ch=WhiteSpaceChars[i] then Begin
-         Result := True;
-         Exit;
+function TParser.IsWhiteSpace(ch: Char): Boolean;
+var
+    i: Integer;
+begin
+    Result := FALSE;
+    for i := 1 to Length(WhiteSpaceChars) do
+    begin
+        if ch = WhiteSpaceChars[i] then
+        begin
+            Result := TRUE;
+            Exit;
         end;
-    End;
-End;
+    end;
+end;
 
 
 {=======================================================================================================================}
 
-Function TParser.IsDelimiter(Const LineBuffer:String; Var LinePos:Integer):Boolean;
-Var i  :Integer;
-    ch :Char;
-Begin
+function TParser.IsDelimiter(const LineBuffer: String; var LinePos: Integer): Boolean;
+var
+    i: Integer;
+    ch: Char;
+begin
 
-    Result := False;
+    Result := FALSE;
 
-    If IsCommentChar(LineBuffer, LinePos) THEN
-      Begin
-        Result := True;
+    if IsCommentChar(LineBuffer, LinePos) then
+    begin
+        Result := TRUE;
         LastDelimiter := CommentChar;
         Exit;
-      End;
+    end;
 
     ch := LineBuffer[LinePos];
 
-    For i := 1 to Length(DelimChars) Do Begin
-        If ch=DelimChars[i] then Begin
-         Result := True;
-         LastDelimiter := ch;
-         Exit;
+    for i := 1 to Length(DelimChars) do
+    begin
+        if ch = DelimChars[i] then
+        begin
+            Result := TRUE;
+            LastDelimiter := ch;
+            Exit;
         end;
-    End;
+    end;
 
-    For i := 1 to Length(WhiteSpaceChars) Do Begin
-        If ch=WhiteSpaceChars[i] then Begin
-         Result := True;
-         LastDelimiter := ' ';  // to indicate stopped on white space
-         Exit;
+    for i := 1 to Length(WhiteSpaceChars) do
+    begin
+        if ch = WhiteSpaceChars[i] then
+        begin
+            Result := TRUE;
+            LastDelimiter := ' ';  // to indicate stopped on white space
+            Exit;
         end;
-    End;
+    end;
 
-End;
+end;
 
 
 {=======================================================================================================================}
 
-Function TParser.IsDelimChar(ch:Char):Boolean;
-Var i:Integer;
-Begin
-    Result := False;
-    For i := 1 to Length(DelimChars) Do Begin
-      If ch=DelimChars[i] then Begin
-         Result := True;
-         Exit;
-      end;
-    End;
-End;
+function TParser.IsDelimChar(ch: Char): Boolean;
+var
+    i: Integer;
+begin
+    Result := FALSE;
+    for i := 1 to Length(DelimChars) do
+    begin
+        if ch = DelimChars[i] then
+        begin
+            Result := TRUE;
+            Exit;
+        end;
+    end;
+end;
 
 {=======================================================================================================================}
 
-Procedure TParser.SkipWhiteSpace(Const LineBuffer:String; Var LinePos:Integer);
-Begin
-     While (LinePos<Length(LineBuffer)) And
-           IsWhiteSpace(LineBuffer[LinePos]) Do Inc(LinePos);
-End;
+procedure TParser.SkipWhiteSpace(const LineBuffer: String; var LinePos: Integer);
+begin
+    while (LinePos < Length(LineBuffer)) and
+        IsWhiteSpace(LineBuffer[LinePos]) do
+        Inc(LinePos);
+end;
 
 {=======================================================================================================================}
 
-Function TParser.GetToken(Const LineBuffer:String; Var LinePos:Integer):String;
-Var
-   TokenStart    :Integer;
-   CmdBufLength  :Integer;
-   QuoteIndex    :Integer;  // value of quote character found
+function TParser.GetToken(const LineBuffer: String; var LinePos: Integer): String;
+var
+    TokenStart: Integer;
+    CmdBufLength: Integer;
+    QuoteIndex: Integer;  // value of quote character found
 
 
    {---------------- Local Function -----------------------}
-   procedure ParseToEndChar( Endchar:char);
-   Begin
-      Inc(LinePos);
-      TokenStart := LinePos;
-      While (LinePos<CmdBufLength)
-         And (LineBuffer[LinePos]<>EndChar) Do Inc(LinePos);
+    procedure ParseToEndChar(Endchar: Char);
+    begin
+        Inc(LinePos);
+        TokenStart := LinePos;
+        while (LinePos < CmdBufLength) and (LineBuffer[LinePos] <> EndChar) do
+            Inc(LinePos);
 
-      GetToken := Copy(LineBuffer, TokenStart, LinePos-TokenStart);
-      If LinePos<CmdBufLength Then Inc(LinePos);  // Increment past endchar
-   End;
-
-   {---------------- Local Function -----------------------}
-   Procedure ParseToEndQuote;
-   Begin
-       ParseToEndChar(FEndQuoteChars[QuoteIndex]);
-       IsQuotedString := TRUE;
-   End;
+        GetToken := Copy(LineBuffer, TokenStart, LinePos - TokenStart);
+        if LinePos < CmdBufLength then
+            Inc(LinePos);  // Increment past endchar
+    end;
 
    {---------------- Local Function -----------------------}
-   Function IsBeginQuote( ch:Char):Boolean;
-   Begin
-       QuoteIndex := Pos(ch, FBeginQuoteChars);
-       IF QuoteIndex > 0 THEN Result := True ELSE Result := False;
-   End;
+    procedure ParseToEndQuote;
+    begin
+        ParseToEndChar(FEndQuoteChars[QuoteIndex]);
+        IsQuotedString := TRUE;
+    end;
 
-Begin
-  Result := '';   // if it doesn't find anything, return null string
-  CmdBufLength := Length(LineBuffer);
-  If LinePos <= CmdBufLength Then Begin
+   {---------------- Local Function -----------------------}
+    function IsBeginQuote(ch: Char): Boolean;
+    begin
+        QuoteIndex := Pos(ch, FBeginQuoteChars);
+        if QuoteIndex > 0 then
+            Result := TRUE
+        else
+            Result := FALSE;
+    end;
+
+begin
+    Result := '';   // if it doesn't find anything, return null string
+    CmdBufLength := Length(LineBuffer);
+    if LinePos <= CmdBufLength then
+    begin
 
    {Handle Quotes and Parentheses around tokens}
-    IsQuotedString := False;
-    IF IsBeginQuote(LineBuffer[LinePos]) THEN
-        ParseToEndQuote
-    ELSE    { Copy to next delimiter or whitespace}
-       BEGIN
-        TokenStart := LinePos;
-        WHILE (LinePos<CmdBufLength)
-          AND Not IsDelimiter(LineBuffer, LinePos) DO Inc(LinePos);
-               
-        Result := Copy(LineBuffer, TokenStart, (LinePos-TokenStart));
-       END;
+        IsQuotedString := FALSE;
+        if IsBeginQuote(LineBuffer[LinePos]) then
+            ParseToEndQuote
+        else    { Copy to next delimiter or whitespace}
+        begin
+            TokenStart := LinePos;
+            while (LinePos < CmdBufLength) and not IsDelimiter(LineBuffer, LinePos) do
+                Inc(LinePos);
+
+            Result := Copy(LineBuffer, TokenStart, (LinePos - TokenStart));
+        end;
 
 
     { Check for stop on comment }
 
     // if stop on comment, ignore rest of line.
-    If LastDelimiter=CommentChar
-    THEN LinePos := Length(LineBuffer)+1
-    ELSE Begin
+        if LastDelimiter = CommentChar then
+            LinePos := Length(LineBuffer) + 1
+        else
+        begin
 
       {Get Rid of Trailing White Space}
-      If LastDelimiter=' ' Then SkipWhiteSpace(LineBuffer,LinePos);
-      If IsDelimchar(LineBuffer[LinePos]) Then Begin
-         LastDelimiter := LineBuffer[LinePos];
-         Inc(LinePos);  // Move past terminating delimiter
-      End;
-      SkipWhiteSpace(LineBuffer,LinePos);
-    End;
-  End;
-End;
+            if LastDelimiter = ' ' then
+                SkipWhiteSpace(LineBuffer, LinePos);
+            if IsDelimchar(LineBuffer[LinePos]) then
+            begin
+                LastDelimiter := LineBuffer[LinePos];
+                Inc(LinePos);  // Move past terminating delimiter
+            end;
+            SkipWhiteSpace(LineBuffer, LinePos);
+        end;
+    end;
+end;
 
 
 {=======================================================================================================================}
 
-Function TParser.GetNextParam:String;
+function TParser.GetNextParam: String;
 
-Begin
+begin
 
-   If FPosition<=Length(CmdBuffer) Then Begin
-      LastDelimiter := ' ';
-      TokenBuffer := GetToken(CmdBuffer, FPosition); // Get entire token and put in token Buffer
-      If (LastDelimiter = '=') Then Begin
-        Parameterbuffer := tokenBuffer;
-        TokenBuffer := Gettoken(CmdBuffer, FPosition);
-      End
-      Else begin
-        ParameterBuffer := '';  //init to null string
-      End;
-   End
-   Else Begin
-       ParameterBuffer := '';
-       TokenBuffer := '';
-   End;
-   Result := ParameterBuffer;
+    if FPosition <= Length(CmdBuffer) then
+    begin
+        LastDelimiter := ' ';
+        TokenBuffer := GetToken(CmdBuffer, FPosition); // Get entire token and put in token Buffer
+        if (LastDelimiter = '=') then
+        begin
+            Parameterbuffer := tokenBuffer;
+            TokenBuffer := Gettoken(CmdBuffer, FPosition);
+        end
+        else
+        begin
+            ParameterBuffer := '';  //init to null string
+        end;
+    end
+    else
+    begin
+        ParameterBuffer := '';
+        TokenBuffer := '';
+    end;
+    Result := ParameterBuffer;
 
-End;
+end;
 
 {=======================================================================================================================}
 
-Function TParser.ParseAsBusName(Var NumNodes:Integer; NodeArray:pIntegerArray):String;
+function TParser.ParseAsBusName(var NumNodes: Integer; NodeArray: pIntegerArray): String;
 
 { Looking for "BusName.1.2.3" in the TokenBuffer
   Assumes NodeArray is big enough to hold the numbers}
 
-Var
-   DotPos, NodeBufferPos:Integer;
-   NodeBuffer,DelimSave,  TokenSave:String;
+var
+    DotPos, NodeBufferPos: Integer;
+    NodeBuffer, DelimSave, TokenSave: String;
 
-Begin
-   IF FAutoIncrement THEN GetNextParam;
-   NumNodes := 0;
-   DotPos := Pos('.', TokenBuffer);
-   If DotPos=0 Then
-      Result := TokenBuffer
-   Else Begin
-      Result := Trim(Copy(TokenBuffer, 1, DotPos-1)); // Bus Name
-      TokenSave := TokenBuffer;
+begin
+    if FAutoIncrement then
+        GetNextParam;
+    NumNodes := 0;
+    DotPos := Pos('.', TokenBuffer);
+    if DotPos = 0 then
+        Result := TokenBuffer
+    else
+    begin
+        Result := Trim(Copy(TokenBuffer, 1, DotPos - 1)); // Bus Name
+        TokenSave := TokenBuffer;
       {now Get nodes}
-      NodeBuffer := Copy(tokenBuffer, DotPos+1, Length(tokenBuffer)-DotPos) + ' ';
+        NodeBuffer := Copy(tokenBuffer, DotPos + 1, Length(tokenBuffer) - DotPos) + ' ';
 
-      NodeBufferPos := 1;
-      DelimSave := DelimChars;
-      DelimChars := '.';
-      TokenBuffer := GetToken(NodeBuffer,NodeBufferPos);
-      Try
-        While Length(TokenBuffer)>0 Do Begin
-           inc(NumNodes);
-           NodeArray^[NumNodes] := MakeInteger;
-           If ConvertError Then NodeArray^[NumNodes] := -1;  // Indicate an error
-           TokenBuffer := GetToken(NodeBuffer,NodeBufferPos);
-        End;
-      Except
+        NodeBufferPos := 1;
+        DelimSave := DelimChars;
+        DelimChars := '.';
+        TokenBuffer := GetToken(NodeBuffer, NodeBufferPos);
+        try
+            while Length(TokenBuffer) > 0 do
+            begin
+                inc(NumNodes);
+                NodeArray^[NumNodes] := MakeInteger;
+                if ConvertError then
+                    NodeArray^[NumNodes] := -1;  // Indicate an error
+                TokenBuffer := GetToken(NodeBuffer, NodeBufferPos);
+            end;
+        except
 //          On E: Exception Do MessageDlg('Node Buffer Too Small: ' + E.Message, mterror, [mbOK], 0 );
-      End;
+        end;
 
-      DelimChars := DelimSave;   //restore to original delimiters
-      TokenBuffer := TokenSave;
-   End;
+        DelimChars := DelimSave;   //restore to original delimiters
+        TokenBuffer := TokenSave;
+    end;
 
-End;
+end;
 
 {=======================================================================================================================}
 
-Function TParser.ParseAsVector(ExpectedSize:Integer; VectorBuffer:pDoubleArray):Integer;
-VAR
-   ParseBufferPos, NumElements, i:Integer;
-   ParseBuffer, DelimSave :String;
+function TParser.ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray): Integer;
+var
+    ParseBufferPos, NumElements, i: Integer;
+    ParseBuffer, DelimSave: String;
 
-BEGIN
+begin
 
-   IF FAutoIncrement THEN GetNextParam;
+    if FAutoIncrement then
+        GetNextParam;
 
-   NumElements := 0;
-   Result := 0;  // return 0 if none found or error occurred
-   TRY
-     For i := 1 to ExpectedSize Do VectorBuffer^[i] := 0.0;
+    NumElements := 0;
+    Result := 0;  // return 0 if none found or error occurred
+    try
+        for i := 1 to ExpectedSize do
+            VectorBuffer^[i] := 0.0;
 
      {now Get Vector values}
-     ParseBuffer := TokenBuffer + ' ';
+        ParseBuffer := TokenBuffer + ' ';
 
-     ParseBufferPos := 1;
-     DelimSave      := DelimChars;
-     DelimChars     := DelimChars + MatrixRowTerminator;
+        ParseBufferPos := 1;
+        DelimSave := DelimChars;
+        DelimChars := DelimChars + MatrixRowTerminator;
 
-     SkipWhiteSpace(ParseBuffer, ParseBufferPos);
-     TokenBuffer := GetToken(ParseBuffer,ParseBufferPos);
-     WHILE Length(TokenBuffer)>0 Do BEGIN
-        inc(NumElements);
-        IF NumElements <= ExpectedSize THEN VectorBuffer^[NumElements] := MakeDouble;
-        IF LastDelimiter = MatrixRowTerminator THEN BREAK;
-        TokenBuffer := GetToken(ParseBuffer,ParseBufferPos);
-     END;
+        SkipWhiteSpace(ParseBuffer, ParseBufferPos);
+        TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+        while Length(TokenBuffer) > 0 do
+        begin
+            inc(NumElements);
+            if NumElements <= ExpectedSize then
+                VectorBuffer^[NumElements] := MakeDouble;
+            if LastDelimiter = MatrixRowTerminator then
+                BREAK;
+            TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+        end;
 
-     Result := NumElements;
+        Result := NumElements;
 
-   EXCEPT
+    except
 //       On E: Exception Do MessageDlg('Vector Buffer in ParseAsVector Probably Too Small: ' + E.Message, mterror, [mbOK], 0 );
-   END;
+    end;
 
 
-   DelimChars  := DelimSave;   //restore to original delimiters
-   TokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
+    DelimChars := DelimSave;   //restore to original delimiters
+    TokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
 
-END;
+end;
 
 {=======================================================================================================================}
 
-Function TParser.ParseAsMatrix(ExpectedOrder:Integer; MatrixBuffer:pDoubleArray):Integer;
+function TParser.ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
 
-VAR
-   i,j,k, ElementsFound:Integer;
-   RowBuf:pDoubleArray;
+var
+    i, j, k, ElementsFound: Integer;
+    RowBuf: pDoubleArray;
 
-BEGIN
+begin
 
-  IF FAutoIncrement THEN GetNextParam;
+    if FAutoIncrement then
+        GetNextParam;
 
-  RowBuf := nil;
+    RowBuf := NIL;
 
-  TRY
-    RowBuf := Allocmem(Sizeof(Double)*ExpectedOrder);
+    try
+        RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
 
-    FOR i := 1 to (ExpectedOrder*ExpectedOrder) DO MatrixBuffer^[i] := 0.0;
+        for i := 1 to (ExpectedOrder * ExpectedOrder) do
+            MatrixBuffer^[i] := 0.0;
 
-    FOR i := 1 to ExpectedOrder DO BEGIN
+        for i := 1 to ExpectedOrder do
+        begin
 
-         ElementsFound := ParseAsVector(ExpectedOrder, RowBuf);
+            ElementsFound := ParseAsVector(ExpectedOrder, RowBuf);
 
          { Returns matrix in Column Order (Fortran order) }
-         k := i;
-         FOR j := 1 to ElementsFound DO BEGIN
-             MatrixBuffer^[k] := RowBuf^[j];
-             Inc(k, ExpectedOrder);
-         END;
+            k := i;
+            for j := 1 to ElementsFound do
+            begin
+                MatrixBuffer^[k] := RowBuf^[j];
+                Inc(k, ExpectedOrder);
+            end;
 
-    END;
+        end;
 
-   EXCEPT
+    except
 //       On E: Exception Do MessageDlg('Matrix Buffer in ParseAsMatrix Probably Too Small: ' + E.Message,  mterror, [mbOK], 0 );
-   END;
+    end;
 
-   if Assigned (RowBuf) then FreeMem(RowBuf, (Sizeof(Double)*ExpectedOrder));
-   result := ExpectedOrder;
-END;
+    if Assigned(RowBuf) then
+        FreeMem(RowBuf, (Sizeof(Double) * ExpectedOrder));
+    result := ExpectedOrder;
+end;
 
 {=======================================================================================================================}
 
-Function TParser.ParseAsSymMatrix(ExpectedOrder:Integer; MatrixBuffer:pDoubleArray):Integer;
+function TParser.ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
 
-VAR
-   i,j,
-   ElementsFound :Integer;
-   RowBuf        :pDoubleArray;
+var
+    i, j,
+    ElementsFound: Integer;
+    RowBuf: pDoubleArray;
 
    {---------------- Local Function -----------------------}
-   Function ElementIndex(ii,jj:Integer):Integer;
-   BEGIN
-       Result := (jj-1)*ExpectedOrder + ii;
-   END;
+    function ElementIndex(ii, jj: Integer): Integer;
+    begin
+        Result := (jj - 1) * ExpectedOrder + ii;
+    end;
 
-BEGIN
+begin
 
 
-  IF FAutoIncrement THEN GetNextParam;
+    if FAutoIncrement then
+        GetNextParam;
 
-  RowBuf := nil;
+    RowBuf := NIL;
 
-  TRY
-    RowBuf := Allocmem(Sizeof(Double)*ExpectedOrder);
+    try
+        RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
 
-    FOR i := 1 to (ExpectedOrder*ExpectedOrder) DO MatrixBuffer^[i] := 0.0;
+        for i := 1 to (ExpectedOrder * ExpectedOrder) do
+            MatrixBuffer^[i] := 0.0;
 
-    FOR i := 1 to ExpectedOrder DO BEGIN
+        for i := 1 to ExpectedOrder do
+        begin
 
-         ElementsFound := ParseAsVector(ExpectedOrder, RowBuf);
+            ElementsFound := ParseAsVector(ExpectedOrder, RowBuf);
 
          { Returns matrix in Column Order (Fortran order) }
-         FOR j := 1 to ElementsFound DO BEGIN
-             MatrixBuffer^[ElementIndex(i,j)] := RowBuf^[j];
-             If i<>j THEN MatrixBuffer^[ElementIndex(j,i)] := RowBuf^[j];
-         END;
+            for j := 1 to ElementsFound do
+            begin
+                MatrixBuffer^[ElementIndex(i, j)] := RowBuf^[j];
+                if i <> j then
+                    MatrixBuffer^[ElementIndex(j, i)] := RowBuf^[j];
+            end;
 
-    END;
+        end;
 
-   EXCEPT
+    except
 //       On E: Exception Do MessageDlg('Matrix Buffer in ParseAsSymMatrix Probably Too Small: ' + E.Message, mterror, [mbOK], 0 );
-   END;
+    end;
 
-   if Assigned (RowBuf) then FreeMem(RowBuf, (Sizeof(Double)*ExpectedOrder));
-   Result := ExpectedOrder;
+    if Assigned(RowBuf) then
+        FreeMem(RowBuf, (Sizeof(Double) * ExpectedOrder));
+    Result := ExpectedOrder;
 
-END;
-
+end;
 
 
 {=======================================================================================================================}
 
-Function TParser.MakeString:String;
-Begin
-    IF FAutoIncrement THEN GetNextParam;
+function TParser.MakeString: String;
+begin
+    if FAutoIncrement then
+        GetNextParam;
 
     Result := TokenBuffer;
-End;
+end;
 
 {=======================================================================================================================}
 
-Function TParser.MakeInteger:Integer;
+function TParser.MakeInteger: Integer;
  // Hex integers must be preceeded by "$"
-Var Code:Integer;
-    Temp:double ;
-Begin
-     ConvertError := FALSE;
-     IF FAutoIncrement THEN GetNextParam;
+var
+    Code: Integer;
+    Temp: Double;
+begin
+    ConvertError := FALSE;
+    if FAutoIncrement then
+        GetNextParam;
 
-     If Length(TokenBuffer)=0 Then Begin
+    if Length(TokenBuffer) = 0 then
+    begin
         Result := 0;
-     End
-     Else Begin
-         If IsQuotedString Then  Begin
+    end
+    else
+    begin
+        if IsQuotedString then
+        begin
             Temp := InterpretRPNString(Code);
             Result := Round(Temp);
-         End
-         Else Val(TokenBuffer, Result, Code);  // Try direct conversion to integer
+        end
+        else
+            Val(TokenBuffer, Result, Code);  // Try direct conversion to integer
 
-         If Code<>0 Then Begin // on error for integer conversion
+        if Code <> 0 then
+        begin // on error for integer conversion
              // Try again with an double result in case value specified in decimal or some other technique
-             Val(Tokenbuffer, Temp, Code);
-             If Code <> 0 Then Begin
+            Val(Tokenbuffer, Temp, Code);
+            if Code <> 0 then
+            begin
                // not needed with Raise ...  Result := 0;
-               ConvertError := TRUE;
-               Raise EParserProblem.Create('Integer number conversion error for string: "'+TokenBuffer+'"');
-             End
-             Else Result := Round(Temp);;
-         End;
-     End;
-End;
+                ConvertError := TRUE;
+                raise EParserProblem.Create('Integer number conversion error for string: "' + TokenBuffer + '"');
+            end
+            else
+                Result := Round(Temp);
+            ;
+        end;
+    end;
+end;
 
 {=======================================================================================================================}
 
-Function TParser.MakeDouble:Double;
-Var Code:Integer;
-Begin
-     IF FAutoIncrement THEN GetNextParam;
-     ConvertError := FALSE;
-     If Length(TokenBuffer)=0 Then Result :=0.0
-     Else Begin
-         If IsQuotedString Then  Result := InterpretRPNString(Code)
-         Else  Val(TokenBuffer, Result, Code);
+function TParser.MakeDouble: Double;
+var
+    Code: Integer;
+begin
+    if FAutoIncrement then
+        GetNextParam;
+    ConvertError := FALSE;
+    if Length(TokenBuffer) = 0 then
+        Result := 0.0
+    else
+    begin
+        if IsQuotedString then
+            Result := InterpretRPNString(Code)
+        else
+            Val(TokenBuffer, Result, Code);
 
-         If Code<>0 Then
-         Begin
+        if Code <> 0 then
+        begin
            // not needed with Raise ...  Result := 0.0;
-           ConvertError := TRUE;
-           Raise EParserProblem.Create('Floating point number conversion error for string: "'+TokenBuffer+'"');
-         End;
-     End;
+            ConvertError := TRUE;
+            raise EParserProblem.Create('Floating point number conversion error for string: "' + TokenBuffer + '"');
+        end;
+    end;
 
-End;
-
-{=======================================================================================================================}
-
-Function TParser.Get_Remainder:String;
-BEGIN
-     Result := Copy(CmdBuffer, FPosition, Length(CmdBuffer)-FPosition+1)
-END;
+end;
 
 {=======================================================================================================================}
 
-Function TParser.IsCommentChar(Const LineBuffer:String; Var LinePos:Integer): Boolean;
+function TParser.Get_Remainder: String;
+begin
+    Result := Copy(CmdBuffer, FPosition, Length(CmdBuffer) - FPosition + 1)
+end;
+
+{=======================================================================================================================}
+
+function TParser.IsCommentChar(const LineBuffer: String; var LinePos: Integer): Boolean;
 
 {Checks for CommentChar and '//'}
 
 begin
-     CASE LineBuffer[LinePos] of
-       CommentChar: Result := TRUE;
-       '/':  Begin
-                 If (Length(LineBuffer)>LinePos) And (LineBuffer[LinePos+1]='/') Then Result := TRUE
-                 Else  Result := FALSE;
-             End;
-     ELSE
-         Result := FALSE;
-     END;
+    case LineBuffer[LinePos] of
+        CommentChar:
+            Result := TRUE;
+        '/':
+        begin
+            if (Length(LineBuffer) > LinePos) and (LineBuffer[LinePos + 1] = '/') then
+                Result := TRUE
+            else
+                Result := FALSE;
+        end;
+    else
+        Result := FALSE;
+    end;
 
 
 end;
 
 {=======================================================================================================================}
 
-function TParser.InterpretRPNString(var Code:Integer): Double;
-VAR
-   ParseBufferPos:Integer;
-   ParseBuffer :String;
+function TParser.InterpretRPNString(var Code: Integer): Double;
+var
+    ParseBufferPos: Integer;
+    ParseBuffer: String;
 
-BEGIN
+begin
 
-   Code := 0;
-   ParseBuffer := TokenBuffer + ' ';
-   ParseBufferPos := 1;
+    Code := 0;
+    ParseBuffer := TokenBuffer + ' ';
+    ParseBufferPos := 1;
 
-   SkipWhiteSpace(ParseBuffer, ParseBufferPos);
-   TokenBuffer := GetToken(ParseBuffer,ParseBufferPos);
+    SkipWhiteSpace(ParseBuffer, ParseBufferPos);
+    TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
 
-   WHILE Length(TokenBuffer) > 0 Do BEGIN
+    while Length(TokenBuffer) > 0 do
+    begin
 
-      Code := ProcessRPNCommand(TokenBuffer, RPNCalculator);
-      If Code>0 Then Break;  // Stop on any floating point error
+        Code := ProcessRPNCommand(TokenBuffer, RPNCalculator);
+        if Code > 0 then
+            Break;  // Stop on any floating point error
 
-      TokenBuffer := GetToken(ParseBuffer,ParseBufferPos);
-   END;
+        TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
+    end;
 
-   Result := RPNCalculator.X;
+    Result := RPNCalculator.X;
 
-  TokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
+    TokenBuffer := copy(ParseBuffer, ParseBufferPos, Length(ParseBuffer));  // prepare for next trip
 
 end;
 
