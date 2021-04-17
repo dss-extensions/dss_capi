@@ -72,6 +72,7 @@ function GetRandomModeID: String;
 function GetLoadModel: String;
 function GetActiveLoadShapeClass: String;
 function GetDSSArray_Real(n: Integer; dbls: pDoubleArray): String;
+function GetDSSArray_Single(n: Integer; sngs: pSingleArray): String;
 function GetDSSArray_Integer(n: Integer; ints: pIntegerArray): String;
 function GetEarthModel(n: Integer): String;
 function GetOCPDeviceType(pElem: TDSSCktElement): Integer;
@@ -104,6 +105,7 @@ function CmulReal_im(const a: Complex; const Mult: Double): Complex;  // Multipl
 //FUNCTION IsValidNumericField(const NumberField:TEdit):Boolean;
 function MaxdblArrayValue(npts: Integer; dbls: pDoubleArray): Double;
 function iMaxAbsdblArrayValue(npts: Integer; dbls: pDoubleArray): Integer;
+function iMaxAbssngArrayValue(npts: Integer; sngs: pSingleArray): Integer;
 function QuadSolver(const a, b, c: Double): Double; // returns largest of two answers
 
 
@@ -705,7 +707,7 @@ var
 
 begin
     Auxparser.CmdString := S;
-    ParmName := Auxparser.NextParam;
+    {ParmName :=} Auxparser.NextParam;
     Result.re := AuxParser.dblvalue;
     ParmName := Auxparser.NextParam;
     Result.im := AuxParser.dblvalue;
@@ -2837,13 +2839,27 @@ end;
 function GetDSSArray_Real(n: Integer; dbls: pDoubleArray): String;
 var
     i: Integer;
-
 begin
     Result := '[';
     for i := 1 to n do
         Result := Result + Format(' %-.6g', [dbls^[i]]);
     Result := Result + ']';
 end;
+
+function GetDSSArray_Single(n: Integer; sngs: pSingleArray): String;
+var
+    i: Integer;
+    tmp: Double;
+begin
+    Result := '[';
+    for i := 1 to n do
+    begin
+        tmp := sngs^[i];
+        Result := Result + Format(' %-.6g', [tmp]);
+    end;
+    Result := Result + ']';
+end;
+
 
 function GetDSSArray_Integer(n: Integer; ints: pIntegerArray): String;
 
@@ -3114,6 +3130,26 @@ begin
         if abs(dbls^[i]) > Maxvalue then
         begin
             Maxvalue := abs(dbls^[i]);
+            Result := i;   // save index
+        end;
+end;
+
+function iMaxAbssngArrayValue(npts: Integer; sngs: pSingleArray): Integer;
+// Returns index of max array value  in abs value
+var
+    i: Integer;
+    MaxValue: Single;
+begin
+    Result := 0;
+    if npts = 0 then
+        exit;
+
+    Result := 1;
+    MaxValue := abs(sngs^[1]);
+    for i := 2 to npts do
+        if abs(sngs^[i]) > Maxvalue then
+        begin
+            Maxvalue := abs(sngs^[i]);
             Result := i;   // save index
         end;
 end;

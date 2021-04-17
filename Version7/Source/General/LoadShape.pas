@@ -106,7 +106,6 @@ type
         // Function Get_FirstMult:Double;
         // Function Get_NextMult :Double;
         function Get_Interval: Double;
-        procedure Set_NumPoints(const Value: Integer);
         procedure SaveToDblFile;
         procedure SaveToSngFile;
         procedure CalcMeanandStdDev;
@@ -114,14 +113,19 @@ type
         function Get_StdDev: Double;
         procedure Set_Mean(const Value: Double);
         procedure Set_StdDev(const Value: Double);  // Normalize the curve presently in memory
-        procedure SetMaxPandQ;
-
+        function GetMultSingle(hr: Double): Complex;
     PUBLIC
 
         Interval: Double;  //=0.0 then random interval     (hr)
-        Hours,          // Time values (hr) if Interval > 0.0  Else nil
-        PMultipliers,
-        QMultipliers: pDoubleArray;  // Multipliers
+        // Double data
+        dblHours,          // Time values (hr) if Interval > 0.0  Else nil
+        dblPMultipliers,
+        dblQMultipliers: pDoubleArray;  // Multipliers
+
+        // Single data
+        sngHours,
+        sngPMultipliers,
+        sngQMultipliers: pSingleArray;
 
         MaxP,
         MaxQ,
@@ -130,6 +134,7 @@ type
 
         Enabled,
         UseActual: Boolean;
+        ExternalMemory:Boolean;
 
         {***********************************************************************
         *                    Memory mapping variables                          *
@@ -162,10 +167,13 @@ type
         constructor Create(ParClass: TDSSClass; const LoadShapeName: String);
         destructor Destroy; OVERRIDE;
 
-        function GetMult(hr: Double): Complex;  // Get multiplier at specified time
-        function Mult(i: Integer): Double;  // get multiplier by index
+        function GetMult(hr: Double): Complex;  // Get multiplier at specified time -- TODO: rename to GetMultAtHour
+        function Mult(i: Integer): Double;  // get multiplier by index -- used in SolutionAlgs, updates LastValueAccessed
+        function PMult(i: Integer): Double;  // get multiplier by index -- used in SolutionAlgs, doesn't update LastValueAccessed 
+        function QMult(i: Integer; var m: Double): Boolean;  // get multiplier by index
         function Hour(i: Integer): Double;  // get hour corresponding to point index
         procedure Normalize;
+        procedure SetMaxPandQ;
         // Loads the current view of the MMF into memory for further use
         procedure LoadMMFView(const Parmname: String; MMF: THandle; Destination: Integer);
         procedure LoadFileFeatures(ShapeType: Integer);
@@ -175,13 +183,17 @@ type
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
 
-        property NumPoints: Integer READ FNumPoints WRITE Set_NumPoints;
+        property NumPoints: Integer READ FNumPoints WRITE FNumPoints;
         property PresentInterval: Double READ Get_Interval;
         property Mean: Double READ Get_Mean WRITE Set_Mean;
         property StdDev: Double READ Get_StdDev WRITE Set_StdDev;
         {Property FirstMult :Double Read Get_FirstMult;}
         {Property NextMult  :Double Read Get_NextMult;}
 
+        procedure SetDataPointers(HoursPtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble);
+        procedure SetDataPointersSingle(HoursPtr: PSingle; PMultPtr: PSingle; QMultPtr: PSingle);
+        procedure UseFloat32;
+        procedure UseFloat64;
     end;
 
 var
@@ -324,7 +336,7 @@ begin
     PropertyHelp[20] := 'Switch input to a CSV text file containing (active, reactive) power (P, Q) multiplier pairs, one per row. ' + CRLF +
         'If the interval=0, there should be 3 items on each line: (hour, Pmult, Qmult)';
     PropertyHelp[21] := '{Yes | No* | True | False*} Enables the memory mapping functionality for dealing with large amounts of load shapes. ' + CRLF +
-        'By defaul is False. Use it to accelerate the model loading when the containing a large number of load shapes.';
+        'By default is False. Use it to accelerate the model loading when the containing a large number of load shapes.';
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -556,12 +568,27 @@ begin
             case ParamPointer of
                 0:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
-                1:
-                    NumPoints := Parser.Intvalue;
-                2:
+                1: // npts:
+                    if ActiveLoadShapeObj.ExternalMemory then
+                    begin
+                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        Exit;
+                    end
+                    else
+                    begin
+                        NumPoints := Parser.Intvalue;
+                        // Force as the always first property when saving in a later point
+                        PrpSequence[ParamPointer] := -10;
+                    end;
+                2: // interval:
                     Interval := Parser.DblValue;
-                3:
+                3, 19: // Pmult, mult:
                 begin
+                    if ActiveLoadShapeObj.ExternalMemory then
+                    begin
+                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        Exit;
+                    end;                
                     if UseMMF then
                     begin
                         MMFError := CreateMMF(Param, 0); // Creates MMF for P
@@ -569,20 +596,27 @@ begin
                         begin
                             LoadFileFeatures(0);
                             myDataSize := NumPoints;
-                            ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+                            ReAllocmem(dblPMultipliers, sizeof(dblPMultipliers^[1]) * 2);
                         end;
                         Exit;
                     end;
 
                     // Otherwise, follow the traditional technique for loading up load shapes
-                    ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
+                	UseFloat64;
+                    ReAllocmem(dblPMultipliers, Sizeof(Double) * NumPoints);
                     // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
-                    NumPoints := InterpretDblArray(Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                    NumPoints := InterpretDblArray(Param, NumPoints, dblPMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
-                4:
+                4: // hour:
                 begin
-                    ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
-                    NumPoints := InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
+                    if ActiveLoadShapeObj.ExternalMemory then
+                    begin
+                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        Exit;
+                    end;
+                    UseFloat64;
+                    ReAllocmem(dblHours, Sizeof(dblHours^[1]) * NumPoints);
+                    InterpretDblArray(Param, NumPoints, dblHours);   // Parser.ParseAsVector(Npts, Hours);
                     Interval := 0.0;
                 end;
                 5:
@@ -604,28 +638,33 @@ begin
                         's':
                             SaveToSngFile;
                     end;
-                11:
+                11: // qmult:
                 begin
+                    if ActiveLoadShapeObj.ExternalMemory then
+                    begin
+                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61105);
+                        Exit;
+                    end;
                     if UseMMF then
                     begin
                         MMFError := CreateMMF(Param, 1);  // Creates MMF for Q
                         if MMFError = 0 then
                         begin
                             LoadFileFeatures(1);
-                            if Assigned(PMultipliers) then
+                            if Assigned(dblPMultipliers) then
                                 myDataSizeQ := myDataSize
                             else
                                 myDataSizeQ := NumPoints;
-                            ReAllocmem(QMultipliers, sizeof(QMultipliers^[1]) * 2);
+                            ReAllocmem(dblQMultipliers, sizeof(dblQMultipliers^[1]) * 2);
                         end;
                         Exit;
                     end;
-                    
-                    // Otherwise, follow the traditional technique for loading up load shapes
-                    ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1]) * NumPoints);
-                    NumPoints := InterpretDblArray(Param, NumPoints, QMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+					// Otherwise, follow the traditional technique for loading up load shapes                    
+                    UseFloat64;
+                    ReAllocmem(dblQMultipliers, Sizeof(dblQMultipliers^[1]) * NumPoints);
+                    InterpretDblArray(Param, NumPoints, dblQMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
-                12:
+                12: // UseActual:
                     UseActual := InterpretYesNo(Param);
                 13:
                     MaxP := Parser.DblValue;
@@ -639,29 +678,16 @@ begin
                     BaseP := Parser.DblValue;
                 18:
                     BaseQ := Parser.DblValue;
-                19:
-                begin   // same as mult
-                    if UseMMF then
-                    begin
-                        MMFError := CreateMMF(Param, 0); // Creates MMF for P
-                        if MMFError = 0 then
-                        begin
-                            LoadFileFeatures(0);
-                            myDataSize := NumPoints;
-                            ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
-                        end;
-                        Exit;
-                    end;
-
-                    // Otherwise, follow the traditional technique for loading up load shapes
-                    ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
-                    // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
-                    NumPoints := InterpretDblArray(Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
-                end;
                 20:
                     Do2ColCSVFile(AdjustInputFilePath(Param));
                 21:
+                begin
                     UseMMF := InterpretYesNo(Param);
+                    if UseMMF then
+                    begin
+                        UseFloat64;
+                    end;
+                end;
 
             else
            // Inherited parameters
@@ -684,7 +710,7 @@ begin
             Param := Parser.StrValue;
         end; {WHILE}
 
-        if Assigned(PMultipliers) then
+        if Assigned(dblPMultipliers) or Assigned(sngPMultipliers) then
             SetMaxPandQ;
     end; {WITH}
 end;
@@ -711,23 +737,66 @@ begin
         begin
             NumPoints := OtherLoadShape.NumPoints;
             Interval := OtherLoadShape.Interval;
-            ReallocMem(PMultipliers, SizeOf(PMultipliers^[1]) * NumPoints);
-            for i := 1 to NumPoints do
-                PMultipliers^[i] := OtherLoadShape.PMultipliers^[i];
-            if Assigned(OtherLoadShape.Qmultipliers) then
+
+            if ExternalMemory then
             begin
-                ReallocMem(QMultipliers, SizeOf(QMultipliers^[1]) * NumPoints);
-                for i := 1 to NumPoints do
-                    QMultipliers^[i] := OtherLoadShape.QMultipliers^[i];
+                // There is no point in copying a static loadshape,
+                // so we assume the user would want to modify the data
+                dblPMultipliers := nil;
+                dblQMultipliers := nil;
+                dblHours:= nil;
+                sngPMultipliers := nil;
+                sngQMultipliers := nil;
+                sngHours:= nil;
+                ExternalMemory := False;
             end;
+
+            // Double versions
+            if Assigned(OtherLoadShape.dblPMultipliers) then
+            begin
+                ReallocMem(dblPMultipliers, SizeOf(Double) * NumPoints);
+                Move(OtherLoadShape.dblPMultipliers[1], dblPMultipliers[1], SizeOf(Double) * NumPoints);
+            end
+            else
+                ReallocMem(dblPMultipliers, 0);
+
+            if Assigned(OtherLoadShape.dblQmultipliers) then
+            begin
+                ReallocMem(dblQMultipliers, SizeOf(Double) * NumPoints);
+                Move(OtherLoadShape.dblQMultipliers[1], dblQMultipliers[1], SizeOf(Double) * NumPoints);
+            end;
+
             if Interval > 0.0 then
-                ReallocMem(Hours, 0)
+                ReallocMem(dblHours, 0)
             else
             begin
-                ReallocMem(Hours, SizeOf(Hours^[1]) * NumPoints);
-                for i := 1 to NumPoints do
-                    Hours^[i] := OtherLoadShape.Hours^[i];
+                ReallocMem(dblHours, SizeOf(Double) * NumPoints);
+                Move(OtherLoadShape.dblHours[1], dblHours[1], SizeOf(Double) * NumPoints);
             end;
+
+            // Single versions
+            if Assigned(OtherLoadShape.sngPMultipliers) then
+            begin
+                ReallocMem(sngPMultipliers, SizeOf(Single) * NumPoints);
+                Move(OtherLoadShape.sngPMultipliers[1], sngPMultipliers[1], SizeOf(Single) * NumPoints);
+            end
+            else
+                ReallocMem(sngPMultipliers, 0);
+
+            if Assigned(OtherLoadShape.sngQmultipliers) then
+            begin
+                ReallocMem(sngQMultipliers, SizeOf(Single) * NumPoints);
+                Move(OtherLoadShape.sngQMultipliers[1], sngQMultipliers[1], SizeOf(Single) * NumPoints);
+            end;
+
+            if Interval > 0.0 then
+                ReallocMem(sngHours, 0)
+            else
+            begin
+                ReallocMem(sngHours, SizeOf(Single) * NumPoints);
+                Move(OtherLoadShape.sngHours[1], sngHours[1], SizeOf(Single) * NumPoints);
+            end;
+
             SetMaxPandQ;
             UseActual := OtherLoadShape.UseActual;
             UseMMF := OtherLoadShape.UseMMF;
@@ -808,6 +877,12 @@ var
     s: String;
 
 begin
+    if ActiveLoadShapeObj.ExternalMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
     try
         AssignFile(F, FileName);
         Reset(F);
@@ -835,17 +910,18 @@ begin
                     LoadFileFeatures(1);                                             // Features for Q
                     myDataSize := NumPoints;
                     myLineLenQ := myLineLen;
-                    ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
-                    ReAllocmem(QMultipliers, sizeof(QMultipliers^[1]) * 2);
+                    ReAllocmem(dblPMultipliers, sizeof(dblPMultipliers^[1]) * 2);
+                    ReAllocmem(dblQMultipliers, sizeof(dblQMultipliers^[1]) * 2);
                 end;
                 Exit;
             end;
 
          // Allocate both P and Q multipliers
-            ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
-            ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1]) * NumPoints);
+            UseFloat64;
+            ReAllocmem(dblPMultipliers, Sizeof(dblPMultipliers^[1]) * NumPoints);
+            ReAllocmem(dblQMultipliers, Sizeof(dblQMultipliers^[1]) * NumPoints);
             if Interval = 0.0 then
-                ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
+                ReAllocmem(dblHours, Sizeof(dblHours^[1]) * NumPoints);
             i := 0;
             while (not EOF(F)) and (i < FNumPoints) do
             begin
@@ -858,12 +934,12 @@ begin
                     if Interval = 0.0 then
                     begin
                         NextParam;
-                        Hours^[i] := DblValue;
+                        dblHours^[i] := DblValue;
                     end;
                     NextParam;
-                    PMultipliers^[i] := DblValue;  // first parm
+                    dblPMultipliers[i] := DblValue;  // first parm
                     NextParam;
-                    QMultipliers^[i] := DblValue;  // second parm
+                    dblQMultipliers[i] := DblValue;  // second parm
                 end;
             end;
             CloseFile(F);
@@ -892,6 +968,12 @@ var
     s: String;
 
 begin
+    if ActiveLoadShapeObj.ExternalMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
     try
         AssignFile(F, FileName);
         Reset(F);
@@ -914,14 +996,15 @@ begin
                 begin
                     LoadFileFeatures(0);
                     myDataSize := NumPoints;
-                    ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+                    ReAllocmem(dblPMultipliers, sizeof(dblPMultipliers^[1]) * 2);
                 end;
                 Exit;
             end;
 
-            ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
+            UseFloat64;
+            ReAllocmem(dblPMultipliers, Sizeof(dblPMultipliers^[1]) * NumPoints);
             if Interval = 0.0 then
-                ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
+                ReAllocmem(dblHours, Sizeof(dblHours^[1]) * NumPoints);
             i := 0;
             while (not EOF(F)) and (i < FNumPoints) do
             begin
@@ -934,10 +1017,10 @@ begin
                     if Interval = 0.0 then
                     begin
                         NextParam;
-                        Hours^[i] := DblValue;
+                        dblHours^[i] := DblValue;
                     end;
                     NextParam;
-                    PMultipliers^[i] := DblValue;
+                    dblPMultipliers^[i] := DblValue;
                 end;
             end;
             CloseFile(F);
@@ -966,6 +1049,12 @@ var
     i: Integer;
 
 begin
+    if ActiveLoadShapeObj.ExternalMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
     try
         AssignFile(F, FileName);
         Reset(F);
@@ -987,14 +1076,15 @@ begin
                 begin
                     LoadFileFeatures(0);
                     myDataSize := NumPoints;
-                    ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+                    ReAllocmem(dblPMultipliers, sizeof(dblPMultipliers^[1]) * 2);
                 end;
                 Exit;
             end;
 
-            ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
+            UseFloat64;
+            ReAllocmem(dblPMultipliers, Sizeof(dblPMultipliers^[1]) * NumPoints);
             if Interval = 0.0 then
-                ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
+                ReAllocmem(dblHours, Sizeof(dblHours^[1]) * NumPoints);
             i := 0;
             while (not EOF(F)) and (i < FNumPoints) do
             begin
@@ -1002,10 +1092,10 @@ begin
                 if Interval = 0.0 then
                 begin
                     Read(F, Hr);
-                    Hours^[i] := Hr;
+                    dblHours^[i] := Hr;
                 end;
                 Read(F, M);
-                PMultipliers^[i] := M;
+                dblPMultipliers^[i] := M;
             end;
             CloseFile(F);
             if i <> FNumPoints then
@@ -1028,6 +1118,12 @@ var
     i: Integer;
 
 begin
+    if ActiveLoadShapeObj.ExternalMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
     try
         AssignFile(F, FileName);
         Reset(F);
@@ -1049,21 +1145,22 @@ begin
                 begin
                     LoadFileFeatures(0);
                     myDataSize := NumPoints;
-                    ReAllocmem(PMultipliers, sizeof(PMultipliers^[1]) * 2);
+                    ReAllocmem(dblPMultipliers, sizeof(dblPMultipliers^[1]) * 2);
                 end;
                 Exit;
             end;
 
-            ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
+            UseFloat64;
+            ReAllocmem(dblPMultipliers, Sizeof(dblPMultipliers^[1]) * NumPoints);
             if Interval = 0.0 then
-                ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
+                ReAllocmem(dblHours, Sizeof(dblHours^[1]) * NumPoints);
             i := 0;
             while (not EOF(F)) and (i < FNumPoints) do
             begin
                 Inc(i);
                 if Interval = 0.0 then
-                    Read(F, Hours^[i]);
-                Read(F, PMultipliers^[i]);
+                    Read(F, dblHours^[i]);
+                Read(F, dblPMultipliers^[i]);
             end;
             CloseFile(F);
             if i <> FNumPoints then
@@ -1089,13 +1186,17 @@ begin
     Name := LowerCase(LoadShapeName);
     DSSObjType := ParClass.DSSClassType;
 
+    ExternalMemory := False;
     LastValueAccessed := 1;
 
     FNumPoints := 0;
     Interval := 1.0;  // hr
-    Hours := NIL;
-    PMultipliers := NIL;
-    QMultipliers := NIL;
+    dblHours := NIL;
+    dblPMultipliers := NIL;
+    dblQMultipliers := NIL;
+    sngHours := NIL;
+    sngPMultipliers := NIL;
+    sngQMultipliers := NIL;
     MaxP := 1.0;
     MaxQ := 0.0;
     BaseP := 0.0;
@@ -1117,13 +1218,21 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLoadShapeObj.Destroy;
 begin
-
-    if Assigned(Hours) then
-        ReallocMem(Hours, 0);
-    if Assigned(PMultipliers) then
-        ReallocMem(PMultipliers, 0);
-    if Assigned(QMultipliers) then
-        ReallocMem(QMultipliers, 0);
+    if not ExternalMemory then
+    begin
+        if Assigned(dblHours) then
+            ReallocMem(dblHours, 0);
+        if Assigned(dblPMultipliers) then
+            ReallocMem(dblPMultipliers, 0);
+        if Assigned(dblQMultipliers) then
+            ReallocMem(dblQMultipliers, 0);
+        if Assigned(sngHours) then
+            ReallocMem(sngHours, 0);
+        if Assigned(sngPMultipliers) then
+            ReallocMem(sngPMultipliers, 0);
+        if Assigned(sngQMultipliers) then
+            ReallocMem(sngQMultipliers, 0);
+    end;
     if UseMMF then
     begin
         UnmapViewOfFile(myView);
@@ -1166,21 +1275,27 @@ var
     end;
 
 begin
+    if Assigned(sngPMultipliers) then
+    begin
+        Result := GetMultSingle(hr);
+        exit;
+    end;
+
     Result.re := 1.0;
     Result.im := 1.0;    // default return value if no points in curve
 
     if FNumPoints > 0 then         // Handle Exceptional cases
         if FNumPoints = 1 then
         begin
-            Result.re := PMultipliers^[1];
-            if Assigned(QMultipliers) then
-                Result.im := QMultipliers^[1]
+            Result.re := dblPMultipliers^[1];
+            if Assigned(dblQMultipliers) then
+                Result.im := dblQMultipliers^[1]
             else
                 Result.im := Set_Result_im(Result.re);
         end
         else
         begin
-            if Interval > 0.0 then                                      // Using Interval
+            if Interval > 0.0 then
             begin
                 Index := round(hr / Interval);
                 if UseMMF then
@@ -1190,7 +1305,7 @@ begin
                     if Index = 0 then
                         Index := myDataSize;
                     Result.re := InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
-                    if Assigned(QMultipliers) then
+                    if Assigned(dblQMultipliers) then
                         Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, Index, myLineLenQ)
                     else
                         Result.im := Set_Result_im(Result.re);
@@ -1202,9 +1317,9 @@ begin
                     Index := Index mod FNumPoints;  // Wrap around using remainder
                 if Index = 0 then
                     Index := FNumPoints;
-                Result.re := PMultipliers^[Index];
-                if Assigned(QMultipliers) then
-                    Result.im := QMultipliers^[Index]
+                Result.Re := dblPMultipliers^[Index];
+                if Assigned(dblQMultipliers) then
+                    Result.im := dblQMultipliers^[Index]
                 else
                     Result.im := Set_Result_im(Result.re);
             end
@@ -1216,21 +1331,21 @@ begin
           of the time, this function will be called sequentially}
 
           {Normalize Hr to max hour in curve to get wraparound}
-                if Hr > Hours^[FNumPoints] then
+                if Hr > dblHours^[FNumPoints] then
                 begin
-                    Hr := Hr - Trunc(Hr / Hours^[FNumPoints]) * Hours^[FNumPoints];
+                    Hr := Hr - Trunc(Hr / dblHours^[FNumPoints]) * dblHours^[FNumPoints];
                 end;
 
-                if Hours^[LastValueAccessed] > Hr then
+                if dblHours^[LastValueAccessed] > Hr then
                     LastValueAccessed := 1;  // Start over from beginning
                 for i := LastValueAccessed + 1 to FNumPoints do
                 begin
-                    if Abs(Hours^[i] - Hr) < 0.00001 then  // If close to an actual point, just use it.
+                    if Abs(dblHours^[i] - Hr) < 0.00001 then  // If close to an actual point, just use it.
                     begin
                         if UseMMF then
                         begin
                             Result.re := InterpretDblArrayMMF(myView, myFileType, myColumn, Index, myLineLen);
-                            if Assigned(QMultipliers) then
+                            if Assigned(dblQMultipliers) then
                                 Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, Index, myLineLenQ)
                             else
                                 Result.im := Set_Result_im(Result.re);
@@ -1239,27 +1354,27 @@ begin
                             Exit;
                         end;
                         
-                        Result.re := PMultipliers^[i];
-                        if Assigned(QMultipliers) then
-                            Result.im := QMultipliers^[i]
+                        Result.re := dblPMultipliers^[i];
+                        if Assigned(dblQMultipliers) then
+                            Result.im := dblQMultipliers^[i]
                         else
                             Result.im := Set_Result_im(Result.re);
                         LastValueAccessed := i;
                         Exit;
                     end
                     else
-                    if Hours^[i] > Hr then      // Interpolate for multiplier
+                    if dblHours^[i] > Hr then      // Interpolate for multiplier
                     begin
                         LastValueAccessed := i - 1;
                         if UseMMF then
                         begin
                             Result.re := InterpretDblArrayMMF(myView, myFileType, myColumn, LastValueAccessed, myLineLen) +
-                                (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed]) *
+                                (Hr - dblHours^[LastValueAccessed]) / (dblHours^[i] - dblHours^[LastValueAccessed]) *
                                 (InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen) -
                                 InterpretDblArrayMMF(myView, myFileType, myColumn, LastValueAccessed, myLineLen));
-                            if Assigned(QMultipliers) then
+                            if Assigned(dblQMultipliers) then
                                 Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, LastValueAccessed, myLineLenQ) +
-                                    (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed]) *
+                                    (Hr - dblHours^[LastValueAccessed]) / (dblHours^[i] - dblHours^[LastValueAccessed]) *
                                     (InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, i, myLineLenQ) -
                                     InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, LastValueAccessed, myLineLenQ))
                             else
@@ -1268,13 +1383,13 @@ begin
                             Exit;
                         end;
 
-                        Result.re := PMultipliers^[LastValueAccessed] +
-                            (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed]) *
-                            (PMultipliers^[i] - PMultipliers^[LastValueAccessed]);
-                        if Assigned(QMultipliers) then
-                            Result.im := QMultipliers^[LastValueAccessed] +
-                                (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed]) *
-                                (QMultipliers^[i] - QMultipliers^[LastValueAccessed])
+                        Result.re := dblPMultipliers^[LastValueAccessed] +
+                            (Hr - dblHours^[LastValueAccessed]) / (dblHours^[i] - dblHours^[LastValueAccessed]) *
+                            (dblPMultipliers^[i] - dblPMultipliers^[LastValueAccessed]);
+                        if Assigned(dblQMultipliers) then
+                            Result.im := dblQMultipliers^[LastValueAccessed] +
+                                (Hr - dblHours^[LastValueAccessed]) / (dblHours^[i] - dblHours^[LastValueAccessed]) *
+                                (dblQMultipliers^[i] - dblQMultipliers^[LastValueAccessed])
                         else
                             Result.im := Set_Result_im(Result.re);
                         Exit;
@@ -1283,16 +1398,14 @@ begin
 
            // If we fall through the loop, just use last value
                 LastValueAccessed := FNumPoints - 1;
-                Result.re := PMultipliers^[FNumPoints];
-                if Assigned(QMultipliers) then
-                    Result.im := QMultipliers^[FNumPoints]
+                Result.re := dblPMultipliers^[FNumPoints];
+                if Assigned(dblQMultipliers) then
+                    Result.im := dblQMultipliers^[FNumPoints]
                 else
                     Result.im := Set_Result_im(Result.re);
             end;
         end;
-
 end;
-
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TLoadShapeObj.Normalize;
@@ -1319,13 +1432,50 @@ var
         end;
     end;
 
-begin
-    MaxMult := BaseP;
-    DoNormalize(PMultipliers);
-    if Assigned(QMultipliers) then
+    procedure DoNormalizeSingle(Multipliers: pSingleArray);
+    var
+        i: Integer;
     begin
-        MaxMult := BaseQ;
-        DoNormalize(QMultipliers);
+        if FNumPoints > 0 then
+        begin
+            if MaxMult <= 0.0 then
+			begin
+                MaxMult := Abs(Multipliers^[1]);
+                for i := 2 to FNumPoints do
+                    MaxMult := Max(MaxMult, Abs(Multipliers^[i]));
+            end;
+            if MaxMult = 0.0 then
+                MaxMult := 1.0; // Avoid divide by zero
+            for i := 1 to FNumPoints do
+                Multipliers^[i] := Multipliers^[i] / MaxMult;
+        end;
+    end;
+
+begin
+    if ExternalMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
+    MaxMult := BaseP;
+    if Assigned(dblPMultipliers) then
+    begin
+        DoNormalize(dblPMultipliers);
+        if Assigned(dblQMultipliers) then
+        begin
+            MaxMult := BaseQ;
+            DoNormalize(dblQMultipliers);
+        end;
+    end
+    else
+    begin
+        DoNormalizeSingle(sngPMultipliers);
+        if Assigned(sngQMultipliers) then
+    	begin
+        	MaxMult := BaseQ;
+            DoNormalizeSingle(sngQMultipliers);
+        end;
     end;
     UseActual := FALSE;  // not likely that you would want to use the actual if you normalized it.
 end;
@@ -1336,11 +1486,22 @@ procedure TLoadShapeObj.CalcMeanandStdDev;
 begin
 
     if FNumPoints > 0 then
-        if Interval > 0.0 then
-            RCDMeanandStdDev(PMultipliers, FNumPoints, FMean, FStdDev)
+    begin
+        if Assigned(dblPMultipliers) then
+        begin
+            if Interval > 0.0 then
+                RCDMeanandStdDev(dblPMultipliers, FNumPoints, FMean, FStdDev)
+            else
+                CurveMeanAndStdDev(dblPMultipliers, dblHours, FNumPoints, FMean, FStdDev);
+        end
         else
-            CurveMeanAndStdDev(PMultipliers, Hours, FNumPoints, FMean, FStdDev);
-
+        Begin
+            if Interval > 0.0 then
+                RCDMeanandStdDevSingle(sngPMultipliers, FNumPoints, FMean, FStdDev)
+            else
+                CurveMeanAndStdDevSingle(sngPMultipliers, sngHours, FNumPoints, FMean, FStdDev);
+        End;
+    end;
     PropertyValue[5] := Format('%.8g', [FMean]);
     PropertyValue[6] := Format('%.8g', [FStdDev]);
 
@@ -1348,36 +1509,6 @@ begin
    { No Action is taken on Q multipliers}
 end;
 
-(*
-Function TLoadShapeObj.Get_FirstMult:Double;
-Begin
-
-  If Npts>0 Then Begin
-     Result :=  Multipliers^[1];
-     LastValueAccessed := 1;
-  End
-  Else
-      Result := 0.0;
-
-End;
-
-Function TLoadShapeObj.Get_NextMult :Double;
-Begin
-
-  If Npts>0 Then Begin
-     Inc(LastValueAccessed);
-     If LastValueAccessed>Npts Then Begin
-         Result := 0.0;
-         Dec(LastValueAccessed);
-     End
-     Else Begin
-          Result :=  Multipliers^[LastValueAccessed];
-     End;
-  End Else
-      Result := 0.0;
-
-End;
-*)
 function TLoadShapeObj.Get_Interval: Double;
 begin
 
@@ -1386,7 +1517,12 @@ begin
     else
     begin
         if LastValueAccessed > 1 then
-            Result := Hours^[LastValueAccessed] - Hours^[LastValueAccessed - 1]
+        begin
+            if dblHours <> nil then
+                Result := dblHours^[LastValueAccessed] - dblHours^[LastValueAccessed - 1]
+            else
+                Result := sngHours^[LastValueAccessed] - sngHours^[LastValueAccessed - 1]
+        end
         else
             Result := 0.0;
     end;
@@ -1410,19 +1546,56 @@ end;
 
 function TLoadShapeObj.Mult(i: Integer): Double;
 begin
-
     if (i <= FNumPoints) and (i > 0) then
     begin
         if UseMMF then
             Result := InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen)
+        else if dblPMultipliers <> nil then
+            Result := dblPMultipliers^[i]
         else
-            Result := PMultipliers^[i];
+            Result := sngPMultipliers^[i];
+
         LastValueAccessed := i;
     end
     else
         Result := 0.0;
-
 end;
+
+function TLoadShapeObj.PMult(i: Integer): Double;
+begin
+    if (i <= FNumPoints) and (i > 0) then
+    begin
+        if UseMMF then
+            Result := InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen)
+        else if dblPMultipliers <> nil then
+            Result := dblPMultipliers^[i]
+        else
+            Result := sngPMultipliers^[i];
+    end
+    else
+        Result := 0.0;
+end;
+
+function TLoadShapeObj.QMult(i: Integer; var m: Double): Boolean;
+begin
+    Result := False;
+    if (dblQMultipliers = nil) and (sngQMultipliers = nil) then
+        Exit;
+    Result := True;
+    
+    if (i <= FNumPoints) and (i > 0) then
+    begin
+        if UseMMF then
+            m := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, i, myLineLenQ)
+        else if dblQMultipliers <> nil then
+            m := dblQMultipliers^[i]
+        else
+            m := sngQMultipliers^[i];
+    end
+    else
+        m := 0.0;
+end;
+
 
 function TLoadShapeObj.Hour(i: Integer): Double;
 begin
@@ -1431,7 +1604,11 @@ begin
     begin
         if (i <= FNumPoints) and (i > 0) then
         begin
-            Result := Hours^[i];
+            if dblHours <> nil then
+                Result := dblHours^[i]
+            else
+                Result := sngHours^[i];
+
             LastValueAccessed := i;
         end
         else
@@ -1439,7 +1616,11 @@ begin
     end
     else
     begin
-        Result := Hours^[i] * Interval;
+        if dblHours <> nil then
+            Result := dblHours^[i] * Interval
+        else
+            Result := sngHours^[i] * Interval;
+
         LastValueAccessed := i;
     end;
 
@@ -1472,33 +1653,38 @@ begin
             Result := IntToStr(FNumPoints);
         2:
             Result := Format('%.8g', [Interval]);
-        3:
+        3, 19:
         begin
             if UseMMF then
             begin
                 Result := '(' + myFileCmd + ')';
                 Exit;
             end;
-            Result := GetDSSArray_Real(FNumPoints, PMultipliers);
+            if dblPMultipliers <> NIL then
+                Result := GetDSSArray_Real(FNumPoints, pDoubleArray(dblPMultipliers))
+            else if sngPMultipliers <> NIL then
+                Result := GetDSSArray_Single(FNumPoints, pSingleArray(sngPMultipliers));
         end;
         4:
-            if Hours <> NIL then
-                Result := GetDSSArray_Real(FNumPoints, Hours);
+            if dblHours <> NIL then
+                Result := GetDSSArray_Real(FNumPoints, pDoubleArray(dblHours))
+            else if sngHours <> NIL then
+                Result := GetDSSArray_Single(FNumPoints, pSingleArray(sngHours));
         5:
             Result := Format('%.8g', [Mean]);
         6:
             Result := Format('%.8g', [StdDev]);
         11:
         begin
-            if not Assigned(QMultipliers) then 
-                Exit;
-
             if UseMMF then
             begin
                 Result := '(' + myFileCmdQ + ')';
                 Exit;
             end;
-            Result := GetDSSArray_Real(FNumPoints, QMultipliers);
+            if Assigned(dblQMultipliers) then
+                Result := GetDSSArray_Real(FNumPoints, pDoubleArray(dblQMultipliers))
+            else if Assigned(sngQMultipliers) then
+                Result := GetDSSArray_Single(FNumPoints, pSingleArray(sngQMultipliers));
         end;
         12:
             if UseActual then
@@ -1517,15 +1703,6 @@ begin
             Result := Format('%.8g', [BaseP]);
         18:
             Result := Format('%.8g', [BaseQ]);
-        19:
-        begin
-            if UseMMF then
-            begin
-                Result := '(' + myFileCmd + ')';
-                Exit;
-            end;
-            Result := GetDSSArray_Real(FNumPoints, PMultipliers);
-        end;
         21:
             if UseMMF then
                 Result := 'Yes'
@@ -1684,7 +1861,8 @@ var
     i: Integer;
     Fname: String;
 begin
-    if Assigned(PMultipliers) then
+    UseFloat64;
+    if Assigned(dblPMultipliers) then
     begin
         try
             FName := OutputDirectory {CurrentDSSDir} + Format('%s_P.dbl', [Name]);
@@ -1700,13 +1878,13 @@ begin
             end
             else
                 for i := 1 to NumPoints do
-                    Write(F, PMultipliers^[i]);
+                    Write(F, dblPMultipliers^[i]);
             GlobalResult := 'mult=[dblfile=' + FName + ']';
         finally
             CloseFile(F);
         end;
 
-        if Assigned(QMultipliers) then
+        if Assigned(dblQMultipliers) then
         begin
             try
                 FName := OutputDirectory {CurrentDSSDir} + Format('%s_Q.dbl', [Name]);
@@ -1722,7 +1900,7 @@ begin
                 end
                 else
                     for i := 1 to NumPoints do
-                        Write(F, QMultipliers^[i]);
+                        Write(F, dblQMultipliers^[i]);
                 AppendGlobalResult(' Qmult=[dblfile=' + FName + ']');
             finally
                 CloseFile(F);
@@ -1743,7 +1921,8 @@ var
     Temp: Single;
 
 begin
-    if Assigned(PMultipliers) then
+    UseFloat64;
+    if Assigned(dblPMultipliers) then
     begin
         try
             FName := OutputDirectory {CurrentDSSDir} + Format('%s_P.sng', [Name]);
@@ -1754,7 +1933,7 @@ begin
                 if UseMMF then
                     Temp := InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen)
                 else
-                    Temp := PMultipliers^[i];
+                    Temp := dblPMultipliers^[i];
                 Write(F, Temp);
             end;
             GlobalResult := 'mult=[sngfile=' + FName + ']';
@@ -1762,7 +1941,7 @@ begin
             CloseFile(F);
         end;
 
-        if Assigned(QMultipliers) then
+        if Assigned(dblQMultipliers) then
         begin
             try
                 FName := OutputDirectory {CurrentDSSDir} + Format('%s_Q.sng', [Name]);
@@ -1773,7 +1952,7 @@ begin
                     if UseMMF then
                         Temp := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, i, myLineLenQ)
                     else
-                        Temp := QMultipliers^[i];
+                        Temp := dblQMultipliers^[i];
                     Write(F, Temp);
                 end;
                 AppendGlobalResult(' Qmult=[sngfile=' + FName + ']');
@@ -1781,28 +1960,41 @@ begin
                 CloseFile(F);
             end;
         end;
-
     end
     else
         DoSimpleMsg('Loadshape.' + Name + ' P multipliers not defined.', 623);
-
-
 end;
 
 procedure TLoadShapeObj.SetMaxPandQ;
 begin
     if UseMMF then
         Exit;
-        
-    iMaxP := iMaxAbsdblArrayValue(NumPoints, PMultipliers);
-    if iMaxP > 0 then
+
+    if Assigned(dblPMultipliers) then
     begin
-        MaxP := PMultipliers^[iMaxP];
-        if not MaxQSpecified then
-            if Assigned(QMultipliers) then
-                MaxQ := QMultipliers^[iMaxP]
-            else
-                MaxQ := 0.0;
+        iMaxP := iMaxAbsdblArrayValue(NumPoints, dblPMultipliers);
+        if iMaxP > 0 then
+        begin
+            MaxP := dblPMultipliers^[iMaxP];
+            if not MaxQSpecified then
+                if Assigned(dblQMultipliers) then
+                    MaxQ := dblQMultipliers^[iMaxP]
+                else
+                    MaxQ := 0.0;
+        end;
+    end
+    else
+    begin
+        iMaxP := iMaxAbssngArrayValue(NumPoints, sngPMultipliers);
+        if iMaxP > 0 then
+        begin
+            MaxP := sngPMultipliers^[iMaxP];
+            if not MaxQSpecified then
+                if Assigned(sngQMultipliers) then
+                    MaxQ := sngQMultipliers^[iMaxP]
+                else
+                    MaxQ := 0.0;
+        end;
     end;
 end;
 
@@ -1812,26 +2004,240 @@ begin
     FMean := Value;
 end;
 
-procedure TLoadShapeObj.Set_NumPoints(const Value: Integer);
-begin
-
-    PropertyValue[1] := IntToStr(Value);   // Update property list variable
-
-        // Reset array property values to keep them in propoer order in Save
-
-    if ArrayPropertyIndex > 0 then
-        PropertyValue[ArrayPropertyIndex] := PropertyValue[ArrayPropertyIndex];
-    if Assigned(Qmultipliers) then
-        PropertyValue[11] := PropertyValue[11];
-
-    FNumPoints := Value;   // Now assign the value
-
-end;
-
 procedure TLoadShapeObj.Set_StdDev(const Value: Double);
 begin
     FStdDevCalculated := TRUE;
     FStdDev := Value;
+end;
+
+procedure TLoadShapeObj.SetDataPointers(HoursPtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble);
+begin
+    if not ExternalMemory then
+    begin
+        if Assigned(dblHours) then
+            ReallocMem(dblHours, 0);
+        if Assigned(dblPMultipliers) then
+            ReallocMem(dblPMultipliers, 0);
+        if Assigned(dblQMultipliers) then
+            ReallocMem(dblQMultipliers, 0);
+        if Assigned(sngHours) then
+            ReallocMem(sngHours, 0);
+        if Assigned(sngPMultipliers) then
+            ReallocMem(sngPMultipliers, 0);
+        if Assigned(sngQMultipliers) then
+            ReallocMem(sngQMultipliers, 0);
+    end;
+    sngHours := nil;
+    sngPMultipliers := nil;
+    sngQMultipliers := nil;
+    dblHours := ArrayDef.PDoubleArray(HoursPtr);
+    dblPMultipliers := ArrayDef.PDoubleArray(PMultPtr);
+    dblQMultipliers := ArrayDef.PDoubleArray(QMultPtr);
+    if Assigned(dblPMultipliers) then
+        SetMaxPandQ;
+end;
+
+procedure TLoadShapeObj.SetDataPointersSingle(HoursPtr: PSingle; PMultPtr: PSingle; QMultPtr: PSingle);
+begin
+    if not ExternalMemory then
+    begin
+        if Assigned(dblHours) then
+            ReallocMem(dblHours, 0);
+        if Assigned(dblPMultipliers) then
+            ReallocMem(dblPMultipliers, 0);
+        if Assigned(dblQMultipliers) then
+            ReallocMem(dblQMultipliers, 0);
+        if Assigned(sngHours) then
+            ReallocMem(sngHours, 0);
+        if Assigned(sngPMultipliers) then
+            ReallocMem(sngPMultipliers, 0);
+        if Assigned(sngQMultipliers) then
+            ReallocMem(sngQMultipliers, 0);
+    end;
+    dblHours := nil;
+    dblPMultipliers := nil;
+    dblQMultipliers := nil;
+    sngHours := ArrayDef.PSingleArray(HoursPtr);
+    sngPMultipliers := ArrayDef.PSingleArray(PMultPtr);
+    sngQMultipliers := ArrayDef.PSingleArray(QMultPtr);
+    if Assigned(sngPMultipliers) then
+        SetMaxPandQ;
+end;
+
+procedure TLoadShapeObj.UseFloat32;
+var
+    i: Integer;
+begin
+    if ActiveLoadShapeObj.ExternalMemory then
+    begin
+        DoSimpleMsg('Data cannot be toggled to 32-bit floats when memory-mapping is enabled.', 61106);
+        Exit;
+    end;
+
+    if ActiveLoadShapeObj.ExternalMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61103);
+        Exit;
+    end;
+
+    if Assigned(dblHours) then
+    begin
+        ReallocMem(sngHours, FNumPoints * SizeOf(Single));
+        for i := 1 to FNumPoints do
+            sngHours[i] := dblHours[i];
+        FreeMem(dblHours);
+        dblHours := nil;
+    end;
+    if Assigned(dblPMultipliers) then
+    begin
+        ReallocMem(sngPMultipliers, FNumPoints * SizeOf(Single));
+        for i := 1 to FNumPoints do
+            sngPMultipliers[i] := dblPMultipliers[i];
+        FreeMem(dblPMultipliers);
+        dblPMultipliers := nil;
+    end;
+    if Assigned(dblQMultipliers) then
+    begin
+        ReallocMem(sngQMultipliers, FNumPoints * SizeOf(Single));
+        for i := 1 to FNumPoints do
+            sngQMultipliers[i] := dblQMultipliers[i];
+        FreeMem(dblQMultipliers);
+        dblQMultipliers := nil;
+    end;
+
+end;
+
+procedure TLoadShapeObj.UseFloat64;
+var 
+    i: Integer;
+begin
+    if ActiveLoadShapeObj.ExternalMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61104);
+        Exit;
+    end;
+
+    if Assigned(sngHours) then
+    begin
+        ReallocMem(dblHours, FNumPoints * SizeOf(Double));
+        for i := 1 to FNumPoints do
+            dblHours[i] := sngHours[i];
+        FreeMem(sngHours);
+        sngHours := nil;
+    end;
+    if Assigned(sngPMultipliers) then
+    begin
+        ReallocMem(dblPMultipliers, FNumPoints * SizeOf(Double));
+        for i := 1 to FNumPoints do
+            dblPMultipliers[i] := sngPMultipliers[i];
+        FreeMem(sngPMultipliers);
+        sngPMultipliers := nil;
+    end;
+    if Assigned(sngQMultipliers) then
+    begin
+        ReallocMem(dblQMultipliers, FNumPoints * SizeOf(Double));
+        for i := 1 to FNumPoints do
+            dblQMultipliers[i] := sngQMultipliers[i];
+        FreeMem(sngQMultipliers);
+        sngQMultipliers := nil;
+    end;
+end;
+
+function TLoadShapeObj.GetMultSingle(hr: Double): Complex;
+var
+    Index, i: Integer;
+
+    function Set_Result_im(const realpart: Double): Double;
+   {Set imaginary part of Result when Qmultipliers not defined}
+    begin
+        if UseActual then
+            Set_Result_im := 0.0       // if actual, assume zero
+        else
+            Set_Result_im := realpart; // same as real otherwise
+    end;
+
+begin
+    Result.re := 1.0;
+    Result.im := 1.0;    // default return value if no points in curve
+
+    if FNumPoints > 0 then         // Handle Exceptional cases
+        if FNumPoints = 1 then
+        begin
+            Result.re := sngPMultipliers^[1];
+            if Assigned(sngQMultipliers) then
+                Result.im := sngQMultipliers^[1]
+            else
+                Result.im := Set_Result_im(Result.re);
+        end
+        else
+        begin
+            if Interval > 0.0 then
+            begin
+                Index := round(hr / Interval);
+                if Index > FNumPoints then
+                    Index := Index mod FNumPoints;  // Wrap around using remainder
+                if Index = 0 then
+                    Index := FNumPoints;
+                Result.Re := sngPMultipliers^[Index];
+                if Assigned(sngQMultipliers) then
+                    Result.im := sngQMultipliers^[Index]
+                else
+                    Result.im := Set_Result_im(Result.re);
+            end
+            else
+            begin
+          // For random interval
+
+        { Start with previous value accessed under the assumption that most
+          of the time, this function will be called sequentially}
+
+          {Normalize Hr to max hour in curve to get wraparound}
+                if Hr > sngHours^[FNumPoints] then
+                begin
+                    Hr := Hr - Trunc(Hr / sngHours^[FNumPoints]) * sngHours^[FNumPoints];
+                end;
+
+                if sngHours^[LastValueAccessed] > Hr then
+                    LastValueAccessed := 1;  // Start over from beginning
+                for i := LastValueAccessed + 1 to FNumPoints do
+                begin
+                    if Abs(sngHours^[i] - Hr) < 0.00001 then  // If close to an actual point, just use it.
+                    begin
+                        Result.re := sngPMultipliers^[i];
+                        if Assigned(sngQMultipliers) then
+                            Result.im := sngQMultipliers^[i]
+                        else
+                            Result.im := Set_Result_im(Result.re);
+                        LastValueAccessed := i;
+                        Exit;
+                    end
+                    else
+                    if sngHours^[i] > Hr then      // Interpolate for multiplier
+                    begin
+                        LastValueAccessed := i - 1;
+                        Result.re := sngPMultipliers^[LastValueAccessed] +
+                            (Hr - sngHours^[LastValueAccessed]) / (sngHours^[i] - sngHours^[LastValueAccessed]) *
+                            (sngPMultipliers^[i] - sngPMultipliers^[LastValueAccessed]);
+                        if Assigned(sngQMultipliers) then
+                            Result.im := sngQMultipliers^[LastValueAccessed] +
+                                (Hr - sngHours^[LastValueAccessed]) / (sngHours^[i] - sngHours^[LastValueAccessed]) *
+                                (sngQMultipliers^[i] - sngQMultipliers^[LastValueAccessed])
+                        else
+                            Result.im := Set_Result_im(Result.re);
+                        Exit;
+                    end;
+                end;
+
+           // If we fall through the loop, just use last value
+                LastValueAccessed := FNumPoints - 1;
+                Result.re := sngPMultipliers^[FNumPoints];
+                if Assigned(sngQMultipliers) then
+                    Result.im := sngQMultipliers^[FNumPoints]
+                else
+                    Result.im := Set_Result_im(Result.re);
+            end;
+        end;
+
 end;
 
 end.

@@ -41,7 +41,10 @@ procedure LoadShapes_Set_UseActual(Value: Wordbool); CDECL;
 // API extensions
 function LoadShapes_Get_idx(): Integer; CDECL;
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
-
+procedure LoadShapes_Set_Points(Npts: Integer; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: Wordbool; IsFloat32: Wordbool); CDECL;
+procedure LoadShapes_UseFloat64(); CDECL;
+procedure LoadShapes_UseFloat32(); CDECL;
+procedure LoadShapes_SetMaxPandQ(); CDECL;
 
 implementation
 
@@ -155,14 +158,15 @@ begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
-    if not assigned(elem.PMultipliers) then
+    if (not assigned(elem.dblPMultipliers)) and (not assigned(elem.sngPMultipliers)) then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     ActualNumPoints := elem.NumPoints;
+    elem.UseFloat64();
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.PMultipliers^[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.dblPMultipliers[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Pmult_GR(); CDECL;
@@ -183,14 +187,15 @@ begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
-    if not assigned(elem.QMultipliers) then
+    if (not assigned(elem.dblQMultipliers)) and (not assigned(elem.sngQMultipliers)) then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
+    elem.UseFloat64();
     ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.QMultipliers^[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.dblQMultipliers[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Qmult_GR(); CDECL;
@@ -218,15 +223,22 @@ begin
 
     with elem do
     begin
+        if elem.ExternalMemory then
+        begin
+            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            Exit;
+        end;
+    
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
             DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61100);
             Exit;
         end;
-
-        ReallocMem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
-        Move(ValuePtr[0], PMultipliers^[1], ValueCount * SizeOf(Double));
+        ReallocMem(sngPMultipliers, 0);
+        UseFloat64();
+        ReallocMem(dblPMultipliers, Sizeof(Double) * ValueCount);
+        Move(ValuePtr[0], dblPMultipliers[1], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -239,15 +251,22 @@ begin
 
     with elem do
     begin
+        if ExternalMemory then
+        begin
+            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            Exit;
+        end;
+        
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
             DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61101);
             Exit;
         end;
-
-        ReallocMem(QMultipliers, Sizeof(QMultipliers^[1]) * NumPoints);
-        Move(ValuePtr[0], QMultipliers^[1], ValueCount * SizeOf(Double));
+        ReallocMem(sngQMultipliers, 0);
+        UseFloat64;
+        ReallocMem(dblQMultipliers, Sizeof(Double) * ValueCount);
+        Move(ValuePtr[0], dblQMultipliers[1], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -271,11 +290,12 @@ begin
     if not _activeObj(elem) then
         Exit;
 
-    if elem.Hours = NIL then
+    elem.UseFloat64();
+    if elem.dblHours = NIL then
         Exit;
     ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.Hours^[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.dblHours[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_TimeArray_GR(); CDECL;
@@ -294,15 +314,22 @@ begin
 
     with elem do
     begin
+        if elem.ExternalMemory then
+        begin
+            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            Exit;
+        end;
+        
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
             DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61102);
             Exit;
         end;
-
-        ReallocMem(Hours, Sizeof(Hours^[1]) * NumPoints);
-        Move(ValuePtr[0], Hours[0], ValueCount * SizeOf(Double));
+        ReallocMem(sngHours, 0);
+        UseFloat64;
+        ReallocMem(dblHours, Sizeof(Double) * ValueCount);        
+        Move(ValuePtr[0], dblHours[1], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -434,6 +461,112 @@ procedure LoadShapes_Set_idx(Value: Integer); CDECL;
 begin
     if LoadShapeClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
+end;
+//------------------------------------------------------------------------------
+procedure LoadShapes_Set_Points(Npts: Integer; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: Wordbool; IsFloat32: Wordbool); CDECL;
+var
+    elem: TLoadshapeObj;
+begin
+	if not _activeObj(elem) then
+        Exit;
+
+    // If the LoadShape owns the memory, dispose the current data and reallocate if necessary
+    if not elem.ExternalMemory then
+    begin
+        ReallocMem(elem.dblPMultipliers, 0);
+        ReallocMem(elem.dblQMultipliers, 0);
+        ReallocMem(elem.dblHours, 0);
+        ReallocMem(elem.sngPMultipliers, 0);
+        ReallocMem(elem.sngQMultipliers, 0);
+        ReallocMem(elem.sngHours, 0);
+    end;
+    elem.dblPMultipliers := NIL;
+    elem.dblQMultipliers := NIL;
+    elem.dblHours := NIL;
+    elem.sngPMultipliers := NIL;
+    elem.sngQMultipliers := NIL;
+    elem.sngHours := NIL;
+    
+    elem.ExternalMemory := ExternalMemory;
+    elem.NumPoints := Npts;
+
+    if not ExternalMemory then
+    begin
+        if not IsFloat32 then
+        begin
+            if PMultPtr <> NIL then
+            begin
+                ReallocMem(elem.dblPMultipliers, Sizeof(Double) * Npts);
+                Move(PMultPtr^, elem.dblPMultipliers[1], Npts * SizeOf(Double));
+            end;
+            if QMultPtr <> NIL then
+            begin
+                ReallocMem(elem.dblQMultipliers, Sizeof(Double) * Npts);
+                Move(QMultPtr^, elem.dblQMultipliers[1], Npts * SizeOf(Double));
+            end;
+            if HoursPtr <> NIL then
+            begin
+                ReallocMem(elem.dblHours, Sizeof(Double) * Npts);
+                Move(HoursPtr^, elem.dblHours[1], Npts * SizeOf(Double));
+            end;
+            if Assigned(elem.dblPMultipliers) then
+                elem.SetMaxPandQ;
+        end
+        else // if IsFloat32
+        begin
+            if PMultPtr <> NIL then
+            begin
+                ReallocMem(elem.sngPMultipliers, Sizeof(Single) * Npts);
+                Move(PMultPtr^, elem.sngPMultipliers[1], Npts * SizeOf(Single));
+            end;
+            if QMultPtr <> NIL then
+            begin
+                ReallocMem(elem.sngQMultipliers, Sizeof(Single) * Npts);
+                Move(QMultPtr^, elem.sngQMultipliers[1], Npts * SizeOf(Single));
+            end;
+            if HoursPtr <> NIL then
+            begin
+                ReallocMem(elem.sngHours, Sizeof(Single) * Npts);
+                Move(HoursPtr^, elem.sngHours[1], Npts * SizeOf(Single));
+            end;
+            if Assigned(elem.sngPMultipliers) then
+                elem.SetMaxPandQ;
+        end;
+        Exit;
+    end;
+    
+    // Using externally controlled memory
+    if not IsFloat32 then
+        elem.SetDataPointers(HoursPtr, PMultPtr, QMultPtr)
+    else
+        elem.SetDataPointersSingle(HoursPtr, PMultPtr, QMultPtr)
+end;
+//------------------------------------------------------------------------------
+procedure LoadShapes_UseFloat64(); CDECL;
+var
+    elem: TLoadshapeObj;
+begin
+	if not _activeObj(elem) then
+        Exit;
+    elem.UseFloat64();
+end;
+//------------------------------------------------------------------------------
+procedure LoadShapes_UseFloat32(); CDECL;
+var
+    elem: TLoadshapeObj;
+begin
+	if not _activeObj(elem) then
+        Exit;
+    elem.UseFloat32();
+end;
+//------------------------------------------------------------------------------
+procedure LoadShapes_SetMaxPandQ(); CDECL;
+var
+    elem: TLoadshapeObj;
+begin
+	if not _activeObj(elem) then
+        Exit;
+    elem.SetMaxPandQ();
 end;
 //------------------------------------------------------------------------------
 end.

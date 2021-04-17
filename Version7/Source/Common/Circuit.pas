@@ -1565,6 +1565,7 @@ var
   myLoadShape   : array of double;
   PFSpecified,
   UseActual     : Boolean;
+  qmult: Double;
 
 Begin
 
@@ -1677,15 +1678,16 @@ Begin
           ActiveDSSObject    :=  LoadshapeClass.ElementList.Active;
           for iElem := 0 to High(myLoadShape) do
           Begin
-            myLoadShape[iElem]  :=  myLoadShape[iElem]  + TLoadshapeObj(ActiveDSSObject).PMultipliers[iElem];
-            if TLoadshapeObj(ActiveDSSObject).QMultipliers <> nil then
+            myLoadShape[iElem]  :=  myLoadShape[iElem]  + TLoadshapeObj(ActiveDSSObject).PMult(iElem);
+
+            if TLoadshapeObj(ActiveDSSObject).QMult(iElem, qmult) then
             Begin
-              myWeight    :=  TLoadshapeObj(ActiveDSSObject).QMultipliers[iElem];
+              myWeight    :=  qmult;
               if myWeight = 0 then
               Begin
                 If PFSpecified and (myPF <> 1.0) Then  // Qmult not specified but PF was
                 Begin  // user specified the PF for this load
-                  myWeight  :=  TLoadshapeObj(ActiveDSSObject).PMultipliers[iElem] * SQRT((1.0/SQR(myPF) - 1));
+                  myWeight  :=  TLoadshapeObj(ActiveDSSObject).PMult(iElem) * SQRT((1.0/SQR(myPF) - 1));
                   If myPF < 0.0 Then // watts and vare are in opposite directions
                     myWeight  :=  -myWeight;
                 End
@@ -1696,7 +1698,7 @@ Begin
               myWeight    :=  0.0;
               If PFSpecified and (myPF <> 1.0) Then  // Qmult not specified but PF was
               Begin  // user specified the PF for this load
-                myWeight  :=  TLoadshapeObj(ActiveDSSObject).PMultipliers[iElem] * SQRT((1.0/SQR(myPF) - 1));
+                myWeight  :=  TLoadshapeObj(ActiveDSSObject).PMult(iElem) * SQRT((1.0/SQR(myPF) - 1));
                 If myPF < 0.0 Then // watts and vare are in opposite directions
                   myWeight  :=  -myWeight;
               End
