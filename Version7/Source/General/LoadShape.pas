@@ -2068,7 +2068,7 @@ procedure TLoadShapeObj.UseFloat32;
 var
     i: Integer;
 begin
-    if ActiveLoadShapeObj.ExternalMemory then
+    if ActiveLoadShapeObj.UseMMF then
     begin
         DoSimpleMsg('Data cannot be toggled to 32-bit floats when memory-mapping is enabled.', 61106);
         Exit;
