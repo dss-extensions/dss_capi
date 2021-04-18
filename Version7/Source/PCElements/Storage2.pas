@@ -1659,7 +1659,7 @@ procedure TStorage2Obj.CalcDailyMult(Hr: Double);
 begin
     if (DailyShapeObj <> NIL) then
     begin
-        ShapeFactor := DailyShapeObj.GetMult(Hr);
+        ShapeFactor := DailyShapeObj.GetMultAtHour(Hr);
     end
     else
         ShapeFactor := CDOUBLEONE;  // Default to no  variation
@@ -1674,7 +1674,7 @@ procedure TStorage2Obj.CalcDutyMult(Hr: Double);
 begin
     if DutyShapeObj <> NIL then
     begin
-        ShapeFactor := DutyShapeObj.GetMult(Hr);
+        ShapeFactor := DutyShapeObj.GetMultAtHour(Hr);
         CheckStateTriggerLevel(ShapeFactor.re);
     end
     else
@@ -1687,7 +1687,7 @@ procedure TStorage2Obj.CalcYearlyMult(Hr: Double);
 begin
     if YearlyShapeObj <> NIL then
     begin
-        ShapeFactor := YearlyShapeObj.GetMult(Hr);
+        ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr);
         CheckStateTriggerLevel(ShapeFactor.re);
     end
     else

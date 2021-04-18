@@ -1356,7 +1356,7 @@ procedure TPVsystem2Obj.CalcDailyMult(Hr: Double);
 begin
     if (DailyShapeObj <> NIL) then
     begin
-        ShapeFactor := DailyShapeObj.GetMult(Hr);
+        ShapeFactor := DailyShapeObj.GetMultAtHour(Hr);
     end
     else
         ShapeFactor := CDOUBLEONE;  // Default to no  variation
@@ -1377,7 +1377,7 @@ procedure TPVsystem2Obj.CalcDutyMult(Hr: Double);
 begin
     if DutyShapeObj <> NIL then
     begin
-        ShapeFactor := DutyShapeObj.GetMult(Hr + DutyStart);
+        ShapeFactor := DutyShapeObj.GetMultAtHour(Hr + DutyStart);
     end
     else
         CalcDailyMult(Hr);  // Default to Daily Mult If no duty curve specified
@@ -1397,7 +1397,7 @@ procedure TPVsystem2Obj.CalcYearlyMult(Hr: Double);
 begin
     if YearlyShapeObj <> NIL then
     begin
-        ShapeFactor := YearlyShapeObj.GetMult(Hr + DutyStart);
+        ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr + DutyStart);
     end
     else
         CalcDailyMult(Hr);  // Defaults to Daily curve

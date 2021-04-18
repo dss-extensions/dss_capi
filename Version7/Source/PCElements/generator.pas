@@ -1111,7 +1111,7 @@ procedure TGeneratorObj.CalcDailyMult(Hr: Double);
 begin
     if (DailyDispShapeObj <> NIL) then
     begin
-        ShapeFactor := DailyDispShapeObj.GetMult(Hr);
+        ShapeFactor := DailyDispShapeObj.GetMultAtHour(Hr);
         ShapeIsActual := DailyDispShapeObj.UseActual;
     end
     else
@@ -1125,7 +1125,7 @@ procedure TGeneratorObj.CalcDutyMult(Hr: Double);
 begin
     if DutyShapeObj <> NIL then
     begin
-        ShapeFactor := DutyShapeObj.GetMult(Hr + DutyStart);
+        ShapeFactor := DutyShapeObj.GetMultAtHour(Hr + DutyStart);
         ShapeIsActual := DutyShapeObj.UseActual;
     end
     else
@@ -1139,7 +1139,7 @@ begin
 {Yearly curve is assumed to be hourly only}
     if YearlyShapeObj <> NIL then
     begin
-        ShapeFactor := YearlyShapeObj.GetMult(Hr);
+        ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr);
         ShapeIsActual := YearlyShapeObj.UseActual;
     end
     else

@@ -1043,7 +1043,7 @@ procedure TLoadObj.CalcDailyMult(Hr: Double);
 begin
     if DailyShapeObj <> NIL then
     begin
-        ShapeFactor := DailyShapeObj.GetMult(Hr);
+        ShapeFactor := DailyShapeObj.GetMultAtHour(Hr);
         ShapeIsActual := DailyShapeObj.UseActual;
     end
     else
@@ -1057,7 +1057,7 @@ procedure TLoadObj.CalcDutyMult(Hr: Double);
 begin
     if DutyShapeObj <> NIL then
     begin
-        ShapeFactor := DutyShapeObj.GetMult(Hr);
+        ShapeFactor := DutyShapeObj.GetMultAtHour(Hr);
         ShapeIsActual := DutyShapeObj.UseActual;
     end
     else
@@ -1071,7 +1071,7 @@ begin
 {Yearly curve is assumed to be hourly only}
     if YearlyShapeObj <> NIL then
     begin
-        ShapeFactor := YearlyShapeObj.GetMult(Hr);
+        ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr);
         ShapeIsActual := YearlyShapeObj.UseActual;
     end
     else
@@ -1089,7 +1089,7 @@ begin
   {CVR curve is assumed to be used in a yearly simulation}
     if CVRShapeObj <> NIL then
     begin
-        CVRFactor := CVRShapeObj.GetMult(Hr);    {Complex}
+        CVRFactor := CVRShapeObj.GetMultAtHour(Hr);    {Complex}
         FCVRWattFactor := CVRFactor.re;
         FCVRvarFactor := CVRFactor.im;
     end;

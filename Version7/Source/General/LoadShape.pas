@@ -113,7 +113,7 @@ type
         function Get_StdDev: Double;
         procedure Set_Mean(const Value: Double);
         procedure Set_StdDev(const Value: Double);  // Normalize the curve presently in memory
-        function GetMultSingle(hr: Double): Complex;
+        function GetMultAtHourSingle(hr: Double): Complex;
     PUBLIC
 
         Interval: Double;  //=0.0 then random interval     (hr)
@@ -167,7 +167,7 @@ type
         constructor Create(ParClass: TDSSClass; const LoadShapeName: String);
         destructor Destroy; OVERRIDE;
 
-        function GetMult(hr: Double): Complex;  // Get multiplier at specified time -- TODO: rename to GetMultAtHour
+        function GetMultAtHour(hr: Double): Complex;  // Get multiplier at specified time
         function Mult(i: Integer): Double;  // get multiplier by index -- used in SolutionAlgs, updates LastValueAccessed
         function PMult(i: Integer): Double;  // get multiplier by index -- used in SolutionAlgs, doesn't update LastValueAccessed 
         function QMult(i: Integer; var m: Double): Boolean;  // get multiplier by index
@@ -1245,8 +1245,7 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TLoadShapeObj.GetMult(hr: Double): Complex;
-
+function TLoadShapeObj.GetMultAtHour(hr: Double): Complex;
 // This function returns a multiplier for the given hour.
 // If no points exist in the curve, the result is  1.0
 // If there are fewer points than requested, the curve is simply assumed to repeat
@@ -1836,7 +1835,7 @@ begin
             for j := 1 to ObjList.ListSize do
             begin
                 Obj := ObjList.Get(j);
-                VBuf^[j] := Obj.GetMult(Hr_Time).Re;
+                VBuf^[j] := Obj.GetMultAtHour(Hr_Time).Re;
             end;
             TopTransferFile.WriteData(HR_Time, Vbuf, Cbuf);
             HR_Time := HR_Time + MinInterval;
@@ -2143,7 +2142,7 @@ begin
     end;
 end;
 
-function TLoadShapeObj.GetMultSingle(hr: Double): Complex;
+function TLoadShapeObj.GetMultAtHourSingle(hr: Double): Complex;
 var
     Index, i: Integer;
 

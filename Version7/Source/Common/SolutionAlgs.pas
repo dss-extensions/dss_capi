@@ -152,7 +152,7 @@ begin
                     with Dynavars do
                     begin
                         Increment_time;
-                        DefaultHourMult := DefaultYearlyShapeObj.getmult(dblHour);
+                        DefaultHourMult := DefaultYearlyShapeObj.GetMultAtHour(dblHour);
                         if PriceCurveObj <> NIL then
                             PriceSignal := PriceCurveObj.GetPrice(dblHour);
                         SolveSnap;
@@ -205,7 +205,7 @@ begin
                     with DynaVars do
                     begin
                         Increment_time;
-                        DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
+                        DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(dblHour);
                         if PriceCurveObj <> NIL then
                             PriceSignal := PriceCurveObj.GetPrice(dblHour);
                         SolveSnap;
@@ -261,7 +261,7 @@ begin
                     with DynaVars do
                     begin
                         Increment_time;
-                        DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
+                        DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(dblHour);
                         if PriceCurveObj <> NIL then
                             PriceSignal := PriceCurveObj.GetPrice(dblHour);
                         SolveSnap;
@@ -306,7 +306,7 @@ begin
                     with DynaVars do
                     begin
                         Increment_time;
-                        DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
+                        DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(dblHour);
             // Assume pricesignal stays constant for dutycycle calcs
                         SolveSnap;
                         MonitorClass.SampleAll;  // Make all monitors take a sample
@@ -347,7 +347,7 @@ begin
                 with DynaVars do
                 begin
               {Compute basic multiplier from Default loadshape to use in generator dispatch, if any}
-                    DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
+                    DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(dblHour);
 
                     SolveSnap;
 
@@ -397,7 +397,7 @@ begin
                     with DynaVars do
                     begin
                         Increment_time;
-                        DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
+                        DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(dblHour);
           // Assume price signal stays constant for dynamic calcs
        {Predictor}
                         IterationFlag := 0;
@@ -514,7 +514,7 @@ begin
                         for i := 1 to Ndaily do
                         begin
                             Increment_time;
-                            DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
+                            DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(dblHour);
                             SolveSnap;
 
                             MonitorClass.SampleAll;  // Make all monitors take a sample
@@ -571,7 +571,7 @@ begin
             ProgressCaption('Monte Carlo Mode 3, ' + IntToStr(NumberofTimes) + ' Different Load Levels.');
             ProgressCount := 0;
 
-            DefaultHourMult := DefaultDailyShapeObj.GetMult(DynaVars.dblHour);
+            DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(DynaVars.dblHour);
             if PriceCurveObj <> NIL then
                 PriceSignal := PriceCurveObj.GetPrice(DynaVars.dblHour);
 
@@ -656,7 +656,7 @@ begin
       // Set the time
                     Increment_time;
 
-                    DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
+                    DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(dblHour);
 
                     if not SolutionAbort then
                     begin
@@ -728,7 +728,7 @@ begin
     // MonitorClass.ResetAll;
     // EnergyMeterClass.ResetAll;
 
-        DefaultHourMult := DefaultDailyShapeObj.GetMult(DynaVars.dblHour);
+        DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(DynaVars.dblHour);
         if not DIFilesAreOpen then
             EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
@@ -1211,7 +1211,7 @@ begin
             with DynaVars do
             begin
               {Compute basic multiplier from Default loadshape to use in generator dispatch, if any}
-                DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
+                DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(dblHour);
 
                 SolveSnap;
           //      Increment_time;  // This function is handeled from SolveHarmonics (04-10-2013)
@@ -1239,7 +1239,7 @@ begin
                 if not RetrieveSavedVoltages then
                     Exit;  {Get Saved fundamental frequency solution}
             end;
-//     DefaultHourMult := DefaultDailyShapeObj.getmult(DynaVars.dblHour);
+//     DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(DynaVars.dblHour);
 //     IF Load_Changed THEN Begin    //Added to update the current sources of all frequencies any time
             InitializeForHarmonics;  //the value of a load changes in a proportional way
 //            Load_Changed:=FALSE;     // Added 05 dec 2013 - D. Montenegro
@@ -1263,7 +1263,7 @@ begin
                 Frequency := FrequencyList^[i]; // forces rebuild of SystemY
                 if Abs(Harmonic - 1.0) > EPSILON then
                 begin    // Skip fundamental
-//               DefaultHourMult := DefaultDailyShapeObj.getmult(DynaVars.dblHour);
+//               DefaultHourMult := DefaultDailyShapeObj.GetMultAtHour(DynaVars.dblHour);
                     SolveHarmTime;
                     MonitorClass.SampleAll;
                     EndOfTimeStepCleanup;
