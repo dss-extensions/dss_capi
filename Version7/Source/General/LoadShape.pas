@@ -102,7 +102,7 @@ type
     TLoadShapeObj = class(TDSSObject)
     PRIVATE
         LastValueAccessed,
-        FNumPoints: Integer;  // Number of points in curve
+        FNumPoints: Integer;  // Number of points in curve -- TODO: int64
         ArrayPropertyIndex: Integer;
 
         iMaxP: Integer;
@@ -138,27 +138,21 @@ type
         Stride: Integer;
 
         // Memory mapping variables
-        UseMMF: Boolean;            // Flag to indicated that the user wants to use MMF
-        mmMMF,                      // Handle for the memory map (P)
-        mmFile,                     // Handle for the file to be mapped (P)
-        mmQMMF,                     // Handle for the memory map (Q)
-        mmQFile: THandle;           // Handle for the file to be mapped (Q)
-        mmFileSizeQ,                // File size of the file opened (P)
-        mmFileSize: Cardinal;       // File size of the file opened (P)
-        mmFileCmdQ,
-        mmFileCmd: String;          // The file definition added by the user (for moving the data window)
-        mmViewQ,                    // Current view of the file mapped (Bytes - Q)
-        mmView: pByte;              // Current view of the file mapped (Bytes - P)
-        mmFileType,                 // The file type (P)
-        mmFileTypeQ: TLSFileType;   // The file type (Q)
-        mmColumn,                   // The column to read (P)
-        mmColumnQ,                  // The column to read (Q)
-        mmLineLen,                  // The size of the char line (P)
-        mmLineLenQ,                 // The size of the char line (Q)
-        mmDataSize,                 // The total data size expected (P)
-        mmDataSizeQ,                // The total data size expected (Q)
-        mmViewLenQ,                 // Memory View size in bytes (Q)
-        mmViewLen: Integer;         // Memory View size in bytes (P)
+        UseMMF: Boolean; // Flag to indicated that the user wants to use MMF
+        {$IFDEF WINDOWS}
+        mmMMF, mmQMMF: THandle; // Handle for the memory map (P, Q)
+        mmFile, mmQFile: THandle; // Handle for the file to be mapped (P, Q)
+        {$ELSE}
+        mmFile, mmQFile: CInt; // Handle for the file to be mapped (P, Q)
+        {$ENDIF}
+        mmFileSize, mmFileSizeQ: Cardinal; // File size of the file opened (P, Q)
+        mmFileCmd, mmFileCmdQ: String; // The file definition added by the user (for moving the data window)
+        mmView, mmViewQ: pByte; // Current view of the file mapped (Bytes - P, Q)
+        mmFileType, mmFileTypeQ: TLSFileType; // The file type (P, Q)
+        mmColumn, mmColumnQ, // The column to read (P, Q)
+        mmLineLen, mmLineLenQ, // The size of the char line (P, Q)
+        mmDataSize, mmDataSizeQ, // The total data size expected (P, Q)
+        mmViewLen, mmViewLenQ: Int64; // Memory View size in bytes (P)
 
         constructor Create(ParClass: TDSSClass; const LoadShapeName: String);
         destructor Destroy; OVERRIDE;
@@ -171,7 +165,7 @@ type
         procedure Normalize;
         procedure SetMaxPandQ;
 
-        procedure LoadMMFView(const Parmname: String; MMF: THandle; Destination: TMMShapeType);
+        procedure LoadMMFView(const Parmname: String; Destination: TMMShapeType);
         procedure LoadFileFeatures(ShapeType: TMMShapeType);
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
@@ -343,7 +337,7 @@ begin
     end;
 end;
 
-// Loads the mapped file features into local variables for further use     *
+// Loads the mapped file features into local variables for further use
 procedure TLoadShapeObj.LoadFileFeatures(ShapeType: TMMShapeType);
 var
     LocalCol: Integer;
@@ -375,6 +369,8 @@ begin
     else if CompareText(Parmname, 'sngfile') = 0 then
         fileType := TLSFileType.Float32;
 
+    // TODO: fileType could be uninitialized!
+
     if ShapeType = TMMShapeType.P then
     begin
         mmFileType := fileType;
@@ -388,7 +384,7 @@ begin
 end;
 
 // Loads the active MMF view into memory for further use
-procedure TLoadShapeObj.LoadMMFView(const Parmname: String; MMF: THandle; Destination: TMMShapeType);
+procedure TLoadShapeObj.LoadMMFView(const Parmname: String; Destination: TMMShapeType);
 var
     FirstPos: Integer;
     lastCh: Byte;
@@ -397,7 +393,6 @@ begin
     FirstPos := 1;
     if Destination = TMMShapeType.P then
     begin
-        mmView := PByte(MapViewOfFile(MMF, FILE_MAP_READ, 0, 0, mmViewLen));
         if CompareText(Parmname, 'file') = 0 then // standard csv file
         begin
             lastCh := mmView[FirstPos];
@@ -417,7 +412,6 @@ begin
     end
     else
     begin
-        mmViewQ := PByte(MapViewOfFile(MMF, FILE_MAP_READ, 0, 0, mmViewLen));
         if CompareText(Parmname, 'file') = 0 then // standard csv file
         begin
             lastCh := mmViewQ[FirstPos];
@@ -442,7 +436,6 @@ function TLoadShape.CreateMMF(const S: String; Destination: TMMShapeType): Boole
 var
     ParmName,
     Param: String;
-    localMMF: THandle;
 begin
     with ActiveLoadShapeObj do
     try
@@ -457,36 +450,48 @@ begin
         
         if Destination = TMMShapeType.P then
         begin
-            // Opens the file for this instance
+            // Creating mapping for P
+{$IFDEF WINDOWS}
             mmFile := CreateFile(Pchar(Param), GENERIC_READ, FILE_SHARE_READ, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-            // Creates the memory map for the file
             mmMMF := CreateFileMapping(mmFile, NIL, PAGE_READONLY, 0, 0, NIL);
-            localMMF := mmMMF;  // Assignment for working locally
-            mmFileCmd := S;
             mmFileSize := GetFileSize(mmFile, NIL);
             mmViewLen := mmFileSize;
+            mmView := PByte(MapViewOfFile(mmMMF, FILE_MAP_READ, 0, 0, mmViewLen));
+{$ELSE}
+            mmFile := fpOpen(Pchar(Param), O_rdOnly, 0);
+            mmFileSize := fpLSeek(mmFile, 0, Seek_End);
+            fpLSeek(mmFile, 0, Seek_Set);
+            mmViewLen := mmFileSize;
+            mmView := PByte(fpMMap(nil, mmFileSize, PROT_READ, MAP_SHARED, mmFile, 0));
+{$ENDIF}
+            mmFileCmd := S;
         end
         else
         begin
             // Creating mapping for Q
-            // Opens the file for this instance
+{$IFDEF WINDOWS}
             mmQFile := CreateFile(Pchar(Param), GENERIC_READ, FILE_SHARE_READ, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-            // Creates the memory map for the file
             mmQMMF := CreateFileMapping(mmQFile, NIL, PAGE_READONLY, 0, 0, NIL);
-            localMMF := mmQMMF; // Assignment for working locally
-            mmFileCmdQ := S;
-            mmFileSizeQ := GetFileSize(mmFile, NIL);
+            mmFileSizeQ := GetFileSize(mmQFile, NIL);
             mmViewLenQ := mmFileSizeQ;
+            mmViewQ := PByte(MapViewOfFile(mmQMMF, FILE_MAP_READ, 0, 0, mmViewLenQ));
+{$ELSE}
+            mmQFile := fpOpen(Pchar(Param), O_rdOnly, 0);
+            mmFileSizeQ := fpLSeek(mmQFile, 0, Seek_End);
+            fpLSeek(mmQFile, 0, Seek_Set);
+            mmViewLenQ := mmFileSizeQ;
+            mmViewQ := PByte(fpMMap(nil, mmFileSizeQ, PROT_READ, MAP_SHARED, mmQFile, 0));
+{$ENDIF}
+            mmFileCmdQ := S;
         end;
 
-        LoadMMFView(ParmName, localMMF, Destination);
+        LoadMMFView(ParmName, Destination);
         Result := True;
     except
         DoSimpleMsg(Format('There was a problem mapping file "%s". Process cancelled.', [Param]), 800001);
         Result := False;
     end;
 end;
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TLoadShape.Edit: Integer;
 var
@@ -495,7 +500,7 @@ var
     Param: String;
 begin
     Result := 0;
-  // continue parsing with contents of Parser
+    // continue parsing with contents of Parser
     ActiveLoadShapeObj := ElementList.Active;
     ActiveDSSObject := ActiveLoadShapeObj;
 
@@ -628,15 +633,18 @@ begin
                     Do2ColCSVFile(AdjustInputFilePath(Param));
                 21:
                 begin
-                    UseMMF := InterpretYesNo(Param);
-                    if UseMMF then
+                    if InterpretYesNo(Param) then
                     begin
+                        UseMMF := True;
                         UseFloat64;
+                    end
+                    else
+                    begin
+                        UseMMF := False;
                     end;
                 end;
-
             else
-           // Inherited parameters
+                // Inherited parameters
                 ClassEdit(ActiveLoadShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
@@ -971,6 +979,7 @@ var
     F: file of Single;
     Hr, M: Single;
     i: Integer;
+    pointsRead: Int64;
 begin
     if ActiveLoadShapeObj.ExternalMemory then
     begin
@@ -1002,30 +1011,60 @@ begin
             Exit;
         end;
 
+        if (dQ = NIL) then
+        begin
+            // Take the opportunity to use float32 data
+            UseFloat32;
+            if Interval = 0.0 then
+            begin
+                while (not EOF(F)) and (i < (FNumPoints - 1)) do
+                begin
+                    Inc(i);
+                    Read(F, sH[i]);
+                    Read(F, sP[i]);
+                end;
+            end
+            else
+            begin
+                BlockRead(F, sP[0], FNumPoints, pointsRead);
+                FNumPoints := pointsRead; 
+            end;
+            CloseFile(F);
+            Exit;
+        end;
+
         UseFloat64;
         ReAllocmem(dP, sizeof(Double) * NumPoints);
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
         i := -1;
-        while (not EOF(F)) and (i < (FNumPoints - 1)) do
+        
+        if Interval = 0.0 then 
         begin
-            Inc(i);
-            if Interval = 0.0 then
+            while (not EOF(F)) and (i < (FNumPoints - 1)) do
             begin
+                Inc(i);
                 Read(F, Hr);
                 dH[i] := Hr;
+                Read(F, M);
+                dP[i] := M;
             end;
-            Read(F, M);
-            dP[i] := M;
+            inc(i);
+            if i <> FNumPoints then
+                NumPoints := i;
+        end
+        else 
+        begin
+            ReallocMem(sP, FNumPoints * SizeOf(Single));
+            BlockRead(F, sP[0], FNumPoints, pointsRead);
+            FNumPoints := pointsRead;
+            for i := 0 to FNumPoints - 1 do
+                dP[i] := sP[i];
+            ReallocMem(sP, 0);
         end;
         CloseFile(F);
-        inc(i);
-        if i <> FNumPoints then
-            NumPoints := i;
     except
         DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 616);
-        CloseFile(F);
-        Exit;
     end;
 end;
 
@@ -1035,6 +1074,7 @@ var
     s: String;
     F: file of Double;
     i: Integer;
+    pointsRead: Int64;
 begin
     if ActiveLoadShapeObj.ExternalMemory then
     begin
@@ -1071,17 +1111,25 @@ begin
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
         i := -1;
-        while (not EOF(F)) and (i < (FNumPoints - 1)) do
+        
+        if Interval = 0.0 then 
         begin
-            Inc(i);
-            if Interval = 0.0 then
+            while (not EOF(F)) and (i < (FNumPoints - 1)) do
+            begin
+                Inc(i);
                 Read(F, dH[i]);
-            Read(F, dP[i]);
+                Read(F, dP[i]);
+            end;
+            inc(i);
+            if i <> FNumPoints then
+                NumPoints := i;
+        end
+        else 
+        begin
+            BlockRead(F, dP[0], FNumPoints, pointsRead);
+            FNumPoints := pointsRead;
         end;
         CloseFile(F);
-        inc(i);
-        if i <> FNumPoints then
-            NumPoints := i;
     except
         DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 618);
         CloseFile(F);
@@ -1122,6 +1170,15 @@ begin
     FStdDevCalculated := FALSE;  // calculate on demand
     Enabled := True;
 
+{$IFDEF WINDOWS}
+    mmMMF := 0;
+    mmQMMF := 0;
+{$ENDIF}
+    mmView := NIL;
+    mmViewQ := NIL;
+    mmFile := 0;
+    mmQFile := 0;
+
     mmViewLen := 1000;   // 1kB by default, it may change for not missing a row
 
     ArrayPropertyIndex := 0;
@@ -1150,11 +1207,24 @@ begin
     end;
     if UseMMF then
     begin
+{$IFDEF WINDOWS}    
         UnmapViewOfFile(mmView);
+        UnmapViewOfFile(mmViewQ);
         CloseHandle(mmMMF);
         CloseHandle(mmFile);
         CloseHandle(mmQMMF);
         CloseHandle(mmQFile);
+{$ELSE}
+        if (mmViewQ <> NIL) and (mmViewQ <> mmView) then
+            fpMUnMap(mmViewQ, mmFileSize);
+        if (mmView <> NIL) then
+            fpMUnMap(mmView, mmFileSizeQ);
+
+        if (mmQFile <> 0) and (mmQFile <> mmFile) then
+            fpclose(mmQFile);
+        if (mmFile <> 0) then
+            fpclose(mmFile);
+{$ENDIF}
     end;
     inherited destroy;
 end;
@@ -1171,7 +1241,7 @@ function TLoadShapeObj.GetMultAtHour(hr: Double): Complex;
 var
     i, 
     offset, // index including stride
-    poffset: Integer; // previous index including stride
+    poffset: Int64; // previous index including stride
     
     function Set_Result_im(const realpart: Double): Double;
     {Set imaginary part of Result when Qmultipliers not defined}
@@ -1815,13 +1885,11 @@ begin
 end;
 
 procedure TLoadShapeObj.SaveToSngFile;
-
 var
     F: file of Single;
     i: Integer;
     Fname: String;
     Temp: Single;
-
 begin
     UseFloat64;
     if Assigned(dP) then
@@ -2074,7 +2142,7 @@ function TLoadShapeObj.GetMultAtHourSingle(hr: Double): Complex;
 var
     i, 
     offset, // index including stride
-    poffset: Integer; // previous index including stride
+    poffset: Int64; // previous index including stride
     
     function Set_Result_im(const realpart: Double): Double;
     {Set imaginary part of Result when Qmultipliers not defined}

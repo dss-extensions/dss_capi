@@ -180,6 +180,9 @@ implementation
 
 uses
 {$IFDEF FPC}
+{$ELSE}
+    BaseUnix,
+    Unix,
     Process,
     CmdForms,
 {$ELSE}
