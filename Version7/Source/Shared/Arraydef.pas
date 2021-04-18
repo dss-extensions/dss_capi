@@ -28,6 +28,11 @@ type
     pStringArray = ^StringArray;
     StringArray = array[1..100] of String;
 
+    DoubleArray0 = array[0..100] of Double;
+    SingleArray0 = array[0..100] of Single;
+    pDoubleArray0 = ^DoubleArray0;
+    pSingleArray0 = ^SingleArray0;
+
     //pDouble = ^Double;
     //pSingle = ^Single;
     //pSmallInt = ^Smallint;

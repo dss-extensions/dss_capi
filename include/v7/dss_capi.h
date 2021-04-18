@@ -6244,9 +6244,14 @@ extern "C" {
     If IsFloat32 is 0/False, the pointers are interpreted as pointers to float64/double precision numbers.
     Otherwise, the pointers are interpreted as pointers to float32/single precision numbers.
     
+    Stride: number of elements to skip to reach the next indexed element.
+    Stride is only used when ExternalMemory is 1/True (ignored otherwise).
+    For non-contiguous series and transposed data. Depending on how much that is used, a row-major matrix is
+    preferred over a column-major one.
+    
     (API Extension)
     */
-    DSS_CAPI_V7_DLL void LoadShapes_Set_Points(int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, uint16_t ExternalMemory, uint16_t IsFloat32);
+    DSS_CAPI_V7_DLL void LoadShapes_Set_Points(int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, uint16_t ExternalMemory, uint16_t IsFloat32, int32_t Stride);
 
     /*
     Converts the current LoadShape data to float32/single precision.

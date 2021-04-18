@@ -23,6 +23,16 @@ uses
     DSSClass,
     Classes{, StdCtrls};
 
+type
+{$SCOPEDENUMS ON}
+    TLSFileType = (
+        PlainText = 0,
+        Float64 = 0,
+        Float32 = 1
+    );
+   
+{$SCOPEDENUMS OFF}
+
 function CompareTextShortest(const S1, S2: String): Integer;
 procedure FireOffEditor(FileNm: String);
 procedure DoDOSCmd(CmdString: String);
@@ -78,7 +88,7 @@ function GetEarthModel(n: Integer): String;
 function GetOCPDeviceType(pElem: TDSSCktElement): Integer;
 function GetOCPDeviceTypeString(icode: Integer): String;
 // Addition to deal with Memory mapped data
-function InterpretDblArrayMMF(myMap : pByte; FileType, Column, INDEX, DataSize : Integer): double;
+function InterpretDblArrayMMF(mmPtr: pByte; FileType: TLSFileType; Column, INDEX, DataSize: Integer): double;
  
 
 {misc functions}
@@ -908,78 +918,82 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-FUNCTION InterpretDblArrayMMF(myMap : pByte; FileType, Column, INDEX, DataSize : Integer): double;
-
-{ Gets the value for the value at INDEX within the file mapped (myMap)
+function InterpretDblArrayMMF(mmPtr: pByte; FileType: TLSFileType; Column, INDEX, DataSize: Integer): double;
+{ Gets the value for the value at INDEX within the file mapped (mmPtr)
   Considers the flags FileType, Column for locating the data within the file
   FileType :
     0 - normal file (ANSI char)
     1 - dblfile
     2 - sngfile
 }
-
-VAR
-
-   DBLByteArray : Array [0..7] of byte;
-   SGLByteArray : Array [0..3] of byte;
-
-   InputLIne,
-   myContent    : String;
-   myByte       : Byte;
-   OffSet,
-   i,j          : Integer;
-
+var
+   DBLByteArray: array[0..7] of byte;
+   SGLByteArray: array[0..3] of byte;
+   InputLIne, content: String;
+   byteValue : Byte;
+   OffSet, i, j : Integer;
 Begin
-  Result      :=  1.0; // Default Return Value;
-  OffSet      :=  (INDEX - 1) * DataSize;
+    Result := 1.0; // Default Return Value;
+    OffSet := (INDEX - 1) * DataSize;
 
-  If FileType = 0  THEN  // Normal file (CSV, txt, ASCII based file)
-  Begin
-    myContent     :=  '';
-    myByte        :=  0;
-    i             :=  OffSet;
-    if myMap[i] = $0A then inc(i); // in case we are at the end of the previous line
-    j             :=  0;
-    while myByte <> $0A do
-    Begin
-      myByte      :=  myMap[i];
-      // Concatenates avoiding special chars (EOL)
-      if (myByte >= 46 ) and (myByte < 58 )then myContent  :=  myContent + AnsiChar(myByte);
-      if myByte = 44 then       // a comma char was found
-      Begin                     // If we are at the column, exit, otherwise, keep looking
-        inc(j);                 // discarding the previous number (not needed anyway)
-        if j = Column then break
-        else myContent := '';
-      End;
-      inc(i);
-    End;
-    TRY
-      // checks if the extraction was OK, othwerwise, forces the default value
-      if myContent = '' then myContent := '1.0';
-      Result    :=  strtofloat(myContent);
-    Except
-    On E:Exception Do
-      Begin
-        DoSimpleMsg(Format('Error reading %d-th numeric array value. Error is:', [i, E.message]), 785);
-        Result := i-1;
-      End;
-    END;
-  End
+    if FileType = TLSFileType.PlainText then  // Normal file (CSV, txt, ASCII based file)
+    begin
+        content := '';
+        byteValue := 0;
+        i := OffSet;
+        if mmPtr[i] = $0A then 
+            inc(i); // in case we are at the end of the previous line
+            
+        j := 0;
+        while byteValue <> $0A do
+        begin
+            byteValue := mmPtr[i];
+            // Concatenates avoiding special chars (EOL)
+            if (byteValue >= 46) and (byteValue < 58) then 
+                content := content + AnsiChar(byteValue);
 
-  ELSE If (FileType = 1) THEN     // DBL files
-  Begin
-    // load the list from a file of doubles (no checking done on type of data)
-    for i := 0 to (DataSize - 1) do DBLByteArray[i] :=  myMap[i + OffSet];  // Load data into the temporary buffer
-    Result      :=  double(DBLByteArray);                                        // returns the number (double)
-  End
+            if byteValue = 44 then // a comma char was found
+            begin               // If we are at the column, exit, otherwise, keep looking
+                inc(j);         // discarding the previous number (not needed anyway)
+                if j = Column then 
+                    break
+                else 
+                    content := '';
+            end;
+            inc(i);
+        end;
+        try
+            // checks if the extraction was OK, othwerwise, forces the default value
+            if content = '' then 
+                content := '1.0';
+            Result := strtofloat(content);
+        except
+            on E:Exception Do
+            begin
+                DoSimpleMsg(Format('Error reading %d-th numeric array value. Error is:', [i, E.message]), 785);
+                Result := i - 1;
+            end;
+        end;
+        Exit;
+    end;
 
-  ELSE If (FileType = 2) THEN     // SGL files
-  Begin
-    // load the list from a file of doubles (no checking done on type of data)
-    for i := 0 to (DataSize - 1) do SGLByteArray[i]  :=  myMap[i + OffSet]; // Load data into the temporary buffer
-    Result      :=  single(SGLByteArray);                                        // returns the number formatted as double
-  End
+    if (FileType = TLSFileType.Float64) then // DBL files
+    begin
+        // load the list from a file of doubles (no checking done on type of data)
+        for i := 0 to (DataSize - 1) do 
+            DBLByteArray[i] :=  mmPtr[i + OffSet]; // Load data into the temporary buffer
+        Result := double(DBLByteArray); // returns the number (double)
+        Exit;
+    end;
 
+    if (FileType = TLSFileType.Float32) then // SGL files
+    begin
+        // load the list from a file of doubles (no checking done on type of data)
+        for i := 0 to (DataSize - 1) do 
+            SGLByteArray[i] := mmPtr[i + OffSet]; // Load data into the temporary buffer
+        Result := single(SGLByteArray); // returns the number formatted as double
+        Exit;
+    end;
 End;
 
 function InterpretIntArray(const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
