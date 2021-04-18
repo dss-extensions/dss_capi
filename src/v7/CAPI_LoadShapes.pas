@@ -166,7 +166,7 @@ begin
     ActualNumPoints := elem.NumPoints;
     elem.UseFloat64();
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.dP[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.dP[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Pmult_GR(); CDECL;
@@ -195,7 +195,7 @@ begin
     elem.UseFloat64();
     ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.dQ[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.dQ[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Qmult_GR(); CDECL;
@@ -238,7 +238,7 @@ begin
         ReallocMem(sP, 0);
         UseFloat64();
         ReallocMem(dP, Sizeof(Double) * ValueCount);
-        Move(ValuePtr[0], dP[1], ValueCount * SizeOf(Double));
+        Move(ValuePtr[0], dP[0], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -266,7 +266,7 @@ begin
         ReallocMem(sQ, 0);
         UseFloat64;
         ReallocMem(dQ, Sizeof(Double) * ValueCount);
-        Move(ValuePtr[0], dQ[1], ValueCount * SizeOf(Double));
+        Move(ValuePtr[0], dQ[0], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -295,7 +295,7 @@ begin
         Exit;
     ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.dH[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.dH[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_TimeArray_GR(); CDECL;
@@ -329,7 +329,7 @@ begin
         ReallocMem(sH, 0);
         UseFloat64;
         ReallocMem(dH, Sizeof(Double) * ValueCount);        
-        Move(ValuePtr[0], dH[1], ValueCount * SizeOf(Double));
+        Move(ValuePtr[0], dH[0], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -498,17 +498,17 @@ begin
             if PMultPtr <> NIL then
             begin
                 ReallocMem(elem.dP, Sizeof(Double) * Npts);
-                Move(PMultPtr^, elem.dP[1], Npts * SizeOf(Double));
+                Move(PMultPtr^, elem.dP[0], Npts * SizeOf(Double));
             end;
             if QMultPtr <> NIL then
             begin
                 ReallocMem(elem.dQ, Sizeof(Double) * Npts);
-                Move(QMultPtr^, elem.dQ[1], Npts * SizeOf(Double));
+                Move(QMultPtr^, elem.dQ[0], Npts * SizeOf(Double));
             end;
             if HoursPtr <> NIL then
             begin
                 ReallocMem(elem.dH, Sizeof(Double) * Npts);
-                Move(HoursPtr^, elem.dH[1], Npts * SizeOf(Double));
+                Move(HoursPtr^, elem.dH[0], Npts * SizeOf(Double));
             end;
             if Assigned(elem.dP) then
                 elem.SetMaxPandQ;
@@ -518,17 +518,17 @@ begin
             if PMultPtr <> NIL then
             begin
                 ReallocMem(elem.sP, Sizeof(Single) * Npts);
-                Move(PMultPtr^, elem.sP[1], Npts * SizeOf(Single));
+                Move(PMultPtr^, elem.sP[0], Npts * SizeOf(Single));
             end;
             if QMultPtr <> NIL then
             begin
                 ReallocMem(elem.sQ, Sizeof(Single) * Npts);
-                Move(QMultPtr^, elem.sQ[1], Npts * SizeOf(Single));
+                Move(QMultPtr^, elem.sQ[0], Npts * SizeOf(Single));
             end;
             if HoursPtr <> NIL then
             begin
                 ReallocMem(elem.sH, Sizeof(Single) * Npts);
-                Move(HoursPtr^, elem.sH[1], Npts * SizeOf(Single));
+                Move(HoursPtr^, elem.sH[0], Npts * SizeOf(Single));
             end;
             if Assigned(elem.sP) then
                 elem.SetMaxPandQ;
