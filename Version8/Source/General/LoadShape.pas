@@ -436,12 +436,14 @@ VAR
 
 Begin
 
-  WITH ActiveLoadShapeObj DO BEGIN
+  WITH ActiveLoadShapeObj DO
+  BEGIN
     try
 
       AuxParser[ActiveActor].CmdString := S;
       ParmName       := AuxParser[ActiveActor].NextParam ;
       Param          := AuxParser[ActiveActor].StrValue;
+
       if fileexists(pChar(Param)) then
       Begin
         if Destination = 0 then
@@ -1178,13 +1180,18 @@ VAR
   End;
 
 BEGIN
-  MaxMult:=BaseP;
-  DoNormalize(PMultipliers);
-  If Assigned(QMultipliers) Then Begin
-    MaxMult:=BaseQ;
-    DoNormalize(QMultipliers);
+  if UseMMF then
+    DoSimpleMsg('Normalize is not possible when working in memory mapping mode"', 2000001)
+  else
+  Begin
+    MaxMult:=BaseP;
+    DoNormalize(PMultipliers);
+    If Assigned(QMultipliers) Then Begin
+      MaxMult:=BaseQ;
+      DoNormalize(QMultipliers);
+    end;
+    UseActual := FALSE;  // not likely that you would want to use the actual if you normalized it.
   end;
-  UseActual := FALSE;  // not likely that you would want to use the actual if you normalized it.
 END;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
