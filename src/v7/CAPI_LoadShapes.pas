@@ -44,7 +44,10 @@ procedure LoadShapes_Set_idx(Value: Integer); CDECL;
 procedure LoadShapes_Set_Points(Npts: Integer; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: Wordbool; IsFloat32: Wordbool; Stride: Integer); CDECL;
 procedure LoadShapes_UseFloat64(); CDECL;
 procedure LoadShapes_UseFloat32(); CDECL;
-procedure LoadShapes_SetMaxPandQ(); CDECL;
+procedure LoadShapes_Set_MaxP(Value: Double); CDECL;
+function LoadShapes_Get_MaxP(): Double; CDECL;
+procedure LoadShapes_Set_MaxQ(Value: Double); CDECL;
+function LoadShapes_Get_MaxQ(): Double; CDECL;
 
 implementation
 
@@ -561,13 +564,43 @@ begin
     elem.UseFloat32();
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_SetMaxPandQ(); CDECL;
+procedure LoadShapes_Set_MaxP(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
 	if not _activeObj(elem) then
         Exit;
-    elem.SetMaxPandQ();
+    elem.MaxP := Value;
+end;
+//------------------------------------------------------------------------------
+function LoadShapes_Get_MaxP(): Double; CDECL;
+var
+    elem: TLoadshapeObj;
+begin
+    Result := 0.0;
+	if not _activeObj(elem) then
+        Exit;
+    Result := elem.MaxP;
+end;
+//------------------------------------------------------------------------------
+procedure LoadShapes_Set_MaxQ(Value: Double); CDECL;
+var
+    elem: TLoadshapeObj;
+begin
+	if not _activeObj(elem) then
+        Exit;
+    elem.MaxQ := Value;
+    elem.MaxQSpecified := True;
+end;
+//------------------------------------------------------------------------------
+function LoadShapes_Get_MaxQ(): Double; CDECL;
+var
+    elem: TLoadshapeObj;
+begin
+    Result := 0.0;
+	if not _activeObj(elem) then
+        Exit;
+    Result := elem.MaxQ;
 end;
 //------------------------------------------------------------------------------
 end.

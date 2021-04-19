@@ -6249,6 +6249,8 @@ extern "C" {
     For non-contiguous series and transposed data. Depending on how much that is used, a row-major matrix is
     preferred over a column-major one.
     
+    Remember to set MaxP and MaxQ accordingly.
+    
     (API Extension)
     */
     DSS_CAPI_V7_DLL void LoadShapes_Set_Points(int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, uint16_t ExternalMemory, uint16_t IsFloat32, int32_t Stride);
@@ -6270,12 +6272,37 @@ extern "C" {
     DSS_CAPI_V7_DLL void LoadShapes_UseFloat64(void);
 
     /*
-    Call the internal SetMaxPandQ for the LoadShape.
-    To be used with external memory loadshapes only, if required.
-        
+    kW value at the time of max power. This is set automatically set upon reading in a loadshape, but for external-memory loadshapes, the user must provide the value.
+    This property can also be used to override the value automatically computed or to retrieve the value computed.
+    
     (API Extension)
     */
-    DSS_CAPI_V7_DLL void LoadShapes_SetMaxPandQ(void);
+    DSS_CAPI_V7_DLL void LoadShapes_Set_MaxP(double Value);
+  
+    /*
+    kW value at the time of max power. This is set automatically set upon reading in a loadshape, but for external-memory loadshapes, the user must provide the value.
+    This property can also be used to override the value automatically computed or to retrieve the value computed.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL double LoadShapes_Get_MaxP(void);
+
+    /*
+    kW value at the time of max power. This is set automatically set upon reading in a loadshape, but for external-memory loadshapes, the user must provide the value.
+    This property can also be used to override the value automatically computed or to retrieve the value computed.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void LoadShapes_Set_MaxQ(double Value);
+
+    /*
+    kvar value at the time of max kW power.
+    This is set automatically set upon reading in a loadshape, but for external-memory loadshapes, the user must provide the value.
+    This property can also be used to override the value automatically computed or to retrieve the value computed.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL double LoadShapes_Get_MaxQ(void);
 
 
 #ifdef __cplusplus

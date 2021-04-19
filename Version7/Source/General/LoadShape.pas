@@ -105,10 +105,7 @@ type
         FNumPoints: Integer;  // Number of points in curve -- TODO: int64
         ArrayPropertyIndex: Integer;
 
-        iMaxP: Integer;
-
         FStdDevCalculated: Boolean;
-        MaxQSpecified: Boolean;
         FMean,
         FStdDev: Double;
 
@@ -133,6 +130,7 @@ type
         sH, sP, sQ: pSingleArray0; //zero based
 
         MaxP, MaxQ, BaseP, BaseQ: Double;
+        MaxQSpecified: Boolean;
 
         Enabled, UseActual, ExternalMemory: Boolean;
         Stride: Integer;
@@ -765,17 +763,18 @@ begin
                     sH[i] := OtherLoadShape.sH[Stride * i];
             end;
 
-            SetMaxPandQ;
             UseActual := OtherLoadShape.UseActual;
             UseMMF := OtherLoadShape.UseMMF;
             BaseP := OtherLoadShape.BaseP;
             BaseQ := OtherLoadShape.BaseQ;
+            SetMaxPandQ;
+            
+            // MaxP := OtherLoadShape.MaxP;
+            // MaxQ := OtherLoadShape.MaxQ;
+            // MaxQSpecified := OtherLoadShape.MaxQSpecified;
+            // Mean :=  OtherLoadShape.Mean;
+            // StdDev := OtherLoadShape.StdDev;
 
-           { MaxP :=  OtherLoadShape.MaxP;
-            MaxQ :=  OtherLoadShape.MaxQ;
-            Mean :=  OtherLoadShape.Mean;
-            StdDev := OtherLoadShape.StdDev;
-           }
             for i := 1 to ParentClass.NumProperties do
                 PropertyValue[i] := OtherLoadShape.PropertyValue[i];
         end
