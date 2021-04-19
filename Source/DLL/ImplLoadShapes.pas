@@ -10,7 +10,7 @@ unit ImplLoadShapes;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl;
+  ComObj, ActiveX, OpenDSSengine_TLB, ucomplex, StdVcl;
 
 type
   TLoadShapes = class(TAutoObject, ILoadShapes)
@@ -161,45 +161,54 @@ end;
 
 function TLoadShapes.Get_Pmult: OleVariant;
 Var
-   k:Integer;
+   k      : Integer;
+   Sample : Complex;
 
 begin
-        Result := VarArrayCreate([0, 0], varDouble);
-        Result[0] := 0.0;  // error condition: one element array=0
-        If ActiveCircuit[ActiveActor] <> Nil Then
-         Begin
-            If ActiveLSObject <> Nil Then Begin
-                 VarArrayRedim(Result, ActiveLSObject.NumPoints-1);
-                 For k:=0 to ActiveLSObject.NumPoints-1 Do
-                      Result[k] := ActiveLSObject.PMultipliers^[k+1];
-            End Else Begin
-               DoSimpleMsg('No active Loadshape Object found.',61001);
-            End;
-         End;
+  Result := VarArrayCreate([0, 0], varDouble);
+  Result[0] := 0.0;  // error condition: one element array=0
+  If ActiveCircuit[ActiveActor] <> Nil Then
+   Begin
+      If ActiveLSObject <> Nil Then
+      Begin
+        VarArrayRedim(Result, ActiveLSObject.NumPoints-1);
+        For k:=1 to ActiveLSObject.NumPoints Do
+        Begin
+          Sample        :=  ActiveLSObject.GetMult(k); // This change adds compatibility with MMF
+          Result[k - 1] :=  Sample.re;
+        End;
+      End Else Begin
+         DoSimpleMsg('No active Loadshape Object found.',61001);
+      End;
+   End;
 end;
 
 function TLoadShapes.Get_Qmult: OleVariant;
 Var
-   k:Integer;
+   k      : Integer;
+   Sample : Complex;
 
 begin
-        Result := VarArrayCreate([0, 0], varDouble);
-        Result[0] := 0.0;  // error condition: one element array=0
-        If ActiveCircuit[ActiveActor] <> Nil Then
-         Begin
-            If ActiveLSObject <> Nil Then
-            Begin
-              If assigned(ActiveLSObject.QMultipliers) Then
-              Begin
-                   VarArrayRedim(Result, ActiveLSObject.NumPoints-1);
-                   For k:=0 to ActiveLSObject.NumPoints-1 Do
-                        Result[k] := ActiveLSObject.QMultipliers^[k+1];
-              End;
-            End Else
-            Begin
-               DoSimpleMsg('No active Loadshape Object found.',61001);
-            End;
-         End;
+  Result := VarArrayCreate([0, 0], varDouble);
+  Result[0] := 0.0;  // error condition: one element array=0
+  If ActiveCircuit[ActiveActor] <> Nil Then
+  Begin
+    If ActiveLSObject <> Nil Then
+    Begin
+      If assigned(ActiveLSObject.QMultipliers) Then
+      Begin
+        VarArrayRedim(Result, ActiveLSObject.NumPoints-1);
+        For k:=1 to ActiveLSObject.NumPoints Do
+        Begin
+          Sample        :=  ActiveLSObject.GetMult(k);     // This change adds compatibility with MMF
+          Result[k - 1] :=  Sample.im;
+        End;
+      End;
+    End Else
+    Begin
+      DoSimpleMsg('No active Loadshape Object found.',61001);
+    End;
+  End;
 end;
 
 procedure TLoadShapes.Set_Npts(Value: Integer);
