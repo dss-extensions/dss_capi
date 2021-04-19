@@ -774,7 +774,8 @@ var
     ParmName,
     Param: String;
     F: Textfile;
-    MyStream: TMemoryStream;
+    MStream: TMemoryStream;
+    FStream: TFileStream;
     i: Integer;
     Temp: Single;
     CSVFileName: String;
@@ -782,6 +783,7 @@ var
     CSVHeader: Boolean;
     InputLIne: String;
     iskip: Integer;
+    sngArray: ArrayDef.PSingleArray;
 
 begin
 
@@ -866,51 +868,40 @@ begin
 
         end;
     end
-
-    else
-    if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'dblfile') = 0) then
+    else if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'dblfile') = 0) then
     begin
          // load the list from a file of doubles (no checking done on type of data)
-        MyStream := TMemoryStream.Create;
-
         if FileExists(Param) then
         begin
-            MyStream.LoadFromFile(Param);
-            // Now move the doubles from the file into the destination array
-            Result := Min(Maxvalues, MyStream.Size div sizeof(ResultArray^[1]));  // no. of doubles
-            MyStream.ReadBuffer(ResultArray^[1], SizeOf(ResultArray^[1]) * Result);
+            FStream := TFileStream.Create(Param, fmOpenRead);
+            Result := Min(Maxvalues, FStream.Size div sizeof(ResultArray^[1]));  // no. of doubles
+            FStream.ReadBuffer(ResultArray^[1], SizeOf(ResultArray^[1]) * Result);
+            FStream.Free;
         end
         else
             DoSimpleMsg(Format('File of doubles "%s" not found.', [Param]), 70501);
-        MyStream.Free;
     end
-
-    else
-    if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'sngfile') = 0) then
+    else if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'sngfile') = 0) then
     begin
-         // load the list from a file of singles (no checking done on type of data)
-        MyStream := TMemoryStream.Create;
-
+        // load the list from a file of singles (no checking done on type of data)
+        MStream := TMemoryStream.Create;
         if FileExists(Param) then
         begin
-            MyStream.LoadFromFile(Param);
+            MStream.LoadFromFile(Param);
+            sngArray := ArrayDef.PSingleArray(MStream.Memory);
             // Now move the singles from the file into the destination array
-            Result := Min(Maxvalues, MyStream.Size div sizeof(Single));  // no. of singles
+            Result := Min(Maxvalues, MStream.Size div sizeof(Single));  // no. of singles
             for i := 1 to Result do
             begin
-                MyStream.Read(Temp, Sizeof(Single));
-                ResultArray^[i] := Temp;  // Single to Double
+               ResultArray^[i] := sngArray[i];  // Single to Double
             end;
         end
         else
             DoSimpleMsg(Format('File of Singles "%s" not found.', [Param]), 70502);
-        MyStream.Free;
-
+        MStream.Free;
     end
-
     else
     begin  // Parse list of values off input string
-
          // Parse Values of array list
         for i := 1 to MaxValues do
         begin
