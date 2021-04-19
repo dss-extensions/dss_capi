@@ -241,7 +241,7 @@ begin
     PropertyName[6] := 'stddev';   // set the std dev (otherwise computed)
     PropertyName[7] := 'csvfile';  // Switch input to a csvfile
     PropertyName[8] := 'sngfile';  // switch input to a binary file of singles
-    PropertyName[9] := 'dblfile';  // switch input to a binary file of singles
+    PropertyName[9] := 'dblfile';  // switch input to a binary file of doubles
     PropertyName[10] := 'action';  // actions  Normalize
     PropertyName[11] := 'qmult';   // Q multiplier
     PropertyName[12] := 'UseActual'; // Flag to signify to use actual value
@@ -605,12 +605,12 @@ begin
                             mmDataSizeQ := mmDataSize
                         else
                             mmDataSizeQ := NumPoints;
-                        ReAllocmem(dQ, sizeof(dQ[1]) * 2);
+                        ReAllocmem(dQ, sizeof(Double) * 2);
                         Exit;
                     end;
 					// Otherwise, follow the traditional technique for loading up load shapes                    
                     UseFloat64;
-                    ReAllocmem(dQ, Sizeof(dQ[1]) * NumPoints);
+                    ReAllocmem(dQ, Sizeof(Double) * NumPoints);
                     InterpretDblArray(Param, NumPoints, PDoubleArray(dQ));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
                 12: // UseActual:
@@ -975,23 +975,21 @@ end;
 procedure TLoadShape.DoSngFile(const FileName: String);
 var
     s: String;
-    F: file of Single;
+    F: TFileStream;
     Hr, M: Single;
     i: Integer;
-    pointsRead: Int64;
+    bytesRead: Int64;
 begin
     if ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
-
+    F := nil;
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 615);
-        CloseFile(F);
         Exit;
     end;
 
@@ -999,7 +997,7 @@ begin
     try
         if UseMMF then
         begin
-            CloseFile(F);
+            FreeAndNil(F);
             s := 'sngfile=' + FileName;
             if not CreateMMF(s, TMMShapeType.P) then
                 Exit; // CreateMMF throws an error message already
@@ -1014,21 +1012,27 @@ begin
         begin
             // Take the opportunity to use float32 data
             UseFloat32;
+            if sP = nil then
+                ReallocMem(sP, FNumPoints * SizeOf(Single));
+            
             if Interval = 0.0 then
             begin
-                while (not EOF(F)) and (i < (FNumPoints - 1)) do
+                if sH = nil then
+                    ReallocMem(sH, FNumPoints * SizeOf(Single));
+
+                while i < (FNumPoints - 1) do
                 begin
                     Inc(i);
-                    Read(F, sH[i]);
-                    Read(F, sP[i]);
+                    if F.Read(sH[i], 4) <> 4 then break;
+                    if F.Read(sP[i], 4) <> 4 then break;
                 end;
             end
             else
             begin
-                BlockRead(F, sP[0], FNumPoints, pointsRead);
-                FNumPoints := pointsRead; 
+                bytesRead := F.Read(sP[0], FNumPoints * sizeof(Single));
+                FNumPoints := min(bytesRead div 4, FNumPoints);
             end;
-            CloseFile(F);
+            FreeAndNil(F);
             Exit;
         end;
 
@@ -1040,12 +1044,12 @@ begin
         
         if Interval = 0.0 then 
         begin
-            while (not EOF(F)) and (i < (FNumPoints - 1)) do
+            while i < (FNumPoints - 1) do
             begin
                 Inc(i);
-                Read(F, Hr);
+                if F.Read(Hr, sizeof(Single)) <> sizeof(Single) then break;
+                if F.Read(M, sizeof(Single)) <> sizeof(Single) then break;
                 dH[i] := Hr;
-                Read(F, M);
                 dP[i] := M;
             end;
             inc(i);
@@ -1055,15 +1059,17 @@ begin
         else 
         begin
             ReallocMem(sP, FNumPoints * SizeOf(Single));
-            BlockRead(F, sP[0], FNumPoints, pointsRead);
-            FNumPoints := pointsRead;
+            bytesRead := F.Read(sP[0], FNumPoints * sizeof(Single));
+            FNumPoints := min(bytesRead div sizeof(Single), FNumPoints);
             for i := 0 to FNumPoints - 1 do
                 dP[i] := sP[i];
             ReallocMem(sP, 0);
         end;
-        CloseFile(F);
+        FreeAndNil(F);
     except
         DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 616);
+        if F <> nil then
+            F.Free();
     end;
 end;
 
@@ -1071,22 +1077,20 @@ end;
 procedure TLoadShape.DoDblFile(const FileName: String);
 var
     s: String;
-    F: file of Double;
+    F: TFileStream;
     i: Integer;
-    pointsRead: Int64;
+    bytesRead: Int64;
 begin
     if ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
-
+    F := nil;
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 617);
-        CloseFile(F);
         Exit;
     end;
 
@@ -1094,7 +1098,7 @@ begin
     try
         if UseMMF then
         begin
-            CloseFile(F);
+            FreeAndNil(F);
             s := 'dblfile=' + FileName;
             if not CreateMMF(s, TMMShapeType.P) then
                 Exit; // CreateMMF throws an error message already
@@ -1113,11 +1117,11 @@ begin
         
         if Interval = 0.0 then 
         begin
-            while (not EOF(F)) and (i < (FNumPoints - 1)) do
+            while i < (FNumPoints - 1) do
             begin
                 Inc(i);
-                Read(F, dH[i]);
-                Read(F, dP[i]);
+                if F.Read(dH[i], sizeof(Double)) <> sizeof(Double) then break;
+                if F.Read(dP[i], sizeof(Double)) <> sizeof(Double) then break;
             end;
             inc(i);
             if i <> FNumPoints then
@@ -1125,14 +1129,14 @@ begin
         end
         else 
         begin
-            BlockRead(F, dP[0], FNumPoints, pointsRead);
-            FNumPoints := pointsRead;
+            bytesRead := F.Read(dP[0], FNumPoints * sizeof(Double));
+            FNumPoints := min(bytesRead div sizeof(Double), FNumPoints);
         end;
-        CloseFile(F);
+        FreeAndNil(F);
+        if F <> nil then
+            F.Free();
     except
         DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 618);
-        CloseFile(F);
-        Exit;
     end;
 end;
 
@@ -1456,6 +1460,9 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TLoadShapeObj.CalcMeanandStdDev;
 begin
+    if UseMMF or ExternalMemory then
+        Exit;
+
     if FNumPoints > 0 then
     begin
         if Assigned(dP) then
@@ -1517,10 +1524,11 @@ end;
 
 function TLoadShapeObj.Mult(i: Integer): Double;
 begin
-    if (i <= FNumPoints) and (i > 0) then
+    dec(i);
+    if (i < FNumPoints) and (i >= 0) then
     begin
         if UseMMF then
-            Result := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i, mmLineLen)
+            Result := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i + 1, mmLineLen)
         else if dP <> nil then
             Result := dP[Stride * i]
         else
@@ -1534,10 +1542,11 @@ end;
 
 function TLoadShapeObj.PMult(i: Integer): Double;
 begin
-    if (i <= FNumPoints) and (i > 0) then
+    dec(i);
+    if (i < FNumPoints) and (i >= 0) then
     begin
         if UseMMF then
-            Result := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i, mmLineLen)
+            Result := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i + 1, mmLineLen)
         else if dP <> nil then
             Result := dP[Stride * i]
         else
@@ -1549,12 +1558,13 @@ end;
 
 function TLoadShapeObj.QMult(i: Integer; var m: Double): Boolean;
 begin
+    dec(i);
     Result := False;
     if (dQ = nil) and (sQ = nil) then
         Exit;
     Result := True;
     
-    if (i <= FNumPoints) and (i > 0) then
+    if (i < FNumPoints) and (i >= 0) then
     begin
         if UseMMF then
             m := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
@@ -1570,10 +1580,10 @@ end;
 
 function TLoadShapeObj.Hour(i: Integer): Double;
 begin
-
+    dec(i);
     if Interval = 0 then
     begin
-        if (i <= FNumPoints) and (i > 0) then
+        if (i < FNumPoints) and (i >= 0) then
         begin
             if dH <> nil then
                 Result := dH[Stride * i]
@@ -1594,7 +1604,6 @@ begin
 
         LastValueAccessed := i;
     end;
-
 end;
 
 
@@ -1935,32 +1944,34 @@ begin
 end;
 
 procedure TLoadShapeObj.SetMaxPandQ;
+var
+    iMaxP: Integer;
 begin
-    if UseMMF then
+    if UseMMF or ExternalMemory then
         Exit;
 
     if Assigned(dP) then
     begin
-        iMaxP := iMaxAbsdblArrayValue(NumPoints, PDoubleArray(dP));
-        if iMaxP > 0 then
+        iMaxP := iMaxAbsdblArrayValue(NumPoints, PDoubleArray(dP)) - 1;
+        if iMaxP >= 0 then
         begin
-            MaxP := dP[Stride * iMaxP];
+            MaxP := dP[{Stride *} iMaxP];
             if not MaxQSpecified then
                 if Assigned(dQ) then
-                    MaxQ := dQ[Stride * iMaxP]
+                    MaxQ := dQ[{Stride *} iMaxP]
                 else
                     MaxQ := 0.0;
         end;
     end
     else
     begin
-        iMaxP := iMaxAbssngArrayValue(NumPoints, PSingleArray(sP));
-        if iMaxP > 0 then
+        iMaxP := iMaxAbssngArrayValue(NumPoints, PSingleArray(sP)) - 1;
+        if iMaxP >= 0 then
         begin
-            MaxP := sP[Stride * iMaxP];
+            MaxP := sP[{Stride *} iMaxP];
             if not MaxQSpecified then
                 if Assigned(sQ) then
-                    MaxQ := sQ[Stride * iMaxP]
+                    MaxQ := sQ[{Stride *} iMaxP]
                 else
                     MaxQ := 0.0;
         end;
@@ -2114,7 +2125,7 @@ begin
     if Assigned(sH) then
     begin
         ReallocMem(dH, FNumPoints * SizeOf(Double));
-        for i := 1 to FNumPoints do
+        for i := 0 to FNumPoints - 1 do
             dH[i] := sH[i];
         FreeMem(sH);
         sH := nil;
@@ -2122,7 +2133,7 @@ begin
     if Assigned(sP) then
     begin
         ReallocMem(dP, FNumPoints * SizeOf(Double));
-        for i := 1 to FNumPoints do
+        for i := 0 to FNumPoints - 1 do
             dP[i] := sP[i];
         FreeMem(sP);
         sP := nil;
@@ -2130,7 +2141,7 @@ begin
     if Assigned(sQ) then
     begin
         ReallocMem(dQ, FNumPoints * SizeOf(Double));
-        for i := 1 to FNumPoints do
+        for i := 0 to FNumPoints - 1 do
             dQ[i] := sQ[i];
         FreeMem(sQ);
         sQ := nil;
