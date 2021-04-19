@@ -9,7 +9,7 @@ procedure LoadShapeV(mode:longint; var arg:Variant);cdecl;
 
 implementation
 
-uses Loadshape, DSSGlobals, PointerList, Variants, ExecHelper;
+uses Loadshape, DSSGlobals, PointerList, Variants, ExecHelper, ucomplex;
 
 Var
     ActiveLSObject: TLoadshapeObj;
@@ -188,9 +188,12 @@ end;
 procedure LoadShapeV(mode:longint; var arg:Variant);cdecl;
 
 Var
-   i, k, LoopLimit: Integer;
-   elem: TLoadshapeObj;
-   pList: TPointerList;
+   i,
+   k,
+   LoopLimit    : Integer;
+   elem         : TLoadshapeObj;
+   pList        : TPointerList;
+   Sample       : Complex;
 
 begin
   case mode of
@@ -218,11 +221,16 @@ begin
         arg[0] := 0.0;  // error condition: one element array=0
         If ActiveCircuit[ActiveActor] <> Nil Then
          Begin
-            If ActiveLSObject <> Nil Then Begin
-                 VarArrayRedim(arg, ActiveLSObject.NumPoints-1);
-                 For k:=0 to ActiveLSObject.NumPoints-1 Do
-                      arg[k] := ActiveLSObject.PMultipliers^[k+1];
-            End Else Begin
+            If ActiveLSObject <> Nil Then
+            Begin
+              VarArrayRedim(arg, ActiveLSObject.NumPoints-1);
+              For k:=1 to ActiveLSObject.NumPoints Do
+              Begin
+                Sample      :=  ActiveLSObject.GetMult(k);     // This change adds compatibility with MMF
+                arg[k - 1]  :=  Sample.re;
+              End;
+            End Else
+            Begin
                DoSimpleMsg('No active Loadshape Object found.',61001);
             End;
          End;
@@ -259,9 +267,12 @@ begin
             Begin
               If assigned(ActiveLSObject.QMultipliers) Then
               Begin
-                   VarArrayRedim(arg, ActiveLSObject.NumPoints-1);
-                   For k:=0 to ActiveLSObject.NumPoints-1 Do
-                        arg[k] := ActiveLSObject.QMultipliers^[k+1];
+                VarArrayRedim(arg, ActiveLSObject.NumPoints-1);    // This change adds compatibility with MMF
+                For k:=1 to ActiveLSObject.NumPoints Do
+                Begin
+                  Sample      :=  ActiveLSObject.GetMult(k);
+                  arg[k - 1]  :=  Sample.im;
+                End;
               End;
             End Else
             Begin
