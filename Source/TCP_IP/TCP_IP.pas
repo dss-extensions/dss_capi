@@ -662,18 +662,20 @@ end;
 
 procedure TDSSConnect.LoadshapePlotMsg(ObjectName: string);
 var
-  ActiveLSObject: TLoadshapeObj;
-  MSG : AnsiString;
-  sinterfal: double;
-  npts: integer;
-  i, k: Integer;
-  y_labels: StringArray1d;
+  ActiveLSObject  : TLoadshapeObj;
+  MSG             : AnsiString;
+  sinterfal       : double;
+  npts,
+  i,
+  k               : Integer;
+  Bus_Names,
+  y_labels        : StringArray1d;
 
-  time,channel,Z_axis: DoubleArray2d;
-  Bus_Names : StringArray1d;
-  phase: IntegerArray1d;
-  PD_Elements: StringArray2d;
-  model_path: string;
+  time,channel,
+  Z_axis          : DoubleArray2d;
+  phase           : IntegerArray1d;
+  PD_Elements     : StringArray2d;
+  model_path      : string;
 
 begin
   if(MySocket.Socket.Connected=False) then
@@ -706,63 +708,82 @@ begin
       SetLength(time, 1, 1) ;
       time[0,0] := 0.0;  // error condition: one element array=0
       If ActiveCircuit[ActiveActor] <> Nil Then
-        Begin
-          If ActiveLSObject <> Nil Then Begin
-             If ActiveLSObject.hours <> Nil Then  Begin
-               SetLength(time, 1, ActiveLSObject.NumPoints) ;
-               For k:=0 to ActiveLSObject.NumPoints-1 Do
-                    time[0,k] := ActiveLSObject.Hours^[k+1] * 3600.0;
-             End
-          End Else Begin
-             DoSimpleMsg('No active Loadshape Object found.',61001);
-          End;
+      Begin
+        If ActiveLSObject <> Nil Then Begin
+           If ActiveLSObject.hours <> Nil Then  Begin
+             SetLength(time, 1, ActiveLSObject.NumPoints) ;
+             For k:=0 to ActiveLSObject.NumPoints-1 Do
+                  time[0,k] := ActiveLSObject.Hours^[k+1] * 3600.0;
+           End
+        End Else Begin
+           DoSimpleMsg('No active Loadshape Object found.',61001);
         End;
+      End;
     end
   else
-    begin
-      // LoadShapes.Npts read
-     npts := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
-       If ActiveLSObject <> Nil Then
-         npts := ActiveLSObject.NumPoints;
-     SetLength(time, 1, npts) ;
-     for i:=0 to npts-1 do
-      time[0,i] := i*sinterfal;
-    end;
+  begin
+    // LoadShapes.Npts read
+   npts := 0;
+   If ActiveCircuit[ActiveActor] <> Nil Then
+     If ActiveLSObject <> Nil Then
+       npts := ActiveLSObject.NumPoints;
+   SetLength(time, 1, npts) ;
+   for i:=0 to npts-1 do
+    time[0,i] := i*sinterfal;
+  end;
 
   // LoadShapes.PMult read
   If ActiveCircuit[ActiveActor] <> Nil Then
+  Begin
+    If ActiveLSObject <> Nil Then
     Begin
-      If ActiveLSObject <> Nil Then Begin
-           SetLength(channel, 1, ActiveLSObject.NumPoints) ;
-           For k:=0 to ActiveLSObject.NumPoints-1 Do
-                channel[0,k] := ActiveLSObject.PMultipliers^[k+1];
-           SetLength(y_labels, 1);
-           y_labels[0]:='Mult.';
-      End Else Begin
-         DoSimpleMsg('No active Loadshape Object found.',61001);
+
+      if ActiveLSObject.UseMMF then
+      Begin
+        ReAllocmem(ActiveLSObject.PMultipliers, sizeof(ActiveLSObject.PMultipliers^[1]) * ActiveLSObject.NumPoints);
+        for i := 1 to ActiveLSObject.NumPoints do
+          ActiveLSObject.PMultipliers^[i] :=  InterpretDblArrayMMF(ActiveLSObject.myView,
+          ActiveLSObject.myFileType, ActiveLSObject.myColumn, i, ActiveLSObject.myLineLen);
       End;
+
+      SetLength(channel, 1, ActiveLSObject.NumPoints) ;
+      For k:=0 to ActiveLSObject.NumPoints-1 Do
+          channel[0,k] := ActiveLSObject.PMultipliers^[k+1];
+      SetLength(y_labels, 1);
+      y_labels[0]:='Mult.';
+
+    End Else Begin
+       DoSimpleMsg('No active Loadshape Object found.',61001);
     End;
+  End;
 
   // LoadShapes.QMult read
   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
-      If ActiveLSObject <> Nil Then
+  Begin
+    If ActiveLSObject <> Nil Then
+    Begin
+    If assigned(ActiveLSObject.QMultipliers) Then
+    Begin
+      if ActiveLSObject.UseMMF then
       Begin
-        If assigned(ActiveLSObject.QMultipliers) Then
-        Begin
-             SetLength(channel, 2, ActiveLSObject.NumPoints) ;
-             For k:=0 to ActiveLSObject.NumPoints-1 Do
-                  channel[1,k] := ActiveLSObject.QMultipliers^[k+1];
-             SetLength(y_labels, 2);
-             y_labels[0]:='P Mult.';
-             y_labels[1]:='Q Mult.';
-        End;
-      End Else
-      Begin
-         DoSimpleMsg('No active Loadshape Object found.',61001);
+        ReAllocmem(ActiveLSObject.QMultipliers, sizeof(ActiveLSObject.QMultipliers^[1]) * ActiveLSObject.NumPoints);
+        for i := 1 to ActiveLSObject.NumPoints do
+          ActiveLSObject.QMultipliers^[i] :=  InterpretDblArrayMMF(ActiveLSObject.myViewQ,
+          ActiveLSObject.myFileTypeQ, ActiveLSObject.myColumnQ, i, ActiveLSObject.myLineLenQ);
       End;
-   End;
+
+      SetLength(channel, 2, ActiveLSObject.NumPoints) ;
+      For k:=0 to ActiveLSObject.NumPoints-1 Do
+          channel[1,k] := ActiveLSObject.QMultipliers^[k+1];
+      SetLength(y_labels, 2);
+      y_labels[0]:='P Mult.';
+      y_labels[1]:='Q Mult.';
+    End;
+    End Else
+    Begin
+       DoSimpleMsg('No active Loadshape Object found.',61001);
+    End;
+  End;
 
   SetLength(Z_axis,0,0);
   SetLength(Bus_Names,0);

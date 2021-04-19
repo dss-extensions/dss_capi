@@ -1421,86 +1421,104 @@ end;
 procedure TDSSPlot.DoLoadShapePlot(const LoadShapeName: String);
 
 Var
-   Load_Shape: TLoadShapeObj;
-   Xarray: pdoubleArray;
-   X, Xinc: Double;
-   i: Integer;
-   Xsize: Integer;
-   XLabel: string;
-   UseXarray: Boolean;
-   S: String;
+   Load_Shape : TLoadShapeObj;
+   Xarray     : pdoubleArray;
+   X,
+   Xinc       : Double;
+   i,
+   Xsize      : Integer;
+   S,
+   XLabel     : string;
+   UseXarray  : Boolean;
+
 
 begin
-   Load_Shape := LoadShapeClass[ActiveActor].Find(LoadShapeName);
-   If Load_Shape = Nil Then
-   Begin
-      DoSimpleMsg('Loadshape object not found: "' + LoadShapeName + '"', 87341);
-      Exit;
-   End;
+  Load_Shape := LoadShapeClass[ActiveActor].Find(LoadShapeName);
+  If Load_Shape = Nil Then
+  Begin
+    DoSimpleMsg('Loadshape object not found: "' + LoadShapeName + '"', 87341);
+    Exit;
+  End;
 
-   UseXarray := FALSE;
-   Xarray := Nil;
-   Xsize := 0; // Init
+  UseXarray := FALSE;
+  Xarray := Nil;
+  Xsize := 0; // Init
 
-   If Load_Shape.Interval <> 0.0 Then
-      With Load_Shape Do
-      Begin // have to gen up Xarray
-         UseXarray := TRUE;
-         Xsize := Sizeof(Xarray^[1]) * NumPoints;
-         GetMem(Xarray, Xsize); // SetLength(Xarray, Numpoints);
-         X := 0.0;
-         If Interval * NumPoints < 1.0 Then
-         Begin
-            Xinc := Interval * 3600.0; // Plot secs
-            XLabel := 'Seconds';
-         End
-         Else
-         Begin
-            Xinc := Interval;
-            XLabel := 'Hours';
-         End;
-         For i := 1 to NumPoints Do
-         Begin
-            Xarray[i] := X;
-            X := X + Xinc;
-         End;
-      End;
+  If Load_Shape.Interval <> 0.0 Then
+    With Load_Shape Do
+    Begin // have to gen up Xarray
+       UseXarray  := TRUE;
+       Xsize      := Sizeof(Xarray^[1]) * NumPoints;
+       GetMem(Xarray, Xsize); // SetLength(Xarray, Numpoints);
+       X          := 0.0;
+       If Interval * NumPoints < 1.0 Then
+       Begin
+          Xinc      := Interval * 3600.0; // Plot secs
+          XLabel    := 'Seconds';
+       End
+       Else
+       Begin
+          Xinc      := Interval;
+          XLabel    := 'Hours';
+       End;
+       For i := 1 to NumPoints Do
+       Begin
+          Xarray[i] := X;
+          X         := X + Xinc;
+       End;
+    End;
 
-   // ** already exists MakeNewGraph;
-   S := 'Loadshape.' + LoadShapeName;
-   Set_Caption(S);
-   S := 'Loadshape = ' + LoadShapeName;
-   Set_ChartCaption(S);
-   Set_XaxisLabel(XLabel);
-   If Load_Shape.UseActual then
-      Set_YaxisLabel('kW, kvar')
-   else
-      Set_YaxisLabel('p.u.');
+  // ** already exists MakeNewGraph;
+  S := 'Loadshape.' + LoadShapeName;
+  Set_Caption(S);
+  S := 'Loadshape = ' + LoadShapeName;
+  Set_ChartCaption(S);
+  Set_XaxisLabel(XLabel);
+  If Load_Shape.UseActual then
+    Set_YaxisLabel('kW, kvar')
+  else
+    Set_YaxisLabel('p.u.');
 
-   If UseXarray Then
-      AddNewCurve(Xarray, Load_Shape.PMultipliers, Load_Shape.NumPoints,
-         Color1, 1, psSolid, FALSE, 1, LoadShapeName)
-   Else
-      AddNewCurve(Load_Shape.Hours, Load_Shape.PMultipliers,
-         Load_Shape.NumPoints, Color1, 1, psSolid, FALSE, 1,
-         LoadShapeName);
+  if Load_Shape.UseMMF then
+  Begin
+    ReAllocmem(Load_Shape.PMultipliers, sizeof(Load_Shape.PMultipliers^[1]) * Load_Shape.NumPoints);
+    for i := 1 to Load_Shape.NumPoints do
+      Load_Shape.PMultipliers^[i] :=  InterpretDblArrayMMF(Load_Shape.myView,
+      Load_Shape.myFileType, Load_Shape.myColumn, i, Load_Shape.myLineLen);
+  End;
 
-   If Assigned(Load_Shape.QMultipliers) Then
-   BEGIN
-      If UseXarray Then
-         AddNewCurve(Xarray, Load_Shape.QMultipliers, Load_Shape.NumPoints,
-            Color2, 1, psSolid, FALSE, 1, LoadShapeName)
-      Else
-         AddNewCurve(Load_Shape.Hours, Load_Shape.QMultipliers,
-            Load_Shape.NumPoints, Color2, 1, psSolid, FALSE, 1,
-            LoadShapeName);
-   END;
+  If UseXarray Then
+    AddNewCurve(Xarray, Load_Shape.PMultipliers, Load_Shape.NumPoints,
+       Color1, 1, psSolid, FALSE, 1, LoadShapeName)
+  Else
+  AddNewCurve(Load_Shape.Hours, Load_Shape.PMultipliers,
+     Load_Shape.NumPoints, Color1, 1, psSolid, FALSE, 1,
+     LoadShapeName);
 
-   set_KeepAspectRatio(FALSE);
+  If Assigned(Load_Shape.QMultipliers) Then
+  BEGIN
+    if Load_Shape.UseMMF then
+    Begin
+      ReAllocmem(Load_Shape.QMultipliers, sizeof(Load_Shape.QMultipliers^[1]) * Load_Shape.NumPoints);
+      for i := 1 to Load_Shape.NumPoints do
+        Load_Shape.QMultipliers^[i] :=  InterpretDblArrayMMF(Load_Shape.myViewQ,
+        Load_Shape.myFileTypeQ, Load_Shape.myColumnQ, i, Load_Shape.myLineLenQ);
+    End;
 
-   If UseXarray Then
-      FreeMem(Xarray, Xsize);
-   Set_Autorange(2.0); // 2% rim
+    If UseXarray Then
+       AddNewCurve(Xarray, Load_Shape.QMultipliers, Load_Shape.NumPoints,
+          Color2, 1, psSolid, FALSE, 1, LoadShapeName)
+    Else
+       AddNewCurve(Load_Shape.Hours, Load_Shape.QMultipliers,
+          Load_Shape.NumPoints, Color2, 1, psSolid, FALSE, 1,
+          LoadShapeName);
+  END;
+
+  set_KeepAspectRatio(FALSE);
+
+  If UseXarray Then
+    FreeMem(Xarray, Xsize);
+  Set_Autorange(2.0); // 2% rim
 //***   ShowGraph; { Form Freed on close }
 end;
 
