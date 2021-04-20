@@ -21,11 +21,7 @@ interface
 uses
     Arraydef,
     classes,{controls,}
-{$IFDEF FPC}
     CmdForms,
-{$ELSE}
-    DSSForms,
-{$ENDIF}
     Sysutils,
     RPN,
     HashList;
@@ -123,12 +119,6 @@ var
 
 
 implementation
-
-{$IFNDEF FPC}
-uses
-    Dialogs;
-
-{$ENDIF}
 
 const
     Commentchar = '!';

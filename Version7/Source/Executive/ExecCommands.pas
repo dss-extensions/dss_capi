@@ -38,13 +38,7 @@ uses
     ExportOptions,
     ParserDel,
     LoadShape,
-{$IFDEF FPC}
     CmdForms,
-{$ELSE}
-    PlotOptions,
-    DSSForms,
-    ConnectOptions,
-{$ENDIF}
     sysutils,
     Utilities,
     SolutionAlgs,
@@ -375,7 +369,8 @@ begin
     CommandHelp[62] := '{All | MeterName}  Default is "All". Interpolates coordinates for missing bus coordinates in meter zone';
     CommandHelp[63] := 'Alignfile [file=]filename.  Aligns DSS script files in columns for easier reading.';
     CommandHelp[64] := '[class=]{Loadshape | Tshape | Monitor  } [object=]{ALL (Loadshapes only) | objectname}. ' +
-        'Send specified object to TOP.  Loadshapes and TShapes must be hourly fixed interval. ';
+        'Send specified object to TOP.  Loadshapes and TShapes must be hourly fixed interval. ' + CRLF + CRLF + 
+        'Not supported in DSS Extensions';
     CommandHelp[65] := 'Usage: Rotate [angle=]nnn.  Rotate circuit plotting coordinates by specified angle (degrees). ';
     CommandHelp[66] := 'Displays the difference between the present solution and the last on saved using the SAVE VOLTAGES command.';
     CommandHelp[67] := 'Returns a power flow summary of the most recent solution in the global result string.';
@@ -825,7 +820,10 @@ begin
             62:
                 CmdResult := DoInterpolateCmd;
             64:
-                CmdResult := DoTOPCmd;
+            begin
+                DSSInfoMessageDlg('ERROR: TOP is not supported in DSS Extensions.');
+                CmdResult := 0;
+            end;
             65:
                 CmdResult := DoRotateCmd;
             66:
@@ -898,23 +896,16 @@ begin
                 FinishTimeStep;
             104:
                 CmdResult := DoNodeListCmd;
-      {$IFNDEF FPC}
-            105:
-                CmdResult := DoConnectCmd; //'TCP/IP connect';
-            106:
-                CmdResult := DoDisConnectCmd; //'TCP/IP disconnect';
-      {$ELSE}
             105:
             begin
-                DSSInfoMessageDlg('Winsock TCP/IP connection is not supported in FPC version');
+                DSSInfoMessageDlg('ERROR: Winsock TCP/IP connection is not supported in DSS Extensions');
                 CmdResult := 0;
             end;
             106:
             begin
-                DSSInfoMessageDlg('Winsock TCP/IP disconnection is not supported in FPC version');
+                DSSInfoMessageDlg('ERROR: Winsock TCP/IP disconnection is not supported in DSS Extensions');
                 CmdResult := 0;
             end;
-      {$ENDIF}
             107:
                 DoRemoveCmd;
             112: 

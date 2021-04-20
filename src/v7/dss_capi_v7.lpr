@@ -184,7 +184,6 @@ uses
     TCC_Curve in 'Version7/Source/General/TCC_Curve.pas',
     TempShape in 'Version7/Source/General/TempShape.pas',
     Terminal in 'Version7/Source/Common/Terminal.pas',
-    TOPExport in 'Version7/Source/Common/TOPExport.pas',
     Transformer in 'Version7/Source/PDElements/Transformer.pas',
     TSData in 'Version7/Source/General/TSData.pas',
     TSLineConstants in 'Version7/Source/General/TSLineConstants.pas',

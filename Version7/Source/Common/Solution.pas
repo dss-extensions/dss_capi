@@ -283,12 +283,7 @@ uses
     SolutionAlgs,
     DSSClassDefs,
     DSSGlobals,
-{$IFDEF FPC}
     CmdForms,
-{$ELSE}
-    Windows,
-    DSSForms,
-{$ENDIF}
     PDElement,
     ControlElem,
     Fault,
@@ -302,9 +297,6 @@ uses
     Capacitor,
     Transformer,
     Reactor,
-{$IFDEF DLL_ENGINE}
-    ImplGlobals,  // to fire events
-{$ENDIF}
     Math,
     Circuit,
     Utilities,
@@ -314,16 +306,6 @@ uses
 
 const
     NumPropsThisClass = 1;
-
-{$DEFINE debugtrace}
-
-{$UNDEF debugtrace}  {turn it off  delete this line to activate debug trace}
-
-{$IFDEF debugtrace}
-var
-    FDebug: TextFile;
-
-{$ENDIF}
 
 // ===========================================================================================
 constructor TDSSSolution.Create;  // Collection of all solution objects
@@ -633,34 +615,6 @@ begin
         MaxError := Math.Max(MaxError, ErrorSaved^[i]);  // update max error
     end;
 
-
-{$IFDEF debugtrace}
-    Assignfile(Fdebug, 'Debugtrace.csv');
-    Append(FDebug);
-    if Iteration = 1 then
-    begin
-        Write(Fdebug, 'Iter');
-        for i := 1 to ActiveCircuit.NumNodes do
-            Write(Fdebug, ', ', ActiveCircuit.Buslist.get(ActiveCircuit.MapNodeToBus^[i].BusRef), '.', ActiveCircuit.MapNodeToBus^[i].NodeNum: 0);
-        Writeln(Fdebug);
-    end;
-              {*****}
-    Write(Fdebug, Iteration: 2);
-    for i := 1 to ActiveCircuit.NumNodes do
-        Write(Fdebug, ', ', VMagSaved^[i]: 8: 1);
-    Writeln(Fdebug);
-    Write(Fdebug, 'Err');
-    for i := 1 to ActiveCircuit.NumNodes do
-        Write(Fdebug, ', ', Format('%-.5g', [ErrorSaved^[i]]));
-    Writeln(Fdebug);
-    Write(Fdebug, 'Curr');
-    for i := 1 to ActiveCircuit.NumNodes do
-        Write(Fdebug, ', ', Cabs(Currents^[i]): 8: 1);
-    Writeln(Fdebug);
-              {*****}
-    CloseFile(FDebug);
-{$ENDIF}
-    ;
     
     if (MaxError <= ConvergenceTolerance) and (not IsNaN(MaxError)) then
         Result := TRUE
@@ -2514,12 +2468,5 @@ begin
 end;
 
 initialization
-
-    {$IFDEF debugtrace}
-    Assignfile(Fdebug, 'Debugtrace.csv');
-    Rewrite(Fdebug);
-
-    CloseFile(Fdebug);
-   {$ENDIF}
 
 end.

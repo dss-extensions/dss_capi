@@ -2776,39 +2776,7 @@ begin
     else
         with ActiveCircuit.Solution {, StorageVars} do
         begin
-(*
-
-      With StorageVars Do
-      If (Dynavars.IterationFlag = 0) Then Begin {First iteration of new time step}
-//****          ThetaHistory := Theta + 0.5*h*dTheta;
-//****          SpeedHistory := Speed + 0.5*h*dSpeed;
-      End;
-
-      // Compute shaft dynamics
-      TracePower := TerminalPowerIn(Vterminal,Iterminal,FnPhases) ;
-
-//****      dSpeed := (Pshaft + TracePower.re - D*Speed) / Mmass;
-//      dSpeed := (Torque + TerminalPowerIn(Vtemp,Itemp,FnPhases).re/Speed) / (Mmass);
-//****      dTheta  := Speed ;
-
-     // Trapezoidal method
-      With StorageVars  Do Begin
-//****       Speed := SpeedHistory + 0.5*h*dSpeed;
-//****       Theta := ThetaHistory + 0.5*h*dTheta;
-      End;
-
-   // Write Dynamics Trace Record
-        IF DebugTrace Then
-          Begin
-             Append(TraceFile);
-             Write(TraceFile,Format('t=%-.5g ', [Dynavars.t]));
-             Write(TraceFile,Format(' Flag=%d ',[Dynavars.Iterationflag]));
-             Writeln(TraceFile);
-             CloseFile(TraceFile);
-         End;
-*)
         end;
-
 end;
 
 

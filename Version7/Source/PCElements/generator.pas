@@ -1643,54 +1643,6 @@ begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     ZeroITerminal;
 
-    (*****   Tried this but couldn't get it to work
-    CASE Fnphases of
-
-    3:With Genvars Do Begin     // Use Symmetrical Components
-          Phase2SymComp(Vterminal, @V012);   // Vterminal is L-N voltages here
-                         // Phase2SymComp(InjCurrent, @I012);   // Vterminal is L-G voltages here
-          V := V012[1]; // Positive sequence L-N voltage
-          Vmag := Cabs(V012[1]);
-
-           { IF   VMag <= VBase95
-            THEN Curr := Cnegate(Cmul(Yeq95, V))  // Below 95% (Vminpu) use an impedance model
-            ELSE If VMag > VBase105
-            THEN Curr := Cnegate(Cmul(Yeq105, V))  // above 105% (Vmaxpu) use an impedance model
-            }
-            IF   (VMag <= VBase95) or (VMag > VBase105) THEN    Curr := Conjg( Cdiv( CurrentLimit, CDivReal(V, -Vmag)) )
-            ELSE With Genvars Do Curr := Conjg(Cdiv(Cmplx(-Pnominalperphase, -Qnominalperphase), V));    // Current INTO pos seq model
-
-         I012[1] := Curr;  // Pos sequence current into the terminal
-
-          If Connection=1 Then I012[0] := CZERO  Else I012[0] := Cdiv(V012[0], cmplx(0.0, xdpp));
-          I012[2] := Cdiv(V012[2], cmplx(0.0, xdpp));
-
-          // Negative and Zero Sequence Contributions
-         SymComp2Phase(@Iabc, @I012);    // Iabc now desired terminal current
-         IF DebugTrace Then Begin
-             Append(TraceFile);
-             Write(TraceFile,Format('V1=%-.5g, /_%-.5g, ',[Cabs(V), CDang(V)]));
-             Write(TraceFile,Format('I1=%-.5g, /_%-.5g, ',[Cabs(Curr), CDang(Curr)]));
-             Write(TraceFile,'Iabc=');
-             For i := 1 to 3 Do Write(TraceFile,Format('%-.5g, /_%-.5g, ',[ Cabs(Iabc[i]), CDang(Iabc[i])]));
-             Writeln(TraceFile);
-             CloseFile(TraceFile);
-         End;
-
-          For i := 1 to 3 Do Begin
-            ITerminal^[i] := Iabc[i];  // Put into Terminal array directly because we have computed line current above
-            Caccum(InjCurrent^[i], Cnegate(Iabc[i]));  // subtract in
-            If Connection=0 Then Begin
-               Caccum(Iterminal^[Fnconds], Cnegate(Iabc[i]));  // Neutral
-               Caccum(InjCurrent^[Fnconds], Iabc[i]);  // Neutral
-            End;
-          End;
-          IterminalUpdated := TRUE;  // so that we con't have to recompute for a report
-      End
-    ELSE
-    ****)
-
-
     CalcVTerminalPhase; // get actual voltage across each phase of the load
     for i := 1 to Fnphases do
     begin

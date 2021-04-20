@@ -2347,14 +2347,6 @@ begin
 {           SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));}
             end;
 
- {$IFDEF AUTOTRANDEBUG}
-    AssignFile(F, OutputDirectory + CircuitName_ + 'AutoTrans_' + Name + '.TXT');
-    Rewrite(F);
-    Writeln(F, 'Y_Term after building...');
-    DumpComplexMatrix(F, Y_Term);
-    CloseFile(F);
- {$ENDIF}
-
 end;
 
 procedure TAutoTransObj.CalcY_Terminal(FreqMult: Double);
@@ -2432,16 +2424,6 @@ begin
                 end;
             end;
 
-  {******************************DEBUG******************************************************}
-  {$IFDEF AUTOTRANDEBUG}
-        AssignFile(F, OutputDirectory + CircuitName_ + 'AutoTrans_' + Name + '.TXT');
-        Rewrite(F);
-        Writeln(F, Format('Zbase=%g, VABase=%g, Nphases=%d, Rpu=%g ', [Zbase, VABase, Fnphases, Winding^[1].Rpu]));
-        Writeln(F, 'ZB before inverting...');
-        DumpComplexMatrix(F, ZB);
-  {$ENDIF}
-  {*****************************************************************************************}
-
         ZB.Invert;   // mhos on one volt base
 
         if ZB.InvertError > 0 then
@@ -2453,12 +2435,6 @@ begin
                 ZB.SetElement(i, i, Cmplx(EPSILON, 0.0));
         end;
 
-  {******************************DEBUG******************************************************}
-  {$IFDEF AUTOTRANDEBUG}
-        Writeln(F, 'ZB after inverting...');
-        DumpComplexMatrix(F, ZB);
-  {$ENDIF}
-  {*****************************************************************************************}
 
    // Now construct Y_Oneturn = AT * ZB.Invert * A
    {     -1 1 0 ...
@@ -2507,14 +2483,6 @@ begin
    }
         Y_1Volt_NL.AddElement(2, 2, Cmplx((pctNoLoadLoss / 100.0 / Zbase), -pctImag / 100.0 / Zbase / Freqmult));
 
-  {******************************DEBUG******************************************************}
-  {$IFDEF AUTOTRANDEBUG}
-        Writeln(F, 'Y_OneVolt ...');
-        DumpComplexMatrix(F, Y_1Volt);
-        Writeln(F, 'Y_OneVolt_NL ...');
-        DumpComplexMatrix(F, Y_1Volt_NL);
-  {$ENDIF}
-  {*****************************************************************************************}
      // should have admittance of one phase of the AutoTrans on a one-volt, wye-connected base
 
      // Now make into terminal admittance matrix and correct for actual voltage ratings
@@ -2562,15 +2530,6 @@ begin
                 Y_Term_NL.SetElement(j, i, ctemparray2^[j]);
         end;
 
-  {******************************DEBUG******************************************************}
-  {$IFDEF AUTOTRANDEBUG}
-        Writeln(F, 'Y_Terminal before adding small element to diagonals ...');
-        DumpComplexMatrix(F, Y_Term);
-        Writeln(F, 'Y_Terminal_NL before adding small element to diagonals ...');
-        DumpComplexMatrix(F, Y_Term_NL);
-  {$ENDIF}
-  {*****************************************************************************************}
-
      {Add a small Admittance to both conductors of each winding so that
     the matrix will always invert even if the user neglects to define a voltage
     reference on all sides}
@@ -2584,15 +2543,6 @@ begin
 {           SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));}
                 end;
 
-{******************************DEBUG******************************************************}
-  {$IFDEF AUTOTRANDEBUG}
-        Writeln(F, 'Y_Terminal after adding small element to diagonals ...');
-        DumpComplexMatrix(F, Y_Term);
-        Writeln(F, 'Y_Terminal_NL after adding small element to diagonals ...');
-        DumpComplexMatrix(F, Y_Term_NL);
-        CloseFile(F);
-  {$ENDIF}
-  {*****************************************************************************************}
         AT.Free;
         Reallocmem(A, 0);
         Reallocmem(ctemparray1, 0);

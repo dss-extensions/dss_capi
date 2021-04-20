@@ -91,7 +91,6 @@ interface
 
          FUNCTION DoMakePosSeq:Integer;
          FUNCTION DoAlignFileCmd:Integer;
-         FUNCTION DoTOPCmd:Integer;
          FUNCTION DoRotateCmd:Integer;
          FUNCTION DoVDiffCmd:Integer;
          FUNCTION DoSummaryCmd:Integer;
@@ -2943,37 +2942,6 @@ Begin
   If Result=0 Then FireOffEditor(GlobalResult);
 
 End; {DoAlignfileCmd}
-
-FUNCTION DoTOPCmd:Integer;
-{ Sends Monitors, Loadshapes, GrowthShapes, or TCC Curves to TOP as an STO file}
-
-Var
-    {ParamName,} Param, ObjName  :String;
-
-Begin
-    Result := 0;
-    {ParamName :=} Parser.NextParam;
-    Param := UpperCase(Parser.StrValue);
-
-    {ParamName :=} Parser.NextParam;
-    ObjName := UpperCase(Parser.StrValue);
-
-    If Length(ObjName)=0 Then ObjName := 'ALL';
-
-
-    Case  Param[1] of
-        'L': LoadShapeClass.TOPExport(ObjName);
-        'T': TshapeClass.TOPExport(ObjName);
-        {
-          'G': GrowthShapeClass.TOPExportAll;
-          'T': TCC_CurveClass.TOPExportAll;
-        }
-    ELSE
-        MonitorClass.TOPExport(ObjName);
-    End;
-
-
-End;
 
 Procedure DoSetNormal(pctNormal:Double);
 

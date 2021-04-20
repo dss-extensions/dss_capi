@@ -179,19 +179,14 @@ function AdjustInputFilePath(const param: String): String;
 implementation
 
 uses
-{$IFDEF FPC}
+{$IFDEF WINDOWS}
 {$ELSE}
     BaseUnix,
     Unix,
+    Windows,
+{$ENDIF}
     Process,
     CmdForms,
-{$ELSE}
-    Windows,
-    ShellAPI,
-    Dialogs,
-    Graphics,
-    DSSForms,
-{$ENDIF}
     SysUtils,
     DSSClassDefs,
     DSSGlobals,

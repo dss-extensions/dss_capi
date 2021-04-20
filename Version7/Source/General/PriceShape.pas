@@ -78,8 +78,6 @@ type
 
         function Find(const ObjName: String): Pointer; OVERRIDE;  // Find an obj of this class by name
 
-        procedure TOPExport(ObjName: String); // can export this to top for plotting
-
        // Set this property to point ActivePriceShapeObj to the right value
         property Code: String READ Get_Code WRITE Set_Code;
 
@@ -143,7 +141,6 @@ uses
     MathUtil,
     Utilities,
     Classes,
-    TOPExport,
     Math,
     PointerList;
 
@@ -841,117 +838,6 @@ begin
     inherited  InitPropertyValues(NumPropsThisClass);
 
 end;
-
-
-procedure TPriceShape.TOPExport(ObjName: String);
-
-var
-    NameList, CNames: TStringList;
-    Vbuf, CBuf: pDoubleArray;
-    Obj: TPriceShapeObj;
-    MaxPts, i, j: Integer;
-    MaxTime, MinInterval, Hr_Time: Double;
-    ObjList: TPointerList;
-
-begin
-    TOPTransferFile.FileName := GetOutputDirectory + 'TOP_PriceShape.STO';
-    try
-        TOPTransferFile.Open;
-    except
-        ON E: Exception do
-        begin
-            DoSimpleMsg('TOP Transfer File Error: ' + E.message, 58619);
-            try
-                TopTransferFile.Close;
-            except
-              {OK if Error}
-            end;
-            Exit;
-        end;
-    end;
-
-     {Send only fixed interval data}
-
-    ObjList := TPointerList.Create(10);
-    NameList := TStringList.Create;
-    CNames := TStringList.Create;
-
-     {Make a List of fixed interval data where the interval is greater than 1 minute}
-    if CompareText(ObjName, 'ALL') = 0 then
-    begin
-        Obj := ElementList.First;
-        while Obj <> NIL do
-        begin
-            if Obj.Interval > (1.0 / 60.0) then
-                ObjList.Add(Obj);
-            Obj := ElementList.Next;
-        end;
-    end
-    else
-    begin
-        Obj := Find(ObjName);
-        if Obj <> NIL then
-        begin
-            if Obj.Interval > (1.0 / 60.0) then
-                ObjList.Add(Obj)
-            else
-                DoSimpleMsg('PriceShape.' + ObjName + ' is not hourly fixed interval.', 58620);
-        end
-        else
-        begin
-            DoSimpleMsg('PriceShape.' + ObjName + ' not found.', 58621);
-        end;
-
-    end;
-
-     {If none found, exit}
-    if ObjList.ListSize > 0 then
-    begin
-
-       {Find Max number of points}
-        MaxTime := 0.0;
-        MinInterval := 1.0;
-        Obj := ObjList.First;
-        while Obj <> NIL do
-        begin
-            MaxTime := Max(MaxTime, Obj.NumPoints * Obj.Interval);
-            MinInterval := Min(MinInterval, Obj.Interval);
-            NameList.Add(Obj.Name);
-            Obj := ObjList.Next;
-        end;
-      // SetLength(Xarray, maxPts);
-        MaxPts := Round(MaxTime / MinInterval);
-
-        TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16, 'DSS (TM), Electrotek Concepts (R)');
-        TopTransferFile.WriteNames(NameList, CNames);
-
-        Hr_Time := 0.0;
-
-        VBuf := AllocMem(Sizeof(Double) * ObjList.ListSize);
-        CBuf := AllocMem(Sizeof(Double) * 1);   // just a dummy -- Cbuf is ignored here
-
-        for i := 1 to MaxPts do
-        begin
-            for j := 1 to ObjList.ListSize do
-            begin
-                Obj := ObjList.Get(j);
-                VBuf^[j] := Obj.GetPrice(Hr_Time);
-            end;
-            TopTransferFile.WriteData(HR_Time, Vbuf, Cbuf);
-            HR_Time := HR_Time + MinInterval;
-        end;
-
-        TopTransferFile.Close;
-        TopTransferFile.SendToTop;
-        Reallocmem(Vbuf, 0);
-        Reallocmem(Cbuf, 0);
-    end;
-
-    ObjList.Free;
-    NameList.Free;
-    CNames.Free;
-end;
-
 
 procedure TPriceShapeObj.SaveToDblFile;
 

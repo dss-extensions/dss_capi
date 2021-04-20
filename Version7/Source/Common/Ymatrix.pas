@@ -143,17 +143,9 @@ var
     CmatArray: pComplexArray;
     pElem: TDSSCktElement;
 
-   //{****} FTrace: TextFile;
-
-
 begin
 
-  //{****} AssignFile(Ftrace, 'YmatrixTrace.txt');
-  //{****} Rewrite(FTrace);
-
     CmatArray := NIL;
-   // new function to log KLUSolve.DLL function calls
-   // SetLogFile ('KLU_Log.txt', 1);
     with ActiveCircuit, ActiveCircuit.Solution do
     begin
 
@@ -222,9 +214,6 @@ begin
                 end;   // If Enabled
             pElem := CktElements.Next;
         end;
-
-     //{****} CloseFile(Ftrace);
-     //{****} FireOffEditor(  'YmatrixTrace.txt');
 
      // Allocate voltage and current vectors if requested
         if AllocateVI then
