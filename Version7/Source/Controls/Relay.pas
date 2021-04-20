@@ -176,7 +176,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -914,7 +914,7 @@ end;
 
 
 {--------------------------------------------------------------------------}
-procedure TRelayObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TRelayObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 {Note PropertyValue is aligned with the internal indices}
 

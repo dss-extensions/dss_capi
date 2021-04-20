@@ -98,7 +98,7 @@ type
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         // Support for Dynamics Mode
         procedure InitStateVars; OVERRIDE;
@@ -509,7 +509,7 @@ begin
     end;
 end;
 
-procedure TVCCSObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TVCCSObj.DumpProperties(F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin

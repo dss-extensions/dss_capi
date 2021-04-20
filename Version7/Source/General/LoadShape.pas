@@ -168,7 +168,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property NumPoints: Integer READ FNumPoints WRITE FNumPoints;
         property PresentInterval: Double READ Get_Interval;
@@ -193,7 +193,8 @@ uses
     Sysutils,
     MathUtil,
     Math,
-    PointerList;
+    PointerList,
+    BufStream;
 
 type
     ELoadShapeError = class(Exception);  // Raised to abort solution
@@ -817,7 +818,7 @@ end;
 procedure TLoadShape.Do2ColCSVFile(const FileName: String);
 //   Process 2-column CSV file (3-col if time expected)
 var
-    F: TFileStream = nil;
+    F: TBufferedFileStream = nil;
     i: Integer;
     s: String;
 begin
@@ -828,7 +829,7 @@ begin
     end;
 
     try
-        F := TFileStream.Create(FileName, fmOpenRead);
+        F := TBufferedFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 613);
         FreeAndNil(F);
@@ -898,7 +899,7 @@ end;
 
 procedure TLoadShape.DoCSVFile(const FileName: String);
 var
-    F: TFileStream = nil;
+    F: TBufferedFileStream = nil;
     i: Integer;
     s: String;
 begin
@@ -909,7 +910,7 @@ begin
     end;
 
     try
-        F := TFileStream.Create(FileName, fmOpenRead);
+        F := TBufferedFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 613);
         FreeAndNil(F);
@@ -1276,21 +1277,29 @@ begin
 
     if Interval > 0.0 then
     begin
-        i := round(hr / Interval) - 1;
+        i := round(hr / Interval);
         if UseMMF then
         begin
-            i := i mod mmDataSize;  // Wrap around using remainder
-            Result.re := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i + 1, mmLineLen);
+            if i > mmDataSize then 
+                i := i mod mmDataSize;  // Wrap around using remainder
+            if i = 0 then 
+                i := mmDataSize;
+            Result.re := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i, mmLineLen);
             if Assigned(dQ) then
-                Result.im := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i + 1, mmLineLenQ)
+                Result.im := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
             else
                 Result.im := Set_Result_im(Result.re);
             
             Exit;
         end;
         
+        if i > FNumPoints then 
+            i := i mod FNumPoints;  // Wrap around using remainder
+        if i = 0 then 
+            i := FNumPoints;
+        
+        dec(i);
         offset := i * Stride;
-        i := i mod FNumPoints;  // Wrap around using remainder
         Result.Re := dP[offset];
         if Assigned(dQ) then
             Result.im := dQ[offset]
@@ -1603,7 +1612,7 @@ begin
 end;
 
 
-procedure TLoadShapeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TLoadShapeObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -2068,9 +2077,14 @@ begin
 
     if Interval > 0.0 then
     begin
-        i := round(hr / Interval) - 1;
+        i := round(hr / Interval);
+        if i > FNumPoints then 
+            i := i mod FNumPoints;  // Wrap around using remainder
+        if i = 0 then 
+            i := FNumPoints;
+
+        dec(i);
         offset := i * Stride;
-        i := i mod FNumPoints;  // Wrap around using remainder
         Result.Re := sP[offset];
         if Assigned(sQ) then
             Result.im := sQ[offset]

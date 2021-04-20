@@ -347,7 +347,8 @@ USES
      Line, Transformer,  Vsource,
      Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, {$ENDIF}
      {$IFDEF MSWINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils,
-     Load, PVSystem;
+     Load, PVSystem,
+     BufStream;
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
 

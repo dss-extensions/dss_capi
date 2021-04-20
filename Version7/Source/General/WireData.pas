@@ -45,7 +45,7 @@ type
         destructor Destroy; OVERRIDE;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
     end;
 
 implementation
@@ -203,7 +203,7 @@ begin
     inherited destroy;
 end;
 
-procedure TWireDataObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TWireDataObj.DumpProperties(F: TFileStream; Complete: Boolean);
 begin
     inherited DumpProperties(F, Complete);
 end;

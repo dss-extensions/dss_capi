@@ -120,7 +120,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property NumPoints: Integer READ FNumPoints WRITE Set_NumPoints;
         property PresentInterval: Double READ Get_Interval;
@@ -142,7 +142,8 @@ uses
     MathUtil,
     Utilities,
     Math,
-    PointerList;
+    PointerList,
+    BufStream;
 
 const
     NumPropsThisClass = 12;
@@ -435,13 +436,13 @@ end;
 procedure TPriceShape.DoCSVFile(const FileName: String);
 
 var
-    F: TFileStream = nil;
+    F: TBufferedFileStream = nil;
     i: Integer;
     s: String;
 
 begin
     try
-        F := TFileStream.Create(FileName, fmOpenRead);        
+        F := TBufferedFileStream.Create(FileName, fmOpenRead);        
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 58613);
         FreeAndNil(F);
@@ -776,7 +777,7 @@ begin
 end;
 
 
-procedure TPriceShapeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TPriceShapeObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

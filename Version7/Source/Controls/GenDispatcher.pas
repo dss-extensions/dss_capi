@@ -80,7 +80,7 @@ type
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         function MakeGenList: Boolean;
     end;
@@ -416,7 +416,7 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TGenDispatcherObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TGenDispatcherObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

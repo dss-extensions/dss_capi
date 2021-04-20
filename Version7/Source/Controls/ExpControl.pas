@@ -97,7 +97,7 @@ INTERFACE
             PROCEDURE   GetCurrents(Curr: pComplexArray); Override;
 
             PROCEDURE   InitPropertyValues(ArrayOffset:Integer);Override;
-            PROCEDURE   DumpProperties(Var F:TFileStream; Complete:Boolean);Override;
+            PROCEDURE   DumpProperties(F: TFileStream; Complete:Boolean);Override;
 
             FUNCTION    MakePVSystemList:Boolean;
             FUNCTION    GetPropertyValue(Index:Integer):String;Override;
@@ -469,7 +469,7 @@ Begin
   For i := 1 to Fnconds Do Curr^[i] := CZERO;
 End;
 
-PROCEDURE TExpControlObj.DumpProperties(Var F:TFileStream; Complete:Boolean);
+PROCEDURE TExpControlObj.DumpProperties(F: TFileStream; Complete:Boolean);
 VAR
    i:Integer;
 Begin

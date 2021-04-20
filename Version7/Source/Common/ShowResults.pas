@@ -113,7 +113,7 @@ begin
         end;
 end;
 
-procedure WriteSeqVoltages(var F: TFileStream; i: Integer; LL: Boolean);
+procedure WriteSeqVoltages(F: TFileStream; i: Integer; LL: Boolean);
 
 var
     j, k: Integer;
@@ -194,7 +194,7 @@ begin
 
 end;
 
-procedure WriteBusVoltages(var F: TFileStream; i: Integer; LL: Boolean);
+procedure WriteBusVoltages(F: TFileStream; i: Integer; LL: Boolean);
 
 // 6/11/14 Modified to write both LL and LN voltages out for LN case
 
@@ -284,7 +284,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElementVoltages(var F: TFileStream; pElem: TDSSCktElement; LL: Boolean);
+procedure WriteElementVoltages(F: TFileStream; pElem: TDSSCktElement; LL: Boolean);
 var
     NCond, Nterm, i, j, k, nref, bref: Integer;
     Busname: String;
@@ -330,7 +330,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElementDeltaVoltages(var F: TFileStream; pElem: TDSSCktElement);
+procedure WriteElementDeltaVoltages(F: TFileStream; pElem: TDSSCktElement);
 var
     NCond,
     Node1, Node2,
@@ -536,7 +536,7 @@ end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
-procedure WriteSeqCurrents(var F: TFileStream; const PaddedBrName: String; I0, I1, I2, Cmax, NormAmps, EmergAmps: Double; j, DSSObjType: Integer);
+procedure WriteSeqCurrents(F: TFileStream; const PaddedBrName: String; I0, I1, I2, Cmax, NormAmps, EmergAmps: Double; j, DSSObjType: Integer);
 
 var
     Inormal, Iemerg, I2I1, I0I1: Double;
@@ -574,7 +574,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteTerminalCurrents(var F: TFileStream; pElem: TDSSCktElement; ShowResidual: Boolean);
+procedure WriteTerminalCurrents(F: TFileStream; pElem: TDSSCktElement; ShowResidual: Boolean);
 
 var
 
@@ -1349,7 +1349,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteTerminalPowerSeq(var F: TFileStream; cktElem: TDSSCktElement; j, opt: Integer);
+procedure WriteTerminalPowerSeq(F: TFileStream; cktElem: TDSSCktElement; j, opt: Integer);
 var
     i, k, Ncond, nref: Integer;
     Volts, S: Complex;
@@ -1437,7 +1437,7 @@ begin
 end;
 
 
-procedure WriteTerminalPower(var F: TFileStream; CktElem: TDSSCktElement; jTerm, opt: Integer);
+procedure WriteTerminalPower(F: TFileStream; CktElem: TDSSCktElement; jTerm, opt: Integer);
 
 var
 
@@ -2023,7 +2023,7 @@ begin
     end;
 end;
 
-procedure WriteElementRecord(var F: TFileStream; pElem: TDSSCktElement);
+procedure WriteElementRecord(F: TFileStream; pElem: TDSSCktElement);
 var
     Nterm, j: Integer;
     BusName: String;
@@ -3112,7 +3112,7 @@ begin
     end;
 end;
 
-procedure TopoLevelTabs(var F: TFileStream; nLevel: Integer);
+procedure TopoLevelTabs(F: TFileStream; nLevel: Integer);
 var
     nTabs, i: Integer;
 begin

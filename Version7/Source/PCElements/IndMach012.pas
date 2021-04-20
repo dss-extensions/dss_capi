@@ -244,7 +244,7 @@ type
 
        // Functions required for managing values of properties
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
         property LocalSlip: Double READ S1 WRITE set_Localslip;
@@ -1767,7 +1767,7 @@ end;
 //= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TIndMach012Obj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TIndMach012Obj.DumpProperties(F: TFileStream; Complete: Boolean);
 //----------------------------------------------------------------------------
 {
  This procedure is require to respond to various commands such as Dump that

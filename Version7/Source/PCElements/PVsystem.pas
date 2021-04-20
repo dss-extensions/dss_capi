@@ -309,7 +309,7 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
         property PresentIrradiance: Double READ Get_PresentIrradiance WRITE Set_PresentIrradiance;
@@ -2537,7 +2537,7 @@ begin
 
 end;
 // ===========================================================================================
-procedure TPVsystemObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TPVsystemObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, idx: Integer;

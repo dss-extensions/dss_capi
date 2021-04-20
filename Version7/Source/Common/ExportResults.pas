@@ -114,9 +114,10 @@ uses
     ExportCIMXML,
     LineSpacing,
     CNData,
-    TSData;
+    TSData,
+    BufStream;
 
-procedure WriteElementVoltagesExportFile(var F: TFileStream; pElem: TDSSCktElement; MaxNumNodes: Integer);
+procedure WriteElementVoltagesExportFile(F: TFileStream; pElem: TDSSCktElement; MaxNumNodes: Integer);
 
 var
     NCond, Nterm, i, j, k, m, nref, bref: Integer;
@@ -358,7 +359,7 @@ begin
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteSeqCurrents(var F: TFileStream; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
+procedure CalcAndWriteSeqCurrents(F: TFileStream; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
 var
     I0, I1, I2, I2I1, I0I1, iNormal, iEmerg: Double;
     i, k, NCond: Integer;
@@ -532,7 +533,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteCurrents(var F: TFileStream; pElem: TDSSCktElement; Cbuffer: pComplexArray; CondWidth, TermWidth: Integer);
+procedure CalcAndWriteCurrents(F: TFileStream; pElem: TDSSCktElement; Cbuffer: pComplexArray; CondWidth, TermWidth: Integer);
 var
     i, j, k: Integer;
     Iresid: Complex;
@@ -566,7 +567,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteMaxCurrents(var F: TFileStream; pElem: TPDElement; Cbuffer: pComplexArray);
+procedure CalcAndWriteMaxCurrents(F: TFileStream; pElem: TPDElement; Cbuffer: pComplexArray);
 var
     RatingIdx,
     i: Integer;
@@ -733,7 +734,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteNodeList(var F: TFileStream; const CktElementName: String);
+procedure WriteNodeList(F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -853,7 +854,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemCurrents(var F: TFileStream; const CktElementName: String);
+procedure WriteElemCurrents(F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -972,7 +973,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemVoltages(var F: TFileStream; const CktElementName: String);
+procedure WriteElemVoltages(F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -1091,7 +1092,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemPowers(var F: TFileStream; const CktElementName: String);
+procedure WriteElemPowers(F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
     S: Complex;
@@ -3664,7 +3665,7 @@ begin
     end;
 end;
 
-procedure WriteNewLine(var F: TFileStream;
+procedure WriteNewLine(F: TFileStream;
     const CktELementName: String; DistFromMeter1, puV1, DistFromMeter2, puV2: Double;
     ColorCode, Thickness, LineType: Integer;
     MarkCenter: Integer;

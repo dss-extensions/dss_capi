@@ -105,7 +105,7 @@ type
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
        {Properties to interpret input to the sensor}
 
@@ -823,7 +823,7 @@ end;
 
 {==============================================================================}
 
-procedure TSensorObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TSensorObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

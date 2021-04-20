@@ -75,7 +75,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property NumPoints: Integer READ Npts;
 
@@ -500,7 +500,7 @@ begin
 end;
 
 
-procedure TTCC_CurveObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TTCC_CurveObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

@@ -196,8 +196,8 @@ type
         function RotatePhases(iPhs: Integer): Integer;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(var F: TFileStream); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure SaveWrite(F: TFileStream); OVERRIDE;
         procedure GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray);
         procedure GetAllWindingCurrents(CurrBuffer: pComplexArray);  // All Winding currents in complex array
         function GetWindingCurrentsResult: String;  // All winding currents in string
@@ -1253,7 +1253,7 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TTransfObj.SaveWrite(var F: TFileStream);
+procedure TTransfObj.SaveWrite(F: TFileStream);
 {Override standard SaveWrite}
 {Transformer structure not conducive to standard means of saving}
 var
@@ -1388,7 +1388,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TTransfObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TTransfObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;

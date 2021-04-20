@@ -131,7 +131,7 @@ type
         procedure CalcYPrim; OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
                 // CIM XML access - this is only tested for the IEEE 8500-node feeder
         property SimpleR: Double READ R;
@@ -1091,7 +1091,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TReactorObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TReactorObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j, k: Integer;

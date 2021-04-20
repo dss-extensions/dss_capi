@@ -190,7 +190,7 @@ type
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
 //           Property PFBand   :Double   Read FPFBand  Write  Set_PFBand;
@@ -1376,7 +1376,7 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TStorageController2Obj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TStorageController2Obj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

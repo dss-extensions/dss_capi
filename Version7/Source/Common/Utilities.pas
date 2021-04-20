@@ -103,7 +103,7 @@ function AllTerminalsClosed(ThisElement: TDSSCktElement): Boolean;
 function Str_Real(const Value: Double; NumDecimals: Integer): String;
 procedure DumpAllDSSCommands(var Filename: String);
 procedure DumpAllocationFactors(var Filename: String);
-procedure DumpComplexMatrix(var F: TFileStream; AMatrix: TcMatrix);
+procedure DumpComplexMatrix(F: TFileStream; AMatrix: TcMatrix);
 function NearestBasekV(kV: Double): Double;
 function PresentTimeInSec: Double;
 function DoResetFaults: Integer;
@@ -122,7 +122,7 @@ function QuadSolver(const a, b, c: Double): Double; // returns largest of two an
 {Save Function Helper}
 function WriteClassFile(const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
 function WriteVsourceClassFile(const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
-procedure WriteActiveDSSObject(var F: TFileStream; const NeworEdit: String);
+procedure WriteActiveDSSObject(F: TFileStream; const NeworEdit: String);
 function checkforblanks(const S: String): String;
 function RewriteAlignedFile(const Filename: String): Boolean;
 
@@ -214,7 +214,8 @@ uses
     EnergyMeter,
     PCElement,
     ControlElem,
-    StrUtils;
+    StrUtils,
+    BufStream;
 
 const
     ZERONULL: Integer = 0;
@@ -775,7 +776,7 @@ var
     Param: String;
     F: TFileStream = nil;
     MStream: TMemoryStream;
-    FStream: TFileStream;
+    FStream: TBufferedFileStream;
     i: Integer;
     Temp: Single;
     CSVFileName: String;
@@ -828,16 +829,15 @@ begin
          // load the list from a file
 
         try
-            F := TFileStream.Create(CSVFileName, fmOpenRead);
+            F := TBufferedFileStream.Create(CSVFileName, fmOpenRead);
 
             if CSVHeader then
                 FSReadln(F, InputLIne);  // skip the header row
 
             for i := 1 to MaxValues do
             begin
-
                 try
-                    if not ((F.Position + 1) < F.Size) then
+                    if (F.Position + 1) < F.Size then
                     begin
                         FSReadln(F, InputLIne);
                         Auxparser.CmdString := InputLine;
@@ -872,7 +872,7 @@ begin
          // load the list from a file of doubles (no checking done on type of data)
         if FileExists(Param) then
         begin
-            FStream := TFileStream.Create(Param, fmOpenRead);
+            FStream := TBufferedFileStream.Create(Param, fmOpenRead);
             Result := Min(Maxvalues, FStream.Size div sizeof(ResultArray^[1]));  // no. of doubles
             FStream.ReadBuffer(ResultArray^[1], SizeOf(ResultArray^[1]) * Result);
             FStream.Free;
@@ -998,7 +998,7 @@ function InterpretIntArray(const s: String; MaxValues: Integer; ResultArray: pIn
 var
     ParmName,
     Param: String;
-    F: TFileStream = nil;
+    F: TBufferedFileStream = nil;
     i: Integer;
     line: String;
 begin
@@ -1013,7 +1013,7 @@ begin
     begin
          // load the list from a file
         try
-            F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
+            F := TBufferedFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
             for i := 1 to MaxValues do
             begin
                 if (F.Position + 1) < F.Size then
@@ -1100,7 +1100,7 @@ procedure InterpretAndAllocStrArray(const s: String; var Size: Integer; var Resu
 var
     ParmName,
     Param: String;
-    F: TFileStream = nil;
+    F: TBufferedFileStream = nil;
     MaxSize: Integer;
 
 
@@ -1155,7 +1155,7 @@ begin
          // load the list from a file
 
         try
-            F := TFileStream.Create(Param, fmOpenRead);
+            F := TBufferedFileStream.Create(Param, fmOpenRead);
             while (F.Position + 1) < F.Size do
             begin
                 FSReadln(F, Param);
@@ -1207,7 +1207,7 @@ var
     ParmName,
     Param,
     NextParam: String;
-    F: TFileStream = nil;
+    F: TBufferedFileStream = nil;
 
 
 begin
@@ -1228,7 +1228,7 @@ begin
          // load the list from a file
 
         try
-            F := TFileStream.Create(Param, fmOpenRead);        
+            F := TBufferedFileStream.Create(Param, fmOpenRead);        
             while (F.Position + 1) < F.Size do
             begin
                 FSReadln(F, Param);
@@ -2097,7 +2097,7 @@ begin
 end;
 
 
-procedure DumpComplexMatrix(var F: TFileStream; AMatrix: TcMatrix);
+procedure DumpComplexMatrix(F: TFileStream; AMatrix: TcMatrix);
 
 var
     i, j: Integer;
@@ -2275,7 +2275,7 @@ begin
 end;
 
 
-procedure WriteActiveDSSObject(var F: TFileStream; const NeworEdit: String);
+procedure WriteActiveDSSObject(F: TFileStream; const NeworEdit: String);
 
 var
     ParClass: TDssClass;
@@ -2323,7 +2323,7 @@ end;
 function RewriteAlignedFile(const Filename: String): Boolean;
 
 var
-    Fin: TFileStream = nil;
+    Fin: TBufferedFileStream = nil;
     Fout: TFileStream = nil;
     SaveDelims, Line, Field, AlignedFile: String;
     FieldLength: pIntegerArray;
@@ -2333,7 +2333,7 @@ begin
     Result := TRUE;
 
     try
-        Fin := TFileStream.Create(FileName, fmOpenRead);
+        Fin := TBufferedFileStream.Create(FileName, fmOpenRead);
     except
         On E: Exception do
         begin
@@ -2543,7 +2543,7 @@ begin
     end;
 end;
 
-procedure WriteUniformGenerators(var F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
+procedure WriteUniformGenerators(F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
  { Distribute the generators uniformly amongst the feeder nodes that have loads}
 
 var
@@ -2581,7 +2581,7 @@ begin
     end;
 end;
 
-procedure WriteRandomGenerators(var F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
+procedure WriteRandomGenerators(F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
 {Distribute Generators randomly to loaded buses}
 
 var
@@ -2633,7 +2633,7 @@ begin
 
 end;
 
-procedure WriteEveryOtherGenerators(var F: TFileStream; kW, PF: Double; Skip: Integer; DoGenerators: Boolean);
+procedure WriteEveryOtherGenerators(F: TFileStream; kW, PF: Double; Skip: Integer; DoGenerators: Boolean);
 
 {distribute generators on every other load, skipping the number specified}
 
@@ -2699,7 +2699,7 @@ begin
 
 end;
 
-procedure WriteProportionalGenerators(var F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
+procedure WriteProportionalGenerators(F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
 
 {Distribute the generator Proportional to load}
 
@@ -3620,17 +3620,24 @@ end;
 
 procedure FSReadln(F: TFileStream; out S: String); // TODO: optimize?
 var
-    ch: AnsiChar;
+    ch: AnsiChar; 
+    i: integer;
 begin
     S := '';
     repeat
         if F.Read(ch, SizeOf(AnsiChar)) <> SizeOf(AnsiChar) then 
-            Exit;
+            break;
         
         S := S + ch;
-    until AnsiEndsStr(S, CRLF);
-    S := AnsiLeftStr(S, Length(S) - Length(CRLF));
-    //TODO: Do we need to handle files with classic Mac OS line endings too?
+    until ch = #10;
+
+    if (Length(S) >= 1) and (S[Length(S)] = #10) then
+    begin
+        if (Length(S) >= 2) and (S[Length(S) - 1] = #13) then
+            SetLength(S, Length(S) - 2)
+        else
+            SetLength(S, Length(S) - 1)
+    end;
 end;
 
 procedure FSFlush(F: TFileStream);

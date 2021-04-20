@@ -143,11 +143,12 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      DSSClass, DSSObject, Utilities, Solution,
      EnergyMeter, Generator, LoadShape, Load, PCElement,   CktElement,
      uComplex,  mathutil,  Bus,  SolutionAlgs,
-     {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,DssPlot,{$ENDIF} ExecCommands, Executive,
+     CmdForms, ExecCommands, Executive,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor, ExportCIMXML, NamedObject,
-     {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
-     PDELement, ReduceAlgs, Ucmatrix;
+     RegExpr,PstCalc,
+     PDELement, ReduceAlgs, Ucmatrix, 
+     BufStream;
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
@@ -1741,7 +1742,7 @@ PROCEDURE DoAutoAddBusList(const S: String);
 VAR
    ParmName,
    Param, S2    :String;
-   F: TFileStream = nil;
+   F: TBufferedFileStream = nil;
 
 
 begin
@@ -1760,7 +1761,7 @@ begin
          // load the list from a file
 
          TRY
-             F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
+             F := TBufferedFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
              WHILE (F.Position+1) < F.Size Do
              Begin         // Fixed 7/8/01 to handle all sorts of bus names
                   FSReadln(F, S2);
@@ -1804,7 +1805,7 @@ PROCEDURE DoKeeperBusList(Const S:String);
 VAR
    ParmName,
    Param, S2    :String;
-   F: TFileStream = nil;
+   F: TBufferedFileStream = nil;
    iBus :Integer;
 
 begin
@@ -1821,7 +1822,7 @@ begin
          // load the list from a file
 
          TRY
-             F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
+             F := TBufferedFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
              WHILE (F.Position + 1) < F.Size Do
              Begin         // Fixed 7/8/01 to handle all sorts of bus names
                   FSReadln(F, S2);
@@ -2738,14 +2739,12 @@ FUNCTION DoBusCoordsCmd(SwapXY:Boolean):Integer;
 }
 
 Var
-
-   F: TFileStream = nil;
+   strings: TStringList = nil;
    {ParamName,} Param,
-   S,
    BusName : String;
    iB      : Integer;
    iLine   : Integer;
-
+   stringIdx: Integer;
 Begin
     Result := 0;
 
@@ -2757,15 +2756,14 @@ Begin
     Try
       iLine := -1;
       Try
-         F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
-         iLine := 0;
-         While (F.Position + 1) < F.Size Do
-          Begin
-             Inc(iLine);
-             FSReadln(F, S);      // Read line in from file
-
-             With AuxParser Do Begin      // User Auxparser to parse line
-                   CmdString := S;
+            strings := TStringList.Create;
+            iLine := 0;
+            strings.LoadFromFile(AdjustInputFilePath(Param));
+            for stringIdx := 0 to (strings.Count - 1) do
+            Begin
+                Inc(iLine);
+                With AuxParser Do Begin      // User Auxparser to parse line
+                   CmdString := strings[stringIdx];
                    NextParam;  BusName := StrValue;
                    iB := ActiveCircuit.Buslist.Find(BusName);
                    If iB >0 Then  Begin
@@ -2779,6 +2777,7 @@ Begin
               {Else just ignore a bus that's not in the circuit}
           End;
 
+
       Except
       {**CHANGE THIS ERROR MESSAGE**}
           ON E:Exception Do Begin
@@ -2788,7 +2787,7 @@ Begin
       End;
 
     Finally
-        FreeAndNil(F);
+        FreeAndNil(strings);
     End;
 
 End;
@@ -3009,7 +3008,7 @@ End;
 
 FUNCTION DoVDiffCmd:Integer;
 Var
-    Fin: TFileStream = nil; 
+    Fin: TBufferedFileStream = nil; 
     Fout: TFileStream = nil;
     sout: String;
         BusName, Line:String;
@@ -3021,7 +3020,7 @@ Begin
    If FileExists(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt') Then Begin
    Try
     Try
-         Fin := TFileStream.Create(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt', fmOpenRead);
+         Fin := TBufferedFileStream.Create(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt', fmOpenRead);
          Fout := TFileStream.Create(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'VDIFF.txt', fmCreate);
 
          While (Fin.Position + 1) < Fin.Size Do 
@@ -3680,7 +3679,7 @@ End;
 
 FUNCTION DoUuidsCmd:Integer;
 Var
-  F: TFileStream = nil;
+  F: TBufferedFileStream = nil;
   {ParamName,} Param, S, NameVal, UuidVal, DevClass, DevName: String;
   pName: TNamedObject;
   idx: integer;
@@ -3690,7 +3689,7 @@ Begin
   {ParamName :=} Parser.NextParam;
   Param := Parser.StrValue;
   Try
-    F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
+    F := TBufferedFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
     AuxParser.Delimiters := ',';
     While (F.Position + 1) < F.Size Do Begin
       FSReadln(F, S);

@@ -91,7 +91,7 @@ type
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -641,7 +641,7 @@ begin
     end;
 end;
 
-procedure TIsourceObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TIsourceObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

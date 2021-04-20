@@ -97,7 +97,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetMult(Yr: Integer): Double;  // Get multiplier for Specified Year
     end;
 
@@ -114,7 +114,8 @@ uses
     Sysutils,
     Ucomplex,
     MathUtil,
-    Utilities;
+    Utilities,
+    BufStream;
 
 const
     NumPropsThisClass = 6;
@@ -348,13 +349,13 @@ end;
 procedure TGrowthShape.DoCSVFile(const FileName: String);
 
 var
-    F: TFileStream = nil;
+    F: TBufferedFileStream = nil;
     i: Integer;
     s: String;
 
 begin
     try
-        F := TFileStream.Create(FileName, fmOpenRead);
+        F := TBufferedFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 603);
         FreeAndNil(F);
@@ -570,7 +571,7 @@ begin
     end;
 end;
 
-procedure TGrowthShapeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TGrowthShapeObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

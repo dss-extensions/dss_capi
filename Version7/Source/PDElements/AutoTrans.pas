@@ -190,8 +190,8 @@ type
         function RotatePhases(iPhs: Integer): Integer;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(var F: TFileStream); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure SaveWrite(F: TFileStream); OVERRIDE;
         procedure GetAutoWindingVoltages(iWind: Integer; VBuffer: pComplexArray);
         procedure GetAllWindingCurrents(CurrBuffer: pComplexArray);
 
@@ -1286,7 +1286,7 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TAutoTransObj.SaveWrite(var F: TFileStream);
+procedure TAutoTransObj.SaveWrite(F: TFileStream);
 {Override standard SaveWrite}
 {AutoTrans structure not conducive to standard means of saving}
 var
@@ -1444,7 +1444,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TAutoTransObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TAutoTransObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;

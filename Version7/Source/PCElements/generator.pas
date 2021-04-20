@@ -309,7 +309,7 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
         property PresentkW: Double READ Get_PresentkW WRITE Set_PresentkW;
@@ -2605,7 +2605,7 @@ end;
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TGeneratorObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TGeneratorObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, idx: Integer;

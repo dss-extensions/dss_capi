@@ -113,7 +113,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -757,7 +757,7 @@ begin
     Zinv.Invert;
 end;
 
-procedure TLineCodeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TLineCodeObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     k,

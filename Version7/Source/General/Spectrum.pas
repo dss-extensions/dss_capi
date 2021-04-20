@@ -70,7 +70,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
 
     end;
@@ -85,7 +85,8 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
-    Utilities;
+    Utilities,
+    BufStream;
 
 const
     NumPropsThisClass = 5;
@@ -353,13 +354,13 @@ end;
 procedure TSpectrum.DoCSVFile(const FileName: String);
 
 var
-    F: TFileStream = nil;
+    F: TBufferedFileStream = nil;
     i: Integer;
     s: String;
     done: Boolean = False;
 begin
     try
-        F := TFileStream.Create(FileName, fmOpenRead);
+        F := TBufferedFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening CSV File: "' + FileName, 653);
         FreeAndNil(F);
@@ -406,7 +407,7 @@ begin
 end;
 
 
-procedure TSpectrumObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TSpectrumObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;

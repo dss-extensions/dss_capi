@@ -153,8 +153,8 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(var F: TFileStream); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure SaveWrite(F: TFileStream); OVERRIDE;
 
         property Transformer: TTransfObj READ Get_Transformer;  // Pointer to controlled Transformer
         property TrWinding: Integer READ Get_Winding;  // Report Tapped winding
@@ -853,7 +853,7 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TRegControlObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TRegControlObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -1433,7 +1433,7 @@ begin
     ARMED := FALSE;
 end;
 
-procedure TRegcontrolObj.SaveWrite(var F: TFileStream);
+procedure TRegcontrolObj.SaveWrite(F: TFileStream);
 {Override standard SaveWrite}
 {Regcontrol structure not conducive to standard means of saving}
 var

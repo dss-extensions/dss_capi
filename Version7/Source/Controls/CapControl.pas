@@ -108,7 +108,7 @@ type
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property This_Capacitor: TCapacitorObj READ Get_Capacitor;  // Pointer to controlled Capacitor
         property PendingChange: EControlAction READ Get_PendingChange WRITE Set_PendingChange;
@@ -812,7 +812,7 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TCapControlObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TCapControlObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

@@ -77,7 +77,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         // CIM XML accessors
         property Xcoord[i: Integer]: Double READ Get_FX
@@ -365,7 +365,7 @@ begin
 end;
 
 
-procedure TLineSpacingObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TLineSpacingObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

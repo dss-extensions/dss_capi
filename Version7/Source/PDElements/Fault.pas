@@ -103,7 +103,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -635,7 +635,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TFaultObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TFaultObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;

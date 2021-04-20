@@ -51,7 +51,7 @@ type
         procedure ComputeIterminal; OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray);
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         procedure set_ITerminalUpdated(const Value: Boolean);
 
       // Sweep solution removed  PROCEDURE BackwardSweep;Override;
@@ -271,7 +271,7 @@ begin
 end;
 
 
-procedure TPCElement.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TPCElement.DumpProperties(F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin

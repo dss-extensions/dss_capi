@@ -145,7 +145,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property Handle: Integer READ FHandle WRITE Set_Handle;
         property Enabled: Boolean READ FEnabled WRITE Set_Enabled;
@@ -1008,7 +1008,7 @@ begin
             LossBuffer^[i] := CZERO;
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TDSSCktElement.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TDSSCktElement.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;

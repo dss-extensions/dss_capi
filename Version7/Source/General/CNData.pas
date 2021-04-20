@@ -57,7 +57,7 @@ type
         property RStrand: Double READ FRStrand;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
     end;
 
 implementation
@@ -261,7 +261,7 @@ begin
     inherited destroy;
 end;
 
-procedure TCNDataObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TCNDataObj.DumpProperties(F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin

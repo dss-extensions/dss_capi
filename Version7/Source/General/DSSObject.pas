@@ -53,8 +53,8 @@ type
       {Get actual values of properties}
         function GetPropertyValue(Index: Integer): String; VIRTUAL;  // Use dssclass.propertyindex to get index by name
         procedure InitPropertyValues(ArrayOffset: Integer); VIRTUAL;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); VIRTUAL;
-        procedure SaveWrite(var F: TFileStream); VIRTUAL;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); VIRTUAL;
+        procedure SaveWrite(F: TFileStream); VIRTUAL;
 
         procedure ClearPropSeqArray;
 
@@ -110,7 +110,7 @@ begin
 end;
 
 
-procedure TDSSObject.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TDSSObject.DumpProperties(F: TFileStream; Complete: Boolean);
 begin
     FSWriteln(F);
     FSWriteln(F, 'New ' + DSSClassName + '.' + Name);
@@ -141,7 +141,7 @@ begin
 
 end;
 
-procedure TDSSObject.SaveWrite(var F: TFileStream);
+procedure TDSSObject.SaveWrite(F: TFileStream);
 var
     iprop: Integer;
     str: String;

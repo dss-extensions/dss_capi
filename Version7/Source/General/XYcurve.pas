@@ -119,8 +119,8 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(var F: TFileStream); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure SaveWrite(F: TFileStream); OVERRIDE;
 
         property NumPoints: Integer READ FNumPoints WRITE Set_NumPoints;
         property XValue_pt[Index: Integer]: Double READ Get_XValue WRITE Set_XValue;
@@ -144,7 +144,8 @@ uses
     MathUtil,
     Utilities,
     Math,
-    PointerList;
+    PointerList,
+    BufStream;
 
 const
     NumPropsThisClass = 13;
@@ -453,13 +454,13 @@ end;
 procedure TXYcurve.DoCSVFile(const FileName: String);
 
 var
-    F: TFileStream = nil;
+    F: TBufferedFileStream = nil;
     i: Integer;
     s: String;
 
 begin
     try
-        F := TFileStream.Create(FileName, fmOpenRead);
+        F := TBufferedFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 613);
         FreeAndNil(F);
@@ -804,7 +805,7 @@ begin
 end;
 
 
-procedure TXYcurveObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TXYcurveObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -1034,7 +1035,7 @@ begin
         YValues^[Index] := Value;
 end;
 
-procedure TXYcurveObj.SaveWrite(var F: TFileStream);
+procedure TXYcurveObj.SaveWrite(F: TFileStream);
 
 {Override standard SaveWrite}
 {Transformer structure not conducive to standard means of saving}

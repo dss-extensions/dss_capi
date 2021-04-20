@@ -322,7 +322,7 @@ type
 
 
       procedure   InitPropertyValues(ArrayOffset:Integer);Override;
-      procedure   DumpProperties(Var F:TFileStream; Complete:Boolean);Override;
+      procedure   DumpProperties(F: TFileStream; Complete:Boolean);Override;
 
 
       function    MakeDERList:Boolean;
@@ -1466,7 +1466,7 @@ procedure TInvControl2Obj.GetInjCurrents(Curr: pComplexArray);
     for i := 1 to Fnconds do Curr^[i] := CZERO;
   end;
 
-procedure TInvControl2Obj.DumpProperties(Var F:TFileStream; Complete:Boolean);
+procedure TInvControl2Obj.DumpProperties(F: TFileStream; Complete:Boolean);
   VAR
     i:Integer;
 

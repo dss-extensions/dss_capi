@@ -79,9 +79,9 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
-        procedure WriteVarOutputRecord(var F: TFileStream); // Add a record to the ouput file based on present GIC
+        procedure WriteVarOutputRecord(F: TFileStream); // Add a record to the ouput file based on present GIC
     end;
 
 var
@@ -571,7 +571,7 @@ begin
 end;
 
 //- - - - - - - - VAR EXPORT - - - - - - - - - - - - - - - - - - - -
-procedure TGICTransformerObj.WriteVarOutputRecord(var F: TFileStream);
+procedure TGICTransformerObj.WriteVarOutputRecord(F: TFileStream);
 var
     Curr: Complex;
     MVarMag: Double;
@@ -719,7 +719,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TGICTransformerObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TGICTransformerObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

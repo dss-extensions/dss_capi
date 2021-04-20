@@ -108,7 +108,7 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
         function NumVariables: Integer; OVERRIDE;
@@ -1007,7 +1007,7 @@ end;
 
 
 //=============================================================================
-procedure TUPFCObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TUPFCObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;

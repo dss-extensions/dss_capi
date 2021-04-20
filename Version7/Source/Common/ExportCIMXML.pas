@@ -151,7 +151,7 @@ const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
     CIM_NS = 'http://iec.ch/TC57/CIM100';
 
-procedure StartCIMFile(var F: TFileStream; FileNm: String; prf: ProfileChoice); FORWARD;
+procedure StartCIMFile(F: TFileStream; FileNm: String; prf: ProfileChoice); FORWARD;
 
 procedure TFileDealer.WriteCimLn(prf: ProfileChoice; const s: String);
 begin
@@ -1810,7 +1810,7 @@ begin
     end;
 end;
 
-procedure StartCIMFile(var F: TFileStream; FileNm: String; prf: ProfileChoice);
+procedure StartCIMFile(F: TFileStream; FileNm: String; prf: ProfileChoice);
 begin
     F := TFileStream.Create(FileNm, fmCreate);
     FSWriteln(F, '<?xml version="1.0" encoding="utf-8"?>');

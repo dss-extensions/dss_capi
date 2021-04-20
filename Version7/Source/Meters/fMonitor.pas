@@ -201,7 +201,7 @@ TYPE
        Procedure GetCurrents(Curr: pComplexArray);                Override; // Get present value of terminal Curr
        Procedure GetInjCurrents(Curr: pComplexArray);             Override;   // Returns Injextion currents
        PROCEDURE InitPropertyValues(ArrayOffset:Integer);         Override;
-       Procedure DumpProperties(Var F:TFileStream; Complete:Boolean);Override;
+       Procedure DumpProperties(F: TFileStream; Complete:Boolean);Override;
        function  Get_FileName: String;
 
       // Property CSVFileName:String Read Get_FileName;
@@ -1887,7 +1887,7 @@ Begin
 End;
 
 {--------------------------------------------------------------------------}
-Procedure TFMonitorObj.DumpProperties(Var F:TFileStream; Complete:Boolean);
+Procedure TFMonitorObj.DumpProperties(F: TFileStream; Complete:Boolean);
 
 VAR
    i, k:Integer;

@@ -139,7 +139,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         // Public for the COM Interface
         procedure FetchLineCode(const Code: String);
@@ -1267,7 +1267,7 @@ begin
 
 end;
 
-procedure TLineObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TLineObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;

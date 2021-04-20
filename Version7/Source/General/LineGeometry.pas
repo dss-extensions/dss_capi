@@ -129,8 +129,8 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(var F: TFileStream); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure SaveWrite(F: TFileStream); OVERRIDE;
 
         // called from a Line object that has its own Spacing and Wires input
         // automatically sets reduce=y if the spacing has more wires than phases
@@ -667,7 +667,7 @@ begin
 end;
 
 
-procedure TLineGeometryObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TLineGeometryObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;
@@ -866,7 +866,7 @@ begin
 end;
 
 
-procedure TLineGeometryObj.SaveWrite(var F: TFileStream);
+procedure TLineGeometryObj.SaveWrite(F: TFileStream);
 { Override standard SaveWrite}
 {Linegeometry structure not conducive to standard means of saving}
 var

@@ -118,7 +118,7 @@ type
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         function MakeLocalControlList: Boolean;
     end;
@@ -505,7 +505,7 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TESPVLControlObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TESPVLControlObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

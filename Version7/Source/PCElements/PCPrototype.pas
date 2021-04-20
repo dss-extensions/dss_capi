@@ -143,7 +143,7 @@ type
 
        // Functions required for managing values of properties
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
        {Put any class properties here}
@@ -1174,7 +1174,7 @@ end;
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TPCPrototypeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TPCPrototypeObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 {
  This procedure is require to respond to various commands such as Dump that

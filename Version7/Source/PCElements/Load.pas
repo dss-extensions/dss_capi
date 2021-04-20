@@ -238,7 +238,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         procedure UpdateVoltageBases;
 
@@ -2385,7 +2385,7 @@ begin
 end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TLoadObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TLoadObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;

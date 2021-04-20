@@ -63,7 +63,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         property NormalState: EControlAction READ FNormalState WRITE Set_NormalState;
         property PresentState: EControlAction READ FPresentState WRITE Set_PresentState;
         property IsLocked: Boolean READ FLocked;
@@ -496,7 +496,7 @@ begin
     FPresentState := Value;
 end;
 
-procedure TSwtControlObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TSwtControlObj.DumpProperties(F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin

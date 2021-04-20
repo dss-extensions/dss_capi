@@ -168,8 +168,8 @@ type
 
         procedure Clear;
         procedure Integrate(var Reg: Double; Value: Double; var Deriv: Double);
-        procedure WriteRegisters(var F: TFileStream);
-        procedure WriteRegisterNames(var F: TFileStream);
+        procedure WriteRegisters(F: TFileStream);
+        procedure WriteRegisterNames(F: TFileStream);
 
     PROTECTED
 
@@ -369,7 +369,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -2257,7 +2257,7 @@ end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TEnergyMeterObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TEnergyMeterObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -3931,12 +3931,12 @@ begin
 
 end;
 
-procedure TSystemMeter.WriteRegisterNames(var F: TFileStream);
+procedure TSystemMeter.WriteRegisterNames(F: TFileStream);
 begin
 // Does nothing
 end;
 
-procedure TSystemMeter.WriteRegisters(var F: TFileStream);
+procedure TSystemMeter.WriteRegisters(F: TFileStream);
 begin
     WriteintoMem(SM_MHandle, kWh);
     WriteintoMem(SM_MHandle, kvarh);

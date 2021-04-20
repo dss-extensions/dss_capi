@@ -80,7 +80,7 @@ type
         property GMRUnits: Integer READ FGMRUnits;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
     end;
 
@@ -302,7 +302,7 @@ begin
     inherited destroy;
 end;
 
-procedure TConductorDataObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TConductorDataObj.DumpProperties(F: TFileStream; Complete: Boolean);
 var
     j,
     i: Integer;

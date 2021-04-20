@@ -75,7 +75,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -707,7 +707,7 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TXfmrCodeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
+procedure TXfmrCodeObj.DumpProperties(F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;

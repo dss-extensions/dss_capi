@@ -234,7 +234,7 @@ type
         function VDiff(i, j: Integer): Complex;  // Difference between two node voltages
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         procedure WriteConvergenceReport(const Fname: String);
         procedure Update_dblHour;
         procedure Increment_time;
@@ -1694,7 +1694,7 @@ begin
 
 end;
 
-procedure TSolutionObj.DumpProperties(var F: TFileStream; complete: Boolean);
+procedure TSolutionObj.DumpProperties(F: TFileStream; complete: Boolean);
 
 var
     i, j: Integer;

@@ -234,7 +234,7 @@ end;
             FUNCTION    CalcLPF(m: Integer; powertype: String;PVSys:TPVSystemObj):Double;
             FUNCTION    CalcRF(m: Integer; powertype: String;PVSys:TPVSystemObj):Double;
             PROCEDURE   InitPropertyValues(ArrayOffset:Integer);Override;
-            PROCEDURE   DumpProperties(Var F:TFileStream; Complete:Boolean);Override;
+            PROCEDURE   DumpProperties(F: TFileStream; Complete:Boolean);Override;
 
             FUNCTION    MakePVSystemList:Boolean;
             FUNCTION    GetPropertyValue(Index:Integer):String;Override;
@@ -1091,7 +1091,7 @@ Begin
 End;
 
 {--------------------------------------------------------------------------}
-PROCEDURE TInvControlObj.DumpProperties(Var F:TFileStream; Complete:Boolean);
+PROCEDURE TInvControlObj.DumpProperties(F: TFileStream; Complete:Boolean);
 
 VAR
    i:Integer;
