@@ -19,6 +19,7 @@ unit Line;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     Circuit,
@@ -138,7 +139,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
         // Public for the COM Interface
         procedure FetchLineCode(const Code: String);
@@ -1266,7 +1267,7 @@ begin
 
 end;
 
-procedure TLineObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TLineObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;
@@ -1279,42 +1280,42 @@ begin
 
     with ParentClass do
     begin
-        Writeln(F, '~ ', PropertyName^[1], '=', firstbus);
-        Writeln(F, '~ ', PropertyName^[2], '=', nextbus);
+        FSWriteln(F, '~ ' + PropertyName^[1] + '=' + firstbus);
+        FSWriteln(F, '~ ' + PropertyName^[2] + '=' + nextbus);
 
-        Writeln(F, '~ ', PropertyName^[3], '=', CondCode);
-        Writeln(F, '~ ', PropertyName^[4], '=', len: 0: 3);
-        Writeln(F, '~ ', PropertyName^[5], '=', Fnphases: 0);
+        FSWriteln(F, '~ ' + PropertyName^[3] + '=' + CondCode);
+        FSWriteln(F, Format('~ %s=%d', [PropertyName^[4], len]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName^[5], Fnphases]));
         if SymComponentsModel then
             rslt := Format('%-.7g', [R1 / FUnitsConvert])
         else
             rslt := '----';
-        Writeln(F, '~ ', PropertyName^[6], '=', Rslt);
+        FSWriteln(F, '~ ' + PropertyName^[6] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [X1 / FUnitsConvert])
         else
             rslt := '----';
-        Writeln(F, '~ ', PropertyName^[7], '=', Rslt);
+        FSWriteln(F, '~ ' + PropertyName^[7] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [R0 / FUnitsConvert])
         else
             rslt := '----';
-        Writeln(F, '~ ', PropertyName^[8], '=', Rslt);
+        FSWriteln(F, '~ ' + PropertyName^[8] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [X0 / FUnitsConvert])
         else
             rslt := '----';
-        Writeln(F, '~ ', PropertyName^[9], '=', Rslt);
+        FSWriteln(F, '~ ' + PropertyName^[9] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [C1 * 1.0e9 / FUnitsConvert])
         else
             rslt := '----';
-        Writeln(F, '~ ', PropertyName^[10], '=', Rslt);
+        FSWriteln(F, '~ ' + PropertyName^[10] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [C0 * 1.0e9 / FUnitsConvert])
         else
             rslt := '----';
-        Writeln(F, '~ ', PropertyName^[11], '=', Rslt);
+        FSWriteln(F, '~ ' + PropertyName^[11] + '=' + Rslt);
 
      // If GeometrySpecified Or SpacingSpecified then length is embedded in Z and Yc    4-9-2020
         if GeometrySpecified or SpacingSpecified then
@@ -1322,47 +1323,47 @@ begin
         else
             LengthMult := 1.0;
 
-        Write(F, '~ ', PropertyName^[12], '=', '"');
+        FSWrite(F, '~ ' + PropertyName^[12] + '=' + '"');
         for i := 1 to Fnphases do
         begin
             for j := 1 to Fnphases do
             begin
-                Write(F, (Z.GetElement(i, j).re / LengthMult / FunitsConvert): 0: 9, ' ');
+                FSWrite(F, Format('%.9g ', [(Z.GetElement(i, j).re / LengthMult / FunitsConvert)]));
             end;
-            Write(F, '|');
+            FSWrite(F, '|');
         end;
-        Writeln(F, '"');
-        Write(F, '~ ', PropertyName^[13], '=', '"');
+        FSWriteln(F, '"');
+        FSWrite(F, '~ ' + PropertyName^[13] + '=' + '"');
         for i := 1 to Fnphases do
         begin
             for j := 1 to Fnphases do
             begin
-                Write(F, (Z.GetElement(i, j).im / LengthMult / FunitsConvert): 0: 9, ' ');
+                FSWrite(F, Format('%.9g ', [(Z.GetElement(i, j).im / LengthMult / FunitsConvert)]));
             end;
-            Write(F, '|');
+            FSWrite(F, '|');
         end;
-        Writeln(F, '"');
-        Write(F, '~ ', PropertyName^[14], '=', '"');
+        FSWriteln(F, '"');
+        FSWrite(F, '~ ' + PropertyName^[14] + '=' + '"');
         for i := 1 to Fnphases do
         begin
             for j := 1 to Fnphases do
             begin
-                Write(F, (Yc.GetElement(i, j).im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9): 0: 3, ' ');
+                FSWrite(F, Format('%.3g ', [(Yc.GetElement(i, j).im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9)]));
             end;
-            Write(F, '|');
+            FSWrite(F, '|');
         end;
-        Writeln(F, '"');
+        FSWriteln(F, '"');
 
-        Write(F, '~ ', PropertyName^[15], '=');
+        FSWrite(F, '~ ' + PropertyName^[15] + '=');
         if IsSwitch then
-            Writeln(F, 'true')
+            FSWriteln(F, 'true')
         else
-            writeln(F, 'false');
+            FSWriteln(F, 'false');
 
          {Dump the rest by default}
         for i := 16 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
     end;
 

@@ -58,6 +58,7 @@ Basic  Reactor
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     PDClass,
@@ -130,7 +131,7 @@ type
         procedure CalcYPrim; OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
                 // CIM XML access - this is only tested for the IEEE 8500-node feeder
         property SimpleR: Double READ R;
@@ -1090,7 +1091,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TReactorObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TReactorObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, j, k: Integer;
@@ -1105,41 +1106,41 @@ begin
                 7:
                     if Rmatrix <> NIL then
                     begin
-                        Write(F, PropertyName^[k], '= (');
+                        FSWrite(F, PropertyName^[k] + '= (');
                         for i := 1 to Fnphases do
                         begin
                             for j := 1 to Fnphases do
-                                Write(F, Format('%-.5g', [RMatrix^[(i - 1) * Fnphases + j]]), ' ');
+                                FSWrite(F, Format('%-.5g ', [RMatrix^[(i - 1) * Fnphases + j]]));
                             if i <> Fnphases then
-                                Write(F, '|');
+                                FSWrite(F, '|');
                         end;
-                        Writeln(F, ')');
+                        FSWriteln(F, ')');
                     end;
                 8:
                     if Xmatrix <> NIL then
                     begin
-                        Write(F, PropertyName^[k], '= (');
+                        FSWrite(F, PropertyName^[k] + '= (');
                         for i := 1 to Fnphases do
                         begin
                             for j := 1 to Fnphases do
-                                Write(F, Format('%-.5g', [XMatrix^[(i - 1) * Fnphases + j]]), ' ');
+                                FSWrite(F, Format('%-.5g ', [XMatrix^[(i - 1) * Fnphases + j]]));
                             if i <> Fnphases then
-                                Write(F, '|');
+                                FSWrite(F, '|');
                         end;
-                        Writeln(F, ')');
+                        FSWriteln(F, ')');
                     end;
                 13:
-                    Writeln(F, Format('~ Z1=[%-.8g, %-.8g]', [Z1.re, Z1.im]));
+                    FSWriteln(F, Format('~ Z1=[%-.8g, %-.8g]', [Z1.re, Z1.im]));
                 14:
-                    Writeln(F, Format('~ Z2=[%-.8g, %-.8g]', [Z2.re, Z2.im]));
+                    FSWriteln(F, Format('~ Z2=[%-.8g, %-.8g]', [Z2.re, Z2.im]));
                 15:
-                    Writeln(F, Format('~ Z0=[%-.8g, %-.8g]', [Z0.re, Z0.im]));
+                    FSWriteln(F, Format('~ Z0=[%-.8g, %-.8g]', [Z0.re, Z0.im]));
                 16:
-                    Writeln(F, Format('~ Z =[%-.8g, %-.8g]', [R, X]));
+                    FSWriteln(F, Format('~ Z =[%-.8g, %-.8g]', [R, X]));
                 19:
-                    Writeln(F, Format('~ LmH=%-.8g', [L * 1000.0]));
+                    FSWriteln(F, Format('~ LmH=%-.8g', [L * 1000.0]));
             else
-                Writeln(F, '~ ', PropertyName^[k], '=', PropertyValue[k]);
+                FSWriteln(F, '~ ' + PropertyName^[k] + '=' + PropertyValue[k]);
             end;
         end;
 

@@ -10,6 +10,7 @@ unit DSSObject;
 interface
 
 uses
+    Classes,
     Arraydef,
     DSSClass,
     NamedObject;
@@ -52,8 +53,8 @@ type
       {Get actual values of properties}
         function GetPropertyValue(Index: Integer): String; VIRTUAL;  // Use dssclass.propertyindex to get index by name
         procedure InitPropertyValues(ArrayOffset: Integer); VIRTUAL;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); VIRTUAL;
-        procedure SaveWrite(var F: TextFile); VIRTUAL;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); VIRTUAL;
+        procedure SaveWrite(var F: TFileStream); VIRTUAL;
 
         procedure ClearPropSeqArray;
 
@@ -109,10 +110,10 @@ begin
 end;
 
 
-procedure TDSSObject.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TDSSObject.DumpProperties(var F: TFileStream; Complete: Boolean);
 begin
-    Writeln(F);
-    Writeln(F, 'New ', DSSClassName, '.', Name);
+    FSWriteln(F);
+    FSWriteln(F, 'New ' + DSSClassName + '.' + Name);
 end;
 
 function TDSSObject.Edit: Integer;
@@ -140,7 +141,7 @@ begin
 
 end;
 
-procedure TDSSObject.SaveWrite(var F: TextFile);
+procedure TDSSObject.SaveWrite(var F: TFileStream);
 var
     iprop: Integer;
     str: String;
@@ -171,8 +172,8 @@ begin
         if Length(str) > 0 then
         begin
             with ParentClass do
-                Write(F, ' ', PropertyName^[RevPropertyIdxMap[iProp]]);
-            Write(F, '=', CheckForBlanks(str));
+                FSWrite(F, ' ' + PropertyName^[RevPropertyIdxMap[iProp]]);
+            FSWrite(F, '=' + CheckForBlanks(str));
         end;
         if LShpFlag then
         begin

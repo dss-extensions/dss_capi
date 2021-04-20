@@ -105,7 +105,7 @@ type
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
        {Properties to interpret input to the sensor}
 
@@ -823,7 +823,7 @@ end;
 
 {==============================================================================}
 
-procedure TSensorObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TSensorObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -834,12 +834,12 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
     if Complete then
     begin
-        Writeln(F);
+        FSWriteln(F);
     end;
 
 end;

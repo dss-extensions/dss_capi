@@ -21,6 +21,7 @@ interface
  }
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -79,7 +80,7 @@ type
         property GMRUnits: Integer READ FGMRUnits;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
     end;
 
@@ -301,7 +302,7 @@ begin
     inherited destroy;
 end;
 
-procedure TConductorDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TConductorDataObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 var
     j,
     i: Integer;
@@ -312,40 +313,40 @@ begin
     begin
         for i := 1 to NumProperties do
         begin
-            Write(F, '~ ', PropertyName^[i], '=');
+            FSWrite(F, '~ ' + PropertyName^[i] + '=');
             case i of
                 1:
-                    Writeln(F, Format('%.6g', [FRDC]));
+                    FSWriteln(F, Format('%.6g', [FRDC]));
                 2:
-                    Writeln(F, Format('%.6g', [FR60]));
+                    FSWriteln(F, Format('%.6g', [FR60]));
                 3:
-                    Writeln(F, Format('%s', [LineUnitsStr(FresistanceUnits)]));
+                    FSWriteln(F, Format('%s', [LineUnitsStr(FresistanceUnits)]));
                 4:
-                    Writeln(F, Format('%.6g', [FGMR60]));
+                    FSWriteln(F, Format('%.6g', [FGMR60]));
                 5:
-                    Writeln(F, Format('%s', [LineUnitsStr(FGMRUnits)]));
+                    FSWriteln(F, Format('%s', [LineUnitsStr(FGMRUnits)]));
                 6:
-                    Writeln(F, Format('%.6g', [Fradius]));
+                    FSWriteln(F, Format('%.6g', [Fradius]));
                 7:
-                    Writeln(F, Format('%s', [LineUnitsStr(FRadiusUnits)]));
+                    FSWriteln(F, Format('%s', [LineUnitsStr(FRadiusUnits)]));
                 8:
-                    Writeln(F, Format('%.6g', [NormAmps]));
+                    FSWriteln(F, Format('%.6g', [NormAmps]));
                 9:
-                    Writeln(F, Format('%.6g', [EmergAmps]));
+                    FSWriteln(F, Format('%.6g', [EmergAmps]));
                 10:
-                    Writeln(F, Format('%.6g', [radius * 2.0]));
+                    FSWriteln(F, Format('%.6g', [radius * 2.0]));
                 11:
-                    Writeln(F, Format('%d', [NumAmpRatings]));
+                    FSWriteln(F, Format('%d', [NumAmpRatings]));
                 12:
                 begin
                     TempStr := '[';
                     for  j := 1 to NumAmpRatings do
                         TempStr := TempStr + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
                     TempStr := TempStr + ']';
-                    Writeln(F, TempStr);
+                    FSWriteln(F, TempStr);
                 end;
                 13: 
-                    Writeln(F, Format('%.6g',[Fcapradius60]));
+                    FSWriteln(F, Format('%.6g',[Fcapradius60]));
             end;
         end;
     end;

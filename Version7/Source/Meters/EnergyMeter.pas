@@ -89,7 +89,6 @@ uses
     PointerList,
     CktTree,
     ucomplex,
-    Feeder,
     Load,
     Generator,
     XYCurve,
@@ -165,13 +164,12 @@ type
         PeakLosseskW: Double;
         FirstSampleAfterReset,
         This_Meter_DIFileIsOpen: Boolean;
-        SystemDIFile: TextFile;
         cPower, cLosses: Complex;
 
         procedure Clear;
         procedure Integrate(var Reg: Double; Value: Double; var Deriv: Double);
-        procedure WriteRegisters(var F: TextFile);
-        procedure WriteRegisterNames(var F: TextFile);
+        procedure WriteRegisters(var F: TFileStream);
+        procedure WriteRegisterNames(var F: TFileStream);
 
     PROTECTED
 
@@ -196,8 +194,6 @@ type
         GeneratorClass: TGenerator;
         FSaveDemandInterval: Boolean;
         FDI_Verbose: Boolean;
-        // FOverLoadFile: Textfile;
-        // FVoltageFile: TextFile;
 
         procedure ProcessOptions(const Opts: String);
         procedure Set_SaveDemandInterval(const Value: Boolean);
@@ -223,8 +219,8 @@ type
 
         DI_RegisterTotals: TRegisterArray;
         DI_Dir: String;
-        FDI_Totals: TextFile;
-        FMeterTotals: TextFile;
+        FDI_Totals: TFileStream;
+        FMeterTotals: TFileStream;
 
         SystemMeter: TSystemMeter;
         Do_OverloadReport: Boolean;
@@ -270,7 +266,6 @@ type
         FVBaseLosses: Boolean;
         FPhaseVoltageReport: Boolean;
 
-        FeederObj: TFeederObj;   // not used at present
         DefinedZoneList: pStringArray;
         DefinedZoneListSize: Integer;
 
@@ -294,11 +289,9 @@ type
         VPhaseMin: pDoubleArray;
         VPhaseAccum: pDoubleArray;
         VPhaseAccumCount: pIntegerArray;
-        // VPhase_File: TextFile;
         VPhaseReportFileIsOpen: Boolean;
 
        {Demand Interval File variables}
-        // DI_File: TextFile;
         This_Meter_DIFileIsOpen: Boolean;
 
 
@@ -312,8 +305,6 @@ type
         function MakeVPhaseReportFileName: String;
         procedure AssignVoltBaseRegisterNames;
 
-    // Not used   Procedure MakeFeederObj;
-    // Not used   Procedure RemoveFeederObj;
         procedure TotalupDownstreamCustomers;
 
 
@@ -378,7 +369,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -1094,7 +1085,6 @@ begin
 
     ZoneIsRadial := TRUE;
     HasFeeder := FALSE; // Not used; leave as False
-    FeederObj := NIL;  // initialize to not assigned
     DefinedZoneList := NIL;
     DefinedZoneListSize := 0;
 
@@ -1369,15 +1359,14 @@ procedure TEnergyMeterObj.SaveRegisters;
 
 var
     CSVName: String;
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
-
+    sout: String;
 begin
 
     try
         CSVName := 'MTR_' + Name + '.CSV';
-        AssignFile(F, GetOutputDirectory + CSVName);
-        Rewrite(F);
+        F := TFileStream.Create(GetOutputDirectory + CSVName, fmCreate);
         GlobalResult := CSVName;
         SetLastResultFile(CSVName);
 
@@ -1385,17 +1374,22 @@ begin
         On E: Exception do
         begin
             DoSimpleMsg('Error opening Meter File "' + CRLF + CSVName + '": ' + E.Message, 526);
+            FreeAndNil(F);
             Exit;
         end
     end;
 
     try
-//       Writeln(F,'**** NEW RECORD ****');
-        Writeln(F, 'Year, ', ActiveCircuit.Solution.Year: 0, ',');
+//       FSWriteln(F,'**** NEW RECORD ****');
+        WriteStr(sout, 'Year, ', ActiveCircuit.Solution.Year: 0, ',');
+        FSWriteLn(F, sout);
         for i := 1 to NumEMregisters do
-            Writeln(F, '"', RegisterNames[i], '",', Registers[i]: 0: 0);
+        begin
+            WriteStr(sout, '"', RegisterNames[i], '",', Registers[i]: 0: 0);
+            FSWriteLn(F, sout);
+        end;
     finally
-        CloseFile(F);
+        F.Free();
     end;
 
 end;
@@ -2207,7 +2201,7 @@ procedure TEnergyMeterObj.ZoneDump;
 
 var
     CSVName: String;
-    F: TextFile;
+    F: TFileStream = nil;
     pdelem: TPDelement;
     LoadElem: TDSSCktElement;
 
@@ -2216,8 +2210,7 @@ begin
     try
 
         CSVName := 'Zone_' + Name + '.CSV';
-        AssignFile(F, GetOutputDirectory + CSVName);
-        Rewrite(F);
+        F := TFileStream.Create(GetOutputDirectory + CSVName, fmCreate);
 
         GlobalResult := CSVName;
         SetLastResultFile(CSVName);
@@ -2227,20 +2220,21 @@ begin
         On E: Exception do
         begin
             DoSimpleMsg('Error opening File "' + CSVName + '": ' + E.Message, 528);
+            FreeAndNil(F);
             Exit;
         end;
 
     end;
 
     try
-        Writeln(F, 'Level, Branch, Bus1, Bus2, Distance');
+        FSWriteln(F, 'Level, Branch, Bus1, Bus2, Distance');
         if BranchList <> NIL then
         begin
             PDElem := BranchList.First;
             while PDElem <> NIL do
                 with ActiveCircuit do
                 begin
-                    Writeln(F, Format('%d, %s.%s, %s, %s, %10.4f',
+                    FSWriteln(F, Format('%d, %s.%s, %s, %s, %10.4f',
                         [BranchList.Level, PDelem.ParentClass.Name, PDelem.Name,
                         PDelem.FirstBus, PDelem.NextBus,
                   {BusList.Get(BranchList.PresentBranch.ToBusReference),}
@@ -2248,7 +2242,8 @@ begin
                     LoadElem := Branchlist.FirstObject;
                     while LoadElem <> NIL do
                     begin
-                        Writeln(F, '-1, ', Format('%s.%s, %s', [LoadElem.ParentClass.Name, LoadElem.Name, LoadElem.Firstbus{ActiveCircuit.BusList.Get(BranchList.PresentBranch.ToBusReference)}]));
+                        FSWrite(F, '-1, ');
+                        FSWriteln(F, Format('%s.%s, %s', [LoadElem.ParentClass.Name, LoadElem.Name, LoadElem.Firstbus{ActiveCircuit.BusList.Get(BranchList.PresentBranch.ToBusReference)}]));
                         LoadElem := BranchList.NextObject
                     end;
                     PDElem := BranchList.GoForward;
@@ -2256,13 +2251,13 @@ begin
         end;
 
     finally
-        Closefile(F);
+        FreeAndNil(F);
     end;
 end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TEnergyMeterObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TEnergyMeterObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -2278,48 +2273,48 @@ begin
             case i of
                 4:
                 begin     // option
-                    Write(F, '~ ', PropertyName^[i], '=(');
+                    FSWrite(F, '~ ', PropertyName^[i], '=(');
                     if ExcessFlag then
-                        Write(F, 'E,')
+                        FSWrite(F, 'E,')
                     else
-                        Write(F, 'T,');
+                        FSWrite(F, 'T,');
                     if ZoneIsRadial then
-                        Write(F, ' R,')
+                        FSWrite(F, ' R,')
                     else
-                        Write(F, ' M,');
+                        FSWrite(F, ' M,');
                     if VoltageUEOnly then
-                        Write(F, ' V')
+                        FSWrite(F, ' V')
                     else
-                        Write(F, ' C');
-                    Writeln(F, ')');
+                        FSWrite(F, ' C');
+                    FSWriteln(F, ')');
                 end;
                 7:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[i], ')');
+                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[i] + ')');
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
             end;
 
     if complete then
     begin
 
-        Writeln(F, 'Registers');
+        FSWriteln(F, 'Registers');
         for i := 1 to NumEMregisters do
         begin
-            Writeln(F, '"', RegisterNames[i], '" = ', Registers[i]: 0: 0);
+            FSWriteln(F, Format('"%s" = %.0g', [RegisterNames[i], Registers[i]]));
         end;
-        Writeln(F);
+        FSWriteln(F);
 
-        Writeln(F, 'Branch List:');
+        FSWriteln(F, 'Branch List:');
         if BranchList <> NIL then
         begin
             PDElem := BranchList.First;
             while PDElem <> NIL do
             begin
-                Writeln(F, 'Circuit Element = ', PDelem.Name);
+                FSWriteln(F, 'Circuit Element = ', PDelem.Name);
                 LoadElem := Branchlist.FirstObject;
                 while LoadElem <> NIL do
                 begin
-                    Writeln(F, '   Shunt Element = ', LoadElem.ParentClass.name, '.', LoadElem.Name);
+                    FSWriteln(F, '   Shunt Element = ' + LoadElem.ParentClass.name + '.' + LoadElem.Name);
                     LoadElem := BranchList.NextObject
                 end;
                 PDElem := BranchList.GoForward;
@@ -2959,239 +2954,235 @@ begin
 end;
 
 procedure TEnergyMeterObj.SaveZone(const dirname: String);
-
 var
     cktElem, shuntElement: TDSSCktElement;
     LoadElement: TLoadObj;
     pControlElem: TDSSCktElement;
-    FBranches, FShunts, FLoads, FGens, FCaps, FXfmrs: TextFile;
+    FBranches, FShunts, FLoads, FGens, FCaps, FXfmrs: TFileStream;
     NBranches, NShunts, Nloads, NGens, NCaps, NXfmrs: Integer;
-
-
 begin
  {We are in the directory indicated by dirname}
 
 {Run down the zone and write each element into a file}
 
-    if BranchList <> NIL then
-    begin
+    if BranchList = NIL then
+        Exit;
+
+    FBranches := nil;
+    FShunts := nil;
+    FLoads := nil;
+    FGens := nil;
+    FCaps := nil; 
+    FXfmrs := nil;
+        
     {Open some files:}
 
-        try
-            AssignFile(FBranches, CurrentDSSDir + 'Branches.dss');     // Both lines and transformers
-            Rewrite(FBranches);
-            NBranches := 0;
-        except
-            On E: Exception do
-            begin
-                DoSimpleMsg('Error creating Branches.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 530);
-                CloseFile(FBranches);
-                Exit;
-            end;
+    try
+        FBranches := TFileStream.Create(CurrentDSSDir + 'Branches.dss', fmCreate);     // Both lines and transformers
+        NBranches := 0;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error creating Branches.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 530);
+            FreeAndNil(FBranches);
+            Exit;
         end;
+    end;
 
-        try
-            AssignFile(FXfmrs, CurrentDSSDir + 'Transformers.dss');     // Both lines and transformers
-            Rewrite(FXfmrs);
-            NXfmrs := 0;
-        except
-            On E: Exception do
-            begin
-                DoSimpleMsg('Error creating Transformers.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 53001);
-                CloseFile(FXfmrs);
-                Exit;
-            end;
+    try
+        FXfmrs := TFileStream.Create(CurrentDSSDir + 'Transformers.dss', fmCreate);     // Both lines and transformers
+        NXfmrs := 0;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error creating Transformers.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 53001);
+            FreeAndNil(FXfmrs);
+            Exit;
         end;
+    end;
 
-        try
-            AssignFile(FShunts, CurrentDSSDir + 'Shunts.dss');
-            Rewrite(FShunts);
-            NShunts := 0;
-        except
-            On E: Exception do
-            begin
-                DoSimpleMsg('Error creating Shunts.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 531);
-                CloseFile(FShunts);
-                Exit;
-            end;
+    try
+        FShunts := TFileStream.Create(CurrentDSSDir + 'Shunts.dss', fmCreate);
+        NShunts := 0;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error creating Shunts.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 531);
+            FreeAndNil(FShunts);
+            Exit;
         end;
+    end;
 
-        try
-            AssignFile(FLoads, CurrentDSSDir + 'Loads.dss');
-            Rewrite(FLoads);
-            Nloads := 0;
-        except
-            On E: Exception do
-            begin
-                DoSimpleMsg('Error creating Loads.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 532);
-                CloseFile(FLoads);
-                Exit;
-            end;
+    try
+        FLoads := TFileStream.Create(CurrentDSSDir + 'Loads.dss', fmCreate);
+        Nloads := 0;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error creating Loads.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 532);
+            FreeAndNil(FLoads);
+            Exit;
         end;
+    end;
 
-        try
-            AssignFile(FGens, CurrentDSSDir + 'Generators.dss');
-            Rewrite(FGens);
-            NGens := 0;
-        except
-            On E: Exception do
-            begin
-                DoSimpleMsg('Error creating Generators.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 533);
-                CloseFile(FGens);
-                Exit;
-            end;
+    try
+        FGens := TFileStream.Create(CurrentDSSDir + 'Generators.dss', fmCreate);
+        NGens := 0;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error creating Generators.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 533);
+            FreeAndNil(FGens);
+            Exit;
         end;
+    end;
 
-        try
-            AssignFile(FCaps, CurrentDSSDir + 'Capacitors.dss');
-            Rewrite(FCaps);
-            Ncaps := 0;
-        except
-            On E: Exception do
-            begin
-                DoSimpleMsg('Error creating Capacitors.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 534);
-                CloseFile(FCaps);
-                Exit;
-            end;
+    try
+        FCaps := TFileStream.Create(CurrentDSSDir + 'Capacitors.dss', fmCreate);
+        Ncaps := 0;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error creating Capacitors.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 534);
+            FreeAndNil(FCaps);
+            Exit;
         end;
+    end;
 
 
-        cktElem := BranchList.First;
-        with ActiveCircuit do
-            while cktElem <> NIL do
+    cktElem := BranchList.First;
+    with ActiveCircuit do
+        while cktElem <> NIL do
+        begin
+            if CktElem.Enabled then
             begin
-                if CktElem.Enabled then
+                ActiveCktElement := cktElem;
+
+                if (CktElem.DSSObjType and Classmask) = XFMR_ELEMENT then
                 begin
-                    ActiveCktElement := cktElem;
-
-                    if (CktElem.DSSObjType and Classmask) = XFMR_ELEMENT then
+                    Inc(NXfmrs);
+                    WriteActiveDSSObject(FXfmrs, 'New');     // sets HasBeenSaved := TRUE
+                    if cktElem.HasControl then
                     begin
-                        Inc(NXfmrs);
-                        WriteActiveDSSObject(FXfmrs, 'New');     // sets HasBeenSaved := TRUE
-                        if cktElem.HasControl then
+                        pControlElem := cktElem.ControlElementList.First;
+                        while pControlElem <> NIL do
                         begin
-                            pControlElem := cktElem.ControlElementList.First;
+                            ActiveCktElement := pControlElem;
+                            WriteActiveDSSObject(FXfmrs, 'New');  //  regulator control ...Also, relays, switch controls
+                            pControlElem := cktElem.ControlElementList.Next;
+                        end;
+                    end;
+                end
+                else
+                begin  {Mostly LINE elements}
+                    Inc(NBranches);
+                    WriteActiveDSSObject(FBranches, 'New');     // sets HasBeenSaved := TRUE
+                    if cktElem.HasControl then
+                    begin
+                        pControlElem := cktElem.ControlElementList.First;
+                        while pControlElem <> NIL do
+                        begin
+                            ActiveCktElement := pControlElem;
+                            WriteActiveDSSObject(FBranches, 'New');  //  regulator control ...Also, relays, switch controls
+                            pControlElem := cktElem.ControlElementList.Next;
+                        end;
+                    end;
+                end;
+
+
+                shuntElement := Branchlist.FirstObject;
+                while shuntElement <> NIL do
+                begin
+                    ActiveCktElement := shuntElement;
+                    if (shuntElement.DSSObjType and Classmask) = LOAD_ELEMENT then
+                    begin
+                        LoadElement := TLoadObj(shuntElement);
+                        if LoadElement.HasBeenAllocated then
+                        begin
+                   {Manually set the allocation factor so it shows up}
+                            Parser.CmdString := 'allocationfactor=' + Format('%-.4g', [LoadElement.AllocationFactor]);
+                            LoadElement.Edit;
+                        end;
+                        ActiveCktElement := shuntElement; // reset in case Edit mangles it
+                        Inc(NLoads);
+                        WriteActiveDSSObject(FLoads, 'New');
+                    end
+                    else
+                    if (shuntElement.DSSObjType and Classmask) = GEN_ELEMENT then
+                    begin
+                        Inc(NGens);
+                        WriteActiveDSSObject(FGens, 'New');
+                        if shuntElement.HasControl then
+                        begin
+                            pControlElem := shuntElement.ControlElementList.First;
                             while pControlElem <> NIL do
                             begin
                                 ActiveCktElement := pControlElem;
-                                WriteActiveDSSObject(FXfmrs, 'New');  //  regulator control ...Also, relays, switch controls
-                                pControlElem := cktElem.ControlElementList.Next;
+                                WriteActiveDSSObject(FGens, 'New');
+                                pControlElem := shuntElement.ControlElementList.Next;
                             end;
                         end;
                     end
                     else
-                    begin  {Mostly LINE elements}
-                        Inc(NBranches);
-                        WriteActiveDSSObject(FBranches, 'New');     // sets HasBeenSaved := TRUE
-                        if cktElem.HasControl then
+                    if (shuntElement.DSSObjType and Classmask) = CAP_ELEMENT then
+                    begin
+                        Inc(NCaps);
+                        WriteActiveDSSObject(FCaps, 'New');
+                        if shuntElement.HasControl then
                         begin
-                            pControlElem := cktElem.ControlElementList.First;
+                            pControlElem := shuntElement.ControlElementList.First;
                             while pControlElem <> NIL do
                             begin
                                 ActiveCktElement := pControlElem;
-                                WriteActiveDSSObject(FBranches, 'New');  //  regulator control ...Also, relays, switch controls
-                                pControlElem := cktElem.ControlElementList.Next;
+                                WriteActiveDSSObject(FCaps, 'New');
+                                pControlElem := shuntElement.ControlElementList.Next;
                             end;
                         end;
-                    end;
-
-
-                    shuntElement := Branchlist.FirstObject;
-                    while shuntElement <> NIL do
+                    end
+                    else
                     begin
-                        ActiveCktElement := shuntElement;
-                        if (shuntElement.DSSObjType and Classmask) = LOAD_ELEMENT then
-                        begin
-                            LoadElement := TLoadObj(shuntElement);
-                            if LoadElement.HasBeenAllocated then
-                            begin
-                       {Manually set the allocation factor so it shows up}
-                                Parser.CmdString := 'allocationfactor=' + Format('%-.4g', [LoadElement.AllocationFactor]);
-                                LoadElement.Edit;
-                            end;
-                            ActiveCktElement := shuntElement; // reset in case Edit mangles it
-                            Inc(NLoads);
-                            WriteActiveDSSObject(FLoads, 'New');
-                        end
-                        else
-                        if (shuntElement.DSSObjType and Classmask) = GEN_ELEMENT then
-                        begin
-                            Inc(NGens);
-                            WriteActiveDSSObject(FGens, 'New');
-                            if shuntElement.HasControl then
-                            begin
-                                pControlElem := shuntElement.ControlElementList.First;
-                                while pControlElem <> NIL do
-                                begin
-                                    ActiveCktElement := pControlElem;
-                                    WriteActiveDSSObject(FGens, 'New');
-                                    pControlElem := shuntElement.ControlElementList.Next;
-                                end;
-                            end;
-                        end
-                        else
-                        if (shuntElement.DSSObjType and Classmask) = CAP_ELEMENT then
-                        begin
-                            Inc(NCaps);
-                            WriteActiveDSSObject(FCaps, 'New');
-                            if shuntElement.HasControl then
-                            begin
-                                pControlElem := shuntElement.ControlElementList.First;
-                                while pControlElem <> NIL do
-                                begin
-                                    ActiveCktElement := pControlElem;
-                                    WriteActiveDSSObject(FCaps, 'New');
-                                    pControlElem := shuntElement.ControlElementList.Next;
-                                end;
-                            end;
-                        end
-                        else
-                        begin
-                            Inc(NShunts);
-                            WriteActiveDSSObject(Fshunts, 'New');
-                        end;
-                        shuntElement := BranchList.NextObject
+                        Inc(NShunts);
+                        WriteActiveDSSObject(Fshunts, 'New');
                     end;
-                end; {if enabled}
+                    shuntElement := BranchList.NextObject
+                end;
+            end; {if enabled}
 
-                cktElem := BranchList.GoForward;
-            end;{WHILE}
+            cktElem := BranchList.GoForward;
+        end;{WHILE}
 
-        CloseFile(FBranches);
-        CloseFile(FXfmrs);
-        CloseFile(Fshunts);
-        CloseFile(FLoads);
-        CloseFile(FGens);
-        CloseFile(FCaps);
+    FreeAndNil(FBranches);
+    FreeAndNil(FXfmrs);
+    FreeAndNil(Fshunts);
+    FreeAndNil(FLoads);
+    FreeAndNil(FGens);
+    FreeAndNil(FCaps);
 
-     {If any records were written to the file, record their relative names}
-        if NBranches > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Branches.dss')
-        else
-            DeleteFile('Branches.dss');
-        if NXfmrs > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Transformers.dss')
-        else
-            DeleteFile('Transformers.dss');
-        if NShunts > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Shunts.dss')
-        else
-            DeleteFile('Shunts.dss');
-        if NLoads > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Loads.dss')
-        else
-            DeleteFile('Loads.dss');
-        if NGens > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Generators.dss')
-        else
-            DeleteFile('Generators.dss');
-        if NCaps > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Capacitors.dss')
-        else
-            DeleteFile('Capacitors.dss');
-
-    end; {IF}
-
+ {If any records were written to the file, record their relative names}
+    if NBranches > 0 then
+        SavedFileList.Add(dirname + PathDelim + 'Branches.dss')
+    else
+        DeleteFile('Branches.dss');
+    if NXfmrs > 0 then
+        SavedFileList.Add(dirname + PathDelim + 'Transformers.dss')
+    else
+        DeleteFile('Transformers.dss');
+    if NShunts > 0 then
+        SavedFileList.Add(dirname + PathDelim + 'Shunts.dss')
+    else
+        DeleteFile('Shunts.dss');
+    if NLoads > 0 then
+        SavedFileList.Add(dirname + PathDelim + 'Loads.dss')
+    else
+        DeleteFile('Loads.dss');
+    if NGens > 0 then
+        SavedFileList.Add(dirname + PathDelim + 'Generators.dss')
+    else
+        DeleteFile('Generators.dss');
+    if NCaps > 0 then
+        SavedFileList.Add(dirname + PathDelim + 'Capacitors.dss')
+    else
+        DeleteFile('Capacitors.dss');
 end;
 
 
@@ -3743,7 +3734,6 @@ begin
 
     try
         FileNm := EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter.CSV';
-        AssignFile(SystemDIFile, FileNm);
       {File Must Exist}
         if FileExists(FileNm) then
         begin
@@ -3755,7 +3745,9 @@ begin
         This_Meter_DIFileIsOpen := TRUE;
     except
         On E: Exception do
+        begin
             DosimpleMsg('Error opening demand interval file "' + FileNm + ' for appending.' + CRLF + E.Message, 540);
+        end;
     end;
 
 end;
@@ -3843,7 +3835,7 @@ end;
 
 procedure TSystemMeter.Save;
 var
-    F: Textfile;
+    F: TFileStream;
     CSVName, Folder: String;
 begin
     try
@@ -3939,12 +3931,12 @@ begin
 
 end;
 
-procedure TSystemMeter.WriteRegisterNames(var F: TextFile);
+procedure TSystemMeter.WriteRegisterNames(var F: TFileStream);
 begin
 // Does nothing
 end;
 
-procedure TSystemMeter.WriteRegisters(var F: TextFile);
+procedure TSystemMeter.WriteRegisters(var F: TFileStream);
 begin
     WriteintoMem(SM_MHandle, kWh);
     WriteintoMem(SM_MHandle, kvarh);

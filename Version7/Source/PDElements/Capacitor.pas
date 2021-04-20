@@ -46,6 +46,7 @@ unit Capacitor;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     PDClass,
@@ -122,7 +123,7 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
         function AddStep: Boolean;
@@ -766,7 +767,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TCapacitorObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TCapacitorObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;
@@ -776,47 +777,45 @@ begin
 
     with ParentClass do
     begin
-        Writeln(F, '~ ', PropertyName^[1], '=', firstbus);
-        Writeln(F, '~ ', PropertyName^[2], '=', nextbus);
-
-        Writeln(F, '~ ', PropertyName^[3], '=', Fnphases: 0);
-        Writeln(F, '~ ', PropertyName^[4], '=', GetPropertyValue(4));
-
-        Writeln(F, '~ ', PropertyName^[5], '=', kVRating: 0: 3);
+        FSWriteln(F, Format('~ %s=%s', [PropertyName^[1], firstbus]));
+        FSWriteln(F, Format('~ %s=%s', [PropertyName^[2], nextbus]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName^[3], Fnphases]));
+        FSWriteln(F, Format('~ %s=%s', [PropertyName^[4], GetPropertyValue(4)]));
+        FSWriteln(F, Format('~ %s=%-.3g', [PropertyName^[5], '=', kVRating]));
         case Connection of
             0:
-                Writeln(F, '~ ', PropertyName^[6], '=wye');
+                FSWriteln(F, '~ ', PropertyName^[6], '=wye');
             1:
-                Writeln(F, '~ ', PropertyName^[6], '=delta');
+                FSWriteln(F, '~ ', PropertyName^[6], '=delta');
         end;
         if Cmatrix <> NIL then
         begin
-            Write(F, PropertyName^[7], '= (');
+            FSWrite(F, PropertyName^[7], '= (');
             for i := 1 to Fnphases do
             begin
                 for j := 1 to i do
-                    Write(F, (CMatrix^[(i - 1) * Fnphases + j] * 1.0e6): 0: 3, ' ');
+                    FSWrite(F, Format('%.3g ', [(CMatrix^[(i - 1) * Fnphases + j] * 1.0e6)]));
                 if i <> Fnphases then
-                    Write(F, '|');
+                    FSWrite(F, '|');
             end;
-            Writeln(F, ')');
+            FSWriteln(F, ')');
         end;
 
-        Writeln(F, '~ ', PropertyName^[8], '=', GetPropertyValue(8));
-        Writeln(F, '~ ', PropertyName^[9], '=', GetPropertyValue(9));
-        Writeln(F, '~ ', PropertyName^[10], '=', GetPropertyValue(10));
-        Writeln(F, '~ ', PropertyName^[11], '=', GetPropertyValue(11));
-        Writeln(F, '~ ', PropertyName^[12], '=', FNumSteps);
-        Writeln(F, '~ ', PropertyName^[13], '=', GetPropertyValue(13));
+        FSWriteln(F, '~ ' + PropertyName^[8], '=', GetPropertyValue(8));
+        FSWriteln(F, '~ ' + PropertyName^[9], '=', GetPropertyValue(9));
+        FSWriteln(F, '~ ' + PropertyName^[10], '=', GetPropertyValue(10));
+        FSWriteln(F, '~ ' + PropertyName^[11], '=', GetPropertyValue(11));
+        FSWriteln(F, '~ ' + PropertyName^[12], '=', IntToStr(FNumSteps));
+        FSWriteln(F, '~ ' + PropertyName^[13], '=', GetPropertyValue(13));
 
         for i := NumPropsthisClass + 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
         if Complete then
         begin
-            Writeln(F, 'SpecType=', SpecType: 0);
+            FSWriteln(F, 'SpecType=', IntToStr(SpecType));
         end;
     end;
 

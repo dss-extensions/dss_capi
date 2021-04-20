@@ -19,6 +19,7 @@ unit GICTransformer;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     PDClass,
@@ -78,9 +79,9 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
-        procedure WriteVarOutputRecord(var F: TextFile); // Add a record to the ouput file based on present GIC
+        procedure WriteVarOutputRecord(var F: TFileStream); // Add a record to the ouput file based on present GIC
     end;
 
 var
@@ -570,7 +571,7 @@ begin
 end;
 
 //- - - - - - - - VAR EXPORT - - - - - - - - - - - - - - - - - - - -
-procedure TGICTransformerObj.WriteVarOutputRecord(var F: TextFile);
+procedure TGICTransformerObj.WriteVarOutputRecord(var F: TFileStream);
 var
     Curr: Complex;
     MVarMag: Double;
@@ -601,7 +602,7 @@ begin
             MvarMag := 0.0;
     end;
 
-    Writeln(F, Format('%s, %.8g, %.8g', [GetBus(1), MVarMag, (GICperPhase)]));
+    FSWriteln(F, Format('%s, %.8g, %.8g', [GetBus(1), MVarMag, (GICperPhase)]));
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -718,7 +719,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TGICTransformerObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TGICTransformerObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -729,32 +730,32 @@ begin
 
     with ParentClass do
     begin
-        Writeln(F, '~ ', PropertyName^[1], '=', firstbus);
-        Writeln(F, '~ ', PropertyName^[2], '=', nextbus);
-        Writeln(F, '~ ', PropertyName^[3], '=', nextbus);
-        Writeln(F, '~ ', PropertyName^[4], '=', nextbus);
+        FSWriteln(F, '~ ' + PropertyName^[1] + '=' + firstbus);
+        FSWriteln(F, '~ ' + PropertyName^[2] + '=' + nextbus);
+        FSWriteln(F, '~ ' + PropertyName^[3] + '=' + nextbus);
+        FSWriteln(F, '~ ' + PropertyName^[4] + '=' + nextbus);
 
-        Writeln(F, '~ ', PropertyName^[5], '=', Fnphases: 0);
+        FSWriteln(F, '~ ' + PropertyName^[5] + '=' + IntToStr(Fnphases));
         case Spectype of
             SPEC_GSU:
-                Writeln(F, '~ ', PropertyName^[6], '= GSU');
+                FSWriteln(F, '~ ', PropertyName^[6], '= GSU');
             SPEC_AUTO:
-                Writeln(F, '~ ', PropertyName^[6], '= AUTO');
+                FSWriteln(F, '~ ', PropertyName^[6], '= AUTO');
             SPEC_YY:
-                Writeln(F, '~ ', PropertyName^[6], '= YY');
+                FSWriteln(F, '~ ', PropertyName^[6], '= YY');
         end;
-        Writeln(F, '~ ', PropertyName^[7], '=', Format('%.8g', [1.0 / G1]));
-        Writeln(F, '~ ', PropertyName^[8], '=', Format('%.8g', [1.0 / G2]));
-        Writeln(F, '~ ', PropertyName^[9], '=', FkV1: 0: 2);
-        Writeln(F, '~ ', PropertyName^[10], '=', FkV2: 0: 2);
-        Writeln(F, '~ ', PropertyName^[11], '=', FMVARating: 0: 2);
-        Writeln(F, '~ ', PropertyName^[12], '=', FVarcurve);
-        Writeln(F, '~ ', PropertyName^[13], '=', Format('%.8g', [FpctR1]));
-        Writeln(F, '~ ', PropertyName^[14], '=', Format('%.8g', [FpctR2]));
+        FSWriteln(F, Format('~ %s=%.8g', [PropertyName^[7], 1.0 / G1]));
+        FSWriteln(F, Format('~ %s=%.8g', [PropertyName^[8], 1.0 / G2]));
+        FSWriteln(F, Format('~ %s=%.2g', [PropertyName^[9], FkV1]));
+        FSWriteln(F, Format('~ %s=%.2g', [PropertyName^[10], FkV2]));
+        FSWriteln(F, Format('~ %s=%.2g', [PropertyName^[11], FMVARating]));
+        FSWriteln(F, Format('~ %s=%s', [PropertyName^[12], FVarcurve]));
+        FSWriteln(F, Format('~ %s=%.8g', [PropertyName^[13], FpctR1]));
+        FSWriteln(F, Format('~ %s=%.8g', [PropertyName^[14], FpctR2]));
 
         for i := NumPropsthisClass + 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
     end;

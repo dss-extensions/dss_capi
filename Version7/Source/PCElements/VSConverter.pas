@@ -9,6 +9,7 @@ unit VSConverter;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     PCClass,
@@ -70,7 +71,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
     end;
 
 var
@@ -566,46 +567,46 @@ begin
     ITerminalUpdated := FALSE;
 end;
 
-procedure TVSConverterObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TVSConverterObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin
     inherited DumpProperties(F, complete);
     with ParentClass do
     begin
-        Writeln(F, '~ ', PropertyName^[1], '=', Fnphases: 0);
-        Writeln(F, '~ ', PropertyName^[2], '=', firstbus);
-        Writeln(F, '~ ', PropertyName^[3], '=', FkVac: 8: 1);
-        Writeln(F, '~ ', PropertyName^[4], '=', FkVdc: 8: 1);
-        Writeln(F, '~ ', PropertyName^[5], '=', FkW: 8: 1);
-        Writeln(F, '~ ', PropertyName^[6], '=', FNdc: 0);
-        Writeln(F, '~ ', PropertyName^[7], '=', FRac: 0: 4);
-        Writeln(F, '~ ', PropertyName^[8], '=', FXac: 0: 4);
-        Writeln(F, '~ ', PropertyName^[9], '=', Fm: 0: 4);
-        Writeln(F, '~ ', PropertyName^[10], '=', Fd: 0: 4);
-        Writeln(F, '~ ', PropertyName^[11], '=', FMinM: 0: 4);
-        Writeln(F, '~ ', PropertyName^[12], '=', FMaxM: 0: 4);
-        Writeln(F, '~ ', PropertyName^[13], '=', FMaxIac: 0: 4);
-        Writeln(F, '~ ', PropertyName^[14], '=', FMaxIdc: 0: 4);
-        Writeln(F, '~ ', PropertyName^[15], '=', FRefVac: 0: 4);
-        Writeln(F, '~ ', PropertyName^[16], '=', FRefPac: 0: 4);
-        Writeln(F, '~ ', PropertyName^[17], '=', FRefQac: 0: 4);
-        Writeln(F, '~ ', PropertyName^[18], '=', FRefVdc: 0: 4);
+        FSWriteln(F, Format('~ %s=%d', [PropertyName^[1], Fnphases]));
+        FSWriteln(F, Format('~ %s=%s', [PropertyName^[2], firstbus]));
+        FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[3], FkVac]));
+        FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[4], FkVdc]));
+        FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[5], FkW]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName^[6], FNdc]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[7], FRac]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[8], FXac]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[9], Fm]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[10], Fd]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[11], FMinM]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[12], FMaxM]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[13], FMaxIac]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[14], FMaxIdc]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[15], FRefVac]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[16], FRefPac]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[17], FRefQac]));
+        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[18], FRefVdc]));
         case Fmode of
             VSC_FIXED:
-                Writeln(F, '~ ', PropertyName^[19], '= Fixed');
+                FSWriteln(F, '~ ' + PropertyName^[19] + '= Fixed');
             VSC_PACVAC:
-                Writeln(F, '~ ', PropertyName^[19], '= PacVac');
+                FSWriteln(F, '~ ' + PropertyName^[19] + '= PacVac');
             VSC_PACQAC:
-                Writeln(F, '~ ', PropertyName^[19], '= PacQac');
+                FSWriteln(F, '~ ' + PropertyName^[19] + '= PacQac');
             VSC_VDCVAC:
-                Writeln(F, '~ ', PropertyName^[19], '= VdcVac');
+                FSWriteln(F, '~ ' + PropertyName^[19] + '= VdcVac');
             VSC_VDCQAC:
-                Writeln(F, '~ ', PropertyName^[19], '= VdcQac');
+                FSWriteln(F, '~ ' + PropertyName^[19] + '= VdcQac');
         end;
         for i := NumPropsthisClass + 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
     end;
 end;

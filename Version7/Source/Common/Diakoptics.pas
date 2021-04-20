@@ -188,10 +188,6 @@ var
   col,
   idx       : Integer;
   TempMat   : TcMatrix;
-// 4 Debugging
-//  myFile    : TextFile;
-//  Text      : String;
-
 Begin
   WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
   Begin
@@ -234,10 +230,6 @@ var
   CVector,
   ZVector   : pComplexArray;
   Ctemp     : Complex;
-// 4 Debugging
-//  myFile    : TextFile;
-//  Text      : String;
-
 Begin
   WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
   Begin
@@ -296,8 +288,6 @@ var
   Node_Names  : Array of String;
   temp        : String;
   Go_Flag     : Boolean;
-
-  myFile      : TextFile;         // For debugging
 Begin
   ActiveActor   :=  1;
   WITH ActiveCircuit DO

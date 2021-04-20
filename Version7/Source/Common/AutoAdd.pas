@@ -27,7 +27,8 @@ uses
     HashList,
     Arraydef,
     Generator,
-    Capacitor;
+    Capacitor,
+    Classes;
 
 type
     TAutoAdd = class(TObject)
@@ -50,7 +51,7 @@ type
         kWLosses, BaseLosses, puLossImprovement: Double;
         kWEEN, BaseEEN, puEENImprovement: Double;
 
-        FLog: Textfile;  // Log File
+        FLog: TFileStream;  // Log File
 
         ProgressCount: Integer;
 
@@ -270,28 +271,29 @@ end;
 procedure TAutoAdd.AppendToFile(const WhichFile, S: String);
 
 var
-    F: TextFile;
+    F: TFileStream;
     Fname: String;
 
 begin
-
+    F := nil;
     try
         FName := GetOutputDirectory + CircuitName_ + 'AutoAdded' + WhichFile + '.txt';
-        AssignFile(F, Fname);
-
         if FileExists(FName) then
-            Append(F)
+        begin
+            F := TFileStream.Create(Fname, fmOpenReadWrite);
+            F.Seek(0, soEnd);
+        end
         else
-            ReWrite(F);
+            F := TFileStream.Create(Fname, fmCreate);
 
-        Writeln(F, S);
-
+        FSWriteLn(F, S);
     except
         On E: EXCEPTion do
             DoSimpleMsg('Error TRYing to append to ' + Fname + CRLF +
                 E.Message, 438);
     end;
-    CloseFile(F);
+    if F <> nil then
+        F.Free();
 end;
 
 
@@ -372,7 +374,7 @@ var
     ProgressMax: Integer;
 
 begin
-
+    FLog := nil;
 {  Algorithm:
      1) makes a list of buses to check, either
         a. Previously defined list
@@ -385,319 +387,312 @@ begin
 
 }
     Result := 0;
-
-    with ActiveCircuit, ActiveCircuit.Solution do
+    try
     begin
-
-
-        if (LoadModel = ADMITTANCE) then
+        with ActiveCircuit, ActiveCircuit.Solution do
         begin
-            LoadModel := POWERFLOW;
-            SystemYChanged := TRUE;  // Force rebuild of System Y without Loads
-        end;
 
-    {Do a preliminary snapshot solution to Force definition of meter zones
-     And set bus lists}
-        EnergyMeterClass.ResetAll;
-        if SystemYChanged or ActiveCircuit.BusNameRedefined then
-        begin
-            SolveSnap;
-            ModeChanged := TRUE;
-        end;
 
-        EnergyMeterClass.SampleAll;
-
-    { Check to see if bus base voltages have been defined }
-        if Buses^[NumBuses].kVBase = 0.0 then
-            SetVoltageBases;
-
-        if ModeChanged then
-        begin
-            MakeBusList;  // Make list of buses to check
-            ModeChanged := FALSE;  {Keep same BusIdxList if no changes}
-        end;
-
-        IntervalHrs := 1.0;
-
-    {Start up Log File}
-
-        AssignFile(FLog, GetOutputDirectory + CircuitName_ + 'AutoAddLog.CSV');
-        Rewrite(FLog);
-        Writeln(Flog, '"Bus", "Base kV", "kW Losses", "% Improvement", "kW UE", "% Improvement", "Weighted Total", "Iterations"');
-        CloseFile(FLog); // Close it now after clearing it out
-
-    // for this solution mode, only the peak load condition is taken into account
-    // load is adjusted for growth by year.
-        SetGeneratorDispRef;
-
-    {Turn regulators and caps off while we are searching}
-        ControlMode := CONTROLSOFF;
-
-        SetBaseLosses;  {Establish base values}
-
-        case AddType of
-
-            GENADD:
+            if (LoadModel = ADMITTANCE) then
             begin
-                if ActiveCircuit.PositiveSequence then
-                    TestGenkW := GenkW / 3.0
-                else
-                    TestGenkW := GenkW;
+                LoadModel := POWERFLOW;
+                SystemYChanged := TRUE;  // Force rebuild of System Y without Loads
+            end;
 
-                if GenPF <> 0.0 then
+        {Do a preliminary snapshot solution to Force definition of meter zones
+         And set bus lists}
+            EnergyMeterClass.ResetAll;
+            if SystemYChanged or ActiveCircuit.BusNameRedefined then
+            begin
+                SolveSnap;
+                ModeChanged := TRUE;
+            end;
+
+            EnergyMeterClass.SampleAll;
+
+        { Check to see if bus base voltages have been defined }
+            if Buses^[NumBuses].kVBase = 0.0 then
+                SetVoltageBases;
+
+            if ModeChanged then
+            begin
+                MakeBusList;  // Make list of buses to check
+                ModeChanged := FALSE;  {Keep same BusIdxList if no changes}
+            end;
+
+            IntervalHrs := 1.0;
+
+        {Start up Log File}
+
+            FLog := TFileStream.Create(GetOutputDirectory + CircuitName_ + 'AutoAddLog.CSV', fmCreate);
+            FSWriteLn(FLog, '"Bus", "Base kV", "kW Losses", "% Improvement", "kW UE", "% Improvement", "Weighted Total", "Iterations"');
+
+
+        // for this solution mode, only the peak load condition is taken into account
+        // load is adjusted for growth by year.
+            SetGeneratorDispRef;
+
+        {Turn regulators and caps off while we are searching}
+            ControlMode := CONTROLSOFF;
+
+            SetBaseLosses;  {Establish base values}
+
+            case AddType of
+
+                GENADD:
                 begin
-                    Genkvar := TestGenkW * sqrt(1.0 / sqr(GenPF) - 1.0);
-                    if GenPF < 0.0 then
-                        Genkvar := -Genkvar;
-                end
-                else
-                begin   // Someone goofed and specified 0.0 PF
-                    GenPF := 1.0;
-                    Genkvar := 0.0;
-                end;
+                    if ActiveCircuit.PositiveSequence then
+                        TestGenkW := GenkW / 3.0
+                    else
+                        TestGenkW := GenkW;
 
-                MinLossBus := 0;   // null string
-                MaxLossImproveFactor := -1.0e50;  // Some very large neg number
-                MinBusPhases := 3;
+                    if GenPF <> 0.0 then
+                    begin
+                        Genkvar := TestGenkW * sqrt(1.0 / sqr(GenPF) - 1.0);
+                        if GenPF < 0.0 then
+                            Genkvar := -Genkvar;
+                    end
+                    else
+                    begin   // Someone goofed and specified 0.0 PF
+                        GenPF := 1.0;
+                        Genkvar := 0.0;
+                    end;
 
-
-                   {Progress meter}
-                ProgressCaption('AutoAdding Generators');
-                ProgressMax := BusIdxListSize;
-                ProgressCount := 0;
-
-                ProgressFormCaption(Format('Testing %d buses. Please Wait... ', [BusIdxListSize]));
-                ShowPctProgress(0);
+                    MinLossBus := 0;   // null string
+                    MaxLossImproveFactor := -1.0e50;  // Some very large neg number
+                    MinBusPhases := 3;
 
 
-                for i := 1 to BusIdxListSize do
-                begin
+                       {Progress meter}
+                    ProgressCaption('AutoAdding Generators');
+                    ProgressMax := BusIdxListSize;
+                    ProgressCount := 0;
 
-                    Inc(ProgressCount);
+                    ProgressFormCaption(Format('Testing %d buses. Please Wait... ', [BusIdxListSize]));
+                    ShowPctProgress(0);
 
-                    BusIndex := BusIdxList^[i];
 
-                    if BusIndex > 0 then
+                    for i := 1 to BusIdxListSize do
                     begin
 
-                        TestBus := BusList.Get(BusIndex);
-                         // ProgressFormCaption( 'Testing bus ' + TestBus);
-                        if ((ProgressCount mod 20) = 0) or (i = BusIdxListSize) then
+                        Inc(ProgressCount);
+
+                        BusIndex := BusIdxList^[i];
+
+                        if BusIndex > 0 then
                         begin
-                            ProgressFormCaption(Format('Testing bus %d/%d. ', [i, BusIdxListSize]));
+
+                            TestBus := BusList.Get(BusIndex);
+                             // ProgressFormCaption( 'Testing bus ' + TestBus);
+                            if ((ProgressCount mod 20) = 0) or (i = BusIdxListSize) then
+                            begin
+                                ProgressFormCaption(Format('Testing bus %d/%d. ', [i, BusIdxListSize]));
+                                ShowPctProgress(Round((100 * ProgressCount) / ProgressMax));
+                            end;
+
+                            EnergyMeterClass.ResetAll;
+
+                             {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
+
+                             {Assume either a 3-phase or 1-phase generator}
+                            if Buses^[BusIndex].NumNodesThisBus < 3 then
+                                Phases := 1
+                            else
+                                Phases := 3;
+
+                            GenVA := Cmplx(1000.0 * TestGenkW / Phases, 1000.0 * Genkvar / Phases);
+
+                             { - -- - - - - - - Solution - - - - - - - - - - - - - - -}
+                            Issolved := FALSE;
+
+                            UseAuxCurrents := TRUE;   // Calls InjCurrents on callback
+                            SolveSnap;
+
+                            if IsSolved then
+                            begin
+                                  {Only do this if solution converged ELSE something might break
+                                   in meter sampling}
+
+                                EnergyMeterClass.SampleAll;
+
+                                LossImproveFactor := WeightedLosses;
+
+                                FSWrite(Flog, Format('"%s", %-g', [TestBus, Buses^[BusIndex].kVBase * SQRT3]));
+                                FSWrite(Flog, Format(', %-g, %-g', [kWLosses, puLossImprovement * 100.0]));
+                                FSWrite(Flog, Format(', %-g, %-g', [kWEEN, puEENImprovement * 100.0]));
+                                FSWriteln(Flog, Format(', %-g, %d', [LossImproveFactor, Iteration]));
+
+                                if LossImproveFactor > MaxLossImproveFactor then
+                                begin
+                                    MaxLossImproveFactor := LossImproveFactor;
+                                    MinLossBus := BusIndex;
+                                    MinBusPhases := Phases;
+                                end;
+
+                            end;
+                        end;
+                        if SolutionAbort then
+                            Break;
+                    end;
+
+                       {Put Control mode back to default before inserting Generator for real}
+                    ControlMode := CTRLSTATIC;
+                    UseAuxCurrents := FALSE;
+
+                    if MinLossBus > 0 then
+                        with DSSExecutive do
+                        begin
+
+                            if MinBusPhases >= 3 then
+                                kVrat := Buses^[MinLossBus].kVBase * SQRT3
+                            else
+                                kVrat := Buses^[MinLossBus].kVBase;
+                            CommandString := 'New, generator.' + GetUniqueGenName +
+                                ', bus1="' + BusList.Get(MinLossBus) +
+                                '", phases=' + IntToStr(MinBusPhases) +
+                                ', kv=' + Format('%-g', [kVrat]) +
+                                ', kw=' + Format('%-g', [TestGenkW]) +
+                                ', ' + Format('%5.2f', [GenPF]) +
+                                Format('! Factor =  %-g (%-.3g, %-.3g)', [MaxLossImproveFactor, LossWeight, UEWeight]);
+                            Command := CommandString;    // Defines Generator
+
+                           // AppEnd this command to '...AutoAddedGenerators.Txt'
+                            AppendToFile('Generators', CommandString);
+
+                            SolveSnap;  // Force rebuilding of lists
+
+                        end;
+                       // Return location of added generator so that it can
+                       // be picked up through the result string of the COM interface
+                    GlobalResult := BusList.Get(MinLossBus) +
+                        Format(', %-g', [MaxLossImproveFactor]);
+
+                    ProgressHide;
+
+                       // note that the command that added the generator can be
+                       // picked up from the Command property of the COM interface.
+                end;
+
+
+                CAPADD:
+                begin
+
+                    MinLossBus := 0;   // null string
+                    MaxLossImproveFactor := -1.0e50;  // Some very large number
+                    MinBusPhases := 3;
+
+                    if ActiveCircuit.PositiveSequence then
+                        TestCapkvar := Capkvar / 3.0
+                    else
+                        TestCapkvar := Capkvar;
+
+                       {Progress meter}
+                    ProgressCaption('AutoAdding Capacitors');
+                    ProgressMax := BusIdxListSize;
+                    ProgressCount := 0;
+
+                    for i := 1 to BusIdxListSize do
+                    begin
+
+                        Inc(ProgressCount);
+                       {Make sure testbus is actually in the circuit}
+                        BusIndex := BusIdxList^[i];
+                        if BusIndex > 0 then
+                        begin
+                            TestBus := BusList.Get(BusIndex);
+                            ProgressFormCaption('Testing bus ' + TestBus);
                             ShowPctProgress(Round((100 * ProgressCount) / ProgressMax));
-                        end;
 
-                        EnergyMeterClass.ResetAll;
+                            EnergyMeterClass.ResetAll;
 
-                         {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
+                           {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
 
-                         {Assume either a 3-phase or 1-phase generator}
-                        if Buses^[BusIndex].NumNodesThisBus < 3 then
-                            Phases := 1
-                        else
-                            Phases := 3;
+                          {Assume either a 3-phase or 1-phase Capacitor}
+                            if Buses^[BusIndex].NumNodesThisBus < 3 then
+                                Phases := 1
+                            else
+                                Phases := 3;
 
-                        GenVA := Cmplx(1000.0 * TestGenkW / Phases, 1000.0 * Genkvar / Phases);
+                               // Apply the capacitor at the bus rating
 
-                         { - -- - - - - - - Solution - - - - - - - - - - - - - - -}
-                        Issolved := FALSE;
+                            kVrat := Buses^[BusIndex].kVBase;  // L-N Base kV
+                            Ycap := (TestCapkvar * 0.001 / Phases) / (kVRat * kVRat);
 
-                        UseAuxCurrents := TRUE;   // Calls InjCurrents on callback
-                        SolveSnap;
 
-                        if IsSolved then
-                        begin
-                              {Only do this if solution converged ELSE something might break
-                               in meter sampling}
+                             { - -- - - - - - - Solution - - - - - - - - - - - - - - -}
+                            Issolved := FALSE;
 
-                            EnergyMeterClass.SampleAll;
+                            UseAuxCurrents := TRUE;    // Calls InjCurrents on callback
+                            SolveSnap;
 
-                            LossImproveFactor := WeightedLosses;
-
-                            try
-                                Append(Flog);
-                                Write(Flog, Format('"%s", %-g', [TestBus, Buses^[BusIndex].kVBase * SQRT3]));
-                                Write(Flog, Format(', %-g, %-g', [kWLosses, puLossImprovement * 100.0]));
-                                Write(Flog, Format(', %-g, %-g', [kWEEN, puEENImprovement * 100.0]));
-                                Writeln(Flog, Format(', %-g, %d', [LossImproveFactor, Iteration]));
-                            finally
-                                CloseFile(Flog);
-                            end;
-
-                            if LossImproveFactor > MaxLossImproveFactor then
+                            if IsSolved then
                             begin
-                                MaxLossImproveFactor := LossImproveFactor;
-                                MinLossBus := BusIndex;
-                                MinBusPhases := Phases;
+                                  {Only do this if solution converged ELSE something might break
+                                   in meter sampling}
+
+                                EnergyMeterClass.SampleAll;
+
+                                LossImproveFactor := WeightedLosses;
+
+                                FSWrite(Flog, Format('"%s", %-g', [TestBus, Buses^[BusIndex].kVBase * SQRT3]));
+                                FSWrite(Flog, Format(', %-g, %-g', [kWLosses, puLossImprovement * 100.0]));
+                                FSWrite(Flog, Format(', %-g, %-g', [kWEEN, puEENImprovement * 100.0]));
+                                FSWriteln(Flog, Format(', %-g, %d', [LossImproveFactor, Iteration]));
+
+                                if LossImproveFactor > MaxLossImproveFactor then
+                                begin
+                                    MaxLossImproveFactor := LossImproveFactor;
+                                    MinLossBus := BusIndex;
+                                    MinBusPhases := Phases;
+                                end;
                             end;
-
                         end;
+                        if SolutionAbort then
+                            Break;
                     end;
-                    if SolutionAbort then
-                        Break;
-                end;
-
-                   {Put Control mode back to default before inserting Generator for real}
-                ControlMode := CTRLSTATIC;
-                UseAuxCurrents := FALSE;
-
-                if MinLossBus > 0 then
-                    with DSSExecutive do
-                    begin
-
-                        if MinBusPhases >= 3 then
-                            kVrat := Buses^[MinLossBus].kVBase * SQRT3
-                        else
-                            kVrat := Buses^[MinLossBus].kVBase;
-                        CommandString := 'New, generator.' + GetUniqueGenName +
-                            ', bus1="' + BusList.Get(MinLossBus) +
-                            '", phases=' + IntToStr(MinBusPhases) +
-                            ', kv=' + Format('%-g', [kVrat]) +
-                            ', kw=' + Format('%-g', [TestGenkW]) +
-                            ', ' + Format('%5.2f', [GenPF]) +
-                            Format('! Factor =  %-g (%-.3g, %-.3g)', [MaxLossImproveFactor, LossWeight, UEWeight]);
-                        Command := CommandString;    // Defines Generator
-
-                       // AppEnd this command to '...AutoAddedGenerators.Txt'
-                        AppendToFile('Generators', CommandString);
-
-                        SolveSnap;  // Force rebuilding of lists
-
-                    end;
-                   // Return location of added generator so that it can
-                   // be picked up through the result string of the COM interface
-                GlobalResult := BusList.Get(MinLossBus) +
-                    Format(', %-g', [MaxLossImproveFactor]);
-
-                ProgressHide;
-
-                   // note that the command that added the generator can be
-                   // picked up from the Command property of the COM interface.
-            end;
 
 
-            CAPADD:
-            begin
+                       {Put Control mode back to default before inserting Capacitor for real}
+                    ControlMode := CTRLSTATIC;
+                    UseAuxCurrents := FALSE;
 
-                MinLossBus := 0;   // null string
-                MaxLossImproveFactor := -1.0e50;  // Some very large number
-                MinBusPhases := 3;
-
-                if ActiveCircuit.PositiveSequence then
-                    TestCapkvar := Capkvar / 3.0
-                else
-                    TestCapkvar := Capkvar;
-
-                   {Progress meter}
-                ProgressCaption('AutoAdding Capacitors');
-                ProgressMax := BusIdxListSize;
-                ProgressCount := 0;
-
-                for i := 1 to BusIdxListSize do
-                begin
-
-                    Inc(ProgressCount);
-                   {Make sure testbus is actually in the circuit}
-                    BusIndex := BusIdxList^[i];
-                    if BusIndex > 0 then
-                    begin
-                        TestBus := BusList.Get(BusIndex);
-                        ProgressFormCaption('Testing bus ' + TestBus);
-                        ShowPctProgress(Round((100 * ProgressCount) / ProgressMax));
-
-                        EnergyMeterClass.ResetAll;
-
-                       {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
-
-                      {Assume either a 3-phase or 1-phase Capacitor}
-                        if Buses^[BusIndex].NumNodesThisBus < 3 then
-                            Phases := 1
-                        else
-                            Phases := 3;
-
-                           // Apply the capacitor at the bus rating
-
-                        kVrat := Buses^[BusIndex].kVBase;  // L-N Base kV
-                        Ycap := (TestCapkvar * 0.001 / Phases) / (kVRat * kVRat);
-
-
-                         { - -- - - - - - - Solution - - - - - - - - - - - - - - -}
-                        Issolved := FALSE;
-
-                        UseAuxCurrents := TRUE;    // Calls InjCurrents on callback
-                        SolveSnap;
-
-                        if IsSolved then
+                    if MinLossBus > 0 then
+                        with DSSExecutive do
                         begin
-                              {Only do this if solution converged ELSE something might break
-                               in meter sampling}
 
-                            EnergyMeterClass.SampleAll;
+                            if MinBusPhases >= 3 then
+                                kVrat := Buses^[MinLossBus].kVBase * SQRT3
+                            else
+                                kVrat := Buses^[MinLossBus].kVBase;
 
-                            LossImproveFactor := WeightedLosses;
+                            CommandString := 'New, Capacitor.' + GetUniqueCapName +
+                                ', bus1="' + BusList.Get(MinLossBus) +
+                                '", phases=' + IntToStr(MinBusPhases) +
+                                ', kvar=' + Format('%-g', [TestCapkvar]) +
+                                ', kv=' + Format('%-g', [kVrat]);
+                            Command := CommandString;     // Defines capacitor
 
-                            try
-                                Append(Flog);
-                                Write(Flog, Format('"%s", %-g', [TestBus, Buses^[BusIndex].kVBase * SQRT3]));
-                                Write(Flog, Format(', %-g, %-g', [kWLosses, puLossImprovement * 100.0]));
-                                Write(Flog, Format(', %-g, %-g', [kWEEN, puEENImprovement * 100.0]));
-                                Writeln(Flog, Format(', %-g, %d', [LossImproveFactor, Iteration]));
-                            finally
-                                CloseFile(Flog);
-                            end;
+                           // AppEnd this command to 'DSSAutoAddedCapacitors.Txt'
+                            AppendToFile('Capacitors', CommandString);
 
-                            if LossImproveFactor > MaxLossImproveFactor then
-                            begin
-                                MaxLossImproveFactor := LossImproveFactor;
-                                MinLossBus := BusIndex;
-                                MinBusPhases := Phases;
-                            end;
+
+                            SolveSnap;  // for rebuilding of lists, etc.
+
                         end;
-                    end;
-                    if SolutionAbort then
-                        Break;
+                       // Return location of added generator so that it can
+                       // be picked up through the result string of the COM interface
+                    GlobalResult := BusList.Get(MinLossBus);
+
+                       // note that the command that added the generator can be
+                       // picked up from the Command property of the COM interface.
+
                 end;
-
-
-                   {Put Control mode back to default before inserting Capacitor for real}
-                ControlMode := CTRLSTATIC;
-                UseAuxCurrents := FALSE;
-
-                if MinLossBus > 0 then
-                    with DSSExecutive do
-                    begin
-
-                        if MinBusPhases >= 3 then
-                            kVrat := Buses^[MinLossBus].kVBase * SQRT3
-                        else
-                            kVrat := Buses^[MinLossBus].kVBase;
-
-                        CommandString := 'New, Capacitor.' + GetUniqueCapName +
-                            ', bus1="' + BusList.Get(MinLossBus) +
-                            '", phases=' + IntToStr(MinBusPhases) +
-                            ', kvar=' + Format('%-g', [TestCapkvar]) +
-                            ', kv=' + Format('%-g', [kVrat]);
-                        Command := CommandString;     // Defines capacitor
-
-                       // AppEnd this command to 'DSSAutoAddedCapacitors.Txt'
-                        AppendToFile('Capacitors', CommandString);
-
-
-                        SolveSnap;  // for rebuilding of lists, etc.
-
-                    end;
-                   // Return location of added generator so that it can
-                   // be picked up through the result string of the COM interface
-                GlobalResult := BusList.Get(MinLossBus);
-
-                   // note that the command that added the generator can be
-                   // picked up from the Command property of the COM interface.
-
             end;
         end;
+    end
+    finally
+        FreeAndNil(FLog);
     end;
-
 end;
 
 procedure TAutoAdd.AddCurrents(SolveType: Integer);

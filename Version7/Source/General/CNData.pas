@@ -9,6 +9,7 @@ unit CNData;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -56,7 +57,7 @@ type
         property RStrand: Double READ FRStrand;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
     end;
 
 implementation
@@ -68,7 +69,8 @@ uses
     Sysutils,
     Ucomplex,
     Arraydef,
-    LineUNits;
+    LineUnits,
+    Utilities;
 
 const
     NumPropsThisClass = 4;
@@ -259,7 +261,7 @@ begin
     inherited destroy;
 end;
 
-procedure TCNDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TCNDataObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin
@@ -268,16 +270,16 @@ begin
     begin
         for i := 1 to NumProperties do
         begin
-            Write(F, '~ ', PropertyName^[i], '=');
+            FSWrite(F, '~ ' + PropertyName^[i] + '=');
             case i of
                 1:
-                    Writeln(F, Format('%d', [FkStrand]));
+                    FSWriteln(F, Format('%d', [FkStrand]));
                 2:
-                    Writeln(F, Format('%.6g', [FDiaStrand]));
+                    FSWriteln(F, Format('%.6g', [FDiaStrand]));
                 3:
-                    Writeln(F, Format('%.6g', [FGmrStrand]));
+                    FSWriteln(F, Format('%.6g', [FGmrStrand]));
                 4:
-                    Writeln(F, Format('%.6g', [FRStrand]));
+                    FSWriteln(F, Format('%.6g', [FRStrand]));
             end;
         end;
     end;

@@ -322,7 +322,7 @@ type
 
 
       procedure   InitPropertyValues(ArrayOffset:Integer);Override;
-      procedure   DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+      procedure   DumpProperties(Var F:TFileStream; Complete:Boolean);Override;
 
 
       function    MakeDERList:Boolean;
@@ -1466,7 +1466,7 @@ procedure TInvControl2Obj.GetInjCurrents(Curr: pComplexArray);
     for i := 1 to Fnconds do Curr^[i] := CZERO;
   end;
 
-procedure TInvControl2Obj.DumpProperties(Var F:TextFile; Complete:Boolean);
+procedure TInvControl2Obj.DumpProperties(Var F:TFileStream; Complete:Boolean);
   VAR
     i:Integer;
 
@@ -1476,12 +1476,12 @@ procedure TInvControl2Obj.DumpProperties(Var F:TextFile; Complete:Boolean);
     with ParentClass do
       for i := 1 to NumProperties do
         begin
-          Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
+          FSWriteln(F,'~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
       if Complete then
         begin
-          Writeln(F);
+          FSWriteln(F);
         end;
   end;
 

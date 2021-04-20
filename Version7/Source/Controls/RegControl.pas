@@ -31,6 +31,7 @@ unit RegControl;
 interface
 
 uses
+    Classes,
     Command,
     ControlClass,
     ControlElem,
@@ -101,7 +102,7 @@ type
 
         DebugTrace: Boolean;
         Armed: Boolean;
-        Tracefile: TextFile;
+        TraceFile: TFileStream;
 
         TapLimitPerChange: Integer;
         TapWinding: Integer;  // Added 7-19-07
@@ -152,8 +153,8 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(var F: TextFile); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure SaveWrite(var F: TFileStream); OVERRIDE;
 
         property Transformer: TTransfObj READ Get_Transformer;  // Pointer to controlled Transformer
         property TrWinding: Integer READ Get_Winding;  // Report Tapped winding
@@ -500,10 +501,14 @@ begin
                 17:
                     if DebugTrace then
                     begin
-                        AssignFile(TraceFile, GetOutputDirectory + 'REG_' + Name + '.CSV');
-                        ReWrite(TraceFile);
-                        Writeln(TraceFile, 'Hour, Sec, ControlIteration, Iterations, LoadMultiplier, Present Tap, Pending Change, Actual Change, Increment, Min Tap, Max Tap');
-                        CloseFile(Tracefile);
+                        FreeAndNil(TraceFile);
+                        TraceFile := TFileStream.Create(GetOutputDirectory + 'REG_' + Name + '.CSV', fmCreate);
+                        FSWriteln(TraceFile, 'Hour, Sec, ControlIteration, Iterations, LoadMultiplier, Present Tap, Pending Change, Actual Change, Increment, Min Tap, Max Tap');
+                        FSFlush(Tracefile);
+                    end
+                    else
+                    begin
+                        FreeAndNil(TraceFile);
                     end;
                 23:
                     RevPowerThreshold := kWRevPowerThreshold * 1000.0;
@@ -593,6 +598,7 @@ begin
     inherited Create(ParClass);
     Name := LowerCase(RegControlName);
     DSSObjType := ParClass.DSSClassType;
+    TraceFile := nil;
 
     NPhases := 3;  // Directly set conds and phases
     Fnconds := 3;
@@ -667,6 +673,9 @@ begin
         ReallocMem(VBuffer, 0);
     if Assigned(CBuffer) then
         ReallocMem(CBuffer, 0);
+
+    FreeAndNil(TraceFile);
+
     inherited Destroy;
 end;
 
@@ -844,7 +853,7 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TRegControlObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TRegControlObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -855,15 +864,15 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
      // Note: The PropertyValue access function calls GetPropertyValue routine.
 
     if Complete then
     begin
-        Writeln(F, '! Bus =', GetBus(1));
-        Writeln(F);
+        FSWriteln(F, '! Bus =' + GetBus(1));
+        FSWriteln(F);
     end;
 
 end;
@@ -1369,9 +1378,8 @@ begin
     try
         if (not InshowResults) then
         begin
-            Append(TraceFile);
-            Writeln(TraceFile, S);
-            CloseFile(TraceFile);
+            FSWriteln(TraceFile, S);
+            FSFlush(TraceFile);
         end;
     except
         On E: Exception do
@@ -1385,16 +1393,16 @@ end;
 procedure TRegControlObj.RegWriteTraceRecord(TapChangeMade: Double);
 var
     Separator: String;
-
+    sout: String;
 begin
 
     try
         if (not InshowResults) then
         begin
             Separator := ', ';
-            Append(TraceFile);
             with TTransfObj(ControlledElement) do
-                Writeln(TraceFile,
+            begin
+                WriteStr(sout,
                     ActiveCircuit.Solution.DynaVars.intHour: 0, Separator,
                     ActiveCircuit.Solution.DynaVars.t: 0: 3, Separator,
                     ActiveCircuit.Solution.ControlIteration: 0, Separator,
@@ -1407,7 +1415,9 @@ begin
                     MinTap[ElementTerminal]: 8: 5, Separator,
                     MaxTap[ElementTerminal]: 8: 5);
 
-            CloseFile(TraceFile);
+                FSWriteln(TraceFile, sout);
+            end;
+            FSFlush(TraceFile);
         end;
     except
         On E: Exception do
@@ -1423,7 +1433,7 @@ begin
     ARMED := FALSE;
 end;
 
-procedure TRegcontrolObj.SaveWrite(var F: TextFile);
+procedure TRegcontrolObj.SaveWrite(var F: TFileStream);
 {Override standard SaveWrite}
 {Regcontrol structure not conducive to standard means of saving}
 var
@@ -1436,7 +1446,7 @@ begin
     iProp := 1;
     if Length(PropertyValue[iProp]) > 0 then
         with ParentClass do
-            Write(F, Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
+            FSWrite(F, Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
 
     iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
     while iProp > 0 do
@@ -1444,7 +1454,7 @@ begin
         begin
             if iProp <> 1 then   // Don't repeat Transformer property
                 if Length(PropertyValue[iProp]) > 0 then
-                    Write(F, Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
+                    FSWrite(F, Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
             iProp := GetNextPropertySet(iProp);
         end;
 end;

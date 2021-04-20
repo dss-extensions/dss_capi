@@ -103,7 +103,7 @@ function AllTerminalsClosed(ThisElement: TDSSCktElement): Boolean;
 function Str_Real(const Value: Double; NumDecimals: Integer): String;
 procedure DumpAllDSSCommands(var Filename: String);
 procedure DumpAllocationFactors(var Filename: String);
-procedure DumpComplexMatrix(var F: TextFile; AMatrix: TcMatrix);
+procedure DumpComplexMatrix(var F: TFileStream; AMatrix: TcMatrix);
 function NearestBasekV(kV: Double): Double;
 function PresentTimeInSec: Double;
 function DoResetFaults: Integer;
@@ -122,7 +122,7 @@ function QuadSolver(const a, b, c: Double): Double; // returns largest of two an
 {Save Function Helper}
 function WriteClassFile(const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
 function WriteVsourceClassFile(const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
-procedure WriteActiveDSSObject(var F: TextFile; const NeworEdit: String);
+procedure WriteActiveDSSObject(var F: TFileStream; const NeworEdit: String);
 function checkforblanks(const S: String): String;
 function RewriteAlignedFile(const Filename: String): Boolean;
 
@@ -168,22 +168,27 @@ procedure MakeDistributedGenerators(kW, PF: Double; How: String; Skip: Integer; 
 procedure Obfuscate;
 
 
-{Feeder Utilities} // not currently used
-procedure EnableFeeders;
-procedure DisableFeeders;
-
 
 function AdjustInputFilePath(const param: String): String;
+procedure FSWriteLn(F: TFileStream; Ss: Array of String); inline; overload;
+procedure FSWriteLn(F: TFileStream; S: String = ''); inline; overload;
+procedure FSWriteLn(F: TFileStream; S: String; S2: String); inline; overload;
+procedure FSWriteLn(F: TFileStream; S: String; S2: String; S3: String); inline; overload;
+procedure FSWrite(F: TFileStream; S: String); inline; overload;
+procedure FSWrite(F: TFileStream; S: String; S2: String); inline; overload;
+procedure FSWrite(F: TFileStream; S: String; S2: String; S3: String); inline; overload;
 
+procedure FSReadln(F: TFileStream; out S: String);
+procedure FSFlush(F: TFileStream);
 
 implementation
 
 uses
 {$IFDEF WINDOWS}
+    Windows,
 {$ELSE}
     BaseUnix,
     Unix,
-    Windows,
 {$ENDIF}
     Process,
     CmdForms,
@@ -204,18 +209,18 @@ uses
     Load,
     Line,
     Fault,
-    Feeder,
     HashList,
     LoadShape,
     EnergyMeter,
     PCElement,
-    ControlElem;
+    ControlElem,
+    StrUtils;
 
 const
     ZERONULL: Integer = 0;
     padString: String = '                                                  '; //50 blanks
     paddotsString: String = ' .................................................'; //50 dots
-
+    sCRLF: String = CRLF;
 
 function CompareTextShortest(const S1, S2: String): Integer;
 var
@@ -768,7 +773,7 @@ function InterpretDblArray(const s: String; MaxValues: Integer; ResultArray: pDo
 var
     ParmName,
     Param: String;
-    F: Textfile;
+    F: TFileStream = nil;
     MStream: TMemoryStream;
     FStream: TFileStream;
     i: Integer;
@@ -823,19 +828,18 @@ begin
          // load the list from a file
 
         try
-            AssignFile(F, CSVFileName);
-            Reset(F);
+            F := TFileStream.Create(CSVFileName, fmOpenRead);
 
             if CSVHeader then
-                Readln(F, InputLIne);  // skip the header row
+                FSReadln(F, InputLIne);  // skip the header row
 
             for i := 1 to MaxValues do
             begin
 
                 try
-                    if not EOF(F) then
+                    if not ((F.Position + 1) < F.Size) then
                     begin
-                        Readln(F, InputLIne);
+                        FSReadln(F, InputLIne);
                         Auxparser.CmdString := InputLine;
                         for iskip := 1 to CSVColumn do
                             ParmName := AuxParser.NextParam;
@@ -859,7 +863,7 @@ begin
 
         finally
 
-            CloseFile(F);
+            FreeAndNil(F);
 
         end;
     end
@@ -994,9 +998,9 @@ function InterpretIntArray(const s: String; MaxValues: Integer; ResultArray: pIn
 var
     ParmName,
     Param: String;
-    F: Textfile;
+    F: TFileStream = nil;
     i: Integer;
-
+    line: String;
 begin
     Auxparser.CmdString := S;
     ParmName := Auxparser.NextParam;
@@ -1009,19 +1013,21 @@ begin
     begin
          // load the list from a file
         try
-            AssignFile(F, AdjustInputFilePath(Param));
-            Reset(F);
+            F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
             for i := 1 to MaxValues do
             begin
-                if not EOF(F) then
-                    Readln(F, ResultArray^[i])
+                if (F.Position + 1) < F.Size then
+                begin
+                    FSReadln(F, line);
+                    ResultArray^[i] := StrToInt(line);
+                end
                 else
                 begin
                     Result := i - 1;
                     Break;
                 end;
             end;
-            CloseFile(F);
+            FreeAndNil(F);
 
         except
             On E: Exception do
@@ -1094,7 +1100,7 @@ procedure InterpretAndAllocStrArray(const s: String; var Size: Integer; var Resu
 var
     ParmName,
     Param: String;
-    F: Textfile;
+    F: TFileStream = nil;
     MaxSize: Integer;
 
 
@@ -1149,11 +1155,10 @@ begin
          // load the list from a file
 
         try
-            AssignFile(F, Param);
-            Reset(F);
-            while not EOF(F) do
+            F := TFileStream.Create(Param, fmOpenRead);
+            while (F.Position + 1) < F.Size do
             begin
-                Readln(F, Param);
+                FSReadln(F, Param);
                 if Param <> '' then
                 begin     // Ignore Blank Lines in File
                     Inc(Size);
@@ -1162,7 +1167,7 @@ begin
                     ResultArray^[Size] := Param;
                 end;
             end;
-            CloseFile(F);
+            FreeAndNil(F);
 
         except
             On E: Exception do
@@ -1202,7 +1207,7 @@ var
     ParmName,
     Param,
     NextParam: String;
-    F: Textfile;
+    F: TFileStream = nil;
 
 
 begin
@@ -1223,11 +1228,10 @@ begin
          // load the list from a file
 
         try
-            AssignFile(F, Param);
-            Reset(F);
-            while not EOF(F) do
+            F := TFileStream.Create(Param, fmOpenRead);        
+            while (F.Position + 1) < F.Size do
             begin
-                Readln(F, Param);
+                FSReadln(F, Param);
                 Auxparser.CmdString := Param;
                 ParmName := Auxparser.NextParam;
                 NextParam := AuxParser.StrValue;
@@ -1236,7 +1240,7 @@ begin
                     ResultList.Add(NextParam);
                 end;
             end;
-            CloseFile(F);
+            FreeAndNil(F);
 
         except
             On E: Exception do
@@ -1542,18 +1546,18 @@ end;
 procedure DumpAllocationFactors(var FileName: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     pLoad: TLoadObj;
 
 begin
 
     try
-        AssignFile(F, FileName);
-        Rewrite(F);
+        F := TFileStream.Create(FileName, fmCreate);
     except
         On E: Exception do
         begin
             DoErrorMsg('Error opening ' + FileName + ' for writing.', E.Message, ' File protected or other file error.', 709);
+            FreeAndNil(F);
             Exit;
         end;
     end;
@@ -1565,15 +1569,15 @@ begin
         begin
             case pLoad.LoadSpecType of
                 3:
-                    Writeln(F, 'Load.' + pLoad.Name + '.AllocationFactor=', Format('%-.5g', [pLoad.kVAAllocationFactor]));
+                    FSWriteln(F, 'Load.' + pLoad.Name + '.AllocationFactor=' + Format('%-.5g', [pLoad.kVAAllocationFactor]));
                 4:
-                    Writeln(F, 'Load.' + pLoad.Name + '.CFactor=', Format('%-.5g', [pLoad.CFactor]));
+                    FSWriteln(F, 'Load.' + pLoad.Name + '.CFactor=' + Format('%-.5g', [pLoad.CFactor]));
             end;
             pLoad := Loads.Next;
         end; {While}
     end; {With}
 
-    CloseFile(F);
+    FreeAndNil(F);
 
     GlobalResult := FileName;
 
@@ -1584,55 +1588,56 @@ end;
 procedure DumpAllDSSCommands(var FileName: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     pClass: TDSSClass;
     i: Integer;
-
+    sout: String;
 begin
 
     try
         FileName := GetOutputDirectory + 'DSSCommandsDump.Txt';
-        AssignFile(F, FileName);
-        Rewrite(F);
+        F := TFileStream.Create(FileName, fmCreate);
     except
         On E: Exception do
         begin
             DoErrorMsg('Error opening ' + FileName + ' for writing.', E.Message, 'Disk protected or other file error', 710);
+            FreeAndNil(F);
             Exit;
         end;
     end;
 
   // dump Executive commands
-    Writeln(F, '[execcommands]');
+    FSWriteln(F, '[execcommands]');
     for i := 1 to NumExecCommands do
     begin
-        Writeln(F, i: 0, ', "', Execcommand[i], '", "',
-            ReplaceCRLF(CommandHelp[i]), '"');
+        WriteStr(sout, i: 0, ', "', Execcommand[i], '", "', ReplaceCRLF(CommandHelp[i]), '"');
+        FSWriteln(F, sout);
     end;
 
   // Dump Executive Options
-    Writeln(F, '[execoptions]');
+    FSWriteln(F, '[execoptions]');
     for i := 1 to NumExecOptions do
     begin
-        Writeln(F, i: 0, ', "', ExecOption[i], '", "',
-            ReplaceCRLF(OptionHelp[i]), '"');
+        WriteStr(sout, i: 0, ', "', ExecOption[i], '", "', ReplaceCRLF(OptionHelp[i]), '"');
+        FSWriteln(F, sout);
     end;
 
   // Dump All presend DSSClasses
     pClass := DSSClassList.First;
     while pClass <> NIL do
     begin
-        Writeln(F, '[', pClass.name, ']');
+        FSWriteln(F, '[' + pClass.name + ']');
         for i := 1 to pClass.NumProperties do
         begin
-            Writeln(F, i: 0, ', "', pClass.PropertyName^[i], '", "',
-                ReplaceCRLF(pClass.PropertyHelp^[i]), '"');
+            WriteStr(sout, i: 0, ', "', pClass.PropertyName^[i], '", "', ReplaceCRLF(pClass.PropertyHelp^[i]), '"');
+            FSWriteln(F, sout);
         end;
         pClass := DSSClassList.Next;
     end;
 
 
-    CloseFile(F);
+    FreeAndNil(F);
+
 
 
 end;
@@ -1674,15 +1679,14 @@ end;
 function SavePresentVoltages: Boolean;
 
 var
-    F: file of Double;
+    F: TFileStream = nil;
     i: Integer;
     dNumNodes: Double;
 begin
     Result := TRUE;
     try
-        Assignfile(F, GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl');
-        Rewrite(F);
-
+        F := TFileStream.Create(GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl', fmCreate);
+        
     except
         On E: Exception do
         begin
@@ -1696,12 +1700,15 @@ begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
             dNumNodes := NumNodes;
-            Write(F, dNumNodes);
+            F.WriteBuffer(dNumNodes, sizeOf(Double));
             for i := 1 to NumNodes do
-                Write(F, NodeV^[i].re, NodeV^[i].im);
+            begin
+                F.WriteBuffer(NodeV^[i].re, sizeOf(Double));
+                F.WriteBuffer(NodeV^[i].im, sizeOf(Double));
+            end;
         end;
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     except
         On E: Exception do
@@ -1718,15 +1725,14 @@ end;
 function RetrieveSavedVoltages: Boolean;
 
 var
-    F: file of Double;
+    F: TFileStream = nil;
     i: Integer;
     dNumNodes: Double;
 begin
 
     Result := TRUE;
     try
-        Assignfile(F, GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl');
-        Reset(F);
+        F := TFileStream.Create(GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl', fmOpenRead);
 
     except
         On E: Exception do
@@ -1740,10 +1746,13 @@ begin
     try
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
-            Read(F, dNumNodes);
+            F.ReadBuffer(dNumNodes, sizeof(Double));
             if NumNodes = Round(dNumNodes) then
                 for i := 1 to NumNodes do
-                    Read(F, NodeV^[i].re, NodeV^[i].im)
+                begin
+                    F.ReadBuffer(NodeV^[i].re, sizeof(Double));
+                    F.ReadBuffer(NodeV^[i].im, sizeof(Double));
+                end
             else
             begin
                 DoSimpleMsg('Saved results do not match present circuit. Aborting.', 714);
@@ -1751,7 +1760,7 @@ begin
             end;
         end;
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     except
         On E: Exception do
@@ -2088,7 +2097,7 @@ begin
 end;
 
 
-procedure DumpComplexMatrix(var F: TextFile; AMatrix: TcMatrix);
+procedure DumpComplexMatrix(var F: TFileStream; AMatrix: TcMatrix);
 
 var
     i, j: Integer;
@@ -2097,24 +2106,24 @@ begin
     try
         if AMatrix <> NIL then
         begin
-            Writeln(F, '!(Real part)');
+            FSWriteln(F, '!(Real part)');
             with AMatrix do
             begin
                 for i := 1 to Order do
                 begin
-                    Write(F, '! ');
+                    FSWrite(F, '! ');
                     for j := 1 to i do
-                        Write(F, Format('%g ', [GetElement(i, j).re]));
-                    Writeln(F);
+                        FSWrite(F, Format('%g ', [GetElement(i, j).re]));
+                    FSWriteln(F);
                 end;
-                Writeln(F, '!(Imaginary part) = ');
+                FSWriteln(F, '!(Imaginary part) = ');
                 for i := 1 to Order do
                 begin
-                    Write(F, '! ');
+                    FSWrite(F, '! ');
                     for j := 1 to i do
-                        Write(F, Format('%g ', [GetElement(i, j).im]));
+                        FSWrite(F, Format('%g ', [GetElement(i, j).im]));
                     ;
-                    Writeln(F);
+                    FSWriteln(F);
                 end;
             end;
         end;
@@ -2158,7 +2167,7 @@ function WriteVsourceClassFile(const DSS_Class: TDSSClass; IsCktElement: Boolean
  so that there is no problem with duplication when the circuit is subsequently created}
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     ClassName: String;
 begin
     Result := TRUE;
@@ -2166,8 +2175,7 @@ begin
         Exit;
     try
         ClassName := DSS_Class.Name;
-        AssignFile(F, CurrentDSSDir + ClassName + '.dss');
-        Rewrite(F);
+        F := TFileStream.Create(CurrentDSSDir + ClassName + '.dss', fmCreate);
         SavedFileList.Add(ClassName + '.dss');
         DSS_Class.First;   // Sets ActiveDSSObject
         WriteActiveDSSObject(F, 'Edit'); // Write First Vsource out as an Edit
@@ -2180,7 +2188,6 @@ begin
        // Skip disabled circuit elements; write all general DSS objects
             WriteActiveDSSObject(F, 'New');    // sets HasBeenSaved := TRUE
         end;
-        CloseFile(F);
         DSS_Class.Saved := TRUE;
 
     except
@@ -2190,13 +2197,14 @@ begin
             Result := FALSE;
         end;
     end;
+    FreeAndNil(F);
 
 end;
 
 function WriteClassFile(const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     ClassName: String;
     Nrecords: Integer;
     ParClass: TDssClass;
@@ -2211,8 +2219,7 @@ begin
         ClassName := DSS_Class.Name;
         if Length(FileName) = 0 then
             FileName := CurrentDSSDir + ClassName + '.DSS';   // default file name
-        AssignFile(F, FileName);
-        Rewrite(F);
+        F := TFileStream.Create(FileName, fmCreate);
 
         Nrecords := 0;
 
@@ -2235,7 +2242,7 @@ begin
             Inc(Nrecords); // count the actual records
         until DSS_Class.Next = 0;
 
-        CloseFile(F);
+        FreeAndNil(F);
 
         if Nrecords > 0 then
             SavedFileList.Add(FileName)
@@ -2251,6 +2258,8 @@ begin
             Result := FALSE;
         end;
     end;
+    
+    FreeAndNil(F);
 
 end;
 
@@ -2266,7 +2275,7 @@ begin
 end;
 
 
-procedure WriteActiveDSSObject(var F: TextFile; const NeworEdit: String);
+procedure WriteActiveDSSObject(var F: TFileStream; const NeworEdit: String);
 
 var
     ParClass: TDssClass;
@@ -2274,8 +2283,8 @@ var
 
 begin
     ParClass := ActiveDSSObject.ParentClass;
-  //  Write(F, NeworEdit, ' "', ParClass.Name + '.' + ActiveDSSObject.Name,'"');
-    Write(F, Format('%s "%s.%s"', [NeworEdit, ParClass.Name, ActiveDSSObject.Name]));
+  //  FSWrite(F, NeworEdit, ' "', ParClass.Name + '.' + ActiveDSSObject.Name,'"');
+    FSWrite(F, Format('%s "%s.%s"', [NeworEdit, ParClass.Name, ActiveDSSObject.Name]));
 
     ActiveDSSObject.SaveWrite(F);
 
@@ -2283,8 +2292,8 @@ begin
    // Handle disabled circuit elements;   Modified to allow applets to save disabled elements 12-28-06
     if (ActiveDSSObject.DSSObjType and ClassMask) <> DSS_Object then
         if not TDSSCktElement(ActiveDSSObject).Enabled then
-            Write(F, ' ENABLED=NO');
-    Writeln(F); // Terminate line
+            FSWrite(F, ' ENABLED=NO');
+    FSWriteln(F); // Terminate line
 
     ActiveDSSObject.HasBeenSaved := TRUE;
 
@@ -2314,7 +2323,8 @@ end;
 function RewriteAlignedFile(const Filename: String): Boolean;
 
 var
-    Fin, Fout: TextFile;
+    Fin: TFileStream = nil;
+    Fout: TFileStream = nil;
     SaveDelims, Line, Field, AlignedFile: String;
     FieldLength: pIntegerArray;
     ArraySize, FieldLen, FieldNum: Integer;
@@ -2323,8 +2333,7 @@ begin
     Result := TRUE;
 
     try
-        AssignFile(Fin, FileName);
-        Reset(Fin);
+        Fin := TFileStream.Create(FileName, fmOpenRead);
     except
         On E: Exception do
         begin
@@ -2336,13 +2345,12 @@ begin
 
     try
         AlignedFile := ExtractFilePath(FileName) + 'Aligned_' + ExtractFileName(FileName);
-        AssignFile(Fout, AlignedFile);
-        Rewrite(Fout);
+        Fout := TFileStream.Create(AlignedFile, fmCreate);
     except
         On E: Exception do
         begin
             DoSimplemsg('Error opening file: ' + AlignedFile + ', ' + E.message, 720);
-            CloseFile(Fin);
+            FreeAndNil(Fin);
             Result := FALSE;
             Exit;
         end;
@@ -2355,9 +2363,9 @@ begin
 
     try
    {Scan once to set field lengths}
-        while not Eof(Fin) do
+        while (Fin.Position + 1) < Fin.Size do
         begin
-            Readln(Fin, line);
+            FSReadln(Fin, line);
             AuxParser.CmdString := Line;  // Load the parsr
             FieldNum := 0;
             repeat
@@ -2385,11 +2393,11 @@ begin
         end;
 
    {Now go back and re-read while writing the new file}
-        Reset(Fin);
+        Fin.Seek(0, soBeginning);
 
-        while not EOF(Fin) do
+        if (Fin.Position + 1) < Fin.Size then
         begin
-            Readln(Fin, Line);
+            FSReadln(Fin, Line);
             AuxParser.CmdString := Line;  // Load the parser
             FieldNum := 0;
             repeat
@@ -2401,20 +2409,20 @@ begin
                 if FieldLen > 0 then
                 begin
                     Inc(FieldNum);
-                    Write(Fout, Pad(Field, FieldLength^[FieldNum] + 1));
+                    FSWrite(Fout, Pad(Field, FieldLength^[FieldNum] + 1));
                 end;
             until FieldLen = 0;
 
             if (pos('!', Line) > 0) then
-                Write(Fout, ExtractComment(Line));
+                FSWrite(Fout, ExtractComment(Line));
 
-            Writeln(Fout);
+            FSWriteln(Fout);
         end;
 
     finally     {Make sure we do this stuff ...}
 
-        Closefile(Fin);
-        CloseFile(Fout);
+        FreeAndNil(Fin);
+        FreeAndNil(Fout);
 
         Reallocmem(FieldLength, 0);
         AuxParser.Delimiters := SaveDelims;
@@ -2535,7 +2543,7 @@ begin
     end;
 end;
 
-procedure WriteUniformGenerators(var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
+procedure WriteUniformGenerators(var F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
  { Distribute the generators uniformly amongst the feeder nodes that have loads}
 
 var
@@ -2558,22 +2566,22 @@ begin
         if pLoad.Enabled then
         begin
             if DoGenerators then
-                Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+                FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
             else
-                Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+                FSWrite(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
             with ActiveCircuit do
             begin
-                Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
-                Write(F, Format(' kW=%-g', [kWeach]));
-                Write(F, Format(' PF=%-.3g', [PF]));
+                FSWrite(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                FSWrite(F, Format(' kW=%-g', [kWeach]));
+                FSWrite(F, Format(' PF=%-.3g', [PF]));
             end;
-            Write(F, ' model=1');
-            Writeln(F);
+            FSWrite(F, ' model=1');
+            FSWriteln(F);
         end;
     end;
 end;
 
-procedure WriteRandomGenerators(var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
+procedure WriteRandomGenerators(var F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
 {Distribute Generators randomly to loaded buses}
 
 var
@@ -2608,24 +2616,24 @@ begin
         if pLoad.Enabled then
         begin
             if DoGenerators then
-                Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+                FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
             else
-                Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+                FSWrite(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
             with ActiveCircuit do
             begin
-                Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
-                Write(F, Format(' kW=%-g', [kWeach * random * 2.0]));
-                Write(F, Format(' PF=%-.3g', [PF]));
+                FSWrite(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                FSWrite(F, Format(' kW=%-g', [kWeach * random * 2.0]));
+                FSWrite(F, Format(' PF=%-.3g', [PF]));
             end;
-            Write(F, ' model=1');
-            Writeln(F);
+            FSWrite(F, ' model=1');
+            FSWriteln(F);
         end;
     end;
 
 
 end;
 
-procedure WriteEveryOtherGenerators(var F: TextFile; kW, PF: Double; Skip: Integer; DoGenerators: Boolean);
+procedure WriteEveryOtherGenerators(var F: TFileStream; kW, PF: Double; Skip: Integer; DoGenerators: Boolean);
 
 {distribute generators on every other load, skipping the number specified}
 
@@ -2672,17 +2680,17 @@ begin
             if SkipCount = 0 then
             begin
                 if DoGenerators then
-                    Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+                    FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
                 else
-                    Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+                    FSWrite(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
                 with ActiveCircuit do
                 begin
-                    Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
-                    Write(F, Format(' kW=%-g ', [kWeach * pLoad.kWBase]));
-                    Write(F, Format(' PF=%-.3g', [PF]));
+                    FSWrite(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                    FSWrite(F, Format(' kW=%-g ', [kWeach * pLoad.kWBase]));
+                    FSWrite(F, Format(' PF=%-.3g', [PF]));
                 end;
-                Write(F, ' model=1');
-                Writeln(F);
+                FSWrite(F, ' model=1');
+                FSWriteln(F);
                 SkipCount := Skip;
             end
             else
@@ -2691,7 +2699,7 @@ begin
 
 end;
 
-procedure WriteProportionalGenerators(var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
+procedure WriteProportionalGenerators(var F: TFileStream; kW, PF: Double; DoGenerators: Boolean);
 
 {Distribute the generator Proportional to load}
 
@@ -2728,17 +2736,17 @@ begin
         if pLoad.Enabled then
         begin
             if DoGenerators then
-                Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+                FSWrite(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
             else
-                Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+                FSWrite(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
             with ActiveCircuit do
             begin
-                Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
-                Write(F, Format(' kW=%-g', [kWeach * pLoad.kWBase]));
-                Write(F, Format(' PF=%-.3g', [PF]));
+                FSWrite(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                FSWrite(F, Format(' kW=%-g', [kWeach * pLoad.kWBase]));
+                FSWrite(F, Format(' PF=%-.3g', [PF]));
             end;
-            Write(F, ' model=1');
-            Writeln(F);
+            FSWrite(F, ' model=1');
+            FSWriteln(F);
         end;
     end;
 
@@ -2748,7 +2756,7 @@ end;
 procedure MakeDistributedGenerators(kW, PF: Double; How: String; Skip: Integer; Fname: String; DoGenerators: Boolean);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     WhatStr: String;
 
 begin
@@ -2757,8 +2765,7 @@ begin
     try
         if FileExists(Fname) then
             DoSimpleMsg('File "' + Fname + '" is about to be overwritten. Rename it now before continuing if you wish to keep it.', 721);//TODO: this is useless without forms
-        AssignFile(F, Fname);
-        Rewrite(F);
+        F := TFileStream.Create(Fname, fmCreate);
     except
         On E: Exception do
         begin
@@ -2773,10 +2780,10 @@ begin
         else
             WhatStr := 'Loads';
 
-        Writeln(F, '! Created with Distribute Command:');
-        Writeln(f, Format('! Distribute kW=%-.6g PF=%-.6g How=%s Skip=%d  file=%s  what=%s', [kW, PF, How, Skip, Fname, WhatStr]));
-        Writeln(F);
-     // Writeln(F, 'Set allowduplicates=yes');
+        FSWriteln(F, '! Created with Distribute Command:');
+        FSWriteln(f, Format('! Distribute kW=%-.6g PF=%-.6g How=%s Skip=%d  file=%s  what=%s', [kW, PF, How, Skip, Fname, WhatStr]));
+        FSWriteln(F);
+     // FSWriteln(F, 'Set allowduplicates=yes');
         if Length(How) = 0 then
             How := 'P';
         case Uppercase(How)[1] of
@@ -2791,51 +2798,10 @@ begin
         end;
         GlobalResult := Fname;
     finally
-   // Writeln(F, 'Set allowduplicates=no');
-        CloseFile(F);
+   // FSWriteln(F, 'Set allowduplicates=no');
+        FreeAndNil(F);
         SetlastResultFile(Fname);
     end;
-
-end;
-
-{Feeder Utilities}
-procedure EnableFeeders;
-
-var
-    pMeter: TEnergyMeterObj;
-
-    // Let EnergyMeter Objects control re-enabling of Feeders
-    // Feeder could have been dumped in meantime by setting Feeder=False in EnergyMeter
-
-begin
-    with ActiveCircuit do
-    begin
-        pMeter := EnergyMeters.First;
-        while pMeter <> NIL do
-        begin
-            pMeter.EnableFeeder; // also sets CktElement feeder flags true   if a valid feeder
-            pMeter := EnergyMeters.Next;
-        end;
-    end;
-end;
-
-procedure DisableFeeders;
-
-var
-    pFeeder: TFeederObj;
-
-begin
-    with ActiveCircuit do
-    begin
-        pFeeder := Feeders.First;
-        while pFeeder <> NIL do
-        begin
-            pFeeder.Enabled := FALSE;
-            pFeeder.SetCktElementFeederFlags(FALSE);
-            pFeeder := Feeders.Next;
-        end;
-    end;
-
 
 end;
 
@@ -2984,7 +2950,7 @@ var
     pMeter: TEnergyMeterObj;
     i: Integer;
     S: String;
-    Fout: Textfile;
+    Fout: TFileStream = nil;
     FileName: String;
     XfmrLevel: Integer;
 
@@ -3014,8 +2980,7 @@ begin
         FileName := GetOutputDirectory + CircuitName_ + ScriptFileName;
         GlobalResult := FileName;
 
-        Assignfile(Fout, fileName);
-        Rewrite(Fout);
+        Fout := TFileStream.Create(filename, fmCreate);    
 
         pMeter.BranchList.StartHere;
         pPDelem := pMeter.BranchList.GoForward;
@@ -3044,7 +3009,7 @@ begin
            //  pPDelem.Edit;   // Uses Parser
                 end;
 
-                Writeln(Fout, S);
+                FSWriteln(Fout, S);
 
          {Now get all shunt objects connected to this branch}
                 pShuntObject := pMeter.BranchList.FirstObject;
@@ -3056,7 +3021,7 @@ begin
                     S := S + Format(' Bus%d=%s%s', [i, StripExtension(pShuntObject.GetBus(i)), PhaseString]);
                     if Length(EditStr) > 0 then
                         S := S + '  ' + EditStr;
-                    Writeln(Fout, S);
+                    FSWriteln(Fout, S);
              //  Parser.CmdString := Format('Bus$d=%s%s',[i, StripExtension(pShuntObject.GetBus(1)), PhaseString]);
              //  pShuntObject.Edit;
                     pShuntObject := pMeter.BranchList.NextObject
@@ -3078,7 +3043,7 @@ begin
                 S := S + Format(' wdg=1 Bus=%s%s  %s', [StripExtension(pPDelem.GetBus(1)), PhaseString, EditStr]);
                 if not TransStop then
                     S := S + Format(' wdg=2 Bus=%s%s  %s', [StripExtension(pPDelem.GetBus(2)), PhaseString, EditStr]);
-                Writeln(Fout, S);
+                FSWriteln(Fout, S);
 
      {Be default Go forward in the tree until we bounce back up to a line section above the transformer}
                 if TransStop then
@@ -3095,7 +3060,7 @@ begin
 
     finally
 
-        Closefile(Fout);
+        FreeAndNil(Fout);
         FireOffEditor(FileName);
 
     end;
@@ -3601,6 +3566,80 @@ begin
         Result := CurrentDSSDir + Param
     else
         Result := Param;
+end;
+
+procedure FSWrite(F: TFileStream; S: String); inline; overload;
+begin
+    F.WriteBuffer(S[1], Length(S));
+end;
+
+procedure FSWrite(F: TFileStream; S: String; S2: String); inline; overload;
+begin
+    F.WriteBuffer(S[1], Length(S));
+    F.WriteBuffer(S2[1], Length(S2));
+end;
+
+procedure FSWrite(F: TFileStream; S: String; S2: String; S3: String); inline; overload;
+begin
+    F.WriteBuffer(S[1], Length(S));
+    F.WriteBuffer(S2[1], Length(S2));
+    F.WriteBuffer(S3[1], Length(S3));
+end;
+
+procedure FSWriteLn(F: TFileStream; S: String = ''); inline; overload;
+begin
+    F.WriteBuffer(S[1], Length(S));
+    F.WriteBuffer(sCRLF[1], Length(sCRLF));
+end;
+
+procedure FSWriteLn(F: TFileStream; S: String; S2: String); inline; overload;
+begin
+    F.WriteBuffer(S[1], Length(S));
+    F.WriteBuffer(S2[1], Length(S2));
+    F.WriteBuffer(sCRLF[1], Length(sCRLF));
+end;
+
+procedure FSWriteLn(F: TFileStream; S: String; S2: String; S3: String); inline; overload;
+begin
+    F.WriteBuffer(S[1], Length(S));
+    F.WriteBuffer(S2[1], Length(S2));
+    F.WriteBuffer(S3[1], Length(S3));
+    F.WriteBuffer(sCRLF[1], Length(sCRLF));
+end;
+
+procedure FSWriteLn(F: TFileStream; Ss: Array of String); inline; overload;
+var 
+    i: integer;
+begin
+    for i := 0 to Length(Ss) - 1 do
+    begin
+        F.WriteBuffer(Ss[i][1], Length(Ss[i]));
+        F.WriteBuffer(sCRLF[1], Length(sCRLF));
+    end;
+end;
+
+procedure FSReadln(F: TFileStream; out S: String); // TODO: optimize?
+var
+    ch: AnsiChar;
+begin
+    S := '';
+    repeat
+        if F.Read(ch, SizeOf(AnsiChar)) <> SizeOf(AnsiChar) then 
+            Exit;
+        
+        S := S + ch;
+    until AnsiEndsStr(S, CRLF);
+    S := AnsiLeftStr(S, Length(S) - Length(CRLF));
+    //TODO: Do we need to handle files with classic Mac OS line endings too?
+end;
+
+procedure FSFlush(F: TFileStream);
+begin
+{$IFDEF WINDOWS}
+    FlushFileBuffers(F.Handle);
+{$ELSE}
+    FPFSync(F.Handle);
+{$ENDIF}
 end;
 
 end.

@@ -92,6 +92,7 @@ unit generator;
 interface
 
 uses
+    Classes,
     GeneratorVars,
     GenUserModel,
     DSSClass,
@@ -174,7 +175,7 @@ type
         Reg_Price: Integer;
         ShapeFactor: Complex;
 // moved to GeneratorVars        Thetaharm       :Double;  {Thevinen equivalent voltage angle reference for Harmonic model}
-        Tracefile: TextFile;
+        TraceFile: TFileStream;
         UserModel, ShaftModel: TGenUserModel;   {User-Written Models}
         V_Avg: Double;
         V_Remembered: Double;
@@ -308,7 +309,7 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
         property PresentkW: Double READ Get_PresentkW WRITE Set_PresentkW;
@@ -790,19 +791,24 @@ begin
                     22:
                         if DebugTrace then
                         begin
-                            AssignFile(TraceFile, GetOutputDirectory + 'GEN_' + Name + '.CSV');
-                            ReWrite(TraceFile);
-                            Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, GenModel, dQdV, Avg_Vpu, Vdiff, MQnominalperphase, MPnominalperphase, CurrentType');
+                            FreeAndNil(TraceFile);
+                            TraceFile := TFileStream.Create(GetOutputDirectory + 'GEN_' + Name + '.CSV', fmCreate);
+                            FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, GenModel, dQdV, Avg_Vpu, Vdiff, MQnominalperphase, MPnominalperphase, CurrentType');
                             for i := 1 to nphases do
-                                Write(Tracefile, ', |Iinj' + IntToStr(i) + '|');
+                                FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
                             for i := 1 to nphases do
-                                Write(Tracefile, ', |Iterm' + IntToStr(i) + '|');
+                                FSWrite(Tracefile, ', |Iterm' + IntToStr(i) + '|');
                             for i := 1 to nphases do
-                                Write(Tracefile, ', |Vterm' + IntToStr(i) + '|');
-                            Write(TraceFile, ',Vthev, Theta');
-                            Writeln(TraceFile);
-                            CloseFile(Tracefile);
+                                FSWrite(Tracefile, ', |Vterm' + IntToStr(i) + '|');
+                            FSWrite(TraceFile, ',Vthev, Theta');
+                            FSWriteln(TraceFile);
+                            FSFlush(Tracefile);
+                        end
+                        else
+                        begin
+                            FreeAndNil(TraceFile);
                         end;
+                        
                     26, 27:
                         kVANotSet := FALSE;
                 end;
@@ -973,6 +979,8 @@ begin
     Name := LowerCase(SourceName);
     DSSObjType := ParClass.DSSClassType; // + GEN_ELEMENT;  // In both PCelement and Genelement list
 
+    TraceFile := nil;
+
     Nphases := 3;
     Fnconds := 4;  // defaults to wye
     Yorder := 0;  // To trigger an initial allocation
@@ -1084,6 +1092,7 @@ end;
 //----------------------------------------------------------------------------
 destructor TGeneratorObj.Destroy;
 begin
+    FreeAndNil(TraceFile);
     YPrimOpenCond.Free;
     UserModel.Free;
     ShaftModel.Free;
@@ -1575,15 +1584,13 @@ procedure TGeneratorObj.WriteTraceRecord(const s: String);
 
 var
     i: Integer;
-
+    sout: String;
 begin
 
     try
         if (not InshowResults) then
-
         begin
-            Append(TraceFile);
-            Write(TraceFile, Format('%-.g, %d, %-.g, ',
+            WriteStr(sout, Format('%-.g, %d, %-.g, ',
                 [ActiveCircuit.Solution.DynaVars.t + ActiveCircuit.Solution.Dynavars.IntHour * 3600.0,
                 ActiveCircuit.Solution.Iteration,
                 ActiveCircuit.LoadMultiplier]),
@@ -1595,16 +1602,28 @@ begin
                 (GenVars.Vtarget - V_Avg): 9: 1, ', ',
                 (Genvars.Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
                 (Genvars.Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
-                s, ', ');
+                s, ', '
+            );
+            FSWrite(TraceFile, sout);
             for i := 1 to nphases do
-                Write(TraceFile, (Cabs(InjCurrent^[i])): 8: 1, ', ');
+            begin
+                WriteStr(sout, (Cabs(InjCurrent^[i])): 8: 1, ', ');
+                FSWrite(TraceFile, sout);
+            end;
             for i := 1 to nphases do
-                Write(TraceFile, (Cabs(ITerminal^[i])): 8: 1, ', ');
+            begin
+                WriteStr(sout, (Cabs(ITerminal^[i])): 8: 1, ', ');
+                FSWrite(TraceFile, sout);
+            end;
             for i := 1 to nphases do
-                Write(TraceFile, (Cabs(Vterminal^[i])): 8: 1, ', ');
-            Write(TraceFile, GenVars.VThevMag: 8: 1, ', ', Genvars.Theta * 180.0 / PI);
-            Writeln(TRacefile);
-            CloseFile(TraceFile);
+            begin
+                WriteStr(sout, (Cabs(Vterminal^[i])): 8: 1, ', ');
+                FSWrite(TraceFile, sout);
+            end;
+            WriteStr(sout, GenVars.VThevMag: 8: 1, ', ', Genvars.Theta * 180.0 / PI);
+            FSWrite(TraceFile, sout);
+            FSWriteln(Tracefile);
+            FSFlush(TraceFile);
         end;
     except
         On E: Exception do
@@ -2586,7 +2605,7 @@ end;
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TGeneratorObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TGeneratorObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, idx: Integer;
@@ -2594,7 +2613,7 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    Writeln(F, '!DQDV=', DQDV: 10: 2);
+    FSWriteln(F, Format('!DQDV=%10.2g', [DQDV]));
 
 
     with ParentClass do
@@ -2603,15 +2622,15 @@ begin
             idx := PropertyIdxMap[i];
             case idx of
                 34, 36:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')');
+                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[idx] + ')');
                 44:
-                    Writeln(F,'~ ',PropertyName^[i],'=False')  // This one has no variable associated, not needed
+                    FSWriteln(F,'~ ',PropertyName^[i],'=False')  // This one has no variable associated, not needed
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[idx]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[idx]);
             end;
         end;
 
-    Writeln(F);
+    FSWriteln(F);
 
 end;
 
@@ -2856,16 +2875,15 @@ begin
       // Write Dynamics Trace Record
         if DebugTrace then
         begin
-            Append(TraceFile);
-            Write(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
-            Write(TraceFile, Format(' Flag=%d ', [Dynavars.Iterationflag]));
-            Write(TraceFile, Format(' Speed=%-.5g ', [Speed]));
-            Write(TraceFile, Format(' dSpeed=%-.5g ', [dSpeed]));
-            Write(TraceFile, Format(' Pshaft=%-.5g ', [PShaft]));
-            Write(TraceFile, Format(' P=%-.5g Q= %-.5g', [TracePower.Re, TracePower.im]));
-            Write(TraceFile, Format(' M=%-.5g ', [Mmass]));
-            Writeln(TraceFile);
-            CloseFile(TraceFile);
+            FSWrite(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
+            FSWrite(TraceFile, Format(' Flag=%d ', [Dynavars.Iterationflag]));
+            FSWrite(TraceFile, Format(' Speed=%-.5g ', [Speed]));
+            FSWrite(TraceFile, Format(' dSpeed=%-.5g ', [dSpeed]));
+            FSWrite(TraceFile, Format(' Pshaft=%-.5g ', [PShaft]));
+            FSWrite(TraceFile, Format(' P=%-.5g Q= %-.5g', [TracePower.Re, TracePower.im]));
+            FSWrite(TraceFile, Format(' M=%-.5g ', [Mmass]));
+            FSWriteln(TraceFile);
+            FSFlush(TraceFile);
         end;
 
         if GenModel = 6 then

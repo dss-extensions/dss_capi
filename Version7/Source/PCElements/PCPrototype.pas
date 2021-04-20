@@ -143,7 +143,7 @@ type
 
        // Functions required for managing values of properties
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
        {Put any class properties here}
@@ -1174,7 +1174,7 @@ end;
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TPCPrototypeObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TPCPrototypeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 {
  This procedure is require to respond to various commands such as Dump that
@@ -1197,13 +1197,13 @@ begin
 
           {Trap any specials here, such as values that are array properties, for example}
                 34, 36:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')')
+                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[idx] + ')')
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[idx]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[idx]);
             end;
         end;
 
-    Writeln(F);
+    FSWriteln(F);
 
 end;
 

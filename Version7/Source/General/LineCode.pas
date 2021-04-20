@@ -22,6 +22,7 @@ interface
  }
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -112,7 +113,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -756,7 +757,7 @@ begin
     Zinv.Invert;
 end;
 
-procedure TLineCodeObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TLineCodeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     k,
@@ -769,58 +770,58 @@ begin
     with ParentClass do
     begin
 
-        Writeln(F, '~ ', PropertyName^[1], '=', FNphases: 0);
-        Writeln(F, '~ ', PropertyName^[2], '=', R1: 0: 5);
-        Writeln(F, '~ ', PropertyName^[3], '=', X1: 0: 5);
-        Writeln(F, '~ ', PropertyName^[4], '=', R0: 0: 5);
-        Writeln(F, '~ ', PropertyName^[5], '=', X0: 0: 5);
-        Writeln(F, '~ ', PropertyName^[6], '=', C1 * 1.0e9: 0: 5);
-        Writeln(F, '~ ', PropertyName^[7], '=', C0 * 1.0e9: 0: 5);
-        Writeln(F, '~ ', PropertyName^[8], '=', PropertyValue[8]);
-        Write(F, '~ ', PropertyName^[9], '=', '"');
+        FSWriteln(F, Format('~ %s=%d', [PropertyName^[1], FNphases]));
+        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[2], R1]));
+        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[3], X1]));
+        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[4], R0]));
+        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[5], X0]));
+        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[6], C1 * 1.0e9]));
+        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[7], C0 * 1.0e9]));
+        FSWriteln(F, Format('~ %s=%s',   [PropertyName^[8], PropertyValue[8]]));
+        FSWrite(F, '~ ' + PropertyName^[9] + '=' + '"');
         for i := 1 to FNPhases do
         begin
             for j := 1 to FNphases do
             begin
-                Write(F, Z.GetElement(i, j).re: 0: 8, ' ');
+                FSWrite(F, Format('%.8g ', [Z.GetElement(i, j).re]));
             end;
-            Write(F, '|');
+            FSWrite(F, '|');
         end;
-        Writeln(F, '"');
-        Write(F, '~ ', PropertyName^[10], '=', '"');
+        FSWriteln(F, '"');
+        FSWrite(F, '~ ' + PropertyName^[10] + '=' + '"');
         for i := 1 to FNPhases do
         begin
             for j := 1 to FNphases do
             begin
-                Write(F, Z.GetElement(i, j).im: 0: 8, ' ');
+                FSWrite(F, Format('%.8g ', [Z.GetElement(i, j).im]));
             end;
-            Write(F, '|');
+            FSWrite(F, '|');
         end;
-        Writeln(F, '"');
-        Write(F, '~ ', PropertyName^[11], '=', '"');
+        FSWriteln(F, '"');
+        FSWrite(F, '~ ' + PropertyName^[11] + '=' + '"');
         for i := 1 to FNPhases do
         begin
             for j := 1 to FNphases do
             begin
-                Write(F, (Yc.GetElement(i, j).im / TwoPi / BaseFrequency * 1.0E9): 0: 8, ' ');
+                FSWrite(F, Format('%.8g ', [(Yc.GetElement(i, j).im / TwoPi / BaseFrequency * 1.0E9)]));
             end;
-            Write(F, '|');
+            FSWrite(F, '|');
         end;
-        Writeln(F, '"');
+        FSWriteln(F, '"');
 
 
         for i := 12 to 21 do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
-        Writeln(F, Format('~ %s=%d', [PropertyName^[22], FNeutralConductor]));
-        Writeln(F, Format('~ %s=%d', [PropertyName^[25], NumAmpRatings]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName^[22], FNeutralConductor]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName^[25], NumAmpRatings]));
         TempStr := '[';
         for  k := 1 to NumAmpRatings do
             TempStr := TempStr + floattoStrf(AmpRatings[k - 1], ffGeneral, 8, 4) + ',';
         TempStr := TempStr + ']';
-        Writeln(F, Format('~ %s=%s', [PropertyName^[26]]) + TempStr);
+        FSWriteln(F, Format('~ %s=%s', [PropertyName^[26]]) + TempStr);
 
 
     end;

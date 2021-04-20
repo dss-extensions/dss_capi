@@ -50,6 +50,7 @@ unit Relay;
 interface
 
 uses
+    Classes,
     Command,
     ControlClass,
     ControlElem,
@@ -175,7 +176,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -913,7 +914,7 @@ end;
 
 
 {--------------------------------------------------------------------------}
-procedure TRelayObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TRelayObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 {Note PropertyValue is aligned with the internal indices}
 
@@ -926,12 +927,12 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[PropertyIdxMap[i]]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[PropertyIdxMap[i]]);
         end;
 
     if Complete then
     begin
-        Writeln(F);
+        FSWriteln(F);
     end;
 
 end;

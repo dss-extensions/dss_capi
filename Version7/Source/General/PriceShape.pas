@@ -49,6 +49,7 @@ interface
  }
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -119,7 +120,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property NumPoints: Integer READ FNumPoints WRITE Set_NumPoints;
         property PresentInterval: Double READ Get_Interval;
@@ -140,7 +141,6 @@ uses
     Sysutils,
     MathUtil,
     Utilities,
-    Classes,
     Math,
     PointerList;
 
@@ -435,17 +435,16 @@ end;
 procedure TPriceShape.DoCSVFile(const FileName: String);
 
 var
-    F: Textfile;
+    F: TFileStream = nil;
     i: Integer;
     s: String;
 
 begin
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);        
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 58613);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -457,10 +456,10 @@ begin
             if Interval = 0.0 then
                 ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
             i := 0;
-            while (not EOF(F)) and (i < FNumPoints) do
+            while ((F.Position + 1) < F.Size) and (i < FNumPoints) do
             begin
                 Inc(i);
-                Readln(F, s); // read entire line  and parse with AuxParser
+                FSReadln(F, s); // read entire line  and parse with AuxParser
             {AuxParser allows commas or white space}
                 with AuxParser do
                 begin
@@ -474,7 +473,7 @@ begin
                     PriceValues^[i] := DblValue;
                 end;
             end;
-            CloseFile(F);
+            FreeAndNil(F);
             if i <> FNumPoints then
                 NumPoints := i;
         end;
@@ -483,7 +482,7 @@ begin
         On E: Exception do
         begin
             DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 58614);
-            CloseFile(F);
+            FreeAndNil(F);
             Exit;
         end;
     end;
@@ -493,18 +492,17 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TPriceShape.DoSngFile(const FileName: String);
 var
-    F: file of Single;
+    F: TFileStream = nil;
     Hr,
     M: Single;
     i: Integer;
 
 begin
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 58615);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -515,24 +513,26 @@ begin
             if Interval = 0.0 then
                 ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
             i := 0;
-            while (not EOF(F)) and (i < FNumPoints) do
+            while ((F.Position + 1) < F.Size) and (i < FNumPoints) do
             begin
                 Inc(i);
                 if Interval = 0.0 then
                 begin
-                    Read(F, Hr);
+                    if F.Read(Hr, SizeOf(Hr)) <> SizeOf(Hr) then 
+                        Break;
                     Hours^[i] := Hr;
                 end;
-                Read(F, M);
+                if F.Read(M, SizeOf(M)) <> SizeOf(M) then 
+                    Break;
                 PriceValues^[i] := M;
             end;
-            CloseFile(F);
+            FreeAndNil(F);
             if i <> FNumPoints then
                 NumPoints := i;
         end;
     except
         DoSimpleMsg('Error Processing PriceShape File: "' + FileName, 58616);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -541,16 +541,15 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TPriceShape.DoDblFile(const FileName: String);
 var
-    F: file of Double;
+    F: TFileStream = nil;
     i: Integer;
 
 begin
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 58617);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -561,20 +560,22 @@ begin
             if Interval = 0.0 then
                 ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
             i := 0;
-            while (not EOF(F)) and (i < FNumPoints) do
+            while ((F.Position + 1) < F.Size) and (i < FNumPoints) do
             begin
                 Inc(i);
                 if Interval = 0.0 then
-                    Read(F, Hours^[i]);
-                Read(F, PriceValues^[i]);
+                    if F.Read(Hours^[i], SizeOf(Double)) <> SizeOf(Double) then
+                        Break;
+                if F.Read(PriceValues^[i], SizeOf(Double)) <> SizeOf(Double) then
+                    Break;
             end;
-            CloseFile(F);
+            FreeAndNil(F);
             if i <> FNumPoints then
                 NumPoints := i;
         end;
     except
         DoSimpleMsg('Error Processing PriceShape File: "' + FileName, 58618);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -775,7 +776,7 @@ begin
 end;
 
 
-procedure TPriceShapeObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TPriceShapeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -786,7 +787,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
 
@@ -842,7 +843,7 @@ end;
 procedure TPriceShapeObj.SaveToDblFile;
 
 var
-    F: file of Double;
+    F: TFileStream = nil;
     i: Integer;
     Fname: String;
 begin
@@ -850,13 +851,11 @@ begin
     begin
         try
             FName := OutputDirectory {CurrentDSSDir} + Format('%s.dbl', [Name]);
-            AssignFile(F, Fname);
-            Rewrite(F);
-            for i := 1 to NumPoints do
-                Write(F, PriceValues^[i]);
+            F := TFileStream.Create(FName, fmCreate);
+            F.WriteBuffer(PriceValues^[1], NumPoints * SizeOf(Double));
             GlobalResult := 'Price=[dblfile=' + FName + ']';
         finally
-            CloseFile(F);
+            FreeAndNil(F);
         end;
 
     end
@@ -867,7 +866,7 @@ end;
 procedure TPriceShapeObj.SaveToSngFile;
 
 var
-    F: file of Single;
+    F: TFileStream = nil;
     i: Integer;
     Fname: String;
     sngPrice: Single;
@@ -877,16 +876,15 @@ begin
     begin
         try
             FName := OutputDirectory {CurrentDSSDir} + Format('%s.sng', [Name]);
-            AssignFile(F, Fname);
-            Rewrite(F);
+            F := TFileStream.Create(FName, fmCreate);
             for i := 1 to NumPoints do
             begin
                 sngPrice := PriceValues^[i];
-                Write(F, sngPrice);
+                F.Write(sngPrice, sizeof(sngPrice));
             end;
             GlobalResult := 'Price=[sngfile=' + FName + ']';
         finally
-            CloseFile(F);
+            FreeAndNil(F);
         end;
 
 

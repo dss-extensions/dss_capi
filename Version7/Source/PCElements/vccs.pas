@@ -13,6 +13,7 @@ unit VCCS;
 interface
 
 uses
+    Classes,
     DSSClass,
     PCClass,
     PCElement,
@@ -97,7 +98,7 @@ type
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
         // Support for Dynamics Mode
         procedure InitStateVars; OVERRIDE;
@@ -508,7 +509,7 @@ begin
     end;
 end;
 
-procedure TVCCSObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TVCCSObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin
@@ -516,12 +517,12 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
     if Complete then
     begin
-        Writeln(F);
-        Writeln(F);
+        FSWriteln(F);
+        FSWriteln(F);
     end;
 end;
 

@@ -34,6 +34,7 @@ unit Storage;
 interface
 
 uses
+    Classes,
     StorageVars,
     StoreUserModel,
     DSSClass,
@@ -140,7 +141,7 @@ type
         Reg_MaxkW: Integer;
         Reg_Price: Integer;
         ShapeFactor: Complex;
-        Tracefile: TextFile;
+        TraceFile: TFileStream;
         IsUserModel: Boolean;
         UserModel: TStoreUserModel;   {User-Written Models}
         DynaModel: TStoreDynaModel;
@@ -255,7 +256,7 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
         property PresentkW: Double READ Get_PresentkW WRITE Set_PresentkW;
@@ -837,21 +838,25 @@ begin
                     propDEBUGTRACE:
                         if DebugTrace then
                         begin   // Init trace file
-                            AssignFile(TraceFile, GetOutputDirectory + 'STOR_' + Name + '.CSV');
-                            ReWrite(TraceFile);
-                            Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, StorageModel,  Qnominalperphase, Pnominalperphase, CurrentType');
+                            FreeAndNil(TraceFile);
+                            TraceFile := TFileStream.Create(GetOutputDirectory + 'STOR_' + Name + '.CSV', fmCreate);
+                            FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, StorageModel,  Qnominalperphase, Pnominalperphase, CurrentType');
                             for i := 1 to nphases do
-                                Write(Tracefile, ', |Iinj' + IntToStr(i) + '|');
+                                FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
                             for i := 1 to nphases do
-                                Write(Tracefile, ', |Iterm' + IntToStr(i) + '|');
+                                FSWrite(Tracefile, ', |Iterm' + IntToStr(i) + '|');
                             for i := 1 to nphases do
-                                Write(Tracefile, ', |Vterm' + IntToStr(i) + '|');
+                                FSWrite(Tracefile, ', |Vterm' + IntToStr(i) + '|');
                             for i := 1 to NumVariables do
-                                Write(Tracefile, ', ', VariableName(i));
+                                FSWrite(Tracefile, ', ' + VariableName(i));
 
-                            Write(TraceFile, ',Vthev, Theta');
-                            Writeln(TraceFile);
-                            CloseFile(Tracefile);
+                            FSWrite(TraceFile, ',Vthev, Theta');
+                            FSWriteln(TraceFile);
+                            FSFlush(Tracefile);
+                        end
+                        else
+                        begin
+                            FreeAndNil(TraceFile);
                         end;
 
                     propKVA:
@@ -1022,6 +1027,7 @@ begin
     inherited create(ParClass);
     Name := LowerCase(SourceName);
     DSSObjType := ParClass.DSSClassType; // + STORAGE_ELEMENT;  // In both PCelement and Storageelement list
+    TraceFile := nil;
 
     Nphases := 3;
     Fnconds := 4;  // defaults to wye
@@ -1293,6 +1299,7 @@ begin
     YPrimOpenCond.Free;
     UserModel.Free;
     DynaModel.Free;
+    FreeAndNil(TraceFile);
     inherited Destroy;
 end;
 
@@ -1883,14 +1890,13 @@ procedure TStorageObj.WriteTraceRecord(const s: String);
 
 var
     i: Integer;
-
+    sout: String;
 begin
 
     try
         if (not InshowResults) then
         begin
-            Append(TraceFile);
-            Write(TraceFile, Format('%-.g, %d, %-.g, ',
+            WriteStr(sout, Format('%-.g, %d, %-.g, ',
                 [ActiveCircuit.Solution.DynaVars.dblHour,
                 ActiveCircuit.Solution.Iteration,
                 ActiveCircuit.LoadMultiplier]),
@@ -1900,19 +1906,29 @@ begin
                 (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
                 (Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
                 s, ', ');
+            FSWrite(TraceFile, sout);
+            
             for i := 1 to nphases do
-                Write(TraceFile, (Cabs(InjCurrent^[i])): 8: 1, ', ');
+            begin
+                WriteStr(sout, (Cabs(InjCurrent^[i])): 8: 1, ', ');
+                FSWrite(TraceFile, sout);
+            end;
             for i := 1 to nphases do
-                Write(TraceFile, (Cabs(ITerminal^[i])): 8: 1, ', ');
+            begin
+                WriteStr(sout, (Cabs(ITerminal^[i])): 8: 1, ', ');
+                FSWrite(TraceFile, sout);
+            end;
             for i := 1 to nphases do
-                Write(TraceFile, (Cabs(Vterminal^[i])): 8: 1, ', ');
+            begin
+                WriteStr(sout, (Cabs(Vterminal^[i])): 8: 1, ', ');
+                FSWrite(TraceFile, sout);
+            end;
             for i := 1 to NumVariables do
-                Write(TraceFile, Format('%-.g, ', [Variable[i]]));
+                FSWrite(TraceFile, Format('%-.g, ', [Variable[i]]));
 
-
-   //****        Write(TraceFile,VThevMag:8:1 ,', ', StoreVARs.Theta*180.0/PI);
-            Writeln(TRacefile);
-            CloseFile(TraceFile);
+   //****        FSWrite(TraceFile,VThevMag:8:1 ,', ', StoreVARs.Theta*180.0/PI);
+            FSWriteln(Tracefile);
+            FSFlush(TraceFile);
         end;
     except
         On E: Exception do
@@ -2598,7 +2614,7 @@ end;
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TStorageObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TStorageObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, idx: Integer;
@@ -2612,15 +2628,15 @@ begin
             idx := PropertyIdxMap[i];
             case idx of
                 propUSERDATA:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')');
+                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[idx] + ')');
                 propDynaData:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')');
+                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[idx] + ')');
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[idx]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[idx]);
             end;
         end;
 
-    Writeln(F);
+    FSWriteln(F);
 end;
 
 
@@ -2802,11 +2818,10 @@ begin
    // Write Dynamics Trace Record
             if DebugTrace then
             begin
-                Append(TraceFile);
-                Write(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
-                Write(TraceFile, Format(' Flag=%d ', [Dynavars.Iterationflag]));
-                Writeln(TraceFile);
-                CloseFile(TraceFile);
+                FSWrite(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
+                FSWrite(TraceFile, Format(' Flag=%d ', [Dynavars.Iterationflag]));
+                FSWriteln(TraceFile);
+                FSFlush(TraceFile);
             end;
 
         end;

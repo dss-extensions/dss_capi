@@ -202,7 +202,7 @@ type
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
        //Property  MonitorFileName:String read BufferFile;
 
         property CSVFileName: String READ Get_FileName;
@@ -1854,7 +1854,7 @@ procedure TMonitorObj.TranslateToCSV(Show: Boolean);
 
 var
     CSVName: String;
-    F: TextFile;
+    F: TFileStream = nil;
     FSignature: Integer;
     Fversion: Integer;
     hr: Single;
@@ -1866,7 +1866,7 @@ var
     RecordSize: Cardinal;
     s: Single;
     sngBuffer: array[1..100] of Single;
-
+    sout: String;
 begin
 
     Save;  // Save present buffer
@@ -1875,8 +1875,7 @@ begin
     CSVName := Get_FileName;
 
     try
-        AssignFile(F, CSVName);    // Make CSV file
-        Rewrite(F);
+        F := TFileStream.Create(CSVName, fmCreate);
     except
         On E: Exception do
         begin
@@ -1896,7 +1895,7 @@ begin
     end;
 
     pStr := @StrBuffer;
-    Writeln(F, pStr);
+    FSWriteln(F, AnsiString(pStr));
     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
 
     try
@@ -1912,13 +1911,15 @@ begin
                 end;
                 if Nread < RecordBytes then
                     Break;
-                Write(F, hr: 0: 0);          // hours
-                Write(F, ', ', s: 0: 5);     // sec
+                
+                WriteStr(sout, hr: 0: 0, ', ', s: 0: 5);
+                FSWrite(F, sout);
+                
                 for i := 1 to RecordSize do
                 begin
-                    Write(F, ', ', Format('%-.6g', [sngBuffer[i]]))
+                    FSWrite(F, Format(', %-.6g', [sngBuffer[i]]))
                 end;
-                Writeln(F);
+                FSWriteln(F);
             end;
 
         except
@@ -1933,7 +1934,7 @@ begin
     finally
 
         CloseMonitorStream;
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -1968,42 +1969,44 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TMonitorObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TMonitorObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, k: Integer;
-
+    sout: String;
 begin
     inherited DumpProperties(F, Complete);
 
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
 
     if Complete then
     begin
-        Writeln(F);
-        Writeln(F, '// BufferSize=', BufferSize: 0);
-        Writeln(F, '// Hour=', Hour: 0);
-        Writeln(F, '// Sec=', Sec: 0);
-        Writeln(F, '// BaseFrequency=', BaseFrequency: 0: 1);
-        Writeln(F, '// Bufptr=', BufPtr: 0);
-        Writeln(F, '// Buffer=');
+        FSWriteln(F);
+        FSWriteln(F, '// BufferSize=', IntToStr(BufferSize));
+        FSWriteln(F, '// Hour=', IntToStr(Hour));
+        WriteStr(sout, '// Sec=', Sec: 0);
+        FSWriteln(F, sout);
+        FSWriteln(F, Format('// BaseFrequency=%.1g', [BaseFrequency]));
+        FSWriteln(F, '// Bufptr=', IntToStr(BufPtr));
+        FSWriteln(F, '// Buffer=');
         k := 0;
         for i := 1 to BufPtr do
         begin
-            Write(F, MonBuffer^[i]: 0: 1, ', ');
+            WriteStr(sout, MonBuffer^[i]: 0: 1, ', ');
+            FSWrite(F, sout);
             Inc(k);
             if k = (2 + Fnconds * 4) then
             begin
-                Writeln(F);
+                FSWriteln(F);
                 k := 0;
             end;
         end;
-        Writeln(F);
+        FSWriteln(F);
     end;
 
 end;

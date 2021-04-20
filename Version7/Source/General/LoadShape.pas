@@ -46,6 +46,7 @@ interface
  }
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -167,7 +168,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property NumPoints: Integer READ FNumPoints WRITE FNumPoints;
         property PresentInterval: Double READ Get_Interval;
@@ -191,7 +192,6 @@ uses
     DSSGlobals,
     Sysutils,
     MathUtil,
-    Classes,
     Math,
     PointerList;
 
@@ -817,7 +817,7 @@ end;
 procedure TLoadShape.Do2ColCSVFile(const FileName: String);
 //   Process 2-column CSV file (3-col if time expected)
 var
-    F: Textfile;
+    F: TFileStream = nil;
     i: Integer;
     s: String;
 begin
@@ -828,11 +828,10 @@ begin
     end;
 
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 613);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -840,7 +839,7 @@ begin
     try
         if UseMMF then
         begin
-            CloseFile(F);
+            FreeAndNil(F);
             mmDataSize := NumPoints;
             mmFileCmd := 'file=' + FileName + ' column=1';      // Command for P
             if not CreateMMF(mmFileCmd, TMMShapeType.P) then  // Creates MMF for the whole file
@@ -864,10 +863,10 @@ begin
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
         i := -1;
-        while (not EOF(F)) and (i < (FNumPoints - 1)) do
+        while ((F.Position + 1) < F.Size) and (i < (FNumPoints - 1)) do
         begin
             Inc(i);
-            Readln(F, s); // read entire line and parse with AuxParser
+            FSReadln(F, s); // read entire line and parse with AuxParser
             {AuxParser allows commas or white space}
             with AuxParser do
             begin
@@ -883,7 +882,7 @@ begin
                 dQ[i] := DblValue;  // second parm
             end;
         end;
-        CloseFile(F);
+        FreeAndNil(F);
         inc(i);
         if i <> FNumPoints then
             NumPoints := i;
@@ -891,7 +890,7 @@ begin
         On E: Exception do
         begin
             DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 614);
-            CloseFile(F);
+            FreeAndNil(F);
             Exit;
         end;
     end;
@@ -899,7 +898,7 @@ end;
 
 procedure TLoadShape.DoCSVFile(const FileName: String);
 var
-    F: Textfile;
+    F: TFileStream = nil;
     i: Integer;
     s: String;
 begin
@@ -910,11 +909,10 @@ begin
     end;
 
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 613);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -922,7 +920,7 @@ begin
     try
         if UseMMF then
         begin
-            CloseFile(F);
+            FreeAndNil(F);
             s := 'file=' + FileName;
             if CreateMMF(s, TMMShapeType.P) then
                 Exit; // CreateMMF throws an error message already
@@ -938,10 +936,10 @@ begin
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
         i := -1;
-        while (not EOF(F)) and (i < (FNumPoints - 1)) do
+        while ((F.Position + 1) < F.Size) and (i < (FNumPoints - 1)) do
         begin
             Inc(i);
-            Readln(F, s); // read entire line  and parse with AuxParser
+            FSReadln(F, s); // read entire line  and parse with AuxParser
             {AuxParser allows commas or white space}
             with AuxParser do
             begin
@@ -955,7 +953,7 @@ begin
                 dP[i] := DblValue;
             end;
         end;
-        CloseFile(F);
+        FreeAndNil(F);
         inc(i);
         if i <> FNumPoints then
             NumPoints := i;
@@ -963,7 +961,7 @@ begin
         On E: Exception do
         begin
             DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 614);
-            CloseFile(F);
+            FreeAndNil(F);
             Exit;
         end;
     end;
@@ -1605,7 +1603,7 @@ begin
 end;
 
 
-procedure TLoadShapeObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TLoadShapeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -1616,7 +1614,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
 
@@ -1726,53 +1724,54 @@ procedure TLoadShapeObj.SaveToDblFile;
 
 var
     myDBL: Double;
-    F: file of Double;
+    F: TFileStream = nil;
     i: Integer;
     Fname: String;
 begin
+    //TODO: disallow when ExternalMemory?
     UseFloat64;
     if Assigned(dP) then
     begin
         try
             FName := OutputDirectory {CurrentDSSDir} + Format('%s_P.dbl', [Name]);
-            AssignFile(F, Fname);
-            Rewrite(F);
+            F := TFileStream.Create(FName, fmCreate);
             if UseMMF then
             begin
                 for i := 1 to NumPoints do
                 begin
                     myDBL := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i, mmLineLen);
-                    Write(F, myDBL);
+                    F.Write(myDBL, sizeOf(myDBL));
                 end;
             end
             else
+            begin
                 for i := 1 to NumPoints do
-                    Write(F, dP[Stride * i]);
+                    F.Write(dP[Stride * i], sizeOf(Double)); 
+            end;
             GlobalResult := 'mult=[dblfile=' + FName + ']';
         finally
-            CloseFile(F);
+            FreeAndNil(F);
         end;
 
         if Assigned(dQ) then
         begin
             try
                 FName := OutputDirectory {CurrentDSSDir} + Format('%s_Q.dbl', [Name]);
-                AssignFile(F, Fname);
-                Rewrite(F);
+                F := TFileStream.Create(FName, fmCreate);
                 if UseMMF then
                 begin
                     for i := 1 to NumPoints do
                     begin
                         myDBL := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ);
-                        Write(F, myDBL);
+                        F.Write(myDBL, sizeOf(myDBL));
                     end;
                 end
                 else
                     for i := 1 to NumPoints do
-                        Write(F, dQ[Stride * i]);
+                        F.Write(dQ[Stride * i], sizeOf(Double)); 
                 AppendGlobalResult(' Qmult=[dblfile=' + FName + ']');
             finally
-                CloseFile(F);
+                FreeAndNil(F);
             end;
         end;
 
@@ -1783,7 +1782,7 @@ end;
 
 procedure TLoadShapeObj.SaveToSngFile;
 var
-    F: file of Single;
+    F: TFileStream = nil;
     i: Integer;
     Fname: String;
     Temp: Single;
@@ -1793,38 +1792,36 @@ begin
     begin
         try
             FName := OutputDirectory {CurrentDSSDir} + Format('%s_P.sng', [Name]);
-            AssignFile(F, Fname);
-            Rewrite(F);
+            F := TFileStream.Create(FName, fmCreate);
             for i := 1 to NumPoints do
             begin
                 if UseMMF then
                     Temp := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i, mmLineLen)
                 else
                     Temp := dP[Stride * i];
-                Write(F, Temp);
+                F.Write(Temp, SizeOf(Temp));
             end;
             GlobalResult := 'mult=[sngfile=' + FName + ']';
         finally
-            CloseFile(F);
+            FreeAndNil(F);
         end;
 
         if Assigned(dQ) then
         begin
             try
                 FName := OutputDirectory {CurrentDSSDir} + Format('%s_Q.sng', [Name]);
-                AssignFile(F, Fname);
-                Rewrite(F);
+                F := TFileStream.Create(FName, fmCreate);
                 for i := 1 to NumPoints do
                 begin
                     if UseMMF then
                         Temp := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
                     else
                         Temp := dQ[Stride * i];
-                    Write(F, Temp);
+                    F.Write(Temp, SizeOf(Temp));
                 end;
                 AppendGlobalResult(' Qmult=[sngfile=' + FName + ']');
             finally
-                CloseFile(F);
+                FreeAndNil(F);
             end;
         end;
     end

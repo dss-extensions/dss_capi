@@ -15,6 +15,7 @@ unit CktElement;
 interface
 
 uses
+    Classes,
     Ucomplex,
     Ucmatrix,
     ArrayDef,
@@ -144,7 +145,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property Handle: Integer READ FHandle WRITE Set_Handle;
         property Enabled: Boolean READ FEnabled WRITE Set_Enabled;
@@ -1007,7 +1008,7 @@ begin
             LossBuffer^[i] := CZERO;
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TDSSCktElement.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TDSSCktElement.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;
@@ -1017,59 +1018,59 @@ begin
     inherited DumpProperties(F, Complete);
 
     if FEnabled then
-        Writeln(F, '! ENABLED')
+        FSWriteln(F, '! ENABLED')
     else
-        Writeln(F, '! DISABLED');
+        FSWriteln(F, '! DISABLED');
     if Complete then
     begin
 
-        Writeln(F, '! NPhases = ', Fnphases: 0);
-        Writeln(F, '! Nconds = ', Fnconds: 0);
-        Writeln(F, '! Nterms = ', fNterms: 0);
-        Writeln(F, '! Yorder = ', Yorder: 0);
-        Write(F, '! NodeRef = "');
+        FSWriteln(F, '! NPhases = ', IntToStr(Fnphases));
+        FSWriteln(F, '! Nconds = ', IntToStr(Fnconds));
+        FSWriteln(F, '! Nterms = ', IntToStr(fNterms));
+        FSWriteln(F, '! Yorder = ', IntToStr(Yorder));
+        FSWrite(F, '! NodeRef = "');
         if NodeRef = NIL then
-            Write(F, 'nil')
+            FSWrite(F, 'nil')
         else
             for i := 1 to Yorder do
-                Write(F, NodeRef^[i]: 0, ' ');
-        Writeln(F, '"');
-        Write(F, '! Terminal Status: [');
+                FSWrite(F, IntToStr(NodeRef^[i]), ' ');
+        FSWriteln(F, '"');
+        FSWrite(F, '! Terminal Status: [');
         for i := 1 to fNTerms do
             for j := 1 to Fnconds do
             begin
                 if Terminals^[i].Conductors^[j].Closed then
-                    Write(F, 'C ')
+                    FSWrite(F, 'C ')
                 else
-                    Write(F, 'O ');
+                    FSWrite(F, 'O ');
             end;
-        Writeln(F, ']');
-        Write(F, '! Terminal Bus Ref: [');
+        FSWriteln(F, ']');
+        FSWrite(F, '! Terminal Bus Ref: [');
         for i := 1 to fNTerms do
             for j := 1 to Fnconds do
             begin
-                Write(F, Terminals^[i].BusRef: 0, ' ');
+                FSWrite(F, IntToStr(Terminals^[i].BusRef), ' ');
             end;
-        Writeln(F, ']');
-        Writeln(F);
+        FSWriteln(F, ']');
+        FSWriteln(F);
 
         if YPrim <> NIL then
         begin
-            Writeln(F, '! YPrim (G matrix)');
+            FSWriteln(F, '! YPrim (G matrix)');
             for i := 1 to Yorder do
             begin
-                Write(F, '! ');
+                FSWrite(F, '! ');
                 for j := 1 to Yorder do
-                    Write(F, Format(' %13.10g |', [YPrim.GetElement(i, j).re]));
-                Writeln(F);
+                    FSWrite(F, Format(' %13.10g |', [YPrim.GetElement(i, j).re]));
+                FSWriteln(F);
             end;
-            Writeln(F, '! YPrim (B Matrix) = ');
+            FSWriteln(F, '! YPrim (B Matrix) = ');
             for i := 1 to Yorder do
             begin
-                Write(F, '! ');
+                FSWrite(F, '! ');
                 for j := 1 to Yorder do
-                    Write(F, Format(' %13.10g |', [YPrim.GetElement(i, j).im]));
-                Writeln(F);
+                    FSWrite(F, Format(' %13.10g |', [YPrim.GetElement(i, j).im]));
+                FSWriteln(F);
             end;
         end;
 

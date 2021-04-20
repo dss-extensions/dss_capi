@@ -47,10 +47,6 @@ uses
     Math,
     sysutils;
 
-{$DEFINE DEBUG}
-
-{$UNDEF DEBUG}
-
 const
     MAXBINS = 50000;
 
@@ -60,10 +56,6 @@ type
     Double6Array = array[0..5] of Double;
 
 var
-
-{$IF Defined(DEBUG)}
-{****}  DebugFile: Textfile; // for debugging
-{$IFEND}
 
     rms_reference: Double;    // internal rms reference value (do not change)
     Fbase: Double;            //not needed for AC signal input
@@ -376,17 +368,7 @@ var
 
     SynthesizedSamples: Integer;
     SamplesPerDeltaT: Double;    // this value is used when RMS data is used as input
-
-{$IF Defined(DEBUG)}
-    i: Integer;
-{$IFEND}
 begin
-
-// DEBUG file
-{$IF Defined(DEBUG)}
-{****} AssignFile(DebugFile, OutputDirectory + 'DebugOut.CSV');
-{****} Rewrite(DebugFile);
-{$IFEND}
 
     rms_reference := 120.0;    // internal rms reference value (do not change)
 
@@ -434,12 +416,6 @@ begin
 
     SamplesPerDeltaT := DeltaT / Tstep;
 
-{$IF Defined(DEBUG)}
-{****}
-{****} Writeln(Debugfile, Format('Tstep=%.8g, DeltaT=%.8g, Samples=%.8g, Pst_Time=%.8g, npts=%d ',
-{****}                        [Tstep, DeltaT, SamplesPerDeltaT, Pst_Time, npts]));
-{$IFEND}
-
     max_flicker := 0.0;
     FirstSample := Varray^[1];
     rms_input := FirstSample;
@@ -480,17 +456,6 @@ begin
                     inc(PstInterval);
                     if PstInterval <= NumPstIntervals then
                         PstResult^[PstInterval] := CalcPst;
-{$IF Defined(DEBUG)}
-{****}
-{****}Writeln(DebugFile, Format('PST Interval=%d, Pst=%.8g, Max_flicker=%.8g', [PstInterval, PstResult^[PstInterval], Max_Flicker]));
-{****}Writeln(Debugfile, 'i, Vin, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, RMSVin');
-{****}for i := 0 to 5 do
-                        Writeln(Debugfile, Format('%d, %.8g, %.8g, %.8g, %.8g, %.8g, %.8g, %.8g, %.8g, %.8g, %.8g, %.8g, %.8g',
-                            [i, Vin[i], X1[i], X2[i], X3[i], X4[i], X5[i], X6[i], X7[i], X8[i], X9[i], X10[i], RMSVin[i]]));
-{****}for i := 0 to 100 do
-                        Writeln(Debugfile, Format('%d, %.8g, %.8g', [i, Bins0^[i], Bins1^[i]]));
-{****}
-{$IFEND}
                     Pst_Timer := 0.0;
                     ZeroOutBins;   // Zero Bins0 and Bins1 out for next time
                 end;
@@ -502,10 +467,6 @@ begin
     end;
 
     Result := PstInterval;   // should be NumPstIntervals
-
-{$IF Defined(DEBUG)}
-{****} CloseFile(DebugFile);
-{$IFEND}
 
     reallocmem(Bins0, 0);
     reallocmem(Bins1, 0);

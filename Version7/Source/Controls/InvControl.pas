@@ -234,7 +234,7 @@ end;
             FUNCTION    CalcLPF(m: Integer; powertype: String;PVSys:TPVSystemObj):Double;
             FUNCTION    CalcRF(m: Integer; powertype: String;PVSys:TPVSystemObj):Double;
             PROCEDURE   InitPropertyValues(ArrayOffset:Integer);Override;
-            PROCEDURE   DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+            PROCEDURE   DumpProperties(Var F:TFileStream; Complete:Boolean);Override;
 
             FUNCTION    MakePVSystemList:Boolean;
             FUNCTION    GetPropertyValue(Index:Integer):String;Override;
@@ -1091,7 +1091,7 @@ Begin
 End;
 
 {--------------------------------------------------------------------------}
-PROCEDURE TInvControlObj.DumpProperties(Var F:TextFile; Complete:Boolean);
+PROCEDURE TInvControlObj.DumpProperties(Var F:TFileStream; Complete:Boolean);
 
 VAR
    i:Integer;
@@ -1102,12 +1102,12 @@ Begin
     WITH ParentClass Do
      For i := 1 to NumProperties Do
      Begin
-        Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
+        FSWriteln(F,'~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
      End;
 
     If Complete THEN
     Begin
-      Writeln(F);
+      FSWriteln(F);
     End;
 
 End;

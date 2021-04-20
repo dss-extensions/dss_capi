@@ -42,6 +42,7 @@ unit Load;
 interface
 
 uses
+    Classes,
     DSSClass,
     PCClass,
     PCElement,
@@ -237,7 +238,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
         procedure UpdateVoltageBases;
 
@@ -2384,7 +2385,7 @@ begin
 end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TLoadObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TLoadObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;
@@ -2397,26 +2398,26 @@ begin
         begin
             case i of
                 4:
-                    Writeln(F, '~ ', PropertyName^[i], '=', kWBase: 8: 1);
+                    FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[i], kWBase]));
                 5:
-                    Writeln(F, '~ ', PropertyName^[i], '=', PFNominal: 5: 3);
+                    FSWriteln(F, Format('~ %s=%5.3g', [PropertyName^[i], PFNominal]));
                 12:
-                    Writeln(F, '~ ', PropertyName^[i], '=', kvarBase: 8: 1);
+                    FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[i], kvarBase]));
                 22:
-                    Writeln(F, '~ ', PropertyName^[i], '=', FkVAAllocationFactor: 5: 3);
+                    FSWriteln(F, Format('~ %s=%5.3g', [PropertyName^[i], FkVAAllocationFactor]));
                 23:
-                    Writeln(F, '~ ', PropertyName^[i], '=', kVABase: 8: 1);
+                    FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[i], kVABase]));
                 33:
                 begin
-                    Write(F, '~ ', PropertyName^[i], '=');
+                    FSWrite(F, '~ ' + PropertyName^[i] + '=');
                     for j := 1 to nZIPV do
-                        Write(F, ZIPV^[j]: 0: 2, ' ');
-                    Writeln(F, '"');
+                        FSWrite(F, Format('%.2g ', [ZIPV^[j]]));
+                    FSWriteln(F, '"');
                 end;
                 34:
-                    Writeln(F, '~ ', PropertyName^[i], '=', (puSeriesRL * 100.0): 8: 1);
+                    FSWriteln(F, Format('~ %s=%8.1g', [(puSeriesRL * 100.0)]));
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
             end;
         end;
 

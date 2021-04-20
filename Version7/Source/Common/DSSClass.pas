@@ -14,7 +14,7 @@ unit DSSClass;
 interface
 
 USES
-    PointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
+    Classes, PointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
 
 TYPE
    // Collection of all DSS Classes

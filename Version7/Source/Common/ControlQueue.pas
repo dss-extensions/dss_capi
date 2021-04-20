@@ -41,7 +41,8 @@ type
     PRIVATE
         ActionList: TList;
         DebugTrace: Boolean;
-        Tracefile: TextFile;
+        TraceFile: TFileStream; 
+        
         ctrlHandle: Integer;
         Temp_Int: array[0..3] of Integer; // Temporary registers, Int Type
         Temp_dbl: array[0..7] of Double;  // Temporary registers, dbl type
@@ -176,6 +177,7 @@ end;
 constructor TControlQueue.Create;
 begin
     inherited Create;
+    TraceFile := nil;
     ActionList := TList.Create;
     ActionList.Clear;
 
@@ -188,6 +190,7 @@ destructor TControlQueue.Destroy;
 begin
     Clear;
     ActionList.Free;
+    FreeAndNil(TraceFile);
     inherited Destroy;
 end;
 
@@ -474,31 +477,28 @@ end;
 
 procedure TControlQueue.Set_Trace(const Value: Boolean);
 begin
-
     DebugTrace := Value;
 
+    FreeAndNil(TraceFile);
     if DebugTrace then
     begin
-        AssignFile(TraceFile, GetOutputDirectory + 'Trace_ControlQueue.CSV');
-        ReWrite(TraceFile);
-        Writeln(TraceFile, '"Hour", "sec", "Control Iteration", "Element", "Action Code", "Trace Parameter", "Description"');
-        CloseFile(Tracefile);
+        TraceFile := TFileStream.Create(GetOutputDirectory + 'Trace_ControlQueue.CSV', fmCreate);
+        FSWriteLn(TraceFile, '"Hour", "sec", "Control Iteration", "Element", "Action Code", "Trace Parameter", "Description"');
+        FSFlush(TraceFile);
     end;
 
 end;
 
 procedure TControlQueue.ShowQueue(const Filenm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
     pAction: pActionRecord;
 
 begin
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
-
-        Writeln(F, 'Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
 
         for i := 0 to ActionList.Count - 1 do
         begin
@@ -506,12 +506,12 @@ begin
             if pAction <> NIL then
                 with Paction^ do
                 begin
-                    Writeln(F, Format('%d, %d, %-.g, %d, %d, %s ',
+                    FSWriteln(F, Format('%d, %d, %-.g, %d, %d, %s ',
                         [ActionHandle, ActionTime.Hour, ActionTime.sec, ActionCode, ProxyHandle, ControlElement.Name]));
                 end;
         end;
     finally
-        CloseFile(F);
+        FreeAndNil(F);
         FireOffEditor(FileNm);
     end;
 
@@ -525,17 +525,15 @@ begin
     try
         if (not InshowResults) then
         begin
-            Append(TraceFile);
-            Writeln(TraceFile, Format('%d, %.6g, %d, %s, %d, %-.g, %s', [
+            FSWriteLn(TraceFile, Format('%d, %.6g, %d, %s, %d, %-.g, %s', [
                 ActiveCircuit.Solution.DynaVars.intHour,
                 ActiveCircuit.Solution.DynaVars.t,
                 ActiveCircuit.Solution.ControlIteration,
                 ElementName,
                 Code,
                 TraceParameter,
-                S]));
-
-            CloseFile(TraceFile);
+                S]
+            ));
         end;
 
     except

@@ -22,6 +22,7 @@ interface
  }
 
 uses
+    Classes,
     Sysutils,
     Arraydef,
     Command,
@@ -128,8 +129,8 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(var F: TextFile); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure SaveWrite(var F: TFileStream); OVERRIDE;
 
         // called from a Line object that has its own Spacing and Wires input
         // automatically sets reduce=y if the spacing has more wires than phases
@@ -666,7 +667,7 @@ begin
 end;
 
 
-procedure TLineGeometryObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TLineGeometryObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;
@@ -678,20 +679,20 @@ begin
     begin
         for i := 1 to 2 do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', GetPropertyValue(i));
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + GetPropertyValue(i));
         end;
         for j := 1 to FNConds do
         begin
             ActiveCond := j;
-            Writeln(F, '~ ', PropertyName^[3], '=', GetPropertyValue(3));
-            Writeln(F, '~ ', PropertyName^[4], '=', GetPropertyValue(4));
-            Writeln(F, '~ ', PropertyName^[5], '=', GetPropertyValue(5));
-            Writeln(F, '~ ', PropertyName^[6], '=', GetPropertyValue(6));
-            Writeln(F, '~ ', PropertyName^[7], '=', GetPropertyValue(7));
+            FSWriteln(F, '~ ' + PropertyName^[3] + '=' + GetPropertyValue(3));
+            FSWriteln(F, '~ ' + PropertyName^[4] + '=' + GetPropertyValue(4));
+            FSWriteln(F, '~ ' + PropertyName^[5] + '=' + GetPropertyValue(5));
+            FSWriteln(F, '~ ' + PropertyName^[6] + '=' + GetPropertyValue(6));
+            FSWriteln(F, '~ ' + PropertyName^[7] + '=' + GetPropertyValue(7));
         end;
         for i := 8 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', GetPropertyValue(i));
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + GetPropertyValue(i));
         end;
 
     end;
@@ -865,7 +866,7 @@ begin
 end;
 
 
-procedure TLineGeometryObj.SaveWrite(var F: TextFile);
+procedure TLineGeometryObj.SaveWrite(var F: TFileStream);
 { Override standard SaveWrite}
 {Linegeometry structure not conducive to standard means of saving}
 var
@@ -880,7 +881,7 @@ begin
    final order they were actually set}
     iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
     if iProp > 0 then
-        Writeln(F);
+        FSWriteln(F);
 
     while iProp > 0 do
     begin
@@ -901,19 +902,19 @@ begin
                         else
                             strPhaseChoice := 'wire';
                         end;
-                        Writeln(F, Format('~ Cond=%d %s=%s X=%.7g h=%.7g units=%s',
+                        FSWriteln(F, Format('~ Cond=%d %s=%s X=%.7g h=%.7g units=%s',
                             [i, strPhaseChoice, FCondName^[i], FX^[i], FY^[i], LineUnitsStr(FUnits^[i])]));
                     end;
                 end;
                 4..7:
 {do Nothing}; // Ignore these properties;
                 8:
-                    Writeln(F, Format('~ normamps=%.4g', [NormAmps]));
+                    FSWriteln(F, Format('~ normamps=%.4g', [NormAmps]));
                 9:
-                    Writeln(F, Format('~ emergamps=%.4g', [EmergAmps]));
+                    FSWriteln(F, Format('~ emergamps=%.4g', [EmergAmps]));
                 10:
                     if FReduce then
-                        Writeln(F, '~ Reduce=Yes');
+                        FSWriteln(F, '~ Reduce=Yes');
                 13..14: ;   {do Nothing} // Ignore these properties;
                 18:
                 begin
@@ -921,15 +922,15 @@ begin
                     for  j := 1 to NumAmpRatings do
                         TempStr := TempStr + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
                     TempStr := TempStr + ']';
-                    Writeln(F, 'ratings=' + TempStr);
+                    FSWriteln(F, 'ratings=' + TempStr);
                 end;
                 19: 
                 begin
                     if (FLineType >= 1) and (FLineType <= (High(LINE_TYPES) + 1)) then
-                        Writeln(F, '~ LineType=' + LINE_TYPES[FLineType - 1]);
+                        FSWriteln(F, '~ LineType=' + LINE_TYPES[FLineType - 1]);
                 end
             else
-                Writeln(F, Format('~ %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
+                FSWriteln(F, Format('~ %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
             end;
         iProp := GetNextPropertySet(iProp);
     end;

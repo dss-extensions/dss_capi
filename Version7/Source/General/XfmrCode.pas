@@ -10,6 +10,7 @@ unit XfmrCode;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -74,7 +75,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -706,7 +707,7 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TXfmrCodeObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TXfmrCodeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -716,60 +717,60 @@ begin
 
     {Basic Property Dump}
 
-    Writeln(F, '~ ', 'NumWindings=', NumWindings: 0);
-    Writeln(F, '~ ', 'phases=', Fnphases: 0);
+    FSWriteln(F, '~ NumWindings=' + IntToStr(NumWindings));
+    FSWriteln(F, '~ phases=' + IntToStr(Fnphases));
 
     for i := 1 to NumWindings do
     begin
         with Winding^[i] do
         begin
-            if i = 1 then
-                Writeln(F, '~ ', 'Wdg=', i: 0)
+            if i = 1 then //TODO: check why these two lines are the same
+                FSWriteln(F, '~ Wdg=' + IntToStr(i))
             else
-                Writeln(F, '~ ', 'Wdg=', i: 0);
+                FSWriteln(F, '~ Wdg=' + IntToStr(i));
             case Connection of
                 0:
-                    Writeln(f, '~ conn=wye');
+                    FSWriteln(F, '~ conn=wye');
                 1:
-                    Writeln(f, '~ conn=delta');
+                    FSWriteln(F, '~ conn=delta');
             end;
-            Writeln(f, '~ kV=', kvll: 0: 2);
-            Writeln(f, '~ kVA=', kva: 0: 1);
-            Writeln(f, '~ tap=', putap: 0: 3);
-            Writeln(f, '~ %R=', (Rpu * 100.0): 0: 2);
-            Writeln(f, Format('~ RdcOhms=%.7g', [Rdcohms]));
-            Writeln(f, '~ rneut=', rneut: 0: 3);
-            Writeln(f, '~ xneut=', xneut: 0: 3);
+            FSWriteln(F, Format('~ kV=%.2g', [kvll]));
+            FSWriteln(F, Format('~ kVA=%.1g', [kva]));
+            FSWriteln(F, Format('~ tap=%.3g', [putap]));
+            FSWriteln(F, Format('~ %R=%.2g', [(Rpu * 100.0)]));
+            FSWriteln(F, Format('~ RdcOhms=%.7g', [Rdcohms]));
+            FSWriteln(F, Format('~ rneut=%.3g', [rneut]));
+            FSWriteln(F, Format('~ xneut=%.3g', [xneut]));
         end;
     end;
 
-    Writeln(F, '~ ', 'XHL=', xhl * 100.0: 0: 3);
-    Writeln(F, '~ ', 'XHT=', xht * 100.0: 0: 3);
-    Writeln(F, '~ ', 'XLT=', xlt * 100.0: 0: 3);
-    Writeln(F, '~ ', 'X12=', xhl * 100.0: 0: 3);
-    Writeln(F, '~ ', 'X13=', xht * 100.0: 0: 3);
-    Writeln(F, '~ ', 'X23=', xlt * 100.0: 0: 3);
-    Write(F, '~ Xscmatrix= "');
+    FSWriteln(F, Format('~ XHL=%.3g', [xhl * 100.0]));
+    FSWriteln(F, Format('~ XHT=%.3g', [xht * 100.0]));
+    FSWriteln(F, Format('~ XLT=%.3g', [xlt * 100.0]));
+    FSWriteln(F, Format('~ X12=%.3g', [xhl * 100.0]));
+    FSWriteln(F, Format('~ X13=%.3g', [xht * 100.0]));
+    FSWriteln(F, Format('~ X23=%.3g', [xlt * 100.0]));
+    FSWrite(F, '~ Xscmatrix= "');
     for i := 1 to (NumWindings - 1) * NumWindings div 2 do
-        Write(F, Xsc^[i] * 100.0: 0: 2, ' ');
-    Writeln(F, '"');
-    Writeln(F, '~ ', 'NormMAxHkVA=', NormMAxHkVA: 0: 0);
-    Writeln(F, '~ ', 'EmergMAxHkVA=', EmergMAxHkVA: 0: 0);
-    Writeln(F, '~ ', 'thermal=', thermalTimeConst: 0: 1);
-    Writeln(F, '~ ', 'n=', n_thermal: 0: 1);
-    Writeln(F, '~ ', 'm=', m_thermal: 0: 1);
-    Writeln(F, '~ ', 'flrise=', flrise: 0: 0);
-    Writeln(F, '~ ', 'hsrise=', hsrise: 0: 0);
-    Writeln(F, '~ ', '%loadloss=', pctLoadLoss: 0: 0);
-    Writeln(F, '~ ', '%noloadloss=', pctNoLoadLoss: 0: 0);
+        FSWrite(F, Format('%.2g ', [Xsc^[i] * 100.0]));
+    FSWriteln(F, '"');
+    FSWriteln(F, Format('~ NormMAxHkVA=%.0g', [NormMAxHkVA]));
+    FSWriteln(F, Format('~ EmergMAxHkVA=%.0g', [EmergMAxHkVA]));
+    FSWriteln(F, Format('~ thermal=%.1g', [thermalTimeConst]));
+    FSWriteln(F, Format('~ n=%.1g', [n_thermal]));
+    FSWriteln(F, Format('~ m=%.1g', [m_thermal]));
+    FSWriteln(F, Format('~ flrise=%.0g', [flrise]));
+    FSWriteln(F, Format('~ hsrise=%.0g', [hsrise]));
+    FSWriteln(F, Format('~ %loadloss=%.0g', [pctLoadLoss]));
+    FSWriteln(F, Format('~ %noloadloss=%.0g', [pctNoLoadLoss]));
 
     for i := 28 to NumPropsThisClass do
-        Writeln(F, '~ ', ParentClass.PropertyName^[i], '=', PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName^[i] + '=' + PropertyValue[i]);
 
     with ParentClass do
     begin
         for i := NumPropsthisClass + 1 to NumProperties do
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
     end;
 end;
 

@@ -42,6 +42,7 @@ unit Fault;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     PDClass,
@@ -102,7 +103,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
     end;
 
@@ -634,7 +635,7 @@ begin
     YprimInvalid := FALSE;
 end;
 
-procedure TFaultObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TFaultObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;
@@ -645,40 +646,40 @@ begin
 
     with ParentClass do
     begin
-        Writeln(F, '~ ', PropertyName^[1], '=', firstbus);
-        Writeln(F, '~ ', PropertyName^[2], '=', nextbus);
+        FSWriteln(F, '~ ' + PropertyName^[1] + '=' + firstbus);
+        FSWriteln(F, '~ ' + PropertyName^[2] + '=' + nextbus);
 
-        Writeln(F, '~ ', PropertyName^[3], '=', Fnphases: 0);
-        Writeln(F, '~ ', PropertyName^[4], '=', (1.0 / G): 0: 2);
-        Writeln(F, '~ ', PropertyName^[5], '=', (StdDev * 100.0): 0: 1);
+        FSWriteln(F, Format('~ %s=%d', [PropertyName^[3], Fnphases]));
+        FSWriteln(F, Format('~ %s=%.2g', [PropertyName^[4], (1.0 / G)]));
+        FSWriteln(F, Format('~ %s=%.1g', [PropertyName^[5], (StdDev * 100.0)]));
         if Gmatrix <> NIL then
         begin
-            Write(F, '~ ', PropertyName^[6], '= (');
+            FSWrite(F, '~ ' + PropertyName^[6] + '= (');
             for i := 1 to Fnphases do
             begin
                 for j := 1 to i do
-                    Write(F, (Gmatrix^[(i - 1) * Fnphases + j]): 0: 3, ' ');
+                    FSWrite(F, Format('%.3g ', [(Gmatrix^[(i - 1) * Fnphases + j])]));
                 if i <> Fnphases then
-                    Write(F, '|');
+                    FSWrite(F, '|');
             end;
-            Writeln(F, ')');
+            FSWriteln(F, ')');
         end;
-        Writeln(F, '~ ', PropertyName^[7], '=', ON_Time: 0: 3);
+        FSWriteln(F, Format('~ %s=%.3g', [PropertyName^[7], ON_Time]));
         if IsTemporary then
-            Writeln(F, '~ ', PropertyName^[8], '= Yes')
+            FSWriteln(F, '~ ' + PropertyName^[8] + '= Yes')
         else
-            Writeln(F, '~ ', PropertyName^[8], '= No');
-        Writeln(F, '~ ', PropertyName^[9], '=', Minamps: 0: 1);
+            FSWriteln(F, '~ ' + PropertyName^[8] + '= No');
+        FSWriteln(F, Format('~ %s=%.1g', [PropertyName^[9], Minamps]));
 
 
         for i := NumPropsthisClass to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
         if Complete then
         begin
-            Writeln(F, '// SpecType=', SpecType: 0);
+            FSWriteln(F, Format('// SpecType=%d', [SpecType]));
         end;
     end;
 

@@ -9,6 +9,7 @@ unit CableData;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -50,7 +51,7 @@ type
         property InsLayer: Double READ FInsLayer;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
     end;
 
 implementation
@@ -62,7 +63,8 @@ uses
     Sysutils,
     Ucomplex,
     Arraydef,
-    LineUnits;
+    LineUnits,
+    Utilities;
 
 constructor TCableData.Create;  // Creates superstructure for all Line objects
 begin
@@ -175,7 +177,7 @@ begin
     inherited destroy;
 end;
 
-procedure TCableDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TCableDataObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin
@@ -184,16 +186,16 @@ begin
     begin
         for i := 1 to NumProperties do
         begin
-            Write(F, '~ ', PropertyName^[i], '=');
+            FSWrite(F, '~ ' + PropertyName^[i] + '=');
             case i of
                 1:
-                    Writeln(F, Format('%.3g', [FEpsR]));
+                    FSWriteln(F, Format('%.3g', [FEpsR]));
                 2:
-                    Writeln(F, Format('%.6g', [FInsLayer]));
+                    FSWriteln(F, Format('%.6g', [FInsLayer]));
                 3:
-                    Writeln(F, Format('%.6g', [FDiaIns]));
+                    FSWriteln(F, Format('%.6g', [FDiaIns]));
                 4:
-                    Writeln(F, Format('%.6g', [FDiaCable]));
+                    FSWriteln(F, Format('%.6g', [FDiaCable]));
             end;
         end;
     end;

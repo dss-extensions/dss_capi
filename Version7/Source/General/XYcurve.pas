@@ -40,6 +40,7 @@ interface
  }
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -118,8 +119,8 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(var F: TextFile); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure SaveWrite(var F: TFileStream); OVERRIDE;
 
         property NumPoints: Integer READ FNumPoints WRITE Set_NumPoints;
         property XValue_pt[Index: Integer]: Double READ Get_XValue WRITE Set_XValue;
@@ -142,7 +143,6 @@ uses
     Sysutils,
     MathUtil,
     Utilities,
-    Classes,
     Math,
     PointerList;
 
@@ -453,17 +453,16 @@ end;
 procedure TXYcurve.DoCSVFile(const FileName: String);
 
 var
-    F: Textfile;
+    F: TFileStream = nil;
     i: Integer;
     s: String;
 
 begin
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 613);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -474,10 +473,10 @@ begin
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
             ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
             i := 0;
-            while (not EOF(F)) and (i < FNumPoints) do
+            while ((F.Position + 1) < F.Size) and (i < FNumPoints) do
             begin
                 Inc(i);
-                Readln(F, s); // read entire line  and parse with AuxParser
+                FSReadln(F, s); // read entire line  and parse with AuxParser
             {AuxParser allows commas or white space}
                 with AuxParser do
                 begin
@@ -488,7 +487,7 @@ begin
                     YValues^[i] := DblValue;
                 end;
             end;
-            CloseFile(F);
+            FreeAndNil(F);
             if i <> FNumPoints then
                 NumPoints := i;
         end;
@@ -497,7 +496,7 @@ begin
         On E: Exception do
         begin
             DoSimpleMsg('Error Processing XYCurve CSV File: "' + FileName + '. ' + E.Message, 614);
-            CloseFile(F);
+            FreeAndNil(F);
             Exit;
         end;
     end;
@@ -507,18 +506,17 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TXYcurve.DoSngFile(const FileName: String);
 var
-    F: file of Single;
+    F: TFileStream = nil;
     sX,
     sY: Single;
     i: Integer;
 
 begin
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 615);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -528,21 +526,27 @@ begin
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
             ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
             i := 0;
-            while (not EOF(F)) and (i < FNumPoints) do
+            while ((F.Position + 1) < F.Size) and (i < FNumPoints) do
             begin
                 Inc(i);
-                Read(F, sX);
+
+                if F.Read(sX, SizeOf(sX)) <> SizeOf(sX) then 
+                    Break;
+
                 XValues^[i] := sX;
-                Read(F, sY);
+
+                if F.Read(sY, SizeOf(sY)) <> SizeOf(sY) then 
+                    Break;
+
                 YValues^[i] := sY;
             end;
-            CloseFile(F);
+            FreeAndNil(F);
             if i <> FNumPoints then
                 NumPoints := i;
         end;
     except
         DoSimpleMsg('Error Processing binary (single) XYCurve File: "' + FileName, 616);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -551,17 +555,16 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TXYcurve.DoDblFile(const FileName: String);
 var
-    F: file of Double;
+    F: TFileStream = nil;
     i: Integer;
 
 begin
 
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 617);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -571,19 +574,22 @@ begin
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
             ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
             i := 0;
-            while (not EOF(F)) and (i < FNumPoints) do
+            while ((F.Position + 1) < F.Size) and (i < FNumPoints) do
             begin
                 Inc(i);
-                Read(F, XValues^[i]);
-                Read(F, YValues^[i]);
+                if F.Read(XValues^[i], SizeOf(Double)) <> SizeOf(Double) then 
+                    Break;
+
+                if F.Read(YValues^[i], SizeOf(Double)) <> SizeOf(Double) then 
+                    Break;
             end;
-            CloseFile(F);
+            FreeAndNil(F);
             if i <> FNumPoints then
                 NumPoints := i;
         end;
     except
         DoSimpleMsg('Error Processing binary (double) XYCurve File: "' + FileName, 618);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -798,7 +804,7 @@ begin
 end;
 
 
-procedure TXYcurveObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TXYcurveObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -811,9 +817,9 @@ begin
         begin
             case i of
                 3, 4:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[i], ')');
+                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[i] + ')');
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
             end;
         end;
 
@@ -1028,7 +1034,7 @@ begin
         YValues^[Index] := Value;
 end;
 
-procedure TXYcurveObj.SaveWrite(var F: TextFile);
+procedure TXYcurveObj.SaveWrite(var F: TFileStream);
 
 {Override standard SaveWrite}
 {Transformer structure not conducive to standard means of saving}
@@ -1038,7 +1044,7 @@ begin
    {Write only properties that were explicitly set in the final order they were actually set}
 
    {Write Npts out first so that arrays get allocated properly}
-    Write(F, Format(' Npts=%d', [NumPoints]));
+    FSWrite(F, Format(' Npts=%d', [NumPoints]));
     iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
     while iProp > 0 do
     begin
@@ -1049,7 +1055,7 @@ begin
 {Ignore Npts};
 
             else
-                Write(F, Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
+                FSWrite(F, Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
             end;
         iProp := GetNextPropertySet(iProp);
     end;

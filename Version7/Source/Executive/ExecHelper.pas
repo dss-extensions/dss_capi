@@ -386,7 +386,7 @@ Begin
         exit;  // ignore altogether IF null filename
     
     SaveDir := CurrentDSSDir;
-
+//TODO: backport changes in order
     try
         // First try, using the provided name directly
         AssignFile(Fin, ReDirFile);
@@ -945,7 +945,7 @@ FUNCTION DoPropertyDump:Integer;
 
 VAR
    pObject:TDSSObject;
-   F:TextFile;
+   F: TFileStream = nil;
    SingleObject, Debugdump, IsSolution:Boolean;
    i:Integer;
    FileName:String;
@@ -1047,8 +1047,7 @@ Begin
  End;
 
   TRY
-      AssignFile(F, GetOutputDirectory + CircuitName_ + 'PropertyDump.Txt');
-      Rewrite(F);
+      F := TFileStream.Create(GetOutputDirectory + CircuitName_ + 'PropertyDump.Txt', fmCreate);
   EXCEPT
       On E:Exception DO
       Begin
@@ -1114,7 +1113,7 @@ Begin
 
   FINALLY
 
-         CloseFile(F);
+         FreeAndNil(F);
   END;  {TRY}
 
   FileName := GetOutputDirectory + CircuitName_ + 'PropertyDump.Txt';
@@ -1742,7 +1741,7 @@ PROCEDURE DoAutoAddBusList(const S: String);
 VAR
    ParmName,
    Param, S2    :String;
-   F :Textfile;
+   F: TFileStream = nil;
 
 
 begin
@@ -1761,18 +1760,17 @@ begin
          // load the list from a file
 
          TRY
-             AssignFile(F, AdjustInputFilePath(Param));
-             Reset(F);
-             WHILE Not EOF(F) Do
+             F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
+             WHILE (F.Position+1) < F.Size Do
              Begin         // Fixed 7/8/01 to handle all sorts of bus names
-                  Readln(F, S2);
+                  FSReadln(F, S2);
                   Auxparser.CmdString := S2;
                   ParmName := Auxparser.NextParam ;
                   Param := AuxParser.StrValue;
                   IF   Length(Param) > 0
                   THEN ActiveCircuit.AutoAddBusList.Add(Param);
              End;
-             CloseFile(F);
+             FreeAndNil(F);
 
          EXCEPT
              On E:Exception Do DoSimpleMsg('Error trying to read bus list file. Error is: '+E.message, 268);
@@ -1806,7 +1804,7 @@ PROCEDURE DoKeeperBusList(Const S:String);
 VAR
    ParmName,
    Param, S2    :String;
-   F :Textfile;
+   F: TFileStream = nil;
    iBus :Integer;
 
 begin
@@ -1823,11 +1821,10 @@ begin
          // load the list from a file
 
          TRY
-             AssignFile(F, AdjustInputFilePath(Param));
-             Reset(F);
-             WHILE Not EOF(F) Do
+             F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
+             WHILE (F.Position + 1) < F.Size Do
              Begin         // Fixed 7/8/01 to handle all sorts of bus names
-                  Readln(F, S2);
+                  FSReadln(F, S2);
                   Auxparser.CmdString := S2;
                   ParmName := Auxparser.NextParam ;
                   Param := AuxParser.StrValue;
@@ -1838,7 +1835,7 @@ begin
                       If iBus>0 Then Buses^[iBus].Keep := TRUE;
                     End;
              End;
-             CloseFile(F);
+             FreeAndNil(F);
 
          EXCEPT
              On E:Exception Do DoSimpleMsg('Error trying to read bus list file "+param+". Error is: '+E.message, 269);
@@ -2742,7 +2739,7 @@ FUNCTION DoBusCoordsCmd(SwapXY:Boolean):Integer;
 
 Var
 
-   F : TextFile;
+   F: TFileStream = nil;
    {ParamName,} Param,
    S,
    BusName : String;
@@ -2760,13 +2757,12 @@ Begin
     Try
       iLine := -1;
       Try
-         AssignFile(F, AdjustInputFilePath(Param));
-         Reset(F);
+         F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
          iLine := 0;
-         While not EOF(F) Do
+         While (F.Position + 1) < F.Size Do
           Begin
              Inc(iLine);
-             Readln(F, S);      // Read line in from file
+             FSReadln(F, S);      // Read line in from file
 
              With AuxParser Do Begin      // User Auxparser to parse line
                    CmdString := S;
@@ -2792,7 +2788,7 @@ Begin
       End;
 
     Finally
-        CloseFile(F);
+        FreeAndNil(F);
     End;
 
 End;
@@ -3013,7 +3009,9 @@ End;
 
 FUNCTION DoVDiffCmd:Integer;
 Var
-        Fin, Fout :TextFile;
+    Fin: TFileStream = nil; 
+    Fout: TFileStream = nil;
+    sout: String;
         BusName, Line:String;
         i,  node, busIndex:Integer;
         Vmag, Diff:Double;
@@ -3023,15 +3021,12 @@ Begin
    If FileExists(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt') Then Begin
    Try
     Try
+         Fin := TFileStream.Create(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt', fmOpenRead);
+         Fout := TFileStream.Create(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'VDIFF.txt', fmCreate);
 
-         AssignFile(Fin, OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt');
-         Reset(Fin);
-
-         AssignFile(Fout, OutputDirectory {CurrentDSSDir} + CircuitName_ + 'VDIFF.txt');
-         Rewrite(Fout);
-
-         While Not EOF(Fin) Do Begin
-             Readln(Fin, Line);
+         While (Fin.Position + 1) < Fin.Size Do 
+         Begin
+             FSReadln(Fin, Line);
              Auxparser.CmdString := Line;
              AuxParser.NextParam;
              BusName := Auxparser.StrValue;
@@ -3046,10 +3041,16 @@ Begin
                              AuxParser.Nextparam;
                              Vmag := AuxParser.Dblvalue;
                              Diff := Cabs(ActiveCircuit.Solution.NodeV^[GetRef(i)]) - Vmag;
-                             If Vmag<>0.0 then Begin
-                                Writeln(Fout, BusName,'.',node,', ', (Diff / Vmag * 100.0):7:2,', %');
+                             If Vmag<>0.0 then 
+                             Begin
+                                WriteStr(sout, BusName,'.',node,', ', (Diff / Vmag * 100.0):7:2,', %');
+                                FSWriteln(Fout, sout);
                              End
-                             Else Writeln(Fout, BusName,'.',node,', ', format('%-.5g',[Diff]),', Volts');
+                             Else 
+                             begin
+                                WriteStr(sout, BusName,'.',node,', ', format('%-.5g',[Diff]),', Volts');
+                                FSWriteln(Fout, sout);
+                             end;
                          End;
                      End;
 
@@ -3069,8 +3070,8 @@ Begin
 
   Finally
 
-   CloseFile(Fin);
-   CloseFile(Fout);
+   FreeAndNil(Fin);
+   FreeAndNil(Fout);
 
    FireOffEditor(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'VDIFF.txt');
 
@@ -3679,7 +3680,7 @@ End;
 
 FUNCTION DoUuidsCmd:Integer;
 Var
-  F:TextFile;
+  F: TFileStream = nil;
   {ParamName,} Param, S, NameVal, UuidVal, DevClass, DevName: String;
   pName: TNamedObject;
   idx: integer;
@@ -3689,11 +3690,10 @@ Begin
   {ParamName :=} Parser.NextParam;
   Param := Parser.StrValue;
   Try
-    AssignFile(F, AdjustInputFilePath(Param));
-    Reset(F);
+    F := TFileStream.Create(AdjustInputFilePath(Param), fmOpenRead);
     AuxParser.Delimiters := ',';
-    While not EOF(F) Do Begin
-      Readln(F, S);
+    While (F.Position + 1) < F.Size Do Begin
+      FSReadln(F, S);
       With AuxParser Do Begin
         pName := nil;
         CmdString := S;
@@ -3734,7 +3734,7 @@ Begin
     End;
   Finally
     AuxParser.ResetDelims;
-    CloseFile(F);
+    FreeAndNil(F);
   End;
 End;
 
@@ -3746,7 +3746,7 @@ Var
    //ParamName      :String;
    Param          :String;
    Action         :String;
-   F              :TextFile;
+   F: TFileStream = nil;
    Fname          :String;
 
 Begin
@@ -3765,19 +3765,18 @@ Begin
      LoadShapeClass := GetDSSClassPtr('loadshape') as TLoadShape;
 
      Fname := OutputDirectory {CurrentDSSDir} + 'ReloadLoadshapes.DSS';
-     AssignFile(F, Fname);
-     Rewrite(F);
+     F := TFileStream.Create(Fname, fmCreate);
 
      iLoadshape := LoadShapeClass.First;
      while iLoadshape > 0 do  Begin
         pLoadShape := LoadShapeClass.GetActiveObj;
         Parser.CmdString := Action;
         pLoadShape.Edit;
-        Writeln(F, Format('New Loadshape.%s Npts=%d Interval=%.8g %s',[pLoadShape.Name, pLoadShape.NumPoints, pLoadShape.Interval, GlobalResult]));
+        FSWriteln(F, Format('New Loadshape.%s Npts=%d Interval=%.8g %s',[pLoadShape.Name, pLoadShape.NumPoints, pLoadShape.Interval, GlobalResult]));
         iLoadshape := LoadShapeClass.Next;
      End;
 
-     CloseFile(F);
+     FreeAndNil(F);
      FireOffEditor(Fname);
      Result := 0;
 End;

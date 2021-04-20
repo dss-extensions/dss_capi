@@ -97,7 +97,7 @@ INTERFACE
             PROCEDURE   GetCurrents(Curr: pComplexArray); Override;
 
             PROCEDURE   InitPropertyValues(ArrayOffset:Integer);Override;
-            PROCEDURE   DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+            PROCEDURE   DumpProperties(Var F:TFileStream; Complete:Boolean);Override;
 
             FUNCTION    MakePVSystemList:Boolean;
             FUNCTION    GetPropertyValue(Index:Integer):String;Override;
@@ -469,7 +469,7 @@ Begin
   For i := 1 to Fnconds Do Curr^[i] := CZERO;
 End;
 
-PROCEDURE TExpControlObj.DumpProperties(Var F:TextFile; Complete:Boolean);
+PROCEDURE TExpControlObj.DumpProperties(Var F:TFileStream; Complete:Boolean);
 VAR
    i:Integer;
 Begin
@@ -478,12 +478,12 @@ Begin
     WITH ParentClass Do
      For i := 1 to NumProperties Do
      Begin
-        Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
+        FSWriteln(F,'~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
      End;
 
     If Complete THEN
     Begin
-      Writeln(F);
+      FSWriteln(F);
     End;
 End;
 

@@ -19,6 +19,7 @@ unit Spectrum;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -69,7 +70,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
 
     end;
@@ -352,17 +353,16 @@ end;
 procedure TSpectrum.DoCSVFile(const FileName: String);
 
 var
-    F: Textfile;
+    F: TFileStream = nil;
     i: Integer;
     s: String;
-
+    done: Boolean = False;
 begin
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening CSV File: "' + FileName, 653);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -374,10 +374,10 @@ begin
             ReAllocmem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);
             ReAllocmem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm);
             i := 0;
-            while (not EOF(F)) and (i < NumHarm) do
+            while ((F.Position + 1) <> F.Size) and (i < NumHarm) do
             begin
                 Inc(i);
-                Readln(F, S);  // Use Auxparser, which allows for formats
+                FSReadln(F, S);  // Use Auxparser, which allows for formats
                 with AuxParser do
                 begin
                     CmdString := S;
@@ -389,7 +389,7 @@ begin
                     AngleArray^[i] := DblValue;
                 end;
             end;
-            CloseFile(F);
+            F.Free();
             if i <> NumHarm then
                 NumHarm := i;   // reset number of points
         end;
@@ -398,7 +398,7 @@ begin
         On E: Exception do
         begin
             DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 654);
-            CloseFile(F);
+            F.Free();
             Exit;
         end;
     end;
@@ -406,7 +406,7 @@ begin
 end;
 
 
-procedure TSpectrumObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TSpectrumObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;
@@ -420,40 +420,40 @@ begin
             case i of
                 2:
                 begin
-                    Write(F, '~ ', PropertyName^[i], '=(');
+                    FSWrite(F, '~ ', PropertyName^[i], '=(');
                     for j := 1 to NumHarm do
-                        Write(F, Format('%-g, ', [HarmArray^[j]]));
-                    Writeln(F, ')');
+                        FSWrite(F, Format('%-g, ', [HarmArray^[j]]));
+                    FSWriteln(F, ')');
                 end;
                 3:
                 begin
-                    Write(F, '~ ', PropertyName^[i], '=(');
+                    FSWrite(F, '~ ', PropertyName^[i], '=(');
                     for j := 1 to NumHarm do
-                        Write(F, Format('%-g, ', [puMagArray^[j] * 100.0]));
-                    Writeln(F, ')');
+                        FSWrite(F, Format('%-g, ', [puMagArray^[j] * 100.0]));
+                    FSWriteln(F, ')');
                 end;
                 4:
                 begin
-                    Write(F, '~ ', PropertyName^[i], '=(');
+                    FSWrite(F, '~ ', PropertyName^[i], '=(');
                     for j := 1 to NumHarm do
-                        Write(F, Format('%-g, ', [AngleArray^[j]]));
-                    Writeln(F, ')');
+                        FSWrite(F, Format('%-g, ', [AngleArray^[j]]));
+                    FSWriteln(F, ')');
                 end;
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
             end;
         end;
 
     if Complete then
     begin
-        Writeln(F, 'Multiplier Array:');
-        Writeln(F, 'Harmonic, Mult.re, Mult.im, Mag,  Angle');
+        FSWriteln(F, 'Multiplier Array:');
+        FSWriteln(F, 'Harmonic, Mult.re, Mult.im, Mag,  Angle');
         for i := 1 to NumHarm do
         begin
-            Write(F, Format('%-g', [HarmArray^[i]]), ', ');
-            Write(F, Format('%-g, %-g, ', [MultArray^[i].re, MultArray^[i].im]));
-            Write(F, Format('%-g, %-g', [Cabs(MultArray^[i]), Cdang(MultArray^[i])]));
-            Writeln(F);
+            FSWrite(F, Format('%-g', [HarmArray^[i]]), ', ');
+            FSWrite(F, Format('%-g, %-g, ', [MultArray^[i].re, MultArray^[i].im]));
+            FSWrite(F, Format('%-g, %-g', [Cabs(MultArray^[i]), Cdang(MultArray^[i])]));
+            FSWriteln(F);
         end;
     end;
 end;

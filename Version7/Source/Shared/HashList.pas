@@ -85,6 +85,8 @@ type
 implementation
 
 uses
+    Classes,
+    Utilities,
     Sysutils,
     math;
 
@@ -467,41 +469,44 @@ end;
 
 procedure THashList.DumpToFile(const fname: String);
 var
-    F: TextFile;
+    F: TFileStream;
     i, j: Integer;
+    sout: String;
 begin
+    F := TFileStream.Create(fname, fmCreate);
+    FSWriteln(F, Format('Number of Hash Lists = %d, Number of Elements = %d', [NumLists, NumElements]));
 
-    AssignFile(F, fname);
-    Rewrite(F);
-    Writeln(F, Format('Number of Hash Lists = %d, Number of Elements = %d', [NumLists, NumElements]));
-
-    Writeln(F);
-    Writeln(F, 'Hash List Distribution');
+    FSWriteln(F);
+    FSWriteln(F, 'Hash List Distribution');
     for i := 1 to NumLists do
     begin
         with ListPtr^[i] do
         begin
-            Writeln(F, Format('List = %d, Number of elements = %d', [i, Nelem]));
+            FSWriteln(F, Format('List = %d, Number of elements = %d', [i, Nelem]));
         end;
     end;
-    Writeln(F);
+    FSWriteln(F);
 
     for i := 1 to NumLists do
     begin
         with ListPtr^[i] do
         begin
-            Writeln(F, Format('List = %d, Number of elements = %d', [i, Nelem]));
+            FSWriteln(F, Format('List = %d, Number of elements = %d', [i, Nelem]));
             for j := 1 to Nelem do
-                Writeln(F, '"', Str^[j], '"  Idx= ', Idx^[j]: 0);
+            begin
+                WriteStr(sout, '"', Str^[j], '"  Idx= ', Idx^[j]: 0);
+                FSWriteln(F, sout);
+            end;
         end;
-        Writeln(F);
+        FSWriteln(F);
     end;
-    Writeln(F, 'LINEAR LISTING...');
+    FSWriteln(F, 'LINEAR LISTING...');
     for i := 1 to NumElements do
     begin
-        Writeln(F, i: 3, ' = "', Stringptr^[i], '"');
+        WriteStr(sout, i: 3, ' = "', Stringptr^[i], '"');
+        FSWriteln(F, sout);
     end;
-    CloseFile(F);
+    FreeAndNil(F);
 
 end;
 

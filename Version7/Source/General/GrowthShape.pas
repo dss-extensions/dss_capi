@@ -45,6 +45,7 @@ interface
  }
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -96,7 +97,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetMult(Yr: Integer): Double;  // Get multiplier for Specified Year
     end;
 
@@ -347,17 +348,16 @@ end;
 procedure TGrowthShape.DoCSVFile(const FileName: String);
 
 var
-    F: Textfile;
+    F: TFileStream = nil;
     i: Integer;
     s: String;
 
 begin
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 603);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -365,10 +365,10 @@ begin
         with ActiveGrowthShapeObj do
         begin
             i := 0;
-            while (not EOF(F)) and (i < Npts) do
+            while ((F.Position + 1) < F.Size) and (i < Npts) do
             begin
                 Inc(i);
-                Readln(F, s);  {Use AuxParser to allow flexible formats}
+                FSReadln(F, s);  {Use AuxParser to allow flexible formats}
                 with AuxParser do
                 begin
              // Readln(F,Year^[i], Multiplier^[i]);
@@ -379,13 +379,13 @@ begin
                     Multiplier^[i] := DblValue;
                 end;
             end;
-            CloseFile(F);
+            F.Free();
         end;
     except
         On E: Exception do
         begin
             DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 604);
-            CloseFile(F);
+            FreeAndNil(F);
             Exit;
         end;
     end;
@@ -395,17 +395,16 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TGrowthShape.DoSngFile(const FileName: String);
 var
-    F: file of Single;
+    F: TFileStream = nil;
     Y, M: Single;
     i: Integer;
 
 begin
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 605);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -413,18 +412,22 @@ begin
         with ActiveGrowthShapeObj do
         begin
             i := 0;
-            while (not EOF(F)) and (i < Npts) do
+            while ((F.Position + 1) < F.Size) and (i < Npts) do
             begin
                 Inc(i);
-                Read(F, Y, M);
+                if F.Read(Y, SizeOf(Y)) <> SizeOf(Y) then 
+                    Break;
+                if F.Read(M, SizeOf(M)) <> SizeOf(M) then 
+                    Break;
+
                 Year^[i] := Round(Y);
                 Multiplier^[i] := M;
             end;
-            CloseFile(F);
+            F.Free();
         end;
     except
         DoSimpleMsg('Error Processing GrowthShape File: "' + FileName, 606);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -433,17 +436,16 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TGrowthShape.DoDblFile(const FileName: String);
 var
-    F: file of Double;
+    F: TFileStream = nil;
     i: Integer;
     Yr: Double;
 
 begin
     try
-        AssignFile(F, FileName);
-        Reset(F);
+        F := TFileStream.Create(FileName, fmOpenRead);
     except
         DoSimpleMsg('Error Opening File: "' + FileName, 607);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -451,17 +453,20 @@ begin
         with ActiveGrowthShapeObj do
         begin
             i := 0;
-            while (not EOF(F)) and (i < Npts) do
+            while ((F.Position + 1) < F.Size) and (i < Npts) do
             begin
                 Inc(i);
-                Read(F, Yr, Multiplier^[i]);
+                if F.Read(Yr, SizeOf(Yr)) <> SizeOf(Yr) then 
+                    Break;
+                if F.Read(Multiplier^[i], SizeOf(Double)) <> SizeOf(Double) then 
+                    Break;
                 Year^[i] := Round(Yr);
             end;
-            CloseFile(F);
+            F.Free();
         end;
     except
         DoSimpleMsg('Error Processing GrowthShape File: "' + FileName, 608);
-        CloseFile(F);
+        FreeAndNil(F);
         Exit;
     end;
 
@@ -565,7 +570,7 @@ begin
     end;
 end;
 
-procedure TGrowthShapeObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TGrowthShapeObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -580,9 +585,9 @@ begin
         begin
             case i of
                 2, 3:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[i], ')');
+                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[i] + ')');
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
             end;
         end;
 

@@ -120,7 +120,6 @@ uses
     ExportOptions in 'Version7/Source/Executive/ExportOptions.pas',
     ExportResults in 'Version7/Source/Common/ExportResults.pas',
     Fault in 'Version7/Source/PDElements/Fault.pas',
-    Feeder in 'Version7/Source/Common/Feeder.pas',
     fuse in 'Version7/Source/PDElements/fuse.pas',
     UPFCControl in 'Version7/Source/Controls/UPFCControl.pas',
     GenDispatcher in 'Version7/Source/Controls/GenDispatcher.pas',

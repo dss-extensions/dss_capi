@@ -3,6 +3,7 @@ unit IndMach012Model;
 interface
 
 uses
+    Classes,
     Dynamics,
     ucomplex,
     ParserDel,
@@ -53,7 +54,7 @@ type
 
         FirstIteration, FixedSlip: Boolean;
 
-        TraceFile: TextFile;
+        TraceFile: TFileStream;
 
         procedure set_Localslip(const Value: Double);
 
@@ -121,7 +122,8 @@ var
 constructor TIndMach012Model.Create(var GenVars: TGeneratorVars; var DynaVars: TDynamicsRec; var CallBacks: TDSSCallBacks);
 {-------------------------------------------------------------------------------------------------------------}
 begin
-
+    TraceFile := nil;
+    
 {Vestas Wind generator}
     puRs := 0.0053;
     puXs := 0.106;
@@ -148,7 +150,7 @@ end;
 
 destructor TIndMach012Model.Destroy;
 begin
-
+    FreeAndNil(TraceFile);
     inherited;
 
 end;
@@ -296,7 +298,9 @@ begin
     FirstIteration := TRUE;
 
     if DebugTrace then
-        InitTraceFile;
+        InitTraceFile
+    else
+        FreeAndNil(TraceFile);
 end;
 
 {-------------------------------------------------------------------------------------------------------------}
@@ -627,31 +631,28 @@ end;
 procedure TIndMach012Model.InitTraceFile;
 {-------------------------------------------------------------------------------------------------------------}
 begin
+    FreeAndNil(TraceFile);
+    TraceFile := TFileStream.Create('IndMach012_Trace.CSV', fmCreate);
 
-    AssignFile(TraceFile, 'IndMach012_Trace.CSV');
-    Rewrite(TraceFile);
+    FSWrite(TraceFile, 'Time, Iteration, S1, |IS1|, |IS2|, |E1|, |dE1dt|, |E2|, |dE2dt|, |V1|, |V2|');
+    FSWriteln(TraceFile);
 
-    Write(TraceFile, 'Time, Iteration, S1, |IS1|, |IS2|, |E1|, |dE1dt|, |E2|, |dE2dt|, |V1|, |V2|');
-    Writeln(TraceFile);
-
-    CloseFile(TraceFile);
+    FSFlush(TraceFile);
 end;
 
 {-------------------------------------------------------------------------------------------------------------}
 procedure TIndMach012Model.WriteTraceRecord;
 {-------------------------------------------------------------------------------------------------------------}
 begin
-    AssignFile(TraceFile, 'IndMach012_Trace.CSV');
-    Append(TraceFile);
-    Write(TraceFile, Format('%-.6g, ', [DynaData^.t]), DynaData^.IterationFlag, ', ', Format('%-.6g, ', [S1]));
+    FSWrite(TraceFile, Format('%-.6g, ', [DynaData^.t]), DynaData^.IterationFlag, ', ', Format('%-.6g, ', [S1]));
 
-    Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));
-    Write(TraceFile, Format('%-.6g, %-.6g, %-.6g, %-.6g, ', [Cabs(E1), Cabs(dE1dt), Cabs(E2), Cabs(dE2dt)]));
-    Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(V1), Cabs(V2)]));
+    FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));
+    FSWrite(TraceFile, Format('%-.6g, %-.6g, %-.6g, %-.6g, ', [Cabs(E1), Cabs(dE1dt), Cabs(E2), Cabs(dE2dt)]));
+    FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(V1), Cabs(V2)]));
 
-    Writeln(TraceFile);
+    FSWriteln(TraceFile);
 
-    CloseFile(TraceFile);
+    FSFlush(TraceFile);
 end;
 
 initialization

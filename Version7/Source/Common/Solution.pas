@@ -42,6 +42,7 @@ unit Solution;
 interface
 
 uses
+    Classes,
     uCOMPLEX,
     Arraydef,
     Command,
@@ -233,7 +234,7 @@ type
         function VDiff(i, j: Integer): Complex;  // Difference between two node voltages
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         procedure WriteConvergenceReport(const Fname: String);
         procedure Update_dblHour;
         procedure Increment_time;
@@ -1481,7 +1482,6 @@ end;
 procedure TSolutionObj.Calc_Inc_Matrix_Org;
 
 var
-//  Ftree       : TextFile;                           // For debugging
     pdElem: TPDElement;
     topo: TCktTree;
 //  TreeNm,                                           // For debugging
@@ -1694,7 +1694,7 @@ begin
 
 end;
 
-procedure TSolutionObj.DumpProperties(var F: TextFile; complete: Boolean);
+procedure TSolutionObj.DumpProperties(var F: TFileStream; complete: Boolean);
 
 var
     i, j: Integer;
@@ -1707,103 +1707,103 @@ var
     cVals: array of Complex;
 begin
 
-    Writeln(F, '! OPTIONS');
+    FSWriteln(F, '! OPTIONS');
 
   // Inherited DumpProperties(F,Complete);
 
-    Writeln(F, '! NumNodes = ', ActiveCircuit.NumNodes: 0);
+    FSWriteln(F, '! NumNodes = ', IntToStr(ActiveCircuit.NumNodes));
 
     {WITH ParentClass Do
      FOR i := 1 to NumProperties Do
      Begin
-        Writeln(F,'Set ',PropertyName^[i],'=',PropertyValue^[i]);
+        FSWriteln(F,'Set ',PropertyName^[i],'=',PropertyValue^[i]);
      End;
      }
-    Writeln(F, 'Set Mode=', GetSolutionModeID);
-    Writeln(F, 'Set ControlMode=', GetControlModeID);
-    Writeln(F, 'Set Random=', GetRandomModeID);
-    Writeln(F, 'Set hour=', DynaVars.intHour: 0);
-    Writeln(F, 'Set sec=', Format('%-g', [DynaVars.t]));
-    Writeln(F, 'Set year=', Year: 0);
-    Writeln(F, 'Set frequency=', Format('%-g', [Frequency]));
-    Writeln(F, 'Set stepsize=', Format('%-g', [DynaVars.h]));
-    Writeln(F, 'Set number=', NumberOfTimes: 0);
-    Writeln(F, 'Set circuit=', ActiveCircuit.Name);
-    Writeln(F, 'Set editor=', DefaultEditor);
-    Writeln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
-    Writeln(F, 'Set maxiterations=', MaxIterations: 0);
-    Writeln(F, 'Set miniterations=', MinIterations: 0);
-    Writeln(F, 'Set loadmodel=', GetLoadModel);
+    FSWriteln(F, 'Set Mode=', GetSolutionModeID);
+    FSWriteln(F, 'Set ControlMode=', GetControlModeID);
+    FSWriteln(F, 'Set Random=', GetRandomModeID);
+    FSWriteln(F, 'Set hour=', IntToStr(DynaVars.intHour));
+    FSWriteln(F, 'Set sec=', Format('%-g', [DynaVars.t]));
+    FSWriteln(F, 'Set year=', IntToStr(Year));
+    FSWriteln(F, 'Set frequency=', Format('%-g', [Frequency]));
+    FSWriteln(F, 'Set stepsize=', Format('%-g', [DynaVars.h]));
+    FSWriteln(F, 'Set number=', IntToStr(NumberOfTimes));
+    FSWriteln(F, 'Set circuit=', ActiveCircuit.Name);
+    FSWriteln(F, 'Set editor=', DefaultEditor);
+    FSWriteln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
+    FSWriteln(F, 'Set maxiterations=', IntToStr(MaxIterations));
+    FSWriteln(F, 'Set miniterations=', IntToStr(MinIterations));
+    FSWriteln(F, 'Set loadmodel=', GetLoadModel);
 
-    Writeln(F, 'Set loadmult=', Format('%-g', [ActiveCircuit.LoadMultiplier]));
-    Writeln(F, 'Set Normvminpu=', Format('%-g', [ActiveCircuit.NormalMinVolts]));
-    Writeln(F, 'Set Normvmaxpu=', Format('%-g', [ActiveCircuit.NormalMaxVolts]));
-    Writeln(F, 'Set Emergvminpu=', Format('%-g', [ActiveCircuit.EmergMinVolts]));
-    Writeln(F, 'Set Emergvmaxpu=', Format('%-g', [ActiveCircuit.EmergMaxVolts]));
-    Writeln(F, 'Set %mean=', Format('%-.4g', [ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0]));
-    Writeln(F, 'Set %stddev=', Format('%-.4g', [ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0]));
-    Writeln(F, 'Set LDCurve=', ActiveCircuit.LoadDurCurve);  // Load Duration Curve
-    Writeln(F, 'Set %growth=', Format('%-.4g', [((ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
+    FSWriteln(F, 'Set loadmult=', Format('%-g', [ActiveCircuit.LoadMultiplier]));
+    FSWriteln(F, 'Set Normvminpu=', Format('%-g', [ActiveCircuit.NormalMinVolts]));
+    FSWriteln(F, 'Set Normvmaxpu=', Format('%-g', [ActiveCircuit.NormalMaxVolts]));
+    FSWriteln(F, 'Set Emergvminpu=', Format('%-g', [ActiveCircuit.EmergMinVolts]));
+    FSWriteln(F, 'Set Emergvmaxpu=', Format('%-g', [ActiveCircuit.EmergMaxVolts]));
+    FSWriteln(F, 'Set %mean=', Format('%-.4g', [ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0]));
+    FSWriteln(F, 'Set %stddev=', Format('%-.4g', [ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0]));
+    FSWriteln(F, 'Set LDCurve=', ActiveCircuit.LoadDurCurve);  // Load Duration Curve
+    FSWriteln(F, 'Set %growth=', Format('%-.4g', [((ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
     with ActiveCircuit.AutoAddObj do
     begin
-        Writeln(F, 'Set genkw=', Format('%-g', [GenkW]));
-        Writeln(F, 'Set genpf=', Format('%-g', [GenPF]));
-        Writeln(F, 'Set capkvar=', Format('%-g', [Capkvar]));
-        Write(F, 'Set addtype=');
+        FSWriteln(F, 'Set genkw=', Format('%-g', [GenkW]));
+        FSWriteln(F, 'Set genpf=', Format('%-g', [GenPF]));
+        FSWriteln(F, 'Set capkvar=', Format('%-g', [Capkvar]));
+        FSWrite(F, 'Set addtype=');
         case Addtype of
             GENADD:
-                Writeln(F, 'generator');
+                FSWriteln(F, 'generator');
             CAPADD:
-                Writeln(F, 'capacitor');
+                FSWriteln(F, 'capacitor');
         end;
     end;
-    Write(F, 'Set allowduplicates=');
+    FSWrite(F, 'Set allowduplicates=');
     if ActiveCircuit.DuplicatesAllowed then
-        Writeln(F, 'Yes')
+        FSWriteln(F, 'Yes')
     else
-        Writeln(F, 'No');
-    Write(F, 'Set zonelock=');
+        FSWriteln(F, 'No');
+    FSWrite(F, 'Set zonelock=');
     if ActiveCircuit.ZonesLocked then
-        Writeln(F, 'Yes')
+        FSWriteln(F, 'Yes')
     else
-        Writeln(F, 'No');
-    Writeln(F, 'Set ueweight=', ActiveCircuit.UEWeight: 8: 2);
-    Writeln(F, 'Set lossweight=', ActiveCircuit.LossWeight: 8: 2);
-    Writeln(F, 'Set ueregs=', IntArraytoString(ActiveCircuit.UEregs, ActiveCircuit.NumUERegs));
-    Writeln(F, 'Set lossregs=', IntArraytoString(ActiveCircuit.Lossregs, ActiveCircuit.NumLossRegs));
-    Write(F, 'Set voltagebases=(');  //  changes the default voltage base rules
+        FSWriteln(F, 'No');
+    FSWriteln(F, Format('Set ueweight=%8.2g', [ActiveCircuit.UEWeight]));
+    FSWriteln(F, Format('Set lossweight=%8.2g', [ActiveCircuit.LossWeight]));
+    FSWriteln(F, 'Set ueregs=', IntArraytoString(ActiveCircuit.UEregs, ActiveCircuit.NumUERegs));
+    FSWriteln(F, 'Set lossregs=', IntArraytoString(ActiveCircuit.Lossregs, ActiveCircuit.NumLossRegs));
+    FSWrite(F, 'Set voltagebases=(');  //  changes the default voltage base rules
     i := 1;
     with ActiveCircuit do
         while LegalVoltageBases^[i] > 0.0 do
         begin
-            Write(F, LegalVoltageBases^[i]: 10: 2);
+            FSWrite(F, Format('%10.2g', [LegalVoltageBases^[i]]));
             inc(i);
         end;
-    Writeln(F, ')');
+    FSWriteln(F, ')');
     case Algorithm of
         NORMALSOLVE:
-            Writeln(F, 'Set algorithm=normal');
+            FSWriteln(F, 'Set algorithm=normal');
         NEWTONSOLVE:
-            Writeln(F, 'Set algorithm=newton');
+            FSWriteln(F, 'Set algorithm=newton');
     end;
-    Write(F, 'Set Trapezoidal=');
+    FSWrite(F, 'Set Trapezoidal=');
     if ActiveCircuit.TrapezoidalIntegration then
-        Writeln(F, 'yes')
+        FSWriteln(F, 'yes')
     else
-        Writeln(F, 'no');
-    Writeln(F, 'Set genmult=', Format('%-g', [ActiveCircuit.GenMultiplier]));
+        FSWriteln(F, 'no');
+    FSWriteln(F, 'Set genmult=', Format('%-g', [ActiveCircuit.GenMultiplier]));
 
-    Writeln(F, 'Set Basefrequency=', Format('%-g', [ActiveCircuit.Fundamental]));
+    FSWriteln(F, 'Set Basefrequency=', Format('%-g', [ActiveCircuit.Fundamental]));
 
-    Write(F, 'Set harmonics=(');  //  changes the default voltage base rules
+    FSWrite(F, 'Set harmonics=(');  //  changes the default voltage base rules
     if DoAllHarmonics then
-        Write(F, 'ALL')
+        FSWrite(F, 'ALL')
     else
         for i := 1 to HarmonicListSize do
-            Write(F, Format('%-g, ', [HarmonicList^[i]]));
-    Writeln(F, ')');
-    Writeln(F, 'Set maxcontroliter=', MaxControlIterations: 0);
-    Writeln(F);
+            FSWrite(F, Format('%-g, ', [HarmonicList^[i]]));
+    FSWriteln(F, ')');
+    FSWriteln(F, 'Set maxcontroliter=', IntToStr(MaxControlIterations));
+    FSWriteln(F);
 
     if Complete then
         with ActiveCircuit do
@@ -1820,10 +1820,10 @@ begin
             SetLength(cVals, nNZ);
             GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
 
-            Writeln(F, 'System Y Matrix (Lower Triangle by Columns)');
-            Writeln(F);
-            Writeln(F, '  Row  Col               G               B');
-            Writeln(F);
+            FSWriteln(F, 'System Y Matrix (Lower Triangle by Columns)');
+            FSWriteln(F);
+            FSWriteln(F, '  Row  Col               G               B');
+            FSWriteln(F);
 
       // traverse the compressed column format
             for j := 0 to nBus - 1 do
@@ -1831,7 +1831,7 @@ begin
                 for p := ColPtr[j] to ColPtr[j + 1] - 1 do
                 begin
                     i := RowIdx[p];  // the zero-based row
-                    Writeln(F, Format('[%4d,%4d] = %12.5g + j%12.5g', [i + 1, j + 1, cVals[p].re, cVals[p].im]));
+                    FSWriteln(F, Format('[%4d,%4d] = %12.5g + j%12.5g', [i + 1, j + 1, cVals[p].re, cVals[p].im]));
                 end;
             end;
         end;
@@ -1847,34 +1847,37 @@ end;
 procedure TSolutionObj.WriteConvergenceReport(const Fname: String);
 var
     i: Integer;
-    F: TextFile;
+    F: TFileStream = nil;
+    sout: String;
 begin
     try
-        Assignfile(F, Fname);
-        ReWrite(F);
+        F := TFileStream.Create(Fname, fmCreate);
 
-        Writeln(F);
-        Writeln(F, '-------------------');
-        Writeln(F, 'Convergence Report:');
-        Writeln(F, '-------------------');
-        Writeln(F, '"Bus.Node", "Error", "|V|","Vbase"');
+        FSWriteln(F);
+        FSWriteln(F, '-------------------');
+        FSWriteln(F, 'Convergence Report:');
+        FSWriteln(F, '-------------------');
+        FSWriteln(F, '"Bus.Node", "Error", "|V|","Vbase"');
         with ActiveCircuit do
             for i := 1 to NumNodes do
                 with MapNodeToBus^[i] do
                 begin
-                    Write(F, '"', pad((BusList.Get(Busref) + '.' + IntToStr(NodeNum) + '"'), 18));
-                    Write(F, ', ', ErrorSaved^[i]: 10: 5);
-                    Write(F, ', ', VmagSaved^[i]: 14);
-                    Write(F, ', ', NodeVbase^[i]: 14);
-                    Writeln(F);
+                    WriteStr(sout, 
+                        '"', pad((BusList.Get(Busref) + '.' + IntToStr(NodeNum) + '"'), 18),
+                        ', ', ErrorSaved^[i]: 10: 5,
+                        ', ', VmagSaved^[i]: 14,
+                        ', ', NodeVbase^[i]: 14
+                    );
+                    FSWrite(F, sout);
+                    FSWriteln(F);
                 end;
 
-        Writeln(F);
-        Writeln(F, 'Max Error = ', MaxError: 10: 5);
+        FSWriteln(F);
+        WriteStr(sout, 'Max Error = ', MaxError: 10: 5);
+        FSWriteln(F, sout);
 
     finally
-
-        CloseFile(F);
+        FreeAndNil(F);
         FireOffEditor(Fname);
 
     end;
@@ -2321,18 +2324,17 @@ end;
 procedure TSolutionObj.SaveVoltages;
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     Volts: Complex;
     i, j: Integer;
     BusName: String;
-
+    sout: String;
 begin
 
     try
 
         try
-            AssignFile(F, OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt');
-            Rewrite(F);
+            F := TFileStream.Create(OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt', fmCreate);
 
             with ActiveCircuit do
                 for i := 1 to NumBuses do
@@ -2341,7 +2343,8 @@ begin
                     for j := 1 to Buses^[i].NumNodesThisBus do
                     begin
                         Volts := NodeV^[Buses^[i].GetRef(j)];
-                        Writeln(F, BusName, ', ', Buses^[i].GetNum(j): 0, Format(', %-.7g, %-.7g', [Cabs(Volts), CDang(Volts)]));
+                        WriteStr(sout, BusName, ', ', Buses^[i].GetNum(j): 0, Format(', %-.7g, %-.7g', [Cabs(Volts), CDang(Volts)]));
+                        FSWriteln(F, sout);
                     end;
                 end;
 
@@ -2355,8 +2358,7 @@ begin
 
 
     finally
-
-        CloseFile(F);
+        FreeAndNil(F);
         GlobalResult := OutputDirectory {CurrentDSSDir} + CircuitName_ + 'SavedVoltages.Txt';
 
     end;

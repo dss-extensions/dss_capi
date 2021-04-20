@@ -40,7 +40,8 @@ uses
     {$ENDIF}
     sysutils,
     math,
-    DSSGlobals;
+    DSSGlobals,
+    Utilities;
 
 type
     TByteArr = array of uint8;
@@ -106,7 +107,7 @@ end;
 //******************************************************************************
 procedure CloseMHandler(Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean); OVERLOAD;
 var
-    F: TextFile;
+    F: TFileStream = nil;
     buffer: Uint8;
     idx: Integer;
     MWrite, Fhead: Boolean;
@@ -117,22 +118,25 @@ begin
 
 { Open Output file; check for errors}
     try
-        AssignFile(F, Dest_path);
         if AppendFile then
-            Append(F)
+        begin
+            F := TFileStream.Create(Dest_path, fmOpenReadWrite);
+            F.Seek(0, soEnd);
+        end
         else
-            Rewrite(F);
+        begin
+            F := TFileStream.Create(Dest_path, fmCreate);
+        end;
     except
         On E: Exception do
         begin
             DoSimpleMsg('Error Attempting to open file: "' + Dest_path + '. ' + E.Message, 159000);
-            CloseFile(F);
+            FreeAndNil(F);
             Exit;
         end;
     end;
 
     try
-
         idx := 0;
         MType := 0;  // initialize to eliminate compiler warning
         MWrite := FALSE;
@@ -168,13 +172,13 @@ begin
                                 Fhead := FALSE;
                             if (buffer = 10) then
                             begin
-                                writeln(F);
+                                fswriteln(F);
                                 Fhead := TRUE;
                                 inc(idx);
                             end
                             else
                             if (buffer > 0) then
-                                write(F, Char(buffer));
+                                fswrite(F, Char(buffer));
                         end
                         else
                         begin
@@ -184,17 +188,13 @@ begin
                     end;
                     2:
                     begin        // Is a Double
-              {$IFNDEF FPC}
-                        Mem_Space.ReadData(TVariableDbl, 8);
-              {$ELSE}
                         Mem_Space.Read(TVariableDbl, sizeof(Double));
-              {$ENDIF}
                         idx := idx + 7;
                         if Fhead then
                             Fhead := FALSE
                         else
-                            write(F, ', ');
-                        write(F, Format('%-g', [TVariableDbl]));
+                            fswrite(F, ', ');
+                        fswrite(F, Format('%-g', [TVariableDbl]));
                         MWrite := FALSE;
                     end
                 else             // Not recognized
@@ -206,7 +206,7 @@ begin
             inc(idx);
         end;
     finally    // make sure we close the file
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 //******************************************************************************

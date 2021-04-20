@@ -19,6 +19,7 @@ unit TCC_Curve;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -74,7 +75,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property NumPoints: Integer READ Npts;
 
@@ -499,7 +500,7 @@ begin
 end;
 
 
-procedure TTCC_CurveObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TTCC_CurveObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -510,7 +511,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 end;
 

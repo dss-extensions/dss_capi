@@ -201,7 +201,7 @@ TYPE
        Procedure GetCurrents(Curr: pComplexArray);                Override; // Get present value of terminal Curr
        Procedure GetInjCurrents(Curr: pComplexArray);             Override;   // Returns Injextion currents
        PROCEDURE InitPropertyValues(ArrayOffset:Integer);         Override;
-       Procedure DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+       Procedure DumpProperties(Var F:TFileStream; Complete:Boolean);Override;
        function  Get_FileName: String;
 
       // Property CSVFileName:String Read Get_FileName;
@@ -1887,7 +1887,7 @@ Begin
 End;
 
 {--------------------------------------------------------------------------}
-Procedure TFMonitorObj.DumpProperties(Var F:TextFile; Complete:Boolean);
+Procedure TFMonitorObj.DumpProperties(Var F:TFileStream; Complete:Boolean);
 
 VAR
    i, k:Integer;
@@ -1898,28 +1898,28 @@ Begin
     With ParentClass Do
      For i := 1 to NumProperties Do
        Begin
-          Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
+          FSWriteln(F,'~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
        End;
 
 
     If Complete Then Begin
-      Writeln(F);
-      Writeln(F,'// BufferSize=',BufferSize:0);
-      Writeln(F,'// Hour=',Hour:0);
-      Writeln(F,'// Sec=',Sec:0);
-      Writeln(F,'// BaseFrequency=',BaseFrequency:0:1);
-      Writeln(F,'// Bufptr=',BufPtr:0);
-      Writeln(F,'// Buffer=');
+      FSWriteln(F);
+      FSWriteln(F,'// BufferSize=',BufferSize:0);
+      FSWriteln(F,'// Hour=',Hour:0);
+      FSWriteln(F,'// Sec=',Sec:0);
+      FSWriteln(F,'// BaseFrequency=',BaseFrequency:0:1);
+      FSWriteln(F,'// Bufptr=',BufPtr:0);
+      FSWriteln(F,'// Buffer=');
       k:=0;
       FOR i := 1 to BufPtr DO Begin
-        Write(F, MonBuffer^[i]:0:1,', ');
+        FSWrite(F, MonBuffer^[i]:0:1,', ');
         Inc(k);
         IF k=(2 + Fnconds*4) THEN Begin
-          Writeln(F);
+          FSWriteln(F);
           k:=0;
         End;
       End;
-      Writeln(F);
+      FSWriteln(F);
     End;
 
 End;

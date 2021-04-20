@@ -76,6 +76,7 @@ procedure ExportC(FileNm: String);
 implementation
 
 uses
+    Classes,
     uComplex,
     Arraydef,
     Sysutils,
@@ -115,7 +116,7 @@ uses
     CNData,
     TSData;
 
-procedure WriteElementVoltagesExportFile(var F: TextFile; pElem: TDSSCktElement; MaxNumNodes: Integer);
+procedure WriteElementVoltagesExportFile(var F: TFileStream; pElem: TDSSCktElement; MaxNumNodes: Integer);
 
 var
     NCond, Nterm, i, j, k, m, nref, bref: Integer;
@@ -128,17 +129,17 @@ begin
     Nterm := pElem.Nterms;
     k := 0;
     BusName := (StripExtension(pElem.FirstBus));
-    Write(F, Format('%s.%s', [pElem.DSSClassName, pElem.Name]));
+    FSWrite(F, Format('%s.%s', [pElem.DSSClassName, pElem.Name]));
 
 
-    Write(F, Format(',%d', [NTerm]));
+    FSWrite(F, Format(',%d', [NTerm]));
 
     for j := 1 to NTerm do
     begin
-        Write(F, Format(',%d,', [j]));
-        Write(F, Format('%d,%d,', [NCond, pElem.NPhases]));
+        FSWrite(F, Format(',%d,', [j]));
+        FSWrite(F, Format('%d,%d,', [NCond, pElem.NPhases]));
 
-        Write(F, Format('%s,', [UpperCase(BusName)]));
+        FSWrite(F, Format('%s,', [UpperCase(BusName)]));
         for i := 1 to NCond do
         begin
             Inc(k);
@@ -157,18 +158,18 @@ begin
                         Vpu := 0.0;
 
                     if (i = 1) then
-                        Write(F, Format('%6.3f', [Buses^[bref].kvBase * sqrt(3)]));
+                        FSWrite(F, Format('%6.3f', [Buses^[bref].kvBase * sqrt(3)]));
                 end;
             with ActiveCircuit do
             begin
-                Write(F, Format(', %d, %10.6g, %6.3f, %9.5g', [k, Vmag, cdang(Volts), Vpu]));
+                FSWrite(F, Format(', %d, %10.6g, %6.3f, %9.5g', [k, Vmag, cdang(Volts), Vpu]));
             end; //end with ActiveCircuit
 
         end; //end numconductors
 
    {Zero Fill row}
         for m := (NCond + 1) to (MaxNumNodes) do
-            Write(F, ', 0, 0, 0, 0');
+            FSWrite(F, ', 0, 0, 0, 0');
 
         BusName := StripExtension(pElem.Nextbus);
     end; // end for numterminals
@@ -181,7 +182,7 @@ procedure ExportSeqVoltages(FileNm: String);
 // Export Symmetrical Component bus voltages
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     nref: Integer;
     Vph, VphLL, V012: array[1..3] of Complex;
@@ -194,10 +195,9 @@ var
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
-        Writeln(F, 'Bus,  V1,  p.u.,Base kV, V2, %V2/V1, V0, %V0/V1, Vresidual, %NEMA');
+        FSWriteln(F, 'Bus,  V1,  p.u.,Base kV, V2, %V2/V1, V0, %V0/V1, Vresidual, %NEMA');
         with ActiveCircuit do
         begin
             for i := 1 to NumBuses do
@@ -261,7 +261,7 @@ begin
                     for j := 1 to Buses^[i].NumNodesThisBus do
                         Caccum(Vresidual, NodeV^[Buses^[i].GetRef(j)]);
 
-                Writeln(F,
+                FSWriteln(F,
                     Format('"%s", %10.6g, %9.5g, %8.2f, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
                     [Uppercase(BusList.Get(i)), V1, Vpu, (Buses^[i].kvbase * SQRT3), V2, V2V1, V0, V0V1, Cabs(Vresidual), V_NEMA]
                     ));
@@ -275,7 +275,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;
@@ -287,7 +287,7 @@ procedure ExportVoltages(FileNm: String);
 
 var
     MaxNumNodes: Integer;
-    F: TextFile;
+    F: TFileStream = nil;
     i, j, jj: Integer;
     BusName: String;
     Volts: Complex;
@@ -306,21 +306,19 @@ begin
             MaxNumNodes := max(MaxNumNodes, Buses^[i].NumNodesThisBus);
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
-
-        Write(F, 'Bus, BasekV');
+        FSWrite(F, 'Bus, BasekV');
         for i := 1 to MaxNumNodes do
-            Write(F, Format(', Node%d, Magnitude%d, Angle%d, pu%d', [i, i, i, i]));
-        Writeln(F);
+            FSWrite(F, Format(', Node%d, Magnitude%d, Angle%d, pu%d', [i, i, i, i]));
+        FSWriteln(F);
 
         with ActiveCircuit do
         begin
             for i := 1 to NumBuses do
             begin
                 BusName := BusList.Get(i);
-                Write(F, Format('"%s", %.5g', [UpperCase(BusName), Buses^[i].kvbase * SQRT3]));
+                FSWrite(F, Format('"%s", %.5g', [UpperCase(BusName), Buses^[i].kvbase * SQRT3]));
 
                 jj := 1;
                 with Buses^[i] do
@@ -338,14 +336,14 @@ begin
                         else
                             Vpu := 0.0;
 
-                        Write(F,
+                        FSWrite(F,
                             Format(', %d, %10.6g, %6.1f, %9.5g',
                             [GetNum(NodeIdx), Vmag, cdang(Volts), Vpu]));
                     end;
            {Zero Fill row}
                 for j := Buses^[i].NumNodesThisBus + 1 to MaxNumNodes do
-                    Write(F, ', 0, 0, 0, 0');
-                Writeln(F);
+                    FSWrite(F, ', 0, 0, 0, 0');
+                FSWriteln(F);
             end;
         end;
 
@@ -353,14 +351,14 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteSeqCurrents(var F: TextFile; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
+procedure CalcAndWriteSeqCurrents(var F: TFileStream; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
 var
     I0, I1, I2, I2I1, I0I1, iNormal, iEmerg: Double;
     i, k, NCond: Integer;
@@ -436,7 +434,7 @@ begin
         Caccum(Iresidual, cBuffer^[i]);
 
 
-    Writeln(F, Format('"%s", %3d, %10.6g, %8.4g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
+    FSWriteln(F, Format('"%s", %3d, %10.6g, %8.4g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
         [(pelem.DSSClassName + '.' + UpperCase(pelem.Name)), j, I1, iNormal, iEmerg, I2, I2I1, I0, I0I1, Cabs(Iresidual), I_NEMA]));
 end;
 
@@ -444,7 +442,7 @@ end;
 procedure ExportSeqCurrents(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     j: Integer;
     pElem: TDSSCktElement;
     PDElem: TPDElement;
@@ -456,12 +454,10 @@ begin
     cBuffer := NIL;
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
-
+        F := TFileStream.Create(FileNm, fmCreate);
 
         {Sequence Currents}
-        Writeln(F, 'Element, Terminal,  I1, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1, Iresidual, %NEMA');
+        FSWriteln(F, 'Element, Terminal,  I1, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1, Iresidual, %NEMA');
 
         {Allocate cBuffer big enough for largest circuit element}
         Getmem(cbuffer, sizeof(Complex) * GetMaxCktElementSize);
@@ -529,48 +525,48 @@ begin
     finally
         if Assigned(Cbuffer) then
             Freemem(cBuffer);
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteCurrents(var F: TextFile; pElem: TDSSCktElement; Cbuffer: pComplexArray; CondWidth, TermWidth: Integer);
+procedure CalcAndWriteCurrents(var F: TFileStream; pElem: TDSSCktElement; Cbuffer: pComplexArray; CondWidth, TermWidth: Integer);
 var
     i, j, k: Integer;
     Iresid: Complex;
 
 begin
     k := 0;
-    Write(F, Format('%s', [pelem.DSSClassName + '.' + UpperCase(pElem.Name)]));
+    FSWrite(F, Format('%s', [pelem.DSSClassName + '.' + UpperCase(pElem.Name)]));
     for      j := 1 to pElem.Nterms do
     begin
         Iresid := CZERO;
         for    i := 1 to pElem.NConds do
         begin
             Inc(k);
-            Write(F,
+            FSWrite(F,
                 Format(', %10.6g, %8.2f', [Cabs(cBuffer^[k]), cdang(cBuffer^[k])]));
             Caccum(Iresid, cBuffer^[k]);
         end;
         for i := pElem.Nconds + 1 to CondWidth do
-            Write(F, Format(', %10.6g, %8.2f', [0.0, 0.0]));
-        Write(F, Format(', %10.6g, %8.2f', [Cabs(Iresid), cdang(Iresid)]));
+            FSWrite(F, Format(', %10.6g, %8.2f', [0.0, 0.0]));
+        FSWrite(F, Format(', %10.6g, %8.2f', [Cabs(Iresid), cdang(Iresid)]));
     end;
 
     {Filler if no. terms less than termwidth}
     for j := pElem.Nterms + 1 to TermWidth do
         for i := 1 to Condwidth + 1 do
-            Write(F, Format(', %10.6g, %8.2f', [0.0, 0.0]));
+            FSWrite(F, Format(', %10.6g, %8.2f', [0.0, 0.0]));
 
-    Writeln(F);
+    FSWriteln(F);
 end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteMaxCurrents(var F: TextFile; pElem: TPDElement; Cbuffer: pComplexArray);
+procedure CalcAndWriteMaxCurrents(var F: TFileStream; pElem: TPDElement; Cbuffer: pComplexArray);
 var
     RatingIdx,
     i: Integer;
@@ -608,7 +604,7 @@ begin
             SeasonalRating := FALSE;    // The user didn't define the seasonal signal
     end;
 
-    Write(F, Format('%s.%s', [pelem.DSSClassName, UpperCase(pElem.Name)]));
+    FSWrite(F, Format('%s.%s', [pelem.DSSClassName, UpperCase(pElem.Name)]));
     MaxCurrent := 0.0;
     for    i := 1 to pElem.Nphases do
     begin
@@ -619,14 +615,14 @@ begin
     //----pElem.ActiveTerminalIdx := 1;
     LocalPower := CmulReal(pElem.Power[1], 0.001);
     if (pElem.NormAmps = 0.0) or (pElem.EmergAmps = 0.0) then
-        Write(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, 0.0, 0.0]))
+        FSWrite(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, 0.0, 0.0]))
     else
-        Write(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, MaxCurrent / NormAmps * 100.0, MaxCurrent / Emergamps * 100.0]));
+        FSWrite(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, MaxCurrent / NormAmps * 100.0, MaxCurrent / Emergamps * 100.0]));
 
-    Write(F, Format(', %10.6g, %10.6g, %d, %d, %d', [Localpower.re, Localpower.im, pElem.BranchNumCustomers, pElem.BranchTotalCustomers, pElem.NPhases]));
+    FSWrite(F, Format(', %10.6g, %10.6g, %d, %d, %d', [Localpower.re, Localpower.im, pElem.BranchNumCustomers, pElem.BranchTotalCustomers, pElem.NPhases]));
     with ActiveCircuit do
-        Write(F, Format(', %-.3g ', [Buses^[MapNodeToBus^[PElem.NodeRef^[1]].BusRef].kVBase]));
-    Writeln(F);
+        FSWrite(F, Format(', %-.3g ', [Buses^[MapNodeToBus^[PElem.NodeRef^[1]].BusRef].kVBase]));
+    FSWriteln(F);
 end;
 
 
@@ -634,7 +630,7 @@ end;
 procedure ExportCurrents(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     cBuffer: pComplexArray;
     pElem: TDSSCktElement;
     MaxCond, MaxTerm: Integer;
@@ -645,8 +641,7 @@ begin
     cBuffer := NIL;
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
 
@@ -665,14 +660,14 @@ begin
 
 
         {Branch Currents}
-        Write(F, 'Element');
+        FSWrite(F, 'Element');
         for i := 1 to MaxTerm do
         begin
             for j := 1 to MaxCond do
-                Write(F, Format(', I%d_%d, Ang%d_%d', [i, j, i, j]));
-            Write(F, Format(', Iresid%d, AngResid%d', [i, i]));
+                FSWrite(F, Format(', I%d_%d, Ang%d_%d', [i, j, i, j]));
+            FSWrite(F, Format(', Iresid%d, AngResid%d', [i, i]));
         end;
-        Writeln(F);
+        FSWriteln(F);
 
 
      // Sources first
@@ -730,7 +725,7 @@ begin
     finally
         if Assigned(cBuffer) then
             Freemem(cBuffer);
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -738,7 +733,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteNodeList(var F: TextFile; const CktElementName: String);
+procedure WriteNodeList(var F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -762,13 +757,13 @@ begin
         if Assigned(ActiveCircuit.ActiveCktElement) then
             with ActiveCircuit.ActiveCktElement do
             begin
-                Write(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
+                FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
                 NValues := NConds * Nterms;
                 for i := 1 to NValues do
                 begin
-                    Write(F, Format(', %d', [GetNodeNum(NodeRef^[i])]));
+                    FSWrite(F, Format(', %d', [GetNodeNum(NodeRef^[i])]));
                 end;
-                Writeln(F);
+                FSWriteln(F);
             end
     end;
 
@@ -782,7 +777,7 @@ procedure ExportNodeOrder(FileNm: String);
 }
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     pElem: TDSSCktElement;
     strName: String;
 
@@ -790,12 +785,11 @@ begin
 
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
      {Header Record}
-        Write(F, 'Element, Nterminals, Nconductors, Node-1, Node-2, Node-3, ...');
-        Writeln(F);
+        FSWrite(F, 'Element, Nterminals, Nconductors, Node-1, Node-2, Node-3, ...');
+        FSWriteln(F);
 
 
      // Sources first
@@ -851,7 +845,7 @@ begin
 
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -859,7 +853,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemCurrents(var F: TextFile; const CktElementName: String);
+procedure WriteElemCurrents(var F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -883,13 +877,13 @@ begin
             with ActiveCircuit.ActiveCktElement do
             begin
                 ComputeIterminal;
-                Write(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
+                FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
                 NValues := NConds * Nterms;
                 for i := 1 to NValues do
                 begin
-                    Write(F, Format(', %10.6g, %8.2f', [Cabs(Iterminal^[i]), cdang(Iterminal^[i])]));
+                    FSWrite(F, Format(', %10.6g, %8.2f', [Cabs(Iterminal^[i]), cdang(Iterminal^[i])]));
                 end;
-                Writeln(F);
+                FSWriteln(F);
             end
     end;
 
@@ -903,7 +897,7 @@ procedure ExportElemCurrents(FileNm: String);
 { Export currents in same order as NodeOrder export
 }
 var
-    F: TextFile;
+    F: TFileStream = nil;
     pElem: TDSSCktElement;
     strName: String;
 
@@ -911,12 +905,11 @@ begin
 
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
      {Header Record}
-        Write(F, 'Element, Nterminals, Nconductors, I_1, Ang_1, ...');
-        Writeln(F);
+        FSWrite(F, 'Element, Nterminals, Nconductors, I_1, Ang_1, ...');
+        FSWriteln(F);
 
 
      // Sources first
@@ -972,14 +965,14 @@ begin
 
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemVoltages(var F: TextFile; const CktElementName: String);
+procedure WriteElemVoltages(var F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -1003,13 +996,13 @@ begin
             with ActiveCircuit.ActiveCktElement do
             begin
                 ComputeVterminal;
-                Write(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
+                FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
                 NValues := NConds * Nterms;
                 for i := 1 to NValues do
                 begin
-                    Write(F, Format(', %10.6g, %8.2f', [Cabs(Vterminal^[i]), cdang(Vterminal^[i])]));
+                    FSWrite(F, Format(', %10.6g, %8.2f', [Cabs(Vterminal^[i]), cdang(Vterminal^[i])]));
                 end;
-                Writeln(F);
+                FSWriteln(F);
             end
     end;
 
@@ -1021,7 +1014,7 @@ procedure ExportElemVoltages(FileNm: String);
 { Export conductor voltages in same order as NodeOrder export
 }
 var
-    F: TextFile;
+    F: TFileStream = nil;
     pElem: TDSSCktElement;
     strName: String;
 
@@ -1029,12 +1022,11 @@ begin
 
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
      {Header Record}
-        Write(F, 'Element, Nterminals, Nconductors, V_1, Ang_1, ...');
-        Writeln(F);
+        FSWrite(F, 'Element, Nterminals, Nconductors, V_1, Ang_1, ...');
+        FSWriteln(F);
 
 
      // Sources first
@@ -1090,7 +1082,7 @@ begin
 
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -1099,7 +1091,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemPowers(var F: TextFile; const CktElementName: String);
+procedure WriteElemPowers(var F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
     S: Complex;
@@ -1124,14 +1116,14 @@ begin
             begin
                 ComputeVterminal;
                 ComputeIterminal;
-                Write(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
+                FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
                 NValues := NConds * Nterms;
                 for i := 1 to NValues do
                 begin
                     S := Cmul(Vterminal^[i], Conjg(Iterminal^[i]));
-                    Write(F, Format(', %10.6g, %10.6g', [S.re * 0.001, S.im * 0.001]));
+                    FSWrite(F, Format(', %10.6g, %10.6g', [S.re * 0.001, S.im * 0.001]));
                 end;
-                Writeln(F);
+                FSWriteln(F);
             end
     end;
 
@@ -1144,7 +1136,7 @@ procedure ExportElemPowers(FileNm: String);
 { Export conductor powers in same order as NodeOrder export
 }
 var
-    F: TextFile;
+    F: TFileStream = nil;
     pElem: TDSSCktElement;
     strName: String;
 
@@ -1152,12 +1144,11 @@ begin
 
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
      {Header Record}
-        Write(F, 'Element, Nterminals, Nconductors, P_1, Q_1, ...');
-        Writeln(F);
+        FSWrite(F, 'Element, Nterminals, Nconductors, P_1, Q_1, ...');
+        FSWriteln(F);
 
 
      // Sources first
@@ -1213,7 +1204,7 @@ begin
 
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -1228,27 +1219,26 @@ procedure ExportPowers(FileNm: String; opt: Integer);
  }
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     Nterm, j: Integer;
     PDElem: TPDElement;
     PCElem: TPCElement;
     S: Complex;
     Separator: String;
-
+    sout: String;
 begin
 
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
         Separator := ', ';
 
 
         case Opt of
             1:
-                Writeln(F, 'Element, Terminal, P(MW), Q(Mvar), P_Normal, Q_Normal, P_Emergency, Q_Emergency');
+                FSWriteln(F, 'Element, Terminal, P(MW), Q(Mvar), P_Normal, Q_Normal, P_Emergency, Q_Emergency');
         else
-            Writeln(F, 'Element, Terminal, P(kW), Q(kvar),  P_Normal, Q_Normal, P_Emergency, Q_Emergency');
+            FSWriteln(F, 'Element, Terminal, P(kW), Q(kvar),  P_Normal, Q_Normal, P_Emergency, Q_Emergency');
         end;
 
      // PDELEMENTS first
@@ -1262,28 +1252,35 @@ begin
 
                 for j := 1 to NTerm do
                 begin
-                    Write(F, Pad('"' + PDelem.DSSClassName + '.' + UpperCase(PDElem.Name) + '"', 24), Separator, j: 3);
+                    WriteStr(sout, Pad('"' + PDelem.DSSClassName + '.' + UpperCase(PDElem.Name) + '"', 24), Separator, j: 3);
+                    FSWrite(F, sout);
            //----PDElem.ActiveTerminalIdx := j;
                     S := PDElem.Power[j];
                     if Opt = 1 then
                         S := CmulReal(S, 0.001);
-                    Write(F, Separator, S.re * 0.001: 11: 1);
-                    Write(F, Separator, S.im * 0.001: 11: 1);
+                    WriteStr(sout, Separator, S.re * 0.001: 11: 1);
+                    FSWrite(F, sout);
+                    WriteStr(sout, Separator, S.im * 0.001: 11: 1);
+                    FSWrite(F, sout);
                     if j = 1 then
                     begin
              //----PDelem.ActiveTerminalIdx := 1;
                         S := PDElem.ExcesskVANorm[1];
                         if Opt = 1 then
                             S := CmulReal(S, 0.001);
-                        Write(F, Separator, Abs(S.re): 11: 1);
-                        Write(F, Separator, Abs(S.im): 11: 1);
+                        WriteStr(sout, Separator, Abs(S.re): 11: 1);
+                        FSWrite(F, sout);
+                        WriteStr(sout, Separator, Abs(S.im): 11: 1);
+                        FSWrite(F, sout);
                         S := PDElem.ExcesskVAEmerg[1];
                         if Opt = 1 then
                             S := CmulReal(S, 0.001);
-                        Write(F, Separator, Abs(S.re): 11: 1);
-                        Write(F, Separator, Abs(S.im): 11: 1);
+                        WriteStr(sout, Separator, Abs(S.re): 11: 1);
+                        FSWrite(F, sout);
+                        WriteStr(sout, Separator, Abs(S.im): 11: 1);
+                        FSWrite(F, sout);
                     end;
-                    Writeln(F);
+                    FSWriteln(F);
                 end;
             end;
             PDElem := ActiveCircuit.PDElements.Next;
@@ -1301,14 +1298,17 @@ begin
 
                 for j := 1 to NTerm do
                 begin
-                    Write(F, Pad('"' + PCElem.DSSClassName + '.' + UpperCase(PCElem.Name) + '"', 24), Separator, j: 3);
+                    FSWrite(F, Pad('"' + PCElem.DSSClassName + '.' + UpperCase(PCElem.Name) + '"', 24), Separator, Format('%3d', [j]));
            //----pcElem.ActiveTerminalIdx := j;
                     S := pCElem.Power[j];
                     if Opt = 1 then
                         S := CmulReal(S, 0.001);
-                    Write(F, Separator, S.re * 0.001: 11: 1);
-                    Write(F, Separator, S.im * 0.001: 11: 1);
-                    Writeln(F);
+                    
+                    WriteStr(sout, Separator, S.re * 0.001: 11: 1);
+                    FSWrite(F, sout);
+                    WriteStr(sout, Separator, S.im * 0.001: 11: 1);
+                    FSWrite(F, sout);
+                    FSWriteln(F);
 
                 end;
             end;
@@ -1318,7 +1318,7 @@ begin
         GlobalResult := FileNm;
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 end;
@@ -1331,7 +1331,7 @@ procedure ExportLosses(FileNm: String);
  }
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     PDElem: TPDElement;
     S_total, S_Load, S_NoLoad: Complex;
 
@@ -1339,10 +1339,9 @@ begin
 
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
-        Writeln(F, 'Element,  Total(W), Total(var),  I2R(W), I2X(var), No-load(W), No-load(var)');
+        FSWriteln(F, 'Element,  Total(W), Total(var),  I2R(W), I2X(var), No-load(W), No-load(var)');
      // PDELEMENTS first
         PDElem := ActiveCircuit.PDElements.First;
 
@@ -1351,7 +1350,7 @@ begin
             if (PDElem.Enabled) then
             begin
                 PDElem.GetLosses(S_total, S_Load, S_NoLoad);
-                Writeln(F, Format('%s.%s, %.7g, %.7g, %.7g, %.7g, %.7g, %.7g', [PDElem.ParentClass.Name, UpperCase(PDElem.Name), S_total.re, S_total.im, S_Load.re, S_Load.im, S_NoLoad.re, S_NoLoad.im]));
+                FSWriteln(F, Format('%s.%s, %.7g, %.7g, %.7g, %.7g, %.7g, %.7g', [PDElem.ParentClass.Name, UpperCase(PDElem.Name), S_total.re, S_total.im, S_Load.re, S_Load.im, S_NoLoad.re, S_NoLoad.im]));
             end;
             PDElem := ActiveCircuit.PDElements.Next;
         end;
@@ -1359,7 +1358,7 @@ begin
         GlobalResult := FileNm;
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 end;
@@ -1374,7 +1373,7 @@ procedure ExportPbyphase(FileNm: String; opt: Integer);
  }
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
     PDElem: TPDElement;
     PCElem: TPCElement;
@@ -1384,14 +1383,13 @@ begin
 
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         case Opt of
             1:
-                Writeln(F, 'Element, NumTerminals, NumConductors, NumPhases, MW1, Mvar1, MW2, Mvar2, MW3, Mvar3, ... ');
+                FSWriteln(F, 'Element, NumTerminals, NumConductors, NumPhases, MW1, Mvar1, MW2, Mvar2, MW3, Mvar3, ... ');
         else
-            Writeln(F, 'Element, NumTerminals, NumConductors, NumPhases, kW1, kvar1, kW2, kvar2, kW3, kvar3, ... ');
+            FSWriteln(F, 'Element, NumTerminals, NumConductors, NumPhases, kW1, kvar1, kW2, kvar2, kW3, kvar3, ... ');
         end;
 
      // PDELEMENTS first
@@ -1405,16 +1403,16 @@ begin
                 begin
                     ComputeITerminal;
                     ComputeVTerminal;
-                    Write(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, Uppercase(Name), NTerms, NConds, Nphases]));
+                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, Uppercase(Name), NTerms, NConds, Nphases]));
                     for i := 1 to Yorder do
                     begin
                         S := CmulReal(Cmul(Vterminal^[i], conjg(ITerminal^[i])), 0.001);
                         if Opt = 1 then
                             S := CmulReal(S, 0.001);   // convert to MVA
-                        Write(F, Format(', %10.3f, %10.3f', [S.re, S.im]));
+                        FSWrite(F, Format(', %10.3f, %10.3f', [S.re, S.im]));
                     end;
                 end;
-                Writeln(F);
+                FSWriteln(F);
             end;
             PDElem := ActiveCircuit.PDElements.Next;
         end;
@@ -1431,16 +1429,16 @@ begin
                 begin
                     ComputeITerminal;
                     ComputeVTerminal;
-                    Write(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, Uppercase(Name), NTerms, NConds, NPhases]));
+                    FSWrite(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, Uppercase(Name), NTerms, NConds, NPhases]));
                     for i := 1 to Yorder do
                     begin
                         S := CmulReal(Cmul(Vterminal^[i], conjg(ITerminal^[i])), 0.001);
                         if Opt = 1 then
                             S := CmulReal(S, 0.001);   // convert to MVA
-                        Write(F, Format(', %10.3f, %10.3f', [S.re, S.im]));
+                        FSWrite(F, Format(', %10.3f, %10.3f', [S.re, S.im]));
                     end;
                 end;
-                Writeln(F);
+                FSWriteln(F);
 
             end;
             PCElem := ActiveCircuit.PCElements.Next;
@@ -1449,7 +1447,7 @@ begin
         GlobalResult := FileNm;
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 end;
@@ -1462,7 +1460,7 @@ procedure ExportSeqPowers(FileNm: String; opt: Integer);
  }
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     cBuffer: pComplexArray;
     NCond, Nterm, i, j, k: Integer;
     PDElem: TPDElement;
@@ -1473,24 +1471,23 @@ var
     Vph, V012: array[1..3] of Complex;
     Iph, I012: array[1..3] of Complex;
     Separator: String;
-
+    sout: String;
 
 begin
 
     cBuffer := NIL;
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
         Separator := ', ';
 
         Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
 
         case Opt of
             1:
-                Writeln(F, 'Element, Terminal, P1(MW), Q1(Mvar), P2, Q2, P0, Q0, P_Normal, Q_Normal, P_Emergency, Q_Emergency');
+                FSWriteln(F, 'Element, Terminal, P1(MW), Q1(Mvar), P2, Q2, P0, Q0, P_Normal, Q_Normal, P_Emergency, Q_Emergency');
         else
-            Writeln(F, 'Element, Terminal, P1(kW), Q1(kvar), P2, Q2, P0, Q0, P_Normal, Q_Normal, P_Emergency, Q_Emergency');
+            FSWriteln(F, 'Element, Terminal, P1(kW), Q1(kvar), P2, Q2, P0, Q0, P_Normal, Q_Normal, P_Emergency, Q_Emergency');
         end;
 
      // PDELEMENTS first
@@ -1506,7 +1503,7 @@ begin
 
                 for j := 1 to NTerm do
                 begin
-                    Write(F, Pad('"' + PDelem.DSSClassName + '.' + Uppercase(PDElem.Name) + '"', 24), Separator, j: 3);
+                    FSWrite(F, Pad('"' + PDelem.DSSClassName + '.' + Uppercase(PDElem.Name) + '"', 24), Separator, Format('%3d', [j]));
                     for i := 1 to PDElem.NPhases do
                     begin
                         k := (j - 1) * Ncond + i;
@@ -1541,18 +1538,25 @@ begin
                     S := Cmul(V012[2], conjg(I012[2]));
                     if Opt = 1 then
                         S := CmulReal(S, 0.001);
-                    Write(F, Separator, S.re * 0.003: 11: 1);
-                    Write(F, Separator, S.im * 0.003: 11: 1);
+                    
+                    WriteStr(sout, Separator, S.re * 0.003: 11: 1);
+                    FSWrite(F, sout);
+                    WriteStr(sout, Separator, S.im * 0.003: 11: 1);
+                    FSWrite(F, sout);
                     S := Cmul(V012[3], conjg(I012[3]));
                     if Opt = 1 then
                         S := CmulReal(S, 0.001);
-                    Write(F, Separator, S.re * 0.003: 11: 1);
-                    Write(F, Separator, S.im * 0.003: 11: 1);
+                    WriteStr(sout, Separator, S.re * 0.003: 11: 1);
+                    FSWrite(F, sout);
+                    WriteStr(sout, Separator, S.im * 0.003: 11: 1);
+                    FSWrite(F, sout);
                     S := Cmul(V012[1], conjg(I012[1]));
                     if Opt = 1 then
                         S := CmulReal(S, 0.001);
-                    Write(F, Separator, S.re * 0.003: 8: 1);
-                    Write(F, Separator, S.im * 0.003: 8: 1);
+                    WriteStr(sout, Separator, S.re * 0.003: 8: 1);
+                    FSWrite(F, sout);
+                    WriteStr(sout, Separator, S.im * 0.003: 8: 1);
+                    FSWrite(F, sout);
 
                     if j = 1 then
                     begin
@@ -1560,15 +1564,19 @@ begin
                         S := PDElem.ExcesskVANorm[1];
                         if Opt = 1 then
                             S := CmulReal(S, 0.001);
-                        Write(F, Separator, Abs(S.re): 11: 1);
-                        Write(F, Separator, Abs(S.im): 11: 1);
+                        WriteStr(sout, Separator, Abs(S.re): 11: 1);
+                        FSWrite(F, sout);
+                        WriteStr(sout, Separator, Abs(S.im): 11: 1);
+                        FSWrite(F, sout);
                         S := PDElem.ExcesskVAEmerg[1];
                         if Opt = 1 then
                             S := CmulReal(S, 0.001);
-                        Write(F, Separator, Abs(S.re): 11: 1);
-                        Write(F, Separator, Abs(S.im): 11: 1);
+                        WriteStr(sout, Separator, Abs(S.re): 11: 1);
+                        FSWrite(F, sout);
+                        WriteStr(sout, Separator, Abs(S.im): 11: 1);
+                        FSWrite(F, sout);
                     end;
-                    Writeln(F);
+                    FSWriteln(F);
 
                 end;
             end;
@@ -1589,7 +1597,7 @@ begin
 
                 for j := 1 to NTerm do
                 begin
-                    Write(F, Pad('"' + PCElem.DSSClassName + '.' + Uppercase(PCElem.Name) + '"', 24), Separator, j: 3);
+                    FSWrite(F, Pad('"' + PCElem.DSSClassName + '.' + Uppercase(PCElem.Name) + '"', 24), Separator, Format('%3d', [j]));
                     for i := 1 to PCElem.NPhases do
                     begin
                         k := (j - 1) * Ncond + i;
@@ -1624,20 +1632,26 @@ begin
                     S := Cmul(V012[2], conjg(I012[2]));
                     if Opt = 1 then
                         S := CmulReal(S, 0.001);
-                    Write(F, Separator, S.re * 0.003: 11: 1);
-                    Write(F, Separator, S.im * 0.003: 11: 1);
+                    WriteStr(sout, Separator, S.re * 0.003: 11: 1);
+                    FSWrite(F, sout);
+                    WriteStr(sout, Separator, S.im * 0.003: 11: 1);
+                    FSWrite(F, sout);
                     S := Cmul(V012[3], conjg(I012[3]));
                     if Opt = 1 then
                         S := CmulReal(S, 0.001);
-                    Write(F, Separator, S.re * 0.003: 11: 1);
-                    Write(F, Separator, S.im * 0.003: 11: 1);
+                    WriteStr(sout, Separator, S.re * 0.003: 11: 1);
+                    FSWrite(F, sout);
+                    WriteStr(sout, Separator, S.im * 0.003: 11: 1);
+                    FSWrite(F, sout);
                     S := Cmul(V012[1], conjg(I012[1]));
                     if Opt = 1 then
                         S := CmulReal(S, 0.001);
-                    Write(F, Separator, S.re * 0.003: 8: 1);
-                    Write(F, Separator, S.im * 0.003: 8: 1);
+                    WriteStr(sout, Separator, S.re * 0.003: 8: 1);
+                    FSWrite(F, sout);
+                    WriteStr(sout, Separator, S.im * 0.003: 8: 1);
+                    FSWrite(F, sout);
 
-                    Writeln(F);
+                    FSWriteln(F);
 
                 end;
             end;
@@ -1649,7 +1663,7 @@ begin
     finally
         if Assigned(cBuffer) then
             Freemem(CBuffer);
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 end;
@@ -1662,7 +1676,7 @@ var
     i, iBus, iphs: Integer;
     YFault: Tcmatrix;
     Vfault: pComplexArray;  {Big temp array}
-    F: Textfile;
+    F: TFileStream = nil;
     GFault: complex;
     Separator: String;
     MaxCurr,
@@ -1672,8 +1686,7 @@ begin
 
     try
 
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         Separator := ', ';
 
@@ -1684,12 +1697,12 @@ begin
             begin
 
      {All Phase Faults}
-                Writeln(F, 'Bus,  3-Phase,  1-Phase,  L-L');
+                FSWriteln(F, 'Bus,  3-Phase,  1-Phase,  L-L');
                 for iBus := 1 to NumBuses do
            {Bus Norton Equivalent Current, Isc has been previously computed}
                     with Buses^[iBus] do
                     begin
-                        Write(F, Pad(Uppercase(BusList.Get(iBus)), 12));
+                        FSWrite(F, Pad(Uppercase(BusList.Get(iBus)), 12));
                         MaxCurr := 0.0;
                         for i := 1 to NumNodesThisBus do
                         begin
@@ -1697,7 +1710,7 @@ begin
                                 MaxCurr := Cabs(BusCurrent^[i]);
                             ;
                         end;
-                        Write(F, Separator, maxCurr: 10: 0);
+                        FSWrite(F, Separator, Format('%-10g', [maxCurr]));
 
            {One Phase Faults}
 
@@ -1727,7 +1740,7 @@ begin
 
                         end; {For iphase}
              {Now, Stuff it in the Css Array where it belongs}
-                        Write(F, Separator, maxCurr: 10: 0);
+                        FSWrite(F, Separator, Format('%-10g', [maxCurr]));
 
                         Freemem(VFault);
                         YFault.Free;
@@ -1760,12 +1773,12 @@ begin
                         end; {For iphase}
              {Now, Stuff it in the Css Array where it belongs}
 
-                        Write(F, Separator, MaxCurr: 10: 0);
+                        FSWrite(F, Separator, Format('%-10g', [maxCurr]));
 
                         Freemem(VFault);
                         YFault.Free;
 
-                        Writeln(F);
+                        FSWriteln(F);
                     end;  {With bus}
 
             end; {With Solution}
@@ -1775,7 +1788,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 end;
@@ -1785,7 +1798,7 @@ end;
 procedure ExportEstimation(Filenm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
     pEnergyMeterObj: TEnergyMeterObj;
     pSensorObj: TSensorObj;
@@ -1803,100 +1816,99 @@ var
 begin
 
     try
-        AssignFile(F, FileNm);
-        Rewrite(F);   // clears file
+        F := TFileStream.Create(FileNm, fmCreate);   // clears file
 
           {Do the EnergyMeters first}
-        Writeln(F, '"Energy Meters" ');
-        Writeln(F, '"energyMeter", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err"'{, "I1 Factor", "I2 Factor", "I3 Factor"'});
+        FSWriteln(F, '"Energy Meters" ');
+        FSWriteln(F, '"energyMeter", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err"'{, "I1 Factor", "I2 Factor", "I3 Factor"'});
 
         pEnergyMeterObj := ActiveCircuit.energyMeters.First;
         while pEnergyMeterObj <> NIL do
         begin
             if pEnergyMeterObj.Enabled then
             begin
-                Write(F, Format('"Energymeter.%s"', [Uppercase(pEnergyMeterObj.Name)]));
+                FSWrite(F, Format('"Energymeter.%s"', [Uppercase(pEnergyMeterObj.Name)]));
                   {Sensor currents (Target)}
                 ZeroTempXArray;
                 for i := 1 to pEnergyMeterObj.Nphases do
                     TempX[i] := pEnergyMeterObj.SensorCurrent^[i];
                 for i := 1 to 3 do
-                    Write(F, Format(', %.6g', [TempX[i]]));
+                    FSWrite(F, Format(', %.6g', [TempX[i]]));
                   {Calculated Currents}
                 ZeroTempXArray;
                 for i := 1 to pEnergyMeterObj.Nphases do
                     TempX[i] := Cabs(pEnergyMeterObj.CalculatedCurrent^[i]);
                 for i := 1 to 3 do
-                    Write(F, Format(', %.6g', [TempX[i]]));
+                    FSWrite(F, Format(', %.6g', [TempX[i]]));
                   {Percent Error}
                 for i := 1 to pEnergyMeterObj.Nphases do
                     TempX[i] := (1.0 - TempX[i] / Max(0.001, pEnergyMeterObj.SensorCurrent^[i])) * 100.0;
                 for i := 1 to 3 do
-                    Write(F, Format(', %.6g', [TempX[i]]));
+                    FSWrite(F, Format(', %.6g', [TempX[i]]));
 
                   (****  Not all that useful
                   {Allocation Factors}
                   ZeroTempXArray;
                   For i := 1 to pEnergyMeterObj.Nphases do TempX[i] := pEnergyMeterObj.PhsAllocationFactor^[i];
-                  For i := 1 to 3 do Write(F, Format(' %.6g,',[TempX[i]]));
+                  For i := 1 to 3 do FSWrite(F, Format(' %.6g,',[TempX[i]]));
                   *****)
 
-                Writeln(F);
+                FSWriteln(F);
             end;
             pEnergyMeterObj := ActiveCircuit.EnergyMeters.Next;
         end;
 
           {Do the Sensors Next}
-        Writeln(F);
-        Writeln(F, '"Sensors" ');
-        Write(F, '"Sensor", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err",');
-        Writeln(F, ' "V1 Target", "V2 Target", "V3 Target", "V1 Calc", "V2 Calc", "V3 Calc", "V1 %Err", "V2 %Err", "V3 %Err", "WLS Voltage Err", "WLS Current Err"');
+        FSWriteln(F);
+        FSWriteln(F, '"Sensors" ');
+        FSWrite(F, '"Sensor", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err",');
+        FSWriteln(F, ' "V1 Target", "V2 Target", "V3 Target", "V1 Calc", "V2 Calc", "V3 Calc", "V1 %Err", "V2 %Err", "V3 %Err", "WLS Voltage Err", "WLS Current Err"');
 
         pSensorObj := ActiveCircuit.Sensors.First;
         while pSensorObj <> NIL do
         begin
             if pSensorObj.Enabled then
             begin
-                Write(F, Format('"Sensor.%s"', [Uppercase(pSensorObj.Name)]));
+                FSWrite(F, Format('"Sensor.%s"', [Uppercase(pSensorObj.Name)]));
                   {Sensor currents (Target)}
                 ZeroTempXArray;
                 for i := 1 to pSensorObj.Nphases do
                     TempX[i] := pSensorObj.SensorCurrent^[i];
                 for i := 1 to 3 do
-                    Write(F, Format(', %.6g', [TempX[i]]));
+                    FSWrite(F, Format(', %.6g', [TempX[i]]));
                   {Calculated Currents}
                 ZeroTempXArray;
                 for i := 1 to pSensorObj.Nphases do
                     TempX[i] := Cabs(pSensorObj.CalculatedCurrent^[i]);
                 for i := 1 to 3 do
-                    Write(F, Format(', %.6g', [TempX[i]]));
+                    FSWrite(F, Format(', %.6g', [TempX[i]]));
                   {Percent Error}
                 for i := 1 to pSensorObj.Nphases do
                     TempX[i] := (1.0 - TempX[i] / Max(0.001, pSensorObj.SensorCurrent^[i])) * 100.0;
                 for i := 1 to 3 do
-                    Write(F, Format(', %.6g', [TempX[i]]));
+                    FSWrite(F, Format(', %.6g', [TempX[i]]));
                   {Sensor Voltage (Target)}
                 ZeroTempXArray;
                 for i := 1 to pSensorObj.Nphases do
                     TempX[i] := pSensorObj.SensorVoltage^[i];
                 for i := 1 to 3 do
-                    Write(F, Format(', %.6g', [TempX[i]]));
+                    FSWrite(F, Format(', %.6g', [TempX[i]]));
                   {Calculated Voltage}
                 ZeroTempXArray;
                 for i := 1 to pSensorObj.Nphases do
                     TempX[i] := Cabs(pSensorObj.CalculatedVoltage^[i]);
                 for i := 1 to 3 do
-                    Write(F, Format(', %.6g', [TempX[i]]));
+                    FSWrite(F, Format(', %.6g', [TempX[i]]));
                   {Percent Error}
                 for i := 1 to pSensorObj.Nphases do
                     TempX[i] := (1.0 - TempX[i] / Max(0.001, pSensorObj.SensorVoltage^[i])) * 100.0;
                 for i := 1 to 3 do
-                    Write(F, Format(', %.6g', [TempX[i]]));
+                    FSWrite(F, Format(', %.6g', [TempX[i]]));
                   {WLS Errors}
                 ZeroTempXArray;
-                Write(F, Format(', %.6g, %.6g', [pSensorObj.WLSVoltageError, pSensorObj.WLSCurrentError]));
+                FSWrite(F, Format(', %.6g, %.6g', [pSensorObj.WLSVoltageError, pSensorObj.WLSCurrentError]));
 
-                Writeln(F);
+                FSWriteln(F);
             end;
             pSensorObj := ActiveCircuit.Sensors.Next;
         end;
@@ -1904,7 +1916,7 @@ begin
 
     finally
         AppendGlobalResult(FileNm);
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -1916,7 +1928,7 @@ end;
 procedure WriteMultipleMeterFiles;
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TEnergyMeterObj;
     MeterClass: TEnergyMeter;
@@ -1940,28 +1952,27 @@ begin
 
                 if not FileExists(FileNm) then
                 begin
-                    AssignFile(F, FileNm);
-                    Rewrite(F);
+                    F := TFileStream.Create(FileNm, fmCreate);
                 {Write New Header}
-                    Write(F, 'Year, LDCurve, Hour, Meter');
+                    FSWrite(F, 'Year, LDCurve, Hour, Meter');
                     for i := 1 to NumEMRegisters do
-                        Write(F, Separator, '"' + pelem.RegisterNames[i] + '"');
-                    Writeln(F);
-                    CloseFile(F);
+                        FSWrite(F, Separator, '"' + pelem.RegisterNames[i] + '"');
+                    FSWriteln(F);
+                    FreeAndNil(F);
                 end;
 
-                AssignFile(F, FileNm);
-                Append(F);
-                Write(F, ActiveCircuit.Solution.Year: 0, Separator);
-                Write(F, ActiveCircuit.LoadDurCurve, Separator);
-                Write(F, ActiveCircuit.Solution.DynaVars.intHour: 0, Separator);
-                Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                F := TFileStream.Create(FileNm, fmOpenReadWrite);
+                F.Seek(0, soEnd);
+                FSWrite(F, IntToStr(ActiveCircuit.Solution.Year), Separator);
+                FSWrite(F, ActiveCircuit.LoadDurCurve, Separator);
+                FSWrite(F, IntToStr(ActiveCircuit.Solution.DynaVars.intHour), Separator);
+                FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
-                    Write(F, Separator, PElem.Registers[j]: 10: 0);
-                Writeln(F);
+                    FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                FSWriteln(F);
                 AppendGlobalResult(FileNm);
             finally
-                CloseFile(F);
+                FreeAndNil(F);
             end;
 
         end;
@@ -1974,7 +1985,7 @@ end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure WriteSingleMeterFile(const FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TEnergyMeterObj;
     TestStr,
@@ -1988,11 +1999,11 @@ begin
 
         if FileExists(FileNm) then
         begin  // See if it has already been written on
-            Assignfile(F, FileNm);
-            Reset(F);
-            if not EOF(F) then
+            F := TFileStream.Create(FileNm, fmOpenRead);
+            
+            if ((F.Position+1) < F.Size) then
             begin
-                Read(F, TestStr);
+                FSReadLn(F, TestStr);
              {See if it likely that the file is OK}
                 if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
                     RewriteFile := FALSE       // Assume the file is OK
@@ -2002,28 +2013,32 @@ begin
             else
                 RewriteFile := TRUE;
 
-            CloseFile(F);
+            FreeAndNil(F);
 
         end
         else
         begin
             ReWriteFile := TRUE;
-            AssignFile(F, FileNm);
         end;
 
    {Either open or append the file}
         if RewriteFile then
         begin
-            ReWrite(F);
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmCreate);
         {Write New Header}
             pElem := ActiveCircuit.energyMeters.First;
-            Write(F, 'Year, LDCurve, Hour, Meter');
+            FSWrite(F, 'Year, LDCurve, Hour, Meter');
             for i := 1 to NumEMRegisters do
-                Write(F, Separator, '"' + pElem.RegisterNames[i] + '"');
-            Writeln(F);
+                FSWrite(F, Separator, '"' + pElem.RegisterNames[i] + '"');
+            FSWriteln(F);
         end
         else
-            Append(F);
+        begin
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmOpenReadWrite); 
+            F.Seek(0, soEnd);
+        end;
 
 
         pElem := ActiveCircuit.energyMeters.First;
@@ -2031,13 +2046,13 @@ begin
         begin
             if pElem.Enabled then
             begin
-                Write(F, ActiveCircuit.Solution.Year: 0, Separator);
-                Write(F, ActiveCircuit.LoadDurCurve, Separator);
-                Write(F, ActiveCircuit.Solution.DynaVars.intHour: 0, Separator);
-                Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                FSWrite(F, IntToStr(ActiveCircuit.Solution.Year), Separator);
+                FSWrite(F, ActiveCircuit.LoadDurCurve, Separator);
+                FSWrite(F, IntToStr(ActiveCircuit.Solution.DynaVars.intHour), Separator);
+                FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
-                    Write(F, Separator, PElem.Registers[j]: 10: 0);
-                Writeln(F);
+                    FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                FSWriteln(F);
             end;
             pElem := ActiveCircuit.EnergyMeters.Next;
         end;
@@ -2046,7 +2061,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -2074,7 +2089,7 @@ end;
 procedure WriteMultipleGenMeterFiles;
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TGeneratorObj;
     GeneratorClass: TGenerator;
@@ -2098,31 +2113,30 @@ begin
 
                 if not FileExists(FileNm) then
                 begin
-                    AssignFile(F, FileNm);
-                    Rewrite(F);
+                    F := TFileStream.Create(FileNm, fmCreate);
                 {Write New Header}
-                    Write(F, 'Year, LDCurve, Hour, Generator');
+                    FSWrite(F, 'Year, LDCurve, Hour, Generator');
                     for i := 1 to NumGenRegisters do
-                        Write(F, Separator, '"' + GeneratorClass.RegisterNames[i] + '"');
-                    Writeln(F);
-                    CloseFile(F);
+                        FSWrite(F, Separator, '"' + GeneratorClass.RegisterNames[i] + '"');
+                    FSWriteln(F);
+                    FreeAndNil(F);
                 end;
 
-                AssignFile(F, FileNm);
-                Append(F);
+                F := TFileStream.Create(FileNm, fmOpenReadWrite);
+                F.Seek(0, soEnd);
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumGenRegisters do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWriteln(F);
                 end;
                 AppendGlobalResult(FileNm);
             finally
-                CloseFile(F);
+                FreeAndNil(F);
             end;
 
         end;
@@ -2136,7 +2150,7 @@ end;
 procedure WriteSingleGenMeterFile(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TGeneratorObj;
     GeneratorClass: TGenerator;
@@ -2156,11 +2170,10 @@ begin
 
         if FileExists(FileNm) then
         begin  // See if it has already been written on
-            Assignfile(F, FileNm);
-            Reset(F);
-            if not EOF(F) then
+            F := TFileStream.Create(FileNm, fmOpenRead);
+            if ((F.Position+1) < F.Size) then
             begin
-                Read(F, TestStr);
+                FSReadLn(F, TestStr);
              {See if it likely that the file is OK}
                 if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
                     RewriteFile := FALSE       // Assume the file is OK
@@ -2170,27 +2183,31 @@ begin
             else
                 RewriteFile := TRUE;
 
-            CloseFile(F);
+            FreeAndNil(F);
 
         end
         else
         begin
             ReWriteFile := TRUE;
-            AssignFile(F, FileNm);
         end;
 
    {Either open or append the file}
         if RewriteFile then
         begin
-            ReWrite(F);
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmCreate); 
         {Write New Header}
-            Write(F, 'Year, LDCurve, Hour, Generator');
+            FSWrite(F, 'Year, LDCurve, Hour, Generator');
             for i := 1 to NumGenRegisters do
-                Write(F, Separator, '"' + GeneratorClass.RegisterNames[i] + '"');
-            Writeln(F);
+                FSWrite(F, Separator, '"' + GeneratorClass.RegisterNames[i] + '"');
+            FSWriteln(F);
         end
         else
-            Append(F);
+        begin
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmOpenReadWrite); 
+            F.Seek(0, soEnd);
+        end;
 
 
         pElem := ActiveCircuit.Generators.First;
@@ -2199,13 +2216,13 @@ begin
             if pElem.Enabled then
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumGenRegisters do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));                        
+                    FSWriteln(F);
                 end;
 
             pElem := ActiveCircuit.Generators.Next;
@@ -2215,7 +2232,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -2228,7 +2245,7 @@ procedure WriteMultiplePVSystem2MeterFiles; forward;
 procedure WriteMultiplePVSystemMeterFiles;
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TPVSystemObj;
     FileNm,
@@ -2255,31 +2272,30 @@ begin
 
                 if not FileExists(FileNm) then
                 begin
-                    AssignFile(F, FileNm);
-                    Rewrite(F);
+                    F := TFileStream.Create(FileNm, fmCreate);
                 {Write New Header}
-                    Write(F, 'Year, LDCurve, Hour, PVSystem');
+                    FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
                     for i := 1 to NumPVSystemRegisters do
-                        Write(F, Separator, '"' + PVSystemClass.RegisterNames[i] + '"');
-                    Writeln(F);
-                    CloseFile(F);
+                        FSWrite(F, Separator, '"' + PVSystemClass.RegisterNames[i] + '"');
+                    FSWriteln(F);
+                    FreeAndNil(F);
                 end;
 
-                AssignFile(F, FileNm);
-                Append(F);
+                F := TFileStream.Create(FileNm, fmOpenReadWrite);
+                F.Seek(0, soEnd);
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWriteln(F);
                 end;
                 AppendGlobalResult(FileNm);
             finally
-                CloseFile(F);
+                FreeAndNil(F);
             end;
 
         end;
@@ -2292,7 +2308,7 @@ end;
 procedure WriteMultiplePVSystem2MeterFiles;
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TPVSystem2Obj;
     FileNm,
@@ -2314,31 +2330,30 @@ begin
 
                 if not FileExists(FileNm) then
                 begin
-                    AssignFile(F, FileNm);
-                    Rewrite(F);
+                    F := TFileStream.Create(FileNm, fmCreate);
                 {Write New Header}
-                    Write(F, 'Year, LDCurve, Hour, PVSystem');
+                    FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
                     for i := 1 to NumPVSystem2Registers do
-                        Write(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
-                    Writeln(F);
-                    CloseFile(F);
+                        FSWrite(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
+                    FSWriteln(F);
+                    FreeAndNil(F);
                 end;
 
-                AssignFile(F, FileNm);
-                Append(F);
+                F := TFileStream.Create(FileNm, fmOpenReadWrite);
+                F.Seek(0, soEnd);
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystem2Registers do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWriteln(F);
                 end;
                 AppendGlobalResult(FileNm);
             finally
-                CloseFile(F);
+                FreeAndNil(F);
             end;
 
         end;
@@ -2354,7 +2369,7 @@ procedure WriteSinglePVSystem2MeterFile(FileNm: String); forward;
 procedure WriteSinglePVSystemMeterFile(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TPVSystemObj;
     Separator, TestStr: String;
@@ -2377,11 +2392,10 @@ begin
 
         if FileExists(FileNm) then
         begin  // See if it has already been written on
-            Assignfile(F, FileNm);
-            Reset(F);
-            if not EOF(F) then
+            F := TFileStream.Create(FileNm, fmOpenRead);
+            if ((F.Position+1) < F.Size) then
             begin
-                Read(F, TestStr);
+                FSReadLn(F, TestStr);
              {See if it likely that the file is OK}
                 if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
                     RewriteFile := FALSE       // Assume the file is OK
@@ -2391,27 +2405,31 @@ begin
             else
                 RewriteFile := TRUE;
 
-            CloseFile(F);
+            FreeAndNil(F);
 
         end
         else
         begin
             ReWriteFile := TRUE;
-            AssignFile(F, FileNm);
         end;
 
    {Either open or append the file}
         if RewriteFile then
         begin
-            ReWrite(F);
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmCreate); 
         {Write New Header}
-            Write(F, 'Year, LDCurve, Hour, PVSystem');
+            FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
             for i := 1 to NumGenRegisters do
-                Write(F, Separator, '"' + PVSystemClass.RegisterNames[i] + '"');
-            Writeln(F);
+                FSWrite(F, Separator, '"' + PVSystemClass.RegisterNames[i] + '"');
+            FSWriteln(F);
         end
         else
-            Append(F);
+        begin
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmOpenReadWrite); 
+            F.Seek(0, soEnd);
+        end;
 
 
         pElem := ActiveCircuit.PVSystems.First;
@@ -2420,13 +2438,13 @@ begin
             if pElem.Enabled then
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWriteln(F);
                 end;
 
             pElem := ActiveCircuit.PVSystems.Next;
@@ -2436,7 +2454,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -2447,7 +2465,7 @@ end;
 procedure WriteSinglePVSystem2MeterFile(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TPVSystem2Obj;
     Separator, TestStr: String;
@@ -2465,11 +2483,10 @@ begin
 
         if FileExists(FileNm) then
         begin  // See if it has already been written on
-            Assignfile(F, FileNm);
-            Reset(F);
-            if not EOF(F) then
+            F := TFileStream.Create(FileNm, fmOpenRead);
+            if ((F.Position+1) < F.Size) then
             begin
-                Read(F, TestStr);
+                FSReadLn(F, TestStr);
              {See if it likely that the file is OK}
                 if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
                     RewriteFile := FALSE       // Assume the file is OK
@@ -2479,27 +2496,30 @@ begin
             else
                 RewriteFile := TRUE;
 
-            CloseFile(F);
-
+            FreeAndNil(F);
         end
         else
         begin
             ReWriteFile := TRUE;
-            AssignFile(F, FileNm);
         end;
 
    {Either open or append the file}
         if RewriteFile then
         begin
-            ReWrite(F);
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmCreate); 
         {Write New Header}
-            Write(F, 'Year, LDCurve, Hour, PVSystem');
+            FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
             for i := 1 to NumGenRegisters do
-                Write(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
-            Writeln(F);
+                FSWrite(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
+            FSWriteln(F);
         end
         else
-            Append(F);
+        begin
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmOpenReadWrite); 
+            F.Seek(0, soEnd);
+        end;
 
 
         pElem := ActiveCircuit.PVSystems.First;
@@ -2508,13 +2528,13 @@ begin
             if pElem.Enabled then
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystem2Registers do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWriteln(F);
                 end;
 
             pElem := ActiveCircuit.PVSystems.Next;
@@ -2524,7 +2544,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -2539,7 +2559,7 @@ procedure WriteMultipleStorage2MeterFiles; forward;
 procedure WriteMultipleStorageMeterFiles;
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TStorageObj;
     FileNm,
@@ -2566,31 +2586,30 @@ begin
 
                 if not FileExists(FileNm) then
                 begin
-                    AssignFile(F, FileNm);
-                    Rewrite(F);
+                    F := TFileStream.Create(FileNm, fmCreate);
                 {Write New Header}
-                    Write(F, 'Year, LDCurve, Hour, Storage');
+                    FSWrite(F, 'Year, LDCurve, Hour, Storage');
                     for i := 1 to NumStorageRegisters do
-                        Write(F, Separator, '"' + StorageClass.RegisterNames[i] + '"');
-                    Writeln(F);
-                    CloseFile(F);
+                        FSWrite(F, Separator, '"' + StorageClass.RegisterNames[i] + '"');
+                    FSWriteln(F);
+                    FreeAndNil(F);
                 end;
 
-                AssignFile(F, FileNm);
-                Append(F);
+                F := TFileStream.Create(FileNm, fmOpenReadWrite);
+                F.Seek(0, soEnd);
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorageRegisters do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWriteln(F);
                 end;
                 AppendGlobalResult(FileNm);
             finally
-                CloseFile(F);
+                FreeAndNil(F);
             end;
 
         end;
@@ -2602,7 +2621,7 @@ end;
 procedure WriteMultipleStorage2MeterFiles;
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TStorage2Obj;
     FileNm,
@@ -2624,31 +2643,30 @@ begin
 
                 if not FileExists(FileNm) then
                 begin
-                    AssignFile(F, FileNm);
-                    Rewrite(F);
+                    F := TFileStream.Create(FileNm, fmCreate);
                 {Write New Header}
-                    Write(F, 'Year, LDCurve, Hour, Storage');
+                    FSWrite(F, 'Year, LDCurve, Hour, Storage');
                     for i := 1 to NumStorage2Registers do
-                        Write(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
-                    Writeln(F);
-                    CloseFile(F);
+                        FSWrite(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
+                    FSWriteln(F);
+                    FreeAndNil(F);
                 end;
 
-                AssignFile(F, FileNm);
-                Append(F);
+                F := TFileStream.Create(FileNm, fmOpenReadWrite);
+                F.Seek(0, soEnd);
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorage2Registers do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWriteln(F);
                 end;
                 AppendGlobalResult(FileNm);
             finally
-                CloseFile(F);
+                FreeAndNil(F);
             end;
 
         end;
@@ -2664,7 +2682,7 @@ procedure WriteSingleStorage2MeterFile(FileNm: String); forward;
 procedure WriteSingleStorageMeterFile(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TStorageObj;
     Separator, TestStr: String;
@@ -2686,11 +2704,10 @@ begin
 
         if FileExists(FileNm) then
         begin  // See if it has already been written on
-            Assignfile(F, FileNm);
-            Reset(F);
-            if not EOF(F) then
+            F := TFileStream.Create(FileNm, fmOpenRead);
+            if ((F.Position+1) < F.Size) then
             begin
-                Read(F, TestStr);
+                FSReadLn(F, TestStr);
              {See if it likely that the file is OK}
                 if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
                     RewriteFile := FALSE       // Assume the file is OK
@@ -2700,28 +2717,31 @@ begin
             else
                 RewriteFile := TRUE;
 
-            CloseFile(F);
+            FreeAndNil(F);
 
         end
         else
         begin
             ReWriteFile := TRUE;
-            AssignFile(F, FileNm);
         end;
 
    {Either open or append the file}
         if RewriteFile then
         begin
-            ReWrite(F);
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmCreate); 
         {Write New Header}
-            Write(F, 'Year, LDCurve, Hour, Storage');
+            FSWrite(F, 'Year, LDCurve, Hour, Storage');
             for i := 1 to NumStorageRegisters do
-                Write(F, Separator, '"' + StorageClass.RegisterNames[i] + '"');
-            Writeln(F);
+                FSWrite(F, Separator, '"' + StorageClass.RegisterNames[i] + '"');
+            FSWriteln(F);
         end
         else
-            Append(F);
-
+        begin
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmOpenReadWrite); 
+            F.Seek(0, soEnd);
+        end;
 
         pElem := ActiveCircuit.StorageElements.First;
         while pElem <> NIL do
@@ -2729,13 +2749,13 @@ begin
             if pElem.Enabled then
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorageRegisters do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWriteln(F);
                 end;
 
             pElem := ActiveCircuit.StorageElements.Next;
@@ -2745,7 +2765,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -2756,7 +2776,7 @@ end;
 procedure WriteSingleStorage2MeterFile(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TStorage2Obj;
     Separator, TestStr: String;
@@ -2774,11 +2794,10 @@ begin
 
         if FileExists(FileNm) then
         begin  // See if it has already been written on
-            Assignfile(F, FileNm);
-            Reset(F);
-            if not EOF(F) then
+            F := TFileStream.Create(FileNm, fmOpenRead);
+            if ((F.Position+1) < F.Size) then
             begin
-                Read(F, TestStr);
+                FSReadLn(F, TestStr);
              {See if it likely that the file is OK}
                 if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
                     RewriteFile := FALSE       // Assume the file is OK
@@ -2788,27 +2807,31 @@ begin
             else
                 RewriteFile := TRUE;
 
-            CloseFile(F);
+            FreeAndNil(F);
 
         end
         else
         begin
             ReWriteFile := TRUE;
-            AssignFile(F, FileNm);
         end;
 
    {Either open or append the file}
         if RewriteFile then
         begin
-            ReWrite(F);
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmCreate);
         {Write New Header}
-            Write(F, 'Year, LDCurve, Hour, Storage');
+            FSWrite(F, 'Year, LDCurve, Hour, Storage');
             for i := 1 to NumStorage2Registers do
-                Write(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
-            Writeln(F);
+                FSWrite(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
+            FSWriteln(F);
         end
         else
-            Append(F);
+        begin
+            FreeAndNil(F);
+            F := TFileStream.Create(FileNm, fmOpenReadWrite);
+            F.Seek(0, soEnd);
+        end;
 
 
         pElem := ActiveCircuit.StorageElements.First;
@@ -2817,13 +2840,13 @@ begin
             if pElem.Enabled then
                 with ActiveCircuit do
                 begin
-                    Write(F, Solution.Year: 0, Separator);
-                    Write(F, LoadDurCurve, Separator);
-                    Write(F, Solution.DynaVars.intHour: 0, Separator);
-                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    FSWrite(F, IntToStr(Solution.Year), Separator);
+                    FSWrite(F, LoadDurCurve, Separator);
+                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
+                    FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorage2Registers do
-                        Write(F, Separator, PElem.Registers[j]: 10: 0);
-                    Writeln(F);
+                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWriteln(F);
                 end;
 
             pElem := ActiveCircuit.StorageElements.Next;
@@ -2833,7 +2856,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -2926,10 +2949,10 @@ procedure ExportLoads(FileNm: String);
 
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     pElem: TLoadObj;
     Separator: String;
-
+    sout: String;
 begin
 
     Separator := ', ';
@@ -2937,10 +2960,9 @@ begin
 
     try
 
-        AssignFile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
      {Write  Header}
-        Writeln(F, 'Load, Connected KVA, Allocation Factor, Phases, kW, kvar, PF, Model');
+        FSWriteln(F, 'Load, Connected KVA, Allocation Factor, Phases, kW, kvar, PF, Model');
 
         pElem := ActiveCircuit.Loads.First;
         while pElem <> NIL do
@@ -2948,16 +2970,19 @@ begin
             if pElem.Enabled then
                 with pElem do
                 begin
-                    Write(F, Uppercase(Name));
-                    Write(F, Separator, ConnectedkVA: 8: 1);
-                    Write(F, Separator, kVAAllocationFactor: 5: 3);
-                    Write(F, Separator, NPhases: 0);
-                    Write(F, Separator, kWBase: 8: 1);
-                    Write(F, Separator, kvarBase: 8: 1);
-                    Write(F, Separator, PFNominal: 5: 3);
-                    Write(F, Separator, FLoadModel: 0);
+                    WriteStr(sout, 
+                        Uppercase(Name),
+                        Separator, ConnectedkVA: 8: 1,
+                        Separator, kVAAllocationFactor: 5: 3,
+                        Separator, NPhases: 0,
+                        Separator, kWBase: 8: 1,
+                        Separator, kvarBase: 8: 1,
+                        Separator, PFNominal: 5: 3,
+                        Separator, FLoadModel: 0
+                    );
+                    FSWrite(F, sout);
                 end;
-            Writeln(F);
+            FSWriteln(F);
             pElem := ActiveCircuit.Loads.Next;
         end;
 
@@ -2965,7 +2990,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -2980,7 +3005,7 @@ procedure ExportCapacity(FileNm: String);
 }
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     cBuffer: pComplexArray;
     pElem: TPDElement;
 
@@ -2989,12 +3014,11 @@ begin
     cBuffer := NIL;
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         Getmem(cBuffer, sizeof(Complex) * GetMaxCktElementSize);
 
-        Writeln(F, 'Name, Imax, %normal, %emergency, kW, kvar, NumCustomers, TotalCustomers, NumPhases, kVBase');
+        FSWriteln(F, 'Name, Imax, %normal, %emergency, kW, kvar, NumCustomers, TotalCustomers, NumPhases, kVBase');
 
      // PDELEMENTS ONLY
         pElem := ActiveCircuit.PDElements.First;
@@ -3013,7 +3037,7 @@ begin
     finally
         if Assigned(cBuffer) then
             Freemem(cBuffer);
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -3024,7 +3048,7 @@ end;
 procedure ExportOverloads(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     cBuffer: pComplexArray;  // Allocate to max total conductors
     NCond,
     i,
@@ -3037,20 +3061,19 @@ var
     iEmerg, Cmax: Double;
     Separator: String;
     Spower: Double;
-
+    sout: String;
 begin
 
     cBuffer := NIL;
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
     {Allocate cBuffer big enough for largest circuit element}
         Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
 
      {Sequence Currents}
-        Writeln(F, 'Element, Terminal,  I1, AmpsOver, kVAOver, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1');
+        FSWriteln(F, 'Element, Terminal,  I1, AmpsOver, kVAOver, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1');
 
         Separator := ', ';
 
@@ -3095,37 +3118,52 @@ begin
                // Get terminal 1 power
                                 Spower := Cabs(PDElem.Power[1]) * 0.001;   // kW
 
-                                Write(F, Format('%s, %d, ', [Pad(('"' + pDelem.DSSClassName + '.' + Uppercase(pDelem.Name) + '"'), 22), j]));
-                                Write(F, Format('%8.2f, ', [I1]));
+                                FSWrite(F, Format('%s, %d, ', [Pad(('"' + pDelem.DSSClassName + '.' + Uppercase(pDelem.Name) + '"'), 22), j]));
+                                FSWrite(F, Format('%8.2f, ', [I1]));
                                 if j = 1 then
                                 begin // Only for 1st Terminal
                                     iNormal := PDelem.NormAmps;
                                     if iNormal > 0.0 then
                                     begin
-                                        Write(F, Format('%8.2f, %10.2f', [(Cmax - iNormal), Spower * (Cmax - iNormal) / iNormal]));
-                                        Write(F, Separator, Cmax / iNormal * 100.0: 8: 1);
+                                        FSWrite(F, Format('%8.2f, %10.2f', [(Cmax - iNormal), Spower * (Cmax - iNormal) / iNormal]));
+                                        WriteStr(sout, Separator, Cmax / iNormal * 100.0: 8: 1);
+                                        FSWrite(F, sout);
                                     end
                                     else
-                                        Write(F, Separator, '     0.0');
+                                        FSWrite(F, Separator, '     0.0');
                                     iEmerg := PDelem.EmergAmps;
                                     if iEmerg > 0.0 then
-                                        Write(F, Separator, Cmax / iEmerg * 100.0: 8: 1)
+                                    begin
+                                        WriteStr(sout, Separator, Cmax / iEmerg * 100.0: 8: 1);
+                                        FSWrite(F, sout)
+                                    end
                                     else
-                                        Write(F, Separator, '     0.0');
+                                        FSWrite(F, Separator, '     0.0');
                                 end
                                 else
-                                    Write(F, Separator, '       0', Separator, '       0');
-                                Write(F, Separator, I2: 8: 1);
+                                    FSWrite(F, Separator + '       0' + Separator + '       0');
+
+                                WriteStr(sout, Separator, I2: 8: 1);
+                                FSWrite(F, sout);
                                 if I1 > 0.0 then
-                                    Write(F, Separator, 100.0 * I2 / I1: 8: 1)
+                                begin
+                                    WriteStr(sout, Separator, 100.0 * I2 / I1: 8: 1);
+                                    FSWrite(F, sout)
+                                end
                                 else
-                                    Write(F, Separator, '0.0');
-                                Write(F, Separator, I0: 8: 1);
+                                    FSWrite(F, Separator, '0.0');
+                                    
+                                WriteStr(sout, Separator, I0: 8: 1);
+                                FSWrite(F, sout);
                                 if I1 > 0.0 then
-                                    Write(F, Separator, 100.0 * I0 / I1: 8: 1)
+                                begin
+                                    WriteStr(sout, Separator, 100.0 * I0 / I1: 8: 1);
+                                    FSWrite(F, sout)
+                                end
                                 else
-                                    Write(F, Separator, '0.0');
-                                Writeln(F);
+                                    FSWrite(F, Separator, '0.0');
+
+                                FSWriteln(F);
                             end;
 
                     end;
@@ -3139,7 +3177,7 @@ begin
     finally
         if Assigned(Cbuffer) then
             Freemem(cBuffer);
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 end;
@@ -3147,17 +3185,16 @@ end;
 procedure ExportUnserved(FileNm: String; UE_Only: Boolean);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     PLoad: TLoadObj;
     DoIt: Boolean;
-
+    sout: String;
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
-        Writeln(F, 'Load, Bus, kW, EEN_Factor,  UE_Factor');
+        FSWriteln(F, 'Load, Bus, kW, EEN_Factor,  UE_Factor');
 
      // Load
         pLoad := ActiveCircuit.Loads.First;
@@ -3177,12 +3214,15 @@ begin
 
                 if DoIt then
                 begin
-                    Write(F, Uppercase(pLoad.Name), ', ');
-                    Write(F, pLoad.GetBus(1), ', ');
-                    Write(F, pLoad.kWBase: 8: 0, ', ');
-                    Write(F, pLoad.EEN_Factor: 9: 3, ', ');
-                    Write(F, pLoad.UE_Factor: 9: 3);
-                    Writeln(F);
+                    WriteStr(sout, 
+                        Uppercase(pLoad.Name), ', ',
+                        pLoad.GetBus(1), ', ',
+                        pLoad.kWBase: 8: 0, ', ',
+                        pLoad.EEN_Factor: 9: 3, ', ',
+                        pLoad.UE_Factor: 9: 3
+                    );
+                    FSWrite(F, sout);
+                    FSWriteln(F);
                 end;
 
             end;
@@ -3193,7 +3233,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -3204,7 +3244,7 @@ procedure ExportYprim(FileNm: String);
 {Exports  YPrim matrices for all  Circuit Elements}
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j, k: Integer;
     cValues: pComplexArray;
 
@@ -3214,8 +3254,7 @@ begin
         Exit;
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         with ActiveCircuit do
         begin
@@ -3227,13 +3266,13 @@ begin
                     if (ActiveCktElement is TPDElement) or (ActiveCktElement is TPCElement) then
                         with ActiveCktElement do
                         begin
-                            Writeln(F, ParentClass.Name, '.', Uppercase(Name));
+                            FSWriteln(F, ParentClass.Name, '.', Uppercase(Name));
                             cValues := GetYprimValues(ALL_YPRIM);
                             for i := 1 to Yorder do
                             begin
                                 for j := 1 to Yorder do
-                                    Write(F, Format('%-13.10g, %-13.10g, ', [cValues^[i + (j - 1) * Yorder].re, cValues^[i + (j - 1) * Yorder].im]));
-                                Writeln(F);
+                                    FSWrite(F, Format('%-13.10g, %-13.10g, ', [cValues^[i + (j - 1) * Yorder].re, cValues^[i + (j - 1) * Yorder].im]));
+                                FSWriteln(F);
                             end;
                         end;
                 end;
@@ -3245,7 +3284,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -3257,7 +3296,7 @@ procedure ExportY(FileNm: String; TripletOpt: Boolean);
 {Exports System Y Matrix in Node Order}
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i, j, p: Longword;
     col, row: Longword;
     hY: NativeUInt;
@@ -3282,8 +3321,7 @@ begin
     GetSize(hY, @nBus); // we should already know this
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         if TripletOpt then
         begin
@@ -3291,7 +3329,7 @@ begin
             SetLength(RowIdx, nNZ);
             SetLength(cVals, nNZ);
             GetTripletMatrix(hY, nNZ, @RowIdx[0], @ColPtr[0], @cVals[0]);
-            Writeln(F, 'Row,Col,G,B');
+            FSWriteln(F, 'Row,Col,G,B');
             for i := 0 to nNZ - 1 do
             begin
                 col := ColPtr[i] + 1;
@@ -3300,7 +3338,7 @@ begin
                 begin
                     re := cVals[i].re;
                     im := cVals[i].im;
-                    Writeln(F, Format('%d,%d,%.10g,%.10g', [row, col, re, im]));
+                    FSWriteln(F, Format('%d,%d,%.10g,%.10g', [row, col, re, im]));
                 end;
             end;
         end
@@ -3313,17 +3351,17 @@ begin
        {Write out fully qualified Bus Names}
             with ActiveCircuit do
             begin
-                Writeln(F, Format('%d, ', [NumNodes]));
+                FSWriteln(F, Format('%d, ', [NumNodes]));
   (*        For i := 1 to NumNodes DO BEGIN
              j :=  MapNodeToBus^[i].BusRef;
-             Write(F, Format('%s.%-d, +j,',[BusList.Get(j), MapNodeToBus^[i].NodeNum]));
+             FSWrite(F, Format('%s.%-d, +j,',[BusList.Get(j), MapNodeToBus^[i].NodeNum]));
           END;
-          Writeln(F);
+          FSWriteln(F);
   *)
                 for i := 1 to NumNodes do
                 begin
                     j := MapNodeToBus^[i].BusRef;
-                    Write(F, Format('"%s.%-d", ', [Uppercase(BusList.Get(j)), MapNodeToBus^[i].NodeNum]));
+                    FSWrite(F, Format('"%s.%-d", ', [Uppercase(BusList.Get(j)), MapNodeToBus^[i].NodeNum]));
                     for j := 1 to NumNodes do
                     begin
                         re := 0.0;
@@ -3338,16 +3376,16 @@ begin
                                 im := cVals[p].im;
                             end;
                         end;
-                        Write(F, Format('%-13.10g, +j %-13.10g,', [re, im]));
+                        FSWrite(F, Format('%-13.10g, +j %-13.10g,', [re, im]));
                     end;
-                    Writeln(F);
+                    FSWriteln(F);
                 end;
             end;
         end;
 
         GlobalResult := FileNm;
     finally
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 
@@ -3356,7 +3394,7 @@ procedure ExportSeqZ(FileNm: String);
 // Export Symmetrical Component Impedances at each bus
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
     Z1, Z0: Complex;
     X1R1, X0R0: Double;
@@ -3365,10 +3403,9 @@ var
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
-        Writeln(F, 'Bus,  NumNodes, R1, X1, R0, X0, Z1, Z0, "X1/R1", "X0/R0"');
+        FSWriteln(F, 'Bus,  NumNodes, R1, X1, R0, X0, Z1, Z0, "X1/R1", "X0/R0"');
         with ActiveCircuit do
         begin
             for i := 1 to NumBuses do
@@ -3385,7 +3422,7 @@ begin
                 else
                     X0R0 := 1000.0;
 
-                Writeln(F,
+                FSWriteln(F,
                     Format('"%s", %d, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %8.4g, %8.4g',
                     [Uppercase(BusList.Get(i)), Buses^[i].NumNodesThisBus,
                     Z1.re, Z1.im, Z0.Re, Z0.im, Cabs(Z1), Cabs(Z0), X1R1, X0R0]
@@ -3399,14 +3436,14 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;
 
 procedure ExportUuids(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     clsLnCd: TLineCode;
     clsGeom: TLineGeometry;
     clsWire: TWireData;
@@ -3426,176 +3463,176 @@ begin
         clsTape := DSSClassList.Get(ClassNames.Find('TSData'));
         clsConc := DSSClassList.Get(ClassNames.Find('CNData'));
     
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         pName := ActiveCircuit;
-        Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+        FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
  
         for i :=1 to ActiveCircuit.NumBuses do 
         begin
             pName := ActiveCircuit.Buses^[i];
-            Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
         end;
     
         pName := ActiveCircuit.CktElements.First;
         while pName <> NIL do
         begin
-            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
             pName := ActiveCircuit.CktElements.Next;
         end;
 
         pName := clsLnCd.ElementList.First;
         while pName <> NIL do
         begin
-            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
             pName := clsLnCd.ElementList.Next;
         end;
 
         pName := clsWire.ElementList.First;
         while pName <> NIL do
         begin
-            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
             pName := clsWire.ElementList.Next;
         end;
 
         pName := clsGeom.ElementList.First;
         while pName <> NIL do
         begin
-            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
             pName := clsGeom.ElementList.Next;
         end;
 
         pName := clsXfCd.ElementList.First;
         while pName <> nil do 
         begin
-            Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
             pName := clsXfCd.ElementList.Next;
         end;
         
         pName := clsSpac.ElementList.First;
         while pName <> NIL do begin
-            Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
             pName := clsSpac.ElementList.Next;
         end;
         
         pName := clsTape.ElementList.First;
         while pName <> NIL do 
         begin
-            Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
             pName := clsTape.ElementList.Next;
         end;
 
         pName := clsConc.ElementList.First;
         while pName <> NIL do
         begin
-            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
             pName := clsConc.ElementList.Next;
         end;
 
         WriteHashedUUIDs (F);
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
         FreeUuidList;
     end;
 end;
 
 procedure ExportCounts(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     cls: TDSSClass;
 begin
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'Format: DSS Class Name = Instance Count');
-        Writeln(F);
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'Format: DSS Class Name = Instance Count');
+        FSWriteln(F);
         cls := DSSClassList.First;
         while cls <> NIL do
         begin
-            Writeln(F, Format('%s = %d', [cls.Name, cls.ElementCount]));
+            FSWriteln(F, Format('%s = %d', [cls.Name, cls.ElementCount]));
             cls := DSSClassList.Next;
         end;
     finally
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 
 procedure ExportSummary(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     cPower, cLosses: Complex;
 
 begin
     try
 
-        Assignfile(F, FileNm);
         if FileExists(FileNm) then
-            Append(F)
+        begin
+            F := TFileStream.Create(FileNm, fmOpenReadWrite); 
+            F.Seek(0, soEnd);
+        end
         else
         begin    // Create and write the header
-            ReWrite(F);
-            Write(F, 'DateTime, CaseName, ');
-            Write(F, 'Status, Mode, Number, LoadMult, NumDevices, NumBuses, NumNodes');
-            Write(F, ', Iterations, ControlMode, ControlIterations');
-            Write(F, ', MostIterationsDone');
+            F := TFileStream.Create(FileNm, fmCreate); 
+            FSWrite(F, 'DateTime, CaseName, ');
+            FSWrite(F, 'Status, Mode, Number, LoadMult, NumDevices, NumBuses, NumNodes');
+            FSWrite(F, ', Iterations, ControlMode, ControlIterations');
+            FSWrite(F, ', MostIterationsDone');
             if ActiveCircuit <> NIL then
                 if ActiveCircuit.Issolved and not ActiveCircuit.BusNameRedefined then
                 begin
-                    Write(F, ', Year, Hour, MaxPuVoltage, MinPuVoltage, TotalMW, TotalMvar');
-                    Write(F, ', MWLosses, pctLosses, MvarLosses, Frequency');
+                    FSWrite(F, ', Year, Hour, MaxPuVoltage, MinPuVoltage, TotalMW, TotalMvar');
+                    FSWrite(F, ', MWLosses, pctLosses, MvarLosses, Frequency');
                 end;
 
-            Writeln(F);
+            FSWriteln(F);
         end;
 
-        Write(F, Format('"%s", ', [DateTimeToStr(Now)]));
+        FSWrite(F, Format('"%s", ', [DateTimeToStr(Now)]));
         if ActiveCircuit <> NIL then
-            Write(F, Format('%s, ', [ActiveCircuit.CaseName]))
+            FSWrite(F, Format('%s, ', [ActiveCircuit.CaseName]))
         else
-            Write(F, 'NONE, ');
+            FSWrite(F, 'NONE, ');
 
         if ActiveCircuit.Issolved then
-            Write(F, 'SOLVED')
+            FSWrite(F, 'SOLVED')
         else
-            Write(F, 'UnSolved');
+            FSWrite(F, 'UnSolved');
 
-        Write(F, Format(', %s', [GetSolutionModeID]));
-        Write(F, Format(', %d', [ActiveCircuit.Solution.NumberofTimes]));
-        Write(F, Format(', %8.3f', [ActiveCircuit.LoadMultiplier]));
-        Write(F, Format(', %d', [ActiveCircuit.NumDevices]));
-        Write(F, Format(', %d', [ActiveCircuit.NumBuses]));
-        Write(F, Format(', %d', [ActiveCircuit.NumNodes]));
-        Write(F, Format(', %d', [ActiveCircuit.Solution.Iteration]));
-        Write(F, Format(', %s', [GetControlModeID]));
-        Write(F, Format(', %d', [ActiveCircuit.Solution.ControlIteration]));
-        Write(F, Format(', %d', [ActiveCircuit.Solution.MostIterationsDone]));
+        FSWrite(F, Format(', %s', [GetSolutionModeID]));
+        FSWrite(F, Format(', %d', [ActiveCircuit.Solution.NumberofTimes]));
+        FSWrite(F, Format(', %8.3f', [ActiveCircuit.LoadMultiplier]));
+        FSWrite(F, Format(', %d', [ActiveCircuit.NumDevices]));
+        FSWrite(F, Format(', %d', [ActiveCircuit.NumBuses]));
+        FSWrite(F, Format(', %d', [ActiveCircuit.NumNodes]));
+        FSWrite(F, Format(', %d', [ActiveCircuit.Solution.Iteration]));
+        FSWrite(F, Format(', %s', [GetControlModeID]));
+        FSWrite(F, Format(', %d', [ActiveCircuit.Solution.ControlIteration]));
+        FSWrite(F, Format(', %d', [ActiveCircuit.Solution.MostIterationsDone]));
         if ActiveCircuit <> NIL then
             if ActiveCircuit.Issolved and not ActiveCircuit.BusNameRedefined then
             begin
-                Write(F, Format(', %d', [ActiveCircuit.Solution.Year]));
-                Write(F, Format(', %d', [ActiveCircuit.Solution.DynaVars.intHour]));
-                Write(F, Format(', %-.5g', [GetMaxPUVoltage]));
-                Write(F, Format(', %-.5g', [GetMinPUVoltage(TRUE)]));
+                FSWrite(F, Format(', %d', [ActiveCircuit.Solution.Year]));
+                FSWrite(F, Format(', %d', [ActiveCircuit.Solution.DynaVars.intHour]));
+                FSWrite(F, Format(', %-.5g', [GetMaxPUVoltage]));
+                FSWrite(F, Format(', %-.5g', [GetMinPUVoltage(TRUE)]));
                 cPower := CmulReal(GetTotalPowerFromSources, 0.000001);  // MVA
-                Write(F, Format(', %-.6g', [cPower.re]));
-                Write(F, Format(', %-.6g', [cPower.im]));
+                FSWrite(F, Format(', %-.6g', [cPower.re]));
+                FSWrite(F, Format(', %-.6g', [cPower.im]));
                 cLosses := CmulReal(ActiveCircuit.Losses, 0.000001);
                 if cPower.re <> 0.0 then
-                    Write(F, Format(', %-.6g, %-.4g', [cLosses.re, (Closses.re / cPower.re * 100.0)]))
+                    FSWrite(F, Format(', %-.6g, %-.4g', [cLosses.re, (Closses.re / cPower.re * 100.0)]))
                 else
-                    Write(F, 'Total Active Losses:   ****** MW, (**** %%)');
-                Write(F, Format(', %-.6g', [cLosses.im]));
-                Write(F, Format(', %-g', [ActiveCircuit.Solution.Frequency]));
+                    FSWrite(F, 'Total Active Losses:   ****** MW, (**** %%)');
+                FSWrite(F, Format(', %-.6g', [cLosses.im]));
+                FSWrite(F, Format(', %-g', [ActiveCircuit.Solution.Frequency]));
             end;
 
-        Writeln(F);
+        FSWriteln(F);
 
         GlobalResult := FileNm;
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 
@@ -3603,43 +3640,42 @@ procedure ExportBusCoords(FileNm: String);
 // Export bus x, y coordinates
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 
 
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         with ActiveCircuit do
             for i := 1 to NumBuses do
             begin
                 if Buses^[i].CoordDefined then
-                    Writeln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(Uppercase(BusList.Get(i))), Buses^[i].X, Buses^[i].Y]));
+                    FSWriteln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(Uppercase(BusList.Get(i))), Buses^[i].X, Buses^[i].Y]));
             end;
 
         GlobalResult := FileNm;
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 
-procedure WriteNewLine(var F: TextFile;
+procedure WriteNewLine(var F: TFileStream;
     const CktELementName: String; DistFromMeter1, puV1, DistFromMeter2, puV2: Double;
     ColorCode, Thickness, LineType: Integer;
     MarkCenter: Integer;
     CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth: Integer);
 
 begin
-    Write(F, Format('%s, %.6g, %.6g, %.6g, %.6g,', [Uppercase(CktElementName), DistFromMeter1, puV1, DistFromMeter2, puV2]));
-    Write(F, Format('%d, %d, %d, ', [ColorCode, Thickness, LineType]));
-    Write(F, Format('%d, ', [MarkCenter]));
-    Write(F, Format('%d, %d, %d', [CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth]));
-    Writeln(F);
+    FSWrite(F, Format('%s, %.6g, %.6g, %.6g, %.6g,', [Uppercase(CktElementName), DistFromMeter1, puV1, DistFromMeter2, puV2]));
+    FSWrite(F, Format('%d, %d, %d, ', [ColorCode, Thickness, LineType]));
+    FSWrite(F, Format('%d, ', [MarkCenter]));
+    FSWrite(F, Format('%d, %d, %d', [CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth]));
+    FSWriteln(F);
 end;
 
 
@@ -3654,16 +3690,15 @@ var
     iphs: Integer;
     iphs2: Integer;
     S: String;
-    F: TextFile;
+    F: TFileStream = nil;
     Linetype: Integer;
 
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
-        Write(F, 'Name, Distance1, puV1, Distance2, puV2, Color, Thickness, Linetype, Markcenter, Centercode, NodeCode, NodeWidth,');
+        FSWrite(F, 'Name, Distance1, puV1, Distance2, puV2, Color, Thickness, Linetype, Markcenter, Centercode, NodeCode, NodeWidth,');
 
     {New graph created before this routine is entered}
         case phasesToPlot of
@@ -3673,7 +3708,7 @@ begin
             S := 'L-N Voltage Profile';
         end;
 
-        Writeln(F, 'Title=', S, ', Distance in km');
+        FSWriteln(F, 'Title=', S, ', Distance in km');
 
         iEnergyMeter := EnergyMeterClass.First;
         while iEnergyMeter > 0 do
@@ -3838,7 +3873,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -3860,184 +3895,175 @@ end;
 
 procedure ExportIncMatrix(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 begin
     with ActiveCircuit.Solution do
     begin
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'Row,Col,Value');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'Row,Col,Value');
         for i := 0 to (IncMat.NZero - 1) do
         begin
-            Writeln(F, inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
+            FSWriteln(F, inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
         end;
         GlobalResult := FileNm;
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 
 procedure ExportIncMatrixRows(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 begin
     with ActiveCircuit.Solution do
     begin
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'B2N Incidence Matrix Row Names (PDElements)');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'B2N Incidence Matrix Row Names (PDElements)');
         for i := 0 to (length(Inc_Mat_Rows) - 1) do
         begin
-            Writeln(F, Inc_Mat_Rows[i]);
+            FSWriteln(F, Inc_Mat_Rows[i]);
         end;
         GlobalResult := FileNm;
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 //-------------------------------------------------------------------
 procedure ExportIncMatrixCols(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 begin
     with ActiveCircuit.Solution do
     begin
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'B2N Incidence Matrix Column Names (Buses)');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'B2N Incidence Matrix Column Names (Buses)');
         for i := 0 to (length(Inc_Mat_Cols) - 1) do
         begin
-            Writeln(F, Inc_Mat_Cols[i]);
+            FSWriteln(F, Inc_Mat_Cols[i]);
         end;
         GlobalResult := FileNm;
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 //-------------------------------------------------------------------
 procedure ExportBusLevels(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 begin
     with ActiveCircuit.Solution do
     begin
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'B2N Incidence Matrix Column Names (Buses) and their level within the matrix');
-        Writeln(F, 'Bus Name,Bus Level');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'B2N Incidence Matrix Column Names (Buses) and their level within the matrix');
+        FSWriteln(F, 'Bus Name,Bus Level');
         for i := 0 to (length(Inc_Mat_Cols) - 1) do
         begin
-            Writeln(F, Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
+            FSWriteln(F, Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
         end;
         GlobalResult := FileNm;
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 //-------------------------------------------------------------------
 procedure ExportLaplacian(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 begin
     with ActiveCircuit.Solution do
     begin
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'Row,Col,Value');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'Row,Col,Value');
         for i := 0 to (Laplacian.NZero - 1) do
         begin
-            Writeln(F, inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
+            FSWriteln(F, inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
         end;
         GlobalResult := FileNm;
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 end;
 //-------------------------------------------------------------------
 procedure ExportZLL(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 begin
     if ADiakoptics then
     begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
-            Assignfile(F, FileNm);
-            ReWrite(F);
-            Writeln(F, 'Row,Col,Value(Real), Value(Imag)');
+            F := TFileStream.Create(FileNm, fmCreate); 
+            FSWriteln(F, 'Row,Col,Value(Real), Value(Imag)');
             for i := 0 to (ZLL.NZero - 1) do
             begin
-                Writeln(F, inttostr(ZLL.CData[i].Row) + ',' + inttostr(ZLL.CData[i].Col) + ',' + floattostr(ZLL.CData[i].Value.Re) + ',' + floattostr(ZLL.CData[i].Value.Im));
+                FSWriteln(F, inttostr(ZLL.CData[i].Row) + ',' + inttostr(ZLL.CData[i].Col) + ',' + floattostr(ZLL.CData[i].Value.Re) + ',' + floattostr(ZLL.CData[i].Value.Im));
             end;
             GlobalResult := FileNm;
-            CloseFile(F);
+            FreeAndNil(F);
         end;
     end;
 end;
 //-------------------------------------------------------------------
 procedure ExportZCC(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 begin
     if ADiakoptics then
     begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
-            Assignfile(F, FileNm);
-            ReWrite(F);
-            Writeln(F, 'Row,Col,Value(Real), Value(Imag)');
+            F := TFileStream.Create(FileNm, fmCreate);
+            FSWriteln(F, 'Row,Col,Value(Real), Value(Imag)');
             for i := 0 to (ZCC.NZero - 1) do
             begin
-                Writeln(F, inttostr(ZCC.CData[i].Row) + ',' + inttostr(ZCC.CData[i].Col) + ',' + floattostr(ZCC.CData[i].Value.Re) + ',' + floattostr(ZCC.CData[i].Value.Im));
+                FSWriteln(F, inttostr(ZCC.CData[i].Row) + ',' + inttostr(ZCC.CData[i].Col) + ',' + floattostr(ZCC.CData[i].Value.Re) + ',' + floattostr(ZCC.CData[i].Value.Im));
             end;
             GlobalResult := FileNm;
-            CloseFile(F);
+            FreeAndNil(F);
         end;
     end;
 end;
 //-------------------------------------------------------------------
 procedure ExportY4(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 begin
     if ADiakoptics then
     begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
-            Assignfile(F, FileNm);
-            ReWrite(F);
-            Writeln(F, 'Row,Col,Value(Real), Value(Imag)');
+            F := TFileStream.Create(FileNm, fmCreate);
+            FSWriteln(F, 'Row,Col,Value(Real), Value(Imag)');
             for i := 0 to (Y4.NZero - 1) do
             begin
-                Writeln(F, inttostr(Y4.CData[i].Row) + ',' + inttostr(Y4.CData[i].Col) + ',' + floattostr(Y4.CData[i].Value.Re) + ',' + floattostr(Y4.CData[i].Value.Im));
+                FSWriteln(F, inttostr(Y4.CData[i].Row) + ',' + inttostr(Y4.CData[i].Col) + ',' + floattostr(Y4.CData[i].Value.Re) + ',' + floattostr(Y4.CData[i].Value.Im));
             end;
             GlobalResult := FileNm;
-            CloseFile(F);
+            FreeAndNil(F);
         end;
     end;
 end;
 //-------------------------------------------------------------------
 procedure ExportC(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 begin
     if ADiakoptics then
     begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
-            Assignfile(F, FileNm);
-            ReWrite(F);
-            Writeln(F, 'Row,Col,Value');
+            F := TFileStream.Create(FileNm, fmCreate);
+            FSWriteln(F, 'Row,Col,Value');
             for i := 0 to (Contours.NZero - 1) do
             begin
-                Writeln(F, inttostr(Contours.CData[i].Row) + ',' + inttostr(Contours.CData[i].Col) + ',' + floattostr(Contours.CData[i].Value.Re));
+                FSWriteln(F, inttostr(Contours.CData[i].Row) + ',' + inttostr(Contours.CData[i].Col) + ',' + floattostr(Contours.CData[i].Value.Re));
             end;
             GlobalResult := FileNm;
-            CloseFile(F);
+            FreeAndNil(F);
         end;
     end;
 end;
@@ -4049,7 +4075,7 @@ procedure ExportVoltagesElements(FileNm: String);
 var
     MaxNumNodes: Integer;
     MaxNumTerminals: Integer;
-    F: TextFile;
+    F: TFileStream = nil;
     i, j: Integer;
     pElem: TDSSCktElement;
 
@@ -4072,22 +4098,21 @@ begin
 }
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
-        Write(F, 'Element,NumTerminals');
+        FSWrite(F, 'Element,NumTerminals');
 
        //Write out the header
         for i := 1 to MaxNumTerminals do
         begin
-            Write(F, Format(', Terminal%d', [i]));
-            Write(F, ',NumConductors,NPhases,');
-            Write(F, 'Bus, BasekV');
+            FSWrite(F, Format(', Terminal%d', [i]));
+            FSWrite(F, ',NumConductors,NPhases,');
+            FSWrite(F, 'Bus, BasekV');
             for j := 1 to MaxNumNodes do
-                Write(F, Format(', Node%d_%d, Magnitude%d_%d, Angle%d_%d, pu%d_%d', [i, j, i, j, i, j, i, j]));
+                FSWrite(F, Format(', Node%d_%d, Magnitude%d_%d, Angle%d_%d, pu%d_%d', [i, j, i, j, i, j, i, j]));
         end;
 
-        Writeln(F);
+        FSWriteln(F);
 
        //Go through all the sources
         with ActiveCircuit do
@@ -4099,7 +4124,7 @@ begin
                 if pElem.Enabled then
                 begin
                     WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
-                    Writeln(F);
+                    FSWriteln(F);
                 end;
                 pElem := ActiveCircuit.sources.Next;
             end;
@@ -4113,7 +4138,7 @@ begin
                 if pElem.Enabled then
                 begin
                     WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
-                    Writeln(F);
+                    FSWriteln(F);
                 end;
                 pElem := ActiveCircuit.PDElements.Next;
             end;
@@ -4127,7 +4152,7 @@ begin
                 if pElem.Enabled then
                 begin
                     WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
-                    Writeln(F);
+                    FSWriteln(F);
                 end;
                 pElem := ActiveCircuit.PCElements.Next;
             end;
@@ -4137,7 +4162,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
 
     end;
 
@@ -4147,7 +4172,7 @@ end;
 procedure ExportGICMvar(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
     pElem: TGICTransformerObj;
     GICClass: TGICTransformer;
 
@@ -4155,12 +4180,11 @@ begin
 
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         GICClass := TGICTransformer(GetDSSClassPtr('GICTransformer'));
 
-        Writeln(F, 'Bus, Mvar, GIC Amps per phase');
+        FSWriteln(F, 'Bus, Mvar, GIC Amps per phase');
         pElem := TGICTransformerObj(GICClass.ElementList.First);
         while PElem <> NIL do
         begin
@@ -4171,7 +4195,7 @@ begin
         GlobalResult := FileNm;
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;
@@ -4179,20 +4203,19 @@ end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportBusReliability(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
 
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'Bus, Lambda, Num-Interruptions, Num-Customers, Cust-Interruptions, Duration, Total-Miles');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'Bus, Lambda, Num-Interruptions, Num-Customers, Cust-Interruptions, Duration, Total-Miles');
         with ActiveCircuit do
             for i := 1 to NumBuses do
                 with Buses^[i] do
                 begin
-                    Writeln(F, Format('%s, %-.11g, %-.11g, %d, %-.11g, %-.11g, %-.11g',
+                    FSWriteln(F, Format('%s, %-.11g, %-.11g, %d, %-.11g, %-.11g, %-.11g',
                         [CheckForBlanks(Uppercase(BusList.Get(i))), BusFltRate, Bus_Num_Interrupt, BusTotalNumCustomers, BusCustInterrupts, Bus_Int_Duration, BusTotalMiles]));
                 end;
 
@@ -4200,7 +4223,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;
@@ -4208,7 +4231,7 @@ end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportBranchReliability(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     pElem: TPDElement;
     pBus: TDSSBus;
     SAIFI: Double;
@@ -4217,9 +4240,8 @@ var
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'Element, Lambda, "Accumulated-Lambda", Num-Customers, Total-Customers, Num-Interrupts, Cust-Interruptions, Cust-Durations, Total-Miles, Cust-Miles, SAIFI');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'Element, Lambda, "Accumulated-Lambda", Num-Customers, Total-Customers, Num-Interrupts, Cust-Interruptions, Cust-Durations, Total-Miles, Cust-Miles, SAIFI');
         with ActiveCircuit do
         begin
 
@@ -4254,7 +4276,7 @@ begin
                             else
                                 SAIFI := 0.0;
 
-                        Writeln(F, Format('%s.%s, %-.11g, %-.11g, %d, %d, %-.11g, %-.11g, %-.11g, %-.11g, %-.11g, %-.11g',
+                        FSWriteln(F, Format('%s.%s, %-.11g, %-.11g, %d, %d, %-.11g, %-.11g, %-.11g, %-.11g, %-.11g, %-.11g',
                             [ParentClass.Name, Name, BranchFltRate, AccumulatedBrFltRate, BranchNumCustomers, BranchTotalCustomers,
                             pBus.Bus_Num_Interrupt, BranchTotalCustomers * pBus.Bus_Num_Interrupt, pBus.BusCustDurations,
                             AccumulatedMilesDownStream, (MaxCustomers - BranchTotalCustomers) * AccumulatedMilesDownStream, SAIFI]));
@@ -4268,7 +4290,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;
@@ -4276,7 +4298,7 @@ end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportNodeNames(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     i: Integer;
     j: Integer;
     BusName: String;
@@ -4284,9 +4306,8 @@ var
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'Node_Name');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'Node_Name');
         with ActiveCircuit do
         begin
 
@@ -4296,7 +4317,7 @@ begin
                 with Buses^[i] do
                     for j := 1 to NumNodesThisBus do
                     begin
-                        Writeln(F, Format('%s.%d ', [BusName, GetNum(j)]));
+                        FSWriteln(F, Format('%s.%d ', [BusName, GetNum(j)]));
                     end;
             end;
 
@@ -4307,7 +4328,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;
@@ -4326,16 +4347,15 @@ end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportTaps(FileNm: String);
 var
-    F: TextFile;
+    F: TFileStream = nil;
     iWind: Integer;
     pReg: TRegControlObj;
 begin
 
     try
 
-        Assignfile(F, FileNm);
-        ReWrite(F);
-        Writeln(F, 'Name, Tap, Min, Max, Step, Position');
+        F := TFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'Name, Tap, Min, Max, Step, Position');
 
         with ActiveCircuit do
         begin
@@ -4345,8 +4365,8 @@ begin
                 with pReg.Transformer do
                 begin
                     iWind := pReg.TrWinding;
-                    Write(F, Name);
-                    Writeln(F, Format(', %8.5f, %8.5f, %8.5f, %8.5f, %d', [PresentTap[iWind], MinTap[iWind], MaxTap[iWind], TapIncrement[iWind], TapPosition(pREg.Transformer, iWind)]));
+                    FSWrite(F, Name);
+                    FSWriteln(F, Format(', %8.5f, %8.5f, %8.5f, %8.5f, %d', [PresentTap[iWind], MinTap[iWind], MaxTap[iWind], TapIncrement[iWind], TapPosition(pREg.Transformer, iWind)]));
                 end;
                 pReg := RegControls.Next;
             end;
@@ -4357,7 +4377,7 @@ begin
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;
@@ -4365,21 +4385,20 @@ end;
 procedure ExportResult(FileNm: String);
 
 var
-    F: TextFile;
+    F: TFileStream = nil;
 
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
         Parservars.Lookup('@result');
-        Writeln(F, Parservars.Value);
+        FSWriteln(F, Parservars.Value);
 
         GlobalResult := FileNm;
 
     finally
 
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 
@@ -4388,13 +4407,12 @@ end;
 procedure ExportYNodeList(FileNM: String);
 var
     i: Integer;
-    F: TextFile;
+    F: TFileStream = nil;
 
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         if ActiveCircuit <> NIL then
             with ActiveCircuit do
@@ -4402,14 +4420,14 @@ begin
                 for i := 1 to NumNodes do
                 begin
                     with MapNodeToBus^[i] do
-                        Writeln(F, Format('"%s.%-d"', [Uppercase(BusList.Get(Busref)), NodeNum]));
+                        FSWriteln(F, Format('"%s.%-d"', [Uppercase(BusList.Get(Busref)), NodeNum]));
                 end;
             end;
 
         GlobalResult := FileNm;
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;
@@ -4417,13 +4435,12 @@ end;
 procedure ExportYVoltages(FileNM: String);
 var
     i: Integer;
-    F: TextFile;
+    F: TFileStream = nil;
 
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         if ActiveCircuit <> NIL then
             with ActiveCircuit do
@@ -4431,14 +4448,14 @@ begin
                 for i := 1 to NumNodes do
                 begin
                     with solution.NodeV^[i] do
-                        Writeln(F, Format('%10.6g, %10.6g', [re, im]));
+                        FSWriteln(F, Format('%10.6g, %10.6g', [re, im]));
                 end;
             end;
 
         GlobalResult := FileNm;
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 
@@ -4447,13 +4464,12 @@ end;
 procedure ExportYCurrents(FileNM: String);
 var
     i: Integer;
-    F: TextFile;
+    F: TFileStream = nil;
 
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
         if ActiveCircuit <> NIL then
             with ActiveCircuit do
@@ -4461,14 +4477,14 @@ begin
                 for i := 1 to NumNodes do
                 begin
                     with solution.Currents^[i] do
-                        Writeln(F, Format('%10.6g, %10.6g', [re, im]));
+                        FSWriteln(F, Format('%10.6g, %10.6g', [re, im]));
                 end;
             end;
 
         GlobalResult := FileNm;
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;
@@ -4479,17 +4495,16 @@ procedure ExportSections(FileNM: String; pMeter: TEnergyMeterObj);
 var
     MyMeterPtr: TEnergyMeterObj;
     iMeter, i: Integer;
-    F: TextFile;
+    F: TFileStream = nil;
 
 
 begin
 
     try
-        Assignfile(F, FileNm);
-        ReWrite(F);
+        F := TFileStream.Create(FileNm, fmCreate);
 
      // Write Header
-        Writeln(F, 'Meter, SectionID, SeqIndex, DeviceType, NumCustomers, NumBranches, AvgRepairHrs, TotalDownlineCust, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates, HeadBranch ');
+        FSWriteln(F, 'Meter, SectionID, SeqIndex, DeviceType, NumCustomers, NumBranches, AvgRepairHrs, TotalDownlineCust, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates, HeadBranch ');
 
         if Assigned(pMeter) then
      // If a meter is specified, export that meter only
@@ -4499,7 +4514,7 @@ begin
                     with FeederSections^[i] do
                     begin
                         ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
-                        Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
+                        FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
                             [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
                             FullName(ActiveCircuit.ActiveCktElement)]));
                     end;
@@ -4517,7 +4532,7 @@ begin
                         with FeederSections^[i] do
                         begin
                             ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
-                            Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
+                            FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
                                 [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
                                 FullName(ActiveCircuit.ActiveCktElement)]));
                         end;
@@ -4530,7 +4545,7 @@ begin
         GlobalResult := FileNm;
 
     finally
-        CloseFile(F);
+        FreeAndNil(F);
     end;
 
 end;

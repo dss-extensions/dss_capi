@@ -305,7 +305,7 @@ TYPE
           Function  SetElementActive(Const FullObjectName:String) : Integer;
           Procedure InvalidateAllPCElements;
 
-          Procedure DebugDump(Var F:TextFile);
+          Procedure DebugDump(Var F:TFileStream);
 
           // Access to topology from the first source
           Function GetTopology: TCktTree;
@@ -926,7 +926,7 @@ END;
 ********************************************************************************}
 procedure TDSSCircuit.Format_SubCircuits(Path  : String; NumCkts  : Integer);
 var
-  myFile      : TextFile;
+  myFile : TFileStream = nil;
   Temp_txt,
   Temp_txt2,
   text        : string;
@@ -943,22 +943,21 @@ const
 
 begin
     // Reads the master file
-    AssignFile(myFile, Path  + PathDelim + 'master.dss');
-    Reset(myFile);                                        // Prepares for reading
+    myFile := TFileStream.Create(Path  + PathDelim + 'master.dss', fmOpenRead);
     setlength(File_Struc,0);
     FS_Idx    :=  0;
-    while not Eof(myFile) do                              // Extracts the file content as an array of strings
+    while (myFile.Position + 1) < myFile.Size do                              // Extracts the file content as an array of strings
     begin
       setlength(File_Struc,(length(File_Struc) + 1));
-      ReadLn(myFile, text);
+      FSReadLn(myFile, text);
       File_Struc[FS_Idx]  :=  text;
       inc(FS_Idx);
     end;
-    CloseFile(myFile);
+    FreeAndNil(myFile);
     //  Creates the copy for the interconnected system
     setlength(Xtra,0);
-    AssignFile(myFile, Path  + PathDelim + 'Master_Interconnected.dss');
-    ReWrite(myFile);                                      // Prepares for writing
+    
+    myFile := TFileStream.Create(Path  + PathDelim + 'Master_Interconnected.dss', fmCreate);
     for FS_Idx := 0 to High(File_Struc) do
     Begin
       Str_Found   :=  False;
@@ -972,19 +971,17 @@ begin
         setlength(Xtra,(length(Xtra) + 1));
         Xtra[High(Xtra)]  :=  File_Struc[FS_Idx];
       End
-      else  WriteLn(myFile,File_Struc[FS_Idx]);
+      else  FSWriteLn(myFile,File_Struc[FS_Idx]);
     End;
     // Adds the zones and the rest to the file
     for FS_Idx := 0 to High(Xtra) do
     Begin
-      WriteLn(myFile,Xtra[FS_Idx])
+      FSWriteLn(myFile,Xtra[FS_Idx])
     End;
-
-    CloseFile(myFile);
+    FreeAndNil(myFile);
 
     // removes the unnecessary information from the master file (deletes the other zones)
-    AssignFile(myFile, Path  + PathDelim + 'master.dss');
-    ReWrite(myFile);                                      // Prepares for writing
+    myFile := TFileStream.Create(Path  + PathDelim + 'master.dss', fmCreate);
     for FS_Idx := 0 to High(File_Struc) do
     Begin
       Local_Temp  :=  ansipos('Redirect zone', File_Struc[FS_Idx]);
@@ -995,11 +992,12 @@ begin
         Begin
           Local_Temp  :=  ansipos('Redirect Monitor', File_Struc[FS_Idx]);
           if Local_Temp   =  0 then
-            WriteLn(myFile,File_Struc[FS_Idx]);
+            FSWriteLn(myFile,File_Struc[FS_Idx]);
         End;
       End;
     End;
-    CloseFile(myFile);
+    FreeAndNil(myFile);
+    
     // Copies the support files to the zones directories
     FS_Idx    :=  0;
     while FS_Idx <> -1 do
@@ -1022,17 +1020,16 @@ begin
     // Creates the master file for each subcircuit
     for FS_Idx := 2 to NumCkts do
     Begin
-      AssignFile(myFile, Path  + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'master.dss');
-      ReWrite(myFile);
-      WriteLn(myFile,'Clear');
-      WriteLn(myFile,'New Circuit.Zone_' + inttostr(FS_Idx));
+      myFile := TFileStream.Create(Path  + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'master.dss', fmCreate);
+      FSWriteLn(myFile,'Clear');
+      FSWriteLn(myFile,'New Circuit.Zone_' + inttostr(FS_Idx));
       FS_Idx1    :=  2;
       while FS_Idx1 <> -1 do                      // Writes the global files
       Begin
         Local_Temp  :=  ansipos('Redirect zone', File_Struc[FS_Idx1]);
         if Local_Temp   =  0 then
         Begin
-          WriteLn(myFile,File_Struc[FS_Idx1]);
+          FSWriteLn(myFile,File_Struc[FS_Idx1]);
           inc(FS_Idx1);
         End
         else
@@ -1044,21 +1041,20 @@ begin
         if Local_Temp   <>  0 then
         Begin
           text    :=  stringreplace(File_Struc[FS_Idx1], 'zone_' + inttostr(FS_Idx) + PathDelim, '',[rfReplaceAll, rfIgnoreCase]);
-          WriteLn(myFile,text);
+          FSWriteLn(myFile,text);
         End;
       End;
-      CloseFile(myFile);
+      FreeAndNil(myFile);
     End;
     // Sets the properties of the VSource on each subcricuit based on the latest voltage measured
     FS_Idx1     :=    0;
     for FS_Idx := 1 to NumCkts do
     Begin
        if FS_Idx = 1 then
-         AssignFile(myFile, Path  +  PathDelim + 'VSource.dss')
+         myFile := TFileStream.Create(Path  +  PathDelim + 'VSource.dss', fmCreate)
        else
-         AssignFile(myFile, Path  +  PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'VSource.dss');
-
-       ReWrite(myFile);
+         myFile := TFileStream.Create(Path  +  PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'VSource.dss', fmCreate);
+       
        for FS_Idx2 := 1 to 3 do
        Begin
          if FS_Idx2 = 1 then
@@ -1078,10 +1074,10 @@ begin
                    ' basekv=' + floattostrF(PConn_Voltages[FS_Idx1],ffGeneral, 8, 3) +
                    ' angle=' + floattostrF(PConn_Voltages[FS_Idx1 + 1],ffGeneral, 8, 3) +
                    ' R1=0 X1=0.001 R0=0 X0=0.001';
-         WriteLn(myFile,text);
+         FSWriteLn(myFile,text);
          FS_Idx1    :=  FS_Idx1 + 2;
        End;
-       CloseFile(myFile);
+       FreeAndNil(myFile);
     End;
 end;
 
@@ -1162,7 +1158,7 @@ var
   myClass,
   myName,
   FileName      : String;
-  F             : TextFile;
+  F: TFileStream = nil;
   myPDEList,
   MyGraph       : array of string;
   MyIdx         : array of integer;
@@ -1271,12 +1267,11 @@ Begin
     End;
 
     FileName  := GetOutputDirectory + CircuitName_ + '.graph';
-    Assignfile(F,FileName);
-    ReWrite(F);
-    Writeln(F,inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(jj) + ' 1'); // it should be the rank of the incidence matrix
+    F := TFileStream.Create(FileName, fmCreate);
+    FSWriteln(F,inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(jj) + ' 1'); // it should be the rank of the incidence matrix
     for i := 1 to High(myGraph) do
-      Writeln(F,myGraph[i]);    
-    CloseFile(F);
+      FSWriteln(F,myGraph[i]);    
+    F.Free();
 
   End;
 
@@ -1540,7 +1535,7 @@ End;
 ********************************************************************************}
 procedure TDSSCircuit.AggregateProfiles(mode  : string);
 var
-  F             : TextFile;
+  F: TFileStream = nil;
   FileRoot,
   myPCE,
   TextCmd,
@@ -1716,11 +1711,13 @@ Begin
 
         // Saves the profile on disk
         myLoadShapes[High(myLoadShapes)]    :=  OutputDirectory {CurrentDSSDir} + 'loadShape_' + EMeter.Name + '.csv';
-        Assignfile(F, myLoadShapes[High(myLoadShapes)]);
-        ReWrite(F);
+        
+        F := TFileStream.Create(myLoadShapes[High(myLoadShapes)], fmCreate);
         for j := 0 to High(myLoadShape) do
-          Writeln(F,floattostr(myLoadShape[j]) + ',' + floattostr(mykvarShape[j]));
-        CloseFile(F);
+          FSWriteln(F,floattostr(myLoadShape[j]) + ',' + floattostr(mykvarShape[j]));
+        
+        FreeAndNil(F);
+        
         setlength(myLoadShapes,length(myLoadShapes) +  1);
       End;
     End;
@@ -2317,35 +2314,37 @@ Begin
 
 End;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TDSSCircuit.DebugDump(Var F:TextFile);
+Procedure TDSSCircuit.DebugDump(Var F:TFileStream);
 
 VAR
    i,j:Integer;
-
+   sout: String;
 BEGIN
 
-     Writeln(F, 'NumBuses= ', NumBuses:0);
-     Writeln(F, 'NumNodes= ', NumNodes:0);
-     Writeln(F, 'NumDevices= ', NumDevices:0);
-     Writeln(F,'BusList:');
+     FSWriteln(F, 'NumBuses= ', IntToStr(NumBuses));
+     FSWriteln(F, 'NumNodes= ', IntToStr(NumNodes));
+     FSWriteln(F, 'NumDevices= ', IntToStr(NumDevices));
+     FSWriteln(F,'BusList:');
      For i := 1 to NumBuses Do BEGIN
-       Write(F,'  ',Pad(BusList.Get(i),12));
-       Write(F,' (', Buses^[i].NumNodesThisBus:0,' Nodes)');
-       FOR j := 1 to Buses^[i].NumNodesThisBus Do Write(F,' ',Buses^[i].Getnum(j):0);
-       Writeln(F);
+       FSWrite(F,'  ',Pad(BusList.Get(i),12));
+       FSWrite(F,' (', IntToStr(Buses^[i].NumNodesThisBus),' Nodes)');
+       FOR j := 1 to Buses^[i].NumNodesThisBus Do FSWrite(F,' ',IntToStr(Buses^[i].Getnum(j)));
+       FSWriteln(F);
      END;
-     Writeln(F,'DeviceList:');
+     FSWriteln(F,'DeviceList:');
      For i := 1 to NumDevices Do BEGIN
-        Write(F,'  ',Pad(DeviceList.Get(i),12));
+        FSWrite(F,'  ',Pad(DeviceList.Get(i),12));
         ActiveCktElement := CktElements.Get(i);
-        If Not ActiveCktElement.Enabled THEN Write(F, '  DISABLED');
-        Writeln(F);
+        If Not ActiveCktElement.Enabled THEN FSWrite(F, '  DISABLED');
+        FSWriteln(F);
      END ;
-     Writeln(F,'NodeToBus Array:');
-     For i := 1 to NumNodes DO BEGIN
+     FSWriteln(F,'NodeToBus Array:');
+     For i := 1 to NumNodes DO 
+     BEGIN
        j :=  MapNodeToBus^[i].BusRef;
-       Write(F,'  ',i:2,' ',j:2,' (=',BusList.Get(j),'.',MapNodeToBus^[i].NodeNum:0,')');
-       Writeln(F);
+       WriteStr(sout, '  ',i:2,' ',j:2,' (=',BusList.Get(j),'.',MapNodeToBus^[i].NodeNum:0,')');
+       FSWrite(F, sout);
+       FSWriteln(F);
      END;
 
 
@@ -2582,68 +2581,64 @@ begin
 end;
 
 function TDSSCircuit.SaveVoltageBases: Boolean;
-Var  F:TextFile;
-     VBases:string;
+Var  
+    F: TFileStream = nil;
+    VBases:string;
 Begin
-
-     Result := FALSE;
-     Try
-        AssignFile(F, CurrentDSSDir + 'BusVoltageBases.DSS');
-        Rewrite(F);
-
-//        For i := 1 to NumBuses do
-//          If Buses^[i].kVBase > 0.0 Then
-//            Writeln(F, Format('SetkVBase Bus=%s  kvln=%.7g ', [BusList.Get(i), Buses^[i].kVBase]));
+    Result := FALSE;
+    Try
+        F := TFileStream.Create(CurrentDSSDir + 'BusVoltageBases.DSS', fmCreate);
         DSSExecutive.Command := 'get voltagebases';
         VBases := GlobalResult;
-        Writeln(F, 'Set Voltagebases='+VBases);
-        CloseFile(F);
+        FSWriteln(F, 'Set Voltagebases='+VBases);
+        FreeAndNil(F);
         Result := TRUE;
-     Except
-      On E:Exception Do DoSimpleMsg('Error Saving BusVoltageBases File: '+E.Message, 43501);
-     End;
+    Except
+        On E:Exception Do 
+            DoSimpleMsg('Error Saving BusVoltageBases File: '+E.Message, 43501);
+    End;
 
+    FreeAndNil(F);
 End;
 
 function TDSSCircuit.SaveMasterFile: Boolean;
 
 Var
-   F:TextFile;
+   F: TFileStream = nil;
    i:integer;
 
 begin
   Result := FALSE;
   Try
-      AssignFile(F, CurrentDSSDir + 'Master.DSS');
-      Rewrite(F);
-
-      Writeln(F, 'Clear');
-      Writeln(F,'New Circuit.' + Name);
-      Writeln(F);
-      If PositiveSequence Then Writeln(F, 'Set Cktmodel=Positive');
-      If DuplicatesAllowed Then Writeln(F, 'set allowdup=yes');
-      Writeln(F);
+      F := TFileStream.Create(CurrentDSSDir + 'Master.DSS', fmCreate);
+      FSWriteln(F, 'Clear');
+      FSWriteln(F,'New Circuit.' + Name);
+      FSWriteln(F);
+      If PositiveSequence Then FSWriteln(F, 'Set Cktmodel=Positive');
+      If DuplicatesAllowed Then FSWriteln(F, 'set allowdup=yes');
+      FSWriteln(F);
 
       // Write Redirect for all populated DSS Classes  Except Solution Class
       For i := 1 to SavedFileList.Count  Do
        Begin
-          Writeln(F, 'Redirect ', SavedFileList.Strings[i-1]);
+          FSWrite(F, 'Redirect ');
+          FSWriteln(F, SavedFileList.Strings[i-1]);
        End;
 
-      Writeln(F,'MakeBusList');
-      Writeln(F,'Redirect BusVoltageBases.dss  ! set voltage bases');
+      FSWriteln(F,'MakeBusList');
+      FSWriteln(F,'Redirect BusVoltageBases.dss  ! set voltage bases');
 
       If FileExists('buscoords.dss') Then
       Begin
-         Writeln(F, 'Buscoords buscoords.dss');
+         FSWriteln(F, 'Buscoords buscoords.dss');
       End;
-
-      CloseFile(F);
+      
+      FreeAndNil(F);
       Result := TRUE;
   Except
       On E:Exception Do DoSimpleMsg('Error Saving Master File: '+E.Message, 435);
   End;
-
+  FreeAndNil(F);
 end;
 
 function TDSSCircuit.SaveFeeders: Boolean;
@@ -2689,31 +2684,32 @@ end;
 
 function TDSSCircuit.SaveBusCoords: Boolean;
 Var
-        F:TextFile;
-        i:Integer;
+    F: TFileStream = nil;
+    i: Integer;
 begin
 
    Result := FALSE;
 
    Try
-       AssignFile(F, CurrentDSSDir + 'BusCoords.dss');
-       Rewrite(F);
-
-
+       F := TFileStream.Create(CurrentDSSDir + 'BusCoords.dss', fmCreate);
 
        For i := 1 to NumBuses Do
        Begin
-           If Buses^[i].CoordDefined then Writeln(F, CheckForBlanks(BusList.Get(i)), Format(', %-g, %-g', [Buses^[i].X, Buses^[i].Y]));
+           If Buses^[i].CoordDefined then
+           begin
+             FSWrite(F, CheckForBlanks(BusList.Get(i)));
+             FSWriteLn(F, Format(', %-g, %-g', [Buses^[i].X, Buses^[i].Y]));
+           end;
        End;
 
-       Closefile(F);
+       FreeAndNil(F);
 
        Result := TRUE;
 
    Except
        On E:Exception Do DoSimpleMsg('Error creating Buscoords.dss.', 437);
    End;
-
+   FreeAndNil(F);
 end;
 
 procedure TDSSCircuit.ReallocDeviceList;

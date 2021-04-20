@@ -118,7 +118,6 @@ uses
     Recloser,
     Fuse,
     Sensor,
-    Feeder,
     XfmrCode,
     Storage,
     Storage2,
@@ -276,9 +275,6 @@ begin
 
     FuseClass := TFuse.Create;
     DSSClasses.New := FuseClass;
-
-//     FeederClass    := TFeeder.Create;
-//     DSSClasses.New := FeederClass;
 
     SwtControlClass := TSwtControl.Create;
     DSSClasses.New := SwtControlClass;

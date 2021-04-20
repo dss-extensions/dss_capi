@@ -45,6 +45,7 @@ interface
 {Add other modules accessed by this class}
 
 uses
+    Classes,
     DSSClass,   // Base class for most DSS objects
     PCClass,    // Base class for collection manager for PC elements
     PCElement,  // Base class for PC  Elements
@@ -61,7 +62,6 @@ uses
 
 
 type
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 { Collection manager for this class of element }
@@ -135,7 +135,7 @@ type
         IndMach012SwitchOpen: Boolean;
 
         // Debugging
-        TraceFile: TextFile;
+        TraceFile: TFileStream;
         DebugTrace: Boolean;
 
         MachineData: TGeneratorVars;    // Use generator variable structure
@@ -244,7 +244,7 @@ type
 
        // Functions required for managing values of properties
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
         property LocalSlip: Double READ S1 WRITE set_Localslip;
@@ -753,6 +753,8 @@ begin
     Name := LowerCase(IndMach012ObjName);
     DSSObjType := ParClass.DSSClassType; // Same as Parent Class
 
+    TraceFile := nil;
+    
      // Set some basic circuit element properties
     Nphases := 3;  // typical DSS default for a circuit element
     Fnconds := 3;  // defaults to delta
@@ -827,6 +829,8 @@ destructor TIndMach012Obj.Destroy;
 // If you allocated anything, dispose of it here
 
 begin
+
+    FreeAndNil(TraceFile);
 
     inherited Destroy;   // This will take care of most common circuit element arrays, etc.
 
@@ -905,7 +909,9 @@ begin
         DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 
     if DebugTrace then
-        InitTraceFile;
+        InitTraceFile
+    else
+        FreeAndNil(TraceFile);
 end;
 
 
@@ -1146,11 +1152,10 @@ begin
 
                 if DebugTrace then     // Put in a separator record
                 begin
-                    Append(TraceFile);
-                    Writeln(TraceFile);
-                    Writeln(TraceFile, '*************** Entering Dynamics Mode ***********************');
-                    Writeln(TraceFile);
-                    Close(Tracefile);
+                    FSWriteln(TraceFile);
+                    FSWriteln(TraceFile, '*************** Entering Dynamics Mode ***********************');
+                    FSWriteln(TraceFile);
+                    FSFlush(Tracefile);
                 end;
 
             end
@@ -1762,7 +1767,7 @@ end;
 //= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TIndMach012Obj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TIndMach012Obj.DumpProperties(var F: TFileStream; Complete: Boolean);
 //----------------------------------------------------------------------------
 {
  This procedure is require to respond to various commands such as Dump that
@@ -1784,13 +1789,13 @@ begin
             case idx of
           {Trap any specials here, such as values that are array properties, for example}
                 34, 36:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')')
+                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[idx] + ')')
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[idx]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[idx]);
             end;
         end;
 
-    Writeln(F);
+    FSWriteln(F);
 
 end;
 
@@ -2339,33 +2344,31 @@ end;
 procedure TIndMach012Obj.InitTraceFile;
 //----------------------------------------------------------------------------
 begin
+    FreeAndNil(TraceFile);
+    TraceFile := TFileStream.Create(OutputDirectory + Format('%s_IndMach012_Trace.CSV', [Name]), fmCreate);
 
-    AssignFile(TraceFile, OutputDirectory + Format('%s_IndMach012_Trace.CSV', [Name]));
-    Rewrite(TraceFile);
+    FSWrite(TraceFile, 'Time, Iteration, S1, |IS1|, |IS2|, |E1|, |dE1dt|, |E2|, |dE2dt|, |V1|, |V2|, Pshaft, Pin, Speed, dSpeed');
+    FSWriteln(TraceFile);
 
-    Write(TraceFile, 'Time, Iteration, S1, |IS1|, |IS2|, |E1|, |dE1dt|, |E2|, |dE2dt|, |V1|, |V2|, Pshaft, Pin, Speed, dSpeed');
-    Writeln(TraceFile);
-
-    CloseFile(TraceFile);
+    FSFlush(TraceFile);
 end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.WriteTraceRecord;
 //----------------------------------------------------------------------------
 begin
-    Append(TraceFile);
     with ActiveCircuit.Solution do
-        Write(TraceFile, Format('%-.6g, %d, %-.6g, ', [Dynavars.dblHour * 3600.0, Iteration, S1]));
+        FSWrite(TraceFile, Format('%-.6g, %d, %-.6g, ', [Dynavars.dblHour * 3600.0, Iteration, S1]));
 
-    Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));
-    Write(TraceFile, Format('%-.6g, %-.6g, %-.6g, %-.6g, ', [Cabs(E1), Cabs(dE1dt), Cabs(E2), Cabs(dE2dt)]));
-    Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(V1), Cabs(V2)]));
-    Write(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.Pshaft, power[1].re]));
-    Write(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.speed, MachineData.dSpeed]));
+    FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));
+    FSWrite(TraceFile, Format('%-.6g, %-.6g, %-.6g, %-.6g, ', [Cabs(E1), Cabs(dE1dt), Cabs(E2), Cabs(dE2dt)]));
+    FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(V1), Cabs(V2)]));
+    FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.Pshaft, power[1].re]));
+    FSWrite(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.speed, MachineData.dSpeed]));
 
-    Writeln(TraceFile);
+    FSWriteln(TraceFile);
 
-    CloseFile(TraceFile);
+    FSFlush(TraceFile);
 end;
 
 initialization

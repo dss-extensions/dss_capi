@@ -36,7 +36,6 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      EnergyMeter,
      Sensor,
      TCC_Curve,
-     Feeder,
      WireData,
      CNData,
      TSData,
@@ -173,9 +172,6 @@ VAR
 
    AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
 
-//{****} DebugTrace:TextFile;
-
-
    ErrorPending       :Boolean;
    CmdResult,
    ErrorNumber        :Integer;
@@ -234,7 +230,6 @@ VAR
    SpectrumClass      :TSpectrum;
    SolutionClass      :TDSSClass;
    EnergyMeterClass   :TEnergyMeter;
-   // FeederClass        :TFeeder;
    MonitorClass       :TDSSMonitor;
    SensorClass        :TSensor;
    TCC_CurveClass     :TTCC_Curve;

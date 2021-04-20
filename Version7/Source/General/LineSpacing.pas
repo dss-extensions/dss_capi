@@ -10,6 +10,7 @@ unit LineSpacing;
 interface
 
 uses
+    Classes,
     Sysutils,
     Arraydef,
     Command,
@@ -76,7 +77,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
         // CIM XML accessors
         property Xcoord[i: Integer]: Double READ Get_FX
@@ -364,7 +365,7 @@ begin
 end;
 
 
-procedure TLineSpacingObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TLineSpacingObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -376,7 +377,7 @@ begin
     begin
         for i := 1 to 5 do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', GetPropertyValue(i));
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + GetPropertyValue(i));
         end;
     end;
 

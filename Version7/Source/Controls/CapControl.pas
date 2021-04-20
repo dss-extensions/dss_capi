@@ -32,6 +32,7 @@ unit CapControl;
 interface
 
 uses
+    Classes,
     Command,
     ControlClass,
     ControlElem,
@@ -107,7 +108,7 @@ type
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
 
         property This_Capacitor: TCapacitorObj READ Get_Capacitor;  // Pointer to controlled Capacitor
         property PendingChange: EControlAction READ Get_PendingChange WRITE Set_PendingChange;
@@ -811,7 +812,7 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TCapControlObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TCapControlObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i: Integer;
@@ -822,12 +823,12 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
     if Complete then
     begin
-        Writeln(F);
+        FSWriteln(F);
     end;
 
 end;

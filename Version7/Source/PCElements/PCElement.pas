@@ -11,6 +11,7 @@ unit PCElement;
 interface
 
 uses
+    Classes,
     CktElement,
     ucomplex,
     DSSClass,
@@ -50,7 +51,7 @@ type
         procedure ComputeIterminal; OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray);
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         procedure set_ITerminalUpdated(const Value: Boolean);
 
       // Sweep solution removed  PROCEDURE BackwardSweep;Override;
@@ -79,7 +80,8 @@ implementation
 uses
     DSSClassDefs,
     DSSGlobals,
-    Sysutils;
+    Sysutils,
+    Utilities;
 
 constructor TPCElement.Create(ParClass: TDSSClass);
 begin
@@ -269,7 +271,7 @@ begin
 end;
 
 
-procedure TPCElement.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TPCElement.DumpProperties(var F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin
@@ -277,10 +279,10 @@ begin
 
     if Complete then
     begin
-        Writeln(F, '! VARIABLES');
+        FSWriteln(F, '! VARIABLES');
         for i := 1 to NumVariables do
         begin
-            Writeln(F, '! ', i: 2, ': ', VariableName(i), ' = ', Format('%-.5g', [Get_Variable(i)]));
+            FSWriteln(F, Format('! %2d: %s = %-.5g', [i, VariableName(i), Get_Variable(i)]));
         end;
     end;
 

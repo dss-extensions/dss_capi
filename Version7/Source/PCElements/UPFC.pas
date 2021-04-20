@@ -15,6 +15,7 @@ unit UPFC;
 interface
 
 uses
+    Classes,
     DSSClass,
     PCClass,
     PCElement,
@@ -107,7 +108,7 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
         function NumVariables: Integer; OVERRIDE;
@@ -1006,7 +1007,7 @@ end;
 
 
 //=============================================================================
-procedure TUPFCObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TUPFCObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, j: Integer;
@@ -1018,23 +1019,23 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
     if Complete then
     begin
-        Writeln(F);
-        Writeln(F, 'BaseFrequency=', BaseFrequency: 0: 1);
-        // Writeln(F,'VMag=',VMag:0:2);
-        Writeln(F, 'Z Matrix=');
+        FSWriteln(F);
+        FSWriteln(F, Format('BaseFrequency=%.1g', [BaseFrequency]));
+        // FSWriteln(F,'VMag=',VMag:0:2);
+        FSWriteln(F, 'Z Matrix=');
         for i := 1 to Fnphases do
         begin
             for j := 1 to i do
             begin
                 c := Z.GetElement(i, j);
-                Write(F, Format('%.8g +j %.8g ', [C.re, C.im]));
+                FSWrite(F, Format('%.8g +j %.8g ', [C.re, C.im]));
             end;
-            Writeln(F);
+            FSWriteln(F);
         end;
     end;
 

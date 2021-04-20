@@ -43,7 +43,7 @@ unit Executive;
 interface
 
 USES
-      PointerList, Command;
+      Classes, PointerList, Command;
 
 
 
@@ -52,6 +52,7 @@ TYPE
      private
          FRecorderOn: Boolean;
          FRecorderFile:String;
+         RecorderFile: TFileStream;
 
          FUNCTION Get_LastError:String;
          FUNCTION Get_ErrorResult:Integer;
@@ -63,7 +64,6 @@ TYPE
 
      public
 
-         RecorderFile: TextFile;
          constructor Create;
          destructor  Destroy; override;
 
@@ -254,22 +254,30 @@ end;
 
 procedure TExecutive.Set_RecorderOn(const Value: Boolean);
 begin
-  If Value Then Begin
-    If Not FRecorderOn Then Begin
-      FRecorderFile := GetOutputDirectory + 'DSSRecorder.DSS' ;
-      AssignFile(RecorderFile, FRecorderFile);
+    If Value Then 
+    Begin
+        If Not FRecorderOn Then 
+        Begin
+            FRecorderFile := GetOutputDirectory + 'DSSRecorder.DSS' ;
+            RecorderFile := TFileStream.Create(FRecorderFile, fmCreate);
+        End
+        else
+        begin
+            RecorderFile.Free();
+            RecorderFile := TFileStream.Create(FRecorderFile, fmCreate);
+        end;
+    End 
+    Else If FRecorderOn Then 
+    Begin
+        FreeAndNil(RecorderFile);
     End;
-    ReWrite(RecorderFile);
-  End Else If FRecorderOn Then Begin
-      CloseFile(RecorderFile);
-  End;
-  GlobalResult := FRecorderFile;
-  FRecorderOn := Value;
+    GlobalResult := FRecorderFile;
+    FRecorderOn := Value;
 end;
 
 procedure TExecutive.Write_to_RecorderFile(const s: string);
 begin
-   Writeln(Recorderfile, S);
+   FSWriteln(Recorderfile, S);
 end;
 
 initialization

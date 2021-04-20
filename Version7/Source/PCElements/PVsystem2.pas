@@ -31,6 +31,7 @@ unit PVsystem2;
 interface
 
 uses
+    Classes,
     PVsystemUserModel,
     DSSClass,
     PCClass,
@@ -175,7 +176,7 @@ type
         ShapeFactor: Complex;
         TShapeValue: Double;
 
-        Tracefile: TextFile;
+        TraceFile: TFileStream;
         UserModel: TPVsystemUserModel;   {User-Written Models}
 
         varBase: Double; // Base vars per phase
@@ -314,7 +315,7 @@ type
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
       {Porperties}
@@ -880,18 +881,22 @@ begin
                     propDEBUGTRACE:
                         if DebugTrace then
                         begin   // Init trace file
-                            AssignFile(TraceFile, GetOutputDirectory + 'STOR_' + Name + '.CSV');
-                            ReWrite(TraceFile);
-                            Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, PVSystemModel,  Qnominalperphase, Pnominalperphase, CurrentType');
+                            FreeAndNil(TraceFile);
+                            TraceFile := TFileStream.Create(GetOutputDirectory + 'STOR_' + Name + '.CSV', fmCreate);
+                            FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, PVSystemModel,  Qnominalperphase, Pnominalperphase, CurrentType');
                             for i := 1 to nphases do
-                                Write(Tracefile, ', |Iinj' + IntToStr(i) + '|');
+                                FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
                             for i := 1 to nphases do
-                                Write(Tracefile, ', |Iterm' + IntToStr(i) + '|');
+                                FSWrite(Tracefile, ', |Iterm' + IntToStr(i) + '|');
                             for i := 1 to nphases do
-                                Write(Tracefile, ', |Vterm' + IntToStr(i) + '|');
-                            Write(TraceFile, ',Vthev, Theta');
-                            Writeln(TraceFile);
-                            CloseFile(Tracefile);
+                                FSWrite(Tracefile, ', |Vterm' + IntToStr(i) + '|');
+                            FSWrite(TraceFile, ',Vthev, Theta');
+                            FSWriteln(TraceFile);
+                            FSFlush(Tracefile);
+                        end
+                        else
+                        begin
+                            FreeAndNil(TraceFile);
                         end;
 
                 end;
@@ -1061,6 +1066,7 @@ begin
     inherited create(ParClass);
     Name := LowerCase(SourceName);
     DSSObjType := ParClass.DSSClassType; // + PVSystem_ELEMENT;  // In both PCelement and PVSystemelement list
+    TraceFile := nil;
 
     Nphases := 3;
     Fnconds := 4;  // defaults to wye
@@ -1335,6 +1341,7 @@ destructor TPVsystem2Obj.Destroy;
 begin
     YPrimOpenCond.Free;
     UserModel.Free;
+    FreeAndNil(TraceFile);
     inherited Destroy;
 end;
 
@@ -2009,13 +2016,12 @@ procedure TPVsystem2Obj.WriteTraceRecord(const s: String);
 
 var
     i: Integer;
-
+    sout: String;
 begin
     try
         if (not InshowResults) then
         begin
-            Append(TraceFile);
-            Write(TraceFile, Format('%-.g, %d, %-.g, ',
+            WriteStr(sout, Format('%-.g, %d, %-.g, ',
                 [ActiveCircuit.Solution.DynaVARs.t,
                 ActiveCircuit.Solution.Iteration,
                 ActiveCircuit.LoadMultiplier]),
@@ -2025,15 +2031,25 @@ begin
                 (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
                 (Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
                 s, ', ');
+            FSWrite(TraceFile, sout);
             for i := 1 to nphases do
-                Write(TraceFile, (Cabs(InjCurrent^[i])): 8: 1, ', ');
+            begin
+                WriteStr(sout, (Cabs(InjCurrent^[i])): 8: 1, ', ');
+                FSWrite(TraceFile, sout);
+            end;
             for i := 1 to nphases do
-                Write(TraceFile, (Cabs(ITerminal^[i])): 8: 1, ', ');
+            begin
+                WriteStr(sout, (Cabs(ITerminal^[i])): 8: 1, ', ');
+                FSWrite(TraceFile, sout);
+            end;
             for i := 1 to nphases do
-                Write(TraceFile, (Cabs(Vterminal^[i])): 8: 1, ', ');
+            begin
+                WriteStr(sout, (Cabs(Vterminal^[i])): 8: 1, ', ');
+                FSWrite(TraceFile, sout);
+            end;
 
-            Writeln(TRacefile);
-            CloseFile(TraceFile);
+            FSWriteln(Tracefile);
+            FSFlush(TraceFile);
         end;
     except
         On E: Exception do
@@ -2631,7 +2647,7 @@ begin
     Result := Qnominalperphase * 0.001 * Fnphases;
 end;
 
-procedure TPVsystem2Obj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TPVsystem2Obj.DumpProperties(var F: TFileStream; Complete: Boolean);
 
 var
     i, idx: Integer;
@@ -2646,14 +2662,14 @@ begin
             idx := PropertyIdxMap[i];
             case idx of
                 propUSERDATA:
-                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')')
+                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[idx] + ')')
             else
-                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[idx]);
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[idx]);
             end;
         end;
     end;
 
-    Writeln(F);
+    FSWriteln(F);
 end;
 
 

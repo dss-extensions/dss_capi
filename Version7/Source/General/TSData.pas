@@ -9,6 +9,7 @@ unit TSData;
 interface
 
 uses
+    Classes,
     Command,
     DSSClass,
     DSSObject,
@@ -54,7 +55,7 @@ type
         property TapeLap: Double READ FTapeLap;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
     end;
 
 implementation
@@ -66,7 +67,8 @@ uses
     Sysutils,
     Ucomplex,
     Arraydef,
-    LineUnits;
+    LineUnits,
+    Utilities;
 
 const
     NumPropsThisClass = 3;
@@ -244,7 +246,7 @@ begin
     inherited destroy;
 end;
 
-procedure TTSDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TTSDataObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin
@@ -253,14 +255,14 @@ begin
     begin
         for i := 1 to NumProperties do
         begin
-            Write(F, '~ ', PropertyName^[i], '=');
+            FSWrite(F, '~ ' + PropertyName^[i] + '=');
             case i of
                 1:
-                    Writeln(F, Format('%.6g', [FDiaShield]));
+                    FSWriteln(F, Format('%.6g', [FDiaShield]));
                 2:
-                    Writeln(F, Format('%.6g', [FTapeLayer]));
+                    FSWriteln(F, Format('%.6g', [FTapeLayer]));
                 3:
-                    Writeln(F, Format('%.2g', [FTapeLap]));
+                    FSWriteln(F, Format('%.2g', [FTapeLap]));
             end;
         end;
     end;

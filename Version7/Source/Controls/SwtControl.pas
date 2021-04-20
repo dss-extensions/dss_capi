@@ -9,6 +9,7 @@ unit SwtControl;
 interface
 
 uses
+    Classes,
     Command,
     ControlClass,
     ControlElem,
@@ -62,7 +63,7 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(var F: TFileStream; Complete: Boolean); OVERRIDE;
         property NormalState: EControlAction READ FNormalState WRITE Set_NormalState;
         property PresentState: EControlAction READ FPresentState WRITE Set_PresentState;
         property IsLocked: Boolean READ FLocked;
@@ -495,16 +496,16 @@ begin
     FPresentState := Value;
 end;
 
-procedure TSwtControlObj.DumpProperties(var F: TextFile; Complete: Boolean);
+procedure TSwtControlObj.DumpProperties(var F: TFileStream; Complete: Boolean);
 var
     i: Integer;
 begin
     inherited DumpProperties(F, Complete);
     with ParentClass do
         for i := 1 to NumProperties do
-            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[PropertyIdxMap[i]]);
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[PropertyIdxMap[i]]);
     if Complete then
-        Writeln(F);
+        FSWriteln(F);
 end;
 
 function TSwtControlObj.GetPropertyValue(Index: Integer): String;

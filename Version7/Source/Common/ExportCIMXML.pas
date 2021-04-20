@@ -15,7 +15,7 @@ unit ExportCIMXML;
 interface
 
 uses
-    NamedObject;  // for TUuid
+    Classes, NamedObject;  // for TUuid
 
 procedure ExportCDPSM(FileNm: String;
     Substation: String;
@@ -29,7 +29,7 @@ procedure ExportCDPSM(FileNm: String;
 
 procedure StartUuidList(size: Integer);
 procedure FreeUuidList;
-procedure WriteHashedUUIDs(var F: TextFile);
+procedure WriteHashedUUIDs(F: TFileStream);
 procedure AddHashedUUID(key: String; UuidVal: String);
 procedure DefaultCircuitUUIDs(var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid);
 
@@ -58,7 +58,6 @@ uses
     CapControl,
     CapControlvars,
     Reactor,
-    Feeder,
     ConductorData,
     LineUnits,
     LineGeometry,
@@ -120,12 +119,12 @@ type
     TFileDealer = class(TObject)
     PRIVATE
     // the Combined XML can be broken into six separate profiles
-        F_FUN: TextFile;
-        F_EP: TextFile;
-        F_SSH: TextFile;
-        F_CAT: TextFile;
-        F_GEO: TextFile;
-        F_TOPO: TextFile;
+        F_FUN: TFileStream;
+        F_EP: TFileStream;
+        F_SSH: TFileStream;
+        F_CAT: TFileStream;
+        F_GEO: TFileStream;
+        F_TOPO: TFileStream;
         roots: array[ProfileChoice] of String;
         ids: array[ProfileChoice] of TUuid;
     PUBLIC
@@ -152,7 +151,7 @@ const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
     CIM_NS = 'http://iec.ch/TC57/CIM100';
 
-procedure StartCIMFile(var F: TextFile; FileNm: String; prf: ProfileChoice); FORWARD;
+procedure StartCIMFile(var F: TFileStream; FileNm: String; prf: ProfileChoice); FORWARD;
 
 procedure TFileDealer.WriteCimLn(prf: ProfileChoice; const s: String);
 begin
@@ -167,22 +166,22 @@ begin
         end;
         case prf of
             FunPrf:
-                WriteLn(F_FUN, s);
+                FSWriteLn(F_FUN, s);
             EpPrf:
-                WriteLn(F_EP, s);
+                FSWriteLn(F_EP, s);
             GeoPrf:
-                WriteLn(F_GEO, s);
+                FSWriteLn(F_GEO, s);
             TopoPrf:
-                WriteLn(F_TOPO, s);
+                FSWriteLn(F_TOPO, s);
             CatPrf:
-                WriteLn(F_CAT, s);
+                FSWriteLn(F_CAT, s);
             SshPrf:
-                WriteLn(F_SSH, s);
+                FSWriteLn(F_SSH, s);
         end;
     end
     else
     begin
-        WriteLn(F_FUN, s)
+        FSWriteLn(F_FUN, s)
     end;
 end;
 
@@ -252,20 +251,20 @@ end;
 
 destructor TFileDealer.Destroy;
 begin
-    WriteLn(F_FUN, '</rdf:RDF>');
-    CloseFile(F_FUN);
+    FSWriteLn(F_FUN, '</rdf:RDF>');
+    FreeAndNil(F_FUN);
     if Separate then
     begin
-        WriteLn(F_GEO, '</rdf:RDF>');
-        WriteLn(F_CAT, '</rdf:RDF>');
-        WriteLn(F_SSH, '</rdf:RDF>');
-        WriteLn(F_TOPO, '</rdf:RDF>');
-        WriteLn(F_EP, '</rdf:RDF>');
-        CloseFile(F_GEO);
-        CloseFile(F_CAT);
-        CloseFile(F_SSH);
-        CloseFile(F_TOPO);
-        CloseFile(F_EP);
+        FSWriteLn(F_GEO, '</rdf:RDF>');
+        FSWriteLn(F_CAT, '</rdf:RDF>');
+        FSWriteLn(F_SSH, '</rdf:RDF>');
+        FSWriteLn(F_TOPO, '</rdf:RDF>');
+        FSWriteLn(F_EP, '</rdf:RDF>');
+        FreeAndNil(F_GEO);
+        FreeAndNil(F_CAT);
+        FreeAndNil(F_SSH);
+        FreeAndNil(F_TOPO);
+        FreeAndNil(F_EP);
     end;
     inherited Destroy;
 end;
@@ -845,7 +844,7 @@ begin
     subGeoID := GetDevUuid(SubGeoRgn, 'SubGeoRgn', 1);
 end;
 
-procedure WriteHashedUUIDs(var F: TextFile);
+procedure WriteHashedUUIDs(F: TFileStream);
 var
     i: Integer;
 begin
@@ -853,7 +852,7 @@ begin
     begin
         if Length(UuidKeyList[i]) < 1 then
             break;
-        WriteLn(F, Format('%s %s', [UuidKeyList[i], UUIDToString(UuidList[i])]));
+        FSWriteLn(F, Format('%s %s', [UuidKeyList[i], UUIDToString(UuidList[i])]));
     end;
 end;
 
@@ -1811,20 +1810,19 @@ begin
     end;
 end;
 
-procedure StartCIMFile(var F: TextFile; FileNm: String; prf: ProfileChoice);
+procedure StartCIMFile(var F: TFileStream; FileNm: String; prf: ProfileChoice);
 begin
-    Assignfile(F, FileNm);
-    ReWrite(F);
-    Writeln(F, '<?xml version="1.0" encoding="utf-8"?>');
-    Writeln(F, '<!-- un-comment this line to enable validation');
-    Writeln(F, '-->');
-    Writeln(F, '<rdf:RDF xmlns:cim="' + CIM_NS + '#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">');
-    Writeln(F, '<!--');
-    Writeln(F, '-->');
-    WriteLn(F, Format('<cim:IEC61970CIMVersion rdf:ID="%s">', [UUIDToCIMString(GetDevUuid(CIMVer, 'IEC', 1))]));
-    WriteLn(F, Format('  <cim:IEC61970CIMVersion.version>%s</cim:IEC61970CIMVersion.version>', ['IEC61970CIM100']));
-    WriteLn(F, Format('  <cim:IEC61970CIMVersion.date>%s</cim:IEC61970CIMVersion.date>', ['2019-04-01']));
-    WriteLn(F, '</cim:IEC61970CIMVersion>');
+    F := TFileStream.Create(FileNm, fmCreate);
+    FSWriteln(F, '<?xml version="1.0" encoding="utf-8"?>');
+    FSWriteln(F, '<!-- un-comment this line to enable validation');
+    FSWriteln(F, '-->');
+    FSWriteln(F, '<rdf:RDF xmlns:cim="' + CIM_NS + '#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">');
+    FSWriteln(F, '<!--');
+    FSWriteln(F, '-->');
+    FSWriteLn(F, Format('<cim:IEC61970CIMVersion rdf:ID="%s">', [UUIDToCIMString(GetDevUuid(CIMVer, 'IEC', 1))]));
+    FSWriteLn(F, Format('  <cim:IEC61970CIMVersion.version>%s</cim:IEC61970CIMVersion.version>', ['IEC61970CIM100']));
+    FSWriteLn(F, Format('  <cim:IEC61970CIMVersion.date>%s</cim:IEC61970CIMVersion.date>', ['2019-04-01']));
+    FSWriteLn(F, '</cim:IEC61970CIMVersion>');
 end;
 
 procedure ListXfmrCodes(clsXfCd: TXfmrCode; lbl: String); // for debugging
@@ -1943,7 +1941,8 @@ begin
 
     {$IFDEF FPC}
          // this only works in the command line version
-        Writeln(FileNm + '<=' + ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
+        if not NoFormsAllowed then
+            Writeln(FileNm + '<=' + ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
     {$ENDIF}
 
         FD := TFileDealer.Create(Combined, FileNm);
