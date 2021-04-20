@@ -365,7 +365,7 @@ Begin
     gotTheFile := False;
     strings := nil;
     Result := 0;
-    InBlockComment := FALSE;  // Discareded off stack upon return
+    InBlockComment := FALSE;  // Discarded off stack upon return
     // Therefore extent of block comment does not extend beyond a file
     // Going back up the redirect stack
 
@@ -387,19 +387,40 @@ Begin
         exit;  // ignore altogether IF null filename
     
     SaveDir := CurrentDSSDir;
-//TODO: backport changes in order
-    try
-        // First try, using the provided name directly
-        AssignFile(Fin, ReDirFile);
-        Reset(Fin);
-        if IsCompile Then 
-        begin
-            LastFileCompiled := ReDirFile;
-            LocalCompFileName:= ReDirFile;
+
+    if FileExists(ReDirFile) then
+    begin
+        // If the usual Pascal text file is broken, 
+        // try a stream via a TStringList object
+        try
+            strings := TStringList.Create;
+            strings.LoadFromFile(ReDirFile);
+            if IsCompile Then 
+            begin
+                LastFileCompiled := ReDirFile;
+                LocalCompFileName := ReDirFile;
+            end;
+            gotTheFile := True;
+        except
+            FreeAndNil(strings);
         end;
-        gotTheFile := True;
-    except
-        // intentionally blank
+    end;
+    
+    if not gotTheFile then
+    begin
+        try
+            // First try, using the provided name directly
+            AssignFile(Fin, ReDirFile);
+            Reset(Fin);
+            if IsCompile Then 
+            begin
+                LastFileCompiled := ReDirFile;
+                LocalCompFileName:= ReDirFile;
+            end;
+            gotTheFile := True;
+        except
+            // intentionally blank
+        end;
     end;
     
     // For full backwards compatibility
