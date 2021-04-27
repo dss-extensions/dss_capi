@@ -1872,8 +1872,11 @@ exports
     WireData_Get_idx,
     WireData_Set_idx,
     XYCurves_Get_idx,
-    XYCurves_Set_idx;
+    XYCurves_Set_idx,
 
+    Circuit_Get_ElementLosses,
+    Circuit_Get_ElementLosses_GR;
+    
 begin
   IsDLL := TRUE;
   DSSExecutive := TExecutive.Create;
