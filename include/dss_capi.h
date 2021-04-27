@@ -6395,6 +6395,17 @@ extern "C" {
     DSS_CAPI_DLL double LoadShapes_Get_MaxQ(void);
 
 
+    /*
+    Array of integers, a copy of the internal NodeRef of the CktElement.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL void CktElement_Get_NodeRef(int32_t** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as CktElement_Get_NodeRef but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void CktElement_Get_NodeRef_GR(void);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
