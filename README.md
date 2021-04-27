@@ -21,6 +21,8 @@ If you are looking for the bindings to other languages:
 
 Version 0.10.7, based on OpenDSS revision 2963 (around version OpenDSS 9.1.3.4), with many extra/custom features.
 
+**This is the work-in-progress branch, which will become 0.12.0.**
+
 While the main objective of COM compatibility has been reach, this is still a work-in-progress and is subject to changes. 
 *Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.* From version 0.10, the v8 interface is a lot more stable than in 0.9.8. Since version 0.10.5, the parallel-machine code from Version 8 is not built for binary releases anymore -- stay tuned for a future unified version.
 
@@ -35,13 +37,14 @@ Besides low-level details such as memory management, most of the COM documentati
 
 **Starting in version 0.9.8, we disabled the `opendsscmd.ini` creation. You can set the default base frequency using the environment variable DSS_BASE_FREQUENCY, or just set it in the DSS scripts (recommended). This also means that the initial datapath is set to the current working directory.**
 
-Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to build DSS C-API. The API code is at the `src/` folder, while the main OpenDSS code is kept in `Version7/` and `Version8/`. The upstream/official code is kept in the branch named `opendss-official-svn` and is periodically merged -- see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document. 
+Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to build DSS C-API. After the 0.10.x series of releases, all Pascal code is contained in the `src/` folder. The `src/CAPI/` folder contains the main API code, which sits besides the general OpenDSS code. Although there have been extensive changes to the official OpenDSS code, the upstream/official code is kept in the branch named `opendss-official-svn` and is periodically merged -- see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document. 
 
 ## Recent changes
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/changelog.md) for a detailed list.
 
-- **2020-12-28 / version 0.10.7: Maintenance release based on on OpenDSS revision 2963. Includes fixes and new features from the official OpenDSS. [A new document describing the DSS properties](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/dss_properties.md) was added.**
+- **2020-03-09 / version 0.10.7-1: Includes a fix for some reports which presented corrupted text in version 0.10.7.**
+- 2020-12-28 / version 0.10.7: Maintenance release based on on OpenDSS revision 2963. Includes fixes and new features from the official OpenDSS. [A new document describing the DSS properties](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/dss_properties.md) was added.
 - 2020-07-31 / version 0.10.6: New API extensions, and ported changes from the official OpenDSS codebase. Includes some bugfixes, a new extended validation error messages and new compatibility toggles.
 - 2020-03-03 / version 0.10.5: Maintenance release with several minor fixes. Includes changes ported from COM and the official OpenDSS codebase. Version 8 binary releases excluded.
 - 2019-11-16 / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and the official OpenDSS codebase.

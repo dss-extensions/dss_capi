@@ -1,29 +1,50 @@
-# Version 0.11
-
-**not released**
+# Version 0.13
 
 - **Done**:
+    - use KLUSolveX, enabling incremental Y updates for transformers and capacitor banks.
     - drop the GR API for strings (bytes, ints and floats will continue)
     - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using `int32_t` instead -- this was an artifact to ensure initial compatibility with the COM code.
     - extend the API to work with 64-bit integers where appropriate
     - extend the API to allow 32-bit floats
-    - rework TPowerTerminal to achieve better memory layout
-    - use `TFPHashList` where possible (replacing the custom, original THashList implementation from OpenDSS)
 
 - **Planned**:
     - **(WIP)** potentially unify the v7 and v8 codebases into a single library.
     - complement the API with the missing classes
     - initial work on the plotting and extended reporting API
-    
 
-# Version 0.10.8
+# Version 0.12
 
 **not released**
 
-- Introduce AllowChangeDir mechanism: defaults to enabled state for backwards compatibility. When disabled, the engine will not change the current working directory in any situation. This is exposed through a new pair of functions
-`DSS_Set_AllowChangeDir` and `DSS_Get_AllowChangeDir`, besides the environment variable `DSS_CAPI_ALLOW_CHANGE_DIR`. Due to Free Pascal legacy limitations, currently this can fail for very long paths (this is tracked in #93).
-- Use `OutputDirectory` more. `OutputDirectory` is set to the current `DataPath` if `DataPath` is writable. If not, it's set to a general location (`%LOCALAPPDATA%/dss-extensions` and `/tmp/dss-extensions` since this release). This should make life easier for a user running files from a read-only location. Note that this is only an issue when running a `compile` command. If the user only uses `redirect` commands, the `DataPath` and `OutputDirectory` are left empty, meaning the files are written to the current working directory (CWD), which the user can control through the programming language driving DSS C-API. Note that the official OpenDSS COM behavior is different, since it loads the `DataPath` saved in the registry and modifies the CWD accordingly when OpenDSS is initialized.
+Since version 0.11 accumulated too many changes for too long (nearly 2 years), making it hard to keep two parallel but increasingly distinct codebases, version 0.12 is a stepping stone to the next big version (planned as 0.13) that will contain all of the 0.11 changes. As such, only some of the 0.11 features are included. The previous 0.10.8 changes are also included here.
 
+This version maintains basic compatibility with the 0.10.x series of releases, but there are many important changes. Version 0.13 will break API and ABI compatibility since function signatures and datatypes will be extensively adjusted. Still, if you use DSS C-API through one of the projects from DSS Extensions, we expect that your code will require few or no changes.
+
+- The library name was changed from `dss_capi_v7` to `dss_capi`. The codebase was cleaned up and reorganized.
+- Experimental ARM64/AARCH64 support added. ARM32 building scripts were also added.
+- Introduce `AllowChangeDir` mechanism: defaults to enabled state for backwards compatibility. When disabled, the engine will not change the current working directory in any situation. This is exposed through a new pair of functions
+`DSS_Set_AllowChangeDir` and `DSS_Get_AllowChangeDir`, besides the environment variable `DSS_CAPI_ALLOW_CHANGE_DIR`.
+- Use `OutputDirectory` more. `OutputDirectory` is set to the current `DataPath` if `DataPath` is writable. If not, it's set to a general location (`%LOCALAPPDATA%/dss-extensions` and `/tmp/dss-extensions` since this release). This should make life easier for a user running files from a read-only location. Note that this is only an issue when running a `compile` command. If the user only uses `redirect` commands, the `DataPath` and `OutputDirectory` are left empty, meaning the files are written to the current working directory (CWD), which the user can control through the programming language driving DSS C-API. Note that the official OpenDSS COM behavior is different, since it loads the `DataPath` saved in the registry and modifies the CWD accordingly when OpenDSS is initialized.
+- File IO rewritten to drop deprecated functions. This removes some limitations related to long paths due to the legacy implementation being limited to 255 chars.
+- Reworked `TPowerTerminal` to achieve better memory layout. This makes simulations running `LoadsTerminalCheck=false` and `LoadsTerminalCheck=true` closer in performance, yet disabling the check is still faster.
+- Use `TFPHashList` where possible (replacing the custom, original THashList implementation from OpenDSS).
+- New LoadShape functions and internals: 
+    - Port memory-shaped files from the official OpenDSS, used when `MemoryMapping=Yes` from a DSS script while creating a LoadShape object.
+    - release the `LoadShape_Set_Points` function, which can be used for faster LoadShape input, memory-mapping externally, shared memory, chunked input, etc.
+- Some new functions, many exposing more internals: 
+    - `Circuit_Get_ElementLosses`
+    - `CktElement_Get_NodeRef`
+    
+
+Due to the high number of IO changes, we recommend checking the performance before and after the upgrade to ensure 
+
+# Version 0.11
+
+**not released, will become 0.13 **
+
+# Version 0.10.8
+
+**not released, was merged into 0.12 **
 
 # Version 0.10.7
 
