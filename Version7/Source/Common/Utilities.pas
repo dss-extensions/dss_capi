@@ -3631,6 +3631,7 @@ begin
         S := S + ch;
     until ch = #10;
 
+    //TODO: Do we need to handle files with classic Mac OS line endings too?
     if (Length(S) >= 1) and (S[Length(S)] = #10) then
     begin
         if (Length(S) >= 2) and (S[Length(S) - 1] = #13) then
