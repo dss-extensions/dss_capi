@@ -45,7 +45,7 @@ const
     RECLOSER_CONTROL = 15 * 8;
     FUSE_CONTROL = 16 * 8;
     REACTOR_ELEMENT = 17 * 8;
-    FEEDER_ELEMENT = 18 * 8;
+    // FEEDER_ELEMENT = 18 * 8;
     GEN_CONTROL = 19 * 8;
     SENSOR_ELEMENT = 20 * 8;
     STORAGE_ELEMENT = 21 * 8;

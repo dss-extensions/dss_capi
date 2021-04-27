@@ -141,7 +141,6 @@ TYPE
           Relays, // added for CIM XML export
           Fuses, // added for CIM XML export
           Reclosers, // added for CIM XML export
-          Feeders,
           SwtControls        :PointerList.TPointerList;
           CktElements        : PointerList.TPointerList;
 
@@ -401,7 +400,6 @@ BEGIN
      Generators      := TPointerList.Create(5);
      StorageElements := TPointerList.Create(5);
      PVSystems       := TPointerList.Create(5);
-     Feeders         := TPointerList.Create(10);
      Substations     := TPointerList.Create(5);
      Transformers    := TPointerList.Create(10);
      CapControls     := TPointerList.Create(10);
@@ -609,7 +607,6 @@ BEGIN
      Generators.Free;
      StorageElements.Free;
      PVSystems.Free;
-     Feeders.Free;
      Substations.Free;
      Transformers.Free;
      CapControls.Free;
@@ -2151,7 +2148,6 @@ BEGIN
        XFMR_ELEMENT   :Transformers.Add(ActiveCktElement);
        LINE_ELEMENT   :Lines.Add(ActiveCktElement);
        FAULTOBJECT    :Faults.Add(ActiveCktElement);
-       FEEDER_ELEMENT :Feeders.Add(ActiveCktElement);
 
        STORAGE_ELEMENT:StorageElements.Add(ActiveCktElement);
        PVSYSTEM_ELEMENT:PVSystems.Add(ActiveCktElement);

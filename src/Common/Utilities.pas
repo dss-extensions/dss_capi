@@ -167,8 +167,6 @@ procedure MakeDistributedGenerators(kW, PF: Double; How: String; Skip: Integer; 
 
 procedure Obfuscate;
 
-
-
 function AdjustInputFilePath(const param: String): String;
 procedure FSWriteLn(F: TFileStream; Ss: Array of String); inline; overload;
 procedure FSWriteLn(F: TFileStream; S: String = ''); inline; overload;
@@ -180,7 +178,6 @@ procedure FSWrite(F: TFileStream; S: String; S2: String; S3: String); inline; ov
 
 procedure FSReadln(F: TFileStream; out S: String);
 procedure FSFlush(F: TFileStream);
-
 implementation
 
 uses
