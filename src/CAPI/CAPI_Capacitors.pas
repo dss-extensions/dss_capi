@@ -41,7 +41,7 @@ uses
     Executive,
     Capacitor,
     SysUtils,
-    PointerList;
+    DSSPointerList;
 
 //------------------------------------------------------------------------------
 function _activeObj(out obj: TCapacitorObj): Boolean; inline;
@@ -98,7 +98,7 @@ end;
 function Capacitors_Get_First(): Integer; CDECL;
 var
     elem: TCapacitorObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
@@ -163,7 +163,7 @@ end;
 function Capacitors_Get_Next(): Integer; CDECL;
 var
     elem: TCapacitorObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then

@@ -192,7 +192,6 @@ uses
     Sysutils,
     MathUtil,
     Math,
-    PointerList,
     BufStream;
 
 type

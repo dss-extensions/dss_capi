@@ -29,7 +29,7 @@ INTERFACE
 USES
      {$IFDEF FPC}gqueue{$ELSE}System.Generics.Collections{$ENDIF},
      Command, ControlClass, ControlElem, CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
-     utilities, XYcurve, Dynamics, PointerList, Classes, StrUtils;
+     utilities, XYcurve, Dynamics, DSSPointerList, Classes, StrUtils;
 
 TYPE
 
@@ -116,7 +116,7 @@ end;
             FPVSystemNameList:TStringList;
             RateofChangeMode : ERateofChangeMode;
             FLPFTau          : Double;
-            FPVSystemPointerList:PointerList.TPointerList;
+            FPVSystemPointerList: TDSSPointerList;
 
             Fvvc_curve_size: Integer; // length of the individual curve
             Fvvc_curve: TXYcurveObj;
@@ -903,7 +903,7 @@ Begin
      FHitkvarLimit            := nil;
 
      FPVSystemNameList := TSTringList.Create;
-     FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+     FPVSystemPointerList := TDSSPointerList.Create(20);  // Default size and increment
 
       //following for dynamic reactive current mode
      FDbVMin                := 0.95;

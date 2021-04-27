@@ -69,7 +69,7 @@ uses
     Executive,
     Reactor,
     SysUtils,
-    PointerList,
+    DSSPointerList,
     Utilities,
     ucomplex;
 
@@ -196,7 +196,7 @@ end;
 function Reactors_Get_First(): Integer; CDECL;
 var
     elem: TReactorObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
@@ -246,7 +246,7 @@ end;
 function Reactors_Get_Next(): Integer; CDECL;
 var
     elem: TReactorObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then

@@ -231,7 +231,6 @@ uses
     ucmatrix,
     showresults,
     mathUtil,
-    PointerList,
     Dynamics,
     PstCalc,
     Capacitor,

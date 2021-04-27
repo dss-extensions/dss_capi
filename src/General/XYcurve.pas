@@ -143,7 +143,6 @@ uses
     MathUtil,
     Utilities,
     Math,
-    PointerList,
     BufStream;
 
 const

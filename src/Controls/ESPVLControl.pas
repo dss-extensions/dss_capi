@@ -32,7 +32,7 @@ uses
     Arraydef,
     ucomplex,
     utilities,
-    PointerList,
+    DSSPointerList,
     Classes,
     Loadshape;
 
@@ -65,7 +65,7 @@ type
             // Local Controllers under supervision of System Controller
         FLocalControlListSize: Integer;
         FLocalControlNameList: TStringList;
-        FLocalControlPointerList: PointerList.TPointerList;
+        FLocalControlPointerList: TDSSPointerList;
         FLocalControlWeights: pDoubleArray;
 
 
@@ -74,13 +74,13 @@ type
              // PVSystems under supervision of this Local Controller
         FPVsystemListSize: Integer;
         FPVsystemNameList: TStringList;
-        FPVsystemPointerList: PointerList.TPointerList;
+        FPVsystemPointerList: TDSSPointerList;
         FPVSystemWeights: pDoubleArray;
 
              // Storage Devices under supervision of this Local Controller
         FStorageListSize: Integer;
         FStorageNameList: TStringList;
-        FStoragePointerList: PointerList.TPointerList;
+        FStoragePointerList: TDSSPointerList;
         FStorageWeights: pDoubleArray;
 
 // dead band control parameters
@@ -401,17 +401,17 @@ begin
 
     FLocalControlNameList := TSTringList.Create;
     FLocalControlWeights := NIL;
-    FLocalControlPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+    FLocalControlPointerList := TDSSPointerList.Create(20);  // Default size and increment
     FLocalControlListSize := 0;
 
     FPVSystemNameList := TSTringList.Create;
     FPVSystemWeights := NIL;
-    FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+    FPVSystemPointerList := TDSSPointerList.Create(20);  // Default size and increment
     FPVSystemListSize := 0;
 
     FStorageNameList := TSTringList.Create;
     FStorageWeights := NIL;
-    FStoragePointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+    FStoragePointerList := TDSSPointerList.Create(20);  // Default size and increment
     FStorageListSize := 0;
 
     FkWLimit := 8000.0;

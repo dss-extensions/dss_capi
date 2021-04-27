@@ -86,7 +86,7 @@ uses
     CktElement,
     PDElement,
     arrayDef,
-    PointerList,
+    DSSPointerList,
     CktTree,
     ucomplex,
     Load,
@@ -317,8 +317,8 @@ type
         RegisterNames: array[1..NumEMregisters] of String;
 
         BranchList: TCktTree;      // Pointers to all circuit elements in meter's zone
-        SequenceList: PointerList.TPointerList;  // Pointers to branches in sequence from meter to ends
-        LoadList: PointerList.TPointerList;  // Pointers to Loads in the Meter zone to aid reliability calcs
+        SequenceList: TDSSPointerList;  // Pointers to branches in sequence from meter to ends
+        LoadList: TDSSPointerList;  // Pointers to Loads in the Meter zone to aid reliability calcs
 
         Registers: TRegisterArray;
         Derivatives: TRegisterArray;
@@ -1986,10 +1986,10 @@ begin
   // needs to run through the tree quickly in a radial sequence
     if Assigned(SequenceList) then
         SequenceList.Free;
-    SequenceList := PointerList.TPointerList.Create(1024); //make it a big initial allocation
+    SequenceList := TDSSPointerList.Create(1024); //make it a big initial allocation
     if Assigned(LoadList) then
         LoadList.Free;
-    LoadList := PointerList.TPointerList.Create(1024); //make it a big initial allocation
+    LoadList := TDSSPointerList.Create(1024); //make it a big initial allocation
 
   // Now start looking for other branches
   // Finds any branch connected to the TestBranch and adds it to the list

@@ -55,7 +55,7 @@ uses
     CAPI_Constants,
     Loadshape,
     DSSGlobals,
-    PointerList,
+    DSSPointerList,
     ExecHelper,
     SysUtils,
     Math;

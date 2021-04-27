@@ -14,7 +14,7 @@ unit DSSClass;
 interface
 
 USES
-    Classes, PointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
+    Classes, DSSPointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
 
 TYPE
    // Collection of all DSS Classes
@@ -68,7 +68,7 @@ TYPE
         DSSClassType: Integer;
 
 
-        ElementList: TPointerList;
+        ElementList: TDSSPointerList;
         ElementNamesOutOfSynch: Boolean;     // When device gets renamed
 
         Saved: Boolean;
@@ -138,7 +138,7 @@ Constructor TDSSClass.Create;
 
 BEGIN
     Inherited Create;
-    ElementList := TPointerList.Create(20);  // Init size and increment
+    ElementList := TDSSPointerList.Create(20);  // Init size and increment
     PropertyName := nil;
     PropertyHelp := Nil;
     PropertyIdxMap  := Nil;

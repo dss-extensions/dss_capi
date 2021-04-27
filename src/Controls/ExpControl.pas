@@ -15,7 +15,7 @@ INTERFACE
   uses
     {$IFDEF FPC}gqueue{$ELSE}System.Generics.Collections{$ENDIF}, Command,
     ControlClass, ControlElem, CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
-    utilities, Dynamics, PointerList, Classes, StrUtils;
+    utilities, Dynamics, DSSPointerList, Classes, StrUtils;
 
   type
     TExpControl = class(TControlClass)
@@ -40,7 +40,7 @@ INTERFACE
             // PVSystemList information
             FListSize:Integer;
             FPVSystemNameList:TStringList;
-            FPVSystemPointerList:PointerList.TPointerList;
+            FPVSystemPointerList: TDSSPointerList;
 
             // working storage for each PV system under management
             FPriorVpu: Array of Double;
@@ -361,7 +361,7 @@ Begin
      FVarChangeTolerance      :=0.0001;  // per-unit
 
      FPVSystemNameList := TSTringList.Create;
-     FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+     FPVSystemPointerList := TDSSPointerList.Create(20);  // Default size and increment
 
      // user parameters for dynamic Vreg
      FVregInit := 1.0; // 0 means to find it during initialization

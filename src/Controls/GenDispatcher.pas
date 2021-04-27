@@ -28,7 +28,7 @@ uses
     Arraydef,
     ucomplex,
     utilities,
-    PointerList,
+    DSSPointerList,
     Classes;
 
 type
@@ -60,7 +60,7 @@ type
         TotalWeight: Double;
         FListSize: Integer;
         FGeneratorNameList: TStringList;
-        FGenPointerList: PointerList.TPointerList;
+        FGenPointerList: TDSSPointerList;
         FWeights: pDoubleArray;
 
     PUBLIC
@@ -323,7 +323,7 @@ begin
 
     FGeneratorNameList := TSTringList.Create;
     FWeights := NIL;
-    FGenPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+    FGenPointerList := TDSSPointerList.Create(20);  // Default size and increment
     FListSize := 0;
     FkWLimit := 8000.0;
     FkWBand := 100.0;

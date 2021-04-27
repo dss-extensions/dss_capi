@@ -301,7 +301,7 @@ uses
     Circuit,
     Utilities,
     KLUSolve,
-    PointerList,
+    DSSPointerList,
     Line;
 
 const
@@ -1263,7 +1263,7 @@ var
     TermIdx,
     BusdotIdx: Integer;
     EndFlag: Boolean;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
 // This rouitne adds the Transformers to the incidence matrix vectors
     with ActiveCircuit do
@@ -1306,7 +1306,7 @@ procedure TSolutionObj.AddSeriesCap2IncMatrix;
 var
     CapBus: String;
     elem: TCapacitorObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
     CapTermIdx,
     BusdotIdx: Integer;
     CapEndFlag: Boolean;

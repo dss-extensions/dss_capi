@@ -41,7 +41,7 @@ uses
     ControlElem,
     SwtControl,
     SysUtils,
-    PointerList;
+    DSSPointerList;
 
 function _activeObj(out obj: TSwtControlObj): Boolean; inline;
 begin
@@ -125,7 +125,7 @@ end;
 function SwtControls_Get_First(): Integer; CDECL;
 var
     elem: TSwtControlObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
@@ -172,7 +172,7 @@ end;
 function SwtControls_Get_Next(): Integer; CDECL;
 var
     elem: TSwtControlObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then

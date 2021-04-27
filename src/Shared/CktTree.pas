@@ -19,7 +19,7 @@ uses
     Classes,
     ArrayDef,
     StackDef,
-    PointerList,
+    DSSPointerList,
     CktElement;
 
 type
@@ -30,7 +30,7 @@ type
     TCktTreeNode = class(TObject)
     PRIVATE
 
-        FChildBranches: TPointerList;  // List of CktTreeNode pointers
+        FChildBranches: TDSSPointerList;  // List of CktTreeNode pointers
 
         NumToBuses, ToBusPtr: Integer;
         ToBusList: pIntegerArray;
@@ -51,7 +51,7 @@ type
         ChildAdded: Boolean;
         LexicalLevel: Integer;
         FParentBranch: TCktTreeNode;
-        FShuntObjects: TPointerList;  // Generic objects attached to the tree at this node
+        FShuntObjects: TDSSPointerList;  // Generic objects attached to the tree at this node
 
     PUBLIC
         CktObject: Pointer;    // Pointer to the circuit object referenced
@@ -84,7 +84,7 @@ type
 
     TZoneEndsList = class(Tobject)
     PRIVATE
-        EndNodeList: TPointerList;
+        EndNodeList: TDSSPointerList;
         EndBuses: pIntegerArray;
 
     PROTECTED
@@ -176,8 +176,8 @@ begin
         LexicalLevel := FParentBranch.LexicalLevel + 1
     else
         LexicalLevel := 0;
-    FChildBranches := TPointerList.Create(2);
-    FShuntObjects := TPointerList.Create(1);
+    FChildBranches := TDSSPointerList.Create(2);
+    FShuntObjects := TDSSPointerList.Create(1);
     FromBusReference := 0;
     VoltBaseIndex := 0; // Index to voltage base list used by energymeter and maybe others
     NumToBuses := 0;
@@ -455,7 +455,7 @@ end;
 
 constructor TZoneEndsList.Create;
 begin
-    EndnodeList := TPointerList.Create(10);
+    EndnodeList := TDSSPointerList.Create(10);
     NumEnds := 0;
     EndBuses := NIL;
 end;

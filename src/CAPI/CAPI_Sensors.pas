@@ -52,7 +52,7 @@ uses
     CAPI_Constants,
     Sensor,
     DSSGlobals,
-    PointerList,
+    DSSPointerList,
     Executive,
     SysUtils;
 
@@ -139,7 +139,7 @@ end;
 function Sensors_Get_First(): Integer; CDECL;
 var
     elem: TSensorObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
@@ -264,7 +264,7 @@ end;
 function Sensors_Get_Next(): Integer; CDECL;
 var
     elem: TSensorObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then

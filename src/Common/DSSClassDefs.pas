@@ -11,7 +11,7 @@ interface
 
 uses
     DSSClass,
-    PointerList,
+    DSSPointerList,
     HashList;
 
 const
@@ -148,11 +148,11 @@ begin
     DSS_CAPI_LEGACY_MODELS_PREV := DSS_CAPI_LEGACY_MODELS;
     
     Classnames := THashList.Create(25);   // Makes 5 sub lists
-    DSSClassList := TPointerList.Create(10);  // 10 is initial size and increment
+    DSSClassList := TDSSPointerList.Create(10);  // 10 is initial size and increment
     DSSClasses := TDSSClasses.Create;  // class to handle junk for defining DSS classes
 
      {General DSS objects, not circuit elements}
-    DSSObjs := TPointerList.Create(25);  // 25 is initial size and increment
+    DSSObjs := TDSSPointerList.Create(25);  // 25 is initial size and increment
 
      {instantiate all Intrinsic Object Classes}
 

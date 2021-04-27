@@ -4,7 +4,7 @@ interface
 
 uses
     sysutils,
-    PointerList;
+    DSSPointerList;
 
 type
     DoubleArray = array[0..$effffff] of Double;
@@ -88,7 +88,7 @@ function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; const in
 // this just gets a single string from the pointer of strings
 function DSS_Get_PAnsiChar(var p: Pointer; Index: Integer): PAnsiChar; CDECL;
 
-procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; const Restore: Boolean); inline;
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TDSSPointerList; const Restore: Boolean); inline;
 
 function InvalidCircuit(): Boolean; inline;
 function MissingSolution(): Boolean; inline;
@@ -365,7 +365,7 @@ begin
     GR_CountPtr_PByte[1] := 0;
 end;
 //------------------------------------------------------------------------------
-procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; const Restore: Boolean); inline;
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TDSSPointerList; const Restore: Boolean); inline;
 var
     Result: PPAnsiCharArray;
     idx_before, k: Integer;

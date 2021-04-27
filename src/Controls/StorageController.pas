@@ -33,7 +33,7 @@ uses
     Arraydef,
     ucomplex,
     utilities,
-    PointerList,
+    DSSPointerList,
     Classes,
     Loadshape;
 
@@ -87,7 +87,7 @@ type
         kWNeeded: Double;
 
         FStorageNameList: TStringList;
-        FleetPointerList: PointerList.TPointerList;
+        FleetPointerList: TDSSPointerList;
         SeasonTargets,
         SeasonTargetsLow: Array of Double;
         FWeights: pDoubleArray;
@@ -803,7 +803,7 @@ begin
 
     FStorageNameList := TSTringList.Create;
     FWeights := NIL;
-    FleetPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+    FleetPointerList := TDSSPointerList.Create(20);  // Default size and increment
     FleetSize := 0;
     FleetState := STORE_IDLING;
     FkWTarget := 8000.0;

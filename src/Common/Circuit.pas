@@ -23,7 +23,7 @@ unit Circuit;
 interface
 
 USES
-     Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
+     Classes, Solution, SysUtils, ArrayDef, HashList, DSSPointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
      AutoAdd, EnergyMeter, NamedObject, CktTree,
      Monitor,PCClass, PDClass,
@@ -141,8 +141,8 @@ TYPE
           Relays, // added for CIM XML export
           Fuses, // added for CIM XML export
           Reclosers, // added for CIM XML export
-          SwtControls        :PointerList.TPointerList;
-          CktElements        : PointerList.TPointerList;
+          SwtControls        : TDSSPointerList;
+          CktElements        : TDSSPointerList;
 
           ControlQueue:TControlQueue;
 
@@ -387,31 +387,31 @@ BEGIN
      NumDevices := 0;
      NumNodes   := 0;
 
-     Faults          := TPointerList.Create(2);
-     CktElements     := TPointerList.Create(1000);
-     PDElements      := TPointerList.Create(1000);
-     PCElements      := TPointerList.Create(1000);
-     DSSControls     := TPointerList.Create(10);
-     Sources         := TPointerList.Create(10);
-     MeterElements   := TPointerList.Create(20);
-     Monitors        := TPointerList.Create(20);
-     EnergyMeters    := TPointerList.Create(5);
-     Sensors         := TPointerList.Create(5);
-     Generators      := TPointerList.Create(5);
-     StorageElements := TPointerList.Create(5);
-     PVSystems       := TPointerList.Create(5);
-     Substations     := TPointerList.Create(5);
-     Transformers    := TPointerList.Create(10);
-     CapControls     := TPointerList.Create(10);
-     SwtControls     := TPointerList.Create(50);
-     RegControls     := TPointerList.Create(5);
-     Lines           := TPointerList.Create(1000);
-     Loads           := TPointerList.Create(1000);
-     ShuntCapacitors := TPointerList.Create(20);
-     Reactors        := TPointerList.Create(5);
-     Reclosers       := TPointerList.Create(10);
-     Relays          := TPointerList.Create(10);
-     Fuses           := TPointerList.Create(50);
+     Faults          := TDSSPointerList.Create(2);
+     CktElements     := TDSSPointerList.Create(1000);
+     PDElements      := TDSSPointerList.Create(1000);
+     PCElements      := TDSSPointerList.Create(1000);
+     DSSControls     := TDSSPointerList.Create(10);
+     Sources         := TDSSPointerList.Create(10);
+     MeterElements   := TDSSPointerList.Create(20);
+     Monitors        := TDSSPointerList.Create(20);
+     EnergyMeters    := TDSSPointerList.Create(5);
+     Sensors         := TDSSPointerList.Create(5);
+     Generators      := TDSSPointerList.Create(5);
+     StorageElements := TDSSPointerList.Create(5);
+     PVSystems       := TDSSPointerList.Create(5);
+     Substations     := TDSSPointerList.Create(5);
+     Transformers    := TDSSPointerList.Create(10);
+     CapControls     := TDSSPointerList.Create(10);
+     SwtControls     := TDSSPointerList.Create(50);
+     RegControls     := TDSSPointerList.Create(5);
+     Lines           := TDSSPointerList.Create(1000);
+     Loads           := TDSSPointerList.Create(1000);
+     ShuntCapacitors := TDSSPointerList.Create(20);
+     Reactors        := TDSSPointerList.Create(5);
+     Reclosers       := TDSSPointerList.Create(10);
+     Relays          := TDSSPointerList.Create(10);
+     Fuses           := TDSSPointerList.Create(50);
 
      Buses        := Allocmem(Sizeof(Buses^[1])        * Maxbuses);
      MapNodeToBus := Allocmem(Sizeof(MapNodeToBus^[1]) * MaxNodes);

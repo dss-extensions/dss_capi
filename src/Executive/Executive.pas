@@ -43,7 +43,7 @@ unit Executive;
 interface
 
 USES
-      Classes, PointerList, Command;
+      Classes, DSSPointerList, Command;
 
 
 
@@ -107,7 +107,7 @@ Begin
      {Instantiate All DSS Classe Definitions, Intrinsic and User-defined}
      CreateDSSClasses;     // in DSSGlobals
 
-     Circuits := TPointerList.Create(2);   // default buffer for 2 active circuits
+     Circuits := TDSSPointerList.Create(2);   // default buffer for 2 active circuits
      NumCircuits := 0;
      ActiveCircuit := nil;
 

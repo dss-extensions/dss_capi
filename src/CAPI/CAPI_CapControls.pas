@@ -56,7 +56,7 @@ uses
     CapControl,
     CapControlVars,
     SysUtils,
-    PointerList;
+    DSSPointerList;
 
 //------------------------------------------------------------------------------
 function _activeObj(out obj: TCapControlObj): Boolean; inline;
@@ -162,7 +162,7 @@ end;
 function CapControls_Get_First(): Integer; CDECL;
 var
     elem: TCapControlObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
@@ -241,7 +241,7 @@ end;
 function CapControls_Get_Next(): Integer; CDECL;
 var
     elem: TCapControlObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then

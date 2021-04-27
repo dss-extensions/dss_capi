@@ -61,7 +61,7 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
-    PointerList;
+    DSSPointerList;
 
 constructor TControlElem.Create(ParClass: TDSSClass);
 begin
@@ -90,14 +90,14 @@ procedure TControlElem.RemoveSelfFromControlElementList(CktElem: TDSSCktElement)
 {Remove this control from the controlelementlist of the designated element}
 var
     ptr: TControlElem;
-    TempList: TPointerList;
+    TempList: TDSSPointerList;
     i: Integer;
 
 begin
     with CktElem do
     begin
          // Make a new copy of the control element list
-        TempList := TPointerList.Create(1);
+        TempList := TDSSPointerList.Create(1);
         for i := 1 to ControlElementList.ListSize do
         begin
             ptr := ControlElementList.Get(i);

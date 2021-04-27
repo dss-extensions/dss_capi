@@ -30,7 +30,7 @@ uses
 
   {$IFDEF FPC}gqueue{$else}System.Generics.Collections{$ENDIF},
   Command, ControlClass, ControlElem, CktElement, DSSClass, bus, PCElement,PVSystem2, Storage2, Storage2Vars, Arraydef, ucomplex,
-  utilities, XYcurve, Dynamics, PointerList, Classes, StrUtils;
+  utilities, XYcurve, Dynamics, DSSPointerList, Classes, StrUtils;
 
 type
 
@@ -91,7 +91,7 @@ type
       CombiControlMode        : Integer;
       ControlActionHandle     : Integer;
       ControlledElement       : Array of TPCElement;
-      MonitoredElement        : TDSSCktElement;  // First DER element for now (the first element from ControlledElement TPointerList)
+      MonitoredElement        : TDSSCktElement;  // First DER element for now (the first element from ControlledElement TDSSPointerList)
 
       {Variables for voltages}
       FVreg                   : Double;
@@ -161,7 +161,7 @@ type
       FPriorwatts             : Array of Double;
 
       {Variables of DER element}
-      FDERPointerList         : PointerList.TPointerList;
+      FDERPointerList         : TDSSPointerList;
       FListSize               : Integer;
       FDERNameList            : TStringList;
       FVBase                  : Array of Double;
@@ -1172,7 +1172,7 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     {Variables of DER element}
     FDERNameList             := nil;
     FDERPointerList          := nil;
-    FDERPointerList          := PointerList.TPointerList.Create(20);  // Default size and increment
+    FDERPointerList          := TDSSPointerList.Create(20);  // Default size and increment
     FDERNameList             := TSTringList.Create;
     FVBase                   := nil;
     FVarFollowInverter       := nil;

@@ -71,7 +71,7 @@ uses
     Executive,
     Transformer,
     SysUtils,
-    PointerList,
+    DSSPointerList,
     ucomplex;
 
 //------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ end;
 function Transformers_Get_First(): Integer; CDECL;
 var
     elem: TTransfObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
@@ -231,7 +231,7 @@ end;
 function Transformers_Get_Next(): Integer; CDECL;
 var
     elem: TTransfObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
@@ -638,7 +638,7 @@ var
     Result: PDoubleArray;
     CResult: PComplexArray; // this array is one-based, see Ucomplex
     elem: TTransfObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
     k: Integer;
 begin
     if (InvalidCircuit) or (ActiveCircuit.Transformers.ListSize <= 0) then

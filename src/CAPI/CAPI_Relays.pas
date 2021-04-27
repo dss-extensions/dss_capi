@@ -32,7 +32,7 @@ uses
     Circuit,
     DSSGlobals,
     Sysutils,
-    Pointerlist;
+    DSSPointerlist;
 
 //------------------------------------------------------------------------------
 function _activeObj(out obj: TRelayObj): Boolean; inline;

@@ -69,7 +69,7 @@ uses
     ControlElem,
     RegControl,
     SysUtils,
-    PointerList;
+    DSSPointerList;
 
 //------------------------------------------------------------------------------
 function _activeObj(out obj: TRegControlObj): Boolean; inline;
@@ -147,7 +147,7 @@ end;
 function RegControls_Get_First(): Integer; CDECL;
 var
     elem: TRegControlObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
@@ -262,7 +262,7 @@ end;
 function RegControls_Get_Next(): Integer; CDECL;
 var
     elem: TRegControlObj;
-    lst: TPointerList;
+    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then

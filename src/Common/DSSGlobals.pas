@@ -20,7 +20,7 @@ unit DSSGlobals;
 
 interface
 
-Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList,
+Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, DSSPointerList,
      UComplex, Arraydef, CktElement, Circuit, IniRegSave,
 
      {$IFDEF UNIX}BaseUnix,{$ENDIF}
@@ -167,8 +167,8 @@ VAR
    MaxCircuits     :Integer;
    MaxBusLimit     :Integer; // Set in Validation
    MaxAllocationIterations :Integer;
-   Circuits        :TPointerList;
-   DSSObjs         :TPointerList;
+   Circuits        :TDSSPointerList;
+   DSSObjs         :TDSSPointerList;
 
    AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
 
@@ -278,7 +278,7 @@ VAR
    SavedFileList:TStringList;
    ErrorStrings: TStringList;
 
-   DSSClassList       :TPointerList; // pointers to the base class types
+   DSSClassList       :TDSSPointerList; // pointers to the base class types
    ClassNames         :THashList;
 
    UpdateRegistry     :Boolean;  // update on program exit
@@ -578,7 +578,7 @@ Begin
         ActiveCircuit := Circuits.Next;
      End;
     Circuits.Free;
-    Circuits := TPointerList.Create(2);   // Make a new list of circuits
+    Circuits := TDSSPointerList.Create(2);   // Make a new list of circuits
     NumCircuits := 0;
 
     // Revert on key global flags to Original States
