@@ -1231,7 +1231,7 @@ function TLoadShapeObj.GetMultAtHour(hr: Double): Complex;
 // The value returned is the nearest to the interval requested.  Thus if you request
 // hour=12.25 and the interval is 1.0, you will get interval 12.
 var
-    i, 
+    i: Integer;
     offset, // index including stride
     poffset: Int64; // previous index including stride
     
@@ -2037,7 +2037,7 @@ end;
 
 function TLoadShapeObj.GetMultAtHourSingle(hr: Double): Complex;
 var
-    i, 
+    i: Integer;
     offset, // index including stride
     poffset: Int64; // previous index including stride
     

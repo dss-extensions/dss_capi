@@ -3,7 +3,7 @@ if [ -n "$TRAVIS_TAG" ]; then
 elif [ -n "$APPVEYOR_REPO_TAG_NAME" ]; then
     export DSS_CAPI_VERSION=$APPVEYOR_REPO_TAG_NAME
 else
-    export DSS_CAPI_VERSION=`grep DSS_CAPI_V7_VERSION include/v7/dss_capi.h | grep -o '".*"' | tr -d '"'`
+    export DSS_CAPI_VERSION=`grep DSS_CAPI_VERSION include/dss_capi.h | grep -o '".*"' | tr -d '"'`
 fi
 
 export DSS_CAPI_REV=`git rev-parse HEAD`
