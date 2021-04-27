@@ -33,6 +33,8 @@ type
    
 {$SCOPEDENUMS OFF}
 
+function StrTOrF(const b: Boolean): String; inline;
+function StrYOrN(const b: Boolean): String; inline;
 function CompareTextShortest(const S1, S2: String): Integer;
 procedure FireOffEditor(FileNm: String);
 procedure DoDOSCmd(CmdString: String);
@@ -220,6 +222,23 @@ const
     paddotsString: String = ' .................................................'; //50 dots
     sCRLF: String = CRLF;
 
+
+function StrTOrF(const b: Boolean): String; inline;
+begin
+    if b then
+        Result := 'true'
+    else
+        Result := 'false'
+end;
+
+function StrYOrN(const b: Boolean): String; inline;
+begin
+    if b then
+        Result := 'Yes'
+    else
+        Result := 'No'
+end;
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 function CompareTextShortest(const S1, S2: String): Integer;
 var
     Teststr: String;
@@ -1485,35 +1504,48 @@ end;
 
 
 //----------------------------------------------------------------------------
-function GetCktElementIndex(const FullObjName: String): Integer;
-
+function GetCktElementIndex(const FullObjName: String): Integer; //TODO: merge with TDSSCircuit.SetElementActive
 // Given the full object name, return the index to the circuit element in the
 // active circuit.  Use full name if given. Else assume last class referenced.
 
 var
-    DevClassIndex, DevIndex: Integer;
-    DevClassName, DevName: String;
-
+    DevIndex: Integer;
+    DevClassIndex: Integer;
+    DevType,
+    DevName: String;
+    DevCls: TDSSClass;
+    element: TDSSCktElement;
 begin
-    Result := 0; // Default return value
-    ParseObjectClassandName(FullObjName, DevClassName, DevName);
-    DevClassIndex := ClassNames.Find(DevClassName);
-    if DevClassIndex = 0 then
+    Result := 0;
+    ParseObjectClassandName(FullObjName, DevType, DevName);
+    DevClassIndex := ClassNames.Find(DevType);
+    if DevClassIndex = 0 then 
         DevClassIndex := LastClassReferenced;
+    DevCls := DSSClassList.At(DevClassIndex);
 
-     // Since there could be devices of the same name of different classes,
-     // loop until we find one of the correct class
-    with ActiveCircuit do
+    if DevName = '' then
+        Exit;
+    
+    if not ActiveCircuit.DuplicatesAllowed then
     begin
-        Devindex := DeviceList.Find(DevName);
-        while DevIndex > 0 do
+        element := TDSSCktElement(DevCls.Find(DevName, False));
+        if element <> NIL then
         begin
-            if DeviceRef^[Devindex].CktElementClass = DevClassIndex then   // we got a match
+            Result := element.Handle;
+            Exit;
+        end;
+    end
+    else
+    begin
+        Devindex := ActiveCircuit.DeviceList.Find(DevName);
+        while DevIndex > 0 do 
+        begin
+            if TDSSCktElement(ActiveCircuit.CktElements.At(Devindex)).ParentClass = DevCls then   // we got a match
             begin
                 Result := DevIndex;
                 Exit;
             end;
-            Devindex := Devicelist.FindNext;
+            Devindex := ActiveCircuit.Devicelist.FindNext;   // Could be duplicates
         end;
     end;
 

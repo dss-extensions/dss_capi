@@ -178,6 +178,7 @@ uses
     DSSGlobals,
     SysUtils,
     Utilities,
+    Solution,
     Math;
 
 var
@@ -269,16 +270,10 @@ end;
 procedure TDSSCktElement.Set_YprimInvalid(const Value: Boolean);
 begin
     FYPrimInvalid := value;
-    if Value then
-    begin
-
+    if Value and FEnabled then
         // If this device is in the circuit, then we have to rebuild Y on a change in Yprim
-        if FEnabled then
-            ActiveCircuit.Solution.SystemYChanged := TRUE;
-
-    end;
+        ActiveCircuit.Solution.SystemYChanged := TRUE;
 end;
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.Set_ActiveTerminal(value: Integer);
 begin
@@ -390,66 +385,65 @@ begin
         Exit;
     end;
 
-// If value is same as present value, no reallocation necessary;
-// If either Nterms or Nconds has changed then reallocate
-    if (value <> FNterms) or (Value * Fnconds <> Yorder) then
+    // If value is same as present value, no reallocation necessary;
+    // If either Nterms or Nconds has changed then reallocate
+    if (value = FNterms) and ((Value * Fnconds) = Yorder) then
+        Exit;
+    
+    {Sanity Check}
+    if Fnconds > 101 then
     begin
+        DoSimpleMsg(Format('Warning: Number of conductors is very large (%d) for Circuit Element: "%s.%s.' +
+            'Possible error in specifying the Number of Phases for element.',
+            [Fnconds, Parentclass.Name, name]), 750);
+    end;
 
-        {Sanity Check}
-        if Fnconds > 101 then
+
+     {ReAllocate BusNames    }
+     // because they are Strings, we have to do it differently
+
+    if Value < fNterms then
+        ReallocMem(FBusNames, Sizeof(FBusNames^[1]) * Value)  // Keeps old values; truncates storage
+    else
+    begin
+        if FBusNames = NIL then
         begin
-            DoSimpleMsg(Format('Warning: Number of conductors is very large (%d) for Circuit Element: "%s.%s.' +
-                'Possible error in specifying the Number of Phases for element.',
-                [Fnconds, Parentclass.Name, name]), 750);
-        end;
-
-
-         {ReAllocate BusNames    }
-         // because they are Strings, we have to do it differently
-
-        if Value < fNterms then
-            ReallocMem(FBusNames, Sizeof(FBusNames^[1]) * Value)  // Keeps old values; truncates storage
+            // First allocation
+              {  Always allocate  arrays of strings with AllocMem so that the pointers are all nil
+                 else Delphi thinks non-zero values are pointing to an existing string.}
+            FBusNames := AllocMem(Sizeof(FBusNames^[1]) * Value); //    fill with zeros or strings will crash
+            for i := 1 to Value do
+                FBusNames^[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
+                 // This is so devices like transformers which may be defined on multiple commands
+                 // will have something in the BusNames array.
+        end
         else
         begin
-            if FBusNames = NIL then
-            begin
-                // First allocation
-                  {  Always allocate  arrays of strings with AllocMem so that the pointers are all nil
-                     else Delphi thinks non-zero values are pointing to an existing string.}
-                FBusNames := AllocMem(Sizeof(FBusNames^[1]) * Value); //    fill with zeros or strings will crash
-                for i := 1 to Value do
-                    FBusNames^[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
-                     // This is so devices like transformers which may be defined on multiple commands
-                     // will have something in the BusNames array.
-            end
-            else
-            begin
-                NewBusNames := AllocMem(Sizeof(FBusNames^[1]) * Value);  // make some new space
-                for i := 1 to fNterms do
-                    NewBusNames^[i] := FBusNames^[i];   // copy old into new
-                for i := 1 to fNterms do
-                    FBusNames^[i] := '';   // decrement usage counts by setting to nil string
-                for i := fNterms + 1 to Value do
-                    NewBusNames^[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
-                ReAllocMem(FBusNames, 0);  // dispose of old array storage
-                FBusNames := NewBusNames;
-            end;
+            NewBusNames := AllocMem(Sizeof(FBusNames^[1]) * Value);  // make some new space
+            for i := 1 to fNterms do
+                NewBusNames^[i] := FBusNames^[i];   // copy old into new
+            for i := 1 to fNterms do
+                FBusNames^[i] := '';   // decrement usage counts by setting to nil string
+            for i := fNterms + 1 to Value do
+                NewBusNames^[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
+            ReAllocMem(FBusNames, 0);  // dispose of old array storage
+            FBusNames := NewBusNames;
         end;
-
-         {Reallocate Terminals if Nconds or NTerms changed}
-        SetLength(Terminals, Value);
-        SetLength(TerminalsChecked, 0);
-        SetLength(TerminalsChecked, Value);
-
-        FNterms := Value;    // Set new number of terminals
-        Yorder := FNterms * Fnconds;
-        ReallocMem(Vterminal, Sizeof(Vterminal^[1]) * Yorder);
-        ReallocMem(Iterminal, Sizeof(Iterminal^[1]) * Yorder);
-        ReallocMem(ComplexBuffer, Sizeof(ComplexBuffer^[1]) * Yorder);    // used by both PD and PC elements
-
-        for i := 1 to Value do
-            Terminals[i - 1].Init(Fnconds);
     end;
+
+    {Reallocate Terminals if Nconds or NTerms changed}
+    SetLength(Terminals, Value);
+    SetLength(TerminalsChecked, 0);
+    SetLength(TerminalsChecked, Value);
+
+    FNterms := Value;    // Set new number of terminals
+    Yorder := FNterms * Fnconds;
+    ReallocMem(Vterminal, Sizeof(Vterminal^[1]) * Yorder);
+    ReallocMem(Iterminal, Sizeof(Iterminal^[1]) * Yorder);
+    ReallocMem(ComplexBuffer, Sizeof(ComplexBuffer^[1]) * Yorder);    // used by both PD and PC elements
+
+    for i := 1 to Value do
+        Terminals[i - 1].Init(Fnconds);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

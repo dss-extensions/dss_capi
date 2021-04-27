@@ -1658,14 +1658,14 @@ Begin
             IF    ActiveCircuit.DuplicatesAllowed THEN
              Begin
                  Result := ActiveDSSClass.NewObject(Name); // Returns index into this class
-                 ActiveCircuit.AddCktElement(Result);   // Adds active object to active circuit
+                 ActiveCircuit.AddCktElement();   // Adds active object to active circuit
              End
             ELSE
              Begin      // Check to see if we can set it active first
                 IF   Not ActiveDSSClass.SetActive(Name)  THEN
                  Begin
                    Result := ActiveDSSClass.NewObject(Name);   // Returns index into this class
-                   ActiveCircuit.AddCktElement(Result);   // Adds active object to active circuit
+                   ActiveCircuit.AddCktElement();   // Adds active object to active circuit
                  End
                 ELSE
                  Begin
