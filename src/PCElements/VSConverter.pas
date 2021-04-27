@@ -80,7 +80,6 @@ implementation
 
 uses
     ParserDel,
-    MyDSSClassDefs,
     DSSClassDefs,
     DSSGlobals,
     Dynamics,

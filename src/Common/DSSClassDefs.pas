@@ -82,7 +82,6 @@ uses
     DSSGlobals,
     DSSObject,
     ParserDel,
-    MyDSSClassDefs,
     Solution,
     Bus,
     Line,
@@ -339,10 +338,6 @@ begin
 
     SensorClass := TSensor.Create;      // Create state estimation sensors
     DSSClasses.New := SensorClass;
-
-
- { Create Classes for custom implementations }
-    CreateMyDSSClasses;
 
     NumIntrinsicClasses := DSSClassList.Count;
 end;
