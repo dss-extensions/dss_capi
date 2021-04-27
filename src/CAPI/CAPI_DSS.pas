@@ -137,21 +137,8 @@ end;
 procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    i, k: Integer;
-
 begin
-    if NumUserClasses > 0 then
-    begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumUserClasses - 1) + 1);
-        k := 0;
-        for i := NumIntrinsicClasses + 1 to DSSClassList.ListSize do
-        begin
-            Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList.Get(i)).Name);
-            Inc(k);
-        end;
-    end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
 
 procedure DSS_Get_UserClasses_GR(); CDECL;
@@ -168,7 +155,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumUserClasses(): Integer; CDECL;
 begin
-    Result := NumUserClasses;
+    Result := 0;
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_DataPath(): PAnsiChar; CDECL;

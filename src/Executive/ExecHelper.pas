@@ -2606,13 +2606,7 @@ FUNCTION DoUserClassesCmd:Integer;
 VAR  i:Integer;
 Begin
     Result := 0;
-    IF NumUserClasses=0 Then Begin
-        AppendGlobalResult('No User Classes Defined.');
-    End
-    ELSE
-     For i := NumIntrinsicClasses+1 to DSSClassList.ListSize Do Begin
-       AppendGlobalResult(TDSSClass(DSSClassList.Get(i)).Name);
-     End;
+    AppendGlobalResult('No User Classes Defined.');
 End;
 
 //----------------------------------------------------------------------------

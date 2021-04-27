@@ -131,7 +131,6 @@ uses
     GICsource in 'src/PCElements/GICsource.pas',
     GrowthShape in 'src/General/GrowthShape.pas',
     HashList in 'src/Shared/HashList.pas',
-    IniRegSave in 'src/Shared/IniRegSave.pas',
     InvControl in 'src/Controls/InvControl.pas',
     Isource in 'src/PCElements/Isource.pas',
     KLUSolve in 'src/CMD/KLUSolve.pas',

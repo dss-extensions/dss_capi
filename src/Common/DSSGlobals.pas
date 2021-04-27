@@ -21,7 +21,7 @@ unit DSSGlobals;
 interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, DSSPointerList,
-     UComplex, Arraydef, CktElement, Circuit, IniRegSave,
+     UComplex, Arraydef, CktElement, Circuit,
 
      {$IFDEF UNIX}BaseUnix,{$ENDIF}
 

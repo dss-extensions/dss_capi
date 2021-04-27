@@ -67,8 +67,7 @@ const
     AUTOTRANS_ELEMENT = 37 * 8;
 
 var
-    NumIntrinsicClasses,
-    NumUserClasses: Integer;
+    NumIntrinsicClasses: Integer;
 
 procedure CreateDSSClasses;
 procedure DisposeDSSClasses;
@@ -346,19 +345,6 @@ begin
     CreateMyDSSClasses;
 
     NumIntrinsicClasses := DSSClassList.ListSize;
-    NumUserClasses := 0;
-
-   {Add user-defined objects}
-
-
-   {This feature has been disabled - doesn't work in IIS}
-
-   // Check all DLLs in present directory and home DSS directory to see if they
-   // are a user-defined DSS class
-
-   //**** LoadUserClasses;
-
-
 end;
 
 //----------------------------------------------------------------------------
@@ -406,51 +392,6 @@ begin
 
 end;
 
-
-{--------------------------------------------------------------}
-procedure AddUserClass;
-
-begin
-      // ***** ADD STUFF HERE ****
-
-      {Assumes DLL has been loaded by call to LoadLibrary and the Handle is stored
-       in LastUserDLLHandle.  Also, assumes DSSRegisterProc has the address of
-       the user.}
-
-
-     { ***** Needs to be re-done ****** }
-
-
-end;
-
-{--------------------------------------------------------------}
-procedure LoadUserClasses;
-var
-    F: TSearchRec;
-begin
-
-{  Rework This !!!!}
-
-    // Check All DLLs in present directory
-    if FindFirst('*.dll', 0, F) = 0 then
-    begin
-        repeat
-            if IsDSSDLL(F.Name) then
-                AddUserclass; // Attempt to add (ignored if classname already exists)
-        until FindNext(F) <> 0;
-    end;
-
-    // Check All DLLs in DSS Directory   unless that is the directory we just checked
-    if comparetext(StartupDirectory, DSSDirectory) <> 0 then
-        if FindFirst(DSSDirectory + '*.dll', 0, F) = 0 then
-        begin
-            repeat
-                if IsDSSDLL(F.Name) then
-                    AddUserclass; // Attempt to add (ignored if classname already exists)
-            until FindNext(F) <> 0;
-        end;
-
-end;
 
 //----------------------------------------------------------------------------
 function SetObjectClass(const ObjType: String): Boolean;
