@@ -1,12 +1,12 @@
 # Tested with arm7l
 set -e -x
 
-if [ ! -d "build/units_v7_arm32" ]; then
-    mkdir build/units_v7_arm32
+if [ ! -d "build/units_arm32" ]; then
+    mkdir build/units_arm32
 fi
-fpc @src/v7/linux-arm32.cfg -B src/v7/dss_capi_v7.lpr
+fpc @src/linux-arm32.cfg -B src/dss_capi.lpr
 bash custom_link.sh lib/linux_arm32
-fpc @src/v7/linux-arm32-dbg.cfg -B src/v7/dss_capi_v7d.lpr
+fpc @src/linux-arm32-dbg.cfg -B src/dss_capid.lpr
 bash custom_link.sh lib/linux_arm32
 
 mkdir -p release/dss_capi/lib

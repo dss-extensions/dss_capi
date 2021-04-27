@@ -1,12 +1,12 @@
 # Tested with a Raspberry Pi 4 Model B
 set -e -x
 
-if [ ! -d "build/units_v7_arm64" ]; then
-    mkdir build/units_v7_arm64
+if [ ! -d "build/units_arm64" ]; then
+    mkdir build/units_arm64
 fi
-fpc @src/v7/linux-arm64.cfg -B src/v7/dss_capi_v7.lpr
+fpc @src/linux-arm64.cfg -B src/dss_capi.lpr
 bash custom_link.sh lib/linux_arm64
-fpc @src/v7/linux-arm64-dbg.cfg -B src/v7/dss_capi_v7d.lpr
+fpc @src/linux-arm64-dbg.cfg -B src/dss_capid.lpr
 bash custom_link.sh lib/linux_arm64
 
 mkdir -p release/dss_capi/lib

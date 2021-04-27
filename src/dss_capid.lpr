@@ -1,2 +1,2 @@
-library dss_capi_v7d;
-{$I './dss_capi_v7.lpr'}
+library dss_capid;
+{$I './dss_capi.lpr'}

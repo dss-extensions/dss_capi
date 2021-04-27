@@ -100,20 +100,12 @@ end;
 
 procedure ShowAboutBox;
 begin
-{$IFNDEF DSS_CAPI}
-    writeln('Console OpenDSS (Electric Power Distribution System Simulator)');
+    writeln('OpenDSS (Electric Power Distribution System Simulator), DSS C-API library version');
     writeln(VersionString);
     writeln('Copyright (c) 2008-2019, Electric Power Research Institute, Inc.');
     writeln('Copyright (c) 2016-2017, Battelle Memorial Institute');
+    writeln('Copyright (c) 2017-2021, Paulo Meira');
     writeln('All rights reserved.');
-{$ELSE}
-    writeln('OpenDSS (Electric Power Distribution System Simulator), DSS C-API library version, v7/classic branch');
-    writeln(VersionString);
-    writeln('Copyright (c) 2008-2019, Electric Power Research Institute, Inc.');
-    writeln('Copyright (c) 2016-2017, Battelle Memorial Institute');
-    writeln('Copyright (c) 2017-2020, Paulo Meira');
-    writeln('All rights reserved.');
-{$ENDIF}
 end;
 
 procedure ShowTreeView(const Fname: String);

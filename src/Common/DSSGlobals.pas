@@ -637,8 +637,7 @@ FUNCTION GetDSSVersion: String;
 BEGIN
     Result := 'DSS C-API Library version ' + DSS_CAPI_VERSION +
               ' revision ' + DSS_CAPI_REV +
-              ' based on OpenDSS SVN ' + DSS_CAPI_SVN_REV +
-              ' (v7/classic variation)'
+              ' based on OpenDSS SVN ' + DSS_CAPI_SVN_REV
     {$IFDEF DSS_CAPI_MVMULT}
               + ' MVMULT'
     {$ENDIF}

@@ -1,18 +1,12 @@
 set -e -x
 
-if [ ! -d "build/units_v7_x64" ]; then
-    mkdir build/units_v7_x64
+if [ ! -d "build/units_x64" ]; then
+    mkdir build/units_x64
 fi
-fpc -Px86_64 @src/v7/linux-x64.cfg -B src/v7/dss_capi_v7.lpr
+fpc -Px86_64 @src/linux-x64.cfg -B src/dss_capi.lpr
 bash custom_link.sh lib/linux_x64
-fpc -Px86_64 @src/v7/linux-x64-dbg.cfg -B src/v7/dss_capi_v7d.lpr
+fpc -Px86_64 @src/linux-x64-dbg.cfg -B src/dss_capid.lpr
 bash custom_link.sh lib/linux_x64
-
-# if [ ! -d "build/units_v8_x64" ]; then
-    # mkdir build/units_v8_x64
-# fi
-# fpc -Px86_64 @src/v8/linux-x64.cfg -B src/v8/dss_capi_v8.lpr
-# bash custom_link.sh lib/linux_x64
 
 mkdir -p release/dss_capi/lib
 cp -R lib/linux_x64 release/dss_capi/lib/linux_x64
