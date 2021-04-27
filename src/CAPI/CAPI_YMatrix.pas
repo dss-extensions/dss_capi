@@ -65,7 +65,9 @@ begin
     GetCompressedMatrix(
         Yhandle,
         NumBuses + 1,
-        NumNZ, @ColPtr[0], @RowIdxPtr[0],
+        NumNZ, 
+        PLongWord(@ColPtr[0]),
+        PLongWord(@RowIdxPtr[0]),
         pComplex(cValsPtr)
     );
 end;

@@ -1564,8 +1564,8 @@ begin
             k := (i - 1) * Fnphases + 1;
             for j := 0 to 2 do
                 Vph[j] := ActiveCircuit.Solution.NodeV^[NodeRef^[k + j]];
-            Phase2SymComp(@Vph, @V012);
-            Phase2SymComp(@Iterminal^[k], @I012);
+            Phase2SymComp(pComplexArray(@Vph), pComplexArray(@V012));
+            Phase2SymComp(pComplexArray(@Iterminal^[k]), pComplexArray(@I012));
             Caccum(PosSeqLosses, Cmul(V012[1], Conjg(I012[1])));
             Caccum(NegSeqLosses, Cmul(V012[2], Conjg(I012[2]))); // accumulate both line modes
             Caccum(ZeroSeqLosses, Cmul(V012[0], Conjg(I012[0])));

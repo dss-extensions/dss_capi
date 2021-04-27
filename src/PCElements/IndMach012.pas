@@ -1085,13 +1085,13 @@ begin
                     3:
                     begin
                  // Calculate E1 based on Pos Seq only
-                        Phase2SymComp(ITerminal, @I012);   // terminal currents
+                        Phase2SymComp(ITerminal, pComplexArray(@I012));   // terminal currents
 
                      // Voltage behind Zsp  (transient reactance), volts
 
                         for i := 1 to FNphases do
                             Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
-                        Phase2SymComp(@Vabc, @V012);
+                        Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
                         E1 := Csub(V012[1], Cmul(I012[1], Zsp));    // Pos sequence
                     end;
                 else
@@ -1344,7 +1344,7 @@ var
 begin
 
     // Convert abc voltages to 012
-    Phase2SymComp(V, @V012);
+    Phase2SymComp(V, pComplexArray(@V012));
 
     // compute I012
 
@@ -1359,7 +1359,7 @@ begin
     end;
     end;
 
-    SymComp2Phase(I, @I012);       // convert back to I abc
+    SymComp2Phase(I, pComplexArray(@I012));       // convert back to I abc
 
 end;
 
@@ -1443,7 +1443,7 @@ begin
    // In this case the injection currents are simply Yprim(frequency) times the voltage buffer
    // Refer to Load.Pas for load-type objects
    {Inj currents = Yprim (E) }
-    YPrim.MVMult(InjCurrent, @cBuffer);
+    YPrim.MVMult(InjCurrent, pComplexArray(@cBuffer));
 
 end;
 

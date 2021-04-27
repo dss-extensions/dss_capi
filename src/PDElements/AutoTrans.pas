@@ -1028,7 +1028,7 @@ begin
                 NNodes[ii] := 0;
 
             Auxparser.Token := s; // load up AuxParser
-            strBusName := AuxParser.ParseAsBusName(NumNodes, @NNodes);
+            strBusName := AuxParser.ParseAsBusName(NumNodes, pIntegerArray(@NNodes));
 
               // Check for non-zero neutral specification
             if NNodes[nphases + 1] > 0 then
@@ -2215,7 +2215,7 @@ begin
        {Load up auxiliary parser}
             AuxParser.CmdString := GetBus(iW);
             AuxParser.NextParam;
-            S := AuxParser.ParseAsBusName(N, @Nodes);
+            S := AuxParser.ParseAsBusName(N, pIntegerArray(@Nodes));
             if N = 0 then
                 OnPhase1 := TRUE;
             for i := 1 to N do

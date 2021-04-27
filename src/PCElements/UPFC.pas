@@ -141,10 +141,6 @@ const
     NumPropsThisClass = 16;
     NumUPFCVariables = 14;
 
-
-var
-    CDOUBLEONE: Complex;
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TUPFC.Create;  // Creates superstructure for all Line objects
 begin
@@ -1230,8 +1226,4 @@ begin
 end;
 
 // ======================== END STATE VARIABLES ===============================
-
-initialization
-
-    CDOUBLEONE := CMplx(1.0, 1.0);
 end.

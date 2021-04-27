@@ -844,7 +844,7 @@ begin
         SampleCount := 0;
         IsPosSeq := FALSE;
         fillchar(StrBuffer, Sizeof(TMonitorStrBuffer), 0);  {clear buffer}
-        strPtr := @StrBuffer;
+        strPtr := PAnsiChar(@StrBuffer);
         // strPtr^ := chr(0);     // Init string -- it's already filled with 0
         if ActiveCircuit.Solution.IsHarmonicModel then
             strLcat(strPtr, pAnsichar('Freq, Harmonic, '), Sizeof(TMonitorStrBuffer))
@@ -1293,7 +1293,7 @@ var
     ResidualVolt: Complex;
     Sum: Complex;
     CplxLosses: Complex;
-    V012, I012: array[1..3] of Complex;
+    V012, I012: Complex3;
 
 
 begin
@@ -1312,14 +1312,14 @@ begin
     with ActiveCircuit.Solution do
         if IsHarmonicModel then
         begin
-            AddDblsToBuffer(@Frequency, 1);  // put freq in hour slot as a double
-            AddDblsToBuffer(@Harmonic, 1);  // stick harmonic in time slot in buffer
+            AddDblsToBuffer(pDoubleArray(@Frequency), 1);  // put freq in hour slot as a double
+            AddDblsToBuffer(pDoubleArray(@Harmonic), 1);  // stick harmonic in time slot in buffer
         end
         else
         begin
             dHour := Hour;      // convert to double
-            AddDblsToBuffer(@dHour, 1);  // put hours in buffer as a double
-            AddDblsToBuffer(@Sec, 1);  // stick time in sec in buffer
+            AddDblsToBuffer(pDoubleArray(@dHour), 1);  // put hours in buffer as a double
+            AddDblsToBuffer(pDoubleArray(@Sec), 1);  // stick time in sec in buffer
         end;
 
     case (Mode and MODEMASK) of
@@ -1455,7 +1455,7 @@ begin
                     k := 1;
                     for i := 1 to Nphases * NumberOfWindings do
                     begin
-                        AddDblsToBuffer(@WdgCurrentsBuffer^[k].re, 2);  // Add Mag, Angle
+                        AddDblsToBuffer(pDoubleArray(@WdgCurrentsBuffer^[k].re), 2);  // Add Mag, Angle
                         k := k + 2;
                     end;
                 end
@@ -1469,7 +1469,7 @@ begin
                     k := 1;
                     for i := 1 to Nphases * NumberOfWindings do
                     begin
-                        AddDblsToBuffer(@WdgCurrentsBuffer^[k].re, 2);  // Add Mag, Angle
+                        AddDblsToBuffer(pDoubleArray(@WdgCurrentsBuffer^[k].re), 2);  // Add Mag, Angle
                         k := k + 2;
                     end;
                // AddDblsToBuffer(@WdgCurrentsBuffer^[1].re, NumTransformerCurrents);
@@ -1499,7 +1499,7 @@ begin
                     end;
                     ConvertComplexArrayToPolar(WdgVoltagesBuffer, NumWindingVoltages);
                   {Put winding Voltages into Monitor}
-                    AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * NumWindingVoltages);  // Add Mag, Angle each winding
+                    AddDblsToBuffer(pDoubleArray(@WdgVoltagesBuffer^[1].re), 2 * NumWindingVoltages);  // Add Mag, Angle each winding
                 end
 
             else
@@ -1513,7 +1513,7 @@ begin
                     end;
                     ConvertComplexArrayToPolar(WdgVoltagesBuffer, NumWindingVoltages);
                   {Put winding Voltages into Monitor}
-                    AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * NumWindingVoltages);  // Add Mag, Angle each winding
+                    AddDblsToBuffer(pDoubleArray(@WdgVoltagesBuffer^[1].re), 2 * NumWindingVoltages);  // Add Mag, Angle each winding
                 end;
             Exit;
         end;
@@ -1527,7 +1527,7 @@ begin
 
             ConvertComplexArrayToPolar( VoltageBuffer, MeteredElement.Yorder);
             {Put Terminal Voltages into Monitor}
-            AddDblsToBuffer(@VoltageBuffer^[1].re, 2 * MeteredElement.Yorder);
+            AddDblsToBuffer(pDoubleArray(@VoltageBuffer^[1].re), 2 * MeteredElement.Yorder);
 
             {Get all terminsl currents}
             MeteredElement.ComputeIterminal();   // only does calc if needed
@@ -1536,7 +1536,7 @@ begin
 
             ConvertComplexArrayToPolar( CurrentBuffer, MeteredElement.Yorder);
             {Put Terminal currents into Monitor}
-            AddDblsToBuffer(@CurrentBuffer^[1].re, 2 * MeteredElement.Yorder);
+            AddDblsToBuffer(pDoubleArray(@CurrentBuffer^[1].re), 2 * MeteredElement.Yorder);
             Exit;
         end
     else
@@ -1546,8 +1546,8 @@ begin
 
     if ((Mode and SEQUENCEMASK) > 0) and (Fnphases = 3) then
     begin  // Convert to Symmetrical components
-        Phase2SymComp(VoltageBuffer, @V012);
-        Phase2SymComp(@CurrentBuffer^[Offset + 1], @I012);
+        Phase2SymComp(PComplex3(VoltageBuffer), @V012);
+        Phase2SymComp(PComplex3(@CurrentBuffer^[Offset + 1]), @I012);
         NumVI := 3;
         IsSequence := TRUE;
        // Replace voltage and current buffer with sequence quantities
@@ -1583,12 +1583,12 @@ begin
             if VIPolar then
             begin
                 ConvertComplexArrayToPolar(VoltageBuffer, NumVI);
-                ConvertComplexArrayToPolar(@CurrentBuffer^[Offset + 1], NumVI);    // Corrected 3-11-13
+                ConvertComplexArrayToPolar(PComplexArray(@CurrentBuffer^[Offset + 1]), NumVI);    // Corrected 3-11-13
             end;
         end;
         1:
         begin     // Convert Voltage Buffer to power kW, kvar or Mag/Angle
-            CalckPowers(VoltageBuffer, VoltageBuffer, @CurrentBuffer^[Offset + 1], NumVI);
+            CalckPowers(VoltageBuffer, VoltageBuffer, PComplexArray(@CurrentBuffer^[Offset + 1]), NumVI);
             if (IsSequence or ActiveCircuit.PositiveSequence) then
                 CmulArray(VoltageBuffer, 3.0, NumVI); // convert to total power
             if Ppolar then
@@ -1623,9 +1623,9 @@ begin
         begin // Save Pos Seq or Avg of all Phases or Total power (Complex)
             if isSequence then
             begin
-                AddDblsToBuffer(@VoltageBuffer^[2].re, 2);
+                AddDblsToBuffer(pDoubleArray(@VoltageBuffer^[2].re), 2);
                 if not IsPower then
-                    AddDblsToBuffer(@CurrentBuffer^[Offset + 2].re, 2);
+                    AddDblsToBuffer(pDoubleArray(@CurrentBuffer^[Offset + 2].re), 2);
             end
             else
             begin
@@ -1634,7 +1634,7 @@ begin
                     Sum := cZero;
                     for i := 1 to Fnphases do
                         Caccum(Sum, VoltageBuffer^[i]);
-                    AddDblsToBuffer(@Sum.re, 2);
+                    AddDblsToBuffer(pDoubleArray(@Sum.re), 2);
                 end
                 else
                 begin  // Average the phase magnitudes and  sum angles
@@ -1642,12 +1642,12 @@ begin
                     for i := 1 to Fnphases do
                         Caccum(Sum, VoltageBuffer^[i]);
                     Sum.re := Sum.re / FnPhases;
-                    AddDblsToBuffer(@Sum.re, 2);
+                    AddDblsToBuffer(pDoubleArray(@Sum.re), 2);
                     Sum := cZero;
                     for i := 1 to Fnphases do
                         Caccum(Sum, CurrentBuffer^[Offset + i]);   // Corrected 3-11-13
                     Sum.re := Sum.re / FnPhases;
-                    AddDblsToBuffer(@Sum.re, 2);
+                    AddDblsToBuffer(pDoubleArray(@Sum.re), 2);
                 end;
             end;
         end;
@@ -1681,19 +1681,19 @@ begin
     else
         case Mode of
             4:
-                AddDblsToBuffer(@FlickerBuffer^[1].re, Fnphases * 2);
+                AddDblsToBuffer(pDoubleArray(@FlickerBuffer^[1].re), Fnphases * 2);
             5:
-                AddDblsToBuffer(@SolutionBuffer^[1], NumSolutionVars);
+                AddDblsToBuffer(pDoubleArray(@SolutionBuffer^[1]), NumSolutionVars);
         else
         begin
-            AddDblsToBuffer(@VoltageBuffer^[1].re, NumVI * 2);
+            AddDblsToBuffer(pDoubleArray(@VoltageBuffer^[1].re), NumVI * 2);
             if not IsPower then
             begin
                 if IncludeResidual then
-                    AddDblsToBuffer(@ResidualVolt, 2);
-                AddDblsToBuffer(@CurrentBuffer^[Offset + 1].re, NumVI * 2);
+                    AddDblsToBuffer(pDoubleArray(@ResidualVolt), 2);
+                AddDblsToBuffer(pDoubleArray(@CurrentBuffer^[Offset + 1].re), NumVI * 2);
                 if IncludeResidual then
-                    AddDblsToBuffer(@ResidualCurr, 2);
+                    AddDblsToBuffer(pDoubleArray(@ResidualCurr), 2);
             end;
         end;
         end;
@@ -1866,7 +1866,7 @@ begin
         Read(StrBuffer, Sizeof(StrBuffer));
     end;
 
-    pStr := @StrBuffer;
+    pStr := PAnsiChar(@StrBuffer);
     FSWriteln(F, AnsiString(pStr));
     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
 

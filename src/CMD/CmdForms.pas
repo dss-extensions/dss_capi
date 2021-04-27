@@ -19,10 +19,6 @@ interface
 uses
     Classes;
 
-var
-    ControlPanelCreated: Boolean;  // signify whether this is the DLL or EXE
-    RebuildHelpForm: Boolean;
-
 procedure CreateControlPanel;
 procedure ExitControlPanel;
 procedure InitProgressForm;
@@ -381,22 +377,22 @@ begin
     writeln('---');
     writeln('## Commands');
     writeln();
-    ShowAnyHelpMD(NumExecCommands, @ExecCommand, @CommandHelp, 'Command');
+    ShowAnyHelpMD(NumExecCommands, pStringArray(@ExecCommand), pStringArray(@CommandHelp), 'Command');
     
     writeln('---');
     writeln('## Execution Options');
     writeln();
-    ShowAnyHelpMD(NumExecOptions, @ExecOption, @OptionHelp, 'Option');
+    ShowAnyHelpMD(NumExecOptions, pStringArray(@ExecOption), pStringArray(@OptionHelp), 'Option');
     
     writeln('---');
     writeln('## `Show` options');
     writeln();
-    ShowAnyHelpMD(NumShowOptions, @ShowOption, @ShowHelp, 'Option');
+    ShowAnyHelpMD(NumShowOptions, pStringArray(@ShowOption), pStringArray(@ShowHelp), 'Option');
     
     writeln('---');
     writeln('## `Export` options');
     writeln();
-    ShowAnyHelpMD(NumExportOptions, @ExportOption, @ExportHelp, 'Option');
+    ShowAnyHelpMD(NumExportOptions, pStringArray(@ExportOption), pStringArray(@ExportHelp), 'Option');
     
     writeln('---');
     writeln('## Elements');
@@ -443,16 +439,16 @@ begin
     else
 {$ENDIF}
     if ANSIStartsStr('com', param) then
-        ShowAnyHelp(NumExecCommands, @ExecCommand, @CommandHelp, OptName)
+        ShowAnyHelp(NumExecCommands, pStringArray(@ExecCommand), pStringArray(@CommandHelp), OptName)
     else
     if ANSIStartsStr('op', param) then
-        ShowAnyHelp(NumExecOptions, @ExecOption, @OptionHelp, OptName)
+        ShowAnyHelp(NumExecOptions, pStringArray(@ExecOption), pStringArray(@OptionHelp), OptName)
     else
     if ANSIStartsStr('sh', param) then
-        ShowAnyHelp(NumShowOptions, @ShowOption, @ShowHelp, OptName)
+        ShowAnyHelp(NumShowOptions, pStringArray(@ShowOption), pStringArray(@ShowHelp), OptName)
     else
     if ANSIStartsStr('e', param) then
-        ShowAnyHelp(NumExportOptions, @ExportOption, @ExportHelp, OptName)
+        ShowAnyHelp(NumExportOptions, pStringArray(@ExportOption), pStringArray(@ExportHelp), OptName)
     else
     if ANSIStartsStr('cl', param) then
         ShowClassHelp(OptName)
@@ -479,11 +475,5 @@ function MakeChannelSelection(NumFieldsToSkip: Integer; const Filename: String):
 begin
     Result := FALSE;
 end;
-
-initialization
-
-    RebuildHelpForm := TRUE;
-
-finalization
 
 end.

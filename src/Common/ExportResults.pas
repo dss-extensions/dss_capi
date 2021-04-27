@@ -186,7 +186,7 @@ var
     F: TFileStream = nil;
     i, j: Integer;
     nref: Integer;
-    Vph, VphLL, V012: array[1..3] of Complex;
+    Vph, VphLL, V012: Complex3;
 
     V0, V1, V2,
     Vpu, V2V1, V0V1: Double;
@@ -363,7 +363,7 @@ procedure CalcAndWriteSeqCurrents(F: TFileStream; j: Integer; pelem: TDSSCktElem
 var
     I0, I1, I2, I2I1, I0I1, iNormal, iEmerg: Double;
     i, k, NCond: Integer;
-    Iph, I012: array[1..3] of Complex;
+    Iph, I012: Complex3;
     Iresidual: Complex;
     I_NEMA: Double;
 
@@ -379,7 +379,7 @@ begin
             Iph[i] := cBuffer^[k];
         end;
 
-        Phase2SymComp(@Iph, @I012);
+        Phase2SymComp(PComplex3(@Iph), @I012);
         I0 := Cabs(I012[1]);
         I1 := Cabs(I012[2]);
         I2 := Cabs(I012[3]);
@@ -1469,8 +1469,8 @@ var
     Volts: Complex;
     S: Complex;
     nref: Integer;
-    Vph, V012: array[1..3] of Complex;
-    Iph, I012: array[1..3] of Complex;
+    Vph, V012: Complex3;
+    Iph, I012: Complex3;
     Separator: String;
     sout: String;
 
@@ -1515,8 +1515,8 @@ begin
                     end;
                     if (PDElem.Nphases >= 3) then
                     begin
-                        Phase2SymComp(@Iph, @I012);
-                        Phase2SymComp(@Vph, @V012);
+                        Phase2SymComp(PComplex3(@Iph), @I012);
+                        Phase2SymComp(PComplex3(@Vph), @V012);
                     end
                     else
                     begin
@@ -3056,7 +3056,7 @@ var
     j: Integer;
     PDElem: TPDElement;
     Iph,
-    I012: array[1..3] of Complex;
+    I012: Complex3;
     I0, I1, I2,
     iNormal,
     iEmerg, Cmax: Double;

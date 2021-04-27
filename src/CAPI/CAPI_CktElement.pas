@@ -101,7 +101,7 @@ procedure _CalcSeqCurrents(pActiveElement: TDSSCktElement; i012: pComplexArray);
 {Assumes V012 is properly allocated before call.}
 var
     Nvalues, i, j, k, iV: Integer;
-    IPh, I012a: array[1..3] of Complex;
+    IPh, I012a: Complex3;
     cBuffer: pComplexArray;
 begin
     with pActiveElement, ActiveCircuit do
@@ -162,7 +162,7 @@ procedure CalcSeqVoltages(pActiveElement: TDSSCktElement; V012: pComplexArray);
 {Assumes V012 is properly allocated before call.}
 var
     Nvalues, i, j, k, iV: Integer;
-    VPh, V012a: array[1..3] of Complex;
+    VPh, V012a: Complex3;
 begin
     with pActiveElement, ActiveCircuit do
     begin
@@ -570,8 +570,8 @@ var
     Result: PDoubleArray;
     Nvalues, i, j, k, n, icount: Integer;
     S: Complex;
-    VPh, V012: array[1..3] of Complex;
-    IPh, I012: array[1..3] of Complex;
+    VPh, V012: Complex3;
+    IPh, I012: Complex3;
     cBuffer: pComplexArray;
 
 begin

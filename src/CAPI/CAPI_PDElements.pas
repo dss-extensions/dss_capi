@@ -860,8 +860,8 @@ var
     pElem: TPDElement;
     CResultPtr: PComplex;
     cBuffer: pComplexArray;
-    VPh, V012: array[1..3] of Complex;
-    IPh, I012: array[1..3] of Complex;
+    VPh, V012: Complex3;
+    IPh, I012: Complex3;
     S: Complex;
 begin
     if (MissingSolution) or (ActiveCircuit.PDElements.Count <= 0) then 

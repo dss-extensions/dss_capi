@@ -117,7 +117,7 @@ procedure WriteSeqVoltages(F: TFileStream; i: Integer; LL: Boolean);
 
 var
     j, k: Integer;
-    Vph, VLL, V012: array[1..3] of Complex;
+    Vph, VLL, V012: Complex3;
     V0, V1, V2,
     Vpu, V2V1, V0V1: Double;
 
@@ -506,7 +506,7 @@ procedure GetI0I1I2(var I0, I1, I2, Cmax: Double; Nphases, koffset: Integer; cBu
 var
     cmag: Double;
     i: Integer;
-    Iph, I012: array[1..3] of Complex;
+    Iph, I012: Complex3;
 
 begin
     if Nphases >= 3 then
@@ -858,8 +858,8 @@ var
     S,
     Saccum: Complex;
     nref, nref1, nref2: Integer;
-    Vph, V012: array[1..3] of Complex;
-    Iph, I012: array[1..3] of Complex;
+    Vph, V012: Complex3;
+    Iph, I012: Complex3;
     sout: String;
 
 begin
@@ -1353,8 +1353,8 @@ procedure WriteTerminalPowerSeq(F: TFileStream; cktElem: TDSSCktElement; j, opt:
 var
     i, k, Ncond, nref: Integer;
     Volts, S: Complex;
-    Vph, V012: array[1..3] of Complex;
-    Iph, I012: array[1..3] of Complex;
+    Vph, V012: Complex3;
+    Iph, I012: Complex3;
     c_Buffer: pComplexArray;  // Allocate to max total conductors
 
 begin
@@ -2519,7 +2519,7 @@ var
     c_Buffer: pComplexArray;  // Allocate to max total conductors
     NCond, i, j, k: Integer;
     PDElem: TPDElement;
-    Iph, I012: array[1..3] of Complex;
+    Iph, I012: Complex3;
     I0, I1, I2,
     Cmag, Cmax: Double;
 

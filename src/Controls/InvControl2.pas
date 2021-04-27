@@ -896,7 +896,7 @@ function TInvControl2.Edit():Integer;
                     for i := 0 to FMonBusesNameList.Count-1 do begin
                       AuxParser.NextParam;  // Gets the next token
 
-                      FMonBuses[i] :=  AuxParser.ParseAsBusName(NNode,@NodeBuffer);
+                      FMonBuses[i] :=  AuxParser.ParseAsBusName(NNode, pIntegerArray(@NodeBuffer));
                       SetLength(FMonBusesNodes[i], NNode);
 
                       for j := 0 to NNode-1 do FMonBusesNodes[i,j] := NodeBuffer[j+1];

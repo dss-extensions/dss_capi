@@ -227,7 +227,6 @@ begin
           {Now, Start over}
           CreateDSSClasses;
           CreateDefaultDSSItems;
-          RebuildHelpForm := True; // because class strings have changed
        End;
 
 {$IFNDEF FPC}

@@ -35,7 +35,8 @@ type
         procedure Clear;
 
         function Add(p: Pointer): Integer;  // Returns index of item
-        function Get(i: Integer): Pointer;
+        function Get(i: Integer): Pointer; // Changes active item
+        function At(i: Integer): Pointer; // Does not change the active item
 
         property First: Pointer READ Get_First;
         property Next: Pointer READ Get_Next;
@@ -149,6 +150,18 @@ begin
     end;
 end;
 
+//-------------------------------------------------------------------------
+function TDSSPointerList.At(i: Integer): Pointer;
+begin
+    if (i < 1) or (i > NumInList) then
+        Result := NIL
+    else
+    begin
+        Result := List^[i];
+    end;
+end;
+
+//-------------------------------------------------------------------------
 procedure TDSSPointerList.Clear;
 begin
     ActiveItem := 0;

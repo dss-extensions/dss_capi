@@ -140,7 +140,7 @@ procedure Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CD
 var
     Result: PDoubleArray;
     Nvalues, i, iV: Integer;
-    VPh, V012: array[1..3] of Complex;
+    VPh, V012: Complex3;
 
 begin
     if (InvalidCircuit) or 
@@ -659,7 +659,7 @@ procedure Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger)
 var
     Result: PDoubleArray;
     Nvalues, i, iV: Integer;
-    VPh, V012: array[1..3] of Complex;
+    VPh, V012: Complex3;
 
 begin
     if (InvalidCircuit) or 

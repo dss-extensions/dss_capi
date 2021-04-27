@@ -2059,10 +2059,10 @@ begin
 
     if ForceBalanced and (Fnphases = 3) then
     begin  // convert to pos-seq only
-        Phase2SymComp(Vterminal, @V012);
+        Phase2SymComp(Vterminal, pComplexArray(@V012));
         V012[0] := CZERO; // Force zero-sequence voltage to zero
         V012[2] := CZERO; // Force negative-sequence voltage to zero
-        SymComp2Phase(Vterminal, @V012);  // Reconstitute Vterminal as balanced
+        SymComp2Phase(Vterminal, pComplexArray(@V012));  // Reconstitute Vterminal as balanced
     end;
 
     for i := 1 to Fnphases do
@@ -2158,10 +2158,10 @@ begin
 
     if ForceBalanced and (Fnphases = 3) then
     begin  // convert to pos-seq only
-        Phase2SymComp(Vterminal, @V012);
+        Phase2SymComp(Vterminal, pComplexArray(@V012));
         V012[0] := CZERO; // Force zero-sequence voltage to zero
         V012[2] := CZERO; // Force negative-sequence voltage to zero
-        SymComp2Phase(Vterminal, @V012);  // Reconstitute Vterminal as balanced
+        SymComp2Phase(Vterminal, pComplexArray(@V012));  // Reconstitute Vterminal as balanced
     end;
 
     ZeroITerminal;
@@ -2284,7 +2284,7 @@ begin
             3:
                 with PVSystemVars do
                 begin
-                    Phase2SymComp(Vterminal, @V012);  // convert Vabc to V012
+                    Phase2SymComp(Vterminal, pComplexArray(@V012));  // convert Vabc to V012
 
                     //Begin  // simple inverter model     //HERE
                     // Positive Sequence Contribution to Iterminal
@@ -2312,7 +2312,7 @@ begin
                     else
                         I012[0] := Cdiv(V012[0], Zthev);
 
-                    SymComp2Phase(ITerminal, @I012);  // Convert back to phase components
+                    SymComp2Phase(ITerminal, pComplexArray(@I012));  // Convert back to phase components
 
                     // Neutral current
                     if Connection = 0 then
@@ -2371,7 +2371,7 @@ begin
         cbuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
 
     {Inj currents = Yprim (E) }
-    YPrim.MVMult(InjCurrent, @cBuffer);
+    YPrim.MVMult(InjCurrent, pComplexArray(@cBuffer));
 end;
 
 // ===========================================================================================
@@ -2729,12 +2729,12 @@ begin
                 3:
                 begin
                     // Calculate Edp based on Pos Seq only
-                    Phase2SymComp(ITerminal, @I012);
+                    Phase2SymComp(ITerminal, pComplexArray(@I012));
                     // Voltage behind Xdp  (transient reactance), volts
 
                     for i := 1 to FNphases do
                         Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
-                    Phase2SymComp(@Vabc, @V012);
+                    Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
                     InitialVAngle := Cang(V012[1]);
                     Edp := Csub(V012[1], Cmul(I012[1], Zthev));    // Pos sequence
                     VthevmagDyn := Cabs(Edp);
@@ -2921,7 +2921,7 @@ begin
         States^[i] := Variable[i];
 
     if UserModel.Exists then
-        UserModel.FGetAllVars(@States^[NumPVSystem2Variables + 1]);
+        UserModel.FGetAllVars(pDoubleArray(@States^[NumPVSystem2Variables + 1]));
 end;
 
 // ===========================================================================================
@@ -2980,7 +2980,7 @@ begin
     begin
         if UserModel.Exists then
         begin
-            pName := @Buff;
+            pName := PAnsiChar(@Buff);
             n := UserModel.FNumVars;
             i2 := i - NumPVSystem2Variables;
             if (i2 <= n) then
