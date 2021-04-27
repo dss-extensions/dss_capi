@@ -1873,7 +1873,19 @@ exports
     CktElement_Get_NodeRef,
     CktElement_Get_NodeRef_GR,
     Circuit_Get_ElementLosses,
-    Circuit_Get_ElementLosses_GR;
+    Circuit_Get_ElementLosses_GR,
+    
+    YMatrix_Set_LoadsNeedUpdating,
+    YMatrix_Get_LoadsNeedUpdating,
+    YMatrix_CheckConvergence,
+    YMatrix_Set_Iteration,
+    YMatrix_Get_Iteration,
+    YMatrix_Set_SolutionInitialized,
+    YMatrix_Get_SolutionInitialized,
+    YMatrix_SetGeneratordQdV,
+    YMatrix_Get_Handle,
+    YMatrix_Set_SolverOptions,
+    YMatrix_Get_SolverOptions;
     
 begin
   IsDLL := TRUE;
