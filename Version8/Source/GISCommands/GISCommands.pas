@@ -33,7 +33,7 @@ uses
   TCP_IP;
 
 CONST
-        NumGISOptions = 34;
+        NumGISOptions = 35;
 
 FUNCTION DoGISCmd:string;
 
@@ -72,6 +72,7 @@ function GISGetSelect():  string;
 function GISStartDrawLine():  string;
 function GISStopDrawLine():  string;
 function GISGetPolyline(): string;
+function GISGetAddress(): string;
 
 var
   GISTCPClient          : TIdTCPClient;  // ... TIdThreadComponent
@@ -122,6 +123,7 @@ Begin
       GISOption[32] := 'DrawLines';
       GISOption[33] := 'StopDraw';
       GISOption[34] := 'GetPolyline';
+      GISOption[35] := 'GetAddress';
 
 
        GISHelp[1] := 'Starts OpenDSS-GIS only if it is installed in the local machine';
@@ -323,6 +325,11 @@ Begin
                            '1. OpenDSS-GIS must be installed' + CRLF +
                            '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
                            '3. The model needs to have the correct GISCoords file';
+       GISHelp[35] := 'Returns the address calculated at the coordinates given in GISCoords. The address is returned in a JSON string.' + CRLF +
+                           'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                           '1. OpenDSS-GIS must be installed' + CRLF +
+                           '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+                           '3. The model needs to have the correct GISCoords file';
 
 End;
 
@@ -445,6 +452,7 @@ Begin
       32: Result :=  GISStartDrawLine();
       33: Result :=  GISStopDrawLine();
       34: Result :=  GISGetPolyline();
+      35: Result :=  GISGetAddress();
       else
      END;
   end;
@@ -1438,6 +1446,36 @@ Begin
 End;
 
 {*******************************************************************************
+*                     gets the address at the given coords                     *
+*******************************************************************************}
+function GISGetAddress(): string;
+Var
+  TCPJSON       : TdJSON;
+  activesave,
+  i             : Integer;
+  InMsg         : String;
+  Found         : Boolean;
+  pLine         : TLineObj;
+Begin
+  if IsGISON then
+  Begin
+    InMsg:=  '{"command":"address","coords":{"long":' + floattostr(GISCoords^[1]) +',"lat":' + floattostr(GISCoords^[2]) + '}}';
+    try
+      GISTCPClient.IOHandler.WriteLn(InMsg);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,1000);
+      Result  :=  InMsg;
+    except
+      on E: Exception do begin
+        IsGISON     :=  False;
+        Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
+    end;
+  end
+  else
+    result  :=  'OpenDSS-GIS is not installed or initialized';
+End;
+
+{*******************************************************************************
 *          gets the coords for the latest polyline drawn in OpenDSS-GIS        *
 *******************************************************************************}
 function GISGetPolyline(): string;
@@ -1672,8 +1710,8 @@ Begin
       End;
       GISCoords^[3] :=  GISCoords^[1];
       GISCoords^[4] :=  GISCoords^[2];
-      GISCoords^[1] :=  myLong;
-      GISCoords^[2] :=  myLat;
+      GISCoords^[1] :=  myLat;
+      GISCoords^[2] :=  myLong;
       Result  :=  'done'
     End
     else
