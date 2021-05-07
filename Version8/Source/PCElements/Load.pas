@@ -640,14 +640,14 @@ Begin
     {Set shape objects;  returns nil if not valid}
     {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
             7: Begin
-                    YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
-                    If Assigned(YearlyShapeObj) then With YearlyShapeObj Do
-                        If UseActual then
-                        Begin
-                          kWref     :=  kWBase;
-                          kVARref   :=  kVARbase;
-                          SetkWkvar(MaxP, MaxQ);
-                        End;
+                YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
+                If Assigned(YearlyShapeObj) then With YearlyShapeObj Do
+                    If UseActual then
+                    Begin
+                      kWref     :=  kWBase;
+                      kVARref   :=  kVARbase;
+                      SetkWkvar(MaxP, MaxQ);
+                    End;
                End;
             8: Begin
                     DailyShapeObj := LoadShapeClass[ActorID].Find(DailyShape);
