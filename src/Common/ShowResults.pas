@@ -100,16 +100,14 @@ end;
 procedure SetMaxDeviceNameLength;
 var
     i: Integer;
-    DevName, DevClassName: String;
-
+    element: TDSSCktElement;
 begin
     MaxDeviceNameLength := 0;
     with ActiveCircuit do
         for i := 1 to NumDevices do
         begin
-            DevName := DeviceList.NameOfIndex(i);
-            DevClassName := TDSSClass(DSSClassList.Get(TDSSCktElement(CktElements.At(i)).ClassIndex)).Name;
-            MaxDeviceNameLength := Max(MaxDeviceNameLength, (Length(DevName) + Length(DevClassName) + 1));
+            element := TDSSCktElement(CktElements.At(i));
+            MaxDeviceNameLength := Max(MaxDeviceNameLength, (Length(element.Name) + Length(element.ParentClass.Name) + 1));
         end;
 end;
 
