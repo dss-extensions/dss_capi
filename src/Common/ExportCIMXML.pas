@@ -75,7 +75,8 @@ uses
     Relay,
     Recloser,
     DSSObject,
-    DSSClass;
+    DSSClass,
+    CmdForms;
 
 type
     UuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
@@ -1825,19 +1826,6 @@ begin
     FSWriteLn(F, '</cim:IEC61970CIMVersion>');
 end;
 
-procedure ListXfmrCodes(clsXfCd: TXfmrCode; lbl: String); // for debugging
-var
-    pXfCd: TXfmrCodeObj;
-begin
-    writeln('xfmrcodes at ' + lbl);
-    pXfCd := clsXfCd.ElementList.First;
-    while pXfCd <> NIL do
-    begin
-        writeln('  ' + pXfCd.LocalName + ' ' + pXfCd.Name + ' ' + UUIDtoString(pXfCd.UUID));
-        pXfCd := clsXfCd.ElementList.Next;
-    end;
-end;
-
 procedure ExportCDPSM(FileNm: String;
     Substation: String;
     SubGeographicRegion: String;
@@ -1939,11 +1927,7 @@ begin
         StartBankList(ActiveCircuit.Transformers.Count);
         StartOpLimitList(ActiveCircuit.Lines.Count);
 
-    {$IFDEF FPC}
-         // this only works in the command line version
-        if not NoFormsAllowed then
-            Writeln(FileNm + '<=' + ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
-    {$ENDIF}
+        DSSInfoMessageDlg(FileNm + '<=' + ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
 
         FD := TFileDealer.Create(Combined, FileNm);
 

@@ -149,6 +149,19 @@ extern "C" {
         YMatrixModes_WholeMatrix = 2
     };
 
+    // EXPERIMENTAL: For message/write callbacks
+    enum DSSMessageType {
+        DSSMessageType_Error = -1,
+        DSSMessageType_General = 0,
+        DSSMessageType_Info = 1,
+        DSSMessageType_Help = 2,
+        DSSMessageType_Progress = 3,
+        DSSMessageType_ProgressCaption = 4,
+        DSSMessageType_ProgressFormCaption = 5,
+        DSSMessageType_ProgressPercent = 6
+    };
+
+
     DSS_CAPI_DLL void DSS_ResetStringBuffer(void);
     DSS_CAPI_DLL void DSS_Dispose_PByte(int8_t** p);
     DSS_CAPI_DLL void DSS_Dispose_PDouble(double** p);
@@ -187,6 +200,17 @@ extern "C" {
     DSS_CAPI_DLL int32_t* DSS_GR_CountPtr_PInteger(void);
     DSS_CAPI_DLL int32_t* DSS_GR_CountPtr_PByte(void);
 
+    /* 
+    Function types for plotting and writing/message callbacks. 
+    Receives a string that contains the JSON-encoded parameters.
+    
+    EXPERIMENTAL
+    */
+    typedef int32_t (*dss_callback_plot_t)(char* jsonParams);
+    typedef int32_t (*dss_callback_message_t)(char* messageStr, int32_t messageType);
+    
+    DSS_CAPI_DLL void DSS_RegisterPlotCallback(dss_callback_plot_t cb);
+    DSS_CAPI_DLL void DSS_RegisterMessageCallback(dss_callback_message_t cb);
 
     DSS_CAPI_DLL void DSS_NewCircuit(char* Value);
 

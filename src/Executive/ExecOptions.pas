@@ -412,7 +412,7 @@ begin
         'Normally Time and Duty modes do not automatically sample EnergyMeters whereas Daily, Yearly, M1, M2, M3, LD1 and LD2 modes do. ' +
         'Use this Option to turn sampling on or off';
     OptionHelp[110] := 'Minimum number of iterations required for a solution. Default is 2.';
-    OptionHelp[111] := 'Activates/Deactivates the extended version of the plot command for figures with the DSS Visualization Tool.';
+    OptionHelp[111] := 'Activates/Deactivates the extended version of the plot command for figures with the DSS Visualization Tool.' + CRLF + CRLF + '**Not supported in DSS Extensions**';
     OptionHelp[112] := 'Keeploads = Y/N option for ReduceOption Laterals option';
     OptionHelp[113] := 'Sets the Zmag option (in Ohms) for ReduceOption Shortlines option. Lines have less line mode impedance are reduced.';
     OptionHelp[114] := 'Enables/disables the seasonal selection of the rating for determining if an element is overloaded. When enabled, the energy meter will' + CRLF +
@@ -459,9 +459,7 @@ begin
             102:
                 UpdateRegistry := InterpretYesNo(Param);
             111:
-            begin
-                DSS_Viz_enable := InterpretYesNo(Param);
-            end;
+                DoSimpleMsg('This is not supported in DSS Extensions.', 302);
         else
         begin
             DoSimpleMsg('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.', 301);
@@ -774,7 +772,7 @@ begin
             110:
                 ActiveCircuit.solution.MinIterations := Parser.IntValue;
             111:
-                DSS_Viz_enable := InterpretYesNo(Param);
+                DoSimpleMsg('This is not supported in DSS Extensions.', 303);
             112:
                 ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
             113:
@@ -1157,10 +1155,7 @@ begin
                 110:
                     AppendGlobalResult(IntToStr(ActiveCircuit.solution.MinIterations));
                 111:
-                    if DSS_Viz_enable then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult('No');
                 112:
                     if ActiveCircuit.ReduceLateralsKeepLoad then
                         AppendGlobalResult('Yes')

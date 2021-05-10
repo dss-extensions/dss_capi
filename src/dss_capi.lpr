@@ -1885,10 +1885,12 @@ exports
     YMatrix_SetGeneratordQdV,
     YMatrix_Get_Handle,
     YMatrix_Set_SolverOptions,
-    YMatrix_Get_SolverOptions;
+    YMatrix_Get_SolverOptions,
+    
+    DSS_RegisterPlotCallback,
+    DSS_RegisterMessageCallback;
     
 begin
-  IsDLL := TRUE;
   DSSExecutive := TExecutive.Create;
   DSSExecutive.CreateDefaultDSSItems;
 end.

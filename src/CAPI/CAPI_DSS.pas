@@ -6,7 +6,8 @@ uses
 {$IFDEF WINDOWS}
     Windows,
 {$ENDIF}
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Globals;
 
 procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 function DSS_Get_NumCircuits(): Integer; CDECL;
@@ -26,12 +27,18 @@ function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
 function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
 function DSS_Get_AllowForms: Wordbool; CDECL;
 procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
+
+// Extensions
 function DSS_Get_AllowEditor: Wordbool; CDECL;
 procedure DSS_Set_AllowEditor(Value: Wordbool); CDECL;
 function DSS_Get_LegacyModels(): Wordbool; CDECL;
 procedure DSS_Set_LegacyModels(Value: Wordbool); CDECL;
 function DSS_Get_AllowChangeDir(): Wordbool; CDECL;
 procedure DSS_Set_AllowChangeDir(Value: Wordbool); CDECL;
+procedure DSS_RegisterPlotCallback(cb: dss_callback_plot_t); CDECL;
+procedure DSS_RegisterMessageCallback(cb: dss_callback_message_t); CDECL;
+
+
 
 implementation
 
@@ -59,9 +66,9 @@ end;
 procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
 begin
 {$IFDEF WINDOWS}
-    if (Value) and (GetConsoleWindow() = 0) then
+    if (Value) and (GetConsoleWindow() = 0) and ((@DSSMessageCallback) = NIL) then
     begin
-        DoSimplemsg('Cannot activate output with no console available!', 5096);
+        DoSimplemsg('Cannot activate output with no console available! If you want to use a message output callback, register it before enabling AllowForms.', 5096);
         Exit;
     end;
 {$ENDIF}
@@ -225,6 +232,26 @@ begin
             SetCurrentDSSDir(GetCurrentDir());
         end;
     end;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_RegisterPlotCallback(cb: dss_callback_plot_t); CDECL;
+begin
+    DSSPlotCallback := cb;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_RegisterMessageCallback(cb: dss_callback_message_t); CDECL;
+begin
+    DSSMessageCallback := cb;
+    
+{$IFDEF WINDOWS}
+    // If we cannot get a console on Windows, disable text output when the
+    // message callback is removed.
+    if ((@DSSMessageCallback) = NIL) and (GetConsoleWindow() = 0) then
+    begin
+        NoFormsAllowed := True;
+    end;
+{$ENDIF}
+    
 end;
 //------------------------------------------------------------------------------
 end.

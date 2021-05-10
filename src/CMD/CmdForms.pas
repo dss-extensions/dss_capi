@@ -19,6 +19,21 @@ interface
 uses
     Classes;
 
+type
+{$SCOPEDENUMS ON}
+    DSSMessageType = (
+        Error = -1,
+        General = 0,
+        Info = 1,
+        Help = 2,
+        Progress = 3,
+        ProgressCaption = 4,
+        ProgressFormCaption = 5,
+        ProgressPercent = 6
+    );
+{$SCOPEDENUMS OFF}
+
+
 procedure CreateControlPanel;
 procedure ExitControlPanel;
 procedure InitProgressForm;
@@ -33,7 +48,6 @@ procedure ShowPctProgress(Count: Integer);
 procedure ShowMessageForm(S: TStrings);
 function DSSMessageDlg(const Msg: String; err: Boolean): Integer;
 procedure DSSInfoMessageDlg(const Msg: String);
-function GetDSSExeFile: String;
 procedure CloseDownForms;
 procedure ShowTreeView(const Fname: String);
 function MakeChannelSelection(NumFieldsToSkip: Integer; const Filename: String): Boolean;
@@ -52,11 +66,23 @@ uses
     ParserDel,
     Sysutils,
     Strutils,
-    ArrayDef;
+    ArrayDef,
+    CAPI_Globals;
 
 const
     colwidth = 25;
     numcols = 4;  // for listing commands to the console
+
+
+procedure WriteLnCB(s: String; mtype: DSSMessageType);
+begin
+    if (@DSSMessageCallback) <> NIL then
+        DSSMessageCallback(PChar(s), ord(mtype))
+    else
+        WriteLn(s);
+end;
+
+
 
 procedure ShowHeapUsage;
 var
@@ -74,12 +100,23 @@ end;
 
 procedure ShowPctProgress(Count: Integer);
 begin
+    if (@DSSMessageCallback) <> NIL then
+    begin
+        DSSMessageCallback(PChar(IntToStr(Count)), ord(DSSMessageType.ProgressPercent));
+        Exit;
+    end;
 end;
 
 procedure ProgressCaption(const S: String);
 begin
     if NoFormsAllowed then
         Exit;
+    
+    if (@DSSMessageCallback) <> NIL then
+    begin
+        DSSMessageCallback(PChar(S), ord(DSSMessageType.ProgressCaption));
+        Exit;
+    end;
     Writeln('Progress: ', S);
 end;
 
@@ -87,6 +124,12 @@ procedure ProgressFormCaption(const S: String);
 begin
     if NoFormsAllowed then
         Exit;
+
+    if (@DSSMessageCallback) <> NIL then
+    begin
+        DSSMessageCallback(PChar(S), ord(DSSMessageType.ProgressFormCaption));
+        Exit;
+    end;
     Writeln('Progress: ', S);
 end;
 
@@ -96,36 +139,32 @@ end;
 
 procedure ShowAboutBox;
 begin
-    writeln('OpenDSS (Electric Power Distribution System Simulator), DSS C-API library version');
-    writeln(VersionString);
-    writeln('Copyright (c) 2008-2019, Electric Power Research Institute, Inc.');
-    writeln('Copyright (c) 2016-2017, Battelle Memorial Institute');
-    writeln('Copyright (c) 2017-2021, Paulo Meira');
-    writeln('All rights reserved.');
+    WriteLnCB(
+        'OpenDSS (Electric Power Distribution System Simulator), DSS C-API library version' + CRLF +
+        VersionString + CRLF +
+        'Copyright (c) 2008-2019, Electric Power Research Institute, Inc.' + CRLF +
+        'Copyright (c) 2016-2017, Battelle Memorial Institute' + CRLF +
+        'Copyright (c) 2017-2021, Paulo Meira' + CRLF +
+        'All rights reserved.', 
+        DSSMessageType.Info
+    );
 end;
 
 procedure ShowTreeView(const Fname: String);
 begin
 end;
 
-function GetDSSExeFile: String;
-begin
-    Result := 'todo'; // ExtractFilePath (Application.ExeName);
-end;
-
-
 function DSSMessageDlg(const Msg: String; err: Boolean): Integer;
 begin
     result := 0;
-{$IFDEF DSS_CAPI}
+
     if DSS_CAPI_EARLY_ABORT then
         // If the result is handled outside and this is not and error message,
         // we can let the caller decide if the error should halt or not
         result := -1; 
-{$ENDIF}
+
     if NoFormsAllowed then
     begin
-{$IFDEF DSS_CAPI}
         if err then
         begin
             // If this is an error message, We need to pass the message somehow. 
@@ -135,9 +174,20 @@ begin
             if DSS_CAPI_EARLY_ABORT then
                 Redirect_Abort := True;
         end;
-{$ENDIF}
+
         Exit;
     end;
+
+    if (@DSSMessageCallback) <> NIL then
+    begin
+        if err then
+            DSSMessageCallback(PChar(Msg), ord(DSSMessageType.Error))
+        else
+            DSSMessageCallback(PChar(Msg), ord(DSSMessageType.General));
+        
+        Exit;
+    end;
+
     if err then
         write('** Error: ');
     writeln(Msg);
@@ -147,7 +197,8 @@ procedure DSSInfoMessageDlg(const Msg: String);
 begin
     if NoFormsAllowed then
         Exit;
-    writeln(Msg);
+
+    WriteLnCB(Msg, DSSMessageType.Info);
 end;
 
 procedure CreateControlPanel;
@@ -183,37 +234,57 @@ begin
     end;
     HelpList.Sort(@CompareClassNames);
 
-    for i := 1 to HelpList.Count do
+    if (@DSSMessageCallback) <> NIL then
     begin
-        pDSSClass := HelpList.Items[i - 1];
-        writeln(pDSSClass.name);
-        if bProperties = TRUE then
-            for j := 1 to pDSSClass.NumProperties do
-                writeln('  ', pDSSClass.PropertyName[j], ': ', pDSSClass.PropertyHelp^[j]);
+        for i := 1 to HelpList.Count do
+        begin
+            pDSSClass := HelpList.Items[i - 1];
+            DSSMessageCallback(PChar(pDSSClass.name), ord(DSSMessageType.Help));
+            if bProperties = TRUE then
+                for j := 1 to pDSSClass.NumProperties do
+                    DSSMessageCallback(PChar('  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.PropertyHelp^[j]), ord(DSSMessageType.Help));
+        end;
+    end
+    else
+    begin
+        for i := 1 to HelpList.Count do
+        begin
+            pDSSClass := HelpList.Items[i - 1];
+            WriteLnCB(pDSSClass.name, DSSMessageType.Help);
+            
+            if bProperties = TRUE then
+                for j := 1 to pDSSClass.NumProperties do
+                    WriteLnCB('  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.PropertyHelp^[j], DSSMessageType.Help);
+        end;
     end;
+
     HelpList.Free;
 end;
 
 procedure ShowGeneralHelp;
 begin
-    writeln('For specific help, enter:');
-    writeln('  "help command [cmd]" lists all executive commands, or');
-    writeln('                       if [cmd] provided, details on that command');
-    writeln('  "help option [opt]"  lists all simulator options, or');
-    writeln('                       if [opt] provided, details on that option');
-    writeln('  "help show [opt]"    lists the options to "show" various outputs, or');
-    writeln('                       if [opt] provided, details on that output');
-    writeln('  "help export [fmt]"  lists the options to "export" in various formats, or');
-    writeln('                       if [fmt] provided, details on that format');
-    writeln('  "help class [cls]"   lists the names of all available circuit model classes, or');
-    writeln('                       if [cls] provided, details on that class');
-    writeln('You may truncate any help topic name, which returns all matching entries');
+    WriteLnCB(
+        'For specific help, enter:' + CRLF + 
+        '  "help command [cmd]" lists all executive commands, or' + CRLF + 
+        '                       if [cmd] provided, details on that command' + CRLF + 
+        '  "help option [opt]"  lists all simulator options, or' + CRLF + 
+        '                       if [opt] provided, details on that option' + CRLF + 
+        '  "help show [opt]"    lists the options to "show" various outputs, or' + CRLF + 
+        '                       if [opt] provided, details on that output' + CRLF + 
+        '  "help export [fmt]"  lists the options to "export" in various formats, or' + CRLF + 
+        '                       if [fmt] provided, details on that format' + CRLF + 
+        '  "help class [cls]"   lists the names of all available circuit model classes, or' + CRLF + 
+        '                       if [cls] provided, details on that class' + CRLF + 
+        'You may truncate any help topic name, which returns all matching entries',
+        DSSMessageType.Help
+    );
 end;
 
 procedure ShowAnyHelp(const num: Integer; cmd: pStringArray; hlp: pStringArray; const opt: String);
 var
     i: Integer;
     lst: TStringList;
+    msg: String = '';
 begin
     if Length(opt) < 1 then
     begin
@@ -223,9 +294,17 @@ begin
         lst.Sort;
         for i := 1 to num do
             if ((i mod numcols) = 0) then
-                writeln(lst[i - 1])
+            begin
+                msg := msg + lst[i - 1];
+                WriteLnCB(msg, DSSMessageType.Help);
+                msg := '';
+            end
             else
-                write(lst[i - 1] + ' ');
+                msg := msg + lst[i - 1] + ' ';
+                
+            if length(msg) > 0 then
+                WriteLnCB(msg, DSSMessageType.Help);
+
         lst.Free;
     end
     else
@@ -234,9 +313,10 @@ begin
         begin
             if AnsiStartsStr(opt, LowerCase(cmd[i])) then
             begin
-                writeln(UpperCase(cmd[i]));
-                writeln('======================');
-                writeln(hlp[i]);
+                WriteLnCB(UpperCase(cmd[i]), DSSMessageType.Help);
+                WriteLnCB('======================', DSSMessageType.Help);
+                WriteLnCB(hlp[i], DSSMessageType.Help);
+                WriteLnCB(msg, DSSMessageType.Help);
             end;
         end;
     end;
@@ -254,32 +334,32 @@ begin
         begin
             if AnsiStartsStr(opt, LowerCase(pDSSClass.name)) then
             begin
-                writeln(UpperCase(pDSSClass.name));
-                writeln('======================');
+                WriteLnCB(UpperCase(pDSSClass.name), DSSMessageType.Help);
+                WriteLnCB('======================', DSSMessageType.Help);
                 for i := 1 to pDSSClass.NumProperties do
-                    writeln('  ', pDSSClass.PropertyName[i], ': ', pDSSClass.PropertyHelp^[i]);
+                    WriteLnCB('  ' + pDSSClass.PropertyName[i] + ': ' + pDSSClass.PropertyHelp^[i], DSSMessageType.Help);
             end;
             pDSSClass := DSSClassList.Next;
         end;
     end
     else
     begin
-        writeln('== Power Delivery Elements ==');
+        WriteLnCB('== Power Delivery Elements ==', DSSMessageType.Help);
         AddHelpForClasses(PD_ELEMENT, FALSE);
-        writeln('== Power Conversion Elements ==');
+        WriteLnCB('== Power Conversion Elements ==', DSSMessageType.Help);
         AddHelpForClasses(PC_ELEMENT, FALSE);
-        writeln('== Control Elements ==');
+        WriteLnCB('== Control Elements ==', DSSMessageType.Help);
         AddHelpForClasses(CTRL_ELEMENT, FALSE);
-        writeln('== Metering Elements ==');
+        WriteLnCB('== Metering Elements ==', DSSMessageType.Help);
         AddHelpForClasses(METER_ELEMENT, FALSE);
-        writeln('== Supporting Elements ==');
+        WriteLnCB('== Supporting Elements ==', DSSMessageType.Help);
         AddHelpForClasses(0, FALSE);
-        writeln('== Other Elements ==');
+        WriteLnCB('== Other Elements ==', DSSMessageType.Help);
         AddHelpForClasses(NON_PCPD_ELEM, FALSE);
     end;
 end;
 
-{$DEFINE EXPORT_HELP}
+//{$DEFINE EXPORT_HELP}
 {$IFDEF EXPORT_HELP}
 function StringToMD(const s: String): String;
 begin
@@ -460,7 +540,7 @@ procedure ShowMessageForm(S: TStrings);
 begin
     if NoFormsAllowed then
         Exit;
-    writeln(s.text);
+    WriteLnCB(s.text, DSSMessageType.General);
 end;
 
 procedure ShowPropEditForm;

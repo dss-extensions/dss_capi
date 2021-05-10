@@ -34,6 +34,7 @@ uses
     ExecHelper,
     Executive,
     ExecOptions,
+    PlotOptions,
     ShowOptions,
     ExportOptions,
     ParserDel,
@@ -370,7 +371,7 @@ begin
     CommandHelp[63] := 'Alignfile [file=]filename.  Aligns DSS script files in columns for easier reading.';
     CommandHelp[64] := '[class=]{Loadshape | Tshape | Monitor  } [object=]{ALL (Loadshapes only) | objectname}. ' +
         'Send specified object to TOP.  Loadshapes and TShapes must be hourly fixed interval. ' + CRLF + CRLF + 
-        'Not supported in DSS Extensions';
+        '**Not supported in DSS Extensions**';
     CommandHelp[65] := 'Usage: Rotate [angle=]nnn.  Rotate circuit plotting coordinates by specified angle (degrees). ';
     CommandHelp[66] := 'Displays the difference between the present solution and the last on saved using the SAVE VOLTAGES command.';
     CommandHelp[67] := 'Returns a power flow summary of the most recent solution in the global result string.';
@@ -721,16 +722,11 @@ begin
                 CmdResult := DoEnableCmd;
             11:
                 CmdResult := DoDisableCmd;
-       {$IFNDEF FPC}
-            12:
-                CmdResult := DoPlotCmd; //'plot';
-       {$ELSE}
             12:
             begin
-                DSSInfoMessageDlg('Plotting not supported in FPC version');
+                DoPlotCmd();
                 CmdResult := 0;
             end;
-       {$ENDIF}
             13:
                 CmdResult := DoResetCmd; //'resetmonitors';
             15:

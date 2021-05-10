@@ -27,11 +27,110 @@ var
 implementation
 
 uses
-    DSSPlot,
+    Classes,
+    fpjson,
+    ArrayDef,
     DSSGlobals,
     SysUtils,
     ParserDel,
-    Utilities;
+    Utilities,
+    CAPI_Globals;
+
+type
+    TDSSPlot = class(TObject)
+    PUBLIC
+        PlotType: String;
+        MatrixType: String;
+        MaxScale, MinScale: Double;
+        Dots, Labels, ShowLoops, { applies to Meterzone plots only }
+        ShowSubs: Boolean;
+        Quantity: String;
+        ObjectName: String;
+        PlotID: String;
+        ValueIndex{, MarkerIdx}: Integer; { For General & AutoAdd }
+
+        PhasesToPlot: Integer; // Profile Plot
+        ProfileScale: Integer; // CYMDIST or pu/km scaling
+
+        Channels: array of Cardinal; // for Monitor Plot
+        Bases: array of Double; // for Monitor Plot
+
+        Color1, Color2, Color3: Integer;
+
+        { Tri-color plots }
+        TriColorMax, TriColorMid: Double;
+
+        MaxScaleIsSpecified: Boolean;
+        MinScaleIsSpecified: Boolean;
+
+        DaisyBusList: TStringList;
+        
+        MaxLineThickness: Integer;
+
+        constructor Create;
+    end;
+
+const
+    vizCURRENT = 1;
+    vizVOLTAGE = 2;
+    vizPOWER = 3;
+    clBlue = $FF0000;
+    clGreen = $008000;
+    clRed = $0000FF;
+    
+var
+    SinglePhLineStyle: Integer = 1;
+    ThreePhLineStyle: Integer = 1;
+
+
+constructor TDSSPlot.Create;
+begin
+    MaxScale := 0.0; // Find MaxScale
+    MaxScaleIsSpecified := FALSE; // indicates take the default
+    MinScale := 0.0; // Find MinScale
+    MinScaleIsSpecified := FALSE; // indicates take the default
+
+    Dots := FALSE;
+    Labels := FALSE;
+    ShowLoops := FALSE;
+    ShowSubs := FALSE;
+    Quantity := 'Power';
+    PlotType := 'CircuitPlot';
+    MatrixType := '';
+    // MarkerIdx := 24;
+    ObjectName := '';
+
+    MaxLineThickness := 10;
+
+    Channels := NIL;
+    SetLength(Channels, 3);
+    Channels[0] := 1;
+    Channels[1] := 3;
+    Channels[2] := 5;
+
+    Bases := NIL;
+    SetLength(Bases, 3);
+    Bases[0] := 1.0;
+    Bases[1] := 1.0;
+    Bases[2] := 1.0;
+
+    Color1 := clBlue;
+    Color2 := clGreen;
+    Color3 := clRed;
+
+    TriColorMax := 0.85;
+    TriColorMid := 0.50;
+
+//    ActiveColorIdx := 0;
+//    SetColorArray;
+
+    ThreePhLineStyle := 1;
+    SinglePhLineStyle := 1;
+    DaisyBusList := TStringList.Create;
+   { Initialize Plotting DLL }
+    PhasesToPlot := PROFILE3PH;
+    ProfileScale := PROFILEPUKM;
+end;
 
 procedure DefineOptions;
 
@@ -178,18 +277,20 @@ end;
 
 //----------------------------------------------------------------------------
 function DoPlotCmd: Integer;
-
 {
-  Produce a plot with the DSSGraphX object
+  Parse plot options and feed the callback function, if any
 }
-
 var
-
     ParamName, Param: String;
     ParamPointer, i: Integer;
     DblBuffer: array[0..50] of Double;
     NumChannels: Integer;
-
+    DSSPlotObj: TDSSPlot;
+    plotParams: TJSONObject = NIL;
+    jsonDaisyBusList: TJSONArray = NIL;
+    jsonBases: TJSONArray = NIL;
+    jsonChannels: TJSONArray = NIL;
+    plotParamsStr: String;
 begin
     Result := 0;
 
@@ -198,11 +299,15 @@ begin
         Result := 1;
         Exit;
     end;
-
-    if not Assigned(DSSPlotObj) then
-        DSSPlotObj := TDSSPlot.Create;
-
-    DSSPlotObj.SetDefaults;
+    if (@DSSPlotCallback) = NIL then
+    begin
+        Result := 1;
+        // If there is no callback active, just ignore the command like we did before.
+        // DoSimpleMsg('Plotting not supported in the DSS Extensions engine. Provide a callback that implements it version', 308);
+        Exit;
+    end;
+    
+    DSSPlotObj := TDSSPlot.Create;
 
     {Get next parameter on command line}
     ParamPointer := 0;
@@ -245,91 +350,77 @@ begin
                     case Param[1] of
                         'A':
                         begin
-                            PlotType := ptAutoAddLogPlot;
+                            PlotType := 'AutoAddLogPlot';
                             ObjectName := CircuitName_ + 'AutoAddLog.CSV';
                             ValueIndex := 2;
                         end;
                         'C':
-                            PlotType := ptCircuitplot;
+                            PlotType := 'CircuitPlot';
                         'E':
-{$IFDEF MSWINDOWS}
                             if CompareTextShortest('ener', Param) = 0 then
-                                PlotType := ptEnergyPlot
+                                PlotType := 'EnergyPlot'
                             else
-                                PlotType := ptEvolutionPlot
-{$ENDIF}
+                                PlotType := 'EvolutionPlot'
                             ;
                         'G':
-                            PlotType := ptGeneralDataPlot;
+                            PlotType := 'GeneralDataPlot';
                         'L':
-                            PlotType := ptLoadshape;
+                            PlotType := 'LoadShape';
                         'M':
                             if CompareTextShortest('mon', Param) = 0 then
-                                PlotType := ptMonitorplot
-                    {$IFDEF MSWINDOWS}
+                                PlotType := 'MonitorPlot'
                             else
-                                PlotType := ptMatrixplot
-{$ENDIF}
+                                PlotType := 'MatrixPlot'
                             ;
                         'P':
                             if CompareTextShortest('pro', Param) = 0 then
-                                PlotType := ptProfile
+                                PlotType := 'Profile'
                             else
                             begin
-                      {$IFDEF MSWINDOWS}
                                 if CompareTextShortest('phas', Param) = 0 then
-                                    PlotType := ptPhaseVoltage
+                                    PlotType := 'PhaseVoltage'
                                 else
-{$ENDIF}
-                                    PlotType := ptPriceShape;
+                                    PlotType := 'PriceShape';
                             end;
                         'S':
-{$IFDEF MSWINDOWS}
-                            PlotType := ptScatterPlot
-{$ENDIF}
+                            PlotType := 'ScatterPlot'
                             ;
                         'T':
-{$IFDEF MSWINDOWS}
-                            PlotType := ptTshape
-{$ENDIF}
+                            PlotType := 'TShape'
                             ;
                         'D':
                         begin
-                            PlotType := ptDaisyplot;
+                            PlotType := 'DaisyPlot';
                             DaisyBusList.Clear;
                         end;
                         'Z':
-                            PlotType := ptMeterZones;
+                            PlotType := 'MeterZones';
                     else
                     end;
                 2:
                     case Param[1] of
                         'V':
-                            Quantity := pqVoltage;
+                            Quantity := 'Voltage';
                         'C':
                             case Param[2] of
                                 'A':
-                                    Quantity := pqcapacity;
+                                    Quantity := 'Capacity';
                                 'U':
-                                    Quantity := pqcurrent;
+                                    Quantity := 'Current';
                             end;
                         'P':
-                            Quantity := pqpower;
+                            Quantity := 'Power';
                         'L':
-{$IFDEF MSWINDOWS}
                             if CompareTextShortest('los', Param) = 0 then
-                                Quantity := pqlosses
+                                Quantity := 'Losses'
                             else
-                                MatrixType := pLaplacian
-{$ENDIF}
+                                MatrixType := 'Laplacian'
                             ;
                         'I':
-{$IFDEF MSWINDOWS}
-                            MatrixType := pIncMatrix
-{$ENDIF}
+                            MatrixType := 'IncMatrix'
                             ;
                     else
-                        Quantity := pqNone;
+                        Quantity := 'None';
                         Valueindex := Parser.IntValue;
                     end;
                 3:
@@ -350,7 +441,7 @@ begin
                 begin
                     ShowLoops := InterpretYesNo(Param);
                     if ShowLoops then
-                        PlotType := ptMeterzones;
+                        PlotType := 'MeterZones';
                 end;
                 8:
                     TriColorMax := Parser.DblValue;
@@ -364,7 +455,7 @@ begin
                     Color3 := InterpretColorName(Param);
                 13:
                 begin    {Channel definitions for Plot Monitor}
-                    NumChannels := Parser.ParseAsVector(51, @DblBuffer);  // allow up to 50 channels
+                    NumChannels := Parser.ParseAsVector(51, PDoubleArray(@DblBuffer));  // allow up to 50 channels
                     if NumChannels > 0 then
                     begin   // Else take the defaults
                         SetLength(Channels, NumChannels);
@@ -377,7 +468,7 @@ begin
                 end;
                 14:
                 begin
-                    NumChannels := Parser.ParseAsVector(51, @DblBuffer);  // allow up to 50 channels
+                    NumChannels := Parser.ParseAsVector(51, PDoubleArray(@DblBuffer));  // allow up to 50 channels
                     if NumChannels > 0 then
                     begin
                         SetLength(Bases, NumChannels);
@@ -388,29 +479,23 @@ begin
                 15:
                     ShowSubs := InterpretYesNo(Param);
                 16:
-                    MaxLineThickness := Parser.IntValue;
+                    if Parser.IntValue > 0 then
+                        MaxLineThickness := Parser.IntValue;
                 17:
                     InterpretTStringListArray(Param, DaisyBusList);  {read in Bus list}
                 18:
                 begin
-                {$IFDEF MSWINDOWS}
                     MinScale := Parser.DblValue;
                     MinScaleIsSpecified := TRUE;    // Indicate the user wants a particular value
-                {$ENDIF}
                 end;
                 19:
-{$IFDEF MSWINDOWS}
                     ThreePhLineStyle := Parser.IntValue
-{$ENDIF}
                     ;
                 20:
-{$IFDEF MSWINDOWS}
                     SinglePhLineStyle := Parser.IntValue
-{$ENDIF}
                     ;
                 21:
                 begin  // Parse off phase(s) to plot
-             {$IFDEF MSWINDOWS}
                     PhasesToPlot := PROFILE3PH; // the default
                     if CompareTextShortest(Param, 'default') = 0 then
                         PhasesToPlot := PROFILE3PH
@@ -432,7 +517,6 @@ begin
                     else
                     if Length(Param) = 1 then
                         PhasesToPlot := Parser.IntValue;
-             {$ENDIF}
                 end;
                 22:
                 begin
@@ -451,38 +535,87 @@ begin
     end;
 
     if not ActiveCircuit.Issolved then
-        DSSPlotObj.Quantity := pqNone;
+        DSSPlotObj.Quantity := 'None';
 
     with DSSPlotObj do
-    begin
-        if DSS_Viz_enable then
-        begin
-      {$IFDEF MSWINDOWS}
-            if (DSS_Viz_installed and ((
-                PlotType = ptMonitorplot) or (
-                PlotType = ptLoadshape) or (
-                PlotType = ptProfile) or (
-                PlotType = ptScatterPlot) or (
-                PlotType = ptEvolutionPlot) or (
-                PlotType = ptEnergyPlot) or (
-                PlotType = ptPhaseVoltage) or (
-                PlotType = ptMatrixplot))) then
-                DSSVizPlot; // OpenDSS Viewer
-      {$ENDIF}
-        end
-        else
-        begin
-      {$IFDEF MSWINDOWS}
-            if (PlotType = ptScatterPlot) or (
-                PlotType = ptEvolutionPlot) or (
-                PlotType = ptMatrixplot) then
-                DoSimpleMsg('The OpenDSS Viewer is disabled (Check the OpenDSSViewer option in the help).', 0)
-            else
-                Execute;   // makes a new plot based on these options
-      {$ENDIF}
-        end;
-    end;
+    try
+        jsonDaisyBusList := TJSONArray.Create();
+        for i := 1 to DaisyBusList.Count do
+            jsonDaisyBusList.Add(DaisyBusList[i]);
 
+        jsonChannels := TJSONArray.Create();
+        for i := 0 to High(Channels) do
+            jsonChannels.Add(Channels[i]);
+
+        jsonBases := TJSONArray.Create();
+        for i := 0 to High(Bases) do
+            jsonBases.Add(Bases[i]);
+        
+        plotParams := TJSONObject.Create([
+            'PlotType', PlotType,
+            'MatrixType', MatrixType,
+            'MaxScale', MaxScale,
+            'MinScale', MinScale,
+            'Dots', Dots,
+            'Labels', Labels,
+            'ShowLoops', ShowLoops,
+            'ShowSubs', ShowSubs,
+            'Quantity', Quantity,
+            'ObjectName', ObjectName,
+            'PlotId', PlotID,
+            'ValueIndex', ValueIndex,
+            'PhasesToPlot', PhasesToPlot,
+            'ProfileScale', ProfileScale,
+            'Channels', jsonChannels,
+            'Bases', jsonBases,
+            // TODO: convert to HTML?
+            'Color1', Color1,
+            'Color2', Color2,
+            'Color3', Color3,
+            'TriColorMax', TriColorMax,
+            'TriColorMid', TriColorMid,
+            'MaxScaleIsSpecified', MaxScaleIsSpecified,
+            'MinScaleIsSpecified', MinScaleIsSpecified,
+            'DaisyBusList', jsonDaisyBusList,
+            'MaxLineThickness', MaxLineThickness,
+            'Markers', TJSONObject.Create(
+            [
+                'NodeMarkerCode', ActiveCircuit.NodeMarkerCode,
+                'NodeMarkerWidth', ActiveCircuit.NodeMarkerWidth,
+                'SwitchMarkerCode', ActiveCircuit.SwitchMarkerCode,
+                'TransMarkerSize', ActiveCircuit.TransMarkerSize,
+                'CapMarkerSize', ActiveCircuit.CapMarkerSize,
+                'RegMarkerSize', ActiveCircuit.RegMarkerSize,
+                'PVMarkerSize', ActiveCircuit.PVMarkerSize,
+                'StoreMarkerSize', ActiveCircuit.StoreMarkerSize,
+                'FuseMarkerSize', ActiveCircuit.FuseMarkerSize,
+                'RecloserMarkerSize', ActiveCircuit.RecloserMarkerSize,
+                'RelayMarkerSize', ActiveCircuit.RelayMarkerSize,
+                'TransMarkerCode', ActiveCircuit.TransMarkerCode,
+                'CapMarkerCode', ActiveCircuit.CapMarkerCode,
+                'RegMarkerCode', ActiveCircuit.RegMarkerCode,
+                'PVMarkerCode', ActiveCircuit.PVMarkerCode,
+                'StoreMarkerCode', ActiveCircuit.StoreMarkerCode,
+                'FuseMarkerCode', ActiveCircuit.FuseMarkerCode,
+                'RecloserMarkerCode', ActiveCircuit.RecloserMarkerCode,
+                'RelayMarkerCode', ActiveCircuit.RelayMarkerCode,
+                'MarkSwitches', ActiveCircuit.MarkSwitches,
+                'MarkTransformers', ActiveCircuit.MarkTransformers,
+                'MarkCapacitors', ActiveCircuit.MarkCapacitors,
+                'MarkRegulators', ActiveCircuit.MarkRegulators,
+                'MarkPVSystems', ActiveCircuit.MarkPVSystems,
+                'MarkStorage', ActiveCircuit.MarkStorage,
+                'MarkFuses', ActiveCircuit.MarkFuses,
+                'MarkReclosers', ActiveCircuit.MarkReclosers,
+                'MarkRelays', ActiveCircuit.MarkRelays
+            ])
+        ]);
+        // plotParams.CompressedJSON := True;
+        plotParamsStr := plotParams.FormatJSON();
+        DSSPlotCallback(PChar(plotParamsStr));
+    finally
+        FreeAndNil(plotParams);
+    end;
 end;
 
 

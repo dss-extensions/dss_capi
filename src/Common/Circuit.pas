@@ -705,7 +705,7 @@ Begin
           try
             DeltreeDir(Directory + PathDelim + Name)
           except
-            Writeln('Could not remove directory ' + Directory + PathDelim + Name);
+            DSSMessageDlg('Could not remove directory ' + Directory + PathDelim + Name, True);
           end;
         end
         else

@@ -3228,11 +3228,26 @@ end;
 
 
 function InterpretColorName(const s: String): Integer;
-
+const
+    clAqua: Integer = $FFFF00;
+    clBlack: Integer = $000000;
+    clBlue: Integer = $FF0000;
+    clDkGray: Integer = $808080;
+    clFuchsia: Integer = $FF00FF;
+    clGray: Integer = $808080;
+    clGreen: Integer = $008000;
+    clLime: Integer = $00FF00;
+    clLtGray: Integer = $C0C0C0;
+    clMaroon: Integer = $000080;
+    clNavy: Integer = $800000;
+    clOlive: Integer = $008080;
+    clPurple: Integer = $800080;
+    clRed: Integer = $0000FF;
+    clSilver: Integer = $C0C0C0;
+    clTeal: Integer = $808000;
+    clWhite: Integer = $FFFFFF;
+    clYellow: Integer = $00FFFF;
 begin
-{$IFDEF FPC}
-    Result := 0; // RGB for black
-{$ELSE}
     Result := clBlue;  // default color
     try
         if CompareTextShortest(S, 'black') = 0 then
@@ -3294,7 +3309,6 @@ begin
         On E: Exception do
             DoSimpleMsg('Invalid Color Specification: "' + S + '".', 724);
     end;
-{$ENDIF}
 end;
 
 function MakeNewCktElemName(const oldname: String): String;

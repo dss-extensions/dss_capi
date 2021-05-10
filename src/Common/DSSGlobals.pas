@@ -80,6 +80,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, DSSPointer
 
 CONST
       CRLF = sLineBreak;
+      IsDLL = True;
 
       PI =  3.14159265359;
 
@@ -151,12 +152,6 @@ VAR
    DSS_CAPI_LEGACY_MODELS_PREV: Boolean = False;
    DSS_CAPI_ALLOW_CHANGE_DIR : Boolean = True;
 
-   // Global variables for the DSS visualization tool
-   DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
-   DSS_Viz_path: String;
-   DSS_Viz_enable: Boolean=False;
-
-   IsDLL,
    NoFormsAllowed  :Boolean;
 
    ActiveCircuit   :TDSSCircuit;
@@ -211,7 +206,6 @@ VAR
    DefaultFontSize  :Integer;
    DefaultFontName  :String;
    DefaultFontStyles :Integer;
-   DSSFileName      :String;     // Name of current exe or DLL
    DSSDirectory     :String;     // where the current exe resides
    StartupDirectory :String;     // Where we started
    DataDirectory    :String;     // used to be DSSDataDirectory
@@ -800,7 +794,6 @@ initialization
    LastResultFile        := '';
    In_Redirect           := FALSE;
    InShowResults         := FALSE;
-   IsDLL                 := FALSE;
    LastCommandWasCompile := FALSE;
    LastErrorMessage      := '';
    MaxCircuits           := 1;  //  Not required anymore. planning to remove it
@@ -820,8 +813,7 @@ initialization
    {Initialize filenames and directories}
 
    ProgramName      := 'dss-extensions';
-   DSSFileName      := GetDSSExeFile;
-   DSSDirectory     := ExtractFilePath(DSSFileName);
+   DSSDirectory     := ExtractFilePath('');
    // want to know if this was built for 64-bit, not whether running on 64 bits
    // (i.e. we could have a 32-bit build running on 64 bits; not interested in that
 
