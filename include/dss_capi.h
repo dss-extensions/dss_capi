@@ -32,6 +32,123 @@
 extern "C" {
 #else
 #endif
+    enum MonitorModes {
+        MonitorModes_VI = 0x00000000, // Monitor records Voltage and Current at the terminal (Default)
+        MonitorModes_Power = 0x00000001, // Monitor records kW, kvar or kVA, angle values, etc. at the terminal to which it is connected.
+        MonitorModes_Taps = 0x00000002, // For monitoring Regulator and Transformer taps
+        MonitorModes_States = 0x00000003, // For monitoring State Variables (for PC Elements only)
+        MonitorModes_Sequence = 0x00000010, // Reports the monitored quantities as sequence quantities
+        MonitorModes_Magnitude = 0x00000020, // Reports the monitored quantities in Magnitude Only
+        MonitorModes_PosOnly = 0x00000040 // Reports the Positive Seq only or avg of all phases
+    };
+
+    enum SolveModes {
+        SolveModes_SnapShot = 0, // Solve a single snapshot power flow
+        SolveModes_Daily = 1, // Solve following Daily load shapes
+        SolveModes_Yearly = 2, // Solve following Yearly load shapes
+        SolveModes_Monte1 = 3, // Monte Carlo Mode 1
+        SolveModes_LD1 = 4, // Load-duration Mode 1
+        SolveModes_PeakDay = 5, // Solves for Peak Day using Daily load curve
+        SolveModes_DutyCycle = 6, // Solve following Duty Cycle load shapes
+        SolveModes_Direct = 7, // Solve direct (forced admittance model)
+        SolveModes_MonteFault = 8, // Monte carlo Fault Study
+        SolveModes_FaultStudy = 9, // Fault study at all buses
+        SolveModes_Monte2 = 10, // Monte Carlo Mode 2
+        SolveModes_Monte3 = 11, // Monte Carlo Mode 3
+        SolveModes_LD2 = 12, // Load-Duration Mode 2
+        SolveModes_AutoAdd = 13, // Auto add generators or capacitors
+        SolveModes_Dynamic = 14, // Solve for dynamics
+        SolveModes_Harmonic = 15 // Harmonic solution mode
+    };
+
+    enum SolutionLoadModels { // Solution_[Get/Set]_LoadModel
+        SolutionLoadModels_PowerFlow = 1, // Power Flow load model option
+        SolutionLoadModels_Admittance = 2 // Admittance load model option
+    };
+
+    enum SolutionAlgorithms { // Solution_[Get/Set]_Algorithm
+        SolutionAlgorithms_NormalSolve = 0, // Solution algorithm option - Normal solution mode
+        SolutionAlgorithms_NewtonSolve = 1 // Solution algorithm option - Newton solution
+    };
+
+    enum ControlModes { // Solution_[Get/Set]_ControlMode
+        ControlModes_Static = 0, // Control Mode option - Static
+        ControlModes_Event = 1, // Control Mode Option - Event driven solution mode
+        ControlModes_Time = 2, // Control mode option - Time driven mode
+        ControlModes_Multirate = 3, // Control mode option - Multirate mode
+        ControlModes_ControlOff = -1 // Control Mode OFF
+    };
+
+    enum CktModels { // Settings_[Get/Set]_CktModel
+        CktModels_Multiphase = 0, // Circuit model is multiphase (default)
+        CktModels_PositiveSeq = 1 // Circuit model is positive sequence model only
+    };
+
+    enum RandomModes { // Solution_[Get/Set]_Random
+        RandomModes_Gaussian = 1, // Gaussian
+        RandomModes_Uniform = 2, // Uniform
+        RandomModes_LogNormal = 3 // Log normal
+    };
+
+    enum AutoAddTypes { // Solution_[Get/Set]_AddType
+        AutoAddTypes_AddGen = 1, // Add generators in AutoAdd mode
+        AutoAddTypes_AddCap = 2 // Add capacitors in AutoAdd mode
+    };
+
+    enum CapControlModes {
+        CapControlModes_Current = 0, // Current control, ON and OFF settings on CT secondary
+        CapControlModes_Voltage = 1, // Voltage control, ON and OFF settings on the PT secondary base
+        CapControlModes_KVAR = 2, // kVAR control, ON and OFF settings on PT / CT base
+        CapControlModes_Time = 3, // Time control, ON and OFF settings are seconds from midnight
+        CapControlModes_PF = 4 // ON and OFF settings are power factor, negative for leading
+    };
+
+    enum ActionCodes {
+        ActionCodes_none = 0, // No action
+        ActionCodes_Open = 1, // Open a switch
+        ActionCodes_Close = 2, // Close a switch
+        ActionCodes_Reset = 3, // Reset to the shelf state (unlocked, closed for a switch)
+        ActionCodes_Lock = 4, // Lock a switch, prventing both manual and automatic operation
+        ActionCodes_Unlock = 5, // Unlock a switch, permitting both manual and automatic operation
+        ActionCodes_TapUp = 6, // Move a regulator tap up
+        ActionCodes_TapDown = 7 // Move a regulator tap down
+    };
+
+    enum LoadStatus {
+        LoadStatus_Variable = 0,
+        LoadStatus_Fixed = 1,
+        LoadStatus_Exempt = 2
+    };
+
+    enum LoadModels {
+        LoadModels_ConstPQ = 1,
+        LoadModels_ConstZ = 2,
+        LoadModels_Motor = 3,
+        LoadModels_CVR = 4,
+        LoadModels_ConstI = 5,
+        LoadModels_ConstPFixedQ = 6,
+        LoadModels_ConstPFixedX = 7,
+        LoadModels_ZIPV = 8
+    };
+
+    enum LineUnits {
+        LineUnits_none = 0, // No line length unit.
+        LineUnits_Miles = 1, // Line length units in miles.
+        LineUnits_kFt = 2, // Line length units are in thousand feet.
+        LineUnits_km = 3, // Line length units are km.
+        LineUnits_meter = 4, // Line length units are meters.
+        LineUnits_ft = 5, // Line units in feet.
+        LineUnits_inch = 6, // Line length units are inches.
+        LineUnits_cm = 7, // Line units are cm.
+        LineUnits_mm = 8, // Line length units are mm.
+        LineUnits_Maxnum = 9 // Maximum number of line units constants.
+    };
+
+    enum YMatrixModes { // Solution_BuildYMatrix, YMatrix_BuildYMatrixD
+        YMatrixModes_SeriesOnly = 1,
+        YMatrixModes_WholeMatrix = 2
+    };
+
     DSS_CAPI_DLL void DSS_ResetStringBuffer(void);
     DSS_CAPI_DLL void DSS_Dispose_PByte(int8_t** p);
     DSS_CAPI_DLL void DSS_Dispose_PDouble(double** p);
@@ -5882,122 +5999,6 @@ extern "C" {
     DSS_CAPI_DLL void ReduceCkt_Do1phLaterals(void);
     DSS_CAPI_DLL void ReduceCkt_DoBranchRemove(void);
 
-    enum MonitorModes {
-        MonitorModes_VI = 0x00000000, // Monitor records Voltage and Current at the terminal (Default)
-        MonitorModes_Power = 0x00000001, // Monitor records kW, kvar or kVA, angle values, etc. at the terminal to which it is connected.
-        MonitorModes_Taps = 0x00000002, // For monitoring Regulator and Transformer taps
-        MonitorModes_States = 0x00000003, // For monitoring State Variables (for PC Elements only)
-        MonitorModes_Sequence = 0x00000010, // Reports the monitored quantities as sequence quantities
-        MonitorModes_Magnitude = 0x00000020, // Reports the monitored quantities in Magnitude Only
-        MonitorModes_PosOnly = 0x00000040 // Reports the Positive Seq only or avg of all phases
-    };
-
-    enum SolveModes {
-        SolveModes_SnapShot = 0, // Solve a single snapshot power flow
-        SolveModes_Daily = 1, // Solve following Daily load shapes
-        SolveModes_Yearly = 2, // Solve following Yearly load shapes
-        SolveModes_Monte1 = 3, // Monte Carlo Mode 1
-        SolveModes_LD1 = 4, // Load-duration Mode 1
-        SolveModes_PeakDay = 5, // Solves for Peak Day using Daily load curve
-        SolveModes_DutyCycle = 6, // Solve following Duty Cycle load shapes
-        SolveModes_Direct = 7, // Solve direct (forced admittance model)
-        SolveModes_MonteFault = 8, // Monte carlo Fault Study
-        SolveModes_FaultStudy = 9, // Fault study at all buses
-        SolveModes_Monte2 = 10, // Monte Carlo Mode 2
-        SolveModes_Monte3 = 11, // Monte Carlo Mode 3
-        SolveModes_LD2 = 12, // Load-Duration Mode 2
-        SolveModes_AutoAdd = 13, // Auto add generators or capacitors
-        SolveModes_Dynamic = 14, // Solve for dynamics
-        SolveModes_Harmonic = 15 // Harmonic solution mode
-    };
-
-    enum SolutionLoadModels { // Solution_[Get/Set]_LoadModel
-        SolutionLoadModels_PowerFlow = 1, // Power Flow load model option
-        SolutionLoadModels_Admittance = 2 // Admittance load model option
-    };
-
-    enum SolutionAlgorithms { // Solution_[Get/Set]_Algorithm
-        SolutionAlgorithms_NormalSolve = 0, // Solution algorithm option - Normal solution mode
-        SolutionAlgorithms_NewtonSolve = 1 // Solution algorithm option - Newton solution
-    };
-
-    enum ControlModes { // Solution_[Get/Set]_ControlMode
-        ControlModes_Static = 0, // Control Mode option - Static
-        ControlModes_Event = 1, // Control Mode Option - Event driven solution mode
-        ControlModes_Time = 2, // Control mode option - Time driven mode
-        ControlModes_Multirate = 3, // Control mode option - Multirate mode
-        ControlModes_ControlOff = -1 // Control Mode OFF
-    };
-
-    enum CktModels { // Settings_[Get/Set]_CktModel
-        CktModels_Multiphase = 0, // Circuit model is multiphase (default)
-        CktModels_PositiveSeq = 1 // Circuit model is positive sequence model only
-    };
-
-    enum RandomModes { // Solution_[Get/Set]_Random
-        RandomModes_Gaussian = 1, // Gaussian
-        RandomModes_Uniform = 2, // Uniform
-        RandomModes_LogNormal = 3 // Log normal
-    };
-
-    enum AutoAddTypes { // Solution_[Get/Set]_AddType
-        AutoAddTypes_AddGen = 1, // Add generators in AutoAdd mode
-        AutoAddTypes_AddCap = 2 // Add capacitors in AutoAdd mode
-    };
-
-    enum CapControlModes {
-        CapControlModes_Current = 0, // Current control, ON and OFF settings on CT secondary
-        CapControlModes_Voltage = 1, // Voltage control, ON and OFF settings on the PT secondary base
-        CapControlModes_KVAR = 2, // kVAR control, ON and OFF settings on PT / CT base
-        CapControlModes_Time = 3, // Time control, ON and OFF settings are seconds from midnight
-        CapControlModes_PF = 4 // ON and OFF settings are power factor, negative for leading
-    };
-
-    enum ActionCodes {
-        ActionCodes_none = 0, // No action
-        ActionCodes_Open = 1, // Open a switch
-        ActionCodes_Close = 2, // Close a switch
-        ActionCodes_Reset = 3, // Reset to the shelf state (unlocked, closed for a switch)
-        ActionCodes_Lock = 4, // Lock a switch, prventing both manual and automatic operation
-        ActionCodes_Unlock = 5, // Unlock a switch, permitting both manual and automatic operation
-        ActionCodes_TapUp = 6, // Move a regulator tap up
-        ActionCodes_TapDown = 7 // Move a regulator tap down
-    };
-
-    enum LoadStatus {
-        LoadStatus_Variable = 0,
-        LoadStatus_Fixed = 1,
-        LoadStatus_Exempt = 2
-    };
-
-    enum LoadModels {
-        LoadModels_ConstPQ = 1,
-        LoadModels_ConstZ = 2,
-        LoadModels_Motor = 3,
-        LoadModels_CVR = 4,
-        LoadModels_ConstI = 5,
-        LoadModels_ConstPFixedQ = 6,
-        LoadModels_ConstPFixedX = 7,
-        LoadModels_ZIPV = 8
-    };
-
-    enum LineUnits {
-        LineUnits_none = 0, // No line length unit.
-        LineUnits_Miles = 1, // Line length units in miles.
-        LineUnits_kFt = 2, // Line length units are in thousand feet.
-        LineUnits_km = 3, // Line length units are km.
-        LineUnits_meter = 4, // Line length units are meters.
-        LineUnits_ft = 5, // Line units in feet.
-        LineUnits_inch = 6, // Line length units are inches.
-        LineUnits_cm = 7, // Line units are cm.
-        LineUnits_mm = 8, // Line length units are mm.
-        LineUnits_Maxnum = 9 // Maximum number of line units constants.
-    };
-
-    enum YMatrixModes { // Solution_BuildYMatrix, YMatrix_BuildYMatrixD
-        YMatrixModes_SeriesOnly = 1,
-        YMatrixModes_WholeMatrix = 2
-    };
 
     // Experimental API extensions
     DSS_CAPI_DLL int32_t CNData_Get_Count(void);
