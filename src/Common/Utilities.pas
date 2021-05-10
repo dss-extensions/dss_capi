@@ -310,71 +310,15 @@ begin
     Result := Copy(S, dotpos + 1, Length(S));
 end;
 
-{$IFDEF FPC}
-procedure FireOffEditor(FileNm: String);
-var
-    s: String;
-    gotError: Boolean;
-    msg: String;
-begin
-{$IFDEF DSS_CAPI}
-    if not DSS_CAPI_ALLOW_EDITOR then
-        Exit; // just ignore if Show is not allowed
-{$ENDIF}
-
-    gotError := FALSE;
-    msg := 'Unknown error in process.';
-    try
-        if FileExists(FileNm) then
-        begin
-{$IF (defined(Windows) or defined(MSWindows))}
-            gotError := not RunCommand(DefaultEditor, [FileNm], s);
-{$ELSE}
-            gotError := not RunCommand('/bin/bash', ['-c', DefaultEditor + ' ' + FileNm], s);
-{$ENDIF}
-        end;
-    except
-        On E: Exception do
-        begin
-            gotError := TRUE;
-            msg := E.Message;
-        end;
-    end;
-    if gotError then
-        DoErrorMsg('FireOffEditor.', msg, 'Editor could not be started. Is the editor correctly specified?', 704);
-end;
-
-procedure DoDOSCmd(CmdString: String);
-var //Handle:Word;
-    s: String;
-    gotError: Boolean;
-    msg: String;
-begin
-    gotError := FALSE;
-    msg := 'Unknown error in command.';
-    try
-{$IF (defined(Windows) or defined(MSWindows))}
-        gotError := not RunCommand('cmd', ['/c', CmdString], s);
-{$ELSE}
-        gotError := not RunCommand('/bin/bash', ['-c', CmdString], s);
-{$ENDIF}
-    except
-        On E: Exception do
-        begin
-            gotError := TRUE;
-            msg := E.Message;
-        end;
-    end;
-    if gotError then
-        DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"', [msg, CmdString]), 704);
-end;
-
-{$ELSE}
+{$IFDEF WINDOWS}
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure FireOffEditor(FileNm: String);
 var
     retval: Word;
 begin
+    if not DSS_CAPI_ALLOW_EDITOR then
+        Exit; // just ignore if Show is not allowed
+
     try
         if FileExists(FileNm) then
         begin
@@ -414,7 +358,54 @@ begin
             DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"', [E.Message, CmdString]), 704);
     end;
 end;
+{$ELSE}
+procedure FireOffEditor(FileNm: String);
+var
+    s: String;
+    gotError: Boolean;
+    msg: String;
+begin
+    if not DSS_CAPI_ALLOW_EDITOR then
+        Exit; // just ignore if Show is not allowed
 
+    gotError := FALSE;
+    msg := 'Unknown error in process.';
+    try
+        if FileExists(FileNm) then
+        begin
+            gotError := not RunCommand('/bin/bash', ['-c', DefaultEditor + ' ' + FileNm], s);
+        end;
+    except
+        On E: Exception do
+        begin
+            gotError := TRUE;
+            msg := E.Message;
+        end;
+    end;
+    if gotError then
+        DoErrorMsg('FireOffEditor.', msg, 'Editor could not be started. Is the editor correctly specified?', 704);
+end;
+
+procedure DoDOSCmd(CmdString: String);
+var //Handle:Word;
+    s: String;
+    gotError: Boolean;
+    msg: String;
+begin
+    gotError := FALSE;
+    msg := 'Unknown error in command.';
+    try
+        gotError := not RunCommand('/bin/bash', ['-c', CmdString], s);
+    except
+        On E: Exception do
+        begin
+            gotError := TRUE;
+            msg := E.Message;
+        end;
+    end;
+    if gotError then
+        DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"', [msg, CmdString]), 704);
+end;
 {$ENDIF}
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
