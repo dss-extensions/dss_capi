@@ -2438,8 +2438,8 @@ FUNCTION TSolutionObj.SolveSystem(V:pNodeVArray; ActorID : Integer): Integer;
 
 Var
   RetCode : Integer;
-  iRes    : LongWord;
-  dRes    : Double;
+//  iRes    : LongWord;
+//  dRes    : Double;
   myMsg   : String;
 
   BEGIN
@@ -2450,6 +2450,7 @@ Var
     // new function to log KLUSolve.DLL function calls; same information as stepping through in Delphi debugger
     // SetLogFile ('KLU_Log.txt', 1);
     RetCode := SolveSparseSet(hY, @V^[1], @Currents^[1]);  // Solve for present InjCurr
+{*  Commented out because results are not logged currently -- but left in just in case
     // new information functions
     GetFlops(hY, @dRes);
     GetRGrowth(hY, @dRes);
@@ -2459,6 +2460,7 @@ Var
     GetNNZ(hY, @iRes);
     GetSparseNNZ(hY, @iRes);
     GetSingularCol(hY, @iRes);
+    *}
   Except
     On E:Exception Do //Raise
     Begin
