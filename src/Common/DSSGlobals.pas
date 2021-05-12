@@ -151,6 +151,7 @@ VAR
    DSS_CAPI_LEGACY_MODELS: Boolean = False;
    DSS_CAPI_LEGACY_MODELS_PREV: Boolean = False;
    DSS_CAPI_ALLOW_CHANGE_DIR : Boolean = True;
+   DSS_CAPI_COM_DEFAULTS: Boolean = True;
 
    NoFormsAllowed  :Boolean;
 
@@ -882,8 +883,10 @@ initialization
    // Default is False, enable at initialization when DSS_CAPI_LEGACY_MODELS = 1
    DSS_CAPI_LEGACY_MODELS := (GetEnvironmentVariable('DSS_CAPI_LEGACY_MODELS') = '1');
    DSS_CAPI_LEGACY_MODELS := DSS_CAPI_LEGACY_MODELS_PREV;
-   
-   // For the 0.10.x branch, default is True, disable at initialization when DSS_CAPI_ALLOW_CHANGE_DIR = 0
+
+   // For the 0.12.x branch, default is True, disable at initialization when DSS_CAPI_COM_DEFAULTS = 0
+   DSS_CAPI_COM_DEFAULTS := (GetEnvironmentVariable('DSS_CAPI_COM_DEFAULTS') <> '0');;
+   // For the 0.12.x branch, default is True, disable at initialization when DSS_CAPI_ALLOW_CHANGE_DIR = 0
    DSS_CAPI_ALLOW_CHANGE_DIR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_CHANGE_DIR') <> '0');
 
 

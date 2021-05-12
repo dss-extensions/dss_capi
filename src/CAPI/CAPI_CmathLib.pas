@@ -29,7 +29,7 @@ var
     Result: PDoubleArray;
 
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     Result[0] := RealPart;
     Result[1] := ImagPart;
 end;
@@ -56,7 +56,7 @@ var
     Result: PDoubleArray;
     TempPolar: polar;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     TempPolar := ctopolardeg(cmplx(RealPart, ImagPart));
     Result[0] := TempPolar.mag;
     Result[1] := TempPolar.ang;
@@ -74,7 +74,7 @@ var
     Result: PDoubleArray;
     cTemp: Complex;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     cTemp := pdegtocomplex(magnitude, angle);
     Result[0] := cTemp.re;
     Result[1] := cTemp.im;
@@ -92,7 +92,7 @@ var
     Result: PDoubleArray;
     cTemp: Complex;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     cTemp := cmul(cmplx(a1, b1), cmplx(a2, b2));
     Result[0] := cTemp.re;
     Result[1] := cTemp.im;
@@ -110,7 +110,7 @@ var
     Result: PDoubleArray;
     cTemp: Complex;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     cTemp := cdiv(cmplx(a1, b1), cmplx(a2, b2));
     Result[0] := cTemp.re;
     Result[1] := cTemp.im;

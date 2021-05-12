@@ -1554,7 +1554,7 @@ extern "C" {
     If enabled, the legacy/deprecated models for PVSystem, InvControl, Storage and StorageControl are used.
     WARNING: Changing the active value runs a "Clear" command, discarding the current circuit. 
     
-    Defaults to False (disabled state).
+    Defaults to False/0 (disabled state).
     
     This can also be set through the environment variable DSS_CAPI_LEGACY_MODELS. Setting it to 1 enables
     the legacy components, using the old models from the start.
@@ -1570,7 +1570,7 @@ extern "C" {
     
     If you have issues with long paths, enabling this might help in some scenarios.
     
-    Defaults to True (allow changes, backwards compatible) in the 0.10.x versions of DSS C-API. 
+    Defaults to True (allow changes, backwards compatible) in the 0.12.x versions of DSS C-API. 
     This might change to false in future versions.
     
     This can also be set through the environment variable DSS_CAPI_ALLOW_CHANGE_DIR. Setting it to 0 to
@@ -1580,6 +1580,25 @@ extern "C" {
     */
     DSS_CAPI_DLL uint16_t DSS_Get_AllowChangeDir(void);
     DSS_CAPI_DLL void DSS_Set_AllowChangeDir(uint16_t Value);
+
+    /*
+    If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the 
+    official OpenDSS COM interface. 
+    
+    For example, consider the function Loads_Get_ZIPV. If there is no active circuit or active load element:
+    - In the disabled state (COMErrorResults=False), the function will return "[]", an array with 0 elements.
+    - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
+      be compatible with the return value of the official COM interface.
+    
+    Defaults to True/1 (enabled state) in the v0.12.x series. This will change to false in future series.
+    
+    This can also be set through the environment variable DSS_CAPI_COM_DEFAULTS. Setting it to 0 disables
+    the legacy/COM behavior. The value can be toggled through the API at any time.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL uint16_t DSS_Get_COMErrorResults(void);
+    DSS_CAPI_DLL void DSS_Set_COMErrorResults(uint16_t Value);
 
     /*
     Array of strings containing the names of all properties for the active DSS object.

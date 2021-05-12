@@ -24,7 +24,7 @@ var
 begin
     if (InvalidCircuit) or (ActiveDSSObject = NIL) then
     begin
-        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
         

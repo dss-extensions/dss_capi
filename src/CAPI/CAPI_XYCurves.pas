@@ -139,7 +139,7 @@ var
     Result: PDoubleArray;
     pXYCurve: TXYCurveObj;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pXYCurve) then
     begin
         DoSimpleMsg('No active XYCurve Object found.', 51013);
@@ -231,7 +231,7 @@ var
     Result: PDoubleArray;
     pXYCurve: TXYCurveObj;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pXYCurve) then
     begin
         DoSimpleMsg('No active XYCurve Object found.', 51013);
@@ -424,13 +424,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
     if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-        Result[0] := DSS_CopyStringAsPChar('NONE');
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, XYCurveClass.ElementList, False);

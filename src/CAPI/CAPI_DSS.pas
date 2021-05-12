@@ -33,6 +33,8 @@ function DSS_Get_AllowEditor: TAPIBoolean; CDECL;
 procedure DSS_Set_AllowEditor(Value: TAPIBoolean); CDECL;
 function DSS_Get_LegacyModels(): TAPIBoolean; CDECL;
 procedure DSS_Set_LegacyModels(Value: TAPIBoolean); CDECL;
+function DSS_Get_COMErrorResults(): TAPIBoolean; CDECL;
+procedure DSS_Set_COMErrorResults(Value: TAPIBoolean); CDECL;
 function DSS_Get_AllowChangeDir(): TAPIBoolean; CDECL;
 procedure DSS_Set_AllowChangeDir(Value: TAPIBoolean); CDECL;
 procedure DSS_RegisterPlotCallback(cb: dss_callback_plot_t); CDECL;
@@ -124,7 +126,7 @@ var
 
 begin
 
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumIntrinsicClasses - 1) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumIntrinsicClasses);
     k := 0;
     for i := 1 to NumIntrinsicClasses do
     begin
@@ -142,10 +144,8 @@ end;
 
 //------------------------------------------------------------------------------
 procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    DefaultResult(ResultPtr, ResultCount, '');
 end;
 
 procedure DSS_Get_UserClasses_GR(); CDECL;
@@ -252,6 +252,16 @@ begin
     end;
 {$ENDIF}
     
+end;
+//------------------------------------------------------------------------------
+function DSS_Get_COMErrorResults(): TAPIBoolean; CDECL;
+begin
+    Result := DSS_CAPI_COM_DEFAULTS;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_Set_COMErrorResults(Value: TAPIBoolean); CDECL;
+begin
+    DSS_CAPI_COM_DEFAULTS := Value;
 end;
 //------------------------------------------------------------------------------
 end.

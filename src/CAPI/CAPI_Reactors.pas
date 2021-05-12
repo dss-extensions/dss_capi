@@ -176,11 +176,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
+    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Reactors, False);
@@ -622,7 +619,7 @@ procedure Reactors_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); C
 var
     pReactor: TReactorObj;
 begin
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pReactor) then
         Exit;
     
@@ -647,7 +644,7 @@ procedure Reactors_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); C
 var
     pReactor: TReactorObj;
 begin
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pReactor) then
         Exit;
 
@@ -673,7 +670,7 @@ var
     Result: PDoubleArray;
     pReactor: TReactorObj;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pReactor) then
         Exit;
     with pReactor do
@@ -696,7 +693,7 @@ var
     Result: PDoubleArray;
     pReactor: TReactorObj;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pReactor) then
         Exit;
     with pReactor do
@@ -719,7 +716,7 @@ var
     Result: PDoubleArray;
     pReactor: TReactorObj;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pReactor) then
         Exit;
     with pReactor do
@@ -742,7 +739,7 @@ var
     Result: PDoubleArray;
     pReactor: TReactorObj;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(pReactor) then
         Exit;
     with pReactor do

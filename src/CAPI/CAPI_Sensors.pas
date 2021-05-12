@@ -90,11 +90,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
+    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Sensors, False);
@@ -121,7 +118,7 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
@@ -177,7 +174,7 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
@@ -197,7 +194,7 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
@@ -217,7 +214,7 @@ var
 begin
     if not _activeObj(elem) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);

@@ -71,11 +71,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
+    DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Generators, False);
@@ -153,7 +150,7 @@ var
     k: Integer;
 begin
     GeneratorCls := GeneratorClass;
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumGenRegisters - 1) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumGenRegisters);
     for k := 0 to NumGenRegisters - 1 do
     begin
         Result[k] := DSS_CopyStringAsPChar(GeneratorCls.RegisterNames[k + 1]);
@@ -175,7 +172,7 @@ var
 begin
     if not _activeObj(Gen) then
     begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 

@@ -92,13 +92,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-var
-    Result: PPAnsiCharArray;
 begin
     if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-        Result[0] := DSS_CopyStringAsPChar('NONE');
+        DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.SwtControls, False);
