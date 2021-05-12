@@ -1,0 +1,83 @@
+{
+  "period" : 0.000000001,
+//  "subscriptions" : [
+//    {
+//      "key" : "opendss/bus/house/voltage/A", 
+//      "type" : "complex",
+//      "required" : true
+//    },
+//    {
+//      "key" : "opendss/bus/house/voltage/B", 
+//      "type" : "complex",
+//      "required" : true
+//    },
+//    {
+//      "key" : "opendss/transformer/reg1/tapposition", 
+//      "type" : "integer",
+//      "required" : true
+//    },
+//    {
+//      "key" : "opendss/transformer/reg1/power/1/A", 
+//      "type" : "complex",
+//      "required" : true
+//    },
+//    {
+//      "key" : "opendss/line/671692/switchstate", 
+//      "type" : "integer",
+//      "required" : true
+//    },
+//    {
+//      "key" : "opendss/line/671692/current/2/A", 
+//      "type" : "complex",
+//      "required" : true
+//    },
+//    {
+//      "key" : "opendss/line/671692/current/2/B", 
+//      "type" : "complex",
+//      "required" : true
+//    },
+//    {
+//      "key" : "opendss/line/671692/current/2/C", 
+//      "type" : "complex",
+//      "required" : true
+//    },
+//    {
+//      "key" : "gridlabd/F1_house_B0/load", 
+//      "type" : "complex",
+//      "required" : true
+//    },
+//    {
+//      "key" : "gridlabd/localWeather/solar_flux", 
+//      "type" : "double",
+//      "required" : true
+//    },
+//    {
+//      "key" : "player/command", 
+//      "type" : "string",
+//      "required" : true
+//    },
+//    {
+//      "key" : "opendss/helics_output",
+//      "type" : "string",
+//      "required" : true
+//    }
+//  ],
+  "endpoints" : [
+    {
+      "global" : false,
+      "key" : "helics_output", 
+      "type" : "string"
+    },
+//    {
+//      "global" : false,
+//      "key" : "helics_input_from_player",
+//      "source" : "player/command", 
+//      "type" : "string"
+//    },
+    {
+      "global" : false,
+      "key" : "gld_output",
+      "type" : "string"
+    }
+  ]
+}
