@@ -53,7 +53,6 @@ type
         function Get_MaxCurrent(idxTerm: Integer): Double;    // Get equivalent total complex current on phase with max current
         function Get_MaxVoltage(idxTerm: Integer): Double;    // Get equivalent total complex voltage on phase
 
-
         procedure DoYprimCalcs(Ymatrix: TCMatrix);
 
 {$IFDEF DSS_CAPI}
@@ -187,7 +186,6 @@ var
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TDSSCktElement.Create(ParClass: TDSSClass);
 begin
-
     inherited Create(ParClass);
     NodeRef := NIL;
     YPrim_Series := NIL;
@@ -254,7 +252,6 @@ begin
     if assigned(ControlElementList) then
         ControlElementList.Free;
 
-
     {Dispose YPrims}
     if Yprim_Series <> NIL then
         Yprim_Series.Free;
@@ -265,7 +262,6 @@ begin
 
     inherited Destroy;
 end;
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.Set_YprimInvalid(const Value: Boolean);
 begin
@@ -313,37 +309,28 @@ begin
     else
         Result := FALSE;
 end;
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.Set_ConductorClosed(Index: Integer; Value: Boolean);
 var
     i: Integer;
 begin
-
     if (Index = 0) then
     begin  // Do all conductors
-
         for i := 1 to Fnphases do
             Terminals[FActiveTerminal - 1].ConductorsClosed[i - 1] := Value;
         ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
         YPrimInvalid := TRUE;
-
     end
     else
     begin
-
         if (Index > 0) and (Index <= Fnconds) then
         begin
             Terminals[FActiveTerminal - 1].ConductorsClosed[index - 1] := Value;
             ActiveCircuit.Solution.SystemYChanged := TRUE;
             YPrimInvalid := TRUE;
         end;
-
     end;
-
 end;
-
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.Set_NConds(Value: Integer);
 
@@ -616,10 +603,13 @@ var
     i: Integer;
 begin
     Result := 0.0;
-    if FEnabled then
-        for i := 1 to Fnphases do
-            with Iterminal^[i] do
-                Result := Max(Result, SQR(re) + SQR(im));
+    if not FEnabled then
+        Exit;
+        
+    for i := 1 to Fnphases do
+        with Iterminal^[i] do
+            Result := Max(Result, SQR(re) + SQR(im));
+            
     Result := Sqrt(Result);  // just do the sqrt once and save a little time
 end;
 
@@ -635,63 +625,57 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TDSSCktElement.Get_Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
 var
-    cPower: Complex;
     i, k, n: Integer;
 begin
-
-    cPower := CZERO;
+    Result := CZERO;
     ActiveTerminalIdx := idxTerm;
-    if FEnabled then
-    begin
-        ComputeIterminal;
+    if not FEnabled then
+        Exit;
+        
+    ComputeIterminal;
 
     // Method: Sum complex power going into phase conductors of active terminal
-        with ActiveCircuit.Solution do
+    with ActiveCircuit.Solution do
+    begin
+        k := (idxTerm - 1) * Fnconds;
+        for i := 1 to Fnconds do     // 11-7-08 Changed from Fnphases - was not accounting for all conductors
         begin
-            k := (idxTerm - 1) * Fnconds;
-            for i := 1 to Fnconds do     // 11-7-08 Changed from Fnphases - was not accounting for all conductors
-            begin
-                n := ActiveTerminal^.TermNodeRef[i - 1]; // don't bother for grounded node
-                if n > 0 then
-                    Caccum(cPower, Cmul(NodeV^[n], conjg(Iterminal[k + i])));
-            end;
+            n := ActiveTerminal^.TermNodeRef[i - 1]; // don't bother for grounded node
+            if n > 0 then
+                Caccum(Result, Cmul(NodeV^[n], conjg(Iterminal[k + i])));
         end;
-       {If this is a positive sequence circuit, then we need to multiply by 3 to get the 3-phase power}
-        if ActiveCircuit.PositiveSequence then
-            cPower := cMulReal(cPower, 3.0);
     end;
-
-    Result := cPower;
+   {If this is a positive sequence circuit, then we need to multiply by 3 to get the 3-phase power}
+    if ActiveCircuit.PositiveSequence then
+        Result := cMulReal(Result, 3.0);
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TDSSCktElement.Get_Losses: Complex;
 // get total losses in circuit element, all phases, all terminals.
 // Returns complex losses (watts, vars)
 var
-    cLoss: Complex;
     k, n: Integer;
 begin
-    cLoss := CZERO;
+    Result := CZERO;
 
-    if FEnabled then
-    begin
-        ComputeIterminal;
+    if not FEnabled then
+        Exit;
+        
+    ComputeIterminal;
 
     // Method: Sum complex power going into all conductors of all terminals
-        with ActiveCircuit.Solution do
-            for k := 1 to Yorder do
+    with ActiveCircuit.Solution do
+        for k := 1 to Yorder do
+        begin
+            n := NodeRef^[k];
+            if n > 0 then
             begin
-                n := NodeRef^[k];
-                if n > 0 then
-                begin
-                    if ActiveCircuit.PositiveSequence then
-                        Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
-                    else
-                        Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
-                end;
+                if ActiveCircuit.PositiveSequence then
+                    Caccum(Result, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
+                else
+                    Caccum(Result, Cmul(NodeV^[n], conjg(Iterminal^[k])));
             end;
-    end;
-    Result := cLoss;
+        end;
 end;
 
 function TDSSCktElement.Get_MaxVoltage(idxTerm: Integer): Double;
@@ -706,53 +690,49 @@ var
     MaxCurr,
     CurrMag: Double;
     MaxPhase: Integer;
-
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
     Cpower := CZERO;
-    if FEnabled then
-    begin
-        ComputeIterminal;
+    Result := 0.0;
+    if not FEnabled then
+        Exit;
+        
+    ComputeIterminal;
 
     // Method: Checks what's the phase with maximum current
     // retunrs the voltage for that phase
 
-        MaxCurr := 0.0;
-        MaxPhase := 1;  // Init this so it has a non zero value
-        k := (idxTerm - 1) * Fnconds; // starting index of terminal
-        for i := 1 to Fnphases do
+    MaxCurr := 0.0;
+    MaxPhase := 1;  // Init this so it has a non zero value
+    k := (idxTerm - 1) * Fnconds; // starting index of terminal
+    for i := 1 to Fnphases do
+    begin
+        CurrMag := Cabs(Iterminal[k + i]);
+        if CurrMag > MaxCurr then
         begin
-            CurrMag := Cabs(Iterminal[k + i]);
-            if CurrMag > MaxCurr then
-            begin
-                MaxCurr := CurrMag;
-                MaxPhase := i
-            end;
+            MaxCurr := CurrMag;
+            MaxPhase := i
         end;
+    end;
 
-        ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
-        nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
-        nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
-        with ActiveCircuit.Solution do     // Get power into max phase of active terminal
-        begin
-
-            if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
-                volts := NodeV^[nref]
-            else
-                volts := csub(NodeV^[nref], NodeV^[nrefN]);
-        end;
-        Result := cabs(volts);
-    end
-    else
-        Result := 0;
+    ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
+    nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
+    nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
+    with ActiveCircuit.Solution do     // Get power into max phase of active terminal
+    begin
+        if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
+            volts := NodeV^[nref]
+        else
+            volts := csub(NodeV^[nref], NodeV^[nrefN]);
+    end;
+    Result := cabs(volts);
 end;
 
 function TDSSCktElement.Get_MaxPower(idxTerm: Integer): Complex;
 {Get power in the phase with the max current and return equivalent power as if it were balanced in all phases
  2/12/2019}
 var
-    volts,
-    cPower: Complex;
+    volts: Complex;
     ClassIdx,
     i, k,
     nrefN,
@@ -762,85 +742,79 @@ var
     MaxPhase: Integer;
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
-    cPower := CZERO;
-    if FEnabled then
-    begin
-        ComputeIterminal;
+    Result := CZERO;
+    if not FEnabled then
+        Exit;
+        
+    ComputeIterminal;
 
     // Method: Get power in the phase with max current of active terminal
     // Multiply by Nphases and return
 
-        MaxCurr := 0.0;
-        MaxPhase := 1;  // Init this so it has a non zero value
-        k := (idxTerm - 1) * Fnconds; // starting index of terminal
-        for i := 1 to Fnphases do
+    MaxCurr := 0.0;
+    MaxPhase := 1;  // Init this so it has a non zero value
+    k := (idxTerm - 1) * Fnconds; // starting index of terminal
+    for i := 1 to Fnphases do
+    begin
+        CurrMag := Cabs(Iterminal[k + i]);
+        if CurrMag > MaxCurr then
         begin
-            CurrMag := Cabs(Iterminal[k + i]);
-            if CurrMag > MaxCurr then
-            begin
-                MaxCurr := CurrMag;
-                MaxPhase := i
-            end;
+            MaxCurr := CurrMag;
+            MaxPhase := i
         end;
-
-
-        ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
-        nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
-        nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
-        with ActiveCircuit.Solution do     // Get power into max phase of active terminal
-        begin
-
-            if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
-                volts := NodeV^[nref]
-            else
-                volts := csub(NodeV^[nref], NodeV^[nrefN]);
-            Cpower := Cmul(volts, conjg(Iterminal[k + MaxPhase]));
-        end;
-
-       // Compute equivalent total power of all phases assuming equal to max power in all phases
-        with Cpower do
-        begin
-            re := re * Fnphases;  // let compiler handle type coercion
-            im := im * Fnphases;
-        end;
-
-       {If this is a positive sequence circuit (Fnphases=1),
-        then we need to multiply by 3 to get the 3-phase power}
-        if ActiveCircuit.PositiveSequence then
-            cPower := cMulReal(cPower, 3.0);
     end;
 
-    Result := cPower;
+
+    ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
+    nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
+    nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
+    with ActiveCircuit.Solution do     // Get power into max phase of active terminal
+    begin
+
+        if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
+            volts := NodeV^[nref]
+        else
+            volts := csub(NodeV^[nref], NodeV^[nrefN]);
+        Result := Cmul(volts, conjg(Iterminal[k + MaxPhase]));
+    end;
+
+   // Compute equivalent total power of all phases assuming equal to max power in all phases
+    with Result do
+    begin
+        re := re * Fnphases;  // let compiler handle type coercion
+        im := im * Fnphases;
+    end;
+
+   {If this is a positive sequence circuit (Fnphases=1),
+    then we need to multiply by 3 to get the 3-phase power}
+    if ActiveCircuit.PositiveSequence then
+        Result := cMulReal(Result, 3.0);
 end;
 
 function TDSSCktElement.Get_MaxCurrent(idxTerm: Integer): Double;
 var
     i, k: Integer;
-    MaxCurr,
     CurrMag: Double;
     // MaxPhase: Integer;
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
-    MaxCurr := 0.0;
-    if FEnabled then
+    Result := 0.0;
+    if not FEnabled then
+        Exit;
+        
+    ComputeIterminal;
+    // Method: Get max current at terminal (magnitude)
+    // MaxPhase := 1;  // Init this so it has a non zero value
+    k := (idxTerm - 1) * Fnconds; // starting index of terminal
+    for i := 1 to Fnphases do
     begin
-        ComputeIterminal;
-        // Method: Get max current at terminal (magnitude)
-        MaxCurr := 0.0;
-        // MaxPhase := 1;  // Init this so it has a non zero value
-        k := (idxTerm - 1) * Fnconds; // starting index of terminal
-        for i := 1 to Fnphases do
+        CurrMag := Cabs(Iterminal[k + i]);
+        if CurrMag > Result then
         begin
-            CurrMag := Cabs(Iterminal[k + i]);
-            if CurrMag > MaxCurr then
-            begin
-                MaxCurr := CurrMag;
-                // MaxPhase := i
-            end;
+            Result := CurrMag;
+            // MaxPhase := i
         end;
     end;
-
-    Result := MaxCurr;
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.GetPhasePower(PowerBuffer: pComplexArray);
@@ -849,26 +823,26 @@ procedure TDSSCktElement.GetPhasePower(PowerBuffer: pComplexArray);
 var
     i, n: Integer;
 begin
-    if FEnabled then
+    if not FEnabled then
     begin
-        ComputeIterminal;
+        FillByte(PowerBuffer^, Yorder * (SizeOf(Double) * 2), 0);
+        Exit;
+    end;
+    
+    ComputeIterminal;
 
-        with ActiveCircuit.Solution do
-            for i := 1 to Yorder do
-            begin
-                n := NodeRef^[i]; // increment through terminals
-                if n > 0 then
-                begin
-                    if ActiveCircuit.PositiveSequence then
-                        PowerBuffer^[i] := CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[i])), 3.0)
-                    else
-                        PowerBuffer^[i] := Cmul(NodeV^[n], conjg(Iterminal^[i]));
-                end;
-            end;
-    end
-    else
+    with ActiveCircuit.Solution do
         for i := 1 to Yorder do
-            PowerBuffer^[i] := CZERO;
+        begin
+            n := NodeRef^[i]; // increment through terminals
+            if n > 0 then
+            begin
+                if ActiveCircuit.PositiveSequence then
+                    PowerBuffer^[i] := CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[i])), 3.0)
+                else
+                    PowerBuffer^[i] := Cmul(NodeV^[n], conjg(Iterminal^[i]));
+            end;
+        end;
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.GetPhaseLosses(var Num_Phases: Integer; LossBuffer: pComplexArray);
@@ -880,39 +854,38 @@ var
     cLoss: Complex;
 begin
     Num_Phases := Fnphases;
-    if FEnabled then
+
+    if not FEnabled then
     begin
-        ComputeIterminal;
+        FillByte(LossBuffer^, Fnphases * (SizeOf(Double) * 2), 0);
+        Exit;
+    end;
+    
+    ComputeIterminal;
 
-        with ActiveCircuit.Solution do
-            for i := 1 to Num_Phases do
-            begin
-                cLoss := cmplx(0.0, 0.0);
-                for j := 1 to FNTerms do
-                begin
-                    k := (j - 1) * FNconds + i;
-                    n := NodeRef^[k]; // increment through terminals
-                    if n > 0 then
-                    begin
-                        if ActiveCircuit.PositiveSequence then
-                            Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
-                        else
-                            Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
-                    end;
-                end;
-                LossBuffer^[i] := cLoss;
-            end;
-
-    end
-    else
+    with ActiveCircuit.Solution do
         for i := 1 to Num_Phases do
-            LossBuffer^[i] := CZERO;
+        begin
+            cLoss := cmplx(0.0, 0.0);
+            for j := 1 to FNTerms do
+            begin
+                k := (j - 1) * FNconds + i;
+                n := NodeRef^[k]; // increment through terminals
+                if n > 0 then
+                begin
+                    if ActiveCircuit.PositiveSequence then
+                        Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
+                    else
+                        Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
+                end;
+            end;
+            LossBuffer^[i] := cLoss;
+        end;
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.DumpProperties(F: TFileStream; Complete: Boolean);
 var
     i, j: Integer;
-
 begin
     inherited DumpProperties(F, Complete);
 
@@ -973,7 +946,6 @@ begin
         end;
     end;  {If complete}
 end;
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.DoYprimCalcs(Ymatrix: TCMatrix);
 var
@@ -1044,24 +1016,20 @@ begin
         end;
     end;
 end;
-
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TDSSCktElement.SumCurrents;
-
 // sum Terminal Currents into System  Currents Array
 // Primarily for Newton Iteration
-
 var
     i: Integer;
-
 begin
-    if FEnabled then
-    begin
-        ComputeIterminal;
-        with ActiveCircuit.Solution do
-            for i := 1 to Yorder do
-                Caccum(Currents^[NodeRef^[i]], Iterminal^[i]);  // Noderef=0 is OK
-    end;
+    if not FEnabled then
+        Exit;
+        
+    ComputeIterminal;
+    with ActiveCircuit.Solution do
+        for i := 1 to Yorder do
+            Caccum(Currents^[NodeRef^[i]], Iterminal^[i]);  // Noderef=0 is OK
 end;
 
 procedure TDSSCktElement.GetTermVoltages(iTerm: Integer; VBuffer: PComplexArray);
@@ -1105,13 +1073,7 @@ end;
 function TDSSCktElement.GetPropertyValue(Index: Integer): String;
 begin
     if Index = FEnabledProperty then
-    begin
-        if Enabled then
-            Result := 'true'
-        else
-            Result := 'false';
-           // *** RCD 6-18-03 commented out PropertyValue[FEnabledProperty] := Result; // Keep this in synch
-    end
+        Result := StrTOrF(Enabled)
     else
         Result := inherited GetPropertyValue(Index);
 end;
