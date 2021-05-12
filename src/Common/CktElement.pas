@@ -593,6 +593,10 @@ begin
     if YPrim <> NIL then
         DoYPrimCalcs(YPrim);
 
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+    if ((ActiveCircuit.Solution.SolverOptions and ord(TSolverOptions.AlwaysResetYPrimInvalid)) <> 0) then
+        YPrimInvalid := False;
+{$ENDIF}
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.ComputeIterminal;
