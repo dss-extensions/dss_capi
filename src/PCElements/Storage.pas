@@ -1251,15 +1251,9 @@ begin
             propCHARGETIME:
                 Result := Format('%.6g', [Chargetime]);
             propBalanced:
-                if ForceBalanced then
-                    Result := 'Yes'
-                else
-                    Result := 'No';
+                Result := StrYorN(ForceBalanced);
             propLimited:
-                if CurrentLimited then
-                    Result := 'Yes'
-                else
-                    Result := 'No';
+                Result := StrYorN(CurrentLimited);
 
         else  // take the generic handler
             Result := inherited GetPropertyValue(index);

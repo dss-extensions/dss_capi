@@ -1209,11 +1209,7 @@ begin
             propCutOut:
                 Result := Format('%.6g', [FpctCutOut]);
             propVarFollowInverter:
-                if FVarFollowInverter then
-                    Result := 'Yes'
-                else
-                    Result := 'No';
-
+                Result := StrYorN(FVarFollowInverter);
             propVMINPU:
                 Result := Format('%.6g', [VMinPu]);
             propVMAXPU:
@@ -1228,15 +1224,9 @@ begin
             proppctPmpp:
                 Result := Format('%.6g', [FpuPmpp * 100.0]);
             propBalanced:
-                if ForceBalanced then
-                    Result := 'Yes'
-                else
-                    Result := 'No';
+                Result := StrYorN(ForceBalanced);
             propLimited:
-                if CurrentLimited then
-                    Result := 'Yes'
-                else
-                    Result := 'No';
+                Result := StrYorN(CurrentLimited);
             propkvarLimit:
                 Result := Format('%.6g', [Fkvarlimit]);
             propDutyStart:

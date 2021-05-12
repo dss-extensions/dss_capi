@@ -1664,10 +1664,7 @@ begin
                 Result := GetDSSArray_Single(FNumPoints, pSingleArray(sQ));
         end;
         12:
-            if UseActual then
-                Result := 'Yes'
-            else
-                Result := 'No';
+            Result := StrYorN(UseActual);
         13:
             Result := Format('%.8g', [MaxP]);
         14:

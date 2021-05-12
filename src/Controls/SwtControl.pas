@@ -531,10 +531,7 @@ begin
           {CTRL_CLOSE:} Result := 'close';
             end;
         4:
-            if Locked then
-                Result := 'Yes'
-            else
-                Result := 'No';
+            Result := StrYorN(Locked);
         5:
             Result := Format('%-.7g', [TimeDelay]);
         6:
