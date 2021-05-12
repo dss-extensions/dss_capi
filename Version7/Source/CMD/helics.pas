@@ -26,6 +26,7 @@ type
   helics_publication = Pointer;
   helics_endpoint = Pointer;
   helics_bool = Boolean;
+  helics_message_object = Pointer;
   //helics_version = Pointer;
 
   // lists for HELICS classic publications
@@ -43,6 +44,7 @@ type
     att: THELICSAttribute;
     trm: Integer;           // terminal number
     ref: Integer;           // index into the phases
+    gld_ppty_name: string;
     constructor Create(attKey, trmKey, phsKey: String; idxRoot: Integer);
   end;
   THELICSTopic = class (TObject)
@@ -52,6 +54,7 @@ type
     cls: THELICSClass;
     idx: Integer;           // index into BusList or DeviceList
     sub: TList;             // list of attribute subtopics
+    gld_obj_name: string;
     constructor Create (clsKey, objKey: String);
   end;
   THELICSERROR = record
@@ -65,10 +68,31 @@ type
     length: qword;
     messageID: Integer;
     flags: word;
+    messageValidation: word;
     original_source: Pchar;
     source: Pchar;
     dest: Pchar;
     original_dest: Pchar;
+  end;
+  TPHELICSMESSAGE = ^THELICSMESSAGE;
+  THELICSENDPOINTPUB = class (TObject)
+    public
+      endpoint: helics_endpoint;
+      publist: TList;
+      name: Pchar;
+      destination: Pchar;
+      info: Pchar;
+      dest_fed_name: string;
+      constructor Create (ep: helics_endpoint);
+  end;
+  //TPHELICSENDPOINTPUB = ^THELICSENDPOINTPUB;
+  TGRIDLABDVALUE = class (TObject)
+  public
+    key: string;
+    objectKey: string;
+    propertyKey: string;
+    value: string;
+    constructor Create (objKey, pptyKey: string);
   end;
 
   THELICS = class(TObject)
@@ -172,8 +196,19 @@ type
     helics_input_get_string: function(input:helics_input; output:Pchar; maxLength:Integer; actualLength:PInteger ;error:Pointer):pchar;HELICS_CALL;
     helics_input_get_string_size: function(input:helics_input):Integer;HELICS_CALL;
     helics_input_get_complex: function(input:helics_input; real:Pointer; imag:Pointer; error:Pointer):Double;HELICS_CALL;
+    helics_endpoint_get_default_destination: function(endpoint:helics_endpoint):Pchar;HELICS_CALL;
+    helics_endpoint_get_message_object: function(endpoint:helics_endpoint):helics_message_object;HELICS_CALL;               
     helics_endpoint_get_message: function(endpoint:helics_endpoint):THELICSMESSAGE;HELICS_CALL;
+    helics_endpoint_get_type: function(endpoint:helics_endpoint):Pchar;HELICS_CALL;                            
+    helics_endpoint_get_name: function(endpoint:helics_endpoint):Pchar;HELICS_CALL;
+    helics_endpoint_get_info: function(endpoint:helics_endpoint):Pchar;HELICS_CALL;
+    helics_endpoint_send_message_raw: procedure(endpoint:helics_endpoint; dest:Pchar; data:Pchar; length:Integer; error:Pointer);HELICS_CALL;
+    helics_endpoint_send_message: procedure(endpoint:helics_endpoint; message:Pointer; error:Pointer);HELICS_CALL;
+    helics_endpoint_create_message: function(endpoint:helics_endpoint; error:Pointer):helics_message_object;HELICS_CALL;
+    helics_message_get_source: function(message_object:helics_message_object):Pchar;HELICS_CALL;
+    helics_message_get_string: function(message_object:helics_message_object):Pchar;HELICS_CALL;
     helics_fed_get_message: function(helicsFed:helics_federate):THELICSMESSAGE;HELICS_CALL;
+
 
 
   private
@@ -186,22 +221,25 @@ type
     ETHelicsTimeRequest: Extended;
     ETHelicsGetEvents: Extended;
     log_level: THELICSLogLevel;
-    topicList: TList;
+    pub_topic_list: TList;
     helicsOutputStream: TStringStream;
     helicsFed: helics_federate;
-    pub_list, sub_list, endpoint_list: TFPList;
+    pub_list, sub_list, ep_pub_list, ep_sub_list: TFPList;
     pub_count, sub_count, endpoint_count: integer;
     opendssSub: helics_input;
     opendssPub: helics_publication;
     pubJsonStr: pchar;
     procedure ReadHELICSJsonConfig (fname: string);
     procedure ReadHELICSTextConfig (fname: string);
-    procedure ReadHelicsJsonString (jsonStr: pchar);
+    function ReadHelicsJsonString (jsonStr: pchar): TList;
+    procedure ReadHelicsEndpointInfo (ep_pub: THELICSENDPOINTPUB);
     procedure SetPublishInterval (val: Integer);
     procedure SetPublishMode (val: string);
     function find_helics_function (name: String): Pointer;
     function helics_get_input_string (input:helics_input; error:Pointer):pchar;
     function parse_key(key:Pchar):string;
+    function parse_fed_name(dest:Pchar):string;
+    function ParseGridlabdJsonString (jsonStr: pchar): TList;
 
   public
     PublishInterval:Integer;
@@ -210,13 +248,14 @@ type
 
     function IsReady:Boolean;
     function IsRunning:Boolean;
-    procedure RunHELICSLoop (const s:string);
+    procedure RunHELICSLoop (const s: string);
     constructor Create();
     destructor Destroy; override;
-    function HelicsTimeRequest (next_helics:helics_time):Boolean; 
+    function HelicsTimeRequest (next_helics: helics_time):Boolean;
     procedure ReadHELICSPubConfigFile (fname: string);
     procedure ReadHELICSPubConfig;
-    procedure TopicsListToPublication;
+    procedure TopicsListToPublication (topic_list: TList);
+    procedure EndpointPublicationToGLD(ep_pub: THELICSENDPOINTPUB);
     procedure DumpHELICSLists;
   end;
 
@@ -231,7 +270,7 @@ uses
 
 var
   ET: TEpikTimer; // for profiling
-  sep: string;    // for delimiting tokens in a FNCS topic key; this is always '.' for DSS
+  sep: string;    // for delimiting tokens in a HELICS topic key; this is always '.' for DSS
 
 constructor THELICSTopic.Create (clsKey, objKey: String);
 begin
@@ -328,6 +367,18 @@ begin
   end;
 end;
 
+constructor THELICSENDPOINTPUB.Create(ep: helics_endpoint);
+begin
+     endpoint := ep;
+end;
+
+constructor TGRIDLABDVALUE.Create (objKey, pptyKey: String);
+begin
+  objectKey := objKey;                                     
+  propertyKey := pptyKey;
+  key := objKey + sep + pptyKey;
+end;
+
 FUNCTION  InterpretStopTimeForHELICS(const s:string):helics_time;
 Var
   Code :Integer;
@@ -373,7 +424,7 @@ begin
 end;
 
 // for performance reasons, we avoid concatenating strings or calling the Format function here
-procedure THELICS.TopicsListToPublication;
+procedure THELICS.TopicsListToPublication(topic_list: TList);
 var
   top: THELICSTopic;
   sub: THELICSSubTopic;
@@ -409,7 +460,7 @@ begin
     cBuffer^[k].re := 0.0;
     cBuffer^[k].im := 0.0;
   end;
-  for top in topicList do begin
+  for top in topic_list do begin
     if PublishMode = helicsPublishJSON then begin
       if not firstObjectFlag then helicsOutputStream.WriteString (',');
 //      helicsOutputStream.WriteString (Format('"%s":{', [top.tag]));
@@ -484,7 +535,7 @@ begin
               pubkey := Pchar(parse_key(helics_publication_get_key(apub)));
               if CompareText (pubkey, key) = 0 then begin
                  pubtype := StrPas(helics_publication_get_type(apub));
-                 if CompareText(pubtype, 'double') = 0 then helics_publication_publish_double(apub, dval, @helics_error); 
+                 if CompareText(pubtype, 'double') = 0 then helics_publication_publish_double(apub, dval, @helics_error);
                  if CompareText(pubtype, 'complex') = 0 then helics_publication_publish_complex(apub, real, imag, @helics_error);
                  if CompareText(pubtype, 'string') = 0 then helics_publication_publish_string(apub, val, @helics_error);
                  if pos('int', pubtype) > 0 then helics_publication_publish_int(apub, ival, @helics_error);
@@ -524,13 +575,146 @@ begin
   ET.Clear;
 end;
 
+procedure THELICS.EndpointPublicationToGLD(ep_pub: THELICSENDPOINTPUB);
+var
+  top: THELICSTopic;
+  sub: THELICSSubTopic;
+  Flow, Volts: Complex;
+  sign, pubtype: String;
+  pElem :TDSSCktElement;
+  pXf: TTransfObj;
+  pStore: TStorageObj;
+  cBuffer :pComplexArray;
+  k, kmax, idxWdg, tap, ival: integer;
+  key, val, pubkey, message: PChar;
+  firstObjectFlag:Boolean=true;
+  writeKeyComma:Boolean=false;
+  pos1,pos2,i:Int64;
+  helics_error: THELICSERROR = (error_code:0; message:nil);
+  ep: helics_endpoint;
+  dval, real, imag: double;
+  fed_name: string;
+begin
+  ET.Clear;
+  ET.Start;
+  ep := ep_pub.endpoint;
+  fed_name := ep_pub.dest_fed_name;
+  if log_level >= helicsLogDebug3 then writeln ('Entering TopicsListToPublication');
+  pos1 := helicsOutputStream.Position;
+  helicsOutputStream.Seek (0, soFromBeginning);
+  helicsOutputStream.WriteString ('{"');
+  helicsOutputStream.WriteString (fed_name);
+  helicsOutputStream.WriteString ('":{');
+  kmax := GetMaxCktElementSize;
+  Getmem(cBuffer, sizeof(cBuffer^[1])*kmax);
+  for k := 1 to kmax do begin
+    cBuffer^[k].re := 0.0;
+    cBuffer^[k].im := 0.0;
+  end;
+  for top in ep_pub.publist do begin
+    if PublishMode = helicsPublishJSON then begin
+      if not firstObjectFlag then helicsOutputStream.WriteString (',');
+//      helicsOutputStream.WriteString (Format('"%s":{', [top.tag]));
+      helicsOutputStream.WriteString ('"');
+      helicsOutputStream.WriteString (top.gld_obj_name);
+      helicsOutputStream.WriteString ('":{');
+      firstObjectFlag := False;
+    end;
+    for sub in top.sub do begin
+      if PublishMode = helicsPublishJSON then
+        key := PChar (sub.tag)
+      else
+        key := PChar (sub.text_key);
+      val := nil;
+      if sub.att = helicsVoltage then begin
+        Volts := ActiveCircuit.Solution.NodeV^[sub.ref];
+        if Volts.im < 0 then
+          sign:='-'
+        else
+          sign:='+';
+        real := Volts.re;
+        imag := Volts.im;
+        val := PChar (FloatToStrF(real, ffFixed, 0, 3) + sign + FloatToStrF(abs(imag), ffFixed, 0, 3) + 'j');
+      end else if (sub.att = helicsCurrent) or (sub.att = helicsPower) then begin
+        pElem := ActiveCircuit.CktElements.Get(top.idx);
+        pElem.GetCurrents(cBuffer);
+        if (sub.att = helicsCurrent) then begin
+          Flow := cBuffer^[sub.ref];
+        end else begin
+          Volts := ActiveCircuit.Solution.NodeV^[pElem.NodeRef^[sub.ref]];
+          Flow:=Cmul(Volts, conjg(cBuffer^[sub.ref]));
+          if ActiveCircuit.PositiveSequence then Flow:=CmulReal(Flow, 3.0);
+        end;
+        if Flow.im < 0 then
+          sign:='-'
+        else
+          sign:='+';
+        real := Flow.re;
+        imag := Flow.im;
+        val := PChar (FloatToStrF(real, ffFixed, 0, 3) + sign + FloatToStrF(abs(imag), ffFixed, 0, 3) + 'j');
+      end else if (sub.att = helicsSwitchState) then begin
+        pElem := ActiveCircuit.CktElements.Get(top.idx);
+        if AllTerminalsClosed (pElem) then
+          ival := 1
+        else
+          ival := 0;
+        val := PChar (IntToStr (ival));
+      end else if (sub.att = helicsTapPosition) then begin
+        pXf := TTransfObj (ActiveCircuit.CktElements.Get(top.idx));
+        idxWdg := 2; // TODO: identify and map this using pReg.Transformer and pReg.TrWinding
+        tap := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
+        ival := tap;
+        val := PChar (IntToStr (tap));
+      end else if (sub.att = helicsEnergy) then begin
+        pStore := TStorageObj (ActiveCircuit.CktElements.Get(top.idx));
+        dval := pStore.StorageVars.kwhStored;
+        val := PChar (FloatToStrF(dval, ffFixed, 0, 3));
+      end;
+      if assigned(val) then begin
+        if writeKeyComma then helicsOutputStream.WriteString (',');
+        writeKeyComma := True;
+//          fncsOutputStream.WriteString (Format ('"%s":"%s"', [key, val]));
+        helicsOutputStream.WriteString ('"');
+        helicsOutputStream.WriteString (sub.gld_ppty_name);
+        helicsOutputStream.WriteString ('":"');
+        helicsOutputStream.WriteString (val);
+        helicsOutputStream.WriteString ('"');
+      //end else begin
+      //    if CompareText (pubkey, key) = 0 then begin
+      //       pubtype := StrPas(helics_publication_get_type(ep));
+      //       if CompareText(pubtype, 'double') = 0 then helics_publication_publish_double(ep, dval, @helics_error);
+      //       if CompareText(pubtype, 'complex') = 0 then helics_publication_publish_complex(ep, real, imag, @helics_error);
+      //       if CompareText(pubtype, 'string') = 0 then helics_publication_publish_string(ep, val, @helics_error);
+      //       if pos('int', pubtype) > 0 then helics_publication_publish_int(ep, ival, @helics_error);
+      //    end;
+        //helics_publish (key, val);
+        if log_level >= helicsLogDebug3 then writeln(Format ('Publish %s = %s', [key, val]));
+      end;
+    end;
+    helicsOutputStream.WriteString ('}');
+    writeKeyComma:=False;
+  end;
+  helicsOutputStream.WriteString ('}}');
+  pos2 := helicsOutputStream.Position;
+  if pos2 < pos1 then
+    for i := 1 to (pos1 - pos2) do
+      helicsOutputStream.WriteString (' ');
+      ep := ep_pub.endpoint;
+      //pubkey := Pchar(parse_key(helics_publication_get_key(ep)));
+      message := PChar(helicsOutputStream.DataString);
+      helics_endpoint_send_message_raw (ep, ep_pub.destination, message, StrLen(message), @helics_error);
+  ETHelicsPublish := ETHelicsPublish + ET.Elapsed;
+  ET.Clear;
+end;
+
+
 procedure THELICS.DumpHELICSLists;
 var
   top: THELICSTopic;
   sub: THELICSSubTopic;
 begin
   writeln('***DumpHELICSLists');
-  for top in topicList do begin
+  for top in pub_topic_list do begin
     writeln(Format('  %2d %5d %s',[top.cls, top.idx, top.tag]));
     for sub in top.sub do begin
       writeln(Format('    %2d %2d %5d %s',[sub.att, sub.trm, sub.ref, sub.tag]));
@@ -564,14 +748,28 @@ end;
 procedure THELICS.ReadHelicsPubConfig ();
 var
   buf: String;
+  aep: helics_endpoint;
+  epinfo: pchar;
+  i: integer;
+  tplist: TList;
+  ep_pub: THELICSENDPOINTPUB;
 begin
   ET.Clear;
   ET.Start;
   buf := '   ';
   helicsOutputStream:=TStringStream.Create(buf);
   next_helics_publish := 0;
-  
-  ReadHelicsJsonString(pubJsonStr);
+
+  if ep_pub_list.count > 0 then begin
+    for i := 0 to ep_pub_list.Count - 1 do begin
+      ep_pub := ep_pub_list.Items[i];
+      //epinfo := helics_endpoint_get_info(aep);
+      ReadHelicsEndpointInfo(ep_pub);
+    end;
+  end
+  else if assigned(pubJsonStr) then begin
+    pub_topic_list := ReadHelicsJsonString(pubJsonStr);
+  end;
   //if Pos ('.json', ExtractFileExt (LowerCase (fname))) > 0 then
   //  ReadHelicsJsonConfig (fname)
   //else
@@ -638,7 +836,7 @@ begin
             for obj in cls.Value do begin
               objKey:=LowerCase(obj.Key);
               top := THELICSTopic.Create (clsKey, objKey);
-              topicList.Add(top);
+              pub_topic_list.Add(top);
               for attri in obj.Value do begin
                 attriKey := LowerCase(attri.Key);
                 if attri.Value is Tjsonarray then begin
@@ -673,7 +871,7 @@ begin
     inputfile.Free;
   end;
 
-  for top in topicList do
+  for top in pub_topic_list do
     for sub in top.sub do
       sub.text_key := Format ('%s%s%s',[top.tag, sep, sub.tag]);
 
@@ -684,7 +882,7 @@ begin
   end;
 end;
 
-procedure THELICS.ReadHelicsJsonString (jsonStr: pchar);
+function THELICS.ReadHelicsJsonString (jsonStr: pchar): TList;
 var
   parser:TJSONParser;
   config:TJSONData;
@@ -692,8 +890,10 @@ var
   attriKey, clsKey, objKey, terminalKey, condKey:string;
   top: THELICSTopic;
   sub: THELICSSubTopic;
+  topic_list: TList;
 begin
     parser:=TJSONParser.Create(StrPas(jsonStr), [joUTF8]);
+    topic_list:=TList.Create();
     try
       config:=parser.Parse;
       // build the lists
@@ -710,7 +910,7 @@ begin
             for obj in cls.Value do begin
               objKey:=LowerCase(obj.Key);
               top := THELICSTopic.Create (clsKey, objKey);
-              topicList.Add(top);
+              topic_list.Add(top);
               for attri in obj.Value do begin
                 attriKey := LowerCase(attri.Key);
                 if attri.Value is Tjsonarray then begin
@@ -742,7 +942,7 @@ begin
       parser.Free;
     end;
 
-  for top in topicList do
+  for top in topic_list do
     for sub in top.sub do
       sub.text_key := Format ('%s%s%s',[top.tag, sep, sub.tag]);
 
@@ -751,8 +951,94 @@ begin
   if log_level >= helicsLogDebug1 then begin
     DumpHELICSLists;
   end;
+  ReadHelicsJsonString := topic_list;
 end;
 
+procedure THELICS.ReadHelicsEndpointInfo (ep_pub: THELICSENDPOINTPUB);
+var
+  parser:TJSONParser;
+  config:TJSONData;
+  el,attri,cls,obj,terminal,conductor, conductorProperty:TJSONEnum;
+  attriKey, clsKey, objKey, terminalKey, condKey, pptyName:string;
+  top: THELICSTopic;
+  sub: THELICSSubTopic;
+  topic_list: TList;
+begin
+    parser:=TJSONParser.Create(StrPas(ep_pub.info), [joUTF8]);
+    topic_list:=TList.Create();
+    try
+      config:=parser.Parse;
+      // build the lists
+      for el in config do begin
+        if el.Key = 'name' then
+          FedName:=el.Value.AsString
+        else if el.Key = 'publishInterval' then
+          SetPublishInterval (el.Value.AsInteger)
+        else if el.Key = 'topics' then begin
+          for cls in el.Value do begin
+            clsKey:=LowerCase(cls.Key);
+            for obj in cls.Value do begin
+              objKey:=LowerCase(obj.Key);
+              top := THELICSTopic.Create (clsKey, objKey);
+              topic_list.Add(top);
+              for attri in obj.Value do begin
+                attriKey := LowerCase(attri.Key);
+                if attri.Value is Tjsonarray then begin
+                  if attri.Value.Count=0 then begin
+                    sub := THELICSSubTopic.Create (attriKey, '-1', '', top.idx); // switchstate, tapposition, etc.
+                    top.sub.Add(sub);
+                  end else begin
+                    for conductor in attri.Value do begin
+                      if conductor.Value is TJSONData then begin
+                        for conductorProperty in conductor.Value do begin
+                          condKey := conductorProperty.Key;
+                          sub := THELICSSubTopic.Create (attriKey, '1', condKey, top.idx);
+                          pptyName := conductorProperty.Value.asstring;
+                          sub.gld_ppty_name := pptyName;
+                          top.sub.Add(sub);
+                        end;
+                      end else begin
+                        condKey := conductor.Value.asstring;
+                        sub := THELICSSubTopic.Create (attriKey, '1', condKey, top.idx);
+                        top.sub.Add(sub);
+                      end;
+
+                    end;
+                  end;
+                end else begin  // attri.Value is not a TJSONArray
+                  if CompareText (attriKey, 'gldobject') = 0 then begin
+                     top.gld_obj_name := attri.Value.asstring;
+                  end else begin
+                    for terminal in attri.Value do begin
+                      terminalKey:=LowerCase(terminal.Key);
+                      for conductor in terminal.Value do begin
+                        condKey := conductor.Value.asstring;
+                        sub := THELICSSubTopic.Create (attriKey, terminalKey, condKey, top.idx);
+                        top.sub.Add(sub);
+                      end;
+                    end;
+                  end
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    finally
+      parser.Free;
+    end;
+
+  for top in topic_list do
+    for sub in top.sub do
+      sub.text_key := Format ('%s%s%s',[top.tag, sep, sub.tag]);
+
+  if log_level >= helicsLogInfo then
+    writeln('Done parsing HELICS publication requests from pub info ');
+  if log_level >= helicsLogDebug1 then begin
+    DumpHELICSLists;
+  end;
+  ep_pub.publist := topic_list;
+end;
 
 // called from ActiveSolution.Increment_time
 function THELICS.HelicsTimeRequest (next_helics:helics_time): Boolean;
@@ -761,15 +1047,21 @@ var
   helics_error: THELICSERROR = (error_code:0; message:nil);
   apub: helics_publication;
   asub: helics_input;
-  key, input_value: pchar;
-  i: integer;
+  key, input_value, source: pchar;
+  i, ii: integer;
   ilast: size_t;
   nvalues, ival: size_t;
   re, im: double;
   ld: TLoadObj;
   Hour: integer;
   Sec, real, imag: double;
-  cmd, input_type, sign: string;
+  cmd, input_type, sign, source_fed_name: string;
+  ep_pub: THELICSENDPOINTPUB;
+  ep_sub: helics_endpoint; 
+  hmo, message: helics_message_object;
+  valid: Boolean;
+  value_list: TList;
+  value: TGRIDLABDVALUE;
 begin
   // execution blocks here, until HELICS permits the time step loop to continue
   time_granted := 0;
@@ -786,13 +1078,24 @@ begin
     Hour := ActiveCircuit.Solution.DynaVars.intHour;
     Sec :=  ActiveCircuit.Solution.Dynavars.t;
     if time_granted >= next_helics_publish then begin
-      if topicList.Count > 0 then begin
+      if pub_topic_list.Count > 0 then begin
         if log_level >= helicsLogDebug2 then begin
           Writeln(Format('  Stream size %u at %f, next at %f, interval %u, %d:%.3f',
             [helicsOutputStream.size, time_granted, next_helics_publish, PublishInterval, Hour, Sec]));
           system.flush (stdout);
         end;
-        TopicsListToPublication;
+        TopicsListToPublication(pub_topic_list);
+      end;
+      if ep_pub_list.Count > 0 then begin
+        for i := 0 to ep_pub_list.count - 1 do begin
+          ep_pub := ep_pub_list.Items[i];
+          if log_level >= helicsLogDebug2 then begin
+            Writeln(Format('  Stream size %u at %f, next at %f, interval %u, %d:%.3f',
+              [helicsOutputStream.size, time_granted, next_helics_publish, PublishInterval, Hour, Sec]));
+            system.flush (stdout);
+          end;
+          EndpointPublicationToGLD(ep_pub);
+        end;
       end;
       while next_helics_publish <= time_granted do
         next_helics_publish := next_helics_publish + PublishInterval;
@@ -832,7 +1135,7 @@ begin
     //  end;
     //end;
     
-    writeln(Format('number of subscription: %d, count in subscription list: %d', [sub_count, sub_list.Count]));
+    //writeln(Format('number of subscription: %d, count in subscription list: %d', [sub_count, sub_list.Count]));
     for i := 0 to sub_count - 1 do begin
       asub := sub_list.Items[i];
       if helics_input_is_valid(asub) and helics_input_is_updated(asub) then begin
@@ -889,11 +1192,103 @@ begin
         end;
       end;
     end;
+    for i := 0 to ep_sub_list.Count - 1 do begin
+        ep_sub:= ep_sub_list.Items[i];
+        valid:= helics_endpoint_is_valid(ep_sub);
+        if helics_endpoint_is_valid(ep_sub) and helics_endpoint_has_message(ep_sub) then begin
+          //writeln('an endpoint is valid.');
+          hmo := helics_endpoint_get_message_object(ep_sub);
+          input_value := helics_message_get_string(hmo);
+          //aaa := StrLen(input_value);
+          if StrLen(input_value) > 0 then begin
+            source := helics_message_get_source(hmo);
+            source_fed_name := parse_fed_name(source);
+            if Pos ('gridlabd', source_fed_name) > 0 then begin
+               value_list := ParseGridlabdJsonString(input_value);
+               for ii := 0 to value_list.Count - 1 do begin
+                   value:= value_list.Items[ii];
+                   if CompareText ('F1_house_B0/power', value.key) = 0 then begin
+                    //input_value := helics_get_input_string(asub, @helics_error);
+                    re := StrToFloat (ExtractWord (1, value.value, ['+', 'j', ' ']));
+                    im := StrToFloat (ExtractWord (2, value.value, ['+', 'j', ' ']));
+                    ActiveCircuit.SetElementActive ('load.F1_house_B0');
+                    ld := TLoadObj (ActiveCircuit.ActiveCktElement);
+                    ld.LoadSpecType := 1;
+                    ld.kwBase := re;
+                    ld.kvarBase := im;
+                    ld.RecalcElementData;
+                    if log_level >= helicsLogDebug2 then begin
+                      writeln(Format ('HELICS input received: %s, at %f, %d:%.3f',
+                        [value.key, time_granted, Hour, Sec]));
+                      system.flush (stdout);
+                    end;
+                   end else if CompareText ('solar_flux', value.key) = 0 then begin
+                      if log_level >= helicsLogDebug2 then begin
+                        writeln(Format ('HELICS Request %s to %g + j %g at %f, %d:%.3f',
+                          [ld.Name, re, im, time_granted, Hour, Sec]));
+                        system.flush (stdout);
+                      end;
+                   end;
+               end;
+            end else
+                cmd := parse_key(source);
+                if CompareText (cmd, 'command') = 0 then begin
+                   if log_level >= helicsLogDebug1 then begin
+                      writeln(Format('HELICS command %s at %f, evt %u of %d',
+                                             [input_value, time_granted, i + 1, sub_count]));
+                      system.flush (stdout);
+                   end;
+                   DSSExecutive.Command := input_value;
+                   if log_level >= helicsLogDebug1 then begin
+                      writeln(Format('Finished with %s at %f, evt %u of %d',
+                                               [input_value, time_granted, i + 1, sub_count]));
+                      system.flush (stdout);
+                   end;
+                end;
+          end;
+        end;
+    end;
     ETHelicsGetEvents := ETHelicsGetEvents + ET.Elapsed;
     ET.Clear;
   end;
   Result := True;
 end;
+
+function THELICS.ParseGridlabdJsonString (jsonStr: pchar): TList;
+var
+  parser:TJSONParser;
+  config:TJSONData;
+  el,attri,ppty,obj:TJSONEnum;
+  pptyKey, objKey:string;
+  value: TGRIDLABDVALUE;
+  value_list: TList;
+begin
+    parser:=TJSONParser.Create(StrPas(jsonStr), [joUTF8]);
+    value_list:=TList.Create();
+    try
+      config:=parser.Parse;
+      // build the lists
+      for el in config do begin
+        if el.Key = 'gridlabd' then
+          for obj in el.Value do begin
+            objKey:=obj.Key;
+            for ppty in obj.Value do begin
+              pptyKey:=ppty.Key;
+              value := TGRIDLABDVALUE.Create (objKey, pptyKey);
+              value.value := ppty.Value.asstring;
+              value_list.Add(value);
+            end;
+          end;
+        end;
+    finally
+      parser.Free;
+    end;
+
+  if log_level >= helicsLogInfo then
+    writeln('Done parsing HELICS publication requests from pub info ');
+  ParseGridlabdJsonString := value_list;
+end;
+
 
 function THELICS.parse_key(key:Pchar):string;
 var
@@ -913,6 +1308,21 @@ begin
     end;
   end;
   Result := cmd;
+end;
+
+function THELICS.parse_fed_name(dest:Pchar):string;
+var
+  fed: string;
+  slash_found: Boolean;
+  i: integer;
+begin
+  slash_found := false;
+  fed := '';
+  for i := 0 to StrLen(dest) - 1 do begin
+    if (dest[i] <> '/') then fed := fed + dest[i]
+    else break;
+  end;
+  Result := fed;
 end;
 
 function THELICS.helics_get_input_string(input: helics_input; error: Pointer): Pchar;
@@ -953,7 +1363,7 @@ end;
 procedure THELICS.RunHELICSLoop (const s:string);
 var
   time_granted, time_stop: helics_time;
-  key, input_value: pchar;
+  key, input_value, dest, source, eptype, epinfo, epname: pchar;
   i, aaa: integer;
   configFile, cmd: string;
   //configFile2: pchar;
@@ -968,6 +1378,8 @@ var
   aep: helics_endpoint;
   helics_message: THELICSMESSAGE;
   parser:TJSONParser;
+  hmo, message: helics_message_object;
+  new_ep_pub: THELICSENDPOINTPUB;
 begin
   //pub_list := TFPList.Create;
   //sub_list := TFPList.Create;
@@ -983,15 +1395,35 @@ begin
   //configFile2 := '/home/xcosmos/src/OpenDSS/Version7/Source/CMD/test/opendss.json';
   //helics_version := helics_get_version();
   //writeln('HELICS version is: ', helics_version);
-  helicsFed := helics_create_value_fed_config(Pchar(configFile), @helics_error);
+  //helicsFed := helics_create_value_fed_config(Pchar(configFile), @helics_error);
   //helicsFed := helics_create_message_fed_config(Pchar(configFile), @helics_error);
-  //helicsFed := helics_create_combination_fed_config(Pchar(configFile), @helics_error);
+  helicsFed := helics_create_combination_fed_config(Pchar(configFile), @helics_error);
   //writeln(Format ('helicsFed address: %p', [helicsFed]));
   if helicsFed <> nil then begin
-    //endpoint_count := helics_get_endpoint_count(helicsFed);
-    //for i := 0 to endpoint_count - 1 do begin
-    //  endpoint_list.Add(helics_fed_get_endpoints_by_index(helicsFed, i, @helics_error))
-    //end;
+    endpoint_count := helics_get_endpoint_count(helicsFed);
+    for i := 0 to endpoint_count - 1 do begin
+      aep := helics_fed_get_endpoints_by_index(helicsFed, i, @helics_error);
+      if helics_endpoint_is_valid(aep) then begin
+        dest := helics_endpoint_get_default_destination(aep);
+        if strlen(dest) = 0 then begin
+           ep_sub_list.Add(aep);
+        end
+           //ReadHelicsJsonString(epinfo);
+        else begin
+           new_ep_pub := THELICSENDPOINTPUB.Create(aep);
+           new_ep_pub.info := helics_endpoint_get_info(aep);
+           new_ep_pub.destination := dest;
+           new_ep_pub.name := helics_endpoint_get_name(aep);
+           new_ep_pub.dest_fed_name := parse_fed_name(dest);
+           ep_pub_list.Add(new_ep_pub);
+           //epinfo := helics_endpoint_get_info(aep);
+        end;
+        //message := helics_endpoint_get_message_object(aep);
+        //source := helics_message_get_source(message);
+        eptype := helics_endpoint_get_type(aep);
+        epname := helics_endpoint_get_name(aep);
+      end;
+    end;
     pub_count := helics_get_publication_count(helicsFed);
     //if pub_count <> 1 then begin
     //  writeln ('Exact 1 publication is needed for opendss federate.');
@@ -1095,37 +1527,41 @@ begin
       end;
     end;
 
-    //for i := 0 to endpoint_count - 1 do begin
-    //  aep := endpoint_list.Items[i];
-    //  if helics_endpoint_is_valid(aep) then begin
-    //    writeln('an endpoint is valid.');
-    //    helics_message := helics_endpoint_get_message(aep);
-    //    cmd := parse_key(key);
-    //    input_value := helics_get_input_string(asub, @helics_error);
-    //    aaa := StrLen(input_value);
-    //    if StrLen(input_value) > 0 then begin
-    //      if CompareText (cmd, 'command') = 0 then begin
-    //         if log_level >= helicsLogDebug1 then begin
-    //            writeln(Format('HELICS command %s at %f, evt %u of %d',
-    //                                   [input_value, time_granted, i + 1, sub_count]));
-    //            system.flush (stdout);
-    //         end;
-    //         DSSExecutive.Command := input_value;
-    //         if log_level >= helicsLogDebug1 then begin
-    //            writeln(Format('Finished with %s at %f, evt %u of %d',
-    //                                     [input_value, time_granted, i + 1, sub_count]));
-    //            system.flush (stdout);
-    //         end;
-    //      end else if Pos ('#load', cmd) > 0 then begin
-    //        input_value := helics_get_input_string(asub, @helics_error);
-    //        if log_level >= helicsLogDebug1 then begin
-    //         writeln(Format ('HELICS Loop %s to %s', [cmd, input_value]));
-    //         system.flush (stdout);
-    //        end;
-    //      end;
-    //    end;
-    //  end;
-    //end;
+    for i := 0 to ep_sub_list.Count - 1 do begin
+      aep := ep_sub_list.Items[i];
+      if helics_endpoint_is_valid(aep) and helics_endpoint_has_message(aep) then begin
+        //writeln('an endpoint is valid.');
+        //helics_message := helics_endpoint_get_message(aep);
+        //cmd := parse_key(key);
+        //input_value := helics_get_input_string(asub, @helics_error);
+        hmo := helics_endpoint_get_message_object(aep);
+        input_value := helics_message_get_string(hmo);
+        source := helics_message_get_source(hmo);
+        cmd := parse_key(source);
+        //aaa := StrLen(input_value);
+        if StrLen(input_value) > 0 then begin
+          if CompareText (cmd, 'command') = 0 then begin
+             if log_level >= helicsLogDebug1 then begin
+                writeln(Format('HELICS command %s at %f, evt %u of %d',
+                                       [input_value, time_granted, i + 1, sub_count]));
+                system.flush (stdout);
+             end;
+             DSSExecutive.Command := input_value;
+             if log_level >= helicsLogDebug1 then begin
+                writeln(Format('Finished with %s at %f, evt %u of %d',
+                                         [input_value, time_granted, i + 1, sub_count]));
+                system.flush (stdout);
+             end;
+          end else if Pos ('#load', cmd) > 0 then begin
+            //input_value := helics_get_input_string(asub, @helics_error);
+            if log_level >= helicsLogDebug1 then begin
+             writeln(Format ('HELICS Loop %s to %s', [cmd, input_value]));
+             system.flush (stdout);
+            end;
+          end;
+        end;
+      end;
+    end;
 
   ETHelicsLoad := ETHelicsLoad + ET.Elapsed;
   ET.Clear;
@@ -1178,32 +1614,38 @@ begin
         end;
       end;
 
-    //for i := 0 to endpoint_count - 1 do begin
-    //  aep := endpoint_list.Items[i];
-    //  if helics_endpoint_is_valid(aep) and helics_endpoint_has_message(aep) then begin
-    //    writeln('an endpoint is valid.');
-    //    helics_message := helics_endpoint_get_message(aep);
-    //      if CompareText (cmd, 'command') = 0 then begin
-    //         if log_level >= helicsLogDebug1 then begin
-    //            writeln(Format('HELICS command %s at %f, evt %u of %d',
-    //                                   [input_value, time_granted, i + 1, sub_count]));
-    //            system.flush (stdout);
-    //         end;
-    //         DSSExecutive.Command := input_value;
-    //         if log_level >= helicsLogDebug1 then begin
-    //            writeln(Format('Finished with %s at %f, evt %u of %d',
-    //                                     [input_value, time_granted, i + 1, sub_count]));
-    //            system.flush (stdout);
-    //         end;
-    //      end else if Pos ('#load', cmd) > 0 then begin
-    //        input_value := helics_get_input_string(asub, @helics_error);
-    //        if log_level >= helicsLogDebug1 then begin
-    //         writeln(Format ('HELICS Loop %s to %s', [cmd, input_value]));
-    //         system.flush (stdout);
-    //        end;
-    //      end;
-    //  end;
-    //end;
+    for i := 0 to ep_sub_list.count - 1 do begin
+      aep := ep_sub_list.Items[i];
+      if helics_endpoint_is_valid(aep) and helics_endpoint_has_message(aep) then begin
+        //writeln('an endpoint is valid.');
+        //helics_message := helics_endpoint_get_message(aep);
+        //cmd := parse_key(helics_message.source);
+        //input_value := helics_message.data;
+        hmo := helics_endpoint_get_message_object(aep);
+        input_value := helics_message_get_string(hmo);
+        source := helics_message_get_source(hmo);
+        cmd := parse_key(source);
+          if CompareText (cmd, 'command') = 0 then begin
+             if log_level >= helicsLogDebug1 then begin
+                writeln(Format('HELICS command %s at %f, evt %u of %d',
+                                       [input_value, time_granted, i + 1, sub_count]));
+                system.flush (stdout);
+             end;
+             DSSExecutive.Command := input_value;
+             if log_level >= helicsLogDebug1 then begin
+                writeln(Format('Finished with %s at %f, evt %u of %d',
+                                         [input_value, time_granted, i + 1, sub_count]));
+                system.flush (stdout);
+             end;
+          end else if Pos ('#load', cmd) > 0 then begin
+            //input_value := helics_get_input_string(asub, @helics_error);
+            if log_level >= helicsLogDebug1 then begin
+             writeln(Format ('HELICS Loop %s to %s', [cmd, input_value]));
+             system.flush (stdout);
+            end;
+          end;
+      end;
+    end;
 
 
       ETHelicsGetEvents := ETHelicsGetEvents + ET.Elapsed;
@@ -1280,10 +1722,11 @@ begin
      FLibHandle := SafeLoadLibrary ('libhelicsSharedLibd.' + SharedSuffix);
 {$ENDIF}
 
-  topicList:=TList.Create();
+  pub_topic_list:=TList.Create();
   pub_list := TFPList.Create();
   sub_list := TFPList.Create();
-  endpoint_list := TFPList.Create();
+  ep_sub_list := TFPList.Create();
+  ep_pub_list := TFPList.Create();
   if FLibHandle <> DynLibs.NilHandle then begin
     FuncError := False;
     @helics_create_value_fed := find_helics_function ('helicsCreateValueFederate');
@@ -1308,6 +1751,17 @@ begin
     if not FuncError then @helics_input_is_valid := find_helics_function ('helicsInputIsValid');
     if not FuncError then @helics_endpoint_is_valid := find_helics_function ('helicsEndpointIsValid');
     if not FuncError then @helics_endpoint_has_message := find_helics_function ('helicsEndpointHasMessage');
+    if not FuncError then @helics_endpoint_get_default_destination := find_helics_function ('helicsEndpointGetDefaultDestination');
+    if not FuncError then @helics_endpoint_get_message_object := find_helics_function ('helicsEndpointGetMessageObject'); 
+    if not FuncError then @helics_endpoint_get_message := find_helics_function ('helicsEndpointGetMessage');
+    if not FuncError then @helics_endpoint_get_type := find_helics_function ('helicsEndpointGetType');                      
+    if not FuncError then @helics_endpoint_get_name := find_helics_function ('helicsEndpointGetName');
+    if not FuncError then @helics_endpoint_get_info := find_helics_function ('helicsEndpointGetInfo'); 
+    if not FuncError then @helics_endpoint_send_message_raw := find_helics_function ('helicsEndpointSendMessageRaw');
+    if not FuncError then @helics_endpoint_send_message := find_helics_function ('helicsEndpointSendMessage');
+    if not FuncError then @helics_endpoint_create_message := find_helics_function ('helicsEndpointCreateMessageObject');
+    if not FuncError then @helics_message_get_source := find_helics_function ('helicsMessageGetSource'); 
+    if not FuncError then @helics_message_get_string := find_helics_function ('helicsMessageGetString');
     //if not FuncError then @fncs_die := find_fncs_function ('fncs_die');
     if not FuncError then @helics_finalize := find_helics_function ('helicsFederateFinalize');
     //if not FuncError then @fncs_get_events_size := find_fncs_function ('fncs_get_events_size');
@@ -1360,7 +1814,7 @@ end;
 destructor THELICS.Destroy;
 begin
   in_helics_loop := False;
-  topicList.Free;
+  pub_topic_list.Free;
   helics_close_library;
   If FLibHandle <> DynLibs.NilHandle Then Begin
     UnloadLibrary(FLibHandle);
