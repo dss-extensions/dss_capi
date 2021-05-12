@@ -10,20 +10,20 @@ procedure LoadShapes_Set_Name(const Value: PAnsiChar); CDECL;
 function LoadShapes_Get_Count(): Integer; CDECL;
 function LoadShapes_Get_First(): Integer; CDECL;
 function LoadShapes_Get_Next(): Integer; CDECL;
-procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure LoadShapes_Get_AllNames_GR(); CDECL;
 function LoadShapes_Get_Npts(): Integer; CDECL;
-procedure LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LoadShapes_Get_Pmult_GR(); CDECL;
-procedure LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LoadShapes_Get_Qmult_GR(); CDECL;
 procedure LoadShapes_Set_Npts(Value: Integer); CDECL;
-procedure LoadShapes_Set_Pmult(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure LoadShapes_Set_Qmult(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LoadShapes_Set_Pmult(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure LoadShapes_Set_Qmult(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 procedure LoadShapes_Normalize(); CDECL;
-procedure LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LoadShapes_Get_TimeArray_GR(); CDECL;
-procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function LoadShapes_Get_HrInterval(): Double; CDECL;
 function LoadShapes_Get_MinInterval(): Double; CDECL;
 function LoadShapes_Get_sInterval(): Double; CDECL;
@@ -35,13 +35,13 @@ function LoadShapes_Get_PBase(): Double; CDECL;
 function LoadShapes_Get_Qbase(): Double; CDECL;
 procedure LoadShapes_Set_PBase(Value: Double); CDECL;
 procedure LoadShapes_Set_Qbase(Value: Double); CDECL;
-function LoadShapes_Get_UseActual(): Wordbool; CDECL;
-procedure LoadShapes_Set_UseActual(Value: Wordbool); CDECL;
+function LoadShapes_Get_UseActual(): TAPIBoolean; CDECL;
+procedure LoadShapes_Set_UseActual(Value: TAPIBoolean); CDECL;
 
 // API extensions
 function LoadShapes_Get_idx(): Integer; CDECL;
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
-procedure LoadShapes_Set_Points(Npts: Integer; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: Wordbool; IsFloat32: Wordbool; Stride: Integer); CDECL;
+procedure LoadShapes_Set_Points(Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAPIBoolean; IsFloat32: TAPIBoolean; Stride: Integer); CDECL;
 procedure LoadShapes_UseFloat64(); CDECL;
 procedure LoadShapes_UseFloat32(); CDECL;
 procedure LoadShapes_Set_MaxP(Value: Double); CDECL;
@@ -122,7 +122,7 @@ begin
     Result := LoadshapeClass.Next;
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -150,7 +150,7 @@ begin
     Result := elem.NumPoints;
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TLoadshapeObj;
     Result: PDoubleArray;
@@ -179,7 +179,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TLoadshapeObj;
     Result: PDoubleArray;
@@ -217,7 +217,7 @@ begin
     elem.NumPoints := Value;
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Set_Pmult(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LoadShapes_Set_Pmult(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TLoadshapeObj;
 begin
@@ -245,7 +245,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Set_Qmult(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LoadShapes_Set_Qmult(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TLoadshapeObj;
 begin
@@ -282,7 +282,7 @@ begin
     elem.Normalize;
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TLoadshapeObj;
     Result: PDoubleArray;
@@ -308,7 +308,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TLoadshapeObj;
 begin
@@ -436,7 +436,7 @@ begin
     elem.baseQ := Value;
 end;
 //------------------------------------------------------------------------------
-function LoadShapes_Get_UseActual(): Wordbool; CDECL;
+function LoadShapes_Get_UseActual(): TAPIBoolean; CDECL;
 var
     elem: TLoadshapeObj;
 begin
@@ -446,7 +446,7 @@ begin
     Result := elem.UseActual;
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Set_UseActual(Value: Wordbool); CDECL;
+procedure LoadShapes_Set_UseActual(Value: TAPIBoolean); CDECL;
 var
     elem: TLoadshapeObj;
 begin
@@ -466,7 +466,7 @@ begin
         DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Set_Points(Npts: Integer; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: Wordbool; IsFloat32: Wordbool; Stride: Integer); CDECL;
+procedure LoadShapes_Set_Points(Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAPIBoolean; IsFloat32: TAPIBoolean; Stride: Integer); CDECL;
 var
     elem: TLoadshapeObj;
 begin

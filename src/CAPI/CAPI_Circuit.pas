@@ -9,19 +9,19 @@ function Circuit_Get_Name(): PAnsiChar; CDECL;
 function Circuit_Get_NumBuses(): Integer; CDECL;
 function Circuit_Get_NumCktElements(): Integer; CDECL;
 function Circuit_Get_NumNodes(): Integer; CDECL;
-procedure Circuit_Get_LineLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_LineLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_LineLosses_GR(); CDECL;
-procedure Circuit_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_Losses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_Losses_GR(); CDECL;
-procedure Circuit_Get_AllBusVmag(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusVmag(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_AllBusVmag_GR(); CDECL;
-procedure Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_AllBusVolts_GR(); CDECL;
-procedure Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_AllElementNames_GR(); CDECL;
-procedure Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_SubstationLosses_GR(); CDECL;
-procedure Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_TotalPower_GR(); CDECL;
 procedure Circuit_Disable(const Name: PAnsiChar); CDECL;
 procedure Circuit_Enable(const Name: PAnsiChar); CDECL;
@@ -29,33 +29,33 @@ function Circuit_FirstPCElement(): Integer; CDECL;
 function Circuit_FirstPDElement(): Integer; CDECL;
 function Circuit_NextPCElement(): Integer; CDECL;
 function Circuit_NextPDElement(): Integer; CDECL;
-procedure Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_AllBusNames_GR(); CDECL;
-procedure Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_AllElementLosses_GR(); CDECL;
 procedure Circuit_Sample(); CDECL;
 procedure Circuit_SaveSample(); CDECL;
 function Circuit_SetActiveElement(const FullName: PAnsiChar): Integer; CDECL;
 function Circuit_Capacity(Start, Increment: Double): Double; CDECL;
-procedure Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_AllBusVmagPu_GR(); CDECL;
 function Circuit_SetActiveBus(const BusName: PAnsiChar): Integer; CDECL;
 function Circuit_SetActiveBusi(BusIndex: Integer): Integer; CDECL;
-procedure Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_AllNodeNames_GR(); CDECL;
-procedure Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_SystemY_GR(); CDECL;
-procedure Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_AllBusDistances_GR(); CDECL;
-procedure Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_AllNodeDistances_GR(); CDECL;
-procedure Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer); CDECL;
+procedure Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCount: PAPISize; Phase: Integer); CDECL;
 procedure Circuit_Get_AllNodeDistancesByPhase_GR(Phase: Integer); CDECL;
-procedure Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer); CDECL;
+procedure Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PAPISize; Phase: Integer); CDECL;
 procedure Circuit_Get_AllNodeVmagByPhase_GR(Phase: Integer); CDECL;
-procedure Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer); CDECL;
+procedure Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PAPISize; Phase: Integer); CDECL;
 procedure Circuit_Get_AllNodeVmagPUByPhase_GR(Phase: Integer); CDECL;
-procedure Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PInteger; Phase: Integer); CDECL;
+procedure Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Phase: Integer); CDECL;
 procedure Circuit_Get_AllNodeNamesByPhase_GR(Phase: Integer); CDECL;
 function Circuit_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
 function Circuit_FirstElement(): Integer; CDECL;
@@ -63,18 +63,18 @@ function Circuit_NextElement(): Integer; CDECL;
 procedure Circuit_UpdateStorage(); CDECL;
 function Circuit_Get_ParentPDElement(): Integer; CDECL;
 procedure Circuit_EndOfTimeStepUpdate(); CDECL;
-procedure Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_YNodeOrder_GR(); CDECL;
-procedure Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_YCurrents_GR(); CDECL;
-procedure Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_YNodeVarray_GR(); CDECL;
 procedure Circuit_SetCktElementIndex(const Value: Integer); CDECL;
 procedure Circuit_SetCktElementName(const Value: PAnsiChar); CDECL;
 
 // Extensions
-procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PInteger; ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
-procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PAPISize; ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;
+procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;
 
 implementation
 
@@ -131,7 +131,7 @@ begin
     Result := ActiveCircuit.NumNodes;
 end;
 //------------------------------------------------------------------------------
-procedure Circuit_Get_LineLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_LineLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pLine: TLineObj;
@@ -161,7 +161,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_Losses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     LossValue: complex;
@@ -185,7 +185,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllBusVmag(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusVmag(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -218,7 +218,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -255,7 +255,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i: Integer;
@@ -285,7 +285,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pTransf: TTransfObj;
@@ -317,7 +317,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Total power being consumed in the circuit.
 // Add up all power being contributed by sources.
 // Returns result in kW
@@ -473,7 +473,7 @@ begin
     until (Result > 0) or (ActivePDElement = NIL);
 end;
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 // Just Bus names      modified 2/7/03
 var
     Result: PPAnsiCharArray;
@@ -502,7 +502,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     CResultPtr: pComplex;
@@ -593,7 +593,7 @@ begin
     end
 end;
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -657,7 +657,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 // Return all node names (Busname.nodenumber)
 // Same order as current solution array.
 var
@@ -694,7 +694,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 {Return System Y matrix, complex form}
 
 var
@@ -754,7 +754,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 {Return distances from each bus to its parent energymeter in an array that aligns with the buslist}
 var
     Result: PDoubleArray;
@@ -783,7 +783,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 {Return distance from each Node back to parent EnergyMeter}
 {Array sequence is same as all bus Vmag and Vmagpu}
 var
@@ -817,7 +817,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer); CDECL;
+procedure Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCount: PAPISize; Phase: Integer); CDECL;
 var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
@@ -857,7 +857,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer); CDECL;
+procedure Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PAPISize; Phase: Integer); CDECL;
 var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
@@ -896,7 +896,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer); CDECL;
+procedure Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PAPISize; Phase: Integer); CDECL;
 var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
@@ -941,7 +941,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PInteger; Phase: Integer); CDECL;
+procedure Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Phase: Integer); CDECL;
 var
     Result: PPAnsiCharArray;
     i, k, NodeIdx: Integer;
@@ -1054,7 +1054,7 @@ begin
     EndOfTimeStepCleanup;
 end;
 //------------------------------------------------------------------------------
-procedure Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i, k: Integer;
@@ -1087,7 +1087,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     CResultPtr: pComplex;
     i: Integer;
@@ -1116,7 +1116,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     CResultPtr: pComplex;
     i: Integer;
@@ -1170,13 +1170,13 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PInteger; ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PAPISize; ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;
 var
     Result: PDoubleArray;
     Elements: PIntegerArray;
     CResultPtr: pComplex;
     pCktElem: TDSSCktElement;
-    i: Integer;
+    i: TAPISize;
 begin
     if MissingSolution then
     begin
@@ -1188,18 +1188,24 @@ begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * ElementsCount);
     CResultPtr := pComplex(ResultPtr);
 
-    for i := 0 to ElementsCount - 1 do
+    i := 0;
+    while i < ElementsCount do
     begin
         pCktElem := ActiveCircuit.CktElements.Get(Elements[i]);
         CResultPtr^ := pCktElem.Losses;
         Inc(CResultPtr);
+        Inc(i);
     end;
-        
-    for i := 0 to 2*ElementsCount - 1 do
+
+    i := 0;
+    while i < 2*ElementsCount do
+    begin
         Result[i] := Result[i] * 0.001;
+        Inc(i);
+    end;
 end;
 
-procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;
 // Same as Circuit_Get_ElementLosses but uses global result (GR) pointers for output
 begin
     Circuit_Get_ElementLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ElementsPtr, ElementsCount)

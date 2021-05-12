@@ -16,9 +16,9 @@ function Parallel_Get_ActorCPU(): Integer; CDECL;
 procedure Parallel_Set_ActorCPU(Value: Integer); CDECL;
 function Parallel_Get_NumOfActors(): Integer; CDECL;
 procedure Parallel_Wait(); CDECL;
-procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Parallel_Get_ActorProgress_GR(); CDECL;
-procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Parallel_Get_ActorStatus_GR(); CDECL;
 function Parallel_Get_ActiveParallel(): Integer; CDECL;
 procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
@@ -95,7 +95,7 @@ begin
         Wait4Actors(0);
 end;
 //------------------------------------------------------------------------------
-procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     idx: Integer;
@@ -114,7 +114,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     idx: Integer;

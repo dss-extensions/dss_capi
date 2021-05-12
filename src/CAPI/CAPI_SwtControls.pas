@@ -6,18 +6,18 @@ uses
     CAPI_Utils;
 
 function SwtControls_Get_Action(): Integer; CDECL;
-procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure SwtControls_Get_AllNames_GR(); CDECL;
 function SwtControls_Get_Delay(): Double; CDECL;
 function SwtControls_Get_First(): Integer; CDECL;
-function SwtControls_Get_IsLocked(): Wordbool; CDECL;
+function SwtControls_Get_IsLocked(): TAPIBoolean; CDECL;
 function SwtControls_Get_Name(): PAnsiChar; CDECL;
 function SwtControls_Get_Next(): Integer; CDECL;
 function SwtControls_Get_SwitchedObj(): PAnsiChar; CDECL;
 function SwtControls_Get_SwitchedTerm(): Integer; CDECL;
 procedure SwtControls_Set_Action(Value: Integer); CDECL;
 procedure SwtControls_Set_Delay(Value: Double); CDECL;
-procedure SwtControls_Set_IsLocked(Value: Wordbool); CDECL;
+procedure SwtControls_Set_IsLocked(Value: TAPIBoolean); CDECL;
 procedure SwtControls_Set_Name(const Value: PAnsiChar); CDECL;
 procedure SwtControls_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 procedure SwtControls_Set_SwitchedTerm(Value: Integer); CDECL;
@@ -91,7 +91,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -147,7 +147,7 @@ begin
     until (Result = 1) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_IsLocked(): Wordbool; CDECL;
+function SwtControls_Get_IsLocked(): TAPIBoolean; CDECL;
 var
     elem: TSwtControlObj;
 begin
@@ -257,7 +257,7 @@ begin
     elem.TimeDelay := Value;
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_IsLocked(Value: Wordbool); CDECL;
+procedure SwtControls_Set_IsLocked(Value: TAPIBoolean); CDECL;
 var
     elem: TSwtControlObj;
 begin

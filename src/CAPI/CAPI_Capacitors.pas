@@ -5,27 +5,27 @@ interface
 uses
     CAPI_Utils;
 
-procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Capacitors_Get_AllNames_GR(); CDECL;
 function Capacitors_Get_First(): Integer; CDECL;
-function Capacitors_Get_IsDelta(): Wordbool; CDECL;
+function Capacitors_Get_IsDelta(): TAPIBoolean; CDECL;
 function Capacitors_Get_kV(): Double; CDECL;
 function Capacitors_Get_kvar(): Double; CDECL;
 function Capacitors_Get_Name(): PAnsiChar; CDECL;
 function Capacitors_Get_Next(): Integer; CDECL;
 function Capacitors_Get_NumSteps(): Integer; CDECL;
-procedure Capacitors_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Capacitors_Set_IsDelta(Value: TAPIBoolean); CDECL;
 procedure Capacitors_Set_kV(Value: Double); CDECL;
 procedure Capacitors_Set_kvar(Value: Double); CDECL;
 procedure Capacitors_Set_Name(const Value: PAnsiChar); CDECL;
 procedure Capacitors_Set_NumSteps(Value: Integer); CDECL;
 function Capacitors_Get_Count(): Integer; CDECL;
-function Capacitors_AddStep(): Wordbool; CDECL;
-function Capacitors_SubtractStep(): Wordbool; CDECL;
+function Capacitors_AddStep(): TAPIBoolean; CDECL;
+function Capacitors_SubtractStep(): TAPIBoolean; CDECL;
 function Capacitors_Get_AvailableSteps(): Integer; CDECL;
-procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Capacitors_Get_States_GR(); CDECL;
-procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 procedure Capacitors_Open(); CDECL;
 procedure Capacitors_Close(); CDECL;
 
@@ -76,7 +76,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -120,7 +120,7 @@ begin
     until (Result = 1) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
-function Capacitors_Get_IsDelta(): Wordbool; CDECL;
+function Capacitors_Get_IsDelta(): TAPIBoolean; CDECL;
 var
     elem: TCapacitorObj;
 begin
@@ -195,7 +195,7 @@ begin
     Result := elem.NumSteps;
 end;
 //------------------------------------------------------------------------------
-procedure Capacitors_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Capacitors_Set_IsDelta(Value: TAPIBoolean); CDECL;
 var
     elem: TCapacitorObj;
 begin
@@ -243,7 +243,7 @@ begin
     Result := ActiveCircuit.ShuntCapacitors.Count;
 end;
 //------------------------------------------------------------------------------
-function Capacitors_AddStep(): Wordbool; CDECL;
+function Capacitors_AddStep(): TAPIBoolean; CDECL;
 var
     elem: TCapacitorObj;
 begin
@@ -253,7 +253,7 @@ begin
     Result := elem.AddStep();
 end;
 //------------------------------------------------------------------------------
-function Capacitors_SubtractStep(): Wordbool; CDECL;
+function Capacitors_SubtractStep(): TAPIBoolean; CDECL;
 var
     elem: TCapacitorObj;
 begin
@@ -273,7 +273,7 @@ begin
     Result := elem.AvailableSteps;
 end;
 //------------------------------------------------------------------------------
-procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     elem: TCapacitorObj;
@@ -295,7 +295,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: TAPISize); CDECL;
 var
     Value: PIntegerArray;
     elem: TCapacitorObj;

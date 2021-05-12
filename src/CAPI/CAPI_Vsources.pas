@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Vsources_Get_AllNames_GR(); CDECL;
 function Vsources_Get_Count(): Integer; CDECL;
 function Vsources_Get_First(): Integer; CDECL;
@@ -58,7 +58,7 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

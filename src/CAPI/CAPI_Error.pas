@@ -9,11 +9,11 @@ function Error_Get_Description(): PAnsiChar; CDECL;
 function Error_Get_Number(): Integer; CDECL;
 
 // API Extensions
-function Error_Get_NumberPtr(): PInteger; CDECL;
-function Error_Get_EarlyAbort(): Wordbool; CDECL;
-procedure Error_Set_EarlyAbort(Value: Wordbool); CDECL;
-function Error_Get_ExtendedErrors(): Wordbool; CDECL;
-procedure Error_Set_ExtendedErrors(Value: Wordbool); CDECL;
+function Error_Get_NumberPtr(): PAPISize; CDECL;
+function Error_Get_EarlyAbort(): TAPIBoolean; CDECL;
+procedure Error_Set_EarlyAbort(Value: TAPIBoolean); CDECL;
+function Error_Get_ExtendedErrors(): TAPIBoolean; CDECL;
+procedure Error_Set_ExtendedErrors(Value: TAPIBoolean); CDECL;
 
 implementation
 
@@ -38,27 +38,27 @@ begin
     ErrorNumber := 0;  // Reset after retrieving ErrorNumber
 end;
 //------------------------------------------------------------------------------
-function Error_Get_NumberPtr(): PInteger; CDECL;
+function Error_Get_NumberPtr(): PAPISize; CDECL;
 begin
     Result := @ErrorNumber; // Remember to reset it to zero after the error treatment!
 end;
 //------------------------------------------------------------------------------
-function Error_Get_EarlyAbort(): Wordbool; CDECL;
+function Error_Get_EarlyAbort(): TAPIBoolean; CDECL;
 begin
     Result := DSS_CAPI_EARLY_ABORT;
 end;
 //------------------------------------------------------------------------------
-procedure Error_Set_EarlyAbort(Value: Wordbool); CDECL;
+procedure Error_Set_EarlyAbort(Value: TAPIBoolean); CDECL;
 begin
     DSS_CAPI_EARLY_ABORT := Value;
 end;
 //------------------------------------------------------------------------------
-function Error_Get_ExtendedErrors(): Wordbool; CDECL;
+function Error_Get_ExtendedErrors(): TAPIBoolean; CDECL;
 begin
     Result := DSS_CAPI_EXT_ERRORS;
 end;
 //------------------------------------------------------------------------------
-procedure Error_Set_ExtendedErrors(Value: Wordbool); CDECL;
+procedure Error_Set_ExtendedErrors(Value: TAPIBoolean); CDECL;
 begin
     DSS_CAPI_EXT_ERRORS := Value;
 end;

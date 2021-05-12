@@ -5,10 +5,10 @@ interface
 uses
     CAPI_Utils;
 
-procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Transformers_Get_AllNames_GR(); CDECL;
 function Transformers_Get_First(): Integer; CDECL;
-function Transformers_Get_IsDelta(): Wordbool; CDECL;
+function Transformers_Get_IsDelta(): TAPIBoolean; CDECL;
 function Transformers_Get_kV(): Double; CDECL;
 function Transformers_Get_kVA(): Double; CDECL;
 function Transformers_Get_MaxTap(): Double; CDECL;
@@ -26,7 +26,7 @@ function Transformers_Get_Xhl(): Double; CDECL;
 function Transformers_Get_Xht(): Double; CDECL;
 function Transformers_Get_Xlt(): Double; CDECL;
 function Transformers_Get_Xneut(): Double; CDECL;
-procedure Transformers_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Transformers_Set_IsDelta(Value: TAPIBoolean); CDECL;
 procedure Transformers_Set_kV(Value: Double); CDECL;
 procedure Transformers_Set_kVA(Value: Double); CDECL;
 procedure Transformers_Set_MaxTap(Value: Double); CDECL;
@@ -44,9 +44,9 @@ procedure Transformers_Set_Xht(Value: Double); CDECL;
 procedure Transformers_Set_Xlt(Value: Double); CDECL;
 procedure Transformers_Set_Xneut(Value: Double); CDECL;
 function Transformers_Get_Count(): Integer; CDECL;
-procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Transformers_Get_WdgVoltages_GR(); CDECL;
-procedure Transformers_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Transformers_Get_WdgCurrents_GR(); CDECL;
 function Transformers_Get_strWdgCurrents(): PAnsiChar; CDECL;
 function Transformers_Get_CoreType(): Integer; CDECL;
@@ -57,9 +57,9 @@ procedure Transformers_Set_RdcOhms(Value: Double); CDECL;
 // API extensions
 function Transformers_Get_idx(): Integer; CDECL;
 procedure Transformers_Set_idx(Value: Integer); CDECL;
-procedure Transformers_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Transformers_Get_LossesByType_GR(); CDECL;
-procedure Transformers_Get_AllLossesByType(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_AllLossesByType(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Transformers_Get_AllLossesByType_GR(); CDECL;
 
 
@@ -107,7 +107,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -150,7 +150,7 @@ begin
     until (Result = 1) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
-function Transformers_Get_IsDelta(): Wordbool; CDECL;
+function Transformers_Get_IsDelta(): TAPIBoolean; CDECL;
 var
     elem: TTransfObj;
 begin
@@ -384,7 +384,7 @@ begin
         Result := elem.WdgXneutral[elem.ActiveWinding];
 end;
 //------------------------------------------------------------------------------
-procedure Transformers_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Transformers_Set_IsDelta(Value: TAPIBoolean); CDECL;
 begin
     if Value = TRUE then
         Set_Parameter('Conn', 'Delta')
@@ -500,7 +500,7 @@ begin
         Result := ActiveCircuit.Transformers.Count;
 end;
 //------------------------------------------------------------------------------
-procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TTransfObj;
 begin
@@ -526,7 +526,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Transformers_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TTransfObj;
     NumCurrents: Integer;
@@ -608,7 +608,7 @@ begin
     Set_Parameter('RdcOhms', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
-procedure Transformers_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for the current active transformer, in VA
 var 
     CResult: PComplexArray; // this array is one-based, see Ucomplex
@@ -632,7 +632,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Transformers_Get_AllLossesByType(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_AllLossesByType(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for all transformers, in VA
 var
     Result: PDoubleArray;

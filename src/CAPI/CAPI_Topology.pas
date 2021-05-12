@@ -7,9 +7,9 @@ uses
 
 function Topology_Get_NumLoops(): Integer; CDECL;
 function Topology_Get_ActiveBranch(): Integer; CDECL;
-procedure Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Topology_Get_AllIsolatedBranches_GR(); CDECL;
-procedure Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Topology_Get_AllLoopedPairs_GR(); CDECL;
 function Topology_Get_BackwardBranch(): Integer; CDECL;
 function Topology_Get_BranchName(): PAnsiChar; CDECL;
@@ -20,7 +20,7 @@ function Topology_Get_Next(): Integer; CDECL;
 function Topology_Get_NumIsolatedBranches(): Integer; CDECL;
 function Topology_Get_ParallelBranch(): Integer; CDECL;
 procedure Topology_Set_BranchName(const Value: PAnsiChar); CDECL;
-procedure Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Topology_Get_AllIsolatedLoads_GR(); CDECL;
 function Topology_Get_FirstLoad(): Integer; CDECL;
 function Topology_Get_NextLoad(): Integer; CDECL;
@@ -108,7 +108,7 @@ begin
     ActiveCircuit.ActiveCktElement := node.CktObject;
 end;
 //------------------------------------------------------------------------------
-procedure Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: array of AnsiString;
     ActualResult: PPAnsiCharArray;
@@ -150,7 +150,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: array of AnsiString;
     ActualResult: PPAnsiCharArray;
@@ -354,7 +354,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: array of AnsiString;
     ActualResult: PPAnsiCharArray;

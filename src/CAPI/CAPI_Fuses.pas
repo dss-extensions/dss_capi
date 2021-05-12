@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Fuses_Get_AllNames_GR(); CDECL;
 function Fuses_Get_Count(): Integer; CDECL;
 function Fuses_Get_First(): Integer; CDECL;
@@ -28,7 +28,7 @@ function Fuses_Get_Delay(): Double; CDECL;
 procedure Fuses_Open(); CDECL;
 procedure Fuses_Close(); CDECL;
 procedure Fuses_Set_Delay(Value: Double); CDECL;
-function Fuses_IsBlown(): Wordbool; CDECL;
+function Fuses_IsBlown(): TAPIBoolean; CDECL;
 function Fuses_Get_idx(): Integer; CDECL;
 procedure Fuses_Set_idx(Value: Integer); CDECL;
 function Fuses_Get_NumPhases(): Integer; CDECL;
@@ -77,7 +77,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -343,7 +343,7 @@ begin
     Set_parameter('Delay', Format('%.8g ', [Value]));
 end;
 //------------------------------------------------------------------------------
-function Fuses_IsBlown(): Wordbool; CDECL;
+function Fuses_IsBlown(): TAPIBoolean; CDECL;
 // Return TRUE if any phase blown
 var
     elem: TFuseObj;

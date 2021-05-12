@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure CapControls_Get_AllNames_GR(); CDECL;
 function CapControls_Get_Capacitor(): PAnsiChar; CDECL;
 function CapControls_Get_CTratio(): Double; CDECL;
@@ -21,7 +21,7 @@ function CapControls_Get_Next(): Integer; CDECL;
 function CapControls_Get_OFFSetting(): Double; CDECL;
 function CapControls_Get_ONSetting(): Double; CDECL;
 function CapControls_Get_PTratio(): Double; CDECL;
-function CapControls_Get_UseVoltOverride(): Wordbool; CDECL;
+function CapControls_Get_UseVoltOverride(): TAPIBoolean; CDECL;
 function CapControls_Get_Vmax(): Double; CDECL;
 function CapControls_Get_Vmin(): Double; CDECL;
 procedure CapControls_Set_Capacitor(const Value: PAnsiChar); CDECL;
@@ -36,7 +36,7 @@ procedure CapControls_Set_Name(const Value: PAnsiChar); CDECL;
 procedure CapControls_Set_OFFSetting(Value: Double); CDECL;
 procedure CapControls_Set_ONSetting(Value: Double); CDECL;
 procedure CapControls_Set_PTratio(Value: Double); CDECL;
-procedure CapControls_Set_UseVoltOverride(Value: Wordbool); CDECL;
+procedure CapControls_Set_UseVoltOverride(Value: TAPIBoolean); CDECL;
 procedure CapControls_Set_Vmax(Value: Double); CDECL;
 procedure CapControls_Set_Vmin(Value: Double); CDECL;
 function CapControls_Get_Count(): Integer; CDECL;
@@ -91,7 +91,7 @@ begin
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -293,7 +293,7 @@ begin
     Result := elem.PTRatioVal;
 end;
 //------------------------------------------------------------------------------
-function CapControls_Get_UseVoltOverride(): Wordbool; CDECL;
+function CapControls_Get_UseVoltOverride(): TAPIBoolean; CDECL;
 var
     elem: TCapControlObj;
 begin
@@ -409,7 +409,7 @@ begin
     Set_Parameter('PTratio', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
-procedure CapControls_Set_UseVoltOverride(Value: Wordbool); CDECL;
+procedure CapControls_Set_UseVoltOverride(Value: TAPIBoolean); CDECL;
 begin
     if Value = TRUE then
         Set_Parameter('VoltOverride', 'Yes')

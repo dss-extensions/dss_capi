@@ -11,7 +11,7 @@ function LineCodes_Get_First(): Integer; CDECL;
 function LineCodes_Get_Next(): Integer; CDECL;
 function LineCodes_Get_Name(): PAnsiChar; CDECL;
 procedure LineCodes_Set_Name(const Value: PAnsiChar); CDECL;
-function LineCodes_Get_IsZ1Z0(): Wordbool; CDECL;
+function LineCodes_Get_IsZ1Z0(): TAPIBoolean; CDECL;
 function LineCodes_Get_Units(): Integer; CDECL;
 procedure LineCodes_Set_Units(Value: Integer); CDECL;
 function LineCodes_Get_Phases(): Integer; CDECL;
@@ -28,20 +28,20 @@ function LineCodes_Get_C0(): Double; CDECL;
 function LineCodes_Get_C1(): Double; CDECL;
 procedure LineCodes_Set_C0(Value: Double); CDECL;
 procedure LineCodes_Set_C1(Value: Double); CDECL;
-procedure LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LineCodes_Get_Cmatrix_GR(); CDECL;
-procedure LineCodes_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineCodes_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LineCodes_Get_Rmatrix_GR(); CDECL;
-procedure LineCodes_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineCodes_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure LineCodes_Get_Xmatrix_GR(); CDECL;
-procedure LineCodes_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure LineCodes_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure LineCodes_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LineCodes_Set_Cmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure LineCodes_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure LineCodes_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function LineCodes_Get_NormAmps(): Double; CDECL;
 procedure LineCodes_Set_NormAmps(Value: Double); CDECL;
 function LineCodes_Get_EmergAmps(): Double; CDECL;
 procedure LineCodes_Set_EmergAmps(Value: Double); CDECL;
-procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure LineCodes_Get_AllNames_GR(); CDECL;
 
 function LineCodes_Get_idx(): Integer; CDECL;
@@ -125,7 +125,7 @@ begin
     // Still same active object if not found
 end;
 //------------------------------------------------------------------------------
-function LineCodes_Get_IsZ1Z0(): Wordbool; CDECL;
+function LineCodes_Get_IsZ1Z0(): TAPIBoolean; CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
@@ -319,7 +319,7 @@ begin
     pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
-procedure LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -353,7 +353,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineCodes_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineCodes_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -386,7 +386,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineCodes_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure LineCodes_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     i, j, k: Integer;
@@ -419,7 +419,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure LineCodes_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LineCodes_Set_Cmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     i, j, k: Integer;
@@ -453,7 +453,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure LineCodes_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LineCodes_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     i, j, k: Integer;
@@ -488,7 +488,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure LineCodes_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure LineCodes_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     i, j, k: Integer;
@@ -565,7 +565,7 @@ begin
     pLineCode.EmergAmps := Value;
 end;
 //------------------------------------------------------------------------------
-procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin

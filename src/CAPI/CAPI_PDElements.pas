@@ -8,7 +8,7 @@ uses
 function PDElements_Get_Count(): Integer; CDECL;
 function PDElements_Get_FaultRate(): Double; CDECL;
 function PDElements_Get_First(): Integer; CDECL;
-function PDElements_Get_IsShunt(): Wordbool; CDECL;
+function PDElements_Get_IsShunt(): TAPIBoolean; CDECL;
 function PDElements_Get_Next(): Integer; CDECL;
 function PDElements_Get_pctPermanent(): Double; CDECL;
 procedure PDElements_Set_FaultRate(Value: Double); CDECL;
@@ -27,31 +27,31 @@ function PDElements_Get_SectionID(): Integer; CDECL;
 procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 
 // Extensions below
-procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllNames_GR(); CDECL;
-procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllMaxCurrents_GR(const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllPctNorm_GR(const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: WordBool); CDECL;
-procedure PDElements_Get_AllCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
+procedure PDElements_Get_AllMaxCurrents_GR(const AllNodes: TAPIBoolean); CDECL;
+procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
+procedure PDElements_Get_AllPctNorm_GR(const AllNodes: TAPIBoolean); CDECL;
+procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
+procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: TAPIBoolean); CDECL;
+procedure PDElements_Get_AllCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllCurrents_GR(); CDECL;
-procedure PDElements_Get_AllCurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllCurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllCurrentsMagAng_GR(); CDECL;
-procedure PDElements_Get_AllCplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllCplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllCplxSeqCurrents_GR(); CDECL;
-procedure PDElements_Get_AllSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllSeqCurrents_GR(); CDECL;
-procedure PDElements_Get_AllPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllPowers_GR(); CDECL;
-procedure PDElements_Get_AllSeqPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllSeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllSeqPowers_GR(); CDECL;
-procedure PDElements_Get_AllNumPhases(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNumPhases(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllNumPhases_GR(); CDECL;
-procedure PDElements_Get_AllNumConductors(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNumConductors(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllNumConductors_GR(); CDECL;
-procedure PDElements_Get_AllNumTerminals(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNumTerminals(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure PDElements_Get_AllNumTerminals_GR(); CDECL;
 
 implementation
@@ -153,7 +153,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_IsShunt(): Wordbool; CDECL;
+function PDElements_Get_IsShunt(): TAPIBoolean; CDECL;
 var
     ActivePDElement: TPDElement;
 begin
@@ -364,7 +364,7 @@ begin
     ActivePDElement.HrsToRepair := Value;
 end;
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     idx_before, k, numEnabled: Integer;
@@ -457,7 +457,7 @@ begin
     end;
 end;
 
-procedure _PDElements_Get_x(var ResultPtr: PDouble; ResultCount: PInteger; const What: integer; const AllNodes: Boolean);
+procedure _PDElements_Get_x(var ResultPtr: PDouble; ResultCount: PAPISize; const What: integer; const AllNodes: Boolean);
 // Internal helper function to calculate for all PDElements
 // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
 var
@@ -540,7 +540,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
 begin
     _PDElements_Get_x(ResultPtr, ResultCount, 0, AllNodes);
 end;
@@ -552,31 +552,31 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
 begin
     _PDElements_Get_x(ResultPtr, ResultCount, 1, AllNodes);
 end;
 
-procedure PDElements_Get_AllPctNorm_GR(const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctNorm_GR(const AllNodes: TAPIBoolean); CDECL;
 // Same as PDElements_Get_AllPctNorm but uses global result (GR) pointers
 begin
     PDElements_Get_AllPctNorm(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
 begin
     _PDElements_Get_x(ResultPtr, ResultCount, 2, AllNodes);
 end;
 
-procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: TAPIBoolean); CDECL;
 // Same as PDElements_Get_AllPctEmerg but uses global result (GR) pointers
 begin
     PDElements_Get_AllPctEmerg(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)
 end;
 
 //------------------------------------------------------------------------------
-procedure _PDElements_Get_AllCurrents_x(var ResultPtr: PDouble; ResultCount: PInteger; const What: Integer);
+procedure _PDElements_Get_AllCurrents_x(var ResultPtr: PDouble; ResultCount: PAPISize; const What: Integer);
 // What=1 for polar form, otherwise rectangular
 type
     PPolar = ^Polar;
@@ -638,7 +638,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 begin
     _PDElements_Get_AllCurrents_x(ResultPtr, ResultCount, 0);
 end;
@@ -649,7 +649,7 @@ begin
     PDElements_Get_AllCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
 end;
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllCurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllCurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 begin
     _PDElements_Get_AllCurrents_x(ResultPtr, ResultCount, 1);
 end;
@@ -661,7 +661,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure _PDElements_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger; magnitude: boolean);
+procedure _PDElements_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; magnitude: boolean);
 type
     PPolar = ^Polar;
 var
@@ -768,7 +768,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 begin
     _PDElements_Get_AllxSeqCurrents(ResultPtr, ResultCount, True);
 end;
@@ -780,7 +780,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllCplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllCplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 begin
     _PDElements_Get_AllxSeqCurrents(ResultPtr, ResultCount, False);
 end;
@@ -792,7 +792,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return complex kW, kvar in each conductor for each terminal, for each PDElement
 var
     Result: PDoubleArray;
@@ -849,7 +849,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllSeqPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllSeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // All seq Powers of each PD element
 // returns kW + j kvar
 var
@@ -979,13 +979,13 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure _PDElements_Get_AllNum_x(var ResultPtr: PInteger; ResultCount: PInteger; const what: Integer);
+procedure _PDElements_Get_AllNum_x(var ResultPtr: PInteger; ResultCount: PAPISize; const what: Integer);
 var
     Result: PIntegerArray;
     idx_before, numEnabled: Integer;
     pElem: TPDElement;
     pList: TDSSPointerList;
-    pval: PInteger;
+    pval: PAPISize;
 begin
     if InvalidCircuit then
     begin
@@ -1052,7 +1052,7 @@ begin
         pList.Get(idx_before);
 end;
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllNumPhases(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNumPhases(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
     _PDElements_Get_AllNum_x(ResultPtr, ResultCount, 0);
 end;
@@ -1064,7 +1064,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllNumConductors(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNumConductors(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
     _PDElements_Get_AllNum_x(ResultPtr, ResultCount, 1);
 end;
@@ -1076,7 +1076,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllNumTerminals(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNumTerminals(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
     _PDElements_Get_AllNum_x(ResultPtr, ResultCount, 2);
 end;

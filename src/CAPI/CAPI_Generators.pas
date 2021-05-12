@@ -5,17 +5,17 @@ interface
 uses
     CAPI_Utils;
 
-procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Generators_Get_AllNames_GR(); CDECL;
 function Generators_Get_First(): Integer; CDECL;
 function Generators_Get_Name(): PAnsiChar; CDECL;
 function Generators_Get_Next(): Integer; CDECL;
-procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Generators_Get_RegisterNames_GR(); CDECL;
-procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Generators_Get_RegisterValues_GR(); CDECL;
-function Generators_Get_ForcedON(): Wordbool; CDECL;
-procedure Generators_Set_ForcedON(Value: Wordbool); CDECL;
+function Generators_Get_ForcedON(): TAPIBoolean; CDECL;
+procedure Generators_Set_ForcedON(Value: TAPIBoolean); CDECL;
 procedure Generators_Set_Name(const Value: PAnsiChar); CDECL;
 function Generators_Get_kV(): Double; CDECL;
 function Generators_Get_kvar(): Double; CDECL;
@@ -70,7 +70,7 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -146,7 +146,7 @@ begin
     until (Result > 0) or (pGen = NIL);
 end;
 //------------------------------------------------------------------------------
-procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     GeneratorCls: TGenerator;
@@ -167,7 +167,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     Gen: TGeneratorObj;
@@ -193,7 +193,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Generators_Get_ForcedON(): Wordbool; CDECL;
+function Generators_Get_ForcedON(): TAPIBoolean; CDECL;
 var
     pGen: TGeneratorObj;
 begin
@@ -204,7 +204,7 @@ begin
     Result := pGen.ForcedON;
 end;
 //------------------------------------------------------------------------------
-procedure Generators_Set_ForcedON(Value: Wordbool); CDECL;
+procedure Generators_Set_ForcedON(Value: TAPIBoolean); CDECL;
 var
     pGen: TGeneratorObj;
 begin

@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Monitors_Get_AllNames_GR(); CDECL;
 function Monitors_Get_FileName(): PAnsiChar; CDECL;
 function Monitors_Get_First(): Integer; CDECL;
@@ -19,7 +19,7 @@ procedure Monitors_Save(); CDECL;
 procedure Monitors_Set_Mode(Value: Integer); CDECL;
 procedure Monitors_Show(); CDECL;
 procedure Monitors_Set_Name(const Value: PAnsiChar); CDECL;
-procedure Monitors_Get_ByteStream(var ResultPtr: PByte; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_ByteStream(var ResultPtr: PByte; ResultCount: PAPISize); CDECL;
 procedure Monitors_Get_ByteStream_GR(); CDECL;
 function Monitors_Get_SampleCount(): Integer; CDECL;
 procedure Monitors_SampleAll(); CDECL;
@@ -27,14 +27,14 @@ procedure Monitors_SaveAll(); CDECL;
 function Monitors_Get_Count(): Integer; CDECL;
 procedure Monitors_Process(); CDECL;
 procedure Monitors_ProcessAll(); CDECL;
-procedure Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PInteger; Index: Integer); CDECL;
+procedure Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PAPISize; Index: Integer); CDECL;
 procedure Monitors_Get_Channel_GR(Index: Integer); CDECL;
-procedure Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Monitors_Get_dblFreq_GR(); CDECL;
-procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Monitors_Get_dblHour_GR(); CDECL;
 function Monitors_Get_FileVersion(): Integer; CDECL;
-procedure Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Monitors_Get_Header_GR(); CDECL;
 function Monitors_Get_NumChannels(): Integer; CDECL;
 function Monitors_Get_RecordSize(): Integer; CDECL;
@@ -114,7 +114,7 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -273,7 +273,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Monitors_Get_ByteStream(var ResultPtr: PByte; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_ByteStream(var ResultPtr: PByte; ResultCount: PAPISize); CDECL;
 var
     pMon: TMonitorObj;
 begin
@@ -345,7 +345,7 @@ begin
     MonitorClass.PostProcessAll;
 end;
 //------------------------------------------------------------------------------
-procedure Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PInteger; Index: Integer); CDECL;
+procedure Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PAPISize; Index: Integer); CDECL;
 // Return an array of doubles for selected channel
 var
     Result: PDoubleArray;
@@ -392,7 +392,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return an array of doubles for frequence for Harmonic solutions
 var
     Result: PDoubleArray;
@@ -449,7 +449,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return an array of doubles for time in hours
 var
     Result: PDoubleArray;
@@ -519,7 +519,7 @@ begin
     Result := Header.Version;
 end;
 //------------------------------------------------------------------------------
-procedure Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 // Variant list of strings with names of all channels
 var
     Result: PPAnsiCharArray;

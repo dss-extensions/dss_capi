@@ -13,10 +13,10 @@ procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 function DSS_Get_NumCircuits(): Integer; CDECL;
 procedure DSS_ClearAll(); CDECL;
 function DSS_Get_Version(): PAnsiChar; CDECL;
-function DSS_Start(code: Integer): Wordbool; CDECL;
-procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+function DSS_Start(code: Integer): TAPIBoolean; CDECL;
+procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure DSS_Get_Classes_GR(); CDECL;
-procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure DSS_Get_UserClasses_GR(); CDECL;
 function DSS_Get_NumClasses(): Integer; CDECL;
 function DSS_Get_NumUserClasses(): Integer; CDECL;
@@ -25,16 +25,16 @@ procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
 procedure DSS_Reset(); CDECL;
 function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
 function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
-function DSS_Get_AllowForms: Wordbool; CDECL;
-procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
+function DSS_Get_AllowForms: TAPIBoolean; CDECL;
+procedure DSS_Set_AllowForms(Value: TAPIBoolean); CDECL;
 
 // Extensions
-function DSS_Get_AllowEditor: Wordbool; CDECL;
-procedure DSS_Set_AllowEditor(Value: Wordbool); CDECL;
-function DSS_Get_LegacyModels(): Wordbool; CDECL;
-procedure DSS_Set_LegacyModels(Value: Wordbool); CDECL;
-function DSS_Get_AllowChangeDir(): Wordbool; CDECL;
-procedure DSS_Set_AllowChangeDir(Value: Wordbool); CDECL;
+function DSS_Get_AllowEditor: TAPIBoolean; CDECL;
+procedure DSS_Set_AllowEditor(Value: TAPIBoolean); CDECL;
+function DSS_Get_LegacyModels(): TAPIBoolean; CDECL;
+procedure DSS_Set_LegacyModels(Value: TAPIBoolean); CDECL;
+function DSS_Get_AllowChangeDir(): TAPIBoolean; CDECL;
+procedure DSS_Set_AllowChangeDir(Value: TAPIBoolean); CDECL;
 procedure DSS_RegisterPlotCallback(cb: dss_callback_plot_t); CDECL;
 procedure DSS_RegisterMessageCallback(cb: dss_callback_message_t); CDECL;
 
@@ -58,12 +58,12 @@ begin
     MakeNewCircuit(Value);
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_AllowForms: Wordbool; CDECL;
+function DSS_Get_AllowForms: TAPIBoolean; CDECL;
 begin
     Result := not NoFormsAllowed;
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
+procedure DSS_Set_AllowForms(Value: TAPIBoolean); CDECL;
 begin
 {$IFDEF WINDOWS}
     if (Value) and (GetConsoleWindow() = 0) and ((@DSSMessageCallback) = NIL) then
@@ -79,12 +79,12 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_AllowEditor: Wordbool; CDECL;
+function DSS_Get_AllowEditor: TAPIBoolean; CDECL;
 begin
     Result := DSS_CAPI_ALLOW_EDITOR;
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Set_AllowEditor(Value: Wordbool); CDECL;
+procedure DSS_Set_AllowEditor(Value: TAPIBoolean); CDECL;
 begin
     DSS_CAPI_ALLOW_EDITOR := not (not Value);
 end;
@@ -104,7 +104,7 @@ begin
     Result := DSS_GetAsPAnsiChar(VersionString + '; License Status: Open ');
 end;
 //------------------------------------------------------------------------------
-function DSS_Start(code: Integer): Wordbool; CDECL;
+function DSS_Start(code: Integer): TAPIBoolean; CDECL;
 {Place any start code here}
 begin
     Result := TRUE;
@@ -117,7 +117,7 @@ begin
   *)
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i, k: Integer;
@@ -141,7 +141,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -203,12 +203,12 @@ begin
     Result := LastClassReferenced;
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_LegacyModels(): Wordbool; CDECL;
+function DSS_Get_LegacyModels(): TAPIBoolean; CDECL;
 begin
     Result := DSS_CAPI_LEGACY_MODELS;
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Set_LegacyModels(Value: Wordbool); CDECL;
+procedure DSS_Set_LegacyModels(Value: TAPIBoolean); CDECL;
 begin
     if (Value <> DSS_CAPI_LEGACY_MODELS) then
     begin
@@ -217,12 +217,12 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_AllowChangeDir(): Wordbool; CDECL;
+function DSS_Get_AllowChangeDir(): TAPIBoolean; CDECL;
 begin
     Result := DSS_CAPI_ALLOW_CHANGE_DIR;
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Set_AllowChangeDir(Value: Wordbool); CDECL;
+procedure DSS_Set_AllowChangeDir(Value: TAPIBoolean); CDECL;
 begin
     if (Value <> DSS_CAPI_ALLOW_CHANGE_DIR) then
     begin

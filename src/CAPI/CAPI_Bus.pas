@@ -7,36 +7,36 @@ uses
 
 function Bus_Get_Name(): PAnsiChar; CDECL;
 function Bus_Get_NumNodes(): Integer; CDECL;
-procedure Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_SeqVoltages_GR(); CDECL;
-procedure Bus_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_Voltages_GR(); CDECL;
-procedure Bus_Get_Nodes(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Nodes(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_Nodes_GR(); CDECL;
-procedure Bus_Get_Isc(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Isc(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_Isc_GR(); CDECL;
-procedure Bus_Get_Voc(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Voc(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_Voc_GR(); CDECL;
 function Bus_Get_kVBase(): Double; CDECL;
-procedure Bus_Get_puVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_puVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_puVoltages_GR(); CDECL;
-procedure Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_Zsc0_GR(); CDECL;
-procedure Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_Zsc1_GR(); CDECL;
-procedure Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_ZscMatrix_GR(); CDECL;
-function Bus_ZscRefresh(): Wordbool; CDECL;
-procedure Bus_Get_YscMatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+function Bus_ZscRefresh(): TAPIBoolean; CDECL;
+procedure Bus_Get_YscMatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_YscMatrix_GR(); CDECL;
-function Bus_Get_Coorddefined(): Wordbool; CDECL;
+function Bus_Get_Coorddefined(): TAPIBoolean; CDECL;
 function Bus_Get_x(): Double; CDECL;
 procedure Bus_Set_x(Value: Double); CDECL;
 function Bus_Get_y(): Double; CDECL;
 procedure Bus_Set_y(Value: Double); CDECL;
 function Bus_Get_Distance(): Double; CDECL;
 function Bus_GetUniqueNodeNumber(StartNumber: Integer): Integer; CDECL;
-procedure Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_CplxSeqVoltages_GR(); CDECL;
 function Bus_Get_Int_Duration(): Double; CDECL;
 function Bus_Get_Lambda(): Double; CDECL;
@@ -44,25 +44,25 @@ function Bus_Get_Cust_Duration(): Double; CDECL;
 function Bus_Get_Cust_Interrupts(): Double; CDECL;
 function Bus_Get_N_Customers(): Integer; CDECL;
 function Bus_Get_N_interrupts(): Double; CDECL;
-procedure Bus_Get_puVLL(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_puVLL(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_puVLL_GR(); CDECL;
-procedure Bus_Get_VLL(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_VLL(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_VLL_GR(); CDECL;
-procedure Bus_Get_puVmagAngle(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_puVmagAngle(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_puVmagAngle_GR(); CDECL;
-procedure Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_VMagAngle_GR(); CDECL;
 function Bus_Get_TotalMiles(): Double; CDECL;
 function Bus_Get_SectionID(): Integer; CDECL;
 function Bus_Get_Next(): Integer; CDECL; // API Extension
-procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_LineList_GR(); CDECL;
-procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_LoadList_GR(); CDECL;
-procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Bus_Get_ZSC012Matrix_GR(); CDECL;
-procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 
 implementation
 
@@ -133,7 +133,7 @@ begin
             Result := ActiveCircuit.Buses^[ActiveCircuit.ActiveBusIndex].NumNodesThisBus;
 end;
 //------------------------------------------------------------------------------
-procedure Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Compute sequence voltages for Active Bus
 // magnitude only
 // returns a set of seq voltages (3)
@@ -187,7 +187,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return Complex for all nodes of voltages for Active Bus
 var
     Result: PDoubleArray;
@@ -232,7 +232,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_Nodes(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Nodes(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 // return array of node numbers corresponding to voltages
 var
     Result: PIntegerArray;
@@ -271,7 +271,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_Isc(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Isc(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return the short circuit current
 var
     Result: PDoubleArray;
@@ -314,7 +314,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_Voc(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Voc(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return the Open circuit Voltage for this bus
 var
     Result: PDoubleArray;
@@ -368,7 +368,7 @@ begin
             Result := ActiveCircuit.Buses^[ActiveCircuit.ActiveBusIndex].kVBase;
 end;
 //------------------------------------------------------------------------------
-procedure Bus_Get_puVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_puVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Returns voltages at bus in per unit.  However, if kVBase=0, returns actual volts
 var
     Result: PDoubleArray;
@@ -417,7 +417,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     Z: Complex;
@@ -446,7 +446,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     Z: Complex;
@@ -474,7 +474,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     Nelements, iV, i, j: Integer;
@@ -519,7 +519,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Bus_ZscRefresh(): Wordbool; CDECL;
+function Bus_ZscRefresh(): TAPIBoolean; CDECL;
 begin
 
     Result := FALSE;   // Init in case of failure
@@ -529,7 +529,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-procedure Bus_Get_YscMatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_YscMatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     Nelements, iV, i, j: Integer;
@@ -573,7 +573,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Bus_Get_Coorddefined(): Wordbool; CDECL;
+function Bus_Get_Coorddefined(): TAPIBoolean; CDECL;
 begin
     Result := FALSE;
     if InvalidCircuit then
@@ -652,7 +652,7 @@ begin
             Result := Utilities.GetUniqueNodeNumber(BusList.NameOfIndex(ActiveBusIndex), StartNumber);
 end;
 //------------------------------------------------------------------------------
-procedure Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Compute sequence voltages for Active Bus
 // Complex values
 // returns a set of seq voltages (3) in 0, 1, 2 order
@@ -768,7 +768,7 @@ begin
             Result := Buses^[ActiveBusIndex].Bus_Num_Interrupt;
 end;
 //------------------------------------------------------------------------------
-procedure Bus_Get_puVLL(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_puVLL(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     Nvalues, i, iV, NodeIdxi, NodeIdxj, jj, k: Integer;
@@ -859,7 +859,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_VLL(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_VLL(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     Nvalues, i, iV, NodeIdxi, NodeIdxj, jj, k: Integer;
@@ -942,7 +942,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_puVmagAngle(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_puVmagAngle(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return mag/angle for all nodes of voltages for Active Bus
 var
     Result: PDoubleArray;
@@ -995,7 +995,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return mag/angle for all nodes of voltages for Active Bus
 var
     Result: PDoubleArray;
@@ -1096,7 +1096,7 @@ begin
         end;
 end;
 //------------------------------------------------------------------------------
-procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 { Returns list of LINE elements connected to this bus}
 var
     BusReference, j, k, LineCount: Integer;
@@ -1153,7 +1153,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 { Returns list of LOAD elements connected to this bus}
 var
     BusReference, j, k, LoadCount: Integer;
@@ -1210,7 +1210,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL; //TODO: remove duplication between this and DoZsc012Cmd
+procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL; //TODO: remove duplication between this and DoZsc012Cmd
 var
     Zsc012Temp: TCmatrix;
     NValues: Integer;
@@ -1254,7 +1254,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     i: Integer;
     myPCEList: Array of String;
@@ -1271,7 +1271,7 @@ begin
         Result[i] := DSS_CopyStringAsPChar(myPCEList[i]);
 end;
 //------------------------------------------------------------------------------
-procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
   i: Integer;
   myPDEList: Array of String;

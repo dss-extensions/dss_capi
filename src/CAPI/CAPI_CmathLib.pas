@@ -5,17 +5,17 @@ interface
 uses
     CAPI_Utils;
 
-procedure CmathLib_Get_cmplx(var ResultPtr: PDouble; ResultCount: PInteger; RealPart, ImagPart: Double); CDECL;
+procedure CmathLib_Get_cmplx(var ResultPtr: PDouble; ResultCount: PAPISize; RealPart, ImagPart: Double); CDECL;
 procedure CmathLib_Get_cmplx_GR(RealPart, ImagPart: Double); CDECL;
 function CmathLib_Get_cabs(realpart, imagpart: Double): Double; CDECL;
 function CmathLib_Get_cdang(RealPart, ImagPart: Double): Double; CDECL;
-procedure CmathLib_Get_ctopolardeg(var ResultPtr: PDouble; ResultCount: PInteger; RealPart, ImagPart: Double); CDECL;
+procedure CmathLib_Get_ctopolardeg(var ResultPtr: PDouble; ResultCount: PAPISize; RealPart, ImagPart: Double); CDECL;
 procedure CmathLib_Get_ctopolardeg_GR(RealPart, ImagPart: Double); CDECL;
-procedure CmathLib_Get_pdegtocomplex(var ResultPtr: PDouble; ResultCount: PInteger; magnitude, angle: Double); CDECL;
+procedure CmathLib_Get_pdegtocomplex(var ResultPtr: PDouble; ResultCount: PAPISize; magnitude, angle: Double); CDECL;
 procedure CmathLib_Get_pdegtocomplex_GR(magnitude, angle: Double); CDECL;
-procedure CmathLib_Get_cmul(var ResultPtr: PDouble; ResultCount: PInteger; a1, b1, a2, b2: Double); CDECL;
+procedure CmathLib_Get_cmul(var ResultPtr: PDouble; ResultCount: PAPISize; a1, b1, a2, b2: Double); CDECL;
 procedure CmathLib_Get_cmul_GR(a1, b1, a2, b2: Double); CDECL;
-procedure CmathLib_Get_cdiv(var ResultPtr: PDouble; ResultCount: PInteger; a1, b1, a2, b2: Double); CDECL;
+procedure CmathLib_Get_cdiv(var ResultPtr: PDouble; ResultCount: PAPISize; a1, b1, a2, b2: Double); CDECL;
 procedure CmathLib_Get_cdiv_GR(a1, b1, a2, b2: Double); CDECL;
 
 implementation
@@ -24,7 +24,7 @@ uses
     CAPI_Constants,
     Ucomplex;
 
-procedure CmathLib_Get_cmplx(var ResultPtr: PDouble; ResultCount: PInteger; RealPart, ImagPart: Double); CDECL;
+procedure CmathLib_Get_cmplx(var ResultPtr: PDouble; ResultCount: PAPISize; RealPart, ImagPart: Double); CDECL;
 var
     Result: PDoubleArray;
 
@@ -51,7 +51,7 @@ begin
     Result := cdang(cmplx(realpart, imagpart));
 end;
 //------------------------------------------------------------------------------
-procedure CmathLib_Get_ctopolardeg(var ResultPtr: PDouble; ResultCount: PInteger; RealPart, ImagPart: Double); CDECL;
+procedure CmathLib_Get_ctopolardeg(var ResultPtr: PDouble; ResultCount: PAPISize; RealPart, ImagPart: Double); CDECL;
 var
     Result: PDoubleArray;
     TempPolar: polar;
@@ -69,7 +69,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CmathLib_Get_pdegtocomplex(var ResultPtr: PDouble; ResultCount: PInteger; magnitude, angle: Double); CDECL;
+procedure CmathLib_Get_pdegtocomplex(var ResultPtr: PDouble; ResultCount: PAPISize; magnitude, angle: Double); CDECL;
 var
     Result: PDoubleArray;
     cTemp: Complex;
@@ -87,7 +87,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CmathLib_Get_cmul(var ResultPtr: PDouble; ResultCount: PInteger; a1, b1, a2, b2: Double); CDECL;
+procedure CmathLib_Get_cmul(var ResultPtr: PDouble; ResultCount: PAPISize; a1, b1, a2, b2: Double); CDECL;
 var
     Result: PDoubleArray;
     cTemp: Complex;
@@ -105,7 +105,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure CmathLib_Get_cdiv(var ResultPtr: PDouble; ResultCount: PInteger; a1, b1, a2, b2: Double); CDECL;
+procedure CmathLib_Get_cdiv(var ResultPtr: PDouble; ResultCount: PAPISize; a1, b1, a2, b2: Double); CDECL;
 var
     Result: PDoubleArray;
     cTemp: Complex;

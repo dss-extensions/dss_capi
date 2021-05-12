@@ -5,9 +5,10 @@ interface
 
 uses
     UComplex,
-    Solution;
+    Solution,
+    CAPI_Utils;
 
-procedure YMatrix_GetCompressedYMatrix(factor: Wordbool; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
+procedure YMatrix_GetCompressedYMatrix(factor: TAPIBoolean; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
 
 procedure YMatrix_ZeroInjCurr; CDECL;
 procedure YMatrix_GetSourceInjCurrents; CDECL;
@@ -18,18 +19,18 @@ procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
 function YMatrix_SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
 
-procedure YMatrix_Set_SystemYChanged(arg: Wordbool); CDECL;
-function YMatrix_Get_SystemYChanged(): Wordbool; CDECL;
-procedure YMatrix_Set_UseAuxCurrents(arg: Wordbool); CDECL;
-function YMatrix_Get_UseAuxCurrents(): Wordbool; CDECL;
+procedure YMatrix_Set_SystemYChanged(arg: TAPIBoolean); CDECL;
+function YMatrix_Get_SystemYChanged(): TAPIBoolean; CDECL;
+procedure YMatrix_Set_UseAuxCurrents(arg: TAPIBoolean); CDECL;
+function YMatrix_Get_UseAuxCurrents(): TAPIBoolean; CDECL;
 
-procedure YMatrix_Set_LoadsNeedUpdating(arg: Wordbool); CDECL;
-function YMatrix_Get_LoadsNeedUpdating(): Wordbool; CDECL;
-function YMatrix_CheckConvergence(): Wordbool; CDECL;
+procedure YMatrix_Set_LoadsNeedUpdating(arg: TAPIBoolean); CDECL;
+function YMatrix_Get_LoadsNeedUpdating(): TAPIBoolean; CDECL;
+function YMatrix_CheckConvergence(): TAPIBoolean; CDECL;
 procedure YMatrix_Set_Iteration(Value: Integer); CDECL;
 function YMatrix_Get_Iteration(): Integer; CDECL;
-procedure YMatrix_Set_SolutionInitialized(arg: Wordbool); CDECL;
-function YMatrix_Get_SolutionInitialized(): Wordbool; CDECL;
+procedure YMatrix_Set_SolutionInitialized(arg: TAPIBoolean); CDECL;
+function YMatrix_Get_SolutionInitialized(): TAPIBoolean; CDECL;
 procedure YMatrix_SetGeneratordQdV(); CDECL;
 function YMatrix_Get_Handle(): NativeUInt; CDECL;
 procedure YMatrix_Set_SolverOptions(opts: UInt64); CDECL;
@@ -40,15 +41,14 @@ implementation
 uses
     DSSGlobals,
     Ymatrix,
-    KLUSolve,
-    CAPI_Utils;
+    KLUSolve;
 
-procedure YMatrix_GetCompressedYMatrix(factor: Wordbool; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
+procedure YMatrix_GetCompressedYMatrix(factor: TAPIBoolean; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
 {Returns Pointers to column and row and matrix values}
 var
     Yhandle: NativeUInt;
     NumNZ, NumBuses: Longword;
-    tmpCnt: array[0..1] of Integer;
+    tmpCnt: array[0..1] of TAPISize;
 begin
     if MissingSolution then
         Exit;
@@ -104,14 +104,14 @@ begin
     ActiveCircuit.Solution.GetPCInjCurr;
 end;
 
-procedure YMatrix_Set_SystemYChanged(arg: Wordbool); CDECL;
+procedure YMatrix_Set_SystemYChanged(arg: TAPIBoolean); CDECL;
 begin
     if InvalidCircuit then
         Exit;
     ActiveCircuit.Solution.SystemYChanged := arg;
 end;
 
-function YMatrix_Get_SystemYChanged(): Wordbool; CDECL;
+function YMatrix_Get_SystemYChanged(): TAPIBoolean; CDECL;
 begin
     Result := FALSE;
     if InvalidCircuit then
@@ -129,14 +129,14 @@ begin
     BuildYMatrix(BuildOps, AllocateV);
 end;
 
-procedure YMatrix_Set_UseAuxCurrents(arg: Wordbool); CDECL;
+procedure YMatrix_Set_UseAuxCurrents(arg: TAPIBoolean); CDECL;
 begin
     if InvalidCircuit then
         Exit;
     ActiveCircuit.Solution.UseAuxCurrents := arg;
 end;
 
-function YMatrix_Get_UseAuxCurrents(): Wordbool; CDECL;
+function YMatrix_Get_UseAuxCurrents(): TAPIBoolean; CDECL;
 begin
     Result := FALSE;
     if InvalidCircuit then
@@ -176,28 +176,28 @@ begin
         Result := ActiveCircuit.Solution.SolveSystem(ActiveCircuit.Solution.NodeV);
 end;
 
-procedure YMatrix_Set_LoadsNeedUpdating(arg: Wordbool); CDECL;
+procedure YMatrix_Set_LoadsNeedUpdating(arg: TAPIBoolean); CDECL;
 begin
    ActiveCircuit.Solution.LoadsNeedUpdating := arg;
 end;
 
-function YMatrix_Get_LoadsNeedUpdating: Wordbool; CDECL;
+function YMatrix_Get_LoadsNeedUpdating: TAPIBoolean; CDECL;
 begin
     Result := ActiveCircuit.Solution.LoadsNeedUpdating;
 end;
 
-procedure YMatrix_Set_SolutionInitialized(arg: Wordbool); CDECL;
+procedure YMatrix_Set_SolutionInitialized(arg: TAPIBoolean); CDECL;
 begin
    ActiveCircuit.Solution.SolutionInitialized := arg;
 end;
 
-function YMatrix_Get_SolutionInitialized: Wordbool; CDECL;
+function YMatrix_Get_SolutionInitialized: TAPIBoolean; CDECL;
 begin
     Result := ActiveCircuit.Solution.SolutionInitialized;
 end;
 
 
-function YMatrix_CheckConvergence: Wordbool; CDECL;
+function YMatrix_CheckConvergence: TAPIBoolean; CDECL;
 begin
     Result := ActiveCircuit.Solution.Converged;
 end;

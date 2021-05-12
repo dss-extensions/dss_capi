@@ -54,7 +54,7 @@ function Solution_Get_DefaultDaily(): PAnsiChar; CDECL;
 function Solution_Get_DefaultYearly(): PAnsiChar; CDECL;
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar); CDECL;
 procedure Solution_Set_DefaultYearly(const Value: PAnsiChar); CDECL;
-procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_EventLog_GR(); CDECL;
 function Solution_Get_dblHour(): Double; CDECL;
 procedure Solution_Set_dblHour(Value: Double); CDECL;
@@ -73,16 +73,16 @@ procedure Solution_SolvePlusControl(); CDECL;
 procedure Solution_SolveSnap(); CDECL;
 procedure Solution_CheckControls(); CDECL;
 procedure Solution_InitSnap(); CDECL;
-function Solution_Get_SystemYChanged(): Wordbool; CDECL;
+function Solution_Get_SystemYChanged(): TAPIBoolean; CDECL;
 procedure Solution_BuildYMatrix(BuildOption, AllocateVI: Integer); CDECL;
 procedure Solution_DoControlActions(); CDECL;
 procedure Solution_SampleControlDevices(); CDECL;
-function Solution_Get_Converged(): Wordbool; CDECL;
-procedure Solution_Set_Converged(Value: Wordbool); CDECL;
+function Solution_Get_Converged(): TAPIBoolean; CDECL;
+procedure Solution_Set_Converged(Value: TAPIBoolean); CDECL;
 function Solution_Get_Totaliterations(): Integer; CDECL;
 function Solution_Get_MostIterationsDone(): Integer; CDECL;
-function Solution_Get_ControlActionsDone(): Wordbool; CDECL;
-procedure Solution_Set_ControlActionsDone(Value: Wordbool); CDECL;
+function Solution_Get_ControlActionsDone(): TAPIBoolean; CDECL;
+procedure Solution_Set_ControlActionsDone(Value: TAPIBoolean); CDECL;
 procedure Solution_Cleanup(); CDECL;
 procedure Solution_FinishTimeStep(); CDECL;
 function Solution_Get_Process_Time(): Double; CDECL;
@@ -96,15 +96,15 @@ procedure Solution_Set_MinIterations(Value: Integer); CDECL;
 {V8-ONLY>
 procedure Solution_SolveAll();cdecl;
 <V8-ONLY}
-procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_IncMatrix_GR(); CDECL;
-procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_Laplacian_GR(); CDECL;
-procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_BusLevels_GR(); CDECL;
-procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_IncMatrixRows_GR(); CDECL;
-procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_IncMatrixCols_GR(); CDECL;
 
 implementation
@@ -528,7 +528,7 @@ begin
     ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
 end;
 //------------------------------------------------------------------------------
-procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i: Integer;
@@ -687,7 +687,7 @@ begin
     ActiveCircuit.Solution.SnapShotInit;
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_SystemYChanged(): Wordbool; CDECL;
+function Solution_Get_SystemYChanged(): TAPIBoolean; CDECL;
 begin
     Result := False;
     if InvalidCircuit then
@@ -725,7 +725,7 @@ begin
     ActiveCircuit.Solution.SampleControlDevices;
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_Converged(): Wordbool; CDECL;
+function Solution_Get_Converged(): TAPIBoolean; CDECL;
 begin
     Result := False;
     if InvalidCircuit then
@@ -733,7 +733,7 @@ begin
     Result := ActiveCircuit.Issolved;
 end;
 //------------------------------------------------------------------------------
-procedure Solution_Set_Converged(Value: Wordbool); CDECL;
+procedure Solution_Set_Converged(Value: TAPIBoolean); CDECL;
 {Set the flag directly to force its setting}
 begin
     if InvalidCircuit then
@@ -759,7 +759,7 @@ begin
     Result := ActiveCircuit.Solution.MostIterationsDone
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_ControlActionsDone(): Wordbool; CDECL;
+function Solution_Get_ControlActionsDone(): TAPIBoolean; CDECL;
 begin
     Result := False;
     if InvalidCircuit then
@@ -767,7 +767,7 @@ begin
     Result := ActiveCircuit.Solution.ControlActionsDone;
 end;
 //------------------------------------------------------------------------------
-procedure Solution_Set_ControlActionsDone(Value: Wordbool); CDECL;
+procedure Solution_Set_ControlActionsDone(Value: TAPIBoolean); CDECL;
 begin
     if InvalidCircuit then
         Exit;
@@ -869,7 +869,7 @@ begin
 end;
 <V8-ONLY}
 //------------------------------------------------------------------------------
-procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     i,
@@ -907,7 +907,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
     Result: PIntegerArray;
     i,
@@ -945,7 +945,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
     if InvalidCircuit then
     begin
@@ -968,7 +968,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     IMIdx,
@@ -997,7 +997,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     i,

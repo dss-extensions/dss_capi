@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils;
 
-procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Reactors_Get_AllNames_GR(); CDECL;
 function Reactors_Get_Name(): PAnsiChar; CDECL;
 procedure Reactors_Set_Name(const Value: PAnsiChar); CDECL;
@@ -19,10 +19,10 @@ procedure Reactors_Set_kvar(Value: Double); CDECL;
 function Reactors_Get_Phases(): Integer; CDECL;
 procedure Reactors_Set_Phases(Value: Integer); CDECL;
 function Reactors_Get_SpecType(): Integer; CDECL;
-function Reactors_Get_IsDelta(): Wordbool; CDECL;
-procedure Reactors_Set_IsDelta(Value: Wordbool); CDECL;
-function Reactors_Get_Parallel(): Wordbool; CDECL;
-procedure Reactors_Set_Parallel(Value: Wordbool); CDECL;
+function Reactors_Get_IsDelta(): TAPIBoolean; CDECL;
+procedure Reactors_Set_IsDelta(Value: TAPIBoolean); CDECL;
+function Reactors_Get_Parallel(): TAPIBoolean; CDECL;
+procedure Reactors_Set_Parallel(Value: TAPIBoolean); CDECL;
 function Reactors_Get_LmH(): Double; CDECL;
 procedure Reactors_Set_LmH(Value: Double); CDECL;
 function Reactors_Get_Bus1(): PAnsiChar; CDECL;
@@ -39,24 +39,24 @@ function Reactors_Get_RCurve(): PAnsiChar; CDECL;
 procedure Reactors_Set_RCurve(const Value: PAnsiChar); CDECL;
 function Reactors_Get_LCurve(): PAnsiChar; CDECL;
 procedure Reactors_Set_LCurve(const Value: PAnsiChar); CDECL;
-procedure Reactors_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Reactors_Get_Rmatrix_GR(); CDECL;
-procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Reactors_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Reactors_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Reactors_Get_Xmatrix_GR(); CDECL;
-procedure Reactors_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Reactors_Get_Z(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Reactors_Get_Z(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Reactors_Get_Z_GR(); CDECL;
-procedure Reactors_Set_Z(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Reactors_Get_Z1(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Set_Z(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Reactors_Get_Z1(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Reactors_Get_Z1_GR(); CDECL;
-procedure Reactors_Set_Z1(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Reactors_Get_Z2(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Set_Z1(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Reactors_Get_Z2(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Reactors_Get_Z2_GR(); CDECL;
-procedure Reactors_Set_Z2(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Reactors_Get_Z0(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Set_Z2(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
+procedure Reactors_Get_Z0(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Reactors_Get_Z0_GR(); CDECL;
-procedure Reactors_Set_Z0(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Reactors_Set_Z0(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function Reactors_Get_idx(): Integer; CDECL;
 procedure Reactors_Set_idx(Value: Integer); CDECL;
 
@@ -175,7 +175,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
@@ -316,7 +316,7 @@ begin
     Result := DSS_GetAsPAnsiChar(pReactor.RCurve);
 end;
 //------------------------------------------------------------------------------
-function Reactors_Get_Parallel(): Wordbool; CDECL;
+function Reactors_Get_Parallel(): TAPIBoolean; CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -326,7 +326,7 @@ begin
     Result := pReactor.IsParallel;
 end;
 //------------------------------------------------------------------------------
-function Reactors_Get_IsDelta(): Wordbool; CDECL;
+function Reactors_Get_IsDelta(): TAPIBoolean; CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -416,7 +416,7 @@ begin
     Result := pReactor.Rp;
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Reactors_Set_IsDelta(Value: TAPIBoolean); CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -426,7 +426,7 @@ begin
     ReactorPropSideEffects(ReactorProps.conn, pReactor);
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Set_Parallel(Value: Wordbool); CDECL;
+procedure Reactors_Set_Parallel(Value: TAPIBoolean); CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -575,7 +575,7 @@ begin
     ReactorPropSideEffects(ReactorProps.Rp, pReactor);
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -597,7 +597,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Reactors_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -618,7 +618,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -643,7 +643,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Reactors_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -668,7 +668,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Reactors_Get_Z1(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Get_Z1(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pReactor: TReactorObj;
@@ -691,7 +691,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Reactors_Get_Z2(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Get_Z2(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pReactor: TReactorObj;
@@ -714,7 +714,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Reactors_Get_Z0(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Get_Z0(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pReactor: TReactorObj;
@@ -737,7 +737,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Reactors_Get_Z(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reactors_Get_Z(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray;
     pReactor: TReactorObj;
@@ -760,7 +760,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Reactors_Set_Z2(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Reactors_Set_Z2(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     pReactor: TReactorObj;
@@ -779,7 +779,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Set_Z1(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Reactors_Set_Z1(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     pReactor: TReactorObj;
@@ -798,7 +798,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Set_Z0(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Reactors_Set_Z0(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     pReactor: TReactorObj;
@@ -817,7 +817,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Set_Z(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Reactors_Set_Z(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     Value: PDoubleArray;
     pReactor: TReactorObj;
