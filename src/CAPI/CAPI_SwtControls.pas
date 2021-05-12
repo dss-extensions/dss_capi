@@ -120,28 +120,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_First(): Integer; CDECL;
-var
-    elem: TSwtControlObj;
-    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    lst := ActiveCircuit.SwtControls;
-    elem := lst.First;
-    if elem = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.SwtControls);
+end;
+//------------------------------------------------------------------------------
+function SwtControls_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := 1;
-        end
-        else
-            elem := lst.Next;
-    until (Result = 1) or (elem = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.SwtControls);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_IsLocked(): TAPIBoolean; CDECL;
@@ -164,31 +155,6 @@ begin
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.Name);
-end;
-//------------------------------------------------------------------------------
-function SwtControls_Get_Next(): Integer; CDECL;
-var
-    elem: TSwtControlObj;
-    lst: TDSSPointerList;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-        
-    lst := ActiveCircuit.SwtControls;
-    elem := lst.Next;
-    if elem = NIL then
-        Exit;
-        
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := lst.ActiveIndex;
-        end
-        else
-            elem := lst.Next;
-    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_SwitchedObj(): PAnsiChar; CDECL;

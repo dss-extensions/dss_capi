@@ -245,24 +245,19 @@ end;
 
 //------------------------------------------------------------------------------
 function Loads_Get_First(): Integer; CDECL;
-var
-    pLoad: TLoadObj;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    pLoad := ActiveCircuit.Loads.First;
-    if pLoad = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.Loads);
+end;
+//------------------------------------------------------------------------------
+function Loads_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-    repeat
-        if pLoad.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pLoad;
-            Result := 1;
-        end
-        else
-            pLoad := ActiveCircuit.Loads.Next;
-    until (Result = 1) or (pLoad = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.Loads);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_idx(): Integer; CDECL;
@@ -297,26 +292,6 @@ begin
         Exit;
         
     Result := DSS_GetAsPAnsiChar(pLoad.Name);
-end;
-//------------------------------------------------------------------------------
-function Loads_Get_Next(): Integer; CDECL;
-var
-    pLoad: TLoadObj;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-    pLoad := ActiveCircuit.Loads.Next;
-    if pLoad = NIL then Exit;
-    repeat
-        if pLoad.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pLoad;
-            Result := ActiveCircuit.Loads.ActiveIndex;
-        end
-        else
-            pLoad := ActiveCircuit.Loads.Next;
-    until (Result > 0) or (pLoad = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Name(const Value: PAnsiChar); CDECL;

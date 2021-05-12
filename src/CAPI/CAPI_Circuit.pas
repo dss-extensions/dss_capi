@@ -377,77 +377,12 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Circuit_FirstPCElement(): Integer; CDECL;
-var
-    p: TDSSCktElement;
-
-{ Returns first enabled element}
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-        
-    p := ActiveCircuit.PCElements.First;
-    if p = NIL then
-        Exit;
-
-    repeat
-        if p.enabled then
-        begin
-            Result := 1;
-            ActiveCircuit.ActiveCktElement := p;
-        end
-        else
-            p := ActiveCircuit.PCElements.Next;
-
-    until (Result = 1) or (p = NIL);
-end;
-//------------------------------------------------------------------------------
 function Circuit_FirstPDElement(): Integer; CDECL;
-var
-    ActivePDElement: TPDElement;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    ActivePDElement := ActiveCircuit.PDElements.First;
-    if ActivePDElement = NIL then
-        Exit;
-        
-    repeat
-        if ActivePDElement.enabled then
-        begin
-            Result := 1;
-            ActiveCircuit.ActiveCktElement := ActivePDElement;
-        end
-        else
-            ActivePDElement := ActiveCircuit.PDElements.Next;
-    until (Result = 1) or (ActivePDELement = NIL);
-end;
-//------------------------------------------------------------------------------
-function Circuit_NextPCElement(): Integer; CDECL;
-var
-    p: TDSSCktElement;
-
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-        
-    p := ActiveCircuit.PCElements.Next;
-    if p = NIL then
-        Exit;
-        
-    repeat
-        if p.enabled then
-        begin
-            Result := ActiveCircuit.PCElements.ActiveIndex;
-            ActiveCircuit.ActiveCktElement := p;
-        end
-        else
-            p := ActiveCircuit.PCElements.Next;
-    until (Result > 0) or (p = NIL);
+    Result := Generic_CktElement_Get_First(ActiveCircuit.PDElements);
 end;
 //------------------------------------------------------------------------------
 function Circuit_NextPDElement(): Integer; CDECL;
@@ -457,20 +392,26 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    ActivePDElement := ActiveCircuit.PDElements.Next;
-    if ActivePDElement = NIL then
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.PDElements);
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+function Circuit_FirstPCElement(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-        
-    repeat
-        if ActivePDElement.Enabled then
-        begin
-            Result := ActiveCircuit.PDElements.ActiveIndex;
-            ActiveCircuit.ActiveCktElement := ActivePDElement;
-        end
-        else
-            ActivePDElement := ActiveCircuit.PDElements.Next;
-    until (Result > 0) or (ActivePDElement = NIL);
+    Result := Generic_CktElement_Get_First(ActiveCircuit.PCElements);
+end;
+//------------------------------------------------------------------------------
+function Circuit_NextPCElement(): Integer; CDECL;
+var
+    p: TDSSCktElement;
+begin
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.PCElements);
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

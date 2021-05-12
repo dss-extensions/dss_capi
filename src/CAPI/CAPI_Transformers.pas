@@ -123,28 +123,19 @@ end;
 
 //------------------------------------------------------------------------------
 function Transformers_Get_First(): Integer; CDECL;
-var
-    elem: TTransfObj;
-    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    lst := ActiveCircuit.Transformers;
-    elem := lst.First;
-    if elem = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.Transformers);
+end;
+//------------------------------------------------------------------------------
+function Transformers_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-        
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := 1;
-        end
-        else
-            elem := lst.Next;
-    until (Result = 1) or (elem = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.Transformers);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_IsDelta(): TAPIBoolean; CDECL;
@@ -222,32 +213,6 @@ begin
         Exit;
     
     Result := DSS_GetAsPAnsiChar(elem.Name);
-end;
-
-//------------------------------------------------------------------------------
-function Transformers_Get_Next(): Integer; CDECL;
-var
-    elem: TTransfObj;
-    lst: TDSSPointerList;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-
-    lst := ActiveCircuit.Transformers;
-    elem := lst.Next;
-    if elem = NIL then
-        Exit;
-
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := lst.ActiveIndex;
-        end
-        else
-            elem := lst.Next;
-    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_NumTaps(): Integer; CDECL;

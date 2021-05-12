@@ -157,28 +157,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_First(): Integer; CDECL;
-var
-    elem: TCapControlObj;
-    lst: TDSSPointerList;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    
-    lst := ActiveCircuit.CapControls;
-    elem := lst.First;
-    if elem = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.CapControls);
+end;
+//------------------------------------------------------------------------------
+function CapControls_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-        
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := 1;
-        end
-        else
-            elem := lst.Next;
-    until (Result = 1) or (elem = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.CapControls);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Mode(): Integer; CDECL;
@@ -233,31 +224,6 @@ begin
     if not _activeObj(elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
-end;
-//------------------------------------------------------------------------------
-function CapControls_Get_Next(): Integer; CDECL;
-var
-    elem: TCapControlObj;
-    lst: TDSSPointerList;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-    
-    lst := ActiveCircuit.CapControls;
-    elem := lst.Next;
-    if elem = NIL then
-        Exit;
-        
-    repeat
-        if elem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := elem;
-            Result := lst.ActiveIndex;
-        end
-        else
-            elem := lst.Next;
-    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_OFFSetting(): Double; CDECL;

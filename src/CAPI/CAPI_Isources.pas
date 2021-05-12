@@ -80,49 +80,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_First(): Integer; CDECL;
-var
-    pElem: TIsourceObj;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-
-    pElem := IsourceClass.ElementList.First;
-    if pElem = NIL then
-        Exit;
-
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := 1;
-        end
-        else
-            pElem := IsourceClass.ElementList.Next;
-    until (Result = 1) or (pElem = NIL);
+    Result := Generic_CktElement_Get_First(IsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_Next(): Integer; CDECL;
-var
-    pElem: TIsourceObj;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-
-    pElem := IsourceClass.ElementList.Next;
-    if pElem = NIL then
-        Exit;
-        
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := IsourceClass.ElementList.ActiveIndex;
-        end
-        else
-            pElem := IsourceClass.ElementList.Next;
-    until (Result > 0) or (pElem = NIL);
+    Result := Generic_CktElement_Get_Next(IsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_Name(): PAnsiChar; CDECL;

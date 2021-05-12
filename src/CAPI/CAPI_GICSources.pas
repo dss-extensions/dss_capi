@@ -86,50 +86,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_First(): Integer; CDECL;
-var
-    pElem: TGICSourceObj;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-
-    pElem := GICsourceClass.ElementList.First;
-    if pElem = NIL then
-        Exit;
-        
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := 1;
-        end
-        else
-            pElem := GICsourceClass.ElementList.Next;
-    until (Result = 1) or (pElem = NIL);
+    Result := Generic_CktElement_Get_First(GICsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Next(): Integer; CDECL;
-var
-    pElem: TGICSourceObj;
 begin
     Result := 0;
-
     if InvalidCircuit then
         Exit;
-        
-    pElem := GICsourceClass.ElementList.Next;
-    if pElem = NIL then
-        Exit;
-        
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := GICsourceClass.ElementList.ActiveIndex;
-        end
-        else
-            pElem := GICsourceClass.ElementList.Next;
-    until (Result > 0) or (pElem = NIL);
+    Result := Generic_CktElement_Get_Next(GICsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Name(): PAnsiChar; CDECL;

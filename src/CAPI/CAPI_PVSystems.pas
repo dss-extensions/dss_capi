@@ -184,46 +184,19 @@ end;
 
 //------------------------------------------------------------------------------
 function PVSystems_Get_First(): Integer; CDECL;
-var
-    pPVSystem: TPCElement;
-begin
-    Result := 0;
-    if (InvalidCircuit) or (ActiveCircuit.pVSystems.Count = 0) then
-        Exit;
-        
-    pPVSystem := ActiveCircuit.pVSystems.First;
-    repeat
-        if pPVSystem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pPVSystem;
-            Result := 1;
-        end
-        else
-            pPVSystem := ActiveCircuit.pVSystems.Next;
-    until (Result = 1) or (pPVSystem = NIL);
-end;
-//------------------------------------------------------------------------------
-function PVSystems_Get_Next(): Integer; CDECL;
-var
-    pPVSystem: TPCElement;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    
-    pPVSystem := ActiveCircuit.PVSystems.Next;
-    if pPVSystem = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.PVSystems);
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-        
-    repeat
-        if pPVSystem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pPVSystem;
-            Result := ActiveCircuit.PVSystems.ActiveIndex;
-        end
-        else
-            pPVSystem := ActiveCircuit.PVSystems.Next;
-    until (Result > 0) or (pPVSystem = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.PVSystems);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Count(): Integer; CDECL;

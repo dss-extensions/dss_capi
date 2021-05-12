@@ -128,29 +128,20 @@ begin
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_First(): Integer; CDECL;
-var
-    ActivePDElement: TPDElement;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-        
-    with ActiveCircuit do
-    begin
-        ActivePDElement := PDElements.First;
-        if ActivePDElement <> NIL then
-        begin
-            repeat
-                if ActivePDElement.enabled then
-                begin
-                    Result := 1;
-                    ActiveCktElement := ActivePDElement;
-                end
-                else
-                    ActivePDElement := PDElements.Next;
-            until (Result = 1) or (ActivePDELement = NIL);
-        end;
-    end;
+    Result := Generic_CktElement_Get_First(ActiveCircuit.PDElements);
+end;
+//------------------------------------------------------------------------------
+function PDElements_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.PDelements);
+    if Result <> 0 then Result := 1; //TODO: inconsistent with the rest
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_IsShunt(): TAPIBoolean; CDECL;
@@ -161,32 +152,6 @@ begin
     if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.IsShunt;
-end;
-//------------------------------------------------------------------------------
-function PDElements_Get_Next(): Integer; CDECL;
-var
-    ActivePDElement: TPDElement;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-        
-    with ActiveCircuit do
-    begin
-        ActivePDElement := PDElements.Next;
-        if ActivePDElement = NIL then
-            Exit;
-            
-        repeat
-            if ActivePDElement.enabled then
-            begin
-                Result := 1;
-                ActiveCktElement := ActivePDElement;
-            end
-            else
-                ActivePDElement := PDElements.Next;
-        until (Result = 1) or (ActivePDELement = NIL);
-    end;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_pctPermanent(): Double; CDECL;

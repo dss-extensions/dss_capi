@@ -108,25 +108,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_First(): Integer; CDECL;
-var
-    pElem: TRecloserObj;
 begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    pElem := ActiveCircuit.Reclosers.First;
-    if pElem = NIL then
+    Result := Generic_CktElement_Get_First(ActiveCircuit.Reclosers);
+end;
+//------------------------------------------------------------------------------
+function Reclosers_Get_Next(): Integer; CDECL;
+begin
+    Result := 0;
+    if InvalidCircuit then
         Exit;
-        
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := ActiveCircuit.Reclosers.ActiveIndex;
-        end
-        else
-            pElem := ActiveCircuit.Reclosers.Next;
-    until (Result > 0) or (pElem = NIL);
+    Result := Generic_CktElement_Get_Next(ActiveCircuit.Reclosers);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_Name(): PAnsiChar; CDECL;
@@ -137,26 +131,6 @@ begin
     if not _activeObj(elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
-end;
-//------------------------------------------------------------------------------
-function Reclosers_Get_Next(): Integer; CDECL;
-var
-    pElem: TRecloserObj;
-begin
-    Result := 0;
-    if InvalidCircuit then
-        Exit;
-    pElem := ActiveCircuit.Reclosers.Next;
-    if pElem = NIL then Exit;
-    repeat
-        if pElem.Enabled then
-        begin
-            ActiveCircuit.ActiveCktElement := pElem;
-            Result := ActiveCircuit.Reclosers.ActiveIndex;
-        end
-        else
-            pElem := ActiveCircuit.Reclosers.Next;
-    until (Result > 0) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_Name(const Value: PAnsiChar); CDECL;
