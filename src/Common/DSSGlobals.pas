@@ -302,7 +302,10 @@ PROCEDURE SetLastResultFile(Const Fname:String);
 
 PROCEDURE MakeNewCircuit(Const Name:String);
 
-PROCEDURE AppendGlobalResult(Const s:String);
+PROCEDURE AppendGlobalResult(Const s: String); overload;
+PROCEDURE AppendGlobalResult(Const b: Boolean); overload;
+PROCEDURE AppendGlobalResult(Const d: Double); overload;
+PROCEDURE AppendGlobalResult(Const i: Integer); overload;
 PROCEDURE AppendGlobalResultCRLF(const S:String);  // Separate by CRLF
 
 PROCEDURE ResetQueryLogFile;
@@ -617,7 +620,7 @@ Begin
 End;
 
 
-PROCEDURE AppendGlobalResult(Const S:String);
+PROCEDURE AppendGlobalResult(Const S: String); overload;
 
 // Append a string to Global result, separated by commas
 
@@ -626,6 +629,24 @@ Begin
         GlobalResult := S
     Else
         GlobalResult := GlobalResult + ', ' + S;
+End;
+
+PROCEDURE AppendGlobalResult(Const b: Boolean); overload;
+Begin
+    if b then
+        AppendGlobalResult('Yes')
+    else
+        AppendGlobalResult('No')
+End;
+
+PROCEDURE AppendGlobalResult(Const d: Double); overload;
+Begin
+    AppendGlobalResult(Format('%-g', [d]));
+End;
+
+PROCEDURE AppendGlobalResult(Const i: Integer); overload;
+Begin
+    AppendGlobalResult(IntToStr(i));
 End;
 
 FUNCTION GetDSSVersion: String;

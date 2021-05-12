@@ -838,21 +838,21 @@ begin
                 2, 13:
                     AppendGlobalResult(ActiveCircuit.ActiveCktElement.Name);
                 3:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.DynaVars.intHour));
+                    AppendGlobalResult(ActiveCircuit.solution.DynaVars.intHour);
                 4:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.solution.DynaVars.t]));
+                    AppendGlobalResult(ActiveCircuit.solution.DynaVars.t);
                 5:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.Year));
+                    AppendGlobalResult(ActiveCircuit.solution.Year);
                 6:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.solution.Frequency]));
+                    AppendGlobalResult(ActiveCircuit.solution.Frequency);
                 7, 18:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.solution.DynaVars.h]));
+                    AppendGlobalResult(ActiveCircuit.solution.DynaVars.h);
                 8:
                     AppendGlobalResult(GetSolutionModeID);
                 9:
                     AppendGlobalResult(GetRandomModeID);
                 10:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.NumberOfTimes));
+                    AppendGlobalResult(ActiveCircuit.solution.NumberOfTimes);
                 11:
                     AppendGlobalResult(Format('[ %d, %-g ] !... %-g (hours)', [ActiveCircuit.solution.DynaVars.intHour, ActiveCircuit.solution.DynaVars.t, ActiveCircuit.solution.DynaVars.dblHour]));
                 14:
@@ -860,35 +860,35 @@ begin
                 15:
                     AppendGlobalResult(DefaultEditor);
                 16:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.solution.ConvergenceTolerance]));
+                    AppendGlobalResult(ActiveCircuit.solution.ConvergenceTolerance);
                 17:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.MaxIterations));
+                    AppendGlobalResult(ActiveCircuit.solution.MaxIterations);
                 19:
                     AppendGlobalResult(GetLoadModel);
                 20:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.LoadMultiplier]));
+                    AppendGlobalResult(ActiveCircuit.LoadMultiplier);
                 21:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.NormalMinVolts]));
+                    AppendGlobalResult(ActiveCircuit.NormalMinVolts);
                 22:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.NormalMaxVolts]));
+                    AppendGlobalResult(ActiveCircuit.NormalMaxVolts);
                 23:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.EmergMinVolts]));
+                    AppendGlobalResult(ActiveCircuit.EmergMinVolts);
                 24:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.EmergMaxVolts]));
+                    AppendGlobalResult(ActiveCircuit.EmergMaxVolts);
                 25:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0]));
+                    AppendGlobalResult(ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0);
                 26:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0]));
+                    AppendGlobalResult(ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0);
                 27:
                     AppendGlobalResult(ActiveCircuit.LoadDurCurve);
                 28:
-                    AppendGlobalResult(Format('%-g', [(ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0]));
+                    AppendGlobalResult((ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0);
                 29:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.AutoAddObj.GenkW]));
+                    AppendGlobalResult(ActiveCircuit.AutoAddObj.GenkW);
                 30:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.AutoAddObj.GenPF]));
+                    AppendGlobalResult(ActiveCircuit.AutoAddObj.GenPF);
                 31:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.AutoAddObj.CapkVAR]));
+                    AppendGlobalResult(ActiveCircuit.AutoAddObj.CapkVAR);
                 32:
                     case ActiveCircuit.AutoAddObj.Addtype of
                         GENADD:
@@ -897,19 +897,13 @@ begin
                             AppendGlobalResult('capacitor');
                     end;
                 33:
-                    if ActiveCircuit.DuplicatesAllowed then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.DuplicatesAllowed);
                 34:
-                    if ActiveCircuit.ZonesLocked then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.ZonesLocked);
                 35:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.UEWeight]));
+                    AppendGlobalResult(ActiveCircuit.UEWeight);
                 36:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.LossWeight]));
+                    AppendGlobalResult(ActiveCircuit.LossWeight);
                 37:
                     AppendGlobalResult(IntArrayToString(ActiveCircuit.UERegs, ActiveCircuit.NumUEregs));
                 38:
@@ -934,10 +928,7 @@ begin
                             AppendGlobalResult('newton');
                     end;
                 41:
-                    if ActiveCircuit.TrapezoidalIntegration then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.TrapezoidalIntegration);
                 42:
                     with ActiveCircuit.AutoAddBusList do
                         for i := 1 to Count do
@@ -945,12 +936,9 @@ begin
                 43:
                     AppendGlobalResult(GetControlModeID);
                 44:
-                    if ActiveCircuit.ControlQueue.traceLog then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.ControlQueue.traceLog);
                 45:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.GenMultiplier]));
+                    AppendGlobalResult(ActiveCircuit.GenMultiplier);
                 46:
                     AppendGlobalResult(ActiveCircuit.DefaultDailyShapeObj.Name);
                 47:
@@ -963,13 +951,13 @@ begin
                     else
                         AppendGlobalResult('multiphase');
                 50:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.PriceSignal]));
+                    AppendGlobalResult(ActiveCircuit.PriceSignal);
                 51:
                     AppendGlobalResult(ActiveCircuit.PriceCurve);
                 52:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.ActiveCktElement.ActiveTerminalIdx]));
+                    AppendGlobalResult(ActiveCircuit.ActiveCktElement.ActiveTerminalIdx);
                 53:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.Fundamental]));
+                    AppendGlobalResult(ActiveCircuit.Fundamental);
                 54:
                     with ActiveCircuit.Solution do
                         if DoALLHarmonics then
@@ -977,10 +965,10 @@ begin
                         else
                         begin
                             for i := 1 to HarmonicListSize do
-                                AppendGlobalResult(Format('%-g', [HarmonicList^[i]]));
+                                AppendGlobalResult(HarmonicList^[i]);
                         end;
                 55:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.MaxControlIterations));
+                    AppendGlobalResult(ActiveCircuit.solution.MaxControlIterations);
                 56:
                     AppendGlobalResult(ActiveCircuit.BusList.NameOfIndex(ActiveCircuit.ActiveBusIndex));
                 57:
@@ -993,181 +981,115 @@ begin
                 59:
                     AppendGlobalResult(ActiveCircuit.ReductionStrategyString);
                 60:
-                    if EnergyMeterClass.SaveDemandInterval then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(EnergyMeterClass.SaveDemandInterval);
                 61:
                     AppendGlobalResult(Format('%-.g', [ActiveCircuit.PctNormalFactor]));
                 62:
-                    if EnergyMeterClass.DI_Verbose then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(EnergyMeterClass.DI_Verbose);
                 63:
                     AppendGlobalResult(ActiveCircuit.CaseName);
                 64:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.NodeMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.NodeMarkerCode);
                 65:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.NodeMarkerWidth]));
+                    AppendGlobalResult(ActiveCircuit.NodeMarkerWidth);
                 66:
-                    if ActiveCircuit.LogEvents then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.LogEvents);
                 67:
-                    if DSSExecutive.RecorderON then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(DSSExecutive.RecorderON);
                 68:
-                    if EnergyMeterClass.Do_OverloadReport then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(EnergyMeterClass.Do_OverloadReport);
                 69:
-                    if EnergyMeterClass.Do_VoltageExceptionReport then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(EnergyMeterClass.Do_VoltageExceptionReport);
                 70:
                     AppendGlobalResult('Get function not applicable.');
                 71:
-                    if AutoShowExport then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(AutoShowExport);
                 72:
-                    AppendGlobalResult(Format('%d', [MaxAllocationIterations]));
+                    AppendGlobalResult(MaxAllocationIterations);
                 73:
-                    AppendGlobalResult(Format('%d', [Round(DefaultBaseFreq)]));
+                    AppendGlobalResult(Round(DefaultBaseFreq));
                 74:
-                    if ActiveCircuit.MarkSwitches then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.MarkSwitches);
                 75:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.SwitchMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.SwitchMarkerCode);
                 76:
                     AppendGlobalResult(Format('%-.6g', [DaisySize]));
                 77:
-                    if ActiveCircuit.MarkTransformers then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.MarkTransformers);
                 78:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.TransMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.TransMarkerCode);
                 79:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.TransMarkerSize]));
+                    AppendGlobalResult(ActiveCircuit.TransMarkerSize);
                 80:
                     AppendGlobalResult(GetActiveLoadShapeClass);
                 81:
                     AppendGlobalResult(GetEarthModel(DefaultEarthModel));
                 82:
-                    if LogQueries then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(LogQueries);
                 83:
-                    if ActiveCircuit.MarkCapacitors then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.MarkCapacitors);
                 84:
-                    if ActiveCircuit.MarkRegulators then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.MarkRegulators);
                 85:
-                    if ActiveCircuit.MarkPVSystems then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.MarkPVSystems);
                 86:
-                    if ActiveCircuit.MarkStorage then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.MarkStorage);
                 87:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.CapMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.CapMarkerCode);
                 88:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RegMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.RegMarkerCode);
                 89:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.PVMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.PVMarkerCode);
                 90:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.StoreMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.StoreMarkerCode);
                 91:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.CapMarkerSize]));
+                    AppendGlobalResult(ActiveCircuit.CapMarkerSize);
                 92:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RegMarkerSize]));
+                    AppendGlobalResult(ActiveCircuit.RegMarkerSize);
                 93:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.PVMarkerSize]));
+                    AppendGlobalResult(ActiveCircuit.PVMarkerSize);
                 94:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.StoreMarkerSize]));
+                    AppendGlobalResult(ActiveCircuit.StoreMarkerSize);
                 95:
-                    if ActiveCircuit.NeglectLoadY then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.NeglectLoadY);
                 96:
-                    if ActiveCircuit.MarkFuses then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.MarkFuses);
                 97:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.FuseMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.FuseMarkerCode);
                 98:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.FuseMarkerSize]));
+                    AppendGlobalResult(ActiveCircuit.FuseMarkerSize);
                 99:
-                    if ActiveCircuit.MarkReclosers then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.MarkReclosers);
                 100:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RecloserMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.RecloserMarkerCode);
                 101:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RecloserMarkerSize]));
+                    AppendGlobalResult(ActiveCircuit.RecloserMarkerSize);
                 102:
-                    if UpdateRegistry then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(UpdateRegistry);
                 103:
-                    if ActiveCircuit.MarkRelays then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.MarkRelays);
                 104:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RelayMarkerCode]));
+                    AppendGlobalResult(ActiveCircuit.RelayMarkerCode);
                 105:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RelayMarkerSize]));
+                    AppendGlobalResult(ActiveCircuit.RelayMarkerSize);
                 106:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.Solution.Time_Solve]));
+                    AppendGlobalResult(ActiveCircuit.Solution.Time_Solve);
                 107:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.Solution.Total_Time]));
+                    AppendGlobalResult(ActiveCircuit.Solution.Total_Time);
                 108:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.Solution.Time_Step]));
+                    AppendGlobalResult(ActiveCircuit.Solution.Time_Step);
                 109:
-                    if ActiveCircuit.Solution.SampleTheMeters then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.Solution.SampleTheMeters);
                 110:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.MinIterations));
+                    AppendGlobalResult(ActiveCircuit.solution.MinIterations);
                 111:
                     AppendGlobalResult('No');
                 112:
-                    if ActiveCircuit.ReduceLateralsKeepLoad then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(ActiveCircuit.ReduceLateralsKeepLoad);
                 113:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.ReductionZmag]));
+                    AppendGlobalResult(ActiveCircuit.ReductionZmag);
                 114:
-                    if SeasonalRating then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    AppendGlobalResult(SeasonalRating);
                 115:
                     AppendGlobalResult(SeasonSignal);
             else
