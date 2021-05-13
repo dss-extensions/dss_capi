@@ -568,6 +568,8 @@ begin
             'ProfileScale', ProfileScale,
             'Channels', jsonChannels,
             'Bases', jsonBases,
+            'SinglePhLineStyle', SinglePhLineStyle,
+            'ThreePhLineStyle', ThreePhLineStyle,
             // TODO: convert to HTML?
             'Color1', Color1,
             'Color2', Color2,

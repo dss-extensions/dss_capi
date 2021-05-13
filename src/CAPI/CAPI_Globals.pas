@@ -21,4 +21,5 @@ initialization
     FPropIndex := 0;
     FPropClass := NIL;
     DSSPlotCallback := NIL;
+    DSSMessageCallback := NIL;
 end.
