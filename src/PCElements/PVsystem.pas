@@ -1420,13 +1420,13 @@ begin
 
             with Solution do
                 case Mode of
-                    SNAPSHOT: ; {Just solve for the present kW, kvar}  // Don't check for state change
-                    DAILYMODE:
+                    TSolveMode.SNAPSHOT: ; {Just solve for the present kW, kvar}  // Don't check for state change
+                    TSolveMode.DAILYMODE:
                     begin
                         CalcDailyMult(DynaVars.dblHour);
                         CalcDailyTemperature(DynaVars.dblHour);
                     end;
-                    YEARLYMODE:
+                    TSolveMode.YEARLYMODE:
                     begin
                         CalcYearlyMult(DynaVars.dblHour);
                         CalcYearlyTemperature(DynaVars.dblHour);
@@ -1437,7 +1437,7 @@ begin
                   FAULTSTUDY,
                   DYNAMICMODE:   ; // {do nothing yet}
                *)
-                    GENERALTIME:
+                    TSolveMode.GENERALTIME:
                     begin
                            // This mode allows use of one class of load shape
                         case ActiveCircuit.ActiveLoadShapeClass of
@@ -1462,21 +1462,21 @@ begin
                     end;
 
                   // Assume Daily curve, If any, for the following
-                    MONTECARLO2,
-                    MONTECARLO3,
-                    LOADDURATION1,
-                    LOADDURATION2:
+                    TSolveMode.MONTECARLO2,
+                    TSolveMode.MONTECARLO3,
+                    TSolveMode.LOADDURATION1,
+                    TSolveMode.LOADDURATION2:
                     begin
                         CalcDailyMult(DynaVars.dblHour);
                         CalcDailyTemperature(DynaVars.dblHour);
                     end;
-                    PEAKDAY:
+                    TSolveMode.PEAKDAY:
                     begin
                         CalcDailyMult(DynaVars.dblHour);
                         CalcDailyTemperature(DynaVars.dblHour);
                     end;
 
-                    DUTYCYCLE:
+                    TSolveMode.DUTYCYCLE:
                     begin
                         CalcDutyMult(DynaVars.dblHour);
                         CalcDutyTemperature(DynaVars.dblHour);

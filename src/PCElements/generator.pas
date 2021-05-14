@@ -1172,25 +1172,25 @@ begin
                 else
                 begin
                     case Mode of
-                        SNAPSHOT:
+                        TSolveMode.SNAPSHOT:
                             Factor := ActiveCircuit.GenMultiplier * 1.0;
-                        DAILYMODE:
+                        TSolveMode.DAILYMODE:
                         begin
                             Factor := ActiveCircuit.GenMultiplier;
                             CalcDailyMult(DynaVars.dblHour) // Daily dispatch curve
                         end;
-                        YEARLYMODE:
+                        TSolveMode.YEARLYMODE:
                         begin
                             Factor := ActiveCircuit.GenMultiplier;
                             CalcYearlyMult(DynaVars.dblHour);
                         end;
-                        DUTYCYCLE:
+                        TSolveMode.DUTYCYCLE:
                         begin
                             Factor := ActiveCircuit.GenMultiplier;
                             CalcDutyMult(DynaVars.dblHour);
                         end;
-                        GENERALTIME,   // General sequential time simulation
-                        DYNAMICMODE:
+                        TSolveMode.GENERALTIME,   // General sequential time simulation
+                        TSolveMode.DYNAMICMODE:
                         begin
                             Factor := ActiveCircuit.GenMultiplier;
                                        // This mode allows use of one class of load shape
@@ -1205,24 +1205,24 @@ begin
                                 ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
                             end;
                         end;
-                        MONTECARLO1,
-                        MONTEFAULT,
-                        FAULTSTUDY:
+                        TSolveMode.MONTECARLO1,
+                        TSolveMode.MONTEFAULT,
+                        TSolveMode.FAULTSTUDY:
                             Factor := ActiveCircuit.GenMultiplier * 1.0;
-                        MONTECARLO2,
-                        MONTECARLO3,
-                        LOADDURATION1,
-                        LOADDURATION2:
+                        TSolveMode.MONTECARLO2,
+                        TSolveMode.MONTECARLO3,
+                        TSolveMode.LOADDURATION1,
+                        TSolveMode.LOADDURATION2:
                         begin
                             Factor := ActiveCircuit.GenMultiplier;
                             CalcDailyMult(DynaVars.dblHour);
                         end;
-                        PEAKDAY:
+                        TSolveMode.PEAKDAY:
                         begin
                             Factor := ActiveCircuit.GenMultiplier;
                             CalcDailyMult(DynaVars.dblHour);
                         end;
-                        AUTOADDFLAG:
+                        TSolveMode.AUTOADDFLAG:
                             Factor := 1.0;
                     else
                         Factor := 1.0

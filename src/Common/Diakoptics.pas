@@ -30,7 +30,8 @@ implementation
 
 Uses
   ExecHelper, Executive, ParserDel, YMatrix, KLUSolve, Ucomplex, Sparse_Math,
-  UcMatrix, math;
+  UcMatrix, math,
+  Dynamics; // For TSolveMode
 
 
 
@@ -466,8 +467,7 @@ End;
 *******************************************************************************}
 Function ADiakoptics_Tearing(): Integer;
 var
-
-  Prev_Mode,                              // Stores the previous solution mode
+  Prev_Mode: TSolveMode;                              // Stores the previous solution mode
   Num_Ckts    : Integer;                  // Stores the number of Sub-Circuits created
 Begin
   With ActiveCircuit,ActiveCircuit.Solution do
@@ -475,7 +475,7 @@ Begin
     ActiveActor                   :=  1;
     Num_Ckts                      :=  ActiveCircuit.Tear_Circuit();
     Prev_mode                     :=  Dynavars.SolutionMode;
-    Dynavars.SolutionMode         :=  0;          // Shapshot mode
+    Dynavars.SolutionMode         :=  TSolveMode.SNAPSHOT;
     DSSExecutive.Command          :=  'set controlmode=off';
     Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE);
 //    DoSolveCmd();

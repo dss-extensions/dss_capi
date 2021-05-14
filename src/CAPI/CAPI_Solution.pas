@@ -118,7 +118,9 @@ uses
     YMatrix,
     SolutionAlgs,
     Solution,
-    ExecOptions;
+    ExecOptions,
+    SysUtils,
+    Dynamics;
 
 //------------------------------------------------------------------------------
 function Solution_Get_Frequency(): Double; CDECL;
@@ -167,7 +169,7 @@ begin
     Result := 0;
     if InvalidCircuit then
         Exit;
-    Result := ActiveCircuit.Solution.Mode
+    Result := Ord(ActiveCircuit.Solution.Mode)
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Number(): Integer; CDECL;
@@ -254,7 +256,10 @@ procedure Solution_Set_Mode(Mode: Integer); CDECL;
 begin
     if InvalidCircuit then
         Exit;
-    ActiveCircuit.Solution.Mode := Mode; //InterpretSolveMode(Value);
+    if (Mode >= Ord(Low(TSolveMode))) and (Mode <= Ord(High(TSolveMode))) then
+        ActiveCircuit.Solution.Mode := TSolveMode(Mode)
+    else
+        DoSimpleMsg(Format('Invalid solution mode (%d).', [Mode]), 5004);
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Number(Value: Integer); CDECL;

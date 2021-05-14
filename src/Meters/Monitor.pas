@@ -1393,7 +1393,7 @@ begin
                     SolutionBuffer^[5] := 0;
                 SolutionBuffer^[6] := IntervalHrs;
                 SolutionBuffer^[7] := SolutionCount;
-                SolutionBuffer^[8] := Mode;
+                SolutionBuffer^[8] := Ord(Mode);
                 SolutionBuffer^[9] := Frequency;
                 SolutionBuffer^[10] := Year;
                 SolutionBuffer^[11] := Time_Solve;

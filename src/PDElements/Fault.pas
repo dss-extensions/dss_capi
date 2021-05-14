@@ -567,7 +567,7 @@ begin
 
   // make sure randommult is 1.0 if not solution mode MonteFault
 
-    if ActiveCircuit.Solution.Mode <> MONTEFAULT then
+    if ActiveCircuit.Solution.Mode <> TSolveMode.MONTEFAULT then
         RandomMult := 1.0;
 
     if RandomMult = 0.0 then

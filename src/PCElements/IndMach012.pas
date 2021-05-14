@@ -1349,7 +1349,7 @@ begin
     // compute I012
 
     case ActiveCircuit.Solution.DynaVars.SolutionMode of
-        DYNAMICMODE:
+        TSolveMode.DYNAMICMODE:
         begin
             CalcDynamic(V012, I012);
         end;
@@ -1365,7 +1365,6 @@ end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.DoDynamicMode;
-//----------------------------------------------------------------------------
 
 { This is an example taken from Generator illustrating how a PC element might
   handle Dynamics mode with a Thevenin equivalent
@@ -1581,25 +1580,25 @@ begin
             with Solution do
 
                 case Mode of
-                    SNAPSHOT:
+                    TSolveMode.SNAPSHOT:
                         Factor := 1.0;
-                    DAILYMODE:
+                    TSolveMode.DAILYMODE:
                     begin
                         Factor := 1.0;
                         CalcDailyMult(DynaVars.dblHour) // Daily dispatch curve
                     end;
-                    YEARLYMODE:
+                    TSolveMode.YEARLYMODE:
                     begin
                         Factor := 1.0;
                         CalcYearlyMult(DynaVars.dblHour);
                     end;
-                    DUTYCYCLE:
+                    TSolveMode.DUTYCYCLE:
                     begin
                         Factor := 1.0;
                         CalcDutyMult(DynaVars.dblHour);
                     end;
-                    GENERALTIME,   // General sequential time simulation
-                    DYNAMICMODE:
+                    TSolveMode.GENERALTIME,   // General sequential time simulation
+                    TSolveMode.DYNAMICMODE:
                     begin
                         Factor := 1.0;
                                    // This mode allows use of one class of load shape
@@ -1614,24 +1613,24 @@ begin
                             ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
                         end;
                     end;
-                    MONTECARLO1,
-                    MONTEFAULT,
-                    FAULTSTUDY:
+                    TSolveMode.MONTECARLO1,
+                    TSolveMode.MONTEFAULT,
+                    TSolveMode.FAULTSTUDY:
                         Factor := 1.0;
-                    MONTECARLO2,
-                    MONTECARLO3,
-                    LOADDURATION1,
-                    LOADDURATION2:
+                    TSolveMode.MONTECARLO2,
+                    TSolveMode.MONTECARLO3,
+                    TSolveMode.LOADDURATION1,
+                    TSolveMode.LOADDURATION2:
                     begin
                         Factor := 1.0;
                         CalcDailyMult(DynaVars.dblHour);
                     end;
-                    PEAKDAY:
+                    TSolveMode.PEAKDAY:
                     begin
                         Factor := 1.0;
                         CalcDailyMult(DynaVars.dblHour);
                     end;
-                    AUTOADDFLAG:
+                    TSolveMode.AUTOADDFLAG:
                         Factor := 1.0;
                 else
                     Factor := 1.0

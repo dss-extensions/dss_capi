@@ -1767,10 +1767,10 @@ begin
 
                 with Solution do
                     case Mode of
-                        SNAPSHOT: ; {Just solve for the present kW, kvar}  // Don't check for state change
-                        DAILYMODE:
+                        TSolveMode.SNAPSHOT: ; {Just solve for the present kW, kvar}  // Don't check for state change
+                        TSolveMode.DAILYMODE:
                             CalcDailyMult(DynaVars.dblHour); // Daily dispatch curve
-                        YEARLYMODE:
+                        TSolveMode.YEARLYMODE:
                             CalcYearlyMult(DynaVars.dblHour);
              (*
                 MONTECARLO1,
@@ -1778,7 +1778,7 @@ begin
                 FAULTSTUDY,
                 DYNAMICMODE:   ; // {do nothing for these modes}
              *)
-                        GENERALTIME:
+                        TSolveMode.GENERALTIME:
                         begin
                                 // This mode allows use of one class of load shape
                             case ActiveCircuit.ActiveLoadShapeClass of
@@ -1793,15 +1793,15 @@ begin
                             end;
                         end;
                 // Assume Daily curve, If any, for the following
-                        MONTECARLO2,
-                        MONTECARLO3,
-                        LOADDURATION1,
-                        LOADDURATION2:
+                        TSolveMode.MONTECARLO2,
+                        TSolveMode.MONTECARLO3,
+                        TSolveMode.LOADDURATION1,
+                        TSolveMode.LOADDURATION2:
                             CalcDailyMult(DynaVars.dblHour);
-                        PEAKDAY:
+                        TSolveMode.PEAKDAY:
                             CalcDailyMult(DynaVars.dblHour);
 
-                        DUTYCYCLE:
+                        TSolveMode.DUTYCYCLE:
                             CalcDutyMult(DynaVars.dblHour);
                 {AUTOADDFLAG:  ; }
                     end;

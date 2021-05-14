@@ -1107,23 +1107,23 @@ begin
           {Modify magnitude based on a LOADSHAPE if assigned}
             case Mode of
                {Uses same logic as LOAD}
-                DAILYMODE:
+                TSolveMode.DAILYMODE:
                 begin
                     CalcDailyMult(DynaVars.dblHour);
                 end;
-                YEARLYMODE:
+                TSolveMode.YEARLYMODE:
                 begin
                     CalcYearlyMult(DynaVars.dblHour);
                 end;
-                DUTYCYCLE:
+                TSolveMode.DUTYCYCLE:
                 begin
                     CalcDutyMult(DynaVars.dblHour);
                 end;
             end;
 
-            if (Mode = DAILYMODE) or     {If a loadshape mode simulation}
-                (Mode = YEARLYMODE) or
-                (Mode = DUTYCYCLE) then
+            if (Mode = TSolveMode.DAILYMODE) or     {If a loadshape mode simulation}
+                (Mode = TSolveMode.YEARLYMODE) or
+                (Mode = TSolveMode.DUTYCYCLE) then
             begin  {Loadshape cases}
                 if ShapeIsActual then
                     Vmag := 1000.0 * ShapeFactor.re  // assumes actual L-N voltage or voltage across source

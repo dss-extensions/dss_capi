@@ -1113,35 +1113,35 @@ begin
         end
         else
             case Mode of
-                SNAPSHOT,
-                HARMONICMODE:
+                TSolveMode.SNAPSHOT,
+                TSolveMode.HARMONICMODE:
                     if ExemptFromLDCurve then
                         Factor := GrowthFactor(Year)
                     else
                         Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
-                DAILYMODE:
+                TSolveMode.DAILYMODE:
                 begin
                     Factor := GrowthFactor(Year);
                     if not ExemptFromLDCurve then
                         Factor := Factor * ActiveCircuit.LoadMultiplier;
                     CalcDailyMult(DynaVars.dblHour);
                 end;
-                YEARLYMODE:
+                TSolveMode.YEARLYMODE:
                 begin
                     Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
                     CalcYearlyMult(DynaVars.dblHour);
                     if FLoadModel = 4 then
                         CalcCVRMult(DynaVars.dblHour);
                 end;
-                DUTYCYCLE:
+                TSolveMode.DUTYCYCLE:
                 begin
                     Factor := GrowthFactor(Year);
                     if not ExemptFromLDCurve then
                         Factor := Factor * ActiveCircuit.LoadMultiplier;
                     CalcDutyMult(DynaVars.dblHour);
                 end;
-                GENERALTIME,
-                DYNAMICMODE:
+                TSolveMode.GENERALTIME,
+                TSolveMode.DYNAMICMODE:
                 begin
                     Factor := GrowthFactor(Year);
                     if not ExemptFromLDCurve then
@@ -1158,7 +1158,7 @@ begin
                         ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
                     end;
                 end;
-                MONTECARLO1:
+                TSolveMode.MONTECARLO1:
                 begin
                     Randomize(RandomType);
                     Factor := RandomMult * GrowthFactor(Year);
@@ -1166,22 +1166,22 @@ begin
                         Factor := Factor * ActiveCircuit.LoadMultiplier;
                 end;
 
-                MONTECARLO2,
-                MONTECARLO3,
-                LOADDURATION1,
-                LOADDURATION2:
+                TSolveMode.MONTECARLO2,
+                TSolveMode.MONTECARLO3,
+                TSolveMode.LOADDURATION1,
+                TSolveMode.LOADDURATION2:
                 begin
                     Factor := GrowthFactor(Year);
                     CalcDailyMult(DynaVars.dblHour);
                     if not ExemptFromLDCurve then
                         Factor := Factor * ActiveCircuit.LoadMultiplier;
                 end;
-                PEAKDAY:
+                TSolveMode.PEAKDAY:
                 begin
                     Factor := GrowthFactor(Year);
                     CalcDailyMult(DynaVars.dblHour);
                 end;
-                AUTOADDFLAG:
+                TSolveMode.AUTOADDFLAG:
                     Factor := GrowthFactor(Year);  // Loadmult = 1.0 by default
             else
                 Factor := GrowthFactor(Year)    // defaults to Base kW * growth

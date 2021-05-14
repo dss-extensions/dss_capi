@@ -1605,7 +1605,7 @@ Begin
     iElem               :=  LoadshapeClass.Next;
   End;
   // Configures simulation
-  solution.Mode                 :=  SNAPSHOT;
+  solution.Mode                 :=  TSolveMode.SNAPSHOT;
   solution.MaxIterations        :=  100;
   Solution.MaxControlIterations :=  100;
 
@@ -2427,7 +2427,7 @@ begin
        Exit;
      End;
 
-     Solution.Mode := SNAPSHOT;
+     Solution.Mode := TSolveMode.SNAPSHOT;
      LoadMultiplier  := CapacityStart;
      CapacityFound := False;
 
