@@ -1062,7 +1062,8 @@ begin
     CASE Index of  // Special cases
        1:  Result := GetBus(1);
        2:  Result := GetBus(2);
-       4:  Result  := GetDSSArray_Real(FNumSteps, Fkvarrating);
+       4:  Result := GetDSSArray_Real(FNumSteps, Fkvarrating);
+       5:  Result := Format('%-g',   [kvRating]);
        8:  Begin
                FTemp := Allocmem(SizeOF(FTemp^[1])*FNumSteps);
                For i := 1 to FNumSteps Do FTemp^[i] := FC^[i] * 1.0e6;  // To microfarads
