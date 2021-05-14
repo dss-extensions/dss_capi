@@ -17,17 +17,19 @@ uses
     ArrayDef,
     uComplex,
     uCMatrix,
-    NamedObject;
+    NamedObject,
+    DSSClass,
+    DSSObject;
 
 type
 
 
     TDSSBus = class(TNamedObject)
     PRIVATE
+        FNumNodesThisBus: SmallInt;
 
-        FNumNodesThisBus: Integer;
         Nodes: pIntegerArray;
-        Allocation: Integer;
+        Allocation: SmallInt;
         RefNo: pIntegerArray;
 
         procedure AddANode;
@@ -48,8 +50,7 @@ type
 
         CoordDefined,
         BusChecked,
-        Keep,
-        IsRadialBus: Boolean;  // Flag for general use in bus searches
+        Keep: Boolean;  // Flag for general use in bus searches
 
        // ***** Reliability Variables
         BusFltRate: Double;  // Accumulated failure rate  downstream from this bus faults per year
@@ -68,13 +69,13 @@ type
         procedure AllocateBusVoltages;
         procedure AllocateBusCurrents;
 
-        function Add(NodeNum: Integer): Integer;
-        function Find(NodeNum: Integer): Integer; // Returns reference num for node by node number
-        function FindIdx(NodeNum: Integer): Integer; // Returns index of node by node number
+        function Add(Circuit: TNamedObject; NodeNum: SmallInt): Integer;
+        function Find(NodeNum: SmallInt): Integer; // Returns reference num for node by node number
+        function FindIdx(NodeNum: SmallInt): Integer; // Returns index of node by node number
         function GetRef(NodeIndex: Integer): Integer; // Returns reference Num for node by node index
-        function GetNum(NodeIndex: Integer): Integer; // Returns ith node number designation
+        function GetNum(NodeIndex: Integer): SmallInt; // Returns ith node number designation
 
-        property NumNodesThisBus: Integer READ FNumNodesThisBus;
+        property NumNodesThisBus: SmallInt READ FNumNodesThisBus;
         property Zsc1: Complex READ Get_Zsc1;
         property Zsc0: Complex READ Get_Zsc0;
 
@@ -86,7 +87,7 @@ type
 
     TNodeBus = record
         BusRef: Integer;   // Ref to Bus in circuit's BusList
-        NodeNum: Integer;
+        NodeNum: SmallInt;
     end;
     pTNodeBusArray = ^TNodeBusArray;
     TNodeBusArray = array[1..2] of TNodeBus;
@@ -95,12 +96,13 @@ implementation
 
 uses
     DSSGlobals,
-    SysUtils;
+    SysUtils,
+    Circuit;
 
 constructor TDSSBus.Create;
 begin
     inherited Create('Bus');
-    Allocation := 3;
+    Allocation := 4;
     Nodes := AllocMem(Sizeof(Nodes^[1]) * Allocation);
     RefNo := AllocMem(Sizeof(RefNo^[1]) * Allocation);
     FNumNodesThisBus := 0;
@@ -121,7 +123,6 @@ begin
     BusTotalMiles := 0.0;  // total length of line downstream
     CoordDefined := FALSE;
     Keep := FALSE;
-    IsRadialBus := FALSE;
 end;
 
 destructor TDSSBus.Destroy;
@@ -151,7 +152,7 @@ begin
     end;
 end;
 
-function TDSSBus.Add(NodeNum: Integer): Integer;
+function TDSSBus.Add(Circuit: TNamedObject; NodeNum: SmallInt): Integer;
 begin
     if NodeNum = 0 then
         Result := 0
@@ -166,7 +167,7 @@ begin
             AddANode;
             Nodes^[FNumNodesThisBus] := NodeNum;
 
-            with ActiveCircuit do
+            with TDSSCircuit(Circuit) do
             begin
                 INC(NumNodes);  // Global node number for circuit
                 RefNo^[FNumNodesThisBus] := NumNodes;
@@ -177,7 +178,7 @@ begin
 end;
 
 
-function TDSSBus.Find(NodeNum: Integer): Integer;
+function TDSSBus.Find(NodeNum: SmallInt): Integer;
 // Returns reference number
 var
     i: Integer;
@@ -201,7 +202,7 @@ begin
         Result := Refno^[NodeIndex];
 end;
 
-function TDSSBus.GetNum(NodeIndex: Integer): Integer;
+function TDSSBus.GetNum(NodeIndex: Integer): SmallInt;
 begin
     Result := 0;
     if (NodeIndex > 0) and (NodeIndex <= FNumNodesThisBus) then
@@ -245,7 +246,7 @@ begin
 
 end;
 
-function TDSSBus.FindIdx(NodeNum: Integer): Integer;
+function TDSSBus.FindIdx(NodeNum: SmallInt): Integer;
 // Returns Index
 var
     i: Integer;

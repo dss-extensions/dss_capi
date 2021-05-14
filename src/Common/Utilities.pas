@@ -2917,7 +2917,7 @@ begin
     if iBusidx > 0 then
         while ActiveCircuit.Buses^[iBusidx].FindIdx(Result) <> 0 do
             Inc(Result);
-    ActiveCircuit.Buses^[iBusidx].Add(result);  // add it to the list so next call will be unique
+    ActiveCircuit.Buses^[iBusidx].Add(ActiveCircuit, result);  // add it to the list so next call will be unique
 end;
 
 procedure ShowMessageBeep(const s: String);

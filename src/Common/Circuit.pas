@@ -2028,7 +2028,7 @@ BEGIN
     {Replace Nodebuffer values with global reference number}
     WITH Buses^[Result] DO BEGIN
       FOR i := 1 to NNodes DO BEGIN
-         NodeRef := Add(NodeBuffer^[i]);
+         NodeRef := Add(self, NodeBuffer^[i]);
          If NodeRef=NumNodes THEN BEGIN  // This was a new node so Add a NodeToBus element ????
              AddANodeBus;   // Allocates more memory if necessary
              MapNodeToBus^[NumNodes].BusRef  := Result;
