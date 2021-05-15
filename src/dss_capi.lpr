@@ -108,7 +108,6 @@ uses
     DSSObject in 'src/General/DSSObject.pas',
     Dynamics in 'src/Shared/Dynamics.pas',
     EnergyMeter in 'src/Meters/EnergyMeter.pas',
-    Equivalent in 'src/PCElements/Equivalent.pas',
     EventQueue in 'src/Common/EventQueue.pas',
     ExecCommands in 'src/Executive/ExecCommands.pas',
     ExecHelper in 'src/Executive/ExecHelper.pas',
