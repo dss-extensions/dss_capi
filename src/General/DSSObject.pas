@@ -29,12 +29,19 @@ type
 {$ELSE}
     PROTECTED
 {$ENDIF}
+        DSS: TDSSContext;
 
         PropSeqCount: Integer;
         FPropertyValue: pStringArray;
         PrpSequence: pIntegerArray;
 
         function GetNextPropertySet(idx: Integer): Integer;
+
+        // DSSContext convenience functions
+        procedure DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);inline;
+        procedure DoSimpleMsg(Const S: String; ErrNum:Integer);inline;
+        procedure AppendToEventLog(const opdev: String; const action: String);inline;
+        function GetCktElementIndex(const FullObjName: String): Integer;inline;
 
     PUBLIC
 
@@ -68,7 +75,9 @@ implementation
 
 uses
     Sysutils,
-    Utilities;
+    Utilities,
+    LoadShape,
+    DSSGlobals;
 
 procedure TDSSObject.ClearPropSeqArray;
 var
@@ -83,6 +92,8 @@ end;
 constructor TDSSObject.Create(ParClass: TDSSClass);
 begin
     inherited Create(ParClass.Name);
+    DSS := ParClass.DSS;
+
     DSSObjType := 0;
     PropSeqCount := 0;
     ParentClass := ParClass;
@@ -99,8 +110,13 @@ destructor TDSSObject.Destroy;
 
 var
     i: Integer;
-
 begin
+    if DSS = nil then
+    begin
+        inherited Destroy;
+        exit;
+    end;
+
     for i := 1 to ParentClass.NumProperties do
         FPropertyValue^[i] := '';
     Reallocmem(FPropertyValue, 0);
@@ -194,11 +210,9 @@ end;
 function TDSSObject.GetNextPropertySet(idx: Integer): Integer;
 // Find next larger property sequence number
 // return 0 if none found
-
 var
     i, smallest: Integer;
 begin
-
     Smallest := 9999999; // some big number
     Result := 0;
 
@@ -213,12 +227,11 @@ begin
                 Result := i;
             end;
     end;
-
 end;
 
 procedure TDSSObject.Set_Name(const Value: String);
 begin
-// If renamed, then let someone know so hash list can be updated;
+    // If renamed, then let someone know so hash list can be updated;
     if Length(LocalName) > 0 then
         ParentClass.ElementNamesOutOfSynch := TRUE;
     LocalName := Value;
@@ -237,6 +250,26 @@ begin
     // Keep track of the order in which this property was accessed for Save Command
     Inc(PropSeqCount);
     PrpSequence^[Index] := PropSeqCount;
+end;
+
+procedure TDSSObject.DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);inline;
+begin
+    DSSGlobals.DoErrorMsg(DSS, S, Emsg, ProbCause, ErrNum)
+end;
+
+procedure TDSSObject.DoSimpleMsg(Const S: String; ErrNum:Integer);inline;
+begin
+    DSSGlobals.DoSimpleMsg(DSS, S, ErrNum)
+end;
+
+procedure TDSSObject.AppendToEventLog(const opdev: String; const action: String);inline;
+begin
+    Utilities.AppendtoEventLog(DSS, opdev, action);
+end;
+
+function TDSSObject.GetCktElementIndex(const FullObjName: String): Integer;inline;
+begin
+    Result := Utilities.GetCktElementIndex(DSS, FullObjName)
 end;
 
 end.

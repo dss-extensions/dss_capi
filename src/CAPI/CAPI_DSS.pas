@@ -6,8 +6,8 @@ uses
 {$IFDEF WINDOWS}
     Windows,
 {$ENDIF}
-    CAPI_Utils,
-    CAPI_Globals;
+    DSSClass,
+    CAPI_Utils;
 
 procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 function DSS_Get_NumCircuits(): Integer; CDECL;
@@ -48,16 +48,16 @@ uses
     CAPI_Constants,
     DSSClassDefs,
     DSSGlobals,
-    DSSClass,
     Exechelper,
     sysUtils,
     Executive,
     ParserDel,
-    CmdForms;
+    CmdForms,
+    DSSHelper;
 
 procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 begin
-    MakeNewCircuit(Value);
+    MakeNewCircuit(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_AllowForms: TAPIBoolean; CDECL;
@@ -68,9 +68,9 @@ end;
 procedure DSS_Set_AllowForms(Value: TAPIBoolean); CDECL;
 begin
 {$IFDEF WINDOWS}
-    if (Value) and (GetConsoleWindow() = 0) and ((@DSSMessageCallback) = NIL) then
+    if (Value) and (GetConsoleWindow() = 0) and ((@DSSPrime.DSSMessageCallback) = NIL) then
     begin
-        DoSimplemsg('Cannot activate output with no console available! If you want to use a message output callback, register it before enabling AllowForms.', 5096);
+        DoSimplemsg(DSSPrime, 'Cannot activate output with no console available! If you want to use a message output callback, register it before enabling AllowForms.', 5096);
         Exit;
     end;
 {$ENDIF}
@@ -93,12 +93,12 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumCircuits(): Integer; CDECL;
 begin
-    Result := NumCircuits;
+    Result := DSSPrime.NumCircuits;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_ClearAll(); CDECL;
 begin
-    DoClearCmd;
+    DSSPrime.DSSExecutive.DoClearCmd;
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_Version(): PAnsiChar; CDECL;
@@ -107,16 +107,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 function DSS_Start(code: Integer): TAPIBoolean; CDECL;
-{Place any start code here}
 begin
     Result := TRUE;
- (*      Reverted to original method. 3/1/17. see dpr file
-      InitializeInterfaces;
-      IsDLL := TRUE;
-    {Create one instance of DSS executive whenever the DSS Engine is init'd}
-      DSSExecutive := TExecutive.Create;  // Start the DSS when DSS interface is created
-      DSSExecutive.CreateDefaultDSSItems;
-  *)
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -126,11 +118,11 @@ var
 
 begin
 
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumIntrinsicClasses);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, DSSPrime.NumIntrinsicClasses);
     k := 0;
-    for i := 1 to NumIntrinsicClasses do
+    for i := 1 to DSSPrime.NumIntrinsicClasses do
     begin
-        Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSClassList.Get(i)).Name);
+        Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSPrime.DSSClassList.Get(i)).Name);
         Inc(k);
     end;
 
@@ -157,7 +149,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumClasses(): Integer; CDECL;
 begin
-    Result := NumIntrinsicClasses;
+    Result := DSSPrime.NumIntrinsicClasses;
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumUserClasses(): Integer; CDECL;
@@ -167,12 +159,12 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_DataPath(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DataDirectory);
+    Result := DSS_GetAsPAnsiChar(DSSPrime.DataDirectory);
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
 begin
-    SetDataPath(Value);
+    SetDataPath(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Reset(); CDECL;
@@ -191,16 +183,16 @@ var
     DevClassIndex: Integer;
 begin
     Result := 0;
-    DevClassIndex := ClassNames.Find(ClassName);
+    DevClassIndex := DSSPrime.ClassNames.Find(ClassName);
     if DevClassIndex = 0 then
     begin
-        DoSimplemsg('Error: Class ' + ClassName + ' not found.', 5016);
+        DoSimplemsg(DSSPrime, 'Error: Class ' + ClassName + ' not found.', 5016);
         Exit;
     end;
 
-    LastClassReferenced := DevClassIndex;
-    ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
-    Result := LastClassReferenced;
+    DSSPrime.LastClassReferenced := DevClassIndex;
+    DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+    Result := DSSPrime.LastClassReferenced;
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_LegacyModels(): TAPIBoolean; CDECL;
@@ -213,7 +205,7 @@ begin
     if (Value <> DSS_CAPI_LEGACY_MODELS) then
     begin
         DSS_CAPI_LEGACY_MODELS := Value;
-        DSSExecutive.Command := 'clear';
+        DSSPrime.DSSExecutive.Command := 'clear';
     end;
 end;
 //------------------------------------------------------------------------------
@@ -229,24 +221,24 @@ begin
         DSS_CAPI_ALLOW_CHANGE_DIR := Value;
         if not Value then
         begin
-            SetCurrentDSSDir(GetCurrentDir());
+            DSSPrime.SetCurrentDSSDir(GetCurrentDir());
         end;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_RegisterPlotCallback(cb: dss_callback_plot_t); CDECL;
 begin
-    DSSPlotCallback := cb;
+    DSSPrime.DSSPlotCallback := cb;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_RegisterMessageCallback(cb: dss_callback_message_t); CDECL;
 begin
-    DSSMessageCallback := cb;
+    DSSPrime.DSSMessageCallback := cb;
     
 {$IFDEF WINDOWS}
     // If we cannot get a console on Windows, disable text output when the
     // message callback is removed.
-    if ((@DSSMessageCallback) = NIL) and (GetConsoleWindow() = 0) then
+    if ((@DSSPrime.DSSMessageCallback) = NIL) and (GetConsoleWindow() = 0) then
     begin
         NoFormsAllowed := True;
     end;

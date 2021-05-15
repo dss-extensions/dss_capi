@@ -31,7 +31,6 @@ type
     PROTECTED
         FEnabled: Boolean;
     PRIVATE
-
         FBusNames: pStringArray;
         FEnabledProperty: Integer;
         FActiveTerminal: Integer;
@@ -65,7 +64,6 @@ type
         Fnconds: Integer;  // no. conductors per terminal
         Fnphases: Integer;  // Phases, this device
 
-
         ComplexBuffer: pComplexArray;
 
         IterminalSolutionCount: Integer;
@@ -88,6 +86,7 @@ type
 
         LastTerminalChecked: Integer;  // Flag used in tree searches
 
+        //TODO: use bit flags to reduce the size of this?
         Checked,
         HasEnergyMeter,
         HasSensorObj,
@@ -175,8 +174,12 @@ uses
     DSSGlobals,
     SysUtils,
     Utilities,
+    Math,
     Solution,
-    Math;
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo,
+    CktElementClass;
 
 var
     cEpsilon : Complex;
@@ -185,6 +188,7 @@ var
 constructor TDSSCktElement.Create(ParClass: TDSSClass);
 begin
     inherited Create(ParClass);
+
     NodeRef := NIL;
     YPrim_Series := NIL;
     YPrim_Shunt := NIL;
@@ -237,6 +241,11 @@ destructor TDSSCktElement.Destroy;
 var
     i: Integer;
 begin
+    if DSS = NIL then
+    begin
+        inherited Destroy;
+        exit;
+    end;
     for i := 1 to FNTerms do
         FBusNames^[i] := ''; // Free up strings
 
@@ -316,15 +325,15 @@ begin
     begin  // Do all conductors
         for i := 1 to Fnphases do
             Terminals[FActiveTerminal - 1].ConductorsClosed[i - 1] := Value;
-        ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
-        YPrimInvalid := TRUE;
+        // DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
+        YPrimInvalid := TRUE; // this also sets the global SystemYChanged flag
     end
     else
     begin
         if (Index > 0) and (Index <= Fnconds) then
         begin
             Terminals[FActiveTerminal - 1].ConductorsClosed[index - 1] := Value;
-            ActiveCircuit.Solution.SystemYChanged := TRUE;
+            // DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;
             YPrimInvalid := TRUE;
         end;
     end;

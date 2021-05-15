@@ -87,7 +87,7 @@ type
         function MakeLike(const ReactorName: String): Integer; OVERRIDE;
         procedure DefineProperties;  // Add Properties of this class to propName
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -144,9 +144,6 @@ type
         property SimpleX: Double READ X;
     end;
 
-var
-    ActiveReactorObj: TReactorObj;
-
 implementation
 
 uses
@@ -155,15 +152,18 @@ uses
     DSSGlobals,
     Sysutils,
     Mathutil,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 19;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TReactor.Create;  // Creates superstructure for all Reactor objects
+constructor TReactor.Create(dssContext: TDSSContext);  // Creates superstructure for all Reactor objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Reactor';
     DSSClassType := DSSClassType + REACTOR_ELEMENT;
 
@@ -285,7 +285,7 @@ var
     MatBuffer: pDoubleArray;
 
 begin
-    with ActiveReactorObj do
+    with DSS.ActiveReactorObj do
     begin
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
         OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
@@ -311,7 +311,7 @@ var
     TestS: String;
 
 begin
-    with ActiveReactorObj do
+    with DSS.ActiveReactorObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -349,7 +349,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveReactorObj do
+    with DSS.ActiveReactorObj do
     begin
         SetBus(1, S);
 
@@ -384,11 +384,11 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveReactorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveReactorObj;  // use property to set this value
+    DSS.ActiveReactorObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveReactorObj;  // use property to set this value
 
 
-    with ActiveReactorObj do
+    with DSS.ActiveReactorObj do
     begin
 
         ParamPointer := 0;
@@ -447,7 +447,7 @@ begin
                     L := Parser.DblValue / 1000.0;  // convert from mH to H
             else
             // Inherited Property Edits
-                ClassEdit(ActiveReactorObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveReactorObj, ParamPointer - NumPropsThisClass)
             end;
 
          // Some specials ...
@@ -497,9 +497,9 @@ begin
                     SpecType := 2;
                 end;
                 17:
-                    RCurveObj := XYCurveClass.Find(RCurve);
+                    RCurveObj := DSS.XYCurveClass.Find(RCurve);
                 18:
-                    LCurveObj := XYCurveClass.Find(LCurve);
+                    LCurveObj := DSS.XYCurveClass.Find(LCurve);
                 19:
                 begin
                     SpecType := 2;
@@ -542,7 +542,7 @@ begin
    {See if we can find this Reactor name in the present collection}
     OtherReactor := Find(ReactorName);
     if OtherReactor <> NIL then
-        with ActiveReactorObj do
+        with DSS.ActiveReactorObj do
         begin
 
             if Fnphases <> OtherReactor.Fnphases then

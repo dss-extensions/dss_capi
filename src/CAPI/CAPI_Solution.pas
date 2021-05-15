@@ -93,9 +93,7 @@ function Solution_Get_IntervalHrs(): Double; CDECL;
 procedure Solution_Set_IntervalHrs(Value: Double); CDECL;
 function Solution_Get_MinIterations(): Integer; CDECL;
 procedure Solution_Set_MinIterations(Value: Integer); CDECL;
-{V8-ONLY>
 procedure Solution_SolveAll();cdecl;
-<V8-ONLY}
 procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure Solution_Get_IncMatrix_GR(); CDECL;
 procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
@@ -111,127 +109,129 @@ implementation
 
 uses
     CAPI_Constants,
+    SysUtils,
     DSSGlobals,
     Math,
     LoadShape,
     Utilities,
     YMatrix,
-    SolutionAlgs,
     Solution,
+    SolutionAlgs,
     ExecOptions,
-    SysUtils,
-    Dynamics;
+    Dynamics,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
 function Solution_Get_Frequency(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.Frequency
+    Result := DSSPrime.ActiveCircuit.Solution.Frequency
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Hour(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.DynaVars.intHour
+    Result := DSSPrime.ActiveCircuit.Solution.DynaVars.intHour
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Iterations(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.Iteration
+    Result := DSSPrime.ActiveCircuit.Solution.Iteration
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_LoadMult(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.LoadMultiplier
+    Result := DSSPrime.ActiveCircuit.LoadMultiplier
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_MaxIterations(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.MaxIterations
+    Result := DSSPrime.ActiveCircuit.Solution.MaxIterations
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Mode(): Integer; CDECL;
 begin
-     //If not InvalidCircuit Then Result := GetSolutionModeID      changed to integer 8/16/00
+     //If not InvalidCircuit(DSSPrime) Then Result := GetSolutionModeID      changed to integer 8/16/00
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Ord(ActiveCircuit.Solution.Mode)
+    Result := Ord(DSSPrime.ActiveCircuit.Solution.Mode)
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Number(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.NumberOfTimes
+    Result := DSSPrime.ActiveCircuit.Solution.NumberOfTimes
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Random(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.RandomType
+    Result := DSSPrime.ActiveCircuit.Solution.RandomType
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Seconds(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.dynavars.t
+    Result := DSSPrime.ActiveCircuit.Solution.dynavars.t
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_StepSize(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.dynavars.h
+    Result := DSSPrime.ActiveCircuit.Solution.dynavars.h
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Tolerance(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.ConvergenceTolerance
+    Result := DSSPrime.ActiveCircuit.Solution.ConvergenceTolerance
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Year(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.Year
+    Result := DSSPrime.ActiveCircuit.Solution.Year
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Frequency(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.Frequency := Value;
+    DSSPrime.ActiveCircuit.Solution.Frequency := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Hour(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    with  ActiveCircuit.Solution do
+    with  DSSPrime.ActiveCircuit.Solution do
     begin
         DynaVars.intHour := Value;
         Update_dblHour;
@@ -240,99 +240,99 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_LoadMult(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.LoadMultiplier := Value;
+    DSSPrime.ActiveCircuit.LoadMultiplier := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_MaxIterations(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.MaxIterations := Value;
+    DSSPrime.ActiveCircuit.Solution.MaxIterations := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Mode(Mode: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     if (Mode >= Ord(Low(TSolveMode))) and (Mode <= Ord(High(TSolveMode))) then
-        ActiveCircuit.Solution.Mode := TSolveMode(Mode)
+        DSSPrime.ActiveCircuit.Solution.Mode := TSolveMode(Mode)
     else
-        DoSimpleMsg(Format('Invalid solution mode (%d).', [Mode]), 5004);
+        DoSimpleMsg(DSSPrime, Format('Invalid solution mode (%d).', [Mode]), 5004);
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Number(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.NumberOfTimes := Value;
+    DSSPrime.ActiveCircuit.Solution.NumberOfTimes := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Random(Random: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.RandomType := Random;
+    DSSPrime.ActiveCircuit.Solution.RandomType := Random;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Seconds(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.dynavars.t := Value;
+    DSSPrime.ActiveCircuit.Solution.dynavars.t := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepSize(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.dynavars.h := Value;
+    DSSPrime.ActiveCircuit.Solution.dynavars.h := Value;
     Solution_Set_IntervalHrs(Value / 3600.0);     // Keep IntervalHrs in synch with time step size
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Tolerance(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.ConvergenceTolerance := Value;
+    DSSPrime.ActiveCircuit.Solution.ConvergenceTolerance := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Year(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.Year := Value;
+    DSSPrime.ActiveCircuit.Solution.Year := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Solve(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.Solve;
+    DSSPrime.ActiveCircuit.Solution.Solve;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ModeID(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(GetSolutionModeID)
+    Result := DSS_GetAsPAnsiChar(GetSolutionModeID(DSSPrime))
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_LoadModel(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.LoadModel
+    Result := DSSPrime.ActiveCircuit.Solution.LoadModel
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_LoadModel(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         LoadModel := Value;
         DefaultLoadModel := LoadModel;
@@ -342,30 +342,30 @@ end;
 function Solution_Get_LDCurve(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(ActiveCircuit.LoadDurCurve)
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.LoadDurCurve)
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_LDCurve(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         LoadDurCurve := Value;
-        LoadDurCurveObj := LoadShapeClass.Find(LoadDurCurve);
+        LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(LoadDurCurve);
         if LoadDurCurveObj = NIL then
-            DoSimpleMsg('Load-Duration Curve not found.', 5001);
+            DoSimpleMsg(DSSPrime, 'Load-Duration Curve not found.', 5001);
     end;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_pctGrowth(): Double; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         Result := (DefaultGrowthRate - 1.0) * 100.0;
         Exit;
@@ -374,9 +374,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_pctGrowth(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         DefaultGrowthRate := 1.0 + Value / 100.0;
         DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
@@ -386,91 +386,91 @@ end;
 function Solution_Get_AddType(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.AutoAddObj.AddType
+    Result := DSSPrime.ActiveCircuit.AutoAddObj.AddType
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_AddType(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.AutoAddObj.AddType := Value;
+    DSSPrime.ActiveCircuit.AutoAddObj.AddType := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_GenkW(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.AutoAddObj.GenkW
+    Result := DSSPrime.ActiveCircuit.AutoAddObj.GenkW
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_GenkW(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.AutoAddObj.GenkW := Value;
+    DSSPrime.ActiveCircuit.AutoAddObj.GenkW := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_GenPF(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.AutoAddObj.GenPF
+    Result := DSSPrime.ActiveCircuit.AutoAddObj.GenPF
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_GenPF(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.AutoAddObj.GenPF := Value;
+    DSSPrime.ActiveCircuit.AutoAddObj.GenPF := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Capkvar(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.AutoAddObj.Capkvar
+    Result := DSSPrime.ActiveCircuit.AutoAddObj.Capkvar
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Capkvar(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.AutoAddObj.Capkvar := Value;
+    DSSPrime.ActiveCircuit.AutoAddObj.Capkvar := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Algorithm(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.Algorithm
+    Result := DSSPrime.ActiveCircuit.Solution.Algorithm
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Algorithm(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.Algorithm := Value;
+    DSSPrime.ActiveCircuit.Solution.Algorithm := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ControlMode(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.ControlMode
+    Result := DSSPrime.ActiveCircuit.Solution.ControlMode
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_ControlMode(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         ControlMode := Value;
         DefaultControlMode := ControlMode;
@@ -480,57 +480,57 @@ end;
 function Solution_Get_GenMult(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.GenMultiplier
+    Result := DSSPrime.ActiveCircuit.GenMultiplier
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_GenMult(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.GenMultiplier := Value;
+    DSSPrime.ActiveCircuit.GenMultiplier := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_DefaultDaily(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(ActiveCircuit.DefaultDailyShapeObj.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Name)
 end;
 
 //------------------------------------------------------------------------------
 function Solution_Get_DefaultYearly(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSS_GetAsPAnsiChar(ActiveCircuit.DefaultYearlyShapeObj.Name))
+    Result := DSS_GetAsPAnsiChar(DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.DefaultYearlyShapeObj.Name))
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar); CDECL;
 var
     TestLoadShapeObj: TLoadShapeObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    TestLoadShapeObj := LoadShapeClass.Find(Value);
+    TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Value);
     if TestLoadShapeObj = NIL then
         Exit;
-    ActiveCircuit.DefaultDailyShapeObj := TestLoadShapeObj;
+    DSSPrime.ActiveCircuit.DefaultDailyShapeObj := TestLoadShapeObj;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_DefaultYearly(const Value: PAnsiChar); CDECL;
 var
     TestLoadShapeObj: TLoadShapeObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    TestLoadShapeObj := LoadShapeClass.Find(Value);
+    TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Value);
     if TestLoadShapeObj = NIL then
         Exit;
-    ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
+    DSSPrime.ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -538,15 +538,15 @@ var
     Result: PPAnsiCharArray;
     i: Integer;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, EventStrings.Count);
-    for i := 0 to EventStrings.Count - 1 do
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, DSSPrime.EventStrings.Count);
+    for i := 0 to DSSPrime.EventStrings.Count - 1 do
     begin
-        Result[i] := DSS_CopyStringAsPChar(EventStrings.Strings[i]);
+        Result[i] := DSS_CopyStringAsPChar(DSSPrime.EventStrings.Strings[i]);
     end;
 end;
 
@@ -560,17 +560,17 @@ end;
 function Solution_Get_dblHour(): Double; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.DynaVars.dblHour;
+    Result := DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_dblHour(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         DynaVars.intHour := Trunc(Value);
         DynaVars.dblHour := Value;
@@ -580,90 +580,90 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepsizeHr(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.Dynavars.h := Value * 3600.0;
+    DSSPrime.ActiveCircuit.Solution.Dynavars.h := Value * 3600.0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepsizeMin(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.Dynavars.h := Value * 60.0;
+    DSSPrime.ActiveCircuit.Solution.Dynavars.h := Value * 60.0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ControlIterations(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.ControlIteration;
+    Result := DSSPrime.ActiveCircuit.Solution.ControlIteration;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_MaxControlIterations(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.MaxControlIterations;
+    Result := DSSPrime.ActiveCircuit.Solution.MaxControlIterations;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Sample_DoControlActions(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.Sample_DoControlActions;
+    DSSPrime.ActiveCircuit.Solution.Sample_DoControlActions;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_ControlIterations(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.ControlIteration := Value;
+    DSSPrime.ActiveCircuit.Solution.ControlIteration := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_MaxControlIterations(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.MaxControlIterations := Value;
+    DSSPrime.ActiveCircuit.Solution.MaxControlIterations := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_CheckFaultStatus(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.Check_Fault_Status;
+    DSSPrime.ActiveCircuit.Solution.Check_Fault_Status;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveDirect(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.SolveDirect;
+    DSSPrime.ActiveCircuit.Solution.SolveDirect;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveNoControl(); CDECL;
 {Solves without checking controls}
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.SolveCircuit;
+    DSSPrime.ActiveCircuit.Solution.SolveCircuit;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolvePflow(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.DoPflowSolution;
+    DSSPrime.ActiveCircuit.Solution.DoPflowSolution;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolvePlusControl(); CDECL;
 {One Pass Through the solution and then dispatches controls}
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         SolveCircuit;
         CheckControls;
@@ -672,32 +672,32 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveSnap(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.SolveSnap;
+    DSSPrime.ActiveCircuit.Solution.SolveSnap;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_CheckControls(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.CheckControls;
+    DSSPrime.ActiveCircuit.Solution.CheckControls;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_InitSnap(); CDECL;
 {Initi some things that are done at the beginning of a snapshot solve}
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.SnapShotInit;
+    DSSPrime.ActiveCircuit.Solution.SnapShotInit;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_SystemYChanged(): TAPIBoolean; CDECL;
 begin
     Result := False;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.SystemYChanged;
+    Result := DSSPrime.ActiveCircuit.Solution.SystemYChanged;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_BuildYMatrix(BuildOption, AllocateVI: Integer); CDECL;
@@ -711,88 +711,88 @@ procedure Solution_BuildYMatrix(BuildOption, AllocateVI: Integer); CDECL;
     FALSE: Do not Reallocate VI; leave as is
 }
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Ymatrix.BuildYMatrix(BuildOption, AllocateVI <> 0)
+    Ymatrix.BuildYMatrix(DSSPrime, BuildOption, AllocateVI <> 0)
 end;
 //------------------------------------------------------------------------------
 procedure Solution_DoControlActions(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.DoControlActions;
+    DSSPrime.ActiveCircuit.Solution.DoControlActions;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SampleControlDevices(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.SampleControlDevices;
+    DSSPrime.ActiveCircuit.Solution.SampleControlDevices;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Converged(): TAPIBoolean; CDECL;
 begin
     Result := False;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Issolved;
+    Result := DSSPrime.ActiveCircuit.Issolved;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Converged(Value: TAPIBoolean); CDECL;
 {Set the flag directly to force its setting}
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.ConvergedFlag := Value;
-    ActiveCircuit.Issolved := Value;
+    DSSPrime.ActiveCircuit.Solution.ConvergedFlag := Value;
+    DSSPrime.ActiveCircuit.Issolved := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Totaliterations(): Integer; CDECL;
 // Same as Iterations interface
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.Iteration
+    Result := DSSPrime.ActiveCircuit.Solution.Iteration
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_MostIterationsDone(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.MostIterationsDone
+    Result := DSSPrime.ActiveCircuit.Solution.MostIterationsDone
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ControlActionsDone(): TAPIBoolean; CDECL;
 begin
     Result := False;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.ControlActionsDone;
+    Result := DSSPrime.ActiveCircuit.Solution.ControlActionsDone;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_ControlActionsDone(Value: TAPIBoolean); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.ControlActionsDone := Value;
+    DSSPrime.ActiveCircuit.Solution.ControlActionsDone := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Cleanup(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    EndOfTimeStepCleanup();
+    DSSPrime.ActiveCircuit.Solution.EndOfTimeStepCleanup();
 end;
 //------------------------------------------------------------------------------
 procedure Solution_FinishTimeStep(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
     begin
-        MonitorClass.SampleAll();  // Make all monitors take a sample
+        DSSPrime.MonitorClass.SampleAll();  // Make all monitors take a sample
         EndOfTimeStepCleanup();
         Increment_time();
 //               DefaultHourMult := DefaultDailyShapeObj.getmult(TDynamicsrec.dblHour);
@@ -802,77 +802,81 @@ end;
 function Solution_Get_Process_Time(): Double; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.Time_Solve;
+    Result := DSSPrime.ActiveCircuit.Solution.Time_Solve;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Total_Time(): Double; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.Total_Time;
+    Result := DSSPrime.ActiveCircuit.Solution.Total_Time;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Total_Time(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.Total_Time := Value;
+    DSSPrime.ActiveCircuit.Solution.Total_Time := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Time_of_Step(): Double; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.Time_Step;
+    Result := DSSPrime.ActiveCircuit.Solution.Time_Step;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_IntervalHrs(): Double; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.IntervalHrs;
+    Result := DSSPrime.ActiveCircuit.Solution.IntervalHrs;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_IntervalHrs(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.IntervalHrs := Value;
+    DSSPrime.ActiveCircuit.Solution.IntervalHrs := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_MinIterations(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Solution.MinIterations
+    Result := DSSPrime.ActiveCircuit.Solution.MinIterations
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_MinIterations(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.Solution.MinIterations := Value;
+    DSSPrime.ActiveCircuit.Solution.MinIterations := Value;
 end;
 
-{V8-ONLY>
+{$IFDEF DSS_CAPI_PM}
 //------------------------------------------------------------------------------
 procedure Solution_SolveAll();cdecl;
 var
-  i : Integer;
+    i : Integer;
 begin
-  for i := 1 to NumOfActors do
-  begin
-    ActiveActor :=  i;
-    CmdResult   :=  DoSetCmd(1);
-  end;
+    for i := 0 to High(DSSPrime.Children) do
+    begin
+        DSSPrime.CmdResult := DoSetCmd(DSSPrime.Children[i], 1);
+    end;
 end;
-<V8-ONLY}
+{$ELSE}
+procedure Solution_SolveAll();cdecl;
+begin
+    DoSimpleMsg(DSSPrime, 'Parallel machine functions were not compiled', 7983);
+end;
+{$ENDIF}
 //------------------------------------------------------------------------------
 procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
@@ -882,9 +886,9 @@ var
     IMIdx,
     ArrSize: Integer;
 begin
-    if (not InvalidCircuit) and (ActiveCircuit.Solution.Laplacian <> NIL) then
+    if (not InvalidCircuit(DSSPrime)) and (DSSPrime.ActiveCircuit.Solution.Laplacian <> NIL) then
     begin
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             ArrSize := Laplacian.NZero * 3;
             Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
@@ -920,9 +924,9 @@ var
     IMIdx,
     ArrSize: Integer;
 begin
-    if (not InvalidCircuit) and (ActiveCircuit.Solution.IncMat <> NIL) then
+    if (not InvalidCircuit(DSSPrime)) and (DSSPrime.ActiveCircuit.Solution.IncMat <> NIL) then
     begin
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             ArrSize := IncMat.NZero * 3;
             Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); // TODO: remove +1?
@@ -952,13 +956,13 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
         
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         DSS_RecreateArray_PInteger(ResultPtr, ResultCount, length(Inc_Mat_Levels));
         Move(Inc_Mat_levels[0], ResultPtr^, length(Inc_Mat_Levels) * SizeOf(Integer));
@@ -979,12 +983,12 @@ var
     IMIdx,
     ArrSize: Integer;
 begin
-    if InvalidCircuit or (ActiveCircuit.Solution.Inc_Mat_Rows = NIL) then
+    if InvalidCircuit(DSSPrime) or (DSSPrime.ActiveCircuit.Solution.Inc_Mat_Rows = NIL) then
     begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         ArrSize := length(Inc_Mat_Rows);
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ArrSize);
@@ -1010,11 +1014,11 @@ var
     ArrSize: Integer;
 begin
     DefaultResult(ResultPtr, ResultCount, '');
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    with ActiveCircuit.Solution, ActiveCircuit do
+    with DSSPrime.ActiveCircuit.Solution, DSSPrime.ActiveCircuit do
     begin
-        if IncMat_Ordered then
+        if DSSPrime.IncMat_Ordered then
         begin
             if Inc_Mat_Cols = NIL then
                 Exit;

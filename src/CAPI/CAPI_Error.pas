@@ -19,12 +19,14 @@ implementation
 
 uses
     CAPI_Constants,
-    DSSGlobals;
+    DSSGlobals,
+    DSSClass,
+    DSSHelper;
 
 function Error_Get_Description_AnsiString(): Ansistring; inline;
 begin
-    Result := LastErrorMessage;
-    LastErrorMessage := ''; // Reset after retrieving message
+    Result := DSSPrime.LastErrorMessage;
+    DSSPrime.LastErrorMessage := ''; // Reset after retrieving message
 end;
 
 function Error_Get_Description(): PAnsiChar; CDECL;
@@ -34,13 +36,13 @@ end;
 //------------------------------------------------------------------------------
 function Error_Get_Number(): Integer; CDECL;
 begin
-    Result := ErrorNumber;
-    ErrorNumber := 0;  // Reset after retrieving ErrorNumber
+    Result := DSSPrime.ErrorNumber;
+    DSSPrime.ErrorNumber := 0;  // Reset after retrieving ErrorNumber
 end;
 //------------------------------------------------------------------------------
 function Error_Get_NumberPtr(): PAPISize; CDECL;
 begin
-    Result := @ErrorNumber; // Remember to reset it to zero after the error treatment!
+    Result := @DSSPrime.ErrorNumber; // Remember to reset it to zero after the error treatment!
 end;
 //------------------------------------------------------------------------------
 function Error_Get_EarlyAbort(): TAPIBoolean; CDECL;

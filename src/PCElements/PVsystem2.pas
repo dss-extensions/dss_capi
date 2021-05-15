@@ -106,7 +106,7 @@ type
     PUBLIC
         RegisterNames: array[1..NumPVSystem2Registers] of String;
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit(): Integer; OVERRIDE;
@@ -340,9 +340,6 @@ type
         property IrradianceNow: Double READ ShapeFactor.re;
     end;
 
-var
-    ActivePVsystem2Obj: TPVsystem2Obj;
-
 implementation
 
 uses
@@ -354,7 +351,9 @@ uses
     MathUtil,
     DSSClassDefs,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper;
 
 const
 
@@ -413,9 +412,9 @@ var
     cBuffer: array[1..24] of Complex;  // Temp buffer for calcs  24-phase PVSystem element?
     CDOUBLEONE: Complex;
 
-constructor TPVsystem2.Create;  // Creates superstructure for all PVSystem elements
+constructor TPVsystem2.Create(dssContext: TDSSContext);  // Creates superstructure for all PVSystem elements
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'PVSystem';
     DSSClassType := DSSClassType + PVSYSTEM_ELEMENT;  // In both PCelement and PVSystem element list
 
@@ -628,7 +627,7 @@ end;
 
 procedure TPVsystem2.SetNcondsForConnection;
 begin
-    with ActivePVsystem2Obj do
+    with DSS.ActivePVsystem2Obj do
     begin
         case Connection of
             0:
@@ -662,7 +661,7 @@ var
     TestS: String;
 
 begin
-    with ActivePVsystem2Obj do
+    with DSS.ActivePVsystem2Obj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -712,12 +711,12 @@ var
 begin
 
   // continue parsing with contents of Parser
-    ActivePVsystem2Obj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActivePVsystem2Obj;
+    DSS.ActivePVsystem2Obj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActivePVsystem2Obj;
 
     Result := 0;
 
-    with ActivePVsystem2Obj do
+    with DSS.ActivePVsystem2Obj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;  // Parse next property off the command line
@@ -849,7 +848,7 @@ begin
 
                 else
                   // Inherited parameters
-                    ClassEdit(ActivePVsystem2Obj, ParamPointer - NumPropsThisClass)
+                    ClassEdit(DSS.ActivePVsystem2Obj, ParamPointer - NumPropsThisClass)
                 end;
 
                 case iCase of
@@ -858,29 +857,29 @@ begin
 
                 {Set loadshape objects;  returns nil If not valid}
                     propYEARLY:
-                        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                        YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                     propDAILY:
-                        DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                        DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                     propDUTY:
-                        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                        DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
 
                     propTYEARLY:
-                        YearlyTShapeObj := TShapeClass.Find(YearlyTShape);
+                        YearlyTShapeObj := DSS.TShapeClass.Find(YearlyTShape);
                     propTDAILY:
-                        DailyTShapeObj := TShapeClass.Find(DailyTShape);
+                        DailyTShapeObj := DSS.TShapeClass.Find(DailyTShape);
                     propTDUTY:
-                        DutyTShapeObj := TShapeClass.Find(DutyTShape);
+                        DutyTShapeObj := DSS.TShapeClass.Find(DutyTShape);
 
                     propInvEffCurve:
-                        InverterCurveObj := XYCurveClass.Find(InverterCurve);
+                        InverterCurveObj := DSS.XYCurveClass.Find(InverterCurve);
                     propP_T_Curve:
-                        Power_TempCurveObj := XYCurveClass.Find(Power_TempCurve);
+                        Power_TempCurveObj := DSS.XYCurveClass.Find(Power_TempCurve);
 
                     propDEBUGTRACE:
                         if DebugTrace then
                         begin   // Init trace file
                             FreeAndNil(TraceFile);
-                            TraceFile := TFileStream.Create(GetOutputDirectory + 'STOR_' + Name + '.CSV', fmCreate);
+                            TraceFile := TFileStream.Create(DSS.OutputDirectory + 'STOR_' + Name + '.CSV', fmCreate);
                             FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, PVSystemModel,  Qnominalperphase, Pnominalperphase, CurrentType');
                             for i := 1 to nphases do
                                 FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
@@ -924,7 +923,7 @@ begin
     OtherPVsystemObj := Find(OtherPVsystemObjName);
     if (OtherPVsystemObj <> NIL) then
     begin
-        with ActivePVsystem2Obj do
+        with DSS.ActivePVsystem2Obj do
         begin
             if (Fnphases <> OtherPVsystemObj.Fnphases) then
             begin
@@ -1135,7 +1134,7 @@ begin
     kvarLimitNegSet := FALSE;
 
 
-    UserModel := TPVsystemUserModel.Create;
+    UserModel := TPVsystemUserModel.Create(DSS);
 
     Reg_kWh := 1;
     Reg_kvarh := 2;
@@ -1435,7 +1434,7 @@ begin
 
     if Length(Spectrum) > 0 then
     begin
-        SpectrumObj := SpectrumClass.Find(Spectrum);
+        SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
         if SpectrumObj = NIL then
             DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
     end
@@ -1982,14 +1981,14 @@ var
     sout: String;
 begin
     try
-        if (not InshowResults) then
+        if (not DSS.InshowResults) then
         begin
             WriteStr(sout, Format('%-.g, %d, %-.g, ',
                 [ActiveCircuit.Solution.DynaVARs.t,
                 ActiveCircuit.Solution.Iteration,
                 ActiveCircuit.LoadMultiplier]),
-                GetSolutionModeID, ', ',
-                GetLoadModel, ', ',
+                GetSolutionModeID(DSS), ', ',
+                GetLoadModel(DSS), ', ',
                 VoltageModel: 0, ', ',
                 (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
                 (Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
@@ -2245,7 +2244,7 @@ begin
             else
             begin
                 DoSimpleMsg(Format('Dynamics model missing for PVSystem.%s ', [Name]), 5671);
-                SolutionAbort := TRUE;
+                DSS.SolutionAbort := TRUE;
             end;
     else  {All other models -- current-limited like Generator Model 7}
       {
@@ -2310,7 +2309,7 @@ begin
 
         else
             DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
-            SolutionAbort := TRUE;
+            DSS.SolutionAbort := TRUE;
         end;
 
     end;
@@ -2705,7 +2704,7 @@ begin
                 end;
             else
                 DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. PVSystem.' + name + ' has %d phases.', [Fnphases]), 5673);
-                SolutionAbort := TRUE;
+                DSS.SolutionAbort := TRUE;
             end;
 
         LastThevAngle := ThetaDyn;

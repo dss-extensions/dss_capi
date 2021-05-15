@@ -38,7 +38,7 @@ type
         procedure DefineProperties;
         function MakeLike(const ShapeName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -80,9 +80,6 @@ type
 
     end;
 
-var
-    ActiveTCC_CurveObj: TTCC_CurveObj;
-
 implementation
 
 uses
@@ -92,15 +89,18 @@ uses
     Sysutils,
     Ucomplex,
     MathUtil,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 3;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TTCC_Curve.Create;  // Creates superstructure for all Line objects
+constructor TTCC_Curve.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'TCC_Curve';
     DSSClassType := DSS_OBJECT;
 
@@ -154,11 +154,8 @@ end;
 function TTCC_Curve.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TTCC_CurveObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TTCC_CurveObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -185,10 +182,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveTCC_CurveObj := ElementList.Active;
-    ActiveDSSObject := ActiveTCC_CurveObj;
+    DSS.ActiveTCC_CurveObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveTCC_CurveObj;
 
-    with ActiveTCC_CurveObj do
+    with DSS.ActiveTCC_CurveObj do
     begin
 
         ParamPointer := 0;
@@ -215,7 +212,7 @@ begin
                     Npts := InterpretDblArray(Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
             else
            // Inherited parameters
-                ClassEdit(ActiveTCC_CurveObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveTCC_CurveObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -248,7 +245,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherTCC_Curve := Find(ShapeName);
     if OtherTCC_Curve <> NIL then
-        with ActiveTCC_CurveObj do
+        with DSS.ActiveTCC_CurveObj do
         begin
             Npts := OtherTCC_Curve.Npts;
             ReAllocmem(C_Values, Sizeof(C_Values^[1]) * Npts);
@@ -292,14 +289,14 @@ var
 
 begin
 
-    ActiveTCC_CurveObj := NIL;
+    DSS.ActiveTCC_CurveObj := NIL;
     TCC_CurveObj := ElementList.First;
     while TCC_CurveObj <> NIL do
     begin
 
         if CompareText(TCC_CurveObj.Name, Value) = 0 then
         begin
-            ActiveTCC_CurveObj := TCC_CurveObj;
+            DSS.ActiveTCC_CurveObj := TCC_CurveObj;
             Exit;
         end;
 

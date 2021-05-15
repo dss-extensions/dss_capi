@@ -72,22 +72,24 @@ uses
     Transformer,
     SysUtils,
     DSSPointerList,
-    ucomplex;
+    ucomplex,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TTransfObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TTransfObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
         
-    obj := ActiveCircuit.Transformers.Active;
+    obj := DSSPrime.ActiveCircuit.Transformers.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Transformer object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Transformer object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -100,19 +102,19 @@ var
     cmd: String;
     obj: TTransfObj;
 begin
-    if not _activeObj(obj) then
+    if not _activeObj(DSSPrime, obj) then
         Exit;
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('transformer.%s.%s=%s', [obj.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSPrime.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Transformers, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Transformers, False);
 end;
 
 procedure Transformers_Get_AllNames_GR(); CDECL;
@@ -125,17 +127,17 @@ end;
 function Transformers_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.Transformers);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Transformers);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.Transformers);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Transformers);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_IsDelta(): TAPIBoolean; CDECL;
@@ -143,7 +145,7 @@ var
     elem: TTransfObj;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -157,7 +159,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -170,7 +172,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -183,7 +185,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -196,7 +198,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -209,7 +211,7 @@ var
     elem: TTransfObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     
     Result := DSS_GetAsPAnsiChar(elem.Name);
@@ -220,7 +222,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -233,7 +235,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.NumberOfWindings;
@@ -244,7 +246,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -257,7 +259,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -270,7 +272,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -283,7 +285,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.ActiveWinding;
@@ -294,7 +296,7 @@ var
     elem: TTransfObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.XfmrCode);
@@ -305,7 +307,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.XhlVal;
@@ -316,7 +318,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.XhtVal;
@@ -327,7 +329,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.XltVal;
@@ -338,7 +340,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (elem.ActiveWinding > 0) and 
@@ -376,17 +378,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if TransformerClass.SetActive(Value) then
+    if DSSPrime.TransformerClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := TransformerClass.ElementList.Active;
-        ActiveCircuit.Transformers.Get(TransformerClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.TransformerClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Transformers.Get(DSSPrime.TransformerClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Transformer "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Transformer "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -399,7 +401,7 @@ procedure Transformers_Set_NumWindings(Value: Integer); CDECL;
 var
     elem: TTransfObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     elem.SetNumWindings(Value);
@@ -424,7 +426,7 @@ procedure Transformers_Set_Wdg(Value: Integer); CDECL;
 var
     elem: TTransfObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     if (value > 0) and (value <= elem.NumberOfWindings) then
         elem.ActiveWinding := Value;
@@ -458,15 +460,15 @@ end;
 function Transformers_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.Transformers.Count;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.Transformers.Count;
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TTransfObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -493,7 +495,7 @@ var
     elem: TTransfObj;
     NumCurrents: Integer;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -515,7 +517,7 @@ function Transformers_Get_strWdgCurrents(): PAnsiChar; CDECL;
 var
     elem: TTransfObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         Result := NIL;
         Exit;
@@ -529,7 +531,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0;  // default = shell
-    if _activeObj(elem) then
+    if _activeObj(DSSPrime, elem) then
         Result := elem.CoreType;
 end;
 //------------------------------------------------------------------------------
@@ -537,7 +539,7 @@ procedure Transformers_Set_CoreType(Value: Integer); CDECL;
 var
     elem: TTransfObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.CoreType := Value;
     case Value of
@@ -557,7 +559,7 @@ var
     elem: TTransfObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then    
+    if not _activeObj(DSSPrime, elem) then    
         Exit;
     
     if (elem.ActiveWinding > 0) and 
@@ -576,7 +578,7 @@ var
     CResult: PComplexArray; // this array is one-based, see Ucomplex
     elem: TTransfObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -603,13 +605,13 @@ var
     lst: TDSSPointerList;
     k: Integer;
 begin
-    if (InvalidCircuit) or (ActiveCircuit.Transformers.Count <= 0) then
+    if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveCircuit.Transformers.Count <= 0) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
-    lst := ActiveCircuit.Transformers;
+    lst := DSSPrime.ActiveCircuit.Transformers;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, lst.Count * 2 * 3);
     CResult := PComplexArray(ResultPtr);
     k := 1;
@@ -635,24 +637,24 @@ end;
 function Transformers_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Transformers.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.Transformers.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_idx(Value: Integer); CDECL;
 var
     pTransformer: TTransfObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pTransformer := ActiveCircuit.Transformers.Get(Value);
+    pTransformer := DSSPrime.ActiveCircuit.Transformers.Get(Value);
     if pTransformer = NIL then
     begin
-        DoSimpleMsg('Invalid Transformer index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Transformer index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pTransformer;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pTransformer;
 end;
 //------------------------------------------------------------------------------
 end.

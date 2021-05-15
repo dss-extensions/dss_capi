@@ -41,22 +41,24 @@ uses
     Executive,
     Capacitor,
     SysUtils,
-    DSSPointerList;
+    DSSPointerList,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TCapacitorObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TCapacitorObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := ActiveCircuit.ShuntCapacitors.Active;
+    obj := DSSPrime.ActiveCircuit.ShuntCapacitors.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Capacitor object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Capacitor object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -69,20 +71,20 @@ var
     cmd: String;
     elem: TCapacitorObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('capacitor.%s.%s=%s', [elem.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSPrime.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.ShuntCapacitors, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.ShuntCapacitors, False);
 end;
 
 procedure Capacitors_Get_AllNames_GR(); CDECL;
@@ -95,17 +97,17 @@ end;
 function Capacitors_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.ShuntCapacitors);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.ShuntCapacitors);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.ShuntCapacitors);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.ShuntCapacitors);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_IsDelta(): TAPIBoolean; CDECL;
@@ -113,7 +115,7 @@ var
     elem: TCapacitorObj;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := (elem.Connection > 0);
 end;
@@ -123,7 +125,7 @@ var
     elem: TCapacitorObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.NomKV;
 end;
@@ -133,7 +135,7 @@ var
     elem: TCapacitorObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Totalkvar;
 end;
@@ -143,7 +145,7 @@ var
     elem: TCapacitorObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
@@ -153,7 +155,7 @@ var
     elem: TCapacitorObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.NumSteps;
 end;
@@ -162,7 +164,7 @@ procedure Capacitors_Set_IsDelta(Value: TAPIBoolean); CDECL;
 var
     elem: TCapacitorObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Connection := Integer(Value);
 end;
@@ -179,17 +181,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if CapacitorClass.SetActive(Value) then
+    if DSSPrime.CapacitorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := CapacitorClass.ElementList.Active;
-        ActiveCircuit.ShuntCapacitors.Get(CapacitorClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.CapacitorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.ShuntCapacitors.Get(DSSPrime.CapacitorClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Capacitor "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Capacitor "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -201,9 +203,9 @@ end;
 function Capacitors_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.ShuntCapacitors.Count;
+    Result := DSSPrime.ActiveCircuit.ShuntCapacitors.Count;
 end;
 //------------------------------------------------------------------------------
 function Capacitors_AddStep(): TAPIBoolean; CDECL;
@@ -211,7 +213,7 @@ var
     elem: TCapacitorObj;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.AddStep();
 end;
@@ -221,7 +223,7 @@ var
     elem: TCapacitorObj;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.SubtractStep();
 end;
@@ -231,7 +233,7 @@ var
     elem: TCapacitorObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.AvailableSteps;
 end;
@@ -241,7 +243,7 @@ var
     Result: PIntegerArray;
     elem: TCapacitorObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount, -1);
         Exit;
@@ -264,12 +266,12 @@ var
     elem: TCapacitorObj;
     i, LoopLimit: Integer;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (ValueCount <> elem.NumSteps) and DSS_CAPI_EXT_ERRORS then
     begin
-        DoSimpleMsg(Format('The number of states provided (%d) does not match the number of steps (%d) in the active capacitor.', 
+        DoSimpleMsg(DSSPrime, Format('The number of states provided (%d) does not match the number of steps (%d) in the active capacitor.', 
             [ValueCount, elem.NumSteps]), 
             8989
         );
@@ -297,7 +299,7 @@ var
     elem: TCapacitorObj;
     i: Integer;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     with elem do
@@ -310,7 +312,7 @@ var
     elem: TCapacitorObj;
     i: Integer;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     
     with elem do
@@ -326,25 +328,25 @@ end;
 function Capacitors_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.ShuntCapacitors.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.ShuntCapacitors.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_idx(Value: Integer); CDECL;
 var
     pCapacitor: TCapacitorObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    pCapacitor := ActiveCircuit.ShuntCapacitors.Get(Value);
+    pCapacitor := DSSPrime.ActiveCircuit.ShuntCapacitors.Get(Value);
     if pCapacitor = NIL then
     begin
-        DoSimpleMsg('Invalid Capacitor index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Capacitor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pCapacitor;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pCapacitor;
 end;
 //------------------------------------------------------------------------------
 end.

@@ -73,9 +73,9 @@ type
         function Get_X(i, units: Integer): Double;
         function Get_Y(i, units: Integer): Double;
         function Get_YCmatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
-        function Get_Ze(i, j: Integer): Complex;
-        function Get_Zint(i: Integer): Complex;
-        function Get_Zmatrix(f, Lngth: Double; Units: Integer): Tcmatrix;
+        function Get_Ze(i, j, EarthModel: Integer): Complex;
+        function Get_Zint(i, EarthModel: Integer): Complex;
+        function Get_Zmatrix(f, Lngth: Double; Units, EarthModel: Integer): Tcmatrix;
         procedure Set_GMR(i, units: Integer; const Value: Double);
         procedure Set_radius(i, units: Integer; const Value: Double);
         procedure Set_Rdc(i, units: Integer; const Value: Double);
@@ -97,7 +97,7 @@ type
     PUBLIC
 
         function ConductorsInSameSpace(var ErrorMessage: String): Boolean; VIRTUAL;
-        procedure Calc(f: Double); VIRTUAL; // force a calc of impedances
+        procedure Calc(f: Double; EarthModel: Integer); VIRTUAL; // force a calc of impedances
         procedure Kron(Norder: Integer); VIRTUAL; // Performs a Kron reduction leaving first Norder  rows
         procedure Reduce;  // Kron reduce to Numphases only
 
@@ -108,13 +108,13 @@ type
         property radius[i, units: Integer]: Double READ Get_radius WRITE Set_radius;
         Property Capradius[i, units:Integer]:Double Read Get_Capradius Write Set_Capradius;
         property GMR[i, units: Integer]: Double READ Get_GMR WRITE Set_GMR;
-        property Zint[i: Integer]: Complex READ Get_Zint;  // Internal impedance of i-th conductor for present frequency
-        property Ze[i, j: Integer]: Complex READ Get_Ze;  // Earth return impedance at present frequency for ij element
+        property Zint[i, EarthModel: Integer]: Complex READ Get_Zint;  // Internal impedance of i-th conductor for present frequency
+        property Ze[i, j, EarthModel: Integer]: Complex READ Get_Ze;  // Earth return impedance at present frequency for ij element
         property rhoearth: Double READ Frhoearth WRITE Set_Frhoearth;
 
     {These two properties will auto recalc the impedance matrices if frequency is different}
     {Converts to desired units when executed; Returns Pointer to Working Verstion}
-        property Zmatrix[f, Lngth: Double; Units: Integer]: Tcmatrix READ Get_Zmatrix;
+        property Zmatrix[f, Lngth: Double; Units, EarthModel: Integer]: Tcmatrix READ Get_Zmatrix;
         property YCmatrix[f, Lngth: Double; Units: Integer]: Tcmatrix READ Get_YCmatrix;
 
         property Nphases: Integer READ FNumPhases WRITE set_Nphases;
@@ -136,7 +136,9 @@ uses
     DSSGlobals,
     mathutil,
     sysutils,
-    math;
+    math,
+    DSSClass,
+    DSSHelper;
 
 var
     C1_j1: Complex;
@@ -145,7 +147,7 @@ var
 
 { TLineConstants }
 
-procedure TLineConstants.Calc(f: Double);
+procedure TLineConstants.Calc(f: Double; EarthModel: Integer);
 {Compute base Z and YC matrices in ohms/m for this frequency and earth impedance}
 var
     Zi, Zspacing: Complex;
@@ -187,7 +189,7 @@ begin
 
     for i := 1 to FNumConds do
     begin
-        Zi := Get_Zint(i);
+        Zi := Get_Zint(i, EarthModel);
         if PowerFreq then
         begin // for less than 1 kHz, use published GMR
             Zi.im := 0.0;
@@ -198,7 +200,7 @@ begin
             Zspacing := CmulReal(Lfactor, ln(1.0 / Fradius^[i]));
         end;
 
-        FZmatrix.SetElement(i, i, Cadd(Zi, Cadd(Zspacing, Get_Ze(i, i))));
+        FZmatrix.SetElement(i, i, Cadd(Zi, Cadd(Zspacing, Get_Ze(i, i, EarthModel))));
 
     end;
 
@@ -209,7 +211,7 @@ begin
         for j := 1 to i - 1 do
         begin
             Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-            FZmatrix.SetElemSym(i, j, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j)));
+            FZmatrix.SetElemSym(i, j, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j, EarthModel)));
         end;
     end;
 
@@ -416,7 +418,7 @@ begin
 
 end;
 
-function TLineConstants.Get_Ze(i, j: Integer): Complex;
+function TLineConstants.Get_Ze(i, j, EarthModel: Integer): Complex;
 var
     LnArg, hterm, xterm: Complex;
     mij, thetaij, Dij, Fyi, Fyj: Double;
@@ -426,7 +428,7 @@ begin
     Fyi := Abs(Fy^[i]);
     Fyj := Abs(Fy^[j]);
 
-    case ActiveEarthModel of
+    case EarthModel of
 
         SIMPLECARSON:
         begin
@@ -484,12 +486,12 @@ begin
     end;
 end;
 
-function TLineConstants.Get_Zint(i: Integer): Complex;
+function TLineConstants.Get_Zint(i, EarthModel: Integer): Complex;
 var
     Alpha, I0I1: Complex;
 begin
 
-    case ActiveEarthModel of
+    case EarthModel of
         SIMPLECARSON:
         begin
             Result := cmplx(FRac^[i], Fw * Mu0 / (8 * pi));
@@ -514,7 +516,7 @@ begin
 end;
 
 function TLineConstants.Get_Zmatrix(f, Lngth: Double;
-    Units: Integer): Tcmatrix;
+    Units, EarthModel: Integer): Tcmatrix;
 
 {Makes a new Zmatrix and correct for lengths and units as it copies}
 {Uses the reduced Zmatrix by default if it exists}
@@ -528,7 +530,7 @@ var
 begin
 
     if (F <> FFrequency) or FRhoChanged then
-        Calc(f);  // only recalcs if f changed or rho earth changed
+        Calc(f, EarthModel);  // only recalcs if f changed or rho earth changed
 
     if assigned(FZreduced) then
     begin

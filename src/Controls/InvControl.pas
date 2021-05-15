@@ -83,7 +83,7 @@ end;
         PROCEDURE DefineProperties;
         FUNCTION MakeLike(const InvControlName:String):Integer;Override;
      public
-       constructor Create;
+       constructor Create(dssContext: TDSSContext);
        destructor Destroy; override;
 
        FUNCTION Edit:Integer; override;     // uses global parser
@@ -241,16 +241,15 @@ end;
 
    end;
 
-
-VAR
-    ActiveInvControlObj:TInvControlObj;
-
 {--------------------------------------------------------------------------}
 IMPLEMENTATION
 
 USES
 
-    ParserDel, Sysutils, DSSClassDefs, DSSGlobals, Circuit,  uCmatrix, MathUtil, Math;
+    ParserDel, Sysutils, DSSClassDefs, DSSGlobals, Circuit,  uCmatrix, MathUtil, Math,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 CONST
 
@@ -263,9 +262,9 @@ CONST
     CHANGEDRCVVARLEVEL = 4;
 
 {--------------------------------------------------------------------------}
-constructor TInvControl.Create;  // Creates superstructure for all InvControl objects
+constructor TInvControl.Create(dssContext: TDSSContext);  // Creates superstructure for all InvControl objects
 Begin
-     Inherited Create;
+     Inherited Create(dssContext);
 
      Class_name   := 'InvControl';
      DSSClassType := DSSClassType + INV_CONTROL;
@@ -274,7 +273,7 @@ Begin
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
-     XY_CurveClass := GetDSSClassPtr('XYCurve');
+     XY_CurveClass := GetDSSClassPtr(DSS, 'XYCurve');
 
 End;
 
@@ -520,12 +519,12 @@ VAR
 Begin
 
   // continue parsing WITH contents of Parser
-  ActiveInvControlObj := ElementList.Active;
-  ActiveCircuit.ActiveCktElement := ActiveInvControlObj;
+  DSS.ActiveInvControlObj := ElementList.Active;
+  ActiveCircuit.ActiveCktElement := DSS.ActiveInvControlObj;
 
   Result := 0;
 
-  WITH ActiveInvControlObj Do Begin
+  WITH DSS.ActiveInvControlObj Do Begin
 
      ParamPointer := 0;
      ParamName := Parser.NextParam;
@@ -566,7 +565,7 @@ Begin
                       if ControlMode = '' then
                          DoSimpleMsg('Invalid Control Mode selected', 1366);
                       CombiControlMode := '';
-                      SolutionAbort := True;
+                      DSS.SolutionAbort := True;
                       exit;
                     End;
 
@@ -588,7 +587,7 @@ Begin
                       if CombiControlMode = '' then
                          DoSimpleMsg('Invalid CombiControl Mode selected', 1367);
                       CombiControlMode := '';
-                      SolutionAbort := True;
+                      DSS.SolutionAbort := True;
                       exit;
                     End;
 
@@ -679,7 +678,7 @@ Begin
 
          ELSE
            // Inherited parameters
-           ClassEdit( ActiveInvControlObj, ParamPointer - NumPropsthisClass)
+           ClassEdit( DSS.ActiveInvControlObj, ParamPointer - NumPropsthisClass)
          End;
 
         CASE ParamPointer OF
@@ -712,7 +711,7 @@ Begin
    {See if we can find this InvControl name in the present collection}
    OtherInvControl := Find(InvControlName);
    IF OtherInvControl<>Nil THEN
-   WITH ActiveInvControlObj Do Begin
+   WITH DSS.ActiveInvControlObj Do Begin
 
       NPhases := OtherInvControl.Fnphases;
       NConds  := OtherInvControl.Fnconds; // Force Reallocation of terminal stuff
@@ -2354,7 +2353,7 @@ VAR
 begin
 
    Result := FALSE;
-   PVSysClass := GetDSSClassPtr('PVsystem');
+   PVSysClass := GetDSSClassPtr(DSS, 'PVsystem');
 
    If FListSize > 0 Then
    Begin    // Name list is defined - Use it

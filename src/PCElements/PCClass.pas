@@ -11,6 +11,7 @@ unit PCClass;
 interface
 
 uses
+    DSSClass,
     CktElementClass;
 
 type
@@ -26,7 +27,7 @@ type
 
     PUBLIC
         NumPCClassProps: Integer;
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
     PUBLISHED
 
@@ -40,12 +41,15 @@ uses
     ParserDel,
     DSSClassDefs,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
-constructor TPCClass.Create;
+
+constructor TPCClass.Create(dssContext: TDSSContext);
 begin
-
-    inherited Create;
+    inherited Create(dssContext);
     NumPCClassProps := 1;
     DSSClassType := PC_ELEMENT;
 end;

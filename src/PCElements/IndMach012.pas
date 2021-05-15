@@ -79,7 +79,7 @@ type
 
     PUBLIC
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;      // Definition of the main property editing function
@@ -259,9 +259,6 @@ type
 
     end;
 
-var
-    ActiveIndMach012Obj: TIndMach012Obj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -275,8 +272,10 @@ uses
     Sysutils,      // Delphi misc utility functions
     Math,          // Delphi Math functions
     MathUtil,      // DSS Math utilities
-    Utilities;     // DSS misc utility functions
-
+    Utilities,     // DSS misc utility functions
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 const
     NumPropsThisClass = 21; // Set this constant to the actual number of properties you define
     NumIndMach012Variables = 22;
@@ -318,9 +317,9 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TIndMach012.Create;  // Creates main collection handler for all IndMach012 objects
+constructor TIndMach012.Create(dssContext: TDSSContext);  // Creates main collection handler for all IndMach012 objects
 begin
-    inherited Create;  // make the base class  and init DSSClassType
+    inherited Create(dssContext);  // make the base class  and init DSSClassType
 
      // Specify class name and bit mask ID for this class type
      // IndMach012_ELEMENT must be defined in DSSClassDefs as nn*8
@@ -477,7 +476,7 @@ procedure TIndMach012.SetNcondsForConnection;
 
 begin
 
-    with ActiveIndMach012Obj do
+    with DSS.ActiveIndMach012Obj do
     begin
         case Connection of
             0:
@@ -518,12 +517,12 @@ begin
 
   // set the present element active
   // and continue parsing with contents of Parser
-    ActiveIndMach012Obj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveIndMach012Obj;
+    DSS.ActiveIndMach012Obj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveIndMach012Obj;
 
     Result := 0;
 
-    with ActiveIndMach012Obj do
+    with DSS.ActiveIndMach012Obj do
     begin
      // peel off the next token on the edit line
         ParamPointer := 0;
@@ -597,7 +596,7 @@ begin
 
                 else
            // Handle Inherited properties
-                    ClassEdit(ActiveIndMach012Obj, ParamPointer - NumPropsThisClass)
+                    ClassEdit(DSS.ActiveIndMach012Obj, ParamPointer - NumPropsThisClass)
                 end;
 
          // ---------------- SIDE EFFECTS CASE STATEMENT ---------------------
@@ -609,7 +608,7 @@ begin
                         SetNcondsForConnection;  // Force Reallocation of terminal info
                     18:
                     begin
-                        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                        YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                         if Assigned(YearlyShapeObj) then
                             with YearlyShapeObj do
                                 if UseActual then
@@ -617,7 +616,7 @@ begin
                     end;
                     19:
                     begin
-                        DailyDispShapeObj := LoadShapeClass.Find(DailyDispShape);
+                        DailyDispShapeObj := DSS.LoadShapeClass.Find(DailyDispShape);
                         if Assigned(DailyDispShapeObj) then
                             with DailyDispShapeObj do
                                 if UseActual then
@@ -625,7 +624,7 @@ begin
                     end;
                     20:
                     begin
-                        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                        DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                         if Assigned(DutyShapeObj) then
                             with DutyShapeObj do
                                 if UseActual then
@@ -648,7 +647,6 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
 function TIndMach012.MakeLike(const OtherIndMach012Name: String): Integer;
 
 // This function should be defined to handle the Like property inherited from
@@ -666,7 +664,7 @@ begin
     OtherIndMach012 := Find(OtherIndMach012Name);
     if (OtherIndMach012 <> NIL)   // skip if not found
     then
-        with ActiveIndMach012Obj do
+        with DSS.ActiveIndMach012Obj do
         begin
        // You should first set the basic circuit element properties, for example
             if (Fnphases <> OtherIndMach012.Fnphases) then
@@ -868,7 +866,7 @@ begin
         if Length(DutyShape) > 0 then
             DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
         DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 
@@ -916,13 +914,10 @@ begin
     kWBase := PkW;
 end;
 
-//----------------------------------------------------------------------------
 //--------------------- MAIN CALC ROUTINES -----------------------------------
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.Integrate;
-//----------------------------------------------------------------------------
-
 var
     h2: Double;
 
@@ -973,8 +968,6 @@ end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.CalcPFlow(var V012, I012: TSymCompArray);
-//----------------------------------------------------------------------------
-
 var
     P_Error: Double;
 
@@ -1027,8 +1020,6 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------}
 procedure TIndMach012Obj.InitModel(V012, I012: TSymCompArray);
-{-------------------------------------------------------------------------------------------------------------}
-
 // Init for Dynamics mode
 
 begin
@@ -1094,7 +1085,7 @@ begin
                     end;
                 else
                     DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Motors. IndMach012.' + name + ' has %d phases.', [Fnphases]), 5672);
-                    SolutionAbort := TRUE;
+                    DSS.SolutionAbort := TRUE;
                 end;
 
                 InitModel(V012, I012); // E2, etc
@@ -2268,7 +2259,7 @@ end;
 procedure TIndMach012Obj.InitTraceFile;
 begin
     FreeAndNil(TraceFile);
-    TraceFile := TFileStream.Create(OutputDirectory + Format('%s_IndMach012_Trace.CSV', [Name]), fmCreate);
+    TraceFile := TFileStream.Create(DSS.OutputDirectory + Format('%s_IndMach012_Trace.CSV', [Name]), fmCreate);
 
     FSWrite(TraceFile, 'Time, Iteration, S1, |IS1|, |IS2|, |E1|, |dE1dt|, |E2|, |dE2dt|, |V1|, |V2|, Pshaft, Pin, Speed, dSpeed');
     FSWriteln(TraceFile);
@@ -2278,7 +2269,6 @@ end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.WriteTraceRecord;
-//----------------------------------------------------------------------------
 begin
     with ActiveCircuit.Solution do
         FSWrite(TraceFile, Format('%-.6g, %d, %-.6g, ', [Dynavars.dblHour * 3600.0, Iteration, S1]));

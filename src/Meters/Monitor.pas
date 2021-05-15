@@ -114,7 +114,7 @@ type
         procedure DefineProperties;
         function MakeLike(const MonitorName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -206,10 +206,6 @@ type
         property CSVFileName: String READ Get_FileName;
     end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-var
-    ActiveMonitorObj: TMonitorObj;
 
 {--------------------------------------------------------------------------}
 implementation
@@ -234,7 +230,10 @@ uses
     PstCalc,
     Capacitor,
     Storage,
-    Storage2;
+    Storage2,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     SEQUENCEMASK = 16;
@@ -257,9 +256,9 @@ end;
 {$ENDIF}
 
 {--------------------------------------------------------------------------}
-constructor TDSSMonitor.Create;  // Creates superstructure for all Monitor objects
+constructor TDSSMonitor.Create(dssContext: TDSSContext);  // Creates superstructure for all Monitor objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'Monitor';
     DSSClassType := DSSClassType + MON_ELEMENT;
@@ -362,13 +361,13 @@ begin
 
   // continue parsing with contents of Parser
   // continue parsing with contents of Parser
-    ActiveMonitorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveMonitorObj;
+    DSS.ActiveMonitorObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveMonitorObj;
 
     Result := 0;
     recalc := 0;
 
-    with ActiveMonitorObj do
+    with DSS.ActiveMonitorObj do
     begin
 
         ParamPointer := 0;
@@ -390,7 +389,7 @@ begin
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 661);
                 1:
                 begin
-                    ElementName := ConstructElemName(lowercase(param));   // subtitute @var values if any
+                    ElementName := ConstructElemName(DSS, lowercase(param));   // subtitute @var values if any
                     PropertyValue[1] := ElementName;
                 end;
                 2:
@@ -421,8 +420,8 @@ begin
                 7:
                     Ppolar := InterpretYesNo(Param);
             else
-           // Inherited parameters
-                ClassEdit(ActiveMonitorObj, ParamPointer - NumPropsthisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveMonitorObj, ParamPointer - NumPropsthisClass)
             end;
 
             ParamName := Parser.NextParam;
@@ -526,7 +525,7 @@ begin
    {See if we can find this Monitor name in the present collection}
     OtherMonitor := Find(MonitorName);
     if OtherMonitor <> NIL then
-        with ActiveMonitorObj do
+        with DSS.ActiveMonitorObj do
         begin
 
             NPhases := OtherMonitor.Fnphases;
@@ -712,7 +711,7 @@ begin
             Setbus(1, MeteredElement.GetBus(MeteredTerminal));
                // Make a name for the Buffer File
             BufferFile := {ActiveCircuit.CurrentDirectory + }
-                CircuitName_ + 'Mon_' + Name + '.mon';
+                DSS.CircuitName_ + 'Mon_' + Name + '.mon';
                  // removed 10/19/99 ConvertBlanks(BufferFile); // turn blanks into '_'
 
                  {Allocate Buffers}
@@ -1838,7 +1837,13 @@ var
     s: Single;
     sngBuffer: array[1..100] of Single;
     sout: String;
+{$IFDEF DSS_CAPI_PM}
+    PMParent: TDSSContext;
 begin
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
 
     Save;  // Save present buffer
     CloseMonitorStream;   // Position at beginning
@@ -1846,7 +1851,16 @@ begin
     CSVName := Get_FileName;
 
     try
-        F := TFileStream.Create(CSVName, fmCreate);
+{$IFDEF DSS_CAPI_PM}
+        if PMParent.ConcatenateReports and (PMParent <> DSS) then
+        begin
+            F := TFileStream.Create(CSVName, fmReadWrite);
+            F.Seek(0, soFromEnd);
+        end
+        else
+{$ENDIF}
+            F := TFileStream.Create(CSVName, fmCreate);
+
     except
         On E: Exception do
         begin
@@ -1866,7 +1880,11 @@ begin
     end;
 
     pStr := PAnsiChar(@StrBuffer);
-    FSWriteln(F, AnsiString(pStr));
+
+{$IFDEF DSS_CAPI_PM}
+    if not PMParent.ConcatenateReports or (PMParent = DSS) then
+{$ENDIF}
+        FSWriteln(F, pStr);
     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
 
     try
@@ -1910,9 +1928,9 @@ begin
     end;
 
     if Show then
-        FireOffEditor(CSVName);
+        FireOffEditor(DSS, CSVName);
 
-    GlobalResult := CSVName;
+    DSS.GlobalResult := CSVName;
 end;
 
 {--------------------------------------------------------------------------}
@@ -1990,11 +2008,20 @@ begin
 end;
 
 function TMonitorObj.Get_FileName: String;
+{$IFDEF DSS_CAPI_PM}
+var
+    PMParent: TDSSContext;
+{$ENDIF}
 begin
-    Result := GetOutputDirectory + CircuitName_ + 'Mon_' + Name + '.csv'
+{$IFDEF DSS_CAPI_PM}
+    PMParent := DSS.GetPrime();
+    if PMParent.ConcatenateReports then
+    begin
+        Result := PMParent.OutputDirectory + PMParent.CircuitName_ + 'Mon_' + Name + '.csv';
+        Exit;
+    end;
+{$ENDIF}
+    Result := DSS.OutputDirectory + DSS.CircuitName_ + 'Mon_' + Name + DSS._Name + '.csv'
 end;
-
-initialization
-  //WriteDLLDebugFile('Monitor');
 
 end.

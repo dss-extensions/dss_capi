@@ -72,7 +72,7 @@ type
         procedure DefineProperties;
         function MakeLike(const RelayName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -178,10 +178,6 @@ type
 
     end;
 
-
-var
-    ActiveRelayObj: TRelayObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -193,7 +189,10 @@ uses
     PCElement,
     Sysutils,
     uCmatrix,
-    MathUtil;
+    MathUtil,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
 
@@ -207,9 +206,9 @@ const
     GENERIC = 6; {Use this for frequency, etc.  Generic over/under relay}
 
 {--------------------------------------------------------------------------}
-constructor TRelay.Create;  // Creates superstructure for all Relay objects
+constructor TRelay.Create(dssContext: TDSSContext);  // Creates superstructure for all Relay objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'Relay';
     DSSClassType := DSSClassType + RELAY_CONTROL;
@@ -219,7 +218,7 @@ begin
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
 
-    TCC_CurveClass := GetDSSClassPtr('TCC_Curve');
+    TCC_CurveClass := GetDSSClassPtr(DSS, 'TCC_Curve');
 end;
 
 {--------------------------------------------------------------------------}
@@ -351,12 +350,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveRelayObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveRelayObj;
+    DSS.ActiveRelayObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveRelayObj;
 
     Result := 0;
 
-    with ActiveRelayObj do
+    with DSS.ActiveRelayObj do
     begin
 
         ParamPointer := 0;
@@ -442,7 +441,7 @@ begin
                         TDGround := Parser.DblValue;
                 else
            // Inherited parameters
-                    ClassEdit(ActiveRelayObj, ParamPointer - NumPropsthisClass)
+                    ClassEdit(DSS.ActiveRelayObj, ParamPointer - NumPropsthisClass)
                 end;
 
             if ParamPointer > 0 then
@@ -486,7 +485,7 @@ begin
    {See if we can find this Relay name in the present collection}
     OtherRelay := Find(RelayName);
     if OtherRelay <> NIL then
-        with ActiveRelayObj do
+        with DSS.ActiveRelayObj do
         begin
 
             NPhases := OtherRelay.Fnphases;

@@ -62,7 +62,7 @@ type
         procedure DefineProperties;
         function MakeLike(const FaultName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -106,9 +106,6 @@ type
 
     end;
 
-var
-    ActiveFaultObj: TFaultObj;
-
 implementation
 
 uses
@@ -119,15 +116,18 @@ uses
     Sysutils,
     Ucomplex,
     MathUtil,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsthisclass = 9;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TFault.Create;  // Creates superstructure for all Fault objects
+constructor TFault.Create(dssContext: TDSSContext);  // Creates superstructure for all Fault objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Fault';
     DSSClassType := FAULTOBJECT + NON_PCPD_ELEM;  // Only in Fault object class
 
@@ -217,7 +217,7 @@ var
     MatBuffer: pDoubleArray;
 
 begin
-    with ActiveFaultObj do
+    with DSS.ActiveFaultObj do
     begin
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
         OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
@@ -244,7 +244,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveFaultObj do
+    with DSS.ActiveFaultObj do
     begin
 
         SetBus(1, S);
@@ -281,10 +281,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveFaultObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveFaultObj;  // use property to set this value
+    DSS.ActiveFaultObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveFaultObj;  // use property to set this value
 
-    with ActiveFaultObj do
+    with DSS.ActiveFaultObj do
     begin
 
         ParamPointer := 0;
@@ -328,7 +328,7 @@ begin
                     MinAmps := Parser.DblValue;
             else
            // Inherited
-                ClassEdit(ActiveFaultObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveFaultObj, ParamPointer - NumPropsThisClass)
             end;
 
          // Some specials ...
@@ -387,7 +387,7 @@ begin
    {See if we can find this Fault name in the present collection}
     OtherFault := Find(FaultName);
     if OtherFault <> NIL then
-        with ActiveFaultObj do
+        with DSS.ActiveFaultObj do
         begin
 
             if Fnphases <> OtherFault.Fnphases then
@@ -690,7 +690,7 @@ begin
         begin
             if not Is_ON then
             begin   {Turn it on unless it has been previously cleared}
-                if (PresentTimeInSec > On_Time) and not Cleared then
+                if (PresentTimeInSec(DSS) > On_Time) and not Cleared then
                 begin
                     Is_ON := TRUE;
                     YPrimInvalid := TRUE;

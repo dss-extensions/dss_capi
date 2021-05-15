@@ -153,8 +153,8 @@ type
 
    // build a tree of connected elements beginning at StartElement
    // Analyze = TRUE will check for loops, isolated components, and parallel lines (takes longer)
-function GetIsolatedSubArea(StartElement: TDSSCktElement; Analyze: Boolean = FALSE): TCktTree;
-procedure BuildActiveBusAdjacencyLists(var lstPD, lstPC: TAdjArray);
+function GetIsolatedSubArea(Circuit: TObject; StartElement: TDSSCktElement; Analyze: Boolean = FALSE): TCktTree;
+procedure BuildActiveBusAdjacencyLists(Circuit: TObject; var lstPD, lstPC: TAdjArray);
 procedure FreeAndNilBusAdjacencyLists(var lstPD, lstPC: TAdjArray);
 
 implementation
@@ -164,7 +164,9 @@ uses
     PDElement,
     PCElement,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSClass,
+    DSSHelper;
 
 constructor TcktTreeNode.Create(const pParent: TCktTreeNode; const pSelfobj: Pointer);
 
@@ -527,11 +529,11 @@ end;
 ////////////////////////////////////////////////////////////////////////
 
 // sources are excluded from the PC element list, so this is a brute-force search
-procedure GetSourcesConnectedToBus(BusNum: Integer; BranchList: TCktTree; Analyze: Boolean);
+procedure GetSourcesConnectedToBus(Ckt: TDSSCircuit; BusNum: Integer; BranchList: TCktTree; Analyze: Boolean);
 var
     psrc: TPCElement;      // Sources are special PC elements
 begin
-    with ActiveCircuit do
+    with Ckt do
     begin
         psrc := Sources.First;
         while psrc <> NIL do
@@ -655,7 +657,7 @@ begin
     end;
 end;
 
-function GetIsolatedSubArea(StartElement: TDSSCktElement; Analyze: Boolean): TCktTree;
+function GetIsolatedSubArea(Circuit: TObject; StartElement: TDSSCktElement; Analyze: Boolean): TCktTree;
 var
     TestBusNum: Integer;
     BranchList: TCktTree;
@@ -663,10 +665,11 @@ var
     TestBranch,
     TestElement: TDSSCktElement;
     lstPD, lstPC: TAdjArray;
+    Ckt: TDSSCircuit;
 begin
-
-    lstPD := ActiveCircuit.GetBusAdjacentPDLists;
-    lstPC := ActiveCircuit.GetBusAdjacentPCLists;
+    Ckt := TDSSCircuit(Circuit);
+    lstPD := Ckt.GetBusAdjacentPDLists;
+    lstPC := Ckt.GetBusAdjacentPCLists;
 
     BranchList := TCktTree.Create;
     TestElement := StartElement;
@@ -695,8 +698,8 @@ begin
                 BranchList.PresentBranch.ToBusReference := TestBusNum;   // Add this as a "to" bus reference
                 if TestBusNum > 0 then
                 begin
-                    ActiveCircuit.Buses^[TestBusNum].BusChecked := TRUE;
-                    GetSourcesConnectedToBus(TestBusNum, BranchList, Analyze);
+                    Ckt.Buses^[TestBusNum].BusChecked := TRUE;
+                    GetSourcesConnectedToBus(Ckt, TestBusNum, BranchList, Analyze);
                     GetPCElementsConnectedToBus(lstPC[TestBusNum], BranchList, Analyze);
                     GetShuntPDElementsConnectedToBus(lstPD[TestBusNum], BranchList, Analyze);
                     FindAllChildBranches(lstPD[TestBusNum], TestBusNum, BranchList, Analyze, TestBranch);
@@ -708,12 +711,14 @@ begin
     Result := BranchList;
 end;
 
-procedure BuildActiveBusAdjacencyLists(var lstPD, lstPC: TAdjArray);
+procedure BuildActiveBusAdjacencyLists(Circuit: TObject; var lstPD, lstPC: TAdjArray);
 var
     i, j, nBus: Integer;
     pCktElement: TDSSCktElement;
+    Ckt: TDSSCircuit;
 begin
-    nBus := ActiveCircuit.NumBuses;
+    Ckt := TDSSCircuit(Circuit);
+    nBus := Ckt.NumBuses;
   // Circuit.Buses is effectively 1-based; bus 0 is ground
     SetLength(lstPD, nBus + 1);
     SetLength(lstPC, nBus + 1);
@@ -723,7 +728,7 @@ begin
         lstPC[i] := TList.Create;
     end;
 
-    pCktElement := ActiveCircuit.PCElements.First;
+    pCktElement := Ckt.PCElements.First;
     while pCktElement <> NIL do
     begin
         if pCktElement.Enabled then
@@ -731,10 +736,10 @@ begin
             i := pCktElement.Terminals[0].BusRef;
             lstPC[i].Add(pCktElement);
         end;
-        pCktElement := ActiveCircuit.PCElements.Next;
+        pCktElement := Ckt.PCElements.Next;
     end;
 
-    pCktElement := ActiveCircuit.PDElements.First;
+    pCktElement := Ckt.PDElements.First;
   {Put only eligible PDElements in the list}
     while pCktElement <> NIL do
     begin
@@ -751,7 +756,7 @@ begin
                     i := pCktElement.Terminals[j - 1].BusRef;
                     lstPD[i].Add(pCktElement);
                 end;
-        pCktElement := ActiveCircuit.PDElements.Next;
+        pCktElement := Ckt.PDElements.Next;
     end;
 end;
 

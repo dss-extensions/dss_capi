@@ -34,7 +34,9 @@ uses
     Executive,
     EnergyMeter,
     ReduceAlgs,
-    PDElement;
+    PDElement,
+    DSSClass,
+    DSSHelper;
 
 var
     ReduceEditString: String;
@@ -46,17 +48,17 @@ function CommonReduceCktChecks(): Boolean; inline;
 begin
     Result := False;
     
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    if EnergyMeterClass.SetActive(EnergyMeterName) then
-        ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+    if DSSPrime.EnergyMeterClass.SetActive(EnergyMeterName) then
+        DSSPrime.ActiveEnergyMeterObj := DSSPrime.EnergyMeterClass.ElementList.Active;
         
-    if not Assigned(ActiveEnergyMeterObj) then 
+    if not Assigned(DSSPrime.ActiveEnergyMeterObj) then 
         Exit;
     
-    if not Assigned(ActiveEnergyMeterObj.BranchList) then
-        ActiveEnergyMeterObj.MakeMeterZoneLists();
+    if not Assigned(DSSPrime.ActiveEnergyMeterObj.BranchList) then
+        DSSPrime.ActiveEnergyMeterObj.MakeMeterZoneLists();
         
     Result := True;
 end;
@@ -64,31 +66,31 @@ end;
 function ReduceCkt_Get_Zmag(): Double; CDECL;
 begin
     Result := 0.0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.ReductionZmag
+    Result := DSSPrime.ActiveCircuit.ReductionZmag
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Set_Zmag(Value: Double); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.ReductionZmag := Value;
+    DSSPrime.ActiveCircuit.ReductionZmag := Value;
 end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_KeepLoad(): TAPIBoolean; CDECL;
 begin
     Result := FALSE;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.ReduceLateralsKeepLoad;
+    Result := DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad;
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Set_KeepLoad(Value: TAPIBoolean); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.ReduceLateralsKeepLoad := Value;
+    DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad := Value;
 end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_EditString(): PAnsiChar; CDECL;
@@ -118,10 +120,10 @@ end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_SaveCircuit(const CktName: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    DSSExecutive.Command := 'Save Circuit Dir=' + CktName;
+    DSSPrime.DSSExecutive.Command := 'Save Circuit Dir=' + CktName;
    // Master file name is returned in DSSText.Result
 end;
 //------------------------------------------------------------------------------
@@ -133,32 +135,32 @@ end;
 procedure ReduceCkt_DoDefault(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoReduceDefault(ActiveEnergyMeterObj.BranchList);
+    DoReduceDefault(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoShortLines(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoReduceShortLines(ActiveEnergyMeterObj.BranchList);
+    DoReduceShortLines(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Do1phLaterals(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoRemoveAll_1ph_Laterals(ActiveEnergyMeterObj.BranchList);
+    DoRemoveAll_1ph_Laterals(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoBranchRemove(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    if ActiveCircuit.SetElementActive(FirstPDelement) < 0 then 
+    if DSSPrime.ActiveCircuit.SetElementActive(FirstPDelement) < 0 then 
         Exit;
     
     // element was found (0-based array)
-    DoRemoveBranches(
-        ActiveEnergyMeterObj.BranchList, 
-        ActiveCircuit.ActiveCktElement as TPDElement, 
-        ActiveCircuit.ReduceLateralsKeepLoad, 
+    DoRemoveBranches(DSSPrime, 
+        DSSPrime.ActiveEnergyMeterObj.BranchList, 
+        DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement, 
+        DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad, 
         ReduceEditString
     );
 end;
@@ -166,25 +168,25 @@ end;
 procedure ReduceCkt_DoDangling(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoReduceDangling(ActiveEnergyMeterObj.BranchList);
+    DoReduceDangling(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoLoopBreak(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoBreakLoops(ActiveEnergyMeterObj.BranchList);
+    DoBreakLoops(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoParallelLines(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoMergeParallelLines(ActiveEnergyMeterObj.BranchList);
+    DoMergeParallelLines(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoSwitches(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoRemoveAll_1ph_Laterals(ActiveEnergyMeterObj.BranchList);
+    DoRemoveAll_1ph_Laterals(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 

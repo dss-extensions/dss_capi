@@ -15,20 +15,22 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
-    Sysutils;
+    Sysutils,
+    DSSClass,
+    DSSHelper;
 
 procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray;
     k: Integer;
 begin
-    if (InvalidCircuit) or (ActiveDSSObject = NIL) then
+    if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
     begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
     end;
         
-    with ActiveDSSObject do
+    with DSSPrime.ActiveDSSObject do
         with ParentClass do
         begin
             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumProperties);
@@ -49,19 +51,19 @@ end;
 function DSSElement_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if (InvalidCircuit) or (ActiveDSSObject = NIL) then
+    if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
         Exit;
-    with ActiveDSSObject do
+    with DSSPrime.ActiveDSSObject do
         Result := DSS_GetAsPAnsiChar(ParentClass.Name + '.' + Name);
 end;
 //------------------------------------------------------------------------------
 function DSSElement_Get_NumProperties(): Integer; CDECL;
 begin
     Result := 0;
-    if (InvalidCircuit) or (ActiveDSSObject = NIL) then
+    if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
         Exit;
         
-    with ActiveDSSObject do
+    with DSSPrime.ActiveDSSObject do
         Result := ParentClass.NumProperties;
 end;
 //------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -122,9 +122,6 @@ type
 
     end;
 
-var
-    ActiveVsourceObj: TVsourceObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -137,15 +134,18 @@ uses
     Dynamics,
     Utilities,
     Sysutils,
-    Command;
+    Command,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 31;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TVsource.Create;  // Creates superstructure for all Line objects
+constructor TVsource.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Vsource';
     DSSClassType := SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
@@ -319,7 +319,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveVSourceObj do
+    with DSS.ActiveVSourceObj do
     begin
         SetBus(1, S);
 
@@ -350,12 +350,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveVSourceObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveVSourceObj;
+    DSS.ActiveVSourceObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveVSourceObj;
 
     Result := 0;
 
-    with ActiveVSourceObj do
+    with DSS.ActiveVSourceObj do
     begin
 
         ParamPointer := 0;
@@ -459,7 +459,7 @@ begin
                 31:
                     puZideal := InterpretComplex(Param);
             else
-                ClassEdit(ActiveVsourceObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveVsourceObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -512,16 +512,16 @@ begin
     {Set shape objects;  returns nil if not valid}
     {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
                 27:
-                    YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                    YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                 28:
                 begin
-                    DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                    DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                   {If Yearly load shape is not yet defined, make it the same as Daily}
                     if YearlyShapeObj = NIL then
                         YearlyShapeObj := DailyShapeObj;
                 end;
                 29:
-                    DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                    DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
             end;
 
             case ParamPointer of
@@ -582,7 +582,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherVSource := Find(OtherSource);
     if OtherVSource <> NIL then
-        with ActiveVsourceObj do
+        with DSS.ActiveVsourceObj do
         begin
 
             if Fnphases <> OtherVSource.Fnphases then
@@ -950,7 +950,7 @@ begin
         Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
     end;
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device Vsource.' + Name + ' Not Found.', 324);
@@ -1192,8 +1192,8 @@ begin
 
     except
         DoSimpleMsg('Error computing Voltages for Vsource.' + Name + '. Check specification. Aborting.', 326);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;

@@ -41,7 +41,7 @@ type
         procedure DefineProperties;
         function MakeLike(const GenDispatcherName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -60,7 +60,7 @@ type
         TotalWeight: Double;
         FListSize: Integer;
         FGeneratorNameList: TStringList;
-        FGenPointerList: TDSSPointerList;
+        FGenPointerList: DSSPointerList.TDSSPointerList;
         FWeights: pDoubleArray;
 
     PUBLIC
@@ -84,10 +84,6 @@ type
         function MakeGenList: Boolean;
     end;
 
-
-var
-    ActiveGenDispatcherObj: TGenDispatcherObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -100,17 +96,20 @@ uses
     Sysutils,
     uCmatrix,
     MathUtil,
-    Math;
+    Math,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
 
-    NumPropsThisClass = 6;
+    NumPropsThisClass = 6;//TODO: check (@meira) -- shouldn't it be 7?
 
 
 {--------------------------------------------------------------------------}
-constructor TGenDispatcher.Create;  // Creates superstructure for all GenDispatcher objects
+constructor TGenDispatcher.Create(dssContext: TDSSContext);  // Creates superstructure for all GenDispatcher objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'GenDispatcher';
     DSSClassType := DSSClassType + GEN_CONTROL;
@@ -187,12 +186,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveGenDispatcherObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveGenDispatcherObj;
+    DSS.ActiveGenDispatcherObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveGenDispatcherObj;
 
     Result := 0;
 
-    with ActiveGenDispatcherObj do
+    with DSS.ActiveGenDispatcherObj do
     begin
 
         ParamPointer := 0;
@@ -234,8 +233,8 @@ begin
                 end;
 
             else
-           // Inherited parameters
-                ClassEdit(ActiveGenDispatcherObj, ParamPointer - NumPropsthisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveGenDispatcherObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -273,7 +272,7 @@ begin
    {See if we can find this GenDispatcher name in the present collection}
     OtherGenDispatcher := Find(GenDispatcherName);
     if OtherGenDispatcher <> NIL then
-        with ActiveGenDispatcherObj do
+        with DSS.ActiveGenDispatcherObj do
         begin
 
             NPhases := OtherGenDispatcher.Fnphases;
@@ -542,7 +541,7 @@ var
 begin
 
     Result := FALSE;
-    GenClass := GetDSSClassPtr('generator');
+    GenClass := GetDSSClassPtr(DSS, 'generator');
 
     if FListSize > 0 then
     begin    // Name list is defined - Use it

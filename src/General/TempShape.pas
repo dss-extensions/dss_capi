@@ -70,7 +70,7 @@ type
         procedure DefineProperties;
         function MakeLike(const ShapeName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -128,8 +128,6 @@ type
 
     end;
 
-var
-    ActiveTShapeObj: TTShapeObj;
 
 implementation
 
@@ -141,15 +139,19 @@ uses
     MathUtil,
     Utilities,
     Math,
-    BufStream;
+    DSSPointerList,
+    BufStream,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 12;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TTShape.Create;  // Creates superstructure for all Line objects
+constructor TTShape.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'TShape';
     DSSClassType := DSS_OBJECT;
 
@@ -242,11 +244,8 @@ end;
 function TTShape.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TTShapeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TTShapeObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 
@@ -260,10 +259,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveTShapeObj := ElementList.Active;
-    ActiveDSSObject := ActiveTShapeObj;
+    DSS.ActiveTShapeObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveTShapeObj;
 
-    with ActiveTShapeObj do
+    with DSS.ActiveTShapeObj do
     begin
 
         ParamPointer := 0;
@@ -320,8 +319,8 @@ begin
                             SaveToSngFile;
                     end;
             else
-           // Inherited parameters
-                ClassEdit(ActiveTShapeObj, ParamPointer - NumPropsThisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveTShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -359,7 +358,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherTShape := Find(ShapeName);
     if OtherTShape <> NIL then
-        with ActiveTShapeObj do
+        with DSS.ActiveTShapeObj do
         begin
             NumPoints := OtherTShape.NumPoints;
             Interval := OtherTShape.Interval;
@@ -403,14 +402,14 @@ var
 
 begin
 
-    ActiveTShapeObj := NIL;
+    DSS.ActiveTShapeObj := NIL;
     TShapeObj := ElementList.First;
     while TShapeObj <> NIL do
     begin
 
         if CompareText(TShapeObj.Name, Value) = 0 then
         begin
-            ActiveTShapeObj := TShapeObj;
+            DSS.ActiveTShapeObj := TShapeObj;
             Exit;
         end;
 
@@ -440,7 +439,7 @@ begin
 
     try
 
-        with ActiveTShapeObj do
+        with DSS.ActiveTShapeObj do
         begin
             ReAllocmem(TValues, Sizeof(TValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -497,7 +496,7 @@ begin
     end;
 
     try
-        with ActiveTShapeObj do
+        with DSS.ActiveTShapeObj do
         begin
             ReAllocmem(TValues, Sizeof(TValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -544,7 +543,7 @@ begin
     end;
 
     try
-        with ActiveTShapeObj do
+        with DSS.ActiveTShapeObj do
         begin
             ReAllocmem(TValues, Sizeof(TValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -841,10 +840,10 @@ begin
     if Assigned(TValues) then
     begin
         try
-            FName := OutputDirectory {CurrentDSSDir} + Format('%s.dbl', [Name]);
+            FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s.dbl', [Name]);
             F := TFileStream.Create(FName, fmCreate);
             F.WriteBuffer(TValues^[1], NumPoints * SizeOf(Double));
-            GlobalResult := 'Temp=[dblfile=' + FName + ']';
+            DSS.GlobalResult := 'Temp=[dblfile=' + FName + ']';
         finally
             FreeAndNil(F);
         end;
@@ -866,14 +865,14 @@ begin
     if Assigned(TValues) then
     begin
         try
-            FName := OutputDirectory {CurrentDSSDir} + Format('%s.sng', [Name]);
+            FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s.sng', [Name]);
             F := TFileStream.Create(FName, fmCreate);
             for i := 1 to NumPoints do
             begin
                 Temp := TValues^[i];
                 F.WriteBuffer(Temp, SizeOf(Temp));
             end;
-            GlobalResult := 'Temp=[sngfile=' + FName + ']';
+            DSS.GlobalResult := 'Temp=[sngfile=' + FName + ']';
         finally
             FreeAndNil(F);
         end;

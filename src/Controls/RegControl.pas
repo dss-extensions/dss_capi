@@ -52,7 +52,7 @@ type
         procedure DefineProperties;
         function MakeLike(const RegControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -192,10 +192,6 @@ type
         property TapNum: Integer READ Get_TapNum WRITE Set_TapNum;
     end;
 
-
-var
-    ActiveRegControlObj: TRegControlObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -208,7 +204,10 @@ uses
     Sysutils,
     uCmatrix,
     MathUtil,
-    Math;
+    Math,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     AVGPHASES = -1;
@@ -224,9 +223,9 @@ var
     LastChange: Integer;
 
 {--------------------------------------------------------------------------}
-constructor TRegControl.Create;  // Creates superstructure for all RegControl objects
+constructor TRegControl.Create(dssContext: TDSSContext);  // Creates superstructure for all RegControl objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'RegControl';
     DSSClassType := DSSClassType + REG_CONTROL;
@@ -385,12 +384,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveRegControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveRegControlObj;
+    DSS.ActiveRegControlObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveRegControlObj;
 
     Result := 0;
 
-    with ActiveRegControlObj do
+    with DSS.ActiveRegControlObj do
     begin
 
         ParamPointer := 0;
@@ -491,8 +490,8 @@ begin
                     CogenEnabled := InterpretYesNo(Param);
 
             else
-           // Inherited parameters
-                ClassEdit(ActiveRegControlObj, ParamPointer - NumPropsthisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveRegControlObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -507,7 +506,7 @@ begin
                     if DebugTrace then
                     begin
                         FreeAndNil(TraceFile);
-                        TraceFile := TFileStream.Create(GetOutputDirectory + 'REG_' + Name + '.CSV', fmCreate);
+                        TraceFile := TFileStream.Create(DSS.OutputDirectory + 'REG_' + Name + '.CSV', fmCreate);
                         FSWriteln(TraceFile, 'Hour, Sec, ControlIteration, Iterations, LoadMultiplier, Present Tap, Pending Change, Actual Change, Increment, Min Tap, Max Tap');
                         FSFlush(Tracefile);
                     end
@@ -539,7 +538,7 @@ begin
    {See if we can find this RegControl name in the present collection}
     OtherRegControl := Find(RegControlName);
     if OtherRegControl <> NIL then
-        with ActiveRegControlObj do
+        with DSS.ActiveRegControlObj do
         begin
 
             Nphases := OtherRegControl.Fnphases;
@@ -1373,7 +1372,7 @@ procedure TRegControlObj.RegWriteDebugRecord(S: String);
 // write a general debug string
 begin
     try
-        if (not InshowResults) then
+        if (not DSS.InShowResults) then
         begin
             FSWriteln(TraceFile, S);
             FSFlush(TraceFile);
@@ -1394,7 +1393,7 @@ var
 begin
 
     try
-        if (not InshowResults) then
+        if (not DSS.InShowResults) then
         begin
             Separator := ', ';
             with TTransfObj(ControlledElement) do

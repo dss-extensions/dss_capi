@@ -55,22 +55,24 @@ uses
     DSSGlobals,
     LineUnits,
     ParserDel,
-    Ucomplex;
+    Ucomplex,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TLineCodeObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TLineCodeObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := LineCodeClass.GetActiveObj;
+    obj := DSSPrime.LineCodeClass.GetActiveObj;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active LineCode object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active LineCode object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -81,25 +83,25 @@ end;
 function LineCodes_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineCodeClass.ElementCount;
+    Result := DSSPrime.LineCodeClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineCodeClass.First;
+    Result := DSSPrime.LineCodeClass.First;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineCodeClass.Next;
+    Result := DSSPrime.LineCodeClass.Next;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Name(): PAnsiChar; CDECL;
@@ -107,7 +109,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := NIL;  // signify no name
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
     
     Result := DSS_GetAsPAnsiChar(pLineCode.Name);
@@ -116,11 +118,11 @@ end;
 procedure LineCodes_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
         
-    if not LineCodeClass.SetActive(Value) then
-        DoSimpleMsg('LineCode "' + Value + '" Not Found in Active Circuit.', 51008);
+    if not DSSPrime.LineCodeClass.SetActive(Value) then
+        DoSimpleMsg(DSSPrime, 'LineCode "' + Value + '" Not Found in Active Circuit.', 51008);
 
     // Still same active object if not found
 end;
@@ -130,7 +132,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := TRUE;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
     
     Result := pLineCode.SymComponentsModel;
@@ -141,7 +143,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
     
     Result := pLineCode.Units;
@@ -151,14 +153,14 @@ procedure LineCodes_Set_Units(Value: Integer); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     with pLineCode do
     begin
         if Value < dssLineUnitsMaxnum then
         begin
-            Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
+            DSSPrime.Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
             Edit;
         end
         else
@@ -171,7 +173,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
         
     Result := pLineCode.FNPhases;
@@ -181,7 +183,7 @@ procedure LineCodes_Set_Phases(Value: Integer); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     pLineCode.NumPhases := Value;   // use property value to force reallocations
@@ -192,7 +194,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Result := pLineCode.R1;
@@ -202,10 +204,10 @@ procedure LineCodes_Set_R1(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Parser.CmdString := Format('R1=%g', [Value]);
+    DSSPrime.Parser.CmdString := Format('R1=%g', [Value]);
     pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
@@ -214,7 +216,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Result := pLineCode.X1;
@@ -224,10 +226,10 @@ procedure LineCodes_Set_X1(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Parser.CmdString := Format('X1=%g', [Value]);
+    DSSPrime.Parser.CmdString := Format('X1=%g', [Value]);
     pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
@@ -236,7 +238,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
     
     Result := pLineCode.R0;
@@ -247,7 +249,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Result := pLineCode.X0;
@@ -257,10 +259,10 @@ procedure LineCodes_Set_R0(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Parser.CmdString := Format('R0=%g', [Value]);
+    DSSPrime.Parser.CmdString := Format('R0=%g', [Value]);
     pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
@@ -268,10 +270,10 @@ procedure LineCodes_Set_X0(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Parser.CmdString := Format('X0=%g', [Value]);
+    DSSPrime.Parser.CmdString := Format('X0=%g', [Value]);
     pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
@@ -280,7 +282,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Result := pLineCode.C0;
@@ -291,7 +293,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Result := pLineCode.C1;
@@ -301,10 +303,10 @@ procedure LineCodes_Set_C0(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Parser.CmdString := Format('C0=%g', [Value]);
+    DSSPrime.Parser.CmdString := Format('C0=%g', [Value]);
     pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
@@ -312,10 +314,10 @@ procedure LineCodes_Set_C1(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Parser.CmdString := Format('C1=%g', [Value]);
+    DSSPrime.Parser.CmdString := Format('C1=%g', [Value]);
     pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
@@ -326,7 +328,7 @@ var
     pLineCode: TLineCodeObj;
     Factor: Double;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -360,7 +362,7 @@ var
     pLineCode: TLineCodeObj;
 
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -393,7 +395,7 @@ var
     pLineCode: TLineCodeObj;
 
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -426,7 +428,7 @@ var
     Factor: Double;
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Value := PDoubleArray(ValuePtr);
@@ -461,7 +463,7 @@ var
     Ztemp: complex;
 
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Value := PDoubleArray(ValuePtr);
@@ -496,7 +498,7 @@ var
     Ztemp: complex;
 
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Value := PDoubleArray(ValuePtr);
@@ -528,7 +530,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Result := pLineCode.NormAmps;
@@ -538,7 +540,7 @@ procedure LineCodes_Set_NormAmps(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     pLineCode.NormAmps := Value;
@@ -549,7 +551,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
     Result := pLineCode.EmergAmps;
@@ -559,7 +561,7 @@ procedure LineCodes_Set_EmergAmps(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if not _activeObj(pLineCode) then
+    if not _activeObj(DSSPrime, pLineCode) then
         Exit;
         
     pLineCode.EmergAmps := Value;
@@ -568,9 +570,9 @@ end;
 procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, LineCodeClass.ElementList, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LineCodeClass.ElementList, False);
 end;
 
 procedure LineCodes_Get_AllNames_GR(); CDECL;
@@ -583,15 +585,15 @@ end;
 function LineCodes_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineCodeClass.ElementList.ActiveIndex
+    Result := DSSPrime.LineCodeClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_idx(Value: Integer); CDECL;
 begin
-    if LineCodeClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid LineCode index: "' + IntToStr(Value) + '".', 656565);
+    if DSSPrime.LineCodeClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg(DSSPrime, 'Invalid LineCode index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

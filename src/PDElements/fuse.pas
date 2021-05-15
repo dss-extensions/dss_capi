@@ -49,7 +49,7 @@ type
         procedure DefineProperties;
         function MakeLike(const FuseName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -100,10 +100,6 @@ type
 
     end;
 
-
-var
-    ActiveFuseObj: TFuseObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -114,7 +110,10 @@ uses
     Circuit,
     Sysutils,
     uCmatrix,
-    MathUtil;
+    MathUtil,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
 
@@ -125,22 +124,22 @@ var
 
 {General Module Function}
 
-function GetTccCurve(const CurveName: String): TTCC_CurveObj;
+function GetTccCurve(DSS: TDSSContext; const CurveName: String): TTCC_CurveObj;
 
 begin
 
     Result := TCC_CurveClass.Find(CurveName);
 
     if Result = NIL then
-        DoSimpleMsg('TCC Curve object: "' + CurveName + '" not found.', 401);
+        DoSimpleMsg(DSS, 'TCC Curve object: "' + CurveName + '" not found.', 401);
 
 end;
 
 
 {--------------------------------------------------------------------------}
-constructor TFuse.Create;  // Creates superstructure for all Fuse objects
+constructor TFuse.Create(dssContext: TDSSContext);  // Creates superstructure for all Fuse objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'Fuse';
     DSSClassType := DSSClassType + FUSE_CONTROL;
@@ -150,7 +149,7 @@ begin
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
 
-    TCC_CurveClass := GetDSSClassPtr('TCC_Curve');
+    TCC_CurveClass := GetDSSClassPtr(DSS, 'TCC_Curve');
 end;
 
 {--------------------------------------------------------------------------}
@@ -230,12 +229,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveFuseObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveFuseObj;
+    DSS.ActiveFuseObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveFuseObj;
 
     Result := 0;
 
-    with ActiveFuseObj do
+    with DSS.ActiveFuseObj do
     begin
 
         ParamPointer := 0;
@@ -263,7 +262,7 @@ begin
                 4:
                     ElementTerminal := Parser.IntValue;
                 5:
-                    FuseCurve := GetTCCCurve(Param);
+                    FuseCurve := GetTCCCurve(DSS, Param);
                 6:
                     RatedCurrent := Parser.Dblvalue;
                 7:
@@ -273,7 +272,7 @@ begin
 
             else
            // Inherited parameters
-                ClassEdit(ActiveFuseObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveFuseObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -304,7 +303,7 @@ begin
    {See if we can find this Fuse name in the present collection}
     OtherFuse := Find(FuseName);
     if OtherFuse <> NIL then
-        with ActiveFuseObj do
+        with DSS.ActiveFuseObj do
         begin
 
             NPhases := OtherFuse.Fnphases;
@@ -365,7 +364,7 @@ begin
     MonitoredElementTerminal := 1;
     MonitoredElement := NIL;
 
-    FuseCurve := GetTccCurve('tlink');
+    FuseCurve := GetTccCurve(DSS, 'tlink');
 
     RatedCurrent := 1.0;
 

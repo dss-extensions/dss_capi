@@ -31,7 +31,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -85,9 +85,6 @@ type
 
     end;
 
-var
-    ActiveGICsourceObj: TGICSourceObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -100,16 +97,18 @@ uses
     Utilities,
     Sysutils,
     Command,
-    dynamics;
+    dynamics,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
-var
-    NumPropsThisClass: Integer;
-
+const 
+    NumPropsThisClass = 10;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGICsource.Create;  // Creates superstructure for all Line objects
+constructor TGICsource.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'GICsource';
     DSSClassType := SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
@@ -133,7 +132,6 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TGICsource.DefineProperties;
 begin
-    NumPropsThisClass := 10;
 
     Numproperties := NumPropsThisClass;
     CountProperties;   // Get inherited property count
@@ -200,12 +198,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveGICsourceObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveGICsourceObj;
+    DSS.ActiveGICsourceObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveGICsourceObj;
 
     Result := 0;
 
-    with ActiveGICsourceObj do
+    with DSS.ActiveGICsourceObj do
     begin
 
         ParamPointer := 0;
@@ -250,7 +248,7 @@ begin
                     Lon2 := Parser.DblValue;
 
             else
-                ClassEdit(ActiveGICsourceObj, ParamPointer - NumPropsThisClass);
+                ClassEdit(DSS.ActiveGICsourceObj, ParamPointer - NumPropsThisClass);
             end;
 
             case ParamPointer of
@@ -281,7 +279,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherGICsource := Find(OtherSource);
     if OtherGICsource <> NIL then
-        with ActiveGICsourceObj do
+        with DSS.ActiveGICsourceObj do
         begin
 
             if Fnphases <> OtherGICsource.Fnphases then
@@ -328,7 +326,7 @@ begin
     DSSObjType := ParClass.DSSClassType; // SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
     LineName := Name;  // GICsource name must be same as associated Line
 
-    LineClass := DSSClassList.Get(ClassNames.Find('Line'));
+    LineClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('Line'));
     Nphases := 3;
     Fnconds := 3;
     Nterms := 2;   // 4/27/2018 made a 2-terminal I source
@@ -526,8 +524,8 @@ begin
 
     except
         DoSimpleMsg('Error computing current for GICsource.' + Name + '. Check specification. Aborting.', 334);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;

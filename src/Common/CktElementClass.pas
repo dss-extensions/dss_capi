@@ -28,7 +28,7 @@ type
 
     PUBLIC
         NumCktElemClassProps: Integer;
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
     PUBLISHED
 
@@ -40,7 +40,9 @@ uses
     CktElement,
     ParserDel,
     Utilities,
-    DSSGlobals;
+    DSSGlobals,
+    DSSHelper,
+    DSSObjectHelper;
 
 { TCktElementClass }
 
@@ -88,10 +90,10 @@ begin
 
 end;
 
-constructor TCktElementClass.Create;
+constructor TCktElementClass.Create(dssContext: TDSSContext);
 begin
 
-    inherited Create;
+    inherited Create(dssContext);
     NumCktElemClassProps := 2;
 
 end;

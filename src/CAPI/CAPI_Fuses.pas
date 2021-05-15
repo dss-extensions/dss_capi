@@ -41,22 +41,24 @@ uses
     Sysutils,
     Fuse,
     DSSPointerlist,
-    DSSGlobals;
+    DSSGlobals,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TFuseObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TFuseObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := ActiveCircuit.Fuses.Active;
+    obj := DSSPrime.ActiveCircuit.Fuses.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Fuse object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Fuse object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -69,20 +71,20 @@ var
     cmd: String;
     obj: TFuseObj;
 begin
-    if not _activeObj(obj) then
+    if not _activeObj(DSSPrime, obj) then
         Exit;
     
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('Fuse.%s.%s=%s', [obj.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSPrime.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Fuses, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Fuses, False);
 end;
 
 procedure Fuses_Get_AllNames_GR(); CDECL;
@@ -95,25 +97,25 @@ end;
 function Fuses_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Fuses.Count;
+    Result := DSSPrime.ActiveCircuit.Fuses.Count;
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.Fuses);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Fuses);
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.Fuses);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Fuses);
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_Name(): PAnsiChar; CDECL;
@@ -121,7 +123,7 @@ var
     elem: TFuseObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.Name);
@@ -130,16 +132,16 @@ end;
 procedure Fuses_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if FuseClass.SetActive(Value) then
+    if DSSPrime.FuseClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := FuseClass.ElementList.Active;
-        ActiveCircuit.Fuses.Get(FuseClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.FuseClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Fuses.Get(DSSPrime.FuseClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Fuse "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Fuse "' + Value + '" Not Found in Active Circuit.', 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -148,7 +150,7 @@ var
     elem: TFuseObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.MonitoredElementName);
@@ -159,7 +161,7 @@ var
     elem: TFuseObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.MonitoredElementTerminal;
@@ -170,7 +172,7 @@ var
     elem: TFuseObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.ElementName);
@@ -180,7 +182,7 @@ procedure Fuses_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Set_parameter('monitoredObj', Value);
@@ -190,7 +192,7 @@ procedure Fuses_Set_MonitoredTerm(Value: Integer); CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Set_parameter('monitoredterm', IntToStr(Value));
@@ -200,7 +202,7 @@ procedure Fuses_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Set_parameter('SwitchedObj', Value);
@@ -211,7 +213,7 @@ var
     elem: TFuseObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.ElementTerminal;
@@ -221,7 +223,7 @@ procedure Fuses_Set_SwitchedTerm(Value: Integer); CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Set_parameter('SwitchedTerm', IntToStr(Value));
@@ -231,7 +233,7 @@ function Fuses_Get_TCCcurve(): PAnsiChar; CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         Result := DSS_GetAsPAnsiChar('No Fuse Active!');
         Exit;
@@ -244,7 +246,7 @@ procedure Fuses_Set_TCCcurve(const Value: PAnsiChar); CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Set_parameter('FuseCurve', Value);
@@ -255,7 +257,7 @@ var
     elem: TFuseObj;
 begin
     Result := -1.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.RatedCurrent
@@ -265,7 +267,7 @@ procedure Fuses_Set_RatedCurrent(Value: Double); CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Set_parameter('RatedCurrent', Format('%.8g ', [Value]));
@@ -276,7 +278,7 @@ var
     elem: TFuseObj;
 begin
     Result := -1.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.DelayTime;
@@ -286,7 +288,7 @@ procedure Fuses_Open(); CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     elem.ControlledElement.Closed[0] := FALSE; // Open all phases
@@ -296,7 +298,7 @@ procedure Fuses_Close(); CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     elem.Reset();
@@ -306,7 +308,7 @@ procedure Fuses_Set_Delay(Value: Double); CDECL;
 var
     elem: TFuseObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Set_parameter('Delay', Format('%.8g ', [Value]));
@@ -319,7 +321,7 @@ var
     i: Integer;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     for i := 1 to elem.nphases do
@@ -330,24 +332,24 @@ end;
 function Fuses_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Fuses.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.Fuses.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_idx(Value: Integer); CDECL;
 var
     pFuse: TFuseObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pFuse := ActiveCircuit.Fuses.Get(Value);
+    pFuse := DSSPrime.ActiveCircuit.Fuses.Get(Value);
     if pFuse = NIL then
     begin
-        DoSimpleMsg('Invalid Fuse index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Fuse index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pFuse;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pFuse;
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_NumPhases(): Integer; CDECL;
@@ -355,7 +357,7 @@ var
     elem: TFuseObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.NPhases;

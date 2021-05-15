@@ -93,7 +93,7 @@ uses
     CktElement in 'src/Common/CktElement.pas',
     CktElementClass in 'src/Common/CktElementClass.pas',
     CktTree in 'src/Shared/CktTree.pas',
-    CmdForms in 'src/CMD/CmdForms.pas',
+    CmdForms in 'src/Common/CmdForms.pas',
     Command in 'src/Shared/Command.pas',
     CNData in 'src/General/CNData.pas',
     CNLineConstants in 'src/General/CNLineConstants.pas',
@@ -229,6 +229,7 @@ uses
     CAPI_LoadShapes in 'CAPI_LoadShapes.pas',
     CAPI_Meters in 'CAPI_Meters.pas',
     CAPI_Monitors in 'CAPI_Monitors.pas',
+    CAPI_Parallel in 'CAPI_Parallel.pas',
     CAPI_Parser in 'CAPI_Parser.pas',
     CAPI_PDElements in 'CAPI_PDElements.pas',
     CAPI_PVSystems in 'CAPI_PVSystems.pas',
@@ -920,6 +921,21 @@ exports
     Monitors_Set_Element,
     Monitors_Get_Terminal,
     Monitors_Set_Terminal,
+    Parallel_Get_NumCPUs,
+    Parallel_Get_NumCores,
+    Parallel_Get_ActiveActor,
+    Parallel_Set_ActiveActor,
+    Parallel_CreateActor,
+    Parallel_Get_ActorCPU,
+    Parallel_Set_ActorCPU,
+    Parallel_Get_NumOfActors,
+    Parallel_Wait,
+    Parallel_Get_ActorProgress,
+    Parallel_Get_ActorStatus,
+    Parallel_Get_ActiveParallel,
+    Parallel_Set_ActiveParallel,
+    Parallel_Get_ConcatenateReports,
+    Parallel_Set_ConcatenateReports,
     Parser_Get_CmdString,
     Parser_Set_CmdString,
     Parser_Get_NextParam,
@@ -1257,6 +1273,7 @@ exports
     Solution_Set_IntervalHrs,
     Solution_Get_MinIterations,
     Solution_Set_MinIterations,
+    Solution_SolveAll,
     Solution_Get_IncMatrix,
     Solution_Get_Laplacian,
     Solution_Get_BusLevels,
@@ -1518,6 +1535,8 @@ exports
     Monitors_Get_dblFreq_GR,
     Monitors_Get_dblHour_GR,
     Monitors_Get_Header_GR,
+    Parallel_Get_ActorProgress_GR,
+    Parallel_Get_ActorStatus_GR,
     Parser_Get_Vector_GR,
     Parser_Get_Matrix_GR,
     Parser_Get_SymMatrix_GR,
@@ -1889,9 +1908,36 @@ exports
     YMatrix_Get_SolverOptions,
     
     DSS_RegisterPlotCallback,
-    DSS_RegisterMessageCallback;
+    DSS_RegisterMessageCallback
     
+//    // Re-export most KLUSolve functions
+//    , 
+//    NewSparseSet,
+//    GetFlops,
+//    ZeroSparseSet,
+//    FactorSparseMatrix,
+//    SolveSparseSet,
+//    DeleteSparseSet,
+//    AddMatrixElement,
+//    GetSize,
+//    GetNNZ,
+//    GetSparseNNZ,
+//    GetSingularCol,
+//    GetRCond,
+//    GetRGrowth,
+//    GetCondEst,
+//    GetMatrixElement,
+//    AddPrimitiveMatrix,
+//    GetCompressedMatrix,
+//    GetTripletMatrix,
+//    FindIslands
+//{$IFDEF DSS_CAPI_MVMULT}
+//    , mvmult
+//{$ENDIF}
+//{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+//    , IncrementMatrixElement
+//    , ZeroiseMatrixElement
+//{$ENDIF}
+    ;
 begin
-  DSSExecutive := TExecutive.Create;
-  DSSExecutive.CreateDefaultDSSItems;
 end.

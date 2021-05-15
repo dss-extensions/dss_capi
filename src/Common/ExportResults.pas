@@ -15,62 +15,63 @@ interface
 
 uses
     EnergyMeter,
-    XYCurve;
+    XYCurve,
+    DSSClass;
 
-procedure ExportVoltages(FileNm: String);
-procedure ExportSeqVoltages(FileNm: String);
-procedure ExportCurrents(FileNm: String);
-procedure ExportEstimation(Filenm: String);
-procedure ExportSeqCurrents(FileNm: String);
-procedure ExportPowers(FileNm: String; opt: Integer);
-procedure ExportPbyphase(FileNm: String; opt: Integer);
-procedure ExportSeqPowers(FileNm: String; opt: Integer);
-procedure ExportFaultStudy(FileNm: String);
-procedure ExportMeters(FileNm: String);
-procedure ExportGenMeters(FileNm: String);
-procedure ExportPVSystemMeters(FileNm: String);
-procedure ExportPVSystem2Meters(FileNm: String);
-procedure ExportStorageMeters(FileNm: String);
-procedure ExportStorage2Meters(FileNm: String);
-procedure ExportLoads(FileNm: String);
-procedure ExportCapacity(FileNm: String);
-procedure ExportOverloads(FileNm: String);
-procedure ExportUnserved(FileNm: String; UE_Only: Boolean);
-procedure ExportYprim(FileNm: String);
-procedure ExportY(FileNm: String; TripletOpt: Boolean);
-procedure ExportSeqZ(FileNm: String);
-procedure ExportBusCoords(FileNm: String);
-procedure ExportLosses(FileNm: String);
-procedure ExportUuids(FileNm: String);
-procedure ExportCounts(FileNm: String);
-procedure ExportSummary(FileNm: String);
-procedure ExportProfile(FileNm: String; PhasesToPlot: Integer);
-procedure ExportEventLog(FileNm: String);
-procedure ExportVoltagesElements(FileNm: String);
-procedure ExportGICMvar(FileNm: String);
-procedure ExportBusReliability(FileNm: String);
-procedure ExportBranchReliability(FileNm: String);
-procedure ExportNodeNames(FileNm: String);
-procedure ExportTaps(FileNm: String);
-procedure ExportNodeOrder(FileNm: String);
-procedure ExportElemCurrents(FileNm: String);
-procedure ExportElemVoltages(FileNm: String);
-procedure ExportElemPowers(FileNm: String);
-procedure ExportResult(FileNm: String);
-procedure ExportYNodeList(FileNM: String);
-procedure ExportYVoltages(FileNM: String);
-procedure ExportYCurrents(FileNM: String);
-procedure ExportSections(FileNM: String; pMeter: TEnergyMeterObj);
-procedure ExportErrorLog(FileNm: String);
-procedure ExportIncMatrix(FileNm: String);
-procedure ExportIncMatrixRows(FileNm: String);
-procedure ExportIncMatrixCols(FileNm: String);
-procedure ExportBusLevels(FileNm: String);
-procedure ExportLaplacian(FileNm: String);
-procedure ExportZLL(FileNm: String);
-procedure ExportZCC(FileNm: String);
-procedure ExportY4(FileNm: String);
-procedure ExportC(FileNm: String);
+procedure ExportVoltages(DSS: TDSSContext; FileNm: String);
+procedure ExportSeqVoltages(DSS: TDSSContext; FileNm: String);
+procedure ExportCurrents(DSS: TDSSContext; FileNm: String);
+procedure ExportEstimation(DSS: TDSSContext; Filenm: String);
+procedure ExportSeqCurrents(DSS: TDSSContext; FileNm: String);
+procedure ExportPowers(DSS: TDSSContext; FileNm: String; opt: Integer);
+procedure ExportPbyphase(DSS: TDSSContext; FileNm: String; opt: Integer);
+procedure ExportSeqPowers(DSS: TDSSContext; FileNm: String; opt: Integer);
+procedure ExportFaultStudy(DSS: TDSSContext; FileNm: String);
+procedure ExportMeters(DSS: TDSSContext; FileNm: String);
+procedure ExportGenMeters(DSS: TDSSContext; FileNm: String);
+procedure ExportPVSystemMeters(DSS: TDSSContext; FileNm: String);
+procedure ExportPVSystem2Meters(DSS: TDSSContext; FileNm: String);
+procedure ExportStorageMeters(DSS: TDSSContext; FileNm: String);
+procedure ExportStorage2Meters(DSS: TDSSContext; FileNm: String);
+procedure ExportLoads(DSS: TDSSContext; FileNm: String);
+procedure ExportCapacity(DSS: TDSSContext; FileNm: String);
+procedure ExportOverloads(DSS: TDSSContext; FileNm: String);
+procedure ExportUnserved(DSS: TDSSContext; FileNm: String; UE_Only: Boolean);
+procedure ExportYprim(DSS: TDSSContext; FileNm: String);
+procedure ExportY(DSS: TDSSContext; FileNm: String; TripletOpt: Boolean);
+procedure ExportSeqZ(DSS: TDSSContext; FileNm: String);
+procedure ExportBusCoords(DSS: TDSSContext; FileNm: String);
+procedure ExportLosses(DSS: TDSSContext; FileNm: String);
+procedure ExportUuids(DSS: TDSSContext; FileNm: String);
+procedure ExportCounts(DSS: TDSSContext; FileNm: String);
+procedure ExportSummary(DSS: TDSSContext; FileNm: String);
+procedure ExportProfile(DSS: TDSSContext; FileNm: String; PhasesToPlot: Integer);
+procedure ExportEventLog(DSS: TDSSContext; FileNm: String);
+procedure ExportVoltagesElements(DSS: TDSSContext; FileNm: String);
+procedure ExportGICMvar(DSS: TDSSContext; FileNm: String);
+procedure ExportBusReliability(DSS: TDSSContext; FileNm: String);
+procedure ExportBranchReliability(DSS: TDSSContext; FileNm: String);
+procedure ExportNodeNames(DSS: TDSSContext; FileNm: String);
+procedure ExportTaps(DSS: TDSSContext; FileNm: String);
+procedure ExportNodeOrder(DSS: TDSSContext; FileNm: String);
+procedure ExportElemCurrents(DSS: TDSSContext; FileNm: String);
+procedure ExportElemVoltages(DSS: TDSSContext; FileNm: String);
+procedure ExportElemPowers(DSS: TDSSContext; FileNm: String);
+procedure ExportResult(DSS: TDSSContext; FileNm: String);
+procedure ExportYNodeList(DSS: TDSSContext; FileNM: String);
+procedure ExportYVoltages(DSS: TDSSContext; FileNM: String);
+procedure ExportYCurrents(DSS: TDSSContext; FileNM: String);
+procedure ExportSections(DSS: TDSSContext; FileNM: String; pMeter: TEnergyMeterObj);
+procedure ExportErrorLog(DSS: TDSSContext; FileNm: String);
+procedure ExportIncMatrix(DSS: TDSSContext; FileNm: String);
+procedure ExportIncMatrixRows(DSS: TDSSContext; FileNm: String);
+procedure ExportIncMatrixCols(DSS: TDSSContext; FileNm: String);
+procedure ExportBusLevels(DSS: TDSSContext; FileNm: String);
+procedure ExportLaplacian(DSS: TDSSContext; FileNm: String);
+procedure ExportZLL(DSS: TDSSContext; FileNm: String);
+procedure ExportZCC(DSS: TDSSContext; FileNm: String);
+procedure ExportY4(DSS: TDSSContext; FileNm: String);
+procedure ExportC(DSS: TDSSContext; FileNm: String);
 
 
 implementation
@@ -89,7 +90,6 @@ uses
     Utilities,
     Bus,
     MathUtil,
-    DSSClass,
     PDElement,
     PCElement,
     Generator,
@@ -111,13 +111,14 @@ uses
     Storage,
     Storage2,
     KLUSolve,
+    DSSHelper,
     ExportCIMXML,
     LineSpacing,
     CNData,
     TSData,
     BufStream;
 
-procedure WriteElementVoltagesExportFile(F: TFileStream; pElem: TDSSCktElement; MaxNumNodes: Integer);
+procedure WriteElementVoltagesExportFile(DSS: TDSSContext; F: TFileStream; pElem: TDSSCktElement; MaxNumNodes: Integer);
 
 var
     NCond, Nterm, i, j, k, m, nref, bref: Integer;
@@ -145,12 +146,12 @@ begin
         begin
             Inc(k);
             nref := pElem.NodeRef^[k];
-            Volts := ActiveCircuit.Solution.NodeV^[nref];
+            Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
             Vmag := Cabs(Volts) * 0.001;
             if nref = 0 then
                 Vpu := 0.0
             else
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     bref := MapNodeToBus^[nref].BusRef;
                     if Buses^[bref].kvbase <> 0.0 then
@@ -161,10 +162,10 @@ begin
                     if (i = 1) then
                         FSWrite(F, Format('%6.3f', [Buses^[bref].kvBase * sqrt(3)]));
                 end;
-            with ActiveCircuit do
+            with DSS.ActiveCircuit do
             begin
                 FSWrite(F, Format(', %d, %10.6g, %6.3f, %9.5g', [k, Vmag, cdang(Volts), Vpu]));
-            end; //end with ActiveCircuit
+            end; //end with DSS.ActiveCircuit
 
         end; //end numconductors
 
@@ -178,7 +179,7 @@ end; //end procedure
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportSeqVoltages(FileNm: String);
+procedure ExportSeqVoltages(DSS: TDSSContext; FileNm: String);
 
 // Export Symmetrical Component bus voltages
 
@@ -199,7 +200,7 @@ begin
         F := TFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F, 'Bus,  V1,  p.u.,Base kV, V2, %V2/V1, V0, %V0/V1, Vresidual, %NEMA');
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             for i := 1 to NumBuses do
             begin
@@ -212,7 +213,7 @@ begin
                     if (Buses^[i].NumNodesThisBus = 1) and PositiveSequence then
                     begin // first node
                         nref := Buses^[i].GetRef(1);
-                        Vph[1] := ActiveCircuit.Solution.NodeV^[nref];
+                        Vph[1] := DSS.ActiveCircuit.Solution.NodeV^[nref];
                         V1 := Cabs(Vph[1]);
                     end
                     else
@@ -221,7 +222,7 @@ begin
                 else
                 begin
 
-                    with  ActiveCircuit.Solution, Buses^[i] do
+                    with  DSS.ActiveCircuit.Solution, Buses^[i] do
                         for j := 1 to 3 do
                         begin      // first nodes named  1, 2, 3
                             Vph[j] := NodeV^[GetRef(FindIdx(j))];
@@ -258,7 +259,7 @@ begin
                 end;
 
                 Vresidual := CZERO;
-                with ActiveCircuit.Solution do
+                with DSS.ActiveCircuit.Solution do
                     for j := 1 to Buses^[i].NumNodesThisBus do
                         Caccum(Vresidual, NodeV^[Buses^[i].GetRef(j)]);
 
@@ -272,7 +273,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -282,7 +283,7 @@ begin
 end;
 
 //-------------------------------------------------------------------
-procedure ExportVoltages(FileNm: String);
+procedure ExportVoltages(DSS: TDSSContext; FileNm: String);
 
 // Export Symmetrical Component bus voltages
 
@@ -302,7 +303,7 @@ begin
 
   {Find max nodes at a bus}
     MaxNumNodes := 0;
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         for i := 1 to NumBuses do
             MaxNumNodes := max(MaxNumNodes, Buses^[i].NumNodesThisBus);
 
@@ -314,7 +315,7 @@ begin
             FSWrite(F, Format(', Node%d, Magnitude%d, Angle%d, pu%d', [i, i, i, i]));
         FSWriteln(F);
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             for i := 1 to NumBuses do
             begin
@@ -330,7 +331,7 @@ begin
                             inc(jj)
                         until NodeIdx > 0;
                         nref := GetRef(NodeIdx);
-                        Volts := ActiveCircuit.Solution.NodeV^[nref];
+                        Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
                         Vmag := Cabs(Volts);
                         if kvbase <> 0.0 then
                             Vpu := 0.001 * Vmag / kVBase
@@ -348,7 +349,7 @@ begin
             end;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -359,7 +360,7 @@ begin
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteSeqCurrents(F: TFileStream; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
+procedure CalcAndWriteSeqCurrents(DSS: TDSSContext; F: TFileStream; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
 var
     I0, I1, I2, I2I1, I0I1, iNormal, iEmerg: Double;
     i, k, NCond: Integer;
@@ -393,7 +394,7 @@ begin
         I1 := 0.0;
         I2 := 0.0;
         I_NEMA := 0.0;
-        if ActiveCircuit.PositiveSequence    // Use phase 1 only
+        if DSS.ActiveCircuit.PositiveSequence    // Use phase 1 only
         then
         begin
             k := (j - 1) * Ncond + 1;
@@ -440,7 +441,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportSeqCurrents(FileNm: String);
+procedure ExportSeqCurrents(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -461,25 +462,25 @@ begin
         FSWriteln(F, 'Element, Terminal,  I1, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1, Iresidual, %NEMA');
 
         {Allocate cBuffer big enough for largest circuit element}
-        Getmem(cbuffer, sizeof(Complex) * GetMaxCktElementSize);
+        Getmem(cbuffer, SizeOf(Complex) * GetMaxCktElementSize(DSS));
 
 
         //Sources First
-        Pelem := ActiveCircuit.Sources.First;
+        Pelem := DSS.ActiveCircuit.Sources.First;
         while pelem <> NIL do
         begin
             if (pelem.Enabled) then
             begin
                 pelem.GetCurrents(cBuffer);
                 for j := 1 to pelem.Nterms do
-                    CalcAndWriteSeqCurrents(F, j, pelem, cBuffer, FALSE);
+                    CalcAndWriteSeqCurrents(DSS, F, j, pelem, cBuffer, FALSE);
             end;
-            pelem := ActiveCircuit.Sources.Next;
+            pelem := DSS.ActiveCircuit.Sources.Next;
         end;
 
 
         // PDELEMENTS Next
-        PDelem := ActiveCircuit.PDElements.First;
+        PDelem := DSS.ActiveCircuit.PDElements.First;
 
         while PDelem <> NIL do
         begin
@@ -487,13 +488,13 @@ begin
             begin
                 PDelem.GetCurrents(cBuffer);
                 for j := 1 to PDelem.Nterms do
-                    CalcAndWriteSeqCurrents(F, j, pDelem, cBuffer, TRUE);
+                    CalcAndWriteSeqCurrents(DSS, F, j, pDelem, cBuffer, TRUE);
             end;
-            PDelem := ActiveCircuit.PDElements.Next;
+            PDelem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
         // PCelemENTS next
-        PCelem := ActiveCircuit.PCelements.First;
+        PCelem := DSS.ActiveCircuit.PCelements.First;
 
         while PCelem <> NIL do
         begin
@@ -501,26 +502,26 @@ begin
             begin
                 PCelem.GetCurrents(cBuffer);
                 for j := 1 to PCelem.Nterms do
-                    CalcAndWriteSeqCurrents(F, j, pCelem, cBuffer, FALSE);
+                    CalcAndWriteSeqCurrents(DSS, F, j, pCelem, cBuffer, FALSE);
             end;
-            PCelem := ActiveCircuit.PCelements.Next;
+            PCelem := DSS.ActiveCircuit.PCelements.Next;
         end;
 
 
         //Faults Next
-        Pelem := ActiveCircuit.Faults.First;
+        Pelem := DSS.ActiveCircuit.Faults.First;
         while pelem <> NIL do
         begin
             if (pelem.Enabled) then
             begin
                 pelem.GetCurrents(cBuffer);
                 for j := 1 to pelem.Nterms do
-                    CalcAndWriteSeqCurrents(F, j, pelem, cBuffer, FALSE);
+                    CalcAndWriteSeqCurrents(DSS, F, j, pelem, cBuffer, FALSE);
             end;
-            pelem := ActiveCircuit.Faults.Next;
+            pelem := DSS.ActiveCircuit.Faults.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
 
     finally
@@ -567,7 +568,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteMaxCurrents(F: TFileStream; pElem: TPDElement; Cbuffer: pComplexArray);
+procedure CalcAndWriteMaxCurrents(DSS: TDSSContext; F: TFileStream; pElem: TPDElement; Cbuffer: pComplexArray);
 var
     RatingIdx,
     i: Integer;
@@ -583,14 +584,14 @@ begin
     NormAmps := pElem.NormAmps;
     EmergAmps := pElem.EmergAmps;
 
-    if SeasonalRating then
+    if DSS.SeasonalRating then
     begin
-        if SeasonSignal <> '' then
+        if DSS.SeasonSignal <> '' then
         begin
-            RSignal := XYCurveClass.Find(SeasonSignal);
+            RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
             if RSignal <> NIL then
             begin
-                RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+                RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
           // Brings the seasonal ratings for the PDElement
                 if (RatingIdx <= PElem.NumAmpRatings) and (PElem.NumAmpRatings > 1) then
                 begin
@@ -599,10 +600,10 @@ begin
                 end;
             end
             else
-                SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+                DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
         end
         else
-            SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+            DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
     end;
 
     FSWrite(F, Format('%s.%s', [pelem.DSSClassName, UpperCase(pElem.Name)]));
@@ -621,14 +622,14 @@ begin
         FSWrite(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, MaxCurrent / NormAmps * 100.0, MaxCurrent / Emergamps * 100.0]));
 
     FSWrite(F, Format(', %10.6g, %10.6g, %d, %d, %d', [Localpower.re, Localpower.im, pElem.BranchNumCustomers, pElem.BranchTotalCustomers, pElem.NPhases]));
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         FSWrite(F, Format(', %-.3g ', [Buses^[MapNodeToBus^[PElem.NodeRef^[1]].BusRef].kVBase]));
     FSWriteln(F);
 end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportCurrents(FileNm: String);
+procedure ExportCurrents(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -644,19 +645,19 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
 
         {Calculate the width of the file}
         MaxCond := 1;
         MaxTerm := 2;
-        pElem := ActiveCircuit.CktElements.First;
+        pElem := DSS.ActiveCircuit.CktElements.First;
         while pElem <> NIL do
         begin
             if pelem.NTerms > MaxTerm then
                 MaxTerm := pelem.NTerms;
             if pelem.NConds > MaxCond then
                 MaxCond := pelem.NConds;
-            pElem := ActiveCircuit.CktElements.Next;
+            pElem := DSS.ActiveCircuit.CktElements.Next;
         end;
 
 
@@ -672,7 +673,7 @@ begin
 
 
      // Sources first
-        pElem := ActiveCircuit.Sources.First;
+        pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
@@ -680,12 +681,12 @@ begin
                 pElem.GetCurrents(cBuffer);
                 CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
             end;
-            pElem := ActiveCircuit.Sources.Next;
+            pElem := DSS.ActiveCircuit.Sources.Next;
         end;
 
 
      // PDELEMENTS first
-        pElem := ActiveCircuit.PDElements.First;
+        pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
@@ -693,11 +694,11 @@ begin
                 pElem.GetCurrents(cBuffer);
                 CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
             end;
-            pElem := ActiveCircuit.PDElements.Next;
+            pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
      // Faults
-        pElem := ActiveCircuit.Faults.First;
+        pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
@@ -705,11 +706,11 @@ begin
                 pElem.GetCurrents(cBuffer);
                 CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
             end;
-            pElem := ActiveCircuit.Faults.Next;
+            pElem := DSS.ActiveCircuit.Faults.Next;
         end;
 
      // PCELEMENTS next
-        pElem := ActiveCircuit.PCElements.First;
+        pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
@@ -717,10 +718,10 @@ begin
                 pElem.GetCurrents(cBuffer);
                 CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
             end;
-            pElem := ActiveCircuit.PCElements.Next;
+            pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
 
     finally
@@ -734,7 +735,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteNodeList(F: TFileStream; const CktElementName: String);
+procedure WriteNodeList(DSS: TDSSContext; F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -742,27 +743,27 @@ var
 begin
 
 
-    if ActiveCircuit <> NIL then
-        if not ActiveCircuit.Issolved then
+    if DSS.ActiveCircuit <> NIL then
+        if not DSS.ActiveCircuit.IsSolved then
         begin
-            DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
+            DoSimpleMsg(DSS, 'Circuit must be solved for this command to execute properly.', 222001);
             Exit;
         end;
 
 
     if Length(CktElementName) > 0 then
     begin
-        SetObject(CktElementName);
+        SetObject(DSS, CktElementName);
 
 
-        if Assigned(ActiveCircuit.ActiveCktElement) then
-            with ActiveCircuit.ActiveCktElement do
+        if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
+            with DSS.ActiveCircuit.ActiveCktElement do
             begin
                 FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
                 NValues := NConds * Nterms;
                 for i := 1 to NValues do
                 begin
-                    FSWrite(F, Format(', %d', [GetNodeNum(NodeRef^[i])]));
+                    FSWrite(F, Format(', %d', [GetNodeNum(DSS, NodeRef^[i])]));
                 end;
                 FSWriteln(F);
             end
@@ -772,7 +773,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportNodeOrder(FileNm: String);
+procedure ExportNodeOrder(DSS: TDSSContext; FileNm: String);
 
 { Writes NodeLists in same order as Export Currents function
 }
@@ -794,55 +795,55 @@ begin
 
 
      // Sources first
-        pElem := ActiveCircuit.Sources.First;
+        pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteNodeList(F, strName);
+                WriteNodeList(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.Sources.Next;
+            pElem := DSS.ActiveCircuit.Sources.Next;
         end;
 
 
      // PDELEMENTS first
-        pElem := ActiveCircuit.PDElements.First;
+        pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteNodeList(F, strName);
+                WriteNodeList(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.PDElements.Next;
+            pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
      // Faults
-        pElem := ActiveCircuit.Faults.First;
+        pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteNodeList(F, strName);
+                WriteNodeList(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.Faults.Next;
+            pElem := DSS.ActiveCircuit.Faults.Next;
         end;
 
      // PCELEMENTS next
-        pElem := ActiveCircuit.PCElements.First;
+        pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteNodeList(F, strName);
+                WriteNodeList(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.PCElements.Next;
+            pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
 
     finally
@@ -854,7 +855,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemCurrents(F: TFileStream; const CktElementName: String);
+procedure WriteElemCurrents(DSS: TDSSContext; F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -862,20 +863,20 @@ var
 begin
 
 
-    if ActiveCircuit <> NIL then
-        if not ActiveCircuit.Issolved then
+    if DSS.ActiveCircuit <> NIL then
+        if not DSS.ActiveCircuit.Issolved then
         begin
-            DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
+            DoSimpleMsg(DSS, 'Circuit must be solved for this command to execute properly.', 222001);
             Exit;
         end;
 
 
     if Length(CktElementName) > 0 then
     begin
-        SetObject(CktElementName);
+        SetObject(DSS, CktElementName);
 
-        if Assigned(ActiveCircuit.ActiveCktElement) then
-            with ActiveCircuit.ActiveCktElement do
+        if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
+            with DSS.ActiveCircuit.ActiveCktElement do
             begin
                 ComputeIterminal;
                 FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
@@ -893,7 +894,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportElemCurrents(FileNm: String);
+procedure ExportElemCurrents(DSS: TDSSContext; FileNm: String);
 
 { Export currents in same order as NodeOrder export
 }
@@ -914,55 +915,55 @@ begin
 
 
      // Sources first
-        pElem := ActiveCircuit.Sources.First;
+        pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemCurrents(F, strName);
+                WriteElemCurrents(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.Sources.Next;
+            pElem := DSS.ActiveCircuit.Sources.Next;
         end;
 
 
      // PDELEMENTS first
-        pElem := ActiveCircuit.PDElements.First;
+        pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemCurrents(F, strName);
+                WriteElemCurrents(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.PDElements.Next;
+            pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
      // Faults
-        pElem := ActiveCircuit.Faults.First;
+        pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemCurrents(F, strName);
+                WriteElemCurrents(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.Faults.Next;
+            pElem := DSS.ActiveCircuit.Faults.Next;
         end;
 
      // PCELEMENTS next
-        pElem := ActiveCircuit.PCElements.First;
+        pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemCurrents(F, strName);
+                WriteElemCurrents(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.PCElements.Next;
+            pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
 
     finally
@@ -973,7 +974,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemVoltages(F: TFileStream; const CktElementName: String);
+procedure WriteElemVoltages(DSS: TDSSContext; F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -981,20 +982,20 @@ var
 begin
 
 
-    if ActiveCircuit <> NIL then
-        if not ActiveCircuit.Issolved then
+    if DSS.ActiveCircuit <> NIL then
+        if not DSS.ActiveCircuit.Issolved then
         begin
-            DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
+            DoSimpleMsg(DSS, 'Circuit must be solved for this command to execute properly.', 222001);
             Exit;
         end;
 
 
     if Length(CktElementName) > 0 then
     begin
-        SetObject(CktElementName);
+        SetObject(DSS, CktElementName);
 
-        if Assigned(ActiveCircuit.ActiveCktElement) then
-            with ActiveCircuit.ActiveCktElement do
+        if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
+            with DSS.ActiveCircuit.ActiveCktElement do
             begin
                 ComputeVterminal;
                 FSWrite(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
@@ -1011,7 +1012,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportElemVoltages(FileNm: String);
+procedure ExportElemVoltages(DSS: TDSSContext; FileNm: String);
 { Export conductor voltages in same order as NodeOrder export
 }
 var
@@ -1031,55 +1032,55 @@ begin
 
 
      // Sources first
-        pElem := ActiveCircuit.Sources.First;
+        pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemVoltages(F, strName);
+                WriteElemVoltages(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.Sources.Next;
+            pElem := DSS.ActiveCircuit.Sources.Next;
         end;
 
 
      // PDELEMENTS first
-        pElem := ActiveCircuit.PDElements.First;
+        pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemVoltages(F, strName);
+                WriteElemVoltages(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.PDElements.Next;
+            pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
      // Faults
-        pElem := ActiveCircuit.Faults.First;
+        pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemVoltages(F, strName);
+                WriteElemVoltages(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.Faults.Next;
+            pElem := DSS.ActiveCircuit.Faults.Next;
         end;
 
      // PCELEMENTS next
-        pElem := ActiveCircuit.PCElements.First;
+        pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemVoltages(F, strName);
+                WriteElemVoltages(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.PCElements.Next;
+            pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
 
     finally
@@ -1092,7 +1093,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemPowers(F: TFileStream; const CktElementName: String);
+procedure WriteElemPowers(DSS: TDSSContext; F: TFileStream; const CktElementName: String);
 var
     NValues, i: Integer;
     S: Complex;
@@ -1100,20 +1101,20 @@ var
 begin
 
 
-    if ActiveCircuit <> NIL then
-        if not ActiveCircuit.Issolved then
+    if DSS.ActiveCircuit <> NIL then
+        if not DSS.ActiveCircuit.Issolved then
         begin
-            DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
+            DoSimpleMsg(DSS, 'Circuit must be solved for this command to execute properly.', 222001);
             Exit;
         end;
 
 
     if Length(CktElementName) > 0 then
     begin
-        SetObject(CktElementName);
+        SetObject(DSS, CktElementName);
 
-        if Assigned(ActiveCircuit.ActiveCktElement) then
-            with ActiveCircuit.ActiveCktElement do
+        if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
+            with DSS.ActiveCircuit.ActiveCktElement do
             begin
                 ComputeVterminal;
                 ComputeIterminal;
@@ -1132,7 +1133,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportElemPowers(FileNm: String);
+procedure ExportElemPowers(DSS: TDSSContext; FileNm: String);
 
 { Export conductor powers in same order as NodeOrder export
 }
@@ -1153,55 +1154,55 @@ begin
 
 
      // Sources first
-        pElem := ActiveCircuit.Sources.First;
+        pElem := DSS.ActiveCircuit.Sources.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemPowers(F, strName);
+                WriteElemPowers(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.Sources.Next;
+            pElem := DSS.ActiveCircuit.Sources.Next;
         end;
 
 
      // PDELEMENTS first
-        pElem := ActiveCircuit.PDElements.First;
+        pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemPowers(F, strName);
+                WriteElemPowers(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.PDElements.Next;
+            pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
      // Faults
-        pElem := ActiveCircuit.Faults.First;
+        pElem := DSS.ActiveCircuit.Faults.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemPowers(F, strName);
+                WriteElemPowers(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.Faults.Next;
+            pElem := DSS.ActiveCircuit.Faults.Next;
         end;
 
      // PCELEMENTS next
-        pElem := ActiveCircuit.PCElements.First;
+        pElem := DSS.ActiveCircuit.PCElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 strName := pElem.ParentClass.Name + '.' + pElem.Name;
-                WriteElemPowers(F, strName);
+                WriteElemPowers(DSS, F, strName);
             end;
-            pElem := ActiveCircuit.PCElements.Next;
+            pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
 
     finally
@@ -1213,7 +1214,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportPowers(FileNm: String; opt: Integer);
+procedure ExportPowers(DSS: TDSSContext; FileNm: String; opt: Integer);
 
 {Opt = 0: kVA
  opt = 1: MVA
@@ -1243,7 +1244,7 @@ begin
         end;
 
      // PDELEMENTS first
-        PDElem := ActiveCircuit.PDElements.First;
+        PDElem := DSS.ActiveCircuit.PDElements.First;
 
         while PDElem <> NIL do
         begin
@@ -1284,11 +1285,11 @@ begin
                     FSWriteln(F);
                 end;
             end;
-            PDElem := ActiveCircuit.PDElements.Next;
+            PDElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
      // PCELEMENTS Next
-        PCElem := ActiveCircuit.PCElements.First;
+        PCElem := DSS.ActiveCircuit.PCElements.First;
 
         while PCElem <> NIL do
         begin
@@ -1313,10 +1314,10 @@ begin
 
                 end;
             end;
-            PCElem := ActiveCircuit.PCElements.Next;
+            PCElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         FreeAndNil(F);
@@ -1325,7 +1326,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportLosses(FileNm: String);
+procedure ExportLosses(DSS: TDSSContext; FileNm: String);
 
 {Opt = 0: kVA
  opt = 1: MVA
@@ -1344,7 +1345,7 @@ begin
 
         FSWriteln(F, 'Element,  Total(W), Total(var),  I2R(W), I2X(var), No-load(W), No-load(var)');
      // PDELEMENTS first
-        PDElem := ActiveCircuit.PDElements.First;
+        PDElem := DSS.ActiveCircuit.PDElements.First;
 
         while PDElem <> NIL do
         begin
@@ -1353,10 +1354,10 @@ begin
                 PDElem.GetLosses(S_total, S_Load, S_NoLoad);
                 FSWriteln(F, Format('%s.%s, %.7g, %.7g, %.7g, %.7g, %.7g, %.7g', [PDElem.ParentClass.Name, UpperCase(PDElem.Name), S_total.re, S_total.im, S_Load.re, S_Load.im, S_NoLoad.re, S_NoLoad.im]));
             end;
-            PDElem := ActiveCircuit.PDElements.Next;
+            PDElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         FreeAndNil(F);
@@ -1365,7 +1366,7 @@ begin
 end;
 
 // ===============================================================================
-procedure ExportPbyphase(FileNm: String; opt: Integer);
+procedure ExportPbyphase(DSS: TDSSContext; FileNm: String; opt: Integer);
 
 { Export Powers by phase }
 
@@ -1394,7 +1395,7 @@ begin
         end;
 
      // PDELEMENTS first
-        PDElem := ActiveCircuit.PDElements.First;
+        PDElem := DSS.ActiveCircuit.PDElements.First;
 
         while PDElem <> NIL do
         begin
@@ -1415,11 +1416,11 @@ begin
                 end;
                 FSWriteln(F);
             end;
-            PDElem := ActiveCircuit.PDElements.Next;
+            PDElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
      // PCELEMENTS Next
-        PCElem := ActiveCircuit.PCElements.First;
+        PCElem := DSS.ActiveCircuit.PCElements.First;
 
         while PCElem <> NIL do
         begin
@@ -1442,10 +1443,10 @@ begin
                 FSWriteln(F);
 
             end;
-            PCElem := ActiveCircuit.PCElements.Next;
+            PCElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         FreeAndNil(F);
@@ -1454,7 +1455,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportSeqPowers(FileNm: String; opt: Integer);
+procedure ExportSeqPowers(DSS: TDSSContext; FileNm: String; opt: Integer);
 
 {Opt = 0: kVA
  opt = 1: MVA
@@ -1482,7 +1483,7 @@ begin
         F := TFileStream.Create(FileNm, fmCreate);
         Separator := ', ';
 
-        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
 
         case Opt of
             1:
@@ -1492,7 +1493,7 @@ begin
         end;
 
      // PDELEMENTS first
-        PDElem := ActiveCircuit.PDElements.First;
+        PDElem := DSS.ActiveCircuit.PDElements.First;
 
         while PDElem <> NIL do
         begin
@@ -1509,7 +1510,7 @@ begin
                     begin
                         k := (j - 1) * Ncond + i;
                         nref := pDElem.NodeRef^[k];
-                        Volts := ActiveCircuit.Solution.NodeV^[nref];
+                        Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
                         Iph[i] := cBuffer^[k];
                         Vph[i] := volts;
                     end;
@@ -1524,7 +1525,7 @@ begin
                         I012[1] := CZERO;
                         V012[3] := CZERO;
                         I012[3] := CZERO;
-                        if ActiveCircuit.PositiveSequence then
+                        if DSS.ActiveCircuit.PositiveSequence then
                         begin
                             V012[2] := Vph[1];
                             I012[2] := Iph[1];
@@ -1581,11 +1582,11 @@ begin
 
                 end;
             end;
-            PDElem := ActiveCircuit.PDElements.Next;
+            PDElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
      // PCELEMENTS Next
-        PCElem := ActiveCircuit.PCElements.First;
+        PCElem := DSS.ActiveCircuit.PCElements.First;
 
         while PCElem <> NIL do
         begin
@@ -1603,7 +1604,7 @@ begin
                     begin
                         k := (j - 1) * Ncond + i;
                         nref := PCElem.NodeRef^[k];
-                        Volts := ActiveCircuit.Solution.NodeV^[nref];
+                        Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
                         Iph[i] := cBuffer^[k];
                         Vph[i] := volts;
                     end;
@@ -1618,7 +1619,7 @@ begin
                         I012[1] := CZERO;
                         V012[3] := CZERO;
                         I012[3] := CZERO;
-                        if ActiveCircuit.PositiveSequence then
+                        if DSS.ActiveCircuit.PositiveSequence then
                         begin
                             V012[2] := Vph[1];
                             I012[2] := Iph[1];
@@ -1656,10 +1657,10 @@ begin
 
                 end;
             end;
-            PCElem := ActiveCircuit.PCElements.Next;
+            PCElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         if Assigned(cBuffer) then
@@ -1671,7 +1672,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportFaultStudy(FileNm: String);
+procedure ExportFaultStudy(DSS: TDSSContext; FileNm: String);
 
 var
     i, iBus, iphs: Integer;
@@ -1692,7 +1693,7 @@ begin
         Separator := ', ';
 
    { Set source voltage injection currents }
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             with Solution do
             begin
@@ -1783,9 +1784,9 @@ begin
                     end;  {With bus}
 
             end; {With Solution}
-        end; {With ActiveCircuit}
+        end; {With DSS.ActiveCircuit}
 
-        GlobalResult := Filenm;
+        DSS.GlobalResult := Filenm;
 
     finally
 
@@ -1796,7 +1797,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportEstimation(Filenm: String);
+procedure ExportEstimation(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -1823,7 +1824,7 @@ begin
         FSWriteln(F, '"Energy Meters" ');
         FSWriteln(F, '"energyMeter", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err"'{, "I1 Factor", "I2 Factor", "I3 Factor"'});
 
-        pEnergyMeterObj := ActiveCircuit.energyMeters.First;
+        pEnergyMeterObj := DSS.ActiveCircuit.energyMeters.First;
         while pEnergyMeterObj <> NIL do
         begin
             if pEnergyMeterObj.Enabled then
@@ -1856,7 +1857,7 @@ begin
 
                 FSWriteln(F);
             end;
-            pEnergyMeterObj := ActiveCircuit.EnergyMeters.Next;
+            pEnergyMeterObj := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
 
           {Do the Sensors Next}
@@ -1865,7 +1866,7 @@ begin
         FSWrite(F, '"Sensor", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err",');
         FSWriteln(F, ' "V1 Target", "V2 Target", "V3 Target", "V1 Calc", "V2 Calc", "V3 Calc", "V1 %Err", "V2 %Err", "V3 %Err", "WLS Voltage Err", "WLS Current Err"');
 
-        pSensorObj := ActiveCircuit.Sensors.First;
+        pSensorObj := DSS.ActiveCircuit.Sensors.First;
         while pSensorObj <> NIL do
         begin
             if pSensorObj.Enabled then
@@ -1911,12 +1912,12 @@ begin
 
                 FSWriteln(F);
             end;
-            pSensorObj := ActiveCircuit.Sensors.Next;
+            pSensorObj := DSS.ActiveCircuit.Sensors.Next;
         end;
 
 
     finally
-        AppendGlobalResult(FileNm);
+        AppendGlobalResult(DSS, FileNm);
         FreeAndNil(F);
 
     end;
@@ -1926,7 +1927,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultipleMeterFiles;
+procedure WriteMultipleMeterFiles(DSS: TDSSContext);
 
 var
     F: TFileStream = nil;
@@ -1938,18 +1939,18 @@ var
 
 begin
 
-    MeterClass := TEnergyMeter(GetDSSClassPtr('Energymeter'));
+    MeterClass := TEnergyMeter(GetDSSClassPtr(DSS, 'Energymeter'));
     if MeterClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
-    pElem := ActiveCircuit.energyMeters.First;
+    pElem := DSS.ActiveCircuit.energyMeters.First;
     while pElem <> NIL do
     begin
         if pElem.Enabled then
         begin
             try
-                FileNm := GetOutputDirectory + 'EXP_MTR_' + Uppercase(pElem.Name) + '.CSV';
+                FileNm := DSS.OutputDirectory + 'EXP_MTR_' + Uppercase(pElem.Name) + '.CSV';
 
                 if not FileExists(FileNm) then
                 begin
@@ -1964,27 +1965,27 @@ begin
 
                 F := TFileStream.Create(FileNm, fmOpenReadWrite);
                 F.Seek(0, soEnd);
-                FSWrite(F, IntToStr(ActiveCircuit.Solution.Year), Separator);
-                FSWrite(F, ActiveCircuit.LoadDurCurve, Separator);
-                FSWrite(F, IntToStr(ActiveCircuit.Solution.DynaVars.intHour), Separator);
+                FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year), Separator);
+                FSWrite(F, DSS.ActiveCircuit.LoadDurCurve, Separator);
+                FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
                     FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
                 FSWriteln(F);
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 FreeAndNil(F);
             end;
 
         end;
-        pElem := ActiveCircuit.EnergyMeters.Next;
+        pElem := DSS.ActiveCircuit.EnergyMeters.Next;
     end;
 
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSingleMeterFile(const FileNm: String);
+procedure WriteSingleMeterFile(DSS: TDSSContext; const FileNm: String);
 var
     F: TFileStream = nil;
     i, j: Integer;
@@ -2028,7 +2029,7 @@ begin
             FreeAndNil(F);
             F := TFileStream.Create(FileNm, fmCreate);
         {Write New Header}
-            pElem := ActiveCircuit.energyMeters.First;
+            pElem := DSS.ActiveCircuit.energyMeters.First;
             FSWrite(F, 'Year, LDCurve, Hour, Meter');
             for i := 1 to NumEMRegisters do
                 FSWrite(F, Separator, '"' + pElem.RegisterNames[i] + '"');
@@ -2042,23 +2043,23 @@ begin
         end;
 
 
-        pElem := ActiveCircuit.energyMeters.First;
+        pElem := DSS.ActiveCircuit.energyMeters.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
-                FSWrite(F, IntToStr(ActiveCircuit.Solution.Year), Separator);
-                FSWrite(F, ActiveCircuit.LoadDurCurve, Separator);
-                FSWrite(F, IntToStr(ActiveCircuit.Solution.DynaVars.intHour), Separator);
+                FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.Year), Separator);
+                FSWrite(F, DSS.ActiveCircuit.LoadDurCurve, Separator);
+                FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
                     FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
                 FSWriteln(F);
             end;
-            pElem := ActiveCircuit.EnergyMeters.Next;
+            pElem := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -2069,7 +2070,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportMeters(FileNm: String);
+procedure ExportMeters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of  Meter Elements
 
@@ -2081,13 +2082,13 @@ begin
 
 
     if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
-        WriteMultipleMeterFiles
+        WriteMultipleMeterFiles(DSS)
     else
-        WriteSingleMeterFile(FileNM);
+        WriteSingleMeterFile(DSS, FileNM);
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultipleGenMeterFiles;
+procedure WriteMultipleGenMeterFiles(DSS: TDSSContext);
 
 var
     F: TFileStream = nil;
@@ -2099,18 +2100,18 @@ var
 
 begin
 
-    GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
+    GeneratorClass := TGenerator(GetDSSClassPtr(DSS, 'generator'));
     if GeneratorClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
-    pElem := ActiveCircuit.Generators.First;
+    pElem := DSS.ActiveCircuit.Generators.First;
     while pElem <> NIL do
     begin
         if pElem.Enabled then
         begin
             try
-                FileNm := GetOutputDirectory + 'EXP_GEN_' + Uppercase(pElem.Name) + '.CSV';
+                FileNm := DSS.OutputDirectory + 'EXP_GEN_' + Uppercase(pElem.Name) + '.CSV';
 
                 if not FileExists(FileNm) then
                 begin
@@ -2125,7 +2126,7 @@ begin
 
                 F := TFileStream.Create(FileNm, fmOpenReadWrite);
                 F.Seek(0, soEnd);
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2135,20 +2136,20 @@ begin
                         FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 FreeAndNil(F);
             end;
 
         end;
-        pElem := ActiveCircuit.Generators.Next;
+        pElem := DSS.ActiveCircuit.Generators.Next;
     end;
 
 end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSingleGenMeterFile(FileNm: String);
+procedure WriteSingleGenMeterFile(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -2161,7 +2162,7 @@ var
 begin
 
 
-    GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
+    GeneratorClass := TGenerator(GetDSSClassPtr(DSS, 'generator'));
     if GeneratorClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
@@ -2211,11 +2212,11 @@ begin
         end;
 
 
-        pElem := ActiveCircuit.Generators.First;
+        pElem := DSS.ActiveCircuit.Generators.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2226,10 +2227,10 @@ begin
                     FSWriteln(F);
                 end;
 
-            pElem := ActiveCircuit.Generators.Next;
+            pElem := DSS.ActiveCircuit.Generators.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -2241,9 +2242,9 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultiplePVSystem2MeterFiles; forward;
+procedure WriteMultiplePVSystem2MeterFiles(DSS: TDSSContext); forward;
 
-procedure WriteMultiplePVSystemMeterFiles;
+procedure WriteMultiplePVSystemMeterFiles(DSS: TDSSContext);
 
 var
     F: TFileStream = nil;
@@ -2255,21 +2256,21 @@ var
 begin
     if not DSS_CAPI_LEGACY_MODELS then
     begin
-        WriteMultiplePVSystem2MeterFiles();
+        WriteMultiplePVSystem2MeterFiles(DSS);
         Exit;
     end;
 
-    if PVSystemClass = NIL then
+    if DSS.PVSystemClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
-    pElem := ActiveCircuit.PVSystems.First;
+    pElem := DSS.ActiveCircuit.PVSystems.First;
     while pElem <> NIL do
     begin
         if pElem.Enabled then
         begin
             try
-                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+                FileNm := DSS.OutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
 
                 if not FileExists(FileNm) then
                 begin
@@ -2277,14 +2278,14 @@ begin
                 {Write New Header}
                     FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
                     for i := 1 to NumPVSystemRegisters do
-                        FSWrite(F, Separator, '"' + PVSystemClass.RegisterNames[i] + '"');
+                        FSWrite(F, Separator, '"' + DSS.PVSystemClass.RegisterNames[i] + '"');
                     FSWriteln(F);
                     FreeAndNil(F);
                 end;
 
                 F := TFileStream.Create(FileNm, fmOpenReadWrite);
                 F.Seek(0, soEnd);
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2294,19 +2295,19 @@ begin
                         FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 FreeAndNil(F);
             end;
 
         end;
-        pElem := ActiveCircuit.PVSystems.Next;
+        pElem := DSS.ActiveCircuit.PVSystems.Next;
     end;
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultiplePVSystem2MeterFiles;
+procedure WriteMultiplePVSystem2MeterFiles(DSS: TDSSContext);
 
 var
     F: TFileStream = nil;
@@ -2317,17 +2318,17 @@ var
 
 begin
 
-    if PVSystem2Class = NIL then
+    if DSS.PVSystem2Class = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
-    pElem := ActiveCircuit.PVSystems.First;
+    pElem := DSS.ActiveCircuit.PVSystems.First;
     while pElem <> NIL do
     begin
         if pElem.Enabled then
         begin
             try
-                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+                FileNm := DSS.OutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
 
                 if not FileExists(FileNm) then
                 begin
@@ -2335,14 +2336,14 @@ begin
                 {Write New Header}
                     FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
                     for i := 1 to NumPVSystem2Registers do
-                        FSWrite(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
+                        FSWrite(F, Separator, '"' + DSS.PVSystem2Class.RegisterNames[i] + '"');
                     FSWriteln(F);
                     FreeAndNil(F);
                 end;
 
                 F := TFileStream.Create(FileNm, fmOpenReadWrite);
                 F.Seek(0, soEnd);
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2352,22 +2353,22 @@ begin
                         FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 FreeAndNil(F);
             end;
 
         end;
-        pElem := ActiveCircuit.PVSystems.Next;
+        pElem := DSS.ActiveCircuit.PVSystems.Next;
     end;
 
 end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSinglePVSystem2MeterFile(FileNm: String); forward;
+procedure WriteSinglePVSystem2MeterFile(DSS: TDSSContext; FileNm: String); forward;
 
-procedure WriteSinglePVSystemMeterFile(FileNm: String);
+procedure WriteSinglePVSystemMeterFile(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -2379,12 +2380,12 @@ var
 begin
     if not DSS_CAPI_LEGACY_MODELS then
     begin
-        WriteSinglePVSystem2MeterFile(FileNm);
+        WriteSinglePVSystem2MeterFile(DSS, FileNm);
         Exit;
     end;
 
 
-    if PVSystemClass = NIL then
+    if DSS.PVSystemClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
@@ -2422,7 +2423,7 @@ begin
         {Write New Header}
             FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
             for i := 1 to NumGenRegisters do
-                FSWrite(F, Separator, '"' + PVSystemClass.RegisterNames[i] + '"');
+                FSWrite(F, Separator, '"' + DSS.PVSystemClass.RegisterNames[i] + '"');
             FSWriteln(F);
         end
         else
@@ -2433,11 +2434,11 @@ begin
         end;
 
 
-        pElem := ActiveCircuit.PVSystems.First;
+        pElem := DSS.ActiveCircuit.PVSystems.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2448,10 +2449,10 @@ begin
                     FSWriteln(F);
                 end;
 
-            pElem := ActiveCircuit.PVSystems.Next;
+            pElem := DSS.ActiveCircuit.PVSystems.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -2463,8 +2464,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSinglePVSystem2MeterFile(FileNm: String);
-
+procedure WriteSinglePVSystem2MeterFile(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i, j: Integer;
@@ -2475,7 +2475,7 @@ var
 begin
 
 
-    if PVSystem2Class = NIL then
+    if DSS.PVSystem2Class = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
@@ -2512,7 +2512,7 @@ begin
         {Write New Header}
             FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
             for i := 1 to NumGenRegisters do
-                FSWrite(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
+                FSWrite(F, Separator, '"' + DSS.PVSystem2Class.RegisterNames[i] + '"');
             FSWriteln(F);
         end
         else
@@ -2523,11 +2523,11 @@ begin
         end;
 
 
-        pElem := ActiveCircuit.PVSystems.First;
+        pElem := DSS.ActiveCircuit.PVSystems.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2538,10 +2538,10 @@ begin
                     FSWriteln(F);
                 end;
 
-            pElem := ActiveCircuit.PVSystems.Next;
+            pElem := DSS.ActiveCircuit.PVSystems.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -2555,9 +2555,9 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteMultipleStorage2MeterFiles; forward;
+procedure WriteMultipleStorage2MeterFiles(DSS: TDSSContext); forward;
 
-procedure WriteMultipleStorageMeterFiles;
+procedure WriteMultipleStorageMeterFiles(DSS: TDSSContext);
 
 var
     F: TFileStream = nil;
@@ -2569,21 +2569,21 @@ var
 begin
     if not DSS_CAPI_LEGACY_MODELS then
     begin
-        WriteMultipleStorage2MeterFiles;
+        WriteMultipleStorage2MeterFiles(DSS);
         Exit;
     end;
 
-    if StorageClass = NIL then
+    if DSS.StorageClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
-    pElem := ActiveCircuit.StorageElements.First;
+    pElem := DSS.ActiveCircuit.StorageElements.First;
     while pElem <> NIL do
     begin
         if pElem.Enabled then
         begin
             try
-                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+                FileNm := DSS.OutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
 
                 if not FileExists(FileNm) then
                 begin
@@ -2591,14 +2591,14 @@ begin
                 {Write New Header}
                     FSWrite(F, 'Year, LDCurve, Hour, Storage');
                     for i := 1 to NumStorageRegisters do
-                        FSWrite(F, Separator, '"' + StorageClass.RegisterNames[i] + '"');
+                        FSWrite(F, Separator, '"' + DSS.StorageClass.RegisterNames[i] + '"');
                     FSWriteln(F);
                     FreeAndNil(F);
                 end;
 
                 F := TFileStream.Create(FileNm, fmOpenReadWrite);
                 F.Seek(0, soEnd);
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2608,19 +2608,18 @@ begin
                         FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 FreeAndNil(F);
             end;
 
         end;
-        pElem := ActiveCircuit.StorageElements.Next;
+        pElem := DSS.ActiveCircuit.StorageElements.Next;
     end;
 
 end;
 
-procedure WriteMultipleStorage2MeterFiles;
-
+procedure WriteMultipleStorage2MeterFiles(DSS: TDSSContext);
 var
     F: TFileStream = nil;
     i, j: Integer;
@@ -2630,17 +2629,17 @@ var
 
 begin
 
-    if Storage2Class = NIL then
+    if DSS.Storage2Class = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
-    pElem := ActiveCircuit.StorageElements.First;
+    pElem := DSS.ActiveCircuit.StorageElements.First;
     while pElem <> NIL do
     begin
         if pElem.Enabled then
         begin
             try
-                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+                FileNm := DSS.OutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
 
                 if not FileExists(FileNm) then
                 begin
@@ -2648,14 +2647,14 @@ begin
                 {Write New Header}
                     FSWrite(F, 'Year, LDCurve, Hour, Storage');
                     for i := 1 to NumStorage2Registers do
-                        FSWrite(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
+                        FSWrite(F, Separator, '"' + DSS.Storage2Class.RegisterNames[i] + '"');
                     FSWriteln(F);
                     FreeAndNil(F);
                 end;
 
                 F := TFileStream.Create(FileNm, fmOpenReadWrite);
                 F.Seek(0, soEnd);
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2665,22 +2664,22 @@ begin
                         FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 FreeAndNil(F);
             end;
 
         end;
-        pElem := ActiveCircuit.StorageElements.Next;
+        pElem := DSS.ActiveCircuit.StorageElements.Next;
     end;
 
 end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSingleStorage2MeterFile(FileNm: String); forward;
+procedure WriteSingleStorage2MeterFile(DSS: TDSSContext; FileNm: String); forward;
 
-procedure WriteSingleStorageMeterFile(FileNm: String);
+procedure WriteSingleStorageMeterFile(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -2692,11 +2691,11 @@ var
 begin
     if not DSS_CAPI_LEGACY_MODELS then
     begin
-        WriteSingleStorage2MeterFile(FileNm);
+        WriteSingleStorage2MeterFile(DSS, FileNm);
         Exit;
     end;
 
-    if StorageClass = NIL then
+    if DSS.StorageClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
@@ -2734,7 +2733,7 @@ begin
         {Write New Header}
             FSWrite(F, 'Year, LDCurve, Hour, Storage');
             for i := 1 to NumStorageRegisters do
-                FSWrite(F, Separator, '"' + StorageClass.RegisterNames[i] + '"');
+                FSWrite(F, Separator, '"' + DSS.StorageClass.RegisterNames[i] + '"');
             FSWriteln(F);
         end
         else
@@ -2744,11 +2743,11 @@ begin
             F.Seek(0, soEnd);
         end;
 
-        pElem := ActiveCircuit.StorageElements.First;
+        pElem := DSS.ActiveCircuit.StorageElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2759,10 +2758,10 @@ begin
                     FSWriteln(F);
                 end;
 
-            pElem := ActiveCircuit.StorageElements.Next;
+            pElem := DSS.ActiveCircuit.StorageElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -2774,22 +2773,19 @@ begin
 end;
 
 
-procedure WriteSingleStorage2MeterFile(FileNm: String);
-
+procedure WriteSingleStorage2MeterFile(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i, j: Integer;
     pElem: TStorage2Obj;
     Separator, TestStr: String;
     ReWriteFile: Boolean;
-
 begin
 
 
-    if StorageClass = NIL then
+    if DSS.StorageClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
-
 
     try
 
@@ -2824,7 +2820,7 @@ begin
         {Write New Header}
             FSWrite(F, 'Year, LDCurve, Hour, Storage');
             for i := 1 to NumStorage2Registers do
-                FSWrite(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
+                FSWrite(F, Separator, '"' + DSS.Storage2Class.RegisterNames[i] + '"');
             FSWriteln(F);
         end
         else
@@ -2835,11 +2831,11 @@ begin
         end;
 
 
-        pElem := ActiveCircuit.StorageElements.First;
+        pElem := DSS.ActiveCircuit.StorageElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     FSWrite(F, IntToStr(Solution.Year), Separator);
                     FSWrite(F, LoadDurCurve, Separator);
@@ -2850,22 +2846,20 @@ begin
                     FSWriteln(F);
                 end;
 
-            pElem := ActiveCircuit.StorageElements.Next;
+            pElem := DSS.ActiveCircuit.StorageElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
         FreeAndNil(F);
 
     end;
-
-
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportGenMeters(FileNm: String);
+procedure ExportGenMeters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
@@ -2874,14 +2868,14 @@ begin
 
 
     if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
-        WriteMultipleGenMeterFiles
+        WriteMultipleGenMeterFiles(DSS)
     else
-        WriteSingleGenMeterFile(FileNM);
+        WriteSingleGenMeterFile(DSS, FileNM);
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportPVSystemMeters(FileNm: String);
+procedure ExportPVSystemMeters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
@@ -2890,14 +2884,14 @@ begin
 
 
     if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
-        WriteMultiplePVSystemMeterFiles
+        WriteMultiplePVSystemMeterFiles(DSS)
     else
-        WriteSinglePVSystemMeterFile(FileNM);
+        WriteSinglePVSystemMeterFile(DSS, FileNM);
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportPVSystem2Meters(FileNm: String);
+procedure ExportPVSystem2Meters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
@@ -2906,14 +2900,14 @@ begin
 
 
     if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
-        WriteMultiplePVSystem2MeterFiles
+        WriteMultiplePVSystem2MeterFiles(DSS)
     else
-        WriteSinglePVSystem2MeterFile(FileNM);
+        WriteSinglePVSystem2MeterFile(DSS, FileNM);
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportStorageMeters(FileNm: String);
+procedure ExportStorageMeters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
@@ -2922,13 +2916,13 @@ begin
 
 
     if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
-        WriteMultipleStorageMeterFiles
+        WriteMultipleStorageMeterFiles(DSS)
     else
-        WriteSingleStorageMeterFile(FileNM);
+        WriteSingleStorageMeterFile(DSS, FileNM);
 
 end;
 
-procedure ExportStorage2Meters(FileNm: String);
+procedure ExportStorage2Meters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
@@ -2937,14 +2931,14 @@ begin
 
 
     if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
-        WriteMultipleStorage2MeterFiles
+        WriteMultipleStorage2MeterFiles(DSS)
     else
-        WriteSingleStorage2MeterFile(FileNM);
+        WriteSingleStorage2MeterFile(DSS, FileNM);
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportLoads(FileNm: String);
+procedure ExportLoads(DSS: TDSSContext; FileNm: String);
 
 // Export Loads to view present allocation
 
@@ -2965,7 +2959,7 @@ begin
      {Write  Header}
         FSWriteln(F, 'Load, Connected KVA, Allocation Factor, Phases, kW, kvar, PF, Model');
 
-        pElem := ActiveCircuit.Loads.First;
+        pElem := DSS.ActiveCircuit.Loads.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
@@ -2984,10 +2978,10 @@ begin
                     FSWrite(F, sout);
                 end;
             FSWriteln(F);
-            pElem := ActiveCircuit.Loads.Next;
+            pElem := DSS.ActiveCircuit.Loads.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -2998,7 +2992,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportCapacity(FileNm: String);
+procedure ExportCapacity(DSS: TDSSContext; FileNm: String);
 
 {
  Similar to export currents except does only max of the phases and compares that
@@ -3017,23 +3011,23 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        Getmem(cBuffer, sizeof(Complex) * GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(Complex) * GetMaxCktElementSize(DSS));
 
         FSWriteln(F, 'Name, Imax, %normal, %emergency, kW, kvar, NumCustomers, TotalCustomers, NumPhases, kVBase');
 
      // PDELEMENTS ONLY
-        pElem := ActiveCircuit.PDElements.First;
+        pElem := DSS.ActiveCircuit.PDElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
             begin
                 pElem.GetCurrents(cBuffer);
-                CalcAndWriteMaxCurrents(F, pElem, Cbuffer);
+                CalcAndWriteMaxCurrents(DSS, F, pElem, Cbuffer);
             end;
-            pElem := ActiveCircuit.PDElements.Next;
+            pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         if Assigned(cBuffer) then
@@ -3046,7 +3040,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportOverloads(FileNm: String);
+procedure ExportOverloads(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -3071,7 +3065,7 @@ begin
         F := TFileStream.Create(FileNm, fmCreate);
 
     {Allocate cBuffer big enough for largest circuit element}
-        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
 
      {Sequence Currents}
         FSWriteln(F, 'Element, Terminal,  I1, AmpsOver, kVAOver, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1');
@@ -3079,7 +3073,7 @@ begin
         Separator := ', ';
 
      // PDELEMENTS Only
-        PDelem := ActiveCircuit.PDElements.First;
+        PDelem := DSS.ActiveCircuit.PDElements.First;
 
         while PDelem <> NIL do
         begin
@@ -3169,10 +3163,10 @@ begin
 
                     end;
                 end;
-            PDelem := ActiveCircuit.PDElements.Next;
+            PDelem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
 
     finally
@@ -3183,7 +3177,7 @@ begin
     end;
 end;
 
-procedure ExportUnserved(FileNm: String; UE_Only: Boolean);
+procedure ExportUnserved(DSS: TDSSContext; FileNm: String; UE_Only: Boolean);
 
 var
     F: TFileStream = nil;
@@ -3198,7 +3192,7 @@ begin
         FSWriteln(F, 'Load, Bus, kW, EEN_Factor,  UE_Factor');
 
      // Load
-        pLoad := ActiveCircuit.Loads.First;
+        pLoad := DSS.ActiveCircuit.Loads.First;
         while pLoad <> NIL do
         begin
             if (pLoad.Enabled) then
@@ -3227,10 +3221,10 @@ begin
                 end;
 
             end;
-            pLoad := ActiveCircuit.Loads.Next;
+            pLoad := DSS.ActiveCircuit.Loads.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -3240,7 +3234,7 @@ begin
 
 end;
 
-procedure ExportYprim(FileNm: String);
+procedure ExportYprim(DSS: TDSSContext; FileNm: String);
 
 {Exports  YPrim matrices for all  Circuit Elements}
 
@@ -3251,13 +3245,13 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSS.ActiveCircuit = NIL then
         Exit;
 
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             for k := 1 to NumDevices do
             begin
@@ -3281,7 +3275,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -3292,7 +3286,7 @@ begin
 end;
 
 // illustrate retrieval of System Y using compressed column format
-procedure ExportY(FileNm: String; TripletOpt: Boolean);
+procedure ExportY(DSS: TDSSContext; FileNm: String; TripletOpt: Boolean);
 
 {Exports System Y Matrix in Node Order}
 
@@ -3308,12 +3302,12 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSS.ActiveCircuit = NIL then
         Exit;
-    hY := ActiveCircuit.Solution.hY;
+    hY := DSS.ActiveCircuit.Solution.hY;
     if hY <= 0 then
     begin
-        DoSimpleMsg('Y Matrix not Built.', 222);
+        DoSimpleMsg(DSS, 'Y Matrix not Built.', 222);
         Exit;
     end;
   // this compresses the entries if necessary - no extra work if already solved
@@ -3350,7 +3344,7 @@ begin
             SetLength(cVals, nNZ);
             GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
        {Write out fully qualified Bus Names}
-            with ActiveCircuit do
+            with DSS.ActiveCircuit do
             begin
                 FSWriteln(F, Format('%d, ', [NumNodes]));
   (*        For i := 1 to NumNodes DO BEGIN
@@ -3384,13 +3378,13 @@ begin
             end;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
     finally
         FreeAndNil(F);
     end;
 end;
 
-procedure ExportSeqZ(FileNm: String);
+procedure ExportSeqZ(DSS: TDSSContext; FileNm: String);
 
 // Export Symmetrical Component Impedances at each bus
 
@@ -3407,7 +3401,7 @@ begin
         F := TFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F, 'Bus,  NumNodes, R1, X1, R0, X0, Z1, Z0, "X1/R1", "X0/R0"');
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             for i := 1 to NumBuses do
             begin
@@ -3433,7 +3427,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -3442,7 +3436,7 @@ begin
 
 end;
 
-procedure ExportUuids(FileNm: String);
+procedure ExportUuids(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     clsLnCd: TLineCode;
@@ -3456,30 +3450,30 @@ var
     i: integer;
 begin
     try
-        clsLnCd := DSSClassList.Get(ClassNames.Find('linecode'));
-        clsWire := DSSClassList.Get(ClassNames.Find('wiredata'));
-        clsGeom := DSSClassList.Get(ClassNames.Find('linegeometry'));
-        clsXfCd := DSSClassList.Get(ClassNames.Find('xfmrcode'));
-        clsSpac := DSSClassList.Get(ClassNames.Find('linespacing'));
-        clsTape := DSSClassList.Get(ClassNames.Find('TSData'));
-        clsConc := DSSClassList.Get(ClassNames.Find('CNData'));
+        clsLnCd := DSS.DSSClassList.Get(DSS.ClassNames.Find('linecode'));
+        clsWire := DSS.DSSClassList.Get(DSS.ClassNames.Find('wiredata'));
+        clsGeom := DSS.DSSClassList.Get(DSS.ClassNames.Find('linegeometry'));
+        clsXfCd := DSS.DSSClassList.Get(DSS.ClassNames.Find('xfmrcode'));
+        clsSpac := DSS.DSSClassList.Get(DSS.ClassNames.Find('linespacing'));
+        clsTape := DSS.DSSClassList.Get(DSS.ClassNames.Find('TSData'));
+        clsConc := DSS.DSSClassList.Get(DSS.ClassNames.Find('CNData'));
     
         F := TFileStream.Create(FileNm, fmCreate);
 
-        pName := ActiveCircuit;
+        pName := DSS.ActiveCircuit;
         FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
  
-        for i :=1 to ActiveCircuit.NumBuses do 
+        for i :=1 to DSS.ActiveCircuit.NumBuses do 
         begin
-            pName := ActiveCircuit.Buses^[i];
+            pName := DSS.ActiveCircuit.Buses^[i];
             FSWriteln(F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
         end;
     
-        pName := ActiveCircuit.CktElements.First;
+        pName := DSS.ActiveCircuit.CktElements.First;
         while pName <> NIL do
         begin
             FSWriteln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-            pName := ActiveCircuit.CktElements.Next;
+            pName := DSS.ActiveCircuit.CktElements.Next;
         end;
 
         pName := clsLnCd.ElementList.First;
@@ -3530,15 +3524,15 @@ begin
             pName := clsConc.ElementList.Next;
         end;
 
-        WriteHashedUUIDs (F);
+        DSS.CIMExporter.WriteHashedUUIDs (F);
 
     finally
         FreeAndNil(F);
-        FreeUuidList;
+        DSS.CIMExporter.FreeUuidList;
     end;
 end;
 
-procedure ExportCounts(FileNm: String);
+procedure ExportCounts(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     cls: TDSSClass;
@@ -3547,18 +3541,18 @@ begin
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'Format: DSS Class Name = Instance Count');
         FSWriteln(F);
-        cls := DSSClassList.First;
+        cls := DSS.DSSClassList.First;
         while cls <> NIL do
         begin
             FSWriteln(F, Format('%s = %d', [cls.Name, cls.ElementCount]));
-            cls := DSSClassList.Next;
+            cls := DSS.DSSClassList.Next;
         end;
     finally
         FreeAndNil(F);
     end;
 end;
 
-procedure ExportSummary(FileNm: String);
+procedure ExportSummary(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     cPower, cLosses: Complex;
@@ -3578,8 +3572,8 @@ begin
             FSWrite(F, 'Status, Mode, Number, LoadMult, NumDevices, NumBuses, NumNodes');
             FSWrite(F, ', Iterations, ControlMode, ControlIterations');
             FSWrite(F, ', MostIterationsDone');
-            if ActiveCircuit <> NIL then
-                if ActiveCircuit.Issolved and not ActiveCircuit.BusNameRedefined then
+            if DSS.ActiveCircuit <> NIL then
+                if DSS.ActiveCircuit.Issolved and not DSS.ActiveCircuit.BusNameRedefined then
                 begin
                     FSWrite(F, ', Year, Hour, MaxPuVoltage, MinPuVoltage, TotalMW, TotalMvar');
                     FSWrite(F, ', MWLosses, pctLosses, MvarLosses, Frequency');
@@ -3589,55 +3583,55 @@ begin
         end;
 
         FSWrite(F, Format('"%s", ', [DateTimeToStr(Now)]));
-        if ActiveCircuit <> NIL then
-            FSWrite(F, Format('%s, ', [ActiveCircuit.CaseName]))
+        if DSS.ActiveCircuit <> NIL then
+            FSWrite(F, Format('%s, ', [DSS.ActiveCircuit.CaseName]))
         else
             FSWrite(F, 'NONE, ');
 
-        if ActiveCircuit.Issolved then
+        if DSS.ActiveCircuit.Issolved then
             FSWrite(F, 'SOLVED')
         else
             FSWrite(F, 'UnSolved');
 
-        FSWrite(F, Format(', %s', [GetSolutionModeID]));
-        FSWrite(F, Format(', %d', [ActiveCircuit.Solution.NumberofTimes]));
-        FSWrite(F, Format(', %8.3f', [ActiveCircuit.LoadMultiplier]));
-        FSWrite(F, Format(', %d', [ActiveCircuit.NumDevices]));
-        FSWrite(F, Format(', %d', [ActiveCircuit.NumBuses]));
-        FSWrite(F, Format(', %d', [ActiveCircuit.NumNodes]));
-        FSWrite(F, Format(', %d', [ActiveCircuit.Solution.Iteration]));
-        FSWrite(F, Format(', %s', [GetControlModeID]));
-        FSWrite(F, Format(', %d', [ActiveCircuit.Solution.ControlIteration]));
-        FSWrite(F, Format(', %d', [ActiveCircuit.Solution.MostIterationsDone]));
-        if ActiveCircuit <> NIL then
-            if ActiveCircuit.Issolved and not ActiveCircuit.BusNameRedefined then
+        FSWrite(F, Format(', %s', [GetSolutionModeID(DSS)]));
+        FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.NumberofTimes]));
+        FSWrite(F, Format(', %8.3f', [DSS.ActiveCircuit.LoadMultiplier]));
+        FSWrite(F, Format(', %d', [DSS.ActiveCircuit.NumDevices]));
+        FSWrite(F, Format(', %d', [DSS.ActiveCircuit.NumBuses]));
+        FSWrite(F, Format(', %d', [DSS.ActiveCircuit.NumNodes]));
+        FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.Iteration]));
+        FSWrite(F, Format(', %s', [GetControlModeID(DSS)]));
+        FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.ControlIteration]));
+        FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.MostIterationsDone]));
+        if DSS.ActiveCircuit <> NIL then
+            if DSS.ActiveCircuit.Issolved and not DSS.ActiveCircuit.BusNameRedefined then
             begin
-                FSWrite(F, Format(', %d', [ActiveCircuit.Solution.Year]));
-                FSWrite(F, Format(', %d', [ActiveCircuit.Solution.DynaVars.intHour]));
-                FSWrite(F, Format(', %-.5g', [GetMaxPUVoltage]));
-                FSWrite(F, Format(', %-.5g', [GetMinPUVoltage(TRUE)]));
-                cPower := CmulReal(GetTotalPowerFromSources, 0.000001);  // MVA
+                FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.Year]));
+                FSWrite(F, Format(', %d', [DSS.ActiveCircuit.Solution.DynaVars.intHour]));
+                FSWrite(F, Format(', %-.5g', [GetMaxPUVoltage(DSS)]));
+                FSWrite(F, Format(', %-.5g', [GetMinPUVoltage(DSS, TRUE)]));
+                cPower := CmulReal(GetTotalPowerFromSources(DSS), 0.000001);  // MVA
                 FSWrite(F, Format(', %-.6g', [cPower.re]));
                 FSWrite(F, Format(', %-.6g', [cPower.im]));
-                cLosses := CmulReal(ActiveCircuit.Losses, 0.000001);
+                cLosses := CmulReal(DSS.ActiveCircuit.Losses, 0.000001);
                 if cPower.re <> 0.0 then
                     FSWrite(F, Format(', %-.6g, %-.4g', [cLosses.re, (Closses.re / cPower.re * 100.0)]))
                 else
                     FSWrite(F, 'Total Active Losses:   ****** MW, (**** %%)');
                 FSWrite(F, Format(', %-.6g', [cLosses.im]));
-                FSWrite(F, Format(', %-g', [ActiveCircuit.Solution.Frequency]));
+                FSWrite(F, Format(', %-g', [DSS.ActiveCircuit.Solution.Frequency]));
             end;
 
         FSWriteln(F);
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         FreeAndNil(F);
     end;
 end;
 
-procedure ExportBusCoords(FileNm: String);
+procedure ExportBusCoords(DSS: TDSSContext; FileNm: String);
 // Export bus x, y coordinates
 
 var
@@ -3650,14 +3644,14 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
             for i := 1 to NumBuses do
             begin
                 if Buses^[i].CoordDefined then
                     FSWriteln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(Uppercase(BusList.NameOfIndex(i))), Buses^[i].X, Buses^[i].Y]));
             end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -3680,7 +3674,7 @@ begin
 end;
 
 
-procedure ExportProfile(FileNm: String; PhasesToPlot: Integer);
+procedure ExportProfile(DSS: TDSSContext; FileNm: String; PhasesToPlot: Integer);
 
 var
     iEnergyMeter: Integer;
@@ -3711,17 +3705,17 @@ begin
 
         FSWriteln(F, 'Title=', S, ', Distance in km');
 
-        iEnergyMeter := EnergyMeterClass.First;
+        iEnergyMeter := DSS.EnergyMeterClass.First;
         while iEnergyMeter > 0 do
         begin
 
-            ActiveEnergyMeter := EnergyMeterClass.GetActiveObj;
+            ActiveEnergyMeter := DSS.EnergyMeterClass.GetActiveObj;
           {Go down each branch list and draw a line}
             PresentCktElement := ActiveEnergyMeter.BranchList.First;
             while PresentCktElement <> NIL do
             begin
                 if IslineElement(PresentCktElement) then
-                    with ActiveCircuit do
+                    with DSS.ActiveCircuit do
                     begin
                         Bus1 := Buses^[PresentCktElement.Terminals[0].BusRef];
                         Bus2 := Buses^[PresentCktElement.Terminals[1].BusRef];
@@ -3853,8 +3847,8 @@ begin
                                         Linetype := 2
                                     else
                                         Linetype := 0;
-                                    puV1 := CABS(ActiveCircuit.Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
-                                    puV2 := CABS(ActiveCircuit.Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
+                                    puV1 := CABS(DSS.ActiveCircuit.Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
+                                    puV2 := CABS(DSS.ActiveCircuit.Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
                                     WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
                                         iphs, 2, Linetype, 0, 0,
                                         NodeMarkerCode, NodeMarkerWidth);
@@ -3867,10 +3861,10 @@ begin
                 PresentCktElement := ActiveEnergyMeter.BranchList.GoForward;
             end;
 
-            iEnergyMeter := EnergyMeterClass.Next;
+            iEnergyMeter := DSS.EnergyMeterClass.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -3880,26 +3874,26 @@ begin
 
 end;
 
-procedure ExportEventLog(FileNm: String);
+procedure ExportEventLog(DSS: TDSSContext; FileNm: String);
 // Export the present set of EventStrings
 begin
-    EventStrings.SaveToFile(FileNm);
-    GlobalResult := FileNm;
+    DSS.EventStrings.SaveToFile(FileNm);
+    DSS.GlobalResult := FileNm;
 end;
 
-procedure ExportErrorLog(FileNm: String);
+procedure ExportErrorLog(DSS: TDSSContext; FileNm: String);
 // Export the present set of ErrorStrings
 begin
-    ErrorStrings.SaveToFile(FileNm);
-    GlobalResult := FileNm;
+    DSS.ErrorStrings.SaveToFile(FileNm);
+    DSS.GlobalResult := FileNm;
 end;
 
-procedure ExportIncMatrix(FileNm: String);
+procedure ExportIncMatrix(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
 begin
-    with ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'Row,Col,Value');
@@ -3907,17 +3901,17 @@ begin
         begin
             FSWriteln(F, inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
         end;
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
         FreeAndNil(F);
     end;
 end;
 
-procedure ExportIncMatrixRows(FileNm: String);
+procedure ExportIncMatrixRows(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
 begin
-    with ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'B2N Incidence Matrix Row Names (PDElements)');
@@ -3925,17 +3919,17 @@ begin
         begin
             FSWriteln(F, Inc_Mat_Rows[i]);
         end;
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
         FreeAndNil(F);
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportIncMatrixCols(FileNm: String);
+procedure ExportIncMatrixCols(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
 begin
-    with ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'B2N Incidence Matrix Column Names (Buses)');
@@ -3943,17 +3937,17 @@ begin
         begin
             FSWriteln(F, Inc_Mat_Cols[i]);
         end;
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
         FreeAndNil(F);
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportBusLevels(FileNm: String);
+procedure ExportBusLevels(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
 begin
-    with ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'B2N Incidence Matrix Column Names (Buses) and their level within the matrix');
@@ -3962,17 +3956,17 @@ begin
         begin
             FSWriteln(F, Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
         end;
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
         FreeAndNil(F);
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportLaplacian(FileNm: String);
+procedure ExportLaplacian(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
 begin
-    with ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'Row,Col,Value');
@@ -3980,19 +3974,19 @@ begin
         begin
             FSWriteln(F, inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
         end;
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
         FreeAndNil(F);
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportZLL(FileNm: String);
+procedure ExportZLL(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
 begin
-    if ADiakoptics then
+    if DSS.ADiakoptics then
     begin
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
             F := TFileStream.Create(FileNm, fmCreate); 
             FSWriteln(F, 'Row,Col,Value(Real), Value(Imag)');
@@ -4000,20 +3994,20 @@ begin
             begin
                 FSWriteln(F, inttostr(ZLL.CData[i].Row) + ',' + inttostr(ZLL.CData[i].Col) + ',' + floattostr(ZLL.CData[i].Value.Re) + ',' + floattostr(ZLL.CData[i].Value.Im));
             end;
-            GlobalResult := FileNm;
+            DSS.GlobalResult := FileNm;
             FreeAndNil(F);
         end;
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportZCC(FileNm: String);
+procedure ExportZCC(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
 begin
-    if ADiakoptics then
+    if DSS.ADiakoptics then
     begin
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
             F := TFileStream.Create(FileNm, fmCreate);
             FSWriteln(F, 'Row,Col,Value(Real), Value(Imag)');
@@ -4021,20 +4015,20 @@ begin
             begin
                 FSWriteln(F, inttostr(ZCC.CData[i].Row) + ',' + inttostr(ZCC.CData[i].Col) + ',' + floattostr(ZCC.CData[i].Value.Re) + ',' + floattostr(ZCC.CData[i].Value.Im));
             end;
-            GlobalResult := FileNm;
+            DSS.GlobalResult := FileNm;
             FreeAndNil(F);
         end;
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportY4(FileNm: String);
+procedure ExportY4(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
 begin
-    if ADiakoptics then
+    if DSS.ADiakoptics then
     begin
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
             F := TFileStream.Create(FileNm, fmCreate);
             FSWriteln(F, 'Row,Col,Value(Real), Value(Imag)');
@@ -4042,20 +4036,20 @@ begin
             begin
                 FSWriteln(F, inttostr(Y4.CData[i].Row) + ',' + inttostr(Y4.CData[i].Col) + ',' + floattostr(Y4.CData[i].Value.Re) + ',' + floattostr(Y4.CData[i].Value.Im));
             end;
-            GlobalResult := FileNm;
+            DSS.GlobalResult := FileNm;
             FreeAndNil(F);
         end;
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportC(FileNm: String);
+procedure ExportC(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
 begin
-    if ADiakoptics then
+    if DSS.ADiakoptics then
     begin
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
             F := TFileStream.Create(FileNm, fmCreate);
             FSWriteln(F, 'Row,Col,Value');
@@ -4063,13 +4057,13 @@ begin
             begin
                 FSWriteln(F, inttostr(Contours.CData[i].Row) + ',' + inttostr(Contours.CData[i].Col) + ',' + floattostr(Contours.CData[i].Value.Re));
             end;
-            GlobalResult := FileNm;
+            DSS.GlobalResult := FileNm;
             FreeAndNil(F);
         end;
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportVoltagesElements(FileNm: String);
+procedure ExportVoltagesElements(DSS: TDSSContext; FileNm: String);
 
 // Export element voltages, by terminal and node/bus
 
@@ -4084,16 +4078,16 @@ begin
 
     MaxNumTerminals := 2;
     MaxNumNodes := 0;
-    pElem := ActiveCircuit.CktElements.First;
+    pElem := DSS.ActiveCircuit.CktElements.First;
     while pElem <> NIL do
     begin
         MaxNumTerminals := max(MaxNumTerminals, pElem.NTerms);
         MaxNumNodes := max(MaxNumNodes, pElem.NConds);
-        pElem := ActiveCircuit.CktElements.Next;
+        pElem := DSS.ActiveCircuit.CktElements.Next;
     end;
 {
     MaxNumNodes := 0;
-    With ActiveCircuit Do
+    With DSS.ActiveCircuit Do
     For j := 1 to NumBuses Do
        MaxNumNodes := max(MaxNumNodes, Buses^[j].NumNodesThisBus);
 }
@@ -4116,7 +4110,7 @@ begin
         FSWriteln(F);
 
        //Go through all the sources
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             pElem := sources.First;
 
@@ -4124,42 +4118,42 @@ begin
             begin
                 if pElem.Enabled then
                 begin
-                    WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
+                    WriteElementVoltagesExportFile(DSS, F, pElem, MaxNumNodes);
                     FSWriteln(F);
                 end;
-                pElem := ActiveCircuit.sources.Next;
+                pElem := DSS.ActiveCircuit.sources.Next;
             end;
 
 
        //Go through all the PDElements
-            pElem := ActiveCircuit.PDElements.First;
+            pElem := DSS.ActiveCircuit.PDElements.First;
 
             while pElem <> NIL do
             begin
                 if pElem.Enabled then
                 begin
-                    WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
+                    WriteElementVoltagesExportFile(DSS, F, pElem, MaxNumNodes);
                     FSWriteln(F);
                 end;
-                pElem := ActiveCircuit.PDElements.Next;
+                pElem := DSS.ActiveCircuit.PDElements.Next;
             end;
 
 
      //Go through all the PCElements
-            pElem := ActiveCircuit.PCElements.First;
+            pElem := DSS.ActiveCircuit.PCElements.First;
 
             while pElem <> NIL do
             begin
                 if pElem.Enabled then
                 begin
-                    WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
+                    WriteElementVoltagesExportFile(DSS, F, pElem, MaxNumNodes);
                     FSWriteln(F);
                 end;
-                pElem := ActiveCircuit.PCElements.Next;
+                pElem := DSS.ActiveCircuit.PCElements.Next;
             end;
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -4170,7 +4164,7 @@ begin
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure ExportGICMvar(FileNm: String);
+procedure ExportGICMvar(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -4183,7 +4177,7 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        GICClass := TGICTransformer(GetDSSClassPtr('GICTransformer'));
+        GICClass := TGICTransformer(GetDSSClassPtr(DSS, 'GICTransformer'));
 
         FSWriteln(F, 'Bus, Mvar, GIC Amps per phase');
         pElem := TGICTransformerObj(GICClass.ElementList.First);
@@ -4193,7 +4187,7 @@ begin
             pElem := TGICTransformerObj(GICClass.ElementList.Next);
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         FreeAndNil(F);
@@ -4202,7 +4196,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportBusReliability(FileNm: String);
+procedure ExportBusReliability(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
@@ -4212,7 +4206,7 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'Bus, Lambda, Num-Interruptions, Num-Customers, Cust-Interruptions, Duration, Total-Miles');
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
             for i := 1 to NumBuses do
                 with Buses^[i] do
                 begin
@@ -4220,7 +4214,7 @@ begin
                         [CheckForBlanks(Uppercase(BusList.NameOfIndex(i))), BusFltRate, Bus_Num_Interrupt, BusTotalNumCustomers, BusCustInterrupts, Bus_Int_Duration, BusTotalMiles]));
                 end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -4230,7 +4224,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportBranchReliability(FileNm: String);
+procedure ExportBranchReliability(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     pElem: TPDElement;
@@ -4243,12 +4237,12 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'Element, Lambda, "Accumulated-Lambda", Num-Customers, Total-Customers, Num-Interrupts, Cust-Interruptions, Cust-Durations, Total-Miles, Cust-Miles, SAIFI');
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
 
      // Find Maxcustomers of any PDElement for Duke Recloser siting algorithm
             MaxCustomers := 0;
-            pElem := ActiveCircuit.PDElements.First;
+            pElem := DSS.ActiveCircuit.PDElements.First;
             while pElem <> NIL do
             begin
                 if pElem.Enabled then
@@ -4259,12 +4253,12 @@ begin
                             if BusTotalNumCustomers > MaxCustomers then
                                 MaxCustomers := BusTotalNumCustomers;
                     end;
-                pElem := ActiveCircuit.PDElements.Next;
+                pElem := DSS.ActiveCircuit.PDElements.Next;
             end;
 
 
      // write report for PDELEMENTS only
-            pElem := ActiveCircuit.PDElements.First;
+            pElem := DSS.ActiveCircuit.PDElements.First;
             while pElem <> NIL do
             begin
                 if pElem.Enabled then
@@ -4282,12 +4276,12 @@ begin
                             pBus.Bus_Num_Interrupt, BranchTotalCustomers * pBus.Bus_Num_Interrupt, pBus.BusCustDurations,
                             AccumulatedMilesDownStream, (MaxCustomers - BranchTotalCustomers) * AccumulatedMilesDownStream, SAIFI]));
                     end;
-                pElem := ActiveCircuit.PDElements.Next;
+                pElem := DSS.ActiveCircuit.PDElements.Next;
             end;
         end;
 
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -4297,7 +4291,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportNodeNames(FileNm: String);
+procedure ExportNodeNames(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     i: Integer;
@@ -4309,7 +4303,7 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'Node_Name');
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
 
             for i := 1 to NumBuses do
@@ -4325,7 +4319,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -4346,7 +4340,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportTaps(FileNm: String);
+procedure ExportTaps(DSS: TDSSContext; FileNm: String);
 var
     F: TFileStream = nil;
     iWind: Integer;
@@ -4358,7 +4352,7 @@ begin
         F := TFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'Name, Tap, Min, Max, Step, Position');
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             pReg := RegControls.First;
             while pReg <> NIL do
@@ -4374,7 +4368,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -4383,7 +4377,7 @@ begin
 
 end;
 
-procedure ExportResult(FileNm: String);
+procedure ExportResult(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -4392,10 +4386,10 @@ begin
 
     try
         F := TFileStream.Create(FileNm, fmCreate);
-        Parservars.Lookup('@result');
-        FSWriteln(F, Parservars.Value);
+        DSS.ParserVars.Lookup('@result');
+        FSWriteln(F, DSS.Parservars.Value);
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
@@ -4405,7 +4399,7 @@ begin
 
 end;
 
-procedure ExportYNodeList(FileNM: String);
+procedure ExportYNodeList(DSS: TDSSContext; FileNm: String);
 var
     i: Integer;
     F: TFileStream = nil;
@@ -4415,8 +4409,8 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        if ActiveCircuit <> NIL then
-            with ActiveCircuit do
+        if DSS.ActiveCircuit <> NIL then
+            with DSS.ActiveCircuit do
             begin
                 for i := 1 to NumNodes do
                 begin
@@ -4425,7 +4419,7 @@ begin
                 end;
             end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         FreeAndNil(F);
@@ -4433,7 +4427,7 @@ begin
 
 end;
 
-procedure ExportYVoltages(FileNM: String);
+procedure ExportYVoltages(DSS: TDSSContext; FileNm: String);
 var
     i: Integer;
     F: TFileStream = nil;
@@ -4443,8 +4437,8 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        if ActiveCircuit <> NIL then
-            with ActiveCircuit do
+        if DSS.ActiveCircuit <> NIL then
+            with DSS.ActiveCircuit do
             begin
                 for i := 1 to NumNodes do
                 begin
@@ -4453,7 +4447,7 @@ begin
                 end;
             end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         FreeAndNil(F);
@@ -4462,7 +4456,7 @@ begin
 
 end;
 
-procedure ExportYCurrents(FileNM: String);
+procedure ExportYCurrents(DSS: TDSSContext; FileNm: String);
 var
     i: Integer;
     F: TFileStream = nil;
@@ -4472,8 +4466,8 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        if ActiveCircuit <> NIL then
-            with ActiveCircuit do
+        if DSS.ActiveCircuit <> NIL then
+            with DSS.ActiveCircuit do
             begin
                 for i := 1 to NumNodes do
                 begin
@@ -4482,7 +4476,7 @@ begin
                 end;
             end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         FreeAndNil(F);
@@ -4491,7 +4485,7 @@ begin
 end;
 
 
-procedure ExportSections(FileNM: String; pMeter: TEnergyMeterObj);
+procedure ExportSections(DSS: TDSSContext; FileNM: String; pMeter: TEnergyMeterObj);
 
 var
     MyMeterPtr: TEnergyMeterObj;
@@ -4514,36 +4508,36 @@ begin
                 for i := 1 to SectionCount do
                     with FeederSections^[i] do
                     begin
-                        ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
+                        DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
                         FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
                             [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
-                            FullName(ActiveCircuit.ActiveCktElement)]));
+                            FullName(DSS.ActiveCircuit.ActiveCktElement)]));
                     end;
             end
         else    // export sections for all meters
         begin
 
-            iMeter := EnergyMeterClass.First;
+            iMeter := DSS.EnergyMeterClass.First;
             while iMeter > 0 do
             begin
-                MyMeterPtr := EnergyMeterClass.GetActiveObj;
+                MyMeterPtr := DSS.EnergyMeterClass.GetActiveObj;
                 with MyMeterPtr do
                 begin
                     for i := 1 to SectionCount do
                         with FeederSections^[i] do
                         begin
-                            ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
+                            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
                             FSWriteln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
                                 [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
-                                FullName(ActiveCircuit.ActiveCktElement)]));
+                                FullName(DSS.ActiveCircuit.ActiveCktElement)]));
                         end;
                 end;
-                iMeter := EnergyMeterClass.Next;
+                iMeter := DSS.EnergyMeterClass.Next;
             end;
 
         end;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
         FreeAndNil(F);

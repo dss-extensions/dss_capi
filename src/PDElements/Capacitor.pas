@@ -66,7 +66,7 @@ type
         function MakeLike(const CapacitorName: String): Integer; OVERRIDE;
         procedure DefineProperties;  // Add Properties of this class to propName
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -144,9 +144,6 @@ type
 
     end;
 
-var
-    ActiveCapacitorObj: TCapacitorObj;
-
 implementation
 
 uses
@@ -155,16 +152,19 @@ uses
     DSSGlobals,
     Sysutils,
     Ucomplex,
+    DSSObjectHelper,
     Utilities,
-    Solution;
+    Solution,
+    DSSHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 13;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TCapacitor.Create;  // Creates superstructure for all Capacitor objects
+constructor TCapacitor.Create(dssContext: TDSSContext);  // Creates superstructure for all Capacitor objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Capacitor';
     DSSClassType := DSSClassType + CAP_ELEMENT;
 
@@ -263,7 +263,7 @@ var
     MatBuffer: pDoubleArray;
 
 begin
-    with ActiveCapacitorObj do
+    with DSS.ActiveCapacitorObj do
     begin
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
         OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
@@ -289,7 +289,7 @@ var
     TestS: String;
 
 begin
-    with ActiveCapacitorObj do
+    with DSS.ActiveCapacitorObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -327,7 +327,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveCapacitorObj do
+    with DSS.ActiveCapacitorObj do
     begin
         SetBus(1, S);
 
@@ -363,11 +363,11 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveCapacitorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveCapacitorObj;  // use property to set this value
+    DSS.ActiveCapacitorObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveCapacitorObj;  // use property to set this value
 
 
-    with ActiveCapacitorObj do
+    with DSS.ActiveCapacitorObj do
     begin
 
         ParamPointer := 0;
@@ -417,7 +417,7 @@ begin
                     ProcessStatesSpec(Param);
             else
             // Inherited Property Edits
-                ClassEdit(ActiveCapacitorObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveCapacitorObj, ParamPointer - NumPropsThisClass)
             end;
 
          // Some specials ...
@@ -474,7 +474,7 @@ begin
                        (YPrim <> NIL) and 
                        (not YPrimInvalid)
                     then
-                       ActiveCircuit.IncrCktElements.Add(ActiveCapacitorObj)
+                       ActiveCircuit.IncrCktElements.Add(DSS.ActiveCapacitorObj)
                     else
 {$ENDIF}
                         YprimInvalid := TRUE;
@@ -501,7 +501,7 @@ begin
    {See if we can find this Capacitor name in the present collection}
     OtherCapacitor := Find(CapacitorName);
     if OtherCapacitor <> NIL then
-        with ActiveCapacitorObj do
+        with DSS.ActiveCapacitorObj do
         begin
 
             if Fnphases <> OtherCapacitor.Fnphases then

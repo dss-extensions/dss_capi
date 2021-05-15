@@ -16,7 +16,7 @@ unit GenUserModel;
 
 interface
 
-USES  GeneratorVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
+USES  GeneratorVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -46,6 +46,7 @@ TYPE
       protected
 
       public
+        DSS: TDSSContext;
 
         FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
         FInit:         procedure(V, I:pComplexArray);Stdcall;   // For dynamics
@@ -76,7 +77,7 @@ TYPE
         Procedure Select;
         Procedure Integrate;
         
-        constructor Create(ActiveGeneratorVars:pTGeneratorVars);
+        constructor Create(dssContext: TDSSContext; ActiveGeneratorVars:pTGeneratorVars);
         destructor  Destroy; override;
       published
 
@@ -86,7 +87,8 @@ TYPE
 
 implementation
 
-Uses Generator, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+Uses Generator, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils,
+     DSSHelper;
 
 { TGenUserModel }
 
@@ -94,15 +96,15 @@ function TGenUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Pointer
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg('Generator User Model Does Not Have Required Function: ' + FuncName, 569);
+            DoSimpleMsg(DSS, 'Generator User Model Does Not Have Required Function: ' + FuncName, 569);
             FuncError := True;
           End;
         Result := Addr;
 end;
 
-constructor TGenUserModel.Create( ActiveGeneratorVars:pTGeneratorVars);
+constructor TGenUserModel.Create(dssContext: TDSSContext; ActiveGeneratorVars:pTGeneratorVars);
 begin
-
+    DSS     := dssContext;
     FID     := 0;
     Fhandle := 0;
     FName   := '';
@@ -179,7 +181,7 @@ begin
           End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('Generator User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 570)
+              DoSimpleMsg(DSS, 'Generator User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 570)
         Else
         Begin
             FName := Value;
@@ -209,7 +211,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew(FActiveGeneratorVars^, ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew(FActiveGeneratorVars^, DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;

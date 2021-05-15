@@ -31,22 +31,24 @@ uses
     Isource,
     DSSGlobals,
     CktElement,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TIsourceObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TIsourceObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := IsourceClass.GetActiveObj();
+    obj := DSSPrime.IsourceClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active ISource object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active ISource object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -57,10 +59,10 @@ end;
 procedure ISources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    Generic_Get_AllNames(ResultPtr, ResultCount, IsourceClass.ElementList, True);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.IsourceClass.ElementList, True);
 end;
 
 procedure ISources_Get_AllNames_GR(); CDECL;
@@ -73,26 +75,26 @@ end;
 function ISources_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    Result := IsourceClass.ElementList.Count;
+    Result := DSSPrime.IsourceClass.ElementList.Count;
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(IsourceClass.ElementList);
+    Result := Generic_CktElement_Get_First(DSSPrime.IsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(IsourceClass.ElementList);
+    Result := Generic_CktElement_Get_Next(DSSPrime.IsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_Name(): PAnsiChar; CDECL;
@@ -100,7 +102,7 @@ var
     elem: TIsourceObj;
 begin
     Result := NIL;
-    if not _activeObj(Elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
@@ -109,16 +111,16 @@ procedure ISources_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if IsourceClass.SetActive(Value) then
+    if DSSPrime.IsourceClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := IsourceClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.IsourceClass.ElementList.Active;
     end
     else
     begin
-        DoSimpleMsg('ISource "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'ISource "' + Value + '" Not Found in Active Circuit.', 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -127,7 +129,7 @@ var
     elem: TIsourceObj;
 begin
     Result := 0.0;
-    if not _activeObj(Elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Amps;
 end;
@@ -136,7 +138,7 @@ procedure ISources_Set_Amps(Value: Double); CDECL;
 var
     elem: TIsourceObj;
 begin
-    if not _activeObj(Elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Amps := Value;
 end;
@@ -146,7 +148,7 @@ var
     elem: TIsourceObj;
 begin
     Result := 0.0;
-    if not _activeObj(Elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Angle;
 end;
@@ -156,7 +158,7 @@ var
     elem: TIsourceObj;
 begin
     Result := 0.0;
-    if not _activeObj(Elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.SrcFrequency;
 end;
@@ -165,7 +167,7 @@ procedure ISources_Set_AngleDeg(Value: Double); CDECL;
 var
     elem: TIsourceObj;
 begin
-    if not _activeObj(Elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Angle := Value;
 end;
@@ -174,7 +176,7 @@ procedure ISources_Set_Frequency(Value: Double); CDECL;
 var
     elem: TIsourceObj;
 begin
-    if not _activeObj(Elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.SrcFrequency := Value;
 end;
@@ -182,24 +184,24 @@ end;
 function ISources_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ISourceClass.ElementList.ActiveIndex;
+    Result := DSSPrime.ISourceClass.ElementList.ActiveIndex;
 end;
 //------------------------------------------------------------------------------
 procedure ISources_Set_idx(Value: Integer); CDECL;
 var
     pISource: TISourceObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pISource := ISourceClass.ElementList.Get(Value);
+    pISource := DSSPrime.ISourceClass.ElementList.Get(Value);
     if pISource = NIL then
     begin
-        DoSimpleMsg('Invalid ISource index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid ISource index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pISource;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pISource;
 end;
 //------------------------------------------------------------------------------
 end.

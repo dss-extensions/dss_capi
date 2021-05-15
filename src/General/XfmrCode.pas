@@ -31,7 +31,7 @@ type
         procedure DefineProperties;
         function MakeLike(const Name: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
         function Edit: Integer; OVERRIDE;     // uses global parser
         function NewObject(const ObjName: String): Integer; OVERRIDE;
@@ -78,9 +78,6 @@ type
 
     end;
 
-var
-    ActiveXfmrCodeObj: TXfmrCodeObj;
-
 implementation
 
 uses
@@ -89,15 +86,18 @@ uses
     DSSGlobals,
     Sysutils,
     Ucomplex,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 39;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TXfmrCode.Create;
+constructor TXfmrCode.Create(dssContext: TDSSContext);
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'XfmrCode';
     DSSClassType := DSS_OBJECT;
     ActiveElement := 0;
@@ -249,11 +249,8 @@ end;
 function TXfmrCode.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TXfmrCodeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TXfmrCodeObj.Create(Self, ObjName);
+    Result := AddObjectToList(ActiveDSSObject);
 end;
 
 procedure TXfmrCodeObj.SetNumWindings(N: Integer);
@@ -280,17 +277,17 @@ begin
         end
     end
     else
-        Dosimplemsg('Invalid number of windings: (' + IntToStr(N) + ') for Transformer ' +
-            ActiveTransfObj.Name, 111);
+        DoSimpleMsg('Invalid number of windings: (' + IntToStr(N) + ') for Transformer ' +
+            DSS.ActiveTransfObj.Name, 111);
 end;
 
 procedure TXfmrCode.SetActiveWinding(w: Integer);
 begin
-    with ActiveXfmrCodeObj do
+    with DSS.ActiveXfmrCodeObj do
         if (w > 0) and (w <= NumWindings) then
             ActiveWinding := w
         else
-            DoSimpleMsg('Wdg parameter invalid for "' + ActiveXfmrCodeObj.Name + '"', 112);
+            DoSimpleMsg('Wdg parameter invalid for "' + DSS.ActiveXfmrCodeObj.Name + '"', 112);
 end;
 
 procedure TXfmrCode.InterpretWindings(const S: String; which: WdgParmChoice);
@@ -299,7 +296,7 @@ var
     i: Integer;
 begin
     AuxParser.CmdString := S;
-    with ActiveXfmrCodeObj do
+    with DSS.ActiveXfmrCodeObj do
     begin
         for i := 1 to Numwindings do
         begin
@@ -333,11 +330,11 @@ var
     UpdateXsc: Boolean;
 
 begin
-    ActiveXfmrCodeObj := ElementList.Active;
-    ActiveDSSObject := ActiveXfmrCodeObj;
+    DSS.ActiveXfmrCodeObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveXfmrCodeObj;
     UpdateXsc := FALSE;
 
-    with ActiveXfmrCodeObj do
+    with DSS.ActiveXfmrCodeObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -441,7 +438,7 @@ begin
                     NumkVARatings := InterpretDblArray(Param, NumkVARatings, Pointer(kVARatings));
                 end
             else
-                ClassEdit(ActiveXfmrCodeObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveXfmrCodeObj, ParamPointer - NumPropsThisClass)
             end;
 
          {Take care of properties that require some additional work,}
@@ -523,7 +520,7 @@ begin
    {See if we can find this ode in the present collection}
     Other := Find(Name);
     if Other <> NIL then
-        with ActiveXfmrCodeObj do
+        with DSS.ActiveXfmrCodeObj do
         begin
             FNphases := Other.FNphases;
             SetNumWindings(Other.NumWindings);
@@ -584,13 +581,13 @@ procedure TXfmrCode.Set_Code(const Value: String);  // sets the  active XfmrCode
 var
     XfmrCodeObj: TXfmrCodeObj;
 begin
-    ActiveXfmrCodeObj := NIL;
+    DSS.ActiveXfmrCodeObj := NIL;
     XfmrCodeObj := ElementList.First;
     while XfmrCodeObj <> NIL do
     begin
         if CompareText(XfmrCodeObj.Name, Value) = 0 then
         begin
-            ActiveXfmrCodeObj := XfmrCodeObj;
+            DSS.ActiveXfmrCodeObj := XfmrCodeObj;
             Exit;
         end;
         XfmrCodeObj := ElementList.Next;

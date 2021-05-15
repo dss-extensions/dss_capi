@@ -43,9 +43,7 @@ unit Executive;
 interface
 
 USES
-      Classes, DSSPointerList, Command;
-
-
+      Classes, DSSPointerList, Command, DSSClass;
 
 TYPE
      TExecutive = class(TObject)
@@ -63,14 +61,17 @@ TYPE
     procedure Set_RecorderOn(const Value: Boolean);
 
      public
-
-         constructor Create;
+         DSS: TDSSContext;
+         constructor Create(dssContext: TDSSContext);
          destructor  Destroy; override;
 
          PROCEDURE CreateDefaultDSSItems;
          Procedure Write_to_RecorderFile(const s:string);
 
          Procedure Clear;
+{$IFDEF DSS_CAPI_PM}
+         Procedure ClearAll;
+{$ENDIF}
          Property Command:String   read Get_Command write Set_Command;
          Property Error:Integer    read Get_ErrorResult;
          Property LastError:String read Get_LastError;
@@ -78,26 +79,23 @@ TYPE
 
      end;
 
-VAR
-
-    DSSExecutive:TExecutive;
-
 
 implementation
 
 
 USES ExecCommands, ExecOptions,
      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
-     Utilities, Solution, DSSClass,
+     Utilities, Solution, DSSHelper,
      {$IFDEF FPC} CmdForms{$ELSE} DSSForms{$ENDIF};
 
 
 //----------------------------------------------------------------------------
-Constructor TExecutive.Create;
+Constructor TExecutive.Create(dssContext: TDSSContext);
 Begin
      Inherited Create;
 
-
+     DSS := dssContext;
+      
      // Exec Commands
      CommandList := TCommandList.Create(ExecCommand);
 
@@ -105,16 +103,14 @@ Begin
      OptionList := TCommandList.Create(ExecOption);
 
      {Instantiate All DSS Classe Definitions, Intrinsic and User-defined}
-     CreateDSSClasses;     // in DSSGlobals
+     CreateDSSClasses(DSS);     // in DSSGlobals
 
-     Circuits := TDSSPointerList.Create(2);   // default buffer for 2 active circuits
-     NumCircuits := 0;
-     ActiveCircuit := nil;
+     DSS.Circuits := TDSSPointerList.Create(2);   // default buffer for 2 active circuits
+     DSS.NumCircuits := 0;
+     DSS.ActiveCircuit := nil;
 
-     Parser := TParser.Create;  // Create global parser object (in DSS globals)
-
-     LastCmdLine := '';
-     RedirFile := '';
+     DSS.LastCmdLine := '';
+     DSS.RedirFile := '';
 
      FRecorderOn := FALSE;
      FrecorderFile := '';
@@ -130,38 +126,31 @@ End;
 Destructor TExecutive.Destroy;
 
 Begin
-     ClearAllCircuits;
+    If RecorderOn Then 
+        RecorderOn := FALSE;
+
+     ClearAllCircuits(DSS);
 
      CommandList.Free;
      OptionList.Free;
-     Circuits.Free;
+     DSS.Circuits.Free;
 
-     DisposeDSSClasses;
-
-     Parser.Free;
+     DisposeDSSClasses(DSS);
 
      Inherited Destroy;
 End;
-
-
-
-
-
-
-
-
 
 //----------------------------------------------------------------------------
 FUNCTION TExecutive.Get_LastError:String;
 
 Begin
-     Result := LastErrorMessage;
+     Result := DSS.LastErrorMessage;
 End;
 
 //----------------------------------------------------------------------------
 FUNCTION TExecutive.Get_ErrorResult:Integer;
 Begin
-     Result := ErrorNumber;
+     Result := DSS.ErrorNumber;
 End;
 
 
@@ -175,7 +164,7 @@ Begin
 
 { this load shape used for generator dispatching, etc.   Loads may refer to it, also.}
    Command := 'new loadshape.default npts=24 1.0 mult=(.677 .6256 .6087 .5833 .58028 .6025 .657 .7477 .832 .88 .94 .989 .985 .98 .9898 .999 1 .958 .936 .913 .876 .876 .828 .756)';
-   IF CmdResult = 0 THEN 
+   IF DSS.CmdResult = 0 THEN
    Begin
        Command := 'new growthshape.default 2 year="1 20" mult=(1.025 1.025)';  // 20 years at 2.5%
        Command := 'new spectrum.default 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 33 20 14 11 9 7) Angle=(0 0 0 0 0 0 0)';
@@ -203,43 +192,84 @@ End;
 
 function TExecutive.Get_Command: String;
 begin
-    Result := LastCmdLine;
+    Result := DSS.LastCmdLine;
 end;
 
 
 procedure TExecutive.Set_Command(const Value: String);
+{$IFDEF DSS_CAPI_PM}
+var
+    PMParent: TDSSContext;
+    idx: Integer;
 begin
-
-      ProcessCommand(Value);
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
+{$IFDEF DSS_CAPI_PM}
+    if PMParent.AllActors then
+    begin
+        for idx := 0 to High(PMParent.Children) do
+        begin
+            //TODO: if in the future the commands are processed in threads, this would need a lock, and
+            //      maybe allow certain commands only in the DSSPrime instance to simplify things
+            if PMParent.AllActors then 
+                ProcessCommand(PMParent.Children[idx], Value);
+        end;
+    end
+    else
+{$ENDIF}
+        ProcessCommand(DSS, Value);
 end;
 
 procedure TExecutive.Clear;
 begin
-       IF (NumCircuits > 0) OR (DSS_CAPI_LEGACY_MODELS <> DSS_CAPI_LEGACY_MODELS_PREV) THEN
-       Begin
-          if DIFilesAreOpen then
-            EnergyMeterClass.CloseAllDIFiles;
+    IF (DSS.NumCircuits > 0) OR (DSS_CAPI_LEGACY_MODELS <> DSS_CAPI_LEGACY_MODELS_PREV) THEN
+	Begin
+    	if DSS.DIFilesAreOpen then
+        	DSS.EnergyMeterClass.CloseAllDIFiles;
 
-          {First get rid of all existing stuff}
-          ClearAllCircuits;
-          DisposeDSSClasses;
+        {First get rid of all existing stuff}
+        ClearAllCircuits(DSS);
+        DisposeDSSClasses(DSS);
 
-          {Now, Start over}
-          CreateDSSClasses;
-          CreateDefaultDSSItems;
-       End;
+        {Now, Start over}
+        CreateDSSClasses(DSS);
+        CreateDefaultDSSItems;
+    End;
 
 {$IFNDEF FPC}
-       If Not IsDLL Then ControlPanel.UpdateElementBox ;
+    If Not IsDLL Then ControlPanel.UpdateElementBox ;
 {$ENDIF}
-       DefaultEarthModel     := DERI;
-       LogQueries            := FALSE;
-       MaxAllocationIterations := 2;
+    DSS.DefaultEarthModel     := DERI;
+    DSS.LogQueries            := FALSE;
+    DSS.MaxAllocationIterations := 2;
 
-       {Prepare for new variables}
-       ParserVars.Free;
-       ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+    {Prepare for new variables}
+    DSS.ParserVars.Free;
+    DSS.ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+    DSS.Parser.SetVars(DSS.ParserVars);
+    DSS.AuxParser.SetVars(DSS.ParserVars);
 end;
+
+{$IFDEF DSS_CAPI_PM}
+procedure TExecutive.ClearAll;
+var
+    PMParent: TDSSContext;
+    i: integer;
+begin
+    PMParent := DSS.GetPrime();
+    
+    for i := 1 to high(PMParent.Children) do
+    begin
+        PMParent.Children[i].Free;
+    end;
+    SetLength(PMParent.Children, 1);
+    PMParent.ActiveChildIndex := 0;
+    PMParent.ActiveChild := PMParent;
+    PMParent.DSSExecutive.Clear();
+end;
+{$ENDIF}
 
 procedure TExecutive.Set_RecorderOn(const Value: Boolean);
 begin
@@ -247,7 +277,7 @@ begin
     Begin
         If Not FRecorderOn Then 
         Begin
-            FRecorderFile := GetOutputDirectory + 'DSSRecorder.DSS' ;
+            FRecorderFile := DSS.OutputDirectory + 'DSSRecorder.DSS' ;
             RecorderFile := TFileStream.Create(FRecorderFile, fmCreate);
         End
         else
@@ -260,7 +290,7 @@ begin
     Begin
         FreeAndNil(RecorderFile);
     End;
-    GlobalResult := FRecorderFile;
+    DSS.GlobalResult := FRecorderFile;
     FRecorderOn := Value;
 end;
 
@@ -268,16 +298,6 @@ procedure TExecutive.Write_to_RecorderFile(const s: string);
 begin
    FSWriteln(Recorderfile, S);
 end;
-
-initialization
-
-//WriteDLLDebugFile('Executive');
-
-
-
-finalization
-
-
 
 end.
 

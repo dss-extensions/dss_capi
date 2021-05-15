@@ -92,7 +92,9 @@ uses
     PCElement,
     MathUtil,
     CktElement,
-    Utilities;
+    Utilities,
+    DSSClass,
+    DSSHelper;
 
 type
     PDoubleArray = CAPI_Utils.PDoubleArray;
@@ -104,7 +106,7 @@ var
     IPh, I012a: Complex3;
     cBuffer: pComplexArray;
 begin
-    with pActiveElement, ActiveCircuit do
+    with pActiveElement, DSSPrime.ActiveCircuit do
     begin
         Nvalues := NPhases;
         if Nvalues <> 3 then
@@ -164,7 +166,7 @@ var
     Nvalues, i, j, k, iV: Integer;
     VPh, V012a: Complex3;
 begin
-    with pActiveElement, ActiveCircuit do
+    with pActiveElement, DSSPrime.ActiveCircuit do
     begin
         Nvalues := NPhases;
         if Nvalues <> 3 then
@@ -211,18 +213,18 @@ end;
 //------------------------------------------------------------------------------
 function IsPDElement: Boolean;
 begin
-    Result := ((ActiveCircuit.ActiveCktElement.DSSObjType and 3) = PD_ELEMENT)
+    Result := ((DSSPrime.ActiveCircuit.ActiveCktElement.DSSObjType and 3) = PD_ELEMENT)
 end;
 //------------------------------------------------------------------------------
 function InvalidCktElement(): Boolean; inline;
 begin
-    Result := InvalidCircuit;
+    Result := InvalidCircuit(DSSPrime);
     if Result then
         Exit;
-    Result := (ActiveCircuit.ActiveCktElement = NIL);
+    Result := (DSSPrime.ActiveCircuit.ActiveCktElement = NIL);
     if Result and DSS_CAPI_EXT_ERRORS then
     begin
-        DoSimpleMsg('No active circuit element found! Activate one and retry.', 97800);
+        DoSimpleMsg(DSSPrime, 'No active circuit element found! Activate one and retry.', 97800);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -237,7 +239,7 @@ begin
         Exit;
     end;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, Nterms);
         for i := 1 to Nterms do
@@ -259,7 +261,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
         Result := DSS_GetAsPAnsiChar(ParentClass.Name + '.' + Name);
 end;
 //------------------------------------------------------------------------------
@@ -269,7 +271,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    Result := ActiveCircuit.ActiveCktElement.NConds
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.NConds
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumPhases(): Integer; CDECL;
@@ -278,7 +280,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    Result := ActiveCircuit.ActiveCktElement.NPhases
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.NPhases
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumTerminals(): Integer; CDECL;
@@ -289,7 +291,7 @@ begin
         Exit;
     end;
 
-    Result := ActiveCircuit.ActiveCktElement.NTerms
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.NTerms
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
@@ -302,12 +304,12 @@ begin
         Exit;
 
     Value := PPAnsiCharArray(ValuePtr);
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         Count := ValueCount;
         if (Count <> ActiveCktElement.NTerms) AND (DSS_CAPI_EXT_ERRORS) then
         begin
-            DoSimpleMsg(
+            DoSimpleMsg(DSSPrime, 
                 Format('The number of buses provided (%d) does not match the number of terminals (%d).', 
                     [ValueCount, Integer(ActiveCktElement.NTerms)]
                 ), 97895
@@ -331,10 +333,10 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution then
+    if InvalidCktElement or MissingSolution(DSSPrime) then
         Exit;
         
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         NValues := NConds * NTerms;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
@@ -359,10 +361,10 @@ begin
     // Return voltages for all terminals
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
+    if InvalidCktElement or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
         Exit;
 
-    with ActiveCircuit, ActiveCktElement do
+    with DSSPrime.ActiveCircuit, ActiveCktElement do
     begin
         numcond := NConds * Nterms;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * numcond - 1) + 1);
@@ -394,7 +396,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
         if (ActiveCktElement.DSSObjType and 3) = PD_ELEMENT then
             with ActiveCktElement as TPDElement do
                 Result := EmergAmps;
@@ -408,7 +410,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    Result := ActiveCircuit.ActiveCktElement.Enabled
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.Enabled
 end;
 
 //------------------------------------------------------------------------------
@@ -419,10 +421,10 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution then
+    if InvalidCktElement or MissingSolution(DSSPrime) then
         Exit;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         LossValue := ActiveCktElement.Losses;
@@ -446,7 +448,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
         if (ActiveCktElement.DSSObjType and 3) = PD_ELEMENT then
             with ActiveCktElement as TPDElement do
                 Result := NormAmps;
@@ -458,13 +460,13 @@ var
     Result: PDoubleArray;
     NValues, i: Integer;
 begin
-    if InvalidCktElement or MissingSolution then
+    if InvalidCktElement or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         NValues := NPhases;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
@@ -491,13 +493,13 @@ var
     NValues,
     i: Integer;
 begin
-    if InvalidCktElement or MissingSolution then
+    if InvalidCktElement or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         NValues := NConds * Nterms;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
@@ -524,10 +526,10 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement or MissingSolution(DSSPrime) or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
 
-    with ActiveCircuit, ActiveCktElement do
+    with DSSPrime.ActiveCircuit, ActiveCktElement do
     begin
         try
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 3 * NTerms);
@@ -577,10 +579,10 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) {or (not ActiveCircuit.ActiveCktElement.Enabled)} then
+    if InvalidCktElement or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) {or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled)} then
         Exit;
 
-    with ActiveCircuit, ActiveCktElement do
+    with DSSPrime.ActiveCircuit, ActiveCktElement do
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * NTerms); // allocate for kW and kvar
         if NPhases <> 3 then
@@ -660,13 +662,13 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     
     if InvalidCktElement 
-        or MissingSolution 
-        or (not ActiveCircuit.ActiveCktElement.Enabled)  
-        or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) 
+        or MissingSolution(DSSPrime) 
+        or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled)  
+        or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) 
     then
         Exit;
 
-    with ActiveCircuit, ActiveCktElement do
+    with DSSPrime.ActiveCircuit, ActiveCktElement do
     begin
         try
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (3 * NTerms - 1) + 1);
@@ -706,7 +708,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         //TODO: why is this changing ActiveTerminal directly?
         ActiveTerminal := @Terminals[Term - 1];
@@ -719,7 +721,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         //TODO: why is this changing ActiveTerminal directly?
         ActiveTerminal := @Terminals[Term - 1];
@@ -733,15 +735,15 @@ begin
         Exit;
 
     if IsPDElement then
-        with ActiveCircuit.ActiveCktElement as TPDElement do
+        with DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement do
             EmergAmps := Value;
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_Enabled(Value: TAPIBoolean); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    ActiveCircuit.ActiveCktElement.Enabled := Value;
+    DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := Value;
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_NormalAmps(Value: Double); CDECL;
@@ -750,7 +752,7 @@ begin
         Exit;
 
     if IsPDElement then
-        with ActiveCircuit.ActiveCktElement as TPDElement do
+        with DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement do
             NormAmps := Value;
 end;
 //------------------------------------------------------------------------------
@@ -762,7 +764,7 @@ begin
     if InvalidCktElement then
         Exit;
     
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         with ActiveCktElement do
             //TODO: why is this changing ActiveTerminal directly?
@@ -793,7 +795,7 @@ begin
         Exit;
     end;
     
-    with ActiveCircuit.ActiveCktElement, ParentClass do
+    with DSSPrime.ActiveCircuit.ActiveCktElement, ParentClass do
     begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumProperties);
         for k := 1 to NumProperties do
@@ -817,7 +819,7 @@ begin
     if InvalidCktElement then
         Exit;
     
-    Result := ActiveCircuit.ActiveCktElement.ParentClass.NumProperties;
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.ParentClass.NumProperties;
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -828,13 +830,13 @@ var
     cResid: Complex;
 
 begin
-    if InvalidCktElement or MissingSolution then
+    if InvalidCktElement or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NTerms);    // 2 values per terminal
         cBuffer := Allocmem(sizeof(Complex) * Yorder);
@@ -876,7 +878,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
         if cValues = NIL then Exit;
@@ -898,7 +900,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(ActiveCircuit.ActiveCktElement.DisplayName)
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName)
 end;
 
 //------------------------------------------------------------------------------
@@ -907,7 +909,7 @@ begin
     Result := NIL;
     if InvalidCktElement then
         Exit;
-    Result := DSS_GetAsPAnsiChar(ActiveCircuit.ActiveCktElement.ID)
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.ID)
 end;
 
 //------------------------------------------------------------------------------
@@ -916,7 +918,7 @@ begin
     Result := 0;
     if InvalidCktElement then
         Exit;
-    Result := ActiveCircuit.ActiveCktElement.Handle
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.Handle
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_DisplayName(const Value: PAnsiChar); CDECL;
@@ -924,7 +926,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    ActiveCircuit.ActiveCktElement.DisplayName := Value;
+    DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName := Value;
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_Controller(idx: Integer): PAnsiChar; CDECL;
@@ -936,7 +938,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         if (idx > 0) and (idx <= ActiveCktElement.ControlElementList.Count) then
         begin
@@ -956,9 +958,9 @@ begin
     if InvalidCktElement then
         Exit;
 
-    if ActiveCircuit.ActiveCktElement.HasEnergyMeter then
+    if DSSPrime.ActiveCircuit.ActiveCktElement.HasEnergyMeter then
     begin
-        pd := ActiveCircuit.ActiveCktElement as TPDElement;
+        pd := DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement;
         Result := DSS_GetAsPAnsiChar(pd.MeterObj.Name);
     end;
 end;
@@ -973,7 +975,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    ctrl := ActiveCircuit.ActiveCktElement.ControlElementlist.First;
+    ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementlist.First;
     while ctrl <> NIL do
     begin
         case (ctrl.DSSObjType and CLASSMASK) of
@@ -986,7 +988,7 @@ begin
         if Result then
             Exit;
 
-        ctrl := ActiveCircuit.ActiveCktElement.ControlElementlist.Next;
+        ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementlist.Next;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -999,7 +1001,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    ctrl := ActiveCircuit.ActiveCktElement.ControlElementList.First;
+    ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementList.First;
     while ctrl <> NIL do
     begin
         case (ctrl.DSSObjType and CLASSMASK) of
@@ -1011,7 +1013,7 @@ begin
         if Result then
             Exit;
 
-        ctrl := ActiveCircuit.ActiveCktElement.ControlElementlist.Next;
+        ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementlist.Next;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1023,13 +1025,13 @@ begin
     DefaultResult(ResultPtr, ResultCount);
 
     if InvalidCktElement 
-        or MissingSolution 
-        or (not ActiveCircuit.ActiveCktElement.Enabled) 
-        or (ActiveCircuit.ActiveCktElement.NodeRef = NIL)
+        or MissingSolution(DSSPrime) 
+        or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled) 
+        or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL)
      then
         Exit;
 
-    with ActiveCircuit, ActiveCktElement do
+    with DSSPrime.ActiveCircuit, ActiveCktElement do
     begin
         try
             DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * NTerms);
@@ -1066,10 +1068,10 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement or MissingSolution(DSSPrime) or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
 
-    with ActiveCircuit, ActiveCktElement do
+    with DSSPrime.ActiveCircuit, ActiveCktElement do
     begin
         try
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * NTerms);
@@ -1110,10 +1112,10 @@ begin
     if InvalidCktElement then
         Exit;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
         if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
         begin
-            pPCElem := (ActiveCircuit.ActiveCktElement as TPCElement);
+            pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, pPCElem.NumVariables);
             for k := 1 to pPCElem.NumVariables do
             begin
@@ -1142,10 +1144,10 @@ begin
     if InvalidCktElement then
         Exit;
     
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
         if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
         begin
-            pPCElem := (ActiveCircuit.ActiveCktElement as TPCElement);
+            pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pPCElem.NumVariables);
             for k := 1 to pPCElem.NumVariables do
             begin
@@ -1172,10 +1174,10 @@ begin
     if InvalidCktElement then
         Exit;
     
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
         if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
         begin
-            pPCElem := (ActiveCircuit.ActiveCktElement as TPCElement);
+            pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
             VarIndex := pPCElem.LookupVariable(MyVarName);
             if (VarIndex > 0) and (VarIndex <= pPCElem.NumVariables) then
             begin
@@ -1197,10 +1199,10 @@ begin
     if InvalidCktElement then
         Exit;
     
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
         if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
         begin
-            pPCElem := (ActiveCircuit.ActiveCktElement as TPCElement);
+            pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
             if (Idx > 0) and (Idx <= pPCElem.NumVariables) then
             begin
                 Result := pPCElem.Variable[Idx];
@@ -1223,7 +1225,7 @@ begin
         Exit;
     end;
     
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         if NodeRef = NIL then
         begin
@@ -1239,7 +1241,7 @@ begin
         begin
             for j := (i - 1) * NConds + 1 to i * Nconds do
             begin
-                Result[k] := GetNodeNum(NodeRef^[j]);
+                Result[k] := GetNodeNum(DSSPrime, NodeRef^[j]);
                 inc(k);
             end;
         end;
@@ -1260,7 +1262,7 @@ begin
         Result := FALSE;
         Exit;
     end;
-    Result := ActiveCircuit.ActiveCktElement.HasOCPDevice;
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.HasOCPDevice;
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumControls(): Integer; CDECL;
@@ -1270,7 +1272,7 @@ begin
         Result := 0;
         Exit;
     end;
-    Result := ActiveCircuit.ActiveCktElement.ControlElementList.Count;
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementList.Count;
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_OCPDevIndex(): Integer; CDECL;
@@ -1283,7 +1285,7 @@ begin
     if InvalidCktElement then
         Exit;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         iControl := 1;
         repeat
@@ -1310,7 +1312,7 @@ begin
         Result := 0;
         Exit;
     end;
-    Result := GetOCPDeviceType(ActiveCircuit.ActiveCktElement);     // see Utilities.pas
+    Result := GetOCPDeviceType(DSSPrime.ActiveCircuit.ActiveCktElement);     // see Utilities.pas
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -1321,13 +1323,13 @@ var
     CMagAng: polar;
     NValues, iV, i: Integer;
 begin
-    if InvalidCktElement or MissingSolution then
+    if InvalidCktElement or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         NValues := NConds * NTerms;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
@@ -1361,13 +1363,13 @@ var
 
 begin
     // Return voltages for all terminals
-    if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
+    if InvalidCktElement or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
 
-    with ActiveCircuit, ActiveCktElement do
+    with DSSPrime.ActiveCircuit, ActiveCktElement do
     begin
         numcond := NConds * Nterms;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * numcond);
@@ -1399,7 +1401,7 @@ begin
         Exit;
     end;
 
-    Result := ActiveCircuit.ActiveCktElement.IsIsolated;
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.IsIsolated;
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -1413,13 +1415,13 @@ var
     myBuffer: Array of Complex;
     Result: PDoubleArray;
 begin
-    if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
+    if InvalidCktElement or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         Exit;
     end;
 
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nterms);
         cBuffer := Allocmem(2 * SizeOf(Double) * NConds * Nterms);
@@ -1455,15 +1457,15 @@ begin
     if InvalidCktElement then 
         Exit;
         
-    if ActiveCircuit.ActiveCktElement.NodeRef = NIL then
+    if DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('NodeRef is not populated for the current element!', 97801);
+            DoSimpleMsg(DSSPrime, 'NodeRef is not populated for the current element!', 97801);
         end;
         Exit;
     end;
-    with ActiveCircuit.ActiveCktElement do
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         DSS_RecreateArray_PInteger(ResultPtr, ResultCount, Yorder);
         Move(NodeRef[1], ResultPtr^, Yorder * SizeOf(Integer));

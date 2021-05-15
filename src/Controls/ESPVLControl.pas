@@ -46,7 +46,7 @@ type
         procedure DefineProperties;
         function MakeLike(const ESPVLControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -121,10 +121,6 @@ type
         function MakeLocalControlList: Boolean;
     end;
 
-
-var
-    ActiveESPVLControlObj: TESPVLControlObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -137,7 +133,10 @@ uses
     Sysutils,
     uCmatrix,
     MathUtil,
-    Math;
+    Math,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
 
@@ -145,9 +144,9 @@ const
 
 
 {--------------------------------------------------------------------------}
-constructor TESPVLControl.Create;  // Creates superstructure for all ESPVLControl objects
+constructor TESPVLControl.Create(dssContext: TDSSContext);  // Creates superstructure for all ESPVLControl objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'ESPVLControl';
     DSSClassType := DSSClassType + ESPVL_CONTROL;
@@ -236,12 +235,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveESPVLControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveESPVLControlObj;
+    DSS.ActiveESPVLControlObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveESPVLControlObj;
 
     Result := 0;
 
-    with ActiveESPVLControlObj do
+    with DSS.ActiveESPVLControlObj do
     begin
 
         ParamPointer := 0;
@@ -312,8 +311,8 @@ begin
                 end;
 
             else
-           // Inherited parameters
-                ClassEdit(ActiveESPVLControlObj, ParamPointer - NumPropsthisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveESPVLControlObj, ParamPointer - NumPropsthisClass)
             end;
 
          // Side Effects
@@ -350,7 +349,7 @@ begin
    {See if we can find this ESPVLControl name in the present collection}
     OtherESPVLControl := Find(ESPVLControlName);
     if OtherESPVLControl <> NIL then
-        with ActiveESPVLControlObj do
+        with DSS.ActiveESPVLControlObj do
         begin
 
             NPhases := OtherESPVLControl.Fnphases;
@@ -634,7 +633,7 @@ begin
 
             for i := 1 to FLocalControlListSize do
             begin
-                pESPVLControl := ESPVLControlClass.Find(FLocalControlNameList.Strings[i - 1]);
+                pESPVLControl := DSS.ESPVLControlClass.Find(FLocalControlNameList.Strings[i - 1]);
                 if Assigned(pESPVLControl) and pESPVLControl.Enabled then
                     FLocalControlPointerList.New := pESPVLControl;
             end;
@@ -644,9 +643,9 @@ begin
         begin
          {Search through the entire circuit for enabled generators and add them to the list}
 
-            for i := 1 to ESPVLControlClass.ElementCount do
+            for i := 1 to DSS.ESPVLControlClass.ElementCount do
             begin
-                pESPVLControl := ESPVLControlClass.ElementList.Get(i);
+                pESPVLControl := DSS.ESPVLControlClass.ElementList.Get(i);
                 if pESPVLControl.Enabled then
                     FLocalControlPointerList.New := pESPVLControl;
             end;

@@ -34,7 +34,8 @@ implementation
 uses
     CAPI_Constants,
     ParserDel,
-    ArrayDef;
+    ArrayDef,
+    DSSClass;
 
 var
     ComParser: ParserDel.TParser;

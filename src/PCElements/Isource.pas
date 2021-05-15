@@ -42,7 +42,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -94,9 +94,6 @@ type
 
     end;
 
-var
-    ActiveIsourceObj: TIsourceObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -109,15 +106,19 @@ uses
     Utilities,
     Sysutils,
     Command,
-    dynamics;
+    dynamics,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
+
 
 var
     NumPropsThisClass: Integer;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TIsource.Create;  // Creates superstructure for all Line objects
+constructor TIsource.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Isource';
     DSSClassType := SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
@@ -226,12 +227,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveIsourceObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveIsourceObj;
+    DSS.ActiveIsourceObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveIsourceObj;
 
     Result := 0;
 
-    with ActiveIsourceObj do
+    with DSS.ActiveIsourceObj do
     begin
 
         ParamPointer := 0;
@@ -302,23 +303,23 @@ begin
                 11:
                     SetBus(2, Param);
             else
-                ClassEdit(ActiveIsourceObj, ParamPointer - NumPropsThisClass);
+                ClassEdit(DSS.ActiveIsourceObj, ParamPointer - NumPropsThisClass);
             end;
 
             case ParamPointer of
             {Set shape objects;  returns nil if not valid}
             {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
                 8:
-                    YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                    YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                 9:
                 begin
-                    DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                    DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                   {If Yearly load shape is not yet defined, make it the same as Daily}
                     if YearlyShapeObj = NIL then
                         YearlyShapeObj := DailyShapeObj;
                 end;
                 10:
-                    DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                    DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
             end;
             ParamName := Parser.NextParam;
             Param := Parser.StrValue;
@@ -341,7 +342,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherIsource := Find(OtherSource);
     if OtherIsource <> NIL then
-        with ActiveIsourceObj do
+        with DSS.ActiveIsourceObj do
         begin
 
             if Fnphases <> OtherIsource.Fnphases then
@@ -390,7 +391,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveISourceObj do
+    with DSS.ActiveISourceObj do
     begin
         SetBus(1, S);
 
@@ -455,7 +456,7 @@ end;
 procedure TIsourceObj.RecalcElementData;
 begin
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
 
     if SpectrumObj = NIL then
     begin
@@ -547,8 +548,8 @@ begin
 
     except
         DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;

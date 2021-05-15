@@ -15,28 +15,30 @@ uses
     CAPI_Constants,
     DSSGlobals,
     Executive,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 
 //TODO: Text_Run_Script or Text_Run_Commands -- run multiple lines at one
 
 //------------------------------------------------------------------------------
 function Text_Get_Command(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSExecutive.Command);
+    Result := DSS_GetAsPAnsiChar(DSSPrime.DSSExecutive.Command);
 end;
 //------------------------------------------------------------------------------
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
 begin
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
-    DSSExecutive.Command := Value;  {Convert to String}
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.DSSExecutive.Command := Value;  {Convert to String}
 end;
 //------------------------------------------------------------------------------
 function Text_Get_Result(): PAnsiChar; CDECL;
 begin
-    if Length(GlobalResult) < 1 then
+    if Length(DSSPrime.GlobalResult) < 1 then
         Result := NIL
     else
-        Result := DSS_GetAsPAnsiChar(GlobalResult);
+        Result := DSS_GetAsPAnsiChar(DSSPrime.GlobalResult);
     {****}
     {
       Need to implement a protocol for determining whether to go get the

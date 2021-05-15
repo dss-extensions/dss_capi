@@ -23,7 +23,7 @@ INTERFACE
         PROCEDURE DefineProperties;
         FUNCTION MakeLike(const ExpControlName:String):Integer;Override;
       public
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; override;
 
         FUNCTION Edit:Integer; override;     // uses global parser
@@ -105,27 +105,25 @@ INTERFACE
 
    end;
 
-  VAR
-    ActiveExpControlObj:TExpControlObj;
-
 {--------------------------------------------------------------------------}
 IMPLEMENTATION
 
 USES
-
-    ParserDel, Sysutils, DSSClassDefs, DSSGlobals, Circuit,  uCmatrix, MathUtil, Math;
+    ParserDel, Sysutils, DSSClassDefs, DSSGlobals, Circuit,  uCmatrix, MathUtil, Math,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 CONST
-
     NumPropsThisClass = 13;
 
     NONE = 0;
     CHANGEVARLEVEL = 1;
 
 {--------------------------------------------------------------------------}
-constructor TExpControl.Create;  // Creates superstructure for all ExpControl objects
+constructor TExpControl.Create(dssContext: TDSSContext);  // Creates superstructure for all ExpControl objects
 Begin
-  Inherited Create;
+  Inherited Create(dssContext);
   Class_name   := 'ExpControl';
   DSSClassType := DSSClassType + EXP_CONTROL;
   DefineProperties;
@@ -233,10 +231,10 @@ VAR
 
 
 Begin
-  ActiveExpControlObj := ElementList.Active;
-  ActiveCircuit.ActiveCktElement := ActiveExpControlObj;
+  DSS.ActiveExpControlObj := ElementList.Active;
+  ActiveCircuit.ActiveCktElement := DSS.ActiveExpControlObj;
   Result := 0;
-  WITH ActiveExpControlObj Do Begin
+  WITH DSS.ActiveExpControlObj Do Begin
     ParamPointer := 0;
     ParamName := Parser.NextParam;
     Param := Parser.StrValue;
@@ -268,7 +266,7 @@ Begin
        13: if Parser.DblValue >= 0 then FTresponse := Parser.DblValue;
       ELSE
         // Inherited parameters
-        ClassEdit( ActiveExpControlObj, ParamPointer - NumPropsthisClass)
+        ClassEdit( DSS.ActiveExpControlObj, ParamPointer - NumPropsthisClass)
       End;
       ParamName := Parser.NextParam;
       Param := Parser.StrValue;
@@ -286,7 +284,7 @@ Begin
    {See if we can find this ExpControl name in the present collection}
    OtherExpControl := Find(ExpControlName);
    IF OtherExpControl<>Nil THEN
-   WITH ActiveExpControlObj Do Begin
+   WITH DSS.ActiveExpControlObj Do Begin
 
       NPhases := OtherExpControl.Fnphases;
       NConds  := OtherExpControl.Fnconds; // Force Reallocation of terminal stuff
@@ -629,7 +627,7 @@ VAR
    i:Integer;
 begin
   Result := FALSE;
-  PVSysClass := GetDSSClassPtr('PVsystem');
+  PVSysClass := GetDSSClassPtr(DSS, 'PVsystem');
   If FListSize > 0 Then Begin    // Name list is defined - Use it
     SetLength(ControlledElement,FListSize+1);  // Use this as the main pointer to PVSystem Elements
     SetLength(FPriorVpu, FListSize+1);

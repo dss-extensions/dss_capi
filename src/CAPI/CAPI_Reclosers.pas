@@ -48,22 +48,24 @@ uses
     Recloser,
     DSSPointerList,
     DSSGlobals,
-    DSSClassDefs;
+    DSSClassDefs,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TRecloserObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TRecloserObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := ActiveCircuit.Reclosers.Active;
+    obj := DSSPrime.ActiveCircuit.Reclosers.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Recloser object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Recloser object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -76,20 +78,20 @@ var
     cmd: String;
     elem: TRecloserObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('recloser.%s.%s=%s', [elem.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSPrime.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Reclosers, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Reclosers, False);
 end;
 
 procedure Reclosers_Get_AllNames_GR(); CDECL;
@@ -102,25 +104,25 @@ end;
 function Reclosers_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Reclosers.Count;
+    Result := DSSPrime.ActiveCircuit.Reclosers.Count;
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.Reclosers);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Reclosers);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.Reclosers);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Reclosers);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_Name(): PAnsiChar; CDECL;
@@ -128,7 +130,7 @@ var
     elem: TRecloserObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
@@ -136,16 +138,16 @@ end;
 procedure Reclosers_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if RecloserClass.SetActive(Value) then
+    if DSSPrime.RecloserClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := RecloserClass.ElementList.Active;
-        ActiveCircuit.Reclosers.Get(RecloserClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.RecloserClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Reclosers.Get(DSSPrime.RecloserClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Recloser "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Recloser "' + Value + '" Not Found in Active Circuit.', 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -154,7 +156,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MonitoredElementTerminal;
 end;
@@ -169,7 +171,7 @@ var
     elem: TRecloserObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.ElementName);
 end;
@@ -184,7 +186,7 @@ var
     elem: TRecloserObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.MonitoredElementName);
 end;
@@ -194,7 +196,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.ElementTerminal;
 end;
@@ -214,7 +216,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.NumFast;
 end;
@@ -226,7 +228,7 @@ var
     elem: TRecloserObj;
     i, k: Integer;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount, -1.0);
         Exit;
@@ -253,7 +255,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.NumReclose + 1;
 end;
@@ -273,7 +275,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.PhaseTrip;
 end;
@@ -288,7 +290,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.GroundInst;
 end;
@@ -298,7 +300,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.GroundTrip;
 end;
@@ -308,7 +310,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.PhaseInst;
 end;
@@ -341,24 +343,24 @@ end;
 function Reclosers_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Reclosers.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.Reclosers.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_idx(Value: Integer); CDECL;
 var
     pRecloser: TRecloserObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pRecloser := ActiveCircuit.Reclosers.Get(Value);
+    pRecloser := DSSPrime.ActiveCircuit.Reclosers.Get(Value);
     if pRecloser = NIL then
     begin
-        DoSimpleMsg('Invalid Recloser index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Recloser index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pRecloser;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pRecloser;
 end;
 //------------------------------------------------------------------------------
 end.

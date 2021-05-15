@@ -28,7 +28,7 @@ type
         procedure DefineProperties;
         function MakeLike(const VSCName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
         function Edit: Integer; OVERRIDE;
         function NewObject(const ObjName: String): Integer; OVERRIDE;
@@ -73,8 +73,6 @@ type
         procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
     end;
 
-var
-    ActiveVSConverterObj: TVSConverterObj;
 
 implementation
 
@@ -86,7 +84,10 @@ uses
     Sysutils,
     MathUtil,
     Utilities,
-    StrUtils;
+    StrUtils,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsthisclass = 19;
@@ -100,9 +101,9 @@ const
 // Class Methods
 // =====================================================
 
-constructor TVSConverter.Create;
+constructor TVSConverter.Create(dssContext: TDSSContext);
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'VSConverter';
     DSSClassType := VS_CONVERTER + PC_ELEMENT;
     ActiveElement := 0;
@@ -186,7 +187,7 @@ var
     s2: String;
     i, dotpos: Integer;
 begin
-    with ActiveVSconverterObj do
+    with DSS.ActiveVSconverterObj do
     begin
         SetBus(1, S);
         dotpos := Pos('.', S);
@@ -208,10 +209,10 @@ var
     Tok: String;
 begin
     Result := 0;
-    ActiveVSConverterObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveVSConverterObj;  // use property to set this value
+    DSS.ActiveVSConverterObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveVSConverterObj;  // use property to set this value
 
-    with ActiveVSConverterObj do
+    with DSS.ActiveVSConverterObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -289,7 +290,7 @@ begin
                         Fmode := VSC_FIXED
                 end;
             else
-                ClassEdit(ActiveVSConverterObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveVSConverterObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -313,7 +314,7 @@ begin
     Result := 0;
     OtherVSC := Find(VSCName);
     if OtherVSC <> NIL then
-        with ActiveVSConverterObj do
+        with DSS.ActiveVSConverterObj do
         begin
             if Fnphases <> OtherVSC.Fnphases then
             begin

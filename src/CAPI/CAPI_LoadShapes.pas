@@ -58,20 +58,22 @@ uses
     DSSPointerList,
     ExecHelper,
     SysUtils,
-    Math;
+    Math,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TLoadshapeObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TLoadshapeObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := LoadshapeClass.GetActiveObj;
+    obj := DSSPrime.LoadshapeClass.GetActiveObj;
     if obj = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61001);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61001);
         Exit;
     end;
     
@@ -83,7 +85,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
@@ -91,43 +93,43 @@ end;
 procedure LoadShapes_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if LoadshapeClass.SetActive(Value) then
+    if DSSPrime.LoadshapeClass.SetActive(Value) then
         Exit;
-    DoSimpleMsg('LoadShape "' + Value + '" Not Found in Active Circuit.', 77003);
+    DoSimpleMsg(DSSPrime, 'LoadShape "' + Value + '" Not Found in Active Circuit.', 77003);
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LoadshapeClass.ElementList.Count;
+    Result := DSSPrime.LoadshapeClass.ElementList.Count;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LoadshapeClass.First;
+    Result := DSSPrime.LoadshapeClass.First;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LoadshapeClass.Next;
+    Result := DSSPrime.LoadshapeClass.Next;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, LoadShapeClass.ElementList, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LoadShapeClass.ElementList, False);
 end;
 
 procedure LoadShapes_Get_AllNames_GR(); CDECL;
@@ -142,7 +144,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.NumPoints;
 end;
@@ -153,7 +155,7 @@ var
     Result: PDoubleArray;
     ActualNumPoints: Integer;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -182,7 +184,7 @@ var
     Result: PDoubleArray;
     ActualNumPoints: Integer;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -209,7 +211,7 @@ procedure LoadShapes_Set_Npts(Value: Integer); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.NumPoints := Value;
 end;
@@ -218,7 +220,7 @@ procedure LoadShapes_Set_Pmult(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     with elem do
@@ -246,7 +248,7 @@ procedure LoadShapes_Set_Qmult(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     with elem do
@@ -274,7 +276,7 @@ procedure LoadShapes_Normalize(); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Normalize;
 end;
@@ -285,7 +287,7 @@ var
     ActualNumPoints: Integer;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     elem.UseFloat64();
@@ -307,7 +309,7 @@ procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: TAPISize); CDE
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     with elem do
@@ -336,7 +338,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Interval;
 end;
@@ -346,7 +348,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Interval * 60.0;
 end;
@@ -356,7 +358,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Interval * 3600.0;
 end;
@@ -365,7 +367,7 @@ procedure LoadShapes_Set_HrInterval(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Interval := Value;
 end;
@@ -374,7 +376,7 @@ procedure LoadShapes_Set_MinInterval(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Interval := Value / 60.0;
 end;
@@ -383,14 +385,14 @@ procedure LoadShapes_Set_Sinterval(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Interval := Value / 3600.0;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_New(const Name: PAnsiChar): Integer; CDECL;
 begin
-    Result := AddObject('loadshape', Name);    // Returns handle to object
+    Result := DSSPrime.DSSExecutive.AddObject('loadshape', Name);    // Returns handle to object
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_PBase(): Double; CDECL;
@@ -398,7 +400,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.baseP;
 end;
@@ -408,7 +410,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.baseQ;
 end;
@@ -417,7 +419,7 @@ procedure LoadShapes_Set_PBase(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.baseP := Value;
 end;
@@ -426,7 +428,7 @@ procedure LoadShapes_Set_Qbase(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.baseQ := Value;
 end;
@@ -436,7 +438,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.UseActual;
 end;
@@ -445,27 +447,27 @@ procedure LoadShapes_Set_UseActual(Value: TAPIBoolean); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.UseActual := Value;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_idx(): Integer; CDECL;
 begin
-    Result := LoadShapeClass.ElementList.ActiveIndex
+    Result := DSSPrime.LoadShapeClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
 begin
-    if LoadShapeClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
+    if DSSPrime.LoadShapeClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg(DSSPrime, 'Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Points(Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAPIBoolean; IsFloat32: TAPIBoolean; Stride: Integer); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-	if not _activeObj(elem) then
+	if not _activeObj(DSSPrime, elem) then
         Exit;
 
     // If the LoadShape owns the memory, dispose the current data and reallocate if necessary
@@ -545,7 +547,7 @@ procedure LoadShapes_UseFloat64(); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-	if not _activeObj(elem) then
+	if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.UseFloat64();
 end;
@@ -554,7 +556,7 @@ procedure LoadShapes_UseFloat32(); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-	if not _activeObj(elem) then
+	if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.UseFloat32();
 end;
@@ -563,7 +565,7 @@ procedure LoadShapes_Set_MaxP(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-	if not _activeObj(elem) then
+	if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.MaxP := Value;
 end;
@@ -573,7 +575,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-	if not _activeObj(elem) then
+	if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MaxP;
 end;
@@ -582,7 +584,7 @@ procedure LoadShapes_Set_MaxQ(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-	if not _activeObj(elem) then
+	if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.MaxQ := Value;
     elem.MaxQSpecified := True;
@@ -593,7 +595,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-	if not _activeObj(elem) then
+	if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MaxQ;
 end;

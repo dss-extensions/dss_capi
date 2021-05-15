@@ -43,7 +43,7 @@ type
         procedure ClassMakeLike(const OtherObj: Pointer);
     PUBLIC
         NumConductorClassProps: Integer;
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
     end;
 
@@ -87,9 +87,6 @@ type
     TConductorDataArray = array[1..100] of TConductorDataObj;
     pConductorDataArray = ^TConductorDataArray;
 
-var
-    ActiveConductorDataObj: TConductorDataObj;
-
 implementation
 
 uses
@@ -99,16 +96,19 @@ uses
     Sysutils,
     Ucomplex,
     LineUNits,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     LineUnitsHelp = '{mi|kft|km|m|Ft|in|cm|mm} Default=none.';
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TConductorData.Create;  // Creates superstructure for all Line objects
+constructor TConductorData.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
     NumConductorClassProps := 13;
+    inherited Create(dssContext);
     DSSClassType := DSS_OBJECT;
 end;
 

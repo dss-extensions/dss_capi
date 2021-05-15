@@ -81,7 +81,7 @@ type
     PUBLIC
         RegisterNames: array[1..NumStorage2Registers] of String;
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit(): Integer; OVERRIDE;
@@ -409,9 +409,6 @@ type
         property pf_wp_nominal: Double WRITE Set_pf_wp_nominal;
     end;
 
-var
-    ActiveStorage2Obj: TStorage2Obj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -425,7 +422,9 @@ uses
     MathUtil,
     DSSClassDefs,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper;
 
 const
 
@@ -498,9 +497,9 @@ var
     CDOUBLEONE: Complex;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TStorage2.Create;  // Creates superstructure for all Storage elements
+constructor TStorage2.Create(dssContext: TDSSContext);  // Creates superstructure for all Storage2 elements
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Storage';
     DSSClassType := DSSClassType + Storage_ELEMENT;  // In both PCelement and Storage element list
     
@@ -747,7 +746,7 @@ end;
 procedure TStorage2.SetNcondsForConnection;
 
 begin
-    with ActiveStorage2Obj do
+    with DSS.ActiveStorage2Obj do
     begin
         case Connection of
             0:
@@ -784,7 +783,7 @@ var
     TestS: String;
 
 begin
-    with ActiveStorage2Obj do
+    with DSS.ActiveStorage2Obj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -867,12 +866,12 @@ var
 begin
 
   // continue parsing with contents of Parser
-    ActiveStorage2Obj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveStorage2Obj;
+    DSS.ActiveStorage2Obj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveStorage2Obj;
 
     Result := 0;
 
-    with ActiveStorage2Obj do
+    with DSS.ActiveStorage2Obj do
     begin
 
         ParamPointer := 0;
@@ -1026,7 +1025,7 @@ begin
 
                 else
                // Inherited parameters
-                    ClassEdit(ActiveStorage2Obj, ParamPointer - NumPropsThisClass)
+                    ClassEdit(DSS.ActiveStorage2Obj, ParamPointer - NumPropsThisClass)
                 end;
 
                 case iCase of
@@ -1041,11 +1040,11 @@ begin
 
         {Set loadshape objects;  returns nil If not valid}
                     propYEARLY:
-                        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                        YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                     propDAILY:
-                        DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                        DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                     propDUTY:
-                        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                        DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
 
                     propKWRATED:
                         if not kVASet then
@@ -1061,13 +1060,13 @@ begin
                         StorageVars.kWhReserve := StorageVars.kWhRating * pctReserve * 0.01;
 
                     propInvEffCurve:
-                        InverterCurveObj := XYCurveClass.Find(InverterCurve);
+                        InverterCurveObj := DSS.XYCurveClass.Find(InverterCurve);
 
                     propDEBUGTRACE:
                         if DebugTrace then
                         begin   // Init trace file
                             FreeAndNil(TraceFile);
-                            TraceFile := TFileStream.Create(GetOutputDirectory + 'STOR_' + Name + '.CSV', fmCreate);
+                            TraceFile := TFileStream.Create(DSS.OutputDirectory + 'STOR_' + Name + '.CSV', fmCreate);
                             FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, StorageModel,  Qnominalperphase, Pnominalperphase, CurrentType');
                             for i := 1 to nphases do
                                 FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
@@ -1128,7 +1127,7 @@ begin
      {See If we can find this line name in the present collection}
     OtherStorageObj := Find(OtherStorage2ObjName);
     if (OtherStorageObj <> NIL) then
-        with ActiveStorage2Obj do
+        with DSS.ActiveStorage2Obj do
         begin
             if (Fnphases <> OtherStorageObj.Fnphases) then
             begin
@@ -1350,8 +1349,8 @@ begin
     PublicDataSize := SizeOf(TStorage2Vars);
 
     IsUserModel := FALSE;
-    UserModel := TStoreUserModel.Create;
-    DynaModel := TStoreDynaModel.Create;
+    UserModel := TStoreUserModel.Create(DSS);
+    DynaModel := TStoreDynaModel.Create(DSS);
 
     FState := STORE_IDLING;  // Idling and fully charged
     FStateChanged := TRUE;  // Force building of YPrim
@@ -1724,7 +1723,7 @@ begin
 
     if Length(Spectrum) > 0 then
     begin
-        SpectrumObj := SpectrumClass.Find(Spectrum);
+        SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
         if SpectrumObj = NIL then
             DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
     end
@@ -2516,14 +2515,14 @@ var
 begin
 
     try
-        if (not InshowResults) then
+        if (not DSS.InshowResults) then
         begin
             WriteStr(sout, Format('%-.g, %d, %-.g, ',
                 [ActiveCircuit.Solution.DynaVars.dblHour,
                 ActiveCircuit.Solution.Iteration,
                 ActiveCircuit.LoadMultiplier]),
-                GetSolutionModeID, ', ',
-                GetLoadModel, ', ',
+                GetSolutionModeID(DSS), ', ',
+                GetLoadModel(DSS), ', ',
                 VoltageModel: 0, ', ',
                 (Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
                 (Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
@@ -2811,7 +2810,7 @@ begin
                 end;
             else
                 DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Storage Element. Storage.%s has %d phases.', [name, Fnphases]), 5671);
-                SolutionAbort := TRUE;
+                DSS.SolutionAbort := TRUE;
             end;
 
     {Add it into inj current array}

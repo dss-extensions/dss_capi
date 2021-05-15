@@ -46,12 +46,12 @@ type
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TRecloser = class(TControlClass)
     PRIVATE
-
+        function GetTccCurve(const CurveName: String): TTCC_CurveObj;
     PROTECTED
         procedure DefineProperties;
         function MakeLike(const RecloserName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -88,7 +88,7 @@ type
         cBuffer: pComplexArray;    // Complexarray buffer
 
         procedure InterpretRecloserAction(const Action: String);
-
+        function GetTccCurve(const CurveName: String): TTCC_CurveObj;
     PUBLIC
 
         RecloseIntervals: pdoubleArray;
@@ -121,10 +121,6 @@ type
 
     end;
 
-
-var
-    ActiveRecloserObj: TRecloserObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -135,7 +131,10 @@ uses
     Circuit,
     Sysutils,
     uCmatrix,
-    MathUtil;
+    MathUtil,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
 
@@ -145,27 +144,25 @@ const
     VOLTAGE = 1;
     REVPOWER = 3;
 
-var
-    TCC_CurveClass: TDSSClass;
-
-{General Module Function}
-
-function GetTccCurve(const CurveName: String): TTCC_CurveObj;
-
+function TRecloser.GetTccCurve(const CurveName: String): TTCC_CurveObj;
 begin
-
-    Result := TCC_CurveClass.Find(CurveName);
-
+    Result := DSS.TCC_CurveClass.Find(CurveName);
     if Result = NIL then
         DoSimpleMsg('TCC Curve object: "' + CurveName + '" not found.', 388);
+end;
 
+function TRecloserObj.GetTccCurve(const CurveName: String): TTCC_CurveObj;
+begin
+    Result := DSS.TCC_CurveClass.Find(CurveName);
+    if Result = NIL then
+        DoSimpleMsg('TCC Curve object: "' + CurveName + '" not found.', 388);
 end;
 
 
 {--------------------------------------------------------------------------}
-constructor TRecloser.Create;  // Creates superstructure for all Recloser objects
+constructor TRecloser.Create(dssContext: TDSSContext);  // Creates superstructure for all Recloser objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'Recloser';
     DSSClassType := DSSClassType + RECLOSER_CONTROL;
@@ -174,8 +171,6 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-
-    TCC_CurveClass := GetDSSClassPtr('TCC_Curve');
 end;
 
 {--------------------------------------------------------------------------}
@@ -290,12 +285,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveRecloserObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveRecloserObj;
+    DSS.ActiveRecloserObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveRecloserObj;
 
     Result := 0;
 
-    with ActiveRecloserObj do
+    with DSS.ActiveRecloserObj do
     begin
 
         ParamPointer := 0;
@@ -360,8 +355,8 @@ begin
                     TDGrDelayed := Parser.DblValue;
 
             else
-           // Inherited parameters
-                ClassEdit(ActiveRecloserObj, ParamPointer - NumPropsthisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveRecloserObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -392,7 +387,7 @@ begin
    {See if we can find this Recloser name in the present collection}
     OtherRecloser := Find(RecloserName);
     if OtherRecloser <> NIL then
-        with ActiveRecloserObj do
+        with DSS.ActiveRecloserObj do
         begin
 
             NPhases := OtherRecloser.Fnphases;

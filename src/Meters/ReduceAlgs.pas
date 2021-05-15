@@ -15,18 +15,19 @@ interface
 
 uses
     CktTree,
-    PDElement;
+    PDElement,
+    DSSClass;
 
-procedure DoReduceDefault(var BranchList: TCktTree);
-procedure DoReduceShortLines(var BranchList: TCktTree);
-procedure DoReduceDangling(var BranchList: TCktTree);
+procedure DoReduceDefault(DSS: TDSSContext; var BranchList: TCktTree);
+procedure DoReduceShortLines(DSS: TDSSContext; var BranchList: TCktTree);
+procedure DoReduceDangling(DSS: TDSSContext; var BranchList: TCktTree);
   {procedure DoReduceTapEnds(var BranchList:TCktTree);}
-procedure DoBreakLoops(var BranchList: TCktTree);
-procedure DoMergeParallelLines(var BranchList: TCktTree);
-procedure DoReduceSwitches(var Branchlist: TCktTree);
-procedure DoRemoveAll_1ph_Laterals(var Branchlist: TCktTree);
+procedure DoBreakLoops(DSS: TDSSContext; var BranchList: TCktTree);
+procedure DoMergeParallelLines(DSS: TDSSContext; var BranchList: TCktTree);
+procedure DoReduceSwitches(DSS: TDSSContext; var Branchlist: TCktTree);
+procedure DoRemoveAll_1ph_Laterals(DSS: TDSSContext; var Branchlist: TCktTree);
 
-procedure DoRemoveBranches(var BranchList: TCktTree; FirstPDElement: TPDElement; KeepLoad: Boolean; const EditStr: String);
+procedure DoRemoveBranches(DSS: TDSSContext; var BranchList: TCktTree; FirstPDElement: TPDElement; KeepLoad: Boolean; const EditStr: String);
 
 
 implementation
@@ -42,13 +43,14 @@ uses
     CktElement,
     sysutils,
     ExecHelper,
-    Bus;
+    Bus,
+    DSSHelper;
 
 const
     SERIESMERGE: Boolean = TRUE;
     PARALLELMERGE: Boolean = FALSE;
 
-procedure DoMergeParallelLines(var BranchList: TCktTree);
+procedure DoMergeParallelLines(DSS: TDSSContext; var BranchList: TCktTree);
 {Merge all lines in this zone that are marked in parallel}
 
 var
@@ -72,7 +74,7 @@ begin
     end;
 end;
 
-procedure DoBreakLoops(var BranchList: TCktTree);
+procedure DoBreakLoops(DSS: TDSSContext; var BranchList: TCktTree);
 
 {Break loops}
 var
@@ -99,7 +101,7 @@ end;
 
 {
 
-procedure DoReduceTapEnds(var BranchList:TCktTree);
+procedure DoReduceTapEnds(DSS: TDSSContext; var BranchList:TCktTree);
 (*Var
    pLineElem1, pLineElem2:TLineObj;
    ToBusRef:Integer;
@@ -112,7 +114,7 @@ end;
 }
 
 
-procedure DoReduceDangling(var BranchList: TCktTree);
+procedure DoReduceDangling(DSS: TDSSContext; var BranchList: TCktTree);
 var
     pLineElem1: TDSSCktElement;
     ToBusRef: Integer;
@@ -136,7 +138,7 @@ begin
                     begin
                         ToBusRef := ToBusReference;  // only access this property once!
                         if ToBusRef > 0 then
-                            with ActiveCircuit.Buses^[ToBusRef] do
+                            with DSS.ActiveCircuit.Buses^[ToBusRef] do
                                 if not (Keep) then
                                     pLineElem1.Enabled := FALSE;
                     end; {IF}
@@ -147,7 +149,7 @@ begin
 
 end;
 
-function IsShortLine(const Elem: TDSSCktElement): Boolean;
+function IsShortLine(DSS: TDSSContext; const Elem: TDSSCktElement): Boolean;
 var
     Ztest: Double;
     LineElement: TLineObj;
@@ -167,14 +169,14 @@ begin
                 Ztest := Cabs(Z.Getelement(1, 1)) * Len;
         end;
 
-    if Ztest <= ActiveCircuit.ReductionZmag then
+    if Ztest <= DSS.ActiveCircuit.ReductionZmag then
         Result := TRUE
     else
         Result := FALSE;
 
 end;
 
-procedure DoReduceShortLines(var BranchList: TCktTree);
+procedure DoReduceShortLines(DSS: TDSSContext; var BranchList: TCktTree);
 {Eliminate short lines with impedance < Zmag and merge with lines on either side}
 var
     LineElement1, LineElement2: TLineObj;
@@ -192,7 +194,7 @@ begin
         begin
             if IsLineElement(LineElement1) then
             begin
-                LineElement1.Flag := IsShortLine(LineElement1);    {Too small: Mark for merge with something}
+                LineElement1.Flag := IsShortLine(DSS, LineElement1);    {Too small: Mark for merge with something}
             end; {IF}
             LineElement1 := BranchList.GoForward;  // traverse the whole meter zone  (circuit tree)
         end; {WHILE}
@@ -220,7 +222,7 @@ begin
                                     if ParentNode <> NIL then
                                     begin
                                         if ParentNode.NumChildBranches = 1 then   // only works for in-line
-                                            if not ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then
+                                            if not DSS.ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then
                                             begin     // Check Keeplist
                                {Let's consider merging}
                                 {First Check for any Capacitors. Skip if any}
@@ -254,8 +256,8 @@ begin
                                                                     ShuntElement := ParentNode.FirstShuntObject;
                                                                     while ShuntElement <> NIL do
                                                                     begin
-                                                                        Parser.CmdString := 'bus1="' + ActiveCircuit.BusList.NameOfIndex(PresentBranch.ToBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
-                          //   {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), Parser.CmdString ]));
+                                                                        DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.ToBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
+                          //   {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), DSS.Parser.CmdString ]));
                                                                         ShuntElement.Edit;
                                                                         ShuntElement := ParentNode.NextShuntObject;
                                                                     end;  {While}
@@ -271,7 +273,7 @@ begin
 
                                 if (PresentBranch.NumChildBranches = 1) then {Merge with child}
                                 begin
-                                    if not ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then    // check keeplist
+                                    if not DSS.ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then    // check keeplist
                                     begin
                          {Let's consider merging}
                           {First Check for any Capacitors. Skip if any}
@@ -305,8 +307,8 @@ begin
                                                             ShuntElement := PresentBranch.FirstShuntObject;
                                                             while ShuntElement <> NIL do
                                                             begin
-                                                                Parser.CmdString := 'bus1="' + ActiveCircuit.BusList.NameOfIndex(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
-                  //  {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), Parser.CmdString ]));
+                                                                DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
+                  //  {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), DSS.Parser.CmdString ]));
                                                                 ShuntElement.Edit;
                                                                 ShuntElement := PresentBranch.NextShuntObject;
                                                             end;  {While}
@@ -321,7 +323,7 @@ begin
             LineElement1 := BranchList.GoForward;
         end;
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             ReprocessBusDefs;  // to get new load added and account for disabled devices
             DoResetMeterZones;  // without eliminated devices
@@ -330,7 +332,7 @@ begin
     end;
 end;
 
-procedure DoReduceSwitches(var Branchlist: TCktTree);
+procedure DoReduceSwitches(DSS: TDSSContext; var Branchlist: TCktTree);
 
 {Merge switches in with lines or delete if dangling}
 
@@ -358,7 +360,7 @@ begin
 
                                 1:
                                     if NumShuntObjects = 0 then
-                                        if not ActiveCircuit.Buses^[ToBusReference].Keep then
+                                        if not DSS.ActiveCircuit.Buses^[ToBusReference].Keep then
                                         begin
                      {Let's consider merging}
                                             LineElement2 := FirstChildBranch.CktObject;
@@ -375,7 +377,7 @@ begin
 
 end;
 
-procedure DoReduceDefault(var BranchList: TCktTree);
+procedure DoReduceDefault(DSS: TDSSContext; var BranchList: TCktTree);
 
 var
     LineElement1, LineElement2: TLineObj;
@@ -400,7 +402,7 @@ begin
                  {see if eligble for merging}
                                     if PresentBranch.NumChildBranches = 1 then
                                         if PresentBranch.NumShuntObjects = 0 then
-                                            if not ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then
+                                            if not DSS.ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then
                                             begin
                      {Let's consider merging}
                                                 LineElement2 := PresentBranch.FirstChildBranch.CktObject;
@@ -418,7 +420,7 @@ begin
 
 end;
 
-procedure DoRemoveBranches(var BranchList: TCktTree; FirstPDElement: TPDElement; KeepLoad: Boolean; const EditStr: String);
+procedure DoRemoveBranches(DSS: TDSSContext; var BranchList: TCktTree; FirstPDElement: TPDElement; KeepLoad: Boolean; const EditStr: String);
 var
     PDElem: TPDElement;
     BusName: String;
@@ -441,7 +443,7 @@ begin
 
     if PDElem = NIL then
     begin
-        DoSimpleMsg(Format('%s.%s Not Found (Remove Command).', [FirstPDElement.ParentClass.Name, FirstPDElement.Name]), 5432100);
+        DoSimpleMsg(DSS, Format('%s.%s Not Found (Remove Command).', [FirstPDElement.ParentClass.Name, FirstPDElement.Name]), 5432100);
     end
     else
     begin
@@ -454,19 +456,19 @@ begin
                 TotalkVA := CDivreal(PDelem.Power[FromTerminal], 1000.0);
                 NewLoadName := Format('Eq_%s_%s', [FirstPDElement.Name, StripExtension(BusName)]);
        {Pick up the kV Base for the From bus}
-                LoadBus := ActiveCircuit.Buses^[FromBusReference];
+                LoadBus := DSS.ActiveCircuit.Buses^[FromBusReference];
                 if Loadbus.kVBase > 0.0 then
                     LoadBasekV := LoadBus.kVBase
                 else
                 begin    // Try to guess from the present voltage at the first node on the bus
-                    ActiveCircuit.Solution.UpdateVBus;
+                    DSS.ActiveCircuit.Solution.UpdateVBus;
                     LoadBasekV := Cabs(Loadbus.Vbus^[1]) * 0.001;
                 end;
                 if FirstPDElement.NPhases > 1 then
                     LoadBasekV := LoadBasekV * Sqrt3;
-       {Load up parser with definition of equivalent load}
-                Parser.CmdString := Format(' phases=%d Bus1=%s kW=%g kvar=%g kV=%g %s', [FirstPDElement.NPhases, Busname, TotalkVA.re, TotalkVA.im, LoadBasekV, EditStr]);
-                AddObject('load', NewLoadName); // Add new load to circuit
+       {Load up DSS.Parser with definition of equivalent load}
+                DSS.Parser.CmdString := Format(' phases=%d Bus1=%s kW=%g kvar=%g kV=%g %s', [FirstPDElement.NPhases, Busname, TotalkVA.re, TotalkVA.im, LoadBasekV, EditStr]);
+                DSS.DSSExecutive.AddObject('load', NewLoadName); // Add new load to circuit
             end;
 
      {Disable all elements in the tree downline from the start element}
@@ -498,7 +500,7 @@ begin
 
     end;
 
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ReprocessBusDefs;  // to get new load added and account for disabled devices
         DoResetMeterZones;  // without eliminated devices
@@ -506,7 +508,7 @@ begin
     end;
 end;
 
-procedure DoRemoveAll_1ph_Laterals(var Branchlist: TCktTree);
+procedure DoRemoveAll_1ph_Laterals(DSS: TDSSContext; var Branchlist: TCktTree);
 {Remove all 1-phase laterals in Branchlist and lump total load back to main feeder}
 {
   This removes all elements on all 1ph laterals and moves the net load back to the main feeder tap point
@@ -538,14 +540,14 @@ begin
         begin
         {Check to see if this is a 1-phase switch or other branch in the middle of a 3-phase branch and go on}
         {If the To bus has more than 1 phase, keep this branch else lump the load at the From node}
-            pBus := ActiveCircuit.Buses^[Branchlist.PresentBranch.ToBusReference];  //To Bus
+            pBus := DSS.ActiveCircuit.Buses^[Branchlist.PresentBranch.ToBusReference];  //To Bus
 
             if pBus.NumNodesThisBus = 1 then // Eliminate the lateral starting with this branch
             begin
 
              { If KeepLoad (ReduceLateralsKeepLoad), create a new Load object at upstream bus (from bus).}
 
-                if ActiveCircuit.ReduceLateralsKeepLoad then
+                if DSS.ActiveCircuit.ReduceLateralsKeepLoad then
                     with BranchList do
                     begin
                         BusName := PDElem.GetBus(PresentBranch.FromTerminal);
@@ -554,12 +556,12 @@ begin
                             BusName := BusName + '.1';
 
                  {Pick up the kV Base for the From bus}
-                        HeadBus := ActiveCircuit.Buses^[PresentBranch.FromBusReference];
+                        HeadBus := DSS.ActiveCircuit.Buses^[PresentBranch.FromBusReference];
                         if (HeadBus.kVBase > 0.0) then
                             HeadBasekV := HeadBus.kVBase  // Use defined voltage base
                         else
                         begin    // Try to guess voltage base from the present voltage at the first node on the bus
-                            ActiveCircuit.Solution.UpdateVBus;
+                            DSS.ActiveCircuit.Solution.UpdateVBus;
                             HeadBasekV := Cabs(HeadBus.Vbus^[1]) * 0.001;
                         end;
                     end;
@@ -581,7 +583,7 @@ begin
                         pShunt := PresentBranch.FirstShuntObject;
                         while pShunt <> NIL do
                         begin
-                            Parser.CmdString := Format('Bus1=%s kV=%.6g ', [Busname, HeadBasekV]);
+                            DSS.Parser.CmdString := Format('Bus1=%s kV=%.6g ', [Busname, HeadBasekV]);
                             pShunt.Edit;
                             pShunt := PresentBranch.NextShuntObject;
                         end;
@@ -610,7 +612,7 @@ begin
 
     end;
 
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ReprocessBusDefs;  // to get new load added and account for disabled devices
         DoResetMeterZones;  // without eliminated devices

@@ -1,5 +1,7 @@
 unit CAPI_Monitors;
 
+//TODO: remove AuxParser usage
+
 interface
 
 uses
@@ -56,7 +58,10 @@ uses
     DSSGlobals,
     SysUtils,
     Classes,
-    Math;
+    Math,
+    DSSClass,
+    DSSHelper,
+    DSSObjectHelper;
 
 type
     THeaderRec = record
@@ -75,7 +80,7 @@ procedure ReadMonitorHeader(var HeaderRec: THeaderRec; Opt: Boolean);
 var
     pMon: TMonitorObj;
 begin
-    pMon := ActiveCircuit.Monitors.Active;
+    pMon := DSSPrime.ActiveCircuit.Monitors.Active;
     try
         with pmon.MonitorStream, HeaderRec do
         begin
@@ -94,19 +99,19 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TMonitorObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TMonitorObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := ActiveCircuit.Monitors.Active;
+    obj := DSSPrime.ActiveCircuit.Monitors.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Monitor object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Monitor object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -117,9 +122,9 @@ end;
 procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Monitors, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Monitors, False);
 end;
 
 procedure Monitors_Get_AllNames_GR(); CDECL;
@@ -134,7 +139,7 @@ var
     pMon: TMonitorObj;
 begin
     Result := NIL;
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     Result := DSS_GetAsPAnsiChar(PMon.CSVFileName);
 end;
@@ -142,17 +147,17 @@ end;
 function Monitors_Get_First(): Integer; CDECL;
 begin
     Result := 0;  // signify no more
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.Monitors);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Monitors);
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_Next(): Integer; CDECL;
 begin
     Result := 0;  // signify no more
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.Monitors);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Monitors);
     if Result <> 0 then Result := 1; //TODO: inconsistent with the rest
 end;
 //------------------------------------------------------------------------------
@@ -161,7 +166,7 @@ var
     pMon: TMonitorObj;
 begin
     Result := 0;
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     Result := PMon.Mode
 end;
@@ -171,7 +176,7 @@ var
     pMon: TMonitorObj;
 begin
     Result := NIL;
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     Result := DSS_GetAsPAnsiChar(PMon.Name)
 end;
@@ -180,23 +185,23 @@ procedure Monitors_Reset(); CDECL;
 var
     pMon: TMonitorObj;
 begin
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     PMon.ResetIt();
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_ResetAll(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    MonitorClass.ResetAll;
+    DSSPrime.MonitorClass.ResetAll;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Sample(); CDECL;
 var
     pMon: TMonitorObj;
 begin
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     PMon.TakeSample();
 end;
@@ -205,7 +210,7 @@ procedure Monitors_Save(); CDECL;
 var
     pMon: TMonitorObj;
 begin
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     PMon.Save();  // TranslateToCSV(False);
 end;
@@ -214,7 +219,7 @@ procedure Monitors_Set_Mode(Value: Integer); CDECL;
 var
     pMon: TMonitorObj;
 begin
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     PMon.Mode := Value;
     PMon.ResetIt();  // Always reset the monitor after a Mode change
@@ -224,23 +229,23 @@ procedure Monitors_Show(); CDECL;
 var
     pMon: TMonitorObj;
 begin
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     PMon.TranslateToCSV(TRUE);
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if MonitorClass.SetActive(Value) then
+    if DSSPrime.MonitorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := MonitorClass.ElementList.Active;
-        ActiveCircuit.Monitors.Get(MonitorClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.MonitorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Monitors.Get(DSSPrime.MonitorClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Monitor "' + Value + '" Not Found in Active Circuit.', 5004);
+        DoSimpleMsg(DSSPrime, 'Monitor "' + Value + '" Not Found in Active Circuit.', 5004);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -248,7 +253,7 @@ procedure Monitors_Get_ByteStream(var ResultPtr: PByte; ResultCount: PAPISize); 
 var
     pMon: TMonitorObj;
 begin
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -272,7 +277,7 @@ var
     pMon: TMonitorObj;
 begin
     Result := 0;
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
 
     Result := pMon.SampleCount;
@@ -280,40 +285,40 @@ end;
 //------------------------------------------------------------------------------
 procedure Monitors_SampleAll(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    MonitorClass.SampleAll;
+    DSSPrime.MonitorClass.SampleAll;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_SaveAll(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    MonitorClass.SaveAll;
+    DSSPrime.MonitorClass.SaveAll;
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Monitors.Count;
+    Result := DSSPrime.ActiveCircuit.Monitors.Count;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Process(); CDECL;
 var
     pMon: TMonitorObj;
 begin
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     pMon.PostProcess();
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_ProcessAll(); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    MonitorClass.PostProcessAll;
+    DSSPrime.MonitorClass.PostProcessAll;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PAPISize; Index: Integer); CDECL;
@@ -327,7 +332,7 @@ var
     AllocSize: Integer;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     
     if pMon.SampleCount <= 0 then
@@ -337,7 +342,7 @@ begin
 
     if (Index < 1) or (Index > Header.RecordSize {NumChannels}) then
     begin
-        DoSimpleMsg(Format(
+        DoSimpleMsg(DSSPrime, Format(
             'Monitors.Channel: invalid channel index (%d), monitor "%s" has %d channels.',
             [Index, pMon.Name, Header.RecordSize]
             ), 5888);
@@ -377,17 +382,17 @@ var
     AllocSize: Integer;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     if pMon.SampleCount <= 0 then
         Exit;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount - 1) + 1);
     ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-    AuxParser.CmdString := String(Header.StrBuffer);
-    AuxParser.AutoIncrement := TRUE;
-    FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-    AuxParser.AutoIncrement := FALSE;
+    DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
+    DSSPrime.AuxParser.AutoIncrement := TRUE;
+    FirstCol := DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
+    DSSPrime.AuxParser.AutoIncrement := FALSE;
     // check first col to see if it is "Freq" for harmonics solution
     if SysUtils.CompareText(FirstCol, 'freq') = 0 then
     begin
@@ -434,17 +439,17 @@ var
     AllocSize: Integer;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     if pMon.SampleCount <= 0 then
         Exit;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
     ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-    AuxParser.CmdString := String(Header.StrBuffer);
-    AuxParser.AutoIncrement := TRUE;
-    FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-    AuxParser.AutoIncrement := FALSE;
+    DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
+    DSSPrime.AuxParser.AutoIncrement := TRUE;
+    FirstCol := DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
+    DSSPrime.AuxParser.AutoIncrement := FALSE;
     // check first col to see if it is "Hour"
     if Sysutils.CompareText(FirstCol, 'hour') = 0 then
     begin
@@ -483,7 +488,7 @@ var
     pMon: TMonitorObj;
 begin
     Result := 0;
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
 
     ReadMonitorHeader(Header, TRUE);
@@ -502,7 +507,7 @@ var
     pMon: TMonitorObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
 
     ReadMonitorHeader(Header, TRUE);
@@ -512,25 +517,25 @@ begin
     ListSize := Header.RecordSize;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, ListSize);
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         k := 0;
-        SaveDelims := AuxParser.Delimiters;
-        AuxParser.Delimiters := ',';
-        SaveWhiteSpace := AuxParser.Whitespace;
-        AuxParser.Whitespace := '';
-        AuxParser.CmdString := String(Header.StrBuffer);
-        AuxParser.AutoIncrement := TRUE;
-        AuxParser.StrValue;  // Get rid of first two columns
-        AuxParser.StrValue;
+        SaveDelims := DSSPrime.AuxParser.Delimiters;
+        DSSPrime.AuxParser.Delimiters := ',';
+        SaveWhiteSpace := DSSPrime.AuxParser.Whitespace;
+        DSSPrime.AuxParser.Whitespace := '';
+        DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
+        DSSPrime.AuxParser.AutoIncrement := TRUE;
+        DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
+        DSSPrime.AuxParser.StrValue;
         while k < ListSize do
         begin
-            Result[k] := DSS_CopyStringAsPChar(AuxParser.StrValue);
+            Result[k] := DSS_CopyStringAsPChar(DSSPrime.AuxParser.StrValue);
             Inc(k);
         end;
-        AuxParser.AutoIncrement := FALSE; // be a good citizen
-        AuxParser.Delimiters := SaveDelims;
-        AuxParser.Whitespace := SaveWhiteSpace;
+        DSSPrime.AuxParser.AutoIncrement := FALSE; // be a good citizen
+        DSSPrime.AuxParser.Delimiters := SaveDelims;
+        DSSPrime.AuxParser.Whitespace := SaveWhiteSpace;
     end;
 end;
 
@@ -547,7 +552,7 @@ var
     pMon: TMonitorObj;
 begin
     Result := 0;
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     ReadMonitorHeader(Header, TRUE);
     Result := Header.RecordSize;
@@ -559,7 +564,7 @@ var
     pMon: TMonitorObj;
 begin
     Result := 0;
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     ReadMonitorHeader(Header, TRUE);
     Result := Header.RecordSize;
@@ -570,7 +575,7 @@ var
     pMon: TMonitorObj;
 begin
     Result := NIL;
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     Result := DSS_GetAsPAnsiChar(pMon.ElementName);
 end;
@@ -579,7 +584,7 @@ procedure Monitors_Set_Element(const Value: PAnsiChar); CDECL;
 var
     pMon: TMonitorObj;
 begin
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     pMon.ElementName := Value;
     pMon.PropertyValue[1] := Value;
@@ -591,7 +596,7 @@ var
     pMon: TMonitorObj;
 begin
     Result := 0;
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     Result := pMon.MeteredTerminal;
 end;
@@ -600,7 +605,7 @@ procedure Monitors_Set_Terminal(Value: Integer); CDECL;
 var
     pMon: TMonitorObj;
 begin
-    if not _activeObj(pMon) then
+    if not _activeObj(DSSPrime, pMon) then
         Exit;
     pMon.MeteredTerminal := Value;
     pMon.RecalcElementData();
@@ -609,26 +614,26 @@ end;
 function Monitors_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Monitors.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.Monitors.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Set_idx(Value: Integer); CDECL;
 var
     pMonitor: TMonitorObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    pMonitor := ActiveCircuit.Monitors.Get(Value);
+    pMonitor := DSSPrime.ActiveCircuit.Monitors.Get(Value);
     if pMonitor = NIL then
     begin
-        DoSimpleMsg('Invalid Monitor index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Monitor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
 
-    ActiveCircuit.ActiveCktElement := pMonitor;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pMonitor;
 end;
 //------------------------------------------------------------------------------
 end.

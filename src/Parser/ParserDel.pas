@@ -57,6 +57,7 @@ type
 
     TParser = class(TObject)
     PRIVATE
+        ParserVars: TParserVar; // reference to global parser vars
         CmdBuffer: String;
         FPosition: Integer;
         ParameterBuffer: String;
@@ -103,6 +104,7 @@ type
         function ParseAsSymMatrix(MatrixBuffer: Array of Double): Integer;
         procedure ResetDelims;   // resets delimiters to default
         procedure CheckforVar(var TokenBuffer: String);
+        procedure SetVars(vars: TParserVar);
     PUBLISHED
         property CmdString: String READ CmdBuffer WRITE SetCmdString;
         property Position: Integer READ FPosition WRITE FPosition; // to save and restore
@@ -113,12 +115,12 @@ type
         property AutoIncrement: Boolean READ FAutoIncrement WRITE FAutoIncrement;
     end;
 
-var
-    Parser: TParser;
-    ParserVars: TParserVar;
-
-
 implementation
+
+uses
+    DSSClass,
+    DSSHelper
+    ;
 
 const
     Commentchar = '!';
@@ -290,6 +292,7 @@ constructor TParser.Create;
 begin
     inherited Create;
 
+    ParserVars := nil;
     DelimChars := ',=';
     WhiteSpaceChars := ' ' + #9;   // blank + tab
     FBeginQuoteChars := '("''[{';
@@ -1030,13 +1033,9 @@ begin
 
 end;
 
-initialization
-
-    // Variables
-    ParserVars := TParserVar.Create(100);  // start with space for 100 variables
-
-finalization
-
-    ParserVars.Free;
+procedure TParser.SetVars(vars: TParserVar);
+begin
+    ParserVars := vars;
+end;
 
 end.

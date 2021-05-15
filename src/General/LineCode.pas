@@ -51,7 +51,7 @@ type
     PUBLIC
         LineTypeList: TCommandList;
         
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -116,9 +116,6 @@ type
 
     end;
 
-var
-    ActiveLineCodeObj: TLineCodeObj;
-
 implementation
 
 uses
@@ -128,7 +125,10 @@ uses
     Sysutils,
     Ucomplex,
     Utilities,
-    LineUnits;
+    LineUnits,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 27;
@@ -139,9 +139,9 @@ const
     ];
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLineCode.Create;  // Creates superstructure for all Line objects
+constructor TLineCode.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'LineCode';
     DSSClassType := DSS_OBJECT;
     ActiveElement := 0;
@@ -268,11 +268,8 @@ end;
 function TLineCode.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TLineCodeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TLineCodeObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 function TLineCodeObj.get_Rmatrix: String;
@@ -333,7 +330,7 @@ procedure TLineCode.SetUnits(const s: String);
 // decodes the units string and sets the Units variable
 
 begin
-    ActiveLineCodeObj.Units := GetUnitsCode(S);
+    DSS.ActiveLineCodeObj.Units := GetUnitsCode(S);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -344,7 +341,7 @@ begin
     SymComponentsChanged := TRUE;
 
 
-    with ActiveLineCodeObj do
+    with DSS.ActiveLineCodeObj do
     begin
         SymComponentsModel := TRUE;
         case i of
@@ -376,7 +373,7 @@ var
     Factor: Double;
 
 begin
-    with ActiveLineCodeObj do
+    with DSS.ActiveLineCodeObj do
     begin
         MatrixChanged := TRUE;
         MatBuffer := Allocmem(Sizeof(Double) * FNphases * FNphases);
@@ -424,13 +421,13 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveLineCodeObj := ElementList.Active;
-    ActiveDSSObject := ActiveLineCodeObj;
+    DSS.ActiveLineCodeObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveLineCodeObj;
     SymComponentsChanged := FALSE;
     MatrixChanged := FALSE;
-    ActiveLineCodeObj.ReduceByKron := FALSE;  // Allow all matrices to be computed it raw form
+    DSS.ActiveLineCodeObj.ReduceByKron := FALSE;  // Allow all matrices to be computed it raw form
 
-    with ActiveLineCodeObj do
+    with DSS.ActiveLineCodeObj do
     begin
 
         ParamPointer := 0;
@@ -511,7 +508,7 @@ begin
                 27: 
                     FLineType := LineTypeList.Getcommand(Param);
             else
-                ClassEdit(ActiveLineCodeObj, Parampointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveLineCodeObj, Parampointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -548,7 +545,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherLineCode := Find(LineName);
     if OtherLineCode <> NIL then
-        with ActiveLineCodeObj do
+        with DSS.ActiveLineCodeObj do
         begin
 
             if FNPhases <> OtherLineCode.FNphases then
@@ -607,14 +604,14 @@ var
     LineCodeObj: TLineCodeObj;
 begin
 
-    ActiveLineCodeObj := NIL;
+    DSS.ActiveLineCodeObj := NIL;
     LineCodeObj := ElementList.First;
     while LineCodeObj <> NIL do
     begin
 
         if CompareText(LineCodeObj.Name, Value) = 0 then
         begin
-            ActiveLineCodeObj := LineCodeObj;
+            DSS.ActiveLineCodeObj := LineCodeObj;
             Exit;
         end;
 
@@ -812,6 +809,7 @@ begin
         FSWriteln(F, Format('~ %s=%s', [PropertyName^[26]]) + TempStr);
 
 
+		// TODO: check missing linetype here
     end;
 
 end;
@@ -919,7 +917,7 @@ begin
     PropertyValue[9] := ''; // 'rmatrix';
     PropertyValue[10] := ''; // 'xmatrix';
     PropertyValue[11] := ''; // 'cmatrix';
-    PropertyValue[12] := Format('%6.1f', [DefaultBaseFreq]); // 'baseFreq';
+    PropertyValue[12] := Format('%6.1f', [DSS.DefaultBaseFreq]); // 'baseFreq';
     PropertyValue[13] := '400'; // 'normamps';
     PropertyValue[14] := '600'; // 'emergamps';
     PropertyValue[15] := '0.1'; // 'faultrate';

@@ -1,7 +1,5 @@
 unit CAPI_Parallel;
 
-{$inline on}
-
 interface
 
 uses
@@ -36,8 +34,12 @@ uses
     CktElement,
     ParserDel,
     KLUSolve,
-    Classes;
+    Classes,
+    DSSClass,
+    DSSHelper;
 
+
+{$IFDEF DSS_CAPI_PM}
 function Parallel_Get_NumCPUs(): Integer; CDECL;
 begin
     Result := CPU_Cores;
@@ -45,54 +47,57 @@ end;
 //------------------------------------------------------------------------------
 function Parallel_Get_NumCores(): Integer; CDECL;
 begin
-    Result := round(CPU_Cores / 2);
+    Result := round(CPU_Cores / 2); //TODO: fix
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ActiveActor(): Integer; CDECL;
 begin
-    Result := ActiveActor;
+    Result := DSSPrime.ActiveChildIndex;
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
 begin
-    if Value <= NumOfActors then
-        ActiveActor := Value
+    if (Value > 0) and (Value <= DSSPrime.NumOfActors) then
+    begin
+        DSSPrime.ActiveChildIndex := Value - 1;
+        DSSPrime.ActiveChild := DSSPrime.Children[DSSPrime.ActiveChildIndex];
+    end
     else
-        DoSimpleMsg('The actor does not exists', 7002);
+        DoSimpleMsg(DSSPrime, 'The actor does not exists', 7002);
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_CreateActor(); CDECL;
 begin
-    New_Actor_Slot();
+    New_Actor_Slot(DSSPrime);
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ActorCPU(): Integer; CDECL;
 begin
-    Result := ActorCPU[ActiveActor];
+    Result := DSSPrime.ActiveChild.CPU;
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ActorCPU(Value: Integer); CDECL;
 begin
     if Value < CPU_Cores then
     begin
-        ActorCPU[ActiveActor] := value;
-        if ActorHandle[ActiveActor] <> nil then
-            ActorHandle[ActiveActor].CPU := ActorCPU[ActiveActor];
+        DSSPrime.ActiveChild.CPU := value;
+        if DSSPrime.ActiveChild.ActorThread <> nil then
+            DSSPrime.ActiveChild.ActorThread.CPU := value;
     end
-    else DoSimpleMsg('The CPU does not exist', 7004);
+    else DoSimpleMsg(DSSPrime, 'The CPU does not exist', 7004);
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_NumOfActors(): Integer; CDECL;
 begin
-    Result := NumOfActors;
+    Result := DSSPrime.NumOfActors;
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Wait(); CDECL;
 var
     i: Integer;
 begin
-    if Parallel_enabled then
-        Wait4Actors(0);
+    if DSSPrime.Parallel_enabled then
+        Wait4Actors(DSSPrime, 0);
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
@@ -100,10 +105,10 @@ var
     Result: PIntegerArray;
     idx: Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NumOfActors);
-    for idx := 1 to NumOfActors do
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors);
+    for idx := 0 to High(DSSPrime.Children) do
     begin
-        Result[idx - 1] := ActorPctProgress[idx];
+        Result[idx] := DSSPrime.Children[idx].ActorPctProgress;
     end;
 end;
 
@@ -119,13 +124,13 @@ var
     Result: PIntegerArray;
     idx: Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NumOfActors);
-    for idx := 1 to NumOfActors do
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors);
+    for idx := 0 to High(DSSPrime.Children) do
     begin
-        if ActorHandle[idx].Is_Busy then
-            Result[idx - 1] := 0
+        if DSSPrime.Children[idx].ActorThread.Is_Busy then
+            Result[idx] := Ord(TActorStatus.Busy)
         else
-            Result[idx - 1] := 1;
+            Result[idx] := Ord(TActorStatus.Idle);
     end;
 end;
 
@@ -138,7 +143,7 @@ end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ActiveParallel(): Integer; CDECL;
 begin
-    if Parallel_enabled then
+    if DSSPrime.Parallel_enabled then
         Result := 1
     else
         Result := 0;
@@ -146,12 +151,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
 begin
-    Parallel_enabled := (Value = 1);
+    DSSPrime.Parallel_enabled := (Value = 1); //TODO
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ConcatenateReports(): Integer; CDECL;
 begin
-    if ConcatenateReports then
+    if DSSPrime.ConcatenateReports then
         Result := 1
     else
         Result := 0;
@@ -159,7 +164,99 @@ end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
 begin
-    ConcatenateReports := (Value = 1);
+    DSSPrime.ConcatenateReports := (Value = 1);
 end;
 //------------------------------------------------------------------------------
+{$ELSE}
+function NotAvailable(): Integer;
+begin
+    DoSimpleMsg(DSSPrime, 'Parallel machine functions were not compiled', 7982);
+    Result := -1;
+end;
+
+function Parallel_Get_NumCPUs(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+function Parallel_Get_NumCores(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+function Parallel_Get_ActiveActor(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_CreateActor(); CDECL;
+begin
+    NotAvailable();
+end;
+
+function Parallel_Get_ActorCPU(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Set_ActorCPU(Value: Integer); CDECL;
+begin
+    NotAvailable();
+end;
+
+function Parallel_Get_NumOfActors(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Wait(); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_Get_ActorProgress_GR(); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_Get_ActorStatus_GR(); CDECL;
+begin
+    NotAvailable();
+end;
+
+function Parallel_Get_ActiveParallel(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
+begin
+    NotAvailable();
+end;
+
+function Parallel_Get_ConcatenateReports(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
+begin
+    NotAvailable();
+end;
+{$ENDIF}
 end.

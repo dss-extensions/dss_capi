@@ -69,27 +69,29 @@ uses
     ArrayDef,
     Utilities,
     Math,
-    MathUtil;
+    MathUtil,
+    DSSClass,
+    DSSHelper;
     
 type
     PDoubleArray = CAPI_Utils.PDoubleArray;
     PIntegerArray = OBJPAS.PIntegerArray;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TPDElement): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TPDElement): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         if ActiveCktElement = NIL then 
         begin
             if DSS_CAPI_EXT_ERRORS then
             begin
-                DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
+                DoSimpleMsg(DSSPrime, 'No active PD Element found! Activate one and retry.', 8989);
             end;
             Exit;
         end;
@@ -98,7 +100,7 @@ begin
         begin
             if DSS_CAPI_EXT_ERRORS then
             begin
-                DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
+                DoSimpleMsg(DSSPrime, 'No active PD Element found! Activate one and retry.', 8989);
             end;
             Exit;
         end;
@@ -111,10 +113,10 @@ end;
 function PDElements_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    Result := ActiveCircuit.PDElements.Count;
+    Result := DSSPrime.ActiveCircuit.PDElements.Count;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_FaultRate(): Double; CDECL;
@@ -122,7 +124,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.Faultrate;
 end;
@@ -130,17 +132,17 @@ end;
 function PDElements_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.PDElements);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.PDElements);
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.PDelements);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.PDelements);
     if Result <> 0 then Result := 1; //TODO: inconsistent with the rest
 end;
 //------------------------------------------------------------------------------
@@ -149,7 +151,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := FALSE;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.IsShunt;
 end;
@@ -159,7 +161,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.PctPerm;
 end;
@@ -168,7 +170,7 @@ procedure PDElements_Set_FaultRate(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     ActivePDElement.FaultRate := Value;
 end;
@@ -177,7 +179,7 @@ procedure PDElements_Set_pctPermanent(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     ActivePDElement.PctPerm := Value;
 end;
@@ -187,7 +189,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := NIL;   // return null if not a PD element
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := DSS_GetAsPAnsiChar(Format('%s.%s', [ActivePDElement.Parentclass.Name, ActivePDElement.Name]));  // full name
 end;
@@ -198,10 +200,10 @@ var
     ActivePDElement: TPDElement;
     TestString: String;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
         
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         TestString := Value;
         // Search through list of PD Elements until we find this one
@@ -224,7 +226,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.AccumulatedBrFltRate;
 end;
@@ -234,7 +236,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.BranchFltRate;
 end;
@@ -244,7 +246,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.BranchNumCustomers;
 end;
@@ -254,12 +256,12 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     if ActivePDElement.ParentPDElement <> NIL then    // leaves ActiveCktElement as is
     begin
-        ActiveCircuit.ActiveCktElement := ActivePDElement.ParentPDElement;
-        Result := ActiveCircuit.ActivecktElement.ClassIndex;
+        DSSPrime.ActiveCircuit.ActiveCktElement := ActivePDElement.ParentPDElement;
+        Result := DSSPrime.ActiveCircuit.ActivecktElement.ClassIndex;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -268,7 +270,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.HrsToRepair;
 end;
@@ -278,10 +280,10 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
         
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
         if ActiveCktElement is TPDElement then
         begin
             ActivePDElement := ActiveCktelement as TPDElement;
@@ -294,7 +296,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.FromTerminal;
 end;
@@ -305,7 +307,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.AccumulatedMilesDownStream;
 end;
@@ -315,7 +317,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     Result := ActivePDElement.BranchSectionID;
 end;
@@ -324,7 +326,7 @@ procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if not _activeObj(ActivePDElement) then
+    if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
     ActivePDElement.HrsToRepair := Value;
 end;
@@ -337,10 +339,10 @@ var
     pList: TDSSPointerList;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    pList := ActiveCircuit.PDElements;
+    pList := DSSPrime.ActiveCircuit.PDElements;
     if pList.Count <= 0 then
         Exit;
     
@@ -434,13 +436,13 @@ var
     RSignal: TXYCurveObj;
 begin
     cBuffer := NIL;
-    if (MissingSolution) or (ActiveCircuit.PDElements.Count <= 0) then 
+    if (MissingSolution(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount, -1.0);
         Exit;
     end;
 
-    pList := ActiveCircuit.PDElements;
+    pList := DSSPrime.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
     k := 0;
     pElem := pList.First;
@@ -463,23 +465,23 @@ begin
     0, 1, 2:
         try
             RatingIdx := -1;
-            if SeasonalRating then
+            if DSSPrime.SeasonalRating then
             begin
-                if SeasonSignal <> '' then
+                if DSSPrime.SeasonSignal <> '' then
                 begin
-                    RSignal := XYCurveClass.Find(SeasonSignal);
+                    RSignal := DSSPrime.XYCurveClass.Find(DSSPrime.SeasonSignal);
                     if RSignal <> NIL then
                     begin
-                        RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+                        RatingIdx := trunc(RSignal.GetYValue(DSSPrime.ActiveCircuit.Solution.DynaVars.intHour));
                     end
                     else
-                        SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+                        DSSPrime.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
                 end
                 else
-                    SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+                    DSSPrime.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
             end;
 
-            maxSize := GetMaxCktElementSize();
+            maxSize := GetMaxCktElementSize(DSSPrime);
             Getmem(cBuffer, sizeof(Complex) * maxSize);
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.Count); // real
             while pElem <> NIL do
@@ -551,12 +553,12 @@ var
     NValuesTotal, NValues, i: Integer;
     CResultPtr: PPolar;
 begin
-    if (InvalidCircuit) or (ActiveCircuit.PDElements.Count <= 0) then 
+    if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    pList := ActiveCircuit.PDElements;
+    pList := DSSPrime.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements
@@ -636,13 +638,13 @@ var
     i012v, i012: pComplex;
     maxSize, NTermsTotal, i, j, k: Integer;
 begin
-    if (MissingSolution) or (ActiveCircuit.PDElements.Count <= 0) then 
+    if (MissingSolution(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
-    pList := ActiveCircuit.PDElements;
+    pList := DSSPrime.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements, max. terminals, max. conductors
@@ -658,7 +660,7 @@ begin
     pElem := pList.First;
     i012v := AllocMem(SizeOf(Complex) * 3 * NTermsTotal);
     i012 := i012v; // this is a running pointer
-    maxSize := GetMaxCktElementSize();
+    maxSize := GetMaxCktElementSize(DSSPrime);
     cBuffer := AllocMem(SizeOf(Complex) * maxSize);
     while pElem <> NIL do
     begin
@@ -673,7 +675,7 @@ begin
             if NPhases <> 3 then
             begin
                 {Handle non-3 phase elements}
-                if (Nphases = 1) and ActiveCircuit.PositiveSequence then
+                if (Nphases = 1) and DSSPrime.ActiveCircuit.PositiveSequence then
                 begin
                     {Populate only phase 1 quantities in Pos seq}
                     Inc(i012);
@@ -765,12 +767,12 @@ var
     pElem: TPDElement;
     CResultPtr: PComplex;
 begin
-    if (InvalidCircuit) or (ActiveCircuit.PDElements.Count <= 0) then 
+    if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    pList := ActiveCircuit.PDElements;
+    pList := DSSPrime.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements
@@ -827,12 +829,12 @@ var
     IPh, I012: Complex3;
     S: Complex;
 begin
-    if (MissingSolution) or (ActiveCircuit.PDElements.Count <= 0) then 
+    if (MissingSolution(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    pList := ActiveCircuit.PDElements;
+    pList := DSSPrime.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements
@@ -859,7 +861,7 @@ begin
     iCount := 0;
     while pElem <> NIL do
     begin
-        with ActiveCircuit, pElem do
+        with DSSPrime.ActiveCircuit, pElem do
         begin
 //            if not pElem.Enabled then  
 //            begin
@@ -949,12 +951,12 @@ var
     pList: TDSSPointerList;
     pval: PAPISize;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount, -1);
         Exit;
     end;
-    pList := ActiveCircuit.PDElements;
+    pList := DSSPrime.ActiveCircuit.PDElements;
     if pList.Count <= 0 then
     begin
         DefaultResult(ResultPtr, ResultCount, -1);

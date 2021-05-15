@@ -1,4 +1,3 @@
-
 unit CAPI_Loads;
 
 interface
@@ -97,6 +96,8 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
+    DSSClass,
+    DSSHelper,
     Executive,
     Load,
     SysUtils,
@@ -153,7 +154,7 @@ begin
             {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
             LoadProps.yearly:
             begin
-                YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                YearlyShapeObj := DSSPrime.LoadShapeClass.Find(YearlyShape);
                 if Assigned(YearlyShapeObj) then
                     with YearlyShapeObj do
                         if UseActual then
@@ -161,7 +162,7 @@ begin
             end;
             LoadProps.daily:
             begin
-                DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                DailyShapeObj := DSSPrime.LoadShapeClass.Find(DailyShape);
                 if Assigned(DailyShapeObj) then
                     with DailyShapeObj do
                         if UseActual then
@@ -172,14 +173,14 @@ begin
             end;
             LoadProps.duty:
             begin
-                DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                DutyShapeObj := DSSPrime.LoadShapeClass.Find(DutyShape);
                 if Assigned(DutyShapeObj) then
                     with DutyShapeObj do
                         if UseActual then
                             SetkWkvar(MaxP, MaxQ);
             end;
             LoadProps.growth:
-                GrowthShapeObj := GrowthShapeClass.Find(GrowthShape);
+                GrowthShapeObj := DSSPrime.GrowthShapeClass.Find(GrowthShape);
 
             LoadProps.kvar:
             begin
@@ -191,24 +192,24 @@ begin
                 LoadSpecType := TLoadSpec.kVA_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
             LoadProps.CVRCurve:
-                CVRShapeObj := LoadShapeClass.Find(CVRshape);
+                CVRShapeObj := DSSPrime.LoadShapeClass.Find(CVRshape);
         end;
     end;
 end;
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TLoadObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TLoadObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := ActiveCircuit.Loads.Active;
+    obj := DSSPrime.ActiveCircuit.Loads.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Load object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Load object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -221,20 +222,20 @@ var
     cmd: String;
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
         
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('load.%s.%s=%s', [elem.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSPrime.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Loads, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Loads, False);
 end;
 
 procedure Loads_Get_AllNames_GR(); CDECL;
@@ -247,40 +248,40 @@ end;
 function Loads_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.Loads);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Loads);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.Loads);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Loads);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Loads.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.Loads.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_idx(Value: Integer); CDECL;
 var
     pLoad: TLoadObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pLoad := ActiveCircuit.Loads.Get(Value);
+    pLoad := DSSPrime.ActiveCircuit.Loads.Get(Value);
     if pLoad = NIL then
     begin
-        DoSimpleMsg('Invalid Load index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Load index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pLoad;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pLoad;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Name(): PAnsiChar; CDECL;
@@ -288,7 +289,7 @@ var
     pLoad: TLoadObj;
 begin
     Result := NIL;
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
         
     Result := DSS_GetAsPAnsiChar(pLoad.Name);
@@ -296,16 +297,16 @@ end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if LoadClass.SetActive(Value) then
+    if DSSPrime.LoadClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := LoadClass.ElementList.Active;
-        ActiveCircuit.Loads.Get(LoadClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.LoadClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Loads.Get(DSSPrime.LoadClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Load "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Load "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -314,7 +315,7 @@ var
     pLoad: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
                 
     Result := pLoad.kVLoadBase;
@@ -325,7 +326,7 @@ var
     pLoad: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
                 
     Result := pLoad.kvarBase;
@@ -336,7 +337,7 @@ var
     pLoad: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
                 
     Result := pLoad.kWBase;
@@ -347,7 +348,7 @@ var
     pLoad: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
                 
     Result := pLoad.PFNominal;
@@ -357,7 +358,7 @@ procedure Loads_Set_kV(Value: Double); CDECL;
 var
     pLoad: TLoadObj;
 begin
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
 
     pLoad.kVLoadBase := Value;
@@ -368,7 +369,7 @@ procedure Loads_Set_kvar(Value: Double); CDECL;
 var
     pLoad: TLoadObj;
 begin
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
 
     pLoad.kvarBase := Value;
@@ -380,7 +381,7 @@ procedure Loads_Set_kW(Value: Double); CDECL;
 var
     pLoad: TLoadObj;
 begin
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
 
     pLoad.kWBase := Value;
@@ -392,7 +393,7 @@ procedure Loads_Set_PF(Value: Double); CDECL;
 var
     pLoad: TLoadObj;
 begin
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
 
     pLoad.PFNominal := Value;
@@ -403,8 +404,8 @@ end;
 function Loads_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.Loads.Count;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.Loads.Count;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_AllocationFactor(): Double; CDECL;
@@ -412,7 +413,7 @@ var
     pLoad: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
 
     Result := pLoad.AllocationFactor;
@@ -423,7 +424,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.CFactor;
@@ -434,7 +435,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.LoadClass;
@@ -445,7 +446,7 @@ var
     elem: TLoadObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.CVRshape);
@@ -456,7 +457,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.CVRvars;
@@ -467,7 +468,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := elem.CVRwatts;
@@ -478,7 +479,7 @@ var
     elem: TLoadObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.DailyShape);
@@ -489,7 +490,7 @@ var
     elem: TLoadObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.DailyShape);
@@ -500,7 +501,7 @@ var
     elem: TLoadObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(elem.GrowthShape);
@@ -511,7 +512,7 @@ var
     elem: TLoadObj;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := (elem.Connection = TLoadConnection.Delta);
 end;
@@ -521,7 +522,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.kVABase;
 end;
@@ -531,7 +532,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.kWh;
 end;
@@ -541,7 +542,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.kWhDays;
 end;
@@ -551,7 +552,7 @@ var
     elem: TLoadObj;
 begin
     Result := dssLoadConstPQ;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     case elem.FLoadModel of
@@ -579,7 +580,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.NumCustomers;
 end;
@@ -589,7 +590,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.puMean * 100.0;
 end;
@@ -599,7 +600,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.puStdDev * 100.0;
 end;
@@ -609,7 +610,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Rneut;
 end;
@@ -619,7 +620,7 @@ var
     elem: TLoadObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Spectrum);
 end;
@@ -629,7 +630,7 @@ var
     elem: TLoadObj;
 begin
     Result := dssLoadVariable;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if elem.ExemptLoad then
@@ -643,7 +644,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MaxPU;
 end;
@@ -653,7 +654,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MinEmerg;
 end;
@@ -663,7 +664,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MinNormal;
 end;
@@ -673,7 +674,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MinPU;
 end;
@@ -683,7 +684,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.ConnectedkVA;
 end;
@@ -693,7 +694,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Xneut;
 end;
@@ -703,7 +704,7 @@ var
     elem: TLoadObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.YearlyShape);
 end;
@@ -743,7 +744,7 @@ procedure Loads_Set_daily(const Value: PAnsiChar); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     elem.DailyShape := Value;
@@ -754,7 +755,7 @@ procedure Loads_Set_duty(const Value: PAnsiChar); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     elem.DutyShape := Value;
@@ -765,7 +766,7 @@ procedure Loads_Set_Growth(const Value: PAnsiChar); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     elem.GrowthShape := Value;
@@ -776,7 +777,7 @@ procedure Loads_Set_IsDelta(Value: TAPIBoolean); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     if Value then
         elem.Connection := TLoadConnection.Delta
@@ -793,7 +794,7 @@ procedure Loads_Set_kwh(Value: Double); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Set_kWh(Value);
   //LoadPropSideEffects(LoadProps.kwh, elem);
@@ -808,13 +809,13 @@ procedure Loads_Set_Model(Value: Integer); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     if (Value >= Ord(Low(TLoadModel))) and (Value <= Ord(High(TLoadModel))) then
         elem.FLoadModel := TLoadModel(Value)
     else
-        DoSimpleMsg(Format('Invalid load model (%d).', [Value]), 5004);
+        DoSimpleMsg(DSSPrime, Format('Invalid load model (%d).', [Value]), 5004);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_NumCust(Value: Integer); CDECL;
@@ -888,7 +889,7 @@ procedure Loads_Set_Yearly(const Value: PAnsiChar); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.YearlyShape := Value;
     LoadPropSideEffects(LoadProps.yearly, elem);
@@ -898,7 +899,7 @@ procedure Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -919,11 +920,11 @@ var
 begin
     if ValueCount <> 7 then
     begin
-        DoSimpleMsg(Format('ZIPV requires 7 elements, %d were provided!', [ValueCount]), 5890);
+        DoSimpleMsg(DSSPrime, Format('ZIPV requires 7 elements, %d were provided!', [ValueCount]), 5890);
         Exit;
     end;
 
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
     elem.ZIPVset := True;
@@ -935,7 +936,7 @@ var
     elem: TLoadObj;
 begin
     Result := -1.0; // signify  bad request
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.puSeriesRL * 100.0;
 end;
@@ -944,7 +945,7 @@ procedure Loads_Set_pctSeriesRL(Value: Double); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.puSeriesRL := Value / 100.0;
 end;
@@ -954,7 +955,7 @@ var
     elem: TLoadObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.RelWeighting;
 end;
@@ -963,7 +964,7 @@ procedure Loads_Set_RelWeight(Value: Double); CDECL;
 var
     elem: TLoadObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.RelWeighting := Value;
 end;
@@ -973,7 +974,7 @@ var
     pLoad: TLoadObj;
 begin
     Result := 0;
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
     Result := pLoad.Nphases;
 end;
@@ -982,7 +983,7 @@ procedure Loads_Set_Phases(Value: Integer); CDECL;
 var
     pLoad: TLoadObj;
 begin
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
     
     if (Value <> pLoad.NPhases) then
@@ -997,7 +998,7 @@ var
     pLoad: TLoadObj;
 begin
     Result := NIL;
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
     Result := DSS_GetAsPAnsiChar(pLoad.GetBus(1));
 end;
@@ -1006,7 +1007,7 @@ procedure Loads_Set_Bus1(const Value: PAnsiChar); CDECL;
 var
     pLoad: TLoadObj;
 begin
-    if not _activeObj(pLoad) then
+    if not _activeObj(DSSPrime, pLoad) then
         Exit;
     pLoad.SetBus(1, Value);
     // LoadPropSideEffects(LoadProps.bus1, pLoad); -- Nothing

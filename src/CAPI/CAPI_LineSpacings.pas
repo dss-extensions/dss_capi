@@ -40,22 +40,24 @@ uses
     ParserDel,
     Ucomplex,
     Line,
-    UcMatrix;
+    UcMatrix,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TLineSpacingObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TLineSpacingObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := LineSpacingClass.GetActiveObj;
+    obj := DSSPrime.LineSpacingClass.GetActiveObj;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active LineSpacing object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active LineSpacing object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -66,25 +68,25 @@ end;
 function LineSpacings_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineSpacingClass.ElementCount;
+    Result := DSSPrime.LineSpacingClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineSpacingClass.First;
+    Result := DSSPrime.LineSpacingClass.First;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineSpacingClass.Next;
+    Result := DSSPrime.LineSpacingClass.Next;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Name(): PAnsiChar; CDECL;
@@ -92,7 +94,7 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := NIL;  // signify no name
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
         
     Result := DSS_GetAsPAnsiChar(pLineSpacing.Name);
@@ -100,11 +102,11 @@ end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if not LineSpacingClass.SetActive(Value) then
-        DoSimpleMsg('LineSpacing "' + Value + '" Not Found in Active Circuit.', 51008);
+    if not DSSPrime.LineSpacingClass.SetActive(Value) then
+        DoSimpleMsg(DSSPrime, 'LineSpacing "' + Value + '" Not Found in Active Circuit.', 51008);
 
     // Still same active object if not found
 end;
@@ -114,7 +116,7 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := 0;
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
         
     Result := pLineSpacing.NWires;
@@ -126,9 +128,9 @@ var
 begin
     if (Value < 1) then
     begin
-        DoSimpleMsg(Format('Invalid number of conductors (%d) sent via C-API. Please use a value within the valid range (>0).', [Value]), 183);
+        DoSimpleMsg(DSSPrime, Format('Invalid number of conductors (%d) sent via C-API. Please use a value within the valid range (>0).', [Value]), 183);
     end;
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
     pLineSpacing.DataChanged := TRUE;
     pLineSpacing.NWires := Value;
@@ -139,7 +141,7 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := 0;
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
         
     Result := pLineSpacing.NPhases;
@@ -149,7 +151,7 @@ procedure LineSpacings_Set_Phases(Value: Integer); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
         
     pLineSpacing.DataChanged := TRUE;
@@ -161,7 +163,7 @@ procedure LineSpacings_Set_Units(Value: Integer); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
 
     pLineSpacing.Units := Value;
@@ -173,7 +175,7 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := 0;
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
 
     Result := pLineSpacing.Units;
@@ -183,7 +185,7 @@ procedure LineSpacings_Set_Ycoords(ValuePtr: PDouble; ValueCount: TAPISize); CDE
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
 
     with pLineSpacing do
@@ -205,7 +207,7 @@ procedure LineSpacings_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISize
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -229,7 +231,7 @@ procedure LineSpacings_Set_Xcoords(ValuePtr: PDouble; ValueCount: TAPISize); CDE
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
 
     with pLineSpacing do
@@ -251,7 +253,7 @@ procedure LineSpacings_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PAPISize
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if not _activeObj(pLineSpacing) then
+    if not _activeObj(DSSPrime, pLineSpacing) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -274,9 +276,9 @@ end;
 procedure LineSpacings_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, LineSpacingClass.ElementList, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LineSpacingClass.ElementList, False);
 end;
 
 procedure LineSpacings_Get_AllNames_GR(); CDECL;
@@ -287,13 +289,13 @@ end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_idx(): Integer; CDECL;
 begin
-    Result := LineSpacingClass.ElementList.ActiveIndex
+    Result := DSSPrime.LineSpacingClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_idx(Value: Integer); CDECL;
 begin
-    if LineSpacingClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid LineSpacing index: "' + IntToStr(Value) + '".', 656565);
+    if DSSPrime.LineSpacingClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg(DSSPrime, 'Invalid LineSpacing index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

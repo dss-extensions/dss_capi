@@ -91,7 +91,7 @@ type
         function MakeLike(const OtherLoadName: String): Integer; OVERRIDE;
         procedure DefineProperties;  // Add Properties of this class to propName
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -283,9 +283,6 @@ type
         nZIPV = 7;
     end;
 
-var
-    ActiveLoadObj: TLoadObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -300,7 +297,10 @@ uses
     Command,
     Math,
     MathUtil,
-    Utilities;
+    Utilities,
+    TypInfo,
+    DSSHelper,
+    DSSObjectHelper;
 
 const
     NumPropsThisClass = 38;
@@ -309,9 +309,9 @@ var
     CDOUBLEONE: Complex;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLoad.Create;  // Creates superstructure FOR all Line objects
+constructor TLoad.Create(dssContext: TDSSContext);  // Creates superstructure FOR all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Load';
     DSSClassType := DSSClassType + LOAD_ELEMENT;
 
@@ -531,7 +531,7 @@ end;
 procedure TLoad.SetNcondsForConnection;
 
 begin
-    with ActiveLoadObj do
+    with DSS.ActiveLoadObj do
     begin
         case Connection of
             TLoadConnection.Wye:
@@ -558,7 +558,7 @@ var
     TestS: String;
 
 begin
-    with ActiveLoadObj do
+    with DSS.ActiveLoadObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -607,12 +607,12 @@ var
 
 begin
   // continue parsing WITH contents of Parser
-    ActiveLoadObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveLoadObj;
+    DSS.ActiveLoadObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveLoadObj;
 
     Result := 0;
 
-    with ActiveLoadObj do
+    with DSS.ActiveLoadObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -731,7 +731,7 @@ begin
 
             else
            // Inherited edits
-                ClassEdit(ActiveLoadObj, paramPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveLoadObj, paramPointer - NumPropsThisClass)
             end;
 
          // << SIDE EFFECTS >>
@@ -759,7 +759,7 @@ begin
     {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
                 7:
                 begin
-                    YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                    YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                     if Assigned(YearlyShapeObj) then
                         with YearlyShapeObj do
                             if UseActual then
@@ -771,7 +771,7 @@ begin
                 end;
                 8:
                 begin
-                    DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                    DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                     if Assigned(DailyShapeObj) then
                         with DailyShapeObj do
                             if UseActual then
@@ -782,14 +782,14 @@ begin
                 end;
                 9:
                 begin
-                    DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                    DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                     if Assigned(DutyShapeObj) then
                         with DutyShapeObj do
                             if UseActual then
                                 SetkWkvar(MaxP, MaxQ);
                 end;
                 10:
-                    GrowthShapeObj := GrowthShapeClass.Find(GrowthShape);
+                    GrowthShapeObj := DSS.GrowthShapeClass.Find(GrowthShape);
 
                 12:
                 begin
@@ -802,7 +802,7 @@ begin
                     LoadSpecType := TLoadSpec.kVA_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
                 31:
-                    CVRShapeObj := LoadShapeClass.Find(CVRshape);
+                    CVRShapeObj := DSS.LoadShapeClass.Find(CVRshape);
             end;
 
             ParamName := Parser.NextParam;
@@ -825,7 +825,7 @@ begin
    {See IF we can find this line name in the present collection}
     OtherLoad := Find(OtherLoadName);
     if OtherLoad <> NIL then
-        with ActiveLoadObj do
+        with DSS.ActiveLoadObj do
         begin
 
             Connection := OtherLoad.Connection;
@@ -1329,7 +1329,7 @@ begin
         if Length(CVRShape) > 0 then
             DoSimpleMsg('WARNING! CVR Shape shape: "' + CVRShape + '" Not Found.', 586);
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
         DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 587);
 
@@ -1532,7 +1532,7 @@ end;
 
 procedure TLoadObj.UpdateVoltageBases;
 begin
-    with ActiveLoadObj do
+    with DSS.ActiveLoadObj do
         case Connection of
             TLoadConnection.Delta:
                 VBase := kVLoadBase * 1000.0;
@@ -1724,7 +1724,7 @@ begin
     if not ZIPVset then
     begin
         DoSimpleMsg('ZIPV is not set. Aborting...', 1366);
-        SolutionAbort := True;
+        DSS.SolutionAbort := True;
         Exit;
     end;
 

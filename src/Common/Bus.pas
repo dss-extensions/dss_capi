@@ -62,7 +62,7 @@ type
         BusTotalMiles: Double;  // Total length of lines downstream from this bus for Duke siting algorithm
         BusSectionID: Integer; // ID of the feeder section this bus belongs to
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         procedure AllocateBusQuantities;
@@ -99,7 +99,7 @@ uses
     SysUtils,
     Circuit;
 
-constructor TDSSBus.Create;
+constructor TDSSBus.Create(dssContext: TDSSContext);
 begin
     inherited Create('Bus');
     Allocation := 4;

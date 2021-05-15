@@ -70,7 +70,7 @@ type
         procedure DefineProperties;
         function MakeLike(const ShapeName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -128,9 +128,6 @@ type
 
     end;
 
-var
-    ActivePriceShapeObj: TPriceShapeObj;
-
 implementation
 
 uses
@@ -141,15 +138,19 @@ uses
     MathUtil,
     Utilities,
     Math,
-    BufStream;
+    BufStream,
+    DSSPointerList,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 12;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TPriceShape.Create;  // Creates superstructure for all Line objects
+constructor TPriceShape.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'PriceShape';
     DSSClassType := DSS_OBJECT;
 
@@ -242,11 +243,8 @@ end;
 function TPriceShape.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TPriceShapeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TPriceShapeObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 
@@ -260,10 +258,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActivePriceShapeObj := ElementList.Active;
-    ActiveDSSObject := ActivePriceShapeObj;
+    DSS.ActivePriceShapeObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActivePriceShapeObj;
 
-    with ActivePriceShapeObj do
+    with DSS.ActivePriceShapeObj do
     begin
 
         ParamPointer := 0;
@@ -320,8 +318,8 @@ begin
                             SaveToSngFile;
                     end;
             else
-           // Inherited parameters
-                ClassEdit(ActivePriceShapeObj, ParamPointer - NumPropsThisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActivePriceShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -359,7 +357,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherPriceShape := Find(ShapeName);
     if OtherPriceShape <> NIL then
-        with ActivePriceShapeObj do
+        with DSS.ActivePriceShapeObj do
         begin
             NumPoints := OtherPriceShape.NumPoints;
             Interval := OtherPriceShape.Interval;
@@ -403,14 +401,14 @@ var
 
 begin
 
-    ActivePriceShapeObj := NIL;
+    DSS.ActivePriceShapeObj := NIL;
     PriceShapeObj := ElementList.First;
     while PriceShapeObj <> NIL do
     begin
 
         if CompareText(PriceShapeObj.Name, Value) = 0 then
         begin
-            ActivePriceShapeObj := PriceShapeObj;
+            DSS.ActivePriceShapeObj := PriceShapeObj;
             Exit;
         end;
 
@@ -440,7 +438,7 @@ begin
 
     try
 
-        with ActivePriceShapeObj do
+        with DSS.ActivePriceShapeObj do
         begin
             ReAllocmem(PriceValues, Sizeof(PriceValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -497,7 +495,7 @@ begin
     end;
 
     try
-        with ActivePriceShapeObj do
+        with DSS.ActivePriceShapeObj do
         begin
             ReAllocmem(PriceValues, Sizeof(PriceValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -544,7 +542,7 @@ begin
     end;
 
     try
-        with ActivePriceShapeObj do
+        with DSS.ActivePriceShapeObj do
         begin
             ReAllocmem(PriceValues, Sizeof(PriceValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -840,10 +838,10 @@ begin
     if Assigned(PriceValues) then
     begin
         try
-            FName := OutputDirectory {CurrentDSSDir} + Format('%s.dbl', [Name]);
+            FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s.dbl', [Name]);
             F := TFileStream.Create(FName, fmCreate);
             F.WriteBuffer(PriceValues^[1], NumPoints * SizeOf(Double));
-            GlobalResult := 'Price=[dblfile=' + FName + ']';
+            DSS.GlobalResult := 'Price=[dblfile=' + FName + ']';
         finally
             FreeAndNil(F);
         end;
@@ -865,14 +863,14 @@ begin
     if Assigned(PriceValues) then
     begin
         try
-            FName := OutputDirectory {CurrentDSSDir} + Format('%s.sng', [Name]);
+            FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s.sng', [Name]);
             F := TFileStream.Create(FName, fmCreate);
             for i := 1 to NumPoints do
             begin
                 sngPrice := PriceValues^[i];
                 F.Write(sngPrice, sizeof(sngPrice));
             end;
-            GlobalResult := 'Price=[sngfile=' + FName + ']';
+            DSS.GlobalResult := 'Price=[sngfile=' + FName + ']';
         finally
             FreeAndNil(F);
         end;

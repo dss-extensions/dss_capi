@@ -33,7 +33,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -117,9 +117,6 @@ type
 
     end;
 
-var
-    ActiveUPFCObj: TUPFCObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -134,7 +131,10 @@ uses
     Sysutils,
     Command,
     solution,
-    YMatrix;
+    YMatrix,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     propLossCurve = 11;
@@ -142,9 +142,9 @@ const
     NumUPFCVariables = 14;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TUPFC.Create;  // Creates superstructure for all Line objects
+constructor TUPFC.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'UPFC';
     DSSClassType := PC_ELEMENT + UPFC_ELEMENT;  // UPFC  is PC Element
 
@@ -243,16 +243,14 @@ var
     ParamPointer: Integer;
     ParamName,
     Param: String;
-//>>>   ZTemp        : Complex;
-
 begin
   // continue parsing with contents of Parser
-    ActiveUPFCObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveUPFCObj;
+    DSS.ActiveUPFCObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveUPFCObj;
 
     Result := 0;
 
-    with ActiveUPFCObj do
+    with DSS.ActiveUPFCObj do
     begin
 
         ParamPointer := 0;
@@ -308,12 +306,12 @@ begin
                     kvarLim := Parser.DblValue;
 
             else
-                ClassEdit(ActiveUPFCObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveUPFCObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
                 propLossCurve:
-                    UPFCLossCurveObj := XYCurveClass.Find(LossCurve);
+                    UPFCLossCurveObj := DSS.XYCurveClass.Find(LossCurve);
             end;
 
             ParamName := Parser.NextParam;
@@ -337,7 +335,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherUPFC := Find(OtherSource);
     if OtherUPFC <> NIL then
-        with ActiveUPFCObj do
+        with DSS.ActiveUPFCObj do
         begin
 
             if Fnphases <> OtherUPFC.Fnphases then
@@ -404,7 +402,7 @@ begin
     pf := 1.0;
     Xs := 0.7540; // Xfmr series inductace 2e-3 H
     Tol1 := 0.02;
-    Freq := 60.0;
+    Freq := Round(ActiveCircuit.Fundamental);
     enabled := TRUE;
     ModeUPFC := 1;
     VpqMax := 24.0;     // From the data provided
@@ -789,8 +787,8 @@ begin
         Result := CurrOut;
     except
         DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 end;
 //============================================================================
@@ -934,8 +932,8 @@ begin
         Result := CurrIn;
     except
         DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;

@@ -34,14 +34,11 @@ type
 {$SCOPEDENUMS OFF}
 
 
-procedure CreateControlPanel;
-procedure ExitControlPanel;
 procedure InitProgressForm;
 procedure ProgressCaption(const S: String);
 procedure ProgressFormCaption(const S: String);
 procedure ProgressHide;
-procedure ShowControlPanel;
-procedure ShowHelpForm;
+procedure ShowHelpForm(dssContext: TObject);
 procedure ShowAboutBox;
 procedure ShowPropEditForm;
 procedure ShowPctProgress(Count: Integer);
@@ -67,7 +64,8 @@ uses
     Sysutils,
     Strutils,
     ArrayDef,
-    CAPI_Globals;
+    DSSHelper,
+    DSSPointerList;
 
 const
     colwidth = 25;
@@ -76,8 +74,8 @@ const
 
 procedure WriteLnCB(s: String; mtype: DSSMessageType);
 begin
-    if (@DSSMessageCallback) <> NIL then
-        DSSMessageCallback(PChar(s), ord(mtype))
+    if (@DSSPrime.DSSMessageCallback) <> NIL then
+        DSSPrime.DSSMessageCallback(DSSPrime, PChar(s), ord(mtype))
     else
         WriteLn(s);
 end;
@@ -100,9 +98,9 @@ end;
 
 procedure ShowPctProgress(Count: Integer);
 begin
-    if (@DSSMessageCallback) <> NIL then
+    if (@DSSPrime.DSSMessageCallback) <> NIL then
     begin
-        DSSMessageCallback(PChar(IntToStr(Count)), ord(DSSMessageType.ProgressPercent));
+        DSSPrime.DSSMessageCallback(DSSPrime, PChar(IntToStr(Count)), ord(DSSMessageType.ProgressPercent));
         Exit;
     end;
 end;
@@ -112,9 +110,9 @@ begin
     if NoFormsAllowed then
         Exit;
     
-    if (@DSSMessageCallback) <> NIL then
+    if (@DSSPrime.DSSMessageCallback) <> NIL then
     begin
-        DSSMessageCallback(PChar(S), ord(DSSMessageType.ProgressCaption));
+        DSSPrime.DSSMessageCallback(DSSPrime, PChar(S), ord(DSSMessageType.ProgressCaption));
         Exit;
     end;
     Writeln('Progress: ', S);
@@ -125,9 +123,9 @@ begin
     if NoFormsAllowed then
         Exit;
 
-    if (@DSSMessageCallback) <> NIL then
+    if (@DSSPrime.DSSMessageCallback) <> NIL then
     begin
-        DSSMessageCallback(PChar(S), ord(DSSMessageType.ProgressFormCaption));
+        DSSPrime.DSSMessageCallback(DSSPrime, PChar(S), ord(DSSMessageType.ProgressFormCaption));
         Exit;
     end;
     Writeln('Progress: ', S);
@@ -170,20 +168,20 @@ begin
             // If this is an error message, We need to pass the message somehow. 
             // Decided to use the error interface here and, if early abort is on,
             // set the global Redirect_Abort.
-            DoSimpleMsg(Msg, 65535);
+            DoSimpleMsg(DSSPrime, Msg, 65535);
             if DSS_CAPI_EARLY_ABORT then
-                Redirect_Abort := True;
+                DSSPrime.Redirect_Abort := True;
         end;
 
         Exit;
     end;
 
-    if (@DSSMessageCallback) <> NIL then
+    if (@DSSPrime.DSSMessageCallback) <> NIL then
     begin
         if err then
-            DSSMessageCallback(PChar(Msg), ord(DSSMessageType.Error))
+            DSSPrime.DSSMessageCallback(DSSPrime, PChar(Msg), ord(DSSMessageType.Error))
         else
-            DSSMessageCallback(PChar(Msg), ord(DSSMessageType.General));
+            DSSPrime.DSSMessageCallback(DSSPrime, PChar(Msg), ord(DSSMessageType.General));
         
         Exit;
     end;
@@ -201,24 +199,12 @@ begin
     WriteLnCB(Msg, DSSMessageType.Info);
 end;
 
-procedure CreateControlPanel;
-begin
-end;
-
-procedure ExitControlPanel;
-begin
-end;
-
-procedure ShowControlPanel;
-begin
-end;
-
 function CompareClassNames(Item1, Item2: Pointer): Integer;
 begin
     Result := CompareText(TDSSClass(Item1).name, TDSSClass(Item2).name);
 end;
 
-procedure AddHelpForClasses(BaseClass: Word; bProperties: Boolean);
+procedure AddHelpForClasses(DSSClassList: TDSSPointerList; BaseClass: Word; bProperties: Boolean);
 var
     HelpList: TList;
     pDSSClass: TDSSClass;
@@ -234,15 +220,15 @@ begin
     end;
     HelpList.Sort(@CompareClassNames);
 
-    if (@DSSMessageCallback) <> NIL then
+    if (@DSSPrime.DSSMessageCallback) <> NIL then
     begin
         for i := 1 to HelpList.Count do
         begin
             pDSSClass := HelpList.Items[i - 1];
-            DSSMessageCallback(PChar(pDSSClass.name), ord(DSSMessageType.Help));
+            DSSPrime.DSSMessageCallback(DSSPrime, PChar(pDSSClass.name), ord(DSSMessageType.Help));
             if bProperties = TRUE then
                 for j := 1 to pDSSClass.NumProperties do
-                    DSSMessageCallback(PChar('  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.PropertyHelp^[j]), ord(DSSMessageType.Help));
+                    DSSPrime.DSSMessageCallback(DSSPrime, PChar('  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.PropertyHelp^[j]), ord(DSSMessageType.Help));
         end;
     end
     else
@@ -322,7 +308,7 @@ begin
     end;
 end;
 
-procedure ShowClassHelp(const opt: String);
+procedure ShowClassHelp(DSSClassList: TDSSPointerList; const opt: String);
 var
     pDSSClass: TDSSClass;
     i: Integer;
@@ -345,17 +331,17 @@ begin
     else
     begin
         WriteLnCB('== Power Delivery Elements ==', DSSMessageType.Help);
-        AddHelpForClasses(PD_ELEMENT, FALSE);
+        AddHelpForClasses(DSSClassList, PD_ELEMENT, FALSE);
         WriteLnCB('== Power Conversion Elements ==', DSSMessageType.Help);
-        AddHelpForClasses(PC_ELEMENT, FALSE);
+        AddHelpForClasses(DSSClassList, PC_ELEMENT, FALSE);
         WriteLnCB('== Control Elements ==', DSSMessageType.Help);
-        AddHelpForClasses(CTRL_ELEMENT, FALSE);
+        AddHelpForClasses(DSSClassList, CTRL_ELEMENT, FALSE);
         WriteLnCB('== Metering Elements ==', DSSMessageType.Help);
-        AddHelpForClasses(METER_ELEMENT, FALSE);
+        AddHelpForClasses(DSSClassList, METER_ELEMENT, FALSE);
         WriteLnCB('== Supporting Elements ==', DSSMessageType.Help);
-        AddHelpForClasses(0, FALSE);
+        AddHelpForClasses(DSSClassList, 0, FALSE);
         WriteLnCB('== Other Elements ==', DSSMessageType.Help);
-        AddHelpForClasses(NON_PCPD_ELEM, FALSE);
+        AddHelpForClasses(DSSClassList, NON_PCPD_ELEM, FALSE);
     end;
 end;
 
@@ -504,18 +490,20 @@ begin
 end;
 {$ENDIF}
 
-procedure ShowHelpForm;
+procedure ShowHelpForm(dssContext: TObject);
 var
     Param, OptName: String;
+    DSS: TDSSContext;
 begin
-    Parser.NextParam;
-    Param := LowerCase(Parser.StrValue);
-    Parser.NextParam;
-    OptName := LowerCase(Parser.StrValue);
+    DSS := TDSSContext(dssContext);
+    DSSPrime.Parser.NextParam;
+    Param := LowerCase(DSSPrime.Parser.StrValue);
+    DSSPrime.Parser.NextParam;
+    OptName := LowerCase(DSSPrime.Parser.StrValue);
     
 {$IFDEF EXPORT_HELP}
     if ANSIStartsStr('markdown', param) then
-        ShowAllHelpMD()
+        ShowAllHelpMD(TODO)
     else
 {$ENDIF}
     if ANSIStartsStr('com', param) then
@@ -531,7 +519,7 @@ begin
         ShowAnyHelp(NumExportOptions, pStringArray(@ExportOption), pStringArray(@ExportHelp), OptName)
     else
     if ANSIStartsStr('cl', param) then
-        ShowClassHelp(OptName)
+        ShowClassHelp(DSSPrime.DSSClassList, OptName)
     else
         ShowGeneralHelp;
 end;
@@ -545,6 +533,7 @@ end;
 
 procedure ShowPropEditForm;
 begin
+    // DoSimpleMsg(DSSPrime, 'Not implemented', 999);
 end;
 
 procedure CloseDownForms;

@@ -28,7 +28,8 @@ uses
     Arraydef,
     Generator,
     Capacitor,
-    Classes;
+    Classes,
+    DSSClass;
 
 type
     TAutoAdd = class(TObject)
@@ -75,8 +76,10 @@ type
         AddType: Integer;
 
         ModeChanged: Boolean;
+        
+        DSS: TDSSContext;
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         procedure MakeBusList;
@@ -105,7 +108,8 @@ uses
 {$ELSE}
     DSSForms,
 {$ENDIF}
-      {ProgressForm, Forms,} Solution;
+    {ProgressForm, Forms,} Solution,
+    DSSHelper;
 
 function SumSelectedRegisters(Mtr: TEnergyMeterObj; Regs: pIntegerArray; count: Integer): Double;
 var
@@ -120,12 +124,13 @@ begin
 end;
 
 
-constructor TAutoAdd.Create;
+constructor TAutoAdd.Create(dssContext: TDSSContext);
 begin
+    DSS := dssContext;
 
     BusIdxListCreated := FALSE;
-    GeneratorClass := DSSClassList.Get(ClassNames.Find('generator'));
-    CapacitorClass := DSSClassList.Get(ClassNames.Find('capacitor'));
+    GeneratorClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('generator'));
+    CapacitorClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('capacitor'));
 
          // AutoAdd defaults
     GenkW := 1000.0;
@@ -171,15 +176,15 @@ begin
     BusIdxListCreated := FALSE;
 
     // Autoaddbuslist exists in Active Circuit, use it  (see set Autobuslist=)
-    if ActiveCircuit.AutoAddBusList.Count > 0 then
-        FBusList := ActiveCircuit.AutoAddBusList
+    if DSS.ActiveCircuit.AutoAddBusList.Count > 0 then
+        FBusList := DSS.ActiveCircuit.AutoAddBusList
     else
 
-    if ActiveCircuit.EnergyMeters.Count = 0 then
+    if DSS.ActiveCircuit.EnergyMeters.Count = 0 then
     begin
         // No energymeters in circuit
         // Include all buses in the circuit
-        BusIdxListSize := ActiveCircuit.BusList.Count;
+        BusIdxListSize := DSS.ActiveCircuit.BusList.Count;
         BusIdxList := AllocMem(Sizeof(BusIdxList^[1]) * BusIdxListSize);
 
         for i := 1 to BusIdxListSize do
@@ -196,8 +201,8 @@ begin
          // Include only buses in EnergyMeter lists
              // Consider all meters
         FBusListCreatedHere := TRUE;
-        FBusList := TBusHashListType.Create(ActiveCircuit.NumBuses);
-        pMeter := ActiveCircuit.EnergyMeters.First;
+        FBusList := TBusHashListType.Create(DSS.ActiveCircuit.NumBuses);
+        pMeter := DSS.ActiveCircuit.EnergyMeters.First;
         while pMeter <> NIL do
         begin
 
@@ -218,7 +223,7 @@ begin
                     PDElem := pMeter.BranchList.GoForward;
                 end;
             end;
-            pMeter := ActiveCircuit.EnergyMeters.Next;
+            pMeter := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
     end;
 
@@ -228,7 +233,7 @@ begin
 
     for i := 1 to BusIdxListSize do
     begin
-        BusIdxList^[i] := ActiveCircuit.BusList.Find(FBusList.NameOfIndex(i));
+        BusIdxList^[i] := DSS.ActiveCircuit.BusList.Find(FBusList.NameOfIndex(i));
     end;
 
     if FBusListCreatedHere then
@@ -251,7 +256,7 @@ begin
 
     ComputekWLosses_EEN;
 
-    if ActiveCircuit.EnergyMeters.Count = 0 then
+    if DSS.ActiveCircuit.EnergyMeters.Count = 0 then
     begin
         // No energymeters in circuit
         // Just go by total system losses
@@ -260,7 +265,7 @@ begin
         Result := puLossImprovement;
     end
     else
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             puLossImprovement := (BaseLosses - kWLosses) / GenkW;
             puEENImprovement := (BaseEEN - kWEEN) / GenkW;
@@ -277,7 +282,7 @@ var
 begin
     F := nil;
     try
-        FName := GetOutputDirectory + CircuitName_ + 'AutoAdded' + WhichFile + '.txt';
+        FName := DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAdded' + WhichFile + '.txt';
         if FileExists(FName) then
         begin
             F := TFileStream.Create(Fname, fmOpenReadWrite);
@@ -289,7 +294,7 @@ begin
         FSWriteLn(F, S);
     except
         On E: EXCEPTion do
-            DoSimpleMsg('Error TRYing to append to ' + Fname + CRLF +
+            DoSimpleMsg(DSS, 'Error TRYing to append to ' + Fname + CRLF +
                 E.Message, 438);
     end;
     if F <> nil then
@@ -388,8 +393,7 @@ begin
 }
     Result := 0;
     try
-    begin
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
 
 
@@ -401,14 +405,14 @@ begin
 
         {Do a preliminary snapshot solution to Force definition of meter zones
          And set bus lists}
-            EnergyMeterClass.ResetAll;
-            if SystemYChanged or ActiveCircuit.BusNameRedefined then
+            DSS.EnergyMeterClass.ResetAll;
+            if SystemYChanged or DSS.ActiveCircuit.BusNameRedefined then
             begin
                 SolveSnap;
                 ModeChanged := TRUE;
             end;
 
-            EnergyMeterClass.SampleAll;
+            DSS.EnergyMeterClass.SampleAll;
 
         { Check to see if bus base voltages have been defined }
             if Buses^[NumBuses].kVBase = 0.0 then
@@ -424,7 +428,7 @@ begin
 
         {Start up Log File}
 
-            FLog := TFileStream.Create(GetOutputDirectory + CircuitName_ + 'AutoAddLog.CSV', fmCreate);
+            FLog := TFileStream.Create(DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAddLog.CSV', fmCreate);
             FSWriteLn(FLog, '"Bus", "Base kV", "kW Losses", "% Improvement", "kW UE", "% Improvement", "Weighted Total", "Iterations"');
 
 
@@ -441,7 +445,7 @@ begin
 
                 GENADD:
                 begin
-                    if ActiveCircuit.PositiveSequence then
+                    if DSS.ActiveCircuit.PositiveSequence then
                         TestGenkW := GenkW / 3.0
                     else
                         TestGenkW := GenkW;
@@ -490,7 +494,7 @@ begin
                                 ShowPctProgress(Round((100 * ProgressCount) / ProgressMax));
                             end;
 
-                            EnergyMeterClass.ResetAll;
+                            DSS.EnergyMeterClass.ResetAll;
 
                              {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
 
@@ -513,7 +517,7 @@ begin
                                   {Only do this if solution converged ELSE something might break
                                    in meter sampling}
 
-                                EnergyMeterClass.SampleAll;
+                                DSS.EnergyMeterClass.SampleAll;
 
                                 LossImproveFactor := WeightedLosses;
 
@@ -531,7 +535,7 @@ begin
 
                             end;
                         end;
-                        if SolutionAbort then
+                        if DSS.SolutionAbort then
                             Break;
                     end;
 
@@ -540,7 +544,7 @@ begin
                     UseAuxCurrents := FALSE;
 
                     if MinLossBus > 0 then
-                        with DSSExecutive do
+                        with DSS.DSSExecutive do
                         begin
 
                             if MinBusPhases >= 3 then
@@ -564,7 +568,7 @@ begin
                         end;
                        // Return location of added generator so that it can
                        // be picked up through the result string of the COM interface
-                    GlobalResult := BusList.NameOfIndex(MinLossBus) +
+                    DSS.GlobalResult := BusList.NameOfIndex(MinLossBus) +
                         Format(', %-g', [MaxLossImproveFactor]);
 
                     ProgressHide;
@@ -581,7 +585,7 @@ begin
                     MaxLossImproveFactor := -1.0e50;  // Some very large number
                     MinBusPhases := 3;
 
-                    if ActiveCircuit.PositiveSequence then
+                    if DSS.ActiveCircuit.PositiveSequence then
                         TestCapkvar := Capkvar / 3.0
                     else
                         TestCapkvar := Capkvar;
@@ -603,7 +607,7 @@ begin
                             ProgressFormCaption('Testing bus ' + TestBus);
                             ShowPctProgress(Round((100 * ProgressCount) / ProgressMax));
 
-                            EnergyMeterClass.ResetAll;
+                            DSS.EnergyMeterClass.ResetAll;
 
                            {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
 
@@ -630,7 +634,7 @@ begin
                                   {Only do this if solution converged ELSE something might break
                                    in meter sampling}
 
-                                EnergyMeterClass.SampleAll;
+                                DSS.EnergyMeterClass.SampleAll;
 
                                 LossImproveFactor := WeightedLosses;
 
@@ -647,7 +651,7 @@ begin
                                 end;
                             end;
                         end;
-                        if SolutionAbort then
+                        if DSS.SolutionAbort then
                             Break;
                     end;
 
@@ -657,7 +661,7 @@ begin
                     UseAuxCurrents := FALSE;
 
                     if MinLossBus > 0 then
-                        with DSSExecutive do
+                        with DSS.DSSExecutive do
                         begin
 
                             if MinBusPhases >= 3 then
@@ -681,7 +685,7 @@ begin
                         end;
                        // Return location of added generator so that it can
                        // be picked up through the result string of the COM interface
-                    GlobalResult := BusList.NameOfIndex(MinLossBus);
+                    DSS.GlobalResult := BusList.NameOfIndex(MinLossBus);
 
                        // note that the command that added the generator can be
                        // picked up from the Command property of the COM interface.
@@ -689,7 +693,6 @@ begin
                 end;
             end;
         end;
-    end
     finally
         FreeAndNil(FLog);
     end;
@@ -712,7 +715,7 @@ begin
     case AddType of
 
         GENADD:
-            with ActiveCircuit, ActiveCircuit.Solution do
+            with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
             begin
            {For buses with voltage <> 0, add into aux current array}
                 for i := 1 to Phases do
@@ -734,7 +737,7 @@ begin
             end;
 
         CAPADD:
-            with ActiveCircuit, ActiveCircuit.Solution do
+            with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
             begin
 
            {For buses with voltage <> 0, add into aux current array}
@@ -766,12 +769,12 @@ var
 
 begin
 
-    if ActiveCircuit.EnergyMeters.Count = 0 then
+    if DSS.ActiveCircuit.EnergyMeters.Count = 0 then
     begin
 
         // No energymeters in circuit
         // Just go by total system losses
-        kWLosses := ActiveCircuit.Losses.re * 0.001;
+        kWLosses := DSS.ActiveCircuit.Losses.re * 0.001;
         kWEEN := 0.0;
 
     end
@@ -780,17 +783,17 @@ begin
         kWLosses := 0.0;
         kWEEN := 0.0;
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
 
-            pMeter := ActiveCircuit.Energymeters.First;
+            pMeter := DSS.ActiveCircuit.Energymeters.First;
             while pMeter <> NIL do
             begin
 
                 kWLosses := kWLosses + SumSelectedRegisters(pMeter, LossRegs, NumLossRegs);
                 kWEEN := kWEEN + SumSelectedRegisters(pMeter, UEregs, NumUEregs);
 
-                pMeter := ActiveCircuit.EnergyMeters.Next;
+                pMeter := DSS.ActiveCircuit.EnergyMeters.Next;
             end;
         end;
     end;

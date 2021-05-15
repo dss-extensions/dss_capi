@@ -47,22 +47,24 @@ uses
     DSSGlobals,
     Generator,
     CktElement,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TGeneratorObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TGeneratorObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := ActiveCircuit.Generators.Active;
+    obj := DSSPrime.ActiveCircuit.Generators.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Generator object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Generator object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -73,9 +75,9 @@ end;
 procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Generators, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Generators, False);
 end;
 
 procedure Generators_Get_AllNames_GR(); CDECL;
@@ -88,17 +90,17 @@ end;
 function Generators_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.Generators);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Generators);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.Generators);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Generators);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Name(): PAnsiChar; CDECL;
@@ -106,7 +108,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := NIL;
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(pGen.Name);
@@ -118,7 +120,7 @@ var
     GeneratorCls: TGenerator;
     k: Integer;
 begin
-    GeneratorCls := GeneratorClass;
+    GeneratorCls := DSSPrime.GeneratorClass;
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumGenRegisters);
     for k := 0 to NumGenRegisters - 1 do
     begin
@@ -139,7 +141,7 @@ var
     Gen: TGeneratorObj;
     k: Integer;
 begin
-    if not _activeObj(Gen) then
+    if not _activeObj(DSSPrime, Gen) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -164,7 +166,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := FALSE;
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     Result := pGen.ForcedON;
@@ -174,7 +176,7 @@ procedure Generators_Set_ForcedON(Value: TAPIBoolean); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     pGen.ForcedON := Value;
@@ -182,16 +184,16 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if GeneratorClass.SetActive(Value) then
+    if DSSPrime.GeneratorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := GeneratorClass.ElementList.Active;
-        ActiveCircuit.Generators.Get(GeneratorClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.GeneratorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Generators.Get(DSSPrime.GeneratorClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Generator "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Generator "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -200,7 +202,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := -1.0;  // not set
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     Result := pGen.GenVars.kVGeneratorBase;
@@ -211,7 +213,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := 0.0;
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     Result := pGen.Presentkvar;
@@ -222,7 +224,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := 0.0;
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     Result := pGen.PresentkW;
@@ -233,7 +235,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := 0.0;
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     Result := pGen.PowerFactor;
@@ -244,7 +246,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := 0;  // not set
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     Result := pGen.nphases;
@@ -254,7 +256,7 @@ procedure Generators_Set_kV(Value: Double); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     pGen.PresentkV := Value;
@@ -264,7 +266,7 @@ procedure Generators_Set_kvar(Value: Double); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     pGen.Presentkvar := Value;
@@ -274,7 +276,7 @@ procedure Generators_Set_kW(Value: Double); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     pGen.PresentkW := Value;
@@ -284,7 +286,7 @@ procedure Generators_Set_PF(Value: Double); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     pGen.PowerFactor := Value;
@@ -294,7 +296,7 @@ procedure Generators_Set_Phases(Value: Integer); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     pGen.Nphases := Value;
@@ -303,32 +305,32 @@ end;
 function Generators_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Generators.Count;
+    Result := DSSPrime.ActiveCircuit.Generators.Count;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Generators.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.Generators.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_idx(Value: Integer); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pGen := ActiveCircuit.Generators.Get(Value);
+    pGen := DSSPrime.ActiveCircuit.Generators.Get(Value);
     if pGen = NIL then
     begin
-        DoSimpleMsg('Invalid Generator index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Generator index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pGen;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pGen;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Model(): Integer; CDECL;
@@ -336,7 +338,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := -1;
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
     
     Result := pGen.GenModel;
@@ -346,7 +348,7 @@ procedure Generators_Set_Model(Value: Integer); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     with pGen do
@@ -354,7 +356,7 @@ begin
         GenModel := Value;
          // Handle side effect
         if GenModel = 3 then
-            ActiveCircuit.Solution.SolutionInitialized := FALSE;
+            DSSPrime.ActiveCircuit.Solution.SolutionInitialized := FALSE;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -363,7 +365,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := -1.0;
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     Result := pGen.Genvars.kVArating;
@@ -373,7 +375,7 @@ procedure Generators_Set_kVArated(Value: Double); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     pGen.Genvars.kVArating := Value;
@@ -384,7 +386,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := -1.0;
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
     
     Result := pGen.Vmaxpu;
@@ -395,7 +397,7 @@ var
     pGen: TGeneratorObj;
 begin
     Result := -1.0;
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     Result := pGen.Vminpu;
@@ -405,7 +407,7 @@ procedure Generators_Set_Vmaxpu(Value: Double); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     pGen.VMaxPu := Value;
@@ -415,7 +417,7 @@ procedure Generators_Set_Vminpu(Value: Double); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if not _activeObj(pGen) then
+    if not _activeObj(DSSPrime, pGen) then
         Exit;
 
     pGen.VMinPu := Value;

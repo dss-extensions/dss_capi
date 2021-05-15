@@ -12,34 +12,37 @@ unit ShowResults;
 
 interface
 
-procedure ShowVoltages(FileNm: String; LL: Boolean; ShowOptionCode: Integer);
-procedure ShowCurrents(FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
-procedure ShowPowers(FileNm: String; opt, ShowOptionCode: Integer);
-procedure ShowBusPowers(FileNm, BusName: String; opt, ShowOptionCode: Integer);
-procedure ShowFaultStudy(FileNm: String);
-procedure ShowElements(FileNm: String; ClassName: String);
-procedure ShowBuses(FileNm: String);
-procedure ShowMeters(FileNm: String);
-procedure ShowGenMeters(FileNm: String);
-procedure ShowMeterZone(FileNm: String);
-procedure ShowLosses(FileNm: String);
-procedure ShowRegulatorTaps(FileNm: String);
-procedure ShowOverloads(FileNm: String);
-procedure ShowUnserved(FileNm: String; UE_Only: Boolean);
-procedure ShowVariables(FileNm: String);
-procedure ShowIsolated(FileNm: String);
-procedure ShowRatings(FileNm: String);
-procedure ShowLoops(FileNm: String);
-procedure ShowLineConstants(FileNm: String; Freq: Double; Units: Integer; Rho: Double);
-procedure ShowYPrim(Filenm: String);
-procedure ShowY(FileNm: String);
-procedure ShowTopology(FileRoot: String); // summary and tree-view to separate files
-procedure ShowNodeCurrentSum(FileNm: String);
-procedure ShowkVBaseMismatch(FileNm: String);
-procedure ShowDeltaV(FileNm: String);
-procedure ShowControlledElements(FileNm: String);
-procedure ShowResult(FileNm: String);
-procedure ShowEventLog(FileNm: String);
+uses 
+    DSSClass;
+
+procedure ShowVoltages(DSS: TDSSContext; FileNm: String; LL: Boolean; ShowOptionCode: Integer);
+procedure ShowCurrents(DSS: TDSSContext; FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
+procedure ShowPowers(DSS: TDSSContext; FileNm: String; opt, ShowOptionCode: Integer);
+procedure ShowBusPowers(DSS: TDSSContext; FileNm, BusName: String; opt, ShowOptionCode: Integer);
+procedure ShowFaultStudy(DSS: TDSSContext; FileNm: String);
+procedure ShowElements(DSS: TDSSContext; FileNm: String; ClassName: String);
+procedure ShowBuses(DSS: TDSSContext; FileNm: String);
+procedure ShowMeters(DSS: TDSSContext; FileNm: String);
+procedure ShowGenMeters(DSS: TDSSContext; FileNm: String);
+procedure ShowMeterZone(DSS: TDSSContext; FileNm: String);
+procedure ShowLosses(DSS: TDSSContext; FileNm: String);
+procedure ShowRegulatorTaps(DSS: TDSSContext; FileNm: String);
+procedure ShowOverloads(DSS: TDSSContext; FileNm: String);
+procedure ShowUnserved(DSS: TDSSContext; FileNm: String; UE_Only: Boolean);
+procedure ShowVariables(DSS: TDSSContext; FileNm: String);
+procedure ShowIsolated(DSS: TDSSContext; FileNm: String);
+procedure ShowRatings(DSS: TDSSContext; FileNm: String);
+procedure ShowLoops(DSS: TDSSContext; FileNm: String);
+procedure ShowLineConstants(DSS: TDSSContext; FileNm: String; Freq: Double; Units: Integer; Rho: Double);
+procedure ShowYPrim(DSS: TDSSContext; FileNm: String);
+procedure ShowY(DSS: TDSSContext; FileNm: String);
+procedure ShowTopology(DSS: TDSSContext; FileRoot: String); // summary and tree-view to separate files
+procedure ShowNodeCurrentSum(DSS: TDSSContext; FileNm: String);
+procedure ShowkVBaseMismatch(DSS: TDSSContext; FileNm: String);
+procedure ShowDeltaV(DSS: TDSSContext; FileNm: String);
+procedure ShowControlledElements(DSS: TDSSContext; FileNm: String);
+procedure ShowResult(DSS: TDSSContext; FileNm: String);
+procedure ShowEventLog(DSS: TDSSContext; FileNm: String);
 
 implementation
 
@@ -49,7 +52,6 @@ uses
     Arraydef,
     sysutils,
     Circuit,
-    DSSClass,
     DSSClassDefs,
     DSSGlobals,
     uCMatrix,
@@ -78,7 +80,8 @@ uses
     LineGeometry,
     YMatrix,
     SwtControl,
-    KLUSolve;
+    KLUSolve,
+    DSSHelper;
 
 var
     MaxBusNameLength: Integer;
@@ -87,23 +90,23 @@ var
 const
     TABCHAR: Char = chr(9);
 
-procedure SetMaxBusNameLength;
+procedure SetMaxBusNameLength(DSS: TDSSContext);
 var
     i: Integer;
 begin
     MaxBusNameLength := 4;
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         for i := 1 to NumBuses do
             MaxBusNameLength := Max(MaxBusNameLength, Length(BusList.NameOfIndex(i)));
 end;
 
-procedure SetMaxDeviceNameLength;
+procedure SetMaxDeviceNameLength(DSS: TDSSContext);
 var
     i: Integer;
     element: TDSSCktElement;
 begin
     MaxDeviceNameLength := 0;
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         for i := 1 to NumDevices do
         begin
             element := TDSSCktElement(CktElements.At(i));
@@ -111,7 +114,7 @@ begin
         end;
 end;
 
-procedure WriteSeqVoltages(F: TFileStream; i: Integer; LL: Boolean);
+procedure WriteSeqVoltages(DSS: TDSSContext; F: TFileStream; i: Integer; LL: Boolean);
 
 var
     j, k: Integer;
@@ -122,7 +125,7 @@ var
 
 begin
 
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
 
         if Buses^[i].NumNodesThisBus >= 3 then
@@ -156,7 +159,7 @@ begin
 
         else
         begin
-            Vph[1] := ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(1)];
+            Vph[1] := DSS.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(1)];
             V0 := 0.0;
             V1 := Cabs(Vph[1]);     // Use first phase value for non-three phase buses
             V2 := 0.0;
@@ -192,7 +195,7 @@ begin
 
 end;
 
-procedure WriteBusVoltages(F: TFileStream; i: Integer; LL: Boolean);
+procedure WriteBusVoltages(DSS: TDSSContext; F: TFileStream; i: Integer; LL: Boolean);
 
 // 6/11/14 Modified to write both LL and LN voltages out for LN case
 
@@ -206,7 +209,7 @@ var
     jj, kk: Integer;
 
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         jj := 1;
         with Buses^[i] do
@@ -220,7 +223,7 @@ begin
                 until NodeIdx > 0;
 
                 nref1 := GetRef(NodeIdx);   // Get the overall node reference number
-                Volts := ActiveCircuit.Solution.NodeV^[nref1];
+                Volts := DSS.ActiveCircuit.Solution.NodeV^[nref1];
 
                 kk := 1; // keep compiler from complaining
                 if {LL and} (jj <= 4) then
@@ -234,7 +237,7 @@ begin
                     if kk <= NumNodesThisBus then
                     begin
                         nref2 := Buses^[i].GetRef(kk); // reference for next phase in sequence
-                        VoltsLL := Csub(Volts, ActiveCircuit.Solution.NodeV^[nref2]);
+                        VoltsLL := Csub(Volts, DSS.ActiveCircuit.Solution.NodeV^[nref2]);
                     end;
                 end;
 
@@ -282,7 +285,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElementVoltages(F: TFileStream; pElem: TDSSCktElement; LL: Boolean);
+procedure WriteElementVoltages(DSS: TDSSContext; F: TFileStream; pElem: TDSSCktElement; LL: Boolean);
 var
     NCond, Nterm, i, j, k, nref, bref: Integer;
     Busname: String;
@@ -301,9 +304,9 @@ begin
         begin
             Inc(k);
             nref := pElem.NodeRef^[k];
-            Volts := ActiveCircuit.Solution.NodeV^[nref];
+            Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
             Vmag := Cabs(Volts) * 0.001;
-            with ActiveCircuit do
+            with DSS.ActiveCircuit do
             begin
                 if nref = 0 then
                     Vpu := 0.0
@@ -328,7 +331,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElementDeltaVoltages(F: TFileStream; pElem: TDSSCktElement);
+procedure WriteElementDeltaVoltages(DSS: TDSSContext; F: TFileStream; pElem: TDSSCktElement);
 var
     NCond,
     Node1, Node2,
@@ -348,19 +351,19 @@ begin
         Node1 := pElem.NodeRef^[i];
         Node2 := pElem.NodeRef^[i + Ncond];
         if Node1 > 0 then
-            Bus1 := ActiveCircuit.MapNodeToBus^[Node1].BusRef
+            Bus1 := DSS.ActiveCircuit.MapNodeToBus^[Node1].BusRef
         else
             Bus1 := 0;
         if Node2 > 0 then
-            Bus2 := ActiveCircuit.MapNodeToBus^[Node2].BusRef
+            Bus2 := DSS.ActiveCircuit.MapNodeToBus^[Node2].BusRef
         else
             Bus2 := 0;
         if (Bus1 > 0) and (Bus2 > 0) then
         begin
-            Volts1 := ActiveCircuit.Solution.NodeV^[Node1];   // OK if Node1 or Node2 = 0
-            Volts2 := ActiveCircuit.Solution.NodeV^[Node2];
+            Volts1 := DSS.ActiveCircuit.Solution.NodeV^[Node1];   // OK if Node1 or Node2 = 0
+            Volts2 := DSS.ActiveCircuit.Solution.NodeV^[Node2];
             Volts1 := Csub(Volts1, Volts2);   // diff voltage
-            with ActiveCircuit do
+            with DSS.ActiveCircuit do
             begin
                 if Buses^[Bus1].kVBase <> Buses^[Bus2].kVBase then
                     Vmag := 0.0
@@ -379,7 +382,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowVoltages(FileNm: String; LL: Boolean; ShowOptionCode: Integer);
+procedure ShowVoltages(DSS: TDSSContext; FileNm: String; LL: Boolean; ShowOptionCode: Integer);
 
 // Show bus voltages by circuit element terminal
 
@@ -391,7 +394,7 @@ var
 begin
 
     try
-        SetMaxBusNameLength;
+        SetMaxBusNameLength(DSS);
 
         F := TFileStream.Create(FileNm, fmCreate);
 
@@ -406,8 +409,8 @@ begin
                 FSWriteln(F);
                 FSWriteln(F, pad('Bus', MaxBusNameLength), '  Mag:   V1 (kV)    p.u.     V2 (kV)   %V2/V1    V0 (kV)    %V0/V1');
                 FSWriteln(F);
-                for i := 1 to ActiveCircuit.NumBuses do
-                    WriteSeqVoltages(F, i, LL);
+                for i := 1 to DSS.ActiveCircuit.NumBuses do
+                    WriteSeqVoltages(DSS, F, i, LL);
 
             end; {ShowOptionCode Case 0}
 
@@ -426,8 +429,8 @@ begin
                     FSWriteln(F, pad('Bus', MaxBusNameLength), ' Node    VLN (kV)   Angle      pu     Base kV    Node-Node   VLL (kV)  Angle      pu');
                 FSWriteln(F);
 
-                for i := 1 to ActiveCircuit.NumBuses do
-                    WriteBusVoltages(F, i, LL);
+                for i := 1 to DSS.ActiveCircuit.NumBuses do
+                    WriteBusVoltages(DSS, F, i, LL);
 
             end; {ShowOptionCode Case 1}
 
@@ -443,25 +446,25 @@ begin
 
 
        // SOURCES first
-                pElem := ActiveCircuit.sources.First;
+                pElem := DSS.ActiveCircuit.sources.First;
 
                 while pElem <> NIL do
                 begin
                     if pElem.Enabled then
-                        WriteElementVoltages(F, pElem, LL);
+                        WriteElementVoltages(DSS, F, pElem, LL);
                     FSWriteln(F);
-                    pElem := ActiveCircuit.sources.Next;
+                    pElem := DSS.ActiveCircuit.sources.Next;
                 end;
 
        // PDELEMENTS first
-                pElem := ActiveCircuit.PDElements.First;
+                pElem := DSS.ActiveCircuit.PDElements.First;
 
                 while pElem <> NIL do
                 begin
                     if pElem.Enabled then
-                        WriteElementVoltages(F, pElem, LL);
+                        WriteElementVoltages(DSS, F, pElem, LL);
                     FSWriteln(F);
-                    pElem := ActiveCircuit.PDElements.Next;
+                    pElem := DSS.ActiveCircuit.PDElements.Next;
                 end;
 
                 FSWriteln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -472,13 +475,13 @@ begin
                 FSWriteln(F);
 
        // PCELEMENTS next
-                pElem := ActiveCircuit.PCElements.First;
+                pElem := DSS.ActiveCircuit.PCElements.First;
 
                 while pElem <> NIL do
                 begin
                     if pElem.Enabled then
-                        WriteElementVoltages(F, pElem, LL);
-                    pElem := ActiveCircuit.PCElements.Next;
+                        WriteElementVoltages(DSS, F, pElem, LL);
+                    pElem := DSS.ActiveCircuit.PCElements.Next;
                     FSWriteln(F);
                 end;
 
@@ -491,8 +494,8 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -572,7 +575,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteTerminalCurrents(F: TFileStream; pElem: TDSSCktElement; ShowResidual: Boolean);
+procedure WriteTerminalCurrents(DSS: TDSSContext; F: TFileStream; pElem: TDSSCktElement; ShowResidual: Boolean);
 
 var
 
@@ -603,7 +606,7 @@ begin
                 Inc(k);
                 if ShowResidual then
                     Caccum(Ctotal, cBuffer^[k]);
-                FSWriteln(F, Format('%s  %4d    %13.5g /_ %6.1f =  %9.5g +j %9.5g', [UpperCase(FromBus), GetNodeNum(pElem.NodeRef^[k]), Cabs(cBuffer^[k]), cdang(cBuffer^[k]), cBuffer^[k].re, cBuffer^[k].im]));
+                FSWriteln(F, Format('%s  %4d    %13.5g /_ %6.1f =  %9.5g +j %9.5g', [UpperCase(FromBus), GetNodeNum(DSS, pElem.NodeRef^[k]), Cabs(cBuffer^[k]), cdang(cBuffer^[k]), cBuffer^[k].re, cBuffer^[k].im]));
             end;
             if ShowResidual and (pElem.NPhases > 1) then
             begin
@@ -625,7 +628,7 @@ begin
 
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowCurrents(FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
+procedure ShowCurrents(DSS: TDSSContext; FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
 
 
 var
@@ -640,8 +643,8 @@ var
 
 begin
 
-    SetMaxDeviceNameLength;
-    SetMaxBusNameLength;
+    SetMaxDeviceNameLength(DSS);
+    SetMaxBusNameLength(DSS);
     try
         try
 
@@ -659,7 +662,7 @@ begin
 
 
 //Sources First
-                    Pelem := ActiveCircuit.Sources.First;
+                    Pelem := DSS.ActiveCircuit.Sources.First;
                     while pelem <> NIL do
                     begin
                         if (pelem.Enabled) then
@@ -677,12 +680,12 @@ begin
                             end;
                             Freemem(cBuffer);
                         end;
-                        pelem := ActiveCircuit.Sources.Next;
+                        pelem := DSS.ActiveCircuit.Sources.Next;
                     end;
 
 
      // PDELEMENTS Next
-                    PDelem := ActiveCircuit.PDElements.First;
+                    PDelem := DSS.ActiveCircuit.PDElements.First;
 
                     while PDelem <> NIL do
                     begin
@@ -701,11 +704,11 @@ begin
                             end; {For}
                             Freemem(cBuffer);
                         end;
-                        PDelem := ActiveCircuit.PDElements.Next;
+                        PDelem := DSS.ActiveCircuit.PDElements.Next;
                     end;
 
     // PCelemENTS next
-                    PCelem := ActiveCircuit.PCelements.First;
+                    PCelem := DSS.ActiveCircuit.PCelements.First;
 
                     while PCelem <> NIL do
                     begin
@@ -724,12 +727,12 @@ begin
                             end;
                             Freemem(cBuffer);
                         end;
-                        PCelem := ActiveCircuit.PCelements.Next;
+                        PCelem := DSS.ActiveCircuit.PCelements.Next;
                     end;
 
 
      //Faults next
-                    Pelem := ActiveCircuit.Faults.First;
+                    Pelem := DSS.ActiveCircuit.Faults.First;
                     while pelem <> NIL do
                     begin
                         if (pelem.Enabled) then
@@ -748,7 +751,7 @@ begin
                             end;
                             Freemem(cBuffer);
                         end;
-                        pelem := ActiveCircuit.Faults.Next;
+                        pelem := DSS.ActiveCircuit.Faults.Next;
                     end;
 
                 end; {Code 0:}
@@ -769,33 +772,33 @@ begin
 
 
      // Sources first
-                    pElem := ActiveCircuit.Sources.First;
+                    pElem := DSS.ActiveCircuit.Sources.First;
 
                     while pElem <> NIL do
                     begin
                         if pElem.Enabled then
-                            WriteTerminalCurrents(F, pElem, FALSE);
-                        pElem := ActiveCircuit.Sources.Next;
+                            WriteTerminalCurrents(DSS, F, pElem, FALSE);
+                        pElem := DSS.ActiveCircuit.Sources.Next;
                     end;
 
      // PDELEMENTS first
-                    pElem := ActiveCircuit.PDElements.First;
+                    pElem := DSS.ActiveCircuit.PDElements.First;
 
                     while pElem <> NIL do
                     begin
                         if pElem.Enabled then
-                            WriteTerminalCurrents(F, pElem, ShowResidual);
-                        pElem := ActiveCircuit.PDElements.Next;
+                            WriteTerminalCurrents(DSS, F, pElem, ShowResidual);
+                        pElem := DSS.ActiveCircuit.PDElements.Next;
                     end;
 
      // Faults
-                    pElem := ActiveCircuit.Faults.First;
+                    pElem := DSS.ActiveCircuit.Faults.First;
 
                     while pElem <> NIL do
                     begin
                         if pElem.Enabled then
-                            WriteTerminalCurrents(F, pElem, FALSE);
-                        pElem := ActiveCircuit.Faults.Next;
+                            WriteTerminalCurrents(DSS, F, pElem, FALSE);
+                        pElem := DSS.ActiveCircuit.Faults.Next;
                     end;
 
 
@@ -807,13 +810,13 @@ begin
                     FSWriteln(F);
 
      // PCELEMENTS next
-                    pElem := ActiveCircuit.PCElements.First;
+                    pElem := DSS.ActiveCircuit.PCElements.First;
 
                     while pElem <> NIL do
                     begin
                         if pElem.Enabled then
-                            WriteTerminalCurrents(F, pElem, FALSE);
-                        pElem := ActiveCircuit.PCElements.Next;
+                            WriteTerminalCurrents(DSS, F, pElem, FALSE);
+                        pElem := DSS.ActiveCircuit.PCElements.Next;
                     end;
 
                 end;  {code:1}
@@ -825,20 +828,20 @@ begin
         finally
 
             FreeAndNil(F);
-            FireOffEditor(FileNm);
-            ParserVars.Add('@lastshowfile', FileNm);
+            FireOffEditor(DSS, FileNm);
+            DSS.ParserVars.Add('@lastshowfile', FileNm);
 
         end;
 
     except
         On E: Exception do
-            DoSimpleMsg('Exception raised in ShowCurrents: ' + E.Message, 2190);
+            DoSimpleMsg(DSS, 'Exception raised in ShowCurrents: ' + E.Message, 2190);
     end;
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowPowers(FileNm: String; opt, ShowOptionCode: Integer);
+procedure ShowPowers(DSS: TDSSContext; FileNm: String; opt, ShowOptionCode: Integer);
 
 {Opt = 0: kVA
  opt = 1: MVA
@@ -863,14 +866,14 @@ var
 begin
 
     c_Buffer := NIL;
-    SetMaxDeviceNameLength;
-    SetMaxBusNameLength;
+    SetMaxDeviceNameLength(DSS);
+    SetMaxBusNameLength(DSS);
 
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
       {Allocate c_Buffer big enough for largest circuit element}
-        Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize);
+        Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize(DSS));
 
         case ShowOptionCode of
             0:
@@ -888,7 +891,7 @@ begin
                 FSWriteln(F);
 
      // Sources first
-                p_Elem := ActiveCircuit.Sources.First;
+                p_Elem := DSS.ActiveCircuit.Sources.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -905,7 +908,7 @@ begin
                             begin
                                 k := (j - 1) * Ncond + i;
                                 nref := p_Elem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
                                 Iph[i] := c_Buffer^[k];
                                 Vph[i] := volts;
                             end;
@@ -920,7 +923,7 @@ begin
                                 I012[1] := CZERO;
                                 V012[3] := CZERO;
                                 I012[3] := CZERO;
-                                if ActiveCircuit.PositiveSequence then
+                                if DSS.ActiveCircuit.PositiveSequence then
                                 begin
                                     V012[2] := Vph[1];
                                     I012[2] := Iph[1];
@@ -951,12 +954,12 @@ begin
 
                         end;
                     end;
-                    p_Elem := ActiveCircuit.Sources.Next;
+                    p_Elem := DSS.ActiveCircuit.Sources.Next;
                 end;
 
 
      // PDELEMENTS next
-                PDElem := ActiveCircuit.PDElements.First;
+                PDElem := DSS.ActiveCircuit.PDElements.First;
 
                 while PDElem <> NIL do
                 begin
@@ -973,7 +976,7 @@ begin
                             begin
                                 k := (j - 1) * Ncond + i;
                                 nref := pDElem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
                                 Iph[i] := c_Buffer^[k];
                                 Vph[i] := volts;
                             end;
@@ -988,7 +991,7 @@ begin
                                 I012[1] := CZERO;
                                 V012[3] := CZERO;
                                 I012[3] := CZERO;
-                                if ActiveCircuit.PositiveSequence then
+                                if DSS.ActiveCircuit.PositiveSequence then
                                 begin
                                     V012[2] := Vph[1];
                                     I012[2] := Iph[1];
@@ -1034,11 +1037,11 @@ begin
 
                         end;
                     end;
-                    PDElem := ActiveCircuit.PDElements.Next;
+                    PDElem := DSS.ActiveCircuit.PDElements.Next;
                 end;
 
      // PCELEMENTS Next
-                PCElem := ActiveCircuit.PCElements.First;
+                PCElem := DSS.ActiveCircuit.PCElements.First;
 
                 while PCElem <> NIL do
                 begin
@@ -1055,7 +1058,7 @@ begin
                             begin
                                 k := (j - 1) * Ncond + i;
                                 nref := PCElem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
                                 Iph[i] := c_Buffer^[k];
                                 Vph[i] := volts;
                             end;
@@ -1071,7 +1074,7 @@ begin
                                 I012[1] := CZERO;
                                 V012[3] := CZERO;
                                 I012[3] := CZERO;
-                                if ActiveCircuit.PositiveSequence then
+                                if DSS.ActiveCircuit.PositiveSequence then
                                 begin
                                     V012[2] := Vph[1];
                                     I012[2] := Iph[1];
@@ -1104,7 +1107,7 @@ begin
 
                         end;
                     end;
-                    PCElem := ActiveCircuit.PCElements.Next;
+                    PCElem := DSS.ActiveCircuit.PCElements.Next;
                 end;
             end; {ShowOptionCode=0}
 
@@ -1129,7 +1132,7 @@ begin
 
 
      // Sources first
-                p_Elem := ActiveCircuit.sources.First;
+                p_Elem := DSS.ActiveCircuit.sources.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1148,15 +1151,15 @@ begin
                             begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
                                 S := Cmul(Volts, conjg(c_Buffer^[k]));
-                                if { (p_Elem.nphases=1) and } ActiveCircuit.PositiveSequence then
+                                if { (p_Elem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
                                     S := CmulReal(S, 3.0);
                                 if Opt = 1 then
                                     S := CmulReal(S, 0.001);
                                 Caccum(Saccum, S);
                                 FSWrite(F, Format('%s %-4d    %-8.1g +j %-8.1g', 
-                                    [UpperCase(FromBus), GetNodeNum(p_Elem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0]
+                                    [UpperCase(FromBus), GetNodeNum(DSS, p_Elem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0]
                                 ));
                                 FSWriteln(F, Format('   %-8.1g     %-8.4g', [Cabs(S) / 1000.0, PowerFactor(S)]));
                             end;
@@ -1166,11 +1169,11 @@ begin
                         end;
                         FSWriteln(F);
                     end;
-                    p_Elem := ActiveCircuit.sources.Next;
+                    p_Elem := DSS.ActiveCircuit.sources.Next;
                 end;
 
      // PDELEMENTS first
-                p_Elem := ActiveCircuit.PDElements.First;
+                p_Elem := DSS.ActiveCircuit.PDElements.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1190,16 +1193,16 @@ begin
                             Inc(k);
                             nref1 := p_Elem.NodeRef^[k];
                             nref2 := p_Elem.NodeRef^[k + 1];
-                            with ActiveCircuit.Solution do
+                            with DSS.ActiveCircuit.Solution do
                                 Volts := CSub(NodeV^[nref1], NodeV^[nref2]);
                             S := Cmul(Volts, conjg(c_Buffer^[k]));
-                            if { (p_Elem.nphases=1) and } ActiveCircuit.PositiveSequence then
+                            if { (p_Elem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
                                 S := CmulReal(S, 3.0);
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
                             Caccum(Saccum, S);
                             
-                            WriteStr(sout, UpperCase(FromBus), '  ', GetNodeNum(p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
+                            WriteStr(sout, UpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
                             FSWrite(F, sout);
 
                             WriteStr(sout, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
@@ -1221,14 +1224,14 @@ begin
                             begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
                                 S := Cmul(Volts, conjg(c_Buffer^[k]));
-                                if { (p_Elem.nphases=1) and } ActiveCircuit.PositiveSequence then
+                                if { (p_Elem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
                                     S := CmulReal(S, 3.0);
                                 if Opt = 1 then
                                     S := CmulReal(S, 0.001);
                                 Caccum(Saccum, S);
-                                WriteStr(sout, UpperCase(FromBus), '  ', GetNodeNum(p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
+                                WriteStr(sout, UpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
                                 FSWrite(F, sout);
                                 WriteStr(sout, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
                                 FSWriteln(F, sout);
@@ -1241,7 +1244,7 @@ begin
                         end;
                         FSWriteln(F);
                     end;
-                    p_Elem := ActiveCircuit.PDElements.Next;
+                    p_Elem := DSS.ActiveCircuit.PDElements.Next;
                 end;
 
                 FSWriteln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -1257,7 +1260,7 @@ begin
                 FSWriteln(F);
 
      // PCELEMENTS next
-                p_Elem := ActiveCircuit.PCElements.First;
+                p_Elem := DSS.ActiveCircuit.PCElements.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1277,14 +1280,14 @@ begin
                             begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
                                 S := Cmul(Volts, conjg(c_Buffer^[k]));
-                                if { (p_Elem.nphases=1) and } ActiveCircuit.PositiveSequence then
+                                if { (p_Elem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
                                     S := CmulReal(S, 3.0);
                                 if Opt = 1 then
                                     S := CmulReal(S, 0.001);
                                 Caccum(Saccum, S);
-                                WriteStr(sout, UpperCase(FromBus), '  ', GetNodeNum(p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 6: 1, ' +j ', S.im / 1000.0: 6: 1);
+                                WriteStr(sout, UpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 6: 1, ' +j ', S.im / 1000.0: 6: 1);
                                 FSWrite(F, sout);
                                 WriteStr(sout, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
                                 FSWriteln(F, sout);
@@ -1297,7 +1300,7 @@ begin
                         end;
                         FSWriteln(F);
                     end;
-                    p_Elem := ActiveCircuit.PCElements.Next;
+                    p_Elem := DSS.ActiveCircuit.PCElements.Next;
                 end;
 
             end; {ShowOptionCode=1}
@@ -1307,7 +1310,7 @@ begin
         end; {CASE}
 
         FSWriteln(F);
-        S := CmulReal(ActiveCircuit.Losses, 0.001);
+        S := CmulReal(DSS.ActiveCircuit.Losses, 0.001);
         if Opt = 1 then
             S := CmulReal(S, 0.001);
         
@@ -1319,8 +1322,8 @@ begin
         if Assigned(C_buffer) then
             Freemem(c_Buffer);
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
 
     end;
@@ -1347,7 +1350,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteTerminalPowerSeq(F: TFileStream; cktElem: TDSSCktElement; j, opt: Integer);
+procedure WriteTerminalPowerSeq(DSS: TDSSContext; F: TFileStream; cktElem: TDSSCktElement; j, opt: Integer);
 var
     i, k, Ncond, nref: Integer;
     Volts, S: Complex;
@@ -1371,7 +1374,7 @@ begin
         begin
             k := (j - 1) * Ncond + i;
             nref := cktElem.NodeRef^[k];
-            Volts := ActiveCircuit.Solution.NodeV^[nref];
+            Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
             Iph[i] := c_Buffer^[k];
             Vph[i] := volts;
         end;
@@ -1387,7 +1390,7 @@ begin
             I012[1] := CZERO;
             V012[3] := CZERO;
             I012[3] := CZERO;
-            if ActiveCircuit.PositiveSequence then
+            if DSS.ActiveCircuit.PositiveSequence then
             begin
                 V012[2] := Vph[1];
                 I012[2] := Iph[1];
@@ -1435,7 +1438,7 @@ begin
 end;
 
 
-procedure WriteTerminalPower(F: TFileStream; CktElem: TDSSCktElement; jTerm, opt: Integer);
+procedure WriteTerminalPower(DSS: TDSSContext; F: TFileStream; CktElem: TDSSCktElement; jTerm, opt: Integer);
 
 var
 
@@ -1463,15 +1466,15 @@ begin
         begin
             k := (jTerm - 1) * Ncond + i;
             nref := CktElem.NodeRef^[k];
-            Volts := ActiveCircuit.Solution.NodeV^[nref];
+            Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
             S := Cmul(Volts, conjg(c_Buffer^[k]));
-            if { (CktElem.nphases=1) and } ActiveCircuit.PositiveSequence then
+            if { (CktElem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
                 S := CmulReal(S, 3.0);
             if Opt = 1 then
                 S := CmulReal(S, 0.001);
             Caccum(Saccum, S);
             FSWriteln(F, Format('%s %4d %10.5g +j %10.5g    %10.5g    %8.4f',
-                [UpperCase(FromBus), GetNodeNum(CktElem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0,
+                [UpperCase(FromBus), GetNodeNum(DSS, CktElem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0,
                 Cabs(S) / 1000.0, PowerFactor(S)]));
         end;
         FSWriteln(F, Format(' TERMINAL TOTAL   %10.5g +j %10.5g    %10.5g    %8.4f',
@@ -1487,7 +1490,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowBusPowers(FileNm, BusName: String; opt, ShowOptionCode: Integer);
+procedure ShowBusPowers(DSS: TDSSContext; FileNm, BusName: String; opt, ShowOptionCode: Integer);
 
 {Report power flow around a specified Bus}
 
@@ -1511,21 +1514,21 @@ var
 
 begin
 
-    SetMaxDeviceNameLength;
+    SetMaxDeviceNameLength(DSS);
     c_Buffer := NIL;
 
   {Get Bus Reference}
-    BusReference := ActiveCircuit.BusList.Find(BusName);
+    BusReference := DSS.ActiveCircuit.BusList.Find(BusName);
     if BusReference = 0 then
     begin
-        DoSimpleMsg('Bus "' + UpperCase(BusName) + '" not found.', 219);
+        DoSimpleMsg(DSS, 'Bus "' + UpperCase(BusName) + '" not found.', 219);
         Exit;
     end;
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
       {Allocate c_Buffer big enough for largest circuit element}
-        Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize);
+        Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize(DSS));
 
         case ShowOptionCode of
             0:
@@ -1537,7 +1540,7 @@ begin
                 FSWriteln(F, 'Bus      V1 (kV)    p.u.    V2 (kV)      %V2/V1    V0 (kV)  %V0/V1');
                 FSWriteln(F);
 
-                WriteSeqVoltages(F, BusReference, FALSE);
+                WriteSeqVoltages(DSS, F, BusReference, FALSE);
 
      {Sequence Currents}
                 FSWriteln(F);
@@ -1547,7 +1550,7 @@ begin
                 FSWriteln(F);
 
      // Sources first
-                p_Elem := ActiveCircuit.Sources.First;
+                p_Elem := DSS.ActiveCircuit.Sources.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1567,12 +1570,12 @@ begin
                             end;
 
                         end;
-                    p_Elem := ActiveCircuit.Sources.Next;
+                    p_Elem := DSS.ActiveCircuit.Sources.Next;
                 end;
 
 
      // PDELEMENTS next
-                PDElem := ActiveCircuit.PDElements.First;
+                PDElem := DSS.ActiveCircuit.PDElements.First;
                 while PDElem <> NIL do
                 begin
                     if (PDElem.Enabled) then
@@ -1589,11 +1592,11 @@ begin
                                     WriteSeqCurrents(F, Paddots(FullName(PDElem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
                         end;
-                    PDElem := ActiveCircuit.PDElements.Next;
+                    PDElem := DSS.ActiveCircuit.PDElements.Next;
                 end;
 
      // PCELEMENTS Next
-                PCElem := ActiveCircuit.PCElements.First;
+                PCElem := DSS.ActiveCircuit.PCElements.First;
                 while PCElem <> NIL do
                 begin
                     if (PCElem.Enabled) then
@@ -1610,7 +1613,7 @@ begin
                                     WriteSeqCurrents(F, Paddots(FullName(PCelem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
                         end;
-                    PCElem := ActiveCircuit.PCElements.Next;
+                    PCElem := DSS.ActiveCircuit.PCElements.Next;
                 end;
 
      {Sequence Powers}
@@ -1626,7 +1629,7 @@ begin
                 FSWriteln(F);
 
      // Sources first
-                p_Elem := ActiveCircuit.Sources.First;
+                p_Elem := DSS.ActiveCircuit.Sources.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1634,34 +1637,34 @@ begin
                         if CheckBusReference(p_Elem, BusReference, j) then
                         begin
         {Use j set by CheckBusReference}
-                            WriteTerminalPowerSeq(F, p_Elem, j, opt);
+                            WriteTerminalPowerSeq(DSS, F, p_Elem, j, opt);
                         end;
-                    p_Elem := ActiveCircuit.Sources.Next;
+                    p_Elem := DSS.ActiveCircuit.Sources.Next;
                 end;
 
 
      // PDELEMENTS next
-                PDElem := ActiveCircuit.PDElements.First;
+                PDElem := DSS.ActiveCircuit.PDElements.First;
                 while PDElem <> NIL do
                 begin
                     if (PDElem.Enabled) then
                         if CheckBusReference(PDElem, BusReference, j) then
                         begin  // Is this connected to the bus
-                            WriteTerminalPowerSeq(F, PDElem, j, opt);
+                            WriteTerminalPowerSeq(DSS, F, PDElem, j, opt);
                         end;
-                    PDElem := ActiveCircuit.PDElements.Next;
+                    PDElem := DSS.ActiveCircuit.PDElements.Next;
                 end;
 
      // PCELEMENTS Next
-                PCElem := ActiveCircuit.PCElements.First;
+                PCElem := DSS.ActiveCircuit.PCElements.First;
                 while PCElem <> NIL do
                 begin
                     if (PCElem.Enabled) then
                         if CheckBusReference(PCElem, BusReference, j) then
                         begin
-                            WriteTerminalPowerSeq(F, PCElem, j, opt)
+                            WriteTerminalPowerSeq(DSS, F, PCElem, j, opt)
                         end;
-                    PCElem := ActiveCircuit.PCElements.Next;
+                    PCElem := DSS.ActiveCircuit.PCElements.Next;
                 end;
             end; {ShowOptionCode=0}
 
@@ -1673,7 +1676,7 @@ begin
                 FSWriteln(F);
                 FSWriteln(F, '  Bus   (node ref)  Node       V (kV)    Angle    p.u.   Base kV');
                 FSWriteln(F);
-                WriteBusVoltages(F, BusReference, FALSE);
+                WriteBusVoltages(DSS, F, BusReference, FALSE);
 
      {Element Currents}
                 FSWriteln(F);
@@ -1688,31 +1691,31 @@ begin
 
 
           // Sources first
-                p_Elem := ActiveCircuit.sources.First;
+                p_Elem := DSS.ActiveCircuit.sources.First;
                 while p_Elem <> NIL do
                 begin
                     if p_Elem.Enabled then
                         if CheckBusReference(p_Elem, BusReference, j) then
                         begin
-                            WriteTerminalCurrents(F, p_Elem, FALSE);
+                            WriteTerminalCurrents(DSS, F, p_Elem, FALSE);
                             FSWriteln(F);
                         end;
-                    p_Elem := ActiveCircuit.sources.Next;
+                    p_Elem := DSS.ActiveCircuit.sources.Next;
                 end;
 
 
      // PDELEMENTS first
-                p_Elem := ActiveCircuit.PDElements.First;
+                p_Elem := DSS.ActiveCircuit.PDElements.First;
 
                 while p_Elem <> NIL do
                 begin
                     if p_Elem.Enabled then
                         if CheckBusReference(p_Elem, BusReference, j) then
                         begin
-                            WriteTerminalCurrents(F, p_Elem, TRUE);
+                            WriteTerminalCurrents(DSS, F, p_Elem, TRUE);
                             FSWriteln(F);
                         end;
-                    p_Elem := ActiveCircuit.PDElements.Next;
+                    p_Elem := DSS.ActiveCircuit.PDElements.Next;
                 end;
 
                 FSWriteln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -1723,33 +1726,33 @@ begin
                 FSWriteln(F);
 
      // PCELEMENTS next
-                p_Elem := ActiveCircuit.PCElements.First;
+                p_Elem := DSS.ActiveCircuit.PCElements.First;
 
                 while p_Elem <> NIL do
                 begin
                     if p_Elem.Enabled then
                         if CheckBusReference(p_Elem, BusReference, j) then
                         begin
-                            WriteTerminalCurrents(F, p_Elem, FALSE);
+                            WriteTerminalCurrents(DSS, F, p_Elem, FALSE);
                             FSWriteln(F);
                         end;
 
-                    p_Elem := ActiveCircuit.PCElements.Next;
+                    p_Elem := DSS.ActiveCircuit.PCElements.Next;
                 end;
 
       // FAULTs next
-                p_Elem := ActiveCircuit.Faults.First;
+                p_Elem := DSS.ActiveCircuit.Faults.First;
 
                 while p_Elem <> NIL do
                 begin
                     if p_Elem.Enabled then
                         if CheckBusReference(p_Elem, BusReference, j) then
                         begin
-                            WriteTerminalCurrents(F, p_Elem, FALSE);
+                            WriteTerminalCurrents(DSS, F, p_Elem, FALSE);
                             FSWriteln(F);
                         end;
 
-                    p_Elem := ActiveCircuit.Faults.Next;
+                    p_Elem := DSS.ActiveCircuit.Faults.Next;
                 end;
 
      {Branch Powers}
@@ -1767,38 +1770,38 @@ begin
                 FSWriteln(F);
 
      // Sources first
-                p_Elem := ActiveCircuit.sources.First;
+                p_Elem := DSS.ActiveCircuit.sources.First;
                 while p_Elem <> NIL do
                 begin
                     if p_Elem.Enabled then
                         if CheckBusReference(p_Elem, BusReference, j) then
                         begin
-                            WriteTerminalPower(F, p_Elem, j, opt);
+                            WriteTerminalPower(DSS, F, p_Elem, j, opt);
                             FSWriteln(F);
                         end;
-                    p_Elem := ActiveCircuit.sources.Next;
+                    p_Elem := DSS.ActiveCircuit.sources.Next;
                 end;
 
 
      // PDELEMENTS first
-                p_Elem := ActiveCircuit.PDElements.First;
+                p_Elem := DSS.ActiveCircuit.PDElements.First;
 
                 while p_Elem <> NIL do
                 begin
                     if p_Elem.Enabled then
                         if CheckBusReference(p_Elem, BusReference, jTerm) then
                         begin
-                            WriteTerminalPower(F, p_Elem, jTerm, opt);
+                            WriteTerminalPower(DSS, F, p_Elem, jTerm, opt);
 
           {Get the other buses for the report}
                             for j := 1 to p_Elem.nterms do
                                 if j <> jTerm then
                                 begin
                                     FSWriteln(F, '------------');
-                                    WriteTerminalPower(F, p_Elem, j, opt);
+                                    WriteTerminalPower(DSS, F, p_Elem, j, opt);
                                 end;
                         end;
-                    p_Elem := ActiveCircuit.PDElements.Next;
+                    p_Elem := DSS.ActiveCircuit.PDElements.Next;
                 end;
 
                 FSWriteln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -1814,18 +1817,18 @@ begin
                 FSWriteln(F);
 
      // PCELEMENTS next
-                p_Elem := ActiveCircuit.PCElements.First;
+                p_Elem := DSS.ActiveCircuit.PCElements.First;
 
                 while p_Elem <> NIL do
                 begin
                     if p_Elem.Enabled then
                         if CheckBusReference(p_Elem, BusReference, jTerm) then
                         begin
-                            WriteTerminalPower(F, p_Elem, jTerm, opt);
+                            WriteTerminalPower(DSS, F, p_Elem, jTerm, opt);
                             FSWriteln(F);
                         end;
 
-                    p_Elem := ActiveCircuit.PCElements.Next;
+                    p_Elem := DSS.ActiveCircuit.PCElements.Next;
                 end;
 
             end; {ShowOptionCode=1}
@@ -1839,14 +1842,14 @@ begin
         if Assigned(C_buffer) then
             Freemem(c_Buffer);
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowFaultStudy(FileNm: String);
+procedure ShowFaultStudy(DSS: TDSSContext; FileNm: String);
 
 var
     i, iBus, iphs: Integer;
@@ -1861,14 +1864,14 @@ var
 
 begin
 
-    SetMaxBusNameLength;
+    SetMaxBusNameLength(DSS);
 
     try
 
         F := TFileStream.Create(FileNm, fmCreate);
 
    { Set source voltage injection currents }
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             with Solution do
             begin
@@ -2016,8 +2019,8 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
 
@@ -2038,7 +2041,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowElements(FileNm: String; ClassName: String);
+procedure ShowElements(DSS: TDSSContext; FileNm: String; ClassName: String);
 
 // Show Elements and bus connections
 
@@ -2050,15 +2053,15 @@ var
     pElem: TDSSCktElement;
 
 begin
-    SetMaxBusNameLength;
-    SetMaxDeviceNameLength;
+    SetMaxBusNameLength(DSS);
+    SetMaxDeviceNameLength(DSS);
 
     try
         try
             F := TFileStream.Create(FileNm, fmCreate);
         except
             On E: Exception do
-                DoSimpleMsg('Error Trying to open element file "' + FileNm + '" file:' + E.message, 219000);
+                DoSimpleMsg(DSS, 'Error Trying to open element file "' + FileNm + '" file:' + E.message, 219000);
         end;
 
         try
@@ -2066,30 +2069,30 @@ begin
             FDisabled := TFileStream.Create(DisabledFileNm, fmCreate);
         except
             On E: Exception do
-                DoSimpleMsg('Error Trying to open disabled element file "' + DisabledFilenm + '" file:' + E.message, 219000);
+                DoSimpleMsg(DSS, 'Error Trying to open disabled element file "' + DisabledFilenm + '" file:' + E.message, 219000);
         end;
 
         if Length(ClassName) > 0 then
         begin  // Just give a list of Active elements of a particular Class
-            if SetObjectClass(ClassName) then
+            if SetObjectClass(DSS, ClassName) then
             begin
                 FSWriteln(F, 'All Elements in Class "', ClassName, '"');
                 FSWriteln(F);
                 FSWriteln(Fdisabled, 'All DISABLED Elements in Class "', ClassName, '"');
                 FSWriteln(Fdisabled);
-                ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
-                for i := 1 to ActiveDSSClass.ElementCount do
+                DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
+                for i := 1 to DSS.ActiveDSSClass.ElementCount do
                 begin
-                    ActiveDSSClass.Active := i;
-                    if (ActiveDSSClass.DSSClassType and BASECLASSMASK) > 0 then
+                    DSS.ActiveDSSClass.Active := i;
+                    if (DSS.ActiveDSSClass.DSSClassType and BASECLASSMASK) > 0 then
                     begin
-                        if TDSSCktElement(ActiveDSSObject).Enabled then
-                            FSWriteln(F, UpperCase(ActiveDssObject.Name))
+                        if TDSSCktElement(DSS.ActiveDSSObject).Enabled then
+                            FSWriteln(F, UpperCase(DSS.ActiveDssObject.Name))
                         else
-                            FSWriteln(Fdisabled, UpperCase(ActiveDssObject.Name));
+                            FSWriteln(Fdisabled, UpperCase(DSS.ActiveDssObject.Name));
                     end
                     else
-                        FSWriteln(F, UpperCase(ActiveDssObject.Name));   // non cktelements
+                        FSWriteln(F, UpperCase(DSS.ActiveDssObject.Name));   // non cktelements
                 end;
             end;
         end
@@ -2097,7 +2100,7 @@ begin
         begin  // Default - Just do PD and PC Element in active circuit
 
             FSWriteln(F);
-            FSWriteln(F, 'Elements in Active Circuit: ' + ActiveCircuit.Name);
+            FSWriteln(F, 'Elements in Active Circuit: ' + DSS.ActiveCircuit.Name);
             FSWriteln(F);
             FSWriteln(F, 'Power Delivery Elements');
             FSWriteln(F);
@@ -2106,7 +2109,7 @@ begin
 
 
             FSWriteln(Fdisabled);
-            FSWriteln(Fdisabled, 'DISABLED Elements in Active Circuit: ' + ActiveCircuit.Name);
+            FSWriteln(Fdisabled, 'DISABLED Elements in Active Circuit: ' + DSS.ActiveCircuit.Name);
             FSWriteln(Fdisabled);
             FSWriteln(Fdisabled, 'DISABLED Power Delivery Elements');
             FSWriteln(Fdisabled);
@@ -2114,7 +2117,7 @@ begin
             FSWriteln(Fdisabled);
 
      // PDELEMENTS first
-            pElem := ActiveCircuit.PDElements.First;
+            pElem := DSS.ActiveCircuit.PDElements.First;
 
             while pElem <> NIL do
             begin
@@ -2126,7 +2129,7 @@ begin
                 begin
                     WriteElementRecord(Fdisabled, pElem);
                 end;
-                pElem := ActiveCircuit.PDElements.Next;
+                pElem := DSS.ActiveCircuit.PDElements.Next;
             end;
 
             FSWriteln(F);
@@ -2142,7 +2145,7 @@ begin
             FSWriteln(Fdisabled);
 
      // PCELEMENTS next
-            pElem := ActiveCircuit.PCElements.First;
+            pElem := DSS.ActiveCircuit.PCElements.First;
 
             while pElem <> NIL do
             begin
@@ -2154,7 +2157,7 @@ begin
                 begin
                     WriteElementRecord(Fdisabled, pElem);
                 end;
-                pElem := ActiveCircuit.PCElements.Next;
+                pElem := DSS.ActiveCircuit.PCElements.Next;
             end;
 
 
@@ -2164,10 +2167,10 @@ begin
     finally
 
         FreeAndNil(FDisabled);
-        FireOffEditor(DisabledFileNm);
+        FireOffEditor(DSS, DisabledFileNm);
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -2175,7 +2178,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowBuses(FileNm: String);
+procedure ShowBuses(DSS: TDSSContext; FileNm: String);
 
 // Show bus names and nodes in uses
 
@@ -2187,17 +2190,17 @@ var
 begin
 
     try
-        SetMaxBusNameLength;
+        SetMaxBusNameLength(DSS);
         Inc(MaxBusNameLength, 2);
         F := TFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F);
-        FSWriteln(F, 'BUSES AND NODES IN ACTIVE CIRCUIT: ' + ActiveCircuit.name);
+        FSWriteln(F, 'BUSES AND NODES IN ACTIVE CIRCUIT: ' + DSS.ActiveCircuit.name);
         FSWriteln(F);
         FSWriteln(F, Pad('     ', MaxBusNameLength), '                         Coord                                 Number of     Nodes');
         FSWriteln(F, Pad('  Bus', MaxBusNameLength), '    Base kV             (x, y)                      Keep?       Nodes        connected ...');
         FSWriteln(F);
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             for i := 1 to NumBuses do
             begin
@@ -2230,8 +2233,8 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -2239,7 +2242,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowMeters(FileNm: String);
+procedure ShowMeters(DSS: TDSSContext; FileNm: String);
 
 // Show Values of  Meter Elements
 
@@ -2258,7 +2261,7 @@ begin
         FSWriteln(F, 'ENERGY METER VALUES');
         FSWriteln(F);
         FSWriteln(F, 'Registers:');
-        MeterClass := TEnergyMeter(GetDSSClassPtr('Energymeter'));
+        MeterClass := TEnergyMeter(GetDSSClassPtr(DSS, 'Energymeter'));
         if MeterClass = NIL then
             Exit;  // oops somewhere!!
         if MeterClass.ElementCount = 0 then
@@ -2269,12 +2272,12 @@ begin
         begin
             ;
 
-            pElem := ActiveCircuit.energyMeters.First;   // write registernames for first meter only
+            pElem := DSS.ActiveCircuit.energyMeters.First;   // write registernames for first meter only
             for i := 1 to NumEMRegisters do
                 FSWriteln(F, 'Reg ' + IntToStr(i) + ' = ', pElem.RegisterNames[i]);
             FSWriteln(F);
 
-            pElem := ActiveCircuit.energyMeters.First;
+            pElem := DSS.ActiveCircuit.energyMeters.First;
             if pElem <> NIL then
             begin
                 FSWrite(F, 'Meter        ');
@@ -2292,7 +2295,7 @@ begin
                             FSWrite(F, Format('%10.0g ', [PElem.Registers[j]]));
                         end;
                     end;
-                    pElem := ActiveCircuit.EnergyMeters.Next;
+                    pElem := DSS.ActiveCircuit.EnergyMeters.Next;
                     FSWriteln(F);
                 end;
             end;
@@ -2302,15 +2305,15 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowGenMeters(FileNm: String);
+procedure ShowGenMeters(DSS: TDSSContext; FileNm: String);
 
 // Show Values of Generator Meter Elements
 
@@ -2328,7 +2331,7 @@ begin
         FSWriteln(F);
         FSWriteln(F, 'GENERATOR ENERGY METER VALUES');
         FSWriteln(F);
-        pElem := ActiveCircuit.Generators.First;
+        pElem := DSS.ActiveCircuit.Generators.First;
         if pElem <> NIL then
         begin
             GeneratorClass := TGenerator(pElem.ParentClass);
@@ -2347,7 +2350,7 @@ begin
                         FSWrite(F, Format('%10.0g ', [PElem.Registers[j]]));
                     end;
                 end;
-                pElem := ActiveCircuit.Generators.Next;
+                pElem := DSS.ActiveCircuit.Generators.Next;
                 FSWriteln(F);
             end;
         end;
@@ -2355,8 +2358,8 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -2373,7 +2376,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowRegulatorTaps(FileNm: String);
+procedure ShowRegulatorTaps(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -2392,7 +2395,7 @@ begin
         FSWriteln(F, 'Name            Tap      Min       Max     Step  Position');
         FSWriteln(F);
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             pReg := RegControls.First;
             while pReg <> NIL do
@@ -2408,14 +2411,14 @@ begin
         end;
     finally
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowMeterZone(FileNm: String);
+procedure ShowMeterZone(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -2431,22 +2434,22 @@ begin
 
     try
         FileNm := StripExtension(FileNm);
-        {ParamName :=} Parser.NextParam;
-        Param := Parser.StrValue;
+        {ParamName :=} DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
 
         FileNm := FileNm + '_' + Param + '.txt';
 
         F := TFileStream.Create(FileNm, fmCreate);
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
-        pMtrClass := DSSClassList.Get(ClassNames.Find('energymeter'));
+        pMtrClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('energymeter'));
 
         if Length(Param) > 0 then
         begin
             pMtr := pMtrClass.Find(Param);
             if pMtr = NIL then
-                DoSimpleMsg('EnergyMeter "' + Param + '" not found.', 220)
+                DoSimpleMsg(DSS, 'EnergyMeter "' + Param + '" not found.', 220)
             else
             if pMtr.BranchList <> NIL then
             begin
@@ -2489,28 +2492,28 @@ begin
             end;
         end
         else
-            DoSimpleMsg('Meter Name Not Specified.' + CRLF + parser.CmdString, 221);
+            DoSimpleMsg(DSS, 'Meter Name Not Specified.' + CRLF + DSS.Parser.CmdString, 221);
 
     finally
 
         FreeAndNil(F);
 
-        {ParamName :=} Parser.NextParam;
-        Param := Parser.strvalue;
+        {ParamName :=} DSS.Parser.NextParam;
+        Param := DSS.Parser.strvalue;
 
         case length(Param) of
             0:
-                FireOffEditor(FileNm);
+                FireOffEditor(DSS, FileNm);
         else
             ShowTreeView(FileNm);
         end;
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
      //
     end;
 
 end;
 
-procedure ShowOverloads(FileNm: String);
+procedure ShowOverloads(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -2524,14 +2527,14 @@ var
 begin
 
     c_Buffer := NIL;
-    SetMaxDeviceNameLength;
+    SetMaxDeviceNameLength(DSS);
 
     try
 
         F := TFileStream.Create(FileNm, fmCreate);
 
       {Allocate c_Buffer big enough for largest circuit element}
-        Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize);
+        Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize(DSS));
 
      {Sequence Currents}
         FSWriteln(F);
@@ -2544,7 +2547,7 @@ begin
 
 
      // PDELEMENTS
-        PDelem := ActiveCircuit.PDElements.First;
+        PDelem := DSS.ActiveCircuit.PDElements.First;
         while PDelem <> NIL do
         begin
             if (PDelem.Enabled) then
@@ -2611,15 +2614,15 @@ begin
                             end;
                     end; {For}
                 end;
-            PDelem := ActiveCircuit.PDElements.Next;
+            PDelem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
     finally
         if Assigned(C_buffer) then
             Freemem(c_Buffer);
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -2627,7 +2630,7 @@ end;
 
 { - -- - - - - ------------------------------}
 
-procedure ShowUnserved(FileNm: String; UE_Only: Boolean);
+procedure ShowUnserved(DSS: TDSSContext; FileNm: String; UE_Only: Boolean);
 
 var
     F: TFileStream = nil;
@@ -2647,7 +2650,7 @@ begin
         FSWriteln(F);
 
      // Load
-        pLoad := ActiveCircuit.Loads.First;
+        pLoad := DSS.ActiveCircuit.Loads.First;
         while pLoad <> NIL do
         begin
             if (pLoad.Enabled) then
@@ -2673,21 +2676,21 @@ begin
                 end;
 
             end;
-            pLoad := ActiveCircuit.Loads.Next;
+            pLoad := DSS.ActiveCircuit.Loads.Next;
         end;
 
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
 
-procedure ShowLosses(FileNm: String);
+procedure ShowLosses(DSS: TDSSContext; FileNm: String);
 
 
 var
@@ -2704,7 +2707,7 @@ var
     sout: String;
 begin
 
-    setMaxDeviceNameLength;
+    setMaxDeviceNameLength(DSS);
 
     try
 
@@ -2725,7 +2728,7 @@ begin
         TransLosses := CZERO;
 
      // PDELEMENTS
-        PDelem := ActiveCircuit.PDElements.First;
+        PDelem := DSS.ActiveCircuit.PDElements.First;
         while PDelem <> NIL do
         begin
             if (PDelem.Enabled)
@@ -2751,7 +2754,7 @@ begin
                 FSWrite(F, Format('     %.6g', [kLosses.im]));
                 FSWriteln(F);
             end;
-            PDelem := ActiveCircuit.PDElements.Next;
+            PDelem := DSS.ActiveCircuit.PDElements.Next;
         end;      {While}
 
         FSWriteln(F);
@@ -2768,14 +2771,14 @@ begin
 
         LoadPower := CZERO;
      // Sum the total load kW being served in the Ckt Model
-        PCelem := ActiveCircuit.Loads.First;
+        PCelem := DSS.ActiveCircuit.Loads.First;
         while Pcelem <> NIL do
         begin
             if PcElem.Enabled then
             begin
                 Caccum(LoadPower, PCelem.Power[1]);
             end;
-            PCelem := ActiveCircuit.Loads.Next;
+            PCelem := DSS.ActiveCircuit.Loads.Next;
         end;
         LoadPower := CmulReal(LoadPower, 0.001);
 
@@ -2793,14 +2796,14 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
-procedure ShowVariables(FileNm: String);
+procedure ShowVariables(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -2821,7 +2824,7 @@ begin
         FSWriteln(F, 'Present values of all variables in PC Elements in the circuit.');
         FSWriteln(F);
 
-        pcElem := ActiveCircuit.PCElements.First;
+        pcElem := DSS.ActiveCircuit.PCElements.First;
 
         while pcElem <> NIL do
         begin
@@ -2835,20 +2838,20 @@ begin
                 end;
                 FSWriteln(F);
             end;
-            pCElem := ActiveCircuit.PCElements.Next;
+            pCElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
-procedure ShowIsolated(FileNm: String);
+procedure ShowIsolated(DSS: TDSSContext; FileNm: String);
 
 {Show isolated buses/branches in present circuit}
 
@@ -2865,10 +2868,10 @@ var
 begin
 
      // Make sure bus list is built
-    if ActiveCircuit.BusNameRedefined then
-        ActiveCircuit.ReProcessBusDefs;
+    if DSS.ActiveCircuit.BusNameRedefined then
+        DSS.ActiveCircuit.ReProcessBusDefs;
 
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
 
          {Initialize all Circuit Elements to not checked}
@@ -2891,8 +2894,8 @@ begin
     end;
 
     // Get Started at main voltage source
-    TestElement := ActiveCircuit.Sources.First;
-    Branch_List := GetIsolatedSubArea(TestElement);
+    TestElement := DSS.ActiveCircuit.Sources.First;
+    Branch_List := GetIsolatedSubArea(DSS.ActiveCircuit, TestElement);
 
     {Show Report of Elements connected and not connected}
     try
@@ -2906,7 +2909,7 @@ begin
         FSWriteln(F, '***  THE FOLLOWING BUSES HAVE NO CONNECTION TO THE SOURCE ***');
         FSWriteln(F);
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             for j := 1 to NumBuses do
                 if not Buses^[j].BusChecked then
@@ -2918,7 +2921,7 @@ begin
         FSWriteln(F, '***********  THE FOLLOWING SUB NETWORKS ARE ISOLATED ************');
         FSWriteln(F);
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             TestElement := CktElements.First;
 
@@ -2929,7 +2932,7 @@ begin
                         if (TestElement.DSSObjType and BASECLASSMASK) = PD_ELEMENT then
                         begin
 
-                            SubArea := GetIsolatedSubArea(TestElement);
+                            SubArea := GetIsolatedSubArea(DSS.ActiveCircuit, TestElement);
                             FSWriteln(F, '*** START SUBAREA ***');
                             TestBranch := SubArea.First;
                             while TestBranch <> NIL do
@@ -2955,7 +2958,7 @@ begin
         FSWriteln(F, '***********  THE FOLLOWING ENABLED ELEMENTS ARE ISOLATED ************');
         FSWriteln(F);
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
 
        {Mark all controls, energy meters and monitors as checked so they don't show up}
@@ -2986,7 +2989,7 @@ begin
         FSWriteln(F, '***  THE FOLLOWING BUSES ARE NOT CONNECTED TO ANY POWER DELIVERY ELEMENT ***');
         FSWriteln(F);
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
             for j := 1 to NumBuses do
                 if not Buses^[j].BusChecked then
@@ -3018,13 +3021,13 @@ begin
 
         FreeAndNil(F);
         Branch_List.Free;
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
-procedure ShowRatings(FileNm: String);
+procedure ShowRatings(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -3038,7 +3041,7 @@ begin
         FSWriteln(F, 'Power Delivery Elements Normal and Emergency (max) Ratings');
         FSWriteln(F);
 
-        pdElem := ActiveCircuit.PDElements.First;
+        pdElem := DSS.ActiveCircuit.PDElements.First;
         while pdElem <> NIL do
         begin
 
@@ -3046,18 +3049,18 @@ begin
             FSWrite(F, Format('%-.4g,  %-.4g  !Amps', [pdElem.Normamps, pdElem.EmergAmps]));
             FSWriteln(F);
 
-            pdElem := ActiveCircuit.PDElements.Next;
+            pdElem := DSS.ActiveCircuit.PDElements.Next;
         end;
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
-procedure ShowLoops(FileNm: String);
+procedure ShowLoops(DSS: TDSSContext; FileNm: String);
 {Show loops and paralleled branches in Meter zones}
 
 var
@@ -3074,12 +3077,12 @@ begin
         FSWriteln(F, 'Loops and Paralleled Lines in all EnergyMeter Zones');
         FSWriteln(F);
 
-        hMeter := EnergyMeterClass.First;
+        hMeter := DSS.EnergyMeterClass.First;
 
         while hMeter > 0 do
         begin
 
-            pMtr := TEnergyMeterObj(ActiveDSSObject);
+            pMtr := TEnergyMeterObj(DSS.ActiveDSSObject);
 
             if pMtr.BranchList <> NIL then
             begin
@@ -3099,14 +3102,14 @@ begin
                 end;
             end;
 
-            hMeter := EnergyMeterClass.Next
+            hMeter := DSS.EnergyMeterClass.Next
         end;
 
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
 
@@ -3123,7 +3126,7 @@ begin
         FSWrite(F, Format('(* %d *)', [nLevel]));
 end;
 
-procedure ShowTopology(FileRoot: String);
+procedure ShowTopology(DSS: TDSSContext; FileRoot: String);
 var
     F: TFileStream = nil;
     Ftree: TFileStream = nil;
@@ -3143,10 +3146,10 @@ begin
         FSWriteln(F);
 
         Ftree := TFileStream.Create(TreeNm, fmCreate);
-        FSWriteln(Ftree, 'Branches and Loads in Circuit ' + ActiveCircuit.Name);
+        FSWriteln(Ftree, 'Branches and Loads in Circuit ' + DSS.ActiveCircuit.Name);
         FSWriteln(Ftree);
 
-        topo := ActiveCircuit.GetTopology;
+        topo := DSS.ActiveCircuit.GetTopology;
         nLoops := 0;
         nParallel := 0;
         nLevels := 0;
@@ -3225,7 +3228,7 @@ begin
             end;
         end;
 
-        pdElem := ActiveCircuit.PDElements.First;
+        pdElem := DSS.ActiveCircuit.PDElements.First;
         while assigned(pdElem) do
         begin
             if pdElem.IsIsolated then
@@ -3252,7 +3255,7 @@ begin
                 FSWriteln(Ftree);
                 Inc(nIsolated);
             end;
-            pdElem := ActiveCircuit.PDElements.Next;
+            pdElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
         nLoops := nLoops div 2;  // TODO, see if parallel lines also counted twice
@@ -3265,13 +3268,13 @@ begin
     finally
         FreeAndNil(F);
         FreeAndNil(Ftree);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
         ShowTreeView(TreeNm);
     end;
 end;
 
-procedure ShowLineConstants(FileNm: String; Freq: Double; Units: Integer; Rho: Double);
+procedure ShowLineConstants(DSS: TDSSContext; FileNm: String; Freq: Double; Units: Integer; Rho: Double);
 var
     F: TFileStream = nil;
     F2: TFileStream = nil;
@@ -3297,7 +3300,7 @@ begin
 
         FSWriteln(F, 'LINE CONSTANTS');
         FSWriteln(F, Format('Frequency = %.6g Hz, Earth resistivity = %.6g ohm-m', [Freq, Rho]));
-        FSWriteln(F, 'Earth Model = ', GetEarthModel(DefaultEarthModel));
+        FSWriteln(F, 'Earth Model = ', GetEarthModel(DSS.DefaultEarthModel));
         FSWriteln(F);
 
         // DSS C-API change: saves the file in the same folder as FileNm
@@ -3306,17 +3309,17 @@ begin
 
         FSWriteln(F2, '!--- OpenDSS Linecodes file generated from Show LINECONSTANTS command');
         FSWriteln(F2, Format('!--- Frequency = %.6g Hz, Earth resistivity = %.6g ohm-m', [Freq, Rho]));
-        FSWriteln(F2, '!--- Earth Model = ', GetEarthModel(DefaultEarthModel));
+        FSWriteln(F2, '!--- Earth Model = ', GetEarthModel(DSS.DefaultEarthModel));
 
         Z := NIL;
         YC := NIL;
 
-        ActiveEarthModel := DefaultEarthModel;
+        DSS.ActiveEarthModel := DSS.DefaultEarthModel;
 
-        p := LineGeometryClass.first;
+        p := DSS.LineGeometryClass.first;
         while p > 0 do
         begin
-            Pelem := LineGeometryClass.GetActiveObj;
+            Pelem := DSS.LineGeometryClass.GetActiveObj;
             Z.Free;
             YC.Free;
 
@@ -3327,7 +3330,7 @@ begin
                 YC := pelem.YCmatrix[freq, 1.0, Units];
             except
                 on E: Exception do
-                    DoSimpleMsg('Error computing line constants for LineGeometry.' + pelem.Name +
+                    DoSimpleMsg(DSS, 'Error computing line constants for LineGeometry.' + pelem.Name +
                         '; Error message: ' + E.Message, 9934);
             end;
 
@@ -3504,20 +3507,20 @@ begin
                 FSWriteln(F);
             end;
 
-            p := LineGeometryClass.Next;
+            p := DSS.LineGeometryClass.Next;
         end;
 
     finally
 
         FreeAndNil(F);
         FreeAndNil(F2);
-        FireOffEditor(FileNm);
-        FireOffEditor(LineCodesFileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        FireOffEditor(DSS, LineCodesFileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
 
-procedure ShowYPrim(Filenm: String);
+procedure ShowYPrim(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -3526,8 +3529,8 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSS.ActiveCircuit <> NIL then
+        with DSS.ActiveCircuit do
         begin
             if ActiveCktElement <> NIL then
             begin
@@ -3574,8 +3577,8 @@ begin
                 finally
 
                     FreeAndNil(F);
-                    FireOffEditor(FileNm);
-                    ParserVars.Add('@lastshowfile', FileNm);
+                    FireOffEditor(DSS, FileNm);
+                    DSS.ParserVars.Add('@lastshowfile', FileNm);
                 end;
 
 
@@ -3585,7 +3588,7 @@ begin
 end;
 
 // shows how to retrieve the System Y in Triplet form
-procedure ShowY(FileNm: String);
+procedure ShowY(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -3598,12 +3601,12 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSS.ActiveCircuit = NIL then
         Exit;
-    hY := ActiveCircuit.Solution.hY;
+    hY := DSS.ActiveCircuit.Solution.hY;
     if hY <= 0 then
     begin
-        DoSimpleMsg('Y Matrix not Built.', 222);
+        DoSimpleMsg(DSS, 'Y Matrix not Built.', 222);
         Exit;
     end;
   // print lower triangle of G and B using new functions
@@ -3640,13 +3643,13 @@ begin
 
     finally
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
-procedure ShowNodeCurrentSum(FileNm: String);
+procedure ShowNodeCurrentSum(DSS: TDSSContext; FileNm: String);
 
 type
     pNodeDoubleArray = ^NodeDoubleArray;
@@ -3669,7 +3672,7 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        with ActiveCircuit, ActiveCircuit.solution do
+        with DSS.ActiveCircuit, DSS.ActiveCircuit.solution do
         begin
         // Zero out the nodal current array
             for i := 0 to NumNodes do
@@ -3700,7 +3703,7 @@ begin
 
         // Now write report
 
-            SetMaxBusNameLength;
+            SetMaxBusNameLength(DSS);
             MaxBusNameLength := MaxBusNameLength + 2;
             FSWriteln(F);
             FSWriteln(F, 'Node Current Mismatch Report');
@@ -3719,7 +3722,7 @@ begin
             FSWriteln(F, Format('%s, %2d, %10.5f,       %s, %10.5f', [Bname, nref, dTemp, pctError, MaxNodeCurrent^[nRef]]));
 
 
-            for i := 1 to ActiveCircuit.NumBuses do
+            for i := 1 to DSS.ActiveCircuit.NumBuses do
             begin
                 for j := 1 to Buses^[i].NumNodesThisBus do
                 begin
@@ -3740,14 +3743,14 @@ begin
 
     finally
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
         ReallocMem(MaxNodeCurrent, 0); // Dispose of temp memory
     end;
 end;
 
 
-procedure ShowkVBaseMismatch(FileNm: String);
+procedure ShowkVBaseMismatch(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -3764,7 +3767,7 @@ begin
         F := TFileStream.Create(FileNm, fmCreate);
 
         {Check Loads}
-        if ActiveCircuit.Loads.Count > 0 then
+        if DSS.ActiveCircuit.Loads.Count > 0 then
         begin
             FSWriteln(F);
             FSWriteln(F, '!!!  LOAD VOLTAGE BASE MISMATCHES');
@@ -3772,12 +3775,12 @@ begin
         end;
 
 
-        pLoad := ActiveCircuit.Loads.First;
+        pLoad := DSS.ActiveCircuit.Loads.First;
         while pLoad <> NIL do
         begin
            {Find Bus To Which Load Connected}
-            pBus := ActiveCircuit.Buses^[pLoad.Terminals[0].BusRef];
-            BusName := ActiveCircuit.BusList.NameOfIndex(pLoad.Terminals[0].BusRef);
+            pBus := DSS.ActiveCircuit.Buses^[pLoad.Terminals[0].BusRef];
+            BusName := DSS.ActiveCircuit.BusList.NameOfIndex(pLoad.Terminals[0].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
                 if (pLoad.Nphases = 1) and (pLoad.Connection = TLoadConnection.Wye) then
@@ -3800,13 +3803,13 @@ begin
                     end;
                 end;
             end;
-            pLoad := ActiveCircuit.Loads.Next;
+            pLoad := DSS.ActiveCircuit.Loads.Next;
         end;
 
 
         {Check Generators}
 
-        if ActiveCircuit.Generators.Count > 0 then
+        if DSS.ActiveCircuit.Generators.Count > 0 then
         begin
             FSWriteln(F);
             FSWriteln(F, '!!!  GENERATOR VOLTAGE BASE MISMATCHES');
@@ -3814,12 +3817,12 @@ begin
         end;
 
 
-        pGen := ActiveCircuit.Generators.First;
+        pGen := DSS.ActiveCircuit.Generators.First;
         while pGen <> NIL do
         begin
            {Find Bus To Which Generator Connected}
-            pBus := ActiveCircuit.Buses^[pGen.Terminals[0].BusRef];
-            BusName := ActiveCircuit.BusList.NameOfIndex(pGen.Terminals[0].BusRef);
+            pBus := DSS.ActiveCircuit.Buses^[pGen.Terminals[0].BusRef];
+            BusName := DSS.ActiveCircuit.BusList.NameOfIndex(pGen.Terminals[0].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
                 if (pGen.Nphases = 1) and (pGen.Connection = 0) then
@@ -3843,17 +3846,17 @@ begin
                 end;
             end;
 
-            pGen := ActiveCircuit.Generators.Next;
+            pGen := DSS.ActiveCircuit.Generators.Next;
         end;
 
     finally
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
 
-procedure ShowDeltaV(FileNm: String);
+procedure ShowDeltaV(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -3865,7 +3868,7 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        SetMaxDeviceNameLength;
+        SetMaxDeviceNameLength(DSS);
 
         FSWriteln(F);
         FSWriteln(F, 'VOLTAGES ACROSS CIRCUIT ELEMENTS WITH 2 TERMINALS');
@@ -3877,16 +3880,16 @@ begin
 
 
          // SOURCES first
-        pElem := ActiveCircuit.sources.First;
+        pElem := DSS.ActiveCircuit.sources.First;
 
         while pElem <> NIL do
         begin
             if pElem.Enabled and (pElem.NTerms = 2) then
             begin
-                WriteElementDeltaVoltages(F, pElem);
+                WriteElementDeltaVoltages(DSS, F, pElem);
                 FSWriteln(F);
             end;
-            pElem := ActiveCircuit.sources.Next;
+            pElem := DSS.ActiveCircuit.sources.Next;
         end;
 
         FSWriteln(F);
@@ -3897,16 +3900,16 @@ begin
 
 
          // PDELEMENTS next
-        pElem := ActiveCircuit.PDElements.First;
+        pElem := DSS.ActiveCircuit.PDElements.First;
 
         while pElem <> NIL do
         begin
             if pElem.Enabled and (pElem.NTerms = 2) then
             begin
-                WriteElementDeltaVoltages(F, pElem);
+                WriteElementDeltaVoltages(DSS, F, pElem);
                 FSWriteln(F);
             end;
-            pElem := ActiveCircuit.PDElements.Next;
+            pElem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
         FSWriteln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -3917,28 +3920,28 @@ begin
         FSWriteln(F);
 
          // PCELEMENTS next
-        pElem := ActiveCircuit.PCElements.First;
+        pElem := DSS.ActiveCircuit.PCElements.First;
 
         while pElem <> NIL do
         begin
             if pElem.Enabled and (pElem.NTerms = 2) then
             begin
-                WriteElementDeltaVoltages(F, pElem);
+                WriteElementDeltaVoltages(DSS, F, pElem);
                 FSWriteln(F);
             end;
-            pElem := ActiveCircuit.PCElements.Next;
+            pElem := DSS.ActiveCircuit.PCElements.Next;
         end;
 
 
     finally
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
-procedure ShowControlledElements(FileNm: String);
+procedure ShowControlledElements(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -3951,7 +3954,7 @@ begin
 
         F := TFileStream.Create(FileNm, fmCreate);
 
-        pdelem := ActiveCircuit.PDElements.First;
+        pdelem := DSS.ActiveCircuit.PDElements.First;
         while pdelem <> NIL do
         begin
             if pdelem.HasControl then
@@ -3966,20 +3969,20 @@ begin
                 end;
                 FSWriteln(F);
             end;
-            pdelem := ActiveCircuit.PDElements.Next;
+            pdelem := DSS.ActiveCircuit.PDElements.Next;
         end;
 
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
-procedure ShowResult(FileNm: String);
+procedure ShowResult(DSS: TDSSContext; FileNm: String);
 
 var
     F: TFileStream = nil;
@@ -3989,33 +3992,33 @@ begin
     try
         F := TFileStream.Create(FileNm, fmCreate);
 
-        Parservars.Lookup('@result');
-        FSWriteln(F, Parservars.Value);
+        DSS.ParserVars.Lookup('@result');
+        FSWriteln(F, DSS.Parservars.Value);
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
 
     finally
 
         FreeAndNil(F);
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 
 end;
 
-procedure ShowEventLog(FileNm: String);
+procedure ShowEventLog(DSS: TDSSContext; FileNm: String);
 
 
 begin
     try
 
-        EventStrings.SaveToFile(FileNm);
-        GlobalResult := FileNm;
+        DSS.EventStrings.SaveToFile(FileNm);
+        DSS.GlobalResult := FileNm;
 
     finally
-        FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;

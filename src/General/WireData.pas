@@ -28,7 +28,7 @@ type
         procedure DefineProperties;
         function MakeLike(const WireName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -56,14 +56,17 @@ uses
     Sysutils,
     Ucomplex,
     Arraydef,
-    LineUNits;
+    LineUNits,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 0; // because they were all moved to ConductorData
 
-constructor TWireData.Create;  // Creates superstructure for all Line objects
+constructor TWireData.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'WireData';
     DSSClassType := DSS_OBJECT;
     ActiveElement := 0;
@@ -92,11 +95,8 @@ end;
 function TWireData.NewObject(const ObjName: String): Integer;
 begin
   // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TWireDataObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TWireDataObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 function TWireData.Edit: Integer;
@@ -107,9 +107,9 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveConductorDataObj := ElementList.Active;
-    ActiveDSSObject := ActiveConductorDataObj;
-    with ActiveConductorDataObj do
+    DSS.ActiveConductorDataObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveConductorDataObj;
+    with DSS.ActiveConductorDataObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -128,8 +128,8 @@ begin
                 0:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
             else
-        // Inherited parameters
-                ClassEdit(ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
             end;
             ParamName := Parser.NextParam;
             Param := Parser.StrValue;
@@ -145,7 +145,7 @@ begin
     Result := 0;
     OtherWireData := Find(WireName);
     if OtherWireData <> NIL then
-        with ActiveConductorDataObj do
+        with DSS.ActiveConductorDataObj do
         begin
             ClassMakeLike(OtherWireData);
             for i := 1 to ParentClass.NumProperties do
@@ -165,13 +165,13 @@ procedure TWireData.Set_Code(const Value: String);  // sets the  active WireData
 var
     WireDataObj: TWireDataObj;
 begin
-    ActiveConductorDataObj := NIL;
+    DSS.ActiveConductorDataObj := NIL;
     WireDataObj := ElementList.First;
     while WireDataObj <> NIL do
     begin
         if CompareText(WireDataObj.Name, Value) = 0 then
         begin
-            ActiveConductorDataObj := WireDataObj;
+            DSS.ActiveConductorDataObj := WireDataObj;
             Exit;
         end;
         WireDataObj := ElementList.Next;

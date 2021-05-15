@@ -6,7 +6,8 @@ interface
 
 uses
     sysutils,
-    DSSPointerList;
+    DSSPointerList,
+    DSSClass;
 
 type
     DoubleArray = array[0..$effffff] of Double;
@@ -110,8 +111,8 @@ procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize;
 function Generic_CktElement_Get_First(pList: TDSSPointerList): Integer; inline;
 function Generic_CktElement_Get_Next(pList: TDSSPointerList): Integer; inline;
 
-function InvalidCircuit(): Boolean; inline;
-function MissingSolution(): Boolean; inline;
+function InvalidCircuit(DSS: TDSSContext): Boolean; inline;
+function MissingSolution(DSS: TDSSContext): Boolean; inline;
 
 procedure DefaultResult(var ResultPtr: PByte; ResultCount: PAPISize; Value: Byte = 0); overload; inline;
 procedure DefaultResult(var ResultPtr: PInteger; ResultCount: PAPISize; Value: Integer = 0); overload; inline;
@@ -121,7 +122,7 @@ procedure DefaultResult(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Value:
 
 implementation
 
-Uses DSSObject, DSSGlobals, CktElement;
+Uses DSSObject, DSSGlobals, CktElement, DSSHelper;
 
 var
     tempBuffer: Ansistring;
@@ -182,13 +183,13 @@ begin
     ResultPtr^ := DSS_CopyStringAsPChar(Value);
 end;
 //------------------------------------------------------------------------------
-function InvalidCircuit(): Boolean; inline;
+function InvalidCircuit(DSS: TDSSContext): Boolean; inline;
 begin
-    if ActiveCircuit = NIL then
+    if DSS.ActiveCircuit = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('There is no active circuit! Create a circuit and retry.', 8888);
+            DoSimpleMsg(DSS, 'There is no active circuit! Create a circuit and retry.', 8888);
         end;
         Result := True;
         Exit;
@@ -196,17 +197,17 @@ begin
     Result := False;
 end;
 //------------------------------------------------------------------------------
-function MissingSolution(): Boolean; inline;
+function MissingSolution(DSS: TDSSContext): Boolean; inline;
 begin
-    Result := InvalidCircuit;
+    Result := InvalidCircuit(DSS);
     if Result then
         Exit;
         
-    if ActiveCircuit.Solution.NodeV = NIL then
+    if DSS.ActiveCircuit.Solution.NodeV = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('Solution state is not initialized for the active circuit!', 8899);
+            DoSimpleMsg(DSS, 'Solution state is not initialized for the active circuit!', 8899);
         end;
         Result := True;
         Exit;
@@ -517,7 +518,7 @@ begin
     repeat
         if (DSS_CAPI_ITERATE_DISABLED = 1) or elem.Enabled then
         begin
-            ActiveCircuit.ActiveCktElement := elem;
+            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
             Result := 1;
         end
         else
@@ -537,7 +538,7 @@ begin
     repeat
         if (DSS_CAPI_ITERATE_DISABLED = 1) or elem.Enabled then
         begin
-            ActiveCircuit.ActiveCktElement := elem;
+            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
             Result := pList.ActiveIndex;
         end
         else

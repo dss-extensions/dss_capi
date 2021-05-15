@@ -62,7 +62,7 @@ type
         procedure DefineProperties;
         function MakeLike(const CurveName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -130,8 +130,6 @@ type
 
     end;
 
-var
-    ActiveXYcurveObj: TXYcurveObj;
 
 implementation
 
@@ -142,16 +140,20 @@ uses
     Sysutils,
     MathUtil,
     Utilities,
+    BufStream,
     Math,
-    BufStream;
+    DSSPointerList,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 13;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TXYcurve.Create;  // Creates superstructure for all Line objects
+constructor TXYcurve.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'XYcurve';
     DSSClassType := DSS_OBJECT;
 
@@ -240,11 +242,8 @@ end;
 function TXYcurve.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TXYcurveObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TXYcurveObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 
@@ -260,10 +259,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveXYcurveObj := ElementList.Active;
-    ActiveDSSObject := ActiveXYcurveObj;
+    DSS.ActiveXYcurveObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveXYcurveObj;
 
-    with ActiveXYcurveObj do
+    with DSS.ActiveXYcurveObj do
     begin
 
         ParamPointer := 0;
@@ -333,7 +332,7 @@ begin
                     FYscale := Parser.dblvalue;
             else
            // Inherited parameters
-                ClassEdit(ActiveXYcurveObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveXYcurveObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -378,7 +377,7 @@ begin
    {See if we can find this curve in the present collection}
     OtherXYCurve := Find(CurveName);
     if OtherXYCurve <> NIL then
-        with ActiveXYcurveObj do
+        with DSS.ActiveXYcurveObj do
         begin
             NumPoints := OtherXYCurve.NumPoints;
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
@@ -422,14 +421,14 @@ var
 
 begin
 
-    ActiveXYcurveObj := NIL;
+    DSS.ActiveXYcurveObj := NIL;
     XYCurveObj := ElementList.First;
     while XYCurveObj <> NIL do
     begin
 
         if CompareText(XYCurveObj.Name, Value) = 0 then
         begin
-            ActiveXYcurveObj := XYCurveObj;
+            DSS.ActiveXYcurveObj := XYCurveObj;
             Exit;
         end;
 
@@ -459,7 +458,7 @@ begin
 
     try
 
-        with ActiveXYcurveObj do
+        with DSS.ActiveXYcurveObj do
         begin
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
             ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
@@ -512,7 +511,7 @@ begin
     end;
 
     try
-        with ActiveXYcurveObj do
+        with DSS.ActiveXYcurveObj do
         begin
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
             ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
@@ -560,7 +559,7 @@ begin
     end;
 
     try
-        with ActiveXYcurveObj do
+        with DSS.ActiveXYcurveObj do
         begin
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
             ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);

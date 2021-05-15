@@ -89,7 +89,12 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
-    Bus;
+    Bus,
+    PDClass,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
+
 
 {---------Summing Utility proc-------}
 procedure accumsum(var a: Double; b: Double); inline;

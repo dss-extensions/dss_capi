@@ -16,6 +16,7 @@ unit MeterClass;
 interface
 
 uses
+    DSSClass,
     CktElementClass;
 
 type
@@ -31,7 +32,7 @@ type
 
     PUBLIC
         NumMeterClassProps: Integer;
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         procedure ResetAll; VIRTUAL;
@@ -50,10 +51,10 @@ uses
     DSSClassDefs,
     DSSGlobals;
 
-constructor TMeterClass.Create;
+constructor TMeterClass.Create(dssContext: TDSSContext);
 begin
 
-    inherited Create;
+    inherited Create(dssContext);
     NumMeterClassProps := 0;
     DSSClassType := METER_ELEMENT;
 end;

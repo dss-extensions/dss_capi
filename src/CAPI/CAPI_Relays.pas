@@ -32,22 +32,24 @@ uses
     Circuit,
     DSSGlobals,
     Sysutils,
-    DSSPointerlist;
+    DSSPointerList,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TRelayObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TRelayObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := ActiveCircuit.Relays.Active;
+    obj := DSSPrime.ActiveCircuit.Relays.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Relay object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Relay object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -60,19 +62,19 @@ var
     cmd: String;
     elem: TRelayObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('Relay.%s.%s=%s', [elem.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSPrime.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Relays, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Relays, False);
 end;
 
 procedure Relays_Get_AllNames_GR(); CDECL;
@@ -85,25 +87,25 @@ end;
 function Relays_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Relays.Count;
+    Result := DSSPrime.ActiveCircuit.Relays.Count;
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.Relays);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Relays);
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.Relays);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Relays);
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_Name(): PAnsiChar; CDECL;
@@ -111,7 +113,7 @@ var
     elem: TRelayObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
@@ -120,16 +122,16 @@ procedure Relays_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if RelayClass.SetActive(Value) then
+    if DSSPrime.RelayClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := RelayClass.ElementList.Active;
-        ActiveCircuit.Relays.Get(RelayClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.RelayClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Relays.Get(DSSPrime.RelayClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Relay "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Relay "' + Value + '" Not Found in Active Circuit.', 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -138,7 +140,7 @@ var
     elem: TRelayObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.MonitoredElementName);
 end;
@@ -154,7 +156,7 @@ var
     elem: TRelayObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MonitoredElementTerminal;
 end;
@@ -164,7 +166,7 @@ var
     elem: TRelayObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.ElementName);
 end;
@@ -185,7 +187,7 @@ var
     elem: TRelayObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.ElementTerminal;
 end;
@@ -198,23 +200,23 @@ end;
 function Relays_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Relays.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.Relays.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Set_idx(Value: Integer); CDECL;
 var
     pRelay: TRelayObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pRelay := ActiveCircuit.Relays.Get(Value);
+    pRelay := DSSPrime.ActiveCircuit.Relays.Get(Value);
     if pRelay = NIL then
     begin
-        DoSimpleMsg('Invalid Relay index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Relay index: "' + IntToStr(Value) + '".', 656565);
     end;
-    ActiveCircuit.ActiveCktElement := pRelay;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pRelay;
 end;
 //------------------------------------------------------------------------------
 end.

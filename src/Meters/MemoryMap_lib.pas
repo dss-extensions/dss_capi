@@ -12,7 +12,7 @@ unit MemoryMap_lib;
 interface
 
 uses
-    Classes;
+    Classes, DSSClass;
 
 type
     DoubleArray1d = array of Double;
@@ -25,7 +25,7 @@ type
 function Create_Meter_Space(Init_Str: String): TBytesStream; OVERLOAD;
 procedure WriteintoMemStr(Mem_Space: TBytesStream; Content: String); OVERLOAD;
 procedure WriteintoMem(Mem_Space: TBytesStream; Content: Double); OVERLOAD;
-procedure CloseMHandler(Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean); OVERLOAD;
+procedure CloseMHandler(DSS: TDSSContext; Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean); OVERLOAD;
 procedure ReadMHandler(Mem_Space: TBytesStream; X_axis: pDoubleArray2d; Ylabels: pStringArray1d; Y_axis: pDoubleArray2d); OVERLOAD;
 procedure Write_String(Mem_Space: TBytesStream; const Content: String);
 
@@ -34,14 +34,12 @@ implementation
 uses
     {$IFDEF MSWINDOWS}
     windows,
-    {$IFNDEF FPC}
-    Dialogs,
-    {$ENDIF}
     {$ENDIF}
     sysutils,
     math,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 type
     TByteArr = array of uint8;
@@ -105,7 +103,7 @@ end;
 // Saves the content of the BytesStream into the specified file path
 // and destroys the ByteStream
 //******************************************************************************
-procedure CloseMHandler(Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean); OVERLOAD;
+procedure CloseMHandler(DSS: TDSSContext; Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean); OVERLOAD;
 var
     F: TFileStream = nil;
     buffer: Uint8;
@@ -130,7 +128,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error Attempting to open file: "' + Dest_path + '. ' + E.Message, 159000);
+            DoSimpleMsg(DSS, 'Error Attempting to open file: "' + Dest_path + '. ' + E.Message, 159000);
             FreeAndNil(F);
             Exit;
         end;

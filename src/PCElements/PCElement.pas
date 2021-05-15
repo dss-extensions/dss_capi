@@ -49,7 +49,7 @@ type
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
         procedure ComputeIterminal; OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
-        procedure CalcYPrimContribution(Curr: pComplexArray);
+        procedure CalcYPrimContribution(Curr: pComplexArray); INLINE;
         procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         procedure set_ITerminalUpdated(const Value: Boolean);
 
@@ -80,7 +80,12 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
-    Utilities;
+    Utilities,
+    PCClass,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
+
 
 constructor TPCElement.Create(ParClass: TDSSClass);
 begin

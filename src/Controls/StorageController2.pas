@@ -52,7 +52,7 @@ type
         procedure DefineProperties;
         function MakeLike(const StorageController2Name: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit(): Integer; OVERRIDE;     // uses global parser
@@ -200,10 +200,6 @@ type
 
     end;
 
-
-var
-    ActiveStorageController2Obj: TStorageController2Obj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -219,7 +215,10 @@ uses
     Math,
     Solution,
     Dynamics,
-    XYCurve;
+    XYCurve,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
 
@@ -290,9 +289,9 @@ var
     CDoubleOne: Complex;
 
 {--------------------------------------------------------------------------}
-constructor TStorageController2.Create;  // Creates superstructure for all StorageController objects
+constructor TStorageController2.Create(dssContext: TDSSContext);  // Creates superstructure for all StorageController objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'StorageController';
     DSSClassType := DSSClassType + Storage_CONTROL;
@@ -528,12 +527,12 @@ var
 begin
 
   // continue parsing with contents of Parser
-    ActiveStorageController2Obj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveStorageController2Obj;
+    DSS.ActiveStorageController2Obj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveStorageController2Obj;
 
     Result := 0;
 
-    with ActiveStorageController2Obj do
+    with DSS.ActiveStorageController2Obj do
     begin
 
         ParamPointer := 0;
@@ -660,7 +659,7 @@ begin
 
             else
            // Inherited parameters
-                ClassEdit(ActiveStorageController2Obj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveStorageController2Obj, ParamPointer - NumPropsthisClass)
             end;
 
          // Side effects of setting properties above
@@ -749,19 +748,19 @@ begin
                 end;
                 propYEARLY:
                 begin
-                    YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                    YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                     if YearlyShapeObj = NIL then
                         DoSimpleMsg('Yearly loadshape "' + YearlyShape + '" not found.', 14404);
                 end;
                 propDAILY:
                 begin
-                    DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                    DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                     if DailyShapeObj = NIL then
                         DoSimpleMsg('Daily loadshape "' + DailyShape + '" not found.', 14405);
                 end;
                 propDUTY:
                 begin
-                    DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                    DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                     if DutyShapeObj = NIL then
                         DoSimpleMsg('Dutycycle loadshape "' + DutyShape + '" not found.', 14406);
                 end
@@ -789,7 +788,7 @@ begin
    {See If we can find this StorageController name in the present collection}
     OtherStorageController := Find(StorageController2Name);
     if OtherStorageController <> NIL then
-        with ActiveStorageController2Obj do
+        with DSS.ActiveStorageController2Obj do
         begin
 
             NPhases := OtherStorageController.Fnphases;
@@ -1613,9 +1612,9 @@ var
     RatingIdx: Integer;
     RSignal: TXYCurveObj;
 begin
-    if SeasonSignal <> '' then
+    if DSS.SeasonSignal <> '' then
     begin
-        RSignal := XYCurveClass.Find(SeasonSignal);
+        RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
         if RSignal <> NIL then
             RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
 
@@ -1687,7 +1686,7 @@ begin
             GetControlPower(S);
 
        // In case of having seasonal targets
-        if SeasonalRating then
+        if DSS.SeasonalRating then
             CtrlTarget := Get_DynamicTarget(1)
         else
             CtrlTarget := FkWTarget;
@@ -2005,7 +2004,7 @@ begin
         SkipkWCharge := FALSE;
 
 
-        if SeasonalRating then
+        if DSS.SeasonalRating then
             CtrlTarget := Get_DynamicTarget(0)
         else
             CtrlTarget := FkWTargetLow;
@@ -2584,7 +2583,7 @@ begin
         FleetPointerList.Clear;
         for i := 1 to FleetSize do
         begin
-            StorageObj := Storage2Class.Find(FStorageNameList.Strings[i - 1]);
+            StorageObj := DSS.Storage2Class.Find(FStorageNameList.Strings[i - 1]);
             if Assigned(StorageObj) then
             begin
                 if StorageObj.Enabled then
@@ -2605,9 +2604,9 @@ begin
      {Search through the entire circuit for enabled Storage Elements and add them to the list}
         FStorageNameList.Clear;
         FleetPointerList.Clear;
-        for i := 1 to Storage2Class.ElementCount do
+        for i := 1 to DSS.Storage2Class.ElementCount do
         begin
-            StorageObj := Storage2Class.ElementList.Get(i);
+            StorageObj := DSS.Storage2Class.ElementList.Get(i);
         // Look for a storage element not already assigned
             if StorageObj.Enabled and (StorageObj.DispatchMode <> STORE_EXTERNALMODE) then
             begin

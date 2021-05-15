@@ -124,7 +124,7 @@ type
     PUBLIC
         RegisterNames: array[1..NumGenregisters] of String;
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -318,9 +318,6 @@ type
 
     end;
 
-var
-    ActiveGeneratorObj: TGeneratorObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -334,7 +331,10 @@ uses
     MathUtil,
     DSSClassDefs,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 44;
@@ -349,9 +349,9 @@ var
 //    TwoPI3:Double;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGenerator.Create;  // Creates superstructure for all Line objects
+constructor TGenerator.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Generator';
     DSSClassType := DSSClassType + GEN_ELEMENT;  // In both PCelement and Genelement list
 
@@ -523,7 +523,7 @@ end;
 procedure TGenerator.SetNcondsForConnection;
 
 begin
-    with ActiveGeneratorObj do
+    with DSS.ActiveGeneratorObj do
     begin
         case Connection of
             0:
@@ -549,7 +549,7 @@ var
     TestS: String;
 
 begin
-    with ActiveGeneratorObj do
+    with DSS.ActiveGeneratorObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -617,12 +617,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveGeneratorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveGeneratorObj;
+    DSS.ActiveGeneratorObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveGeneratorObj;
 
     Result := 0;
 
-    with ActiveGeneratorObj do
+    with DSS.ActiveGeneratorObj do
     begin
 
         ParamPointer := 0;
@@ -742,7 +742,7 @@ begin
                         end
                 else
            // Inherited parameters
-                    ClassEdit(ActiveGeneratorObj, ParamPointer - NumPropsThisClass)
+                    ClassEdit(DSS.ActiveGeneratorObj, ParamPointer - NumPropsThisClass)
                 end;
 
             if ParamPointer > 0 then
@@ -763,7 +763,7 @@ begin
      {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
                     7:
                     begin
-                        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                        YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                         if Assigned(YearlyShapeObj) then
                             with YearlyShapeObj do
                                 if UseActual then
@@ -771,7 +771,7 @@ begin
                     end;
                     8:
                     begin
-                        DailyDispShapeObj := LoadShapeClass.Find(DailyDispShape);
+                        DailyDispShapeObj := DSS.LoadShapeClass.Find(DailyDispShape);
                         if Assigned(DailyDispShapeObj) then
                             with DailyDispShapeObj do
                                 if UseActual then
@@ -779,7 +779,7 @@ begin
                     end;
                     9:
                     begin
-                        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                        DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                         if Assigned(DutyShapeObj) then
                             with DutyShapeObj do
                                 if UseActual then
@@ -790,7 +790,7 @@ begin
                         if DebugTrace then
                         begin
                             FreeAndNil(TraceFile);
-                            TraceFile := TFileStream.Create(GetOutputDirectory + 'GEN_' + Name + '.CSV', fmCreate);
+                            TraceFile := TFileStream.Create(DSS.OutputDirectory + 'GEN_' + Name + '.CSV', fmCreate);
                             FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, GenModel, dQdV, Avg_Vpu, Vdiff, MQnominalperphase, MPnominalperphase, CurrentType');
                             for i := 1 to nphases do
                                 FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
@@ -831,7 +831,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherGenerator := Find(OtherGeneratorName);
     if (OtherGenerator <> NIL) then
-        with ActiveGeneratorObj do
+        with DSS.ActiveGeneratorObj do
         begin
 
             if (Fnphases <> OtherGenerator.Fnphases) then
@@ -857,8 +857,6 @@ begin
             varMin := OtherGenerator.varMin;
             varMax := OtherGenerator.varMax;
             Connection := OtherGenerator.Connection;
-     //  Rneut          := OtherGenerator.Rneut;
-      // Xneut          := OtherGenerator.Xneut;
             YearlyShape := OtherGenerator.YearlyShape;
             YearlyShapeObj := OtherGenerator.YearlyShapeObj;
             DailyDispShape := OtherGenerator.DailyDispShape;
@@ -962,8 +960,6 @@ begin
     kvarMax := kvarBase * 2.0;
     kvarMin := -kvarmax;
     PFNominal := 0.88;
-  //   Rneut        := 0.0;
-  //   Xneut        := 0.0;
     YearlyShape := '';
     YearlyShapeObj := NIL;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
     DailyDispShape := '';
@@ -1025,8 +1021,8 @@ begin
     PublicDataStruct := pointer(@Genvars);
     PublicDataSize := SizeOf(TGeneratorVars);
 
-    UserModel := TGenUserModel.Create(@Genvars);
-    ShaftModel := TGenUserModel.Create(@Genvars);
+    UserModel := TGenUserModel.Create(DSS, @Genvars);
+    ShaftModel := TGenUserModel.Create(DSS, @Genvars);
 
     DispatchValue := 0.0;   // Follow curves
 
@@ -1336,7 +1332,7 @@ begin
         if Length(DutyShape) > 0 then
             DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
         DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 
@@ -1558,14 +1554,14 @@ var
 begin
 
     try
-        if (not InshowResults) then
+        if (not DSS.InShowResults) then
         begin
             WriteStr(sout, Format('%-.g, %d, %-.g, ',
                 [ActiveCircuit.Solution.DynaVars.t + ActiveCircuit.Solution.Dynavars.IntHour * 3600.0,
                 ActiveCircuit.Solution.Iteration,
                 ActiveCircuit.LoadMultiplier]),
-                GetSolutionModeID, ', ',
-                GetLoadModel, ', ',
+                GetSolutionModeID(DSS), ', ',
+                GetLoadModel(DSS), ', ',
                 GenModel: 0, ', ',
                 DQDV: 8: 0, ', ',
                 (V_Avg * 0.001732 / GenVars.kVgeneratorbase): 8: 3, ', ',
@@ -2040,7 +2036,7 @@ begin
             else
             begin
                 DoSimpleMsg(Format('Dynamics model missing for Generator.%s ', [Name]), 5671);
-                SolutionAbort := TRUE;
+                DSS.SolutionAbort := TRUE;
             end;
     else
 
@@ -2120,7 +2116,7 @@ begin
                 end;
         else
             DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
-            SolutionAbort := TRUE;
+            DSS.SolutionAbort := TRUE;
         end;
 
     end;
@@ -2727,7 +2723,7 @@ begin
                     end;
                 else
                     DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.' + name + ' has %d phases.', [Fnphases]), 5672);
-                    SolutionAbort := TRUE;
+                    DSS.SolutionAbort := TRUE;
                 end;
 
 

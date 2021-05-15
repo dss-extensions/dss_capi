@@ -19,7 +19,9 @@ uses
     Executive,
     SysUtils,
     solution,
-    CktElement;
+    CktElement,
+    DSSClass,
+    DSSHelper;
 
 procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 var
@@ -27,12 +29,12 @@ var
     i, j: Integer;
     Volts, BaseFactor: Double;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         i := Index;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Buses^[i].NumNodesThisBus);
@@ -42,7 +44,7 @@ begin
             BaseFactor := 1.0;
         for j := 1 to Buses^[i].NumNodesThisBus do
         begin
-            Volts := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
+            Volts := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
             Result[j - 1] := Volts / BaseFactor;
         end;
     end
@@ -61,19 +63,19 @@ var
     i, j, k: Integer;
     Volts: Complex;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
         
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         i := Index;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Buses^[i].NumNodesThisBus);
         for j := 1 to Buses^[i].NumNodesThisBus do
         begin
-            Volts := ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)];
+            Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)];
             k := (j - 1) * 2;
             Result[k] := Volts.re;
             Result[k + 1] := Volts.im;

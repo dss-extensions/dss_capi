@@ -10,12 +10,13 @@ unit ShowOptions;
 interface
 
 uses
-    Command;
+    Command,
+    DSSClass;
 
 const
     NumShowOptions = 34;
 
-function DoShowCmd: Integer;
+function DoShowCmd(DSS: TDSSContext): Integer;
 
 
 var
@@ -32,12 +33,9 @@ uses
     Utilities,
     DSSGlobals,
     sysutils,
-{$IFDEF FPC}
     CmdForms,
-{$ELSE}
-    DSSForms,
-{$ENDIF}
-    LineUnits;
+    LineUnits,
+    DSSHelper;
 
 procedure DefineOptions;
 
@@ -155,7 +153,7 @@ end;
 
 
 //----------------------------------------------------------------------------
-function DoShowCmd: Integer;
+function DoShowCmd(DSS: TDSSContext): Integer;
 
 var
     ParamName, Param, Filname: String;
@@ -170,18 +168,23 @@ var
     Freq: Double;
     Units: Integer;
     Rho_line: Double;
-
-
+{$IFDEF DSS_CAPI_PM}
+    PMParent: TDSSContext;
+    InitP, FinalP, idxP: Integer;  // Variables added to concatenate the results in OpenDSS-PM
 begin
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
     Result := 0;
 
-    ParamName := Parser.NextParam;
-    Param := LowerCase(Parser.StrValue);
+    ParamName := DSS.Parser.NextParam;
+    Param := LowerCase(DSS.Parser.StrValue);
     ParamPointer := ShowCommands.Getcommand(Param);
 
     if ParamPointer = 0 then
     begin
-        DoSimpleMsg('Error: Unknown Show Command:"' + Param + '"', 24700);
+        DoSimpleMsg(DSS, 'Error: Unknown Show Command:"' + Param + '"', 24700);
         Exit;
 //        ParamPointer := 13;  {voltages}
     end;
@@ -190,35 +193,35 @@ begin
     case ParamPointer of
         4, 6, 8..10, 12, 13..17, 19..23, 29..31:
         begin
-            if not assigned(ActiveCircuit) then
+            if not assigned(DSS.ActiveCircuit) then
             begin
-                DoSimpleMsg('No circuit created.', 24701);
+                DoSimpleMsg(DSS, 'No circuit created.', 24701);
                 Exit;
             end;
-            if not assigned(ActiveCircuit.Solution) or not assigned(ActiveCircuit.Solution.NodeV) then
+            if not assigned(DSS.ActiveCircuit.Solution) or not assigned(DSS.ActiveCircuit.Solution.NodeV) then
             begin
-                DoSimpleMsg('The circuit must be solved before you can do this.', 24702);
+                DoSimpleMsg(DSS, 'The circuit must be solved before you can do this.', 24702);
                 Exit;
             end;
         end;
     end;
 
-    InShowResults := TRUE;
+    DSS.InShowResults := TRUE;
 
     case ParamPointer of
         1:
         begin {Autoadded}
-            FireOffEditor(GetOutputDirectory + CircuitName_ + 'AutoAddedGenerators.Txt');
-            FireOffEditor(GetOutputDirectory + CircuitName_ + 'AutoAddedCapacitors.Txt');
+            FireOffEditor(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAddedGenerators.Txt');
+            FireOffEditor(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAddedCapacitors.Txt');
         end;
         2:
-            ShowBuses(GetOutputDirectory + CircuitName_ + 'Buses.Txt');
+            ShowBuses(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Buses.Txt');
         3:
         begin
             ShowOptionCode := 0;
             ShowResid := FALSE;
-            ParamName := Parser.NextParam;   // Look for residual
-            Param := Uppercase(Parser.StrValue);
+            ParamName := DSS.Parser.NextParam;   // Look for residual
+            Param := Uppercase(DSS.Parser.StrValue);
            // logic handles show curr y|n|T elements or show curr elements
             if (Length(Param) > 0) then
                 case Param[1] of
@@ -229,8 +232,8 @@ begin
                     'E':
                         ShowOptionCode := 1;
                 end;
-            ParamName := Parser.NextParam;   // Look for another param
-            Param := Uppercase(Parser.StrValue);
+            ParamName := DSS.Parser.NextParam;   // Look for another param
+            Param := Uppercase(DSS.Parser.StrValue);
             if (Length(Param) > 0) then
                 case Param[1] of
                     'E':
@@ -244,48 +247,68 @@ begin
             else
                 FilName := 'ERROR';
             end;
-            ShowCurrents(GetOutputDirectory + CircuitName_ + FilName + '.Txt', ShowResid, ShowOptionCode);
+            ShowCurrents(DSS, DSS.OutputDirectory + DSS.CircuitName_ + FilName + '.Txt', ShowResid, ShowOptionCode);
         end;
         4:
-            ActiveCircuit.Solution.WriteConvergenceReport(GetOutputDirectory + CircuitName_ + 'Convergence.TXT');
+            DSS.ActiveCircuit.Solution.WriteConvergenceReport(DSS.OutputDirectory + DSS.CircuitName_ + 'Convergence.TXT');
         5:
         begin
-            ParamName := Parser.NextParam;   // Look for another param
-            Param := LowerCase(Parser.StrValue);
-            ShowElements(GetOutputDirectory + CircuitName_ + 'Elements.Txt', Param);
+            ParamName := DSS.Parser.NextParam;   // Look for another param
+            Param := LowerCase(DSS.Parser.StrValue);
+            ShowElements(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Elements.Txt', Param);
         end;
         6:
-            ShowFaultStudy(GetOutputDirectory + CircuitName_ + 'FaultStudy.Txt');
+            ShowFaultStudy(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'FaultStudy.Txt');
         7:
-            ShowIsolated(GetOutputDirectory + CircuitName_ + 'Isolated.Txt');
+            ShowIsolated(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Isolated.Txt');
         8:
-            ShowGenMeters(GetOutputDirectory + CircuitName_ + 'GenMeterOut.Txt');
+            ShowGenMeters(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'GenMeterOut.Txt');
         9:
-            ShowMeters(GetOutputDirectory + CircuitName_ + 'EMout.Txt');
+            ShowMeters(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'EMout.Txt');
         10:
         begin     // Show Monitor
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
-            if Length(Param) > 0 then
-            begin
-                pMon := MonitorClass.Find(Param);
-                if pMon <> NIL then
-                    pMon.TranslateToCSV(TRUE)
-                else
-                    DoSimpleMsg('Monitor "' + param + '" not found.' + CRLF + parser.CmdString, 248);
-            end
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
+            if Length(Param) = 0 then
+                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + DSS.Parser.CmdString, 249)
             else
-                DoSimpleMsg('Monitor Name Not Specified.' + CRLF + parser.CmdString, 249);
+            begin
+{$IFDEF DSS_CAPI_PM}
+                if not PMParent.ConcatenateReports then
+                begin
+{$ENDIF}
+                    pMon := DSS.MonitorClass.Find(Param);
+                    if pMon <> NIL then
+                        pMon.TranslateToCSV(TRUE)
+                    else
+                        DoSimpleMsg(DSS, 'Monitor "' + param + '" not found.' + CRLF + DSS.Parser.CmdString, 248);
+{$IFDEF DSS_CAPI_PM}
+                end
+                else
+                begin
+                    InitP := 0;
+                    FinalP := High(PMParent.Children);
+                    for idxP := InitP to FinalP do
+                    begin
+                        pMon := PMParent.Children[idxP].MonitorClass.Find(Param);
+                        if pMon <> NIL then
+                            pMon.TranslateToCSV((idxP = FinalP))
+                        else
+                            DoSimpleMsg(DSS, 'Monitor "' + param + '" not found.' + CRLF + DSS.Parser.CmdString, 248);
+                    end;
+                end;
+{$ENDIF}
+            end;
         end;
         11:
-            ShowControlPanel;
+            DoSimpleMsg(DSS, 'Command "show panel" is not supported in DSS Extensions.', 999);
         12:
         begin
             ShowOptionCode := 0;
             MVAOpt := 0;
             FilName := 'Power';
-            Paramname := parser.nextParam;
-            Param := LowerCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := LowerCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 case Param[1] of
                     'm':
@@ -293,8 +316,8 @@ begin
                     'e':
                         ShowOptionCode := 1;
                 end;
-            Paramname := parser.nextParam;
-            Param := LowerCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := LowerCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 if Param[1] = 'e' then
                     ShowOptionCode := 1;
@@ -307,15 +330,15 @@ begin
             else
                 FilName := FilName + '_kVA';
 
-            ShowPowers(GetOutputDirectory + CircuitName_ + filname + '.txt', MVAOpt, ShowOptionCode);
+            ShowPowers(DSS, DSS.OutputDirectory + DSS.CircuitName_ + filname + '.txt', MVAOpt, ShowOptionCode);
         end;
         13:
         begin
             LLOpt := FALSE;      // Line-Line voltage option
             ShowOptionCode := 0;
             {Check for LL or LN option}
-            Paramname := parser.nextParam;
-            Param := Parser.strvalue;
+            Paramname := DSS.Parser.nextParam;
+            Param := DSS.Parser.strvalue;
 
             FilName := 'VLN';
             if Length(Param) > 0 then
@@ -325,8 +348,8 @@ begin
                     FilName := 'VLL';
                 end;
             {Check for Seq | nodes | elements}
-            Paramname := parser.nextParam;
-            Param := UpperCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := UpperCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 case Param[1] of
                     'N':
@@ -342,45 +365,45 @@ begin
                 else
                     FilName := FilName + '_seq';
                 end;
-            ShowVoltages(GetOutputDirectory + CircuitName_ + FilName + '.Txt', LLopt, ShowOptionCode);
+            ShowVoltages(DSS, DSS.OutputDirectory + DSS.CircuitName_ + FilName + '.Txt', LLopt, ShowOptionCode);
         end;
         14:
-            ShowMeterZone(GetOutputDirectory + CircuitName_ + 'ZoneOut.Txt');
+            ShowMeterZone(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'ZoneOut.Txt');
         15:
-            ShowRegulatorTaps(GetOutputDirectory + CircuitName_ + 'RegTaps.Txt');
+            ShowRegulatorTaps(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'RegTaps.Txt');
         16:
-            ShowOverloads(GetOutputDirectory + CircuitName_ + 'Overload.Txt');
+            ShowOverloads(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Overload.Txt');
         17:
         begin
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
             if Length(Param) > 0 then
-                ShowUnserved(GetOutputDirectory + CircuitName_ + 'Unserved.Txt', TRUE)
+                ShowUnserved(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Unserved.Txt', TRUE)
             else
-                ShowUnserved(GetOutputDirectory + CircuitName_ + 'Unserved.Txt', FALSE);
+                ShowUnserved(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Unserved.Txt', FALSE);
         end;
         18:
-            ShowEventLog(GetOutputDirectory + CircuitName_ + 'EventLog.Txt');// ShowMessageForm(EventStrings);
+            ShowEventLog(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'EventLog.Txt');// ShowMessageForm(EventStrings);
         19:
-            ShowVariables(GetOutputDirectory + CircuitName_ + 'Variables.Txt');
+            ShowVariables(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Variables.Txt');
         20:
-            ShowRatings(GetOutputDirectory + CircuitName_ + 'RatingsOut.Txt');
+            ShowRatings(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'RatingsOut.Txt');
         21:
-            ShowLoops(GetOutputDirectory + CircuitName_ + 'Loops.Txt');
+            ShowLoops(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Loops.Txt');
         22:
-            ShowLosses(GetOutputDirectory + CircuitName_ + 'Losses.Txt');
+            ShowLosses(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Losses.Txt');
         23:
         begin  // Show Bus Power Report
             ShowOptionCode := 0;
             MVAOpt := 0;
-            Paramname := parser.nextParam; // Get busname
-            Busname := Parser.strvalue;
+            Paramname := DSS.Parser.nextParam; // Get busname
+            Busname := DSS.Parser.strvalue;
             if Length(BusName) > 0 then
                 FilName := BusName
             else
                 FilName := 'BusPower';
-            Paramname := parser.nextParam;
-            Param := LowerCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := LowerCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 case Param[1] of
                     'm':
@@ -388,8 +411,8 @@ begin
                     'e':
                         ShowOptionCode := 1;
                 end;
-            Paramname := parser.nextParam;
-            Param := LowerCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := LowerCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 if Param[1] = 'e' then
                     ShowOptionCode := 1;
@@ -402,58 +425,58 @@ begin
             else
                 FilName := FilName + '_kVA';
 
-            ShowBusPowers(GetOutputDirectory + CircuitName_ + FilName + '.txt', BusName, MVAOpt, ShowOptionCode);
+            ShowBusPowers(DSS, DSS.OutputDirectory + DSS.CircuitName_ + FilName + '.txt', BusName, MVAOpt, ShowOptionCode);
         end;
         24:
         begin {ShowLineConstants  Show Lineconstants 60 mi}
-            Freq := DefaultBaseFreq;  // Default
+            Freq := DSS.DefaultBaseFreq;  // Default
             Units := UNITS_KFT; // 'kft'; // default
             Rho_line := 100.0;
-            ParamName := parser.nextparam;
-            if Length(Parser.strvalue) > 0 then
-                Freq := Parser.dblvalue;
-            ParamName := parser.nextparam;
-            if Length(Parser.strvalue) > 0 then
-                Units := GetUnitsCode(Parser.strvalue);
-            ParamName := parser.nextparam;
-            if Length(Parser.strvalue) > 0 then
-                Rho_line := Parser.dblValue;
-            ShowLineConstants(GetOutputDirectory + CircuitName_ + 'LineConstants.txt', freq, units, Rho_line);
+            ParamName := DSS.Parser.nextparam;
+            if Length(DSS.Parser.strvalue) > 0 then
+                Freq := DSS.Parser.dblvalue;
+            ParamName := DSS.Parser.nextparam;
+            if Length(DSS.Parser.strvalue) > 0 then
+                Units := GetUnitsCode(DSS.Parser.strvalue);
+            ParamName := DSS.Parser.nextparam;
+            if Length(DSS.Parser.strvalue) > 0 then
+                Rho_line := DSS.Parser.dblValue;
+            ShowLineConstants(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'LineConstants.txt', freq, units, Rho_line);
         end;
 
         25:
-            if ActiveCircuit <> NIL then
+            if DSS.ActiveCircuit <> NIL then
             begin  {Yprim}
-                with ActiveCircuit.ActiveCktElement do
-                    ShowYprim(GetOutputDirectory + ParentClass.name + '_' + name + '_Yprim.txt');
+                with DSS.ActiveCircuit.ActiveCktElement do
+                    ShowYprim(DSS, DSS.OutputDirectory + ParentClass.name + '_' + name + '_Yprim.txt');
             end;
 
         26:
         begin   {Y}
-            ShowY(GetOutputDirectory + CircuitName_ + 'SystemY.txt');
+            ShowY(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'SystemY.txt');
         end;
         27:
-            if ActiveCircuit <> NIL then
-                ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + CircuitName_ + 'ControlQueue.csv');
+            if DSS.ActiveCircuit <> NIL then
+                DSS.ActiveCircuit.ControlQueue.ShowQueue(DSS.OutputDirectory + DSS.CircuitName_ + 'ControlQueue.csv');
         28:
-            ShowTopology(GetOutputDirectory + CircuitName_);
+            ShowTopology(DSS, DSS.OutputDirectory + DSS.CircuitName_);
         29:
-            ShowNodeCurrentSum(GetOutputDirectory + CircuitName_ + 'NodeMismatch.Txt');
+            ShowNodeCurrentSum(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'NodeMismatch.Txt');
         30:
-            ShowkVBaseMismatch(GetOutputDirectory + CircuitName_ + 'kVBaseMismatch.Txt');
+            ShowkVBaseMismatch(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'kVBaseMismatch.Txt');
         31:
-            ShowDeltaV(GetOutputDirectory + CircuitName_ + 'DeltaV.Txt');
+            ShowDeltaV(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'DeltaV.Txt');
         32:
-            FireOffEditor(QueryLogFileName);
+            FireOffEditor(DSS, DSS.QueryLogFileName);
         33:
-            ShowControlledElements(GetOutputDirectory + CircuitName_ + 'ControlledElements.CSV');
+            ShowControlledElements(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'ControlledElements.CSV');
         34:
-            ShowResult(GetOutputDirectory + CircuitName_ + 'Result.CSV');
+            ShowResult(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Result.CSV');
     else
     end;
 
 
-    InShowResults := FALSE;
+    DSS.InShowResults := FALSE;
 
 end;
 

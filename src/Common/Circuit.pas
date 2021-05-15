@@ -24,12 +24,13 @@ interface
 
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, DSSPointerList, CktElement,
-     DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree,
-     Monitor,PCClass, PDClass,
-     {$IFNDEF FPC}, Graphics{$ENDIF}
-     math, Sparse_Math,
-     {$IFNDEF FPC}vcl.dialogs, {$ELSE} Process, {$ENDIF} MeTIS_Exec;
+     DSSClass, Bus, LoadShape, PriceShape, ControlQueue, uComplex,
+     AutoAdd, EnergyMeter, NamedObject, CktTree, MeTIS_Exec,
+     Monitor, PCClass, PDClass, math, Sparse_Math, Process 
+     {$IFDEF DSS_CAPI_PM}
+     , syncobjs
+     {$ENDIF}
+     ;
 
 
 TYPE
@@ -95,6 +96,7 @@ TYPE
 
 
       Public
+          DSS: TDSSContext;
 
           ActiveBusIndex :Integer;
           Fundamental    :Double;    // fundamental and default base frequency
@@ -152,7 +154,7 @@ TYPE
           CapacityStart,
           CapacityIncrement:  Double;
 
-          TrapezoidalIntegration,   // flag for trapezoidal integratio
+          TrapezoidalIntegration,   // flag for trapezoidal integration
           LogEvents  :Boolean;
 
           LoadDurCurve:String;
@@ -181,13 +183,19 @@ TYPE
           BusZones          : Array of String;
 
           // Variables for Diakoptics
+          //TODO: migrate TSparse_Complex to KLUSolveX (most functionality already present in Eigen)
           Contours         :  TSparse_Complex;    //  Contours matrix
           ZLL              :  TSparse_Complex;    //  Link branch matrix
           ZCT              :  TSparse_Complex;    //  The transformation matrix (to go from one to other domain)
           ZCC              :  TSparse_Complex;    //  Interconnections matrix
           Y4               :  TSparse_Complex;    //  The inverse of the interconnections matrix
           V_0              :  TSparse_Complex;    //  The voltages of the partial solutions
+          
           Ic               :  TSparse_Complex;    //  The complementary Currents vector
+{$IFDEF DSS_CAPI_PM}
+          LockIc           :  TCriticalSection;
+{$ENDIF}
+
           VIndex           :  Integer;  // To store the index of the sub-circuit in the interconnected system
           VLength          :  Integer;  // To store the length of the sub-circuit in the interconnected system
           AD_Init          :  Boolean;    // This is used only by the A-Diakoptics coordiantor (ID = 1)
@@ -278,7 +286,7 @@ TYPE
           MeTISZones: TStringList;                      // The list for assigning a zone to a bus after tearing
 
 
-          Constructor Create(const aName:String);
+          Constructor Create(dssContext: TDSSContext; const aName:String);
           Destructor Destroy; Override;
 
           Procedure AddCktElement();  // Adds last DSS object created to circuit
@@ -337,26 +345,28 @@ USES
      Line, Transformer,  Vsource,
      Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, {$ENDIF}
      {$IFDEF MSWINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils,
-     Load, PVSystem,
+     Load, PVSystem, DSSHelper,
      BufStream;
 //----------------------------------------------------------------------------
-Constructor TDSSCircuit.Create(const aName:String);
+Constructor TDSSCircuit.Create(dssContext: TDSSContext; const aName:String);
 
 // Var Retval:Integer;
 
 BEGIN
      inherited Create('Circuit');
+     
+     DSS := dssContext;
 
      IsSolved := False;
-     {*Retval   := *} SolutionClass.NewObject(Name);
-     Solution := ActiveSolutionObj;
+     {*Retval   := *} DSS.SolutionClass.NewObject(Name);
+     Solution := DSS.ActiveSolutionObj;
 
      LocalName   := LowerCase(aName);
 
      CaseName    := aName;  // Default case name to circuitname
                             // Sets CircuitName_
 
-     Fundamental      := DefaultBaseFreq;
+     Fundamental      := DSS.DefaultBaseFreq;
      ActiveCktElement := nil;
      ActiveBusIndex   := 1;    // Always a bus
 
@@ -410,7 +420,7 @@ BEGIN
      Buses        := Allocmem(Sizeof(Buses^[1])        * Maxbuses);
      MapNodeToBus := Allocmem(Sizeof(MapNodeToBus^[1]) * MaxNodes);
 
-     ControlQueue := TControlQueue.Create;
+     ControlQueue := TControlQueue.Create(DSS);
 
      LegalVoltageBases := AllocMem(SizeOf(LegalVoltageBases^[1]) * 8);
      // Default Voltage Bases
@@ -507,8 +517,8 @@ BEGIN
      DefaultGrowthRate          := 1.025;
      DefaultGrowthFactor        := 1.0;
 
-     DefaultDailyShapeObj  := LoadShapeClass.Find('default');
-     DefaultYearlyShapeObj := LoadShapeClass.Find('default');
+     DefaultDailyShapeObj  := DSS.LoadShapeClass.Find('default');
+     DefaultYearlyShapeObj := DSS.LoadShapeClass.Find('default');
 
      CurrentDirectory   := '';
 
@@ -524,7 +534,7 @@ BEGIN
      ReduceLateralsKeepLoad := TRUE;
 
    {Misc objects}
-   AutoAddObj           := TAutoAdd.Create;
+   AutoAddObj           := TAutoAdd.Create(DSS);
 
    Branch_List          := nil;
    BusAdjPC             := nil;
@@ -534,7 +544,7 @@ BEGIN
 
 
   Coverage              :=  0.9;      // 90% coverage expected by default
-  Actual_coverage       :=  -1;       //No coverage
+  Actual_coverage       :=  -1;       // No coverage
   Num_SubCkts           :=  CPU_Cores-1;
 
   setlength(Longest_paths,0);
@@ -550,7 +560,9 @@ BEGIN
   Y4        :=  TSparse_Complex.Create;
   V_0       :=  TSparse_Complex.Create;
   Ic        :=  TSparse_Complex.Create;
-
+{$IFDEF DSS_CAPI_PM}
+  LockIc    :=  syncobjs.TCriticalSection.Create;
+{$ENDIF}
 END;
 
 //----------------------------------------------------------------------------
@@ -561,80 +573,81 @@ VAR
     ElemName :String;
 
 BEGIN
-     For i := 1 to NumDevices Do Begin
-           TRY
-              pCktElem := TDSSCktElement(CktElements.Get(i));
-              ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
-              pCktElem.Free;
+    For i := 1 to NumDevices Do Begin
+        TRY
+            pCktElem := TDSSCktElement(CktElements.Get(i));
+            ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
+            pCktElem.Free;
+        EXCEPT
+            ON E: Exception Do
+                DoSimpleMsg(DSS, 'Exception Freeing Circuit Element:' + ElemName + CRLF + E.Message, 423);
+        END;
+    End;
+    FOR i := 1 to NumBuses Do Buses^[i].Free;  // added 10-29-00
 
-           EXCEPT
-             ON E: Exception Do
-               DoSimpleMsg('Exception Freeing Circuit Element:'  + ElemName + CRLF + E.Message, 423);
-           END;
-     End;
+    Reallocmem(Buses, 0);
+    Reallocmem(MapNodeToBus, 0);
+    Reallocmem(NodeBuffer, 0);
+    Reallocmem(UEregs, 0);
+    Reallocmem(Lossregs, 0);
+    Reallocmem(LegalVoltageBases, 0);
 
-     FOR i := 1 to NumBuses Do Buses^[i].Free;  // added 10-29-00
-
-     Reallocmem(Buses,     0);
-     Reallocmem(MapNodeToBus, 0);
-     Reallocmem(NodeBuffer, 0);
-     Reallocmem(UEregs, 0);
-     Reallocmem(Lossregs, 0);
-     Reallocmem(LegalVoltageBases, 0);
-
-     DeviceList.Free;
-     BusList.Free;
-     AutoAddBusList.Free;
-     Solution.Free;
-     PDElements.Free;
-     PCElements.Free;
-     DSSControls.Free;
-     Sources.Free;
-     Faults.Free;
-     CktElements.Free;
+    DeviceList.Free;
+    BusList.Free;
+    AutoAddBusList.Free;
+    Solution.Free;
+    PDElements.Free;
+    PCElements.Free;
+    DSSControls.Free;
+    Sources.Free;
+    Faults.Free;
+    CktElements.Free;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
     IncrCktElements.Free;
 {$ENDIF}
-     MeterElements.Free;
-     Monitors.Free;
-     EnergyMeters.Free;
-     Sensors.Free;
-     Generators.Free;
-     StorageElements.Free;
-     PVSystems.Free;
-     Substations.Free;
-     Transformers.Free;
-     CapControls.Free;
-     SwtControls.Free;
-     RegControls.Free;
-     Loads.Free;
-     Lines.Free;
-     ShuntCapacitors.Free;
-     Reactors.Free;
-     Reclosers.Free;
-     Relays.Free;
-     Fuses.Free;
+    MeterElements.Free;
+    Monitors.Free;
+    EnergyMeters.Free;
+    Sensors.Free;
+    Generators.Free;
+    StorageElements.Free;
+    PVSystems.Free;
+    Substations.Free;
+    Transformers.Free;
+    CapControls.Free;
+    SwtControls.Free;
+    RegControls.Free;
+    Loads.Free;
+    Lines.Free;
+    ShuntCapacitors.Free;
+    Reactors.Free;
+    Reclosers.Free;
+    Relays.Free;
+    Fuses.Free;
 
-     ControlQueue.Free;
+    ControlQueue.Free;
 
-     ClearBusMarkers;
-     BusMarkerList.Free;
+    ClearBusMarkers;
+    BusMarkerList.Free;
 
-     AutoAddObj.Free;
+    AutoAddObj.Free;
 
-     FreeTopology;
+    FreeTopology;
 
 //  Release all ADiakoptics matrixes
 
-     Contours.Free;
-     ZLL.Free;
-     ZCC.Free;
-     ZCT.Free;
-     Y4.Free;
-     V_0.Free;
-     Ic.Free;
+    Contours.Free;
+    ZLL.Free;
+    ZCC.Free;
+    ZCT.Free;
+    Y4.Free;
+    V_0.Free;
+    Ic.Free;
 
-     Inherited Destroy;
+{$IFDEF DSS_CAPI_PM}
+    LockIc.Free;
+{$ENDIF}
+    Inherited Destroy;
 END;
 
 {*******************************************************************************
@@ -1083,11 +1096,11 @@ var
   Fileroot    : String;
 Begin
     // Prepares everything to save the base of the torn circuit on a separate folder
-    Fileroot              :=  OutputDirectory; {CurrentDSSDir;}
+    Fileroot              :=  DSS.OutputDirectory; {CurrentDSSDir;}
     Fileroot              :=  Fileroot  + PathDelim + 'Torn_Circuit';
     CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
     DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
-    DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
+    DSS.DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
     // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
     Format_SubCircuits(FileRoot, length(Locations));
 End;
@@ -1106,9 +1119,9 @@ VAR
 Begin
   Result := '';
   setlength(NBuses,2);
-  IF ActiveCircuit <> NIL THEN
+  IF DSS.ActiveCircuit <> NIL THEN // TODO: check why this is not using self
   Begin      // Search list of Lines in active circuit for name
-    WITH ActiveCircuit.Lines DO
+    WITH DSS.ActiveCircuit.Lines DO
     Begin
       S := LName;  // Convert to Pascal String
       Found := FALSE;
@@ -1118,7 +1131,7 @@ Begin
       Begin
         IF (CompareText(pLine.Name, S) = 0) THEN
         Begin
-          ActiveCircuit.ActiveCktElement := pLine;
+          DSS.ActiveCircuit.ActiveCktElement := pLine;
           Found := TRUE;
           Break;
         End;
@@ -1126,13 +1139,13 @@ Begin
       End;
       IF NOT Found THEN
       Begin
-        DoSimpleMsg('Line "'+S+'" Not Found in Active Circuit.', 5008);
+        DoSimpleMsg(DSS, 'Line "'+S+'" Not Found in Active Circuit.', 5008);
         pLine := Get(ActiveSave);    // Restore active Line
-        ActiveCircuit.ActiveCktElement := pLine;
+        DSS.ActiveCircuit.ActiveCktElement := pLine;
       End;
     End;
-    For i := 1 to  ActiveCircuit.ActiveCktElement.Nterms Do
-        NBuses[i-1] := ActiveCircuit.ActiveCktElement.GetBus(i);
+    For i := 1 to  DSS.ActiveCircuit.ActiveCktElement.Nterms Do
+        NBuses[i-1] := DSS.ActiveCircuit.ActiveCktElement.GetBus(i);
     // returns the name of the desired bus
     Result  :=  NBuses[NBus - 1];
   End;
@@ -1221,8 +1234,8 @@ Begin
             // if transformer, the weigth is the lowest
             if myClass <> 'Transformer' then
             Begin
-              ActiveCircuit.SetElementActive(MyName);
-              myIntVar  :=  ActiveCircuit.ActiveCktElement.NPhases;
+              DSS.ActiveCircuit.SetElementActive(MyName);
+              myIntVar  :=  DSS.ActiveCircuit.ActiveCktElement.NPhases;
             end
             else
               myIntVar  := 1;
@@ -1259,7 +1272,7 @@ Begin
       End;
     End;
 
-    FileName  := GetOutputDirectory + CircuitName_ + '.graph';
+    FileName  := DSS.OutputDirectory + DSS.CircuitName_ + '.graph';
     F := TFileStream.Create(FileName, fmCreate);
     FSWriteln(F,inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(jj) + ' 1'); // it should be the rank of the incidence matrix
     for i := 1 to High(myGraph) do
@@ -1394,15 +1407,15 @@ Begin
 
   for myDERIdx := 0 to High(myDERList) do
   Begin
-    DevClassIndex                     := ClassNames.Find(myDERList[myDERIdx]);
-    LastClassReferenced  := DevClassIndex;
-    ActiveDSSClass       := DSSClassList.Get(LastClassReferenced);
-    if ActiveDSSClass.ElementCount > 0 then
+    DevClassIndex                     := DSS.ClassNames.Find(myDERList[myDERIdx]);
+    DSS.LastClassReferenced  := DevClassIndex;
+    DSS.ActiveDSSClass       := DSS.DSSClassList.Get(DSS.LastClassReferenced);
+    if DSS.ActiveDSSClass.ElementCount > 0 then
     Begin
-      myIdx := ActiveDSSClass.First;
+      myIdx := DSS.ActiveDSSClass.First;
       Repeat
         ActiveCktElement.Enabled    :=  False   ;
-        myIdx                       := ActiveDSSClass.Next;
+        myIdx                       := DSS.ActiveDSSClass.Next;
       Until (myIdx <= 0);
     End;
   End;
@@ -1420,9 +1433,9 @@ Begin
     SetLength(myBus, 2);
     SetLength(Result, 0);
     BusName := LowerCase(BusName);
-    for i := 1 to DSSClassList.Count do
+    for i := 1 to DSS.DSSClassList.Count do
     begin
-        Dss_Class := DSSClassList.Get(i);
+        Dss_Class := DSS.DSSClassList.Get(i);
         if (DSS_Class is TCktElementClass) then
         begin
             // Checks if it is a PCE class
@@ -1462,9 +1475,9 @@ var
 begin
     SetLength(Result, 0);
     BusName :=  LowerCase(BusName);
-    for i := 1 to DSSClassList.Count do
+    for i := 1 to DSS.DSSClassList.Count do
     begin
-        Dss_Class := DSSClassList.Get(i);
+        Dss_Class := DSS.DSSClassList.Get(i);
         if not (DSS_Class is TCktElementClass) then
             continue;
             
@@ -1589,20 +1602,20 @@ Begin
   // Add monitors and Energy Meters at link branches
   // Creates and EnergyMeter at the feeder head
   pLine := Lines.First;
-  DSSExecutive.Command := 'New EnergyMeter.myEMZoneFH element=Line.' + pLine.Name + ' terminal=1' ;
+  DSS.DSSExecutive.Command := 'New EnergyMeter.myEMZoneFH element=Line.' + pLine.Name + ' terminal=1' ;
   for i := 0 to High(Link_Branches) do
   Begin
-    DSSExecutive.Command := 'New EnergyMeter.myEMZone' + InttoStr(i) + ' element=' + Link_Branches[i] + ' terminal=1' ;
+    DSS.DSSExecutive.Command := 'New EnergyMeter.myEMZone' + InttoStr(i) + ' element=' + Link_Branches[i] + ' terminal=1' ;
   End;
   // Gets the max number of iterations to configure the simulation using the existing loadshapes
-  iElem               :=  LoadshapeClass.First;
+  iElem               :=  DSS.LoadshapeClass.First;
   j                   :=  0;
   while iElem <> 0 do
   Begin
-    ActiveLSObject      :=  ActiveDSSObject as TLoadShapeObj;
+    ActiveLSObject      :=  DSS.ActiveDSSObject as TLoadShapeObj;
     k                   :=  ActiveLSObject.NumPoints;
     if k > j then j     :=  k;
-    iElem               :=  LoadshapeClass.Next;
+    iElem               :=  DSS.LoadshapeClass.Next;
   End;
   // Configures simulation
   solution.Mode                 :=  TSolveMode.SNAPSHOT;
@@ -1614,7 +1627,7 @@ Begin
   solution.Solve() ;
 
   // Creates the folder for storign the results
-  Fileroot              :=  OutputDirectory; {CurrentDSSDir;}
+  Fileroot              :=  DSS.OutputDirectory; {CurrentDSSDir;}
   Fileroot              :=  Fileroot  + 'Aggregated_model';
   CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
   DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
@@ -1638,8 +1651,8 @@ Begin
         if myPCE = 'Load' then
         Begin
           SetElementActive(EMeter.ZonePCE[j]);
-          TotalkW           :=  TotalkW + TLoadObj(ActiveDSSObject).kWBase;
-          myLoads[k]        :=  TLoadObj(ActiveDSSObject).Name;
+          TotalkW           :=  TotalkW + TLoadObj(DSS.ActiveDSSObject).kWBase;
+          myLoads[k]        :=  TLoadObj(DSS.ActiveDSSObject).Name;
           setlength(myLoads,length(myLoads) + 1);
           inc(k);
         End;
@@ -1652,7 +1665,7 @@ Begin
       if length(myLoads) > 0 then
       Begin
         SetElementActive('Load.' + myLoads[0]);
-        setlength(myLoadShape,TLoadObj(ActiveDSSObject).YearlyShapeObj.NumPoints);
+        setlength(myLoadShape,TLoadObj(DSS.ActiveDSSObject).YearlyShapeObj.NumPoints);
         setlength(mykvarShape,length(myLoadShape));
         // Next, aggregate the load profiles for the zone
         for j := 0 to High(myLoads) do
@@ -1660,22 +1673,22 @@ Begin
           SetElementActive('Load.' + myLoads[j]);
           myWeight                        :=  0.0;
           myActual                        :=  1.0;
-          myPF                            :=  TLoadObj(ActiveDSSObject).PFNominal;
-          PFSpecified                     :=  TLoadObj(ActiveDSSObject).IsPFSpecified;
-          LoadshapeClass.SetActive(TLoadObj( ActiveDSSObject).YearlyShape);
-          ActiveDSSObject    :=  LoadshapeClass.ElementList.Active;
+          myPF                            :=  TLoadObj(DSS.ActiveDSSObject).PFNominal;
+          PFSpecified                     :=  TLoadObj(DSS.ActiveDSSObject).IsPFSpecified;
+          DSS.LoadshapeClass.SetActive(TLoadObj(DSS.ActiveDSSObject).YearlyShape);
+          DSS.ActiveDSSObject    :=  DSS.LoadshapeClass.ElementList.Active;
           for iElem := 0 to High(myLoadShape) do
           Begin
-            myLoadShape[iElem]  :=  myLoadShape[iElem]  + TLoadshapeObj(ActiveDSSObject).PMult(iElem);
+            myLoadShape[iElem]  :=  myLoadShape[iElem]  + TLoadshapeObj(DSS.ActiveDSSObject).PMult(iElem);
 
-            if TLoadshapeObj(ActiveDSSObject).QMult(iElem, qmult) then
+            if TLoadshapeObj(DSS.ActiveDSSObject).QMult(iElem, qmult) then
             Begin
               myWeight    :=  qmult;
               if myWeight = 0 then
               Begin
                 If PFSpecified and (myPF <> 1.0) Then  // Qmult not specified but PF was
                 Begin  // user specified the PF for this load
-                  myWeight  :=  TLoadshapeObj(ActiveDSSObject).PMult(iElem) * SQRT((1.0/SQR(myPF) - 1));
+                  myWeight  :=  TLoadshapeObj(DSS.ActiveDSSObject).PMult(iElem) * SQRT((1.0/SQR(myPF) - 1));
                   If myPF < 0.0 Then // watts and vare are in opposite directions
                     myWeight  :=  -myWeight;
                 End
@@ -1686,7 +1699,7 @@ Begin
               myWeight    :=  0.0;
               If PFSpecified and (myPF <> 1.0) Then  // Qmult not specified but PF was
               Begin  // user specified the PF for this load
-                myWeight  :=  TLoadshapeObj(ActiveDSSObject).PMult(iElem) * SQRT((1.0/SQR(myPF) - 1));
+                myWeight  :=  TLoadshapeObj(DSS.ActiveDSSObject).PMult(iElem) * SQRT((1.0/SQR(myPF) - 1));
                 If myPF < 0.0 Then // watts and vare are in opposite directions
                   myWeight  :=  -myWeight;
               End
@@ -1703,7 +1716,7 @@ Begin
         End;
 
         // Saves the profile on disk
-        myLoadShapes[High(myLoadShapes)]    :=  OutputDirectory {CurrentDSSDir} + 'loadShape_' + EMeter.Name + '.csv';
+        myLoadShapes[High(myLoadShapes)]    :=  DSS.OutputDirectory {CurrentDSSDir} + 'loadShape_' + EMeter.Name + '.csv';
         
         F := TFileStream.Create(myLoadShapes[High(myLoadShapes)], fmCreate);
         for j := 0 to High(myLoadShape) do
@@ -1718,12 +1731,12 @@ Begin
   End;
   setlength(myLoadShapes,length(myLoadShapes) -  1);
   // Deactivate all loadshapes in the model
-  LoadshapeClass.First;
-  for j := 1 to LoadshapeClass.ElementCount do
+  DSS.LoadshapeClass.First;
+  for j := 1 to DSS.LoadshapeClass.ElementCount do
   Begin
-    ActiveDSSObject                        :=  LoadshapeClass.ElementList.Active;
-    TLoadshapeObj(ActiveDSSObject).Enabled :=  False;
-    LoadshapeClass.Next;
+    DSS.ActiveDSSObject                        :=  DSS.LoadshapeClass.ElementList.Active;
+    TLoadshapeObj(DSS.ActiveDSSObject).Enabled :=  False;
+    DSS.LoadshapeClass.Next;
   End;
 
   // Declare the new loadshapes in the model
@@ -1734,11 +1747,11 @@ Begin
     TextCmd                           := 'New LoadShape.myShape_' + inttostr(j) + ' npts=' +
                                           floattostr(length(myLoadShape)) + ' interval=1 mult=(file=' + myLoadShapes[j] + ' col=1, header=No)' +
                                           'Qmult=(file=' + myLoadShapes[j] + ' col=2, header=No)' + TextCmd;
-    DSSExecutive.Command :=  TextCmd;
+    DSS.DSSExecutive.Command :=  TextCmd;
   End;
   // Assigns the new loadshapes to all the loads in the zone
   // also, disables the energy meters created and restores the originals
-//  DSSExecutive.Command :=  'solve snap';
+//  DSS.DSSExecutive.Command :=  'solve snap';
   k             :=  0;
   EnergyMeters.First;
   for i := 1 to EnergyMeters.Count do
@@ -1757,16 +1770,16 @@ Begin
             // Stores the reference values for the loads in memory to be consistent in
             // the feeder's definition
             SetElementActive(EMeter.ZonePCE[j]);
-            mykW                                            :=  TLoadObj( ActiveDSSObject).kWref;
-            mykvar                                          :=  TLoadObj( ActiveDSSObject).kVARref;
-            DSSExecutive.Command :=  EMeter.ZonePCE[j] + '.yearly=myShape_' + inttostr(k);
+            mykW                                            :=  TLoadObj(DSS.ActiveDSSObject).kWref;
+            mykvar                                          :=  TLoadObj(DSS.ActiveDSSObject).kVARref;
+            DSS.DSSExecutive.Command :=  EMeter.ZonePCE[j] + '.yearly=myShape_' + inttostr(k);
             SetElementActive(EMeter.ZonePCE[j]);
             // Rstores the nominal values for saving the file
-            TLoadObj( ActiveDSSObject).kWBase  := mykW;
-            TLoadObj( ActiveDSSObject).kvarBase:= mykvar;
-            TLoadObj( ActiveDSSObject).kWref   := mykW;
-            TLoadObj( ActiveDSSObject).kvarref := mykvar;
-            TLoadObj( ActiveDSSObject).kVABase := mykW / Abs(TLoadObj( ActiveDSSObject).PFNominal);
+            TLoadObj(DSS.ActiveDSSObject).kWBase  := mykW;
+            TLoadObj(DSS.ActiveDSSObject).kvarBase:= mykvar;
+            TLoadObj(DSS.ActiveDSSObject).kWref   := mykW;
+            TLoadObj(DSS.ActiveDSSObject).kvarref := mykvar;
+            TLoadObj(DSS.ActiveDSSObject).kVABase := mykW / Abs(TLoadObj(DSS.ActiveDSSObject).PFNominal);
           End;
         End;
         inc(k);
@@ -1779,7 +1792,7 @@ Begin
   end;
 
   // saves the new model
-  DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
+  DSS.DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
 
 End;
 
@@ -1825,7 +1838,7 @@ Begin
       setlength(PConn_Voltages,length(Locations)*6);        //  Sets the memory space for storing the voltage at the point of conn
       setlength(Link_branches,length(Locations));           //  Sets the memory space for storing the link branches names
       setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
-      SolutionAbort := FALSE;
+      DSS.SolutionAbort := FALSE;
       j             :=  0;
       for i := 0 to High(Locations) do
       begin
@@ -1844,7 +1857,7 @@ Begin
              for dbg := 0 to 1 do
              Begin
                BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
-               SetActiveBus(BusName);           // Activates the Bus
+               SetActiveBus(DSS, BusName);           // Activates the Bus
                pBus             :=  Buses^[ActiveBusIndex];
                jj               :=  1;
          // this code so nodes come out in order from smallest to larges
@@ -1864,7 +1877,7 @@ Begin
              Terminal         :=  'terminal=' + inttostr(jj + 1);
 
              PConn_Names[i]   :=  BusName;
-             SetActiveBus(BusName);           // Activates the Bus
+             SetActiveBus(DSS, BusName);           // Activates the Bus
              pBus             :=  Buses^[ActiveBusIndex];
 
              for jj := 1 to 3 do
@@ -1881,7 +1894,7 @@ Begin
 
            End;
           // Generates the OpenDSS Command;
-          DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
+          DSS.DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
         End
         else
         Begin
@@ -1889,7 +1902,7 @@ Begin
           Begin
              BusName          :=  Inc_Mat_Cols[0];
              PConn_Names[i]   :=  BusName;
-             SetActiveBus(BusName);           // Activates the Bus
+             SetActiveBus(DSS, BusName);           // Activates the Bus
              pBus             :=  Buses^[ActiveBusIndex];
              // Stores the voltages for the Reference bus first
              for jj := 1 to 3 do
@@ -1934,7 +1947,7 @@ BEGIN
       np    := NPhases;
       Ncond := NConds;
 
-      Parser.Token := FirstBus;     // use parser functions to decode
+      DSS.Parser.Token := FirstBus;     // use parser functions to decode
       FOR iTerm := 1 to Nterms DO
         BEGIN
            NodesOK := TRUE;
@@ -1946,7 +1959,7 @@ BEGIN
            For i := np + 1 to NCond DO NodeBuffer^[i] := 0;
 
            // Parser will override bus connection if any specified
-           BusName :=  Parser.ParseAsBusName(NNodes, NodeBuffer);
+           BusName :=  DSS.Parser.ParseAsBusName(NNodes, NodeBuffer);
 
            // Check for error in node specification
            For j := 1 to NNodes Do
@@ -1955,11 +1968,11 @@ BEGIN
                Begin
                    retval := DSSMessageDlg('Error in Node specification for Element: "'
                      +ParentClass.Name+'.'+Name+'"'+CRLF+
-                     'Bus Spec: "'+Parser.Token+'"',FALSE);
+                     'Bus Spec: "'+DSS.Parser.Token+'"',FALSE);
                    NodesOK := FALSE;
                    If  retval=-1 Then Begin
                        AbortBusProcess := TRUE;
-                       AppendGlobalresult('Aborted bus process.');
+                       AppendGlobalresult(DSS, 'Aborted bus process.');
                        Exit
                    End;
                    Break;
@@ -1976,7 +1989,7 @@ BEGIN
              ActiveTerminal.BusRef := AddBus(BusName,   Ncond);
              SetNodeRef(iTerm, NodeBuffer);  // for active circuit
            End;
-           Parser.Token := NextBus;
+           DSS.Parser.Token := NextBus;
          END;
      END;
 END;
@@ -1985,6 +1998,7 @@ END;
 //----------------------------------------------------------------------------
 Procedure TDSSCircuit.AddABus;
 BEGIN
+    //TODO: check if other growth rates are better from large systems
     If NumBuses > MaxBuses THEN BEGIN
         Inc(MaxBuses, IncBuses);
         ReallocMem(Buses, SizeOf(Buses^[1]) * MaxBuses);
@@ -2009,7 +2023,7 @@ BEGIN
 
 // Trap error in bus name
     IF Length(BusName) = 0 THEN BEGIN  // Error in busname
-       DoErrorMsg('TDSSCircuit.AddBus', 'BusName for Object "' + ActiveCktElement.Name + '" is null.',
+       DoErrorMsg(DSS, 'TDSSCircuit.AddBus', 'BusName for Object "' + ActiveCktElement.Name + '" is null.',
                   'Error in definition of object.', 424);
        For i := 1 to ActiveCktElement.NConds DO NodeBuffer^[i] := 0;
        Result := 0;
@@ -2021,7 +2035,7 @@ BEGIN
          Result := BusList.Add(BusName);    // Result is index of bus
          Inc(NumBuses);
          AddABus;   // Allocates more memory if necessary
-         Buses^[NumBuses] := TDSSBus.Create;
+         Buses^[NumBuses] := TDSSBus.Create(DSS);
     END;
 
     {Define nodes belonging to the bus}
@@ -2051,15 +2065,15 @@ VAR
     element: TDSSCktElement;
 begin
     Result := 0;
-    ParseObjectClassandName(FullObjectName, DevType, DevName);
-    DevClassIndex := ClassNames.Find(DevType);
+    ParseObjectClassandName(DSS, FullObjectName, DevType, DevName);
+    DevClassIndex := DSS.ClassNames.Find(DevType);
     if DevClassIndex = 0 then 
-        DevClassIndex := LastClassReferenced;
-    DevCls := DSSClassList.At(DevClassIndex);
+        DevClassIndex := DSS.LastClassReferenced;
+    DevCls := DSS.DSSClassList.At(DevClassIndex);
 
     if DevName = '' then
     begin
-        CmdResult := Result;
+        DSS.CmdResult := Result;
         Exit;
     end;
     
@@ -2068,8 +2082,8 @@ begin
         element := TDSSCktElement(DevCls.Find(DevName, False));
         if element <> NIL then
         begin
-            ActiveDSSClass := DSSClassList.Get(DevClassIndex);
-            LastClassReferenced := DevClassIndex;
+            DSS.ActiveDSSClass := DSS.DSSClassList.Get(DevClassIndex);
+            DSS.LastClassReferenced := DevClassIndex;
             Result := element.Handle;
             ActiveCktElement := CktElements.Get(Result);
         end;
@@ -2081,8 +2095,8 @@ begin
         begin
             if TDSSCktElement(CktElements.At(Devindex)).ParentClass = DevCls then   // we got a match
             BEGIN
-                ActiveDSSClass := DSSClassList.Get(DevClassIndex);
-                LastClassReferenced := DevClassIndex;
+                DSS.ActiveDSSClass := DSS.DSSClassList.Get(DevClassIndex);
+                DSS.LastClassReferenced := DevClassIndex;
                 Result := Devindex;
                 ActiveCktElement := CktElements.Get(Result);
                 break;
@@ -2090,14 +2104,14 @@ begin
             Devindex := Devicelist.FindNext;   // Could be duplicates
         end;
     end;
-    CmdResult := Result;
+    DSS.CmdResult := Result;
 END;
 
 //----------------------------------------------------------------------------
 Procedure TDSSCircuit.Set_ActiveCktElement(Value:TDSSCktElement);
 BEGIN
     FActiveCktElement := Value;
-    ActiveDSSObject := Value;
+    DSS.ActiveDSSObject := Value;
 END;
 
 //----------------------------------------------------------------------------
@@ -2164,10 +2178,10 @@ BEGIN
    so that all changes to the circuit will result in rebuilding the lists}
   If Not MeterZonesComputed or Not ZonesLocked Then
   Begin
-     If LogEvents Then LogThisEvent('Resetting Meter Zones');
-     EnergyMeterClass.ResetMeterZonesAll;
+     If LogEvents Then LogThisEvent(DSS, 'Resetting Meter Zones');
+     DSS.EnergyMeterClass.ResetMeterZonesAll;
      MeterZonesComputed := True;
-     If LogEvents Then LogThisEvent('Done Resetting Meter Zones');
+     If LogEvents Then LogThisEvent(DSS, 'Done Resetting Meter Zones');
   End;
 
   FreeTopology;
@@ -2242,7 +2256,7 @@ VAR
     i:integer;
 
 BEGIN
-     If LogEvents Then LogThisEvent('Reprocessing Bus Definitions');
+     If LogEvents Then LogThisEvent(DSS, 'Reprocessing Bus Definitions');
 
      AbortBusProcess := FALSE;
      SaveBusInfo;  // So we don't have to keep re-doing this
@@ -2418,12 +2432,12 @@ Var
 begin
      Result := FALSE;
      If (EnergyMeters.Count = 0) Then Begin
-       DoSimpleMsg('Cannot compute system capacity with EnergyMeter objects!', 430);
+       DoSimpleMsg(DSS, 'Cannot compute system capacity with EnergyMeter objects!', 430);
        Exit;
      End;
 
      If (NumUeRegs = 0) Then Begin
-       DoSimpleMsg('Cannot compute system capacity with no UE resisters defined.  Use SET UEREGS=(...) command.', 431);
+       DoSimpleMsg(DSS, 'Cannot compute system capacity with no UE resisters defined.  Use SET UEREGS=(...) command.', 431);
        Exit;
      End;
 
@@ -2432,9 +2446,9 @@ begin
      CapacityFound := False;
 
      Repeat
-          EnergyMeterClass.ResetAll;
+          DSS.EnergyMeterClass.ResetAll;
           Solution.Solve;
-          EnergyMeterClass.SampleAll;
+          DSS.EnergyMeterClass.SampleAll;
           TotalizeMeters;
 
            // Check for non-zero in UEregs
@@ -2459,7 +2473,7 @@ begin
 
 // Make a new subfolder in the present folder based on the circuit name and
 // a unique sequence number
-   SaveDir := CurrentDSSDir;  // remember where to come back to
+   SaveDir := DSS.CurrentDSSDir;  // remember where to come back to
    Success := FALSE;
    If Length(Dir)=0 Then Begin
      dir := Name;
@@ -2471,7 +2485,7 @@ begin
           Begin
               If CreateDir(CurrDir) Then
                Begin
-                  SetCurrentDSSDir(CurrDir);
+                  DSS.SetCurrentDSSDir(CurrDir);
                   Success := TRUE;
                   Break;
                End;
@@ -2483,52 +2497,52 @@ begin
           CurrDir :=  dir;
           If CreateDir(CurrDir) Then
            Begin
-              SetCurrentDSSDir(CurrDir);
+              DSS.SetCurrentDSSDir(CurrDir);
               Success := TRUE;
            End;
        End Else Begin  // Exists - overwrite
           CurrDir := Dir;
-          SetCurrentDSSDir(CurrDir);
+          DSS.SetCurrentDSSDir(CurrDir);
           Success := TRUE;
        End;
     End;
 
     If Not Success Then
      Begin
-       DoSimpleMsg('Could not create a folder "'+Dir+'" for saving the circuit.', 432);
+       DoSimpleMsg(DSS, 'Could not create a folder "'+Dir+'" for saving the circuit.', 432);
        Exit;
      End;
 
-    SavedFileList.Clear;  {This list keeps track of all files saved}
+    DSS.SavedFileList.Clear;  {This list keeps track of all files saved}
 
     // Initialize so we will know when we have saved the circuit elements
     For i := 1 to CktElements.Count Do TDSSCktElement(CktElements.Get(i)).HasBeenSaved := False;
 
     // Initialize so we don't save a class twice
-    For i := 1 to DSSClassList.Count Do TDssClass(DSSClassList.Get(i)).Saved := FALSE;
+    For i := 1 to DSS.DSSClassList.Count Do TDssClass(DSS.DSSClassList.Get(i)).Saved := FALSE;
 
     {Ignore Feeder Class -- gets saved with Energymeters}
    // FeederClass.Saved := TRUE;  // will think this class is already saved
 
     {Define voltage sources first}
-    Success :=  WriteVsourceClassFile(GetDSSClassPtr('vsource'), TRUE);
+    Success :=  WriteVsourceClassFile(DSS, GetDssClassPtr(DSS, 'vsource'), TRUE);
     {Write library files so that they will be available to lines, loads, etc}
     {Use default filename=classname}
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('wiredata'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('cndata'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('tsdata'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('linegeometry'),'', FALSE);
-    // If Success Then Success :=  WriteClassFile(GetDssClassPtr('linecode'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('linespacing'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('linecode'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('xfmrcode'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('loadshape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('TShape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('priceshape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('growthshape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('XYcurve'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('TCC_Curve'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('Spectrum'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'wiredata'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'cndata'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'tsdata'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'linegeometry'),'', FALSE);
+    // If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'linecode'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'linespacing'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'linecode'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'xfmrcode'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'loadshape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'TShape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'priceshape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'growthshape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'XYcurve'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'TCC_Curve'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'Spectrum'),'', FALSE);
     If Success Then Success := SaveFeeders; // Save feeders first
     If Success Then Success := SaveDSSObjects;  // Save rest ot the objects
     If Success Then Success := SaveVoltageBases;
@@ -2537,14 +2551,14 @@ begin
 
     If Success Then
     Begin
-        GlobalResult := 'Circuit saved in directory: ' + CurrentDSSDir;
+        DSS.GlobalResult := 'Circuit saved in directory: ' + DSS.CurrentDSSDir;
         // DoSimpleMsg('Circuit saved in directory: ' + CurrentDSSDir, 433)
     End
     Else
-        DoSimpleMsg('Error attempting to save circuit in ' + CurrentDSSDir, 434);
+        DoSimpleMsg(DSS, 'Error attempting to save circuit in ' + DSS.CurrentDSSDir, 434);
 
     // Return to Original directory
-    SetCurrentDSSDir(SaveDir);
+    DSS.SetCurrentDSSDir(SaveDir);
 
     Result := TRUE;
 
@@ -2560,12 +2574,12 @@ begin
   Result := FALSE;
 
   // Write Files for all populated DSS Classes  Except Solution Class
-  For i := 1 to DSSClassList.Count Do
+  For i := 1 to DSS.DSSClassList.Count Do
    Begin
-      Dss_Class := DSSClassList.Get(i);
-      If (DSS_Class = SolutionClass) or Dss_Class.Saved Then Continue;   // Cycle to next
+      Dss_Class := DSS.DSSClassList.Get(i);
+      If (DSS_Class = DSS.SolutionClass) or Dss_Class.Saved Then Continue;   // Cycle to next
             {use default filename=classname}
-      IF Not WriteClassFile(Dss_Class,'', (DSS_Class is TCktElementClass) ) Then Exit;  // bail on error
+      IF Not WriteClassFile(DSS, Dss_Class,'', (DSS_Class is TCktElementClass) ) Then Exit;  // bail on error
       DSS_Class.Saved := TRUE;
    End;
 
@@ -2580,15 +2594,15 @@ Var
 Begin
     Result := FALSE;
     Try
-        F := TFileStream.Create(CurrentDSSDir + 'BusVoltageBases.DSS', fmCreate);
-        DSSExecutive.Command := 'get voltagebases';
-        VBases := GlobalResult;
+        F := TFileStream.Create(DSS.CurrentDSSDir + 'BusVoltageBases.DSS', fmCreate);
+        DSS.DssExecutive.Command := 'get voltagebases';
+        VBases := DSS.GlobalResult;
         FSWriteln(F, 'Set Voltagebases='+VBases);
         FreeAndNil(F);
         Result := TRUE;
     Except
         On E:Exception Do 
-            DoSimpleMsg('Error Saving BusVoltageBases File: '+E.Message, 43501);
+            DoSimpleMsg(DSS, 'Error Saving BusVoltageBases File: '+E.Message, 43501);
     End;
 
     FreeAndNil(F);
@@ -2603,7 +2617,7 @@ Var
 begin
   Result := FALSE;
   Try
-      F := TFileStream.Create(CurrentDSSDir + 'Master.DSS', fmCreate);
+      F := TFileStream.Create(DSS.CurrentDSSDir + 'Master.DSS', fmCreate);
       FSWriteln(F, 'Clear');
       FSWriteln(F,'New Circuit.' + Name);
       FSWriteln(F);
@@ -2612,10 +2626,10 @@ begin
       FSWriteln(F);
 
       // Write Redirect for all populated DSS Classes  Except Solution Class
-      For i := 1 to SavedFileList.Count  Do
+      For i := 1 to DSS.SavedFileList.Count  Do
        Begin
           FSWrite(F, 'Redirect ');
-          FSWriteln(F, SavedFileList.Strings[i-1]);
+          FSWriteln(F, DSS.SavedFileList.Strings[i-1]);
        End;
 
       FSWriteln(F,'MakeBusList');
@@ -2629,7 +2643,7 @@ begin
       FreeAndNil(F);
       Result := TRUE;
   Except
-      On E:Exception Do DoSimpleMsg('Error Saving Master File: '+E.Message, 435);
+      On E:Exception Do DoSimpleMsg(DSS, 'Error Saving Master File: '+E.Message, 435);
   End;
   FreeAndNil(F);
 end;
@@ -2643,7 +2657,7 @@ begin
 
    Result := TRUE;
 {Write out all energy meter  zones to separate subdirectories}
-   SaveDir := CurrentDSSDir;
+   SaveDir := DSS.CurrentDSSDir;
    For i := 1 to EnergyMeters.Count Do
     Begin
         Meter := EnergyMeters.Get(i); // Recast pointer
@@ -2653,21 +2667,21 @@ begin
         
         If DirectoryExists(CurrDir) Then
          Begin
-            SetCurrentDSSDir(CurrDir);
+            DSS.SetCurrentDSSDir(CurrDir);
             Meter.SaveZone(CurrDir);
-            SetCurrentDSSDir(SaveDir);
+            DSS.SetCurrentDSSDir(SaveDir);
          End
         Else Begin
              If CreateDir(CurrDir) Then
              Begin
-                SetCurrentDSSDir(CurrDir);
+                DSS.SetCurrentDSSDir(CurrDir);
                 Meter.SaveZone(CurrDir);
-                SetCurrentDSSDir(SaveDir);
+                DSS.SetCurrentDSSDir(SaveDir);
              End
              Else Begin
-                DoSimpleMsg('Cannot create directory: '+CurrDir, 436);
+                DoSimpleMsg(DSS, 'Cannot create directory: '+CurrDir, 436);
                 Result := FALSE;
-                SetCurrentDSSDir(SaveDir);  // back to whence we came
+                DSS.SetCurrentDSSDir(SaveDir);  // back to whence we came
                 Break;
              End;
         End;
@@ -2684,7 +2698,7 @@ begin
    Result := FALSE;
 
    Try
-       F := TFileStream.Create(CurrentDSSDir + 'BusCoords.dss', fmCreate);
+       F := TFileStream.Create(DSS.CurrentDSSDir + 'BusCoords.dss', fmCreate);
 
        For i := 1 to NumBuses Do
        Begin
@@ -2700,7 +2714,7 @@ begin
        Result := TRUE;
 
    Except
-       On E:Exception Do DoSimpleMsg('Error creating Buscoords.dss.', 437);
+       On E:Exception Do DoSimpleMsg(DSS, 'Error creating Buscoords.dss.', 437);
    End;
    FreeAndNil(F);
 end;
@@ -2713,7 +2727,7 @@ Var
 
 begin
 {Reallocate the device list to improve the performance of searches}
-    If LogEvents Then LogThisEvent('Reallocating Device List');
+    If LogEvents Then LogThisEvent(DSS, 'Reallocating Device List');
     TempList := THashList.Create(2*NumDevices);
 
     For i := 1 to DeviceList.Count Do
@@ -2729,7 +2743,7 @@ end;
 procedure TDSSCircuit.Set_CaseName(const Value: String);
 begin
   FCaseName := Value;
-  CircuitName_ := Value + '_';
+  DSS.CircuitName_ := Value + '_';
 end;
 
 function TDSSCircuit.Get_Name:String;
@@ -2739,13 +2753,13 @@ end;
 
 Function TDSSCircuit.GetBusAdjacentPDLists: TAdjArray;
 begin
-  if not Assigned (BusAdjPD) then BuildActiveBusAdjacencyLists (BusAdjPD, BusAdjPC);
+  if not Assigned (BusAdjPD) then BuildActiveBusAdjacencyLists(self, BusAdjPD, BusAdjPC);
   Result := BusAdjPD;
 end;
 
 Function TDSSCircuit.GetBusAdjacentPCLists: TAdjArray;
 begin
-  if not Assigned (BusAdjPC) then BuildActiveBusAdjacencyLists (BusAdjPD, BusAdjPC);
+  if not Assigned (BusAdjPC) then BuildActiveBusAdjacencyLists(self, BusAdjPD, BusAdjPC);
   Result := BusAdjPC;
 end;
 
@@ -2764,7 +2778,7 @@ begin
       elem := CktElements.Next;
     End;
     FOR i := 1 to NumBuses Do Buses^[i].BusChecked := FALSE;
-    Branch_List := GetIsolatedSubArea (Sources.First, TRUE);  // calls back to build adjacency lists
+    Branch_List := GetIsolatedSubArea(self, Sources.First, TRUE);  // calls back to build adjacency lists
   end;
   Result := Branch_List;
 end;

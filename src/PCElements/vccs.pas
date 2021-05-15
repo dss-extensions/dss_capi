@@ -30,7 +30,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -107,8 +107,6 @@ type
         function VariableName(i: Integer): String; OVERRIDE;
     end;
 
-var
-    ActiveVCCSObj: TVCCSObj;
 
 implementation
 
@@ -120,7 +118,10 @@ uses
     Utilities,
     Sysutils,
     Command,
-    Solution;
+    Solution,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 var
     NumPropsThisClass: Integer;
@@ -140,9 +141,9 @@ begin
     Result := MapIdx(idx + offset, len);
 end;
 
-constructor TVCCS.Create;  // Creates superstructure for all Line objects
+constructor TVCCS.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'VCCS';
     DSSClassType := VCCS_ELEMENT + PC_ELEMENT; // participates in dynamics
 
@@ -152,7 +153,7 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-    XY_CurveClass := GetDSSClassPtr('XYCurve');
+    XY_CurveClass := GetDSSClassPtr(DSS, 'XYCurve');
 end;
 
 destructor TVCCS.Destroy;
@@ -221,11 +222,11 @@ var
     Param: String;
 begin
   // continue parsing with contents of Parser
-    ActiveVCCSObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveVCCSObj;
+    DSS.ActiveVCCSObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveVCCSObj;
     Result := 0;
 
-    with ActiveVCCSObj do
+    with DSS.ActiveVCCSObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -291,7 +292,7 @@ begin
                 13:
                     FirmsTau := Parser.DblValue;
             else
-                ClassEdit(ActiveVCCSObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveVCCSObj, ParamPointer - NumPropsThisClass)
             end;
             ParamName := Parser.NextParam;
             Param := Parser.StrValue;
@@ -311,7 +312,7 @@ begin
   {See if we can find this line name in the present collection}
     OtherVCCS := Find(OtherSource);
     if OtherVCCS <> NIL then
-        with ActiveVCCSObj do
+        with DSS.ActiveVCCSObj do
         begin
             if Fnphases <> OtherVCCS.Fnphases then
             begin
@@ -395,7 +396,7 @@ end;
 
 procedure TVCCSObj.RecalcElementData;
 begin
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device VCCS.' + Name + ' Not Found.', 333);
@@ -476,7 +477,7 @@ var
 begin
     ComputeVterminal;
 //  IterminalUpdated := FALSE;
-    if ActiveSolutionObj.IsDynamicModel then
+    if DSS.ActiveSolutionObj.IsDynamicModel then
     begin
         if FrmsMode then
         begin
@@ -609,7 +610,7 @@ begin
 
   // initialize the history terms for HW model source convention
     d := 1 / FsampleFreq;
-    wd := 2 * Pi * ActiveSolutionObj.Frequency * d;
+    wd := 2 * Pi * DSS.ActiveSolutionObj.Frequency * d;
     for i := 1 to Ffiltlen do
     begin
         wt := vang - wd * (Ffiltlen - i);
@@ -644,8 +645,8 @@ begin
     vpu := cabs(Vterminal^[1]) / Vrated;
     if vpu > 0.0 then
     begin
-        h := ActiveSolutionObj.DynaVars.h;
-        corrector := ActiveSolutionObj.DynaVars.IterationFlag;
+        h := DSS.ActiveSolutionObj.DynaVars.h;
+        corrector := DSS.ActiveSolutionObj.DynaVars.IterationFlag;
         nstep := trunc(1e-6 + h * FSampleFreq);
     // Vrms from LPF
         d := vpu - s1;
@@ -712,10 +713,10 @@ begin
 
     ComputeIterminal;
 
-    t := ActiveSolutionObj.DynaVars.t;
-    h := ActiveSolutionObj.DynaVars.h;
-    f := ActiveSolutionObj.Frequency;
-    corrector := ActiveSolutionObj.DynaVars.IterationFlag;
+    t := DSS.ActiveSolutionObj.DynaVars.t;
+    h := DSS.ActiveSolutionObj.DynaVars.h;
+    f := DSS.ActiveSolutionObj.Frequency;
+    corrector := DSS.ActiveSolutionObj.DynaVars.IterationFlag;
     d := 1 / FSampleFreq;
     nstep := trunc(1e-6 + h / d);
     w := 2 * Pi * f;

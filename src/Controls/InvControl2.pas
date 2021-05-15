@@ -75,7 +75,7 @@ type
       function MakeLike(const InvControl2Name:String):Integer;Override;
 
     public
-      constructor Create;
+      constructor Create(dssContext: TDSSContext);
       destructor Destroy; override;
 
       function Edit():Integer; override;     // uses global parser
@@ -363,14 +363,13 @@ type
   end;
 
 
-VAR
-    ActiveInvControl2Obj : TInvControl2Obj;
-
 IMPLEMENTATION
 
 uses
 
-    ParserDel, Sysutils, DSSClassDefs, DSSGlobals, Circuit,  uCmatrix, MathUtil, Math;
+    ParserDel, Sysutils, DSSClassDefs, DSSGlobals, Circuit,  uCmatrix, MathUtil, Math, 
+    DSSHelper,
+    DSSObjectHelper;
 
 const
 
@@ -408,11 +407,9 @@ type
     TPVSystemObj = TPVSystem2Obj;
     TStorageObj = TStorage2Obj;
 
-
-
-constructor TInvControl2.Create;  // Creates superstructure for all InvControl objects
+constructor TInvControl2.Create(dssContext: TDSSContext);
   begin
-    Inherited Create;
+    Inherited Create(dssContext);
 
      Class_name   := 'InvControl';
      DSSClassType := DSSClassType + INV_CONTROL;
@@ -421,7 +418,7 @@ constructor TInvControl2.Create;  // Creates superstructure for all InvControl o
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
-     XY_CurveClass := GetDSSClassPtr('XYCurve');
+     XY_CurveClass := GetDSSClassPtr(DSS, 'XYCurve');
 
   end;
 
@@ -704,12 +701,12 @@ function TInvControl2.Edit():Integer;
   begin
 
     // continue parsing with contents of Parser
-    ActiveInvControl2Obj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveInvControl2Obj;
+    DSS.ActiveInvControl2Obj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveInvControl2Obj;
 
     Result := 0;
 
-    with ActiveInvControl2Obj do
+    with DSS.ActiveInvControl2Obj do
       begin
 
         ParamPointer := 0;
@@ -761,7 +758,7 @@ function TInvControl2.Edit():Integer;
                     begin
                       if ControlMode = NONE_MODE then DoSimpleMsg('Invalid Control Mode selected', 1366);
                       CombiControlMode := NONE_COMBMODE;
-                      SolutionAbort := True;
+                      DSS.SolutionAbort := True;
                       exit;
                     end;
                  end;
@@ -781,7 +778,7 @@ function TInvControl2.Edit():Integer;
                     begin
                       if CombiControlMode = NONE_COMBMODE then DoSimpleMsg('Invalid CombiControl Mode selected', 1367);
                       CombiControlMode := NONE_COMBMODE;
-                      SolutionAbort := True;
+                      DSS.SolutionAbort := True;
                       exit;
                     end;
                  end;
@@ -956,7 +953,7 @@ function TInvControl2.Edit():Integer;
 
               else
                 // Inherited parameters
-                ClassEdit( ActiveInvControl2Obj, ParamPointer - NumPropsthisClass)
+                ClassEdit( DSS.ActiveInvControl2Obj, ParamPointer - NumPropsthisClass)
             end;
 
             CASE ParamPointer OF
@@ -989,7 +986,7 @@ function TInvControl2.MakeLike(const InvControl2Name:String):Integer;
 
    if OtherInvControl<>Nil then
 
-    with ActiveInvControl2Obj do begin
+    with DSS.ActiveInvControl2Obj do begin
 
       NPhases := OtherInvControl.Fnphases;
       NConds  := OtherInvControl.Fnconds; // Force Reallocation of terminal stuff
@@ -2879,8 +2876,8 @@ function TInvControl2Obj.MakeDERList:Boolean;
   begin
 
     Result := FALSE;
-    PVSysClass := GetDSSClassPtr('PVSystem');
-    StorageClass := GetDSSClassPtr('Storage');
+    PVSysClass := GetDSSClassPtr(DSS, 'PVSystem');
+    StorageClass := GetDSSClassPtr(DSS, 'Storage');
 
     if FListSize > 0 then
       begin    // Name list is defined - Use it

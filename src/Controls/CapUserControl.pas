@@ -24,7 +24,7 @@ unit CapUserControl;
 
 interface
 
-USES  CapControlVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
+USES  CapControlVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -54,6 +54,7 @@ TYPE
       protected
 
       public
+        DSS: TDSSContext;
 
         FEdit:    Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
 
@@ -62,7 +63,7 @@ TYPE
         Procedure DoPending(Const Code, ProxyHdl:integer);
         Procedure Sample;
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
 
         // this property loads library (if needed), sets the procedure variables, and makes a new instance
@@ -79,7 +80,7 @@ TYPE
 
 implementation
 
-Uses  DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+Uses  DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils, DSSHelper;
 
 { TCapUserControl }
 
@@ -87,15 +88,15 @@ function TCapUserControl.CheckFuncError(Addr: Pointer;  FuncName: String): Point
 begin
         If Addr=nil then
           Begin
-               DoSimpleMsg('CapControl User Model Does Not Have Required Function: ' + FuncName, 569);
+               DoSimpleMsg(DSS, 'CapControl User Model Does Not Have Required Function: ' + FuncName, 569);
                FuncError := True;
           End;
         Result := Addr;
 end;
 
-constructor TCapUserControl.Create;
+constructor TCapUserControl.Create(dssContext: TDSSContext);
 begin
-
+    DSS     := dssContext;
     FID     := 0;
     Fhandle := 0;
     FName   := '';
@@ -188,7 +189,7 @@ begin
           End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('CapControl User Model ' + Value + ' Load Library Failed. DSS Directory = '+DSSDirectory, 570)
+              DoSimpleMsg(DSS, 'CapControl User Model ' + Value + ' Load Library Failed. DSS Directory = '+DSSDirectory, 570)
         Else
         Begin
             FName := Value;
@@ -205,7 +206,7 @@ begin
 
             If FuncError Then Begin
                  If not FreeLibrary(FHandle) then
-                 DoSimpleMsg('Error Freeing DLL: '+Fname, 10570);  // decrement the reference count
+                 DoSimpleMsg(DSS, 'Error Freeing DLL: '+Fname, 10570);  // decrement the reference count
                  FID     := 0;
                  FHandle := 0;
                  FName   := '';

@@ -16,22 +16,22 @@ implementation
 
 uses
     CAPI_Constants,
-    CAPI_Globals,
     DSSClass,
     DSSGlobals,
     Executive,
-    SysUtils;
+    SysUtils,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
 function IsPropIndexInvalid(errorNum: Integer): Boolean;
 begin
     Result := FALSE;
 
-    if (FPropIndex > ActiveDSSObject.ParentClass.NumProperties) or (FPropIndex < 1) then
+    if (DSSPrime.FPropIndex > DSSPrime.ActiveDSSObject.ParentClass.NumProperties) or (DSSPrime.FPropIndex < 1) then
     begin
-        DoSimpleMsg(Format(
+        DoSimpleMsg(DSSPrime, Format(
             'Invalid property index "%d" for "%s.%s"',
-            [FPropIndex, ActiveDSSObject.ParentClass.Name, ActiveDSSObject.Name]),
+            [DSSPrime.FPropIndex, DSSPrime.ActiveDSSObject.ParentClass.Name, DSSPrime.ActiveDSSObject.Name]),
             errorNum
         );
         Result := TRUE;
@@ -41,31 +41,31 @@ end;
 function DSSProperty_Get_Description(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
         
-    if ActiveDSSObject = NIL then
+    if DSSPrime.ActiveDSSObject = NIL then
     begin
-        DoSimpleMsg('No active DSS object found! Activate one and try again.', 33100);
+        DoSimpleMsg(DSSPrime, 'No active DSS object found! Activate one and try again.', 33100);
         Exit;
     end;
 
-    with ActiveDSSObject.ParentClass do
+    with DSSPrime.ActiveDSSObject.ParentClass do
         if not IsPropIndexInvalid(33006) then
-            Result := DSS_GetAsPAnsiChar(PropertyHelp^[FPropIndex]);
+            Result := DSS_GetAsPAnsiChar(PropertyHelp^[DSSPrime.FPropIndex]);
 end;
 //------------------------------------------------------------------------------
 function DSSProperty_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if ActiveDSSObject = NIL then
+    if DSSPrime.ActiveDSSObject = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active DSS object found! Activate one and try again.', 33101);
+            DoSimpleMsg(DSSPrime, 'No active DSS object found! Activate one and try again.', 33101);
         end;
         Exit;
     end;
@@ -73,20 +73,20 @@ begin
     if IsPropIndexInvalid(33005) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(ActiveDSSObject.ParentClass.PropertyName^[FPropIndex]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveDSSObject.ParentClass.PropertyName^[DSSPrime.FPropIndex]);
 end;
 //------------------------------------------------------------------------------
 function DSSProperty_Get_Val(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if ActiveDSSObject = NIL then
+    if DSSPrime.ActiveDSSObject = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active DSS object found! Activate one and try again.', 33102);
+            DoSimpleMsg(DSSPrime, 'No active DSS object found! Activate one and try again.', 33102);
         end;
         Exit;
     end;
@@ -94,21 +94,21 @@ begin
     if IsPropIndexInvalid(33004) then
         Exit;
         
-    with ActiveDSSObject do
-        Result := DSS_GetAsPAnsiChar(PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]]);
+    with DSSPrime.ActiveDSSObject do
+        Result := DSS_GetAsPAnsiChar(PropertyValue[ParentClass.PropertyIdxMap[DSSPrime.FPropIndex]]);
 end;
 
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Val(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if ActiveDSSObject = NIL then
+    if DSSPrime.ActiveDSSObject = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active DSS object found! Activate one and try again.', 33103);
+            DoSimpleMsg(DSSPrime, 'No active DSS object found! Activate one and try again.', 33103);
         end;
         Exit;
     end;
@@ -116,26 +116,26 @@ begin
     if IsPropIndexInvalid(33001) then
         Exit;
 
-    with ActiveDSSObject do
-        DSSExecutive.Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' + ParentClass.PropertyName^[FPropIndex] + '=' + (Value);
+    with DSSPrime.ActiveDSSObject do
+        DSSPrime.DSSExecutive.Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' + ParentClass.PropertyName^[DSSPrime.FPropIndex] + '=' + (Value);
 end;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Index(const Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if ActiveDSSObject = NIL then
+    if DSSPrime.ActiveDSSObject = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active DSS object found! Activate one and try again.', 33104);
+            DoSimpleMsg(DSSPrime, 'No active DSS object found! Activate one and try again.', 33104);
         end;
         Exit;
     end;
         
-    FPropIndex := Value + 1;
-    FPropClass := ActiveDSSObject.ParentClass;
+    DSSPrime.FPropIndex := Value + 1;
+    DSSPrime.FPropClass := DSSPrime.ActiveDSSObject.ParentClass;
     if IsPropIndexInvalid(33002) then
         Exit;
 end;
@@ -144,35 +144,35 @@ procedure DSSProperty_Set_Name(const Value: PAnsiChar); CDECL;
 var
     i: Integer;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if ActiveDSSObject = NIL then
+    if DSSPrime.ActiveDSSObject = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active DSS object found! Activate one and try again.', 33105);
+            DoSimpleMsg(DSSPrime, 'No active DSS object found! Activate one and try again.', 33105);
         end;
         Exit;
     end;
         
-    FPropClass := ActiveDSSObject.ParentClass;
-    FPropIndex := 0;
-    if FPropClass <> NIL then
+    DSSPrime.FPropClass := DSSPrime.ActiveDSSObject.ParentClass;
+    DSSPrime.FPropIndex := 0;
+    if DSSPrime.FPropClass <> NIL then
     begin
-        for i := 1 to FPropClass.NumProperties do
+        for i := 1 to DSSPrime.FPropClass.NumProperties do
         begin
-            if CompareText(Value, FPropClass.PropertyName^[i]) = 0 then
+            if CompareText(Value, DSSPrime.FPropClass.PropertyName^[i]) = 0 then
             begin
-                FPropIndex := i;
+                DSSPrime.FPropIndex := i;
                 Exit;
             end;
         end;
     end;
     
-    DoSimpleMsg(Format(
+    DoSimpleMsg(DSSPrime, Format(
         'Invalid property name "%s" for "%s.%s"',
-        [String(Value), FPropClass.Name, ActiveDSSObject.Name]),
+        [String(Value), DSSPrime.FPropClass.Name, DSSPrime.ActiveDSSObject.Name]),
         33003
     );
 end;

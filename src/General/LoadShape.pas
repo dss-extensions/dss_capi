@@ -84,7 +84,7 @@ type
         procedure DefineProperties;
         function MakeLike(const ShapeName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -180,9 +180,6 @@ type
         procedure UseFloat64;
     end;
 
-var
-    ActiveLoadShapeObj: TLoadShapeObj;
-
 implementation
 
 uses
@@ -192,7 +189,11 @@ uses
     Sysutils,
     MathUtil,
     Math,
-    BufStream;
+    BufStream,
+    DSSPointerList,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 type
     ELoadShapeError = class(Exception);  // Raised to abort solution
@@ -201,9 +202,9 @@ const
     NumPropsThisClass = 21;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLoadShape.Create;  // Creates superstructure for all Line objects
+constructor TLoadShape.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'LoadShape';
     DSSClassType := DSS_OBJECT;
 
@@ -325,11 +326,8 @@ end;
 function TLoadShape.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TLoadShapeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TLoadShapeObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 // Loads the mapped file features into local variables for further use
@@ -432,7 +430,7 @@ var
     ParmName,
     Param: String;
 begin
-    with ActiveLoadShapeObj do
+    with DSS.ActiveLoadShapeObj do
     try
         AuxParser.CmdString := S;
         ParmName := AuxParser.NextParam;
@@ -496,10 +494,10 @@ var
 begin
     Result := 0;
     // continue parsing with contents of Parser
-    ActiveLoadShapeObj := ElementList.Active;
-    ActiveDSSObject := ActiveLoadShapeObj;
+    DSS.ActiveLoadShapeObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveLoadShapeObj;
 
-    with ActiveLoadShapeObj do
+    with DSS.ActiveLoadShapeObj do
     begin
 
         ParamPointer := 0;
@@ -519,7 +517,7 @@ begin
                 0:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
                 1: // npts:
-                    if ActiveLoadShapeObj.ExternalMemory then
+                    if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
                         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                         Exit;
@@ -534,7 +532,7 @@ begin
                     Interval := Parser.DblValue;
                 3, 19: // Pmult, mult:
                 begin
-                    if ActiveLoadShapeObj.ExternalMemory then
+                    if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
                         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                         Exit;
@@ -557,7 +555,7 @@ begin
                 end;
                 4: // hour:
                 begin
-                    if ActiveLoadShapeObj.ExternalMemory then
+                    if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
                         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                         Exit;
@@ -588,7 +586,7 @@ begin
                     end;
                 11: // qmult:
                 begin
-                    if ActiveLoadShapeObj.ExternalMemory then
+                    if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
                         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61105);
                         Exit;
@@ -640,7 +638,7 @@ begin
                 end;
             else
                 // Inherited parameters
-                ClassEdit(ActiveLoadShapeObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveLoadShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -682,7 +680,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherLoadShape := Find(ShapeName);
     if OtherLoadShape <> NIL then
-        with ActiveLoadShapeObj do
+        with DSS.ActiveLoadShapeObj do
         begin
             if ExternalMemory then
             begin
@@ -792,13 +790,13 @@ procedure TLoadShape.Set_Code(const Value: String);  // sets the  active LoadSha
 var
     LoadShapeObj: TLoadShapeObj;
 begin
-    ActiveLoadShapeObj := NIL;
+    DSS.ActiveLoadShapeObj := NIL;
     LoadShapeObj := ElementList.First;
     while LoadShapeObj <> NIL do
     begin
         if CompareText(LoadShapeObj.Name, Value) = 0 then
         begin
-            ActiveLoadShapeObj := LoadShapeObj;
+            DSS.ActiveLoadShapeObj := LoadShapeObj;
             Exit;
         end;
         LoadShapeObj := ElementList.Next;
@@ -814,7 +812,7 @@ var
     i: Integer;
     s: String;
 begin
-    if ActiveLoadShapeObj.ExternalMemory then
+    if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
@@ -828,7 +826,7 @@ begin
         Exit;
     end;
 
-    with ActiveLoadShapeObj do
+    with DSS.ActiveLoadShapeObj do
     try
         if UseMMF then
         begin
@@ -895,7 +893,7 @@ var
     i: Integer;
     s: String;
 begin
-    if ActiveLoadShapeObj.ExternalMemory then
+    if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
@@ -909,7 +907,7 @@ begin
         Exit;
     end;
 
-    with ActiveLoadShapeObj do
+    with DSS.ActiveLoadShapeObj do
     try
         if UseMMF then
         begin
@@ -969,7 +967,7 @@ var
     i: Integer;
     bytesRead: Int64;
 begin
-    if ActiveLoadShapeObj.ExternalMemory then
+    if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
@@ -982,7 +980,7 @@ begin
         Exit;
     end;
 
-    with ActiveLoadShapeObj do
+    with DSS.ActiveLoadShapeObj do
     try
         if UseMMF then
         begin
@@ -1070,7 +1068,7 @@ var
     i: Integer;
     bytesRead: Int64;
 begin
-    if ActiveLoadShapeObj.ExternalMemory then
+    if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
@@ -1083,7 +1081,7 @@ begin
         Exit;
     end;
 
-    with ActiveLoadShapeObj do
+    with DSS.ActiveLoadShapeObj do
     try
         if UseMMF then
         begin
@@ -1276,9 +1274,9 @@ begin
                 i := i mod mmDataSize;  // Wrap around using remainder
             if i = 0 then 
                 i := mmDataSize;
-            Result.re := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i, mmLineLen);
+            Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen);
             if Assigned(dQ) then
-                Result.im := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
+                Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
             else
                 Result.im := Set_Result_im(Result.re);
             
@@ -1323,9 +1321,9 @@ begin
         begin
             if UseMMF then
             begin
-                Result.re := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i + 1, mmLineLen);
+                Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i + 1, mmLineLen);
                 if Assigned(dQ) then
-                    Result.im := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i + 1, mmLineLenQ)
+                    Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i + 1, mmLineLenQ)
                 else
                     Result.im := Set_Result_im(Result.re);
             
@@ -1348,15 +1346,15 @@ begin
             poffset := offset - Stride;
             if UseMMF then
             begin
-                Result.re := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, LastValueAccessed + 1, mmLineLen) +
+                Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed + 1, mmLineLen) +
                     (Hr - dH[LastValueAccessed]) / (dH[i] - dH[LastValueAccessed]) *
-                    (InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i, mmLineLen) -
-                    InterpretDblArrayMMF(mmView, mmFileType, mmColumn, LastValueAccessed, mmLineLen));
+                    (InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen) -
+                    InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed, mmLineLen));
                 if Assigned(dQ) then
-                    Result.im := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed + 1, mmLineLenQ) +
+                    Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed + 1, mmLineLenQ) +
                         (Hr - dH[LastValueAccessed]) / (dH[i] - dH[LastValueAccessed]) *
-                        (InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ) -
-                        InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed, mmLineLenQ))
+                        (InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ) -
+                        InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed, mmLineLenQ))
                 else
                     Result.im := Set_Result_im(Result.re);
                     
@@ -1525,7 +1523,7 @@ begin
     if (i < FNumPoints) and (i >= 0) then
     begin
         if UseMMF then
-            Result := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i + 1, mmLineLen)
+            Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i + 1, mmLineLen)
         else if dP <> nil then
             Result := dP[Stride * i]
         else
@@ -1543,7 +1541,7 @@ begin
     if (i < FNumPoints) and (i >= 0) then
     begin
         if UseMMF then
-            Result := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i + 1, mmLineLen)
+            Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i + 1, mmLineLen)
         else if dP <> nil then
             Result := dP[Stride * i]
         else
@@ -1564,7 +1562,7 @@ begin
     if (i < FNumPoints) and (i >= 0) then
     begin
         if UseMMF then
-            m := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
+            m := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
         else if dQ <> nil then
             m := dQ[Stride * i]
         else
@@ -1731,13 +1729,13 @@ begin
     if Assigned(dP) then
     begin
         try
-            FName := OutputDirectory {CurrentDSSDir} + Format('%s_P.dbl', [Name]);
+            FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s_P.dbl', [Name]);
             F := TFileStream.Create(FName, fmCreate);
             if UseMMF then
             begin
                 for i := 1 to NumPoints do
                 begin
-                    myDBL := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i, mmLineLen);
+                    myDBL := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen);
                     F.Write(myDBL, sizeOf(myDBL));
                 end;
             end
@@ -1746,7 +1744,7 @@ begin
                 for i := 1 to NumPoints do
                     F.Write(dP[Stride * i], sizeOf(Double)); 
             end;
-            GlobalResult := 'mult=[dblfile=' + FName + ']';
+            DSS.GlobalResult := 'mult=[dblfile=' + FName + ']';
         finally
             FreeAndNil(F);
         end;
@@ -1754,20 +1752,20 @@ begin
         if Assigned(dQ) then
         begin
             try
-                FName := OutputDirectory {CurrentDSSDir} + Format('%s_Q.dbl', [Name]);
+                FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s_Q.dbl', [Name]);
                 F := TFileStream.Create(FName, fmCreate);
                 if UseMMF then
                 begin
                     for i := 1 to NumPoints do
                     begin
-                        myDBL := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ);
+                        myDBL := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ);
                         F.Write(myDBL, sizeOf(myDBL));
                     end;
                 end
                 else
                     for i := 1 to NumPoints do
                         F.Write(dQ[Stride * i], sizeOf(Double)); 
-                AppendGlobalResult(' Qmult=[dblfile=' + FName + ']');
+                AppendGlobalResult(DSS, ' Qmult=[dblfile=' + FName + ']');
             finally
                 FreeAndNil(F);
             end;
@@ -1789,17 +1787,17 @@ begin
     if Assigned(dP) then
     begin
         try
-            FName := OutputDirectory {CurrentDSSDir} + Format('%s_P.sng', [Name]);
+            FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s_P.sng', [Name]);
             F := TFileStream.Create(FName, fmCreate);
             for i := 1 to NumPoints do
             begin
                 if UseMMF then
-                    Temp := InterpretDblArrayMMF(mmView, mmFileType, mmColumn, i, mmLineLen)
+                    Temp := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen)
                 else
                     Temp := dP[Stride * i];
                 F.Write(Temp, SizeOf(Temp));
             end;
-            GlobalResult := 'mult=[sngfile=' + FName + ']';
+            DSS.GlobalResult := 'mult=[sngfile=' + FName + ']';
         finally
             FreeAndNil(F);
         end;
@@ -1807,17 +1805,17 @@ begin
         if Assigned(dQ) then
         begin
             try
-                FName := OutputDirectory {CurrentDSSDir} + Format('%s_Q.sng', [Name]);
+                FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s_Q.sng', [Name]);
                 F := TFileStream.Create(FName, fmCreate);
                 for i := 1 to NumPoints do
                 begin
                     if UseMMF then
-                        Temp := InterpretDblArrayMMF(mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
+                        Temp := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
                     else
                         Temp := dQ[Stride * i];
                     F.Write(Temp, SizeOf(Temp));
                 end;
-                AppendGlobalResult(' Qmult=[sngfile=' + FName + ']');
+                AppendGlobalResult(DSS, ' Qmult=[sngfile=' + FName + ']');
             finally
                 FreeAndNil(F);
             end;
@@ -1954,13 +1952,13 @@ procedure TLoadShapeObj.UseFloat32;
 var
     i: Integer;
 begin
-    if ActiveLoadShapeObj.UseMMF then
+    if DSS.ActiveLoadShapeObj.UseMMF then
     begin
         DoSimpleMsg('Data cannot be toggled to 32-bit floats when memory-mapping is enabled.', 61106);
         Exit;
     end;
 
-    if ActiveLoadShapeObj.ExternalMemory then
+    if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61103);
         Exit;

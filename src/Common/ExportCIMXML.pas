@@ -1,7 +1,5 @@
 unit ExportCIMXML;
 
-{$IFDEF FPC}{$MODE Delphi}{$ENDIF}
-
 {
   ----------------------------------------------------------
   Copyright (c) 2009-2015, Electric Power Research Institute, Inc.
@@ -15,23 +13,98 @@ unit ExportCIMXML;
 interface
 
 uses
-    Classes, NamedObject;  // for TUuid
+    Classes, NamedObject,  // for TUuid
+    DSSClass,
+    Transformer,
+    HashList;
 
-procedure ExportCDPSM(FileNm: String;
-    Substation: String;
-    SubGeographicRegion: String;
-    GeographicRegion: String;
-    FdrUUID: TUuid;
-    SubUUID: TUuid;
-    SubGeoUUID: TUuid;
-    RgnUUID: TUuid;
-    Combined: Boolean = TRUE);
 
-procedure StartUuidList(size: Integer);
-procedure FreeUuidList;
-procedure WriteHashedUUIDs(F: TFileStream);
-procedure AddHashedUUID(key: String; UuidVal: String);
-procedure DefaultCircuitUUIDs(var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid);
+
+type
+    UuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
+        BaseV, LinePhase, LoadPhase, GenPhase, CapPhase, SolarPhase, BatteryPhase,
+        XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc, SolarLoc, BatteryLoc,
+        OpLimV, OpLimI, LoadResp, CIMVer, PosPt, CoordSys, TopoIsland, Station,
+        GeoRgn, SubGeoRgn, ZData, OpLimT, XfInfo, FdrLoc, OpLimAHi, OpLimALo,
+        OpLimBHi, OpLimBLo, MachLoc, PVPanels, Battery, SrcLoc, TankInfo, TankAsset,
+        TapInfo, TapCtrl, TapAsset, PUZ, WirePos, NormAmps, EmergAmps);
+
+    ProfileChoice = (FunPrf, EpPrf, GeoPrf, TopoPrf, CatPrf, SshPrf);
+
+    TCIMExporter = class;
+
+    TCIMBankObject = class(TNamedObject)
+    PUBLIC
+        vectorGroup: String;
+        maxWindings: Integer;
+        nWindings: Integer;
+        connections: array of Integer;
+        angles: array of Integer;
+        phaseA: array of Integer;
+        phaseB: array of Integer;
+        phaseC: array of Integer;
+        ground: array of Integer;
+        a_unit: TTransfObj;  // save this for writing the bank coordinates
+
+        constructor Create(MaxWdg: Integer);
+        destructor Destroy; OVERRIDE;
+
+        procedure AddTransformer(CE: TCIMExporter; pXf: TTransfObj);
+        procedure BuildVectorGroup;
+    end;
+
+    TCIMOpLimitObject = class(TNamedObject)
+    PUBLIC
+        NormAmps: Double;
+        EmergAmps: Double;
+        constructor Create(norm, emerg: Double);
+        destructor Destroy; OVERRIDE;
+    end;
+
+    TCIMExporter = class(TObject)
+    public
+        procedure StartUuidList(size: Integer);
+        procedure FreeUuidList;
+        procedure WriteHashedUUIDs(F: TFileStream);
+        procedure AddHashedUUID(key: String; UuidVal: String);
+        procedure DefaultCircuitUUIDs(var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid);
+        procedure ExportCDPSM(FileNm: String;
+            Substation: String;
+            SubGeographicRegion: String;
+            GeographicRegion: String;
+            FdrUUID: TUuid;
+            SubUUID: TUuid;
+            SubGeoUUID: TUuid;
+            RgnUUID: TUuid;
+            Combined: Boolean = TRUE);
+
+        constructor Create(dssContext: TDSSContext);
+        destructor Destroy; override;
+    private
+        DSS: TDSSContext;
+        UuidHash: THashList;       // index is 1-based
+        UuidList: array of TUuid;  // index is 0-based
+        UuidKeyList: array of String;
+        BankHash: THashList;
+        BankList: array of TCIMBankObject;
+        OpLimitHash: THashList;
+        OpLimitList: array of TCIMOpLimitObject;
+    // the Combined XML can be broken into six separate profiles
+        F_FUN: TFileStream;
+        F_EP: TFileStream;
+        F_SSH: TFileStream;
+        F_CAT: TFileStream;
+        F_GEO: TFileStream;
+        F_TOPO: TFileStream;
+        roots: array[ProfileChoice] of String;
+        ids: array[ProfileChoice] of TUuid;
+    public
+        Separate: Boolean;
+        procedure WriteCimLn(prf: ProfileChoice; const s: String);
+        procedure StartInstance(prf: ProfileChoice; Root: String; Obj: TNamedObject);
+        procedure StartFreeInstance(prf: ProfileChoice; Root: String; uuid: TUUID);
+        procedure EndInstance(prf: ProfileChoice; Root: String);
+    end;
 
 implementation
 
@@ -49,7 +122,6 @@ uses
     RegControl,
     Vsource,
     Line,
-    Transformer,
     Ucomplex,
     UcMatrix,
     LineCode,
@@ -63,7 +135,6 @@ uses
     LineGeometry,
     StrUtils,
     Math,
-    HashList,
     WireData,
     XfmrCode,
     LineSpacing,
@@ -75,86 +146,110 @@ uses
     Relay,
     Recloser,
     DSSObject,
-    DSSClass,
+    DSSHelper,
     CmdForms;
-
-type
-    UuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
-        BaseV, LinePhase, LoadPhase, GenPhase, CapPhase, SolarPhase, BatteryPhase,
-        XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc, SolarLoc, BatteryLoc,
-        OpLimV, OpLimI, LoadResp, CIMVer, PosPt, CoordSys, TopoIsland, Station,
-        GeoRgn, SubGeoRgn, ZData, OpLimT, XfInfo, FdrLoc, OpLimAHi, OpLimALo,
-        OpLimBHi, OpLimBLo, MachLoc, PVPanels, Battery, SrcLoc, TankInfo, TankAsset,
-        TapInfo, TapCtrl, TapAsset, PUZ, WirePos, NormAmps, EmergAmps);
-
-    ProfileChoice = (FunPrf, EpPrf, GeoPrf, TopoPrf, CatPrf, SshPrf);
-
-    TBankObject = class(TNamedObject)
-    PUBLIC
-        vectorGroup: String;
-        maxWindings: Integer;
-        nWindings: Integer;
-        connections: array of Integer;
-        angles: array of Integer;
-        phaseA: array of Integer;
-        phaseB: array of Integer;
-        phaseC: array of Integer;
-        ground: array of Integer;
-        a_unit: TTransfObj;  // save this for writing the bank coordinates
-
-        constructor Create(MaxWdg: Integer);
-        destructor Destroy; OVERRIDE;
-
-        procedure AddTransformer(pXf: TTransfObj);
-        procedure BuildVectorGroup;
-    end;
-
-    TOpLimitObject = class(TNamedObject)
-    PUBLIC
-        NormAmps: Double;
-        EmergAmps: Double;
-        constructor Create(norm, emerg: Double);
-        destructor Destroy; OVERRIDE;
-    end;
-
-    TFileDealer = class(TObject)
-    PRIVATE
-    // the Combined XML can be broken into six separate profiles
-        F_FUN: TFileStream;
-        F_EP: TFileStream;
-        F_SSH: TFileStream;
-        F_CAT: TFileStream;
-        F_GEO: TFileStream;
-        F_TOPO: TFileStream;
-        roots: array[ProfileChoice] of String;
-        ids: array[ProfileChoice] of TUuid;
-    PUBLIC
-        Separate: Boolean;
-        constructor Create(Combined: Boolean; FileName: String);
-        destructor Destroy; OVERRIDE;
-        procedure WriteCimLn(prf: ProfileChoice; const s: String);
-        procedure StartInstance(prf: ProfileChoice; Root: String; Obj: TNamedObject);
-        procedure StartFreeInstance(prf: ProfileChoice; Root: String; uuid: TUUID);
-        procedure EndInstance(prf: ProfileChoice; Root: String);
-    end;
-
-var
-    UuidHash: THashList;       // index is 1-based
-    UuidList: array of TUuid;  // index is 0-based
-    UuidKeyList: array of String;
-    BankHash: THashList;
-    BankList: array of TBankObject;
-    OpLimitHash: THashList;
-    OpLimitList: array of TOpLimitObject;
-    FD: TFileDealer;
 
 const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
     CIM_NS = 'http://iec.ch/TC57/CIM100';
 
-procedure StartCIMFile(F: TFileStream; FileNm: String; prf: ProfileChoice); FORWARD;
+type
+    TCIMExporterHelper = class helper for TCIMExporter
+    private
+        procedure StartCIMFile(F: TFileStream; FileNm: String; prf: ProfileChoice);
+        procedure StartOpLimitList(size: Integer);
+        procedure StartBankList(size: Integer);
+        procedure FreeBankList;
+        procedure FreeOpLimitList;
+        procedure AddBank(pBank: TCIMBankObject);
+        function GetBank(sBank: String): TCIMBankObject;
+        procedure AddOpLimit(pLimit: TCIMOpLimitObject);
+        function GetOpLimit(sLimit: String): TCIMOpLimitObject;
+        function GetHashedUuid(key: String): TUuid;
+        function GetDevUuid(which: UuidChoice; Name: String; Seq: Integer): TUuid;
+        function GetTermUuid(pElem: TDSSCktElement; Seq: Integer): TUuid;
+        function GetBaseVUuid(val: Double): TUuid;
+        function GetOpLimVUuid(val: Double): TUuid;
+        function GetOpLimIUuid(norm, emerg: Double): TUuid;
+        function PhaseString(pElem: TDSSCktElement; bus: Integer): String; // if order doesn't matter
+        procedure ParseSwitchClass(pLine: TLineObj; var swtCls: String; var ratedAmps, breakingAmps: Double);
+        procedure DoubleNode(prf: ProfileChoice; Node: String; val: Double);
+        procedure IntegerNode(prf: ProfileChoice; Node: String; val: Integer);
+        procedure BooleanNode(prf: ProfileChoice; Node: String; val: Boolean);
+        procedure RefNode(prf: ProfileChoice; Node: String; Obj: TNamedObject);
+        procedure UuidNode(prf: ProfileChoice; Node: String; ID: TUuid);
+        procedure LineCodeRefNode(prf: ProfileChoice; List: TLineCode; Name: String);
+        procedure LineSpacingRefNode(prf: ProfileChoice; List: TDSSClass; Name: String);
+        procedure PhaseWireRefNode(prf: ProfileChoice; Obj: TConductorDataObj);
+        procedure CircuitNode(prf: ProfileChoice; Obj: TNamedObject);
+        function FirstPhaseString(pElem: TDSSCktElement; bus: Integer): String;
+        procedure GeneratorControlEnum(prf: ProfileChoice; val: String);
+        procedure BatteryStateEnum(prf: ProfileChoice; val: Integer);
+        procedure SynchMachTypeEnum(prf: ProfileChoice; val: String);
+        procedure SynchMachModeEnum(prf: ProfileChoice; val: String);
+        procedure RegulatingControlEnum(prf: ProfileChoice; val: String);
+        procedure WindingConnectionEnum(prf: ProfileChoice; val: String);
+        procedure ConductorInsulationEnum(prf: ProfileChoice; val: String);
+        procedure ConductorUsageEnum(prf: ProfileChoice; val: String);
+        procedure CableShieldMaterialEnum(prf: ProfileChoice; val: String);
+        procedure ConductorMaterialEnum(prf: ProfileChoice; val: String);
+        procedure CableOuterJacketEnum(prf: ProfileChoice; val: String);
+        procedure CableConstructionEnum(prf: ProfileChoice; val: String);
+        procedure TransformerControlEnum(prf: ProfileChoice; val: String);
+        procedure MonitoredPhaseNode(prf: ProfileChoice; val: String);
+        procedure OpLimitDirectionEnum(prf: ProfileChoice; val: String);
+        procedure StringNode(prf: ProfileChoice; Node: String; val: String);
+        procedure StartInstance(prf: ProfileChoice; Root: String; Obj: TNamedObject);
+        procedure StartFreeInstance(prf: ProfileChoice; Root: String; uuid: TUUID);
+        procedure EndInstance(prf: ProfileChoice; Root: String);
+        procedure XfmrPhasesEnum(prf: ProfileChoice; pElem: TDSSCktElement; bus: Integer);
+        procedure PhaseNode(prf: ProfileChoice; Root: String; val: String);
+        procedure PhaseKindNode(prf: ProfileChoice; Root: String; val: String);
+        procedure PhaseSideNode(prf: ProfileChoice; Root: String; Side: Integer; val: String);
+        procedure ShuntConnectionKindNode(prf: ProfileChoice; Root: String; val: String); // D, Y, Yn, I
+        procedure WindingConnectionKindNode(prf: ProfileChoice; val: String); // D, Y, Z, Yn, Zn, A, I
+        procedure AttachLinePhases(pLine: TLineObj);
+        procedure AttachSwitchPhases(pLine: TLineObj);
+        procedure AttachCapPhases(pCap: TCapacitorObj; geoUUID: TUuid);
+        procedure AttachSecondaryPhases(pLoad: TLoadObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
+        procedure AttachLoadPhases(pLoad: TLoadObj; geoUUID: TUuid);
+        procedure AttachSecondaryGenPhases(pGen: TGeneratorObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
+        procedure AttachGeneratorPhases(pGen: TGeneratorObj; geoUUID: TUuid);
+        procedure AttachSecondarySolarPhases(pPV: TPVSystemObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
+        procedure AttachSolarPhases(pPV: TPVSystemObj; geoUUID: TUuid);
+        procedure AttachSecondaryStoragePhases(pBat: TStorageObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
+        procedure AttachStoragePhases(pBat: TStorageObj; geoUUID: TUuid);
+        procedure WriteLoadModel(Name: String; ID: TUuid;
+            zP: Double; iP: Double; pP: Double; zQ: Double; iQ: Double; pQ: Double;
+            eP: Double; eQ: Double);
+        procedure WritePositions(pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid);
+        procedure WriteReferenceTerminals(pElem: TDSSCktElement; RefUuid: TUuid; norm: Double = 0.0; emerg: Double = 0.0);
+        procedure WriteTerminals(pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid; norm: Double = 0.0; emerg: Double = 0.0);
+        procedure VbaseNode(prf: ProfileChoice; pElem: TDSSCktElement);
+        procedure WriteXfmrCode(pXfCd: TXfmrCodeObj);
+        procedure WriteCableData(pCab: TCableDataObj);
+        procedure WriteTapeData(pCab: TTSDataObj);
+        procedure WriteConcData(pCab: TCNDataObj);
+        procedure WriteWireData(pWire: TConductorDataObj);
 
-procedure TFileDealer.WriteCimLn(prf: ProfileChoice; const s: String);
+        procedure FD_Destroy;
+        procedure FD_Create(Combined: Boolean; FileName: String);
+
+        function ActiveCircuit: TDSSCircuit;inline;
+        function FD: TCIMExporter;inline;
+    end;
+
+function TCIMExporterHelper.FD: TCIMExporter;
+begin
+    Result := self;
+end;
+
+function TCIMExporterHelper.ActiveCircuit: TDSSCircuit;
+begin
+    Result := DSS.ActiveCircuit;
+end;
+
+procedure TCIMExporter.WriteCimLn(prf: ProfileChoice; const s: String);
 begin
     if Separate then
     begin
@@ -186,30 +281,7 @@ begin
     end;
 end;
 
-constructor TFileDealer.Create(Combined: Boolean; FileName: String);
-var
-    i: ProfileChoice;
-begin
-    inherited Create;
-    Separate := not Combined;
-    if Separate then
-    begin
-        for i := Low(ProfileChoice) to High(ProfileChoice) do
-            roots[i] := '';
-        StartCIMFile(F_FUN, FileName + '_FUN.XML', FunPrf);
-        StartCIMFile(F_GEO, FileName + '_GEO.XML', GeoPrf);
-        StartCIMFile(F_TOPO, FileName + '_TOPO.XML', TopoPrf);
-        StartCIMFile(F_SSH, FileName + '_SSH.XML', SshPrf);
-        StartCIMFile(F_CAT, FileName + '_CAT.XML', CatPrf);
-        StartCIMFile(F_EP, FileName + '_EP.XML', EpPrf)
-    end
-    else
-    begin
-        StartCIMFile(F_FUN, FileName, FunPrf)
-    end;
-end;
-
-procedure TFileDealer.StartInstance(prf: ProfileChoice; Root: String; Obj: TNamedObject);
+procedure TCIMExporter.StartInstance(prf: ProfileChoice; Root: String; Obj: TNamedObject);
 begin
     if Separate then
     begin // must be first to avoid stack overflow in WriteCimLn
@@ -221,7 +293,7 @@ begin
     WriteCimLn(prf, Format('  <cim:IdentifiedObject.name>%s</cim:IdentifiedObject.name>', [Obj.localName]));
 end;
 
-procedure TFileDealer.StartFreeInstance(prf: ProfileChoice; Root: String; uuid: TUUID);
+procedure TCIMExporter.StartFreeInstance(prf: ProfileChoice; Root: String; uuid: TUUID);
 begin
     if Separate then
     begin // must be first to avoid stack overflow in WriteCimLn
@@ -231,7 +303,7 @@ begin
     WriteCimLn(prf, Format('<cim:%s rdf:ID="%s">', [Root, UUIDToCIMString(uuid)]));
 end;
 
-procedure TFileDealer.EndInstance(prf: ProfileChoice; Root: String);
+procedure TCIMExporter.EndInstance(prf: ProfileChoice; Root: String);
 var
     i: ProfileChoice;
 begin
@@ -250,27 +322,7 @@ begin
         WriteCimLn(prf, Format('</cim:%s>', [Root]));
 end;
 
-destructor TFileDealer.Destroy;
-begin
-    FSWriteLn(F_FUN, '</rdf:RDF>');
-    FreeAndNil(F_FUN);
-    if Separate then
-    begin
-        FSWriteLn(F_GEO, '</rdf:RDF>');
-        FSWriteLn(F_CAT, '</rdf:RDF>');
-        FSWriteLn(F_SSH, '</rdf:RDF>');
-        FSWriteLn(F_TOPO, '</rdf:RDF>');
-        FSWriteLn(F_EP, '</rdf:RDF>');
-        FreeAndNil(F_GEO);
-        FreeAndNil(F_CAT);
-        FreeAndNil(F_SSH);
-        FreeAndNil(F_TOPO);
-        FreeAndNil(F_EP);
-    end;
-    inherited Destroy;
-end;
-
-procedure ParseSwitchClass(pLine: TLineObj; var swtCls: String; var ratedAmps, breakingAmps: Double);
+procedure TCIMExporterHelper.ParseSwitchClass(pLine: TLineObj; var swtCls: String; var ratedAmps, breakingAmps: Double);
 var
     pFuse: TFuseObj;
     pRelay: TRelayObj;
@@ -314,7 +366,7 @@ begin
 end;
 
 // this returns s1, s2, or a combination of ABCN
-function PhaseString(pElem: TDSSCktElement; bus: Integer): String; // if order doesn't matter
+function TCIMExporterHelper.PhaseString(pElem: TDSSCktElement; bus: Integer): String; // if order doesn't matter
 var
     val, phs: String;
     dot: Integer;
@@ -492,7 +544,7 @@ end;
 
 {$R+}
 
-constructor TBankObject.Create(MaxWdg: Integer);
+constructor TCIMBankObject.Create(MaxWdg: Integer);
 begin
     maxWindings := MaxWdg;
     nWindings := 0;
@@ -505,7 +557,7 @@ begin
     inherited Create('Bank');
 end;
 
-destructor TBankObject.Destroy;
+destructor TCIMBankObject.Destroy;
 begin
     connections := NIL;
     angles := NIL;
@@ -517,7 +569,7 @@ begin
     inherited Destroy;
 end;
 
-procedure TBankObject.BuildVectorGroup;
+procedure TCIMBankObject.BuildVectorGroup;
 var
     i: Integer;
 begin
@@ -544,7 +596,7 @@ begin
         vectorGroup := UpperCase(LeftStr(vectorGroup, 1)) + RightStr(vectorGroup, Length(vectorGroup) - 1);
 end;
 
-procedure TBankObject.AddTransformer(pXf: TTransfObj);
+procedure TCIMBankObject.AddTransformer(CE: TCIMExporter; pXf: TTransfObj);
 var
     i: Integer;
     phs: String;
@@ -555,7 +607,7 @@ begin
     a_unit := pXf;
     for i := 1 to pXf.NumberOfWindings do
     begin
-        phs := PhaseString(pXf, i);
+        phs := CE.PhaseString(pXf, i);
         if Pos('A', phs) > 0 then
             phaseA[i - 1] := 1;
         if Pos('B', phs) > 0 then
@@ -571,14 +623,14 @@ begin
     end;
 end;
 
-constructor TOpLimitObject.Create(norm, emerg: Double);
+constructor TCIMOpLimitObject.Create(norm, emerg: Double);
 begin
     NormAmps := norm;
     EmergAmps := emerg;
     inherited Create('OpLimI');
 end;
 
-destructor TOpLimitObject.Destroy;
+destructor TCIMOpLimitObject.Destroy;
 begin
     inherited Destroy;
 end;
@@ -587,7 +639,7 @@ end;
 // a counterpart in the DSS named objects.  These include banks, windings, and
 // winding info.  So we create temporary UUIDs on the fly, and use a hash list when we
 // need the UUIDs for later reference
-procedure StartUuidList(size: Integer);
+procedure TCIMExporter.StartUuidList(size: Integer);
 begin
     if assigned(UuidList) then
         FreeUuidList;
@@ -596,38 +648,38 @@ begin
     SetLength(UuidKeyList, size);
 end;
 
-procedure StartBankList(size: Integer);
+procedure TCIMExporterHelper.StartBankList(size: Integer);
 begin
     BankHash := THashList.Create(size);
     SetLength(BankList, size);
 end;
 
-procedure StartOpLimitList(size: Integer);
+procedure TCIMExporterHelper.StartOpLimitList(size: Integer);
 begin
     OpLimitHash := THashList.Create(size);
     SetLength(OpLimitList, size);
 end;
 
-procedure FreeUuidList;
+procedure TCIMExporter.FreeUuidList;
 begin
     UuidHash.Free;
     UuidList := NIL;
     UuidKeyList := NIL;
 end;
 
-procedure FreeBankList;
+procedure TCIMExporterHelper.FreeBankList;
 begin
     BankHash.Free;
     BankList := NIL;
 end;
 
-procedure FreeOpLimitList;
+procedure TCIMExporterHelper.FreeOpLimitList;
 begin
     OpLimitHash.Free;
     OpLimitList := NIL;
 end;
 
-procedure AddBank(pBank: TBankObject);
+procedure TCIMExporterHelper.AddBank(pBank: TCIMBankObject);
 var
     ref, size: Integer;
 begin
@@ -638,7 +690,7 @@ begin
     BankList[ref - 1] := pBank;
 end;
 
-function GetBank(sBank: String): TBankObject;
+function TCIMExporterHelper.GetBank(sBank: String): TCIMBankObject;
 var
     ref: Integer;
 begin
@@ -648,7 +700,7 @@ begin
         Result := BankList[ref - 1];
 end;
 
-procedure AddOpLimit(pLimit: TOpLimitObject);
+procedure TCIMExporterHelper.AddOpLimit(pLimit: TCIMOpLimitObject);
 var
     ref, size: Integer;
 begin
@@ -659,7 +711,7 @@ begin
     OpLimitList[ref - 1] := pLimit;
 end;
 
-function GetOpLimit(sLimit: String): TOpLimitObject;
+function TCIMExporterHelper.GetOpLimit(sLimit: String): TCIMOpLimitObject;
 var
     ref: Integer;
 begin
@@ -669,7 +721,7 @@ begin
         Result := OpLimitList[ref - 1];
 end;
 
-function GetHashedUuid(key: String): TUuid;
+function TCIMExporterHelper.GetHashedUuid(key: String): TUuid;
 var
     ref: Integer;
     size: Integer;
@@ -694,7 +746,7 @@ begin
     end;
 end;
 
-procedure AddHashedUuid(key: String; UuidVal: String);
+procedure TCIMExporter.AddHashedUuid(key: String; UuidVal: String);
 var
     ref: Integer;
     size: Integer;
@@ -719,7 +771,7 @@ begin
 end;
 
 // any temporary object (not managed by DSS) should have '=' prepended to the Name
-function GetDevUuid(which: UuidChoice; Name: String; Seq: Integer): TUuid;
+function TCIMExporterHelper.GetDevUuid(which: UuidChoice; Name: String; Seq: Integer): TUuid;
 var
     key: String;
 begin
@@ -835,7 +887,7 @@ begin
     Result := GetHashedUuid(key);
 end;
 
-procedure DefaultCircuitUUIDs(var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid);
+procedure TCIMExporter.DefaultCircuitUUIDs(var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid);
 begin
     if not assigned(uuidlist) then
         StartUuidList(ActiveCircuit.NumBuses + 2 * ActiveCircuit.NumDevices);
@@ -845,7 +897,7 @@ begin
     subGeoID := GetDevUuid(SubGeoRgn, 'SubGeoRgn', 1);
 end;
 
-procedure WriteHashedUUIDs(F: TFileStream);
+procedure TCIMExporter.WriteHashedUUIDs(F: TFileStream);
 var
     i: Integer;
 begin
@@ -858,7 +910,7 @@ begin
 end;
 
 // terminals are uniquely identified by class (DSSObjType), plus name and sequence
-function GetTermUuid(pElem: TDSSCktElement; Seq: Integer): TUuid;
+function TCIMExporterHelper.GetTermUuid(pElem: TDSSCktElement; Seq: Integer): TUuid;
 var
     key: String;
 begin
@@ -874,7 +926,7 @@ begin
     Result := 'BaseV_' + FloatToStrF(val, ffFixed, 6, 4);
 end;
 
-function GetBaseVUuid(val: Double): TUuid;
+function TCIMExporterHelper.GetBaseVUuid(val: Double): TUuid;
 begin
     Result := GetDevUuid(BaseV, GetBaseVName(val), 1);
 end;
@@ -884,7 +936,7 @@ begin
     Result := 'OpLimV_' + FloatToStrF(val, ffFixed, 6, 4);
 end;
 
-function GetOpLimVUuid(val: Double): TUuid;
+function TCIMExporterHelper.GetOpLimVUuid(val: Double): TUuid;
 begin
     Result := GetDevUuid(OpLimV, GetOpLimVName(val), 1);
 end;
@@ -894,22 +946,22 @@ begin
     Result := 'OpLimI_' + FloatToStrF(norm, ffFixed, 6, 1) + '_' + FloatToStrF(emerg, ffFixed, 6, 1);
 end;
 
-function GetOpLimIUuid(norm, emerg: Double): TUuid;
+function TCIMExporterHelper.GetOpLimIUuid(norm, emerg: Double): TUuid;
 begin
     Result := GetDevUuid(OpLimI, GetOpLimIName(norm, emerg), 1);
 end;
 
-procedure DoubleNode(prf: ProfileChoice; Node: String; val: Double);
+procedure TCIMExporterHelper.DoubleNode(prf: ProfileChoice; Node: String; val: Double);
 begin
     FD.WriteCimLn(prf, Format('  <cim:%s>%.8g</cim:%s>', [Node, val, Node]));
 end;
 
-procedure IntegerNode(prf: ProfileChoice; Node: String; val: Integer);
+procedure TCIMExporterHelper.IntegerNode(prf: ProfileChoice; Node: String; val: Integer);
 begin
     FD.WriteCimLn(prf, Format('  <cim:%s>%d</cim:%s>', [Node, val, Node]));
 end;
 
-procedure BooleanNode(prf: ProfileChoice; Node: String; val: Boolean);
+procedure TCIMExporterHelper.BooleanNode(prf: ProfileChoice; Node: String; val: Boolean);
 var
     i: String;
 begin
@@ -920,17 +972,17 @@ begin
     FD.WriteCimLn(prf, Format('  <cim:%s>%s</cim:%s>', [Node, i, Node]));
 end;
 
-procedure RefNode(prf: ProfileChoice; Node: String; Obj: TNamedObject);
+procedure TCIMExporterHelper.RefNode(prf: ProfileChoice; Node: String; Obj: TNamedObject);
 begin
     FD.WriteCimLn(prf, Format('  <cim:%s rdf:resource="#%s"/>', [Node, Obj.CIM_ID]));
 end;
 
-procedure UuidNode(prf: ProfileChoice; Node: String; ID: TUuid);
+procedure TCIMExporterHelper.UuidNode(prf: ProfileChoice; Node: String; ID: TUuid);
 begin
     FD.WriteCimLn(prf, Format('  <cim:%s rdf:resource="#%s"/>', [Node, UUIDToCIMString(ID)]));
 end;
 
-procedure LineCodeRefNode(prf: ProfileChoice; List: TLineCode; Name: String);
+procedure TCIMExporterHelper.LineCodeRefNode(prf: ProfileChoice; List: TLineCode; Name: String);
 var
     Obj: TLineCodeObj;
 begin
@@ -941,7 +993,7 @@ begin
     end;
 end;
 
-procedure LineSpacingRefNode(prf: ProfileChoice; List: TDSSClass; Name: String);
+procedure TCIMExporterHelper.LineSpacingRefNode(prf: ProfileChoice; List: TDSSClass; Name: String);
 var
     Obj: TDSSObject; // should be a TLineGeometryObj or TLineSpacingObj
 begin
@@ -952,17 +1004,17 @@ begin
     end;
 end;
 
-procedure PhaseWireRefNode(prf: ProfileChoice; Obj: TConductorDataObj);
+procedure TCIMExporterHelper.PhaseWireRefNode(prf: ProfileChoice; Obj: TConductorDataObj);
 begin
     FD.WriteCimLn(prf, Format('  <cim:ACLineSegmentPhase.WireInfo rdf:resource="#%s"/>', [Obj.CIM_ID]));
 end;
 
-procedure CircuitNode(prf: ProfileChoice; Obj: TNamedObject);
+procedure TCIMExporterHelper.CircuitNode(prf: ProfileChoice; Obj: TNamedObject);
 begin
     FD.WriteCimLn(prf, Format('  <cim:Equipment.EquipmentContainer rdf:resource="#%s"/>', [Obj.CIM_ID]));
 end;
 
-function FirstPhaseString(pElem: TDSSCktElement; bus: Integer): String;
+function TCIMExporterHelper.FirstPhaseString(pElem: TDSSCktElement; bus: Integer): String;
 var
     val: String;
 begin
@@ -973,13 +1025,13 @@ begin
         Result := 'A';
 end;
 
-procedure GeneratorControlEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.GeneratorControlEnum(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:GeneratingUnit.genControlSource rdf:resource="%s#GeneratorControlSource.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure BatteryStateEnum(prf: ProfileChoice; val: Integer);
+procedure TCIMExporterHelper.BatteryStateEnum(prf: ProfileChoice; val: Integer);
 var
     str: String;
 begin
@@ -993,142 +1045,142 @@ begin
         [CIM_NS, str]));
 end;
 
-procedure SynchMachTypeEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.SynchMachTypeEnum(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:SynchronousMachine.type rdf:resource="%s#SynchronousMachineType.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure SynchMachModeEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.SynchMachModeEnum(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:SynchronousMachine.operatingMode rdf:resource="%s#SynchronousMachineOperatingMode.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure RegulatingControlEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.RegulatingControlEnum(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:RegulatingControl.mode rdf:resource="%s#RegulatingControlModeKind.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure WindingConnectionEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.WindingConnectionEnum(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:TransformerEndInfo.connectionKind rdf:resource="%s#WindingConnection.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure ConductorInsulationEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.ConductorInsulationEnum(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:WireInfo.insulationMaterial rdf:resource="%s#WireInsulationKind.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure ConductorUsageEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.ConductorUsageEnum(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:WireSpacingInfo.usage rdf:resource="%s#WireUsageKind.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure CableShieldMaterialEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.CableShieldMaterialEnum(prf: ProfileChoice; val: String);
 begin
 //  FD.WriteCimLn (prf, Format ('  <cim:CableInfo.shieldMaterial rdf:resource="%s#CableShieldMaterialKind.%s"/>',
 //    [CIM_NS, val]));
 end;
 
-procedure ConductorMaterialEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.ConductorMaterialEnum(prf: ProfileChoice; val: String);
 begin
 //  FD.WriteCimLn (prf, Format ('  <cim:WireInfo.material rdf:resource="%s#WireMaterialKind.%s"/>',
 //    [CIM_NS, val]));
 end;
 
-procedure CableOuterJacketEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.CableOuterJacketEnum(prf: ProfileChoice; val: String);
 begin
 //  FD.WriteCimLn (prf, Format ('  <cim:CableInfo.outerJacketKind rdf:resource="%s#CableOuterJacketKind.%s"/>',
 //    [CIM_NS, val]));
 end;
 
-procedure CableConstructionEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.CableConstructionEnum(prf: ProfileChoice; val: String);
 begin
 //  FD.WriteCimLn (prf, Format ('  <cim:CableInfo.constructionKind rdf:resource="%s#CableConstructionKind.%s"/>',
 //    [CIM_NS, val]));
 end;
 
-procedure TransformerControlEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.TransformerControlEnum(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:RatioTapChanger.tculControlMode rdf:resource="%s#TransformerControlMode.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure MonitoredPhaseNode(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.MonitoredPhaseNode(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:RegulatingControl.monitoredPhase rdf:resource="%s#PhaseCode.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure OpLimitDirectionEnum(prf: ProfileChoice; val: String);
+procedure TCIMExporterHelper.OpLimitDirectionEnum(prf: ProfileChoice; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:OperationalLimitType.direction rdf:resource="%s#OperationalLimitDirectionKind.%s"/>',
         [CIM_NS, val]));
 end;
 
-procedure StringNode(prf: ProfileChoice; Node: String; val: String);
+procedure TCIMExporterHelper.StringNode(prf: ProfileChoice; Node: String; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:%s>%s</cim:%s>', [Node, val, Node]));
 end;
 
-procedure StartInstance(prf: ProfileChoice; Root: String; Obj: TNamedObject);
+procedure TCIMExporterHelper.StartInstance(prf: ProfileChoice; Root: String; Obj: TNamedObject);
 begin
     FD.StartInstance(prf, Root, Obj);
 end;
 
-procedure StartFreeInstance(prf: ProfileChoice; Root: String; uuid: TUUID);
+procedure TCIMExporterHelper.StartFreeInstance(prf: ProfileChoice; Root: String; uuid: TUUID);
 begin
     FD.StartFreeInstance(prf, Root, uuid);
 end;
 
-procedure EndInstance(prf: ProfileChoice; Root: String);
+procedure TCIMExporterHelper.EndInstance(prf: ProfileChoice; Root: String);
 begin
     FD.EndInstance(prf, Root);
 end;
 
-procedure XfmrPhasesEnum(prf: ProfileChoice; pElem: TDSSCktElement; bus: Integer);
+procedure TCIMExporterHelper.XfmrPhasesEnum(prf: ProfileChoice; pElem: TDSSCktElement; bus: Integer);
 begin
     FD.WriteCimLn(prf, Format('  <cim:TransformerTankEnd.phases rdf:resource="%s#PhaseCode.%s"/>',
         [CIM_NS, PhaseString(pElem, bus)]));
 end;
 
-procedure PhaseNode(prf: ProfileChoice; Root: String; val: String);
+procedure TCIMExporterHelper.PhaseNode(prf: ProfileChoice; Root: String; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:%s.phase rdf:resource="%s#PhaseCode.%s"/>',
         [Root, CIM_NS, val]));
 end;
 
-procedure PhaseKindNode(prf: ProfileChoice; Root: String; val: String);
+procedure TCIMExporterHelper.PhaseKindNode(prf: ProfileChoice; Root: String; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:%s.phase rdf:resource="%s#SinglePhaseKind.%s"/>',
         [Root, CIM_NS, val]));
 end;
 
-procedure PhaseSideNode(prf: ProfileChoice; Root: String; Side: Integer; val: String);
+procedure TCIMExporterHelper.PhaseSideNode(prf: ProfileChoice; Root: String; Side: Integer; val: String);
 begin
     FD.WriteCimLn(prf, Format('  <cim:%s.phaseSide%d rdf:resource="%s#SinglePhaseKind.%s"/>',
         [Root, Side, CIM_NS, val]));
 end;
 
-procedure ShuntConnectionKindNode(prf: ProfileChoice; Root: String; val: String); // D, Y, Yn, I
+procedure TCIMExporterHelper.ShuntConnectionKindNode(prf: ProfileChoice; Root: String; val: String); // D, Y, Yn, I
 begin
     FD.WriteCimLn(prf, Format('  <cim:%s.phaseConnection rdf:resource="%s#PhaseShuntConnectionKind.%s"/>',
         [Root, CIM_NS, val]));
 end;
 
-procedure WindingConnectionKindNode(prf: ProfileChoice; val: String); // D, Y, Z, Yn, Zn, A, I
+procedure TCIMExporterHelper.WindingConnectionKindNode(prf: ProfileChoice; val: String); // D, Y, Z, Yn, Zn, A, I
 begin
     FD.WriteCimLn(prf, Format('  <cim:PowerTransformerEnd.connectionKind rdf:resource="%s#WindingConnection.%s"/>',
         [CIM_NS, val]));
 end;
 
 // we specify phases except for balanced three-phase
-procedure AttachLinePhases(pLine: TLineObj);
+procedure TCIMExporterHelper.AttachLinePhases(pLine: TLineObj);
 var
     s, phs: String;
     i: Integer;
@@ -1161,7 +1213,7 @@ begin
     end;
 end;
 
-procedure AttachSwitchPhases(pLine: TLineObj);
+procedure TCIMExporterHelper.AttachSwitchPhases(pLine: TLineObj);
 var
     s1, s2, phs1, phs2: String;
     i: Integer;
@@ -1190,7 +1242,7 @@ begin
     end;
 end;
 
-procedure AttachCapPhases(pCap: TCapacitorObj; geoUUID: TUuid);
+procedure TCIMExporterHelper.AttachCapPhases(pCap: TCapacitorObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1224,7 +1276,7 @@ begin
     end;
 end;
 
-procedure AttachSecondaryPhases(pLoad: TLoadObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
+procedure TCIMExporterHelper.AttachSecondaryPhases(pLoad: TLoadObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
     pPhase.LocalName := pLoad.Name + '_' + phs;
     pPhase.UUID := GetDevUuid(LoadPhase, pPhase.LocalName, 1);
@@ -1237,7 +1289,7 @@ begin
     EndInstance(FunPrf, 'EnergyConsumerPhase');
 end;
 
-procedure AttachLoadPhases(pLoad: TLoadObj; geoUUID: TUuid);
+procedure TCIMExporterHelper.AttachLoadPhases(pLoad: TLoadObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1288,7 +1340,7 @@ begin
     end;
 end;
 
-procedure AttachSecondaryGenPhases(pGen: TGeneratorObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
+procedure TCIMExporterHelper.AttachSecondaryGenPhases(pGen: TGeneratorObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
     pPhase.LocalName := pGen.Name + '_' + phs;
     pPhase.UUID := GetDevUuid(GenPhase, pPhase.LocalName, 1);
@@ -1301,7 +1353,7 @@ begin
     EndInstance(FunPrf, 'SynchronousMachinePhase');
 end;
 
-procedure AttachGeneratorPhases(pGen: TGeneratorObj; geoUUID: TUuid);
+procedure TCIMExporterHelper.AttachGeneratorPhases(pGen: TGeneratorObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1349,7 +1401,7 @@ begin
     end;
 end;
 
-procedure AttachSecondarySolarPhases(pPV: TPVSystemObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
+procedure TCIMExporterHelper.AttachSecondarySolarPhases(pPV: TPVSystemObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
     pPhase.LocalName := pPV.Name + '_' + phs;
     pPhase.UUID := GetDevUuid(SolarPhase, pPhase.LocalName, 1);
@@ -1362,7 +1414,7 @@ begin
     EndInstance(FunPrf, 'PowerElectronicsConnectionPhase');
 end;
 
-procedure AttachSolarPhases(pPV: TPVSystemObj; geoUUID: TUuid);
+procedure TCIMExporterHelper.AttachSolarPhases(pPV: TPVSystemObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1410,7 +1462,7 @@ begin
     end;
 end;
 
-procedure AttachSecondaryStoragePhases(pBat: TStorageObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
+procedure TCIMExporterHelper.AttachSecondaryStoragePhases(pBat: TStorageObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
     pPhase.LocalName := pBat.Name + '_' + phs;
     pPhase.UUID := GetDevUuid(BatteryPhase, pPhase.LocalName, 1);
@@ -1423,7 +1475,7 @@ begin
     EndInstance(FunPrf, 'PowerElectronicsConnectionPhase');
 end;
 
-procedure AttachStoragePhases(pBat: TStorageObj; geoUUID: TUuid);
+procedure TCIMExporterHelper.AttachStoragePhases(pBat: TStorageObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1471,7 +1523,7 @@ begin
     end;
 end;
 
-procedure WriteLoadModel(Name: String; ID: TUuid;
+procedure TCIMExporterHelper.WriteLoadModel(Name: String; ID: TUuid;
     zP: Double; iP: Double; pP: Double; zQ: Double; iQ: Double; pQ: Double;
     eP: Double; eQ: Double);
 begin
@@ -1517,7 +1569,7 @@ begin
         Result := FALSE;
 end;
 
-procedure WritePositions(pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid);
+procedure TCIMExporterHelper.WritePositions(pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid);
 var
     Nterm, j, ref: Integer;
     BusName: String;
@@ -1546,12 +1598,12 @@ begin
     end;
 end;
 
-procedure WriteReferenceTerminals(pElem: TDSSCktElement; RefUuid: TUuid; norm: Double = 0.0; emerg: Double = 0.0);
+procedure TCIMExporterHelper.WriteReferenceTerminals(pElem: TDSSCktElement; RefUuid: TUuid; norm: Double; emerg: Double);
 var
     Nterm, j, ref: Integer;
     BusName, TermName, LimitName: String;
     TermUuid, LimiTUuid: TUuid;
-    pLimit: TOpLimitObject;
+    pLimit: TCIMOpLimitObject;
 begin
     Nterm := pElem.Nterms;
     BusName := pElem.FirstBus;
@@ -1577,7 +1629,7 @@ begin
                 pLimit := GetOpLimit(LimitName);
                 if pLimit = NIL then
                 begin
-                    pLimit := TOpLimitObject.Create(norm, emerg);
+                    pLimit := TCIMOpLimitObject.Create(norm, emerg);
                     pLimit.localName := LimitName;
                     pLimit.UUID := GetDevUuid(OpLimI, LimitName, 0);
                     AddOpLimit(pLimit);
@@ -1591,14 +1643,14 @@ begin
     end;
 end;
 
-procedure WriteTerminals(pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid;
-    norm: Double = 0.0; emerg: Double = 0.0);
+procedure TCIMExporterHelper.WriteTerminals(pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid;
+    norm: Double; emerg: Double);
 begin
     WriteReferenceTerminals(pElem, pElem.UUID, norm, emerg);
     WritePositions(pElem, geoUUID, crsUUID);
 end;
 
-procedure VbaseNode(prf: ProfileChoice; pElem: TDSSCktElement);
+procedure TCIMExporterHelper.VbaseNode(prf: ProfileChoice; pElem: TDSSCktElement);
 var
     j: Integer;
 begin
@@ -1607,7 +1659,7 @@ begin
         GetBaseVUuid(sqrt(3.0) * ActiveCircuit.Buses^[j].kVBase));
 end;
 
-procedure WriteXfmrCode(pXfCd: TXfmrCodeObj);
+procedure TCIMExporterHelper.WriteXfmrCode(pXfCd: TXfmrCodeObj);
 var
     pName, pBank: TNamedObject;
     ratShort, ratEmerg, val, Zbase: Double;
@@ -1715,7 +1767,7 @@ begin
     pName.Free;
 end;
 
-procedure WriteCableData(pCab: TCableDataObj);
+procedure TCIMExporterHelper.WriteCableData(pCab: TCableDataObj);
 var
     v1: Double;
 begin
@@ -1736,7 +1788,7 @@ begin
     end;
 end;
 
-procedure WriteTapeData(pCab: TTSDataObj);
+procedure TCIMExporterHelper.WriteTapeData(pCab: TTSDataObj);
 var
     v1: Double;
 begin
@@ -1752,7 +1804,7 @@ begin
     end;
 end;
 
-procedure WriteConcData(pCab: TCNDataObj);
+procedure TCIMExporterHelper.WriteConcData(pCab: TCNDataObj);
 var
     v1: Double;
 begin
@@ -1775,7 +1827,7 @@ begin
     end;
 end;
 
-procedure WriteWireData(pWire: TConductorDataObj);
+procedure TCIMExporterHelper.WriteWireData(pWire: TConductorDataObj);
 var
     v1: Double;
 begin
@@ -1811,7 +1863,7 @@ begin
     end;
 end;
 
-procedure StartCIMFile(F: TFileStream; FileNm: String; prf: ProfileChoice);
+procedure TCIMExporterHelper.StartCIMFile(F: TFileStream; FileNm: String; prf: ProfileChoice);
 begin
     F := TFileStream.Create(FileNm, fmCreate);
     FSWriteln(F, '<?xml version="1.0" encoding="utf-8"?>');
@@ -1826,7 +1878,7 @@ begin
     FSWriteLn(F, '</cim:IEC61970CIMVersion>');
 end;
 
-procedure ExportCDPSM(FileNm: String;
+procedure TCIMExporter.ExportCDPSM(FileNm: String;
     Substation: String;
     SubGeographicRegion: String;
     GeographicRegion: String;
@@ -1848,7 +1900,7 @@ var
     pIsland, pSwing: TNamedObject;  // island and ref node
     pRegion, pSubRegion, pLocation, pSubstation, pCRS: TNamedObject;
 
-    pILimit: TOpLimitObject;
+    pILimit: TCIMOpLimitObject;
     pNormLimit, pEmergLimit, pRangeAHiLimit, pRangeALoLimit, pRangeBHiLimit, pRangeBLoLimit: TNamedObject; // OperationalLimitType
     LimitName: String;
     LimiTUuid: TUuid;
@@ -1858,7 +1910,7 @@ var
     swtCls: String;  // based on controls, if any, attached to a line having switch=yes
     ratedAmps, breakingAmps: Double;
 
-    pBank: TBankObject;
+    pBank: TCIMBankObject;
     maxWdg: Integer;
     WdgList: array of TNamedObject;
     CoreList: array of TNamedObject;
@@ -1909,13 +1961,13 @@ var
     crsUUID: TUuid;
 begin
     try
-        clsLnCd := DSSClassList.Get(ClassNames.Find('linecode'));
-        clsWire := DSSClassList.Get(ClassNames.Find('wiredata'));
-        clsGeom := DSSClassList.Get(ClassNames.Find('linegeometry'));
-        clsXfCd := DSSClassList.Get(ClassNames.Find('xfmrcode'));
-        clsSpac := DSSClassList.Get(ClassNames.Find('linespacing'));
-        clsTape := DSSClassList.Get(ClassNames.Find('TSData'));
-        clsConc := DSSClassList.Get(ClassNames.Find('CNData'));
+        clsLnCd := DSS.DSSClassList.Get(DSS.ClassNames.Find('linecode'));
+        clsWire := DSS.DSSClassList.Get(DSS.ClassNames.Find('wiredata'));
+        clsGeom := DSS.DSSClassList.Get(DSS.ClassNames.Find('linegeometry'));
+        clsXfCd := DSS.DSSClassList.Get(DSS.ClassNames.Find('xfmrcode'));
+        clsSpac := DSS.DSSClassList.Get(DSS.ClassNames.Find('linespacing'));
+        clsTape := DSS.DSSClassList.Get(DSS.ClassNames.Find('TSData'));
+        clsConc := DSS.DSSClassList.Get(DSS.ClassNames.Find('CNData'));
         pName1 := TNamedObject.Create('Temp1');
         pName2 := TNamedObject.Create('Temp2');
         if not assigned(UuidList) then
@@ -1929,7 +1981,7 @@ begin
 
         DSSInfoMessageDlg(FileNm + '<=' + ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
 
-        FD := TFileDealer.Create(Combined, FileNm);
+        FD_Create(Combined, FileNm);
 
         pCRS := TNamedObject.Create('CoordinateSystem');
         crsUUID := GetDevUuid(CoordSys, 'Local', 1);
@@ -2388,7 +2440,7 @@ begin
                     sBank := 'CIMXfmrCode_' + pXf.Name;
                     clsXfCd.NewObject(sBank);
                     clsXfCd.Code := sBank;
-                    pXfCd := ActiveXfmrCodeObj;
+                    pXfCd := DSS.ActiveXfmrCodeObj;
                     pXfCd.UUID := GetDevUuid(TankInfo, pXfCd.Name, 1);
                     pXfCd.PullFromTransformer(pXf);
                     pXf.XfmrCode := pXfCd.Name;
@@ -2453,7 +2505,7 @@ begin
                 pBank := GetBank(sBank);
                 if pBank = NIL then
                 begin
-                    pBank := TBankObject.Create(maxWdg);
+                    pBank := TCIMBankObject.Create(maxWdg);
                     pBank.localName := sBank;
                     pBank.UUID := GetDevUuid(Bank, sBank, 0);
                     AddBank(pBank);
@@ -2479,7 +2531,7 @@ begin
                         bTanks := FALSE; // case 1, balanced three-phase
 
                     pBank := GetBank(sBank);
-                    pBank.AddTransformer(pXf);
+                    pBank.AddTransformer(self, pXf);
                     geoUUID := GetDevUuid(XfLoc, pXf.Name, 1);
 
                     if bTanks then
@@ -2621,7 +2673,7 @@ begin
                             pILimit := GetOpLimit(LimitName);
                             if pILimit = NIL then
                             begin
-                                pILimit := TOpLimitObject.Create(pXf.NormAmps, pXf.EmergAmps);
+                                pILimit := TCIMOpLimitObject.Create(pXf.NormAmps, pXf.EmergAmps);
                                 pILimit.localName := LimitName;
                                 pILimit.UUID := GetDevUuid(OpLimI, LimitName, 0);
                                 AddOpLimit(pILimit);
@@ -3148,10 +3200,63 @@ begin
         FreeBankList;
         FreeOpLimitList;
 
-        GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
     finally
         FD.Free;
     end;
 end;
+
+constructor TCIMExporter.Create(dssContext: TDSSContext);
+begin
+    DSS := dssContext;
+end;
+
+destructor TCIMExporter.Destroy;
+begin
+    inherited Destroy;
+end;
+
+procedure TCIMEXporterHelper.FD_Create(Combined: Boolean; FileName: String);
+var
+    i: ProfileChoice;
+begin
+    Separate := not Combined;
+    if Separate then
+    begin
+        for i := Low(ProfileChoice) to High(ProfileChoice) do
+            roots[i] := '';
+        StartCIMFile(F_FUN, FileName + '_FUN.XML', FunPrf);
+        StartCIMFile(F_GEO, FileName + '_GEO.XML', GeoPrf);
+        StartCIMFile(F_TOPO, FileName + '_TOPO.XML', TopoPrf);
+        StartCIMFile(F_SSH, FileName + '_SSH.XML', SshPrf);
+        StartCIMFile(F_CAT, FileName + '_CAT.XML', CatPrf);
+        StartCIMFile(F_EP, FileName + '_EP.XML', EpPrf)
+    end
+    else
+    begin
+        StartCIMFile(F_FUN, FileName, FunPrf)
+    end;
+end;
+
+procedure TCIMEXporterHelper.FD_Destroy;
+begin
+    FSWriteLn(F_FUN, '</rdf:RDF>');
+    FreeAndNil(F_FUN);
+    if Separate then
+    begin
+        FSWriteLn(F_GEO, '</rdf:RDF>');
+        FSWriteLn(F_CAT, '</rdf:RDF>');
+        FSWriteLn(F_SSH, '</rdf:RDF>');
+        FSWriteLn(F_TOPO, '</rdf:RDF>');
+        FSWriteLn(F_EP, '</rdf:RDF>');
+        FreeAndNil(F_GEO);
+        FreeAndNil(F_CAT);
+        FreeAndNil(F_SSH);
+        FreeAndNil(F_TOPO);
+        FreeAndNil(F_EP);
+    end;
+    // inherited Destroy;
+end;
+
 
 end.

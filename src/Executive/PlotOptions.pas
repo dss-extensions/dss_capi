@@ -10,12 +10,13 @@ unit PlotOptions;
 interface
 
 uses
-    Command;
+    Command,
+    DSSClass;
 
 const
     NumPlotOptions = 23;
 
-function DoPlotCmd: Integer;
+function DoPlotCmd(DSS: TDSSContext): Integer;
 
 var
 
@@ -34,7 +35,8 @@ uses
     SysUtils,
     ParserDel,
     Utilities,
-    CAPI_Globals;
+    Circuit,
+    DSSHelper;
 
 type
     TDSSPlot = class(TObject)
@@ -276,7 +278,7 @@ end;
 
 
 //----------------------------------------------------------------------------
-function DoPlotCmd: Integer;
+function DoPlotCmd(DSS: TDSSContext): Integer;
 {
   Parse plot options and feed the callback function, if any
 }
@@ -291,6 +293,8 @@ var
     jsonBases: TJSONArray = NIL;
     jsonChannels: TJSONArray = NIL;
     plotParamsStr: String;
+    Parser: TParser;
+    ActiveCircuit: TDSSCircuit;
 begin
     Result := 0;
 
@@ -299,14 +303,16 @@ begin
         Result := 1;
         Exit;
     end;
-    if (@DSSPlotCallback) = NIL then
+    if (@DSS.DSSPlotCallback) = NIL then
     begin
         Result := 1;
         // If there is no callback active, just ignore the command like we did before.
-        // DoSimpleMsg('Plotting not supported in the DSS Extensions engine. Provide a callback that implements it version', 308);
+        // DoSimpleMsg(DSS, 'Plotting not supported in the DSS Extensions engine. Provide a callback that implements it version', 308);
         Exit;
     end;
     
+    Parser := DSS.Parser;
+    ActiveCircuit := DSS.ActiveCircuit;
     DSSPlotObj := TDSSPlot.Create;
 
     {Get next parameter on command line}
@@ -330,12 +336,12 @@ begin
                         begin
                             if not assigned(ActiveCircuit) then
                             begin
-                                DoSimpleMsg('No circuit created.', 24731);
+                                DoSimpleMsg(DSS, 'No circuit created.', 24731);
                                 Exit;
                             end;
                             if not assigned(ActiveCircuit.Solution) or not assigned(ActiveCircuit.Solution.NodeV) then
                             begin
-                                DoSimpleMsg('The circuit must be solved before you can do this.', 24732);
+                                DoSimpleMsg(DSS, 'The circuit must be solved before you can do this.', 24732);
                                 Exit;
                             end;
                         end;
@@ -351,7 +357,7 @@ begin
                         'A':
                         begin
                             PlotType := 'AutoAddLogPlot';
-                            ObjectName := CircuitName_ + 'AutoAddLog.CSV';
+                            ObjectName := DSS.CircuitName_ + 'AutoAddLog.CSV';
                             ValueIndex := 2;
                         end;
                         'C':
@@ -448,11 +454,11 @@ begin
                 9:
                     TriColorMid := Parser.DblValue;
                 10:
-                    Color1 := InterpretColorName(Param);
+                    Color1 := InterpretColorName(DSS, Param);
                 11:
-                    Color2 := InterpretColorName(Param);
+                    Color2 := InterpretColorName(DSS, Param);
                 12:
-                    Color3 := InterpretColorName(Param);
+                    Color3 := InterpretColorName(DSS, Param);
                 13:
                 begin    {Channel definitions for Plot Monitor}
                     NumChannels := Parser.ParseAsVector(51, PDoubleArray(@DblBuffer));  // allow up to 50 channels
@@ -482,7 +488,7 @@ begin
                     if Parser.IntValue > 0 then
                         MaxLineThickness := Parser.IntValue;
                 17:
-                    InterpretTStringListArray(Param, DaisyBusList);  {read in Bus list}
+                    InterpretTStringListArray(DSS, Param, DaisyBusList);  {read in Bus list}
                 18:
                 begin
                     MinScale := Parser.DblValue;
@@ -614,7 +620,7 @@ begin
         ]);
         // plotParams.CompressedJSON := True;
         plotParamsStr := plotParams.FormatJSON();
-        DSSPlotCallback(PChar(plotParamsStr));
+        DSS.DSSPlotCallback(DSS, PChar(plotParamsStr));
     finally
         FreeAndNil(plotParams);
     end;

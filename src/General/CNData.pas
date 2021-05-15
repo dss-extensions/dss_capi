@@ -25,7 +25,7 @@ type
         procedure DefineProperties;
         function MakeLike(const CNName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -69,14 +69,17 @@ uses
     Ucomplex,
     Arraydef,
     LineUnits,
-    Utilities;
+    Utilities,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 4;
 
-constructor TCNData.Create;  // Creates superstructure for all Line objects
+constructor TCNData.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'CNData';
     DSSClassType := DSS_OBJECT;
     ActiveElement := 0;
@@ -114,11 +117,8 @@ end;
 
 function TCNData.NewObject(const ObjName: String): Integer;
 begin
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TCNDataObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TCNDataObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 function TCNData.Edit: Integer;
@@ -129,9 +129,9 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveConductorDataObj := ElementList.Active;
-    ActiveDSSObject := ActiveConductorDataObj;
-    with TCNDataObj(ActiveConductorDataObj) do
+    DSS.ActiveConductorDataObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveConductorDataObj;
+    with TCNDataObj(DSS.ActiveConductorDataObj) do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -158,8 +158,8 @@ begin
                 4:
                     FRStrand := Parser.DblValue;
             else
-        // Inherited parameters
-                ClassEdit(ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
             end;
 
       {Set defaults}
@@ -195,7 +195,7 @@ begin
     Result := 0;
     OtherData := Find(CNName);
     if OtherData <> NIL then
-        with TCNDataObj(ActiveConductorDataObj) do
+        with TCNDataObj(DSS.ActiveConductorDataObj) do
         begin
             FkStrand := OtherData.FkStrand;
             FDiaStrand := OtherData.FDiaStrand;
@@ -219,13 +219,13 @@ procedure TCNData.Set_Code(const Value: String);  // sets the  active CNData
 var
     CNDataObj: TCNDataObj;
 begin
-    ActiveConductorDataObj := NIL;
+    DSS.ActiveConductorDataObj := NIL;
     CNDataObj := ElementList.First;
     while CNDataObj <> NIL do
     begin
         if CompareText(CNDataObj.Name, Value) = 0 then
         begin
-            ActiveConductorDataObj := CNDataObj;
+            DSS.ActiveConductorDataObj := CNDataObj;
             Exit;
         end;
         CNDataObj := ElementList.Next;

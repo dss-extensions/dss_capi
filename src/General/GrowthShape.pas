@@ -67,7 +67,7 @@ type
         procedure DefineProperties;
         function MakeLike(const ShapeName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -100,10 +100,6 @@ type
         function GetMult(Yr: Integer): Double;  // Get multiplier for Specified Year
     end;
 
-var
-    ActiveGrowthShapeObj: TGrowthShapeObj;
-
-
 implementation
 
 uses
@@ -114,15 +110,18 @@ uses
     Ucomplex,
     MathUtil,
     Utilities,
-    BufStream;
+    BufStream,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 6;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGrowthShape.Create;  // Creates superstructure for all Line objects
+constructor TGrowthShape.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'GrowthShape';
     DSSClassType := DSS_OBJECT;
 
@@ -188,11 +187,8 @@ end;
 function TGrowthShape.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TGrowthShapeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TGrowthShapeObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 
@@ -208,10 +204,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveGrowthShapeObj := ElementList.Active;
-    ActiveDSSObject := ActiveGrowthShapeObj;
+    DSS.ActiveGrowthShapeObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveGrowthShapeObj;
 
-    with ActiveGrowthShapeObj do
+    with DSS.ActiveGrowthShapeObj do
     begin
 
         ParamPointer := 0;
@@ -256,8 +252,8 @@ begin
                 6:
                     DoDblFile(AdjustInputFilePath(Param));
             else
-           // Inherited parameters
-                ClassEdit(ActiveGrowthShapeObj, ParamPointer - NumPropsThisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveGrowthShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
             ParamName := Parser.NextParam;
@@ -278,7 +274,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherGrowthShape := Find(ShapeName);
     if OtherGrowthShape <> NIL then
-        with ActiveGrowthShapeObj do
+        with DSS.ActiveGrowthShapeObj do
         begin
             Npts := OtherGrowthShape.Npts;
             ReallocMem(Multiplier, SizeOf(Multiplier^[1]) * Npts);
@@ -317,14 +313,14 @@ var
 
 begin
 
-    ActiveGrowthShapeObj := NIL;
+    DSS.ActiveGrowthShapeObj := NIL;
     GrowthShapeObj := ElementList.First;
     while GrowthShapeObj <> NIL do
     begin
 
         if CompareText(GrowthShapeObj.Name, Value) = 0 then
         begin
-            ActiveGrowthShapeObj := GrowthShapeObj;
+            DSS.ActiveGrowthShapeObj := GrowthShapeObj;
             Exit;
         end;
 
@@ -353,7 +349,7 @@ begin
     end;
 
     try
-        with ActiveGrowthShapeObj do
+        with DSS.ActiveGrowthShapeObj do
         begin
             i := 0;
             while ((F.Position + 1) < F.Size) and (i < Npts) do
@@ -400,7 +396,7 @@ begin
     end;
 
     try
-        with ActiveGrowthShapeObj do
+        with DSS.ActiveGrowthShapeObj do
         begin
             i := 0;
             while ((F.Position + 1) < F.Size) and (i < Npts) do
@@ -441,7 +437,7 @@ begin
     end;
 
     try
-        with ActiveGrowthShapeObj do
+        with DSS.ActiveGrowthShapeObj do
         begin
             i := 0;
             while ((F.Position + 1) < F.Size) and (i < Npts) do

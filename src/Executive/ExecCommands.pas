@@ -10,10 +10,14 @@ unit ExecCommands;
 interface
 
 uses
-    Command;
+    Command, DSSClass;
 
 const
+{$IFNDEF DSS_CAPI_PM}
     NumExecCommands = 118;
+{$ELSE}
+    NumExecCommands = 125;
+{$ENDIF}
 
 var
 
@@ -22,10 +26,10 @@ var
 
     CommandList: TCommandList;
 
-    LastCmdLine: String;   // always has last command processed
-    RedirFile: String;
+procedure ProcessCommand(DSS: TDSSContext; const CmdLine: String);
 
-procedure ProcessCommand(const CmdLine: String);
+procedure DefineCommands;
+procedure DisposeStrings;
 
 implementation
 
@@ -43,8 +47,30 @@ uses
     sysutils,
     Utilities,
     SolutionAlgs,
+    DSSHelper,
+    DSSClassDefs,
     EnergyMeter,
-    MemoryMap_lib;
+    MemoryMap_lib,
+    KLUSolve
+{$IFDEF DSS_CAPI_PM}
+    , Diakoptics
+    , sparse_math
+{$ENDIF}
+    ;
+    
+{$IFDEF DSS_CAPI_PM}
+const
+    CMD_NewActor = 119;
+    CMD_ClearAll = 120;
+    CMD_Wait = 121;
+    CMD_SolveAll = 122;
+    CMD_Tear_Circuit = 123;
+    CMD_Abort = 124;
+    CMD_Clone = 125;
+
+
+    
+{$ENDIF}
 
 procedure DefineCommands;
 
@@ -169,6 +195,15 @@ begin
     ExecCommand[116] := 'AllPCEatBus';
     ExecCommand[117] := 'AllPDEatBus';
     ExecCommand[118] := 'TotalPowers';
+{$IFDEF DSS_CAPI_PM}
+    ExecCommand[CMD_NewActor] := 'NewActor';
+    ExecCommand[CMD_ClearAll] := 'ClearAll';
+    ExecCommand[CMD_Wait] := 'Wait';
+    ExecCommand[CMD_SolveAll] := 'SolveAll';
+    ExecCommand[CMD_Tear_Circuit] := 'Tear_Circuit';
+    ExecCommand[CMD_Abort] := 'Abort';
+    ExecCommand[CMD_Clone] := 'Clone';
+{$ENDIF}
 
     CommandHelp[1] := 'Create a new object within the DSS. Object becomes the ' +
         'active object' + CRLF +
@@ -526,33 +561,52 @@ begin
     CommandHelp[118] := 'Returns the total powers (complex) at ALL terminals of the active circuit element in the Result string. '+
                         '(See Select command.)' +
                          'Returned as comma-separated kW and kvar.';
+{$IFDEF DSS_CAPI_PM}
+    CommandHelp[CMD_NewActor] := 'This command creates a new actor (OpenDSS Instance) and sets the new actor as the active actor. ' +
+        'There can be only 1 circuit per actor. The NewActor command will increment the variable NumOfActors;' +
+        ' however, if the number of actors is the same as the number of available CPUs the new actor will not be created ' +
+        'generating an error message. This instruction will deliver the ID of the active actor. This command does not requires a precedent command.';
+    CommandHelp[CMD_ClearAll] := 'Clears all the circuits and all the actors, after this instruction there will be only 1 actor (actor 1) and will be the active actor';
+    CommandHelp[CMD_Wait] := 'Pauses the scripting thread until all the active actors are Ready to receive new commands (have finished all their tasks and are ready to receive new simulation orders).';
+    CommandHelp[CMD_SolveAll] := 'Solves all the circuits (Actors) loaded into memory by the user';
+    CommandHelp[CMD_Tear_Circuit] := 'Estimates the buses for tearing the system in many parts as CPUs - 1 are in the local computer, is used for tearing the interconnected circuit into a' +
+        ' balanced (same number of nodes) collection of subsystems for the A-Diakoptics algorithm';
+    CommandHelp[CMD_Abort] := 'Aborts all the simulations running';
+    CommandHelp[CMD_Clone] := 'Clones the active circuit. This command creates as many copies of the active cirucit as indicated in the argument ' +
+        'if the number of requested clones does not overpasses the number of local CPUs. The form of this command is clone X where' +
+        'X is the number of clones to be created';
+{$ENDIF}
 end;
 
 //----------------------------------------------------------------------------
-procedure ProcessCommand(const CmdLine: String);
+procedure ProcessCommand(DSS: TDSSContext; const CmdLine: String);
 var
     ParamPointer: Integer;
+    i: Integer;
     ParamName: String;
     Param: String;
     ObjName, PropName: String;
-
+{$IFDEF DSS_CAPI_PM}
+    PMParent: TDSSContext;
 begin
-
-
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
     try
 
-        CmdResult := 0;
-        ErrorNumber := 0;  // Reset Error number
-        GlobalResult := '';
+        DSS.CmdResult := 0;
+        DSS.ErrorNumber := 0;  // Reset Error number
+        DSS.GlobalResult := '';
 
 {Load up the parser and process the first parameter only}
-        LastCmdLine := CmdLine;
-        Parser.CmdString := LastCmdLine;  // Load up command parser
-        LastCommandWasCompile := FALSE;
+        DSS.LastCmdLine := CmdLine;
+        DSS.Parser.CmdString := DSS.LastCmdLine;  // Load up command parser
+        DSS.LastCommandWasCompile := FALSE;
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         if Length(Param) = 0 then
             Exit;  // Skip blank line
 
@@ -565,22 +619,22 @@ begin
         case ParamPointer of
             14:
             begin
-                with DSSExecutive do
+                with DSS.DSSExecutive do
                     if RecorderOn then
                         Write_to_RecorderFile(CRLF + '!*********' + CmdLine);
-                CmdResult := DoRedirect(TRUE);
+                DSS.CmdResult := DSS.DSSExecutive.DoRedirect(TRUE);
                 Exit;
             end;//'Compile';
             20:
             begin
-                with DSSExecutive do
+                with DSS.DSSExecutive do
                     if RecorderOn then
                         Write_to_RecorderFile(CRLF + '!*********' + CmdLine);
-                CmdResult := DoRedirect(FALSE);
+                DSS.CmdResult := DSS.DSSExecutive.DoRedirect(FALSE);
                 Exit;
             end; //'Redirect';
         else   // Write everything direct to recorder, if ON
-            with DSSExecutive do
+            with DSS.DSSExecutive do
                 if RecorderOn then
                     Write_to_RecorderFile(CmdLine);
         end;
@@ -589,87 +643,118 @@ begin
         case ParamPointer of
 
             1:
-                CmdResult := DoNewCmd; // new
+                DSS.CmdResult := DSS.DSSExecutive.DoNewCmd; // new
 
             15:
-                if not Assigned(ActiveCircuit) then
+                if not Assigned(DSS.ActiveCircuit) then
                 begin
-                    DoSetCmd_NoCircuit; // can only call this if no circuit active
+                    DoSetCmd_NoCircuit(DSS); // can only call this if no circuit active
                     Exit;    // We exit with either a good outcome or bad
                 end;
             19:
 {Do Nothing - comment};
 
             21:
-                CmdResult := DoHelpCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoHelpCmd;
             22:
-                if not IsDLL then
-                    ExitControlPanel;  // Quit in Stand alone version
+                ;
+                // if not IsDLL then ExitControlPanel;  // Quit in Stand alone version
             25:
-                ShowControlPanel; // DSSForms
+                DoSimpleMsg(DSS, 'Command "panel" supported in DSS Extensions.', 999);
             27:
-                DoClearCmd;
+                DSS.DSSExecutive.DoClearCmd;
             28:
-                DoAboutBox;
+                DSS.DSSExecutive.DoAboutBox;
+            32:
+                if not Assigned(DSS.ActiveCircuit) then
+                begin
+                    DoGetCmd_NoCircuit(DSS); // can only call this if no circuit active
+                    Exit;    // We exit with either a good outcome or bad
+                end;
             35:
-                CmdResult := DoFileEditCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoFileEditCmd;
             49:
-                CmdResult := DoClassesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoClassesCmd;
             50:
-                CmdResult := DoUserClassesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoUserClassesCmd;
             63:
-                CmdResult := DoAlignFileCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoAlignFileCmd;
             69:
-                CmdResult := DoDI_PlotCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoDI_PlotCmd;
             70:
-                CmdResult := DoCompareCasesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoCompareCasesCmd;
             71:
-                CmdResult := DoYearlyCurvesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoYearlyCurvesCmd;
             72:
             begin
-                ParamName := Parser.NextParam;
-                Param := Parser.StrValue;
+                ParamName := DSS.Parser.NextParam;
+                Param := DSS.Parser.StrValue;
                 if DirectoryExists(Param) then
                 begin
-                    CmdResult := 0;
-                    SetDataPath(Param);  // change datadirectory
+                    DSS.CmdResult := 0;
+                    SetDataPath(DSS, Param);  // change datadirectory
                 end
                 else
-                    DoSimpleMsg('Directory "' + Param + '" not found.', 282);
+                    DoSimpleMsg(DSS, 'Directory "' + Param + '" not found.', 282);
             end;
             75:
-                DoADosCmd;
+                DSS.DSSExecutive.DoADosCmd;
             88:
-                DoCvrtLoadshapesCmd;
+                DSS.DSSExecutive.DoCvrtLoadshapesCmd;
 
             101:
-                DoVarCmd;
+                DSS.DSSExecutive.DoVarCmd;
 
             108: // CalcIncMatrix
             begin
-                ActiveCircuit.Solution.Calc_Inc_Matrix();
+                DSS.ActiveCircuit.Solution.Calc_Inc_Matrix();
             end;
             109: // CalcIncMatrix_O
             begin
-                ActiveCircuit.Solution.Calc_Inc_Matrix_Org();
+                DSS.ActiveCircuit.Solution.Calc_Inc_Matrix_Org();
             end;
             110: // Refine_BusLevels
             begin
-                ActiveCircuit.Get_paths_4_Coverage();
-                GlobalResult := inttostr(length(ActiveCircuit.Path_Idx) - 1) + ' new paths detected';
+                DSS.ActiveCircuit.Get_paths_4_Coverage();
+                DSS.GlobalResult := inttostr(length(DSS.ActiveCircuit.Path_Idx) - 1) + ' new paths detected';
             end;
             111: // CalcLaplacian
             begin
-                with ActiveCircuit.Solution do
+                with DSS.ActiveCircuit.Solution do
                 begin
                     Laplacian := IncMat.Transpose();          // Transposes the Incidence Matrix
                     Laplacian := Laplacian.multiply(IncMat);  // IncMatT*IncMat
                 end;
-            end
-        else
-            if ActiveCircuit = NIL then
+            end;
+{$IFDEF DSS_CAPI_PM}
+            CMD_NewActor:
             begin
-                DoSimpleMsg('You must create a new circuit object first: "new circuit.mycktname" to execute this command.', 301);
+                New_Actor_Slot(DSS);
+            end;
+            CMD_ClearAll:
+                DSS.DSSExecutive.DoClearAllCmd;
+            CMD_Wait:
+            begin
+                if DSS.Parallel_enabled then
+                    Wait4Actors(DSS, 0);
+            end;
+            CMD_SolveAll:
+            begin
+                PMParent.IsSolveAll := TRUE; //TODO
+                for i := 0 to PMParent.NumOfActors - 1 do
+                begin
+                    DSS.CmdResult := DoSetCmd(PMParent.Children[i], 1);
+                end;
+            end;
+            CMD_Tear_Circuit:
+            begin
+                ADiakoptics_Tearing(DSS);
+            end;
+{$ENDIF}
+        else
+            if DSS.ActiveCircuit = NIL then
+            begin
+                DoSimpleMsg(DSS, 'You must create a new circuit object first: "new circuit.mycktname" to execute this command.', 301);
                 Exit;
             end;
         end;
@@ -683,20 +768,20 @@ begin
        {If a command or no text beFORe the = sign, THEN error}
             if (Length(ParamName) = 0) or (Comparetext(paramName, 'command') = 0) then
             begin
-                DoSimpleMsg('Unknown Command: "' + Param + '" ' + CRLF + parser.CmdString, 302);
-                CmdResult := 1;
+                DoSimpleMsg(DSS, 'Unknown Command: "' + Param + '" ' + CRLF + DSS.Parser.CmdString, 302);
+                DSS.CmdResult := 1;
             end
             else
             begin
-                ParseObjName(ParamName, ObjName, PropName);
+                DSS.DSSExecutive.ParseObjName(ParamName, ObjName, PropName);
                 if Length(ObjName) > 0 then
-                    SetObject(ObjName);  // Set active element
-                if ActiveDSSObject <> NIL then
+                    SetObject(DSS, ObjName);  // Set active element
+                if DSS.ActiveDSSObject <> NIL then
                 begin
              // rebuild command line and pass to editor
              // use quotes to ensure first parameter is interpreted OK after rebuild
-                    Parser.CmdString := PropName + '="' + Param + '" ' + Parser.Remainder;
-                    ActiveDSSClass.Edit;
+                    DSS.Parser.CmdString := PropName + '="' + Param + '" ' + DSS.Parser.Remainder;
+                    DSS.ActiveDSSClass.Edit;
                 end;
             end;
             Exit;  // Done - don't need to do anything ELSE
@@ -707,246 +792,259 @@ begin
         case ParamPointer of
 
             2:
-                CmdResult := DoEditCmd; // edit
+                DSS.CmdResult := DSS.DSSExecutive.DoEditCmd; // edit
             3..5:
-                CmdResult := DoMoreCmd; // more , m, ~
+                DSS.CmdResult := DSS.DSSExecutive.DoMoreCmd; // more , m, ~
             6:
-                CmdResult := DoSelectCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoSelectCmd;
             7:
-                CmdResult := DoSaveCmd; //'save';
+                DSS.CmdResult := DSS.DSSExecutive.DoSaveCmd; //'save';
             8:
-                CmdResult := DoShowCmd; //'show';
+                DSS.CmdResult := DoShowCmd(DSS); //'show';
             9:
-                CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
+            begin
+{$IFDEF DSS_CAPI_PM}
+                PMParent.IsSolveAll := FALSE; //TODO
+                DSS.ActiveCircuit.AD_Init := FALSE; //TODO
+{$ENDIF}
+                DSS.CmdResult := DoSetCmd(DSS, 1);  // changed from DoSolveCmd; //'solve';
+            end;
             10:
-                CmdResult := DoEnableCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoEnableCmd;
             11:
-                CmdResult := DoDisableCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoDisableCmd;
             12:
             begin
-                DoPlotCmd();
-                CmdResult := 0;
+                DoPlotCmd(DSS);
+                DSS.CmdResult := 0;
             end;
             13:
-                CmdResult := DoResetCmd; //'resetmonitors';
+                DSS.CmdResult := DSS.DSSExecutive.DoResetCmd; //'resetmonitors';
             15:
-                CmdResult := DoSetCmd(0);  //'set WITH no solve'
+                DSS.CmdResult := DoSetCmd(DSS, 0);  //'set WITH no solve'
             16:
-                CmdResult := DoPropertyDump;
+                DSS.CmdResult := DSS.DSSExecutive.DoPropertyDump;
             17:
-                CmdResult := DoOpenCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoOpenCmd;
             18:
-                CmdResult := DoCloseCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoCloseCmd;
 
 
             23:
-                CmdResult := DoQueryCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoQueryCmd;
             24:
-                CmdResult := DoNextCmd;  // Advances time
-       {25: ControlPanel.Show -- see above }
+                DSS.CmdResult := DSS.DSSExecutive.DoNextCmd;  // Advances time
+            25: 
+                DoSimpleMsg(DSS, 'Command supported in DSS Extensions.', 999);
             26:
-                CmdResult := DoSampleCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoSampleCmd;
        {27: Begin ClearAllCircuits; DisposeDSSClasses; CreateDSSClasses; End;}
        {28: DoAboutBox; }
             29:
-                CmdResult := DoSetVoltageBases;
+                DSS.CmdResult := DSS.DSSExecutive.DoSetVoltageBases;
             30:
-                CmdResult := DoSetkVBase;
+                DSS.CmdResult := DSS.DSSExecutive.DoSetkVBase;
             31:
-                ActiveCircuit.InvalidateAllPCElements;  // FORce rebuilding of Y
+                DSS.ActiveCircuit.InvalidateAllPCElements;  // FORce rebuilding of Y
             32:
-                CmdResult := DoGetCmd;
+                DSS.CmdResult := DoGetCmd(DSS);
             33:
-                ActiveCircuit.Solution.SolutionInitialized := FALSE;
+                DSS.ActiveCircuit.Solution.SolutionInitialized := FALSE;
             34:
-                CmdResult := DoExportCmd;
-       {35: CmdResult := DoFileEditCmd;}
+                DSS.CmdResult := DoExportCmd(DSS);
+       {35: DSS.CmdResult := DoFileEditCmd;}
             36:
-                CmdResult := DovoltagesCmd(FALSE);
+                DSS.CmdResult := DSS.DSSExecutive.DovoltagesCmd(FALSE);
             37:
-                CmdResult := DocurrentsCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DocurrentsCmd;
             38:
-                CmdResult := DopowersCmd(0);
+                DSS.CmdResult := DSS.DSSExecutive.DopowersCmd(0);
             39:
-                CmdResult := DoseqvoltagesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoseqvoltagesCmd;
             40:
-                CmdResult := DoseqcurrentsCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoseqcurrentsCmd;
             41:
-                CmdResult := DoseqpowersCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoseqpowersCmd;
             42:
-                CmdResult := DolossesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DolossesCmd;
             43:
-                CmdResult := DophaselossesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DophaselossesCmd;
             44:
-                CmdResult := DocktlossesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DocktlossesCmd;
             45:
-                CmdResult := DoAllocateLoadsCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoAllocateLoadsCmd;
             46:
-                CmdResult := DoFormEditCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoFormEditCmd;
             47:
-                CmdResult := DoMeterTotals;
+                DSS.CmdResult := DSS.DSSExecutive.DoMeterTotals;
             48:
-                CmdResult := DoCapacityCmd;
-//       49: CmdResult := DoClassesCmd;
-//       50: CmdResult := DoUserClassesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoCapacityCmd;
+//       49: DSS.CmdResult := DoClassesCmd;
+//       50: DSS.CmdResult := DoUserClassesCmd;
             51:
-                CmdResult := DoZscCmd(TRUE);
+                DSS.CmdResult := DSS.DSSExecutive.DoZscCmd(TRUE);
             52:
-                CmdResult := DoZsc10cmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoZsc10cmd;
             53:
-                CmdResult := DoZscRefresh;
+                DSS.CmdResult := DSS.DSSExecutive.DoZscRefresh;
             54:
-                CmdResult := DoZscCmd(FALSE);
+                DSS.CmdResult := DSS.DSSExecutive.DoZscCmd(FALSE);
             55:
-                CmdResult := DovoltagesCmd(TRUE);
+                DSS.CmdResult := DSS.DSSExecutive.DovoltagesCmd(TRUE);
             56:
-                CmdResult := DoVarValuesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoVarValuesCmd;
             57:
-                CmdResult := DoVarNamesCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoVarNamesCmd;
             58:
-                CmdResult := DoBusCoordsCmd(FALSE);
+                DSS.CmdResult := DSS.DSSExecutive.DoBusCoordsCmd(FALSE);
             59:
-                with ActiveCircuit do
+                with DSS.ActiveCircuit do
                     if BusNameRedefined then
                         ReprocessBusDefs;
             60:
-                CmdResult := DoMakePosSeq;
+                DSS.CmdResult := DSS.DSSExecutive.DoMakePosSeq;
             61:
-                CmdResult := DoReduceCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoReduceCmd;
             62:
-                CmdResult := DoInterpolateCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoInterpolateCmd;
             64:
             begin
-                DSSInfoMessageDlg('ERROR: TOP is not supported in DSS Extensions.');
-                CmdResult := 0;
+                DoSimpleMsg(DSS, 'TOP is not supported in DSS Extensions.', 999);
+                DSS.CmdResult := 0;
             end;
             65:
-                CmdResult := DoRotateCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoRotateCmd;
             66:
-                CmdResult := DoVdiffCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoVdiffCmd;
             67:
-                CmdResult := DoSummaryCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoSummaryCmd;
             68:
-                CmdResult := DoDistributeCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoDistributeCmd;
 //      69;
 //      70;
 //      71;
 //      72;
             73:
-                CmdResult := DoVisualizeCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoVisualizeCmd;
             74:
-                CmdResult := DoCloseDICmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoCloseDICmd;
             76:
-                CmdResult := DoEstimateCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoEstimateCmd;
             77:
-                CmdResult := DoReconductorCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoReconductorCmd;
        {Step solution commands}
             78:
-                ActiveCircuit.Solution.SnapShotInit;
+                DSS.ActiveCircuit.Solution.SnapShotInit;
             79:
-                ActiveCircuit.Solution.SolveCircuit;
+                DSS.ActiveCircuit.Solution.SolveCircuit;
             80:
-                ActiveCircuit.Solution.SampleControlDevices;
+                DSS.ActiveCircuit.Solution.SampleControlDevices;
             81:
-                ActiveCircuit.Solution.DoControlActions;
+                DSS.ActiveCircuit.Solution.DoControlActions;
             82:
-                ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + CircuitName_ + 'ControlQueue.csv');
+                DSS.ActiveCircuit.ControlQueue.ShowQueue(DSS.OutputDirectory + DSS.CircuitName_ + 'ControlQueue.csv');
             83:
-                ActiveCircuit.Solution.SolveDirect;
+                DSS.ActiveCircuit.Solution.SolveDirect;
             84:
-                ActiveCircuit.Solution.DoPFLOWsolution;
+                DSS.ActiveCircuit.Solution.DoPFLOWsolution;
             85:
-                CmdResult := DoAddMarkerCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoAddMarkerCmd;
             86:
-                CmdResult := DoUuidsCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoUuidsCmd;
             87:
-                CmdResult := DoSetLoadAndGenKVCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoSetLoadAndGenKVCmd;
 //       88:;
             89:
-                CmdResult := DoNodeDiffCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoNodeDiffCmd;
             90:
-                CmdResult := DoRephaseCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoRephaseCmd;
             91:
-                CmdResult := DoSetBusXYCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoSetBusXYCmd;
             92:
-                CmdResult := DoUpDateStorageCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoUpDateStorageCmd;
             93:
-                Obfuscate;
+                Obfuscate(DSS);
             94:
-                CmdResult := DoBusCoordsCmd(TRUE);   // swaps X and Y
+                DSS.CmdResult := DSS.DSSExecutive.DoBusCoordsCmd(TRUE);   // swaps X and Y
             95:
-                CmdResult := DoBatchEditCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoBatchEditCmd;
             96:
-                CmdResult := DoPstCalc;
+                DSS.CmdResult := DSS.DSSExecutive.DoPstCalc;
             97:
-                CmdResult := DoValVarCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoValVarCmd;
             98:
-                ActiveCircuit.ReprocessBusDefs;
+                DSS.ActiveCircuit.ReprocessBusDefs;
             99:
-                Activecircuit.ClearBusMarkers;
+                DSS.ActiveCircuit.ClearBusMarkers;
             100:
-                CmdResult := DoLambdaCalcs;   // Option: Assume Restoration
+                DSS.CmdResult := DSS.DSSExecutive.DoLambdaCalcs;   // Option: Assume Restoration
             102:
-                EndofTimeStepCleanup;
+                DSS.ActiveCircuit.Solution.EndofTimeStepCleanup;
             103:
-                FinishTimeStep;
+                DSS.ActiveCircuit.Solution.FinishTimeStep;
             104:
-                CmdResult := DoNodeListCmd;
+                DSS.CmdResult := DSS.DSSExecutive.DoNodeListCmd;
             105:
             begin
-                DSSInfoMessageDlg('ERROR: Winsock TCP/IP connection is not supported in DSS Extensions');
-                CmdResult := 0;
+                DoSimpleMsg(DSS, 'Winsock TCP/IP connection is not supported in DSS Extensions', 999);
+                DSS.CmdResult := 0;
             end;
             106:
             begin
-                DSSInfoMessageDlg('ERROR: Winsock TCP/IP disconnection is not supported in DSS Extensions');
-                CmdResult := 0;
+                DoSimpleMsg(DSS, 'Winsock TCP/IP connection is not supported in DSS Extensions', 999);
+                DSS.CmdResult := 0;
             end;
             107:
-                DoRemoveCmd;
-            112: 
+                DSS.DSSExecutive.DoRemoveCmd;
+            112:
             begin
-                if OV_MHandle <> nil then
-                    CloseMHandler(OV_MHandle, EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads' + '.CSV', OV_Append);
+                if DSS.EnergyMeterClass.OV_MHandle <> nil then
+                    CloseMHandler(DSS, DSS.EnergyMeterClass.OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads' + '.CSV', DSS.EnergyMeterClass.OV_Append);
+{$IFDEF DSS_CAPI_PM}
+            CMD_Abort:
+                PMParent.SolutionAbort := TRUE; //TODO
+            CMD_Clone:
+                DoClone(DSS);
+{$ENDIF}
             end;
             113: 
             begin
-                if VR_MHandle <> nil then
-                    CloseMHandler(VR_MHandle, EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions' + '.CSV', VR_Append);
+                if DSS.EnergyMeterClass.VR_MHandle <> nil then
+                    CloseMHandler(DSS, DSS.EnergyMeterClass.VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions' + '.CSV', DSS.EnergyMeterClass.VR_Append);
             end;
             114:
-                CmdResult := DoZsc012Cmd; // Get full symmetrical component transformation of Zsc
+                DSS.CmdResult := DSS.DSSExecutive.DoZsc012Cmd; // Get full symmetrical component transformation of Zsc
             115:
             begin
-                DoSimpleMsg('AggregateProfiles is not supported in DSS Extensions yet.', 304);
+                DoSimpleMsg(DSS, 'AggregateProfiles is not supported in DSS Extensions yet.', 304);
                 // Parser.NextParam;
-                // ActiveCircuit.AggregateProfiles(Parser.StrValue);
+                // DSS.ActiveCircuit.AggregateProfiles(Parser.StrValue);
             end;
             116:
             begin
-                Parser.NextParam;
-                GlobalResult  :=  ActiveCircuit.ReportPCEatBus(Parser.StrValue);
+                DSS.Parser.NextParam;
+                DSS.GlobalResult  :=  DSS.ActiveCircuit.ReportPCEatBus(DSS.Parser.StrValue);
             end;
             117:
             begin
-                Parser.NextParam;
-                GlobalResult  :=  ActiveCircuit.ReportPDEatBus(Parser.StrValue);
+                DSS.Parser.NextParam;
+                DSS.GlobalResult  :=  DSS.ActiveCircuit.ReportPDEatBus(DSS.Parser.StrValue);
             end;
             118: 
-                CmdResult := DopowersCmd(1);
+                DSS.CmdResult := DSS.DSSExecutive.DopowersCmd(1);
         else
        // Ignore excess parameters
         end;
 
     except
         On E: Exception do
-            DoErrorMsg(('ProcessCommand' + CRLF + 'Exception Raised While Processing DSS Command:' + CRLF + parser.CmdString),
+            DoErrorMsg(DSS, ('ProcessCommand' + CRLF + 'Exception Raised While Processing DSS Command:' + CRLF + DSS.Parser.CmdString),
                 E.Message,
                 'Error in command string or circuit data.', 303);
     end;
-
-    ParserVars.Add('@result', GlobalResult)
-
+{$IFNDEF DSS_CAPI_PM}
+    DSS.ParserVars.Add('@result', DSS.GlobalResult)
+{$ENDIF}
 end;
 
 procedure DisposeStrings;
@@ -960,13 +1058,5 @@ begin
         CommandHelp[i] := '';
     end;
 end;
-
-initialization
-
-    DefineCommands;
-
-finalization
-
-    DisposeStrings;
 
 end.

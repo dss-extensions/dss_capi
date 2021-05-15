@@ -66,6 +66,8 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
+    DSSClass,
+    DSSHelper,
     Executive,
     Reactor,
     SysUtils,
@@ -77,19 +79,19 @@ type
     ReactorProps = (bus1 = 1, bus2, phases, kvar, kv, conn, Rmatrix, Xmatrix, Parallel, R, X, Rp, Z1, Z2, Z0, Z, RCurve, LCurve, LmH);
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TReactorObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TReactorObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := ActiveCircuit.Reactors.Active;
+    obj := DSSPrime.ActiveCircuit.Reactors.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Reactor object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Reactor object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -147,9 +149,9 @@ begin
                 SpecType := 2;
             end;
             ReactorProps.RCurve:
-                RCurveObj := XYCurveClass.Find(RCurve);
+                RCurveObj := DSSPrime.XYCurveClass.Find(RCurve);
             ReactorProps.LCurve:
-                LCurveObj := XYCurveClass.Find(LCurve);
+                LCurveObj := DSSPrime.XYCurveClass.Find(LCurve);
             ReactorProps.LmH:
             begin
                 SpecType := 2;
@@ -178,9 +180,9 @@ end;
 procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Reactors, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Reactors, False);
 end;
 
 procedure Reactors_Get_AllNames_GR(); CDECL;
@@ -193,17 +195,17 @@ end;
 function Reactors_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.Reactors);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Reactors);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.Reactors);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Reactors);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Name(): PAnsiChar; CDECL;
@@ -211,32 +213,32 @@ var
     elem: TReactorObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if ReactorClass.SetActive(Value) then
+    if DSSPrime.ReactorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := ReactorClass.ElementList.Active;
-        ActiveCircuit.Reactors.Get(ReactorClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.ReactorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Reactors.Get(DSSPrime.ReactorClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Reactor "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Reactor "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Reactors.Count;
+    Result := DSSPrime.ActiveCircuit.Reactors.Count;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Bus1(): PAnsiChar; CDECL;
@@ -244,7 +246,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := NIL;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := DSS_GetAsPAnsiChar(pReactor.GetBus(1));
 end;
@@ -254,7 +256,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := NIL;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := DSS_GetAsPAnsiChar(pReactor.GetBus(2));
 end;
@@ -264,7 +266,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := NIL;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := DSS_GetAsPAnsiChar(pReactor.LCurve);
 end;
@@ -274,7 +276,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := NIL;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := DSS_GetAsPAnsiChar(pReactor.RCurve);
 end;
@@ -284,7 +286,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := FALSE;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := pReactor.IsParallel;
 end;
@@ -294,7 +296,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := FALSE;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := (pReactor.Connection = TReactorConnection.Delta);
 end;
@@ -304,7 +306,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := pReactor.kvrating;
 end;
@@ -314,7 +316,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := pReactor.kvarRating;
 end;
@@ -324,7 +326,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := pReactor.L * 1000.0;
 end;
@@ -334,7 +336,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := pReactor.Nphases;
 end;
@@ -344,7 +346,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := pReactor.SpecType;
 end;
@@ -354,7 +356,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := pReactor.R;
 end;
@@ -364,7 +366,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := pReactor.X;
 end;
@@ -374,7 +376,7 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     Result := pReactor.Rp;
 end;
@@ -383,7 +385,7 @@ procedure Reactors_Set_IsDelta(Value: TAPIBoolean); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
 
     if Value then 
@@ -398,7 +400,7 @@ procedure Reactors_Set_Parallel(Value: TAPIBoolean); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.IsParallel := Value;
     ReactorPropSideEffects(ReactorProps.Parallel, pReactor);
@@ -435,7 +437,7 @@ procedure Reactors_Set_Bus1(const Value: PAnsiChar); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     _ReactorSetbus1(pReactor, Value);
     ReactorPropSideEffects(ReactorProps.bus1, pReactor);
@@ -445,7 +447,7 @@ procedure Reactors_Set_Bus2(const Value: PAnsiChar); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.SetBus(2, Value);
     ReactorPropSideEffects(ReactorProps.bus2, pReactor);
@@ -455,7 +457,7 @@ procedure Reactors_Set_LCurve(const Value: PAnsiChar); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.LCurve := Value;
     ReactorPropSideEffects(ReactorProps.LCurve, pReactor);
@@ -465,7 +467,7 @@ procedure Reactors_Set_RCurve(const Value: PAnsiChar); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.RCurve := Value;
     ReactorPropSideEffects(ReactorProps.RCurve, pReactor);
@@ -475,7 +477,7 @@ procedure Reactors_Set_kV(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.kvrating := Value;
     ReactorPropSideEffects(ReactorProps.kv, pReactor);
@@ -485,7 +487,7 @@ procedure Reactors_Set_kvar(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.kvarRating := Value;
     ReactorPropSideEffects(ReactorProps.kvar, pReactor);
@@ -495,7 +497,7 @@ procedure Reactors_Set_LmH(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.L := Value / 1000.0;
     ReactorPropSideEffects(ReactorProps.LmH, pReactor);
@@ -505,7 +507,7 @@ procedure Reactors_Set_Phases(Value: Integer); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     if Value = pReactor.NPhases then
         Exit;
@@ -517,7 +519,7 @@ procedure Reactors_Set_R(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.R := Value;
     ReactorPropSideEffects(ReactorProps.R, pReactor);
@@ -527,7 +529,7 @@ procedure Reactors_Set_X(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.X := Value;
     ReactorPropSideEffects(ReactorProps.X, pReactor);
@@ -537,7 +539,7 @@ procedure Reactors_Set_Rp(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.Rp := Value;
     ReactorPropSideEffects(ReactorProps.Rp, pReactor);
@@ -547,14 +549,14 @@ procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
         
     if Sqr(pReactor.Nphases) <> ValueCount then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(Format('The number of values provided (%d) does not match the expected (%d).', [ValueCount, Sqr(pReactor.Nphases)]), 5024);
+            DoSimpleMsg(DSSPrime, Format('The number of values provided (%d) does not match the expected (%d).', [ValueCount, Sqr(pReactor.Nphases)]), 5024);
         end;
         Exit;
     end;
@@ -569,13 +571,13 @@ procedure Reactors_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     if Sqr(pReactor.Nphases) <> ValueCount then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(Format('The number of values provided (%d) does not match the expected (%d).', [ValueCount, Sqr(pReactor.Nphases)]), 5024);
+            DoSimpleMsg(DSSPrime, Format('The number of values provided (%d) does not match the expected (%d).', [ValueCount, Sqr(pReactor.Nphases)]), 5024);
         end;
         Exit;
     end;
@@ -591,7 +593,7 @@ var
     pReactor: TReactorObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     
     if pReactor.Rmatrix = NIL then
@@ -616,7 +618,7 @@ var
     pReactor: TReactorObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
 
     if pReactor.Xmatrix = NIL then
@@ -642,7 +644,7 @@ var
     pReactor: TReactorObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     with pReactor do
     begin
@@ -665,7 +667,7 @@ var
     pReactor: TReactorObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     with pReactor do
     begin
@@ -688,7 +690,7 @@ var
     pReactor: TReactorObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     with pReactor do
     begin
@@ -711,7 +713,7 @@ var
     pReactor: TReactorObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     with pReactor do
     begin
@@ -734,7 +736,7 @@ var
     pReactor: TReactorObj;
 begin
     Value := PDoubleArray(ValuePtr);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     
     if (ValueCount <> 2) then
@@ -753,7 +755,7 @@ var
     pReactor: TReactorObj;
 begin
     Value := PDoubleArray(ValuePtr);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     
     if (ValueCount <> 2) then
@@ -772,7 +774,7 @@ var
     pReactor: TReactorObj;
 begin
     Value := PDoubleArray(ValuePtr);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     
     if (ValueCount <> 2) then
@@ -791,7 +793,7 @@ var
     pReactor: TReactorObj;
 begin
     Value := PDoubleArray(ValuePtr);
-    if not _activeObj(pReactor) then
+    if not _activeObj(DSSPrime, pReactor) then
         Exit;
     
     if (ValueCount <> 2) then
@@ -807,24 +809,24 @@ end;
 function Reactors_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Reactors.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.Reactors.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_idx(Value: Integer); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pReactor := ActiveCircuit.Reactors.Get(Value);
+    pReactor := DSSPrime.ActiveCircuit.Reactors.Get(Value);
     if pReactor = NIL then
     begin
-        DoSimpleMsg('Invalid Reactor index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Reactor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pReactor;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pReactor;
 end;
 //------------------------------------------------------------------------------
 end.

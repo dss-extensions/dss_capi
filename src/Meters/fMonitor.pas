@@ -32,7 +32,7 @@ TYPE
      public
 
 
-       constructor Create;
+       constructor Create(dssContext: TDSSContext);
        destructor  Destroy; override;
 
        Function Edit:Integer;                 override;     // uses global parser
@@ -205,10 +205,6 @@ TYPE
       // Property CSVFileName:String Read Get_FileName;
    end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-VAR
-    ActiveFMonitorObj:TFMonitorObj;
 
 {--------------------------------------------------------------------------}
 implementation
@@ -218,7 +214,11 @@ USES
     ParserDel, DSSClassDefs, DSSGlobals, Circuit, CktTree, CktElement,Transformer, PCElement, PDElement,
     Sysutils, ucmatrix, showresults, mathUtil , TOPExport, Dynamics, PstCalc,
     {}  Terminal,   Generic5OrderMach,   strutils,
-    Capacitor,Load;
+    Capacitor,
+    Load,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 CONST
     SEQUENCEMASK = 17;
@@ -233,10 +233,10 @@ VAR
     StrBuffer:TFMonitorStrBuffer;
 
 {--------------------------------------------------------------------------}
-constructor TDSSFMonitor.Create;  // Creates superstructure for all Monitor objects
+constructor TDSSFMonitor.Create(dssContext: TDSSContext);  // Creates superstructure for all Monitor objects
 
 Begin
-     Inherited Create;
+     Inherited Create(dssContext);
 
      Class_name   := 'FMonitor';
      DSSClassType := DSSClassType + FMON_ELEMENT;
@@ -2784,7 +2784,7 @@ end;
 {}
 function TFMonitorObj.Get_FileName: String;
 begin
-  Result := GetOutputDirectory +  CircuitName_ + 'Mon_' + Name + '.csv'
+  Result := DSS.OutputDirectory +  CircuitName_ + 'Mon_' + Name + '.csv'
 end;
 
 function TFMonitorObj.Calc_fm_ul_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double): double;

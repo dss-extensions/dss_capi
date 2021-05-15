@@ -41,7 +41,7 @@ type
         procedure DefineProperties;
         function MakeLike(const SensorName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -121,12 +121,6 @@ type
 
 {==============================================================================}
 
-
-var
-    ActiveSensorObj: TSensorObj;
-
-{==============================================================================}
-
 implementation
 
 uses
@@ -142,7 +136,10 @@ uses
     ucmatrix,
     showresults,
     mathUtil,
-    {TOPExport,} Dynamics;
+    DSSPointerList, {TOPExport,} Dynamics,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
 
@@ -150,9 +147,9 @@ const
 
 {==============================================================================}
 
-constructor TSensor.Create;  // Creates superstructure for all Sensor objects
+constructor TSensor.Create(dssContext: TDSSContext);  // Creates superstructure for all Sensor objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'Sensor';
     DSSClassType := DSSClassType + SENSOR_ELEMENT;
@@ -250,13 +247,13 @@ var
 begin
 
   // continue parsing with contents of Parser
-    ActiveSensorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveSensorObj;
+    DSS.ActiveSensorObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveSensorObj;
 
     Result := 0;
     DoRecalcElementData := FALSE;
 
-    with ActiveSensorObj do
+    with DSS.ActiveSensorObj do
     begin
 
         ParamPointer := 0;
@@ -311,7 +308,7 @@ begin
                     Action := Param;  // Put sq error in Global Result
             else
            // Inherited parameters
-                ClassEdit(ActiveSensorObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveSensorObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -463,7 +460,7 @@ begin
    {See if we can find this Sensor name in the present collection}
     OtherSensor := Find(SensorName);
     if OtherSensor <> NIL then
-        with ActiveSensorObj do
+        with DSS.ActiveSensorObj do
         begin
 
             NPhases := OtherSensor.Fnphases;

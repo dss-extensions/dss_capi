@@ -15,7 +15,7 @@ unit StoreUserModel;
 
 interface
 
-USES  StorageVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
+USES  StorageVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -39,6 +39,7 @@ TYPE
          function  Get_Exists: Boolean;
 
       Public
+         DSS: TDSSContext;
 
          FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
          FInit:         Procedure(V, I:pComplexArray);Stdcall;   // For dynamics
@@ -62,7 +63,7 @@ TYPE
          Procedure   Select;
          Procedure   Integrate;
 
-         constructor Create;
+         constructor Create(dssContext: TDSSContext);
          destructor  Destroy; override;
 
       Published
@@ -94,7 +95,8 @@ TYPE
       protected
 
       public
-
+        DSS: TDSSContext;
+        
         FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
         FInit:         Procedure(V, I:pComplexArray); Stdcall;   // For dynamics
         FCalc:         Procedure(V, I:pComplexArray); stdcall; // returns Currents or sets Pshaft
@@ -121,7 +123,7 @@ TYPE
         Procedure   Select;
         Procedure   Integrate;
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
 
       published
@@ -130,7 +132,8 @@ TYPE
 
 implementation
 
-Uses Storage, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+Uses Storage, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils,
+     DSSHelper;
 
 { TStoreUserModel }
 
@@ -138,15 +141,15 @@ function TStoreUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Point
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg('Storage User Model DLL Does Not Have Required Function: ' + FuncName, 1569);
+            DoSimpleMsg(DSS, 'Storage User Model DLL Does Not Have Required Function: ' + FuncName, 1569);
             FuncError := True;
           End;
         Result := Addr;
 end;
 
-constructor TStoreUserModel.Create;
+constructor TStoreUserModel.Create(dssContext: TDSSContext);
 begin
-
+  DSS := dssContext;
   FID := 0;
   Fhandle := 0;
   FName := '';
@@ -219,7 +222,7 @@ begin
         End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('Storage User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
+              DoSimpleMsg(DSS, 'Storage User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
         Else
         Begin
 
@@ -250,7 +253,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew( ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew( DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;
@@ -264,15 +267,15 @@ function TStoreDynaModel.CheckFuncError(Addr: Pointer;
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg('Storage User Dynamic DLL Does Not Have Required Function: ' + FuncName, 1569);
+            DoSimpleMsg(DSS, 'Storage User Dynamic DLL Does Not Have Required Function: ' + FuncName, 1569);
             FuncError := True;
           End;
         Result := Addr;
 end;
 
-constructor TStoreDynaModel.Create;
+constructor TStoreDynaModel.Create(dssContext: TDSSContext);
 begin
-
+  DSS := dssContext;
   FID     := 0;
   Fhandle := 0;
   FName   := '';
@@ -346,7 +349,7 @@ begin
         End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('Storage User-written Dynamics Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
+              DoSimpleMsg(DSS, 'Storage User-written Dynamics Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
         Else
         Begin
 
@@ -375,7 +378,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew( ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew( DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;

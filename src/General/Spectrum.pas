@@ -39,7 +39,7 @@ type
         procedure DefineProperties;
         function MakeLike(const LineName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -75,8 +75,6 @@ type
 
     end;
 
-var
-    ActiveSpectrumObj: TSpectrumObj;
 
 implementation
 
@@ -86,15 +84,18 @@ uses
     DSSGlobals,
     Sysutils,
     Utilities,
-    BufStream;
+    BufStream,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 5;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TSpectrum.Create;  // Creates superstructure for all Line objects
+constructor TSpectrum.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Spectrum';
     DSSClassType := DSS_OBJECT;
     ActiveElement := 0;
@@ -152,11 +153,8 @@ end;
 function TSpectrum.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveDSSObject := TSpectrumObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TSpectrumObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 
@@ -172,10 +170,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveSpectrumObj := ElementList.Active;
-    ActiveDSSObject := ActiveSpectrumObj;
+    DSS.ActiveSpectrumObj := ElementList.Active;
+    DSS.ActiveDSSObject := DSS.ActiveSpectrumObj;
 
-    with ActiveSpectrumObj do
+    with DSS.ActiveSpectrumObj do
     begin
 
         ParamPointer := 0;
@@ -221,8 +219,8 @@ begin
                 5:
                     DoCSVFile(AdjustInputFilePath(Param));
             else
-          // Inherited parameters
-                ClassEdit(ActiveSpectrumObj, Parampointer - NumPropsThisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveSpectrumObj, Parampointer - NumPropsThisClass)
             end;
 
 
@@ -256,7 +254,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherSpectrum := Find(LineName);
     if OtherSpectrum <> NIL then
-        with ActiveSpectrumObj do
+        with DSS.ActiveSpectrumObj do
         begin
 
             NumHarm := OtherSpectrum.NumHarm;
@@ -299,14 +297,14 @@ var
     SpectrumObj: TSpectrumObj;
 begin
 
-    ActiveSpectrumObj := NIL;
+    DSS.ActiveSpectrumObj := NIL;
     SpectrumObj := ElementList.First;
     while SpectrumObj <> NIL do
     begin
 
         if CompareText(SpectrumObj.Name, Value) = 0 then
         begin
-            ActiveSpectrumObj := SpectrumObj;
+            DSS.ActiveSpectrumObj := SpectrumObj;
             Exit;
         end;
 
@@ -369,7 +367,7 @@ begin
 
     try
 
-        with ActiveSpectrumObj do
+        with DSS.ActiveSpectrumObj do
         begin
             ReAllocmem(HarmArray, Sizeof(HarmArray^[1]) * NumHarm);
             ReAllocmem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);
@@ -379,7 +377,7 @@ begin
             begin
                 Inc(i);
                 FSReadln(F, S);  // Use Auxparser, which allows for formats
-                with AuxParser do
+                with DSS.AuxParser do
                 begin
                     CmdString := S;
                     NextParam;
@@ -572,8 +570,8 @@ begin
 
     except
         DoSimpleMsg('Exception while computing Spectrum.' + Name + '. Check Definition. Aborting', 655);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;

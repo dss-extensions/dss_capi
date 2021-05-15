@@ -75,22 +75,24 @@ uses
     DSSGlobals,
     LineUnits,
     ConductorData,
-    CAPI_WireData;
+    CAPI_WireData,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------  
-function _activeObj(out obj: TCNDataObj): boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TCNDataObj): boolean; inline;
 begin
     obj := NIL;
     Result := False;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
         
-    obj := CNDataClass.GetActiveObj();
+    obj := DSSPrime.CNDataClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active CNData object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active CNData object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -151,25 +153,25 @@ end;
 function CNData_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := CNDataClass.ElementCount;
+    Result := DSSPrime.CNDataClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := CNDataClass.First;
+    Result := DSSPrime.CNDataClass.First;
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := CNDataClass.Next;
+    Result := DSSPrime.CNDataClass.Next;
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Name(): PAnsiChar; CDECL;
@@ -177,7 +179,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := NIL;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(pCNData.Name);
@@ -187,11 +189,11 @@ procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if not CNDataClass.SetActive(Value) then
-        DoSimpleMsg('CNData "' + Value + '" Not Found in Active Circuit.', 51008);
+    if not DSSPrime.CNDataClass.SetActive(Value) then
+        DoSimpleMsg(DSSPrime, 'CNData "' + Value + '" Not Found in Active Circuit.', 51008);
 
      // Still same active object if not found
 end;
@@ -199,10 +201,10 @@ end;
 procedure CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    Generic_Get_AllNames(ResultPtr, ResultCount, CNDataClass.ElementList, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.CNDataClass.ElementList, False);
 end;
 
 procedure CNData_Get_AllNames_GR(); CDECL;
@@ -216,7 +218,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.NormAmps;
@@ -226,7 +228,7 @@ procedure CNData_Set_NormAmps(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     pCNData.NormAmps := Value;
@@ -238,7 +240,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.EmergAmps;
@@ -248,7 +250,7 @@ procedure CNData_Set_EmergAmps(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     pCNData.EmergAmps := Value;
@@ -260,7 +262,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FRadius * 2.0;
@@ -270,7 +272,7 @@ procedure CNData_Set_Diameter(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -285,7 +287,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FRadius;
@@ -295,7 +297,7 @@ procedure CNData_Set_Radius(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -310,7 +312,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FGMR60;
@@ -320,7 +322,7 @@ procedure CNData_Set_GMRac(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -335,7 +337,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FR60;
@@ -345,7 +347,7 @@ procedure CNData_Set_Rac(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -360,7 +362,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FRDC;
@@ -370,7 +372,7 @@ procedure CNData_Set_Rdc(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -385,7 +387,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FGMRUnits;
@@ -395,7 +397,7 @@ procedure CNData_Set_GMRUnits(Value: Integer); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -410,7 +412,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FRadiusUnits;
@@ -420,7 +422,7 @@ procedure CNData_Set_RadiusUnits(Value: Integer); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -435,7 +437,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FResistanceUnits;
@@ -445,7 +447,7 @@ procedure CNData_Set_ResistanceUnits(Value: Integer); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -460,7 +462,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FEpsR;
@@ -470,7 +472,7 @@ procedure CNData_Set_EpsR(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -485,7 +487,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FInsLayer;
@@ -495,7 +497,7 @@ procedure CNData_Set_InsLayer(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -510,7 +512,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FDiaIns;
@@ -520,7 +522,7 @@ procedure CNData_Set_DiaIns(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
     with pCNData do
     begin
@@ -534,7 +536,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
     Result := pCNData.FDiaCable;
 end;
@@ -543,7 +545,7 @@ procedure CNData_Set_DiaCable(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
     with pCNData do
     begin
@@ -557,7 +559,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
     Result := pCNData.FkStrand;
 end;
@@ -566,7 +568,7 @@ procedure CNData_Set_k(Value: Integer); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
     with pCNData do
     begin
@@ -580,7 +582,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FDiaStrand;
@@ -590,7 +592,7 @@ procedure CNData_Set_DiaStrand(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -605,7 +607,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
     Result := pCNData.FGmrStrand;
 end;
@@ -614,7 +616,7 @@ procedure CNData_Set_GmrStrand(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -629,7 +631,7 @@ var
     pCNData: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     Result := pCNData.FRStrand;
@@ -639,7 +641,7 @@ procedure CNData_Set_RStrand(Value: Double); CDECL;
 var
     pCNData: TCNDataObj;
 begin
-    if not _activeObj(pCNData) then
+    if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
     with pCNData do
@@ -652,16 +654,16 @@ end;
 function CNData_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
-    Result := CNDataClass.ElementList.ActiveIndex
+    Result := DSSPrime.CNDataClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_idx(Value: Integer); CDECL;
 begin
-    if CNDataClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid CNData index: "' + IntToStr(Value) + '".', 656565);
+    if DSSPrime.CNDataClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg(DSSPrime, 'Invalid CNData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

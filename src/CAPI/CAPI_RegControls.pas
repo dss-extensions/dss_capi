@@ -69,22 +69,24 @@ uses
     ControlElem,
     RegControl,
     SysUtils,
-    DSSPointerList;
+    DSSPointerList,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TRegControlObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TRegControlObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := ActiveCircuit.RegControls.Active;
+    obj := DSSPrime.ActiveCircuit.RegControls.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active RegControl object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active RegControl object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -97,21 +99,21 @@ var
     cmd: String;
     elem: TRegControlObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('regcontrol.%s.%s=%s', [elem.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSPrime.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.RegControls, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.RegControls, False);
 end;
 
 procedure RegControls_Get_AllNames_GR(); CDECL;
@@ -126,7 +128,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.CT;
 end;
@@ -136,7 +138,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.InitialDelay;
 end;
@@ -144,17 +146,17 @@ end;
 function RegControls_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.RegControls);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.RegControls);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.RegControls);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.RegControls);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ForwardBand(): Double; CDECL;
@@ -162,7 +164,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.BandVoltage;
 end;
@@ -172,7 +174,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.LineDropR;
 end;
@@ -182,7 +184,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.TargetVoltage;
 end;
@@ -192,7 +194,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.LineDropX;
 end;
@@ -202,7 +204,7 @@ var
     elem: TRegControlObj;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.IsInverseTime;
 end;
@@ -212,7 +214,7 @@ var
     elem: TRegControlObj;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.UseReverseDrop;
 end;
@@ -222,7 +224,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MaxTapChange;
 end;
@@ -232,7 +234,7 @@ var
     elem: TRegControlObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.ControlledBusName);
 end;
@@ -242,7 +244,7 @@ var
     elem: TRegControlObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
@@ -252,7 +254,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.PT;
 end;
@@ -262,7 +264,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.RevBandVoltage;
 end;
@@ -272,7 +274,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.RevLineDropR;
 end;
@@ -282,7 +284,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.RevTargetVoltage;
 end;
@@ -292,7 +294,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.RevLineDropX;
 end;
@@ -302,7 +304,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.SubsequentDelay;
 end;
@@ -312,7 +314,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.TrWinding;  // has the taps
 end;
@@ -322,7 +324,7 @@ var
     elem: TRegControlObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Transformer.Name);
 end;
@@ -332,7 +334,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.VoltageLimit;
 end;
@@ -342,7 +344,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.ElementTerminal;  // monitored winding
 end;
@@ -352,7 +354,7 @@ var
     elem: TRegControlObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.TapNum;  // tap number on the controlled-winding of the transformer controlled by this regcontrol
 end;
@@ -415,16 +417,16 @@ end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if RegControlClass.SetActive(Value) then
+    if DSSPrime.RegControlClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := RegControlClass.ElementList.Active;
-        ActiveCircuit.RegControls.Get(RegControlClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.RegControlClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.RegControls.Get(DSSPrime.RegControlClass.Active);
     end
     else
     begin
-        DoSimpleMsg('RegControl "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'RegControl "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -486,16 +488,16 @@ end;
 function RegControls_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.RegControls.Count;
+    Result := DSSPrime.ActiveCircuit.RegControls.Count;
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Reset(); CDECL;
 var
     elem: TRegControlObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Reset();
 end;
@@ -503,24 +505,24 @@ end;
 function RegControls_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.RegControls.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.RegControls.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_idx(Value: Integer); CDECL;
 var
     pRegControl: TRegControlObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pRegControl := ActiveCircuit.RegControls.Get(Value);
+    pRegControl := DSSPrime.ActiveCircuit.RegControls.Get(Value);
     if pRegControl = NIL then
     begin
-        DoSimpleMsg('Invalid RegControl index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid RegControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pRegControl;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pRegControl;
 end;
 //------------------------------------------------------------------------------
 end.

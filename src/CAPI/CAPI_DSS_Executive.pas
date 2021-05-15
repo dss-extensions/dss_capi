@@ -20,7 +20,9 @@ uses
     DSSGlobals,
     ExecCommands,
     ExecOptions,
-    Executive;
+    Executive,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_Command(i: Integer): PAnsiChar; CDECL;
@@ -55,8 +57,8 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_OptionValue(i: Integer): PAnsiChar; CDECL;
 begin
-    DSSExecutive.Command := 'get ' + ExecOption[i];
-    Result := DSS_GetAsPAnsiChar(GlobalResult);
+    DSSPrime.DSSExecutive.Command := 'get ' + ExecOption[i];
+    Result := DSS_GetAsPAnsiChar(DSSPrime.GlobalResult);
 end;
 //------------------------------------------------------------------------------
 end.

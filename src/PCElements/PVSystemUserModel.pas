@@ -10,7 +10,7 @@ unit PVSystemUserModel;
 
 interface
 
-USES  Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
+USES  Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -35,6 +35,7 @@ TYPE
       protected
 
       public
+        DSS: TDSSContext;
 
         FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
         FInit:         procedure(V, I:pComplexArray);Stdcall;   // For dynamics
@@ -63,7 +64,7 @@ TYPE
         Procedure   Select;
         Procedure   Integrate;
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
       published
 
@@ -71,7 +72,8 @@ TYPE
 
 implementation
 
-Uses PVSystem, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+Uses PVSystem, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils, 
+     DSSHelper;
 
 { TPVsystemUserModel }
 
@@ -79,15 +81,15 @@ function TPVsystemUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Po
 begin
     If Addr=nil then
       Begin
-        DoSimpleMsg('PVSystem User Model Does Not Have Required Function: ' + FuncName, 1569);
+        DoSimpleMsg(DSS, 'PVSystem User Model Does Not Have Required Function: ' + FuncName, 1569);
         FuncError := True;
       End;
     Result := Addr;
 end;
 
-constructor TPVsystemUserModel.Create;
+constructor TPVsystemUserModel.Create(dssContext: TDSSContext);
 begin
-
+    DSS := dssContext;
     FID := 0;
     Fhandle := 0;
     FName := '';
@@ -161,7 +163,7 @@ begin
         End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('PVSystem User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
+              DoSimpleMsg(DSS, 'PVSystem User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
         Else
         Begin
 
@@ -192,7 +194,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew( ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew( DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;

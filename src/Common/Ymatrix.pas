@@ -2,7 +2,7 @@ unit Ymatrix;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -17,7 +17,9 @@ interface
 
 uses
     uComplex,
-    SysUtils;
+    ucMatrix,
+    SysUtils,
+    DSSClass;
 
 
 {Options for building Y matrix}
@@ -29,11 +31,11 @@ type
     EEsolv32Problem = class(Exception);
 
 
-procedure BuildYMatrix(BuildOption: Integer; AllocateVI: Boolean);
+procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);
 procedure ResetSparseMatrix(var hY: NativeUint; size: Integer);
-procedure InitializeNodeVbase;
+procedure InitializeNodeVbase(DSS: TDSSContext);
 
-function CheckYMatrixforZeroes: String;
+function CheckYMatrixforZeroes(DSS: TDSSContext): String;
 
 implementation
 
@@ -45,9 +47,9 @@ uses
     KLUSolve,
     Solution,
     DSSClassDefs,
-    UcMatrix,
     GUtil,
-    GSet;
+    GSet,
+    DSSHelper;
 
 
 type 
@@ -57,17 +59,16 @@ type
     TNodeSet = TSet<Integer, TNodeLess>;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ReCalcAllYPrims;
+procedure ReCalcAllYPrims(Ckt: TDSSCircuit);
 
 var
     pElem: TDSSCktElement;
 
 begin
-
-    with ActiveCircuit do
+    with Ckt do
     begin
         if LogEvents then
-            LogThisEvent('Recalc All Yprims');
+            LogThisEvent(Ckt.DSS, 'Recalc All Yprims');
         pElem := CktElements.First;
         while pElem <> NIL do
         begin
@@ -79,18 +80,16 @@ begin
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ReCalcInvalidYPrims;
-{Recalc YPrims only for those circuit elements that have had changes since last
- solution}
+procedure ReCalcInvalidYPrims(Ckt: TDSSCircuit);
+{Recalc YPrims only for those circuit elements that have had changes since last solution}
 var
     pElem: TDSSCktElement;
 
 begin
-
-    with ActiveCircuit do
+    with Ckt do
     begin
         if LogEvents then
-            LogThisEvent('Recalc Invalid Yprims');
+            LogThisEvent(Ckt.DSS, 'Recalc Invalid Yprims');
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         pElem := IncrCktElements.First;
@@ -141,14 +140,12 @@ begin
 end;
 
 
-procedure InitializeNodeVbase;
-
+procedure InitializeNodeVbase(DSS: TDSSContext);
 var
     i: Integer;
 
 begin
-
-    with ActiveCircuit, Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         for i := 1 to NumNodes do
             with MapNodeToBus^[i] do
@@ -303,7 +300,7 @@ begin
 
         // Retry with the full matrix
         Ckt.Solution.SystemYChanged := True;
-        BuildYMatrix(BuildOption, AllocateVI);
+        BuildYMatrix(Ckt.DSS, BuildOption, AllocateVI);
         Ckt.IncrCktElements.Clear;
     end
     else
@@ -317,7 +314,7 @@ begin
 end;
 {$ENDIF} //DSS_CAPI_INCREMENTAL_Y
 
-procedure BuildYMatrix(BuildOption: Integer; AllocateVI: Boolean);
+procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);
 
 {Builds designated Y matrix for system and allocates solution arrays}
 
@@ -335,7 +332,7 @@ begin
 {$ENDIF}
 
     CmatArray := NIL;
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
 
         if PreserveNodeVoltages then
@@ -352,7 +349,7 @@ begin
             WHOLEMATRIX:
             begin
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-                Incremental := (SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
+                Incremental := (Solution.SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
                     (not SystemYChanged) and 
                     (IncrCktElements.Count <> 0) and 
                     (not AllocateVI) and 
@@ -386,13 +383,13 @@ begin
 {$ENDIF}
         begin
             if (FrequencyChanged) then
-                ReCalcAllYPrims
+                ReCalcAllYPrims(DSS.ActiveCircuit)
             else
-                ReCalcInvalidYPrims;
+                ReCalcInvalidYPrims(DSS.ActiveCircuit);
         end;
         
 
-        if SolutionAbort then
+        if DSS.SolutionAbort then
         begin
             DoSimpleMsg('Y matrix build aborted due to error in primitive Y calculations.', 11001);
             Exit;  // Some problem occured building Yprims
@@ -406,12 +403,13 @@ begin
                 WHOLEMATRIX:
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
                     if Incremental then
-                        LogThisEvent('Building Whole Y Matrix -- using incremental method')
+                        LogThisEvent(DSS, 'Building Whole Y Matrix -- using incremental method')
                     else
 {$ENDIF}
-                    LogThisEvent('Building Whole Y Matrix');
+                        LogThisEvent(DSS, 'Building Whole Y Matrix');
+
                 SERIESONLY:
-                    LogThisEvent('Building Series Y Matrix');
+                    LogThisEvent(DSS, 'Building Series Y Matrix');
             end;
           // Add in Yprims for all devices
           
@@ -421,30 +419,30 @@ begin
         begin
 {$ENDIF}
             // Full method, handles all elements
-        pElem := CktElements.First;
-        while pElem <> NIL do
-        begin
-            with pElem do
-                if (Enabled) then
-                begin          // Add stuff only if enabled
-                    case BuildOption of
-                        WHOLEMATRIX:
-                            CmatArray := GetYPrimValues(ALL_YPRIM);
-                        SERIESONLY:
-                            CmatArray := GetYPrimValues(SERIES)
-                    end;
-           // new function adding primitive Y matrix to KLU system Y matrix
-                    if CMatArray <> NIL then
-                        if AddPrimitiveMatrix(hY, Yorder, PLongWord(@NodeRef[1]), @CMatArray[1]) < 1 then
-                            raise EEsolv32Problem.Create('Node index out of range adding to System Y Matrix')
-                end;   // If Enabled
-            pElem := CktElements.Next;
-        end;
+            pElem := CktElements.First;
+            while pElem <> NIL do
+            begin
+                with pElem do
+                    if (Enabled) then
+                    begin          // Add stuff only if enabled
+                        case BuildOption of
+                            WHOLEMATRIX:
+                                CmatArray := GetYPrimValues(ALL_YPRIM);
+                            SERIESONLY:
+                                CmatArray := GetYPrimValues(SERIES)
+                        end;
+               // new function adding primitive Y matrix to KLU system Y matrix
+                        if CMatArray <> NIL then
+                            if AddPrimitiveMatrix(hY, Yorder, PLongWord(@NodeRef[1]), @CMatArray[1]) < 1 then
+                                raise EEsolv32Problem.Create('Node index out of range adding to System Y Matrix')
+                    end;   // If Enabled
+                pElem := CktElements.Next;
+            end;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         end // if not Incremental
         else
         begin // if Incremental 
-            if not UpdateYMatrix(ActiveCircuit, BuildOption, AllocateVI) then
+            if not UpdateYMatrix(DSS.ActiveCircuit, BuildOption, AllocateVI) then
                 Exit;
         end;
 {$ENDIF}
@@ -453,7 +451,7 @@ begin
         if AllocateVI then
         begin
             if LogEvents then
-                LogThisEvent('ReAllocating Solution Arrays');
+                LogThisEvent(DSS, 'ReAllocating Solution Arrays');
             ReAllocMem(NodeV, SizeOf(NodeV^[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
             NodeV^[0] := CZERO;
             ReAllocMem(Currents, SizeOf(Currents^[1]) * (NumNodes + 1)); // Allocate System current array
@@ -467,8 +465,12 @@ begin
             VMagSaved := AllocMem(Sizeof(VMagSaved^[1]) * NumNodes);  // zero fill
             ErrorSaved := AllocMem(Sizeof(ErrorSaved^[1]) * NumNodes);  // zero fill
             NodeVBase := AllocMem(Sizeof(NodeVBase^[1]) * NumNodes);  // zero fill
-            InitializeNodeVbase;
-
+            InitializeNodeVbase(DSS);
+{$IFDEF DSS_CAPI_PM}
+            {A-Diakoptics vectors memory allocation}
+            ReAllocMem(Node_dV, SizeOf(Node_dV^[1]) * (NumNodes + 1)); // Allocate the partial solution voltage
+            ReAllocMem(Ic_Local, SizeOf(Ic_Local^[1]) * (NumNodes + 1)); // Allocate the Complementary currents
+{$ENDIF}
         end;
 
         case BuildOption of
@@ -491,7 +493,7 @@ begin
 end;
 
 // leave the call to GetMatrixElement, but add more diagnostics
-function CheckYMatrixforZeroes: String;
+function CheckYMatrixforZeroes(DSS: TDSSContext): String;
 
 var
     i: Longword;
@@ -503,7 +505,7 @@ var
 begin
 
     Result := '';
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         hY := Solution.hY;
         for i := 1 to Numnodes do

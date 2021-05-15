@@ -46,9 +46,9 @@ type
         function MakeLike(const LineName: String): Integer; OVERRIDE;
 
     PUBLIC
-        LineTypeList: TCommandList;
-        
-        constructor Create;
+    	LineTypeList: TCommandList;
+    	
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
 
@@ -161,9 +161,6 @@ type
         property ConductorData[i: Integer]: TConductorDataObj READ FetchConductorData;
     end;
 
-var
-    ActiveLineObj: TLineObj;
-
 implementation
 
 uses
@@ -174,7 +171,10 @@ uses
     Utilities,
     Mathutil,
     ControlElem,
-    LineUnits;
+    LineUnits,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 30;
@@ -187,17 +187,15 @@ const
 
 var
     CAP_EPSILON: Complex;
-    LineCodeClass: TLineCode;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLine.Create;  // Creates superstructure for all Line objects
+constructor TLine.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'Line';
     DSSClassType := DSSClassType + LINE_ELEMENT; // in both PDElement list and Linesection lists
 
     ActiveElement := 0;
-    LineCodeClass := NIL;
 
     DefineProperties;
 
@@ -386,13 +384,10 @@ var
     i: Integer;
 
 begin
-    if LineCodeClass = NIL then
-        LineCodeClass := DSSClassList.Get(ClassNames.Find('linecode'));
-
-    if LineCodeClass.SetActive(Code) then
+    if DSS.LineCodeClass.SetActive(Code) then
     begin
 
-        LineCodeObj := LineCodeClass.GetActiveObj;
+        LineCodeObj := DSS.LineCodeClass.GetActiveObj;
 
         CondCode := LowerCase(Code);
 
@@ -481,7 +476,7 @@ var
     Zvalues: pComplexArray;
 
 begin
-    with ActiveLineObj do
+    with DSS.ActiveLineObj do
     begin
        {Added 3-17-15 in case Z and Yc do not get allocated to the proper value}
         if Z.Order <> Fnphases then
@@ -510,7 +505,7 @@ var
     Zvalues: pComplexArray;
 
 begin
-    with ActiveLineObj do
+    with DSS.ActiveLineObj do
     begin
         if Z.Order <> Fnphases then
             ReallocZandYcMatrices;
@@ -541,7 +536,7 @@ var
     Factor: Double;
 
 begin
-    with ActiveLineObj do
+    with DSS.ActiveLineObj do
     begin
         if Z.Order <> Fnphases then
             ReallocZandYcMatrices;
@@ -593,10 +588,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveLineObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveLineObj;  // use property to set this value
+    DSS.ActiveLineObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveLineObj;  // use property to set this value
 
-    with ActiveLineObj do
+    with DSS.ActiveLineObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -708,7 +703,7 @@ begin
                     FLineType := LineTypeList.Getcommand(Param);
             else
             // Inherited Property Edits
-                ClassEdit(ActiveLineObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveLineObj, ParamPointer - NumPropsThisClass)
             end;
 
          // Side Effects ...
@@ -823,7 +818,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherLine := Find(LineName);
     if OtherLine <> NIL then
-        with ActiveLineObj do
+        with DSS.ActiveLineObj do
         begin
 
             if Fnphases <> OtherLine.Fnphases then
@@ -923,7 +918,7 @@ begin
     FUnitsConvert := 1.0;
     FLineCodeUnits := UNITS_NONE;
     FLineCodeSpecified := FALSE;
-    FEarthModel := DefaultEarthModel;
+    FEarthModel := DSS.DefaultEarthModel;
     FLineType := 1;  // Default to OH Line
 
     SpacingSpecified := FALSE;
@@ -1124,7 +1119,7 @@ begin
         begin
 
             FMakeZFromGeometry(ActiveCircuit.Solution.Frequency); // Includes length in proper units
-            if SolutionAbort then
+            if DSS.SolutionAbort then
                 Exit;
 
         end
@@ -1133,7 +1128,7 @@ begin
         begin
 
             FMakeZFromSpacing(ActiveCircuit.Solution.Frequency); // Includes length in proper units
-            if SolutionAbort then
+            if DSS.SolutionAbort then
                 Exit;
 
         end
@@ -1943,10 +1938,10 @@ end;
 
 procedure TLineObj.FetchLineSpacing(const Code: String);
 begin
-    if LineSpacingClass.SetActive(Code) then
+    if DSS.LineSpacingClass.SetActive(Code) then
     begin
 
-        FLineSpacingObj := LineSpacingClass.GetActiveObj;
+        FLineSpacingObj := DSS.LineSpacingClass.GetActiveObj;
         FLineCodeSpecified := FALSE;
         KillGeometrySpecified;
         SpacingCode := LowerCase(Code);
@@ -1994,10 +1989,10 @@ begin
     for i := istart to FLineSpacingObj.NWires do
     begin
         AuxParser.NextParam; // ignore any parameter name  not expecting any
-        WireDataClass.code := AuxParser.StrValue;
-        if Assigned(ActiveConductorDataObj) then
+        DSS.WireDataClass.code := AuxParser.StrValue;
+        if Assigned(DSS.ActiveConductorDataObj) then
         begin
-            FLineWireData^[i] := ActiveConductorDataObj;
+            FLineWireData^[i] := DSS.ActiveConductorDataObj;
             if FLineWireData^[i].NumAmpRatings > NewNumRat then
             begin
                 NewNumRat := FLineWireData^[i].NumAmpRatings;
@@ -2039,9 +2034,9 @@ begin
     for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
         AuxParser.NextParam; // ignore any parameter name  not expecting any
-        CNDataClass.code := AuxParser.StrValue;
-        if Assigned(ActiveConductorDataObj) then
-            FLineWireData^[i] := ActiveConductorDataObj
+        DSS.CNDataClass.code := AuxParser.StrValue;
+        if Assigned(DSS.ActiveConductorDataObj) then
+            FLineWireData^[i] := DSS.ActiveConductorDataObj
         else
             DoSimpleMsg('CN cable ' + AuxParser.StrValue + ' was not defined first.(LINE.' + Name + ')', 18105);
     end;
@@ -2062,9 +2057,9 @@ begin
     for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
         AuxParser.NextParam; // ignore any parameter name  not expecting any
-        TSDataClass.code := AuxParser.StrValue;
-        if Assigned(ActiveConductorDataObj) then
-            FLineWireData^[i] := ActiveConductorDataObj
+        DSS.TSDataClass.code := AuxParser.StrValue;
+        if Assigned(DSS.ActiveConductorDataObj) then
+            FLineWireData^[i] := DSS.ActiveConductorDataObj
         else
             DoSimpleMsg('TS cable ' + AuxParser.StrValue + ' was not defined first. (LINE.' + Name + ')', 18107);
     end;
@@ -2074,12 +2069,12 @@ procedure TLineObj.FetchGeometryCode(const Code: String);
 var
     i: Integer;
 begin
-    if LineGeometryClass.SetActive(Code) then
+    if DSS.LineGeometryClass.SetActive(Code) then
     begin
         FLineCodeSpecified := FALSE;  // Cancel this flag
         SpacingSpecified := FALSE;
 
-        FLineGeometryObj := LineGeometryClass.GetActiveObj;
+        FLineGeometryObj := DSS.LineGeometryClass.GetActiveObj;
         FZFrequency := -1.0;  // Init to signify not computed
 
         GeometryCode := LowerCase(Code);
@@ -2133,7 +2128,7 @@ begin
             Yc := NIL;
         end;
 
-        ActiveEarthModel := FEarthModel;
+        DSS.ActiveEarthModel := FEarthModel;
 
         Z := FLineGeometryObj.Zmatrix[f, len, LengthUnits];
         Yc := FLineGeometryObj.YCmatrix[f, len, LengthUnits];
@@ -2175,7 +2170,7 @@ begin
     end;
 
   // make a temporary LineGeometry to calculate line constants
-    pGeo := TLineGeometryObj.Create(LineGeometryClass, Name);
+    pGeo := TLineGeometryObj.Create(DSS.LineGeometryClass, Name);
     pGeo.LoadSpacingAndWires(FLineSpacingObj, FLineWireData); // this sets OH, CN, or TS
 
     if FrhoSpecified then
@@ -2184,7 +2179,7 @@ begin
     EmergAmps := pGeo.EmergAmps;
     UpdatePDProperties;
 
-    ActiveEarthModel := FEarthModel;
+    DSS.ActiveEarthModel := FEarthModel;
 
     Z := pGeo.Zmatrix[f, len, LengthUnits];
     Yc := pGeo.YCmatrix[f, len, LengthUnits];

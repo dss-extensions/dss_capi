@@ -1,4 +1,3 @@
-
 unit CAPI_LineGeometries;
 
 interface
@@ -59,22 +58,25 @@ uses
     LineUnits,
     Ucomplex,
     Line,
-    UcMatrix;
+    UcMatrix,
+    DSSClass,
+    DSSHelper;
+
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TLineGeometryObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TLineGeometryObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     
-    obj := LineGeometryClass.GetActiveObj;
+    obj := DSSPrime.LineGeometryClass.GetActiveObj;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active LineGeometry object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active LineGeometry object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -85,25 +87,25 @@ end;
 function LineGeometries_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineGeometryClass.ElementCount;
+    Result := DSSPrime.LineGeometryClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function LineGeometries_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineGeometryClass.First;
+    Result := DSSPrime.LineGeometryClass.First;
 end;
 //------------------------------------------------------------------------------
 function LineGeometries_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineGeometryClass.Next;
+    Result := DSSPrime.LineGeometryClass.Next;
 end;
 //------------------------------------------------------------------------------
 function LineGeometries_Get_Name(): PAnsiChar; CDECL;
@@ -111,7 +113,7 @@ var
     pLineGeometry: TLineGeometryObj;
 begin
     Result := NIL;  // signify no name
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
     Result := DSS_GetAsPAnsiChar(pLineGeometry.Name);
@@ -120,10 +122,10 @@ end;
 procedure LineGeometries_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if not LineGeometryClass.SetActive(Value) then
-        DoSimpleMsg('LineGeometry "' + Value + '" Not Found in Active Circuit.', 51008);
+    if not DSSPrime.LineGeometryClass.SetActive(Value) then
+        DoSimpleMsg(DSSPrime, 'LineGeometry "' + Value + '" Not Found in Active Circuit.', 51008);
 
      // Still same active object if not found
 end;
@@ -133,7 +135,7 @@ var
     pLineGeometry: TLineGeometryObj;
 begin
     Result := 0;
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
     Result := pLineGeometry.Nconds;
@@ -145,10 +147,10 @@ var
 begin
     if (Value < 1) then
     begin
-        DoSimpleMsg(Format('Invalid number of conductors (%d). Please use a value within the valid range (>0).', [Value]), 183);
+        DoSimpleMsg(DSSPrime, Format('Invalid number of conductors (%d). Please use a value within the valid range (>0).', [Value]), 183);
         Exit;
     end;
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
     pLineGeometry.DataChanged := TRUE;
@@ -160,7 +162,7 @@ var
     pLineGeometry: TLineGeometryObj;
 begin
     Result := 0;
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
     Result := pLineGeometry.NPhases;
@@ -172,10 +174,10 @@ var
 begin
     if (Value < 1) then
     begin
-        DoSimpleMsg('Invalid number of phases sent via C-API. Please enter a value within range.', 184);
+        DoSimpleMsg(DSSPrime, 'Invalid number of phases sent via C-API. Please enter a value within range.', 184);
     end;
 
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
     pLineGeometry.DataChanged := TRUE;
@@ -190,7 +192,7 @@ var
     Factor: Double;
     mat: TcMatrix;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -222,7 +224,7 @@ var
     pLineGeometry: TLineGeometryObj;
     mat: Tcmatrix;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -253,7 +255,7 @@ var
     pLineGeometry: TLineGeometryObj;
     mat: Tcmatrix;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -284,7 +286,7 @@ var
     order: Integer;
     data: PComplexArray;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -308,7 +310,7 @@ var
     pLineGeometry: TLineGeometryObj;
 begin
     Result := FALSE;
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     Result := pLineGeometry.FReduce;
 end;
@@ -318,7 +320,7 @@ var
     pLineGeometry: TLineGeometryObj;
 
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     pLineGeometry.DataChanged := TRUE;
     pLineGeometry.FReduce := Value;
@@ -329,7 +331,7 @@ var
     pLineGeometry: TLineGeometryObj;
 begin
     Result := 0;
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     Result := pLineGeometry.RhoEarth;
 end;
@@ -338,7 +340,7 @@ procedure LineGeometries_Set_RhoEarth(Value: Double); CDECL;
 var
     pLineGeometry: TLineGeometryObj;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     with pLineGeometry do
     begin
@@ -352,7 +354,7 @@ var
     pLineGeometry: TLineGeometryObj;
 begin
     Result := 0;
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     Result := pLineGeometry.NormAmps;
 end;
@@ -361,7 +363,7 @@ procedure LineGeometries_Set_NormAmps(Value: Double); CDECL;
 var
     pLineGeometry: TLineGeometryObj;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     pLineGeometry.NormAmps := Value;
 end;
@@ -371,7 +373,7 @@ var
     pLineGeometry: TLineGeometryObj;
 begin
     Result := 0;
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     Result := pLineGeometry.EmergAmps;
 end;
@@ -380,7 +382,7 @@ procedure LineGeometries_Set_EmergAmps(Value: Double); CDECL;
 var
     pLineGeometry: TLineGeometryObj;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     pLineGeometry.EmergAmps := Value;
 end;
@@ -389,7 +391,7 @@ procedure LineGeometries_Set_Units(ValuePtr: PInteger; ValueCount: TAPISize); CD
 var
     pLineGeometry: TLineGeometryObj;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     with pLineGeometry do
     begin
@@ -408,7 +410,7 @@ var
     Result: PIntegerArray;
     pLineGeometry: TLineGeometryObj;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -431,7 +433,7 @@ procedure LineGeometries_Set_Ycoords(ValuePtr: PDouble; ValueCount: TAPISize); C
 var
     pLineGeometry: TLineGeometryObj;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     with pLineGeometry do
     begin
@@ -450,7 +452,7 @@ var
     Result: PDoubleArray;
     pLineGeometry: TLineGeometryObj;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -473,7 +475,7 @@ procedure LineGeometries_Set_Xcoords(ValuePtr: PDouble; ValueCount: TAPISize); C
 var
     pLineGeometry: TLineGeometryObj;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
     with pLineGeometry do
     begin
@@ -492,7 +494,7 @@ var
     Result: PDoubleArray;
     pLineGeometry: TLineGeometryObj;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -517,7 +519,7 @@ var
     pLineGeometry: TLineGeometryObj;
     i: Integer;
 begin
-    if not _activeObj(pLineGeometry) then
+    if not _activeObj(DSSPrime, pLineGeometry) then
     begin
         DefaultResult(ResultPtr, ResultCount);
     end;
@@ -540,9 +542,9 @@ end;
 procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, LineGeometryClass.ElementList, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LineGeometryClass.ElementList, False);
 end;
 
 procedure LineGeometries_Get_AllNames_GR(); CDECL;
@@ -555,17 +557,17 @@ end;
 function LineGeometries_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := LineGeometryClass.ElementList.ActiveIndex
+    Result := DSSPrime.LineGeometryClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Set_idx(Value: Integer); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if LineGeometryClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid LineGeometry index: "' + IntToStr(Value) + '".', 656565);
+    if DSSPrime.LineGeometryClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg(DSSPrime, 'Invalid LineGeometry index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

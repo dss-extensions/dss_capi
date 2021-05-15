@@ -18,7 +18,8 @@ interface
 uses
     Arraydef,
     ControlElem,
-    Classes;
+    Classes,
+    DSSClass;
 
 type
 
@@ -39,6 +40,7 @@ type
 
     TControlQueue = class(Tobject)
     PRIVATE
+        DSS: TDSSContext;
         ActionList: TList;
         DebugTrace: Boolean;
         TraceFile: TFileStream; 
@@ -59,7 +61,7 @@ type
         procedure Restore_Time_Step;
 
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Push(const Hour: Integer; const Sec: Double; const Code, ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
@@ -88,7 +90,8 @@ uses
     DSSGlobals,
     sysutils,
     Utilities,
-    YMatrix;
+    YMatrix,
+    DSSHelper;
 
 { TControlQueue }
 
@@ -174,10 +177,12 @@ begin
     ActionList.Clear;
 end;
 
-constructor TControlQueue.Create;
+constructor TControlQueue.Create(dssContext: TDSSContext);
 begin
     inherited Create;
     TraceFile := nil;
+    DSS := dssContext;
+
     ActionList := TList.Create;
     ActionList.Clear;
 
@@ -386,7 +391,7 @@ begin
     begin
         Ltimer.Hour := Hour;
         Ltimer.Sec := Sec;
-        Temp_dbl[4] := ActiveCircuit.solution.DynaVars.h;                        // Simulation step time (Time window size)
+        Temp_dbl[4] := DSS.ActiveCircuit.solution.DynaVars.h;                        // Simulation step time (Time window size)
         Temp_dbl[6] := TimeRecToTime(Ltimer);                                    // Simulation step time incremental
         pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], FALSE);
         while pElem <> NIL do
@@ -398,8 +403,8 @@ begin
             pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], FALSE);
         end;
 //**************After this point, the additional control actions are performed************
-        Temp_dbl[7] := ActiveCircuit.solution.DynaVars.t;                        // Saving the current time (secs)
-        with ActiveCircuit.solution.DynaVars do
+        Temp_dbl[7] := DSS.ActiveCircuit.solution.DynaVars.t;                        // Saving the current time (secs)
+        with DSS.ActiveCircuit.solution.DynaVars do
             Temp_Int[2] := intHour;          // Saving the current time (hour)
         Temp_dbl[2] := Temp_dbl[6];
 //*************** Simulation time is recalculated considering the next control action event ************
@@ -426,7 +431,7 @@ begin
             end;
             if (pElem = NIL) and (Temp_Int[1] = 0) then                             // The last CtrlAction was within the time
             begin                                                                   // Time window, keep scanning
-                with ActiveCircuit.Solution do
+                with DSS.ActiveCircuit.Solution do
                 begin
                     Temp_dbl[1] := Temp_dbl[1] + (Temp_dbl[3] - Temp_dbl[6]);         // The Accumulated time is calculated
                     Temp_dbl[6] := Temp_dbl[6] + Temp_dbl[4];                         // Time reference moves forward
@@ -455,18 +460,18 @@ begin
     end;
     Ltimer.Hour := Temp_Int[0];
     Ltimer.sec := Temp_dbl[2];
-    with ActiveCircuit.solution.DynaVars do
+    with DSS.ActiveCircuit.solution.DynaVars do
         intHour := Temp_Int[0];               // Sets the simulation time
-    ActiveCircuit.solution.DynaVars.t := Temp_dbl[2];
-    ActiveCircuit.solution.Update_dblHour;
+    DSS.ActiveCircuit.solution.DynaVars.t := Temp_dbl[2];
+    DSS.ActiveCircuit.solution.Update_dblHour;
 end;
 
 procedure TControlQueue.Restore_Time_Step;
 begin
-    with ActiveCircuit.solution.DynaVars do
+    with DSS.ActiveCircuit.solution.DynaVars do
         intHour := Temp_Int[2];
-    ActiveCircuit.solution.DynaVars.t := Temp_dbl[7];
-    ActiveCircuit.solution.Update_dblHour;
+    DSS.ActiveCircuit.solution.DynaVars.t := Temp_dbl[7];
+    DSS.ActiveCircuit.solution.Update_dblHour;
 end;
 
 function TControlQueue.TimeRecToTime(Trec: TTimeRec): Double;
@@ -482,7 +487,7 @@ begin
     FreeAndNil(TraceFile);
     if DebugTrace then
     begin
-        TraceFile := TFileStream.Create(GetOutputDirectory + 'Trace_ControlQueue.CSV', fmCreate);
+        TraceFile := TFileStream.Create(DSS.OutputDirectory + 'Trace_ControlQueue.CSV', fmCreate);
         FSWriteLn(TraceFile, '"Hour", "sec", "Control Iteration", "Element", "Action Code", "Trace Parameter", "Description"');
         FSFlush(TraceFile);
     end;
@@ -512,7 +517,7 @@ begin
         end;
     finally
         FreeAndNil(F);
-        FireOffEditor(FileNm);
+        FireOffEditor(DSS, FileNm);
     end;
 
 
@@ -523,12 +528,12 @@ procedure TControlQueue.WriteTraceRecord(const ElementName: String; const Code: 
 begin
 
     try
-        if (not InshowResults) then
+        if (not DSS.InShowResults) then
         begin
             FSWriteLn(TraceFile, Format('%d, %.6g, %d, %s, %d, %-.g, %s', [
-                ActiveCircuit.Solution.DynaVars.intHour,
-                ActiveCircuit.Solution.DynaVars.t,
-                ActiveCircuit.Solution.ControlIteration,
+                DSS.ActiveCircuit.Solution.DynaVars.intHour,
+                DSS.ActiveCircuit.Solution.DynaVars.t,
+                DSS.ActiveCircuit.Solution.ControlIteration,
                 ElementName,
                 Code,
                 TraceParameter,

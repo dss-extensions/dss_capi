@@ -41,7 +41,7 @@ type
         procedure DefineProperties;
         function MakeLike(const UPFCControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -83,10 +83,6 @@ type
         function MakeGenList: Boolean;
     end;
 
-
-var
-    ActiveUPFCControlObj: TUPFCControlObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -99,7 +95,10 @@ uses
     Sysutils,
     uCmatrix,
     MathUtil,
-    Math;
+    Math,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
 
@@ -107,9 +106,9 @@ const
 
 
 {--------------------------------------------------------------------------}
-constructor TUPFCControl.Create;  // Creates superstructure for all UPFCControl objects
+constructor TUPFCControl.Create(dssContext: TDSSContext);  // Creates superstructure for all UPFCControl objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'UPFCControl';
     DSSClassType := DSSClassType + UPFC_CONTROL;
@@ -186,12 +185,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveUPFCControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveUPFCControlObj;
+    DSS.ActiveUPFCControlObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveUPFCControlObj;
 
     Result := 0;
 
-    with ActiveUPFCControlObj do
+    with DSS.ActiveUPFCControlObj do
     begin
 
         ParamPointer := 0;
@@ -233,8 +232,8 @@ begin
                 end;
 
             else
-           // Inherited parameters
-                ClassEdit(ActiveUPFCControlObj, ParamPointer - NumPropsthisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveUPFCControlObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -272,7 +271,7 @@ begin
    {See if we can find this UPFCControl name in the present collection}
     OtherUPFCControl := Find(UPFCControlName);
     if OtherUPFCControl <> NIL then
-        with ActiveUPFCControlObj do
+        with DSS.ActiveUPFCControlObj do
         begin
 
             NPhases := OtherUPFCControl.Fnphases;
@@ -541,7 +540,7 @@ var
 begin
 
     Result := FALSE;
-    GenClass := GetDSSClassPtr('generator');
+    GenClass := GetDSSClassPtr(DSS, 'generator');
 
     if FListSize > 0 then
     begin    // Name list is defined - Use it

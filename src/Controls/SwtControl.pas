@@ -25,7 +25,7 @@ type
         procedure DefineProperties;
         function MakeLike(const SwtControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -76,9 +76,6 @@ type
         property CurrentAction: EControlAction READ ActionCommand WRITE Set_LastAction;
     end;
 
-var
-    ActiveSwtControlObj: TSwtControlObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -89,15 +86,17 @@ uses
     Circuit,
     Sysutils,
     Utilities,
-    solution;
+    solution,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
 
     NumPropsThisClass = 8;
-
-constructor TSwtControl.Create;  // Creates superstructure for all SwtControl objects
+constructor TSwtControl.Create(dssContext: TDSSContext);  // Creates superstructure for all SwtControl objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'SwtControl';
     DSSClassType := DSSClassType + SWT_CONTROL;
@@ -171,12 +170,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveSwtControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveSwtControlObj;
+    DSS.ActiveSwtControlObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveSwtControlObj;
 
     Result := 0;
 
-    with ActiveSwtControlObj do
+    with DSS.ActiveSwtControlObj do
     begin
 
         ParamPointer := 0;
@@ -225,8 +224,8 @@ begin
                     end;
 
             else
-           // Inherited parameters
-                ClassEdit(ActiveSwtControlObj, ParamPointer - NumPropsthisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveSwtControlObj, ParamPointer - NumPropsthisClass)
             end;
 
          {supplemental actions}
@@ -280,7 +279,7 @@ begin
    {See if we can find this SwtControl name in the present collection}
     OtherSwtControl := Find(SwtControlName);
     if OtherSwtControl <> NIL then
-        with ActiveSwtControlObj do
+        with DSS.ActiveSwtControlObj do
         begin
 
             NPhases := OtherSwtControl.Fnphases;

@@ -46,7 +46,7 @@ type
 
     PUBLIC
 
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;      // Definition of the main property editing function
@@ -351,11 +351,6 @@ type
     end;
 
 
-var
-    Generic5Class: TGeneric5;
-    ActiveGeneric5Obj: TGeneric5Obj;
-
-
 implementation
 
 {Typical Uses Clause -- not all may not be needed}
@@ -368,7 +363,10 @@ uses
     Sysutils,      // Delphi misc utility functions
     Math,          // Delphi Math functions
     MathUtil,      // DSS Math utilities
-    Utilities;     // DSS misc utility functions
+    Utilities,     // DSS misc utility functions
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 48;//44;//24;//23; // Set this constant to the actual number of properties you define   add grpnum
@@ -380,9 +378,9 @@ var  // Define any useful module vars here, for example:
     CDOUBLEONE: Complex;   // 1 + j1  (see Initialization section below)
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGeneric5.Create;  // Creates main collection handler for all IndMach012 objects
+constructor TGeneric5.Create(dssContext: TDSSContext);  // Creates main collection handler for all IndMach012 objects
 begin
-    inherited Create;  // make the base class  and init DSSClassType
+    inherited Create(dssContext);  // make the base class  and init DSSClassType
 
      // Specify class name and bit mask ID for this class type
      // IndMach012_ELEMENT must be defined in DSSClassDefs as nn*8

@@ -57,7 +57,7 @@ type
         procedure DefineProperties;
         function MakeLike(const CapControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -136,9 +136,6 @@ type
     end;
 
 
-var
-    ActiveCapControlObj: TCapControlObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -150,7 +147,10 @@ uses
     Sysutils,
     uCmatrix,
     MathUtil,
-    Math;
+    Math,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     AVGPHASES = -1;
@@ -160,9 +160,9 @@ const
 
 
 {--------------------------------------------------------------------------}
-constructor TCapControl.Create;  // Creates superstructure for all CapControl objects
+constructor TCapControl.Create(dssContext: TDSSContext);  // Creates superstructure for all CapControl objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
 
     Class_name := 'CapControl';
     DSSClassType := DSSClassType + CAP_CONTROL;
@@ -292,12 +292,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveCapControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveCapControlObj;
+    DSS.ActiveCapControlObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveCapControlObj;
 
     Result := 0;
 
-    with ActiveCapControlObj do
+    with DSS.ActiveCapControlObj do
     begin
 
         ParamPointer := 0;
@@ -317,7 +317,7 @@ begin
                 0:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 352);
                 1:
-                    ElementName := ConstructElemName(lowercase(param));  // substitute @var value if any
+                    ElementName := ConstructElemName(DSS, lowercase(param));  // substitute @var value if any
                 2:
                     ElementTerminal := Parser.IntValue;
                 3:
@@ -335,7 +335,7 @@ begin
                         'p':
                             ControlType := PFCONTROL;
                     else
-                        DoSimpleMsg(Format('Unrecognized CapControl Type: "%s" (Capcontrol.%s)', [param, ActiveCapControlObj.name]), 352);
+                        DoSimpleMsg(Format('Unrecognized CapControl Type: "%s" (Capcontrol.%s)', [param, DSS.ActiveCapControlObj.name]), 352);
                     end;
                 5:
                     ControlVars.PTRatio := Parser.DblValue;
@@ -400,8 +400,8 @@ begin
                         PropertyValue[22] := 'n'; // so it gets reported properly
                     end;
             else
-           // Inherited parameters
-                ClassEdit(ActiveCapControlObj, ParamPointer - NumPropsthisClass)
+                // Inherited parameters
+                ClassEdit(DSS.ActiveCapControlObj, ParamPointer - NumPropsthisClass)
             end;
 
 
@@ -428,7 +428,7 @@ begin
                             end
                             else
                             begin
-                                DoSimpleMsg('Invalid PF ON value for CapControl.' + ActiveCapControlObj.Name, 353);
+                                DoSimpleMsg('Invalid PF ON value for CapControl.' + DSS.ActiveCapControlObj.Name, 353);
                             end;
                         end;
                         8:
@@ -442,7 +442,7 @@ begin
                             end
                             else
                             begin
-                                DoSimpleMsg('Invalid PF OFF value for CapControl.' + ActiveCapControlObj.Name, 35301);
+                                DoSimpleMsg('Invalid PF OFF value for CapControl.' + DSS.ActiveCapControlObj.Name, 35301);
                             end;
                         end;
 
@@ -489,7 +489,7 @@ begin
    {See if we can find this CapControl name in the present collection}
     OtherCapControl := Find(CapControlName);
     if OtherCapControl <> NIL then
-        with ActiveCapControlObj do
+        with DSS.ActiveCapControlObj do
         begin
 
             NPhases := OtherCapControl.Fnphases;
@@ -603,8 +603,7 @@ begin
     FpctMinkvar := 50.0;
 
     IsUserModel := FALSE;
-    UserModel := TCapUserControl.Create;   // Inits handles, FID
-
+    UserModel := TCapUserControl.Create(DSS);   // Inits handles, FID
 
     ControlVars.ControlActionHandle := 0;
 
@@ -751,10 +750,8 @@ var
 begin
     with pBus do
         if Assigned(Vbus) then    // uses nphases from CapControlObj
-            for j := 1 to nPhases do
+            for j := 1 to nPhases do //TODO (@meira) check if nphases is ambiguous
                 cBuffer^[j] := ActiveCircuit.Solution.NodeV^[GetRef(j)];
-    ;
-
 end;
 
 procedure TCapControlObj.GetControlCurrent(var ControlCurrent: Double);

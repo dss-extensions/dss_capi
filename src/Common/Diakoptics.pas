@@ -12,24 +12,24 @@ unit Diakoptics;
 interface
 
 uses
-  Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, EnergyMeter,
+  DSSClass, Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, EnergyMeter,
   SolutionAlgs, Line,
   {$IFDEF FPC}CmdForms{$ELSE}DSSForms, ScriptEdit{$ENDIF};
 
-Function Solve_Diakoptics():Integer;
-Function ADiakoptics_Tearing(): Integer;
-procedure ADiakopticsInit();
-function Calc_C_Matrix(PLinks : PString; NLinks  : Integer):Integer;
-function Calc_ZLL(PLinks : PString; NLinks  : Integer):Integer;
-procedure Calc_ZCC(Links : Integer);
-procedure Calc_Y4();
-procedure SendIdx2Actors();
-Function get_Statistics(): String;
+Function Solve_Diakoptics(DSS: TDSSContext):Integer;
+Function ADiakoptics_Tearing(DSS: TDSSContext): Integer;
+procedure ADiakopticsInit(DSS: TDSSContext);
+function Calc_C_Matrix(DSS: TDSSContext; PLinks : PString; NLinks  : Integer):Integer;
+function Calc_ZLL(DSS: TDSSContext; PLinks : PString; NLinks  : Integer):Integer;
+procedure Calc_ZCC(DSS: TDSSContext; Links : Integer);
+procedure Calc_Y4(DSS: TDSSContext);
+procedure SendIdx2Actors(DSS: TDSSContext);
+Function get_Statistics(DSS: TDSSContext): String;
 
 implementation
 
 Uses
-  ExecHelper, Executive, ParserDel, YMatrix, KLUSolve, Ucomplex, Sparse_Math,
+  DSSHelper, ExecHelper, Executive, ParserDel, YMatrix, KLUSolve, Ucomplex, Sparse_Math,
   UcMatrix, math,
   Dynamics; // For TSolveMode
 
@@ -40,15 +40,15 @@ Uses
 *                        Coordinator (Actor = 1)                               *
 *******************************************************************************}
 
-Function Solve_Diakoptics():Integer;
+Function Solve_Diakoptics(DSS: TDSSContext):Integer;
 var
   i,
   j,
   k         : Integer;
-  Vpartial  : TSparse_Complex;
+  Vpartial  : TSparse_Complex; //TODO: migrate to KLUSolveX
 Begin
   {Space left empty to implement the simplified Diakoptics algorithm}
-  With ActiveCircuit[1], ActiveCircuit[1].Solution do
+  With DSS.ActiveCircuit, Solution do
   Begin
      // This is the coordinator actor in A-Diakoptics mode
     FOR i := 1 TO NumberOfTimes Do
@@ -65,36 +65,39 @@ Begin
       else
       Begin
       // Setups the other actors to match the options of the coordinator
-        for j := 2 to NumOfActors do
+        for j := 1 to DSS.NumOfActors - 1 do
         Begin
-          ActiveCircuit[j].Solution.Mode                  :=  Mode;
-          ActiveCircuit[j].solution.DynaVars.h            :=  DynaVars.h;
-          ActiveCircuit[j].solution.DynaVars.intHour      :=  DynaVars.intHour;
-          ActiveCircuit[j].solution.DynaVars.t            :=  DynaVars.t;
-          ActiveCircuit[j].solution.MaxIterations         :=  MaxIterations;
-          ActiveCircuit[j].solution.MaxControlIterations  :=  MaxControlIterations;
-          ActiveCircuit[j].solution.ControlMode           :=  ControlMode;
-          ActiveCircuit[j].solution.NumberOfTimes         :=  1;
+          DSS.Children[j].ActiveCircuit.Solution.Mode                  :=  Mode;
+          DSS.Children[j].ActiveCircuit.solution.DynaVars.h            :=  DynaVars.h;
+          DSS.Children[j].ActiveCircuit.solution.DynaVars.intHour      :=  DynaVars.intHour;
+          DSS.Children[j].ActiveCircuit.solution.DynaVars.t            :=  DynaVars.t;
+          DSS.Children[j].ActiveCircuit.solution.MaxIterations         :=  MaxIterations;
+          DSS.Children[j].ActiveCircuit.solution.MaxControlIterations  :=  MaxControlIterations;
+          DSS.Children[j].ActiveCircuit.solution.ControlMode           :=  ControlMode;
+          DSS.Children[j].ActiveCircuit.solution.NumberOfTimes         :=  1;
         End;
         AD_Init   :=  True;
       End;
     // Starts the simulation
-      for j := 2 to NumOfActors do
+      for j := 1 to DSS.NumOfActors - 1 do
       Begin
-        ActiveActor :=  j;
-        CmdResult   :=  DoSolveCmd;
+        DSS.CmdResult := DSS.Children[j].DSSExecutive.DoSolveCmd();
       End;
-      Wait4Actors(AD_Actors);
+      Wait4Actors(DSS, AD_Actors);
       // The other routines
-      ActorPctProgress[1]  :=  (i*100) div NumberofTimes;
-      if SolutionAbort then break
-      else ActiveCircuit[1].Issolved :=  True;
+      DSS.ActorPctProgress  :=  (i*100) div NumberofTimes;
+      if DSS.SolutionAbort then
+        break
+      else
+        DSS.ActiveCircuit.IsSolved :=  True;
       Increment_time;
     End;
   End;
 
-  if SolutionAbort then ActiveCircuit[1].Issolved :=  False;
-  ActiveActor :=  1;    // Returns the control to Actor 1
+  if DSS.SolutionAbort then 
+    DSS.ActiveCircuit.IsSolved :=  False;
+  DSS.ActiveChild := DSS;
+  DSS.ActiveChildIndex := 0;
   Result  :=  0;
 End;
 
@@ -102,7 +105,7 @@ End;
 *              Returns a string with the partitioning statistics               *
 *                  It only works if the partitioning was succesful             *
 *******************************************************************************}
-Function get_Statistics(): String;
+Function get_Statistics(DSS: TDSSContext): String;
 var
   unbalance,
   ASize     : Array of single;
@@ -112,12 +115,12 @@ var
   AvgImbal  : Double;
 Begin
   setlength(ASize,0);
-  for idx := 2 to NumOfActors do
+  for idx := 1 to DSS.NumOfActors-1 do
   Begin
     setlength(ASize,length(ASize) + 1);
-    ASize[high(ASize)]  :=  ActiveCircuit[idx].NumNodes;
+    ASize[high(ASize)]  :=  DSS.Children[idx].ActiveCircuit.NumNodes;
   End;
-  GReduct  :=  (1 - (MaxValue(ASize)/ActiveCircuit[1].NumNodes))*100;   // The biggest actor
+  GReduct  :=  (1 - (MaxValue(ASize)/DSS.ActiveCircuit.NumNodes))*100;   // The biggest actor
   setlength(unbalance,length(ASize));
   for idx := 0 to High(ASize) do
     unbalance[idx]  :=  (1 - (ASize[idx]/MaxValue(ASize))) * 100; // All the unbalances
@@ -135,7 +138,7 @@ End;
 *              Sets the memory index for each actor so they can write          *
 *                   directly into the coordinator's Voltage vector             *
 *******************************************************************************}
-procedure SendIdx2Actors();
+procedure SendIdx2Actors(DSS: TDSSContext);
 VAR
    i,j,k      : Integer;
    BusName    : String;
@@ -143,11 +146,11 @@ VAR
 Begin
 // Gets the names of the nodes in the interconnected system
   setlength(AllNNames,0);
-  With ActiveCircuit[1] do
+  With DSS.ActiveCircuit do
   Begin
        FOR i := 1 to NumBuses DO
        Begin
-           BusName := BusList.NameOfIndex(i);
+           BusName := BusList.Get(i);
            FOR j := 1 to Buses^[i].NumNodesThisBus DO
            Begin
                 setlength(AllNNames,(length(AllNNames) + 1));
@@ -157,23 +160,24 @@ Begin
   End;
 // Sets the index for each actor
 // The feeder head first
-  ActiveCircuit[2].VIndex :=  0;
+  DSS.ActiveCircuit.VIndex :=  0;
 // Then checks the rest of the actors
-  for i := 3 to NumOfActors do
+  for i := 1 to DSS.NumOfActors - 1 do
   Begin
-    BusName :=  ActiveCircuit[i].BusList.NameOfIndex(1) + '.1';
+    BusName :=  DSS.Children[i].ActiveCircuit.BusList.Get(1) + '.1';
     // Looks for the node within all the Node Names in the interconnected model
     for j := 0 to High(AllNNames) do
-      if BusName = AllNNames[j] then  Break;
-    ActiveCircuit[i].VIndex :=  j;
+      if BusName = AllNNames[j] then  
+        Break;
+    DSS.Children[i].ActiveCircuit.VIndex :=  j;
   End;
   // Initializes the Ic vector with zeros
-  ActiveCircuit[1].Ic.sparse_matrix_Cmplx(length(AllNNames),1);
-  ActiveCircuit[1].V_0.sparse_matrix_Cmplx(length(AllNNames),1);
+  DSS.ActiveCircuit.Ic.sparse_matrix_Cmplx(length(AllNNames),1);
+  DSS.ActiveCircuit.V_0.sparse_matrix_Cmplx(length(AllNNames),1);
   for i := 0 to High(AllNNames) do
   Begin
-    ActiveCircuit[1].Ic.Insert(i,0,cZERO);
-    ActiveCircuit[1].V_0.Insert(i,0,cZERO);
+    DSS.ActiveCircuit.Ic.Insert(i,0,cZERO);
+    DSS.ActiveCircuit.V_0.Insert(i,0,cZERO);
   End;
 End;
 
@@ -181,7 +185,7 @@ End;
 *              Inverts ZCC to obtain its admittance equivalent Y4              *
 *                      This is the heart of ADiakoptics                        *
 *******************************************************************************}
-procedure Calc_Y4();
+procedure Calc_Y4(DSS: TDSSContext);
 var
   value     : Complex;
   NumRows,
@@ -190,7 +194,7 @@ var
   idx       : Integer;
   TempMat   : TcMatrix;
 Begin
-  WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
+  WITH DSS.ActiveCircuit, Solution DO
   Begin
     //  Moves ZCC into an equivalent compatible with TcMatrix
     TempMat  :=  TCmatrix.CreateMatrix(ZCC.NRows);
@@ -220,7 +224,7 @@ End;
 *              Calculates the Connections matrix ZCC in the                    *
 *                      contours-contours domain                                *
 *******************************************************************************}
-procedure Calc_ZCC(Links : Integer);
+procedure Calc_ZCC(DSS: TDSSContext; Links : Integer);
 var
   row,
   col,
@@ -232,7 +236,7 @@ var
   ZVector   : pComplexArray;
   Ctemp     : Complex;
 Begin
-  WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
+  WITH DSS.ActiveCircuit, Solution DO
   Begin
     GetSize(hY, @NNodes);
     col       :=  NNodes;
@@ -279,7 +283,7 @@ End;
 *             on the location in the graph of the link branches                *
 *             if there is an error returns <> 0                                *
 *******************************************************************************}
-function Calc_C_Matrix(PLinks : PString; NLinks  : Integer):Integer;
+function Calc_C_Matrix(DSS: TDSSContext; PLinks : PString; NLinks  : Integer):Integer;
 var
   LIdx,k,l,
   j,CDirection,
@@ -290,8 +294,10 @@ var
   temp        : String;
   Go_Flag     : Boolean;
 Begin
-  ActiveActor   :=  1;
-  WITH ActiveCircuit DO
+  DSS := DSS.GetPrime();
+  DSS.ActiveChild := DSS;
+  DSS.ActiveChildIndex := 0;
+  WITH DSS.ActiveCircuit DO
   Begin
     Result    :=  0;
     setlength(Elem_Buses,2);
@@ -300,7 +306,7 @@ Begin
     Begin
       setlength(Node_Names,(length(Node_Names) + 1));
       With MapNodeToBus^[i] do
-        Node_Names[High(Node_names)] := Format('%s.%-d',[lowercase(BusList.NameOfIndex(Busref)), NodeNum]);
+        Node_Names[High(Node_names)] := Format('%s.%-d',[lowercase(BusList.Get(Busref)), NodeNum]);
     End;
 
     Contours.sparse_matrix_Cmplx(length(Node_Names),(NLinks - 1)*3);
@@ -374,7 +380,7 @@ End;
 *            Calculates the Link branches matrix for further use                *
 *                if there is an error returns <> 0                             *
 *******************************************************************************}
-Function Calc_ZLL(PLinks : PString; NLinks  : Integer):Integer;
+Function Calc_ZLL(DSS: TDSSContext; PLinks : PString; NLinks  : Integer):Integer;
 var
   NValues,
   idx, k, j,
@@ -389,8 +395,10 @@ Begin
   dec(NLinks);
   ErrorFlag :=  False;
   LinkPrim  :=  TCmatrix.CreateMatrix(3);
-  ActiveActor   :=  1;
-  WITH ActiveCircuit DO
+  DSS := DSS.GetPrime();
+  DSS.ActiveChild := DSS;
+  DSS.ActiveChildIndex := 0;
+  WITH DSS.ActiveCircuit DO
   Begin
     ZLL.Sparse_matrix_Cmplx(NLinks*3,NLinks*3);
     for i := 1 to NLinks do
@@ -465,31 +473,34 @@ End;
 *           Tears the system using considering the number of                   *
 *           circuits specified by the user                                     *
 *******************************************************************************}
-Function ADiakoptics_Tearing(): Integer;
+Function ADiakoptics_Tearing(DSS: TDSSContext): Integer;
 var
   Prev_Mode: TSolveMode;                              // Stores the previous solution mode
   Num_Ckts    : Integer;                  // Stores the number of Sub-Circuits created
 Begin
-  With ActiveCircuit,ActiveCircuit.Solution do
+  DSS := DSS.GetPrime();
+  DSS.ActiveChild := DSS;
+  DSS.ActiveChildIndex := 0;
+
+  With DSS.ActiveCircuit, Solution do
   Begin
-    ActiveActor                   :=  1;
-    Num_Ckts                      :=  ActiveCircuit.Tear_Circuit();
+    Num_Ckts                      :=  Tear_Circuit();
     Prev_mode                     :=  Dynavars.SolutionMode;
     Dynavars.SolutionMode         :=  TSolveMode.SNAPSHOT;
-    DSSExecutive.Command          :=  'set controlmode=off';
-    Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE);
+    DSS.DSSExecutive.Command          :=  'set controlmode=off';
+    Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);
 //    DoSolveCmd();
-    if not SolutionAbort then
+    if not DSS.SolutionAbort then
     Begin
       Save_SubCircuits();
       Dynavars.SolutionMode         :=  Prev_mode;  // Goes back to the previous solution mode
-      ActiveCircuit[1].Num_SubCkts  :=  Num_Ckts;
-      GlobalResult                  :=  'Sub-Circuits Created: ' + inttostr(Num_Ckts);
+      DSS.ActiveCircuit.Num_SubCkts  :=  Num_Ckts;
+      DSS.GlobalResult                  :=  'Sub-Circuits Created: ' + inttostr(Num_Ckts);
       Result                        :=  0;
     End
     else
     Begin
-      GlobalResult                  := 'There was an error when tearing the circuit ';
+      DSS.GlobalResult                  := 'There was an error when tearing the circuit ';
       Result                        :=  1;
     End;
   End;
@@ -499,7 +510,7 @@ End;
 *            Generates the subsystems, actors and memory space                 *
 *                     For using the A-Diakoptics parallelism                   *
 *******************************************************************************}
-procedure ADiakopticsInit();
+procedure ADiakopticsInit(DSS: TDSSContext);
 var
   EMeter      : TEnergyMeterObj;
   j,
@@ -519,42 +530,47 @@ var
   {$ENDIF}
 
 Begin
-// The program is built as a state machine to facilitate the error detection
-// and quitting the routines after an error is detected wihtout killing the prog
+  // The program is built as a state machine to facilitate the error detection
+  // and quitting the routines after an error is detected wihtout killing the prog
   MQuit       :=  False;
   Num_States  :=  9;                          // Number of states of the machine
   Local_State :=  0;                          // Current state
   prog_str    :=  'A-Diakoptics initialization summary:' + CRLF + CRLF;
-  ActiveActor :=  1;
+
+  DSS := DSS.GetPrime();
+  DSS.ActiveChild := DSS;
+  DSS.ActiveChildIndex := 0;
+
   // Checks if the number of actors is within a reasonable limit
-  if ActiveCircuit[1].Num_SubCkts > (CPU_Cores - 2) then
-    ActiveCircuit[1].Num_SubCkts    :=  CPU_Cores - 2;
+  if DSS.ActiveCircuit.Num_SubCkts > (CPU_Cores - 2) then
+    DSS.ActiveCircuit.Num_SubCkts := CPU_Cores - 2;
 
   while(not MQuit) do
   Begin
     case Local_State of
       0: Begin                       // Create subcircuits
 
-        prog_Str    :=  prog_str + '- Creating Sub-Circuits...' + CRLF;
+        prog_Str := prog_str + '- Creating Sub-Circuits...' + CRLF;
 
-        ErrorCode   :=  ADiakoptics_Tearing();
-        if ErrorCode <> 0 then ErrorStr := 'Error' + CRLF
-                        + 'The circuit cannot be decomposed' + CRLF
+        ErrorCode :=  ADiakoptics_Tearing(DSS);
+        if ErrorCode <> 0 then 
+            ErrorStr := 'Error' + CRLF + 'The circuit cannot be decomposed' + CRLF
         else
-        ErrorStr    :=  '  ' + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
-        prog_Str    :=  prog_str + ErrorStr;
+            ErrorStr :=  '  ' + inttostr(DSS.ActiveCircuit.Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
+
+        prog_Str :=  prog_str + ErrorStr;
 
       End;
       1:  Begin                      // Saves the Link Branch list locally
 
-        Diak_Actors                     :=  ActiveCircuit[1].Num_SubCkts + 1;
-        prog_Str    :=  prog_str + '- Indexing link branches...';
+        Diak_Actors :=  DSS.ActiveCircuit.Num_SubCkts + 1;
+        prog_Str :=  prog_str + '- Indexing link branches...';
 
-        setlength(Links,length(ActiveCircuit[1].Link_Branches));
-        for DIdx := 0 to High(Links) do Links[DIdx]   :=  ActiveCircuit[1].Link_Branches[DIdx];
+        setlength(Links,length(DSS.ActiveCircuit.Link_Branches));
+        for DIdx := 0 to High(Links) do Links[DIdx]   :=  DSS.ActiveCircuit.Link_Branches[DIdx];
 
-        prog_Str    :=  prog_str + 'Done';
-        ErrorCode   :=  0;          // No error handling here
+        prog_Str :=  prog_str + 'Done';
+        ErrorCode :=  0;          // No error handling here
 
       End;
       2:  Begin                      // Compile subsystems
@@ -562,18 +578,17 @@ Begin
         ErrorCode   :=  0;
         prog_Str    :=  prog_str + CRLF + '- Setting up the Actors...';
         // Clears everything to create the actors and compile the subsystems
-        Parallel_enabled                :=  False;
-        DSSExecutive.ClearAll;
+        DSS.Parallel_enabled                :=  False;
+        DSS.DSSExecutive.ClearAll;
         Fileroot                        :=  OutputDirectory {CurrentDSSDir};    //  Gets the current directory
-        SolutionAbort                   :=  False;
+        DSS.SolutionAbort                   :=  False;
 
         // Compiles the interconnected Circuit for further calculations on actor 1
         ActiveActor                     :=  1;
         Proj_Dir                        :=  'compile "' + Fileroot + 'Torn_Circuit' + PathDelim + 'master_interconnected.dss"';
-        DssExecutive.Command            :=  Proj_Dir;
-        DssExecutive.Command            :=  'set controlmode=Off';
+        DSS.DssExecutive.Command            :=  'set controlmode=Off';
         // Disables the Energymeters for the zones
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSS.ActiveCircuit, Solution do
         Begin
           EMeter    := EnergyMeters.First;
           while EMeter  <> Nil do
@@ -583,23 +598,27 @@ Begin
             EMeter          :=  EnergyMeters.Next;
           end;
         End;
-        Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE);
-        DoSolveCmd;
+        Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);
+        DSS.DSSExecutive.DoSolveCmd();
 
         // Creates the other actors
         for DIdx := 2 to Diak_Actors do
         Begin
-          New_Actor_Slot();
+          //New_Actor_Slot();
 
-          if DIdx = 2 then  Dir :=  ''
-          else  Dir :=  'zone_' + inttostr(DIdx - 1) + PathDelim;
-          Proj_Dir              :=  'compile "' + Fileroot + 'Torn_Circuit' + PathDelim + Dir + 'master.dss"';
-          DssExecutive.Command  := Proj_Dir;
+          if DIdx = 2 then 
+            Dir :=  ''
+          else
+            Dir :=  'zone_' + inttostr(DIdx - 1) + PathDelim;
+
+          Proj_Dir :=  'compile "' + Fileroot + PathDelim + 'Torn_Circuit' + PathDelim + Dir + 'master.dss"';
+          DSS.DssExecutive.Command := Proj_Dir;
           if DIdx > 2 then
-            DssExecutive.Command  := Links[DIdx - 2] + '.enabled=False';
-          DssExecutive.Command  :=  'set controlmode=Off';
-          DoSolveCmd;
-          if SolutionAbort then
+            DSS.DssExecutive.Command  := Links[DIdx - 2] + '.enabled=False';
+
+          DSS.DssExecutive.Command :=  'set controlmode=Off';
+          DSS.DssExecutive.DoSolveCmd();
+          if DSS.SolutionAbort then
           Begin
             ErrorCode :=  1;
             Break;
@@ -612,11 +631,9 @@ Begin
 
       end;
       3:  Begin                      // Creates the contours matrix
-
-        ActiveActor                     :=  1;
         prog_Str    :=  prog_str + CRLF + '- Building Contours...';
         // Builds the contour matrix
-        ErrorCode :=  Calc_C_Matrix(@Links[0], length(Links));
+        ErrorCode :=  Calc_C_Matrix(DSS, @Links[0], length(Links));
         if ErrorCode <> 0 then ErrorStr := 'Error' + CRLF
                         + 'One or more link branches are not lines' + CRLF
         else ErrorStr :=  'Done';
@@ -626,7 +643,7 @@ Begin
       4: Begin                       // Builds the ZLL matrix
 
         prog_Str    :=  prog_str + CRLF + '- Building ZLL...';
-        ErrorCode :=  Calc_ZLL(@Links[0],length(Links));
+        ErrorCode :=  Calc_ZLL(DSS, @Links[0],length(Links));
         if ErrorCode <> 0 then ErrorStr := 'Error'
         else ErrorStr :=  'Done';
         prog_Str    :=  prog_str + ErrorStr;
@@ -638,40 +655,41 @@ Begin
         prog_Str    :=  prog_str + CRLF + '- Opening link branches...';
         for DIdx := 1 to High(Links) do
         Begin
-          DssExecutive.Command    :=  Links[DIdx] + '.r0=10000000';
-          DssExecutive.Command    :=  Links[DIdx] + '.r1=10000000';
-          DssExecutive.Command    :=  Links[DIdx] + '.x0=0';
-          DssExecutive.Command    :=  Links[DIdx] + '.x1=0';
+          DSS.DssExecutive.Command    :=  Links[DIdx] + '.r0=10000000';
+          DSS.DssExecutive.Command    :=  Links[DIdx] + '.r1=10000000';
+          DSS.DssExecutive.Command    :=  Links[DIdx] + '.x0=0';
+          DSS.DssExecutive.Command    :=  Links[DIdx] + '.x1=0';
         End;
-        Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE);
+        Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);
         prog_Str      :=  prog_str + 'Done';
-        ErrorCode     :=  0;          // No error handling here
+        ErrorCode     :=  0;  // No error handling here
 
       end;
-      6:  Begin                      // Builds the ZCC matrix
+      6:  Begin // Builds the ZCC matrix
 
         prog_Str      :=  prog_str + CRLF + '- Building ZCC...';
-        Calc_ZCC(length(Links));
+        Calc_ZCC(DSS, length(Links));
         prog_Str      :=  prog_str + 'Done';
 
       End;
-      7:  Begin                      // Inverts ZCC to get Y4
+      7:  Begin // Inverts ZCC to get Y4
 
         prog_Str      :=  prog_str + CRLF + '- Building Y4 ...';
-        Calc_Y4();
+        Calc_Y4(DSS);
         prog_Str      :=  prog_str + 'Done';
         // Moves back the link branches list into actor 1 for further use
-        setlength(ActiveCircuit[1].Link_Branches,length(Links));
-        for DIdx := 0 to High(Links) do ActiveCircuit[1].Link_Branches[DIdx] := Links[DIdx];
+        setlength(DSS.ActiveCircuit.Link_Branches,length(Links));
+        for DIdx := 0 to High(Links) do 
+            DSS.ActiveCircuit.Link_Branches[DIdx] := Links[DIdx];
       End;
       8:  Begin                      // Sends the index to the actors for uploading info
         prog_Str      :=  prog_str + CRLF + '- Assigning indexes to actors ...';
-        SendIdx2Actors();
+        SendIdx2Actors(DSS);
         prog_Str      :=  prog_str + 'Done';
       End;
       9:  Begin                      // Prints the statistics of the partitioning
         prog_Str      :=  prog_str + CRLF + CRLF + 'Partitioning statistics';
-        prog_Str      :=  prog_str + get_Statistics();
+        prog_Str      :=  prog_str + get_Statistics(DSS);
       End
       else
       Begin
@@ -682,35 +700,36 @@ Begin
     MQuit := (Local_State > Num_States) or (ErrorCode <> 0);
   End;
 
-  ActiveActor   :=  1;
+  DSS := DSS.GetPrime();
   if ErrorCode <> 0 then
   Begin
     ErrorStr          := 'One or more errors found';
-    ADiakoptics       :=  False;
+    DSS.ADiakoptics       :=  False;
   End
   else
   Begin
     ErrorStr          :=  'A-Diakoptics initialized';
-    Parallel_enabled  :=  True;
-    ADiakoptics       :=  True;
+    DSS.Parallel_enabled  :=  True;
+    DSS.ADiakoptics       :=  True;
   End;
-  ProgressCmd   :=  True;
+//TODO?  ProgressCmd   :=  True;
   prog_Str      :=  CRLF + prog_str + CRLF + ErrorStr + CRLF;
-  GlobalResult  :=  ErrorStr;
+  DSS.GlobalResult  :=  ErrorStr;
 
+  //TODO: check -- the previous GlobalResult is ignored here...
   {$IFNDEF FPC}
   if not IsDLL
   then
     ScriptEd.PublishMessage(prog_Str)
   else
-    GlobalResult  :=  prog_str;
+    DSS.GlobalResult  :=  prog_str;
   {$ELSE}
-    GlobalResult  :=  prog_str;
+    DSS.GlobalResult  :=  prog_str;
   {$ENDIF}
   // TEMc: TODO: should we report something here under FPC?
   // Davis: Done: This will add the needed report
 
-  SolutionAbort :=  False;
+  DSS.SolutionAbort :=  False;
 
 End;
 

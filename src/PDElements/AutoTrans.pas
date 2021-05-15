@@ -55,7 +55,7 @@ type
         procedure DefineProperties;
         function MakeLike(const AutoTransfName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -229,12 +229,6 @@ type
         property baseVA: Double READ VAbase;
     end;
 
-var
-    ActiveAutoTransObj: TAutoTransObj;
-    AutoTransClass: TAutoTrans;
-
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 implementation
 
@@ -243,31 +237,27 @@ uses
     DSSGlobals,
     Sysutils,
     Utilities,
-    XfmrCode;
-
-var
-    XfmrCodeClass: TXfmrCode;
+    XfmrCode,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 42;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TAutoTrans.Create;  // Creates superstructure for all AutoTrans objects
+constructor TAutoTrans.Create(dssContext: TDSSContext);  // Creates superstructure for all AutoTrans objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'AutoTrans';
     DSSClassType := DSSClassType + AUTOTRANS_ELEMENT; // override PDElement   (kept in both actually)
 
     ActiveElement := 0;
-    XfmrCodeClass := NIL;
-
     DefineProperties;
 
      {Make space for AutoTrans property list}
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;     {Allow property list abbreviations}
-
-    AutoTransClass := Self;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -456,12 +446,12 @@ begin
   // continue parsing cmdline presently in Parser
 
   {Make this object the active circuit element}
-    ActiveAutoTransObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveAutoTransObj;  // use property to set this value
+    DSS.ActiveAutoTransObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveAutoTransObj;  // use property to set this value
 
     Result := 0;
 
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
     begin
         XHXChanged := FALSE;
         ParamPointer := 0;
@@ -566,7 +556,7 @@ begin
                     PropertyValue[45] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
             else
            // Inherited properties
-                ClassEdit(ActiveAutoTransObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveAutoTransObj, ParamPointer - NumPropsThisClass)
             end;
 
          {Take care of properties that require some additional work,}
@@ -645,18 +635,18 @@ end;
 procedure TAutoTrans.SetActiveWinding(w: Integer);
 
 begin
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         if (w > 0) and (w <= NumWindings) then
             ActiveWinding := w
         else
-            DoSimpleMsg('Wdg parameter invalid for "' + ActiveAutoTransObj.Name + '"', 100112);
+            DoSimpleMsg('Wdg parameter invalid for "' + DSS.ActiveAutoTransObj.Name + '"', 100112);
 end;
 
 function TAutoTrans.TrapZero(const Value: Double; DefaultValue: Double): Double;
 begin
     if Value = 0.0 then
     begin
-        Dosimplemsg('Zero Reactance specified for AutoTrans.' + ActiveAutoTransObj.Name, 1011201);
+        DoSimpleMsg('Zero Reactance specified for AutoTrans.' + DSS.ActiveAutoTransObj.Name, 1011201);
         Result := DefaultValue;
     end
     else
@@ -671,7 +661,7 @@ procedure TAutoTrans.InterpretAutoConnection(const S: String);
 //    Y, wye, or LN
 
 begin
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
     begin
         with Winding^[ActiveWinding] do
         begin
@@ -714,7 +704,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -737,7 +727,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -777,7 +767,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -800,7 +790,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -824,7 +814,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -848,7 +838,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -871,7 +861,7 @@ begin
    {See if we can find this Transf name in the present collection}
     OtherTransf := Find(AutoTransfName);
     if OtherTransf <> NIL then
-        with ActiveAutoTransObj do
+        with DSS.ActiveAutoTransObj do
         begin
             Nphases := OtherTransf.Fnphases;
             SetNumWindings(OtherTransf.NumWindings);
@@ -2538,12 +2528,9 @@ var
     Obj: TXfmrCodeObj;
     i: Integer;
 begin
-    if XfmrCodeClass = NIL then
-        XfmrCodeClass := DSSClassList.Get(ClassNames.Find('xfmrcode'));
-
-    if XfmrCodeClass.SetActive(Code) then
+    if DSS.XfmrCodeClass.SetActive(Code) then
     begin
-        Obj := XfmrCodeClass.GetActiveObj;
+        Obj := DSS.XfmrCodeClass.GetActiveObj;
         XfmrCode := LowerCase(Code);
     // set sizes and copy parameters
         Nphases := Obj.Fnphases;

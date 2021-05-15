@@ -52,7 +52,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherLine: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -107,9 +107,6 @@ type
 
     end;
 
-var
-    ActiveGICLineObj: TGICLineObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -120,15 +117,18 @@ uses
     DSSGlobals,
     Utilities,
     Sysutils,
-    Command;
+    Command,
+    DSSHelper,
+    DSSObjectHelper,
+    TypInfo;
 
 const
     NumPropsThisClass = 15;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGICLine.Create;  // Creates superstructure for all Line objects
+constructor TGICLine.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dssContext);
     Class_Name := 'GICLine';
     DSSClassType := GIC_Line + PC_ELEMENT;
 
@@ -239,7 +239,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveGICLineObj do
+    with DSS.ActiveGICLineObj do
     begin
         SetBus(1, S);
 
@@ -264,12 +264,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveGICLineObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveGICLineObj;
+    DSS.ActiveGICLineObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveGICLineObj;
 
     Result := 0;
 
-    with ActiveGICLineObj do
+    with DSS.ActiveGICLineObj do
     begin
 
         ParamPointer := 0;
@@ -340,7 +340,7 @@ begin
                     Lon2 := Parser.DblValue;
 
             else
-                ClassEdit(ActiveGICLineObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveGICLineObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -371,7 +371,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherGICLine := Find(OtherLine);
     if OtherGICLine <> NIL then
-        with ActiveGICLineObj do
+        with DSS.ActiveGICLineObj do
         begin
 
             if Fnphases <> OtherGICLine.Fnphases then
@@ -516,7 +516,7 @@ begin
 
     Vmag := Volts;
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if (SpectrumObj = NIL) and (Length(Spectrum) > 0) then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device GICLine.' + Name + ' Not Found.', 324);
@@ -669,8 +669,8 @@ begin
 
     except
         DoSimpleMsg('Error computing Voltages for GICLine.' + Name + '. Check specification. Aborting.', 326);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;

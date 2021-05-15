@@ -88,27 +88,29 @@ uses
     ParserDel,
     Math,
     LineUnits,
-    XYCurve;
+    XYCurve,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(out obj: TLineObj): Boolean; inline;
+function _activeObj(DSSPrime: TDSSContext; out obj: TLineObj): Boolean; inline;
 var
     CktElem: TDSSCktElement;
 begin
     Result := False;
     obj := NIL;
     
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
 
     //TODO: use the active line instead?
     
-    CktElem := ActiveCircuit.ActiveCktElement;
+    CktElem := DSSPrime.ActiveCircuit.ActiveCktElement;
     if CktElem = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg('No active Line object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active Line object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -118,7 +120,7 @@ begin
         
     if obj = NIL {((CktElem.DssObjtype and CLASSMASK) <> LINE_ELEMENT)} then
     begin
-        DoSimpleMsg('Line Type Expected, but another found. DSS Class=' + CktElem.DSSClassName + CRLF +
+        DoSimpleMsg(DSSPrime, 'Line Type Expected, but another found. DSS Class=' + CktElem.DSSClassName + CRLF +
             'Element name=' + CktElem.Name, 5007);
         Exit;
     end;
@@ -129,9 +131,9 @@ end;
 procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Lines, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Lines, False);
 end;
 
 procedure Lines_Get_AllNames_GR(); CDECL;
@@ -146,7 +148,7 @@ var
     elem: TLineObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.GetBus(1));
 end;
@@ -156,7 +158,7 @@ var
     elem: TLineObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.GetBus(2));
 end;
@@ -164,17 +166,17 @@ end;
 function Lines_Get_First(): Integer; CDECL;
 begin
     Result := 0;  // signify no more
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(ActiveCircuit.Lines);
+    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Lines);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Next(): Integer; CDECL;
 begin
     Result := 0;  // signify no more
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(ActiveCircuit.Lines);
+    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Lines);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Length(): Double; CDECL;
@@ -182,7 +184,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Len;
 end;
@@ -192,7 +194,7 @@ var
     elem: TLineObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.CondCode);
 end;
@@ -202,7 +204,7 @@ var
     elem: TLineObj;
 begin
     Result := NIL;  // signify no name
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
@@ -212,7 +214,7 @@ var
     elem: TLineObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Nphases;
 end;
@@ -222,7 +224,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.R1 / elem.UnitsConvert;
 end;
@@ -232,21 +234,21 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.X1 / elem.UnitsConvert;
 end;
 //------------------------------------------------------------------------------
 function Lines_New(const Name: PAnsiChar): Integer; CDECL;
 begin
-    Result := AddObject('line', Name);    // Returns handle to object
+    Result := DSSPrime.DSSExecutive.AddObject('line', Name);    // Returns handle to object
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Bus1(const Value: PAnsiChar); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.SetBus(1, Value);
 end;
@@ -255,7 +257,7 @@ procedure Lines_Set_Bus2(const Value: PAnsiChar); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.SetBus(2, Value);
 end;
@@ -264,7 +266,7 @@ procedure Lines_Set_Length(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Len := Value;
     elem.YprimInvalid := TRUE;
@@ -274,7 +276,7 @@ procedure Lines_Set_LineCode(const Value: PAnsiChar); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.FetchLineCode(Value);
     elem.YprimInvalid := TRUE;
@@ -282,16 +284,16 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if LineClass.SetActive(Value) then
+    if DSSPrime.LineClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := LineClass.ElementList.Active;
-        ActiveCircuit.Lines.Get(LineClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.LineClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Lines.Get(DSSPrime.LineClass.Active);
     end
     else
     begin
-        DoSimpleMsg('Line "' + Value + '" Not Found in Active Circuit.', 5008);
+        DoSimpleMsg(DSSPrime, 'Line "' + Value + '" Not Found in Active Circuit.', 5008);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -299,7 +301,7 @@ procedure Lines_Set_Phases(Value: Integer); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Nphases := Value;
     elem.YprimInvalid := TRUE;
@@ -309,7 +311,7 @@ procedure Lines_Set_R1(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.R1 := Value;
     elem.SymComponentsChanged := TRUE;
@@ -320,7 +322,7 @@ procedure Lines_Set_X1(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.X1 := Value;
     elem.SymComponentsChanged := TRUE;
@@ -332,7 +334,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.C0 / elem.UnitsConvert * 1.0e9;
 end;
@@ -342,7 +344,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.C1 / elem.UnitsConvert * 1.0e9;
 end;
@@ -354,7 +356,7 @@ var
     Factor: Double;
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -385,7 +387,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.R0 / elem.UnitsConvert;
 end;
@@ -396,7 +398,7 @@ var
     i, j, k: Integer;
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -426,7 +428,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.X0 / elem.UnitsConvert;
 end;
@@ -437,7 +439,7 @@ var
     i, j, k: Integer;
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -465,7 +467,7 @@ procedure Lines_Set_C0(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
@@ -479,7 +481,7 @@ procedure Lines_Set_C1(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
@@ -496,7 +498,7 @@ var
     Factor: Double;
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Value := PDoubleArray(ValuePtr);
     with elem do
@@ -526,7 +528,7 @@ procedure Lines_Set_R0(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
@@ -543,7 +545,7 @@ var
     Ztemp: complex;
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Value := PDoubleArray(ValuePtr);
     with elem do
@@ -573,7 +575,7 @@ procedure Lines_Set_X0(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
@@ -590,7 +592,7 @@ var
     Ztemp: complex;
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Value := PDoubleArray(ValuePtr);
     
@@ -621,7 +623,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.EmergAmps;
 end;
@@ -631,7 +633,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.NormAmps;
 end;
@@ -640,7 +642,7 @@ procedure Lines_Set_EmergAmps(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.EmergAmps := Value;
 end;
@@ -649,7 +651,7 @@ procedure Lines_Set_NormAmps(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.NormAmps := Value;
 end;
@@ -659,7 +661,7 @@ var
     elem: TLineObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.GeometryCode);
 end;
@@ -668,11 +670,11 @@ procedure Lines_Set_Geometry(const Value: PAnsiChar); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
-        Parser.CmdString := 'geometry=' + Value;
+        DSSPrime.Parser.CmdString := 'geometry=' + Value;
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -683,7 +685,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Rg;
 end;
@@ -693,7 +695,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.rho;
 end;
@@ -703,7 +705,7 @@ var
     elem: TLineObj;
 begin
     Result := 0.0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.Xg;
 end;
@@ -712,11 +714,11 @@ procedure Lines_Set_Rg(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
-        Parser.CmdString := Format('rg=%.7g', [Value]);
+        DSSPrime.Parser.CmdString := Format('rg=%.7g', [Value]);
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -726,11 +728,11 @@ procedure Lines_Set_Rho(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
-        Parser.CmdString := Format('rho=%.7g', [Value]);
+        DSSPrime.Parser.CmdString := Format('rho=%.7g', [Value]);
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -740,11 +742,11 @@ procedure Lines_Set_Xg(Value: Double); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
-        Parser.CmdString := Format('xg=%.7g', [Value]);
+        DSSPrime.Parser.CmdString := Format('xg=%.7g', [Value]);
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -757,7 +759,7 @@ var
     cValues: pComplexArray;
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -788,12 +790,12 @@ procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
         
     {Do Nothing for now}
     
-    DoSimpleMsg('Setting Yprim is currently not allowed.', 1833);
+    DoSimpleMsg(DSSPrime, 'Setting Yprim is currently not allowed.', 1833);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_NumCust(): Integer; CDECL;
@@ -801,7 +803,7 @@ var
     elem: TLineObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.BranchNumCustomers;
 end;
@@ -811,7 +813,7 @@ var
     elem: TLineObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.BranchTotalCustomers;
 end;
@@ -823,7 +825,7 @@ var
     pLine: TLineObj;
 begin
     Result := 0;
-    if not _activeObj(pLine) then
+    if not _activeObj(DSSPrime, pLine) then
         Exit;
 
     if pLine.ParentPDelement = NIL then
@@ -831,17 +833,17 @@ begin
         
     if (pLine.ParentPDelement.Enabled and ((pLine.ParentPDelement.DssObjtype and CLASSMASK) = LINE_ELEMENT)) then
     begin
-        ActiveCircuit.ActiveCktElement := pLine.ParentPDElement;
-        Result := ActiveCircuit.Lines.ActiveIndex;
+        DSSPrime.ActiveCircuit.ActiveCktElement := pLine.ParentPDElement;
+        Result := DSSPrime.ActiveCircuit.Lines.ActiveIndex;
     end;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Lines.Count;
+    Result := DSSPrime.ActiveCircuit.Lines.Count;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Spacing(): PAnsiChar; CDECL;
@@ -849,7 +851,7 @@ var
     elem: TLineObj;
 begin
     Result := NIL;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := DSS_GetAsPAnsiChar(elem.SpacingCode);
 end;
@@ -858,11 +860,11 @@ procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
-        Parser.CmdString := 'spacing=' + Value;
+        DSSPrime.Parser.CmdString := 'spacing=' + Value;
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -873,7 +875,7 @@ var
     elem: TLineObj;
 begin
     Result := 0;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.LengthUnits;
 end;
@@ -886,13 +888,13 @@ procedure Lines_Set_Units(Value: Integer); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     with elem do
     begin
         if (Value >= dssLineUnitsNone) and (Value < dssLineUnitsMaxnum) then
         begin
-            Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
+            DSSPrime.Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
             Edit;
             YprimInvalid := TRUE;
         end
@@ -904,24 +906,24 @@ end;
 function Lines_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := ActiveCircuit.Lines.ActiveIndex
+    Result := DSSPrime.ActiveCircuit.Lines.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_idx(Value: Integer); CDECL;
 var
     pLine: TLineObj;
 begin
-    if InvalidCircuit then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    pLine := ActiveCircuit.Lines.Get(Value);
+    pLine := DSSPrime.ActiveCircuit.Lines.Get(Value);
     if pLine = NIL then
     begin
-        DoSimpleMsg('Invalid Line index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Line index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pLine;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pLine;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_SeasonRating(): Double; CDECL;
@@ -933,18 +935,18 @@ begin
     Result := 0;
     RatingIdx := -1;
 
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if (not SeasonalRating) or (SeasonSignal = '') then 
+    if (not DSSPrime.SeasonalRating) or (DSSPrime.SeasonSignal = '') then 
     begin
         Result := elem.NormAmps;
         Exit;
     end;
     
-    RSignal := XYCurveClass.Find(SeasonSignal);
+    RSignal := DSSPrime.XYCurveClass.Find(DSSPrime.SeasonSignal);
     if RSignal <> NIL then
-        RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+        RatingIdx := trunc(RSignal.GetYValue(DSSPrime.ActiveCircuit.Solution.DynaVars.intHour));
     
     // Just in case
     if (RatingIdx >= elem.NumAmpRatings) or (RatingIdx < 0) then
@@ -957,7 +959,7 @@ procedure Lines_Set_IsSwitch(Value: TAPIBoolean); CDECL;
 var
     elem: TLineObj;
 begin
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
         
     with elem do
@@ -986,7 +988,7 @@ var
     elem: TLineObj;
 begin
     Result := FALSE;
-    if not _activeObj(elem) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.IsSwitch;
 end;
