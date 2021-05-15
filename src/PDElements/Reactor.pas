@@ -69,6 +69,13 @@ uses
     XYCurve;
 
 type
+{$SCOPEDENUMS ON}
+    TReactorConnection = (
+        Wye = 0, // wye, star, line-neutral connection
+        Delta = 1 // delta, line-line connection
+    );
+    
+{$SCOPEDENUMS OFF}
 
     TReactor = class(TPDClass)
     PRIVATE
@@ -101,7 +108,7 @@ type
         Rmatrix, Gmatrix,
         XMatrix, Bmatrix: pDoubleArray;  // If not nil then overrides C
 
-        Connection: Integer;   // 0 or 1 for wye (default) or delta, respectively
+        Connection: TReactorConnection;   // 0 or 1 for wye (default) or delta, respectively
         SpecType: Integer;   // 1=kvar, 2=R+jX, 3=R and X matrices, 4=sym components
 
         IsParallel: Boolean;
@@ -309,22 +316,22 @@ begin
         TestS := lowercase(S);
         case TestS[1] of
             'y', 'w':
-                Connection := 0;  {Wye}
+                Connection := TReactorConnection.Wye;  {Wye}
             'd':
-                Connection := 1;  {Delta or line-Line}
+                Connection := TReactorConnection.Delta;  {Delta or line-Line}
             'l':
                 case Tests[2] of
                     'n':
-                        Connection := 0;
+                        Connection := TReactorConnection.Wye;
                     'l':
-                        Connection := 1;
+                        Connection := TReactorConnection.Delta;
                 end;
 
         end;
         case Connection of
-            1:
+            TReactorConnection.Delta:
                 Nterms := 1;  // Force reallocation of terminals
-            0:
+            TReactorConnection.Wye:
                 if Fnterms <> 2 then
                     Nterms := 2;
         end;
@@ -636,7 +643,7 @@ begin
     Bus2Defined := FALSE;
     Z2Specified := FALSE;
     Z0Specified := FALSE;
-    Connection := 0;   // 0 or 1 for wye (default) or delta, respectively
+    Connection := TReactorConnection.Wye;   // 0 or 1 for wye (default) or delta, respectively
     SpecType := 1; // 1=kvar, 2=Cuf, 3=Cmatrix
     NormAmps := kvarRating * SQRT3 / kvrating;
     EmergAmps := NormAmps * 1.35;
@@ -679,7 +686,7 @@ begin
         begin // kvar
             kvarPerPhase := kvarRating / Fnphases;
             case Connection of
-                1:
+                TReactorConnection.Delta:
                 begin  // Line-to-Line
                     PhasekV := kVRating;
                 end;
@@ -831,7 +838,7 @@ begin
                     Caccum(Value, Cmplx(Gp, 0.0));
 
                 case Connection of
-                    1:
+                    TReactorConnection.Delta:
                     begin   // Line-Line
                         Value2 := CmulReal(Value, 2.0);
                         Value := cnegate(Value);
@@ -1242,7 +1249,7 @@ begin
             1:
             begin // kvar
                 kvarPerPhase := kvarRating / 3.0;  // divide among 3 phases Fnphases;
-                if (FnPhases > 1) or (Connection <> 0) then
+                if (FnPhases > 1) or (Connection <> TReactorConnection.Wye) then
                     PhasekV := kVRating / SQRT3
                 else
                     PhasekV := kVRating;

@@ -296,7 +296,7 @@ begin
     Result := FALSE;
     if not _activeObj(pReactor) then
         Exit;
-    Result := (pReactor.Connection > 0);
+    Result := (pReactor.Connection = TReactorConnection.Delta);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_kV(): Double; CDECL;
@@ -385,7 +385,12 @@ var
 begin
     if not _activeObj(pReactor) then
         Exit;
-    pReactor.Connection := Integer(Value);
+
+    if Value then 
+        pReactor.Connection := TReactorConnection.Delta
+    else
+        pReactor.Connection := TReactorConnection.Wye;
+        
     ReactorPropSideEffects(ReactorProps.conn, pReactor);
 end;
 //------------------------------------------------------------------------------
