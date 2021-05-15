@@ -149,7 +149,8 @@ Type
     End;
 
     pFeederSections = ^FeederSectionArray;
-    FeederSectionArray = Array[1..100] of TFeederSection;   // Dummy dimension
+    FeederSectionArray = Array[0..100] of TFeederSection;   // Dummy dimension
+    // 0 is an OK index RCD 5/14/2021
     //  --------- Feeder Section Definition -----------
 
    TSystemMeter = Class(Tobject)
@@ -2485,9 +2486,9 @@ begin
        End;
 
        // Now have number of sections  so allocate FeederSections array
-       Reallocmem(FeederSections, Sizeof(FeederSections^[1])*(SectionCount * 10));
-       for idx := 1 to SectionCount do
-            With FeederSections^[idx] Do
+       Reallocmem(FeederSections, Sizeof(FeederSections^[1])*(SectionCount + 1 ));
+       for idx := 0 to SectionCount do
+            With FeederSections^[idx] Do      // Should be only place idx=0
             Begin
                 OCPDeviceType         := 0;    // 1=Fuse; 2=Recloser; 3=Relay
                 AverageRepairTime     := 0.0;
@@ -2538,7 +2539,7 @@ begin
           {$ENDIF}
            End;
 
-          { Compute Avg Interruption duration of each Section }
+          { Compute Avg Interruption duration of each Section  except 0 Section}
           for idx := 1 to SectionCount do
             With FeederSections^[idx] Do
               AverageRepairTime := SumFltRatesXRepairHrs / SumBranchFltRates;
@@ -2550,14 +2551,14 @@ begin
             Begin
               pBus := Buses^[idx];
               If pBus.BusSectionID > 0 Then
-                pBus.Bus_Int_Duration := Source_IntDuration + FeederSections^
-                  [pBus.BusSectionID].AverageRepairTime;
+                pBus.Bus_Int_Duration := Source_IntDuration +
+                   FeederSections^[pBus.BusSectionID].AverageRepairTime;
             End;
 
         {$IFDEF DEBUG}
           WriteDLLDebugFile
             ('Meter, SectionID, NBranches, NCustomers, AvgRepairHrs, AvgRepairMins, FailureRate*RepairtimeHrs, SumFailureRates');
-          for idx := 1 to SectionCount do
+          for idx := 0 to SectionCount do
             With FeederSections^[idx] Do
               WriteDLLDebugFile(Format('%s.%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
                 [ParentClass.Name, Name, idx, NBranches, NCustomers, AverageRepairTime,
@@ -2595,7 +2596,7 @@ begin
 
         // Compute SAIDI from Sections list
         SAIDI := 0.0;
-        For idx := 1 to SectionCount Do
+        For idx := 1 to SectionCount Do    // ignore idx=0
           With FeederSections^[idx] Do
             Begin
               SAIDI := SAIDI +  SectFaultRate * AverageRepairTime * TotalCustomers  ;
