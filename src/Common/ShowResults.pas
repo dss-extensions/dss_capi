@@ -3780,7 +3780,7 @@ begin
             BusName := ActiveCircuit.BusList.NameOfIndex(pLoad.Terminals[0].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
-                if (pLoad.Nphases = 1) and (pLoad.Connection = 0) then
+                if (pLoad.Nphases = 1) and (pLoad.Connection = TLoadConnection.Wye) then
                 begin
                     if abs(pLoad.kVLoadBase - pBus.kVBase) > 0.10 * pBus.kVBase then
                     begin

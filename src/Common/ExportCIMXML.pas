@@ -1248,7 +1248,7 @@ begin
         exit;
     p := 1000.0 * pLoad.kWBase / pLoad.NPhases;
     q := 1000.0 * pLoad.kvarBase / pLoad.NPhases;
-    if pLoad.Connection = 1 then
+    if pLoad.Connection = TLoadConnection.Delta then
         s := DeltaPhaseString(pLoad)
     else
         s := PhaseString(pLoad, 1);
@@ -2923,25 +2923,25 @@ begin
                     CircuitNode(FunPrf, ActiveCircuit);
                     VbaseNode(FunPrf, pLoad);
                     case FLoadModel of
-                        1:
+                        TLoadModel.ConstPQ:
                             UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id1_ConstkVA);
-                        2:
+                        TLoadModel.ConstZ:
                             UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id2_ConstZ);
-                        3:
+                        TLoadModel.Motor:
                             UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id3_ConstPQuadQ);
-                        4:
+                        TLoadModel.CVR:
                             UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id4_LinPQuadQ);
-                        5:
+                        TLoadModel.ConstI:
                             UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id5_ConstI);
-                        6:
+                        TLoadModel.ConstPFixedQ:
                             UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id6_ConstPConstQ);
-                        7:
+                        TLoadModel.ConstPFixedX:
                             UuidNode(FunPrf, 'EnergyConsumer.LoadResponse', id7_ConstPConstX);
                     end;
                     DoubleNode(SshPrf, 'EnergyConsumer.p', 1000.0 * kWBase);
                     DoubleNode(SshPrf, 'EnergyConsumer.q', 1000.0 * kvarBase);
                     IntegerNode(FunPrf, 'EnergyConsumer.customerCount', NumCustomers);
-                    if Connection = 0 then
+                    if Connection = TLoadConnection.Wye then
                     begin
                         ShuntConnectionKindNode(FunPrf, 'EnergyConsumer', 'Y');
                         BooleanNode(FunPrf, 'EnergyConsumer.grounded', TRUE);  // TODO - check bus 2

@@ -1588,9 +1588,9 @@ begin
         while pLoad <> NIL do
         begin
             case pLoad.LoadSpecType of
-                3:
+                TLoadSpec.ConnectedkVA_PF:
                     FSWriteln(F, 'Load.' + pLoad.Name + '.AllocationFactor=' + Format('%-.5g', [pLoad.kVAAllocationFactor]));
-                4:
+                TLoadSpec.kwh_PF:
                     FSWriteln(F, 'Load.' + pLoad.Name + '.CFactor=' + Format('%-.5g', [pLoad.CFactor]));
             end;
             pLoad := Loads.Next;

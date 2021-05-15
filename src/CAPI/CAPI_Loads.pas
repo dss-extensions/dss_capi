@@ -123,9 +123,9 @@ begin
             begin
             // -> SetNcondsForConnection  // Force Reallocation of terminal info
                 case Connection of
-                    0:
+                    TLoadConnection.Wye:
                         NConds := Fnphases + 1;
-                    1:
+                    TLoadConnection.Delta:
                         case Fnphases of
                             1, 2:
                                 NConds := Fnphases + 1; // L-L and Open-delta
@@ -142,7 +142,7 @@ begin
                 UpdateVoltageBases;
 
             LoadProps.kW:
-                LoadSpecType := 0;
+                LoadSpecType := TLoadSpec.kW_PF;
 
             LoadProps.pf:
             begin
@@ -183,12 +183,12 @@ begin
 
             LoadProps.kvar:
             begin
-                LoadSpecType := 1;
+                LoadSpecType := TLoadSpec.kW_kvar;
                 PFSpecified := FALSE;
             end;// kW, kvar
  {*** see set_xfkva, etc           21, 22: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
             LoadProps.pctMean:
-                LoadSpecType := 2;  // kVA, PF
+                LoadSpecType := TLoadSpec.kVA_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
             LoadProps.CVRCurve:
                 CVRShapeObj := LoadShapeClass.Find(CVRshape);
@@ -372,7 +372,7 @@ begin
         Exit;
 
     pLoad.kvarBase := Value;
-    pLoad.LoadSpecType := 1;
+    pLoad.LoadSpecType := TLoadSpec.kW_kvar;
     pLoad.RecalcElementData;  // set power factor based on kW, kvar
 end;
 //------------------------------------------------------------------------------
@@ -384,7 +384,7 @@ begin
         Exit;
 
     pLoad.kWBase := Value;
-    pLoad.LoadSpecType := 0;
+    pLoad.LoadSpecType := TLoadSpec.kW_PF;
     pLoad.RecalcElementData; // sets kvar based on kW and pF
 end;
 //------------------------------------------------------------------------------
@@ -396,7 +396,7 @@ begin
         Exit;
 
     pLoad.PFNominal := Value;
-    pLoad.LoadSpecType := 0;
+    pLoad.LoadSpecType := TLoadSpec.kW_PF;
     pLoad.RecalcElementData; //  sets kvar based on kW and pF
 end;
 //------------------------------------------------------------------------------
@@ -513,8 +513,7 @@ begin
     Result := FALSE;
     if not _activeObj(elem) then
         Exit;
-    if elem.Connection > 0 then
-        Result := TRUE;
+    Result := (elem.Connection = TLoadConnection.Delta);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_kva(): Double; CDECL;
@@ -556,21 +555,21 @@ begin
         Exit;
 
     case elem.FLoadModel of
-        1:
+        TLoadModel.ConstPQ:
             Result := dssLoadConstPQ;
-        2:
+        TLoadModel.ConstZ:
             Result := dssLoadConstZ;
-        3:
+        TLoadModel.Motor:
             Result := dssLoadMotor;
-        4:
+        TLoadModel.CVR:
             Result := dssLoadCVR;
-        5:
+        TLoadModel.ConstI:
             Result := dssLoadConstI;
-        6:
+        TLoadModel.ConstPFixedQ:
             Result := dssLoadConstPFixedQ;
-        7:
+        TLoadModel.ConstPFixedX:
             Result := dssLoadConstPFixedX;
-        8:
+        TLoadModel.ZIPV:
             Result := dssLoadZIPV;
     end;
 end;
@@ -779,7 +778,10 @@ var
 begin
     if not _activeObj(elem) then
         Exit;
-    elem.Connection := Integer(Value);
+    if Value then
+        elem.Connection := TLoadConnection.Delta
+    else
+        elem.Connection := TLoadConnection.Wye;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kva(Value: Double); CDECL;
@@ -808,7 +810,11 @@ var
 begin
     if not _activeObj(elem) then
         Exit;
-    elem.FLoadModel := Value; // enums match the integer codes
+
+    if (Value >= Ord(Low(TLoadModel))) and (Value <= Ord(High(TLoadModel))) then
+        elem.FLoadModel := TLoadModel(Value)
+    else
+        DoSimpleMsg(Format('Invalid load model (%d).', [Value]), 5004);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_NumCust(Value: Integer); CDECL;

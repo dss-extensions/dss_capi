@@ -54,6 +54,33 @@ uses
     ArrayDef;
 
 type
+{$SCOPEDENUMS ON}
+    
+    TLoadModel = (
+        // INVALID = 0,
+        ConstPQ = 1, // Constant kVA (P,Q always in same ratio)
+        ConstZ = 2, // Constant impedance
+        Motor = 3, // Constant P, Quadratic Q (Mostly motor)
+        CVR = 4, // Linear P, Quadratic Q  (Mixed motor/resistive Use this for CVR studies
+        ConstI = 5, // Constant |I|
+        ConstPFixedQ = 6, // Constant P (Variable); Q is fixed value (not variable)
+        ConstPFixedX = 7, // Constant P (Variable); Q is fixed Z (not variable)
+        ZIPV = 8 // ZIPV (3 real power coefficients, 3 reactive, Vcutoff)
+    );
+    
+    TLoadConnection = (
+        Wye = 0, // wye, star, line-neutral connection
+        Delta = 1 // delta, line-line connection
+    );
+        
+    TLoadSpec = (
+        kW_PF = 0,
+        kW_kvar = 1,
+        kVA_PF = 2,
+        ConnectedkVA_PF = 3,
+        kWh_PF = 4
+    );
+{$SCOPEDENUMS OFF}
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TLoad = class(TPCClass)
     PRIVATE
@@ -179,7 +206,7 @@ type
 
     PUBLIC
 
-        Connection: Integer;  {     0 = line-neutral; 1=Delta}
+        Connection: TLoadConnection; 
         DailyShape: String;         // Daily (24 HR) load shape
         DailyShapeObj: TLoadShapeObj;  // Daily load Shape FOR this load
         DutyShape: String;         // Duty cycle load shape FOR changes typically less than one hour
@@ -196,7 +223,7 @@ type
         kVLoadBase: Double;
         LoadClass: Integer;
         NumCustomers: Integer;
-        LoadSpecType: Integer;  // 0=kW, PF;  1= kw, kvar;  2=kva, PF
+        LoadSpecType: TLoadSpec;  // 0=kW, PF;  1= kw, kvar;  2=kva, PF
         PFNominal: Double;
         Rneut: Double;
         UE_Factor: Double;  // These are set to > 0 IF a line in the critical path
@@ -209,16 +236,7 @@ type
         puSeriesRL: Double;
         RelWeighting: Double;
 
-        FLoadModel: Integer;   // Variation with voltage
-          {  1 = Constant kVA (P,Q always in same ratio)
-             2 = Constant impedance
-             3 = Constant P, Quadratic Q (Mostly motor)
-             4 = Linear P, Quadratic Q  (Mixed motor/resistive Use this for CVR studies
-             5 = Constant |I|
-             6 = Constant P (Variable); Q is fixed value (not variable)
-             7 = Constant P (Variable); Q is fixed Z (not variable)
-             8 = ZIPV (3 real power coefficients, 3 reactive, Vcutoff)
-          }
+        FLoadModel: TLoadModel;   // Variation with voltage
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
@@ -518,9 +536,9 @@ begin
     with ActiveLoadObj do
     begin
         case Connection of
-            0:
+            TLoadConnection.Wye:
                 NConds := Fnphases + 1;
-            1:
+            TLoadConnection.Delta:
                 case Fnphases of
                     1, 2:
                         NConds := Fnphases + 1; // L-L and Open-delta
@@ -547,22 +565,22 @@ begin
         TestS := lowercase(S);
         case TestS[1] of
             'y', 'w':
-                Connection := 0;  {Wye}
+                Connection := TLoadConnection.Wye;
             'd':
-                Connection := 1;  {Delta or line-Line}
+                Connection := TLoadConnection.Delta;
             'l':
                 case Tests[2] of
                     'n':
-                        Connection := 0;
+                        Connection := TLoadConnection.Wye;
                     'l':
-                        Connection := 1;
+                        Connection := TLoadConnection.Delta;
                 end;
         end;
 
         SetNCondsForConnection;
 
         case Connection of
-            1:
+            TLoadConnection.Delta:
                 VBase := kVLoadBase * 1000.0;
         else
             case Fnphases of
@@ -625,7 +643,12 @@ begin
                 5:
                     PFNominal := Parser.DblValue;
                 6:
-                    FLoadModel := Parser.IntValue;
+                begin
+                    if (Parser.IntValue >= Ord(Low(TLoadModel))) and (Parser.IntValue <= Ord(High(TLoadModel))) then
+                        FLoadModel := TLoadModel(Parser.IntValue)
+                    else
+                        DoSimpleMsg(Format('Invalid load model (%d).', [Parser.IntValue]), 5004);
+                end;
                 7:
                     YearlyShape := Param;
                 8:
@@ -726,7 +749,7 @@ begin
 
                 4:
                 begin
-                    LoadSpecType := 0;
+                    LoadSpecType := TLoadSpec.kW_PF;
                     kWRef := kWBase;
                 end;
                 5:
@@ -772,13 +795,13 @@ begin
 
                 12:
                 begin
-                    LoadSpecType := 1;
+                    LoadSpecType := TLoadSpec.kW_kvar;
                     PFSpecified := FALSE;
                     kVARref := kVARbase;
                 end;// kW, kvar
  {*** see set_xfkva, etc           21, 22: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
                 23:
-                    LoadSpecType := 2;  // kVA, PF
+                    LoadSpecType := TLoadSpec.kVA_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
                 31:
                     CVRShapeObj := LoadShapeClass.Find(CVRshape);
@@ -891,7 +914,7 @@ begin
     kvarBase := 5.0;
     PFNominal := 0.88;
     kVABase := kWBase / PFNominal;
-    LoadSpecType := 0;
+    LoadSpecType := TLoadSpec.kW_PF;
     Rneut := -1.0;  // signify neutral is open
     Xneut := 0.0;
 
@@ -905,8 +928,8 @@ begin
     GrowthShapeObj := NIL;  // IF grwothshapeobj = nil THEN the load alway stays nominal * global multipliers
     CVRShape := '';
     CVRShapeObj := NIL;
-    Connection := 0;    // Wye (star)
-    FLoadModel := 1;  // changed from 2 RCD {easiest to solve}
+    Connection := TLoadConnection.Wye;    // Wye (star)
+    FLoadModel := TLoadModel.ConstPQ;  // changed from 2 RCD {easiest to solve}
     LoadClass := 1;
     NumCustomers := 1;
     LastYear := 0;
@@ -1094,9 +1117,9 @@ begin
     kWBase := PkW;
     kvarbase := Qkvar;
     if PFSpecified then
-        LoadSpecType := 0
+        LoadSpecType := TLoadSpec.kW_PF
     else
-        LoadSpecType := 1;
+        LoadSpecType := TLoadSpec.kW_kvar;
 end;
 
 procedure TLoadObj.SetNominalLoad;
@@ -1130,7 +1153,7 @@ begin
                 begin
                     Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
                     CalcYearlyMult(DynaVars.dblHour);
-                    if FLoadModel = 4 then
+                    if FLoadModel = TLoadModel.CVR then
                         CalcCVRMult(DynaVars.dblHour);
                 end;
                 TSolveMode.DUTYCYCLE:
@@ -1246,14 +1269,14 @@ begin
     {Set kW and kvar from root values of kVA and PF}
 
     case LoadSpecType of
-        0:
+        TLoadSpec.kW_PF:
         begin  {kW, PF}
             kvarBase := kWBase * SQRT(1.0 / SQR(PFNominal) - 1.0);
             if PFNominal < 0.0 then
                 kvarBase := -kvarBase;
             kVABase := SQRT(SQR(kWbase) + SQR(kvarBase));
         end;
-        1:
+        TLoadSpec.kW_kvar:
         begin  {kW, kvar -- need to set PFNominal}
             kVABase := SQRT(SQR(kWbase) + SQR(kvarBase));
             if kVABase > 0.0 then
@@ -1265,7 +1288,7 @@ begin
             end;
           {Else leave it as it is}
         end;
-        2:
+        TLoadSpec.kVA_PF:
         begin  {kVA, PF}
             kWbase := kVABase * Abs(PFNominal);
             kWref := kWBase;
@@ -1274,7 +1297,7 @@ begin
             if PFNominal < 0.0 then
                 kvarBase := -kvarBase;
         end;
-        3, 4:
+        TLoadSpec.ConnectedkVA_PF, TLoadSpec.kWh_PF:
             if PFChanged then
             begin  // Recompute kvarBase
                 kvarBase := kWBase * SQRT(1.0 / SQR(PFNominal) - 1.0);
@@ -1396,7 +1419,7 @@ begin
 
     case Connection of
 
-        0:
+        TLoadConnection.Wye:
         begin // WYE
             for i := 1 to Fnphases do
             begin
@@ -1411,7 +1434,7 @@ begin
             if Rneut < 0.0 then
                 Ymatrix.SetElement(Fnconds, Fnconds, Cmulreal(Ymatrix.GetElement(Fnconds, Fnconds), 1.000001));
         end;
-        1:
+        TLoadConnection.Delta:
         begin  // Delta  or L-L
             for i := 1 to Fnphases do
             begin
@@ -1498,13 +1521,13 @@ var
 begin
     case Connection of
 
-        0:
+        TLoadConnection.Wye:
         begin  //Wye
             Caccum(TermArray^[i], Cnegate(Curr));
             Caccum(TermArray^[Fnconds], Curr); // Neutral
         end;
 
-        1:
+        TLoadConnection.Delta:
         begin //DELTA
             Caccum(TermArray^[i], Cnegate(Curr));
             j := i + 1;
@@ -1519,7 +1542,7 @@ procedure TLoadObj.UpdateVoltageBases;
 begin
     with ActiveLoadObj do
         case Connection of
-            1:
+            TLoadConnection.Delta:
                 VBase := kVLoadBase * 1000.0;
         else  {wye}
             case Fnphases of
@@ -2002,14 +2025,14 @@ begin
 { Establish phase voltages and stick in Vtemp}
     case Connection of
 
-        0:
+        TLoadConnection.Wye:
         begin
             with ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                     Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
         end;
 
-        1:
+        TLoadConnection.Delta:
         begin
             with ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
@@ -2044,21 +2067,21 @@ begin
            //  compute total Load currents and Add into InjCurrent array;
             case FLoadModel of
 
-                1:
+                TLoadModel.ConstPQ:
                     DoConstantPQLoad; // normal load-flow type load
-                2:
+                TLoadModel.ConstZ:
                     DoConstantZLoad;
-                3:
+                TLoadModel.Motor:
                     DoMotorTypeLoad;  // Constant P, Quadratic Q;
-                4:
+                TLoadModel.CVR:
                     DoCVRModel;       // mixed motor/resistive load   with CVR factors
-                5:
+                TLoadModel.ConstI:
                     DoConstantILoad;
-                6:
+                TLoadModel.ConstPFixedQ:
                     DoFixedQ;         // Fixed Q
-                7:
+                TLoadModel.ConstPFixedX:
                     DoFixedQZ;        // Fixed, constant Z Q
-                8:
+                TLoadModel.ZIPV:
                     DoZIPVModel;
             else
                 DoConstantZLoad;     // FOR now, until we implement the other models.
@@ -2400,7 +2423,7 @@ procedure TLoadObj.Set_kVAAllocationFactor(const Value: Double);
 begin
     FkVAAllocationFactor := Value;
     FAllocationFactor := Value;
-    LoadSpecType := 3;
+    LoadSpecType := TLoadSpec.ConnectedkVA_PF;
     ComputeAllocatedLoad;
     HasBeenAllocated := TRUE;
 end;
@@ -2410,9 +2433,9 @@ procedure TLoadObj.Set_AllocationFactor(const Value: Double);
 begin
     FAllocationFactor := Value;
     case LoadSpecType of
-        3:
+        TLoadSpec.ConnectedkVA_PF:
             FkVAAllocationFactor := Value;
-        4:
+        TLoadSpec.kWh_PF:
             FCFactor := Value;
     end;
     ComputeAllocatedLoad;  // update kWbase
@@ -2423,7 +2446,7 @@ procedure TLoadObj.Set_CFactor(const Value: Double);
 begin
     FCFactor := Value;
     FAllocationFactor := Value;
-    LoadSpecType := 4;
+    LoadSpecType := TLoadSpec.kWh_PF;
     ComputeAllocatedLoad;
     HasBeenAllocated := TRUE;
 end;
@@ -2431,7 +2454,7 @@ end;
 procedure TLoadObj.Set_ConnectedkVA(const Value: Double);
 begin
     FConnectedkVA := Value;
-    LoadSpecType := 3;
+    LoadSpecType := TLoadSpec.ConnectedkVA_PF;
     FAllocationFactor := FkVAAllocationFactor;
     ComputeAllocatedLoad;
 end;
@@ -2439,7 +2462,7 @@ end;
 procedure TLoadObj.Set_kWh(const Value: Double);
 begin
     FkWh := Value;
-    LoadSpecType := 4;
+    LoadSpecType := TLoadSpec.kWh_PF;
     FAllocationFactor := FCFactor;
     ComputeAllocatedLoad;
 end;
@@ -2447,7 +2470,7 @@ end;
 procedure TLoadObj.Set_kWhDays(const Value: Double);
 begin
     FkWhDays := Value;
-    LoadSpecType := 4;
+    LoadSpecType := TLoadSpec.kWh_PF;
     ComputeAllocatedLoad;
 end;
 
@@ -2462,7 +2485,7 @@ begin
 
     case LoadSpecType of
 
-        3:
+        TLoadSpec.ConnectedkVA_PF:
             if FConnectedkVA > 0.0 then
             begin
                 kWBase := FConnectedkVA * FkVAAllocationFactor * Abs(PFNominal);
@@ -2471,7 +2494,7 @@ begin
                     kvarBase := -kvarBase;
             end;
 
-        4:
+        TLoadSpec.kWh_PF:
         begin
             FavgkW := FkWh / (FkWhDays * 24);
             kWBase := FavgkW * FCfactor;
@@ -2573,7 +2596,7 @@ begin
     S := 'Phases=1 conn=wye';
 
   // Make sure voltage is line-neutral
-    if (Fnphases > 1) or (connection <> 0) then
+    if (Fnphases > 1) or (connection <> TLoadConnection.Wye) then
         V := kVLoadBase / SQRT3
     else
         V := kVLoadBase;
