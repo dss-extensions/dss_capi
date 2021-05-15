@@ -126,7 +126,6 @@ type
         procedure ComputeVterminal;
         procedure ZeroITerminal; inline;
         procedure GetCurrents(Curr: pComplexArray); VIRTUAL; ABSTRACT; //Get present value of terminal Curr for reports
-        procedure GetInjCurrents(Curr: pComplexArray); VIRTUAL; // Returns Injextion currents
         function InjCurrents: Integer; VIRTUAL; // Applies to PC Elements Puts straight into Solution Array
 
         function GetBus(i: Integer): String;  // Get bus name by index
@@ -134,7 +133,6 @@ type
         procedure SetNodeRef(iTerm: Integer; NodeRefArray: pIntegerArray); VIRTUAL;  // Set NodeRef Array for fast solution with intrinsics
         procedure RecalcElementData; VIRTUAL; ABSTRACT;
         procedure CalcYPrim; VIRTUAL;
-      // radial solution removed PROCEDURE BackwardSweep; Virtual;
 
         procedure MakePosSequence; VIRTUAL;  // Make a positive Sequence Model
 
@@ -161,7 +159,7 @@ type
         property Power[idxTerm: Integer]: Complex READ Get_Power;  // Total power in active terminal
         property MaxPower[idxTerm: Integer]: Complex READ Get_MaxPower;  // Total power in active terminal
         property MaxCurrent[idxTerm: Integer]: Double READ Get_MaxCurrent;  // Max current in active terminal
-        property MaxVoltage[idxTerm: Integer]: Double READ Get_MaxVoltage;  // Max current in active terminal
+        property MaxVoltage[idxTerm: Integer]: Double READ Get_MaxVoltage;  // Max voltage in active terminal
         property ActiveTerminalIdx: Integer READ FActiveTerminal WRITE Set_ActiveTerminal;
         property Closed[Index: Integer]: Boolean READ Get_ConductorClosed WRITE Set_ConductorClosed;
         procedure SumCurrents;
@@ -361,7 +359,6 @@ procedure TDSSCktElement.Set_NTerms(Value: Integer);
 var
     i: Integer;
     NewBusNames: pStringArray;
-
 begin
 
 // Check for an almost certain programming error
@@ -478,11 +475,6 @@ begin
     end;
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TDSSCktElement.GetInjCurrents(Curr: pComplexArray);
-begin
-    DoErrorMsg('Something is Wrong.  Got to base CktElement GetInjCurrents for Object:' + CRLF + DSSClassName + '.' + Name, '****',
-        'Should not be able to get here. Probable Programming Error.', 752);
-end;
 
 procedure TDSSCktElement.GetLosses(var TotalLosses, LoadLosses,
     NoLoadLosses: Complex);
@@ -1085,7 +1077,6 @@ begin
     PosSeqLosses := CZERO;
     NegSeqLosses := CZERO;
     ZeroModeLosses := CZERO;
-
 end;
 
 function IsGroundBus(const S: String): Boolean;
@@ -1125,7 +1116,6 @@ procedure TDSSCktElement.ComputeVterminal;
 {Put terminal voltages in an array}
 var
     i: Integer;
-
 begin
     with ActiveCircuit.solution do
         for i := 1 to Yorder do

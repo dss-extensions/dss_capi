@@ -171,8 +171,6 @@ type
         procedure Reset; OVERRIDE;  // Reset to initial defined state
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
-
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
@@ -1144,15 +1142,6 @@ begin
     for i := 1 to Fnconds do
         Curr^[i] := CZERO;
 
-end;
-
-procedure TStorageControllerObj.GetInjCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-
-begin
-    for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
 end;
 
 function TStorageControllerObj.GetkWActual: String;

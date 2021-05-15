@@ -226,8 +226,6 @@ end;
             PROCEDURE   Reset; Override;  // Reset to initial defined state
 
             PROCEDURE   GetCurrents(Curr: pComplexArray); Override; // Get present value of terminal Curr
-            PROCEDURE   GetInjCurrents(Curr: pComplexArray); Override;   // Returns Injection currents
-
             PROCEDURE   CalcVoltWatt_pu(j: Integer);
             PROCEDURE   CalcVoltVar_vars(j: Integer);
             PROCEDURE   CalcDRC_vars(j: Integer);
@@ -1078,15 +1076,6 @@ Begin
 // Control is a zero current source
   For i := 1 to Fnconds Do Curr^[i] := CZERO;
 
-
-End;
-
-PROCEDURE TInvControlObj.GetInjCurrents(Curr: pComplexArray);
-VAR
-   i:Integer;
-Begin
-// Control is a zero current source
-  For i := 1 to Fnconds Do Curr^[i] := CZERO;
 
 End;
 

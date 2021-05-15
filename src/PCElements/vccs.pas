@@ -77,6 +77,7 @@ type
         sIdxY: Integer; // ring buffer index for y2 (rms current)
         y2sum: Double;
         procedure InitPhasorStates;
+        procedure GetInjCurrents(Curr: pComplexArray);
         procedure IntegratePhasorStates;
 
     PROTECTED
@@ -93,7 +94,6 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;

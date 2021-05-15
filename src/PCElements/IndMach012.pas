@@ -221,8 +221,6 @@ type
         // Inj currents are the difference between the desired total terminal currents and the
         // currents that result from the linear admittance matrix of the element
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
-
           // State variable management functions, if any
         // You can omit these if your PC element model is not using these
         // Default behavior is to basically do nothing
@@ -1316,7 +1314,6 @@ end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.DoIndMach012Model;
-//----------------------------------------------------------------------------
 {Compute total terminal Current }
 var
     i: Integer;
@@ -1702,36 +1699,6 @@ begin
 end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TIndMach012Obj.GetInjCurrents(Curr: pComplexArray);
-//----------------------------------------------------------------------------
-
-// Gets the currents for the last solution performed
-
-// Do not call anything that may change the basic element values from the last solution
-
-var
-    i: Integer;
-
-begin
-
-    CalcInjCurrentArray;  // Difference between currents in YPrim and total current
-
-    try    // an exception here generally means an array boundary overrun
-   // Copy into buffer array
-        for i := 1 to Yorder do
-            Curr^[i] := InjCurrent^[i];
-
-    except
-        ON E: Exception do
-            DoErrorMsg('IndMach012 Object: "' + Name + '" in GetInjCurrents function.',
-                E.Message,
-                'Current buffer not big enough.', 568);
-    end;
-
-end;
-//= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TIndMach012Obj.DumpProperties(F: TFileStream; Complete: Boolean);
 //----------------------------------------------------------------------------
 {
@@ -1898,13 +1865,8 @@ begin
     end;
 end;
 
-// ******************* END PROPERTY VALUES   *******************
 
-
-//----------------------------------------------------------------------------
 procedure TIndMach012Obj.IntegrateStates;
-//----------------------------------------------------------------------------
-
 {
   This is a virtual function. You do not need to write this routine
   if you are not integrating state variables in dynamics mode.
@@ -2262,7 +2224,6 @@ end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.Set_ConductorClosed(Index: Integer; Value: Boolean);
-//----------------------------------------------------------------------------
 
 // Routine for handling Open/Close procedures
 
@@ -2279,7 +2240,6 @@ end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.set_Localslip(const Value: Double);
-//----------------------------------------------------------------------------
 
     function Sign(const x: Double): Double;
     begin
@@ -2299,7 +2259,6 @@ end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.Set_Slip(const Value: Double);
-//----------------------------------------------------------------------------
 begin
     LocalSlip := Value;
     MachineData.Speed := MachineData.w0 * (-S1); // make motor speed agree
@@ -2307,7 +2266,6 @@ end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.InitTraceFile;
-//----------------------------------------------------------------------------
 begin
     FreeAndNil(TraceFile);
     TraceFile := TFileStream.Create(OutputDirectory + Format('%s_IndMach012_Trace.CSV', [Name]), fmCreate);

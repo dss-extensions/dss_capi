@@ -96,7 +96,7 @@ type
         procedure CalcYPrim; OVERRIDE;
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
+        procedure GetInjCurrents(Curr: pComplexArray);
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model

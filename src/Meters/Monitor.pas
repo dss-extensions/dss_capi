@@ -199,7 +199,6 @@ type
         procedure TranslateToCSV(Show: Boolean);
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
        //Property  MonitorFileName:String read BufferFile;
@@ -1930,14 +1929,6 @@ begin
     for i := 1 to Fnconds do
         Curr^[i] := CZERO;
 
-end;
-
-procedure TMonitorObj.GetInjCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-begin
-    for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
 end;
 
 {--------------------------------------------------------------------------}

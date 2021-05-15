@@ -84,6 +84,7 @@ type
         procedure CalcYearlyMult(Hr: Double);
 
         function InterpretSourceModel(const s: String): Boolean;
+        procedure GetInjCurrents(Curr: pComplexArray); 
 
     PUBLIC
 
@@ -111,7 +112,6 @@ type
         procedure CalcYPrim; OVERRIDE;
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model

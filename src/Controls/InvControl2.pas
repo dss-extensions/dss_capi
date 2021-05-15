@@ -318,7 +318,6 @@ type
       procedure   Reset; Override;  // Reset to initial defined state
 
       procedure   GetCurrents(Curr: pComplexArray); Override; // Get present value of terminal Curr
-      procedure   GetInjCurrents(Curr: pComplexArray); Override;   // Returns Injection currents
 
 
       procedure   InitPropertyValues(ArrayOffset:Integer);Override;
@@ -1451,14 +1450,6 @@ procedure TInvControl2Obj.CalcYPrim();
   end;
 
 procedure TInvControl2Obj.GetCurrents(Curr: pComplexArray);
-  VAR
-    i:Integer;
-  begin
-    // Control is a zero current source
-    for i := 1 to Fnconds do Curr^[i] := CZERO;
-  end;
-
-procedure TInvControl2Obj.GetInjCurrents(Curr: pComplexArray);
   VAR
     i:Integer;
   begin

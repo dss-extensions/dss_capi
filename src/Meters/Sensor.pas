@@ -102,7 +102,6 @@ type
         procedure Save;  // Saves present buffer to file
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
@@ -696,14 +695,6 @@ end;
 
 {==============================================================================}
 
-procedure TSensorObj.GetInjCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-begin
-    for i := 1 to Fnconds do
-        Curr^[i] := cZero;
-end;
-
 procedure TSensorObj.UpdateCurrentVector;
 {Updates the currentvector when P and Q are defined
  as the input vectors for the sensor}
@@ -885,15 +876,6 @@ begin
     else
         Result := -1;
 end;
-
-{--------------------------------------------------------------------------}
-
-{ - function is not actually used
-function TSensorObj.Get_FileName: String;
-begin
-        Result := GetOutputDirectory +  CircuitName_ + 'Sensor_' + Name + '.csv'
-end;
-}
 
 {==============================================================================}
 

@@ -63,7 +63,7 @@ type
 
       // these three functions make it a PCElement
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
+        procedure GetInjCurrents(Curr: pComplexArray);
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure MakePosSequence; OVERRIDE;

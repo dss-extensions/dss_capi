@@ -82,6 +82,7 @@ type
         function GetOutputCurr(Cond: Integer): Complex;
         function CalcUPFCPowers(ModeUP, Cond: Integer): Complex;
         function CalcUPFCLosses(Vpu: Double): Double;
+        procedure GetInjCurrents(Curr: pComplexArray);
 
     PROTECTED
 
@@ -101,7 +102,6 @@ type
         procedure CalcYPrim; OVERRIDE;
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model

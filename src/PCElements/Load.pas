@@ -244,7 +244,6 @@ type
         procedure RecalcElementData; OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure InitHarmonics; OVERRIDE;
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
         procedure SetNominalLoad;
@@ -2229,37 +2228,6 @@ begin
     WriteDLLDebugFile(Format('Iter=%d, Name="%s", Vmag=%.6g, Yeq=%.6g +j %.6g',
              [ActiveCircuit.Solution.iteration, Name, Vmag, Result.re, Result.im]));
  }
-end;
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TLoadObj.GetInjCurrents(Curr: pComplexArray);
-
-// Gets the injection  currents for the last solution performed
-// Do not call SetNominalLoad, as that may change the load values
-
-var
-    i: Integer;
-
-begin
-
-    try
-        if Enabled then
-        begin
-            CalcInjCurrentArray;
-       // Copy into buffer array
-            for i := 1 to Yorder do
-                Curr^[i] := InjCurrent^[i];
-        end
-        else
-            for i := 1 to Yorder do
-                Curr^[i] := cZero;
-    except
-        ON E: Exception do
-            DoErrorMsg('Load Object: "' + Name + '" in GetInjCurrents FUNCTION.',
-                E.Message,
-                'Current buffer may not big enough.', 588);
-    end;
-
 end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -

@@ -93,7 +93,6 @@ INTERFACE
 
             PROCEDURE   Reset; Override;  // Reset to initial defined state
 
-            PROCEDURE   GetInjCurrents(Curr: pComplexArray); Override;
             PROCEDURE   GetCurrents(Curr: pComplexArray); Override;
 
             PROCEDURE   InitPropertyValues(ArrayOffset:Integer);Override;
@@ -454,14 +453,6 @@ Begin
 End;
 
 PROCEDURE TExpControlObj.GetCurrents(Curr: pComplexArray);
-Var
-   i:Integer;
-Begin
-// Control is a zero current source
-  For i := 1 to Fnconds Do Curr^[i] := CZERO;
-End;
-
-PROCEDURE TExpControlObj.GetInjCurrents(Curr: pComplexArray);
 Var
    i:Integer;
 Begin

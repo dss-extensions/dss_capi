@@ -232,7 +232,6 @@ type
         procedure CalcYPrim; OVERRIDE;
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         function NumVariables: Integer; OVERRIDE;
         procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
@@ -1648,8 +1647,6 @@ begin
                     Y := Cadd(cnegate(YeqDischarge), YeqIdling);
             end;
 
-       //---DEBUG--- WriteDLLDebugFile(Format('t=%.8g, Change To State=%s, Y=%.8g +j %.8g',[ActiveCircuit.Solution.dblHour, StateToStr, Y.re, Y.im]));
-
        // ****** Need to modify the base admittance for real harmonics calcs
             Y.im := Y.im / FreqMultiplier;
 
@@ -1893,7 +1890,6 @@ begin
             for i := 1 to NumVariables do
                 FSWrite(TraceFile, Format('%-.g, ', [Variable[i]]));
 
-   //****        FSWrite(TraceFile,VThevMag:8:1 ,', ', StoreVARs.Theta*180.0/PI);
             FSWriteln(Tracefile);
             FSFlush(TraceFile);
         end;
@@ -1924,8 +1920,6 @@ begin
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     ZeroITerminal;
 
-    //---DEBUG--- WriteDLLDebugFile(Format('t=%.8g, State=%s, Iyprim= %s', [ActiveCircuit.Solution.dblHour, StateToStr, CmplxArrayToString(InjCurrent, Yprim.Order) ]));
-
     case FState of
         STORE_IDLING:  // YPrim current is only current
         begin
@@ -1935,10 +1929,7 @@ begin
                 StickCurrInTerminalArray(ITerminal, Curr, i);  // Put YPrim contribution into Terminal array taking into account connection
                 IterminalUpdated := TRUE;
                 StickCurrInTerminalArray(InjCurrent, Cnegate(Curr), i);    // Compensation current is zero since terminal current is same as Yprim contribution
-                    //---DEBUG--- S := Cmul(Vterminal^[i] , Conjg(Iterminal^[i]));  // for debugging below
-                    //---DEBUG--- WriteDLLDebugFile(Format('        Phase=%d, Pnom=%.8g +j %.8g',[i, S.re, S.im ]));
             end;
-             //---DEBUG--- WriteDLLDebugFile(Format('        Icomp=%s ', [CmplxArrayToString(InjCurrent, Yprim.Order) ]));
         end;
     else   // For Charging and Discharging
 
@@ -1994,14 +1985,10 @@ begin
                 end;
 
             end;
-
-         //---DEBUG--- WriteDLLDebugFile(Format('        Phase=%d, Pnom=%.8g +j %.8g', [i, Pnominalperphase, Qnominalperphase ]));
-
             StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
             IterminalUpdated := TRUE;
             StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
         end;
-        //---DEBUG--- WriteDLLDebugFile(Format('        Icomp=%s ', [CmplxArrayToString(InjCurrent, Yprim.Order) ]));
     end;
 
 end;
@@ -2274,18 +2261,6 @@ begin
 
 end;
 
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-(*
-PROCEDURE TStorageObj.CalcVTerminal;
-{Put terminal voltages in an array}
-Begin
-   ComputeVTerminal;
-   StorageSolutionCount := ActiveCircuit.Solution.SolutionCount;
-End;
-*)
-
-
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TStorageObj.CalcStorageModelContribution;
 
@@ -2372,35 +2347,6 @@ begin
         Result := inherited InjCurrents;
     end;
 end;
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TStorageObj.GetInjCurrents(Curr: pComplexArray);
-
-// Gives the currents for the last solution performed
-
-// Do not call SetNominalLoad, as that may change the load values
-
-var
-    i: Integer;
-
-begin
-
-    CalcInjCurrentArray;  // Difference between currents in YPrim and total current
-
-    try
-   // Copy into buffer array
-        for i := 1 to Yorder do
-            Curr^[i] := InjCurrent^[i];
-
-    except
-        ON E: Exception do
-            DoErrorMsg('Storage Object: "' + Name + '" in GetInjCurrents FUNCTION.',
-                E.Message,
-                'Current buffer not big enough.', 568);
-    end;
-
-end;
-
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TStorageObj.ResetRegisters;
@@ -2757,31 +2703,16 @@ begin
         DynaModel.Integrate
 
     else
-
         with ActiveCircuit.Solution, StorageVars do
         begin
 
             with StorageVars do
                 if (Dynavars.IterationFlag = 0) then
                 begin {First iteration of new time step}
-//****          ThetaHistory := Theta + 0.5*h*dTheta;
-//****          SpeedHistory := Speed + 0.5*h*dSpeed;
                 end;
 
       // Compute shaft dynamics
             TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases);
-
-//****      dSpeed := (Pshaft + TracePower.re - D*Speed) / Mmass;
-//      dSpeed := (Torque + TerminalPowerIn(Vtemp,Itemp,FnPhases).re/Speed) / (Mmass);
-//****      dTheta  := Speed ;
-
-     // Trapezoidal method
-            with StorageVars do
-            begin
-//****       Speed := SpeedHistory + 0.5*h*dSpeed;
-//****       Theta := ThetaHistory + 0.5*h*dTheta;
-            end;
-
    // Write Dynamics Trace Record
             if DebugTrace then
             begin
