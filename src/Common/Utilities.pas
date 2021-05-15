@@ -28,8 +28,8 @@ type
 {$SCOPEDENUMS ON}
     TLSFileType = (
         PlainText = 0,
-        Float64 = 0,
-        Float32 = 1
+        Float64 = 1,
+        Float32 = 2
     );
    
 {$SCOPEDENUMS OFF}
