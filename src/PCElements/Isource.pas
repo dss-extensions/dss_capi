@@ -473,7 +473,7 @@ procedure TIsourceObj.CalcYPrim;
 begin
 
  // Build only YPrim Series
-    if YPrimInvalid then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) {YPrimInvalid} then
     begin
         if YPrim_Series <> NIL then
             YPrim_Series.Free;

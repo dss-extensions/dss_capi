@@ -251,12 +251,12 @@ begin
         ControlElementList.Free;
 
     {Dispose YPrims}
+    if (Yprim <> NIL) AND (Yprim <> Yprim_Shunt) AND (Yprim <> Yprim_Series) then
+        Yprim.Free;
     if Yprim_Series <> NIL then
         Yprim_Series.Free;
     if Yprim_Shunt <> NIL then
         Yprim_Shunt.Free;
-    if Yprim <> NIL then
-        Yprim.Free;
 
     inherited Destroy;
 end;
