@@ -926,8 +926,7 @@ begin
     if not _activeObj(elem) then
         Exit;
 
-    // allocate space for 7
-    elem.nZIPV := 7;
+    elem.ZIPVset := True;
     Move(ValuePtr[0], elem.ZIPV[1], elem.nZIPV * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
