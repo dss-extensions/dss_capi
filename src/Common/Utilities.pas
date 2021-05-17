@@ -723,14 +723,14 @@ function InterpretComplex(DSS: TDSSContext; const s: String): Complex;
 
 // interpret first two entries as complex numbers
 
-var
-    ParmName: String;
+// var
+//     ParmName: String;
 
 begin
     DSS.AuxParser.CmdString := S;
-    ParmName := DSS.AuxParser.NextParam;
+    {ParmName :=} DSS.AuxParser.NextParam;
     Result.re := DSS.AuxParser.dblvalue;
-    ParmName := DSS.AuxParser.NextParam;
+    {ParmName :=} DSS.AuxParser.NextParam;
     Result.im := DSS.AuxParser.dblvalue;
 end;
 
@@ -785,7 +785,7 @@ var
     MStream: TMemoryStream;
     FStream: TBufferedFileStream;
     i: Integer;
-    Temp: Single;
+    // Temp: Single;
     CSVFileName: String;
     CSVColumn: Integer;
     CSVHeader: Boolean;
@@ -929,7 +929,8 @@ function InterpretDblArrayMMF(DSS: TDSSContext; mmPtr: pByte; FileType: TLSFileT
 var
    DBLByteArray: array[0..7] of byte;
    SGLByteArray: array[0..3] of byte;
-   InputLIne, content: String;
+   // InputLIne, 
+   content: String;
    byteValue : Byte;
    OffSet, i, j : Integer;
 Begin
@@ -1426,7 +1427,7 @@ end;
 procedure ParseIntArray(DSS: TDSSContext; var iarray: pIntegerArray; var count: Integer; const s: String);
 
 var
-    paramName: String;
+    // paramName: String;
     param: String;
     i: Integer;
 
@@ -1436,7 +1437,7 @@ begin
     DSS.AuxParser.cmdString := S;
     Count := 0;
     repeat
-        ParamName := DSS.AuxParser.NextParam;
+        {ParamName :=} DSS.AuxParser.NextParam;
         Param := DSS.AuxParser.StrValue;
         if Length(Param) > 0 then
             Inc(Count);
@@ -1449,7 +1450,7 @@ begin
     DSS.AuxParser.cmdString := S;
     for i := 1 to Count do
     begin
-        ParamName := DSS.AuxParser.NextParam;
+        {ParamName :=} DSS.AuxParser.NextParam;
         iarray^[i] := DSS.AuxParser.IntValue;
     end;
 
@@ -3655,7 +3656,6 @@ end;
 procedure FSReadln(F: TFileStream; out S: String); // TODO: optimize?
 var
     ch: AnsiChar; 
-    i: integer;
 begin
     S := '';
     repeat

@@ -444,7 +444,7 @@ end;
 procedure TAltHashList.DumpToFile(const fname: String);
 var
     F: TextFile;
-    i, j: Integer;
+    i: Integer;
 begin
     AssignFile(F, fname);
     Rewrite(F);

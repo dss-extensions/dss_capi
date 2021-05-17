@@ -45,7 +45,7 @@ type
         FphaseShift: Double;
         Bus2Defined: Boolean;
 
-        Vmag: Double;
+        // Vmag: Double;
         Angle: Double;
         SrcFrequency: Double;
         LineName: String;
@@ -425,7 +425,7 @@ end;
 procedure TGICSourceObj.CalcYPrim;
 
 var
-    Rs, Rm, Rzero: Double;
+    // Rs, Rm, Rzero: Double;
     i: Integer;
     Value: Complex;
     NegValue: Complex;

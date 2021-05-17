@@ -1346,10 +1346,10 @@ function DoGetCmd_NoCircuit(DSS: TDSSContext): Boolean;
 // may be retrieved by Result property of the DSSText interface
 
 var
-    ParamPointer, i: Integer;
-    ParamName: String;
+    // ParamName: String;
     Param: String;
 {$IFDEF DSS_CAPI_PM}
+    ParamPointer: Integer;
     PMParent: TDSSContext;
 begin
     PMParent := DSS.GetPrime();
@@ -1362,15 +1362,14 @@ begin
         DSS.GlobalResult := '';  //initialize for appending
 
         // Continue parsing command line
-        ParamName := DSS.Parser.NextParam;
+        {ParamName :=} DSS.Parser.NextParam;
         Param := DSS.Parser.StrValue;
         // there will be no named paramters in this command and the params
         // themselves will be the parameter name to return
         while Length(Param) > 0 do
         begin
-            ParamPointer := OptionList.GetCommand(Param);
-
 {$IFDEF DSS_CAPI_PM}
+            ParamPointer := OptionList.GetCommand(Param);
             case ParamPointer of
                 OPTION_NumCPUs:
                     AppendGlobalResult(DSS, Format('%d', [CPU_Cores]));
@@ -1402,7 +1401,7 @@ begin
                     Exit;
                 end;
             end;
-            ParamName := DSS.Parser.NextParam;
+            {ParamName :=} DSS.Parser.NextParam;
             Param := DSS.Parser.StrValue;
 {$ELSE} 
             DoSimpleMsg(DSS, 'You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.', 301);

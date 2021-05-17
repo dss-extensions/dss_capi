@@ -496,10 +496,10 @@ var
     DSS: TDSSContext;
 begin
     DSS := TDSSContext(dssContext);
-    DSSPrime.Parser.NextParam;
-    Param := LowerCase(DSSPrime.Parser.StrValue);
-    DSSPrime.Parser.NextParam;
-    OptName := LowerCase(DSSPrime.Parser.StrValue);
+    DSS.Parser.NextParam;
+    Param := LowerCase(DSS.Parser.StrValue);
+    DSS.Parser.NextParam;
+    OptName := LowerCase(DSS.Parser.StrValue);
     
 {$IFDEF EXPORT_HELP}
     if ANSIStartsStr('markdown', param) then
@@ -519,7 +519,7 @@ begin
         ShowAnyHelp(NumExportOptions, pStringArray(@ExportOption), pStringArray(@ExportHelp), OptName)
     else
     if ANSIStartsStr('cl', param) then
-        ShowClassHelp(DSSPrime.DSSClassList, OptName)
+        ShowClassHelp(DSS.DSSClassList, OptName)
     else
         ShowGeneralHelp;
 end;

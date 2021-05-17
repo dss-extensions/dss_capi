@@ -1556,7 +1556,6 @@ var
   pLine         : TLineObj;
   myPF,
   myWeight,
-  myActual,
   mykW,
   mykvar,
   TotalkW       : Double;
@@ -1672,7 +1671,6 @@ Begin
         Begin
           SetElementActive('Load.' + myLoads[j]);
           myWeight                        :=  0.0;
-          myActual                        :=  1.0;
           myPF                            :=  TLoadObj(DSS.ActiveDSSObject).PFNominal;
           PFSpecified                     :=  TLoadObj(DSS.ActiveDSSObject).IsPFSpecified;
           DSS.LoadshapeClass.SetActive(TLoadObj(DSS.ActiveDSSObject).YearlyShape);

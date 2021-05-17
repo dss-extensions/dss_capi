@@ -523,7 +523,7 @@ var
     HeadBasekV: Double;
     StartLevel: Integer;
     pBus: TDSSBus;
-    strNodes: String;
+    // strNodes: String;
 
 
 begin

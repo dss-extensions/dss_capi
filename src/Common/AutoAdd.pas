@@ -54,8 +54,6 @@ type
 
         FLog: TFileStream;  // Log File
 
-        ProgressCount: Integer;
-
         function Get_WeightedLosses: Double;
 
         procedure ComputekWLosses_EEN;

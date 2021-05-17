@@ -919,9 +919,9 @@ begin
 end;
 
 function TStorageControllerObj.GetPropertyValue(Index: Integer): String;
-var
-    I: Integer;
-    TempStr: String;
+//var
+    // I: Integer;
+    // TempStr: String;
 begin
     Result := '';
     case Index of
@@ -1452,7 +1452,7 @@ end;
 {--------------------------------------------------------------------------}
 function TStorageControllerObj.Get_DynamicTarget(THigh: Integer): Double;
 var
-    Temp, temp2: Double;
+    // Temp, temp2: Double;
     RatingIdx: Integer;
     RSignal: TXYCurveObj;
 begin
@@ -1736,7 +1736,7 @@ var
     AmpsDiff,
     ChargekW,
     ActualkWh,
-    ActualkW,
+    // ActualkW,
     TotalRatingkWh,
     CtrlTarget,
     KwtoPercentagekW: Double;
@@ -1768,7 +1768,7 @@ begin
             PDiff := S.re * 0.001 - CtrlTarget;  // Assume S.re is normally positive
         end;
 
-        ActualkW := FleetkW;
+        // ActualkW := FleetkW;
         ActualkWh := FleetkWh;
         TotalRatingkWh := FleetkWhRating;
 

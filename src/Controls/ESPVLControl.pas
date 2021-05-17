@@ -93,12 +93,12 @@ type
 
   //          YearlyShape     :String;  // ='fixed' means no variation  on all the time
    //         YearlyShapeObj  :TLoadShapeObj;  // Shape for this Storage element
-        DailyForecastShape: String;  // Daily (24 HR) Storage element shape
-        DailyForecasstShapeObj: TLoadShapeObj;  // Daily Storage element Shape for this load
+//        DailyForecastShape: String;  // Daily (24 HR) Storage element shape
+//        DailyForecasstShapeObj: TLoadShapeObj;  // Daily Storage element Shape for this load
   //          DutyShape       :String;  // Duty cycle load shape for changes typically less than one hour
   //          DutyShapeObj    :TLoadShapeObj;  // Shape for this Storage element
 
-        LoadShapeMult: Complex;
+//        LoadShapeMult: Complex;
 
 
     PUBLIC
@@ -528,13 +528,13 @@ procedure TESPVLControlObj.Sample;
 
 var
     i: Integer;
-    PDiff,
-    QDiff: Double;
+    PDiff: Double;
+    // QDiff: Double;
     S: Complex;
     Gen: TGeneratorObj;
-    GenkWChanged, Genkvarchanged: Boolean;
-    GenkW, Genkvar: Double;
-
+    // GenkWChanged, Genkvarchanged: Boolean;
+    GenkW: Double;
+    // Genkvar: Double;
 begin
      // If list is not define, go make one from all generators in circuit
     if FLocalControlPointerList.Count = 0 then
@@ -548,12 +548,12 @@ begin
 
         PDiff := S.re * 0.001 - FkWLimit;
 
-        QDiff := S.im * 0.001 - FkvarLimit;
+        // QDiff := S.im * 0.001 - FkvarLimit;
 
        // Redispatch the vars.
 
-        GenkWChanged := FALSE;
-        GenkvarChanged := FALSE;
+        // GenkWChanged := FALSE;
+        // GenkvarChanged := FALSE;
 
         if Abs(PDiff) > HalfkWBand then
         begin // Redispatch Generators
@@ -566,7 +566,7 @@ begin
                 if GenkW <> Gen.kWBase then
                 begin
                     Gen.kWBase := GenkW;
-                    GenkWChanged := TRUE;
+                    // GenkWChanged := TRUE;
                 end;
             end;
         end;

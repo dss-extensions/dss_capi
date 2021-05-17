@@ -2619,7 +2619,6 @@ End;
 
 //----------------------------------------------------------------------------
 function TExecHelper.DoUserClassesCmd:Integer;
-VAR  i:Integer;
 Begin
     Result := 0;
     AppendGlobalResult(DSS, 'No User Classes Defined.');
@@ -4108,8 +4107,6 @@ VAR
    Param:String;
    Str  : String;
    iVar : Integer;
-   MsgStrings : TStringList;
-
 Begin
 
      Result := 0;

@@ -355,7 +355,6 @@ var
     F: TBufferedFileStream = nil;
     i: Integer;
     s: String;
-    done: Boolean = False;
 begin
     try
         F := TBufferedFileStream.Create(FileName, fmOpenRead);

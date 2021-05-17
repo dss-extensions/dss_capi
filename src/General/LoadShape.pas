@@ -1001,6 +1001,7 @@ begin
             UseFloat32;
             if sP = nil then
                 ReallocMem(sP, FNumPoints * SizeOf(Single));
+            i := -1;
             
             if Interval = 0.0 then
             begin

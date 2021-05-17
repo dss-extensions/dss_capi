@@ -582,11 +582,11 @@ end;
 procedure ProcessCommand(DSS: TDSSContext; const CmdLine: String);
 var
     ParamPointer: Integer;
-    i: Integer;
     ParamName: String;
     Param: String;
     ObjName, PropName: String;
 {$IFDEF DSS_CAPI_PM}
+    i: Integer;
     PMParent: TDSSContext;
 begin
     PMParent := DSS.GetPrime();

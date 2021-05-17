@@ -823,7 +823,7 @@ end;
 
 function TUPFCObj.GetinputCurr(Cond: Integer): Complex;
 var
-    CurrIn, Ctemp: complex;
+    CurrIn{, Ctemp}: complex;
     S: Double;
 
 begin
@@ -842,7 +842,7 @@ begin
                     1:
                     begin                     // Voltage regulation mode
                         CurrIn := CZERO;
-                        Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
+                        // Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
                         Losses := CalcUPFCLosses(Cabs(Vbin) / (VRef * 1000));
                         // CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
                         CurrIn := cnegate(cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im));
@@ -860,7 +860,7 @@ begin
                     3:
                     begin                    // Dual mode
                         CurrIn := CZERO;
-                        Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
+                        // Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
                         Losses := CalcUPFCLosses(Cabs(Vbin) / (VRef * 1000));
                         // CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
                         CurrIn := cnegate(cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im));
@@ -882,7 +882,7 @@ begin
                         if SF2 then
                         begin    // Normal control routine considering the dynamic reference
                             CurrIn := CZERO;
-                            Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
+                            // Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
                             Losses := CalcUPFCLosses(Cabs(Vbin) / (VRefD * 1000));
                             // CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
                             CurrIn := cnegate(cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im));
@@ -900,7 +900,7 @@ begin
                         if SF2 then
                         begin
                             CurrIn := CZERO;
-                            Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
+                            // Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
                             Losses := CalcUPFCLosses(Cabs(Vbin) / (VRefD * 1000));
                             // CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
                             CurrIn := cnegate(cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im));

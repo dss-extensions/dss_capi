@@ -489,7 +489,7 @@ procedure TVSConverterObj.GetInjCurrents(Curr: pComplexArray);
 var
     Vmag: Complex;
     Vdc, Sphase, Stotal: Complex;
-    Pac, Deg, Idc, Idclim, Iaclim, Itmag: Double;
+    Pac, Deg, Idc, Idclim{, Iaclim, Itmag}: Double;
     i, Nac: Integer;
 begin
 
@@ -503,7 +503,7 @@ begin
 
     Nac := FNphases - FNdc;
     Idclim := FMaxIdc * Fkw / FkVdc;
-    Iaclim := FMaxIac * Fkw / FkVac / Nac;
+    // Iaclim := FMaxIac * Fkw / FkVac / Nac;
 
   // obtain the terminal control quantities
     ComputeVterminal;

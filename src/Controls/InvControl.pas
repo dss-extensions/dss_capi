@@ -1107,7 +1107,7 @@ PROCEDURE TInvControlObj.DoPendingAction;
 VAR
 
   k                                         :Integer;
-  SMonitoredElement                         :Complex;
+  // SMonitoredElement                         :Complex;
   Qtemp,PTemp,QTemp2                        :Double;
   pctVV,pctDRC,QTemporig                    :Double;
 
@@ -1127,7 +1127,7 @@ BEGIN
       PVSys := ControlledElement[k];   // Use local variable in loop
 
 
-      SMonitoredElement := PVSys.Power[1]; // s is in va
+      // SMonitoredElement := PVSys.Power[1]; // s is in va
 
       if(ControlMode = '') and (CombiControlMode = 'VV_DRC') and (PendingChange[k]=CHANGEDRCVVARLEVEL) then
         begin
@@ -2943,7 +2943,7 @@ VAR
 
   DeltaQ,basekV,
   QTemp,TempQ     :Double;
-  SMonitoredElement                         :Complex;
+  // SMonitoredElement                         :Complex;
 
 
  // local pointer to current PVSystem element
@@ -2954,7 +2954,7 @@ BEGIN
       PVSys := ControlledElement[j];   // Use local variable in loop
 
 
-      SMonitoredElement := PVSys.Power[1]; // s is in va
+      // SMonitoredElement := PVSys.Power[1]; // s is in va
       PVSys.VWmode := FALSE;
       PVSys.ActiveTerminalIdx := 1; // Set active terminal of PVSystem to terminal 1
       PVSys.Varmode := VARMODEKVAR;  // Set var mode to VARMODEKVAR to indicate we might change kvar
@@ -3117,7 +3117,7 @@ VAR
 
   voltagechangesolution,QPresentpu,VpuFromCurve,
   DeltaQ                                   :Double;
-  SMonitoredElement                        :Complex;
+  // SMonitoredElement                        :Complex;
 
 
  // local pointer to current PVSystem element
@@ -3134,7 +3134,7 @@ BEGIN
       PVSys := ControlledElement[j];
 
 
-      SMonitoredElement := PVSys.Power[1]; // s is in va
+      // SMonitoredElement := PVSys.Power[1]; // s is in va
 
       QDesiredpu[j] := 0.0;
 

@@ -1608,7 +1608,7 @@ end;
 {--------------------------------------------------------------------------}
 function TStorageController2Obj.Get_DynamicTarget(THigh: Integer): Double;
 var
-    Temp, temp2: Double;
+    // Temp, temp2: Double;
     RatingIdx: Integer;
     RSignal: TXYCurveObj;
 begin
@@ -1986,9 +1986,9 @@ var
     AmpsDiff,
     ChargekW,
     ActualkWh,
-    ActualkW,
+    // ActualkW,
     TotalRatingkWh,
-    KwtoPercentagekW,
+    // KwtoPercentagekW,
     CtrlTarget,
     ActualkWDispatch: Double;
 
@@ -2025,7 +2025,7 @@ begin
             PDiff := S.re * 0.001 - CtrlTarget;  // Assume S.re is normally positive
         end;
 
-        ActualkW := FleetkW;
+        // ActualkW := FleetkW;
         ActualkWh := FleetkWh;
         TotalRatingkWh := FleetkWhRating;
 
@@ -2333,8 +2333,8 @@ var
     FleetStateSaved: Integer;
     RateChanged: Boolean;
     NewChargeRate: Double;
-    NewkWRate,
-    NewkvarRate: Double;
+    NewkWRate: Double;
+    //NewkvarRate: Double;
 begin
 
     FleetStateSaved := FleetState;
@@ -2707,7 +2707,8 @@ end;
 procedure TStorageController2Obj.GetControlPower(var ControlPower: Complex);
 // Get power to control based on active power
 var
-    i, ControlPowerPhase: Integer;
+    i: Integer;
+    // ControlPowerPhase: Integer;
     TempPower: Double;
 
 begin
@@ -2735,7 +2736,7 @@ begin
                     TempPower := abs(cBuffer^[i].re);
                     if TempPower > abs(ControlPower.re) then
                         ControlPower := cBuffer^[i];
-                    ControlPowerPhase := i;
+                    // ControlPowerPhase := i;
                 end;
                           // Compute equivalent total power of all phases assuming equal to max power in all phases
                 ControlPower := cMulReal(ControlPower, Fnphases);
@@ -2748,7 +2749,7 @@ begin
                     TempPower := abs(cBuffer^[i].re);
                     if TempPower < abs(ControlPower.re) then
                         ControlPower := cBuffer^[i];
-                    ControlPowerPhase := i;
+                    // ControlPowerPhase := i;
                 end;
                           // Compute equivalent total power of all phases assuming equal to min power in all phases
                 ControlPower := cMulReal(ControlPower, Fnphases);  // sign according to phase with min abs value

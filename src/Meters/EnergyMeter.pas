@@ -3198,7 +3198,6 @@ procedure TEnergyMeterObj.GetPCEatZone(const allowEmpty: Boolean);
 var
     cktElem,
     shuntElement: TDSSCktElement;
-    pMeter: TEnergyMeterObj;
 begin
     //TODO: if performance ever becomes an issue, rewrite to use a temporary list,
     //      or try overallocating the array first

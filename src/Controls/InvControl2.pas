@@ -3943,29 +3943,25 @@ procedure TInvControl2Obj.CalcQVVcurve_desiredpu(j: Integer);
   end;
 
 procedure TInvControl2Obj.CalcQWVcurve_desiredpu(j: Integer);
-  VAR
-    voltagechangesolution                    :Double;
+//VAR
+//    voltagechangesolution: Double;
+begin
+    // QDesireWVpu[j] := 0.0;
 
-
-  begin
-
-    QDesireWVpu[j] := 0.0;
-
-    voltagechangesolution := 0.0;
-
-    // for first two seconds, keep voltagechangesolution equal to zero
-    // we don't have solutions from the time-series power flow, yet
-    if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
-    else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
-    else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
+    // voltagechangesolution := 0.0;
+    // 
+    // // for first two seconds, keep voltagechangesolution equal to zero
+    // // we don't have solutions from the time-series power flow, yet
+    // if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
+    // else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
+    // else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
 
     QDesireWVpu[j] := Fwattvar_curve.GetYValue(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] / FDCkWRated[j]);
-
-  end;
+end;
 
 procedure TInvControl2Obj.CalcQWPcurve_desiredpu(j: Integer);
   VAR
-    voltagechangesolution                    :Double;
+    // voltagechangesolution                    :Double;
     p                                        :Double;
     pf_priority                              :Boolean;
     QDesiredWP                               :Double;
@@ -3974,13 +3970,13 @@ procedure TInvControl2Obj.CalcQWPcurve_desiredpu(j: Integer);
 
     QDesireWPpu[j] := 0.0;
 
-    voltagechangesolution := 0.0;
+    // voltagechangesolution := 0.0;
 
     // for first two seconds, keep voltagechangesolution equal to zero
     // we don't have solutions from the time-series power flow, yet
-    if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
-    else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
-    else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
+    // if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
+    // else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
+    // else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
 
     pf_wp_nominal := Fwattpf_curve.GetYValue(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] / FDCkWRated[j]);
 

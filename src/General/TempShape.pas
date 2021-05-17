@@ -834,7 +834,6 @@ procedure TTShapeObj.SaveToDblFile;
 
 var
     F: TFileStream = nil;
-    i: Integer;
     Fname: String;
 begin
     if Assigned(TValues) then

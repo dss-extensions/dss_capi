@@ -152,8 +152,7 @@ type
         Vminpu: Double;
         YPrimOpenCond: TCmatrix;
 
-        procedure InitPropertyValues(ArrayOffset: Integer);
-        
+
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);
         procedure CalcStorageModelContribution;
@@ -254,6 +253,7 @@ type
 
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
@@ -2602,7 +2602,7 @@ procedure TStorageObj.InitStateVars;
 
 // for going into dynamics mode
 var
-    VNeut: Complex;
+    // VNeut: Complex;
     VThevPolar: Polar;
     i: Integer;
     V012,
@@ -2648,12 +2648,12 @@ begin
                 begin
                     Phase2SymComp(ITerminal, pComplexArray(@I012));
                 // Voltage behind Xdp  (transient reactance), volts
-                    case Connection of
-                        0:
-                            Vneut := NodeV^[NodeRef^[Fnconds]]
-                    else
-                        Vneut := CZERO;
-                    end;
+                    // case Connection of
+                    //     0:
+                    //         Vneut := NodeV^[NodeRef^[Fnconds]]
+                    // else
+                    //     Vneut := CZERO;
+                    // end;
 
                     for i := 1 to FNphases do
                         Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
@@ -2690,8 +2690,8 @@ procedure TStorageObj.IntegrateStates;
 
 // dynamics mode integration routine
 
-var
-    TracePower: Complex;
+//var
+//    TracePower: Complex;
 
 begin
    // Compute Derivatives and Then integrate
@@ -2712,7 +2712,7 @@ begin
                 end;
 
       // Compute shaft dynamics
-            TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases);
+            // TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases);
    // Write Dynamics Trace Record
             if DebugTrace then
             begin

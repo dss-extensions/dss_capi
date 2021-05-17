@@ -832,7 +832,6 @@ procedure TPriceShapeObj.SaveToDblFile;
 
 var
     F: TFileStream = nil;
-    i: Integer;
     Fname: String;
 begin
     if Assigned(PriceValues) then

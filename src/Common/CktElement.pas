@@ -682,8 +682,7 @@ end;
 function TDSSCktElement.Get_MaxVoltage(idxTerm: Integer): Double;
 {Get Voltage at the specified terminal 09/17/2019}
 var
-    volts,
-    cPower: Complex;
+    volts: Complex;
     ClassIdx,
     i, k,
     nrefN,
@@ -693,7 +692,6 @@ var
     MaxPhase: Integer;
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
-    Cpower := CZERO;
     Result := 0.0;
     if not FEnabled then
         Exit;

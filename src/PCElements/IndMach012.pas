@@ -2163,9 +2163,9 @@ procedure TIndMach012Obj.MakePosSequence;
 // Routine to convert existing three-phase models to a single-phase positive-
 // sequence model
 
-var
-    S: String;
-   { V :Double; }
+// var
+//    S: String;
+//    V :Double; 
 
 begin
 
@@ -2185,7 +2185,7 @@ begin
  // example from Generator class
  // Modify as necessary
 
-    S := 'Phases=1 conn=wye';    // Positive sequence model is 1-phase wye
+//    S := 'Phases=1 conn=wye';    // Positive sequence model is 1-phase wye
 
   (****
 

@@ -1667,7 +1667,7 @@ var
     Qramp_limit: Double;
     TempPF: Double;
     CutOutkWAC: Double;
-    CutInkWAC: Double;
+    // CutInkWAC: Double;
 
 begin
     // Reset CurrentkvarLimit to kvarLimit
@@ -1682,12 +1682,12 @@ begin
         if Assigned(InverterCurveObj) then
         begin
             CutOutkWAC := CutOutkW * InverterCurveObj.GetYValue(abs(CutOutkW) / FkVArating);
-            CutInkWAC := CutInkW * InverterCurveObj.GetYValue(abs(CutInkW) / FkVArating);
+            // CutInkWAC := CutInkW * InverterCurveObj.GetYValue(abs(CutInkW) / FkVArating);
         end
         else  // Assume Ideal Inverter
         begin
             CutOutkWAC := CutOutkW;
-            CutInkWAC := CutInkW;
+            // CutInkWAC := CutInkW;
         end;
 
 

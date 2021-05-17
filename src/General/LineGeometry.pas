@@ -88,8 +88,6 @@ type
         FLineData: TLineConstants;
         procedure ChangeLineConstantsType(newPhaseChoice: ConductorChoice);
 
-        procedure InitPropertyValues(ArrayOffset: Integer);
-
         procedure set_Nconds(const Value: Integer);
         procedure set_Nphases(const Value: Integer);
         procedure set_ActiveCond(const Value: Integer);
@@ -129,6 +127,7 @@ type
         destructor Destroy; OVERRIDE;
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
         procedure SaveWrite(F: TFileStream); OVERRIDE;
 
