@@ -1197,6 +1197,7 @@ function TVsourceObj.GetPropertyValue(Index: Integer): String;
 begin
         Case Index of
           1 : Result  := GetBus(1);
+          4 : Result  := Format('%-.5g',[Angle]);
           7 : Result  := Format('%-.5g',[MVAsc3]);
           8 : Result  := Format('%-.5g',[MVAsc1]);
           11 : Result := Format('%-.5g',[Isc3]);
