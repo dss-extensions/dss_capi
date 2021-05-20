@@ -69,7 +69,7 @@ Type THeaderRec = Record
         Version    : Integer;
         RecordSize : Integer;
         Mode       : Integer;
-        StrBuffer  : TMonitorStrBuffer;
+        dummyRec   : TMonitorStrBuffer;
       End;
 
      SingleArray  = Array[1..100] of Single;
@@ -89,7 +89,7 @@ Begin
            Read( version,    Sizeof(version));        // Version     (32 bit Integer )
            Read( RecordSize, Sizeof(RecordSize));    // RecordSize  (32 bit Integer )
            Read( Mode,       Sizeof(Mode));                // Mode        (32 bit Integer )
-           Read( StrBuffer,  Sizeof(TMonitorStrBuffer)); // String      (255 char string)
+           Read( dummyRec,  Sizeof(TMonitorStrBuffer)); // String      (255 char string)
          End;
 
    FINALLY
@@ -438,7 +438,7 @@ begin
 
              Result := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
              ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
-             AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+             AuxParser[ActiveActor].CmdString := string(pMon.StrBuffer);
              AuxParser[ActiveActor].AutoIncrement := TRUE;
              FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
              AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -485,7 +485,7 @@ begin
       If pMon.SampleCount >0 Then Begin
              Result := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
              ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-             AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+             AuxParser[ActiveActor].CmdString := string(pMon.StrBuffer);
              AuxParser[ActiveActor].AutoIncrement := TRUE;
              FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
              AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -538,7 +538,7 @@ begin
       If pMon.SampleCount >0 Then Begin
              Result := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
              ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-             AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+             AuxParser[ActiveActor].CmdString := string(pMon.StrBuffer);
              AuxParser[ActiveActor].AutoIncrement := TRUE;
              FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
              AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -585,11 +585,13 @@ function TMonitors.Get_Header: OleVariant;
 
 // Variant list of strings with names of all channels
 
-Var  Header : THeaderRec;
-     k : Integer;
-     ListSize : Integer;
-     SaveDelims : String;
+Var  Header         : THeaderRec;
+     k              : Integer;
+     ListSize       : Integer;
+     SaveDelims     : String;
      SaveWhiteSpace : String;
+     pMon           : TMonitorObj;
+
 begin
 
     Result := VarArrayCreate([0, 0], varOleStr);
@@ -597,8 +599,9 @@ begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
+         pMon := ActiveCircuit[ActiveActor].Monitors.Active;
          ReadMonitorHeader(Header, TRUE);
-         If Header.RecordSize > 0 Then
+         If length(pMon.StrBuffer) > 0 Then
          Begin
              ListSize := Header.RecordSize;
              VarArrayRedim(Result, ListSize-1);
@@ -607,7 +610,7 @@ begin
              AuxParser[ActiveActor].Delimiters := ',';
              SaveWhiteSpace := AuxParser[ActiveActor].Whitespace;
              AuxParser[ActiveActor].Whitespace := '';
-             AuxParser[ActiveActor].CmdString := String(Header.StrBuffer);
+             AuxParser[ActiveActor].CmdString := String(pMon.StrBuffer);
              AuxParser[ActiveActor].AutoIncrement := TRUE;
              AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
              AuxParser[ActiveActor].StrValue;
