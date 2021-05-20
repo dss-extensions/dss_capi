@@ -1,7 +1,7 @@
 unit Monitor;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -96,7 +96,7 @@ USES
      Command, MeterClass, Meterelement, DSSClass, Arraydef, ucomplex, utilities, Classes;
 
 TYPE
-    TMonitorStrBuffer = Array[1..256] of AnsiChar;
+    TMonitorStrBuffer = Array [1..256] of AnsiChar;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
    {This has to be named TDSSMonitor because Delphi has a TMonitor Class and the compiler will get confused}
@@ -173,9 +173,11 @@ TYPE
 
 
      public
-       Mode          :Integer;
-       MonitorStream :TMemoryStream;
-       SampleCount   :Integer;  // This is the number of samples taken
+       Mode           : Integer;
+       MonitorStream  : TMemoryStream;
+       SampleCount    : Integer;           // This is the number of samples taken
+       myHeaderSize   : Integer;           // size of the header of this monitor
+       StrBuffer      : Array of AnsiChar; // Header
 
        constructor Create(ParClass:TDSSClass; const MonitorName:String);
        destructor Destroy; override;
@@ -188,6 +190,7 @@ TYPE
        Procedure Save;     // Saves present buffer to file
        Procedure PostProcess(ActorID : Integer); // calculates Pst or other post-processing
 
+       procedure Add2Header(myText : AnsiString);
        Procedure OpenMonitorStream;
        Procedure ClearMonitorStream(ActorID : Integer);
        Procedure CloseMonitorStream(ActorID : Integer);
@@ -228,7 +231,7 @@ CONST
     NumSolutionVars = 12;
 
 VAR
-    StrBuffer:TMonitorStrBuffer;
+  dummyRec    : TMonitorStrBuffer;
 
 {--------------------------------------------------------------------------}
 constructor TDSSMonitor.Create;  // Creates superstructure for all Monitor objects
@@ -288,6 +291,7 @@ Begin
                     '10 = All Winding voltages (Transformer device only)'+CRLF+
                     'Normally, these would be actual phasor quantities from solution.' + CRLF+
                     '11 = All terminal node voltages and line currents of monitored device' +CRLF+
+                    '12 = All terminal node voltages LL and line currents of monitored device' +CRLF+
                     'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF+
                     '+16 = Sequence quantities' + CRLF+
                     '+32 = Magnitude only' + CRLF+
@@ -697,6 +701,10 @@ Begin
                              ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
                              ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.Yorder);
                          End;
+                     12: Begin
+                             ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
+                             ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*(MeteredElement.Yorder + 1));
+                         End;
                  Else
                      ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
                      ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.NConds);
@@ -753,86 +761,101 @@ Begin
   // Yprim is zeroed when created.  Leave it as is.
 End;
 
+{--------------------------------------------------------------------------
+        Concatenates the given string into the header buffer
+--------------------------------------------------------------------------}
+procedure TMonitorObj.Add2Header(myText : AnsiString);
+var
+  i, j,
+  myLen : integer;
+Begin
+  myLen   :=  length(StrBuffer);
+  for i := 0 to High(myText) do
+    if myText[i] <> AnsiChar(0) then
+    Begin 
+      setlength(StrBuffer,length(StrBuffer) + 1);      
+      StrBuffer[high(StrBuffer)]  :=  myText[i];
+    End;
+End;
+
 {--------------------------------------------------------------------------}
 Procedure TMonitorObj.ClearMonitorStream(ActorID : Integer);
 
 VAR
-    i,j         :Integer;
-    iMax        :Integer;
+    PhaseLoc    : Array of Integer;
+    i,j,
+    iMax,
+    NumVI,
+    RecordSize,
     iMin        :Integer;
-    IsPosSeq    :Boolean;
+    IsPosSeq,
     IsPower     :Boolean;
-    NameOfState :AnsiString;
-    strPtr      :pAnsiChar;
+    NameOfState,
     Str_Temp    :AnsiString;
-
-    NumVI       :Integer;
-    RecordSize  :Integer;
 
 Begin
   Try
 
-     MonitorStream.Clear;
-     IsProcessed := FALSE;
-     SampleCount  :=  0;
-     IsPosSeq := False;
-     fillchar(StrBuffer, Sizeof(TMonitorStrBuffer), 0);  {clear buffer}
-     strPtr := @StrBuffer;
-     strPtr^ := chr(0);     // Init string
-     If ActiveCircuit[ActorID].Solution.IsHarmonicModel Then strLcat(strPtr, pAnsiChar('Freq, Harmonic, '), Sizeof(TMonitorStrBuffer))
-                                                        Else strLcat(strPtr, pAnsiChar('hour, t(sec), '),   Sizeof(TMonitorStrBuffer));
+    MonitorStream.Clear;
+    IsProcessed := FALSE;
+    SampleCount  :=  0;
+    IsPosSeq := False;
+    setlength(StrBuffer,0);
+    If ActiveCircuit[ActorID].Solution.IsHarmonicModel Then 
+      Add2header(pAnsiChar('Freq, Harmonic, '))
+    Else Add2Header(pAnsiChar('hour, t(sec), '));
      
      CASE (Mode and MODEMASK) of
 
      2: Begin
               RecordSize := 1;     // Transformer Taps
-              strLcat(strPtr, pAnsiChar('Tap (pu)'), Sizeof(TMonitorStrBuffer));
+              Add2header(pAnsiChar('Tap (pu)'));
         End;
      3: Begin
               RecordSize := NumStateVars;   // Statevariabes
               For i := 1 to NumStateVars Do Begin
                   NameofState := AnsiString(TpcElement(MeteredElement).VariableName(i) + ',');
-                  strLcat(strPtr, pAnsiChar(NameofState), Sizeof(TMonitorStrBuffer));
+                  Add2header(pAnsiChar(NameofState));
               End;
         End;
      4: Begin
               RecordSize := 2 * FnPhases;
               For i := 1 to FnPhases Do Begin  //AnsString and pAnsiChar replaced with AnsiString and pAnsiChar to make it compatible with Linux
-                strLcat(strPtr, pAnsiChar(AnsiString('Flk'+IntToStr(i)+', Pst'+IntToStr(i))), Sizeof(TMonitorStrBuffer));
-                if i < FnPhases then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                Add2header(pAnsiChar(AnsiString('Flk'+IntToStr(i)+', Pst'+IntToStr(i))));
+                if i < FnPhases then Add2header(pAnsiChar(', '));
               End;
         End;
      5: Begin
              RecordSize := NumSolutionVars;
-             strLcat(strPtr, pAnsiChar('TotalIterations, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('ControlIteration, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('MaxIterations, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('MaxControlIterations, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('Converged, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('IntervalHrs, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('SolutionCount, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('Mode, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('Frequency, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('Year, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('SolveSnap_uSecs, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('TimeStep_uSecs, '), Sizeof(TMonitorStrBuffer));
+             Add2header(pAnsiChar('TotalIterations, '));
+             Add2header(pAnsiChar('ControlIteration, '));
+             Add2header(pAnsiChar('MaxIterations, '));
+             Add2header(pAnsiChar('MaxControlIterations, '));
+             Add2header(pAnsiChar('Converged, '));
+             Add2header(pAnsiChar('IntervalHrs, '));
+             Add2header(pAnsiChar('SolutionCount, '));
+             Add2header(pAnsiChar('Mode, '));
+             Add2header(pAnsiChar('Frequency, '));
+             Add2header(pAnsiChar('Year, '));
+             Add2header(pAnsiChar('SolveSnap_uSecs, '));
+             Add2header(pAnsiChar('TimeStep_uSecs, '));
         End;
      6: Begin
               RecordSize := TCapacitorObj(MeteredElement).NumSteps;     // Capacitor Taps
               for i := 1 to RecordSize do
                 begin
                   Str_Temp  :=  AnsiString('Step_' + inttostr(i) + ',');
-                  strLcat(strPtr, pAnsiChar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                  Add2header(pAnsiChar(Str_Temp));
                 end;
 
         End;
      7: Begin
               RecordSize := 5;     // Storage state vars
-              strLcat(strPtr, ('kW output, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('kvar output, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('kW Stored, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('%kW Stored, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('State, '), Sizeof(TMonitorStrBuffer));
+              Add2header(('kW output, '));
+              Add2header(('kvar output, '));
+              Add2header(('kW Stored, '));
+              Add2header(('%kW Stored, '));
+              Add2header(('State, '));
         End;
      8: Begin   // All winding Currents
               If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
@@ -844,7 +867,7 @@ Begin
                         for j := 1 to NumberOfWindings do
                           begin
                             Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                            Add2header(pAnsichar(Str_Temp));
                           end;
                       End;
                 End
@@ -856,16 +879,16 @@ Begin
                         for j := 1 to NumberOfWindings do
                           begin
                             Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                            Add2header(pAnsichar(Str_Temp));
                           end;
                       End;
                 End;
         End;
      9: Begin // watts vars of meteredElement
               RecordSize := 2;
-              strLcat(strPtr,  pAnsichar('watts, vars'), Sizeof(TMonitorStrBuffer));
+              Add2header(pAnsichar('watts, vars'));
         End;
-    10: Begin // All Winding Voltages
+     10:Begin // All Winding Voltages
               If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
               Then With TAutoTransObj(MeteredElement) Do
                  Begin
@@ -875,7 +898,7 @@ Begin
                         for j := 1 to NumberOfWindings do
                           begin
                             Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                            Add2header(pAnsichar(Str_Temp));
                           end;
                       End;
                  End
@@ -887,12 +910,12 @@ Begin
                         for j := 1 to NumberOfWindings do
                           begin
                             Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                            Add2header(pAnsichar(Str_Temp));
                           end;
                       End;
                  End;
         End;
-    11: Begin {All terminal voltages and currents  *****}
+     11:Begin {All terminal voltages and currents  *****}
 
             Recordsize := 2 * 2 * MeteredElement.Yorder;  // V and I
 
@@ -901,7 +924,7 @@ Begin
                For i := 1 to MeteredElement.NConds Do
                Begin
                     Str_Temp  :=  AnsiString(Format('V%dT%d,Deg, ', [i,j] ));
-                    strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                    Add2header(pAnsichar(Str_Temp));
                End;
 
             {Currents}
@@ -909,7 +932,35 @@ Begin
                For i := 1 to MeteredElement.NConds Do
                Begin
                     Str_Temp  :=  AnsiString(Format('I%dT%d,Deg, ', [i,j] ));
-                    strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                    Add2header(pAnsichar(Str_Temp));
+               End;
+
+        End;
+     12:Begin {All terminal voltages LL and currents  *****}
+
+            with MeteredElement do
+            Begin
+              Recordsize := 2 * ((NPhases * NTerms) + Yorder) ;  // V and I
+              setlength(PhaseLoc, NPhases + 1);
+            end;
+            // Creates the map of phase combinations (LL)
+            For j := 1 to MeteredElement.NPhases Do PhaseLoc[j - 1] :=  j;
+            PhaseLoc[High(PhaseLoc)]  :=  1;
+
+            {Voltages}
+            For j := 1 to MeteredElement.NTerms Do
+               For i := 1 to MeteredElement.NPhases Do
+               Begin
+                    Str_Temp  :=  AnsiString(Format('V%d-%dT%d,Deg, ', [PhaseLoc[i-1],PhaseLoc[i],j] ));
+                    Add2header(pAnsichar(Str_Temp));
+               End;
+
+            {Currents}
+            For j := 1 to MeteredElement.NTerms Do
+               For i := 1 to MeteredElement.NConds Do
+               Begin
+                    Str_Temp  :=  AnsiString(Format('I%dT%d,Deg, ', [i,j] ));
+                    Add2header(pAnsichar(Str_Temp));
                End;
 
         End
@@ -940,27 +991,27 @@ Begin
                       FOR i := 1 to NumVI DO Inc(RecordSize,1);
                       IF IncludeResidual Then Inc(RecordSize, 2);
                        For i := 1 to NumVI Do Begin
-                           strLcat(strPtr, pAnsiChar(AnsiString(Format('|V|%d (volts)',[i]))), Sizeof(TMonitorStrBuffer));
-                           strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                           Add2header(pAnsiChar(AnsiString(Format('|V|%d (volts)',[i]))));
+                           Add2header(pAnsiChar(', '));
                        End;
                        IF IncludeResidual Then Begin
-                           strLcat(strPtr, pAnsiChar('|VN| (volts)'), Sizeof(TMonitorStrBuffer));
-                           strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                           Add2header(pAnsiChar('|VN| (volts)'));
+                           Add2header(pAnsiChar(', '));
                        End;
                        For i := 1 to NumVI Do Begin
-                           strLcat(strPtr, pAnsiChar(AnsiString('|I|'+IntToStr(i)+' (amps)')), Sizeof(TMonitorStrBuffer));
-                           If i<NumVI Then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                           Add2header(pAnsiChar(AnsiString('|I|'+IntToStr(i)+' (amps)')));
+                           If i<NumVI Then Add2header(pAnsiChar(', '));
                        End;
                        IF IncludeResidual Then Begin
-                           strLcat(strPtr, pAnsiChar(',|IN| (amps)'), Sizeof(TMonitorStrBuffer));
+                           Add2header(pAnsiChar(',|IN| (amps)'));
                        End;
                  End
                  Else Begin  // Power
                        For i := 1 to NumVI Do
                        Begin
-                           If PPolar Then strLcat(strPtr, pAnsiChar(AnsiString('S'+IntToStr(i)+' (kVA)')), Sizeof(TMonitorStrBuffer))
-                                     Else strLcat(strPtr, pAnsiChar(AnsiString('P'+IntToStr(i)+' (kW)')), Sizeof(TMonitorStrBuffer));
-                           If i<NumVI Then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                           If PPolar Then Add2header(pAnsiChar(AnsiString('S'+IntToStr(i)+' (kVA)')))
+                                     Else Add2header(pAnsiChar(AnsiString('P'+IntToStr(i)+' (kW)')));
+                           If i<NumVI Then Add2header(pAnsiChar(', '));
                        End;
                  End;
               End ;
@@ -968,12 +1019,12 @@ Begin
                      RecordSize := 2;
                      IF Not IsPower THEN Begin
                         RecordSize := RecordSize+ 2;
-                        If VIPolar Then strLcat(strPtr, pAnsiChar('V1, V1ang, I1, I1ang'), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsiChar('V1.re, V1.im, I1.re, I1.im'), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then Add2header(pAnsiChar('V1, V1ang, I1, I1ang'))
+                                   Else Add2header(pAnsiChar('V1.re, V1.im, I1.re, I1.im'));
                      End
                      Else Begin
-                        If Ppolar Then strLcat(strPtr, pAnsiChar('S1 (kVA), Ang '), Sizeof(TMonitorStrBuffer))
-                                  Else strLcat(strPtr, pAnsiChar('P1 (kW), Q1 (kvar)'), Sizeof(TMonitorStrBuffer));
+                        If Ppolar Then Add2header(pAnsiChar('S1 (kVA), Ang '))
+                                  Else Add2header(pAnsiChar('P1 (kW), Q1 (kvar)'));
                      End;
                End ;
             96:Begin  // Save Pos Seq or Aver magnitude of all Phases of total kVA (Magnitude)
@@ -981,11 +1032,11 @@ Begin
                      IF Not IsPower
                      THEN Begin
                        RecordSize := RecordSize+ 1;
-                       strLcat(strPtr, pAnsiChar('V, I '), Sizeof(TMonitorStrBuffer));
+                       Add2header(pAnsiChar('V, I '));
                      End
                      Else Begin  // Power
-                        If Ppolar Then strLcat(strPtr, pAnsiChar('S1 (kVA)'), Sizeof(TMonitorStrBuffer))
-                                  Else strLcat(strPtr, pAnsiChar('P1 (kW)'), Sizeof(TMonitorStrBuffer));
+                        If Ppolar Then Add2header(pAnsiChar('S1 (kVA)'))
+                                  Else Add2header(pAnsiChar('P1 (kW)'));
                      End;
                End ;
 
@@ -997,32 +1048,32 @@ Begin
                      RecordSize := RecordSize + NumVI*2;
                      IF IncludeResidual Then Inc(RecordSize, 4);
                      For i := iMin to iMax Do Begin
-                        If VIPolar Then strLcat(strPtr, pAnsiChar(AnsiString('V'+IntToStr(i)+', VAngle'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsiChar(AnsiString('V'+IntToStr(i)+'.re, V'+IntToStr(i)+'.im')), Sizeof(TMonitorStrBuffer));
-                        strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then Add2header(pAnsiChar(AnsiString('V'+IntToStr(i)+', VAngle'+IntToStr(i))))
+                                   Else Add2header(pAnsiChar(AnsiString('V'+IntToStr(i)+'.re, V'+IntToStr(i)+'.im')));
+                        Add2header(pAnsiChar(', '));
                      End;
                      IF IncludeResidual Then Begin
-                        If VIPolar Then strLcat(strPtr, pAnsiChar('VN, VNAngle'), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsiChar('VN.re, VN.im'), Sizeof(TMonitorStrBuffer));
-                        strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then Add2header(pAnsiChar('VN, VNAngle'))
+                                   Else Add2header(pAnsiChar('VN.re, VN.im'));
+                        Add2header(pAnsiChar(', '));
                      End;
                      For i := iMin to iMax Do Begin
-                        If VIPolar Then strLcat(strPtr, pAnsiChar(AnsiString('I'+IntToStr(i)+', IAngle'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsiChar(AnsiString('I'+IntToStr(i)+'.re, I'+IntToStr(i)+'.im')), Sizeof(TMonitorStrBuffer));
-                        If i<NumVI Then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then Add2header(pAnsiChar(AnsiString('I'+IntToStr(i)+', IAngle'+IntToStr(i))))
+                                   Else Add2header(pAnsiChar(AnsiString('I'+IntToStr(i)+'.re, I'+IntToStr(i)+'.im')));
+                        If i<NumVI Then Add2header(pAnsiChar(', '));
                      End;
                      IF IncludeResidual Then Begin
-                        If VIPolar Then strLcat(strPtr, pAnsiChar(', IN, INAngle'), Sizeof(TMonitorStrBuffer))
-                        Else strLcat(strPtr, pAnsiChar(', IN.re, IN.im'), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then Add2header(pAnsiChar(', IN, INAngle'))
+                        Else Add2header(pAnsiChar(', IN.re, IN.im'));
                      End;
                 End
                 Else Begin
                     If isPosSeq then Begin iMin := 0; iMax := NumVI-1; End
                     Else Begin iMin := 1; iMax := NumVI; End;
                     For i := iMin to iMax Do Begin
-                        If Ppolar Then strLcat(strPtr, pAnsiChar(AnsiString('S'+IntToStr(i)+' (kVA), Ang'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
-                                  Else strLcat(strPtr, pAnsiChar(AnsiString('P'+IntToStr(i)+' (kW), Q'+IntToStr(i)+' (kvar)')), Sizeof(TMonitorStrBuffer));
-                        If i<NumVI Then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                        If Ppolar Then Add2header(pAnsiChar(AnsiString('S'+IntToStr(i)+' (kVA), Ang'+IntToStr(i))))
+                                  Else Add2header(pAnsiChar(AnsiString('P'+IntToStr(i)+' (kW), Q'+IntToStr(i)+' (kvar)')));
+                        If i<NumVI Then Add2header(pAnsiChar(', '));
                     End;
                 End;
           END;
@@ -1035,22 +1086,28 @@ Begin
      // Write Header to Monitor Stream
      // Write ID so we know it is a DSS Monitor file and which version in case we
      // change it down the road
+     // Adds NULL character at the end of the header to note the end of the string
+
+     setlength(StrBuffer,(length(StrBuffer) + 1));
+     StrBuffer[High(StrBuffer)] :=  AnsiChar(0);
+     myHeaderSize :=  length(StrBuffer);    // stores the size of the header for further use    
 
      With MonitorStream Do Begin
          Write(FileSignature, Sizeof(FileSignature) );
          Write(FileVersion,   Sizeof(FileVersion) );
          Write(RecordSize,    Sizeof(RecordSize) );
          Write(Mode,          Sizeof(Mode)       );
-         Write(StrBuffer,     Sizeof(TMonitorStrBuffer)  );
+         Write(dummyRec,      Sizeof(TMonitorStrBuffer));       // adds the empty dummy record to avoid
+                                                                // killing apps relying on this space
      End;
 
-{    So the file now looks like:
+{    So the file now looks like: (update 05-18-2021)
        FileSignature (4 bytes)    32-bit Integers
        FileVersion   (4)
        RecordSize    (4)
        Mode          (4)
-       String        (256)
-
+       String        (256) - > this is empty now
+      
        hr   (4)       all singles
        Sec  (4)
        Sample  (4*RecordSize)
@@ -1137,9 +1194,13 @@ Procedure TMonitorObj.TakeSample(ActorID : Integer);
 VAR
     dHour             :Double;
     dSum              :Double;
-    i,j,k             :Integer;
     IsPower           :Boolean;
     IsSequence        :Boolean;
+    BuffInit,
+    BuffEnd,
+    i,j,k,
+    myRefIdx,
+    CalcEnd,
     NumVI             :Integer;
     Offset            :Integer;
     ResidualCurr      :Complex;
@@ -1353,6 +1414,41 @@ Begin
             {Put Terminal currents into Monitor}
             AddDblsToBuffer(@CurrentBuffer^[1].re, 2 * MeteredElement.Yorder);
             Exit;
+         End;
+     12: Begin    {Get all terminal voltages LL and currents of this device - 05192021}
+            With MeteredElement Do
+            Begin
+              {Get All node voltages at all terminals}
+              ComputeVterminal(ActorID);
+              for k := 1 to NTerms do   // Adds each term separately
+              Begin
+                BuffInit  :=  1 + NPhases * (k - 1);
+                BuffEnd   :=  NPhases * k;
+                For i := BuffInit to BuffEnd Do
+                  VoltageBuffer^[i - (BuffInit - 1)] := Vterminal^[i];
+                if NPhases = NConds then
+                  myRefIdx                    :=  NPhases + 1
+                else
+                  myRefIdx                    :=  NConds;
+
+                //Brings the first phase to the last place for calculations
+                VoltageBuffer^[myRefIdx]      :=  VoltageBuffer^[1];
+                // Calculates the LL voltages
+                For i := 1 to NPhases Do
+                  VoltageBuffer^[i] := csub(VoltageBuffer^[i],VoltageBuffer^[i+1]);
+                ConvertComplexArrayToPolar( VoltageBuffer, Yorder);
+                {Put Terminal Voltages into Monitor}
+                AddDblsToBuffer(@VoltageBuffer^[1].re, 2 * NPhases);
+              End;
+
+              {Get all terminsl currents}
+              ComputeIterminal(ActorID);   // only does calc if needed
+              For i := 1 to Yorder Do CurrentBuffer^[i] := Iterminal^[i];
+              ConvertComplexArrayToPolar( CurrentBuffer, Yorder);
+              {Put Terminal currents into Monitor}
+              AddDblsToBuffer(@CurrentBuffer^[1].re, 2 * Yorder);
+              Exit;
+            End;
          End
      Else Exit  // Ignore invalid mask
 
@@ -1525,7 +1621,7 @@ begin
     Read( Fversion,   Sizeof(Fversion));
     Read( RecordSize, Sizeof(RecordSize));
     Read( Mode,       Sizeof(Mode));
-    Read( StrBuffer,  Sizeof(StrBuffer));
+    Read( dummyRec,   Sizeof(dummyRec));
     bStart := Position;
   End;
   RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
@@ -1629,10 +1725,9 @@ Begin
          Read( Fversion,   Sizeof(Fversion));
          Read( RecordSize, Sizeof(RecordSize));
          Read( Mode,       Sizeof(Mode));
-         Read( StrBuffer,  Sizeof(StrBuffer));
+         Read( dummyRec,   Sizeof(dummyRec));
      End;
-
-     pStr := @StrBuffer;
+     pStr := @StrBuffer[0];
      if not ConcatenateReports or (ActorID=1) then
      Writeln(F, pStr);
      RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
@@ -1837,7 +1932,7 @@ begin
                Read( Fversion,   Sizeof(Fversion));
                Read( RecordSize, Sizeof(RecordSize));
                Read( iMode,      Sizeof(iMode));
-               Read( StrBuffer,  Sizeof(StrBuffer));
+               Read( dummyRec,   Sizeof(dummyRec));
            End;
 
            {Parse off Channel Names}
