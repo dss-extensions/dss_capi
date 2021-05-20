@@ -20,7 +20,7 @@ Type THeaderRec = Record
         Version    : Integer;
         RecordSize : Integer;
         Mode       : Integer;
-        StrBuffer  : TMonitorStrBuffer;
+        dummyRec   : TMonitorStrBuffer;
       End;
 
      SingleArray  = Array[1..100] of Single;
@@ -28,24 +28,24 @@ Type THeaderRec = Record
 
 Procedure ReadMonitorHeader(Var HeaderRec:THeaderRec; Opt:Boolean);
 VAR
-    pMon : TMonitorObj;
+    mypMon : TMonitorObj;
 
 Begin
-   pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+   mypMon := ActiveCircuit[ActiveActor].Monitors.Active;
    TRY
-       With pmon.MonitorStream, HeaderRec Do
+       With mypmon.MonitorStream, HeaderRec Do
          Begin
            Seek(0,           classes.soFromBeginning  );
            Read( signature,  Sizeof(signature));    // Signature   (32 bit Integer )
            Read( version,    Sizeof(version));        // Version     (32 bit Integer )
            Read( RecordSize, Sizeof(RecordSize));    // RecordSize  (32 bit Integer )
            Read( Mode,       Sizeof(Mode));                // Mode        (32 bit Integer )
-           Read( StrBuffer,  Sizeof(TMonitorStrBuffer)); // String      (255 char string)
+           Read( dummyRec,   Sizeof(TMonitorStrBuffer)); // String      (255 char string)
          End;
 
    FINALLY
           // If opt is false leave monitorstream at end of header record
-          If Opt Then pmon.MonitorStream.Seek(0, soFromEnd);    // put monitor stream pointer back where it was
+          If Opt Then mypmon.MonitorStream.Seek(0, soFromEnd);    // put monitor stream pointer back where it was
    END;
 
 
@@ -54,8 +54,8 @@ End;
 function MonitorsI(mode:longint; arg: longint):longint; cdecl;
 
 Var
-   pMon:TMonitorObj;
-   Header : THeaderRec;
+   pMon       : TMonitorObj;
+   Header     : THeaderRec;
 
 begin
   Result:=0;  // Default return value
@@ -235,11 +235,11 @@ end;
 function MonitorsS(mode:longint; arg: pAnsiChar):pAnsiChar; cdecl;
 
 Var
-   pMon:TMonitorObj;
-   Header : THeaderRec;
-   activesave :integer;
-   S: String;
-   Found :Boolean;
+   pMon       : TMonitorObj;
+   Header     : THeaderRec;
+   activesave : integer;
+   S          : String;
+   Found      : Boolean;
 
 begin
   Result := pAnsiChar(AnsiString('0')); // Default return value
@@ -310,20 +310,21 @@ end;
 procedure MonitorsV(mode:longint; var arg: Variant); cdecl;
 
 Var
-  MonitorElem:TMonitorObj;
-  i , k , index:Integer;
-  pMon:TMonitorObj;
-  p:Pointer;
-  Header : THeaderRec;
-  ListSize : Integer;
-  SaveDelims : String;
-  SaveWhiteSpace : String;
-  hr : Single;
-  s  : Single;
-  freq : Single;
-  FirstCol : String;
-  SngBuffer : pSingleArray;
-  AllocSize : Integer;
+  MonitorElem     : TMonitorObj;
+  AllocSize,
+  i , k , index,
+  ListSize        : Integer;
+  pMon            : TMonitorObj;
+  p               : Pointer;
+  Header          : THeaderRec;
+  TempStr,
+  SaveDelims,
+  SaveWhiteSpace,
+  FirstCol        : String;
+  hr,
+  s,
+  freq            : Single;
+  SngBuffer       : pSingleArray;
 
 
 begin
@@ -361,23 +362,28 @@ begin
                  arg := VarArrayCreate([0, 0], varByte);
        End;
   end;
-  2: begin  // Monitors.dblHour
+  2: begin  // Monitors.Header
       arg := VarArrayCreate([0, 0], varOleStr);
       arg[0] := 'NONE';
       IF ActiveCircuit[ActiveActor] <> Nil THEN
        WITH ActiveCircuit[ActiveActor] DO
        Begin
+           pMon := ActiveCircuit[ActiveActor].Monitors.Active;
            ReadMonitorHeader(Header, TRUE);
-           If Header.RecordSize > 0 Then
+           If length(pMon.StrBuffer) > 0 Then
            Begin
                ListSize := Header.RecordSize;
                VarArrayRedim(arg, ListSize-1);
                k:=0;
                SaveDelims := AuxParser[ActiveActor].Delimiters;
-               AuxParser[ActiveActor].Delimiters := ',';
+               AuxParser[ActiveActor].Delimiters  :=  ',';
                SaveWhiteSpace := AuxParser[ActiveActor].Whitespace;
-               AuxParser[ActiveActor].Whitespace := '';
-               AuxParser[ActiveActor].CmdString := String(Header.StrBuffer);
+               AuxParser[ActiveActor].Whitespace  :=  '';
+               TempStr                            :=  '';
+               for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
+                TempStr   :=  TempStr + pMon.StrBuffer[i]; // For some reason needed for DLL
+
+               AuxParser[ActiveActor].CmdString := TempStr;
                AuxParser[ActiveActor].AutoIncrement := TRUE;
                AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
                AuxParser[ActiveActor].StrValue;
@@ -397,7 +403,12 @@ begin
         If pMon.SampleCount >0 Then Begin
                arg := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
                ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-               AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+
+               TempStr                            :=  '';
+               for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
+                TempStr   :=  TempStr + pMon.StrBuffer[i]; // For some reason needed for DLL
+
+               AuxParser[ActiveActor].CmdString := string(TempStr);
                AuxParser[ActiveActor].AutoIncrement := TRUE;
                FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
                AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -425,13 +436,17 @@ begin
         Else   arg := VarArrayCreate([0, 0], varDouble);
       End;
   end;
-  4: begin  // Monitors,dblFreq
+  4: begin  // Monitors.dblFreq
      If ActiveCircuit[ActiveActor] <> Nil Then Begin
-          pMon := ActiveCircuit[ActiveActor].Monitors.Active;
+        pMon := ActiveCircuit[ActiveActor].Monitors.Active;
         If pMon.SampleCount >0 Then Begin
                arg := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
                ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-               AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+               TempStr                            :=  '';
+               for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
+                TempStr   :=  TempStr + pMon.StrBuffer[i]; // For some reason needed for DLL
+
+               AuxParser[ActiveActor].CmdString := string(TempStr);
                AuxParser[ActiveActor].AutoIncrement := TRUE;
                FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
                AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -459,14 +474,18 @@ begin
         Else   arg := VarArrayCreate([0, 0], varDouble);
       End;
   end;
-  5: begin
+  5: begin    // Monitors.Channel
      If ActiveCircuit[ActiveActor] <> Nil Then Begin
         pMon := ActiveCircuit[ActiveActor].Monitors.Active;
         If pMon.SampleCount >0 Then Begin
                index:=integer(arg);
                arg := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
                ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
-               AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+               TempStr                            :=  '';
+               for i := 0 to High(pMon.StrBuffer) do       // Moves the content to a string var
+                TempStr   :=  TempStr + pMon.StrBuffer[i]; // For some reason needed for DLL
+
+               AuxParser[ActiveActor].CmdString := string(TempStr);
                AuxParser[ActiveActor].AutoIncrement := TRUE;
                FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
                AuxParser[ActiveActor].AutoIncrement := FALSE;
