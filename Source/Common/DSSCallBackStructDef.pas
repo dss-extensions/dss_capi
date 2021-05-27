@@ -3,7 +3,7 @@ TYPE
   {NOTE: Maxlen argument is to better accommodate Fortran strings.  VB also}
   {      Caller must allocate space for pchar values       }
    pDSSCallBacks = ^TDSSCallBacks;  {Pointer to callback structure}
-   TDSSCallBacks = Packed Record
+   TDSSCallBacks = packed Record
 
         MsgCallBack: Procedure (S : pUTF8Char; Maxlen:Cardinal);Stdcall; {Make use of DSS Message handling}
 
