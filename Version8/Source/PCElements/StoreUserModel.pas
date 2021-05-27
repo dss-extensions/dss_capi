@@ -75,7 +75,7 @@ TYPE
   // Interface for general user-written model that includes power flow calcs as well as dynamics
     TStoreUserModel  = class(TObject)
       private
-         FHandle: Integer;  // Handle to DLL containing user model
+         FHandle: NativeUInt;  // Handle to DLL containing user model
          FID : Integer;    // ID of this instance of the user model
          Fname: String;    // Name of the DLL file containing user model
          FuncError:Boolean;
@@ -188,7 +188,7 @@ end;
 
 procedure TStoreUserModel.Set_Edit(const Value: String);
 begin
-        If FID <> 0 Then FEdit(pAnsichar(AnsiString(Value)), Length(Value));
+  If FID <> 0 Then FEdit(pAnsichar(AnsiString(Value)), Length(Value));
         // Else Ignore
 end;
 
@@ -316,7 +316,8 @@ end;
 
 procedure TStoreDynaModel.Set_Edit(const Value: String);
 begin
-     If FID <> 0 Then FEdit(pAnsichar(AnsiString(Value)), Length(Value));
+  If FID <> 0 Then FEdit(pAnsichar(AnsiString(Value)), Length(Value));
+
 end;
 
 procedure TStoreDynaModel.Set_Name(const Value:String);
