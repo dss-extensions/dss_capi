@@ -3,7 +3,8 @@ unit CAPI_ActiveClass;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure ActiveClass_Get_AllNames_GR(); CDECL;
@@ -32,7 +33,7 @@ uses
 
 procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     idx: Integer;
     k: Integer;
 
@@ -60,7 +61,7 @@ end;
 procedure ActiveClass_Get_AllNames_GR(); CDECL;
 // Same as ActiveClass_Get_AllNames but uses global result (GR) pointers
 begin
-    ActiveClass_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    ActiveClass_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -86,7 +87,7 @@ begin
     if DSSPrime.ActiveDSSObject = NIL then
         Exit;
     
-    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveDSSObject.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.Name)
 end;
 //------------------------------------------------------------------------------
 procedure ActiveClass_Set_Name(const Value: PAnsiChar); CDECL;
@@ -120,7 +121,7 @@ begin
     Result := NIL;
     if DSSPrime.ActiveDSSClass = NIL then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveDSSCLass.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSCLass.Name)
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_Count(): Integer; CDECL;
@@ -131,24 +132,24 @@ begin
     Result := DSSPrime.ActiveDSSCLass.ElementCount
 end;
 //------------------------------------------------------------------------------
-function ActiveClass_Get_ActiveClassParent(): PAnsiChar;
+function ActiveClass_Get_ActiveClassParent(): PAnsiChar; CDECL;
 begin
     if DSSPrime.ActiveDSSClass = NIL then
     begin
-        Result := DSS_GetAsPAnsiChar('Parent Class unknonwn');
+        Result := DSS_GetAsPAnsiChar(DSSPrime, 'Parent Class unknonwn');
         Exit;
     end;
 
     if DSSPrime.ActiveDSSClass.ClassType.InheritsFrom(TMeterClass) then
-        Result := DSS_GetAsPAnsiChar('TMeterClass')
+        Result := DSS_GetAsPAnsiChar(DSSPrime, 'TMeterClass')
     else if DSSPrime.ActiveDSSClass.ClassType.InheritsFrom(TControlClass) then
-        Result := DSS_GetAsPAnsiChar('TControlClass')
+        Result := DSS_GetAsPAnsiChar(DSSPrime, 'TControlClass')
     else  if DSSPrime.ActiveDSSClass.ClassType.InheritsFrom(TPDClass) then
-        Result := DSS_GetAsPAnsiChar('TPDClass')
+        Result := DSS_GetAsPAnsiChar(DSSPrime, 'TPDClass')
     else if DSSPrime.ActiveDSSClass.ClassType.InheritsFrom(TPCClass) then
-        Result := DSS_GetAsPAnsiChar('TPCClas') //NOTE: kept as "Clas" for compatibility
+        Result := DSS_GetAsPAnsiChar(DSSPrime, 'TPCClas') //NOTE: kept as "Clas" for compatibility
     else 
-        Result := DSS_GetAsPAnsiChar('Generic Object');
+        Result := DSS_GetAsPAnsiChar(DSSPrime, 'Generic Object');
 end;
 //------------------------------------------------------------------------------
 end.

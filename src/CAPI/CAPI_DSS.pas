@@ -7,7 +7,8 @@ uses
     Windows,
 {$ENDIF}
     DSSClass,
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 function DSS_Get_NumCircuits(): Integer; CDECL;
@@ -25,11 +26,11 @@ procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
 procedure DSS_Reset(); CDECL;
 function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
 function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
-function DSS_Get_AllowForms: TAPIBoolean; CDECL;
+function DSS_Get_AllowForms(): TAPIBoolean; CDECL;
 procedure DSS_Set_AllowForms(Value: TAPIBoolean); CDECL;
 
 // Extensions
-function DSS_Get_AllowEditor: TAPIBoolean; CDECL;
+function DSS_Get_AllowEditor(): TAPIBoolean; CDECL;
 procedure DSS_Set_AllowEditor(Value: TAPIBoolean); CDECL;
 function DSS_Get_LegacyModels(): TAPIBoolean; CDECL;
 procedure DSS_Set_LegacyModels(Value: TAPIBoolean); CDECL;
@@ -60,7 +61,7 @@ begin
     MakeNewCircuit(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_AllowForms: TAPIBoolean; CDECL;
+function DSS_Get_AllowForms(): TAPIBoolean; CDECL;
 begin
     Result := not NoFormsAllowed;
 end;
@@ -81,7 +82,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_AllowEditor: TAPIBoolean; CDECL;
+function DSS_Get_AllowEditor(): TAPIBoolean; CDECL;
 begin
     Result := DSS_CAPI_ALLOW_EDITOR;
 end;
@@ -103,7 +104,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_Version(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(VersionString + '; License Status: Open ');
+    Result := DSS_GetAsPAnsiChar(DSSPrime, VersionString + '; License Status: Open ');
 end;
 //------------------------------------------------------------------------------
 function DSS_Start(code: Integer): TAPIBoolean; CDECL;
@@ -113,7 +114,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i, k: Integer;
 
 begin
@@ -131,7 +132,7 @@ end;
 procedure DSS_Get_Classes_GR(); CDECL;
 // Same as DSS_Get_Classes but uses global result (GR) pointers
 begin
-    DSS_Get_Classes(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    DSS_Get_Classes(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -143,7 +144,7 @@ end;
 procedure DSS_Get_UserClasses_GR(); CDECL;
 // Same as DSS_Get_UserClasses but uses global result (GR) pointers
 begin
-    DSS_Get_UserClasses(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    DSS_Get_UserClasses(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -159,7 +160,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_DataPath(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime.DataDirectory);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.DataDirectory);
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
@@ -175,7 +176,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSGlobals.DefaultEditor);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSGlobals.DefaultEditor);
 end;
 //------------------------------------------------------------------------------
 function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;

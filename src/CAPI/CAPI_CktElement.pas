@@ -3,7 +3,8 @@ unit CAPI_CktElement;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_BusNames_GR(); CDECL;
@@ -95,9 +96,6 @@ uses
     Utilities,
     DSSClass,
     DSSHelper;
-
-type
-    PDoubleArray = CAPI_Utils.PDoubleArray;
 
 procedure _CalcSeqCurrents(pActiveElement: TDSSCktElement; i012: pComplexArray);
 {Assumes V012 is properly allocated before call.}
@@ -211,29 +209,29 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function IsPDElement: Boolean;
+function IsPDElement(DSS: TDSSContext): Boolean;
 begin
-    Result := ((DSSPrime.ActiveCircuit.ActiveCktElement.DSSObjType and 3) = PD_ELEMENT)
+    Result := ((DSS.ActiveCircuit.ActiveCktElement.DSSObjType and 3) = PD_ELEMENT)
 end;
 //------------------------------------------------------------------------------
-function InvalidCktElement(): Boolean; inline;
+function InvalidCktElement(DSS: TDSSContext): Boolean; inline;
 begin
-    Result := InvalidCircuit(DSSPrime);
+    Result := InvalidCircuit(DSS);
     if Result then
         Exit;
     Result := (DSSPrime.ActiveCircuit.ActiveCktElement = NIL);
     if Result and DSS_CAPI_EXT_ERRORS then
     begin
-        DoSimpleMsg(DSSPrime, 'No active circuit element found! Activate one and retry.', 97800);
+        DoSimpleMsg(DSS, 'No active circuit element found! Activate one and retry.', 97800);
     end;
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i: Integer;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
@@ -251,24 +249,24 @@ end;
 procedure CktElement_Get_BusNames_GR(); CDECL;
 // Same as CktElement_Get_BusNames but uses global result (GR) pointers
 begin
-    CktElement_Get_BusNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    CktElement_Get_BusNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
 function CktElement_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit.ActiveCktElement do
-        Result := DSS_GetAsPAnsiChar(ParentClass.Name + '.' + Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, ParentClass.Name + '.' + Name);
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumConductors(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     Result := DSSPrime.ActiveCircuit.ActiveCktElement.NConds
@@ -277,7 +275,7 @@ end;
 function CktElement_Get_NumPhases(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     Result := DSSPrime.ActiveCircuit.ActiveCktElement.NPhases
@@ -285,7 +283,7 @@ end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumTerminals(): Integer; CDECL;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
     begin
         Result := 0;
         Exit;
@@ -296,14 +294,14 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
 var
-    Value: PPAnsiCharArray;
+    Value: PPAnsiCharArray0;
     i: Integer;
     Count: Integer;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
-    Value := PPAnsiCharArray(ValuePtr);
+    Value := PPAnsiCharArray0(ValuePtr);
     with DSSPrime.ActiveCircuit do
     begin
         Count := ValueCount;
@@ -328,12 +326,12 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     NValues: Integer;
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution(DSSPrime) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) then
         Exit;
         
     with DSSPrime.ActiveCircuit.ActiveCktElement do
@@ -347,21 +345,21 @@ end;
 procedure CktElement_Get_Currents_GR(); CDECL;
 // Same as CktElement_Get_Currents but uses global result (GR) pointers
 begin
-    CktElement_Get_Currents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_Currents(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Bus Voltages at active terminal
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     numcond, i, n, iV: Integer;
     Volts: Complex;
 begin
     // Return voltages for all terminals
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
         Exit;
 
     with DSSPrime.ActiveCircuit, ActiveCktElement do
@@ -385,7 +383,7 @@ end;
 procedure CktElement_Get_Voltages_GR(); CDECL;
 // Same as CktElement_Get_Voltages but uses global result (GR) pointers
 begin
-    CktElement_Get_Voltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_Voltages(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -393,7 +391,7 @@ function CktElement_Get_EmergAmps(): Double; CDECL;
 begin
     Result := 0;
     
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit do
@@ -407,7 +405,7 @@ function CktElement_Get_Enabled(): TAPIBoolean; CDECL;
 begin
     Result := FALSE;
     
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     Result := DSSPrime.ActiveCircuit.ActiveCktElement.Enabled
@@ -416,12 +414,12 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     LossValue: complex;
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution(DSSPrime) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit do
@@ -437,7 +435,7 @@ end;
 procedure CktElement_Get_Losses_GR(); CDECL;
 // Same as CktElement_Get_Losses but uses global result (GR) pointers
 begin
-    CktElement_Get_Losses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_Losses(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -445,7 +443,7 @@ function CktElement_Get_NormalAmps(): Double; CDECL;
 begin
     Result := 0;
     
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit do
@@ -457,10 +455,10 @@ end;
 procedure CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Returns Phase losses in kW, kVar
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     NValues, i: Integer;
 begin
-    if InvalidCktElement or MissingSolution(DSSPrime) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -482,18 +480,18 @@ end;
 procedure CktElement_Get_PhaseLosses_GR(); CDECL;
 // Same as CktElement_Get_PhaseLosses but uses global result (GR) pointers
 begin
-    CktElement_Get_PhaseLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_PhaseLosses(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return complex kW, kvar in each conductor for each terminal
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     NValues,
     i: Integer;
 begin
-    if InvalidCktElement or MissingSolution(DSSPrime) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -512,21 +510,21 @@ end;
 procedure CktElement_Get_Powers_GR(); CDECL;
 // Same as CktElement_Get_Powers but uses global result (GR) pointers
 begin
-    CktElement_Get_Powers(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_Powers(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // All sequence currents of active ciruit element
 // returns magnitude only.
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i: Integer;
     i012: pComplexArray;
     S: String;
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution(DSSPrime) or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
 
     with DSSPrime.ActiveCircuit, ActiveCktElement do
@@ -561,7 +559,7 @@ end;
 procedure CktElement_Get_SeqCurrents_GR(); CDECL;
 // Same as CktElement_Get_SeqCurrents but uses global result (GR) pointers
 begin
-    CktElement_Get_SeqCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_SeqCurrents(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -569,7 +567,7 @@ procedure CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PAPISize
 // All seq Powers of active 3-phase circuit element
 // returns kW + j kvar
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nvalues, i, j, k, n, icount: Integer;
     S: Complex;
     VPh, V012: Complex3;
@@ -579,7 +577,7 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) {or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled)} then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) {or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled)} then
         Exit;
 
     with DSSPrime.ActiveCircuit, ActiveCktElement do
@@ -644,7 +642,7 @@ end;
 procedure CktElement_Get_SeqPowers_GR(); CDECL;
 // Same as CktElement_Get_SeqPowers but uses global result (GR) pointers
 begin
-    CktElement_Get_SeqPowers(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_SeqPowers(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -654,14 +652,14 @@ procedure CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISi
 // returns a set of seq voltages (3) for each terminal
 // 0, 1, 2 sequence  (0, +, -)
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i: Integer;
     V012: pComplexArray;
     S: String;
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement 
+    if InvalidCktElement(DSSPrime) 
         or MissingSolution(DSSPrime) 
         or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled)  
         or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) 
@@ -699,13 +697,13 @@ end;
 procedure CktElement_Get_SeqVoltages_GR(); CDECL;
 // Same as CktElement_Get_SeqVoltages but uses global result (GR) pointers
 begin
-    CktElement_Get_SeqVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_SeqVoltages(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure CktElement_Close(Term, Phs: Integer); CDECL;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit.ActiveCktElement do
@@ -718,7 +716,7 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Open(Term, Phs: Integer); CDECL;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit.ActiveCktElement do
@@ -731,10 +729,10 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_EmergAmps(Value: Double); CDECL;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
-    if IsPDElement then
+    if IsPDElement(DSSPrime) then
         with DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement do
             EmergAmps := Value;
 end;
@@ -748,10 +746,10 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_NormalAmps(Value: Double); CDECL;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
-    if IsPDElement then
+    if IsPDElement(DSSPrime) then
         with DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement do
             NormAmps := Value;
 end;
@@ -761,7 +759,7 @@ var
     i: Integer;
 begin
     Result := False;
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
     
     with DSSPrime.ActiveCircuit do
@@ -786,10 +784,10 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     k: Integer;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount, '');
         Exit;
@@ -808,7 +806,7 @@ end;
 procedure CktElement_Get_AllPropertyNames_GR(); CDECL;
 // Same as CktElement_Get_AllPropertyNames but uses global result (GR) pointers
 begin
-    CktElement_Get_AllPropertyNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    CktElement_Get_AllPropertyNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -816,7 +814,7 @@ function CktElement_Get_NumProperties(): Integer; CDECL;
 begin
     Result := 0;
     
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
     
     Result := DSSPrime.ActiveCircuit.ActiveCktElement.ParentClass.NumProperties;
@@ -824,13 +822,13 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     cBuffer: pComplexArray;
     iV, i, j, k: Integer;
     cResid: Complex;
 
 begin
-    if InvalidCktElement or MissingSolution(DSSPrime) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -863,7 +861,7 @@ end;
 procedure CktElement_Get_Residuals_GR(); CDECL;
 // Same as CktElement_Get_Residuals but uses global result (GR) pointers
 begin
-    CktElement_Get_Residuals(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_Residuals(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -875,7 +873,7 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit.ActiveCktElement do
@@ -890,40 +888,40 @@ end;
 procedure CktElement_Get_Yprim_GR(); CDECL;
 // Same as CktElement_Get_Yprim but uses global result (GR) pointers
 begin
-    CktElement_Get_Yprim(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_Yprim(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 function CktElement_Get_DisplayName(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName)
 end;
 
 //------------------------------------------------------------------------------
 function CktElement_Get_GUID(): PAnsiChar; CDECL;
 begin
     Result := NIL;
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.ID)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.ActiveCktElement.ID)
 end;
 
 //------------------------------------------------------------------------------
 function CktElement_Get_Handle(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
     Result := DSSPrime.ActiveCircuit.ActiveCktElement.Handle
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_DisplayName(const Value: PAnsiChar); CDECL;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName := Value;
@@ -935,7 +933,7 @@ var
 begin
     Result := NIL;
 
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit do
@@ -944,7 +942,7 @@ begin
         begin
             ctrl := ActiveCktElement.ControlElementList.Get(idx);
             if ctrl <> NIL then
-                Result := DSS_GetAsPAnsiChar(Format('%s.%s', [ctrl.ParentClass.Name, ctrl.Name]));
+                Result := DSS_GetAsPAnsiChar(DSSPrime, Format('%s.%s', [ctrl.ParentClass.Name, ctrl.Name]));
         end;
     end;
 end;
@@ -955,13 +953,13 @@ var
 begin
     Result := NIL;
 
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     if DSSPrime.ActiveCircuit.ActiveCktElement.HasEnergyMeter then
     begin
         pd := DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement;
-        Result := DSS_GetAsPAnsiChar(pd.MeterObj.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, pd.MeterObj.Name);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -972,7 +970,7 @@ var
 begin
     Result := FALSE;
 
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementlist.First;
@@ -998,7 +996,7 @@ var
 begin
     Result := FALSE;
 
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementList.First;
@@ -1024,7 +1022,7 @@ var
 begin
     DefaultResult(ResultPtr, ResultCount);
 
-    if InvalidCktElement 
+    if InvalidCktElement(DSSPrime) 
         or MissingSolution(DSSPrime) 
         or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled) 
         or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL)
@@ -1054,21 +1052,21 @@ end;
 procedure CktElement_Get_CplxSeqVoltages_GR(); CDECL;
 // Same as CktElement_Get_CplxSeqVoltages but uses global result (GR) pointers
 begin
-    CktElement_Get_CplxSeqVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_CplxSeqVoltages(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 {returns Seq Voltages as array of complex values}
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i012: pComplexArray;
     S: String;
 
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement or MissingSolution(DSSPrime) or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) or (not DSSPrime.ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
 
     with DSSPrime.ActiveCircuit, ActiveCktElement do
@@ -1096,20 +1094,20 @@ end;
 procedure CktElement_Get_CplxSeqCurrents_GR(); CDECL;
 // Same as CktElement_Get_CplxSeqCurrents but uses global result (GR) pointers
 begin
-    CktElement_Get_CplxSeqCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_CplxSeqCurrents(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     k: Integer;
     pPCElem: TPCElement;
 
 begin
     DefaultResult(ResultPtr, ResultCount, '');
     
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit.ActiveCktElement do
@@ -1127,21 +1125,21 @@ end;
 procedure CktElement_Get_AllVariableNames_GR(); CDECL;
 // Same as CktElement_Get_AllVariableNames but uses global result (GR) pointers
 begin
-    CktElement_Get_AllVariableNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    CktElement_Get_AllVariableNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 {Return array of doubles with values of all variables if PCElement}
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     k: Integer;
     pPCElem: TPCElement;
 
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
     
     with DSSPrime.ActiveCircuit.ActiveCktElement do
@@ -1159,7 +1157,7 @@ end;
 procedure CktElement_Get_AllVariableValues_GR(); CDECL;
 // Same as CktElement_Get_AllVariableValues but uses global result (GR) pointers
 begin
-    CktElement_Get_AllVariableValues(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_AllVariableValues(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -1171,7 +1169,7 @@ begin
     Result := 0.0;
     Code := 1; // Signifies an error; no value set
     
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
     
     with DSSPrime.ActiveCircuit.ActiveCktElement do
@@ -1196,7 +1194,7 @@ begin
     Result := 0.0;
     Code := 1; // Signifies an error; no value set
     
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
     
     with DSSPrime.ActiveCircuit.ActiveCktElement do
@@ -1213,12 +1211,12 @@ end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
-    Result: PIntegerArray;
+    Result: PIntegerArray0;
     k: Integer;
     i: Integer;
     j: Integer;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
     begin
         // Just ignore as the original code did
         DefaultResult(ResultPtr, ResultCount);
@@ -1251,13 +1249,13 @@ end;
 procedure CktElement_Get_NodeOrder_GR(); CDECL;
 // Same as CktElement_Get_NodeOrder but uses global result (GR) pointers
 begin
-    CktElement_Get_NodeOrder(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    CktElement_Get_NodeOrder(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_HasOCPDevice(): TAPIBoolean; CDECL;
 // Check for presence of a fuse, recloser, etc.
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
     begin
         Result := FALSE;
         Exit;
@@ -1267,7 +1265,7 @@ end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumControls(): Integer; CDECL;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
     begin
         Result := 0;
         Exit;
@@ -1282,7 +1280,7 @@ var
 
 begin
     Result := 0;
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit do
@@ -1307,7 +1305,7 @@ end;
 //------------------------------------------------------------------------------
 function CktElement_Get_OCPDevType(): Integer; CDECL;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
     begin
         Result := 0;
         Exit;
@@ -1318,12 +1316,12 @@ end;
 procedure CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // return currents in magnitude, angle array
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     cBuffer: pComplexArray;
     CMagAng: polar;
     NValues, iV, i: Integer;
 begin
-    if InvalidCktElement or MissingSolution(DSSPrime) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -1350,20 +1348,20 @@ end;
 procedure CktElement_Get_CurrentsMagAng_GR(); CDECL;
 // Same as CktElement_Get_CurrentsMagAng but uses global result (GR) pointers
 begin
-    CktElement_Get_CurrentsMagAng(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_CurrentsMagAng(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Bus Voltages in magnitude, angle at all terminal
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     numcond, i, n, iV: Integer;
     Volts: Polar;
 
 begin
     // Return voltages for all terminals
-    if InvalidCktElement or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -1390,12 +1388,12 @@ end;
 procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
 // Same as CktElement_Get_VoltagesMagAng but uses global result (GR) pointers
 begin
-    CktElement_Get_VoltagesMagAng(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_VoltagesMagAng(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_IsIsolated(): TAPIBoolean; CDECL;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement(DSSPrime) then
     begin
         Result := FALSE;
         Exit;
@@ -1413,9 +1411,9 @@ var
     i,
     iV: Integer;
     myBuffer: Array of Complex;
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
 begin
-    if InvalidCktElement or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
+    if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         Exit;
@@ -1448,13 +1446,13 @@ end;
 procedure CktElement_Get_TotalPowers_GR(); CDECL;
 // Same as CktElement_Get_TotalPowers but uses global result (GR) pointers
 begin
-    CktElement_Get_TotalPowers(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    CktElement_Get_TotalPowers(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;    
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCktElement then 
+    if InvalidCktElement(DSSPrime) then 
         Exit;
         
     if DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL then
@@ -1475,7 +1473,7 @@ end;
 procedure CktElement_Get_NodeRef_GR(); CDECL;
 // Same as CktElement_Get_NodeRef but uses global result (GR) pointers
 begin
-    CktElement_Get_NodeRef(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    CktElement_Get_NodeRef(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 //------------------------------------------------------------------------------
 

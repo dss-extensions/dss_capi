@@ -3,7 +3,8 @@ unit CAPI_Generators;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Generators_Get_AllNames_GR(); CDECL;
@@ -52,19 +53,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TGeneratorObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TGeneratorObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.Generators.Active;
+    obj := DSS.ActiveCircuit.Generators.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active Generator object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active Generator object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -83,7 +84,7 @@ end;
 procedure Generators_Get_AllNames_GR(); CDECL;
 // Same as Generators_Get_AllNames but uses global result (GR) pointers
 begin
-    Generators_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Generators_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -92,7 +93,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Generators);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.Generators);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Next(): Integer; CDECL;
@@ -100,7 +101,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Generators);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.Generators);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Name(): PAnsiChar; CDECL;
@@ -111,12 +112,12 @@ begin
     if not _activeObj(DSSPrime, pGen) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(pGen.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pGen.Name);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     GeneratorCls: TGenerator;
     k: Integer;
 begin
@@ -131,13 +132,13 @@ end;
 procedure Generators_Get_RegisterNames_GR(); CDECL;
 // Same as Generators_Get_RegisterNames but uses global result (GR) pointers
 begin
-    Generators_Get_RegisterNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Generators_Get_RegisterNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Gen: TGeneratorObj;
     k: Integer;
 begin
@@ -157,7 +158,7 @@ end;
 procedure Generators_Get_RegisterValues_GR(); CDECL;
 // Same as Generators_Get_RegisterValues but uses global result (GR) pointers
 begin
-    Generators_Get_RegisterValues(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Generators_Get_RegisterValues(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------

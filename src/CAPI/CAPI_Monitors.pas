@@ -5,7 +5,8 @@ unit CAPI_Monitors;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Monitors_Get_AllNames_GR(); CDECL;
@@ -76,11 +77,11 @@ type
     pSingleArray = ^SingleArray;
 
 //------------------------------------------------------------------------------
-procedure ReadMonitorHeader(var HeaderRec: THeaderRec; Opt: Boolean);
+procedure ReadMonitorHeader(DSS: TDSSContext; var HeaderRec: THeaderRec; Opt: Boolean);
 var
     pMon: TMonitorObj;
 begin
-    pMon := DSSPrime.ActiveCircuit.Monitors.Active;
+    pMon := DSS.ActiveCircuit.Monitors.Active;
     try
         with pmon.MonitorStream, HeaderRec do
         begin
@@ -130,7 +131,7 @@ end;
 procedure Monitors_Get_AllNames_GR(); CDECL;
 // Same as Monitors_Get_AllNames but uses global result (GR) pointers
 begin
-    Monitors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Monitors_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -141,7 +142,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(PMon.CSVFileName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, PMon.CSVFileName);
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_First(): Integer; CDECL;
@@ -149,7 +150,7 @@ begin
     Result := 0;  // signify no more
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Monitors);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.Monitors);
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_Next(): Integer; CDECL;
@@ -157,7 +158,7 @@ begin
     Result := 0;  // signify no more
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Monitors);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.Monitors);
     if Result <> 0 then Result := 1; //TODO: inconsistent with the rest
 end;
 //------------------------------------------------------------------------------
@@ -178,7 +179,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(PMon.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, PMon.Name)
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Reset(); CDECL;
@@ -268,7 +269,7 @@ end;
 procedure Monitors_Get_ByteStream_GR(); CDECL;
 // Same as Monitors_Get_ByteStream but uses global result (GR) pointers
 begin
-    Monitors_Get_ByteStream(GR_DataPtr_PByte, GR_CountPtr_PByte)
+    Monitors_Get_ByteStream(DSSPrime.GR_DataPtr_PByte, @DSSPrime.GR_Counts_PByte[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -324,7 +325,7 @@ end;
 procedure Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PAPISize; Index: Integer); CDECL;
 // Return an array of doubles for selected channel
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Header: THeaderRec;
     i: Integer;
     pMon: TMonitorObj;
@@ -338,7 +339,7 @@ begin
     if pMon.SampleCount <= 0 then
         Exit;
 
-    ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
+    ReadMonitorHeader(DSSPrime, Header, FALSE);   // FALSE = leave at beginning of data
 
     if (Index < 1) or (Index > Header.RecordSize {NumChannels}) then
     begin
@@ -364,14 +365,14 @@ end;
 procedure Monitors_Get_Channel_GR(Index: Integer); CDECL;
 // Same as Monitors_Get_Channel but uses global result (GR) pointers
 begin
-    Monitors_Get_Channel(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Index)
+    Monitors_Get_Channel(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Index)
 end;
 
 //------------------------------------------------------------------------------
 procedure Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return an array of doubles for frequence for Harmonic solutions
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Header: THeaderRec;
     k, i: Integer;
     FirstCol: String;
@@ -388,7 +389,7 @@ begin
         Exit;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount - 1) + 1);
-    ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
+    ReadMonitorHeader(DSSPrime, Header, FALSE);   // leave at beginning of data
     DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
     DSSPrime.AuxParser.AutoIncrement := TRUE;
     FirstCol := DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
@@ -421,14 +422,14 @@ end;
 procedure Monitors_Get_dblFreq_GR(); CDECL;
 // Same as Monitors_Get_dblFreq but uses global result (GR) pointers
 begin
-    Monitors_Get_dblFreq(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Monitors_Get_dblFreq(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return an array of doubles for time in hours
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Header: THeaderRec;
     k, i: Integer;
     FirstCol: String;
@@ -445,7 +446,7 @@ begin
         Exit;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
-    ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
+    ReadMonitorHeader(DSSPrime, Header, FALSE);   // leave at beginning of data
     DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
     DSSPrime.AuxParser.AutoIncrement := TRUE;
     FirstCol := DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
@@ -478,7 +479,7 @@ end;
 procedure Monitors_Get_dblHour_GR(); CDECL;
 // Same as Monitors_Get_dblHour but uses global result (GR) pointers
 begin
-    Monitors_Get_dblHour(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Monitors_Get_dblHour(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -491,14 +492,14 @@ begin
     if not _activeObj(DSSPrime, pMon) then
         Exit;
 
-    ReadMonitorHeader(Header, TRUE);
+    ReadMonitorHeader(DSSPrime, Header, TRUE);
     Result := Header.Version;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 // Variant list of strings with names of all channels
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     Header: THeaderRec;
     k: Integer;
     ListSize: Integer;
@@ -510,7 +511,7 @@ begin
     if not _activeObj(DSSPrime, pMon) then
         Exit;
 
-    ReadMonitorHeader(Header, TRUE);
+    ReadMonitorHeader(DSSPrime, Header, TRUE);
     if Header.RecordSize <= 0 then
         Exit;
 
@@ -542,7 +543,7 @@ end;
 procedure Monitors_Get_Header_GR(); CDECL;
 // Same as Monitors_Get_Header but uses global result (GR) pointers
 begin
-    Monitors_Get_Header(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Monitors_Get_Header(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -554,7 +555,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    ReadMonitorHeader(Header, TRUE);
+    ReadMonitorHeader(DSSPrime, Header, TRUE);
     Result := Header.RecordSize;
 end;
 //------------------------------------------------------------------------------
@@ -566,7 +567,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    ReadMonitorHeader(Header, TRUE);
+    ReadMonitorHeader(DSSPrime, Header, TRUE);
     Result := Header.RecordSize;
 end;
 //------------------------------------------------------------------------------
@@ -577,7 +578,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(pMon.ElementName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pMon.ElementName);
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Set_Element(const Value: PAnsiChar); CDECL;

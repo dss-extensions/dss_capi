@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CAPI_Types,
     TSData,
     CableData;
 
@@ -75,19 +76,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TTSDataObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TTSDataObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.TSDataClass.GetActiveObj;
+    obj := DSS.TSDataClass.GetActiveObj;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active TSData object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active TSData object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -146,7 +147,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pTSData) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(pTSData.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pTSData.Name);
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Name(const Value: PAnsiChar); CDECL;
@@ -173,7 +174,7 @@ end;
 procedure TSData_Get_AllNames_GR(); CDECL;
 // Same as TSData_Get_AllNames but uses global result (GR) pointers
 begin
-    TSData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    TSData_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_NormAmps(): Double; CDECL;

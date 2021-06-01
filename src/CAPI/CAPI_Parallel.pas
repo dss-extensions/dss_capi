@@ -3,7 +3,8 @@ unit CAPI_Parallel;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function Parallel_Get_NumCPUs(): Integer; CDECL;
 function Parallel_Get_NumCores(): Integer; CDECL;
@@ -102,7 +103,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
-    Result: PIntegerArray;
+    Result: PIntegerArray0;
     idx: Integer;
 begin
     Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors);
@@ -115,13 +116,13 @@ end;
 procedure Parallel_Get_ActorProgress_GR(); CDECL;
 // Same as Parallel_Get_ActorProgress but uses global result (GR) pointers
 begin
-    Parallel_Get_ActorProgress(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Parallel_Get_ActorProgress(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
-    Result: PIntegerArray;
+    Result: PIntegerArray0;
     idx: Integer;
 begin
     Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors);
@@ -137,7 +138,7 @@ end;
 procedure Parallel_Get_ActorStatus_GR(); CDECL;
 // Same as Parallel_Get_ActorStatus but uses global result (GR) pointers
 begin
-    Parallel_Get_ActorStatus(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Parallel_Get_ActorStatus(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -168,95 +169,95 @@ begin
 end;
 //------------------------------------------------------------------------------
 {$ELSE}
-function NotAvailable(): Integer;
+function NotAvailable(DSS: TDSSContext): Integer;
 begin
-    DoSimpleMsg(DSSPrime, 'Parallel machine functions were not compiled', 7982);
+    DoSimpleMsg(DSS, 'Parallel machine functions were not compiled', 7982);
     Result := -1;
 end;
 
 function Parallel_Get_NumCPUs(): Integer; CDECL;
 begin
-    Result := NotAvailable();
+    Result := NotAvailable(DSSPrime);
 end;
 
 function Parallel_Get_NumCores(): Integer; CDECL;
 begin
-    Result := NotAvailable();
+    Result := NotAvailable(DSSPrime);
 end;
 
 function Parallel_Get_ActiveActor(): Integer; CDECL;
 begin
-    Result := NotAvailable();
+    Result := NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_CreateActor(); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 
 function Parallel_Get_ActorCPU(): Integer; CDECL;
 begin
-    Result := NotAvailable();
+    Result := NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_Set_ActorCPU(Value: Integer); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 
 function Parallel_Get_NumOfActors(): Integer; CDECL;
 begin
-    Result := NotAvailable();
+    Result := NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_Wait(); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_Get_ActorProgress_GR(); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_Get_ActorStatus_GR(); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 
 function Parallel_Get_ActiveParallel(): Integer; CDECL;
 begin
-    Result := NotAvailable();
+    Result := NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 
 function Parallel_Get_ConcatenateReports(): Integer; CDECL;
 begin
-    Result := NotAvailable();
+    Result := NotAvailable(DSSPrime);
 end;
 
 procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
 begin
-    NotAvailable();
+    NotAvailable(DSSPrime);
 end;
 {$ENDIF}
 end.

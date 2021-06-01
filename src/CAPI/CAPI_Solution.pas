@@ -3,7 +3,8 @@ unit CAPI_Solution;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function Solution_Get_Frequency(): Double; CDECL;
 function Solution_Get_Hour(): Integer; CDECL;
@@ -317,7 +318,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(GetSolutionModeID(DSSPrime))
+    Result := DSS_GetAsPAnsiChar(DSSPrime, GetSolutionModeID(DSSPrime))
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_LoadModel(): Integer; CDECL;
@@ -344,7 +345,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.LoadDurCurve)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.LoadDurCurve)
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_LDCurve(const Value: PAnsiChar); CDECL;
@@ -497,7 +498,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Name)
 end;
 
 //------------------------------------------------------------------------------
@@ -506,7 +507,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.DefaultYearlyShapeObj.Name))
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.DefaultYearlyShapeObj.Name)
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar); CDECL;
@@ -535,7 +536,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i: Integer;
 begin
     if InvalidCircuit(DSSPrime) then
@@ -553,7 +554,7 @@ end;
 procedure Solution_Get_EventLog_GR(); CDECL;
 // Same as Solution_Get_EventLog but uses global result (GR) pointers
 begin
-    Solution_Get_EventLog(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Solution_Get_EventLog(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -880,7 +881,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
-    Result: PIntegerArray;
+    Result: PIntegerArray0;
     i,
     Counter,
     IMIdx,
@@ -912,13 +913,13 @@ end;
 procedure Solution_Get_Laplacian_GR(); CDECL;
 // Same as Solution_Get_Laplacian but uses global result (GR) pointers
 begin
-    Solution_Get_Laplacian(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Solution_Get_Laplacian(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
-    Result: PIntegerArray;
+    Result: PIntegerArray0;
     i,
     Counter,
     IMIdx,
@@ -950,7 +951,7 @@ end;
 procedure Solution_Get_IncMatrix_GR(); CDECL;
 // Same as Solution_Get_IncMatrix but uses global result (GR) pointers
 begin
-    Solution_Get_IncMatrix(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Solution_Get_IncMatrix(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -973,13 +974,13 @@ end;
 procedure Solution_Get_BusLevels_GR(); CDECL;
 // Same as Solution_Get_BusLevels but uses global result (GR) pointers
 begin
-    Solution_Get_BusLevels(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Solution_Get_BusLevels(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     IMIdx,
     ArrSize: Integer;
 begin
@@ -1002,13 +1003,13 @@ end;
 procedure Solution_Get_IncMatrixRows_GR(); CDECL;
 // Same as Solution_Get_IncMatrixRows but uses global result (GR) pointers
 begin
-    Solution_Get_IncMatrixRows(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Solution_Get_IncMatrixRows(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i,
     IMIdx,
     ArrSize: Integer;
@@ -1047,7 +1048,7 @@ end;
 procedure Solution_Get_IncMatrixCols_GR(); CDECL;
 // Same as Solution_Get_IncMatrixCols but uses global result (GR) pointers
 begin
-    Solution_Get_IncMatrixCols(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Solution_Get_IncMatrixCols(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------

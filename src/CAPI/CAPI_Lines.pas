@@ -3,7 +3,8 @@ unit CAPI_Lines;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Lines_Get_AllNames_GR(); CDECL;
@@ -93,24 +94,24 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TLineObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TLineObj): Boolean; inline;
 var
     CktElem: TDSSCktElement;
 begin
     Result := False;
     obj := NIL;
     
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
 
     //TODO: use the active line instead?
     
-    CktElem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    CktElem := DSS.ActiveCircuit.ActiveCktElement;
     if CktElem = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active Line object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active Line object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -120,7 +121,7 @@ begin
         
     if obj = NIL {((CktElem.DssObjtype and CLASSMASK) <> LINE_ELEMENT)} then
     begin
-        DoSimpleMsg(DSSPrime, 'Line Type Expected, but another found. DSS Class=' + CktElem.DSSClassName + CRLF +
+        DoSimpleMsg(DSS, 'Line Type Expected, but another found. DSS Class=' + CktElem.DSSClassName + CRLF +
             'Element name=' + CktElem.Name, 5007);
         Exit;
     end;
@@ -139,7 +140,7 @@ end;
 procedure Lines_Get_AllNames_GR(); CDECL;
 // Same as Lines_Get_AllNames but uses global result (GR) pointers
 begin
-    Lines_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Lines_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -150,7 +151,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.GetBus(1));
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GetBus(1));
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Bus2(): PAnsiChar; CDECL;
@@ -160,7 +161,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.GetBus(2));
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GetBus(2));
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_First(): Integer; CDECL;
@@ -168,7 +169,7 @@ begin
     Result := 0;  // signify no more
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Lines);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.Lines);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Next(): Integer; CDECL;
@@ -176,7 +177,7 @@ begin
     Result := 0;  // signify no more
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Lines);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.Lines);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Length(): Double; CDECL;
@@ -196,7 +197,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.CondCode);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.CondCode);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Name(): PAnsiChar; CDECL;
@@ -206,7 +207,7 @@ begin
     Result := NIL;  // signify no name
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Phases(): Integer; CDECL;
@@ -351,7 +352,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     Factor: Double;
     elem: TLineObj;
@@ -378,7 +379,7 @@ end;
 procedure Lines_Get_Cmatrix_GR(); CDECL;
 // Same as Lines_Get_Cmatrix but uses global result (GR) pointers
 begin
-    Lines_Get_Cmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Lines_Get_Cmatrix(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -394,7 +395,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     elem: TLineObj;
 begin
@@ -419,7 +420,7 @@ end;
 procedure Lines_Get_Rmatrix_GR(); CDECL;
 // Same as Lines_Get_Rmatrix but uses global result (GR) pointers
 begin
-    Lines_Get_Rmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Lines_Get_Rmatrix(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -435,7 +436,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     elem: TLineObj;
 begin
@@ -460,7 +461,7 @@ end;
 procedure Lines_Get_Xmatrix_GR(); CDECL;
 // Same as Lines_Get_Xmatrix but uses global result (GR) pointers
 begin
-    Lines_Get_Xmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Lines_Get_Xmatrix(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_C0(Value: Double); CDECL;
@@ -493,14 +494,14 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray;
+    Value: PDoubleArray0;
     i, j, k: Integer;
     Factor: Double;
     elem: TLineObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Value := PDoubleArray(ValuePtr);
+    Value := PDoubleArray0(ValuePtr);
     with elem do
     begin
         if (NPhases * NPhases) <> ValueCount then
@@ -540,14 +541,14 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray;
+    Value: PDoubleArray0;
     i, j, k: Integer;
     Ztemp: complex;
     elem: TLineObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Value := PDoubleArray(ValuePtr);
+    Value := PDoubleArray0(ValuePtr);
     with elem do
     begin
         if (NPhases * NPhases) <> ValueCount then
@@ -587,14 +588,14 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray;
+    Value: PDoubleArray0;
     i, j, k: Integer;
     Ztemp: complex;
     elem: TLineObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Value := PDoubleArray(ValuePtr);
+    Value := PDoubleArray0(ValuePtr);
     
     with elem do
     begin
@@ -663,7 +664,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.GeometryCode);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GeometryCode);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Geometry(const Value: PAnsiChar); CDECL;
@@ -782,7 +783,7 @@ end;
 procedure Lines_Get_Yprim_GR(); CDECL;
 // Same as Lines_Get_Yprim but uses global result (GR) pointers
 begin
-    Lines_Get_Yprim(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Lines_Get_Yprim(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -853,7 +854,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.SpacingCode);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.SpacingCode);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;

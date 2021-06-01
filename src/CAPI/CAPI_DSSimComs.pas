@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CAPI_Types,
     UComplex;
 
 procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
@@ -25,7 +26,7 @@ uses
 
 procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j: Integer;
     Volts, BaseFactor: Double;
 begin
@@ -53,13 +54,13 @@ end;
 procedure DSSimComs_BusVoltagepu_GR(Index: PtrUInt); CDECL;
 // Same as DSSimComs_BusVoltagepu but uses global result (GR) pointers
 begin
-    DSSimComs_BusVoltagepu(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Index)
+    DSSimComs_BusVoltagepu(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Index)
 end;
 
 //------------------------------------------------------------------------------
 procedure DSSimComs_BusVoltage(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     Volts: Complex;
 begin
@@ -86,7 +87,7 @@ end;
 procedure DSSimComs_BusVoltage_GR(Index: PtrUInt); CDECL;
 // Same as DSSimComs_BusVoltage but uses global result (GR) pointers
 begin
-    DSSimComs_BusVoltage(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Index)
+    DSSimComs_BusVoltage(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Index)
 end;
 
 //------------------------------------------------------------------------------

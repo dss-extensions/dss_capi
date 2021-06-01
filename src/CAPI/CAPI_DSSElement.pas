@@ -3,7 +3,8 @@ unit CAPI_DSSElement;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
@@ -21,7 +22,7 @@ uses
 
 procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     k: Integer;
 begin
     if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
@@ -44,7 +45,7 @@ end;
 procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
 // Same as DSSElement_Get_AllPropertyNames but uses global result (GR) pointers
 begin
-    DSSElement_Get_AllPropertyNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    DSSElement_Get_AllPropertyNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -54,7 +55,7 @@ begin
     if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
         Exit;
     with DSSPrime.ActiveDSSObject do
-        Result := DSS_GetAsPAnsiChar(ParentClass.Name + '.' + Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, ParentClass.Name + '.' + Name);
 end;
 //------------------------------------------------------------------------------
 function DSSElement_Get_NumProperties(): Integer; CDECL;

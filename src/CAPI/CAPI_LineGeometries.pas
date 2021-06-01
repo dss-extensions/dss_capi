@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CAPI_Types,
     LineGeometry;
 
 function LineGeometries_Get_Count(): Integer; CDECL;
@@ -64,19 +65,19 @@ uses
 
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TLineGeometryObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TLineGeometryObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.LineGeometryClass.GetActiveObj;
+    obj := DSS.LineGeometryClass.GetActiveObj;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active LineGeometry object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active LineGeometry object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -116,7 +117,7 @@ begin
     if not _activeObj(DSSPrime, pLineGeometry) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(pLineGeometry.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pLineGeometry.Name);
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Set_Name(const Value: PAnsiChar); CDECL;
@@ -186,7 +187,7 @@ end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     pLineGeometry: TLineGeometryObj;
     Factor: Double;
@@ -213,13 +214,13 @@ end;
 procedure LineGeometries_Get_Cmatrix_GR(Frequency, Length: Double; Units: Integer); CDECL;
 // Same as LineGeometries_Get_Cmatrix but uses global result (GR) pointers
 begin
-    LineGeometries_Get_Cmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Frequency, Length, Units)
+    LineGeometries_Get_Cmatrix(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Frequency, Length, Units)
 end;
 
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     pLineGeometry: TLineGeometryObj;
     mat: Tcmatrix;
@@ -244,13 +245,13 @@ end;
 procedure LineGeometries_Get_Rmatrix_GR(Frequency, Length: Double; Units: Integer); CDECL;
 // Same as LineGeometries_Get_Rmatrix but uses global result (GR) pointers
 begin
-    LineGeometries_Get_Rmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Frequency, Length, Units)
+    LineGeometries_Get_Rmatrix(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Frequency, Length, Units)
 end;
 
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize; Frequency, Length: Double; Units: Integer); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     pLineGeometry: TLineGeometryObj;
     mat: Tcmatrix;
@@ -275,7 +276,7 @@ end;
 procedure LineGeometries_Get_Xmatrix_GR(Frequency, Length: Double; Units: Integer); CDECL;
 // Same as LineGeometries_Get_Xmatrix but uses global result (GR) pointers
 begin
-    LineGeometries_Get_Xmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Frequency, Length, Units)
+    LineGeometries_Get_Xmatrix(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Frequency, Length, Units)
 end;
 
 //------------------------------------------------------------------------------
@@ -301,7 +302,7 @@ end;
 procedure LineGeometries_Get_Zmatrix_GR(Frequency, Length: Double; Units: Integer); CDECL;
 // Same as LineGeometries_Get_Zmatrix but uses global result (GR) pointers
 begin
-    LineGeometries_Get_Zmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Frequency, Length, Units)
+    LineGeometries_Get_Zmatrix(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Frequency, Length, Units)
 end;
 
 //------------------------------------------------------------------------------
@@ -407,7 +408,7 @@ end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_Units(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
-    Result: PIntegerArray;
+    Result: PIntegerArray0;
     pLineGeometry: TLineGeometryObj;
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
@@ -425,7 +426,7 @@ end;
 procedure LineGeometries_Get_Units_GR(); CDECL;
 // Same as LineGeometries_Get_Units but uses global result (GR) pointers
 begin
-    LineGeometries_Get_Units(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    LineGeometries_Get_Units(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -449,7 +450,7 @@ end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     pLineGeometry: TLineGeometryObj;
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
@@ -467,7 +468,7 @@ end;
 procedure LineGeometries_Get_Ycoords_GR(); CDECL;
 // Same as LineGeometries_Get_Ycoords but uses global result (GR) pointers
 begin
-    LineGeometries_Get_Ycoords(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LineGeometries_Get_Ycoords(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -491,7 +492,7 @@ end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     pLineGeometry: TLineGeometryObj;
 begin
     if not _activeObj(DSSPrime, pLineGeometry) then
@@ -509,13 +510,13 @@ end;
 procedure LineGeometries_Get_Xcoords_GR(); CDECL;
 // Same as LineGeometries_Get_Xcoords but uses global result (GR) pointers
 begin
-    LineGeometries_Get_Xcoords(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LineGeometries_Get_Xcoords(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure LineGeometries_Get_Conductors(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     pLineGeometry: TLineGeometryObj;
     i: Integer;
 begin
@@ -535,7 +536,7 @@ end;
 procedure LineGeometries_Get_Conductors_GR(); CDECL;
 // Same as LineGeometries_Get_Conductors but uses global result (GR) pointers
 begin
-    LineGeometries_Get_Conductors(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    LineGeometries_Get_Conductors(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -550,7 +551,7 @@ end;
 procedure LineGeometries_Get_AllNames_GR(); CDECL;
 // Same as LineGeometries_Get_AllNames but uses global result (GR) pointers
 begin
-    LineGeometries_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    LineGeometries_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------

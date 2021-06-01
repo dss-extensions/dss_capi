@@ -3,7 +3,8 @@ unit CAPI_Meters;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Meters_Get_AllNames_GR(); CDECL;
@@ -87,19 +88,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TEnergyMeterObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TEnergyMeterObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.EnergyMeters.Active;
+    obj := DSS.ActiveCircuit.EnergyMeters.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active EnergyMeter object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active EnergyMeter object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -107,9 +108,9 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure InvalidActiveSection(); inline;
+procedure InvalidActiveSection(DSS: TDSSContext); inline;
 begin
-    DoSimpleMsg(DSSPrime, 'Invalid active section. Has SetActiveSection been called?', 5055);
+    DoSimpleMsg(DSS, 'Invalid active section. Has SetActiveSection been called?', 5055);
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -123,7 +124,7 @@ end;
 procedure Meters_Get_AllNames_GR(); CDECL;
 // Same as Meters_Get_AllNames but uses global result (GR) pointers
 begin
-    Meters_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Meters_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -132,7 +133,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.EnergyMeters);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.EnergyMeters);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_Next(): Integer; CDECL;
@@ -140,7 +141,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.EnergyMeters);        
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.EnergyMeters);        
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_Name(): PAnsiChar; CDECL;
@@ -151,12 +152,12 @@ begin
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
     
-    Result := DSS_GetAsPAnsiChar(pMeterObj.name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pMeterObj.name);
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     pMeterObj: TEnergyMeterObj;
     k: Integer;
 begin
@@ -176,7 +177,7 @@ end;
 procedure Meters_Get_RegisterNames_GR(); CDECL;
 // Same as Meters_Get_RegisterNames but uses global result (GR) pointers
 begin
-    Meters_Get_RegisterNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Meters_Get_RegisterNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -197,7 +198,7 @@ end;
 procedure Meters_Get_RegisterValues_GR(); CDECL;
 // Same as Meters_Get_RegisterValues but uses global result (GR) pointers
 begin
-    Meters_Get_RegisterValues(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Meters_Get_RegisterValues(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -272,7 +273,7 @@ end;
 procedure Meters_Get_Totals_GR(); CDECL;
 // Same as Meters_Get_Totals but uses global result (GR) pointers
 begin
-    Meters_Get_Totals(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Meters_Get_Totals(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -293,7 +294,7 @@ end;
 procedure Meters_Get_Peakcurrent_GR(); CDECL;
 // Same as Meters_Get_Peakcurrent but uses global result (GR) pointers
 begin
-    Meters_Get_Peakcurrent(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Meters_Get_Peakcurrent(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -314,7 +315,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     pMeterObj: TEnergyMeterObj;
     k: Integer;
 begin
@@ -332,13 +333,13 @@ end;
 procedure Meters_Get_CalcCurrent_GR(); CDECL;
 // Same as Meters_Get_CalcCurrent but uses global result (GR) pointers
 begin
-    Meters_Get_CalcCurrent(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Meters_Get_CalcCurrent(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray;
+    Value: PDoubleArray0;
     pMeterObj: TEnergyMeterObj;
     i: Integer;
 begin
@@ -351,7 +352,7 @@ begin
         Exit;
     end;
         
-    Value := PDoubleArray(ValuePtr);
+    Value := PDoubleArray0(ValuePtr);
     for i := 1 to pMeterObj.NPhases do
         pMeterObj.CalculatedCurrent^[i] := cmplx(Value[i - 1], 0.0);   // Just set the real part
 end;
@@ -373,20 +374,20 @@ end;
 procedure Meters_Get_AllocFactors_GR(); CDECL;
 // Same as Meters_Get_AllocFactors but uses global result (GR) pointers
 begin
-    Meters_Get_AllocFactors(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Meters_Get_AllocFactors(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray;
+    Value: PDoubleArray0;
     pMeterObj: TEnergyMeterObj;
     i: Integer;
 begin
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    Value := PDoubleArray(ValuePtr);
+    Value := PDoubleArray0(ValuePtr);
     if ValueCount <> pMeterObj.NPhases then
     begin
         DoSimpleMsg(DSSPrime, 'The provided number of values does not match the element''s number of phases.', 5026);
@@ -407,7 +408,7 @@ begin
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(pMeterObj.ElementName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pMeterObj.ElementName);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_MeteredTerminal(): Integer; CDECL;
@@ -483,7 +484,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     pMeterObj: TEnergyMeterObj;
     k, num: Integer;
     elem: TDSSCktElement;
@@ -512,7 +513,7 @@ end;
 procedure Meters_Get_AllEndElements_GR(); CDECL;
 // Same as Meters_Get_AllEndElements but uses global result (GR) pointers
 begin
-    Meters_Get_AllEndElements(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Meters_Get_AllEndElements(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -543,7 +544,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     pMeterObj: TEnergyMeterObj;
     k: Integer;
     BranchCount: Integer;
@@ -557,7 +558,7 @@ begin
         Exit;
 
     // Get count of branches
-    BranchCount := Meters_Get_CountBranches;
+    BranchCount := Meters_Get_CountBranches();
     if BranchCount <= 0 then 
         Exit;
         
@@ -575,7 +576,7 @@ end;
 procedure Meters_Get_AllBranchesInZone_GR(); CDECL;
 // Same as Meters_Get_AllBranchesInZone but uses global result (GR) pointers
 begin
-    Meters_Get_AllBranchesInZone(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Meters_Get_AllBranchesInZone(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -758,7 +759,7 @@ begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
             Result := FeederSections^[ActiveSection].AverageRepairTime
         else
-            InvalidActiveSection();
+            InvalidActiveSection(DSSPrime);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -775,7 +776,7 @@ begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
             Result := FeederSections^[ActiveSection].SumFltRatesXRepairHrs
         else
-            InvalidActiveSection();
+            InvalidActiveSection(DSSPrime);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -792,7 +793,7 @@ begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
             Result := FeederSections^[ActiveSection].NBranches
         else
-            InvalidActiveSection();
+            InvalidActiveSection(DSSPrime);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -809,7 +810,7 @@ begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
             Result := FeederSections^[ActiveSection].NCustomers
         else
-            InvalidActiveSection();
+            InvalidActiveSection(DSSPrime);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -826,7 +827,7 @@ begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
             Result := FeederSections^[ActiveSection].OCPDeviceType
         else
-            InvalidActiveSection();
+            InvalidActiveSection(DSSPrime);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -843,7 +844,7 @@ begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
             Result := FeederSections^[ActiveSection].SumBranchFltRates
         else
-            InvalidActiveSection();
+            InvalidActiveSection(DSSPrime);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -860,7 +861,7 @@ begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
             Result := FeederSections^[ActiveSection].SeqIndex
         else
-            InvalidActiveSection();
+            InvalidActiveSection(DSSPrime);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -877,7 +878,7 @@ begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
             Result := FeederSections^[ActiveSection].TotalCustomers
         else
-            InvalidActiveSection();
+            InvalidActiveSection(DSSPrime);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -908,7 +909,7 @@ procedure Meters_Get_ZonePCE(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); 
 var
    pMeter: TEnergyMeterObj;
    k: integer;
-   Result: PPAnsiCharArray;
+   Result: PPAnsiCharArray0;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 0);
     if InvalidCircuit(DSSPrime) then

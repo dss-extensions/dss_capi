@@ -3,7 +3,8 @@ unit CAPI_Bus;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function Bus_Get_Name(): PAnsiChar; CDECL;
 function Bus_Get_NumNodes(): Integer; CDECL;
@@ -83,33 +84,33 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _hasActiveBus(): Boolean; inline;
+function _hasActiveBus(DSS: TDSSContext): Boolean; inline;
 begin
     Result := False;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
 
-    if (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) or
-       (DSSPrime.ActiveCircuit.Buses = NIL) then
+    if (not ((DSS.ActiveCircuit.ActiveBusIndex > 0) and (DSS.ActiveCircuit.ActiveBusIndex <= DSS.ActiveCircuit.NumBuses))) or
+       (DSS.ActiveCircuit.Buses = NIL) then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active bus found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active bus found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
     Result := True;
 end;
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TDSSBus): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TDSSBus): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
     
-    if not _hasActiveBus() then
+    if not _hasActiveBus(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.Buses[DSSPrime.ActiveCircuit.ActiveBusIndex];
+    obj := DSS.ActiveCircuit.Buses[DSS.ActiveCircuit.ActiveBusIndex];
     Result := True;
 end;
 //------------------------------------------------------------------------------
@@ -121,7 +122,7 @@ begin
 
     with DSSPrime.ActiveCircuit do
         if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-            Result := DSS_GetAsPAnsiChar(BusList.NameOfIndex(ActiveBusIndex));
+            Result := DSS_GetAsPAnsiChar(DSSPrime, BusList.NameOfIndex(ActiveBusIndex));
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_NumNodes(): Integer; CDECL;
@@ -140,7 +141,7 @@ procedure Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CD
 // magnitude only
 // returns a set of seq voltages (3)
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nvalues, i, iV: Integer;
     VPh, V012: Complex3;
 
@@ -185,14 +186,14 @@ end;
 procedure Bus_Get_SeqVoltages_GR(); CDECL;
 // Same as Bus_Get_SeqVoltages but uses global result (GR) pointers
 begin
-    Bus_Get_SeqVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_SeqVoltages(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return Complex for all nodes of voltages for Active Bus
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nvalues, i, iV, NodeIdx, jj: Integer;
     Volts: Complex;
     pBus: TDSSBus;
@@ -230,14 +231,14 @@ end;
 procedure Bus_Get_Voltages_GR(); CDECL;
 // Same as Bus_Get_Voltages but uses global result (GR) pointers
 begin
-    Bus_Get_Voltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_Voltages(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_Nodes(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 // return array of node numbers corresponding to voltages
 var
-    Result: PIntegerArray;
+    Result: PIntegerArray0;
     Nvalues, i, iV, NodeIdx, jj: Integer;
     pBus: TDSSBus;
 begin
@@ -269,14 +270,14 @@ end;
 procedure Bus_Get_Nodes_GR(); CDECL;
 // Same as Bus_Get_Nodes but uses global result (GR) pointers
 begin
-    Bus_Get_Nodes(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Bus_Get_Nodes(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_Isc(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return the short circuit current
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Isc: Complex;
     i, iV, NValues: Integer;
 
@@ -312,14 +313,14 @@ end;
 procedure Bus_Get_Isc_GR(); CDECL;
 // Same as Bus_Get_Isc but uses global result (GR) pointers
 begin
-    Bus_Get_Isc(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_Isc(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_Voc(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return the Open circuit Voltage for this bus
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Voc: Complex;
     i, iV, NValues: Integer;
 
@@ -355,7 +356,7 @@ end;
 procedure Bus_Get_Voc_GR(); CDECL;
 // Same as Bus_Get_Voc but uses global result (GR) pointers
 begin
-    Bus_Get_Voc(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_Voc(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -373,7 +374,7 @@ end;
 procedure Bus_Get_puVoltages(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Returns voltages at bus in per unit.  However, if kVBase=0, returns actual volts
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nvalues, i, iV, NodeIdx, jj: Integer;
     Volts: Complex;
     BaseFactor: Double;
@@ -415,13 +416,13 @@ end;
 procedure Bus_Get_puVoltages_GR(); CDECL;
 // Same as Bus_Get_puVoltages but uses global result (GR) pointers
 begin
-    Bus_Get_puVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_puVoltages(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Z: Complex;
 
 begin
@@ -444,13 +445,13 @@ end;
 procedure Bus_Get_Zsc0_GR(); CDECL;
 // Same as Bus_Get_Zsc0 but uses global result (GR) pointers
 begin
-    Bus_Get_Zsc0(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_Zsc0(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Z: Complex;
 begin
     if (InvalidCircuit(DSSPrime)) or 
@@ -472,13 +473,13 @@ end;
 procedure Bus_Get_Zsc1_GR(); CDECL;
 // Same as Bus_Get_Zsc1 but uses global result (GR) pointers
 begin
-    Bus_Get_Zsc1(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_Zsc1(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nelements, iV, i, j: Integer;
     Z: Complex;
 
@@ -517,7 +518,7 @@ end;
 procedure Bus_Get_ZscMatrix_GR(); CDECL;
 // Same as Bus_Get_ZscMatrix but uses global result (GR) pointers
 begin
-    Bus_Get_ZscMatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_ZscMatrix(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -533,7 +534,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_YscMatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nelements, iV, i, j: Integer;
     Y1: Complex;
 
@@ -571,7 +572,7 @@ end;
 procedure Bus_Get_YscMatrix_GR(); CDECL;
 // Same as Bus_Get_YscMatrix but uses global result (GR) pointers
 begin
-    Bus_Get_YscMatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_YscMatrix(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -659,7 +660,7 @@ procedure Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PAPISize)
 // Complex values
 // returns a set of seq voltages (3) in 0, 1, 2 order
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nvalues, i, iV: Integer;
     VPh, V012: Complex3;
 
@@ -704,7 +705,7 @@ end;
 procedure Bus_Get_CplxSeqVoltages_GR(); CDECL;
 // Same as Bus_Get_CplxSeqVoltages but uses global result (GR) pointers
 begin
-    Bus_Get_CplxSeqVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_CplxSeqVoltages(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -772,7 +773,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_puVLL(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nvalues, i, iV, NodeIdxi, NodeIdxj, jj, k: Integer;
     Volts: Complex;
     pBus: TDSSBus;
@@ -857,13 +858,13 @@ end;
 procedure Bus_Get_puVLL_GR(); CDECL;
 // Same as Bus_Get_puVLL but uses global result (GR) pointers
 begin
-    Bus_Get_puVLL(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_puVLL(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_VLL(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nvalues, i, iV, NodeIdxi, NodeIdxj, jj, k: Integer;
     Volts: Complex;
     pBus: TDSSBus;
@@ -940,14 +941,14 @@ end;
 procedure Bus_Get_VLL_GR(); CDECL;
 // Same as Bus_Get_VLL but uses global result (GR) pointers
 begin
-    Bus_Get_VLL(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_VLL(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_puVmagAngle(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return mag/angle for all nodes of voltages for Active Bus
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nvalues, i, iV, NodeIdx, jj: Integer;
     Volts: polar;
     pBus: TDSSBus;
@@ -993,14 +994,14 @@ end;
 procedure Bus_Get_puVmagAngle_GR(); CDECL;
 // Same as Bus_Get_puVmagAngle but uses global result (GR) pointers
 begin
-    Bus_Get_puVmagAngle(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_puVmagAngle(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return mag/angle for all nodes of voltages for Active Bus
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     Nvalues, i, iV, NodeIdx, jj: Integer;
     Volts: polar;
     pBus: TDSSBus;
@@ -1038,7 +1039,7 @@ end;
 procedure Bus_Get_VMagAngle_GR(); CDECL;
 // Same as Bus_Get_VMagAngle but uses global result (GR) pointers
 begin
-    Bus_Get_VMagAngle(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_VMagAngle(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -1103,7 +1104,7 @@ procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CD
 var
     BusReference, j, k, LineCount: Integer;
     pElem: TDSSCktElement;
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     pBus: TDSSBus;
 begin
     if not _activeObj(DSSPrime, pBus) then
@@ -1151,7 +1152,7 @@ end;
 procedure Bus_Get_LineList_GR(); CDECL;
 // Same as Bus_Get_LineList but uses global result (GR) pointers
 begin
-    Bus_Get_LineList(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Bus_Get_LineList(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -1160,7 +1161,7 @@ procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CD
 var
     BusReference, j, k, LoadCount: Integer;
     pElem: TDSSCktElement;
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     pBus : TDSSBus;
 begin
     if not _activeObj(DSSPrime, pBus) then
@@ -1208,7 +1209,7 @@ end;
 procedure Bus_Get_LoadList_GR(); CDECL;
 // Same as Bus_Get_LoadList but uses global result (GR) pointers
 begin
-    Bus_Get_LoadList(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Bus_Get_LoadList(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -1252,7 +1253,7 @@ end;
 procedure Bus_Get_ZSC012Matrix_GR(); CDECL;
 // Same as Bus_Get_ZSC012Matrix but uses global result (GR) pointers
 begin
-    Bus_Get_ZSC012Matrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Bus_Get_ZSC012Matrix(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -1260,9 +1261,9 @@ procedure Bus_Get_AllPCEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
 var
     i: Integer;
     myPCEList: Array of String;
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
 begin
-    if not _hasActiveBus then
+    if not _hasActiveBus(DSSPrime) then
     begin
         DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;
@@ -1277,9 +1278,9 @@ procedure Bus_Get_AllPDEatBus(var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
 var
   i: Integer;
   myPDEList: Array of String;
-  Result: PPAnsiCharArray;
+  Result: PPAnsiCharArray0;
 begin
-    if not _hasActiveBus then
+    if not _hasActiveBus(DSSPrime) then
     begin
         DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;

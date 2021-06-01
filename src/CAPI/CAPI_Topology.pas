@@ -3,7 +3,8 @@ unit CAPI_Topology;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function Topology_Get_NumLoops(): Integer; CDECL;
 function Topology_Get_ActiveBranch(): Integer; CDECL;
@@ -43,31 +44,31 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function ActiveTree(out topo: TCktTree): Boolean;
+function ActiveTree(DSS: TDSSContext; out topo: TCktTree): Boolean;
 begin
     topo := NIL;
     Result := False;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
-    topo := DSSPrime.ActiveCircuit.GetTopology;
+    topo := DSS.ActiveCircuit.GetTopology;
     If (topo = NIL) then
     begin
         if (DSS_CAPI_EXT_ERRORS) then
         begin
-            DoSimpleMsg(DSSPrime, 'Topology is not initialized for the active circuit.', 5097);
+            DoSimpleMsg(DSS, 'Topology is not initialized for the active circuit.', 5097);
         end;
         Exit;
     end;
     Result := True; 
 end;
 //------------------------------------------------------------------------------
-function ActiveTreeNode(var node: TCktTreeNode): Boolean;
+function ActiveTreeNode(DSS: TDSSContext; var node: TCktTreeNode): Boolean;
 var
     topo: TCktTree;
 begin
     node := NIL;
     Result := False;
-    if not ActiveTree(topo) then
+    if not ActiveTree(DSS, topo) then
         Exit;
     node := topo.PresentBranch;
     if node = NIL then
@@ -83,7 +84,7 @@ var
     pdElem: TPDElement;
 begin
     Result := 0;
-    if not ActiveTree(topo) then
+    if not ActiveTree(DSSPrime, topo) then
         Exit;
 
     PDElem := topo.First;
@@ -102,9 +103,9 @@ var
     node: TCktTreeNode;
 begin
     Result := 0;
-    if not ActiveTree(topo) then
+    if not ActiveTree(DSSPrime, topo) then
         Exit;
-    if not ActiveTreeNode(node) then
+    if not ActiveTreeNode(DSSPrime, node) then
         Exit;
     Result := topo.Level;
     DSSPrime.ActiveCircuit.ActiveCktElement := node.CktObject;
@@ -113,7 +114,7 @@ end;
 procedure Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: array of AnsiString;
-    ActualResult: PPAnsiCharArray;
+    ActualResult: PPAnsiCharArray0;
     elm: TPDElement;
     topo: TCktTree;
     k, i: Integer;
@@ -121,7 +122,7 @@ begin
     SetLength(Result, 1);
     k := 0;
     elm := NIL;
-    if ActiveTree(topo) then
+    if ActiveTree(DSSPrime, topo) then
         elm := DSSPrime.ActiveCircuit.PDElements.First;
 
     while assigned(elm) do
@@ -153,14 +154,14 @@ end;
 procedure Topology_Get_AllIsolatedBranches_GR(); CDECL;
 // Same as Topology_Get_AllIsolatedBranches but uses global result (GR) pointers
 begin
-    Topology_Get_AllIsolatedBranches(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Topology_Get_AllIsolatedBranches(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: array of AnsiString;
-    ActualResult: PPAnsiCharArray;
+    ActualResult: PPAnsiCharArray0;
     topo: TCktTree;
     pdElem, pdLoop: TPDElement;
     k, i: Integer;
@@ -169,7 +170,7 @@ begin
     SetLength(Result, 1);
     k := -1;  // because we always increment by 2!
     PDElem := NIL;
-    if ActiveTree(topo) then
+    if ActiveTree(DSSPrime, topo) then
         PDElem := topo.First;
 
     while Assigned(PDElem) do
@@ -218,7 +219,7 @@ end;
 procedure Topology_Get_AllLoopedPairs_GR(); CDECL;
 // Same as Topology_Get_AllLoopedPairs but uses global result (GR) pointers
 begin
-    Topology_Get_AllLoopedPairs(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Topology_Get_AllLoopedPairs(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -227,7 +228,7 @@ var
     topo: TCktTree;
 begin
     Result := 0;
-    if not ActiveTree(topo) then
+    if not ActiveTree(DSSPrime, topo) then
         Exit;
 
     if assigned(topo.GoBackward) then
@@ -243,11 +244,11 @@ var
     elm: TDSSCktElement;
 begin
     Result := NIL;
-    if not ActiveTreeNode(node) then
+    if not ActiveTreeNode(DSSPrime, node) then
         Exit;
     elm := node.CktObject;
     if assigned(elm) then
-        Result := DSS_GetAsPAnsiChar(elm.QualifiedName);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elm.QualifiedName);
 end;
 //------------------------------------------------------------------------------
 function Topology_Get_First(): Integer; CDECL;
@@ -255,7 +256,7 @@ var
     topo: TCktTree;
 begin
     Result := 0;
-    if not ActiveTree(topo) then
+    if not ActiveTree(DSSPrime, topo) then
         Exit;
 
     if assigned(topo.First) then
@@ -270,7 +271,7 @@ var
     topo: TCktTree;
 begin
     Result := 0;
-    if not ActiveTree(topo) then
+    if not ActiveTree(DSSPrime, topo) then
         Exit;
 
     if assigned(topo.GoForward) then
@@ -285,7 +286,7 @@ var
     node: TCktTreeNode;
 begin
     Result := 0;
-    if not ActiveTreeNode(node) then
+    if not ActiveTreeNode(DSSPrime, node) then
         Exit;
     if node.IsLoopedHere then
     begin
@@ -296,7 +297,7 @@ end;
 //------------------------------------------------------------------------------
 function Topology_Get_Next(): Integer; CDECL;
 begin
-    Result := Topology_Get_ForwardBranch;
+    Result := Topology_Get_ForwardBranch();
 end;
 //------------------------------------------------------------------------------
 function Topology_Get_NumIsolatedBranches(): Integer; CDECL;
@@ -305,7 +306,7 @@ var
     topo: TCktTree;
 begin
     Result := 0;
-    if not ActiveTree(topo) then
+    if not ActiveTree(DSSPrime, topo) then
         Exit;
 
     elm := DSSPrime.ActiveCircuit.PDElements.First;
@@ -322,7 +323,7 @@ var
     node: TCktTreeNode;
 begin
     Result := 0;
-    if not ActiveTreeNode(node) then
+    if not ActiveTreeNode(DSSPrime, node) then
         Exit;
     if node.IsParallel then
     begin
@@ -345,7 +346,7 @@ begin
     Found := FALSE;
     elem := NIL;
     S := Value;  // Convert to Pascal String
-    if ActiveTree(topo) then
+    if ActiveTree(DSSPrime, topo) then
     begin
         elem := DSSPrime.ActiveCircuit.ActiveCktElement;
         pdElem := topo.First;
@@ -371,14 +372,14 @@ end;
 procedure Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: array of AnsiString;
-    ActualResult: PPAnsiCharArray;
+    ActualResult: PPAnsiCharArray0;
     elm: TPCElement;
     topo: TCktTree;
     k, i: Integer;
 begin
     SetLength(Result, 1);
     k := 0;
-    if ActiveTree(topo) then
+    if ActiveTree(DSSPrime, topo) then
     begin
         elm := DSSPrime.ActiveCircuit.PCElements.First;
         while assigned(elm) do
@@ -412,7 +413,7 @@ end;
 procedure Topology_Get_AllIsolatedLoads_GR(); CDECL;
 // Same as Topology_Get_AllIsolatedLoads but uses global result (GR) pointers
 begin
-    Topology_Get_AllIsolatedLoads(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Topology_Get_AllIsolatedLoads(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -422,7 +423,7 @@ var
     elm: TDSSCktElement;
 begin
     Result := 0;
-    if not ActiveTreeNode(node) then
+    if not ActiveTreeNode(DSSPrime, node) then
         Exit;
     elm := node.FirstShuntObject;
     if assigned(elm) then
@@ -438,7 +439,7 @@ var
     elm: TDSSCktElement;
 begin
     Result := 0;
-    if not ActiveTreeNode(node) then
+    if not ActiveTreeNode(DSSPrime, node) then
         Exit;
 
     elm := node.NextShuntObject;
@@ -455,7 +456,7 @@ var
     topo: TCktTree;
 begin
     Result := 0;
-    if not ActiveTree(topo) then
+    if not ActiveTree(DSSPrime, topo) then
         Exit;
         
     elm := DSSPrime.ActiveCircuit.PCElements.First;
@@ -469,7 +470,7 @@ end;
 //------------------------------------------------------------------------------
 function Topology_Get_ActiveLevel(): Integer; CDECL;
 begin
-    Result := Topology_Get_ActiveBranch;
+    Result := Topology_Get_ActiveBranch();
 end;
 //------------------------------------------------------------------------------
 function Topology_Get_BusName(): PAnsiChar; CDECL;
@@ -478,11 +479,11 @@ var
     elm: TDSSCktElement;
 begin
     Result := NIL;
-    if not ActiveTreeNode(node) then
+    if not ActiveTreeNode(DSSPrime, node) then
         Exit;
     elm := node.CktObject;
     if assigned(elm) then
-        Result := DSS_GetAsPAnsiChar(elm.FirstBus);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elm.FirstBus);
 end;
 //------------------------------------------------------------------------------
 procedure Topology_Set_BusName(const Value: PAnsiChar); CDECL;
@@ -493,7 +494,7 @@ var
     elem: TDSSCktElement;
     pdElem: TPDElement;
 begin
-    if not ActiveTree(topo) then
+    if not ActiveTree(DSSPrime, topo) then
         Exit;
 
     Found := FALSE;

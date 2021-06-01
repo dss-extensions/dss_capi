@@ -249,7 +249,11 @@ uses
     CAPI_Vsources in 'CAPI_Vsources.pas',
     CAPI_WireData in 'CAPI_WireData.pas', // API extension
     CAPI_XYCurves in 'CAPI_XYCurves.pas',
-    CAPI_YMatrix in 'CAPI_YMatrix.pas';
+    CAPI_YMatrix in 'CAPI_YMatrix.pas'
+{$IFDEF DSS_CAPI_CONTEXT},
+    {$I './CAPICtx/generated/ctx_files.inc'}
+{$ENDIF}
+    ;
 
 exports
 
@@ -1906,10 +1910,14 @@ exports
     YMatrix_Get_Handle,
     YMatrix_Set_SolverOptions,
     YMatrix_Get_SolverOptions,
-    
+
     DSS_RegisterPlotCallback,
     DSS_RegisterMessageCallback
-    
+
+{$IFDEF DSS_CAPI_CONTEXT},
+    {$I './CAPICtx/generated/ctx_functions.inc'}
+{$ENDIF}
+
 //    // Re-export most KLUSolve functions
 //    , 
 //    NewSparseSet,

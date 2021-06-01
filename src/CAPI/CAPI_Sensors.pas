@@ -3,7 +3,8 @@ unit CAPI_Sensors;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Sensors_Get_AllNames_GR(); CDECL;
@@ -59,19 +60,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TSensorObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TSensorObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.Sensors.Active;
+    obj := DSS.ActiveCircuit.Sensors.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active Sensor object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active Sensor object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -79,16 +80,16 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
 var
     cmd: String;
     elem: TSensorObj;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if not _activeObj(DSS, elem) then
         Exit;
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('sensor.%s.%s=%s', [elem.Name, parm, val]);
-    DSSPrime.DSSExecutive.Command := cmd;
+    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -102,7 +103,7 @@ end;
 procedure Sensors_Get_AllNames_GR(); CDECL;
 // Same as Sensors_Get_AllNames but uses global result (GR) pointers
 begin
-    Sensors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Sensors_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -131,7 +132,7 @@ end;
 procedure Sensors_Get_Currents_GR(); CDECL;
 // Same as Sensors_Get_Currents but uses global result (GR) pointers
 begin
-    Sensors_Get_Currents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Sensors_Get_Currents(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -140,7 +141,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Sensors);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.Sensors);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_Next(): Integer; CDECL;
@@ -148,7 +149,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Sensors);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.Sensors);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_IsDelta(): TAPIBoolean; CDECL;
@@ -177,7 +178,7 @@ end;
 procedure Sensors_Get_kVARS_GR(); CDECL;
 // Same as Sensors_Get_kVARS but uses global result (GR) pointers
 begin
-    Sensors_Get_kVARS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Sensors_Get_kVARS(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -197,7 +198,7 @@ end;
 procedure Sensors_Get_kVS_GR(); CDECL;
 // Same as Sensors_Get_kVS but uses global result (GR) pointers
 begin
-    Sensors_Get_kVS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Sensors_Get_kVS(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -217,7 +218,7 @@ end;
 procedure Sensors_Get_kWS_GR(); CDECL;
 // Same as Sensors_Get_kWS but uses global result (GR) pointers
 begin
-    Sensors_Get_kWS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Sensors_Get_kWS(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -228,7 +229,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.ElementName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_MeteredTerminal(): Integer; CDECL;
@@ -248,7 +249,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_PctError(): Double; CDECL;
@@ -368,12 +369,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_MeteredElement(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter('element', Value);
+    Set_Parameter(DSSPrime, 'element', Value);
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_MeteredTerminal(Value: Integer); CDECL;
 begin
-    Set_Parameter('terminal', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'terminal', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_Name(const Value: PAnsiChar); CDECL;
@@ -393,20 +394,20 @@ end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_PctError(Value: Double); CDECL;
 begin
-    Set_Parameter('%error', FloatToStr(Value));
+    Set_Parameter(DSSPrime, '%error', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_ReverseDelta(Value: TAPIBoolean); CDECL;
 begin
     if Value = TRUE then
-        Set_Parameter('DeltaDirection', '-1')
+        Set_Parameter(DSSPrime, 'DeltaDirection', '-1')
     else
-        Set_Parameter('DeltaDirection', '1');
+        Set_Parameter(DSSPrime, 'DeltaDirection', '1');
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_Weight(Value: Double); CDECL;
 begin
-    Set_Parameter('weight', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'weight', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_kVbase(): Double; CDECL;
@@ -421,7 +422,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_kVbase(Value: Double); CDECL;
 begin
-    Set_Parameter('kvbase', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'kvbase', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_idx(): Integer; CDECL;

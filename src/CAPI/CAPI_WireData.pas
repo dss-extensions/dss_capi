@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CAPI_Types,
     WireData,
     ConductorData;
 
@@ -59,19 +60,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TWireDataObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TWireDataObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.WireDataClass.GetActiveObj();
+    obj := DSS.WireDataClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active WireData object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active WireData object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -159,7 +160,7 @@ begin
     Result := NIL;  // signify no name
     if not _activeObj(DSSPrime, pWireData) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(pWireData.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pWireData.Name);
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;
@@ -186,7 +187,7 @@ end;
 procedure WireData_Get_AllNames_GR(); CDECL;
 // Same as WireData_Get_AllNames but uses global result (GR) pointers
 begin
-    WireData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    WireData_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_NormAmps(): Double; CDECL;

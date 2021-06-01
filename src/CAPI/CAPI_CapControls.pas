@@ -3,7 +3,8 @@ unit CAPI_CapControls;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure CapControls_Get_AllNames_GR(); CDECL;
@@ -62,19 +63,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TCapControlObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TCapControlObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.CapControls.Active;
+    obj := DSS.ActiveCircuit.CapControls.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active CapControl object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active CapControl object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -82,16 +83,16 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
 var
     cmd: String;
     elem: TCapControlObj;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if not _activeObj(DSS, elem) then
         Exit;
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('capcontrol.%s.%s=%s', [elem.Name, parm, val]);
-    DSSPrime.DSSExecutive.Command := cmd;
+    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -105,7 +106,7 @@ end;
 procedure CapControls_Get_AllNames_GR(); CDECL;
 // Same as CapControls_Get_AllNames but uses global result (GR) pointers
 begin
-    CapControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    CapControls_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -116,7 +117,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.This_Capacitor.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.This_Capacitor.Name);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_CTratio(): Double; CDECL;
@@ -164,7 +165,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.CapControls);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.CapControls);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Next(): Integer; CDECL;
@@ -172,7 +173,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.CapControls);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.CapControls);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Mode(): Integer; CDECL;
@@ -206,7 +207,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.ElementName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_MonitoredTerm(): Integer; CDECL;
@@ -226,7 +227,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_OFFSetting(): Double; CDECL;
@@ -291,27 +292,27 @@ end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Capacitor(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter('Capacitor', value);
+    Set_Parameter(DSSPrime, 'Capacitor', value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_CTratio(Value: Double); CDECL;
 begin
-    Set_Parameter('CTratio', FloatToStr(value));
+    Set_Parameter(DSSPrime, 'CTratio', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_DeadTime(Value: Double); CDECL;
 begin
-    Set_Parameter('DeadTime', FloatToStr(value));
+    Set_Parameter(DSSPrime, 'DeadTime', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Delay(Value: Double); CDECL;
 begin
-    Set_Parameter('Delay', FloatToStr(value));
+    Set_Parameter(DSSPrime, 'Delay', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_DelayOff(Value: Double); CDECL;
 begin
-    Set_Parameter('DelayOff', FloatToStr(value));
+    Set_Parameter(DSSPrime, 'DelayOff', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Mode(Value: Integer); CDECL;
@@ -336,12 +337,12 @@ end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter('Element', value);
+    Set_Parameter(DSSPrime, 'Element', value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_MonitoredTerm(Value: Integer); CDECL;
 begin
-    Set_Parameter('Terminal', IntToStr(value));
+    Set_Parameter(DSSPrime, 'Terminal', IntToStr(value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Name(const Value: PAnsiChar); CDECL;
@@ -362,32 +363,32 @@ end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_OFFSetting(Value: Double); CDECL;
 begin
-    Set_Parameter('OffSetting', FloatToStr(value));
+    Set_Parameter(DSSPrime, 'OffSetting', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_ONSetting(Value: Double); CDECL;
 begin
-    Set_Parameter('OnSetting', FloatToStr(value));
+    Set_Parameter(DSSPrime, 'OnSetting', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_PTratio(Value: Double); CDECL;
 begin
-    Set_Parameter('PTratio', FloatToStr(value));
+    Set_Parameter(DSSPrime, 'PTratio', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_UseVoltOverride(Value: TAPIBoolean); CDECL;
 begin
-    Set_Parameter('VoltOverride', StrYorN(Value = True))
+    Set_Parameter(DSSPrime, 'VoltOverride', StrYorN(Value = True))
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Vmax(Value: Double); CDECL;
 begin
-    Set_Parameter('Vmax', FloatToStr(value));
+    Set_Parameter(DSSPrime, 'Vmax', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Vmin(Value: Double); CDECL;
 begin
-    Set_Parameter('Vmin', FloatToStr(value));
+    Set_Parameter(DSSPrime, 'Vmin', FloatToStr(value));
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Count(): Integer; CDECL;

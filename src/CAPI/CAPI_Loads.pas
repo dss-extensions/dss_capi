@@ -3,7 +3,8 @@ unit CAPI_Loads;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Loads_Get_AllNames_GR(); CDECL;
@@ -113,7 +114,7 @@ type
     );
 
 //------------------------------------------------------------------------------
-procedure LoadPropSideEffects(prop: LoadProps; load: TLoadObj); //incomplete
+procedure LoadPropSideEffects(DSS: TDSSContext; prop: LoadProps; load: TLoadObj); //incomplete
 begin
     with load do
     begin
@@ -154,7 +155,7 @@ begin
             {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
             LoadProps.yearly:
             begin
-                YearlyShapeObj := DSSPrime.LoadShapeClass.Find(YearlyShape);
+                YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                 if Assigned(YearlyShapeObj) then
                     with YearlyShapeObj do
                         if UseActual then
@@ -162,7 +163,7 @@ begin
             end;
             LoadProps.daily:
             begin
-                DailyShapeObj := DSSPrime.LoadShapeClass.Find(DailyShape);
+                DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                 if Assigned(DailyShapeObj) then
                     with DailyShapeObj do
                         if UseActual then
@@ -173,14 +174,14 @@ begin
             end;
             LoadProps.duty:
             begin
-                DutyShapeObj := DSSPrime.LoadShapeClass.Find(DutyShape);
+                DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                 if Assigned(DutyShapeObj) then
                     with DutyShapeObj do
                         if UseActual then
                             SetkWkvar(MaxP, MaxQ);
             end;
             LoadProps.growth:
-                GrowthShapeObj := DSSPrime.GrowthShapeClass.Find(GrowthShape);
+                GrowthShapeObj := DSS.GrowthShapeClass.Find(GrowthShape);
 
             LoadProps.kvar:
             begin
@@ -192,24 +193,24 @@ begin
                 LoadSpecType := TLoadSpec.kVA_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
             LoadProps.CVRCurve:
-                CVRShapeObj := DSSPrime.LoadShapeClass.Find(CVRshape);
+                CVRShapeObj := DSS.LoadShapeClass.Find(CVRshape);
         end;
     end;
 end;
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TLoadObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TLoadObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.Loads.Active;
+    obj := DSS.ActiveCircuit.Loads.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active Load object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active Load object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -217,17 +218,17 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
 var
     cmd: String;
     elem: TLoadObj;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if not _activeObj(DSS, elem) then
         Exit;
         
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('load.%s.%s=%s', [elem.Name, parm, val]);
-    DSSPrime.DSSExecutive.Command := cmd;
+    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -241,7 +242,7 @@ end;
 procedure Loads_Get_AllNames_GR(); CDECL;
 // Same as Loads_Get_AllNames but uses global result (GR) pointers
 begin
-    Loads_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Loads_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -250,7 +251,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Loads);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.Loads);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Next(): Integer; CDECL;
@@ -258,7 +259,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Loads);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.Loads);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_idx(): Integer; CDECL;
@@ -292,7 +293,7 @@ begin
     if not _activeObj(DSSPrime, pLoad) then
         Exit;
         
-    Result := DSS_GetAsPAnsiChar(pLoad.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pLoad.Name);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Name(const Value: PAnsiChar); CDECL;
@@ -449,7 +450,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.CVRshape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.CVRshape);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_CVRvars(): Double; CDECL;
@@ -482,7 +483,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.DailyShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShape);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_duty(): PAnsiChar; CDECL;
@@ -493,7 +494,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.DailyShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShape);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Growth(): PAnsiChar; CDECL;
@@ -504,7 +505,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.GrowthShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GrowthShape);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_IsDelta(): TAPIBoolean; CDECL;
@@ -622,7 +623,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Spectrum);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Spectrum);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Status(): Integer; CDECL;
@@ -706,38 +707,38 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.YearlyShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShape);
 end;
 
 //------------------------------------------------------------------------------
 procedure Loads_Set_AllocationFactor(Value: Double); CDECL;
 begin
-    Set_Parameter('AllocationFactor', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'AllocationFactor', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Cfactor(Value: Double); CDECL;
 begin
-    Set_Parameter('Cfactor', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Cfactor', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Class_(Value: Integer); CDECL;
 begin
-    Set_Parameter('Class', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'Class', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_CVRcurve(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter('CVRcurve', Value);
+    Set_Parameter(DSSPrime, 'CVRcurve', Value);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_CVRvars(Value: Double); CDECL;
 begin
-    Set_Parameter('CVRvars', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'CVRvars', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_CVRwatts(Value: Double); CDECL;
 begin
-    Set_Parameter('CVRwatts', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'CVRwatts', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_daily(const Value: PAnsiChar); CDECL;
@@ -748,7 +749,7 @@ begin
         Exit;
 
     elem.DailyShape := Value;
-    LoadPropSideEffects(LoadProps.daily, elem);
+    LoadPropSideEffects(DSSPrime, LoadProps.daily, elem);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_duty(const Value: PAnsiChar); CDECL;
@@ -759,7 +760,7 @@ begin
         Exit;
 
     elem.DutyShape := Value;
-    LoadPropSideEffects(LoadProps.duty, elem);
+    LoadPropSideEffects(DSSPrime, LoadProps.duty, elem);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Growth(const Value: PAnsiChar); CDECL;
@@ -770,7 +771,7 @@ begin
         Exit;
 
     elem.GrowthShape := Value;
-    LoadPropSideEffects(LoadProps.growth, elem);
+    LoadPropSideEffects(DSSPrime, LoadProps.growth, elem);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_IsDelta(Value: TAPIBoolean); CDECL;
@@ -787,7 +788,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kva(Value: Double); CDECL;
 begin
-    Set_Parameter('kva', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'kva', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kwh(Value: Double); CDECL;
@@ -797,12 +798,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.Set_kWh(Value);
-  //LoadPropSideEffects(LoadProps.kwh, elem);
+  //LoadPropSideEffects(DSSPrime, LoadProps.kwh, elem);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kwhdays(Value: Double); CDECL;
 begin
-    Set_Parameter('kwhdays', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'kwhdays', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Model(Value: Integer); CDECL;
@@ -820,69 +821,69 @@ end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_NumCust(Value: Integer); CDECL;
 begin
-    Set_Parameter('NumCust', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'NumCust', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_PctMean(Value: Double); CDECL;
 begin
-    Set_Parameter('%mean', FloatToStr(Value));
+    Set_Parameter(DSSPrime, '%mean', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_PctStdDev(Value: Double); CDECL;
 begin
-    Set_Parameter('%stddev', FloatToStr(Value));
+    Set_Parameter(DSSPrime, '%stddev', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Rneut(Value: Double); CDECL;
 begin
-    Set_Parameter('Rneut', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Rneut', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Spectrum(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter('Spectrum', Value);
+    Set_Parameter(DSSPrime, 'Spectrum', Value);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Status(Value: Integer); CDECL;
 begin
     case Value of
         dssLoadVariable:
-            Set_Parameter('status', 'v');
+            Set_Parameter(DSSPrime, 'status', 'v');
         dssLoadFixed:
-            Set_Parameter('status', 'f');
+            Set_Parameter(DSSPrime, 'status', 'f');
         dssLoadExempt:
-            Set_Parameter('status', 'e');
+            Set_Parameter(DSSPrime, 'status', 'e');
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Vmaxpu(Value: Double); CDECL;
 begin
-    Set_Parameter('VmaxPu', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'VmaxPu', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Vminemerg(Value: Double); CDECL;
 begin
-    Set_Parameter('VminEmerg', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'VminEmerg', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Vminnorm(Value: Double); CDECL;
 begin
-    Set_Parameter('VminNorm', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'VminNorm', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Vminpu(Value: Double); CDECL;
 begin
-    Set_Parameter('VminPu', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'VminPu', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_xfkVA(Value: Double); CDECL;
 begin
-    Set_Parameter('XfKVA', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'XfKVA', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Xneut(Value: Double); CDECL;
 begin
-    Set_Parameter('Xneut', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Xneut', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Yearly(const Value: PAnsiChar); CDECL;
@@ -892,7 +893,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     elem.YearlyShape := Value;
-    LoadPropSideEffects(LoadProps.yearly, elem);
+    LoadPropSideEffects(DSSPrime, LoadProps.yearly, elem);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -911,7 +912,7 @@ end;
 procedure Loads_Get_ZIPV_GR(); CDECL;
 // Same as Loads_Get_ZIPV but uses global result (GR) pointers
 begin
-    Loads_Get_ZIPV(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Loads_Get_ZIPV(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -989,7 +990,7 @@ begin
     if (Value <> pLoad.NPhases) then
     begin
         pLoad.NPhases := Value;
-        LoadPropSideEffects(LoadProps.phases, pLoad);
+        LoadPropSideEffects(DSSPrime, LoadProps.phases, pLoad);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1000,7 +1001,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pLoad) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(pLoad.GetBus(1));
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pLoad.GetBus(1));
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Bus1(const Value: PAnsiChar); CDECL;
@@ -1010,7 +1011,7 @@ begin
     if not _activeObj(DSSPrime, pLoad) then
         Exit;
     pLoad.SetBus(1, Value);
-    // LoadPropSideEffects(LoadProps.bus1, pLoad); -- Nothing
+    // LoadPropSideEffects(DSSPrime, LoadProps.bus1, pLoad); -- Nothing
 end;
 //------------------------------------------------------------------------------
 end.

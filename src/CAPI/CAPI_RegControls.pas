@@ -3,7 +3,8 @@ unit CAPI_RegControls;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure RegControls_Get_AllNames_GR(); CDECL;
@@ -74,19 +75,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TRegControlObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TRegControlObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.RegControls.Active;
+    obj := DSS.ActiveCircuit.RegControls.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active RegControl object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active RegControl object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -94,16 +95,16 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
 var
     cmd: String;
     elem: TRegControlObj;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if not _activeObj(DSS, elem) then
         Exit;
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('regcontrol.%s.%s=%s', [elem.Name, parm, val]);
-    DSSPrime.DSSExecutive.Command := cmd;
+    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -119,7 +120,7 @@ end;
 procedure RegControls_Get_AllNames_GR(); CDECL;
 // Same as RegControls_Get_AllNames but uses global result (GR) pointers
 begin
-    RegControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    RegControls_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -148,7 +149,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.RegControls);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.RegControls);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Next(): Integer; CDECL;
@@ -156,7 +157,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.RegControls);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.RegControls);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ForwardBand(): Double; CDECL;
@@ -236,7 +237,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.ControlledBusName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ControlledBusName);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Name(): PAnsiChar; CDECL;
@@ -246,7 +247,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_PTratio(): Double; CDECL;
@@ -326,7 +327,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Transformer.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Transformer.Name);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_VoltageLimit(): Double; CDECL;
@@ -361,58 +362,58 @@ end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_CTPrimary(Value: Double); CDECL;
 begin
-    Set_Parameter('CTprim', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'CTprim', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_Delay(Value: Double); CDECL;
 begin
-    Set_Parameter('Delay', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Delay', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_ForwardBand(Value: Double); CDECL;
 begin
-    Set_Parameter('Band', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Band', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_ForwardR(Value: Double); CDECL;
 begin
-    Set_Parameter('R', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'R', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_ForwardVreg(Value: Double); CDECL;
 begin
-    Set_Parameter('Vreg', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Vreg', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_ForwardX(Value: Double); CDECL;
 begin
-    Set_Parameter('X', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'X', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_IsInverseTime(Value: TAPIBoolean); CDECL;
 begin
     if Value = TRUE then
-        Set_Parameter('InverseTime', 'y')
+        Set_Parameter(DSSPrime, 'InverseTime', 'y')
     else
-        Set_Parameter('InverseTime', 'n');
+        Set_Parameter(DSSPrime, 'InverseTime', 'n');
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_IsReversible(Value: TAPIBoolean); CDECL;
 begin
     if Value = TRUE then
-        Set_Parameter('Reversible', 'y')
+        Set_Parameter(DSSPrime, 'Reversible', 'y')
     else
-        Set_Parameter('Reversible', 'n');
+        Set_Parameter(DSSPrime, 'Reversible', 'n');
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_MaxTapChange(Value: Integer); CDECL;
 begin
-    Set_Parameter('MaxTapChange', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'MaxTapChange', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_MonitoredBus(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter('Bus', Value);
+    Set_Parameter(DSSPrime, 'Bus', Value);
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_Name(const Value: PAnsiChar); CDECL;
@@ -432,57 +433,57 @@ end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_PTratio(Value: Double); CDECL;
 begin
-    Set_Parameter('PTratio', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'PTratio', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_ReverseBand(Value: Double); CDECL;
 begin
-    Set_Parameter('RevBand', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'RevBand', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_ReverseR(Value: Double); CDECL;
 begin
-    Set_Parameter('RevR', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'RevR', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_ReverseVreg(Value: Double); CDECL;
 begin
-    Set_Parameter('RevVreg', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'RevVreg', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_ReverseX(Value: Double); CDECL;
 begin
-    Set_Parameter('RevX', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'RevX', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_TapDelay(Value: Double); CDECL;
 begin
-    Set_Parameter('TapDelay', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'TapDelay', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_TapWinding(Value: Integer); CDECL;
 begin
-    Set_Parameter('TapWinding', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'TapWinding', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_Transformer(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter('Transformer', Value);
+    Set_Parameter(DSSPrime, 'Transformer', Value);
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_VoltageLimit(Value: Double); CDECL;
 begin
-    Set_Parameter('Vlimit', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Vlimit', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_Winding(Value: Integer); CDECL;
 begin
-    Set_Parameter('Winding', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'Winding', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_TapNumber(Value: Integer); CDECL;
 begin
-    Set_Parameter('TapNum', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'TapNum', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Count(): Integer; CDECL;

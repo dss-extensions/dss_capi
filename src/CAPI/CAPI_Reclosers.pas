@@ -3,7 +3,8 @@ unit CAPI_Reclosers;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Reclosers_Get_AllNames_GR(); CDECL;
@@ -53,19 +54,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TRecloserObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TRecloserObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.Reclosers.Active;
+    obj := DSS.ActiveCircuit.Reclosers.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active Recloser object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active Recloser object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -73,17 +74,17 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
 var
     cmd: String;
     elem: TRecloserObj;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if not _activeObj(DSS, elem) then
         Exit;
 
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('recloser.%s.%s=%s', [elem.Name, parm, val]);
-    DSSPrime.DSSExecutive.Command := cmd;
+    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -97,7 +98,7 @@ end;
 procedure Reclosers_Get_AllNames_GR(); CDECL;
 // Same as Reclosers_Get_AllNames but uses global result (GR) pointers
 begin
-    Reclosers_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Reclosers_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -114,7 +115,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Reclosers);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.Reclosers);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_Next(): Integer; CDECL;
@@ -122,7 +123,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Reclosers);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.Reclosers);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_Name(): PAnsiChar; CDECL;
@@ -132,7 +133,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_Name(const Value: PAnsiChar); CDECL;
@@ -163,7 +164,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_MonitoredTerm(Value: Integer); CDECL;
 begin
-    Set_parameter('monitoredterm', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'monitoredterm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_SwitchedObj(): PAnsiChar; CDECL;
@@ -173,12 +174,12 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.ElementName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 begin
-    Set_parameter('SwitchedObj', Value);
+    Set_Parameter(DSSPrime, 'SwitchedObj', Value);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_MonitoredObj(): PAnsiChar; CDECL;
@@ -188,7 +189,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.MonitoredElementName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.MonitoredElementName);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_SwitchedTerm(): Integer; CDECL;
@@ -203,12 +204,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 begin
-    Set_parameter('monitoredObj', Value);
+    Set_Parameter(DSSPrime, 'monitoredObj', Value);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_SwitchedTerm(Value: Integer); CDECL;
 begin
-    Set_parameter('SwitchedTerm', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'SwitchedTerm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_NumFast(): Integer; CDECL;
@@ -224,7 +225,7 @@ end;
 procedure Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // return reclose intervals in seconds
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     elem: TRecloserObj;
     i, k: Integer;
 begin
@@ -246,7 +247,7 @@ end;
 procedure Reclosers_Get_RecloseIntervals_GR(); CDECL;
 // Same as Reclosers_Get_RecloseIntervals but uses global result (GR) pointers
 begin
-    Reclosers_Get_RecloseIntervals(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Reclosers_Get_RecloseIntervals(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -262,12 +263,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_NumFast(Value: Integer); CDECL;
 begin
-    Set_parameter('numfast', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'numfast', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_Shots(Value: Integer); CDECL;
 begin
-    Set_parameter('shots', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'shots', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_PhaseTrip(): Double; CDECL;
@@ -282,7 +283,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_PhaseTrip(Value: Double); CDECL;
 begin
-    Set_parameter('PhaseTrip', Format('%.g', [Value]));
+    Set_Parameter(DSSPrime, 'PhaseTrip', Format('%.g', [Value]));
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_GroundInst(): Double; CDECL;
@@ -317,27 +318,27 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_GroundInst(Value: Double); CDECL;
 begin
-    Set_parameter('GroundInst', Format('%.g', [Value]));
+    Set_Parameter(DSSPrime, 'GroundInst', Format('%.g', [Value]));
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_GroundTrip(Value: Double); CDECL;
 begin
-    Set_parameter('GroundTrip', Format('%.g', [Value]));
+    Set_Parameter(DSSPrime, 'GroundTrip', Format('%.g', [Value]));
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_PhaseInst(Value: Double); CDECL;
 begin
-    Set_parameter('Phaseinst', Format('%.g', [Value]));
+    Set_Parameter(DSSPrime, 'Phaseinst', Format('%.g', [Value]));
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Close(); CDECL;
 begin
-    Set_parameter('Action', 'close');
+    Set_Parameter(DSSPrime, 'Action', 'close');
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Open(); CDECL;
 begin
-    Set_parameter('Action', 'open');
+    Set_Parameter(DSSPrime, 'Action', 'open');
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_idx(): Integer; CDECL;

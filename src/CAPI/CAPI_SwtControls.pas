@@ -3,7 +3,8 @@ unit CAPI_SwtControls;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function SwtControls_Get_Action(): Integer; CDECL;
 procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -45,19 +46,19 @@ uses
     DSSClass,
     DSSHelper;
 
-function _activeObj(DSSPrime: TDSSContext; out obj: TSwtControlObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TSwtControlObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
         
-    obj := DSSPrime.ActiveCircuit.SwtControls.Active;
+    obj := DSS.ActiveCircuit.SwtControls.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active SwtControl object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active SwtControl object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -65,16 +66,16 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
 var
     cmd: String;
     obj: TSwtControlObj;
 begin
-    if not _activeObj(DSSPrime, obj) then
+    if not _activeObj(DSS, obj) then
         exit;
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('swtcontrol.%s.%s=%s', [obj.Name, parm, val]);
-    DSSPrime.DSSExecutive.Command := cmd;
+    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Action(): Integer; CDECL;
@@ -106,7 +107,7 @@ end;
 procedure SwtControls_Get_AllNames_GR(); CDECL;
 // Same as SwtControls_Get_AllNames but uses global result (GR) pointers
 begin
-    SwtControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    SwtControls_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -126,7 +127,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.SwtControls);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.SwtControls);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Next(): Integer; CDECL;
@@ -134,7 +135,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.SwtControls);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.SwtControls);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_IsLocked(): TAPIBoolean; CDECL;
@@ -156,7 +157,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_SwitchedObj(): PAnsiChar; CDECL;
@@ -167,7 +168,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.ElementName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_SwitchedTerm(): Integer; CDECL;
@@ -250,12 +251,12 @@ end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter('SwitchedObj', Value);
+    Set_Parameter(DSSPrime, 'SwitchedObj', Value);
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_SwitchedTerm(Value: Integer); CDECL;
 begin
-    Set_Parameter('SwitchedTerm', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'SwitchedTerm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Count(): Integer; CDECL;

@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CAPI_Types,
     XYCurve,
     DSSClass;
 
@@ -49,19 +50,19 @@ uses
     SysUtils,
     DSSHelper;
 
-function _activeObj(DSSPrime: TDSSContext; out obj: TXYCurveObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TXYCurveObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
         
-    obj := DSSPrime.XYCurveClass.GetActiveObj;
+    obj := DSS.XYCurveClass.GetActiveObj;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active XYCurve object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active XYCurve object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -95,7 +96,7 @@ begin
     if not _activeObj(DSSPrime, pXYCurve) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(pXYCurve.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pXYCurve.Name);
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_Next(): Integer; CDECL;
@@ -137,7 +138,7 @@ end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     pXYCurve: TXYCurveObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
@@ -153,7 +154,7 @@ end;
 procedure XYCurves_Get_Xarray_GR(); CDECL;
 // Same as XYCurves_Get_Xarray but uses global result (GR) pointers
 begin
-    XYCurves_Get_Xarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    XYCurves_Get_Xarray(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -175,7 +176,7 @@ procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
     pXYCurve: TXYCurveObj;
     ActualValueCount: TAPISize;
-    Value: PDoubleArray;
+    Value: PDoubleArray0;
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
@@ -189,7 +190,7 @@ begin
         Exit;
     end;
     
-    Value := PDoubleArray(ValuePtr);
+    Value := PDoubleArray0(ValuePtr);
     // Only put in as many points as we have allocated
     ActualValueCount := ValueCount;
     if ActualValueCount > pXYCurve.NumPoints then
@@ -229,7 +230,7 @@ end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     pXYCurve: TXYCurveObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
@@ -245,7 +246,7 @@ end;
 procedure XYCurves_Get_Yarray_GR(); CDECL;
 // Same as XYCurves_Get_Yarray but uses global result (GR) pointers
 begin
-    XYCurves_Get_Yarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    XYCurves_Get_Yarray(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -437,7 +438,7 @@ end;
 procedure XYCurves_Get_AllNames_GR(); CDECL;
 // Same as XYCurves_Get_AllNames but uses global result (GR) pointers
 begin
-    XYCurves_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    XYCurves_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 end.

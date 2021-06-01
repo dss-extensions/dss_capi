@@ -3,7 +3,8 @@ unit CAPI_Transformers;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Transformers_Get_AllNames_GR(); CDECL;
@@ -77,19 +78,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TTransfObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TTransfObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
         
-    obj := DSSPrime.ActiveCircuit.Transformers.Active;
+    obj := DSS.ActiveCircuit.Transformers.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active Transformer object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active Transformer object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -97,16 +98,16 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
 var
     cmd: String;
     obj: TTransfObj;
 begin
-    if not _activeObj(DSSPrime, obj) then
+    if not _activeObj(DSS, obj) then
         Exit;
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('transformer.%s.%s=%s', [obj.Name, parm, val]);
-    DSSPrime.DSSExecutive.Command := cmd;
+    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -120,7 +121,7 @@ end;
 procedure Transformers_Get_AllNames_GR(); CDECL;
 // Same as Transformers_Get_AllNames but uses global result (GR) pointers
 begin
-    Transformers_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Transformers_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -129,7 +130,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Transformers);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.Transformers);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Next(): Integer; CDECL;
@@ -137,7 +138,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Transformers);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.Transformers);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_IsDelta(): TAPIBoolean; CDECL;
@@ -214,7 +215,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_NumTaps(): Integer; CDECL;
@@ -299,7 +300,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.XfmrCode);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.XfmrCode);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Xhl(): Double; CDECL;
@@ -351,29 +352,29 @@ end;
 procedure Transformers_Set_IsDelta(Value: TAPIBoolean); CDECL;
 begin
     if Value = TRUE then
-        Set_Parameter('Conn', 'Delta')
+        Set_Parameter(DSSPrime, 'Conn', 'Delta')
     else
-        Set_Parameter('Conn', 'Wye')
+        Set_Parameter(DSSPrime, 'Conn', 'Wye')
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_kV(Value: Double); CDECL;
 begin
-    Set_Parameter('kv', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'kv', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_kVA(Value: Double); CDECL;
 begin
-    Set_Parameter('kva', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'kva', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_MaxTap(Value: Double); CDECL;
 begin
-    Set_Parameter('MaxTap', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'MaxTap', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_MinTap(Value: Double); CDECL;
 begin
-    Set_Parameter('MinTap', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'MinTap', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Name(const Value: PAnsiChar); CDECL;
@@ -394,7 +395,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_NumTaps(Value: Integer); CDECL;
 begin
-    Set_Parameter('NumTaps', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'NumTaps', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_NumWindings(Value: Integer); CDECL;
@@ -409,17 +410,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_R(Value: Double); CDECL;
 begin
-    Set_Parameter('%R', FloatToStr(Value));
+    Set_Parameter(DSSPrime, '%R', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Rneut(Value: Double); CDECL;
 begin
-    Set_Parameter('Rneut', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Rneut', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Tap(Value: Double); CDECL;
 begin
-    Set_Parameter('Tap', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Tap', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Wdg(Value: Integer); CDECL;
@@ -434,27 +435,27 @@ end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_XfmrCode(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter('XfmrCode', Value);
+    Set_Parameter(DSSPrime, 'XfmrCode', Value);
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Xhl(Value: Double); CDECL;
 begin
-    Set_Parameter('Xhl', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Xhl', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Xht(Value: Double); CDECL;
 begin
-    Set_Parameter('Xht', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Xht', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Xlt(Value: Double); CDECL;
 begin
-    Set_Parameter('Xlt', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Xlt', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Xneut(Value: Double); CDECL;
 begin
-    Set_Parameter('Xneut', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'Xneut', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Count(): Integer; CDECL;
@@ -486,7 +487,7 @@ end;
 procedure Transformers_Get_WdgVoltages_GR(); CDECL;
 // Same as Transformers_Get_WdgVoltages but uses global result (GR) pointers
 begin
-    Transformers_Get_WdgVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Transformers_Get_WdgVoltages(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -509,7 +510,7 @@ end;
 procedure Transformers_Get_WdgCurrents_GR(); CDECL;
 // Same as Transformers_Get_WdgCurrents but uses global result (GR) pointers
 begin
-    Transformers_Get_WdgCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Transformers_Get_WdgCurrents(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -523,7 +524,7 @@ begin
         Exit;
     end;
     
-    Result := DSS_GetAsPAnsiChar(elem.GetWindingCurrentsResult);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GetWindingCurrentsResult);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_CoreType(): Integer; CDECL;
@@ -569,7 +570,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_RdcOhms(Value: Double); CDECL;
 begin
-    Set_Parameter('RdcOhms', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'RdcOhms', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -592,14 +593,14 @@ end;
 
 procedure Transformers_Get_LossesByType_GR(); CDECL;
 begin
-    Transformers_Get_LossesByType(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Transformers_Get_LossesByType(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Transformers_Get_AllLossesByType(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for all transformers, in VA
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     CResult: PComplexArray; // this array is one-based, see Ucomplex
     elem: TTransfObj;
     lst: TDSSPointerList;
@@ -631,7 +632,7 @@ end;
 
 procedure Transformers_Get_AllLossesByType_GR(); CDECL;
 begin
-    Transformers_Get_AllLossesByType(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Transformers_Get_AllLossesByType(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_idx(): Integer; CDECL;

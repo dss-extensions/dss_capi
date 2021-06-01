@@ -3,7 +3,8 @@ unit CAPI_DSS_Executive;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function DSS_Executive_Get_Command(i: Integer): PAnsiChar; CDECL;
 function DSS_Executive_Get_NumCommands(): Integer; CDECL;
@@ -27,7 +28,7 @@ uses
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_Command(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ExecCommand[i]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, ExecCommand[i]);
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_NumCommands(): Integer; CDECL;
@@ -42,23 +43,23 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_Option(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ExecOption[i]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, ExecOption[i]);
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_CommandHelp(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(CommandHelp[i]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, CommandHelp[i]);
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_OptionHelp(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(OptionHelp[i]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, OptionHelp[i]);
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_OptionValue(i: Integer): PAnsiChar; CDECL;
 begin
     DSSPrime.DSSExecutive.Command := 'get ' + ExecOption[i];
-    Result := DSS_GetAsPAnsiChar(DSSPrime.GlobalResult);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.GlobalResult);
 end;
 //------------------------------------------------------------------------------
 end.

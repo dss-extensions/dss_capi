@@ -3,7 +3,8 @@ unit CAPI_PVSystems;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure PVSystems_Get_AllNames_GR(); CDECL;
@@ -58,19 +59,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TPVSystemObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TPVSystemObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.PVSystems.Active;
+    obj := DSS.ActiveCircuit.PVSystems.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active PVSystem object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active PVSystem object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -78,19 +79,19 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-function _activeObj2(DSSPrime: TDSSContext; out obj: TPVSystem2Obj): Boolean; inline;
+function _activeObj2(DSS: TDSSContext; out obj: TPVSystem2Obj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.PVSystems.Active;
+    obj := DSS.ActiveCircuit.PVSystems.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active PVSystem object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active PVSystem object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -109,13 +110,13 @@ end;
 procedure PVSystems_Get_AllNames_GR(); CDECL;
 // Same as PVSystems_Get_AllNames but uses global result (GR) pointers
 begin
-    PVSystems_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    PVSystems_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     k: Integer;
 begin
     if DSS_CAPI_LEGACY_MODELS then
@@ -137,13 +138,13 @@ end;
 procedure PVSystems_Get_RegisterNames_GR(); CDECL;
 // Same as PVSystems_Get_RegisterNames but uses global result (GR) pointers
 begin
-    PVSystems_Get_RegisterNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    PVSystems_Get_RegisterNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     PVSystem: TPVSystemObj;
     PVSystem2: TPVSystem2Obj;
     k: Integer;
@@ -181,7 +182,7 @@ end;
 procedure PVSystems_Get_RegisterValues_GR(); CDECL;
 // Same as PVSystems_Get_RegisterValues but uses global result (GR) pointers
 begin
-    PVSystems_Get_RegisterValues(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    PVSystems_Get_RegisterValues(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -190,7 +191,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.PVSystems);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.PVSystems);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Next(): Integer; CDECL;
@@ -198,7 +199,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.PVSystems);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.PVSystems);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Count(): Integer; CDECL;
@@ -244,12 +245,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(elem.Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem2.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Name(const Value: PAnsiChar); CDECL;
@@ -454,12 +455,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(elem.DailyShape);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShape);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem2.DailyShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DailyShape);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_daily(const Value: PAnsiChar); CDECL;
@@ -491,12 +492,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(elem.DutyShape);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShape);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem2.DutyShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DutyShape);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_duty(const Value: PAnsiChar); CDECL;
@@ -528,12 +529,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(elem.YearlyShape);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShape);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem2.YearlyShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.YearlyShape);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_yearly(const Value: PAnsiChar); CDECL;
@@ -565,12 +566,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(elem.DailyTShape);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyTShape);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem2.DailyTShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DailyTShape);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tdaily(const Value: PAnsiChar); CDECL;
@@ -602,12 +603,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(elem.DutyTShape);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyTShape);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem2.DutyTShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DutyTShape);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tduty(const Value: PAnsiChar); CDECL;
@@ -639,12 +640,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(elem.YearlyTShape);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyTShape);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem2.YearlyTShape);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.YearlyTShape);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tyearly(const Value: PAnsiChar); CDECL;

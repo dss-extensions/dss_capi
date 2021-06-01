@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CAPI_Types,
     Classes;
 
 procedure CtrlQueue_ClearQueue(); CDECL;
@@ -132,7 +133,7 @@ end;
 procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 // returns entire queue in CSV file format as a variant array of strings
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i: Integer;
     Qsize: Integer;
 
@@ -157,7 +158,7 @@ end;
 procedure CtrlQueue_Get_Queue_GR(); CDECL;
 // Same as CtrlQueue_Get_Queue but uses global result (GR) pointers
 begin
-    CtrlQueue_Get_Queue(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    CtrlQueue_Get_Queue(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 end.

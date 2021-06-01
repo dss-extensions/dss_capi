@@ -3,7 +3,8 @@ unit CAPI_Circuit;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function Circuit_Get_Name(): PAnsiChar; CDECL;
 function Circuit_Get_NumBuses(): Integer; CDECL;
@@ -105,7 +106,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.Name)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.Name)
 end;
 //------------------------------------------------------------------------------
 function Circuit_Get_NumBuses(): Integer; CDECL;
@@ -134,7 +135,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_LineLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     pLine: TLineObj;
     Loss: Complex;
 begin
@@ -158,13 +159,13 @@ end;
 procedure Circuit_Get_LineLosses_GR(); CDECL;
 // Same as Circuit_Get_LineLosses but uses global result (GR) pointers
 begin
-    Circuit_Get_LineLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_LineLosses(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_Losses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     LossValue: complex;
 begin
     if InvalidCircuit(DSSPrime) then
@@ -182,13 +183,13 @@ end;
 procedure Circuit_Get_Losses_GR(); CDECL;
 // Same as Circuit_Get_Losses but uses global result (GR) pointers
 begin
-    Circuit_Get_Losses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_Losses(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllBusVmag(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
 
 begin
@@ -215,13 +216,13 @@ end;
 procedure Circuit_Get_AllBusVmag_GR(); CDECL;
 // Same as Circuit_Get_AllBusVmag but uses global result (GR) pointers
 begin
-    Circuit_Get_AllBusVmag(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_AllBusVmag(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     Volts: Complex;
 
@@ -252,13 +253,13 @@ end;
 procedure Circuit_Get_AllBusVolts_GR(); CDECL;
 // Same as Circuit_Get_AllBusVolts but uses global result (GR) pointers
 begin
-    Circuit_Get_AllBusVolts(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_AllBusVolts(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i: Integer;
 
 begin
@@ -282,13 +283,13 @@ end;
 procedure Circuit_Get_AllElementNames_GR(); CDECL;
 // Same as Circuit_Get_AllElementNames but uses global result (GR) pointers
 begin
-    Circuit_Get_AllElementNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Circuit_Get_AllElementNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     pTransf: TTransfObj;
     Loss: Complex;
 begin
@@ -314,7 +315,7 @@ end;
 procedure Circuit_Get_SubstationLosses_GR(); CDECL;
 // Same as Circuit_Get_SubstationLosses but uses global result (GR) pointers
 begin
-    Circuit_Get_SubstationLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_SubstationLosses(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -323,7 +324,7 @@ procedure Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PAPISize);
 // Add up all power being contributed by sources.
 // Returns result in kW
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     pCktElem: TDSSCktElement;
     cPower: Complex;
 begin
@@ -348,7 +349,7 @@ end;
 procedure Circuit_Get_TotalPower_GR(); CDECL;
 // Same as Circuit_Get_TotalPower but uses global result (GR) pointers
 begin
-    Circuit_Get_TotalPower(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_TotalPower(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -383,7 +384,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.PDElements);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.PDElements);
 end;
 //------------------------------------------------------------------------------
 function Circuit_NextPDElement(): Integer; CDECL;
@@ -391,7 +392,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.PDElements);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.PDElements);
 end;
 //------------------------------------------------------------------------------
 function Circuit_FirstPCElement(): Integer; CDECL;
@@ -399,7 +400,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.PCElements);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.PCElements);
 end;
 //------------------------------------------------------------------------------
 function Circuit_NextPCElement(): Integer; CDECL;
@@ -407,13 +408,13 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.PCElements);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.PCElements);
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 // Just Bus names      modified 2/7/03
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i: Integer;
 
 begin
@@ -435,13 +436,13 @@ end;
 procedure Circuit_Get_AllBusNames_GR(); CDECL;
 // Same as Circuit_Get_AllBusNames but uses global result (GR) pointers
 begin
-    Circuit_Get_AllBusNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Circuit_Get_AllBusNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     CResultPtr: pComplex;
     pCktElem: TDSSCktElement;
     i: Integer;
@@ -470,7 +471,7 @@ end;
 procedure Circuit_Get_AllElementLosses_GR(); CDECL;
 // Same as Circuit_Get_AllElementLosses but uses global result (GR) pointers
 begin
-    Circuit_Get_AllElementLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_AllElementLosses(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -520,7 +521,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     Volts, BaseFactor: Double;
 begin
@@ -552,7 +553,7 @@ end;
 procedure Circuit_Get_AllBusVmagPu_GR(); CDECL;
 // Same as Circuit_Get_AllBusVmagPu but uses global result (GR) pointers
 begin
-    Circuit_Get_AllBusVmagPu(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_AllBusVmagPu(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -586,7 +587,7 @@ procedure Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PAPIS
 // Return all node names (Busname.nodenumber)
 // Same order as current solution array.
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i, j, k: Integer;
     BusName: String;
 begin
@@ -615,7 +616,7 @@ end;
 procedure Circuit_Get_AllNodeNames_GR(); CDECL;
 // Same as Circuit_Get_AllNodeNames but uses global result (GR) pointers
 begin
-    Circuit_Get_AllNodeNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Circuit_Get_AllNodeNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -623,7 +624,7 @@ procedure Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PAPISize); CD
 {Return System Y matrix, complex form}
 
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     iV: Longword;
     i, j, p: Longword;
     NValues: Longword;
@@ -675,14 +676,14 @@ end;
 procedure Circuit_Get_SystemY_GR(); CDECL;
 // Same as Circuit_Get_SystemY but uses global result (GR) pointers
 begin
-    Circuit_Get_SystemY(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_SystemY(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 {Return distances from each bus to its parent energymeter in an array that aligns with the buslist}
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i: Integer;
 
 begin
@@ -704,7 +705,7 @@ end;
 procedure Circuit_Get_AllBusDistances_GR(); CDECL;
 // Same as Circuit_Get_AllBusDistances but uses global result (GR) pointers
 begin
-    Circuit_Get_AllBusDistances(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_AllBusDistances(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -712,7 +713,7 @@ procedure Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PAPI
 {Return distance from each Node back to parent EnergyMeter}
 {Array sequence is same as all bus Vmag and Vmagpu}
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
 begin
     if InvalidCircuit(DSSPrime) then
@@ -738,13 +739,13 @@ end;
 procedure Circuit_Get_AllNodeDistances_GR(); CDECL;
 // Same as Circuit_Get_AllNodeDistances but uses global result (GR) pointers
 begin
-    Circuit_Get_AllNodeDistances(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_AllNodeDistances(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCount: PAPISize; Phase: Integer); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, k, NodeIdx: Integer;
 begin
     if InvalidCircuit(DSSPrime) then
@@ -778,13 +779,13 @@ end;
 procedure Circuit_Get_AllNodeDistancesByPhase_GR(Phase: Integer); CDECL;
 // Same as Circuit_Get_AllNodeDistancesByPhase but uses global result (GR) pointers
 begin
-    Circuit_Get_AllNodeDistancesByPhase(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Phase)
+    Circuit_Get_AllNodeDistancesByPhase(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Phase)
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PAPISize; Phase: Integer); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, k, NodeIdx: Integer;
 begin
     if MissingSolution(DSSPrime) then
@@ -817,13 +818,13 @@ end;
 procedure Circuit_Get_AllNodeVmagByPhase_GR(Phase: Integer); CDECL;
 // Same as Circuit_Get_AllNodeVmagByPhase but uses global result (GR) pointers
 begin
-    Circuit_Get_AllNodeVmagByPhase(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Phase)
+    Circuit_Get_AllNodeVmagByPhase(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Phase)
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PAPISize; Phase: Integer); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, k, NodeIdx: Integer;
     BaseFactor: Double;
 begin
@@ -862,13 +863,13 @@ end;
 procedure Circuit_Get_AllNodeVmagPUByPhase_GR(Phase: Integer); CDECL;
 // Same as Circuit_Get_AllNodeVmagPUByPhase but uses global result (GR) pointers
 begin
-    Circuit_Get_AllNodeVmagPUByPhase(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Phase)
+    Circuit_Get_AllNodeVmagPUByPhase(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, Phase)
 end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Phase: Integer); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i, k, NodeIdx: Integer;
     Temp: Array of String;
 
@@ -908,7 +909,7 @@ end;
 procedure Circuit_Get_AllNodeNamesByPhase_GR(Phase: Integer); CDECL;
 // Same as Circuit_Get_AllNodeNamesByPhase but uses global result (GR) pointers
 begin
-    Circuit_Get_AllNodeNamesByPhase(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar, Phase)
+    Circuit_Get_AllNodeNamesByPhase(DSSPrime.GR_DataPtr_PPAnsiChar, DSSPrime.GR_Counts_PPAnsiChar, Phase)
 end;
 
 //------------------------------------------------------------------------------
@@ -981,7 +982,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     i, k: Integer;
 
 begin
@@ -1008,7 +1009,7 @@ end;
 procedure Circuit_Get_YNodeOrder_GR(); CDECL;
 // Same as Circuit_Get_YNodeOrder but uses global result (GR) pointers
 begin
-    Circuit_Get_YNodeOrder(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Circuit_Get_YNodeOrder(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -1037,7 +1038,7 @@ end;
 procedure Circuit_Get_YCurrents_GR(); CDECL;
 // Same as Circuit_Get_YCurrents but uses global result (GR) pointers
 begin
-    Circuit_Get_YCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_YCurrents(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -1066,7 +1067,7 @@ end;
 procedure Circuit_Get_YNodeVarray_GR(); CDECL;
 // Same as Circuit_Get_YNodeVarray but uses global result (GR) pointers
 begin
-    Circuit_Get_YNodeVarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Circuit_Get_YNodeVarray(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -1097,8 +1098,8 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PAPISize; ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;
 var
-    Result: PDoubleArray;
-    Elements: PIntegerArray;
+    Result: PDoubleArray0;
+    Elements: PIntegerArray0;
     CResultPtr: pComplex;
     pCktElem: TDSSCktElement;
     i: TAPISize;
@@ -1109,7 +1110,7 @@ begin
         Exit;
     end;
     
-    Elements := PIntegerArray(ElementsPtr);
+    Elements := PIntegerArray0(ElementsPtr);
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * ElementsCount);
     CResultPtr := pComplex(ResultPtr);
 
@@ -1133,7 +1134,7 @@ end;
 procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: TAPISize); CDECL;
 // Same as Circuit_Get_ElementLosses but uses global result (GR) pointers for output
 begin
-    Circuit_Get_ElementLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ElementsPtr, ElementsCount)
+    Circuit_Get_ElementLosses(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, ElementsPtr, ElementsCount)
 end;
 
 //------------------------------------------------------------------------------

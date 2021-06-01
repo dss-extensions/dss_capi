@@ -3,7 +3,8 @@ unit CAPI_PDElements;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function PDElements_Get_Count(): Integer; CDECL;
 function PDElements_Get_FaultRate(): Double; CDECL;
@@ -72,26 +73,22 @@ uses
     MathUtil,
     DSSClass,
     DSSHelper;
-    
-type
-    PDoubleArray = CAPI_Utils.PDoubleArray;
-    PIntegerArray = OBJPAS.PIntegerArray;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TPDElement): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TPDElement): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         if ActiveCktElement = NIL then 
         begin
             if DSS_CAPI_EXT_ERRORS then
             begin
-                DoSimpleMsg(DSSPrime, 'No active PD Element found! Activate one and retry.', 8989);
+                DoSimpleMsg(DSS, 'No active PD Element found! Activate one and retry.', 8989);
             end;
             Exit;
         end;
@@ -100,7 +97,7 @@ begin
         begin
             if DSS_CAPI_EXT_ERRORS then
             begin
-                DoSimpleMsg(DSSPrime, 'No active PD Element found! Activate one and retry.', 8989);
+                DoSimpleMsg(DSS, 'No active PD Element found! Activate one and retry.', 8989);
             end;
             Exit;
         end;
@@ -134,7 +131,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.PDElements);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.PDElements);
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Next(): Integer; CDECL;
@@ -142,7 +139,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.PDelements);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.PDelements);
     if Result <> 0 then Result := 1; //TODO: inconsistent with the rest
 end;
 //------------------------------------------------------------------------------
@@ -191,7 +188,7 @@ begin
     Result := NIL;   // return null if not a PD element
     if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(Format('%s.%s', [ActivePDElement.Parentclass.Name, ActivePDElement.Name]));  // full name
+    Result := DSS_GetAsPAnsiChar(DSSPrime, Format('%s.%s', [ActivePDElement.Parentclass.Name, ActivePDElement.Name]));  // full name
 end;
 
 //------------------------------------------------------------------------------
@@ -333,7 +330,7 @@ end;
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
-    Result: PPAnsiCharArray;
+    Result: PPAnsiCharArray0;
     idx_before, k, numEnabled: Integer;
     elem: TPDElement;
     pList: TDSSPointerList;
@@ -376,7 +373,7 @@ end;
 procedure PDElements_Get_AllNames_GR(); CDECL;
 // Same as PDElements_Get_AllNames but uses global result (GR) pointers
 begin
-    PDElements_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar);
+    PDElements_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0]);
 end;
 
 //------------------------------------------------------------------------------
@@ -423,11 +420,11 @@ begin
     end;
 end;
 
-procedure _PDElements_Get_x(var ResultPtr: PDouble; ResultCount: PAPISize; const What: integer; const AllNodes: Boolean);
+procedure _PDElements_Get_x(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; const What: integer; const AllNodes: Boolean);
 // Internal helper function to calculate for all PDElements
 // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
 var
-    Result: CAPI_Utils.PDoubleArray;
+    Result: PDoubleArray0;
     k, idx_before, maxSize, RatingIdx: Integer;
     pElem: TPDElement;
     pList: TDSSPointerList;
@@ -436,13 +433,13 @@ var
     RSignal: TXYCurveObj;
 begin
     cBuffer := NIL;
-    if (MissingSolution(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
+    if (MissingSolution(DSS)) or (DSS.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount, -1.0);
         Exit;
     end;
 
-    pList := DSSPrime.ActiveCircuit.PDElements;
+    pList := DSS.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
     k := 0;
     pElem := pList.First;
@@ -465,23 +462,23 @@ begin
     0, 1, 2:
         try
             RatingIdx := -1;
-            if DSSPrime.SeasonalRating then
+            if DSS.SeasonalRating then
             begin
-                if DSSPrime.SeasonSignal <> '' then
+                if DSS.SeasonSignal <> '' then
                 begin
-                    RSignal := DSSPrime.XYCurveClass.Find(DSSPrime.SeasonSignal);
+                    RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
                     if RSignal <> NIL then
                     begin
-                        RatingIdx := trunc(RSignal.GetYValue(DSSPrime.ActiveCircuit.Solution.DynaVars.intHour));
+                        RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
                     end
                     else
-                        DSSPrime.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+                        DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
                 end
                 else
-                    DSSPrime.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+                    DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
             end;
 
-            maxSize := GetMaxCktElementSize(DSSPrime);
+            maxSize := GetMaxCktElementSize(DSS);
             Getmem(cBuffer, sizeof(Complex) * maxSize);
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.Count); // real
             while pElem <> NIL do
@@ -507,41 +504,41 @@ end;
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
 begin
-    _PDElements_Get_x(ResultPtr, ResultCount, 0, AllNodes);
+    _PDElements_Get_x(DSSPrime, ResultPtr, ResultCount, 0, AllNodes);
 end;
 
-procedure PDElements_Get_AllMaxCurrents_GR(); CDECL;
+procedure PDElements_Get_AllMaxCurrents_GR(const AllNodes: TAPIBoolean); CDECL;
 // Same as PDElements_Get_AllMaxCurrents but uses global result (GR) pointers
 begin
-    PDElements_Get_AllMaxCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)
+    PDElements_Get_AllMaxCurrents(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, AllNodes)
 end;
 
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
 begin
-    _PDElements_Get_x(ResultPtr, ResultCount, 1, AllNodes);
+    _PDElements_Get_x(DSSPrime, ResultPtr, ResultCount, 1, AllNodes);
 end;
 
 procedure PDElements_Get_AllPctNorm_GR(const AllNodes: TAPIBoolean); CDECL;
 // Same as PDElements_Get_AllPctNorm but uses global result (GR) pointers
 begin
-    PDElements_Get_AllPctNorm(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)
+    PDElements_Get_AllPctNorm(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, AllNodes)
 end;
 
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PAPISize; const AllNodes: TAPIBoolean); CDECL;
 begin
-    _PDElements_Get_x(ResultPtr, ResultCount, 2, AllNodes);
+    _PDElements_Get_x(DSSPrime, ResultPtr, ResultCount, 2, AllNodes);
 end;
 
 procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: TAPIBoolean); CDECL;
 // Same as PDElements_Get_AllPctEmerg but uses global result (GR) pointers
 begin
-    PDElements_Get_AllPctEmerg(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)
+    PDElements_Get_AllPctEmerg(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, AllNodes)
 end;
 
 //------------------------------------------------------------------------------
-procedure _PDElements_Get_AllCurrents_x(var ResultPtr: PDouble; ResultCount: PAPISize; const What: Integer);
+procedure _PDElements_Get_AllCurrents_x(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; const What: Integer);
 // What=1 for polar form, otherwise rectangular
 type
     PPolar = ^Polar;
@@ -553,12 +550,12 @@ var
     NValuesTotal, NValues, i: Integer;
     CResultPtr: PPolar;
 begin
-    if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
+    if (InvalidCircuit(DSS)) or (DSS.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    pList := DSSPrime.ActiveCircuit.PDElements;
+    pList := DSS.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements
@@ -605,32 +602,32 @@ end;
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 begin
-    _PDElements_Get_AllCurrents_x(ResultPtr, ResultCount, 0);
+    _PDElements_Get_AllCurrents_x(DSSPrime, ResultPtr, ResultCount, 0);
 end;
 
 procedure PDElements_Get_AllCurrents_GR(); CDECL;
 // Same as PDElements_Get_AllCurrentsMagAng but uses global result (GR) pointers
 begin
-    PDElements_Get_AllCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+    PDElements_Get_AllCurrents(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0]);
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllCurrentsMagAng(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 begin
-    _PDElements_Get_AllCurrents_x(ResultPtr, ResultCount, 1);
+    _PDElements_Get_AllCurrents_x(DSSPrime, ResultPtr, ResultCount, 1);
 end;
 
 procedure PDElements_Get_AllCurrentsMagAng_GR(); CDECL;
 // Same as PDElements_Get_AllCurrentsMagAng but uses global result (GR) pointers
 begin
-    PDElements_Get_AllCurrentsMagAng(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+    PDElements_Get_AllCurrentsMagAng(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0]);
 end;
 
 //------------------------------------------------------------------------------
-procedure _PDElements_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize; magnitude: boolean);
+procedure _PDElements_Get_AllxSeqCurrents(DSS: TDSSContext; var ResultPtr: PDouble; ResultCount: PAPISize; magnitude: boolean);
 type
     PPolar = ^Polar;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     idx_before: Integer;
     pList: TDSSPointerList;
     pElem: TPDElement;
@@ -638,13 +635,13 @@ var
     i012v, i012: pComplex;
     maxSize, NTermsTotal, i, j, k: Integer;
 begin
-    if (MissingSolution(DSSPrime)) or (DSSPrime.ActiveCircuit.PDElements.Count <= 0) then 
+    if (MissingSolution(DSS)) or (DSS.ActiveCircuit.PDElements.Count <= 0) then 
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
     
-    pList := DSSPrime.ActiveCircuit.PDElements;
+    pList := DSS.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements, max. terminals, max. conductors
@@ -660,7 +657,7 @@ begin
     pElem := pList.First;
     i012v := AllocMem(SizeOf(Complex) * 3 * NTermsTotal);
     i012 := i012v; // this is a running pointer
-    maxSize := GetMaxCktElementSize(DSSPrime);
+    maxSize := GetMaxCktElementSize(DSS);
     cBuffer := AllocMem(SizeOf(Complex) * maxSize);
     while pElem <> NIL do
     begin
@@ -675,7 +672,7 @@ begin
             if NPhases <> 3 then
             begin
                 {Handle non-3 phase elements}
-                if (Nphases = 1) and DSSPrime.ActiveCircuit.PositiveSequence then
+                if (Nphases = 1) and DSS.ActiveCircuit.PositiveSequence then
                 begin
                     {Populate only phase 1 quantities in Pos seq}
                     Inc(i012);
@@ -735,32 +732,32 @@ end;
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 begin
-    _PDElements_Get_AllxSeqCurrents(ResultPtr, ResultCount, True);
+    _PDElements_Get_AllxSeqCurrents(DSSPrime, ResultPtr, ResultCount, True);
 end;
 
 procedure PDElements_Get_AllSeqCurrents_GR(); CDECL;
 // Same as PDElements_Get_AllSeqCurrents but uses global result (GR) pointers
 begin
-    PDElements_Get_AllSeqCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+    PDElements_Get_AllSeqCurrents(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0]);
 end;
 
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllCplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 begin
-    _PDElements_Get_AllxSeqCurrents(ResultPtr, ResultCount, False);
+    _PDElements_Get_AllxSeqCurrents(DSSPrime, ResultPtr, ResultCount, False);
 end;
 
 procedure PDElements_Get_AllCplxSeqCurrents_GR(); CDECL;
 // Same as PDElements_Get_AllCplxSeqCurrents but uses global result (GR) pointers
 begin
-    PDElements_Get_AllCplxSeqCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+    PDElements_Get_AllCplxSeqCurrents(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0]);
 end;
 
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return complex kW, kvar in each conductor for each terminal, for each PDElement
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     NValuesTotal, NValues, i: Integer;
     idx_before: Integer;
     pList: TDSSPointerList;
@@ -810,7 +807,7 @@ end;
 procedure PDElements_Get_AllPowers_GR(); CDECL;
 // Same as PDElements_Get_AllPowers but uses global result (GR) pointers
 begin
-    PDElements_Get_AllPowers(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+    PDElements_Get_AllPowers(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0]);
 end;
 
 //------------------------------------------------------------------------------
@@ -818,7 +815,7 @@ procedure PDElements_Get_AllSeqPowers(var ResultPtr: PDouble; ResultCount: PAPIS
 // All seq Powers of each PD element
 // returns kW + j kvar
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     NValuesTotal, MaxNValues, i, j, k, n, iCount: Integer;
     idx_before: Integer;
     pList: TDSSPointerList;
@@ -940,23 +937,23 @@ end;
 procedure PDElements_Get_AllSeqPowers_GR(); CDECL;
 // Same as PDElements_Get_AllPowers but uses global result (GR) pointers
 begin
-    PDElements_Get_AllSeqPowers(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+    PDElements_Get_AllSeqPowers(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0]);
 end;
 
 //------------------------------------------------------------------------------
-procedure _PDElements_Get_AllNum_x(var ResultPtr: PInteger; ResultCount: PAPISize; const what: Integer);
+procedure _PDElements_Get_AllNum_x(DSS: TDSSContext; var ResultPtr: PInteger; ResultCount: PAPISize; const what: Integer);
 var
     idx_before, numEnabled: Integer;
     pElem: TPDElement;
     pList: TDSSPointerList;
     pval: PAPISize;
 begin
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
     begin
         DefaultResult(ResultPtr, ResultCount, -1);
         Exit;
     end;
-    pList := DSSPrime.ActiveCircuit.PDElements;
+    pList := DSS.ActiveCircuit.PDElements;
     if pList.Count <= 0 then
     begin
         DefaultResult(ResultPtr, ResultCount, -1);
@@ -1016,37 +1013,37 @@ end;
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllNumPhases(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
-    _PDElements_Get_AllNum_x(ResultPtr, ResultCount, 0);
+    _PDElements_Get_AllNum_x(DSSPrime, ResultPtr, ResultCount, 0);
 end;
 
 procedure PDElements_Get_AllNumPhases_GR(); CDECL;
 // Same as PDElements_Get_AllNumPhases but uses global result (GR) pointers
 begin
-    PDElements_Get_AllNumPhases(GR_DataPtr_PInteger, GR_CountPtr_PInteger);
+    PDElements_Get_AllNumPhases(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0]);
 end;
 
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllNumConductors(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
-    _PDElements_Get_AllNum_x(ResultPtr, ResultCount, 1);
+    _PDElements_Get_AllNum_x(DSSPrime, ResultPtr, ResultCount, 1);
 end;
 
 procedure PDElements_Get_AllNumConductors_GR(); CDECL;
 // Same as PDElements_Get_AllNumConductors but uses global result (GR) pointers
 begin
-    PDElements_Get_AllNumConductors(GR_DataPtr_PInteger, GR_CountPtr_PInteger);
+    PDElements_Get_AllNumConductors(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0]);
 end;
 
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllNumTerminals(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 begin
-    _PDElements_Get_AllNum_x(ResultPtr, ResultCount, 2);
+    _PDElements_Get_AllNum_x(DSSPrime, ResultPtr, ResultCount, 2);
 end;
 
 procedure PDElements_Get_AllNumTerminals_GR(); CDECL;
 // Same as PDElements_Get_AllNumPhases but uses global result (GR) pointers
 begin
-    PDElements_Get_AllNumTerminals(GR_DataPtr_PInteger, GR_CountPtr_PInteger);
+    PDElements_Get_AllNumTerminals(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0]);
 end;
 
 //------------------------------------------------------------------------------

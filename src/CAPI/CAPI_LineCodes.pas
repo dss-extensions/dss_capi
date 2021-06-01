@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CAPI_Types,
     LineCode;
 
 function LineCodes_Get_Count(): Integer; CDECL;
@@ -60,19 +61,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TLineCodeObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TLineCodeObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.LineCodeClass.GetActiveObj;
+    obj := DSS.LineCodeClass.GetActiveObj;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active LineCode object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active LineCode object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -112,7 +113,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
     
-    Result := DSS_GetAsPAnsiChar(pLineCode.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pLineCode.Name);
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Name(const Value: PAnsiChar); CDECL;
@@ -323,7 +324,7 @@ end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
     Factor: Double;
@@ -351,13 +352,13 @@ end;
 procedure LineCodes_Get_Cmatrix_GR(); CDECL;
 // Same as LineCodes_Get_Cmatrix but uses global result (GR) pointers
 begin
-    LineCodes_Get_Cmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LineCodes_Get_Cmatrix(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure LineCodes_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
 
@@ -384,13 +385,13 @@ end;
 procedure LineCodes_Get_Rmatrix_GR(); CDECL;
 // Same as LineCodes_Get_Rmatrix but uses global result (GR) pointers
 begin
-    LineCodes_Get_Rmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LineCodes_Get_Rmatrix(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure LineCodes_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
 
@@ -417,13 +418,13 @@ end;
 procedure LineCodes_Get_Xmatrix_GR(); CDECL;
 // Same as LineCodes_Get_Xmatrix but uses global result (GR) pointers
 begin
-    LineCodes_Get_Xmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LineCodes_Get_Xmatrix(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Cmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray;
+    Value: PDoubleArray0;
     i, j, k: Integer;
     Factor: Double;
     pLineCode: TLineCodeObj;
@@ -431,7 +432,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Value := PDoubleArray(ValuePtr);
+    Value := PDoubleArray0(ValuePtr);
 
     with pLineCode do
     begin
@@ -457,7 +458,7 @@ end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray;
+    Value: PDoubleArray0;
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
     Ztemp: complex;
@@ -466,7 +467,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Value := PDoubleArray(ValuePtr);
+    Value := PDoubleArray0(ValuePtr);
 
     with pLineCode do
     begin
@@ -492,7 +493,7 @@ end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 var
-    Value: PDoubleArray;
+    Value: PDoubleArray0;
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
     Ztemp: complex;
@@ -501,7 +502,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Value := PDoubleArray(ValuePtr);
+    Value := PDoubleArray0(ValuePtr);
 
     with pLineCode do
     begin
@@ -578,7 +579,7 @@ end;
 procedure LineCodes_Get_AllNames_GR(); CDECL;
 // Same as LineCodes_Get_AllNames but uses global result (GR) pointers
 begin
-    LineCodes_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    LineCodes_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------

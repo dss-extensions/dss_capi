@@ -3,7 +3,8 @@ unit CAPI_DSSProperty;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function DSSProperty_Get_Description(): PAnsiChar; CDECL;
 function DSSProperty_Get_Name(): PAnsiChar; CDECL;
@@ -23,15 +24,15 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function IsPropIndexInvalid(errorNum: Integer): Boolean;
+function IsPropIndexInvalid(DSS: TDSSContext; errorNum: Integer): Boolean;
 begin
     Result := FALSE;
 
-    if (DSSPrime.FPropIndex > DSSPrime.ActiveDSSObject.ParentClass.NumProperties) or (DSSPrime.FPropIndex < 1) then
+    if (DSS.FPropIndex > DSS.ActiveDSSObject.ParentClass.NumProperties) or (DSS.FPropIndex < 1) then
     begin
-        DoSimpleMsg(DSSPrime, Format(
+        DoSimpleMsg(DSS, Format(
             'Invalid property index "%d" for "%s.%s"',
-            [DSSPrime.FPropIndex, DSSPrime.ActiveDSSObject.ParentClass.Name, DSSPrime.ActiveDSSObject.Name]),
+            [DSS.FPropIndex, DSS.ActiveDSSObject.ParentClass.Name, DSS.ActiveDSSObject.Name]),
             errorNum
         );
         Result := TRUE;
@@ -51,8 +52,8 @@ begin
     end;
 
     with DSSPrime.ActiveDSSObject.ParentClass do
-        if not IsPropIndexInvalid(33006) then
-            Result := DSS_GetAsPAnsiChar(PropertyHelp^[DSSPrime.FPropIndex]);
+        if not IsPropIndexInvalid(DSSPrime, 33006) then
+            Result := DSS_GetAsPAnsiChar(DSSPrime, PropertyHelp^[DSSPrime.FPropIndex]);
 end;
 //------------------------------------------------------------------------------
 function DSSProperty_Get_Name(): PAnsiChar; CDECL;
@@ -70,10 +71,10 @@ begin
         Exit;
     end;
 
-    if IsPropIndexInvalid(33005) then
+    if IsPropIndexInvalid(DSSPrime, 33005) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveDSSObject.ParentClass.PropertyName^[DSSPrime.FPropIndex]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.ParentClass.PropertyName^[DSSPrime.FPropIndex]);
 end;
 //------------------------------------------------------------------------------
 function DSSProperty_Get_Val(): PAnsiChar; CDECL;
@@ -91,11 +92,11 @@ begin
         Exit;
     end;
 
-    if IsPropIndexInvalid(33004) then
+    if IsPropIndexInvalid(DSSPrime, 33004) then
         Exit;
         
     with DSSPrime.ActiveDSSObject do
-        Result := DSS_GetAsPAnsiChar(PropertyValue[ParentClass.PropertyIdxMap[DSSPrime.FPropIndex]]);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, PropertyValue[ParentClass.PropertyIdxMap[DSSPrime.FPropIndex]]);
 end;
 
 //------------------------------------------------------------------------------
@@ -113,7 +114,7 @@ begin
         Exit;
     end;
     
-    if IsPropIndexInvalid(33001) then
+    if IsPropIndexInvalid(DSSPrime, 33001) then
         Exit;
 
     with DSSPrime.ActiveDSSObject do
@@ -136,7 +137,7 @@ begin
         
     DSSPrime.FPropIndex := Value + 1;
     DSSPrime.FPropClass := DSSPrime.ActiveDSSObject.ParentClass;
-    if IsPropIndexInvalid(33002) then
+    if IsPropIndexInvalid(DSSPrime, 33002) then
         Exit;
 end;
 //------------------------------------------------------------------------------

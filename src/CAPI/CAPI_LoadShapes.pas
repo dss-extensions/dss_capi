@@ -3,7 +3,8 @@ unit CAPI_LoadShapes;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function LoadShapes_Get_Name(): PAnsiChar; CDECL;
 procedure LoadShapes_Set_Name(const Value: PAnsiChar); CDECL;
@@ -63,17 +64,17 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TLoadshapeObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TLoadshapeObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.LoadshapeClass.GetActiveObj;
+    obj := DSS.LoadshapeClass.GetActiveObj;
     if obj = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61001);
+        DoSimpleMsg(DSS, 'No active Loadshape Object found.', 61001);
         Exit;
     end;
     
@@ -87,7 +88,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Name(const Value: PAnsiChar); CDECL;
@@ -135,7 +136,7 @@ end;
 procedure LoadShapes_Get_AllNames_GR(); CDECL;
 // Same as LoadShapes_Get_AllNames but uses global result (GR) pointers
 begin
-    LoadShapes_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    LoadShapes_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -152,7 +153,7 @@ end;
 procedure LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TLoadshapeObj;
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     ActualNumPoints: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
@@ -174,14 +175,14 @@ end;
 procedure LoadShapes_Get_Pmult_GR(); CDECL;
 // Same as LoadShapes_Get_Pmult but uses global result (GR) pointers
 begin
-    LoadShapes_Get_Pmult(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LoadShapes_Get_Pmult(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
 procedure LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     elem: TLoadshapeObj;
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     ActualNumPoints: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
@@ -203,7 +204,7 @@ end;
 procedure LoadShapes_Get_Qmult_GR(); CDECL;
 // Same as LoadShapes_Get_Qmult but uses global result (GR) pointers
 begin
-    LoadShapes_Get_Qmult(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LoadShapes_Get_Qmult(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -301,7 +302,7 @@ end;
 procedure LoadShapes_Get_TimeArray_GR(); CDECL;
 // Same as LoadShapes_Get_TimeArray but uses global result (GR) pointers
 begin
-    LoadShapes_Get_TimeArray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LoadShapes_Get_TimeArray(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------

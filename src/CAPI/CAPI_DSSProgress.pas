@@ -3,7 +3,8 @@ unit CAPI_DSSProgress;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure DSSProgress_Close(); CDECL;
 procedure DSSProgress_Set_Caption(const Value: PAnsiChar); CDECL;

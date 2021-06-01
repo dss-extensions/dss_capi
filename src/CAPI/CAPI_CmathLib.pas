@@ -3,7 +3,8 @@ unit CAPI_CmathLib;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure CmathLib_Get_cmplx(var ResultPtr: PDouble; ResultCount: PAPISize; RealPart, ImagPart: Double); CDECL;
 procedure CmathLib_Get_cmplx_GR(RealPart, ImagPart: Double); CDECL;
@@ -22,11 +23,13 @@ implementation
 
 uses
     CAPI_Constants,
+    DSSClass,
+    DSSHelper,
     Ucomplex;
 
 procedure CmathLib_Get_cmplx(var ResultPtr: PDouble; ResultCount: PAPISize; RealPart, ImagPart: Double); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
 
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
@@ -37,7 +40,7 @@ end;
 procedure CmathLib_Get_cmplx_GR(RealPart, ImagPart: Double); CDECL;
 // Same as CmathLib_Get_cmplx but uses global result (GR) pointers
 begin
-    CmathLib_Get_cmplx(GR_DataPtr_PDouble, GR_CountPtr_PDouble, RealPart, ImagPart)
+    CmathLib_Get_cmplx(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, RealPart, ImagPart)
 end;
 
 //------------------------------------------------------------------------------
@@ -53,7 +56,7 @@ end;
 //------------------------------------------------------------------------------
 procedure CmathLib_Get_ctopolardeg(var ResultPtr: PDouble; ResultCount: PAPISize; RealPart, ImagPart: Double); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     TempPolar: polar;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
@@ -65,13 +68,13 @@ end;
 procedure CmathLib_Get_ctopolardeg_GR(RealPart, ImagPart: Double); CDECL;
 // Same as CmathLib_Get_ctopolardeg but uses global result (GR) pointers
 begin
-    CmathLib_Get_ctopolardeg(GR_DataPtr_PDouble, GR_CountPtr_PDouble, RealPart, ImagPart)
+    CmathLib_Get_ctopolardeg(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, RealPart, ImagPart)
 end;
 
 //------------------------------------------------------------------------------
 procedure CmathLib_Get_pdegtocomplex(var ResultPtr: PDouble; ResultCount: PAPISize; magnitude, angle: Double); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     cTemp: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
@@ -83,13 +86,13 @@ end;
 procedure CmathLib_Get_pdegtocomplex_GR(magnitude, angle: Double); CDECL;
 // Same as CmathLib_Get_pdegtocomplex but uses global result (GR) pointers
 begin
-    CmathLib_Get_pdegtocomplex(GR_DataPtr_PDouble, GR_CountPtr_PDouble, magnitude, angle)
+    CmathLib_Get_pdegtocomplex(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, magnitude, angle)
 end;
 
 //------------------------------------------------------------------------------
 procedure CmathLib_Get_cmul(var ResultPtr: PDouble; ResultCount: PAPISize; a1, b1, a2, b2: Double); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     cTemp: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
@@ -101,13 +104,13 @@ end;
 procedure CmathLib_Get_cmul_GR(a1, b1, a2, b2: Double); CDECL;
 // Same as CmathLib_Get_cmul but uses global result (GR) pointers
 begin
-    CmathLib_Get_cmul(GR_DataPtr_PDouble, GR_CountPtr_PDouble, a1, b1, a2, b2)
+    CmathLib_Get_cmul(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, a1, b1, a2, b2)
 end;
 
 //------------------------------------------------------------------------------
 procedure CmathLib_Get_cdiv(var ResultPtr: PDouble; ResultCount: PAPISize; a1, b1, a2, b2: Double); CDECL;
 var
-    Result: PDoubleArray;
+    Result: PDoubleArray0;
     cTemp: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
@@ -119,7 +122,7 @@ end;
 procedure CmathLib_Get_cdiv_GR(a1, b1, a2, b2: Double); CDECL;
 // Same as CmathLib_Get_cdiv but uses global result (GR) pointers
 begin
-    CmathLib_Get_cdiv(GR_DataPtr_PDouble, GR_CountPtr_PDouble, a1, b1, a2, b2)
+    CmathLib_Get_cdiv(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, a1, b1, a2, b2)
 end;
 
 //------------------------------------------------------------------------------

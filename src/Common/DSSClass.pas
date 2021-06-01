@@ -14,9 +14,18 @@ unit DSSClass;
 interface
 
 USES
-    Command,  Arraydef, Hashlist, Classes, DSSPointerList, NamedObject, ParserDel, SyncObjs, UComplex;
+    Command, 
+    Arraydef, 
+    Hashlist, 
+    Classes, 
+    DSSPointerList, 
+    NamedObject, 
+    ParserDel, 
+    SyncObjs, 
+    UComplex, 
+    CAPI_Types;
 
-TYPE
+type
 {$SCOPEDENUMS ON}
     TActorStatus = (
         Busy = 0,
@@ -281,6 +290,17 @@ TYPE
 {$ENDIF}
         _Name: String;
     
+        // C-API pointer data (GR mode)
+        GR_DataPtr_PPAnsiChar: PPAnsiChar;
+        GR_DataPtr_PDouble: PDouble;
+        GR_DataPtr_PInteger: PInteger;
+        GR_DataPtr_PByte: PByte;
+
+        GR_Counts_PPAnsiChar: Array[0..1] of TAPISize;
+        GR_Counts_PDouble: Array[0..1] of TAPISize;
+        GR_Counts_PInteger: Array[0..1] of TAPISize;
+        GR_Counts_PByte: Array[0..1] of TAPISize;
+
         // Original global state
         DSSClasses: TDSSClasses;
         ClassNames         :TClassNamesHashListType;
@@ -387,6 +407,12 @@ constructor TDSSContext.Create(_Parent: TDSSContext; _IsPrime: Boolean);
 begin
     inherited Create;
 
+    // GR (global result) counters: Initialize to zero
+    FillByte(GR_Counts_PPAnsiChar, sizeof(TAPISize) * 2, 0);
+    FillByte(GR_Counts_PDouble, sizeof(TAPISize) * 2, 0);
+    FillByte(GR_Counts_PInteger, sizeof(TAPISize) * 2, 0);
+    FillByte(GR_Counts_PByte, sizeof(TAPISize) * 2, 0);
+
     IsPrime := _IsPrime;
     Parent := _Parent;
 
@@ -477,6 +503,7 @@ begin
     FPropIndex := 0;
     FPropClass := NIL;
     
+    // From ReduceCkt interface initialization
     ReduceEditString := ''; // Init to null string
     EnergyMeterName := '';
     FirstPDelement := '';

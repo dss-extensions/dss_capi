@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CAPI_Types,
     CNData,
     CableData;
 
@@ -80,19 +81,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------  
-function _activeObj(DSSPrime: TDSSContext; out obj: TCNDataObj): boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TCNDataObj): boolean; inline;
 begin
     obj := NIL;
     Result := False;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
         
-    obj := DSSPrime.CNDataClass.GetActiveObj();
+    obj := DSS.CNDataClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active CNData object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active CNData object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -182,7 +183,7 @@ begin
     if not _activeObj(DSSPrime, pCNData) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(pCNData.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pCNData.Name);
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;
@@ -210,7 +211,7 @@ end;
 procedure CNData_Get_AllNames_GR(); CDECL;
 // Same as CNData_Get_AllNames but uses global result (GR) pointers
 begin
-    CNData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    CNData_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_NormAmps(): Double; CDECL;

@@ -3,7 +3,8 @@ unit CAPI_Settings;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function Settings_Get_AllowDuplicates(): TAPIBoolean; CDECL;
 function Settings_Get_AutoBusList(): PAnsiChar; CDECL;
@@ -81,7 +82,7 @@ begin
     begin
         for i := 1 to Count do
             AppendGlobalResult(DSSPrime, NameOfIndex(i));
-        Result := DSS_GetAsPAnsiChar(DSSPrime.GlobalResult);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.GlobalResult);
     end
 end;
 //------------------------------------------------------------------------------
@@ -220,7 +221,7 @@ end;
 procedure Settings_Get_LossRegs_GR(); CDECL;
 // Same as Settings_Get_LossRegs but uses global result (GR) pointers
 begin
-    Settings_Get_LossRegs(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Settings_Get_LossRegs(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -255,7 +256,7 @@ end;
 procedure Settings_Get_UEregs_GR(); CDECL;
 // Same as Settings_Get_UEregs but uses global result (GR) pointers
 begin
-    Settings_Get_UEregs(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Settings_Get_UEregs(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -341,7 +342,7 @@ end;
 procedure Settings_Get_VoltageBases_GR(); CDECL;
 // Same as Settings_Get_VoltageBases but uses global result (GR) pointers
 begin
-    Settings_Get_VoltageBases(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Settings_Get_VoltageBases(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -372,7 +373,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.PriceCurve)
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.PriceCurve)
 end;
 //------------------------------------------------------------------------------
 function Settings_Get_PriceSignal(): Double; CDECL;

@@ -9,6 +9,9 @@ unit Arraydef;
 
 interface
 
+uses
+    CAPI_Types;
+
 type
 
 { Define arrays with dummy dimension of 100 so we can hard code
@@ -28,10 +31,8 @@ type
     pStringArray = ^StringArray;
     StringArray = array[1..100] of String;
 
-    DoubleArray0 = array[0..100] of Double;
-    SingleArray0 = array[0..100] of Single;
-    pDoubleArray0 = ^DoubleArray0;
-    pSingleArray0 = ^SingleArray0;
+    PDoubleArray0 = CAPI_Types.PDoubleArray0;
+    PSingleArray0 = CAPI_Types.PSingleArray0;
 
     //pDouble = ^Double;
     //pSingle = ^Single;

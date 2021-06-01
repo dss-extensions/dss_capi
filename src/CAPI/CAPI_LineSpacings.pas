@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CAPI_Types,
     LineSpacing;
 
 function LineSpacings_Get_Count(): Integer; CDECL;
@@ -45,19 +46,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TLineSpacingObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TLineSpacingObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.LineSpacingClass.GetActiveObj;
+    obj := DSS.LineSpacingClass.GetActiveObj;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active LineSpacing object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active LineSpacing object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -97,7 +98,7 @@ begin
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
         
-    Result := DSS_GetAsPAnsiChar(pLineSpacing.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, pLineSpacing.Name);
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_Name(const Value: PAnsiChar); CDECL;
@@ -223,7 +224,7 @@ end;
 procedure LineSpacings_Get_Ycoords_GR(); CDECL;
 // Same as LineSpacings_Get_Ycoords but uses global result (GR) pointers
 begin
-    LineSpacings_Get_Ycoords(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LineSpacings_Get_Ycoords(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -269,7 +270,7 @@ end;
 procedure LineSpacings_Get_Xcoords_GR(); CDECL;
 // Same as LineSpacings_Get_Xcoords but uses global result (GR) pointers
 begin
-    LineSpacings_Get_Xcoords(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    LineSpacings_Get_Xcoords(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -284,7 +285,7 @@ end;
 procedure LineSpacings_Get_AllNames_GR(); CDECL;
 // Same as LineSpacings_Get_AllNames but uses global result (GR) pointers
 begin
-    LineSpacings_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    LineSpacings_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_idx(): Integer; CDECL;

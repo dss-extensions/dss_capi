@@ -3,7 +3,8 @@ unit CAPI_GICSources;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure GICSources_Get_AllNames_GR(); CDECL;
@@ -46,19 +47,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TGICSourceObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TGICSourceObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.GICsourceClass.ElementList.Active;
+    obj := DSS.GICsourceClass.ElementList.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active GICSource object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active GICSource object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -77,7 +78,7 @@ end;
 procedure GICSources_Get_AllNames_GR(); CDECL;
 // Same as GICSources_Get_AllNames but uses global result (GR) pointers
 begin
-    GICSources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    GICSources_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Count(): Integer; CDECL;
@@ -93,7 +94,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.GICsourceClass.ElementList);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.GICsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Next(): Integer; CDECL;
@@ -101,7 +102,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.GICsourceClass.ElementList);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.GICsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Name(): PAnsiChar; CDECL;
@@ -112,7 +113,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Name(const Value: PAnsiChar); CDECL;
@@ -159,7 +160,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.GetBus(1));
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GetBus(1));
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Bus2(): PAnsiChar; CDECL;
@@ -170,7 +171,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(elem.GetBus(2));
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GetBus(2));
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_EN(): Double; CDECL;

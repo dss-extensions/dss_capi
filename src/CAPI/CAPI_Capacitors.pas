@@ -3,7 +3,8 @@ unit CAPI_Capacitors;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Capacitors_Get_AllNames_GR(); CDECL;
@@ -46,19 +47,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TCapacitorObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TCapacitorObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.ShuntCapacitors.Active;
+    obj := DSS.ActiveCircuit.ShuntCapacitors.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active Capacitor object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active Capacitor object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -66,16 +67,16 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
 var
     cmd: String;
     elem: TCapacitorObj;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if not _activeObj(DSS, elem) then
         Exit;
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('capacitor.%s.%s=%s', [elem.Name, parm, val]);
-    DSSPrime.DSSExecutive.Command := cmd;
+    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -90,7 +91,7 @@ end;
 procedure Capacitors_Get_AllNames_GR(); CDECL;
 // Same as Capacitors_Get_AllNames but uses global result (GR) pointers
 begin
-    Capacitors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Capacitors_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -99,7 +100,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.ShuntCapacitors);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.ShuntCapacitors);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_Next(): Integer; CDECL;
@@ -107,7 +108,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.ShuntCapacitors);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.ShuntCapacitors);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_IsDelta(): TAPIBoolean; CDECL;
@@ -147,7 +148,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_NumSteps(): Integer; CDECL;
@@ -171,12 +172,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_kV(Value: Double); CDECL;
 begin
-    Set_Parameter('kv', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'kv', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_kvar(Value: Double); CDECL;
 begin
-    Set_Parameter('kvar', FloatToStr(Value));
+    Set_Parameter(DSSPrime, 'kvar', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_Name(const Value: PAnsiChar); CDECL;
@@ -197,7 +198,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_NumSteps(Value: Integer); CDECL;
 begin
-    Set_Parameter('numsteps', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'numsteps', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_Count(): Integer; CDECL;
@@ -240,7 +241,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
-    Result: PIntegerArray;
+    Result: PIntegerArray0;
     elem: TCapacitorObj;
 begin
     if not _activeObj(DSSPrime, elem) then
@@ -256,7 +257,7 @@ end;
 procedure Capacitors_Get_States_GR(); CDECL;
 // Same as Capacitors_Get_States but uses global result (GR) pointers
 begin
-    Capacitors_Get_States(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Capacitors_Get_States(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 
 //------------------------------------------------------------------------------

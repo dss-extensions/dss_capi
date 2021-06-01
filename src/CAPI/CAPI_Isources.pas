@@ -3,7 +3,8 @@ unit CAPI_ISources;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure ISources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure ISources_Get_AllNames_GR(); CDECL;
@@ -36,19 +37,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TIsourceObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TIsourceObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.IsourceClass.GetActiveObj();
+    obj := DSS.IsourceClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active ISource object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active ISource object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -68,7 +69,7 @@ end;
 procedure ISources_Get_AllNames_GR(); CDECL;
 // Same as ISources_Get_AllNames but uses global result (GR) pointers
 begin
-    ISources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    ISources_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -86,7 +87,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.IsourceClass.ElementList);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.IsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_Next(): Integer; CDECL;
@@ -94,7 +95,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.IsourceClass.ElementList);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.IsourceClass.ElementList);
 end;
 //------------------------------------------------------------------------------
 function ISources_Get_Name(): PAnsiChar; CDECL;
@@ -104,7 +105,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure ISources_Set_Name(const Value: PAnsiChar); CDECL;

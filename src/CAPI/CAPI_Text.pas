@@ -3,7 +3,8 @@ unit CAPI_Text;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function Text_Get_Command(): PAnsiChar; CDECL;
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
@@ -24,7 +25,7 @@ uses
 //------------------------------------------------------------------------------
 function Text_Get_Command(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime.DSSExecutive.Command);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.DSSExecutive.Command);
 end;
 //------------------------------------------------------------------------------
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
@@ -38,7 +39,7 @@ begin
     if Length(DSSPrime.GlobalResult) < 1 then
         Result := NIL
     else
-        Result := DSS_GetAsPAnsiChar(DSSPrime.GlobalResult);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.GlobalResult);
     {****}
     {
       Need to implement a protocol for determining whether to go get the

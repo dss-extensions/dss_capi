@@ -3,7 +3,8 @@ unit CAPI_Relays;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Relays_Get_AllNames_GR(); CDECL;
@@ -37,19 +38,19 @@ uses
     DSSHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSSPrime: TDSSContext; out obj: TRelayObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TRelayObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSSPrime.ActiveCircuit.Relays.Active;
+    obj := DSS.ActiveCircuit.Relays.Active;
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active Relay object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active Relay object found! Activate one and retry.', 8989);
         end;
         Exit;
     end;
@@ -57,16 +58,16 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
 var
     cmd: String;
     elem: TRelayObj;
 begin
-    if not _activeObj(DSSPrime, elem) then
+    if not _activeObj(DSS, elem) then
         Exit;
-    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('Relay.%s.%s=%s', [elem.Name, parm, val]);
-    DSSPrime.DSSExecutive.Command := cmd;
+    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -80,7 +81,7 @@ end;
 procedure Relays_Get_AllNames_GR(); CDECL;
 // Same as Relays_Get_AllNames but uses global result (GR) pointers
 begin
-    Relays_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Relays_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
 end;
 
 //------------------------------------------------------------------------------
@@ -97,7 +98,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_First(DSSPrime.ActiveCircuit.Relays);
+    Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.Relays);
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_Next(): Integer; CDECL;
@@ -105,7 +106,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := Generic_CktElement_Get_Next(DSSPrime.ActiveCircuit.Relays);
+    Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.Relays);
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_Name(): PAnsiChar; CDECL;
@@ -115,7 +116,7 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Set_Name(const Value: PAnsiChar); CDECL;
@@ -142,13 +143,13 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.MonitoredElementName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.MonitoredElementName);
 end;
 
 //------------------------------------------------------------------------------
 procedure Relays_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 begin
-    Set_parameter('monitoredObj', Value);
+    Set_Parameter(DSSPrime, 'monitoredObj', Value);
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_MonitoredTerm(): Integer; CDECL;
@@ -168,18 +169,18 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(elem.ElementName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ElementName);
 end;
 
 //------------------------------------------------------------------------------
 procedure Relays_Set_MonitoredTerm(Value: Integer); CDECL;
 begin
-    Set_parameter('monitoredterm', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'monitoredterm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 begin
-    Set_parameter('SwitchedObj', Value);
+    Set_Parameter(DSSPrime, 'SwitchedObj', Value);
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_SwitchedTerm(): Integer; CDECL;
@@ -194,7 +195,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Relays_Set_SwitchedTerm(Value: Integer); CDECL;
 begin
-    Set_parameter('SwitchedTerm', IntToStr(Value));
+    Set_Parameter(DSSPrime, 'SwitchedTerm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_idx(): Integer; CDECL;

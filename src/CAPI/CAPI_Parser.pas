@@ -3,7 +3,8 @@ unit CAPI_Parser;
 interface
 
 uses
-    CAPI_Utils;
+    CAPI_Utils,
+    CAPI_Types;
 
 function Parser_Get_CmdString(): PAnsiChar; CDECL;
 procedure Parser_Set_CmdString(const Value: PAnsiChar); CDECL;
@@ -43,7 +44,7 @@ var
 //------------------------------------------------------------------------------
 function Parser_Get_CmdString(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ComParser.CmdString);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, ComParser.CmdString);
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_CmdString(const Value: PAnsiChar); CDECL;
@@ -53,7 +54,7 @@ end;
 //------------------------------------------------------------------------------
 function Parser_Get_NextParam(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ComParser.NextParam);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, ComParser.NextParam);
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_AutoIncrement(): TAPIBoolean; CDECL;
@@ -78,12 +79,12 @@ end;
 //------------------------------------------------------------------------------
 function Parser_Get_StrValue(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ComParser.StrValue);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, ComParser.StrValue);
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_WhiteSpace(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Comparser.Whitespace);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, Comparser.Whitespace);
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_WhiteSpace(const Value: PAnsiChar); CDECL;
@@ -93,12 +94,12 @@ end;
 //------------------------------------------------------------------------------
 function Parser_Get_BeginQuote(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ComParser.BeginQuoteChars);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, ComParser.BeginQuoteChars);
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_EndQuote(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ComParser.EndQuoteChars);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, ComParser.EndQuoteChars);
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_BeginQuote(const Value: PAnsiChar); CDECL;
@@ -113,7 +114,7 @@ end;
 //------------------------------------------------------------------------------
 function Parser_Get_Delimiters(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ComParser.Delimiters);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, ComParser.Delimiters);
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_Delimiters(const Value: PAnsiChar); CDECL;
@@ -138,7 +139,7 @@ end;
 procedure Parser_Get_Vector_GR(ExpectedSize: Integer); CDECL;
 // Same as Parser_Get_Vector but uses global result (GR) pointers
 begin
-    Parser_Get_Vector(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ExpectedSize)
+    Parser_Get_Vector(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, ExpectedSize)
 end;
 
 //------------------------------------------------------------------------------
@@ -151,7 +152,7 @@ end;
 procedure Parser_Get_Matrix_GR(ExpectedOrder: Integer); CDECL;
 // Same as Parser_Get_Matrix but uses global result (GR) pointers
 begin
-    Parser_Get_Matrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ExpectedOrder)
+    Parser_Get_Matrix(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, ExpectedOrder)
 end;
 
 //------------------------------------------------------------------------------
@@ -164,7 +165,7 @@ end;
 procedure Parser_Get_SymMatrix_GR(ExpectedOrder: Integer); CDECL;
 // Same as Parser_Get_SymMatrix but uses global result (GR) pointers
 begin
-    Parser_Get_SymMatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ExpectedOrder)
+    Parser_Get_SymMatrix(DSSPrime.GR_DataPtr_PDouble, DSSPrime.GR_Counts_PDouble, ExpectedOrder)
 end;
 
 //------------------------------------------------------------------------------
