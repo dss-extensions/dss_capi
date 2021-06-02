@@ -2444,7 +2444,7 @@ Var
    hr, S: single;
    i, Nread, RecordSize, RecordBytes: Cardinal;
    sngBuffer: Array [1 .. 100] of single;      // a big buffer
-   StrBuffer: TMonitorStrBuffer;
+   dummyRec: TMonitorStrBuffer;
    pStrBuffer: PAnsichar;
    time: Double;
    FirstRecord, Hours: Boolean;
@@ -2470,7 +2470,7 @@ begin
 
          FirstRecord := TRUE;
          Hours := TRUE;
-         pStrBuffer := @StrBuffer;
+         pStrBuffer := @StrBuffer[0];
          With MonitorStream Do
          Begin
             {$IFNDEF Linux}           // Was throwing E2251 (ambiguous olverloaded...) in Linux
@@ -2480,7 +2480,7 @@ begin
             Read(Fversion, Sizeof(Fversion));
             Read(RecordSize, Sizeof(RecordSize));
             Read(iMode, Sizeof(iMode));
-            Read(StrBuffer, Sizeof(StrBuffer));
+            Read(dummyRec, Sizeof(dummyRec));
          End;
 
          AuxParser[ActiveActor].Whitespace := '';
