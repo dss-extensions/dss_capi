@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 5/19/2021 10:56:52 AM (- $Rev: 12980 $, 7903296).
+// File generated on 6/2/2021 5:42:48 PM (- $Rev: 12980 $, 8984734).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -2479,7 +2479,7 @@ library OpenDSSengine
     HRESULT _stdcall NormalState([out, retval] enum ActionCodes* Value);
     [propput, id(0x000000DD), helpstring("Set normal state of recloser.")]
     HRESULT _stdcall NormalState([in] enum ActionCodes Value);
-    [propget, id(0x000000DE), helpstring("Get/Set present state of recloser. If set to open, open recloser's controlled element and lock out the recloser. If set to close, close recloser's controlled and resets recloser to first operation.")]
+    [propget, id(0x000000DE), helpstring("Get/Set present state of recloser. If set to open, open recloser's controlled element and lock out the recloser. If set to close, close recloser's controlled element and resets recloser to first operation.")]
     HRESULT _stdcall State([out, retval] enum ActionCodes* Value);
     [propput, id(0x000000DE), helpstring("Set present state of recloser.")]
     HRESULT _stdcall State([in] enum ActionCodes Value);
@@ -2525,6 +2525,20 @@ library OpenDSSengine
     HRESULT _stdcall idx([out, retval] long* Value);
     [propput, id(0x000000D2), helpstring("Get/Set Relay active by index into relay list. 1..Count")]
     HRESULT _stdcall idx([in] long Value);
+    [id(0x000000D3), helpstring("Open relay's controlled element and lock out the relay.")]
+    HRESULT _stdcall Open(void);
+    [id(0x000000D4), helpstring("Close the switched object controlled by the relay. Resets relay to first operation.")]
+    HRESULT _stdcall Close(void);
+    [id(0x000000D5), helpstring("Reset relay to normal state. If open, lock out the relay. If closed, resets relay to first operation.  ")]
+    HRESULT _stdcall Reset(void);
+    [propget, id(0x000000D6), helpstring("Get/Set present state of relay. If set to open, open relay's controlled element and lock out the relay. If set to close, close relay's controlled element and resets relay to first operation.")]
+    HRESULT _stdcall State([out, retval] enum ActionCodes* Value);
+    [propput, id(0x000000D6), helpstring("Set present state of relay.")]
+    HRESULT _stdcall State([in] enum ActionCodes Value);
+    [propget, id(0x000000D7), helpstring("Get normal state of relay.")]
+    HRESULT _stdcall NormalState([out, retval] enum ActionCodes* Value);
+    [propput, id(0x000000D7), helpstring("Set normal state of relay.")]
+    HRESULT _stdcall NormalState([in] enum ActionCodes Value);
   };
 
   [
