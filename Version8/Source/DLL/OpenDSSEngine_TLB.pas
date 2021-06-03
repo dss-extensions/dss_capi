@@ -12,10 +12,10 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 98336 $
-// File generated on 4/8/2021 11:57:28 PM from Type Library described below.
+// File generated on 6/2/2021 5:38:45 PM from Type Library described below.
 
 // ************************************************************************  //
-// Type Lib: C:\Users\prdu001\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
+// Type Lib: C:\Projects\OpenDSS\OpenDSS-Official\Version8\Source\DLL\OpenDSSengine (1)
 // LIBID: {8BFDE413-245A-4514-B151-B16DCC243796}
 // LCID: 0
 // Helpfile:
@@ -3145,6 +3145,13 @@ type
     procedure Set_SwitchedTerm(Value: Integer); safecall;
     function Get_idx: Integer; safecall;
     procedure Set_idx(Value: Integer); safecall;
+    procedure Open; safecall;
+    procedure Close; safecall;
+    procedure Reset; safecall;
+    function Get_State: ActionCodes; safecall;
+    procedure Set_State(Value: ActionCodes); safecall;
+    function Get_NormalState: ActionCodes; safecall;
+    procedure Set_NormalState(Value: ActionCodes); safecall;
     property AllNames: OleVariant read Get_AllNames;
     property Count: Integer read Get_Count;
     property First: Integer read Get_First;
@@ -3155,6 +3162,8 @@ type
     property SwitchedObj: WideString read Get_SwitchedObj write Set_SwitchedObj;
     property SwitchedTerm: Integer read Get_SwitchedTerm write Set_SwitchedTerm;
     property idx: Integer read Get_idx write Set_idx;
+    property State: ActionCodes read Get_State write Set_State;
+    property NormalState: ActionCodes read Get_NormalState write Set_NormalState;
   end;
 
 // *********************************************************************//
@@ -3174,6 +3183,11 @@ type
     property SwitchedObj: WideString dispid 208;
     property SwitchedTerm: Integer dispid 209;
     property idx: Integer dispid 210;
+    procedure Open; dispid 211;
+    procedure Close; dispid 212;
+    procedure Reset; dispid 213;
+    property State: ActionCodes dispid 214;
+    property NormalState: ActionCodes dispid 215;
   end;
 
 // *********************************************************************//
