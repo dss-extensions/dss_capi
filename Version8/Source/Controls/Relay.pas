@@ -1017,7 +1017,7 @@ end;
 
 Procedure TRelayObj.Reset(ActorID : Integer);
 Begin
-     if ShowEventLog then AppendToEventLog (self.Name, 'Resetting', ActorID);
+     if ShowEventLog then AppendToEventLog ('Relay.' + self.Name, 'Resetting', ActorID);
 
      FPresentState   := FNormalState;
 
