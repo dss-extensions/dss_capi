@@ -13,7 +13,7 @@ uses
 type
     TDSSContext = DSSClass.TDSSContext;
 
-procedure DSS_GetGRPointers(
+procedure ctx_DSS_GetGRPointers(
     DSS: TDSSContext;
 
     // Pointers to the global variables that contains the actual pointers.
@@ -29,19 +29,42 @@ procedure DSS_GetGRPointers(
     var CountPtr_PByte: PAPISize
 ); CDECL;
 
+procedure DSS_GetGRPointers(
+    // Pointers to the global variables that contains the actual pointers.
+    var DataPtr_PPAnsiChar: PPPAnsiChar;
+    var DataPtr_PDouble: PPDouble;
+    var DataPtr_PInteger: PPInteger;
+    var DataPtr_PByte: PPByte;
+
+    // These are not reallocated during the execution, can return the actual pointer values
+    var CountPtr_PPAnsiChar: PAPISize;
+    var CountPtr_PDouble: PAPISize;
+    var CountPtr_PInteger: PAPISize;
+    var CountPtr_PByte: PAPISize
+); CDECL;
+
 // Separate simple functions for MATLAB, which return the current pointer
 // directly, instead of a pointer to pointer.
-function DSS_GR_DataPtr_PDouble(DSS: TDSSContext): PDouble; CDECL;
-function DSS_GR_DataPtr_PInteger(DSS: TDSSContext): PInteger; CDECL;
-function DSS_GR_DataPtr_PByte(DSS: TDSSContext): PByte; CDECL;
-function DSS_GR_CountPtr_PDouble(DSS: TDSSContext): PAPISize; CDECL;
-function DSS_GR_CountPtr_PInteger(DSS: TDSSContext): PAPISize; CDECL;
-function DSS_GR_CountPtr_PByte(DSS: TDSSContext): PAPISize; CDECL;
+function ctx_DSS_GR_DataPtr_PDouble(DSS: TDSSContext): PDouble; CDECL;
+function ctx_DSS_GR_DataPtr_PInteger(DSS: TDSSContext): PInteger; CDECL;
+function ctx_DSS_GR_DataPtr_PByte(DSS: TDSSContext): PByte; CDECL;
+function ctx_DSS_GR_CountPtr_PDouble(DSS: TDSSContext): PAPISize; CDECL;
+function ctx_DSS_GR_CountPtr_PInteger(DSS: TDSSContext): PAPISize; CDECL;
+function ctx_DSS_GR_CountPtr_PByte(DSS: TDSSContext): PAPISize; CDECL;
+function DSS_GR_DataPtr_PDouble(): PDouble; CDECL;
+function DSS_GR_DataPtr_PInteger(): PInteger; CDECL;
+function DSS_GR_DataPtr_PByte(): PByte; CDECL;
+function DSS_GR_CountPtr_PDouble(): PAPISize; CDECL;
+function DSS_GR_CountPtr_PInteger(): PAPISize; CDECL;
+function DSS_GR_CountPtr_PByte(): PAPISize; CDECL;
 
-procedure DSS_DisposeGRData(DSS: TDSSContext); CDECL;
+procedure ctx_DSS_DisposeGRData(DSS: TDSSContext); CDECL;
+procedure DSS_DisposeGRData(); CDECL;
 
 function DSS_GetAsPAnsiChar(DSS: TDSSContext; s: Ansistring): PAnsiChar;
-procedure DSS_ResetStringBuffer(DSS: TDSSContext); CDECL;
+
+procedure ctx_DSS_ResetStringBuffer(DSS: TDSSContext); CDECL;
+procedure DSS_ResetStringBuffer(); CDECL;
 
 function DSS_CopyStringAsPChar(s: Ansistring): PAnsiChar; // TODO: check possible memory leaks for := DSS_CopyStringAsPChar('NONE')
 
@@ -195,9 +218,14 @@ begin
     result := PAnsiChar(DSS.tempBuffer);
 end;
 //------------------------------------------------------------------------------
-procedure DSS_ResetStringBuffer(DSS: TDSSContext); CDECL;
+procedure ctx_DSS_ResetStringBuffer(DSS: TDSSContext); CDECL;
 begin
     DSS.tempBuffer := '';
+end;
+//------------------------------------------------------------------------------
+procedure DSS_ResetStringBuffer(); CDECL;
+begin
+    DSSPrime.tempBuffer := '';
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Dispose_PByte(var p: PByte); CDECL;
@@ -385,7 +413,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure DSS_GetGRPointers(
+procedure ctx_DSS_GetGRPointers(
     DSS: TDSSContext;
     
     var DataPtr_PPAnsiChar: PPPAnsiChar;
@@ -411,35 +439,85 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
+procedure DSS_GetGRPointers(
+    var DataPtr_PPAnsiChar: PPPAnsiChar;
+    var DataPtr_PDouble: PPDouble;
+    var DataPtr_PInteger: PPInteger;
+    var DataPtr_PByte: PPByte;
+    var CountPtr_PPAnsiChar: PAPISize;
+    var CountPtr_PDouble: PAPISize;
+    var CountPtr_PInteger: PAPISize;
+    var CountPtr_PByte: PAPISize
+); CDECL;
+begin
+    ctx_DSS_GetGRPointers(
+        DSSPrime,
+        DataPtr_PPAnsiChar,
+        DataPtr_PDouble,
+        DataPtr_PInteger,
+        DataPtr_PByte,
+        CountPtr_PPAnsiChar,
+        CountPtr_PDouble,
+        CountPtr_PInteger,
+        CountPtr_PByte
+    );
+end;
+//------------------------------------------------------------------------------
 // Separate simple functions for MATLAB, which return the current pointer
 // directly, instead of a pointer to pointer.
 
-function DSS_GR_DataPtr_PDouble(DSS: TDSSContext): PDouble; CDECL;
+function ctx_DSS_GR_DataPtr_PDouble(DSS: TDSSContext): PDouble; CDECL;
 begin
     Result := DSS.GR_DataPtr_PDouble;
 end;
-function DSS_GR_DataPtr_PInteger(DSS: TDSSContext): PInteger; CDECL;
+function ctx_DSS_GR_DataPtr_PInteger(DSS: TDSSContext): PInteger; CDECL;
 begin
     Result := DSS.GR_DataPtr_PInteger;
 end;
-function DSS_GR_DataPtr_PByte(DSS: TDSSContext): PByte; CDECL;
+function ctx_DSS_GR_DataPtr_PByte(DSS: TDSSContext): PByte; CDECL;
 begin
     Result := DSS.GR_DataPtr_PByte;
 end;
-function DSS_GR_CountPtr_PDouble(DSS: TDSSContext): PAPISize; CDECL;
+function ctx_DSS_GR_CountPtr_PDouble(DSS: TDSSContext): PAPISize; CDECL;
 begin
     Result := @DSS.GR_Counts_PDouble[0];
 end;
-function DSS_GR_CountPtr_PInteger(DSS: TDSSContext): PAPISize; CDECL;
+function ctx_DSS_GR_CountPtr_PInteger(DSS: TDSSContext): PAPISize; CDECL;
 begin
     Result := @DSS.GR_Counts_PInteger[0];
 end;
-function DSS_GR_CountPtr_PByte(DSS: TDSSContext): PAPISize; CDECL;
+function ctx_DSS_GR_CountPtr_PByte(DSS: TDSSContext): PAPISize; CDECL;
 begin
     Result := @DSS.GR_Counts_PByte[0];
 end;
+
+function DSS_GR_DataPtr_PDouble(): PDouble; CDECL;
+begin
+    Result := DSSPrime.GR_DataPtr_PDouble;
+end;
+function DSS_GR_DataPtr_PInteger(): PInteger; CDECL;
+begin
+    Result := DSSPrime.GR_DataPtr_PInteger;
+end;
+function DSS_GR_DataPtr_PByte(): PByte; CDECL;
+begin
+    Result := DSSPrime.GR_DataPtr_PByte;
+end;
+function DSS_GR_CountPtr_PDouble(): PAPISize; CDECL;
+begin
+    Result := @DSSPrime.GR_Counts_PDouble[0];
+end;
+function DSS_GR_CountPtr_PInteger(): PAPISize; CDECL;
+begin
+    Result := @DSSPrime.GR_Counts_PInteger[0];
+end;
+function DSS_GR_CountPtr_PByte(): PAPISize; CDECL;
+begin
+    Result := @DSSPrime.GR_Counts_PByte[0];
+end;
+
 //------------------------------------------------------------------------------
-procedure DSS_DisposeGRData(DSS: TDSSContext); CDECL;
+procedure ctx_DSS_DisposeGRData(DSS: TDSSContext); CDECL;
 begin
     with DSS do
     begin
@@ -458,6 +536,11 @@ begin
         GR_Counts_PInteger[1] := 0;
         GR_Counts_PByte[1] := 0;
     end;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_DisposeGRData(); CDECL;
+begin
+    ctx_DSS_DisposeGRData(DSSPrime);
 end;
 //------------------------------------------------------------------------------
 procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; pList: TDSSPointerList; const Restore: Boolean); inline;

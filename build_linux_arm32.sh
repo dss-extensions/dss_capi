@@ -1,6 +1,8 @@
 # Tested with arm7l
 set -e -x
 
+python3 src/classic_to_ctx.py
+
 if [ ! -d "build/units_arm32" ]; then
     mkdir build/units_arm32
 fi

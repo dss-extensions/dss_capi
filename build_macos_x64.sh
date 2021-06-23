@@ -1,5 +1,7 @@
 set -e -x
 
+python3 src/classic_to_ctx.py
+
 export LDFLAGS=-L`pwd`/lib/darwin_x64/
 
 if [ ! -d "build/units_x64" ]; then

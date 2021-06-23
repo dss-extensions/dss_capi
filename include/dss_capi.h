@@ -161,6 +161,16 @@ extern "C" {
         DSSMessageType_ProgressPercent = 6
     };
 
+    /* 
+    Function types for plotting and writing/message callbacks. 
+    Receives a string that contains the JSON-encoded parameters.
+    
+    EXPERIMENTAL
+    */
+    typedef int32_t (*dss_callback_plot_t)(void* ctx, char* jsonParams);
+    typedef int32_t (*dss_callback_message_t)(void* ctx, char* messageStr, int32_t messageType);
+
+    /* Functions start here */
 
     DSS_CAPI_DLL void DSS_ResetStringBuffer(void);
     DSS_CAPI_DLL void DSS_Dispose_PByte(int8_t** p);
@@ -200,15 +210,6 @@ extern "C" {
     DSS_CAPI_DLL int32_t* DSS_GR_CountPtr_PInteger(void);
     DSS_CAPI_DLL int32_t* DSS_GR_CountPtr_PByte(void);
 
-    /* 
-    Function types for plotting and writing/message callbacks. 
-    Receives a string that contains the JSON-encoded parameters.
-    
-    EXPERIMENTAL
-    */
-    typedef int32_t (*dss_callback_plot_t)(char* jsonParams);
-    typedef int32_t (*dss_callback_message_t)(char* messageStr, int32_t messageType);
-    
     DSS_CAPI_DLL void DSS_RegisterPlotCallback(dss_callback_plot_t cb);
     DSS_CAPI_DLL void DSS_RegisterMessageCallback(dss_callback_message_t cb);
 

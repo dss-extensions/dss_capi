@@ -1,6 +1,8 @@
 @echo off
 @SETLOCAL
 
+python src\classic_to_ctx.py
+
 where /q fpc
 if errorlevel 1 (
     if exist c:\lazarus\fpc\3.2.0\bin\x86_64-win64\fpc.exe (

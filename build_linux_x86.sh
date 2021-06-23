@@ -1,5 +1,7 @@
 set -e -x
 
+python3 src/classic_to_ctx.py
+
 if [ ! -d "build/units_x86" ]; then
     mkdir build/units_x86
 fi

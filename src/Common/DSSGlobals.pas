@@ -556,6 +556,9 @@ BEGIN
               + ' MVMULT'
     {$ENDIF}
               + ' [FPC ' + {$include %FPCVersion%} + ']'
+    {$IFDEF DSS_CAPI_CONTEXT}
+              + ' CONTEXT_API'
+    {$ENDIF}
     {$IFDEF DSS_CAPI_DEBUG_BUILD}
               + ' DEBUG'
     {$ENDIF}
@@ -753,7 +756,7 @@ end;
 
 
 initialization
-    // TODO: CALPHA has excetionally bad precision here... change for v0.13
+    // TODO: CALPHA has exceptionally bad precision here... change for v0.13
     CALPHA := Cmplx(-0.5, -0.866025); // -120 degrees phase shift
     SQRT2 := Sqrt(2.0);
     SQRT3 := Sqrt(3.0);

@@ -1,6 +1,8 @@
 # Tested with a Raspberry Pi 4 Model B
 set -e -x
 
+python3 src/classic_to_ctx.py
+
 if [ ! -d "build/units_arm64" ]; then
     mkdir build/units_arm64
 fi
