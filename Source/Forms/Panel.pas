@@ -2685,14 +2685,18 @@ end;
 
 procedure TControlPanel.LinkstoHelpFiles1Click(Sender: TObject);
 Var retval : Word;
+    myFolder,
     FileNm : String;
 
 Begin
-  FileNm := StartupDirectory + '..\Doc\Help Links.htm';
+
+  FileNm    :=  ExpandFileName(DSSDirectory + '\..');
+  FileNm    :=  FileNm + '\Doc\Help Links.htm';
+  myFolder  :=  ExtractFilePath(FileNm);
   TRY
   If FileExists(FileNm) Then
   Begin
-      retval := ShellExecute (0, Nil, PChar(encloseQuotes(FileNm)),Nil, Nil, SW_SHOW);
+      retval := ShellExecute (0, 'open', pChar(encloseQuotes(FileNm)),Nil, pChar(encloseQuotes(myFolder)), SW_SHOWNORMAL);
       SetLastResultFile( FileNm);
 
   End;
