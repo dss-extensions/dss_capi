@@ -587,7 +587,10 @@ Begin
                   DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Solution.Year-1));
                End;
             6: ActiveCircuit[ActiveActor].solution.Frequency      := Parser[ActiveActor].DblValue;
-            7,18: ActiveCircuit[ActiveActor].solution.DynaVars.h  := InterpretTimeStepSize(Param);
+            7,18: WITH ActiveCircuit[ActiveActor] Do Begin
+                    Solution.DynaVars.h  := InterpretTimeStepSize(Param);
+                    Solution.IntervalHrs := Solution.DynaVars.h/3600.0;
+                  End;
             8: ActiveCircuit[ActiveActor].solution.Mode          := InterpretSolveMode(Param);  // see DSSGlobals
             9: ActiveCircuit[ActiveActor].solution.RandomType    := InterpretRandom(Param);
            10: ActiveCircuit[ActiveActor].solution.NumberOfTimes := Parser[ActiveActor].IntValue;
