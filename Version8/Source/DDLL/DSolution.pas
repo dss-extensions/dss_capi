@@ -290,7 +290,10 @@ begin
      Else Result := 0.0;
   end;
   3: begin  // Solution.Seconds Write
-     If ActiveCircuit[ActiveActor] <> Nil Then ActiveCircuit[ActiveActor].Solution.dynavars.t  := arg;
+     If ActiveCircuit[ActiveActor] <> Nil Then With  ActiveCircuit[ActiveActor].Solution Do Begin
+        DynaVars.t  := arg;
+        Update_dblHour;
+     End;
      Result:=0.0;
   end;
   4: begin  // Solution.Stepsize read
