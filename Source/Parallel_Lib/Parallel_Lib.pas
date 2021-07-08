@@ -49,7 +49,7 @@ end;
 type
   TParallel_Lib = class(TObject)
   public
-    function Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
+    function Set_Thread_Affinity(Hnd : THandle; CPU_Cores, CPU : integer): Integer;
     function Set_Process_Priority(Hnd: THandle; P_priority : integer): Integer;
     function Set_Thread_Priority(Hnd: THandle; T_priority : integer): Integer;
     function Get_Thread_Priority(Hnd: THandle): String;
@@ -126,20 +126,22 @@ implementation
 
 
 
-    function TParallel_Lib.Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
+    function TParallel_Lib.Set_Thread_Affinity(Hnd : THandle; CPU_Cores, CPU : integer): Integer;
     var
       CPU_bit   : integer;
       Op_Result : {$IFDEF MSWINDOWS}Dword{$ELSE}Cardinal{$ENDIF};
     begin
-       CPU_bit    :=  floor(power(2, CPU));
-
-       {$IFDEF MSWINDOWS}
-       Op_Result  := SetThreadAffinityMask(Hnd,CPU_bit);
-       {$ELSE}
-       Op_Result  :=  1;
-       {$ENDIF}
-       if Op_Result = 0 then raise Exception.Create('Error setting thread affinity mask : ' + IntToStr(GetLastError));
-       Result   :=  Op_Result;
+      if CPU >= 0 then
+        CPU_bit    :=  floor(power(2, CPU))
+      else
+        CPU_bit    :=  floor(power(2, CPU_Cores) - 1);
+      {$IFDEF MSWINDOWS}
+      Op_Result  := SetThreadAffinityMask(Hnd,CPU_bit);
+      {$ELSE}
+      Op_Result  :=  1;
+      {$ENDIF}
+      if Op_Result = 0 then raise Exception.Create('Error setting thread affinity mask : ' + IntToStr(GetLastError));
+      Result   :=  Op_Result;
     end;
     function TParallel_Lib.Set_Process_Priority(Hnd: THandle; P_priority : integer):Integer;
    {$IFDEF MSWINDOWS}
