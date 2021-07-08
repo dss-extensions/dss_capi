@@ -1104,7 +1104,7 @@ Begin
     inc(NumOfActors);
     GlobalResult              :=  inttostr(NumOfActors);
     ActiveActor               :=  NumOfActors;
-    ActorCPU[ActiveActor]     :=  ActiveActor -1;
+    ActorCPU[ActiveActor]     :=  -1;       // By default, the actor will have affinity to all processors (-1)
     DSSExecutive[ActiveActor] :=  TExecutive.Create;  // Make a DSS object
     Parser[ActiveActor]       :=  TParser.Create;
     AuxParser[ActiveActor]    :=  TParser.Create;
@@ -1446,7 +1446,7 @@ initialization
    Allactors              :=  False;
    ActiveActor            :=  1;
    NumOfActors            :=  1;
-   ActorCPU[ActiveActor]  :=  0;
+   ActorCPU[ActiveActor]  :=  -1;
    Parser[ActiveActor]    :=  Tparser.Create;
    ProgramName            :=  'OpenDSS';
    DSSFileName            :=  GetDSSExeFile;
