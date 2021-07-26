@@ -468,14 +468,15 @@ end;
 function TMonitors.Get_dblFreq: OleVariant;
 
 // Return an array of doubles for frequence for Harmonic solutions
-Var  Header : THeaderRec;
-     k , i : Integer;
-     FirstCol : String;
-     pMon : TMonitorObj;
-     SngBuffer : pSingleArray;
-     freq : Single;
-     s  : Single;
-     AllocSize : Integer;
+Var  Header     : THeaderRec;
+     k , i,
+     AllocSize  : Integer;
+     FirstCol   : String;
+     pMon       : TMonitorObj;
+     SngBuffer  : pSingleArray;
+     freq,
+     s          : Single;
+     pStr       : pAnsiChar;
 
 begin
 
@@ -485,7 +486,9 @@ begin
       If pMon.SampleCount >0 Then Begin
              Result := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
              ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-             AuxParser[ActiveActor].CmdString := string(pMon.StrBuffer);
+             with pMon do
+               pStr := @StrBuffer[0];
+             AuxParser[ActiveActor].CmdString := pStr;
              AuxParser[ActiveActor].AutoIncrement := TRUE;
              FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
              AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -521,14 +524,15 @@ end;
 function TMonitors.Get_dblHour: OleVariant;
 
 // Return an array of doubles for time in hours
-Var  Header : THeaderRec;
-     k , i : Integer;
-     FirstCol : String;
-     pMon : TMonitorObj;
-     SngBuffer : pSingleArray;
-     hr : Single;
-     s  : Single;
-     AllocSize : Integer;
+Var  Header     : THeaderRec;
+     k , i,
+     AllocSize  : Integer;
+     FirstCol   : String;
+     pMon       : TMonitorObj;
+     SngBuffer  : pSingleArray;
+     hr,
+     s          : Single;
+     pStr       : pAnsiChar;
 
 begin
 
@@ -538,7 +542,9 @@ begin
       If pMon.SampleCount >0 Then Begin
              Result := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
              ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-             AuxParser[ActiveActor].CmdString := string(pMon.StrBuffer);
+             with pMon do
+               pStr := @StrBuffer[0];
+             AuxParser[ActiveActor].CmdString := pStr;
              AuxParser[ActiveActor].AutoIncrement := TRUE;
              FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
              AuxParser[ActiveActor].AutoIncrement := FALSE;
