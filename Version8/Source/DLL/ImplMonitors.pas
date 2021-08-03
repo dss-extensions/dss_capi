@@ -597,6 +597,7 @@ Var  Header         : THeaderRec;
      SaveDelims     : String;
      SaveWhiteSpace : String;
      pMon           : TMonitorObj;
+     pStr           : pAnsiChar;
 
 begin
 
@@ -607,7 +608,8 @@ begin
      Begin
          pMon := ActiveCircuit[ActiveActor].Monitors.Active;
          ReadMonitorHeader(Header, TRUE);
-         If length(pMon.StrBuffer) > 0 Then
+         with pMon do pStr := @StrBuffer[0];
+         If length(pStr) > 0 Then
          Begin
              ListSize := Header.RecordSize;
              VarArrayRedim(Result, ListSize-1);
@@ -616,7 +618,7 @@ begin
              AuxParser[ActiveActor].Delimiters := ',';
              SaveWhiteSpace := AuxParser[ActiveActor].Whitespace;
              AuxParser[ActiveActor].Whitespace := '';
-             AuxParser[ActiveActor].CmdString := String(pMon.StrBuffer);
+             AuxParser[ActiveActor].CmdString := String(pStr);
              AuxParser[ActiveActor].AutoIncrement := TRUE;
              AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
              AuxParser[ActiveActor].StrValue;
