@@ -4,8 +4,10 @@ environment:
     PYTHON_DIR: "C:\\Python39-x64"
 
 init:
-- cmd: set PATH=%PYTHON_DIR%;%PYTHON_DIR%\\Scripts;%PATH%
+- cmd: set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
 - cmd: echo %PATH%
+- cmd: dir %PYTHON_DIR%
+- cmd: python -V
 
 build_script:
 - cmd: >-
