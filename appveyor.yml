@@ -5,6 +5,7 @@ environment:
 
 init:
 - cmd: set PATH=%PYTHON_DIR%;%PYTHON_DIR%\\Scripts;%PATH%
+- cmd: PATH
 
 build_script:
 - cmd: >-
