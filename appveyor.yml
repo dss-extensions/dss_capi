@@ -5,14 +5,9 @@ environment:
 
 init:
 - cmd: set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
-- cmd: echo %PATH%
-- cmd: dir %PYTHON_DIR%
-- cmd: python -V
 
 build_script:
 - cmd: >-
-    python -V
-    
     "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
 
     appveyor downloadfile https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.exe/download -FileName fpc-3.2.0.i386-win32.exe
