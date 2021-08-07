@@ -1,8 +1,13 @@
 image: Visual Studio 2017
 clone_folder: c:\dss_capi
-stack: python 3.9
+environment:
+  matrix:
+    - PYTHON_DIR: "C:\\Python39-x86"
+
 build_script:
 - cmd: >-
+    set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
+
     python -V
     
     "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
