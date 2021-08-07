@@ -22,7 +22,7 @@ build_script:
     
     xcopy /E c:\dss_capi\klusolve\lib c:\dss_capi\lib
 
-    set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
+    set PATH=C:\Python39-x64;%PATH%;C:\FPC\3.2.0\bin\i386-win32
     
     set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
 

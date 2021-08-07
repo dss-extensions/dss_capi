@@ -1,7 +1,7 @@
 @echo off
 @SETLOCAL
 
-C:\Python39-x64 src\classic_to_ctx.py
+python src\classic_to_ctx.py
 
 where /q fpc
 if errorlevel 1 (
