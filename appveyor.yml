@@ -4,9 +4,11 @@ environment:
   matrix:
     - PYTHON_DIR: "C:\\Python39-x86"
 
+init:
+- cmd: set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
+
 build_script:
 - cmd: >-
-    set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
 
     python -V
     
