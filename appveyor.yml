@@ -25,6 +25,8 @@ build_script:
     xcopy /E c:\dss_capi\klusolve\lib c:\dss_capi\lib
 
     set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%;C:\FPC\3.2.0\bin\i386-win32
+
+    python -V
     
     set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
 
