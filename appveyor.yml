@@ -2,8 +2,13 @@ image: Visual Studio 2017
 clone_folder: c:\dss_capi
 environment:
   PYTHON_DIR: C:\Python39-x64
+
 build_script:
 - cmd: >-
+    set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%
+
+    python -V
+    
     "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
 
     appveyor downloadfile https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.exe/download -FileName fpc-3.2.0.i386-win32.exe
@@ -24,10 +29,8 @@ build_script:
     
     xcopy /E c:\dss_capi\klusolve\lib c:\dss_capi\lib
 
-    set PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%;C:\FPC\3.2.0\bin\i386-win32
+    set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
 
-    python -V
-    
     set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
 
     call build_win_x86.bat
