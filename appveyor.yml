@@ -5,16 +5,11 @@ environment:
 
 build_script:
   - cmd: "SET PATH=%PYTHON_DIR%;%PYTHON_DIR%\\Scripts;%PATH%"
-  - cmd: >-
-    python -V
-    
-    "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
-
-    appveyor downloadfile https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.exe/download -FileName fpc-3.2.0.i386-win32.exe
-    
-    appveyor downloadfile https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.cross.x86_64-win64.exe/download -FileName fpc-3.2.0.i386-win32.cross.x86_64-win64.exe
-
-    appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x86-msvc2017.zip -FileName klusolve_x86.zip
+  - cmd: "python -V"
+  - cmd: "'c:\Program Files\Git\bin\bash' -c 'bash ./make_metadata.sh'"
+  - cmd: "appveyor downloadfile https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.exe/download -FileName fpc-3.2.0.i386-win32.exe"
+  - cmd: "appveyor downloadfile https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.cross.x86_64-win64.exe/download -FileName fpc-3.2.0.i386-win32.cross.x86_64-win64.exe"
+  - cmd: "appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x86-msvc2017.zip -FileName klusolve_x86.zip"
     
     appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x64-gcc8.1.zip -FileName klusolve_x64.zip
 
