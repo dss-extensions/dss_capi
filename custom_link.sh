@@ -14,9 +14,9 @@ if [[ $1 == *"linux"* ]]; then
 else
     echo '-alias_list' >> "$resfile"
     echo 'src/darwin_alias_list.txt' >> "$resfile"
-    cut -d " " -f 2 'src/darwin_alias_list.txt' >> $1/linksyms.fpc
+    cut -d " " -f 2 'src/darwin_alias_list.txt' >> "$1"/linksyms.fpc
 fi
 
-$1/ppas.sh
-rm -f $1/ppas.sh "$resfile" $1/linksyms.fpc
+"$1"/ppas.sh
+rm -f "$1"/ppas.sh "$resfile" "$1"/linksyms.fpc
 
