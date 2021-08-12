@@ -174,9 +174,9 @@ begin
       Result := 0.0;
       IF ActiveCircuit[ActiveActor] <> NIL
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).R1;
-      End
+      THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+         Result := R1/UnitsConvert;
+      End;
   end;
   3: begin  // Lines.R1 write
       IF ActiveCircuit[ActiveActor] <> NIL
@@ -193,9 +193,9 @@ begin
       Result := 0.0;
       IF ActiveCircuit[ActiveActor] <> NIL
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).X1;
-      End
+      THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+         Result := X1/UnitsConvert;
+      End;
   end;
   5: begin  // Lines.X1 write
       IF ActiveCircuit[ActiveActor] <> NIL
