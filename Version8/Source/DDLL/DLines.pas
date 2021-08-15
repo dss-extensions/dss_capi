@@ -593,7 +593,8 @@ begin
              FOR i := 1 to NPhases DO
               FOR j := 1 to Nphases DO
               Begin
-                arg[k] :=  Z.GetElement(i,j).Re/UnitsConvert;
+                If GeometrySpecified Or SpacingSpecified then  arg[k] :=  Z.GetElement(i,j).Re/Len
+                else arg[k] :=  Z.GetElement(i,j).Re/UnitsConvert;
                 Inc(k);
               End;
            End;
@@ -627,7 +628,8 @@ begin
              FOR i := 1 to NPhases DO
               FOR j := 1 to Nphases DO
               Begin
-                 arg[k] :=  Z.GetElement(i,j).im/UnitsConvert;
+                 If GeometrySpecified Or SpacingSpecified then  arg[k] :=  Z.GetElement(i,j).im/Len
+                 else arg[k] :=  Z.GetElement(i,j).im/UnitsConvert;
                  Inc(k);
               End;
            End;
@@ -662,7 +664,8 @@ begin
              FOR i := 1 to NPhases DO
               FOR j := 1 to Nphases DO
               Begin
-                 arg[k] :=  Yc.GetElement(i,j).im / Factor;
+                 If GeometrySpecified Or SpacingSpecified then  arg[k] :=  Yc.GetElement(i,j).im  / Factor / Len
+                 else arg[k] :=  Yc.GetElement(i,j).im / Factor;
                  Inc(k);
               End;
            End;
