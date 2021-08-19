@@ -3,16 +3,13 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.3.0.1
+Version 9.3.0.2
 
 Changes this version
 ====================
-- Includes remote relay functionality for relays.
-- Includes the latest improvements on the smart inverter module.
-- Add more instructions for interacting with OpenDSS-GIS
-- Fixes bug found in cogen property of RegControls
-- Includes the memory mapping instructions for linking load shapes to the model faster (when working with a large number of load shapes).
-- Adds more options for controlling/setting up circuit breaker controllers such as relays and fuses (EXE and COM/DLL).
+- Fixes bug located at COM/DLL interfaces when reading sequence R and X.
+- Fixes bug when calling the links to help documents.
+- Includes updated COM help file.
 
 The Version 8 was the first to be delivered with parallel processing capabilities in both 32-bit (X86) and 
 64-bit (X64) versions. Version 9 is the latest update. The files are still listed under the 'Version8' folder on Sourceforge.net.
