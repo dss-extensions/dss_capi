@@ -2880,6 +2880,7 @@ Begin
    // keep kvar nominal up to date with kW and PF
    If (PFNominal <> 0.0)  Then Begin
       kvarBase := kWBase* sqrt(1.0/Sqr(PFNominal) - 1.0);
+      Genvars.Pnominalperphase   := 1000.0* kWBase / Fnphases;
       Genvars.Qnominalperphase := 1000.0* kvarBase / Fnphases;
       kvarMax  := 2.0 * kvarBase;
       kvarMin  := -kvarMax;
