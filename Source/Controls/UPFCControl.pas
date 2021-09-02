@@ -1,7 +1,7 @@
 unit UPFCControl;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -41,40 +41,32 @@ TYPE
    end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TUPFCControlObj = class(TControlElem)
-     private
+  TUPFCControlObj = class(TControlElem)
+    private
 
-            FkWLimit,
-            FkWBand,
-            HalfkWBand,
-            FkvarLimit,
-            TotalWeight   :Double;
-            FListSize:Integer;
-            FGeneratorNameList:TStringList;
-            FGenPointerList:PointerList.TPointerList;
-            FWeights:pDoubleArray;
+      FUPFCNameList         : TStringList;
+      FUPFCList             : PointerList.TPointerList;
+      FListSize             : Integer;
+      FWeights              : pDoubleArray;
+      TotalWeight           : Double;
 
-     public
+    public
+      constructor Create(ParClass:TDSSClass; const UPFCControlName:String);
+      destructor Destroy; override;
 
-       constructor Create(ParClass:TDSSClass; const UPFCControlName:String);
-       destructor Destroy; override;
+      PROCEDURE MakePosSequence(ActorID : Integer); Override;  // Make a positive Sequence Model
+      PROCEDURE RecalcElementData(ActorID : Integer); Override;
+      PROCEDURE CalcYPrim(ActorID : Integer); Override;    // Always Zero for a UPFCControl
+      PROCEDURE Sample(ActorID : Integer);  Override;    // Sample control quantities and set action times in Control Queue
+      PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Override;   // Do the action that is pending from last sample
+      PROCEDURE Reset(ActorID : Integer); Override;  // Reset to initial defined state
+      PROCEDURE GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present value of terminal Curr
+      PROCEDURE GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override;   // Returns Injextion currents
+      PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
+      PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
 
-       PROCEDURE MakePosSequence(ActorID : Integer); Override;  // Make a positive Sequence Model
-       PROCEDURE RecalcElementData(ActorID : Integer); Override;
-       PROCEDURE CalcYPrim(ActorID : Integer); Override;    // Always Zero for a UPFCControl
-
-       PROCEDURE Sample(ActorID : Integer);  Override;    // Sample control quantities and set action times in Control Queue
-       PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Override;   // Do the action that is pending from last sample
-       PROCEDURE Reset(ActorID : Integer); Override;  // Reset to initial defined state
-
-       PROCEDURE GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present value of terminal Curr
-       PROCEDURE GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override;   // Returns Injextion currents
-
-       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-       PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-
-       FUNCTION MakeGenList:Boolean;
-   end;
+      FUNCTION MakeUPFCList:Boolean;
+  end;
 
 
 VAR
@@ -85,11 +77,11 @@ IMPLEMENTATION
 
 USES
 
-    ParserDel, DSSClassDefs, DSSGlobals, Circuit,  Generator, Sysutils, uCmatrix, MathUtil, Math;
+    ParserDel, DSSClassDefs, DSSGlobals, Circuit,  UPFC, Sysutils, uCmatrix, MathUtil, Math;
 
 CONST
 
-    NumPropsThisClass = 6;
+    NumPropsThisClass = 1;
 
 
 {--------------------------------------------------------------------------}
@@ -124,26 +116,11 @@ Begin
 
      // Define Property names
 
-     PropertyName[1] := 'Element';
-     PropertyName[2] := 'Terminal';
-     PropertyName[3] := 'kWLimit';
-     PropertyName[4] := 'kWBand';
-     PropertyName[5] := 'kvarlimit';
-     PropertyName[6] := 'GenList';
-     PropertyName[7] := 'Weights';
+     PropertyName[1] := 'UPFCList';
 
-     PropertyHelp[1] := 'Full object name of the circuit element, typically a line or transformer, '+
-                        'which the control is monitoring. There is no default; must be specified.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the UPFCControl control is connected. '+
-                        '1 or 2, typically.  Default is 1. Make sure you have the direction on the power matching the sign of kWLimit.';
-     PropertyHelp[3] := 'kW Limit for the monitored element. The generators are dispatched to hold the power in band.';
-     PropertyHelp[4] := 'Bandwidth (kW) of the dead band around the target limit.' +
-                        'No dispatch changes are attempted if the power in the monitored terminal stays within this band.';
-     PropertyHelp[5] := 'Max kvar to be delivered through the element.  Uses same dead band as kW.';
-     PropertyHelp[6] := 'Array list of generators to be dispatched.  If not specified, all generators in the circuit are assumed dispatchable.';
-     PropertyHelp[7] := 'Array of proportional weights corresponding to each generator in the GenList.' +
-                        ' The needed kW to get back to center band is dispatched to each generator according to these weights. ' +
-                        'Default is to set all weights to 1.0.';
+
+     PropertyHelp[1] := 'The list of all the UPFC devices to be controlled by this controller, '+
+                        'If left empty, this control will apply for all UPFCs in the model.';
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -191,43 +168,19 @@ Begin
 
          CASE ParamPointer OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
-            1: ElementName     := lowercase(param);
-            2: ElementTerminal := Parser[ActorID].IntValue;
-            3: FkWLimit := Parser[ActorID].DblValue;
-            4: FkWBand := Parser[ActorID].DblValue;
-            5: FkvarLimit := Parser[ActorID].DblValue;
-            6: InterpretTStringListArray(Param, FGeneratorNameList);
-            7: Begin
-                 FListSize := FGeneratorNameList.count;
-                 IF FListSize>0 Then Begin
-                 Reallocmem(FWeights, Sizeof(FWeights^[1])*FListSize);
-                 FListSize := InterpretDblArray(Param, FListSize, FWeights);
-                 End;
-               End;
-
+            1: InterpretTStringListArray(Param, FUPFCNameList);
          ELSE
            // Inherited parameters
            ClassEdit( ActiveUPFCControlObj, ParamPointer - NumPropsthisClass)
          End;
 
-         CASE ParamPointer OF
-            4: HalfkWBand := FkWBand / 2.0;
-            6: Begin   // levelize the list
-                 FGenPointerList.Clear;  // clear this for resetting on first sample
-                 FListSize := FGeneratorNameList.count;
-                 Reallocmem(FWeights, Sizeof(FWeights^[1])*FListSize);
-                 For i := 1 to FListSize Do FWeights^[i] := 1.0;
-               End;
-         ELSE
-
-         END;
+     END;
 
          ParamName := Parser[ActorID].NextParam;
          Param := Parser[ActorID].StrValue;
-     End;
-
-     RecalcElementData(ActorID);
   End;
+
+  //RecalcElementData(ActorID);
 
 End;
 
@@ -268,40 +221,20 @@ End;
 {==========================================================================}
 {                    TUPFCControlObj                                           }
 {==========================================================================}
-
-
-
 {--------------------------------------------------------------------------}
 constructor TUPFCControlObj.Create(ParClass:TDSSClass; const UPFCControlName:String);
 
 Begin
-     Inherited Create(ParClass);
-     Name := LowerCase(UPFCControlName);
-     DSSObjType := ParClass.DSSClassType;
+  Inherited Create(ParClass);
 
-     NPhases := 3;  // Directly set conds and phases
-     Fnconds := 3;
-     Nterms  := 1;  // this forces allocation of terminals and conductors
-                         // in base class
+  Name                := LowerCase(UPFCControlName);
+  DSSObjType          := ParClass.DSSClassType;
 
-
-
-     ElementName   := '';
-     ControlledElement := nil;  // not used in this control
-     ElementTerminal  := 1;
-     MonitoredElement := Nil;
-
-     FGeneratorNameList := TSTringList.Create;
-     FWeights   := Nil;
-     FGenPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
-     FListSize   := 0;
-     FkWLimit    := 8000.0;
-     FkWBand     := 100.0;
-     TotalWeight := 1.0;
-     HalfkWBand  := FkWBand/2.0;
-     InitPropertyValues(0);
-     FkvarLimit  := FkWLimit/2.0;
-
+  FUPFCNameList       := TSTringList.Create;
+  FUPFCList           := PointerList.TPointerList.Create(20);  // Default size and increment
+  TotalWeight         := 1.0;
+  FWeights            := Nil;
+  FListSize           := 0;
 
    //  RecalcElementData;
 
@@ -320,32 +253,33 @@ VAR
    DevIndex :Integer;
 
 Begin
-
-
 {Check for existence of monitored element}
 
-         Devindex := GetCktElementIndex(ElementName); // Global function
-         IF   DevIndex>0  THEN Begin
-             MonitoredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
-             IF ElementTerminal > MonitoredElement.Nterms
-             THEN Begin
-                 DoErrorMsg('UPFCControl: "' + Name + '"',
-                                 'Terminal no. "' +'" does not exist.',
-                                 'Re-specify terminal no.', 371);
-             End
-             ELSE Begin
-               // Sets name of i-th terminal's connected bus in UPFCControl's buslist
-                 Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-             End;
-         End
-         ELSE DoSimpleMsg('Monitored Element in UPFCControl.'+Name+ ' does not exist:"'+ElementName+'"', 372);
-
-
+  Devindex := GetCktElementIndex(ElementName); // Global function
+  IF   DevIndex>0  THEN
+  Begin
+    MonitoredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+    IF ElementTerminal > MonitoredElement.Nterms THEN
+    Begin
+      DoErrorMsg('UPFCControl: "' + Name + '"',
+                     'Terminal no. "' +'" does not exist.',
+                     'Re-specify terminal no.', 371);
+    End
+    ELSE
+    Begin
+     // Sets name of i-th terminal's connected bus in UPFCControl's buslist
+      Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+    End;
+  End
+  ELSE
+    DoSimpleMsg('Monitored Element in UPFCControl.'+Name+ ' does not exist:"'+ElementName+'"', 372);
 End;
 
+{--------------------------------------------------------------------------}
 procedure TUPFCControlObj.MakePosSequence(ActorID : Integer);
 begin
-  if MonitoredElement <> Nil then begin
+  if MonitoredElement <> Nil then
+  begin
     Nphases := ControlledElement.NPhases;
     Nconds := FNphases;
     Setbus(1, MonitoredElement.GetBus(ElementTerminal));
@@ -360,11 +294,6 @@ Begin
   // Yprim is zeroed when created.  Leave it as is.
   //  IF YPrim=nil THEN YPrim := TcMatrix.CreateMatrix(Yorder);
 End;
-
-
-
-
-
 
 {--------------------------------------------------------------------------}
 PROCEDURE TUPFCControlObj.GetCurrents(Curr: pComplexArray; ActorID : Integer);
@@ -389,13 +318,13 @@ VAR
    i:Integer;
 
 Begin
-    Inherited DumpProperties(F,Complete);
+  Inherited DumpProperties(F,Complete);
 
-    WITH ParentClass Do
-     For i := 1 to NumProperties Do
-     Begin
-        Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
-     End;
+  WITH ParentClass Do
+    For i := 1 to NumProperties Do
+    Begin
+      Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
+    End;
 
     If Complete THEN
     Begin
@@ -404,81 +333,52 @@ Begin
 
 End;
 
-
 {--------------------------------------------------------------------------}
 PROCEDURE TUPFCControlObj.DoPendingAction;
-begin
+VAR
+  Update      : Boolean;
+  i           : Integer;
+  MyClass     : TDSSClass;
+  myUPFC      : TUPFCObj;
 
-        {Do Nothing}
+begin
+  If FListSize>0 Then
+  Begin
+    For i := 1 to FListSize Do
+    Begin
+      myUPFC  :=  FUPFCList.Get(i);
+      myUPFC.UploadCurrents(ActorID);
+    End;
+  End;
 end;
 
 {--------------------------------------------------------------------------}
 PROCEDURE TUPFCControlObj.Sample(ActorID : Integer);
-
 VAR
-   i           :Integer;
-   PDiff,
-   QDiff       :Double;
-   S           :Complex ;
-   Gen         :TGeneratorObj;
-   GenkWChanged, Genkvarchanged: Boolean;
-   GenkW, Genkvar :Double;
+  Update      : Boolean;
+  i           : Integer;
+  MyClass     : TDSSClass;
+  myUPFC      : TUPFCObj;
 
 begin
-     // If list is not define, go make one from all generators in circuit
-     IF FGenPointerList.ListSize=0 Then  MakeGenList;
-
-     If FListSize>0 Then Begin
-
-       //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-       S := MonitoredElement.Power[ElementTerminal,ActorID];  // Power in active terminal
-
-       PDiff := S.re * 0.001 - FkWLimit;
-
-       QDiff := S.im * 0.001 - FkvarLimit;
-
-       // Redispatch the vars.
-
-       GenkWChanged := FALSE;
-       GenkvarChanged := FALSE;
-
-       If Abs(PDiff) > HalfkWBand Then Begin // Redispatch Generators
-          // PDiff is kW needed to get back into band
-          For i := 1 to FListSize Do Begin
-              Gen := FGenPointerList.Get(i);
-              // compute new dispatch value for this generator ...
-              GenkW := Max(1.0, (Gen.kWBase + PDiff *(FWeights^[i]/TotalWeight)));
-              If GenkW <> Gen.kWBase Then Begin
-                  Gen.kWBase := GenkW;
-                  GenkWChanged := TRUE;
-              End;
-          End;
-       End;
-
-       If Abs(QDiff) > HalfkWBand Then Begin // Redispatch Generators
-          // QDiff is kvar needed to get back into band
-          For i := 1 to FListSize Do Begin
-              Gen := FGenPointerList.Get(i);
-              // compute new dispatch value for this generator ...
-              Genkvar := Max(0.0, (Gen.kvarBase + QDiff *(FWeights^[i]/TotalWeight)));
-              If Genkvar <> Gen.kvarBase Then Begin
-                  Gen.kvarBase := Genkvar;
-                  Genkvarchanged := TRUE;
-              End;
-          End;
-       End;
-
-       If GenkWChanged or Genkvarchanged Then  // Only push onto controlqueue if there has been a change
-          With ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do Begin
-            LoadsNeedUpdating := TRUE; // Force recalc of power parms
-            // Push present time onto control queue to force re solve at new dispatch value
-            ControlQueue.Push(DynaVars.intHour, DynaVars.t, 0, 0, Self, ActorID);
-          End;
-       
-
-       {Else just continue}
+  // If list is not define, go make one from all generators in circuit
+  IF FUPFCList.ListSize=0 Then  MakeUPFCList;
+  Update  :=  False;
+  If FListSize>0 Then
+  Begin
+    For i := 1 to FListSize Do
+    Begin
+      myUPFC  :=  FUPFCList.Get(i);
+      Update  :=  Update or myUPFC.CheckStatus(ActorID);
     End;
+   {Checks if at least one UPFC needs to be updated}
+    if Update then
+    Begin
+      With ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
+        ControlQueue.Push(DynaVars.intHour, DynaVars.t, 0, 0, Self, ActorID);
 
+    End;
+  End;
 
 end;
 
@@ -486,60 +386,62 @@ end;
 procedure TUPFCControlObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-     PropertyValue[1]  := '';   //'element';
-     PropertyValue[2]  := '1';   //'terminal';
-     PropertyValue[3]  := '8000';
-     PropertyValue[4]  := '100';
-     PropertyValue[5]  := '0';
-     PropertyValue[6]  := '';
-     PropertyValue[7]  := '';
-
+     PropertyValue[1]  := '[]';   //'UPFC List';
 
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
 end;
 
-Function TUPFCControlObj.MakeGenList:Boolean;
+Function TUPFCControlObj.MakeUPFCList:Boolean;
 
 VAR
-   GenClass:TDSSClass;
-   Gen:TGeneratorObj;
-   i:Integer;
+  MyClass  : TDSSClass;
+  UPFC      : TUPFCObj;
+  i         : Integer;
 
 begin
 
-   Result := FALSE;
-   GenClass := GetDSSClassPtr('generator');
+  Result := FALSE;
+  // Clears everything
+  FUPFCNameList.Clear;
+  FUPFCList.Clear;
+  MyClass := GetDSSClassPtr('upfc');
 
-   If FListSize>0 Then Begin    // Name list is defined - Use it
+  If FListSize>0 Then Begin    // Name list is defined - Use it
 
-     For i := 1 to FListSize Do Begin
-         Gen := GenClass.Find(FGeneratorNameList.Strings[i-1]);
-         If Assigned(Gen) and Gen.Enabled Then FGenPointerList.New := Gen;
-     End;
+    For i := 1 to FListSize Do Begin
+      UPFC := MyClass.Find(FUPFCNameList.Strings[i-1]);
+      If Assigned(UPFC) and UPFC.Enabled Then FUPFCList.New := UPFC;
+    End;
 
-   End
-   Else Begin
-     {Search through the entire circuit for enabled generators and add them to the list}
-     
-     For i := 1 to GenClass.ElementCount Do Begin
-        Gen :=  GenClass.ElementList.Get(i);
-        If Gen.Enabled Then FGenPointerList.New := Gen;
-     End;
+  End
+  Else  // No list given
+  Begin
+   {Search through the entire circuit for enabled generators and add them to the list}
 
-     {Allocate uniform weights}
-     FListSize := FGenPointerList.ListSize;
-     Reallocmem(FWeights, Sizeof(FWeights^[1])*FListSize);
-     For i := 1 to FListSize Do FWeights^[i] := 1.0;
+    For i := 1 to MyClass.ElementCount Do
+    Begin
+      UPFC  :=  MyClass.ElementList.Get(i);
+      // Checks if it's enabled
+      if UPFC.Enabled then
+        FUPFCList.New :=  UPFC;
+    End;
 
-   End;
+    {Allocate uniform weights}
+    FListSize := FUPFCList.ListSize;
+    Reallocmem(FWeights, Sizeof(FWeights^[1])*FListSize);
+    For i := 1 to FListSize Do FWeights^[i] := 1.0;
 
-   // Add up total weights
-   TotalWeight := 0.0;
-   For i := 1 to FlistSize Do  TotalWeight := TotalWeight + FWeights^[i];
+  End;
 
-   If FGenPointerList.ListSize>0 Then Result := TRUE;
+  // Add up total weights
+  TotalWeight := 0.0;
+  For i := 1 to FListSize Do
+    TotalWeight := TotalWeight + FWeights^[i];
+
+  If FUPFCList.ListSize>0 Then Result := TRUE;
+
 end;
 
 

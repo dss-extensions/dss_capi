@@ -2076,15 +2076,16 @@ PROCEDURE TSolutionObj.Sample_DoControlActions(ActorID : Integer);
 
 begin
 
-     IF ControlMode = CONTROLSOFF THEN ControlActionsDone := TRUE
-     ELSE  Begin
+  IF ControlMode = CONTROLSOFF THEN ControlActionsDone := TRUE
+  ELSE
+  Begin
 
-          SampleControlDevices(ActorID);
-          DoControlActions(ActorID);
+    SampleControlDevices(ActorID);
+    DoControlActions(ActorID);
 
-     {This variable lets control devices know the bus list has changed}
-         ActiveCircuit[ActorID].Control_BusNameRedefined := False;  // Reset until next change
-     End;
+  {This variable lets control devices know the bus list has changed}
+    ActiveCircuit[ActorID].Control_BusNameRedefined := False;  // Reset until next change
+  End;
 
 end;
 
