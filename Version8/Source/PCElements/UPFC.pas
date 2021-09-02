@@ -1,7 +1,7 @@
 unit UPFC;
 {
   ----------------------------------------------------------
-  Copyright (c) 2015,  Electric Power Research Institute, Inc.
+  Copyright (c) 2021,  Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -70,8 +70,8 @@ TYPE
         LossCurve           :String;      //Losses curve name
         UPFCLossCurveObj    :TXYCurveObj; //Losses curve reference
 
-        Function GetinputCurr(Cond: integer):Complex;
-        Function GetOutputCurr(Cond:integer):Complex;
+        Function GetinputCurr(Cond: integer; ActorID : Integer):Complex;
+        Function GetOutputCurr(Cond:integer;ActorID : Integer):Complex;
         Function CalcUPFCPowers(ModeUP, Cond:integer):Complex;
         Function CalcUPFCLosses(Vpu:Double):Double;
 
@@ -82,9 +82,12 @@ TYPE
 
       public
 
-        Z     : TCmatrix;  // Base Frequency Series Z matrix
-        Zinv  : TCMatrix;
-        VMag  : Double;
+        InCurr,
+        OutCurr   : Array of complex; // for storing the input and output currents
+
+        Z         : TCmatrix;  // Base Frequency Series Z matrix
+        Zinv      : TCMatrix;
+        VMag      : Double;
 
         constructor Create(ParClass:TDSSClass; const SourceName:String);
         destructor  Destroy; override;
@@ -95,6 +98,10 @@ TYPE
         Function  InjCurrents(ActorID : Integer):Integer; Override;
         Procedure GetInjCurrents(Curr:pComplexArray; ActorID : Integer); Override;
         Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer);Override;
+
+        // Uploads the input/output currents when commanded by the controller - 09/02/2021
+        Procedure UploadCurrents(ActorID : Integer);
+        function CheckStatus(ActorID : Integer): Boolean;
 
         PROCEDURE MakePosSequence(ActorID : Integer);Override;  // Make a positive Sequence Model
 
@@ -110,8 +117,8 @@ TYPE
    End;
 
 VAR
-    ActiveUPFCObj:TUPFCObj;
-    UPFC_class:TUPFC;
+    ActiveUPFCObj : TUPFCObj;
+    UPFC_class    : TUPFC;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -191,7 +198,13 @@ Begin
      PropertyHelp[8] := 'Tolerance in pu for the series PI controller'+CRLF+
                         'Tol1=0.02 is the format used to define 2% tolerance (Default=2%)';
      PropertyHelp[9] := 'Integer used to define the control mode of the UPFC: '+CRLF+CRLF+'0 = Off, '+CRLF+
-                        '1 = Voltage regulator, '+CRLF+'2 = Phase angle regulator, '+CRLF+'3 = Dual mode';
+                        '1 = Voltage regulator, '+CRLF+'2 = Phase angle regulator, '+CRLF+'3 = Dual mode'+CRLF+
+                        '4 = It is a control mode where the user can set two different set points to create a secure GAP,'+
+                        ' these references must be defined in the parameters RefkV and RefkV2. The only restriction when '+
+                        'setting these values is that RefkV must be higher than RefkV2. ' +CRLF+
+                        '5 = In this mode the user can define the same GAP using two set points as in control mode 4. The '+
+                        'only difference between mode 5 and mode 4 is that in mode 5, the UPFC controller performs dual control'+
+                        ' actions just as in control mode 3';
      PropertyHelp[10]:= 'Maximum voltage (in volts) delivered by the series voltage source (Default = 24 V)';
      PropertyHelp[11]:= 'Name of the XYCurve for describing the losses behavior as a function of the voltage at the input of the UPFC';
      PropertyHelp[12]:= 'High limit for the voltage at the input of the UPFC, if the voltage is above this value the UPFC turns off. This value is specified in Volts (default 300 V)';
@@ -260,6 +273,8 @@ Begin
             6: Begin
                  Nphases   := Parser[ActorID].Intvalue; // num phases
                  NConds    := Fnphases;  // Force Reallocation of terminal info
+                 setlength(OutCurr,Nphases + 1);
+                 setlength(InCurr,Nphases + 1);
                End;
             7: Xs       := Parser[ActorID].DblValue; // Xs
             8: Tol1     := Parser[ActorID].DblValue; // Tolerance Ctrl 2
@@ -395,6 +410,14 @@ Begin
      for i:=1 to Nphases do ERR0[i] := 0; //For multiphase model
 
      InitPropertyValues(0);
+
+     setlength(OutCurr,Nphases + 1);
+     setlength(InCurr,Nphases + 1);
+     for i:=0 to Nphases do
+     Begin
+      OutCurr[i] := CZERO; //For multiphase model
+      InCurr[i] := CZERO; //For multiphase model
+     end;
 
      Yorder := Fnterms * Fnconds;
      RecalcElementData(ActiveActor);
@@ -560,7 +583,7 @@ End;
   mode 3: Mode 1 and 2 working together
 }
 
-Function TUPFCObj.GetoutputCurr(Cond:integer):Complex;
+Function TUPFCObj.GetoutputCurr(Cond:integer; ActorID : Integer):Complex;
 
 VAr
    Error    : Double;
@@ -576,7 +599,7 @@ VAr
 Begin
 
   TRY
-   WITH ActiveCircuit[ActiveActor].Solution Do
+   WITH ActiveCircuit[ActorID].Solution Do
    UPFCON:=True;
    VinMag:=cabs(Vbin);
    if (VinMag>VHLimit) or (VinMag<VLLimit) then
@@ -748,7 +771,7 @@ End;
          |           |
 }
 
-Function TUPFCObj.GetinputCurr(Cond: integer):Complex;
+Function TUPFCObj.GetinputCurr(Cond: integer; ActorID : Integer):Complex;
 VAr
    CurrIn,Ctemp:complex;
    S:double;
@@ -756,7 +779,7 @@ VAr
 Begin
 
   TRY
-    WITH ActiveCircuit[ActiveActor].Solution Do
+    WITH ActiveCircuit[ActorID].Solution Do
   {Get first Phase Current}
   if UPFCON then
   begin
@@ -862,25 +885,123 @@ VAR
    i:Integer;
 Begin
 
-     WITH ActiveCircuit[ActorID].solution DO  Begin
-        for i := 1 to fnphases do
-        begin
-        Vbin  :=  NodeV^[NodeRef^[i]];           //Gets voltage at the input of UPFC Cond i
-        Vbout :=  NodeV^[NodeRef^[i+fnphases]]; //Gets voltage at the output of UPFC Cond i
+  WITH ActiveCircuit[ActorID].solution DO  Begin
+    for i := 1 to fnphases do
+    begin
+      Vbin  :=  NodeV^[NodeRef^[i]];           //Gets voltage at the input of UPFC Cond i
+      Vbout :=  NodeV^[NodeRef^[i+fnphases]];  //Gets voltage at the output of UPFC Cond i
 
-//      these functions were modified to follow the UPFC Dynamic
-//      (Different from VSource)
-        Curr^[i+fnphases]:= GetoutputCurr(i);
-        Curr^[i] := GetinputCurr(i);
-        end;
-     End;
+//    These functions were modified to follow the UPFC Dynamic
+//    (Different from VSource)
+      Curr^[i+fnphases]:= OutCurr[i];
+      Curr^[i] := InCurr[i];
+    end;
+  End;
 End;
 
 //===========================================================================
+//|     Checks if the UPFC control needs an update, returns true if so      |
+//===========================================================================
 
+function TUPFCObj.CheckStatus(ActorID : Integer): Boolean;
+VAR
+   i    : Integer;
+   Error,
+   TError,
+   VinMag,
+   RefH,
+   RefL     : Double;
+   Vpolar   : polar;
+   VTemp,
+   CurrOut  : complex;
+Begin
+  Result  :=  False;
+  WITH ActiveCircuit[ActorID].Solution Do UPFCON:=True;
+  VinMag:=cabs(Vbin);
+  if (VinMag > VHLimit) or (VinMag < VLLimit) then
+  begin   // Check Limits (Voltage)
+    UPFCON  :=  False;
+    CurrOut :=  cmplx(0,0);
+  end
+  else                                                       // Limits OK
+  begin
+    case ModeUPFC of
+    0:  Begin
+          CurrOut         :=  cmplx(0,0); //UPFC off
+        end;
+    1:  Begin              //UPFC as a voltage regulator
+          Vpolar:=ctopolar(Vbout);
+          Error:=abs(1-abs(Vpolar.mag/(VRef*1000)));
+          if Error > Tol1 then Result := True;
+
+        end;
+    2:  CurrOut         :=  cmplx(0,0); //UPFC as a phase angle regulator
+    3:  Begin              //UPFC in Dual mode Voltage and Phase angle regulator
+          Vpolar        :=ctopolar(Vbout);
+          Error         :=abs(1-abs(Vpolar.mag/(VRef*1000)));
+          if Error > Tol1 then Result :=  True
+
+        end;
+    4:  Begin                // Double reference control mode (only voltage control)
+          Vpolar:=ctopolar(Vbin);       // Takes the input voltage to verify the operation
+          // Verifies if the Voltage at the input is out of the gap defined with VRef and VRef2
+          RefH            :=  (VRef*1000)+(VRef*1000*Tol1);
+          RefL            :=  (VRef2*1000)-(VRef2*1000*Tol1);
+          if (Vpolar.mag > RefH) or (Vpolar.mag < RefL) then
+          Begin
+            // Sets the New reference by considering the value at the input of the device
+            if (Vpolar.mag > RefH) then VRefD:=VRef
+            else if (Vpolar.mag < RefL) then VRefD:=VRef2;
+            // Starts the control routine for voltage control only
+            Vpolar        :=  ctopolar(Vbout);
+            Error         :=  abs(1-abs(Vpolar.mag/(VRefD*1000)));
+            if Error > Tol1 then  Result  :=  True;
+          End
+
+        end;
+    5:  Begin                // Double reference control mode (Dual mode)
+          Vpolar          :=  ctopolar(Vbin);       // Takes the input voltage to verify the operation
+          // Verifies if the Voltage at the input is out of the gap defined with VRef and VRef2
+          RefH            :=  (VRef*1000)+(VRef*1000*Tol1);
+          RefL            :=  (VRef2*1000)-(VRef2*1000*Tol1);
+          if (Vpolar.mag > RefH) or (Vpolar.mag < RefL) then
+          Begin
+            // Sets the New reference by considering the value at the input of the device
+            if (Vpolar.mag > RefH) then VRefD:=VRef
+            else if (Vpolar.mag < RefL) then  VRefD:=VRef2;
+            // Starts standard control (the same as Dual control mode)
+            Vpolar        :=  ctopolar(Vbout);
+            Error         :=  abs(1-abs(Vpolar.mag/(VRefD*1000)));
+            if Error > Tol1 then Result :=  True;   // In case we need a control action
+          End
+        End
+
+    end;
+
+  end;
+
+End;
+
+
+//===========================================================================
+//|      Uploads the calculated currents into memeory for further use       |
+//===========================================================================
+
+Procedure TUPFCObj.UploadCurrents(ActorID : Integer);
+VAR
+   i:Integer;
+
+Begin
+    for i := 1 to fnphases do
+    begin
+      OutCurr[i]:= GetoutputCurr(i, ActorID);
+      InCurr[i] := GetinputCurr(i, ActorID);
+    end;
+end;
+
+//===========================================================================
 
 Procedure TUPFCObj.GetCurrents(Curr: pComplexArray; ActorID : Integer);
-
 VAR
    i:Integer;
 
@@ -890,9 +1011,9 @@ Begin
     Begin
         ComputeVTerminal(ActorID);
 
-        YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
+        YPrim.MVMult(Curr, Vterminal);            // Current from Elements in System Y
 
-        GetInjCurrents(ComplexBuffer, ActorID);  // Get present value of inj currents
+        GetInjCurrents(ComplexBuffer, ActorID);   // Get present value of inj currents
 //       Add Together  with yprim currents
         FOR i := 1 TO Yorder DO Curr^[i] := Csub(Curr^[i], ComplexBuffer^[i]);
    End;  {With}
