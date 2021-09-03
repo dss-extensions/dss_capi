@@ -66,6 +66,11 @@ TYPE
       PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
 
       FUNCTION MakeUPFCList:Boolean;
+
+      // Public properties
+      Property UPFCList     :PointerList.TPointerList   Read FUPFCList write FUPFCList;
+      Property UPFCListSize : Integer                   Read FListSize write FListSize;
+
   end;
 
 

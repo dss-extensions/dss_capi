@@ -125,7 +125,7 @@ VAR
 implementation
 
 
-USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Utilities, Sysutils, Command, solution, YMatrix;
+USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Utilities, Sysutils, Command, solution, YMatrix, UPFCControl;
 
 Const
     propLossCurve= 11;
@@ -369,7 +369,10 @@ End;
 //=============================================================================
 Constructor TUPFCObj.Create(ParClass:TDSSClass; const SourceName:String);
 var
-    i:integer;
+  i           : integer;
+  MyClass     : TDSSClass;
+  myCtrl      : TUPFCControlObj;
+
 Begin
      Inherited create(ParClass);
      Name := LowerCase(SourceName);
@@ -418,6 +421,16 @@ Begin
       OutCurr[i] := CZERO; //For multiphase model
       InCurr[i] := CZERO; //For multiphase model
      end;
+
+     // If there is a controller, sets the flag for it to consider de new UPFC
+     MyClass := GetDSSClassPtr('upfccontrol');
+     if MyClass.ElementCount > 0 then
+     Begin
+      myCtrl  :=  MyClass.ElementList.Get(1);
+      myCtrl.UPFCList.Clear;
+      myCtrl.UPFCListSize :=  0;
+     End;
+
 
      Yorder := Fnterms * Fnconds;
      RecalcElementData(ActiveActor);
