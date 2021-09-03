@@ -163,19 +163,17 @@ TYPE
    TSolutionObj = class(TDSSObject)
      private
 
-       dV :pNodeVArray;   // Array of delta V for Newton iteration
-       FFrequency:Double;
+       dV                         : pNodeVArray;   // Array of delta V for Newton iteration
+       FFrequency                 : Double;
        // //by Dahei
-       nNZ_yii   :LongWord;       //how many lines in Yii
-       pColIdx_Yii, pRowIdx_Yii   :pLongIntArray;//array of LongWord;  //cols and rows
-       pcVals_Yii                 :pComplexArray;   //vals of yii
+       nNZ_yii                    : LongWord;       //how many lines in Yii
+       pColIdx_Yii, pRowIdx_Yii   : pLongIntArray;//array of LongWord;  //cols and rows
+       pcVals_Yii                 : pComplexArray;   //vals of yii
        // =========
 
        FUNCTION Converged(ActorID : Integer):Boolean;
        FUNCTION OK_for_Dynamics(const Value:Integer):Boolean;
        FUNCTION OK_for_Harmonics(const Value:Integer):Boolean;
-
-
 
        PROCEDURE DoNewtonSolution(ActorID : Integer);
        PROCEDURE DoNormalSolution(ActorID : Integer);
@@ -189,64 +187,68 @@ TYPE
 
      public
 
-       Algorithm :Integer;      // NORMALSOLVE or NEWTONSOLVE
-       AuxCurrents  :pComplexArray;  // For injections like AutoAdd
-       ControlActionsDone :Boolean;
-       ControlIteration :Integer;
-       ControlMode :Integer;     // EVENTDRIVEN, TIMEDRIVEN
-       ConvergenceTolerance :Double;
-       ConvergedFlag:Boolean;
-       DefaultControlMode :Integer;    // EVENTDRIVEN, TIMEDRIVEN
-       DefaultLoadModel :Integer;     // 1=POWERFLOW  2=ADMITTANCE
-       DoAllHarmonics : Boolean;
-       DynamicsAllowed :Boolean;
-       DynaVars:TDynamicsRec;
-       ErrorSaved :pDoubleArray;
-       FirstIteration :Boolean;
-       FrequencyChanged:Boolean;  // Flag set to true if something has altered the frequency
-       Fyear :Integer;
-       Harmonic   :Double;
-       HarmonicList  :pDoubleArray;
-       HarmonicListSize :Integer;
-       hYsystem :NativeUint;   {Handle for main (system) Y matrix}
-       hYseries :NativeUint;   {Handle for series Y matrix}
-       hY :NativeUint;         {either hYsystem or hYseries}
-       IntervalHrs:Double;   // Solution interval since last solution, hrs.
-       IsDynamicModel :Boolean;
-       IsHarmonicModel :Boolean;
-       Iteration :Integer;
-       LoadModel :Integer;        // 1=POWERFLOW  2=ADMITTANCE
-       LastSolutionWasDirect :Boolean;
-       LoadsNeedUpdating :Boolean;
-       MaxControlIterations :Integer;
-       MaxError :Double;
+       Algorithm            : Integer;      // NORMALSOLVE or NEWTONSOLVE
+       AuxCurrents          : pComplexArray;// For injections like AutoAdd
+       ControlActionsDone   : Boolean;
+       ControlIteration,
+       ControlMode          : Integer;      // EVENTDRIVEN, TIMEDRIVEN
+       ConvergenceTolerance : Double;
+       ConvergedFlag        : Boolean;
+       DefaultControlMode   : Integer;      // EVENTDRIVEN, TIMEDRIVEN
+       DefaultLoadModel     : Integer;      // 1=POWERFLOW  2=ADMITTANCE
+       DoAllHarmonics       : Boolean;
+       DynamicsAllowed      : Boolean;
+       DynaVars             : TDynamicsRec;
+       ErrorSaved           : pDoubleArray;
+       FirstIteration,
+       FrequencyChanged     : Boolean;      // Flag set to true if something has altered the frequency
+       Fyear                : Integer;
+       Harmonic             : Double;
+       HarmonicList         : pDoubleArray;
+       HarmonicListSize     : Integer;
+       hYsystem,                            {Handle for main (system) Y matrix}
+       hYseries,                            {Handle for series Y matrix}
+       hY                   : NativeUint;   {either hYsystem or hYseries}
+       IntervalHrs          : Double;       // Solution interval since last solution, hrs.
+       Iteration,
+       LoadModel            : Integer;      // 1=POWERFLOW  2=ADMITTANCE
+
+       VoltageBaseChanged,
+       SampleTheMeters,                     // Flag to allow sampling of EnergyMeters
+       SeriesYInvalid,
+       SolutionInitialized,
+       SystemYChanged,
+       UseAuxCurrents,
+       PreserveNodeVoltages,
+       IsDynamicModel,
+       IsHarmonicModel,
+       LastSolutionWasDirect,
+       LoadsNeedUpdating    : Boolean;
+
+       ActorVIdx,                           // Index of the actor within the interconnected model (ADiakoptics)
+       NumberOfTimes,                       // Number of times to solve
+       RandomType,                          //  0 = none; 1 = gaussian; 2 = UNIFORM
+       SolutionCount,                       // Counter incremented for each solution
        MaxIterations,
-       MinIterations :Integer;
-       MostIterationsDone :Integer;
-       NodeVbase :pDoubleArray;
-       NumberOfTimes :Integer;  // Number of times to solve
-       PreserveNodeVoltages:Boolean;
-       RandomType :Integer;     //0 = none; 1 = gaussian; 2 = UNIFORM
-       SampleTheMeters : Boolean;  // Flag to allow sampling of EnergyMeters
-       SeriesYInvalid :Boolean;
-       SolutionCount :Integer;  // Counter incremented for each solution
-       SolutionInitialized :Boolean;
-       SystemYChanged  : Boolean;
-       UseAuxCurrents  : Boolean;
-       VmagSaved : pDoubleArray;
-       VoltageBaseChanged : Boolean;
+       MinIterations,
+       MostIterationsDone,
+       MaxControlIterations : Integer;
+       MaxError             : Double;
+
+       NodeVbase,
+       VmagSaved            : pDoubleArray;
 
        {Voltage and Current Arrays}
-       NodeV     : pNodeVArray;     // Main System Voltage Array   allows NodeV^[0]=0
-       Currents  : pNodeVArray;     // Main System Currents Array
+       NodeV,                               // Main System Voltage Array   allows NodeV^[0]=0
+       Currents             : pNodeVArray;  // Main System Currents Array
 
        {A-Diakoptics variables}
-       Node_dV   : pNodeVArray;     // Used to store the partial solution voltage
-       Ic_Local  : pNodeVArray;     // Used to store the complementary curret
+       Node_dV,                             // Used to store the partial solution voltage
+       Ic_Local             : pNodeVArray;  // Used to store the complementary curret
 
 //******************************************************************************
-       IncMat                 :  Tsparse_matrix; // Incidence sparse matrix
-       Laplacian              :  Tsparse_matrix; // Laplacian sparse matrix
+       IncMat,                                // Incidence sparse matrix
+       Laplacian            : Tsparse_matrix; // Laplacian sparse matrix
        {by Dahei for FMonitor}
               {------------------}
        NodeYii                : pNodeVArray;         // Main System Y = G + jB, Bii for all nodes
@@ -1016,7 +1018,7 @@ Begin
 
    IF Not SolutionInitialized THEN Begin
      
-        If ActiveCircuit[ActorID].LogEvents Then LogThisEvent('Initializing Solution',ActorID);
+      If ActiveCircuit[ActorID].LogEvents Then LogThisEvent('Initializing Solution',ActorID);
       TRY
         //SolveZeroLoadSnapShot;
         SolveYDirect(ActorID);  // 8-14-06 This should give a better answer than zero load snapshot
@@ -2452,7 +2454,17 @@ Var
   Try
     // new function to log KLUSolve.DLL function calls; same information as stepping through in Delphi debugger
     // SetLogFile ('KLU_Log.txt', 1);
-    RetCode := SolveSparseSet(hY, @V^[1], @Currents^[1]);  // Solve for present InjCurr
+    if not ADiakoptics then
+      RetCode := SolveSparseSet(hY, @V^[1], @Currents^[1])  // Solve for present InjCurr, normal solution
+    else
+    Begin
+    // Solve for using the actors index at the voltage and current vectors in actor 1
+    // The solution will be deposited there, affecting just a part of the vector
+    // for now is just the structure
+      ActorVIdx :=  1;    // for now, actor 1 should command everything
+      with ActiveCircuit[1].Solution do
+        RetCode := SolveSparseSet(hY,@NodeV^[ActorVIdx], @Currents^[ActorVIdx]);
+    End;
 {*  Commented out because results are not logged currently -- but left in just in case
     // new information functions
     GetFlops(hY, @dRes);
