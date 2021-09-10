@@ -45,9 +45,9 @@ Begin
     Result[0] := 'NONE';
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
-        If IsourceClass.ElementList.ListSize > 0 then
+        If IsourceClass[ActiveActor].ElementList.ListSize > 0 then
         Begin
-          pList := IsourceClass.ElementList;
+          pList := IsourceClass[ActiveActor].ElementList;
           VarArrayRedim(Result, pList.ListSize -1);
           k:=0;
           elem := pList.First;
@@ -65,7 +65,7 @@ function TISources.Get_Count: Integer;
 Begin
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
-        Result := IsourceClass.ElementList.ListSize;
+        Result := IsourceClass[ActiveActor].ElementList.ListSize;
 end;
 
 function TISources.Get_First: Integer;
@@ -75,14 +75,14 @@ begin
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-        pElem := IsourceClass.ElementList.First;
+        pElem := IsourceClass[ActiveActor].ElementList.First;
         If pElem <> Nil Then
         Repeat
           If pElem.Enabled Then Begin
               ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
               Result := 1;
           End
-          Else pElem := IsourceClass.ElementList.Next;
+          Else pElem := IsourceClass[ActiveActor].ElementList.Next;
         Until (Result = 1) or (pElem = nil);
      End;
 end;
@@ -94,14 +94,14 @@ begin
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-        pElem := IsourceClass.ElementList.Next;
+        pElem := IsourceClass[ActiveActor].ElementList.Next;
         If pElem <> Nil Then
         Repeat
           If pElem.Enabled Then Begin
               ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := IsourceClass.ElementList.ActiveIndex;
+              Result := IsourceClass[ActiveActor].ElementList.ActiveIndex;
           End
-          Else pElem := IsourceClass.ElementList.Next;
+          Else pElem := IsourceClass[ActiveActor].ElementList.Next;
         Until (Result > 0) or (pElem = nil);
      End;
 end;
@@ -121,9 +121,9 @@ procedure TISources.Set_Name(const Value: WideString);
 begin
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If IsourceClass.SetActive(Value) Then
+          If IsourceClass[ActiveActor].SetActive(Value) Then
           Begin
-               ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass.ElementList.Active ;
+               ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass[ActiveActor].ElementList.Active ;
           End
           Else Begin
               DoSimpleMsg('Isource "'+ Value +'" Not Found in Active Circuit.', 77003);
@@ -136,7 +136,7 @@ var
   elem: TIsourceObj;
 begin
   Result := 0.0;
-  elem := IsourceClass.ElementList.Active ;
+  elem := IsourceClass[ActiveActor].ElementList.Active ;
   if elem <> nil then Result := elem.Amps   ;
 end;
 
@@ -144,7 +144,7 @@ procedure TISources.Set_Amps(Value: Double);
 var
   elem: TIsourceObj;
 begin
-  elem := IsourceClass.GetActiveObj ;
+  elem := IsourceClass[ActiveActor].GetActiveObj ;
   if elem <> nil then elem.Amps := Value;
 end;
 
@@ -153,7 +153,7 @@ var
   elem: TIsourceObj;
 begin
   Result := 0.0;
-  elem := IsourceClass.ElementList.Active ;
+  elem := IsourceClass[ActiveActor].ElementList.Active ;
   if elem <> nil then Result := elem.Angle ;
 end;
 
@@ -162,7 +162,7 @@ var
   elem: TIsourceObj;
 begin
   Result := 0.0;
-  elem := IsourceClass.ElementList.Active ;
+  elem := IsourceClass[ActiveActor].ElementList.Active ;
   if elem <> nil then Result := elem.SrcFrequency  ;
 end;
 
@@ -170,7 +170,7 @@ procedure TISources.Set_AngleDeg(Value: Double);
 var
   elem: TIsourceObj;
 begin
-  elem := IsourceClass.GetActiveObj ;
+  elem := IsourceClass[ActiveActor].GetActiveObj ;
   if elem <> nil then elem.Angle := Value;
 end;
 
@@ -178,7 +178,7 @@ procedure TISources.Set_Frequency(Value: Double);
 var
   elem: TIsourceObj;
 begin
-  elem := IsourceClass.GetActiveObj ;
+  elem := IsourceClass[ActiveActor].GetActiveObj ;
   if elem <> nil then elem.SrcFrequency := Value;
 end;
 
