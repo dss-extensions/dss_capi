@@ -572,6 +572,7 @@ PROCEDURE ProcessCommand(Const CmdLine:String);
 VAR
    ParamPointer,
    Temp_int,
+   Iter,
    i            : Integer;
    ParamName,
    Param,
@@ -666,8 +667,12 @@ Begin
               if Parallel_enabled then Wait4Actors(0);
             end;
        108: begin
-              IsSolveAll  :=  True;
-              for i := 1 to NumOfActors do
+              //  Added to avoid crashes when in A-Diakoptics mode but the user
+              //  uses the SolveAll command
+              if ADiakoptics then Iter  :=  1
+              else Iter :=  NumOfActors;
+              //  Execution area
+              for i := 1 to Iter do
               begin
                 ActiveActor :=  i;
                 CmdResult   :=  DoSetCmd(1);
@@ -680,7 +685,7 @@ Begin
               ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix_Org(ActiveActor);
             end;
        111: begin
-              ADiakoptics_Tearing();
+              ADiakoptics_Tearing(False);
             end;
        114: begin
               ActiveCircuit[ActiveActor].Get_paths_4_Coverage();
@@ -741,10 +746,9 @@ Begin
         7: CmdResult := DoSaveCmd; //'save';
         8: CmdResult := DoShowCmd; //'show';
         9: Begin
-          IsSolveAll :=  False;
-          ActiveCircuit[1].AD_Init    :=   False;
-          CmdResult  := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
-        End;
+            if ADiakoptics then ActiveActor := 1;   // Just in case
+            CmdResult  := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
+           End;
        10: CmdResult := DoEnableCmd;
        11: CmdResult := DoDisableCmd;
        {$IFNDEF FPC}
@@ -815,18 +819,15 @@ Begin
        {Step solution commands}
        78: ActiveCircuit[ActiveActor].Solution.SnapShotInit(ActiveActor);
        79: Begin
-         IsSolveAll :=  False;
          ActiveCircuit[ActiveActor].Solution.SolveCircuit(ActiveActor);
        End;
        80: ActiveCircuit[ActiveActor].Solution.SampleControlDevices(ActiveActor);
        81: ActiveCircuit[ActiveActor].Solution.DoControlActions(ActiveActor);
        82: ActiveCircuit[ActiveActor].ControlQueue.ShowQueue(DSSDirectory + CircuitName_[ActiveActor]+'ControlQueue.csv');
        83: Begin
-         IsSolveAll :=  False;
          ActiveCircuit[ActiveActor].Solution.SolveDirect(ActiveActor);
        End;
        84: Begin
-         IsSolveAll :=  False;
          ActiveCircuit[ActiveActor].Solution.DoPFLOWsolution(ActiveActor);
        End;
        85: CmdResult := DoAddMarkerCmd;

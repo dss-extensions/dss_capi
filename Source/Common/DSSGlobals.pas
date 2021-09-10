@@ -68,7 +68,8 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      IdTCPConnection,
      IdTCPClient,
      IdThreadComponent,
-     NumCPULib
+     NumCPULib,
+     ISource
 
 ;
 
@@ -281,9 +282,9 @@ VAR
    ActorPctProgress   : Array of integer;
    ActorHandle        : Array of TSolver;
 
-   IsSolveAll,
    AllActors,
    ADiakoptics,
+   ADiak_Init,
    Parallel_enabled,
    ConcatenateReports,
 
@@ -340,6 +341,9 @@ VAR
    DSSExecutive: Array of TExecutive;
 
    DSSClasses             : TDSSClasses;
+
+   IsourceClass           : array of TISource;
+   VSourceClass           : array of TVsource;
 
 //************************ Progress actor Global defs***************************
   DSSProgressFrm,
@@ -1049,11 +1053,11 @@ Begin
   for i := (WType +1) to NumOfActors do
   Begin
     Try
-      if ActorStatus[i] = 0 then
+      while ActorStatus[i] = 0 do
       Begin
         Flag  :=  true;
         while Flag do
-          Flag  := ActorMA_Msg[i].WaitFor(10) = TWaitResult.wrTimeout;
+          Flag  := ActorMA_Msg[i].WaitFor(1) = TWaitResult.wrTimeout;
       End;
     Except
       On EOutOfMemory Do
@@ -1404,7 +1408,8 @@ initialization
    SetLength(FM_Append,CPU_Cores + 1);
    SetLength(DIFilesAreOpen,CPU_Cores + 1);
    SetLength(DSSExecutive,CPU_Cores + 1);
-
+   SetLength(IsourceClass,CPU_Cores + 1);
+   SetLength(VSourceClass,CPU_Cores + 1);
 
    for ActiveActor := 1 to CPU_Cores do
    begin
@@ -1452,6 +1457,7 @@ initialization
    DSSFileName            :=  GetDSSExeFile;
    DSSDirectory           :=  ExtractFilePath(DSSFileName);
    ADiakoptics            :=  False;  // Disabled by default
+   ADiak_Init             :=  False;
 
    GetDefaultPorts();                 // Gets the default ports to get connected to other add-ons
 

@@ -203,10 +203,12 @@ Var
   cLosses, cPower :Complex;
   ActorBusy,
   ActorsRdy       : Boolean;
+  CallerID,
   USIdx           : Integer;
   TStr            : String;
 begin
     ProgressCmd :=  False;
+    CallerID    :=  ActiveActor;
     With ControlPanel.SummaryEdit Do Begin
 
         ActorsRdy :=  True;
@@ -299,7 +301,7 @@ begin
         ControlPanel.ResultPages.ActivePage := ControlPanel.SummaryTab;
         If Not IsDLL Then ControlPanel.UpdateStatus;
     End;
-
+    ActiveActor   :=  CallerID;
 end;
 
 function TScriptEdit.CheckEditorClose:Boolean;
