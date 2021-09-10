@@ -330,7 +330,7 @@ TYPE
           function Create_MeTIS_Zones(Filename  : string): string; // Executes MeTiS and loads the zones into memory for further use
           procedure AggregateProfiles(mode: string);
           procedure Disable_All_DER();
-          procedure Save_SubCircuits();
+          procedure Save_SubCircuits(AddISrc  : Boolean);
           function getPCEatBus(BusName: String):  DynStringArray;
           function getPDEatBus(BusName: String):  DynStringArray;
           function ReportPCEatBus(BusName: String):  String;
@@ -341,7 +341,10 @@ TYPE
           procedure Normalize_graph();
           procedure Get_paths_4_Coverage();                             // Calculates the paths inside the graph
                                                                         // To guarantee the desired coverage when tearing the system
-          procedure Format_SubCircuits(Path  : String; NumCkts  : Integer); // Arrange the files of the subcircuits to make them independent
+          // Arrange the files of the subcircuits to make them independent
+          procedure Format_SubCircuits(Path  : String; NumCkts  : Integer; AddISrc  : Boolean);
+          // Appends single phase ISources at the end of the given
+          procedure AppendIsources(myPath : string; BusNum  : Integer; LinkBranch: String);
 
           property Name             : String         Read Get_Name;
           Property CaseName         : String         Read FCaseName         Write Set_CaseName;
@@ -876,11 +879,52 @@ Begin
     end;
   End;
 End;
+
+{*******************************************************************************
+*     Appends single phase ISources to the each node of bus specified          *
+*     if the given linkBranch. This actions take place within the given file.  *
+********************************************************************************
+}
+procedure TDSSCircuit.AppendIsources(myPath : string; BusNum  : Integer; LinkBranch: String);
+VAR
+  jj,
+  kk            : Integer;
+  text,
+  BusName       : String;
+  pBus          : TDSSBus;
+  myFile        : TextFile;
+
+Begin
+
+  AssignFile(myFile, myPath);
+  Append(myFile);
+
+  With ActiveCircuit[ActiveActor] Do
+  Begin
+    SetElementActive(LinkBranch);
+    BusName :=  ActiveCktElement.GetBus(BusNum);
+    jj               :=  ansipos('.',BusName);     // removes the dot
+    if jj > 0 then BusName  :=  BusName.Substring(0,jj - 1);
+    SetActiveBus(BusName);
+    pBus             :=  Buses^[ActiveBusIndex];
+    for kk := 1 to pBus.NumNodesThisBus do
+    Begin
+      text := 'New ISource.' + inttostr(BusNum) + '_' + inttostr(kk) + ' phases=1 bus1=' + BusName +
+      '.' + inttostr(kk) + ' amps=0.000001 angle=0';
+      WriteLn(myFile,text);
+    End;
+  End;
+  CloseFile(myFile);
+
+End;
 {*******************************************************************************
 * This routine reads the master file of the torn circuit and creates the       *
 *  header definitions for declaring separate subcircuits in OpenDSS            *
+*           The flag AddISrc indicates if its necessary to create              *
+*           Isources at the edges of the link branches, the ISource            *
+*           magnitude is equal to 0.000001, angle 0 (for A-Diakoptics)         *
 ********************************************************************************}
-procedure TDSSCircuit.Format_SubCircuits(Path  : String; NumCkts  : Integer);
+procedure TDSSCircuit.Format_SubCircuits(Path  : String; NumCkts  : Integer; AddISrc  : Boolean);
 var
   myFile      : TextFile;
   Temp_txt,
@@ -893,6 +937,8 @@ var
   FS_Idx,
   FS_Idx1,
   FS_Idx2     : Integer;
+
+
 const
   Reference   : array[0..5] of string =                   // To filter the source file
     ('Redirect EnergyM', 'Redirect Monitor', 'MakeBu', 'Redirect BusVolta', 'Buscoords busco', 'Redirect zone');
@@ -956,6 +1002,11 @@ begin
       End;
     End;
     CloseFile(myFile);
+
+    // Adds Isources at the link branch edges if requested
+    if AddISrc then
+      AppendIsources(Path  + '\master.dss', 1, Link_Branches[1]);
+
     // Copies the support files to the zones directories
     FS_Idx    :=  0;
     while FS_Idx <> -1 do
@@ -1008,6 +1059,18 @@ begin
         End;
       End;
       CloseFile(myFile);
+
+      // Adds Isources at the link branch edges if requested
+      if AddISrc then
+      Begin
+        text  :=  Path  + '\zone_' + inttostr(FS_Idx) + '\master.dss';
+        AppendIsources(text, 2, Link_Branches[FS_Idx - 1]);
+        // If there is another link branch, means that this zone conencts with other through ZCC
+        // Add Another current source at the point of connection
+        if Length(Link_Branches) > FS_Idx then
+          AppendIsources(text, 1, Link_Branches[FS_Idx]);
+
+      End;
     End;
     // Sets the properties of the VSource on each subcricuit based on the latest voltage measured
     FS_Idx1     :=    0;
@@ -1047,9 +1110,12 @@ end;
 
 {*******************************************************************************
 *        Saves the subcircuits created in memory into the hard drive           *
+*        The flag AddISrc indicates if its necessary to create                 *
+*        Isources at the edges of the link branches, the ISource               *
+*        magnitude is equal to 0.000001, angle 0 (for A-Diakoptics)            *
 ********************************************************************************
 }
-procedure TDSSCircuit.Save_SubCircuits();
+procedure TDSSCircuit.Save_SubCircuits(AddISrc  : Boolean);
 var
   Fileroot    : String;
 Begin
@@ -1060,7 +1126,7 @@ Begin
     DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
     DssExecutive[ActiveActor].Command  :=  'save circuit Dir="' + Fileroot + '"';
     // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
-    Format_SubCircuits(FileRoot, length(Locations));
+    Format_SubCircuits(FileRoot, length(Locations), AddISrc);
 End;
 
 {*******************************************************************************
@@ -1571,7 +1637,7 @@ Begin
   {----------------------------------------------------------------------------}
   // Add monitors and Energy Meters at link branches
   // Creates and EnergyMeter at the feeder head
-  pElem :=  VsourceClass.ElementList.First;
+  pElem :=  VsourceClass[ActiveActor].ElementList.First;
   ActiveCircuit[ActiveActor].SetElementActive('Vsource.' + pElem.Name);
   myBus :=  StripExtension(ActiveCktElement.GetBus(1));
   myPDE :=  ActiveCircuit[Activeactor].ReportPDEatBus(myBus);
@@ -1598,7 +1664,6 @@ Begin
   Solution.MaxControlIterations :=  100;
 
   // solves the circuit
-  IsSolveAll                    :=  False;
   solution.Solve(ActiveActor) ;
 
   // Creates the folder for storign the results
@@ -1789,10 +1854,12 @@ var
   TextCmd,
   PDElement,
   FileName      : String;
+
   NodeIdx,
   Num_Pieces,
   Location_idx,                                     // Active Location
   j,jj,dbg,dbg2,
+  k,l,
   i             : Integer;                          // Generic counter variables
   Candidates    : Array of Integer;                 // Array for 0 level buses idx
 
@@ -1800,8 +1867,10 @@ var
   pBus          : TDSSBus;
   Volts         : Polar;
   Term_volts    : Array of Double;                  // To verify the connection of the branch
+  pVSource      : TVsourceObj;
 
   Replacer      : TFileSearchReplace;
+  myPDEList     : DynStringArray;
 
 Begin
   Num_pieces    :=  Num_SubCkts;
@@ -1830,85 +1899,81 @@ Begin
       j             :=  0;
       for i := 0 to High(Locations) do
       begin
-        if Locations[i] > 0 then
+        if i > 0 then
         Begin
           inc(Result);
           // Gets the name of the PDE for placing the EnergyMeter
-           with solution do
-           Begin
-             PDElement        :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
-             Link_Branches[i] :=  PDElement;
-             dbg              :=  get_IncMatrix_Col(Locations[i]);      // Temporary stores the given location
-      // Checks the branch orientation across the feeder by substracting the voltages around the branch
-      // Start with Bus 1
-             setlength(Term_volts,2);
-             for dbg := 0 to 1 do
-             Begin
-               BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
-               SetActiveBus(BusName);           // Activates the Bus
-               pBus             :=  Buses^[ActiveBusIndex];
-               jj               :=  1;
-         // this code so nodes come out in order from smallest to larges
-               Repeat
-                 NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
-                 inc(jj)
-               Until NodeIdx>0;
-               Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
-               Term_volts[dbg]     :=  Volts.mag;
-             End;
-
-        // Determines the best place to connect the EnergyMeter
-             Term_volts[0]      :=  Term_volts[0] - Term_volts[1];
-//             if Term_volts[0] >= 0 then jj  :=  0   // Forces to use always the first terminal
-//             else   jj  :=  1;                            // removes the line.
-             jj               :=  ansipos('.',Link_Branches[i]);
-             BusName          :=  get_line_bus(Link_Branches[i].Substring(jj),2);
-             jj               :=  ansipos('.',BusName);     // removes the dot
-             if jj > 0 then
-               BusName          :=  BusName.Substring(0,jj - 1);
-             Terminal         :=  'terminal=1';
-
-             PConn_Names[i]   :=  BusName;
+          with solution do
+          Begin
+            PDElement        :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
+            Link_Branches[i] :=  PDElement;
+            dbg              :=  get_IncMatrix_Col(Locations[i]);      // Temporary stores the given location
+          // Checks the branch orientation across the feeder by substracting the voltages around the branch
+          // Start with Bus 1
+            setlength(Term_volts,2);
+            for dbg := 0 to 1 do
+            Begin
+             BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
              SetActiveBus(BusName);           // Activates the Bus
              pBus             :=  Buses^[ActiveBusIndex];
-
-             for jj := 1 to 3 do
-             Begin
-               // this code so nodes come out in order from smallest to larges
+             jj               :=  1;
+            // this code so nodes come out in order from smallest to larges
+             Repeat
                NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+               inc(jj)
+             Until NodeIdx>0;
+             Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+             Term_volts[dbg]     :=  Volts.mag;
+            End;
 
-               Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
-               PConn_Voltages[j]  :=  (Volts.mag/1000);
-               inc(j);
-               PConn_Voltages[j]  :=  Volts.ang;
-               inc(j);
-             End;
+            // Determines the best place to connect the EnergyMeter
+            Term_volts[0]      :=  Term_volts[0] - Term_volts[1];
+            jj               :=  ansipos('.',Link_Branches[i]);
+            BusName          :=  get_line_bus(Link_Branches[i].Substring(jj),2);
+            jj               :=  ansipos('.',BusName);     // removes the dot
+            if jj > 0 then
+             BusName          :=  BusName.Substring(0,jj - 1);
+            Terminal         :=  'terminal=1';
 
-           End;
+            PConn_Names[i]   :=  BusName;
+            SetActiveBus(BusName);           // Activates the Bus
+            pBus             :=  Buses^[ActiveBusIndex];
+
+            for jj := 1 to 3 do
+            Begin
+              // this code so nodes come out in order from smallest to larges
+              NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+              Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+              PConn_Voltages[j]  :=  (Volts.mag/1000);
+              inc(j);
+              PConn_Voltages[j]  :=  Volts.ang;
+              inc(j);
+            End;
+
+          End;
           // Generates the OpenDSS Command;
           DssExecutive[ActiveActor].Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
         End
         else
         Begin
-          if Locations[i] = 0 then    // The reference bus (Actor 1)
+        // The reference bus (Actor 1)
+          BusName          :=  Inc_Mat_Cols[0];
+          PConn_Names[i]   :=  BusName;
+          SetActiveBus(BusName);           // Activates the Bus
+          pBus             :=  Buses^[ActiveBusIndex];
+          // Stores the voltages for the Reference bus first
+          for jj := 1 to 3 do
           Begin
-             BusName          :=  Inc_Mat_Cols[0];
-             PConn_Names[i]   :=  BusName;
-             SetActiveBus(BusName);           // Activates the Bus
-             pBus             :=  Buses^[ActiveBusIndex];
-             // Stores the voltages for the Reference bus first
-             for jj := 1 to 3 do
-             Begin
-               // this code so nodes come out in order from smallest to larges
-               NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+           // this code so nodes come out in order from smallest to larges
+           NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
 
-               Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
-               PConn_Voltages[j]  :=  (Volts.mag/1000);
-               inc(j);
-               PConn_Voltages[j]  :=  Volts.ang;
-               inc(j);
-             End;
+           Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+           PConn_Voltages[j]  :=  (Volts.mag/1000);
+           inc(j);
+           PConn_Voltages[j]  :=  Volts.ang;
+           inc(j);
           End;
+
         End;
       end;
     End

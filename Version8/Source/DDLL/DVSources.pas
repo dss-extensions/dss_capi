@@ -23,20 +23,20 @@ begin
   0: begin  // Vsource.Count
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
-        Result := VsourceClass.ElementList.ListSize;
+        Result := VsourceClass[ActiveActor].ElementList.ListSize;
   end;
   1: begin  // Vsource.First
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-        pElem := VsourceClass.ElementList.First;
+        pElem := VsourceClass[ActiveActor].ElementList.First;
         If pElem <> Nil Then
         Repeat
           If pElem.Enabled Then Begin
               ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
               Result := 1;
           End
-          Else pElem := VsourceClass.ElementList.Next;
+          Else pElem := VsourceClass[ActiveActor].ElementList.Next;
         Until (Result = 1) or (pElem = nil);
      End;
   end;
@@ -44,24 +44,24 @@ begin
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-        pElem := VsourceClass.ElementList.Next;
+        pElem := VsourceClass[ActiveActor].ElementList.Next;
         If pElem <> Nil Then
         Repeat
           If pElem.Enabled Then Begin
               ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := VsourceClass.ElementList.ActiveIndex;
+              Result := VsourceClass[ActiveActor].ElementList.ActiveIndex;
           End
-          Else pElem := VsourceClass.ElementList.Next;
+          Else pElem := VsourceClass[ActiveActor].ElementList.Next;
         Until (Result > 0) or (pElem = nil);
      End;
   end;
   3: begin   // Vsource.Phases read
       Result := 0;
-      elem := VsourceClass.ElementList.Active ;
+      elem := VsourceClass[ActiveActor].ElementList.Active ;
       if elem <> nil then Result := elem.NPhases ;
   end;
   4: begin  // Vsource.Phases write
-      elem := VsourceClass.GetActiveObj ;
+      elem := VsourceClass[ActiveActor].GetActiveObj ;
       if elem <> nil then elem.Nphases := arg;
   end
   else
@@ -80,38 +80,38 @@ begin
   case mode of
   0: begin  // Vsources.basekV read
     Result := 0.0;
-    elem := VsourceClass.ElementList.Active ;
+    elem := VsourceClass[ActiveActor].ElementList.Active ;
     if elem <> nil then Result := elem.kVBase ;
   end;
   1: begin  // Vsources.basekV write
-    elem := VsourceClass.GetActiveObj ;
+    elem := VsourceClass[ActiveActor].GetActiveObj ;
     if elem <> nil then elem.kVBase := arg;
   end;
   2: begin  // Vsource.pu read
     Result := 0.0;
-    elem := VsourceClass.ElementList.Active ;
+    elem := VsourceClass[ActiveActor].ElementList.Active ;
     if elem <> nil then Result := elem.perunit ;
   end;
   3: begin  // Vsource.pu write
-      elem := VsourceClass.GetActiveObj ;
+      elem := VsourceClass[ActiveActor].GetActiveObj ;
       if elem <> nil then elem.PerUnit := arg;
   end;
   4: begin  // Vsource.Angledeg read
       Result := 0.0;
-      elem := VsourceClass.ElementList.Active ;
+      elem := VsourceClass[ActiveActor].ElementList.Active ;
       if elem <> nil then Result := elem.angle ;
   end;
   5: begin  // Vsource.Angledeg write
-      elem := VsourceClass.GetActiveObj ;
+      elem := VsourceClass[ActiveActor].GetActiveObj ;
       if elem <> nil then elem.Angle := arg;
   end;
   6: begin  // Vsource.Frequency read
       Result := 0.0;
-      elem := VsourceClass.ElementList.Active ;
+      elem := VsourceClass[ActiveActor].ElementList.Active ;
       if elem <> nil then Result := elem.SrcFrequency  ;
   end;
   7: begin  // Vsource.Frequency write
-      elem := VsourceClass.GetActiveObj ;
+      elem := VsourceClass[ActiveActor].GetActiveObj ;
       if elem <> nil then elem.SrcFrequency := arg;
   end
   else
@@ -136,9 +136,9 @@ begin
   1: begin  // Vsources.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If VsourceClass.SetActive(widestring(arg)) Then
+          If VsourceClass[ActiveActor].SetActive(widestring(arg)) Then
           Begin
-               ActiveCircuit[ActiveActor].ActiveCktElement := VsourceClass.ElementList.Active ;
+               ActiveCircuit[ActiveActor].ActiveCktElement := VsourceClass[ActiveActor].ElementList.Active ;
           End
           Else Begin
               DoSimpleMsg('Vsource "'+ widestring(arg) +'" Not Found in Active Circuit.', 77003);
@@ -165,9 +165,9 @@ begin
     arg[0] := 'NONE';
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
-        If VsourceClass.ElementList.ListSize > 0 then
+        If VsourceClass[ActiveActor].ElementList.ListSize > 0 then
         Begin
-          pList := VsourceClass.ElementList;
+          pList := VsourceClass[ActiveActor].ElementList;
           VarArrayRedim(arg, pList.ListSize -1);
           k:=0;
           elem := pList.First;

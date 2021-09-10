@@ -23,20 +23,20 @@ begin
   0: begin  // Isources.Count
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
-        Result := IsourceClass.ElementList.ListSize;
+        Result := IsourceClass[ActiveActor].ElementList.ListSize;
   end;
   1: begin  // Isources.First
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-        pElem := IsourceClass.ElementList.First;
+        pElem := IsourceClass[ActiveActor].ElementList.First;
         If pElem <> Nil Then
         Repeat
           If pElem.Enabled Then Begin
               ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
               Result := 1;
           End
-          Else pElem := IsourceClass.ElementList.Next;
+          Else pElem := IsourceClass[ActiveActor].ElementList.Next;
         Until (Result = 1) or (pElem = nil);
      End;
   end;
@@ -44,14 +44,14 @@ begin
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-        pElem := IsourceClass.ElementList.Next;
+        pElem := IsourceClass[ActiveActor].ElementList.Next;
         If pElem <> Nil Then
         Repeat
           If pElem.Enabled Then Begin
               ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := IsourceClass.ElementList.ActiveIndex;
+              Result := IsourceClass[ActiveActor].ElementList.ActiveIndex;
           End
-          Else pElem := IsourceClass.ElementList.Next;
+          Else pElem := IsourceClass[ActiveActor].ElementList.Next;
         Until (Result > 0) or (pElem = nil);
      End;
   end
@@ -72,29 +72,29 @@ begin
   case mode of
   0: begin  // Isources.Amps read
       Result := 0.0;
-      elem := IsourceClass.ElementList.Active ;
+      elem := IsourceClass[ActiveActor].ElementList.Active ;
       if elem <> nil then Result := elem.Amps   ;
   end;
   1: begin  // Isources.Amps write
-      elem := IsourceClass.GetActiveObj ;
+      elem := IsourceClass[ActiveActor].GetActiveObj ;
       if elem <> nil then elem.Amps := arg;
   end;
   2: begin  // Isources.AngleDeg read
       Result := 0.0;
-      elem := IsourceClass.ElementList.Active ;
+      elem := IsourceClass[ActiveActor].ElementList.Active ;
       if elem <> nil then Result := elem.Angle ;
   end;
   3: begin  // Isources.AngleDeg write
-      elem := IsourceClass.GetActiveObj ;
+      elem := IsourceClass[ActiveActor].GetActiveObj ;
       if elem <> nil then elem.Angle := arg;
   end;
   4: begin  // Isources.Frequency read
       Result := 0.0;
-      elem := IsourceClass.ElementList.Active ;
+      elem := IsourceClass[ActiveActor].ElementList.Active ;
       if elem <> nil then Result := elem.SrcFrequency  ;
   end;
   5: begin  // Isources.Frequency write
-      elem := IsourceClass.GetActiveObj ;
+      elem := IsourceClass[ActiveActor].GetActiveObj ;
       if elem <> nil then elem.SrcFrequency := arg;
   end
   else
@@ -119,9 +119,9 @@ begin
   1: begin  // Isoruces.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If IsourceClass.SetActive(widestring(arg)) Then
+          If IsourceClass[ActiveActor].SetActive(widestring(arg)) Then
           Begin
-               ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass.ElementList.Active ;
+               ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass[ActiveActor].ElementList.Active ;
           End
           Else Begin
               DoSimpleMsg('Isource "'+ widestring(arg) +'" Not Found in Active Circuit.', 77003);
@@ -148,9 +148,9 @@ begin
     arg[0] := 'NONE';
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
-        If IsourceClass.ElementList.ListSize > 0 then
+        If IsourceClass[ActiveActor].ElementList.ListSize > 0 then
         Begin
-          pList := IsourceClass.ElementList;
+          pList := IsourceClass[ActiveActor].ElementList;
           VarArrayRedim(arg, pList.ListSize -1);
           k:=0;
           elem := pList.First;

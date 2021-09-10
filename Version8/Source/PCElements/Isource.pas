@@ -98,7 +98,7 @@ TYPE
 
 VAR
     ActiveIsourceObj:TIsourceObj;
-    IsourceClass:TISource;
+    {IsourceClass:TISource;}
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
@@ -122,7 +122,7 @@ Begin
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
 
-     IsourceClass := Self;
+     IsourceClass[ActiveActor] := Self;
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
