@@ -132,71 +132,71 @@ Begin
   GISHelp[2] :=
     'Shows the bus specified on the map, however, the following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[3] :=
     'Finds a route between the given buses using roads and geographical information. The buses are described as an array'
     + ' as follows: GISFindRoute [b1 b2], do not include phases. The following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[4] :=
     'Returns the GIS coords of the route between 2 buses step by step, however, the following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. GISFindRoute has been executed at some point before this command (at least once)'
     + CRLF + '4. The model needs to have the correct GISCoords file';
   GISHelp[5] :=
     'Returns the distance (value units) of the last route calculated between 2 buses, however, the following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. GISFindRoute has been executed at some point before this command (at least once)'
     + CRLF + '4. The model needs to have the correct GISCoords file';
   GISHelp[6] :=
     'Shows the last route calculated between 2 buses in OpenDSS-GIS, however, the following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. GISFindRoute has been executed at some point before this command (at least once)'
     + CRLF + '4. The model needs to have the correct GISCoords file';
   GISHelp[7] :=
     'Returns the JSON script describing the last route calculated between 2 buses, however, the following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. GISFindRoute has been executed at some point before this command (at least once)'
     + CRLF + '4. The model needs to have the correct GISCoords file';
   GISHelp[8] :=
     'Redistributes the windows horizontally leaving OpenDSS to the left of the screen and OpenDSS-GIS to the right, however, the following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)';
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)';
   GISHelp[9] :=
     'Redistributes the windows horizontally leaving OpenDSS to the right of the screen and OpenDSS-GIS to the left, however, the following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)';
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)';
   GISHelp[10] :=
     'Resizes the OpenDSS-GIS window, the coordiantes need to be given as: Left, Top, Right, Bottom. For example:'
     + CRLF + CRLF + 'GISWindowSize 0 0 800 800' + CRLF + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)';
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)';
   GISHelp[11] :=
     'Draws the circuit on top of the map displayed in OpenDSS-GIS. The following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[12] :=
     'Shows the line specified int he argument using OpenDSS-GIS. The following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[13] :=
     'Exports the current map view into the models folder as a PNG file. The following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[14] :=
     'Returns Tree/No tree if a tree intersects with the line given in the argument. The following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[15] :=
     'Chenges the map view in OpenDSS-GIS using one of the following arguments:'
@@ -207,43 +207,43 @@ Begin
     '- Navigation' + CRLF + '- OpenStreetMap' + CRLF + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[16] :=
     'Clears the Map by removing all the previous draws. The following conditions need to be fulfilled:'
     + CRLF + CRLF + '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[17] :=
     'Draws a line at the given coordinates using the color and thickness (pix) specified.'
     + CRLF + 'The line features can be defined using GISCoords, GISColor and GISThickness from the exective options.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[18] := 'Zooms the map at the area specified at GISCoords.' + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[19] :=
     'Plots the content of the file specified in the argument on top of the current map.'
     + CRLF + 'With this function it is expected that the content of the file describes lines, their color and thickness.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[20] := 'Shows the location  in the map at given the coordinates.' +
     'The coordiantes must be defined using GISCoords.' + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)';
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)';
   GISHelp[21] :=
     'Plots the content of the file specified in the argument on top of the current map.'
     + CRLF + 'This function plots the content as points, the point shape, color and size must be specified in the file.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[22] :=
     'plots the shape specified in the argument in the map at given the coordinates.'
@@ -253,18 +253,18 @@ Begin
     '  Triangle' + CRLF + '  x' + CRLF + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)';
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)';
   GISHelp[23] :=
     'Uploads the coordinates of the bus specified in the argument to the coordinates buffer by pushing the previous down.'
     + ' The coordinates buffer has 4 positions, the coordinates of the bus specified will be at the first 2 positions.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[24] := 'Returns the content of the coordinates buffer.' + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[25] :=
     'Formats the coordinates located at the first 2 places of the coordiantes buffer. The first argument indicates '
@@ -274,7 +274,7 @@ Begin
     '- UTM (Universal Transverse Mercator)' + CRLF + '- USNG' + CRLF + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[26] :=
     'Formats the coordinates within the file specified. The first argument indicates '
@@ -285,68 +285,68 @@ Begin
     '- UTM (Universal Transverse Mercator)' + CRLF + '- USNG' + CRLF + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[27] := 'Closses all the instances of OpenDSS-GIS';
   GISHelp[28] :=
     'Returns the distance in meters between the coordinates in the buffer.' +
     CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[29] :=
     'Commands OpenDSS-GIS to start the selection mode for allowing users to draw an area on the map.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[30] :=
     'Stops the latest select command sent to OpenDSS-GIS. Clears the map from selections and stores the selection coords in OpenDSS-GIS.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[31] :=
     'Requests the boundaries of the latest selection. The boundaties are returned as XMin, YMin, XMax and YMax in WGS84 coords format.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[32] :=
     'Commands OpenDSS-GIS to start line drawing mode for allowing the user to draw a polyline over the map.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[33] :=
     'Stops the latest line drawing mode in OpenDSS-GIS. Clears the map and stores the coordinates of the polyline drawn by the user (if any).'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[34] :=
     'Requests the coordinates of the latest polyline drawn by the user to OpenDSS-GIS. The are returned in coordiante pairs (Longitude, latitude) in WGS84 coords format.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[35] :=
     'Returns the address calculated at the coordinates given in GISCoords. The address is returned in a JSON string.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[36] :=
     'Plots the text given at the argument at the coordinates given in GISCoords with the color given at GISCOlor and size given at GISThickness.'
     + CRLF + 'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
   GISHelp[37] :=
     'Plots the text within the file given at the path in the argument.' + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
-    '2. OpenDSS-GIS must be initialized (use GISStart command)' + CRLF +
+    '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
     '3. The model needs to have the correct GISCoords file';
 
 End;
