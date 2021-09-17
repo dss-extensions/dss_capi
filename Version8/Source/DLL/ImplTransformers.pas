@@ -282,7 +282,7 @@ var
 begin
   Result := 0.0;
   elem := ActiveTransformer;
-  if elem <> nil then Result := elem.XhlVal;
+  if elem <> nil then Result := elem.XhlVal * 100.0;
 end;
 
 function TTransformers.Get_Xht: Double;
@@ -291,7 +291,7 @@ var
 begin
   Result := 0.0;
   elem := ActiveTransformer;
-  if elem <> nil then Result := elem.XhtVal;
+  if elem <> nil then Result := elem.XhtVal * 100.0;
 end;
 
 function TTransformers.Get_Xlt: Double;
@@ -300,7 +300,7 @@ var
 begin
   Result := 0.0;
   elem := ActiveTransformer;
-  if elem <> nil then Result := elem.XltVal;
+  if elem <> nil then Result := elem.XltVal * 100.0;
 end;
 
 function TTransformers.Get_Xneut: Double;

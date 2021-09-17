@@ -203,7 +203,7 @@ begin
   16: begin  // Transformers.Xhl read
       Result := 0.0;
       elem := ActiveTransformer;
-      if elem <> nil then Result := elem.XhlVal;
+      if elem <> nil then Result := elem.XhlVal * 100.0;
   end;
   17: begin  // Transformers.Xhl write
       Set_Parameter ('Xhl', FloatToStr (arg));
@@ -211,7 +211,7 @@ begin
   18: begin  // Transformers.Xht read
       Result := 0.0;
       elem := ActiveTransformer;
-      if elem <> nil then Result := elem.XhtVal;
+      if elem <> nil then Result := elem.XhtVal * 100.0;
   end;
   19: begin  // Transformers.Xht write
       Set_Parameter ('Xht', FloatToStr (arg));
@@ -219,7 +219,7 @@ begin
   20: begin  // Transformers.Xlt read
       Result := 0.0;
       elem := ActiveTransformer;
-      if elem <> nil then Result := elem.XltVal;
+      if elem <> nil then Result := elem.XltVal * 100.0;
   end;
   21: begin  // Transformers.Xlt write
       Set_Parameter ('Xlt', FloatToStr (arg));
