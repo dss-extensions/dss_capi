@@ -203,6 +203,7 @@ TYPE
           BusZones          : Array of String;
 
           // Variables for Diakoptics
+          ContoursT        :  TSparse_Complex;    //  Contours matrix transposed
           Contours         :  TSparse_Complex;    //  Contours matrix
           ZLL              :  TSparse_Complex;    //  Link branch matrix
           ZCT              :  TSparse_Complex;    //  The transformation matrix (to go from one to other domain)
