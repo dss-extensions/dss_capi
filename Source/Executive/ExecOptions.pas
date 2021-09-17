@@ -639,6 +639,7 @@ Begin
            43: WITH ActiveCircuit[ActiveActor].Solution Do Begin
                     ControlMode := InterpretControlMode(Param);
                     DefaultControlMode := ControlMode;  // always revert to last one specified in a script
+                    if ADiakoptics and (ActiveActor = 1) then SendCmd2Actors(GETCTRLMODE);
                END;
            44: ActiveCircuit[ActiveActor].ControlQueue.TraceLog := InterpretYesNo(Param);
            45: ActiveCircuit[ActiveActor].GenMultiplier := Parser[ActiveActor].DblValue ;
@@ -669,7 +670,10 @@ Begin
                 ActiveCircuit[ActiveActor].Solution.Frequency := Parser[ActiveActor].DblValue;
                End;
            54: DoHarmonicsList(Param);
-           55: ActiveCircuit[ActiveActor].Solution.MaxControlIterations := Parser[ActiveActor].IntValue;
+           55: Begin
+                 ActiveCircuit[ActiveActor].Solution.MaxControlIterations := Parser[ActiveActor].IntValue;
+                 if ADiakoptics and (ActiveActor = 1) then ActiveCircuit[ActiveActor].Solution.SendCmd2Actors(GETCTRLMODE);
+               End;
            56: Result := SetActiveBus(Param);   // See DSSGlobals
            57: SetDataPath(Param);  // Set a legal data path
            58: DoKeeperBusList(Param);

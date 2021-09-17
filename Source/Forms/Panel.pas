@@ -286,6 +286,7 @@ type
     Summary1          : TMenuItem;
     LinkstoHelpFiles1 : TMenuItem;
     Timer1            : TTimer;
+    COMHelp1: TMenuItem;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DSSHelp1Click(Sender: TObject);
@@ -470,6 +471,7 @@ type
     procedure EditPagesChange(Sender: TObject);
     procedure LinkstoHelpFiles1Click(Sender: TObject);
     procedure Timerdone(Sender: TObject);
+    procedure COMHelp1Click(Sender: TObject);
   private
     { Private declarations }
     PlotOptionString  :String;
@@ -670,6 +672,11 @@ end;
 procedure TControlPanel.Clear1Click(Sender: TObject);
 begin
   ActiveScriptForm.ExecuteDSSCommand('clear');
+end;
+
+procedure TControlPanel.COMHelp1Click(Sender: TObject);
+begin
+  ActiveScriptForm.ExecuteDSSCommand('COMHelp');
 end;
 
 procedure TControlPanel.Exit1Click(Sender: TObject);
