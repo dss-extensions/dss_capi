@@ -145,14 +145,24 @@ End;
 Procedure        GetActiveElementVoltagesCallBack (Var NumVoltages:Integer; V:pComplexArray); StdCall;
 {NumVoltages is size of the V buffer}
 Var
-    i :Integer;
+    i, j :Integer;
 Begin
-        If Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) then
-        With ActiveCircuit[ActiveActor] Do
-           With ActiveCktElement Do Begin
-             NumVoltages := Min(Yorder, NumVoltages) ;  // reset buffer size
-             For i  := 1 to NumVoltages do V^[i] := Solution.NodeV^[NodeRef^[i]];
-        End;
+  If Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) then
+  With ActiveCircuit[ActiveActor] Do
+  Begin
+     With ActiveCktElement Do
+     Begin
+       NumVoltages := Min(Yorder, NumVoltages) ;  // reset buffer size
+       For i  := 1 to NumVoltages do
+       begin
+        if not ADiakoptics or (ActiveActor = 1) then
+          V^[i] := Solution.NodeV^[NodeRef^[i]]
+        else
+          V^[i] := Solution.VoltInActor1(NodeRef^[i]);
+       end;
+
+     End;
+  End;
 End;
 
 {====================================================================================================================}

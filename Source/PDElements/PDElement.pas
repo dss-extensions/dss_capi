@@ -209,15 +209,19 @@ End;
 
 PROCEDURE TPDElement.GetCurrents(Curr: pComplexArray; ActorID : Integer);
 VAR
-   i:Integer;
+   i, j:Integer;
 Begin
   TRY
 
    If Enabled Then
    Begin
-   
+
      WITH ActiveCircuit[ActorID].Solution DO
-     FOR i := 1 TO Yorder DO Vterminal^[i] := NodeV^[NodeRef^[i]];
+     FOR i := 1 TO Yorder DO
+      if not ADiakoptics or (ActorID = 1) then
+        Vterminal^[i] := NodeV^[NodeRef^[i]]
+      else    // In the contenxt of actor 1 voltages
+        Vterminal^[i] := VoltInActor1(NodeRef^[i]);
 
      YPrim.MVMult(Curr, Vterminal);
   End

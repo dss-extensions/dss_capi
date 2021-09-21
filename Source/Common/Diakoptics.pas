@@ -41,7 +41,7 @@ Uses
 
 Function Solve_Diakoptics():Integer;
 var
-  i         : Integer;
+  i, myRow  : Integer;
   Vpartial  : TSparse_Complex;
 Begin
   {Space left empty to implement the simplified Diakoptics algorithm}
@@ -51,11 +51,16 @@ Begin
     // Solves the partial systems to find the voltages at the edges of the sub-systems
     SendCmd2Actors(SOLVE_AD1);
 
-    // Moves Voltages from the Varray into a sparse equivalent
-    for i := 0 to (V_0.NRows - 1) do V_0.insert(i,0,NodeV^[i + 1]);
-
+    Vpartial    :=  Tsparse_Complex.Create;
+    Vpartial.sparse_matrix_Cmplx(Contours.NCols,1);
+    // Does the voltage diff calculation using the partial results
+    myRow   :=  0;
+    for i := 0 to (Contours.NCols - 1) do
+    begin
+      VPartial.insert(i, 0, csub(NodeV^[Contours.CData[myRow].Row + 1],NodeV^[Contours.CData[myRow + 1].Row + 1]));
+      myRow   :=  myRow + 2;
+    end;
     // Loads the partial solution considering the previous iteration
-    VPartial  :=  ContoursT.multiply(V_0);
     Vpartial  :=  Y4.multiply(VPartial);
     Ic        :=  Contours.multiply(VPartial);  // Calculates the new Injecting Currents
 
@@ -64,9 +69,11 @@ Begin
 
   End;
   ActiveCircuit[1].Issolved :=  True;
+  ActiveCircuit[1].BusNameRedefined :=  False;
   if SolutionAbort then ActiveCircuit[1].Issolved :=  False;
   ActiveActor :=  1;    // Returns the control to Actor 1
   Result  :=  0;
+  Vpartial.Free;
 End;
 
 {*******************************************************************************
@@ -645,9 +652,11 @@ Begin
         prog_Str    :=  prog_str + CRLF + '- Opening link branches...';
         for DIdx := 1 to High(Links) do
         Begin
-          ActiveCircuit[1].SetElementActive(string(Links[DIdx]));
-          ActiveCircuit[1].ActiveCktElement.Enabled :=  False;
+          ActiveCircuit[ActiveActor].SetElementActive(string(Links[DIdx]));
+          ActiveCircuit[ActiveActor].ActiveCktElement.Enabled :=  False;
+
         End;
+        ActiveCircuit[ActiveActor].BusNameRedefined :=  False;
         Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
         prog_Str      :=  prog_str + 'Done';
         ErrorCode     :=  0;          // No error handling here
@@ -708,8 +717,19 @@ Begin
             ActorHandle[DIdx].Priority :=  {$IFDEF MSWINDOWS}tpTimeCritical{$ELSE}6{$ENDIF};
           End;
         End;
+        // Compiles the interconnected Circuit for further calculations on actor 1
+        ActiveActor                     :=  1;
+        prog_Str    :=  prog_str + CRLF + '- Closing link branches...';
+        for DIdx := 1 to High(Links) do
+        Begin
+          ActiveCircuit[ActiveActor].SetElementActive(string(Links[DIdx]));
+          ActiveCircuit[ActiveActor].ActiveCktElement.Enabled :=  True;
 
-        ActiveCircuit[1].Solution.SendCmd2Actors(INIT_ADIAKOPTICS);
+        End;
+        ActiveCircuit[ActiveActor].BusNameRedefined :=  False;
+        Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
+
+        ActiveCircuit[ActiveActor].Solution.SendCmd2Actors(INIT_ADIAKOPTICS);
         ADiak_init    :=  True;
       End
       else
