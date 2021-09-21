@@ -692,7 +692,11 @@ begin
              Begin
                   Nref := Buses^[BusIndex].GetRef(i);
                   IF   Nref > 0 THEN Begin   // add in only non-ground currents
-                     BusV := NodeV^[Nref];
+                    if not ADiakoptics or (ActorID = 1) then
+                      BusV := NodeV^[Nref]
+                    else // In the context of actor 1
+                      BusV := VoltInActor1(Nref);
+
                      IF  (BusV.re <> 0.0) OR (BusV.im <> 0.0)   THEN
                       {Current  INTO the system network}
                        CASE SolveType of
@@ -711,7 +715,10 @@ begin
              Begin
                   Nref := Buses^[BusIndex].GetRef(i);
                   IF Nref > 0 THEN  Begin
-                     BusV := NodeV^[Nref];
+                    if not ADiakoptics or (ActorID = 1) then
+                      BusV := NodeV^[Nref]
+                    else // In the context of actor 1
+                      BusV := VoltInActor1(Nref);
                      IF    (BusV.re <> 0.0) OR (BusV.im <> 0.0)   THEN
                          {Current  INTO the system network}
                       CASE SolveType of

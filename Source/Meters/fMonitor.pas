@@ -1671,21 +1671,25 @@ begin
          begin
               i := tempTerminal.TermNodeRef^[j];  // global node number
               phase_num := ActiveCircuit[ActorID].MapNodeToBus^[i].NodeNum;
-              vabs := cabs (activecircuit[ActorID].Solution.NodeV^[i]);
+              if not ADiakoptics or (ActorID = 1) then vabs := cabs (activecircuit[ActorID].Solution.NodeV^[i])
+              else vabs := cabs (activecircuit[ActorID].Solution.VoltInActor1(i));
               if phase_num=1 then // phase A
               begin
                    pnodefms^[nd_num_in_cluster].vl_V1 := vabs ;
-                   pnodefms^[nd_num_in_cluster].vl_V_1c :=   activecircuit[ActorID].Solution.NodeV^[i];
+                   if not ADiakoptics or (ActorID = 1) then pnodefms^[nd_num_in_cluster].vl_V_1c :=   activecircuit[ActorID].Solution.NodeV^[i]
+                   else pnodefms^[nd_num_in_cluster].vl_V_1c :=   activecircuit[ActorID].Solution.VoltInActor1(i);
               end
               else if phase_num=2 then    //phase B
               begin
                     pnodefms^[nd_num_in_cluster].vl_V2 := vabs;
-                    pnodefms^[nd_num_in_cluster].vl_V_2c :=   activecircuit[ActorID].Solution.NodeV^[i];
+                    if not ADiakoptics or (ActorID = 1) then pnodefms^[nd_num_in_cluster].vl_V_2c :=   activecircuit[ActorID].Solution.NodeV^[i]
+                    else pnodefms^[nd_num_in_cluster].vl_V_2c :=   activecircuit[ActorID].Solution.VoltInActor1(i);
               end
               else if phase_num=3 then    //phase c
               begin
                     pnodefms^[nd_num_in_cluster].vl_V3 := vabs;
-                    pnodefms^[nd_num_in_cluster].vl_V_3c :=   activecircuit[ActorID].Solution.NodeV^[i];
+                    if not ADiakoptics or (ActorID = 1) then pnodefms^[nd_num_in_cluster].vl_V_3c :=   activecircuit[ActorID].Solution.NodeV^[i]
+                    else pnodefms^[nd_num_in_cluster].vl_V_3c :=   activecircuit[ActorID].Solution.VoltInActor1(i);
               end;
          end;
          if tempElement.NPhases=3  then
@@ -2328,7 +2332,10 @@ begin
       for j:=1 to MeteredElement.NConds do// how many conds of this element
              begin
                   i := pTerminal.TermNodeRef^[j];  // global node number
-                  CACCUM( tempCplx , cmul(activecircuit[ActorID].Solution.NodeV^[i], Conjg(MeteredElement.Iterminal[k+j])));//power
+                  if not ADiakoptics or (ActorID = 1) then
+                    CACCUM( tempCplx , cmul(activecircuit[ActorID].Solution.NodeV^[i], Conjg(MeteredElement.Iterminal[k+j])))//power
+                  else
+                    CACCUM( tempCplx , cmul(activecircuit[ActorID].Solution.VoltInActor1(i), Conjg(MeteredElement.Iterminal[k+j])))
              end;
       result :=  tempCplx.re ;
 end;
@@ -2353,7 +2360,8 @@ begin
       then Begin
           With ActiveCircuit[ActorID].solution Do
               For i := 1 to pElem.Yorder Do
-                  pElem.Vterminal^[i] := NodeV^[pElem.NodeRef^[i]];
+                if not ADiakoptics or (ActorID = 1) then pElem.Vterminal^[i] := NodeV^[pElem.NodeRef^[i]]
+                else pElem.Vterminal^[i] := VoltInActor1(pElem.NodeRef^[i]);
       End
           else result := 0.0 ;
       //k is the terminal number of this end
@@ -2369,7 +2377,8 @@ begin
            if activecircuit[ActorID].MapNodeToBus^[j].NodeNum = phase_num then
            begin
                 nodeRefj := j;                                   // node ref of the other end of this element and this phase
-                vTemp := activecircuit[ActorID].Solution.NodeV^[nodeRefj];
+                if not ADiakoptics or (ActorID = 1) then vTemp := activecircuit[ActorID].Solution.NodeV^[nodeRefj]
+                else vTemp := activecircuit[ActorID].Solution.VoltInActor1(nodeRefj);
                 nodeRefi := pElem.Terminals^[k].TermNodeRef^[i]; // node ref of this node
            end;
       end;
@@ -2555,7 +2564,8 @@ begin
       then Begin
           With ActiveCircuit[ActorID].solution Do
               For i := 1 to pElem.Yorder Do
-                  pElem.Vterminal^[i] := NodeV^[pElem.NodeRef^[i]];
+                if not ADiakoptics or (ActorID = 1) then pElem.Vterminal^[i] := NodeV^[pElem.NodeRef^[i]]
+                else pElem.Vterminal^[i] := VoltInActor1(pElem.NodeRef^[i]);
       End
           else result := 0.0 ;
       //k is the terminal number of this end
@@ -2571,7 +2581,9 @@ begin
            if activecircuit[ActorID].MapNodeToBus^[j].NodeNum = phase_num then
            begin
                 nodeRefj := j;                                   // node ref of the other end of this element and this phase
-                vTemp := activecircuit[ActorID].Solution.NodeV^[nodeRefj];
+                if not ADiakoptics or (ActorID = 1) then vTemp := activecircuit[ActorID].Solution.NodeV^[nodeRefj]
+                else vTemp := activecircuit[ActorID].Solution.VoltInActor1(nodeRefj);
+
                 nodeRefi := pElem.Terminals^[k].TermNodeRef^[i]; // node ref of this node
            end;
       end;

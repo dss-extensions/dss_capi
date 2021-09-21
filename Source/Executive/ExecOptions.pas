@@ -560,9 +560,10 @@ FUNCTION DoSetCmd(SolveOption:Integer):Integer;
 // Solve Command is re-routed here first to set options beFORe solving
 
 VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
+   i,
+   ParamPointer     :Integer;
+   ParamName        :String;
+   Param            :String;
    TestLoadShapeObj :TLoadShapeObj;
 
 
@@ -593,7 +594,11 @@ Begin
                     Solution.DynaVars.h  := InterpretTimeStepSize(Param);
                     Solution.IntervalHrs := Solution.DynaVars.h/3600.0;
                   End;
-            8: ActiveCircuit[ActiveActor].solution.Mode          := InterpretSolveMode(Param);  // see DSSGlobals
+            8: Begin
+                  ActiveCircuit[ActiveActor].solution.Mode          := InterpretSolveMode(Param);  // see DSSGlobals
+                  if ADiakoptics then
+                    for i := 2 to NumOfActors do ActiveCircuit[i].solution.Mode :=  ActiveCircuit[1].solution.Mode
+               end;
             9: ActiveCircuit[ActiveActor].solution.RandomType    := InterpretRandom(Param);
            10: ActiveCircuit[ActiveActor].solution.NumberOfTimes := Parser[ActiveActor].IntValue;
            11: Set_Time;

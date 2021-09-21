@@ -1916,7 +1916,7 @@ Begin
 
      0:Begin
          With ActiveCircuit[ActorID].Solution Do
-           FOR i := 1 to Fnphases Do Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
+           FOR i := 1 to Fnphases Do Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds], ActorID);
        End;
 
      1:Begin
@@ -1924,7 +1924,7 @@ Begin
           FOR i := 1 to Fnphases Do  Begin
              j := i + 1;
              If j > Fnconds Then j := 1;
-             Vterminal^[i] := VDiff( NodeRef^[i] , NodeRef^[j]);
+             Vterminal^[i] := VDiff( NodeRef^[i] , NodeRef^[j], ActorID);
           End;
        End;
 
@@ -2310,10 +2310,12 @@ begin
              With ActiveCircuit[ActorID].solution Do
              Case Connection of
                0: Begin {wye - neutral is explicit}
-                    Va := Csub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[Fnconds]]);
+                    if not ADiakoptics or (ActorID = 1) then Va := Csub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[Fnconds]])
+                    else Va := Csub(VoltInActor1(NodeRef^[1]), VoltInActor1(NodeRef^[Fnconds]));
                   End;
                1: Begin  {delta -- assume neutral is at zero}
-                    Va := NodeV^[NodeRef^[1]];
+                    if not ADiakoptics or (ActorID = 1) then Va := NodeV^[NodeRef^[1]]
+                    else Va := VoltInActor1(NodeRef^[1]);
                   End;
              End;
 
@@ -2414,7 +2416,10 @@ begin
          case Fnphases of
 
               1: Begin
-                      Edp      := Csub( CSub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[2]]) , Cmul(ITerminal^[1], Zthev));
+                  if not ADiakoptics or (ActorID = 1) then
+                      Edp      := Csub( CSub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[2]]) , Cmul(ITerminal^[1], Zthev))
+                  else
+                      Edp      := Csub( CSub(VoltInActor1(NodeRef^[1]), VoltInActor1(NodeRef^[2])) , Cmul(ITerminal^[1], Zthev));
                       VThevMag := Cabs(Edp);
                  End;
 
@@ -2423,7 +2428,10 @@ begin
                      Phase2SymComp(ITerminal, @I012);
                      // Voltage behind Xdp  (transient reactance), volts
 
-                     For i := 1 to FNphases Do Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
+                     For i := 1 to FNphases Do
+                      if not ADiakoptics or (ActorID = 1) then Vabc[i] := NodeV^[NodeRef^[i]]   // Wye Voltage
+                      else Vabc[i] := VoltInActor1(NodeRef^[i]);   // Wye Voltage
+
                      Phase2SymComp(@Vabc, @V012);
                      Edp      := Csub( V012[1] , Cmul(I012[1], Zthev));    // Pos sequence
                      VThevMag := Cabs(Edp);
