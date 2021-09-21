@@ -108,7 +108,7 @@ End;
 FUNCTION SolveYearly(ActorID : integer):Integer;
 
 VAR
-   N, Twopct :Integer;
+   N, Twopct, i :Integer;
 
 Begin
  Result := 0;
@@ -117,6 +117,7 @@ Begin
  ShowPctProgress(ActorProgressCount[ActorID],ActorID);
 }
  WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
+
  Begin
   Try
 
@@ -126,6 +127,9 @@ Begin
     FOR N := 1 TO NumberOfTimes Do
       IF Not SolutionAbort Then With Dynavars do Begin
           Increment_time;
+          if ADiakoptics and (ActorID = 1) then
+            for i := 2 to NumOfActors do ActiveCircuit[i].Solution.Increment_time;
+
           DefaultHourMult := DefaultYearlyShapeObj.getmult(dblHour);
           IF PriceCurveObj <> NIL THEN PriceSignal := PriceCurveObj.GetPrice(dblHour);
           SolveSnap(ActorID);

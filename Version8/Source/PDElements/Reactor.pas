@@ -988,7 +988,7 @@ END;
 
 procedure TReactorObj.GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex; ActorID : Integer);
 var
-   i    :integer;
+   i, j    :integer;
 begin
 
   {Only report No Load Losses if Rp defined and Reactor is a shunt device;
@@ -1001,8 +1001,19 @@ begin
      NoLoadLosses := CZERO;
      With ActiveCircuit[ActorID].Solution Do
        For i  := 1 to FNphases do
-         With NodeV^[NodeRef^[i]] Do
-           Caccum(NoLoadLosses, cmplx((SQR(re) + SQR(im))/Rp, 0.0));  // V^2/Rp
+       Begin
+         if not ADiakoptics or (ActorID = 1) then
+         Begin
+           With NodeV^[NodeRef^[i]] Do
+             Caccum(NoLoadLosses, cmplx((SQR(re) + SQR(im))/Rp, 0.0))  // V^2/Rp
+         End
+         else
+         Begin
+           With VoltInActor1(NodeRef^[i]) Do
+             Caccum(NoLoadLosses, cmplx((SQR(re) + SQR(im))/Rp, 0.0))  // V^2/Rp
+         End;
+
+       End;
 
      IF   ActiveCircuit[ActorID].PositiveSequence then CmulReal(NoLoadLosses, 3.0);
      LoadLosses := Csub(TotalLosses , NoLoadLosses);  // Subtract no load losses from total losses

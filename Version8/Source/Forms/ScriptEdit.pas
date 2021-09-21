@@ -204,7 +204,8 @@ Var
   ActorBusy,
   ActorsRdy       : Boolean;
   CallerID,
-  USIdx           : Integer;
+  USIdx,
+  APointer        : Integer;
   TStr            : String;
 begin
     ProgressCmd :=  False;
@@ -218,7 +219,10 @@ begin
         Begin
           cLosses :=  CZERO;
           Clear;
-          for USIdx := 1 to NumOfActors do
+          if ADiakoptics and (ActiveActor = 1)then APointer := 1
+          else APointer :=  NumOfActors;
+
+          for USIdx := 1 to APointer do
           Begin
             ActiveActor :=  USIdx;
             if ActiveCircuit[ActiveActor] <> nil then

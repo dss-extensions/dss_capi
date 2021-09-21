@@ -1266,7 +1266,7 @@ Procedure TEnergyMeterObj.TakeSample(ActorID : Integer);
 // Assumes one time period has taken place since last sample.
 
 VAR
-   i,j, idx :Integer;
+   i,j, l, idx :Integer;
    
    S_Local,
    S_Totallosses,
@@ -1513,7 +1513,11 @@ Begin
                 Do Begin
                     j := Buses^[FromBusReference].GetNum(i);
                     If (j>0) and (j<4) then Begin
-                      puV := Cabs(Solution.NodeV^[Buses^[FromBusReference].GetRef(i)])/Buses^[FromBusReference].kVBase;
+                      if not ADiakoptics or (ActorID = 1) then
+                        puV := Cabs(Solution.NodeV^[Buses^[FromBusReference].GetRef(i)])/Buses^[FromBusReference].kVBase
+                      else
+                        puV :=  Cabs(Solution.VoltInActor1(Buses^[FromBusReference].GetRef(i)))/Buses^[FromBusReference].kVBase;
+
                       idx := jiIndex(j, VoltBaseIndex);
                       If puV > VphaseMax^[idx] Then
                       Begin
@@ -3596,7 +3600,7 @@ end;
 
 procedure TEnergyMeter.WriteVoltageReport(ActorID:integer);
 var
-  i, j       :Integer;
+  i, j, l    :Integer;
   Vmagpu     :Double;
   UnderCount :Integer;
   OverCount  :integer;
@@ -3626,7 +3630,11 @@ begin
            Begin
                For j := 1 to NumNodesThisBus Do
                Begin
-                  Vmagpu := Cabs(Solution.NodeV^[GetRef(j)])/kvbase * 0.001;
+                if not ADiakoptics or (ActorID = 1) then
+                  Vmagpu := Cabs(Solution.NodeV^[GetRef(j)])/kvbase * 0.001
+                else
+                  Vmagpu := Cabs(Solution.VoltInActor1(GetRef(j)))/kvbase * 0.001;
+
                   If Vmagpu > 0.1 then Begin // ignore neutral buses
                      If Vmagpu < underVmin Then
                      Begin
@@ -3681,7 +3689,11 @@ begin
            Begin
                For j := 1 to NumNodesThisBus Do
                Begin
-                  Vmagpu := Cabs(Solution.NodeV^[GetRef(j)])/kvbase * 0.001;
+                if not ADiakoptics or (ActorID = 1) then
+                  Vmagpu := Cabs(Solution.NodeV^[GetRef(j)])/kvbase * 0.001
+                else
+                  Vmagpu := Cabs(Solution.VoltInActor1(GetRef(j)))/kvbase * 0.001;
+
                   If Vmagpu > 0.1 then Begin // ignore neutral buses
                      If Vmagpu < underVmin Then
                      Begin

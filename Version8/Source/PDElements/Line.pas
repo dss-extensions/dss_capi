@@ -1305,7 +1305,8 @@ procedure TLineObj.GetSeqLosses(var PosSeqLosses, NegSeqLosses, ZeroSeqLosses: c
 }
 
 Var
-   i,j, k :Integer;
+   i,j,
+   k, l   :Integer;
    Vph,
    V012,
    I012   :Array[0..2] of Complex;
@@ -1324,7 +1325,14 @@ begin
        For i := 1 to 2 do
          Begin
              k := (i-1)*Fnphases + 1;
-             For j := 0 to 2 DO  Vph[j] := ActiveCircuit[ActorID].Solution.NodeV^[NodeRef^[k+j]] ;
+             For j := 0 to 2 DO
+             Begin
+              if not ADiakoptics or (ActorID = 1) then
+                Vph[j] := ActiveCircuit[ActorID].Solution.NodeV^[NodeRef^[k+j]]
+              else
+                Vph[j] := ActiveCircuit[ActorID].Solution.VoltInActor1(NodeRef^[k+j]);
+
+             End;
              Phase2SymComp(@Vph, @V012);
              Phase2SymComp(@Iterminal^[k], @I012);
              Caccum(PosSeqLosses,  Cmul(V012[1], Conjg(I012[1])));

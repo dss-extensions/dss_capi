@@ -642,7 +642,13 @@ Begin
    WITH    ActiveCircuit[ActorID].Solution  DO
    Begin
 
-       FOR  i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
+       FOR  i := 1 TO Yorder DO
+       Begin
+        if not ADiakoptics or (ActorID = 1) then
+           Vterminal^[i] := NodeV^[NodeRef^[i]]
+        else
+           Vterminal^[i] := VoltInActor1(NodeRef^[i]);
+       End;
 
        YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
 

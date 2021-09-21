@@ -1512,10 +1512,13 @@ PROCEDURE TTransfObj.GetAllWindingCurrents(CurrBuffer: pComplexArray; ActorID : 
 }
 
 VAR
-  i, jphase, k, iPhase, iWind, NeutTerm   : Integer;
-  VTerm : pComplexArray;
-  ITerm : pComplexArray;
-  ITerm_NL : pComplexArray;
+  j,
+  i, jphase, k,
+  iPhase, iWind,
+  NeutTerm        : Integer;
+  VTerm           : pComplexArray;
+  ITerm           : pComplexArray;
+  ITerm_NL        : pComplexArray;
 
 Begin
 
@@ -1527,7 +1530,14 @@ Begin
      {Load up Vterminal - already allocated for all cktelements}
       WITH ActiveCircuit[ActorID].Solution DO
        if Assigned (NodeV) then
-            FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]]
+        FOR i := 1 TO Yorder DO
+        Begin
+          if not ADiakoptics or (ActorID = 1) then
+            Vterminal^[i] := NodeV^[NodeRef^[i]]
+          else
+            Vterminal^[i] := VoltInActor1(NodeRef^[i]);
+
+        End
        Else FOR i := 1 TO Yorder DO  Vterminal^[i] := CZERO;
 
 
@@ -1615,7 +1625,7 @@ PROCEDURE TTransfObj.GetWindingVoltages(iWind: Integer;  VBuffer: pComplexArray;
 // Order is Number of Phases
 
 VAR
-  i, ii,k,  NeutTerm:Integer;
+  i, ii,k, l, NeutTerm:Integer;
 
 Begin
 
@@ -1629,7 +1639,14 @@ Begin
 
      {Load up VTerminal - already allocated for all cktelements}
      WITH ActiveCircuit[ActorID].Solution DO
-     FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
+      FOR i := 1 TO Yorder DO
+      Begin
+        if not ADiakoptics or (ActorID = 1) then
+          Vterminal^[i] := NodeV^[NodeRef^[i]]
+        else
+          Vterminal^[i] := VoltInActor1(NodeRef^[i]);
+
+      End;
 
 
      k := (iWind-1)*FNconds;    // Offset for winding

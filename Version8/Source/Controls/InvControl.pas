@@ -2360,14 +2360,26 @@ procedure TInvControlObj.GetmonVoltage(ActorID : Integer; var Vpresent: Double; 
 
             if (length(FMonBusesNodes[j]) = 2) then
               begin
-              vi := (ActiveCircuit[ActorID].Solution.NodeV^[rBus.GetRef(FMonBusesNodes[j][0])]);
-              vj := (ActiveCircuit[ActorID].Solution.NodeV^[rBus.GetRef(FMonBusesNodes[j][1])]);
+                if not ADiakoptics or (ActorID = 1) then
+                Begin
+                  vi := (ActiveCircuit[ActorID].Solution.NodeV^[rBus.GetRef(FMonBusesNodes[j][0])]);
+                  vj := (ActiveCircuit[ActorID].Solution.NodeV^[rBus.GetRef(FMonBusesNodes[j][1])]);
+                End
+                else
+                Begin
+                  vi := (ActiveCircuit[ActorID].Solution.VoltInActor1(rBus.GetRef(FMonBusesNodes[j][0])));
+                  vj := (ActiveCircuit[ActorID].Solution.VoltInActor1(rBus.GetRef(FMonBusesNodes[j][1])));
+                End;
+
               cBuffer[i,j] := cmulreal(Csub(vi, vj), BasekV * 1000.0 / FMonBusesVbase[j+1]);
               v := cBuffer[i,j];
               end
             else
               begin
-                cBuffer[i,j] := cmulreal(ActiveCircuit[ActorID].Solution.NodeV^[rBus.GetRef(FMonBusesNodes[j][0])], BasekV * 1000.0 / FMonBusesVbase[j+1]);
+                if not ADiakoptics or (ActorID = 1) then
+                  cBuffer[i,j] := cmulreal(ActiveCircuit[ActorID].Solution.NodeV^[rBus.GetRef(FMonBusesNodes[j][0])], BasekV * 1000.0 / FMonBusesVbase[j+1])
+                else
+                  cBuffer[i,j] := cmulreal(ActiveCircuit[ActorID].Solution.VoltInActor1(rBus.GetRef(FMonBusesNodes[j][0])), BasekV * 1000.0 / FMonBusesVbase[j+1]);
                 v := cBuffer[i,j];
               end;
           end;
