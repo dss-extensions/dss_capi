@@ -1874,15 +1874,27 @@ var
   myPDEList     : DynStringArray;
 
 Begin
-  Num_pieces    :=  Num_SubCkts;
+  if UseUserLinks and (length(Link_Branches) > 0) then Num_pieces := length(Link_Branches) + 1
+  else  Num_pieces    :=  Num_SubCkts;
   with solution do
   Begin
-
-    FileName  :=  Create_METIS_Graph();
-    TextCmd   :=  Create_METIS_Zones(FileName);
+    if UseUserLinks and (length(Link_Branches) > 0) then // using link branches entered manually
+    Begin
+      Calc_Inc_Matrix_Org(ActiveActor);                       //Calculates the ordered incidence matrix
+      setlength(Locations, length(Link_Branches));
+      Locations[0]  :=  0;
+      for i := 1 to High(Link_Branches) do
+        with solution do Locations[i]  :=  get_PDE_Bus1_Location(Link_Branches[i]);
+    End
+    else
+    Begin
+      FileName      :=  Create_METIS_Graph();
+      TextCmd       :=  Create_METIS_Zones(FileName);
+      UseUserLinks  :=  False;
+    End;
     {******************************************************************************************}
     // Verifies if there was no error executing MeTIS and the zones file was created
-    if (TextCmd <> '**Error**') and fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces))) then
+    if ((TextCmd <> '**Error**') and fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces)))) or UseUserLinks then
     Begin
     //***********The directory is ready for storing the new circuit****************
       EMeter    := EnergyMeters.First;

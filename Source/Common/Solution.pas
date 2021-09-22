@@ -372,6 +372,7 @@ TYPE
        function get_IncMatrix_Row(Col : integer): Integer;          // Gets the index of the Row connected to the specified Column
        function get_IncMatrix_Col(Row : integer): Integer;          // Gets the index of the Column connected to the specified Row
        function CheckLocationIdx(Idx : Integer): Integer;           // Evaluates the area covered by the tearing point to see if there is a better one
+       function get_PDE_Bus1_Location(myPDE : string): Integer;     // Gets the index of myPDE -> bus1 within the Inc matrix
 
        procedure AddLines2IncMatrix(ActorID : Integer);             // Adds the Lines to the Incidence matrix arrays
        procedure AddXfmr2IncMatrix(ActorID : Integer);              // Adds the Xfmrs to the Incidence matrix arrays
@@ -1663,6 +1664,31 @@ Begin
       IncMat_Ordered  :=  False;
     End;
 End;
+
+{*******************************************************************************
+*          This function returns the index of bus 1 with the Incidence         *
+*                          matrix for the given PDE                            *
+********************************************************************************}
+function TSolutionObj.get_PDE_Bus1_Location(myPDE : string): Integer;
+var
+  i,
+  j       : integer;
+  myBUS   : string;
+Begin
+  with ActiveCircuit[ActiveActor] do
+  Begin
+    SetElementActive(myPDE);
+    myBUS   :=  ActiveCktElement.GetBus(2);
+    j       :=  ansipos('.',myBus);
+    if j <> 0 then
+      myBUS :=  copy(myBUS,0,j - 1);
+    for i :=  0 to High(Inc_Mat_Cols) do
+      if Inc_Mat_Cols[i] = myBUS then break;
+    Result  :=  i;
+  End;
+
+End;
+
 {*******************************************************************************
 * This function delivers the Row index connected to the Column at the input    *
 *                   Inside the B2N incidence Matrix                            *

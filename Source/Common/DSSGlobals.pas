@@ -282,10 +282,13 @@ VAR
    ActorPctProgress   : Array of integer;
    ActorHandle        : Array of TSolver;
 
+//***********************A-Diakoptics suite globals*****************************
+
    AllActors,
    ADiakoptics,
    ADiak_Init,
    ADiak_PCInj,
+   UseUserLinks,   // To indicate if the tearing process will take place using the link branches given by the user
    Parallel_enabled,
    ConcatenateReports,
 
@@ -297,8 +300,6 @@ VAR
    // Default ports
    DSSPrgPort,
    DSSGISPort         : Integer;
-
-
 
 
 {*******************************************************************************
@@ -1450,7 +1451,7 @@ initialization
    GISThickness           :=  '3';
    GISColor               :=  'FF0000';
    GISCoords              :=  AllocMem(Sizeof(Double) * 4);
-
+   UseUserLinks           :=  False;
    IsProgressOn           :=  False;
 
    Progress_Actor         :=  nil;
