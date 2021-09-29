@@ -39,6 +39,6 @@ else
     cp ../klusolve/LICENSE release/dss_capi/KLUSOLVE_LICENSE
 fi
 cd release
-tar zcf "dss_capi_${GITHUB_REF}_darwin_x64.tar.gz" dss_capi
+tar zcf "dss_capi_${GITHUB_SHA}_darwin_x64.tar.gz" dss_capi
 cd ..
 rm -rf release/dss_capi

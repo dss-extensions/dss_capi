@@ -83,7 +83,7 @@ IF DEFINED CI (
     copy OPENDSS_LICENSE release\dss_capi\
     copy klusolve\LICENSE release\dss_capi\KLUSOLVE_LICENSE
     cd release
-    7z a "dss_capi_%GITHUB_REF%_win_x86.zip" dss_capi
+    7z a "dss_capi_%GITHUB_SHA%_win_x86.zip" dss_capi
     cd ..
     rd /s /q release\dss_capi
 )
