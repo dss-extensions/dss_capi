@@ -91,13 +91,15 @@ To build the DLL yourself:
 
 ### On Windows
 
-If you just need the DLL, you can download it from the releases page. Otherwise:
+If you just need the DLL, you can download it from the releases page. Pre-release development versions can be downloaded from the build artifacts from the GitHub Actions workflow.
+
+Otherwise:
 
 - Install the x64 Free Pascal compiler -- see [the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) for further instructions.
 
 - If you want to use the DLL from Visual Studio, you need to generate an import library. This can be done by starting the next step from the "x64 Native Tools Command Prompt for VS 2017" (or equivalent for your Visual Studio version) -- you only need the `dumpbin.exe` and `lib.exe` utilities.
 
-- Open a command prompt on the `dss_capi` folder and run `build_win_x64.bat`
+- Open a command prompt on the `dss_capi` folder and run `build/build_win_x64.bat`
 
 The output files will be placed into the `lib/win_x64` folder. 
 
@@ -111,7 +113,7 @@ If the provided DLLs are not compatible with your distribution, the current reco
 
 - Build the main project:
 ```
-    bash build_linux_x64.sh
+    bash build/build_linux_x64.sh
 ```
 
 ### On MacOS
@@ -121,7 +123,7 @@ After taking care of KLUSolve and placing a copy of it in the same folder, overa
 - Install the x64 Free Pascal compiler -- see [the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) for further instructions.
 - Build the main project:
 ```
-    bash build_macos_x64.sh
+    bash build/build_macos_x64.sh
 ```
 
 ## Usage and examples

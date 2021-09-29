@@ -92,12 +92,12 @@ Caso deseje compilar o DLL:
 
 ### No Windows
 
-Se você precisa apenas do arquivo DLL, lembre-se que ele pode ser baixado na página de "Releases" no GitHub. Pode ser necessário instalar o pacote de [runtime do Microsoft Visual Studio 2017](https://go.microsoft.com/fwlink/?LinkId=746572).
+Se você precisa apenas do arquivo DLL, lembre-se que ele pode ser baixado na página de "Releases" no GitHub. Pode ser necessário instalar o pacote de [runtime do Microsoft Visual Studio 2017](https://go.microsoft.com/fwlink/?LinkId=746572). Versões de teste durante o desenvolvimento podem ser baixadas dos artefatos da compilação do GitHub Actions.
 Caso precisa compilar:
 
 - Caso pretenda utilizar a DLL no Visual Studio, você precisa gerar uma biblioteca de importação. Isto pode ser feito iniciando a próxima etapa em um prompt do Visual Studio, como o "x64 Native Tools Command Prompt for VS 2017" (ou equivalente para sua versão) -- você precisa apenas dos utilitários  `dumpbin.exe` e `lib.exe`.
 
-- Abra um prompt de comando na pasta `dss_capi` que você clonou anteriormente e execute `build_win_x64.bat`
+- Abra um prompt de comando na pasta `dss_capi` que você clonou anteriormente e execute `build/build_win_x64.bat`
 
 Os arquivos de saída do processo são depositados na subpasta `lib/win_x64`. 
 
@@ -107,14 +107,14 @@ Caso precise apenas dos DLLs para versões ainda não lançadas, você pode enco
 
 - Compile o projeto principal:
 ```
-    bash build_linux_x64.sh
+    bash build/build_linux_x64.sh
 ```
 
 ### No MacOS
 
 - Compile o projeto principal:
 ```
-    bash build_macos_x64.sh
+    bash build/build_macos_x64.sh
 ```
 
 ## Como usar e exemplos

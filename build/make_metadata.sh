@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #TODO: process $GITHUB_REF to extract valid version tags
 #if [ -n "$GITHUB_SHA" ]; then
 #    export DSS_CAPI_VERSION=$GITHUB_SHA

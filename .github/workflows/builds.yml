@@ -28,8 +28,8 @@ jobs:
         run: |
           cd dss_capi
           export PATH=/opt/python/cp38-cp38/bin/:$PATH
-          bash make_metadata.sh
-          bash build_linux_x64.sh
+          ./build/make_metadata.sh
+          ./build/build_linux_x64.sh
           ls -lR lib
       - name: 'Upload artifacts'
         uses: "actions/upload-artifact@v2"
@@ -60,8 +60,8 @@ jobs:
       - name: Build
         run: |
           cd dss_capi
-          bash make_metadata.sh
-          docker run -e GITHUB_SHA -v "${PWD}/..:/build" pmeira/manylinux_wheel_cmake_fpc320_i686 bash -c 'cd /build/dss_capi; PATH=/opt/python/cp38-cp38/bin/:$PATH bash build_linux_x86.sh'
+          ./build/make_metadata.sh
+          docker run -e GITHUB_SHA -v "${PWD}/..:/build" pmeira/manylinux_wheel_cmake_fpc320_i686 bash -c 'cd /build/dss_capi; PATH=/opt/python/cp38-cp38/bin/:$PATH bash build/build_linux_x86.sh'
           ls -lR lib
       - name: 'Upload artifacts'
         uses: "actions/upload-artifact@v2"
@@ -93,8 +93,8 @@ jobs:
       - name: Build
         run: |
           cd dss_capi
-          bash make_metadata.sh
-          bash build_macos_x64.sh
+          ./build/make_metadata.sh
+          ./build/build_macos_x64.sh
           ls -lR lib
 
       - name: 'Upload artifacts'
@@ -130,10 +130,10 @@ jobs:
         shell: cmd
         run: |
           cd dss_capi
-          "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
+          "c:\Program Files\Git\bin\bash" -c "bash ./build/make_metadata.sh"
           set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
           set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
-          call build_win_x64.bat
+          call build/build_win_x64.bat
       - name: 'Upload artifacts'
         uses: "actions/upload-artifact@v2"
         #if: github.event_name == 'release' && github.event.action == 'created'
@@ -165,10 +165,10 @@ jobs:
         shell: cmd
         run: |
           cd dss_capi
-          "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
+          "c:\Program Files\Git\bin\bash" -c "bash ./build/make_metadata.sh"
           set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
           set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
-          call build_win_x86.bat
+          call build/build_win_x86.bat
       - name: 'Upload artifacts'
         uses: "actions/upload-artifact@v2"
         #if: github.event_name == 'release' && github.event.action == 'created'

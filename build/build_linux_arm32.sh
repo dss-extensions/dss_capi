@@ -1,4 +1,8 @@
-# Tested with arm7l
+#!/bin/bash
+
+# Tested with a arm7l phone
+# Tested with a Raspberry Pi 4 Model B with the official 32-bit OS
+
 set -e -x
 
 python3 src/classic_to_ctx.py
@@ -7,9 +11,9 @@ if [ ! -d "build/units_arm32" ]; then
     mkdir build/units_arm32
 fi
 fpc @src/linux-arm32.cfg -B src/dss_capi.lpr
-bash custom_link.sh lib/linux_arm32
+bash build/custom_link.sh lib/linux_arm32
 fpc @src/linux-arm32-dbg.cfg -B src/dss_capid.lpr
-bash custom_link.sh lib/linux_arm32
+bash build/custom_link.sh lib/linux_arm32
 
 mkdir -p release/dss_capi/lib
 cp -R lib/linux_arm32 release/dss_capi/lib/linux_arm32
