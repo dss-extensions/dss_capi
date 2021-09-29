@@ -36,7 +36,7 @@ jobs:
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'Development build: ${{ env.name }}'
-          path: '${{ env.GITHUB_WORKSPACE }}/dss_capi/release/*.tar.gz'
+          path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
 
   build_linux_x86:
     name: 'Linux x86: dockerized build'
@@ -68,7 +68,7 @@ jobs:
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'Development build: ${{ env.name }}'
-          path: '${{ env.GITHUB_WORKSPACE }}/dss_capi/release/*.tar.gz'
+          path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
 
   build_macos_x64:
     name: 'macOS x64'
@@ -102,7 +102,7 @@ jobs:
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'Development build: ${{ env.name }}'
-          path: '${{ env.GITHUB_WORKSPACE }}/dss_capi/release/*.tar.gz'
+          path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
 
   build_win_x64:
     name: 'Windows x64'
@@ -139,7 +139,7 @@ jobs:
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'Development build: ${{ env.name }}'
-          path: '${{ env.GITHUB_WORKSPACE }}/dss_capi/release/*.zip'
+          path: '${{ github.workspace }}/dss_capi/release/*.zip'
 
   build_win:
     name: 'Windows x86'
@@ -174,4 +174,4 @@ jobs:
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'Development build: ${{ env.name }}'
-          path: '${{ env.GITHUB_WORKSPACE }}/dss_capi/release/*.zip'
+          path: '${{ github.workspace }}/dss_capi/release/*.zip'
