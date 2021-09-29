@@ -1,6 +1,9 @@
 name: Builds
 
-on: [push] #, pull_request]
+on: 
+  # release:
+  #   types: [created]
+  push:
 
 jobs:
   build_linux_x64:
@@ -28,6 +31,12 @@ jobs:
           bash make_metadata.sh
           bash build_linux_x64.sh
           ls -lR lib
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'Development build: ${{ env.name }}'
+          path: '{{ env.GITHUB_WORKSPACE }}/*.tar.gz'
 
   build_linux_x86:
     name: 'Linux x86: dockerized build'
@@ -54,6 +63,12 @@ jobs:
           bash make_metadata.sh
           bash build_linux_x86.sh
           ls -lR lib
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'Development build: ${{ env.name }}'
+          path: '{{ env.GITHUB_WORKSPACE }}/*.tar.gz'
 
   build_macos_x64:
     name: 'macOS x64'
@@ -81,6 +96,13 @@ jobs:
           bash make_metadata.sh
           bash build_macos_x64.sh
           ls -lR lib
+
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'Development build: ${{ env.name }}'
+          path: '{{ env.GITHUB_WORKSPACE }}/*.tar.gz'
 
   build_win_x64:
     name: 'Windows x64'
@@ -112,6 +134,12 @@ jobs:
           set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
           set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
           call build_win_x64.bat
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'Development build: ${{ env.name }}'
+          path: '{{ env.GITHUB_WORKSPACE }}/*.zip'
 
   build_win:
     name: 'Windows x86'
@@ -141,4 +169,9 @@ jobs:
           set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
           set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
           call build_win_x86.bat
-    
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'Development build: ${{ env.name }}'
+          path: '{{ env.GITHUB_WORKSPACE }}/dss_capi/*.zip'
