@@ -35,7 +35,7 @@ jobs:
         uses: "actions/upload-artifact@v2"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
-          name: '${{ env.name }}'
+          name: 'development-build'
           path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
 
   build_linux_x86:
@@ -67,7 +67,7 @@ jobs:
         uses: "actions/upload-artifact@v2"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
-          name: '${{ env.name }}'
+          name: 'development-build'
           path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
 
   build_macos_x64:
@@ -101,7 +101,7 @@ jobs:
         uses: "actions/upload-artifact@v2"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
-          name: '${{ env.name }}'
+          name: 'development-build'
           path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
 
   build_win_x64:
@@ -138,7 +138,7 @@ jobs:
         uses: "actions/upload-artifact@v2"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
-          name: '${{ env.name }}'
+          name: 'development-build'
           path: '${{ github.workspace }}/dss_capi/release/*.zip'
 
   build_win:
@@ -173,5 +173,5 @@ jobs:
         uses: "actions/upload-artifact@v2"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
-          name: '${{ env.name }}'
+          name: 'development-build'
           path: '${{ github.workspace }}/dss_capi/release/*.zip'
