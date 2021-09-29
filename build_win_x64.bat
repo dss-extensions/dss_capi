@@ -78,7 +78,7 @@ if exist lib\win_x64\dss_capid.dll (
 
 SETLOCAL ENABLEEXTENSIONS
 
-IF DEFINED APPVEYOR (
+IF DEFINED CI (
     mkdir release
     mkdir dss_capi
     xcopy /E lib\win_x64 release\dss_capi\lib\win_x64\
@@ -88,8 +88,7 @@ IF DEFINED APPVEYOR (
     copy OPENDSS_LICENSE release\dss_capi\
     copy klusolve\LICENSE release\dss_capi\KLUSOLVE_LICENSE
     cd release
-    7z a "dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x64.zip" dss_capi
+    7z a "dss_capi_%GITHUB_REF%_win_x64.zip" dss_capi
     cd ..
     rd /s /q release\dss_capi
-    appveyor PushArtifact "c:\dss_capi\release\dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x64.zip"
 )

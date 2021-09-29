@@ -23,7 +23,7 @@ else
     cp ../klusolve/LICENSE release/dss_capi/KLUSOLVE_LICENSE
 fi
 cd release
-tar zcf "dss_capi_${TRAVIS_TAG}_linux_arm64.tar.gz" dss_capi
+tar zcf "dss_capi_${GITHUB_REF}_linux_arm64.tar.gz" dss_capi
 cd ..
 rm -rf release/dss_capi
 

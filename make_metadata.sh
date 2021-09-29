@@ -1,7 +1,5 @@
-if [ -n "$TRAVIS_TAG" ]; then
-    export DSS_CAPI_VERSION=$TRAVIS_TAG
-elif [ -n "$APPVEYOR_REPO_TAG_NAME" ]; then
-    export DSS_CAPI_VERSION=$APPVEYOR_REPO_TAG_NAME
+if [ -n "$GITHUB_REF" ]; then
+    export DSS_CAPI_VERSION=$GITHUB_REF
 else
     export DSS_CAPI_VERSION=`grep DSS_CAPI_VERSION include/dss_capi.h | grep -o '".*"' | tr -d '"'`
 fi
