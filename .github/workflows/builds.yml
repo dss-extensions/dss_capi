@@ -1,0 +1,177 @@
+name: Builds
+
+on: 
+  # release:
+  #   types: [created]
+  push:
+
+jobs:
+  build_linux_x64:
+    name: 'Linux x64'
+    runs-on: ubuntu-latest
+    container:
+      image: 'docker://pmeira/manylinux_wheel_cmake_fpc320'
+    env:
+      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_linux_x64.tar.gz'
+    steps: 
+      - name: 'Checkout'
+        run: |
+          git clone $GITHUB_SERVER_URL/$GITHUB_REPOSITORY dss_capi
+          cd dss_capi
+          git checkout $GITHUB_SHA
+      - name: 'Download/extract KLUSolve(X)'
+        run: |
+          curl -s -L "${KLUSOLVE_URL}" -o klusolve.tar.gz
+          tar zxf klusolve.tar.gz
+          cp -r klusolve/lib/* dss_capi/lib/
+      - name: Build
+        run: |
+          cd dss_capi
+          export PATH=/opt/python/cp38-cp38/bin/:$PATH
+          bash make_metadata.sh
+          bash build_linux_x64.sh
+          ls -lR lib
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'development-build'
+          path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
+
+  build_linux_x86:
+    name: 'Linux x86'
+    runs-on: ubuntu-latest
+    env:
+      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_linux_x86.tar.gz'
+    steps: 
+      - name: 'Checkout'
+        run: |
+          git clone $GITHUB_SERVER_URL/$GITHUB_REPOSITORY dss_capi
+          cd dss_capi
+          git checkout $GITHUB_SHA
+      - name: 'Setup Docker'
+        run: |
+          docker pull pmeira/manylinux_wheel_cmake_fpc320_i686
+      - name: 'Download/extract KLUSolve(X)'
+        run: |
+          curl -s -L "${KLUSOLVE_URL}" -o klusolve.tar.gz
+          tar zxf klusolve.tar.gz
+          cp -r klusolve/lib/* dss_capi/lib/
+      - name: Build
+        run: |
+          cd dss_capi
+          bash make_metadata.sh
+          docker run -e GITHUB_SHA -v "${PWD}/..:/build" pmeira/manylinux_wheel_cmake_fpc320_i686 bash -c 'cd /build/dss_capi; PATH=/opt/python/cp38-cp38/bin/:$PATH bash build_linux_x86.sh'
+          ls -lR lib
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'development-build'
+          path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
+
+  build_macos_x64:
+    name: 'macOS x64'
+    runs-on: macos-latest
+    env:
+      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_darwin_x64.tar.gz'
+    steps:
+      - uses: actions/checkout@v2
+        with: 
+          fetch-depth: 0
+          path: 'dss_capi'
+      - name: 'Install FreePascal'
+        run: |
+          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.0/fpc-3.2.0.intel-macosx.dmg/download -Ofpc.dmg -q
+          sudo hdiutil attach fpc.dmg
+          sudo installer -package /Volumes/fpc-3.2.0.intel-macosx/fpc-3.2.0-intel-macosx.pkg -target /
+      - name: 'Download/extract KLUSolve(X)'
+        run: |
+          wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
+          tar zxf klusolve.tar.gz
+          cp -r klusolve/lib/* dss_capi/lib/
+      - name: Build
+        run: |
+          cd dss_capi
+          bash make_metadata.sh
+          bash build_macos_x64.sh
+          ls -lR lib
+
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'development-build'
+          path: '${{ github.workspace }}/dss_capi/release/*.tar.gz'
+
+  build_win_x64:
+    name: 'Windows x64'
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+        with: 
+          fetch-depth: 0
+          path: 'dss_capi'
+      - name: 'Install FreePascal'
+        shell: cmd
+        run: |
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.exe/download -o fpc-win32.exe
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.cross.x86_64-win64.exe/download  -o fpc-win32.cross.x86_64-win64.exe
+          fpc-win32.exe /VERYSILENT
+          fpc-win32.cross.x86_64-win64.exe /VERYSILENT
+      - name: 'Download/extract KLUSolve(X)'
+        shell: cmd
+        run: |
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x64-gcc8.1.zip -o klusolve_x64.zip
+          7z x -y -o. klusolve_x64.zip
+          xcopy /E klusolve\lib dss_capi\lib
+      - name: Build
+        #TODO? cv2pdb (generate PDB for MSVC) and dlltool (generate lib compatible with GCC)
+        shell: cmd
+        run: |
+          cd dss_capi
+          "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
+          set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
+          set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
+          call build_win_x64.bat
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'development-build'
+          path: '${{ github.workspace }}/dss_capi/release/*.zip'
+
+  build_win:
+    name: 'Windows x86'
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+        with: 
+          fetch-depth: 0
+          path: 'dss_capi'
+      - name: 'Install FreePascal'
+        shell: cmd
+        run: |
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.exe/download -o fpc-win32.exe
+          fpc-win32.exe /VERYSILENT
+      - name: 'Download/extract KLUSolve(X)'
+        shell: cmd
+        run: |
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x86-msvc2017.zip -o klusolve_x86.zip
+          7z x -y -o. klusolve_x86.zip
+          xcopy /E klusolve\lib dss_capi\lib
+      - name: Build
+        #TODO? cv2pdb (generate PDB for MSVC) and dlltool (generate lib compatible with GCC)
+        shell: cmd
+        run: |
+          cd dss_capi
+          "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
+          set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
+          set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
+          call build_win_x86.bat
+      - name: 'Upload artifacts'
+        uses: "actions/upload-artifact@v2"
+        #if: github.event_name == 'release' && github.event.action == 'created'
+        with:
+          name: 'development-build'
+          path: '${{ github.workspace }}/dss_capi/release/*.zip'

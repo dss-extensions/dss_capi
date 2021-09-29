@@ -1,10 +1,9 @@
-if [ -n "$TRAVIS_TAG" ]; then
-    export DSS_CAPI_VERSION=$TRAVIS_TAG
-elif [ -n "$APPVEYOR_REPO_TAG_NAME" ]; then
-    export DSS_CAPI_VERSION=$APPVEYOR_REPO_TAG_NAME
-else
-    export DSS_CAPI_VERSION=`grep DSS_CAPI_VERSION include/dss_capi.h | grep -o '".*"' | tr -d '"'`
-fi
+#TODO: process $GITHUB_REF to extract valid version tags
+#if [ -n "$GITHUB_SHA" ]; then
+#    export DSS_CAPI_VERSION=$GITHUB_SHA
+#else
+export DSS_CAPI_VERSION=`grep DSS_CAPI_VERSION include/dss_capi.h | grep -o '".*"' | tr -d '"'`
+#fi
 
 export DSS_CAPI_REV=`git rev-parse HEAD`
 export DSS_CAPI_SVN_REV=`git log | grep -m 1 -E "trunk@[0-9]+" -o | grep -E "[0-9]+" -o`

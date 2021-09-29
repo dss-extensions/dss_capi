@@ -16,9 +16,13 @@ cp -R include release/dss_capi/
 # cp -R examples release/dss_capi/
 cp LICENSE release/dss_capi/
 cp OPENDSS_LICENSE release/dss_capi/
-cp klusolve/LICENSE release/dss_capi/KLUSOLVE_LICENSE
+if [ -d "klusolve" ]; then
+    cp klusolve/LICENSE release/dss_capi/KLUSOLVE_LICENSE
+else  
+    cp ../klusolve/LICENSE release/dss_capi/KLUSOLVE_LICENSE
+fi
 cd release
-tar zcf "dss_capi_${TRAVIS_TAG}_linux_x86.tar.gz" dss_capi
+tar zcf "dss_capi_${GITHUB_SHA}_linux_x86.tar.gz" dss_capi
 cd ..
 rm -rf release/dss_capi
 

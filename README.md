@@ -1,5 +1,4 @@
-[![Travis-CI: Linux and MacOS build status](https://travis-ci.com/dss-extensions/dss_capi.svg?branch=master)](https://travis-ci.com/dss-extensions/dss_capi)
-[![AppVeyor: Windows build status](https://ci.appveyor.com/api/projects/status/eekf7ry9d0cy4k1b?svg=true)](https://ci.appveyor.com/project/PMeira/dss-capi-u9ben)
+[![GitHub Actions: Builds](https://github.com/dss-extensions/dss_capi/actions/workflows/builds.yml/badge.svg)](https://github.com/dss-extensions/dss_capi/actions/workflows/builds.yml)
 [![GitHub downloads](https://img.shields.io/github/downloads/dss-extensions/dss_capi/total?logo=GitHub&cacheSeconds=86400)](https://github.com/dss-extensions/dss_capi/releases)
 
 *Para uma versão em português deste arquivo, veja [README.pt-BR.md](https://github.com/dss-extensions/dss_capi/blob/master/README.pt-BR.md).*
