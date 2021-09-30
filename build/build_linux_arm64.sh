@@ -9,9 +9,7 @@ if [ ! -d "build/units_arm64" ]; then
     mkdir build/units_arm64
 fi
 fpc @src/linux-arm64.cfg -B src/dss_capi.lpr
-bash build/custom_link.sh lib/linux_arm64
 fpc @src/linux-arm64-dbg.cfg -B src/dss_capid.lpr
-bash build/custom_link.sh lib/linux_arm64
 
 mkdir -p release/dss_capi/lib
 cp -R lib/linux_arm64 release/dss_capi/lib/linux_arm64

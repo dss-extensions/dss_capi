@@ -10,7 +10,6 @@ if [ ! -d "build/units_x64" ]; then
     mkdir build/units_x64
 fi
 fpc -Px86_64 @src/darwin-x64.cfg -B src/dss_capi.lpr
-bash build/custom_link.sh lib/darwin_x64
 
 # Make the lib look in the same folder for KLUSolve
 DSS_CAPI_LIB="lib/darwin_x64/libdss_capi.dylib"
@@ -20,7 +19,6 @@ install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_L
 install_name_tool -id "@loader_path/./libdss_capi.dylib" "$DSS_CAPI_LIB"
 
 fpc -Px86_64 @src/darwin-x64-dbg.cfg -B src/dss_capid.lpr
-bash build/custom_link.sh lib/darwin_x64
 
 # Make the lib look in the same folder for KLUSolve
 DSS_CAPI_LIB="lib/darwin_x64/libdss_capid.dylib"

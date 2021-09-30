@@ -38,6 +38,7 @@ This version still maintains basic compatibility with the 0.10.x series of relea
 - Some new functions: 
     - `Circuit_Get_ElementLosses`
     - `CktElement_Get_NodeRef`
+- Drop function aliases: previously deprecated function aliases (`LoadShapes_Set_Sinterval` and `LoadShapes_Get_sInterval`) were removed to simplify the build process. Use `LoadShapes_Set_SInterval` and `LoadShapes_Get_SInterval` instead.
 
 Due to the high number of IO changes, we recommend checking the performance before and after the upgrade to ensure your use case is not affected negatively. If issues are found, please do report.
 

@@ -1,2 +1,0 @@
-_LoadShapes_Set_Sinterval _LoadShapes_Set_SInterval
-_LoadShapes_Get_sInterval _LoadShapes_Get_SInterval
