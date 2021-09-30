@@ -1911,10 +1911,6 @@ exports
     DSS_RegisterMessageCallback
 
 {$IFDEF DSS_CAPI_CONTEXT},
-{$IFDEF MSWINDOWS}
-    ctx_LoadShapes_Get_SInterval,
-    ctx_LoadShapes_Set_SInterval,
-{$ENDIF}
     {$I '../build/generated/ctx_functions.inc'}
 {$ENDIF}
 
