@@ -828,12 +828,8 @@ exports
     LoadShapes_Set_TimeArray,
     LoadShapes_Get_HrInterval,
     LoadShapes_Get_MinInterval,
-    LoadShapes_Get_sInterval,
-    LoadShapes_Set_Sinterval,
-{$IFDEF MSWINDOWS}
     LoadShapes_Get_SInterval,
     LoadShapes_Set_SInterval,
-{$ENDIF}
     LoadShapes_Set_HrInterval,
     LoadShapes_Set_MinInterval,
     LoadShapes_Get_PBase,

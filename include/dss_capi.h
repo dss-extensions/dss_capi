@@ -3010,9 +3010,6 @@ extern "C" {
     */
     DSS_CAPI_DLL void LoadShapes_Set_SInterval(double Value);
 
-    DSS_CAPI_DLL double LoadShapes_Get_sInterval(void); // deprecated, see #24
-    DSS_CAPI_DLL void LoadShapes_Set_Sinterval(double Value); // deprecated, see #24
-
     /*
     Fixed interval time value, hours.
     */
@@ -4285,7 +4282,7 @@ extern "C" {
     DSS_CAPI_DLL double RegControls_Get_ForwardX(void);
 
     /*
-    Time delay is inversely adjsuted, proportinal to the amount of voltage outside the regulating band.
+    Time delay is inversely adjusted, proportional to the amount of voltage outside the regulating band.
     */
     DSS_CAPI_DLL uint16_t RegControls_Get_IsInverseTime(void);
 
@@ -4397,7 +4394,7 @@ extern "C" {
     DSS_CAPI_DLL void RegControls_Set_ForwardX(double Value);
 
     /*
-    Time delay is inversely adjsuted, proportinal to the amount of voltage outside the regulating band.
+    Time delay is inversely adjusted, proportional to the amount of voltage outside the regulating band.
     */
     DSS_CAPI_DLL void RegControls_Set_IsInverseTime(uint16_t Value);
 

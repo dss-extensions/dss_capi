@@ -27,10 +27,10 @@ procedure LoadShapes_Get_TimeArray_GR(); CDECL;
 procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function LoadShapes_Get_HrInterval(): Double; CDECL;
 function LoadShapes_Get_MinInterval(): Double; CDECL;
-function LoadShapes_Get_sInterval(): Double; CDECL;
+function LoadShapes_Get_SInterval(): Double; CDECL;
 procedure LoadShapes_Set_HrInterval(Value: Double); CDECL;
 procedure LoadShapes_Set_MinInterval(Value: Double); CDECL;
-procedure LoadShapes_Set_Sinterval(Value: Double); CDECL;
+procedure LoadShapes_Set_SInterval(Value: Double); CDECL;
 function LoadShapes_New(const Name: PAnsiChar): Integer; CDECL;
 function LoadShapes_Get_PBase(): Double; CDECL;
 function LoadShapes_Get_Qbase(): Double; CDECL;
@@ -354,7 +354,7 @@ begin
     Result := elem.Interval * 60.0;
 end;
 //------------------------------------------------------------------------------
-function LoadShapes_Get_sInterval(): Double; CDECL;
+function LoadShapes_Get_SInterval(): Double; CDECL;
 var
     elem: TLoadshapeObj;
 begin
@@ -382,7 +382,7 @@ begin
     elem.Interval := Value / 60.0;
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Set_Sinterval(Value: Double); CDECL;
+procedure LoadShapes_Set_SInterval(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
