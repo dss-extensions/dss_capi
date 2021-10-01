@@ -311,7 +311,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := elem.XhlVal;
+    Result := elem.XhlVal * 100.0;
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Xht(): Double; CDECL;
@@ -322,7 +322,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := elem.XhtVal;
+    Result := elem.XhtVal * 100.0;
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Xlt(): Double; CDECL;
@@ -333,7 +333,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := elem.XltVal;
+    Result := elem.XltVal * 100.0;
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Xneut(): Double; CDECL;

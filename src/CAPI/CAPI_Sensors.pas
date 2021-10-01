@@ -41,6 +41,8 @@ procedure Sensors_Set_ReverseDelta(Value: TAPIBoolean); CDECL;
 procedure Sensors_Set_Weight(Value: Double); CDECL;
 function Sensors_Get_kVbase(): Double; CDECL;
 procedure Sensors_Set_kVbase(Value: Double); CDECL;
+procedure Sensors_Get_AllocationFactor(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+procedure Sensors_Get_AllocationFactor_GR(); CDECL;
 
 // API extensions
 function Sensors_Get_idx(): Integer; CDECL;
@@ -447,5 +449,25 @@ begin
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pSensor;
 end;
+//------------------------------------------------------------------------------
+procedure Sensors_Get_AllocationFactor(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
+var
+    elem: TSensorObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+    begin
+        DefaultResult(ResultPtr, ResultCount);
+        Exit;
+    end;
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
+    Move(elem.PhsAllocationFactor[1], ResultPtr^, elem.NPhases * SizeOf(Double));
+end;
+
+procedure Sensors_Get_AllocationFactor_GR(); CDECL;
+// Same as Sensors_Get_AllocationFactor but uses global result (GR) pointers
+begin
+    Sensors_Get_AllocationFactor(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
+end;
+
 //------------------------------------------------------------------------------
 end.

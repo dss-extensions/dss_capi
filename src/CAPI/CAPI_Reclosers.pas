@@ -39,11 +39,17 @@ procedure Reclosers_Close(); CDECL;
 procedure Reclosers_Open(); CDECL;
 function Reclosers_Get_idx(): Integer; CDECL;
 procedure Reclosers_Set_idx(Value: Integer); CDECL;
+procedure Reclosers_Reset(); CDECL;
+function Reclosers_Get_NormalState(): Integer; CDECL;
+procedure Reclosers_Set_NormalState(Value: Integer); CDECL;
+function Reclosers_Get_State(): Integer; CDECL;
+procedure Reclosers_Set_State(Value: Integer); CDECL;
 
 implementation
 
 uses
     CAPI_Constants,
+    ControlElem,
     Executive,
     Sysutils,
     Recloser,
@@ -362,6 +368,67 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pRecloser;
+end;
+//------------------------------------------------------------------------------
+procedure Reclosers_Reset(); CDECL;
+var
+    elem: TRecloserObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.Reset();
+end;
+//------------------------------------------------------------------------------
+function Reclosers_Get_NormalState(): Integer; CDECL;
+var
+    elem: TRecloserObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := Ord(elem.NormalState);
+end;
+//------------------------------------------------------------------------------
+procedure Reclosers_Set_NormalState(Value: Integer); CDECL;
+var
+    elem: TRecloserObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    if Value = dssActionOpen then //TODO: use the same enum
+        elem.NormalState := CTRL_OPEN
+    else if Value = dssActionClose then
+        elem.NormalState := CTRL_CLOSE
+    else
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid Recloser normal state: "' + IntToStr(Value) + '".', 656566);
+    end;
+end;
+//------------------------------------------------------------------------------
+function Reclosers_Get_State(): Integer; CDECL;
+var
+    elem: TRecloserObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := Ord(elem.PresentState);
+end;
+//------------------------------------------------------------------------------
+procedure Reclosers_Set_State(Value: Integer); CDECL;
+var
+    elem: TRecloserObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    if Value = dssActionOpen then
+        elem.PresentState := CTRL_OPEN
+    else if Value = dssActionClose then
+        elem.PresentState := CTRL_CLOSE
+    else
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid Recloser state: "' + IntToStr(Value) + '".', 656567);
+    end;
 end;
 //------------------------------------------------------------------------------
 end.

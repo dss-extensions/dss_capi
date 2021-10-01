@@ -248,6 +248,8 @@ type
         CurrentkvarLimit: Double;
         CurrentkvarLimitNeg: Double;
 
+        AVRMode: Boolean;
+
         Connection: Integer;  {0 = line-neutral; 1=Delta}
         DailyShape: String;  // Daily (24 HR) PVSystem element irradiance shape
         DailyShapeObj: TLoadShapeObj;  // Daily PVSystem element irradianceShape for this load
@@ -526,9 +528,9 @@ begin
         'Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ' +
         'Above this value, the load model reverts to a constant impedance model.');
     AddProperty('Balanced', propBalanced,
-        '{Yes | No*} Default is No.  Force balanced current only for 3-phase PVSystems2. Forces zero- and negative-sequence to zero. ');
+        '{Yes | No*} Default is No.  Force balanced current only for 3-phase PVSystems. Forces zero- and negative-sequence to zero. ');
     AddProperty('LimitCurrent', propLimited,
-        'Limits current magnitude to Vminpu value for both 1-phase and 3-phase PVSystems2 similar to Generator Model 7. For 3-phase, ' +
+        'Limits current magnitude to Vminpu value for both 1-phase and 3-phase PVSystems similar to Generator Model 7. For 3-phase, ' +
         'limits the positive-sequence current but not the negative-sequence.');
     AddProperty('yearly', propYEARLY,
         'Dispatch shape to use for yearly simulations.  Must be previously defined ' +
@@ -991,6 +993,7 @@ begin
             FWPMode := OtherPVsystemObj.FWPMode;
             FWVMode := OtherPVsystemObj.FWPMode;
             FDRCMode := OtherPVsystemObj.FDRCMode;
+            AVRMode := OtherPVsystemObj.AVRMode;
             UserModel.Name := OtherPVsystemObj.UserModel.Name;  // Connect to user written models
 
             ForceBalanced := OtherPVsystemObj.ForceBalanced;
@@ -1152,6 +1155,7 @@ begin
     FWVMode := FALSE;
     FWPMode := FALSE;
     FDRCMode := FALSE;
+    AVRMode := FALSE;
     InitPropertyValues(0);
     RecalcElementData();
 
@@ -1814,7 +1818,7 @@ begin
                 end
                 // Forces constant power factor when kvar limit is exceeded and PF Priority is true. Temp PF is calculated based on kvarRequested
                 else
-                if PF_Priority and (not FVVMode or not FDRCMode or not FWVmode) then
+                if PF_Priority and (not FVVMode or not FDRCMode or not FWVmode or not AVRMode) then
                 begin
                     if abs(kvarRequested) > 0.0 then
                     begin
@@ -1848,7 +1852,7 @@ begin
                 kvar_out := FkVArating * abs(sin(ArcCos(Fpf_wp_nominal))) * sign(kvarRequested)
             end
             else
-            if (varMode = VARMODEKVAR) and PF_Priority and (not FVVMode or not FDRCMode or not FWVmode) then
+            if (varMode = VARMODEKVAR) and PF_Priority and (not FVVMode or not FDRCMode or not FWVmode or not AVRMode) then
               // Operates under constant power factor (PF implicitly calculated based on kw and kvar)
             begin
                 if abs(kvar_out) = Fkvarlimit then
@@ -2803,7 +2807,7 @@ begin
     begin
         Pac := PanelkW * EffFactor;
 
-        if VWmode then
+        if VWmode or WVmode then
         begin
             if (Pac > kwrequested) then
                 kW_Out := kwrequested

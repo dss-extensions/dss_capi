@@ -65,40 +65,9 @@ uses
     DSSObjectHelper;
 
 type
-    THeaderRec = record
-        Signature: Integer;
-        Version: Integer;
-        RecordSize: Integer;
-        Mode: Integer;
-        StrBuffer: TMonitorStrBuffer;
-    end;
-
     SingleArray = array[1..100] of Single;
     pSingleArray = ^SingleArray;
 
-//------------------------------------------------------------------------------
-procedure ReadMonitorHeader(DSS: TDSSContext; var HeaderRec: THeaderRec; Opt: Boolean);
-var
-    pMon: TMonitorObj;
-begin
-    pMon := DSS.ActiveCircuit.Monitors.Active;
-    try
-        with pmon.MonitorStream, HeaderRec do
-        begin
-            Seek(0, classes.soFromBeginning);
-            Read(signature, Sizeof(signature));    // Signature   (32 bit Integer )
-            Read(version, Sizeof(version));        // Version     (32 bit Integer )
-            Read(RecordSize, Sizeof(RecordSize));    // RecordSize  (32 bit Integer )
-            Read(Mode, Sizeof(Mode));                // Mode        (32 bit Integer )
-            Read(StrBuffer, Sizeof(TMonitorStrBuffer)); // String      (255 char string)
-        end;
-
-    finally
-          // If opt is false leave monitorstream at end of header record
-        if Opt then
-            pmon.MonitorStream.Seek(0, soFromEnd);    // put monitor stream pointer back where it was
-    end;
-end;
 //------------------------------------------------------------------------------
 function _activeObj(DSSPrime: TDSSContext; out obj: TMonitorObj): Boolean; inline;
 begin
@@ -326,7 +295,6 @@ procedure Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PAPISize; In
 // Return an array of doubles for selected channel
 var
     Result: PDoubleArray0;
-    Header: THeaderRec;
     i: Integer;
     pMon: TMonitorObj;
     SngBuffer: pSingleArray;
@@ -339,19 +307,19 @@ begin
     if pMon.SampleCount <= 0 then
         Exit;
 
-    ReadMonitorHeader(DSSPrime, Header, FALSE);   // FALSE = leave at beginning of data
+    pMon.MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
 
-    if (Index < 1) or (Index > Header.RecordSize {NumChannels}) then
+    if (Index < 1) or (Index > pMon.RecordSize {NumChannels}) then
     begin
         DoSimpleMsg(DSSPrime, Format(
             'Monitors.Channel: invalid channel index (%d), monitor "%s" has %d channels.',
-            [Index, pMon.Name, Header.RecordSize]
+            [Index, pMon.Name, pMon.RecordSize]
             ), 5888);
         Exit;
     end;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
 
-    AllocSize := Sizeof(Single) * (Header.RecordSize + 2); // Include Hour and Second fields
+    AllocSize := Sizeof(Single) * (pMon.RecordSize + 2); // Include Hour and Second fields
     Index := Index + 2; // Skip Hour and Second fields
     SngBuffer := Allocmem(AllocSize); // Need a buffer to convert from float32 to float64
     for i := 1 to pMon.SampleCount do
@@ -373,7 +341,6 @@ procedure Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PAPISize); C
 // Return an array of doubles for frequence for Harmonic solutions
 var
     Result: PDoubleArray0;
-    Header: THeaderRec;
     k, i: Integer;
     FirstCol: String;
     pMon: TMonitorObj;
@@ -389,15 +356,12 @@ begin
         Exit;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount - 1) + 1);
-    ReadMonitorHeader(DSSPrime, Header, FALSE);   // leave at beginning of data
-    DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
-    DSSPrime.AuxParser.AutoIncrement := TRUE;
-    FirstCol := DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
-    DSSPrime.AuxParser.AutoIncrement := FALSE;
+    pMon.MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
+    FirstCol := pMon.Header.Strings[0];
     // check first col to see if it is "Freq" for harmonics solution
     if SysUtils.CompareText(FirstCol, 'freq') = 0 then
     begin
-        AllocSize := Sizeof(Single) * Header.RecordSize;
+        AllocSize := Sizeof(Single) * pMon.RecordSize;
         SngBuffer := Allocmem(AllocSize);
         k := 0;
         for i := 1 to pMon.SampleCount do
@@ -430,7 +394,6 @@ procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PAPISize); C
 // Return an array of doubles for time in hours
 var
     Result: PDoubleArray0;
-    Header: THeaderRec;
     k, i: Integer;
     FirstCol: String;
     pMon: TMonitorObj;
@@ -446,15 +409,13 @@ begin
         Exit;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
-    ReadMonitorHeader(DSSPrime, Header, FALSE);   // leave at beginning of data
-    DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
-    DSSPrime.AuxParser.AutoIncrement := TRUE;
-    FirstCol := DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
-    DSSPrime.AuxParser.AutoIncrement := FALSE;
+    pMon.MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
+    FirstCol := pMon.Header.Strings[0];
+
     // check first col to see if it is "Hour"
     if Sysutils.CompareText(FirstCol, 'hour') = 0 then
     begin
-        AllocSize := Sizeof(Single) * Header.RecordSize;
+        AllocSize := Sizeof(Single) * pMon.RecordSize;
         SngBuffer := Allocmem(AllocSize);
         k := 0;
         for i := 1 to pMon.SampleCount do
@@ -485,58 +446,41 @@ end;
 //------------------------------------------------------------------------------
 function Monitors_Get_FileVersion(): Integer; CDECL;
 var
-    Header: THeaderRec;
     pMon: TMonitorObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
 
-    ReadMonitorHeader(DSSPrime, Header, TRUE);
-    Result := Header.Version;
+    Result := pMon.FileVersion;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 // Variant list of strings with names of all channels
 var
     Result: PPAnsiCharArray0;
-    Header: THeaderRec;
     k: Integer;
     ListSize: Integer;
-    SaveDelims: String;
-    SaveWhiteSpace: String;
     pMon: TMonitorObj;
 begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pMon) then
         Exit;
 
-    ReadMonitorHeader(DSSPrime, Header, TRUE);
-    if Header.RecordSize <= 0 then
+    if pMon.RecordSize <= 0 then
         Exit;
 
-    ListSize := Header.RecordSize;
+    ListSize := pMon.RecordSize;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, ListSize);
 
     with DSSPrime.ActiveCircuit do
     begin
         k := 0;
-        SaveDelims := DSSPrime.AuxParser.Delimiters;
-        DSSPrime.AuxParser.Delimiters := ',';
-        SaveWhiteSpace := DSSPrime.AuxParser.Whitespace;
-        DSSPrime.AuxParser.Whitespace := '';
-        DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
-        DSSPrime.AuxParser.AutoIncrement := TRUE;
-        DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
-        DSSPrime.AuxParser.StrValue;
         while k < ListSize do
         begin
-            Result[k] := DSS_CopyStringAsPChar(DSSPrime.AuxParser.StrValue);
+            Result[k] := DSS_CopyStringAsPChar(pMon.Header.Strings[k + 2]);
             Inc(k);
         end;
-        DSSPrime.AuxParser.AutoIncrement := FALSE; // be a good citizen
-        DSSPrime.AuxParser.Delimiters := SaveDelims;
-        DSSPrime.AuxParser.Whitespace := SaveWhiteSpace;
     end;
 end;
 
@@ -549,26 +493,22 @@ end;
 //------------------------------------------------------------------------------
 function Monitors_Get_NumChannels(): Integer; CDECL;
 var
-    Header: THeaderRec;
     pMon: TMonitorObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    ReadMonitorHeader(DSSPrime, Header, TRUE);
-    Result := Header.RecordSize;
+    Result := pMon.RecordSize;
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_RecordSize(): Integer; CDECL;
 var
-    Header: THeaderRec;
     pMon: TMonitorObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    ReadMonitorHeader(DSSPrime, Header, TRUE);
-    Result := Header.RecordSize;
+    Result := pMon.RecordSize;
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_Element(): PAnsiChar; CDECL;

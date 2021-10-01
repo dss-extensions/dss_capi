@@ -33,11 +33,17 @@ function Fuses_IsBlown(): TAPIBoolean; CDECL;
 function Fuses_Get_idx(): Integer; CDECL;
 procedure Fuses_Set_idx(Value: Integer); CDECL;
 function Fuses_Get_NumPhases(): Integer; CDECL;
+procedure Fuses_Reset(); CDECL;
+procedure Fuses_Get_NormalState(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Fuses_Set_NormalState(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
+procedure Fuses_Get_State(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+procedure Fuses_Set_State(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
 
 implementation
 
 uses
     CAPI_Constants,
+    ControlElem,
     Executive,
     Sysutils,
     Fuse,
@@ -298,6 +304,18 @@ end;
 procedure Fuses_Close(); CDECL;
 var
     elem: TFuseObj;
+    i: Integer;
+begin
+    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+        Exit;
+
+    for i := 1 to elem.ControlledElement.NPhases do 
+        elem.States[i] := CTRL_CLOSE; // Close all phases
+end;
+//------------------------------------------------------------------------------
+procedure Fuses_Reset(); CDECL;
+var
+    elem: TFuseObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
@@ -340,17 +358,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_idx(Value: Integer); CDECL;
 var
-    pFuse: TFuseObj;
+    elem: TFuseObj;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    pFuse := DSSPrime.ActiveCircuit.Fuses.Get(Value);
-    if pFuse = NIL then
+    elem := DSSPrime.ActiveCircuit.Fuses.Get(Value);
+    if elem = NIL then
     begin
         DoSimpleMsg(DSSPrime, 'Invalid Fuse index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    DSSPrime.ActiveCircuit.ActiveCktElement := pFuse;
+    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_NumPhases(): Integer; CDECL;
@@ -362,6 +380,118 @@ begin
         Exit;
 
     Result := elem.NPhases;
+end;
+//------------------------------------------------------------------------------
+procedure Fuses_Get_NormalState(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+var
+    Result: PPAnsiCharArray0;
+    elem: TFuseObj;
+    i: Integer;
+begin
+    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
+        Exit;
+    end;
+
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.ControlledElement.NPhases);
+    for i := 1 to elem.ControlledElement.NPhases do
+        if elem.NormalStates[i] = CTRL_CLOSE then 
+            Result[i - 1] := 'closed' 
+        else 
+            Result[i - 1] := 'open';
+end;
+//------------------------------------------------------------------------------
+procedure Fuses_Get_State(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
+var
+    Result: PPAnsiCharArray0;
+    elem: TFuseObj;
+    i: Integer;
+begin
+    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+    begin
+        DefaultResult(ResultPtr, ResultCount, '');
+        Exit;
+    end;
+
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.ControlledElement.NPhases);
+    for i := 1 to elem.ControlledElement.NPhases do
+        if elem.States[i] = CTRL_CLOSE then 
+            Result[i - 1] := 'closed' 
+        else 
+            Result[i - 1] := 'open';
+end;
+//------------------------------------------------------------------------------
+procedure Fuses_Set_State(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
+var
+    Value: PPAnsiCharArray0;
+    i: Integer;
+    Count: Integer;
+    elem: TFuseObj;
+begin
+    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+        Exit;
+
+    Value := PPAnsiCharArray0(ValuePtr);
+
+    Count := ValueCount;
+    if (Count <> elem.ControlledElement.NPhases) AND (DSS_CAPI_EXT_ERRORS) then
+    begin
+        DoSimpleMsg(DSSPrime, 
+            Format('The number of states provided (%d) does not match the number of phases (%d).', 
+                [ValueCount, Integer(elem.ControlledElement.NPhases)]
+            ), 97896
+        );
+        Exit;
+    end;
+        
+    if Count > elem.ControlledElement.NPhases then
+        Count := elem.ControlledElement.NPhases;
+
+    for i := 1 to Count Do 
+    begin
+        if Length(Value[i - 1]) > 0 then
+            case LowerCase(Value[i - 1])[1] of
+                'o': elem.States[i] := CTRL_OPEN;
+                'c': elem.States[i] := CTRL_CLOSE;
+            end;
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Fuses_Set_NormalState(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
+var
+    Value: PPAnsiCharArray0;
+    i: Integer;
+    Count: Integer;
+    elem: TFuseObj;
+begin
+    if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
+        Exit;
+
+    Value := PPAnsiCharArray0(ValuePtr);
+
+    Count := ValueCount;
+    if (Count <> elem.ControlledElement.NPhases) AND (DSS_CAPI_EXT_ERRORS) then
+    begin
+        DoSimpleMsg(DSSPrime, 
+            Format('The number of states provided (%d) does not match the number of phases (%d).', 
+                [ValueCount, Integer(elem.ControlledElement.NPhases)]
+            ), 97897
+        );
+        Exit;
+    end;
+        
+    if Count > elem.ControlledElement.NPhases then
+        Count := elem.ControlledElement.NPhases;
+
+    for i := 1 to Count Do 
+    begin
+        if Length(Value[i - 1]) > 0 then
+            case LowerCase(Value[i - 1])[1] of
+                'o': elem.NormalStates[i] := CTRL_OPEN;
+                'c': elem.NormalStates[i] := CTRL_CLOSE;
+            end;
+    end;
 end;
 //------------------------------------------------------------------------------
 end.

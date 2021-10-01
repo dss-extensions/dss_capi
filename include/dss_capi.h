@@ -149,6 +149,12 @@ extern "C" {
         YMatrixModes_WholeMatrix = 2
     };
 
+    enum StorageStates { // Storages_Set_State, Storages_Get_State
+        StorageStates_Charging = -1,
+        StorageStates_Idling = 0,
+        StorageStates_Discharging = 1
+    };
+
     // EXPERIMENTAL: For message/write callbacks
     enum DSSMessageType {
         DSSMessageType_Error = -1,
@@ -1811,8 +1817,14 @@ extern "C" {
     */
     DSS_CAPI_DLL double Fuses_Get_Delay(void);
 
+    /*
+    Manual opening of all phases of the fuse.
+    */
     DSS_CAPI_DLL void Fuses_Open(void);
 
+    /*
+    Close all phases of the fuse.
+    */
     DSS_CAPI_DLL void Fuses_Close(void);
 
     /*
@@ -1820,6 +1832,9 @@ extern "C" {
     */
     DSS_CAPI_DLL void Fuses_Set_Delay(double Value);
 
+    /*
+    Current state of the fuses. TRUE if any fuse on any phase is blown. Else FALSE.
+    */
     DSS_CAPI_DLL uint16_t Fuses_IsBlown(void);
 
     /*
@@ -1831,6 +1846,31 @@ extern "C" {
     Set Fuse active by index into the list of fuses. 1..count
     */
     DSS_CAPI_DLL void Fuses_Set_idx(int32_t Value);
+
+    /*
+    Reset fuse to normal state.
+    */
+    DSS_CAPI_DLL void Fuses_Reset(int32_t Value);
+    
+    /*
+    Array of strings ('open' or 'closed') indicating the state of each phase of the fuse.
+    */
+    DSS_CAPI_DLL void Fuses_Get_State(char*** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Array of strings ('open' or 'closed') indicating the state of each phase of the fuse.
+    */
+    DSS_CAPI_DLL void Fuses_Set_State(char** ValuePtr, int32_t ValueCount);
+
+    /*
+    Array of strings ('open' or 'closed') indicating the normal state of each phase of the fuse.
+    */
+    DSS_CAPI_DLL void Fuses_Get_NormalState(char*** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Array of strings ('open' or 'closed') indicating the normal state of each phase of the fuse.
+    */
+    DSS_CAPI_DLL void Fuses_Set_NormalState(char** ValuePtr, int32_t ValueCount);
 
     /*
     Number of phases, this fuse.
@@ -1871,7 +1911,7 @@ extern "C" {
     DSS_CAPI_DLL void Generators_Get_RegisterNames_GR(void);
 
     /*
-    Array of valus in generator energy meter registers.
+    Array of values in generator energy meter registers.
     */
     DSS_CAPI_DLL void Generators_Get_RegisterValues(double** ResultPtr, int32_t* ResultCount);
     /*
@@ -2875,7 +2915,7 @@ extern "C" {
     DSS_CAPI_DLL void Loads_Set_Yearly(char* Value);
 
     /*
-    Array of 7  doubles with values for ZIPV property of the LOAD object
+    Array of 7 doubles with values for ZIPV property of the LOAD object
     */
     DSS_CAPI_DLL void Loads_Get_ZIPV(double** ResultPtr, int32_t* ResultCount);
     /*
@@ -2901,6 +2941,11 @@ extern "C" {
     Relative Weighting factor for the active LOAD
     */
     DSS_CAPI_DLL void Loads_Set_RelWeight(double Value);
+
+    /*
+    Name of the sensor monitoring this load.
+    */
+    DSS_CAPI_DLL char* Loads_Get_Sensor(void);
 
     /*
     Get the Name of the active Loadshape
@@ -4105,6 +4150,12 @@ extern "C" {
     DSS_CAPI_DLL double PVSystems_Get_IrradianceNow(void);
 
     /*
+    Name of the sensor monitoring this PVSystem element.
+    */
+    DSS_CAPI_DLL char* PVSystems_Get_Sensor(void);
+
+
+    /*
     Array of strings with names of all Reclosers in Active Circuit
     */
     DSS_CAPI_DLL void Reclosers_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
@@ -4223,9 +4274,20 @@ extern "C" {
 
     DSS_CAPI_DLL void Reclosers_Set_PhaseInst(double Value);
 
+    /*
+    Close the switched object controlled by the recloser. Resets recloser to first operation.
+    */
     DSS_CAPI_DLL void Reclosers_Close(void);
 
+    /*
+    Open recloser's controlled element and lock out the recloser.
+    */
     DSS_CAPI_DLL void Reclosers_Open(void);
+
+    /*
+    Reset recloser to normal state. If open, lock out the recloser. If closed, resets recloser to first operation.
+    */
+    DSS_CAPI_DLL void Reclosers_Reset(void);
 
     /*
     Get/Set the active Recloser by index into the recloser list.  1..Count
@@ -4236,6 +4298,30 @@ extern "C" {
     Get/Set the Active Recloser by index into the recloser list. 1..Count
     */
     DSS_CAPI_DLL void Reclosers_Set_idx(int32_t Value);
+
+    /*
+    Get/Set present state of recloser. 
+    If set to open (ActionCodes.Open=1), open recloser's controlled element and lock out the recloser. 
+    If set to close (ActionCodes.Close=2), close recloser's controlled element and resets recloser to first operation.
+    */
+    DSS_CAPI_DLL int32_t Reclosers_Get_State(void);
+
+    /*
+    Get/Set present state of recloser. 
+    If set to open (ActionCodes.Open=1), open recloser's controlled element and lock out the recloser. 
+    If set to close (ActionCodes.Close=2), close recloser's controlled element and resets recloser to first operation.
+    */
+    DSS_CAPI_DLL void Reclosers_Set_State(int32_t Value);
+
+    /*
+    Get/set normal state (ActionCodes.Open=1, ActionCodes.Close=2) of the recloser.
+    */
+    DSS_CAPI_DLL int32_t Reclosers_Get_NormalState(void);
+
+    /*
+    Get/set normal state (ActionCodes.Open=1, ActionCodes.Close=2) of the recloser.
+    */
+    DSS_CAPI_DLL void Reclosers_Set_NormalState(int32_t Value);
 
     /*
     Array of strings containing all RegControl names
@@ -4553,6 +4639,45 @@ extern "C" {
     DSS_CAPI_DLL void Relays_Set_idx(int32_t Value);
 
     /*
+    Open relay's controlled element and lock out the relay.
+    */
+    DSS_CAPI_DLL void Relays_Open(void);
+    
+    /*
+    Close the switched object controlled by the relay. Resets relay to first operation.
+    */
+    DSS_CAPI_DLL void Relays_Close(void);
+
+    /*
+    Reset relay to normal state. If open, lock out the relay. If closed, resets relay to first operation.
+    */
+    DSS_CAPI_DLL void Relays_Reset(void);
+
+    /*
+    Get/Set present state of relay. 
+    If set to open (ActionCodes.Open = 1), open relay's controlled element and lock out the relay. 
+    If set to close (ActionCodes.Close = 2), close relay's controlled element and resets relay to first operation.
+    */
+    DSS_CAPI_DLL int32_t Relays_Get_State(void);
+    
+    /*
+    Get/Set present state of relay. 
+    If set to open (ActionCodes.Open = 1), open relay's controlled element and lock out the relay. 
+    If set to close (ActionCodes.Close = 2), close relay's controlled element and resets relay to first operation.
+    */
+    DSS_CAPI_DLL void Relays_Set_State(int32_t Value);
+
+    /*
+    Get/set normal state of relay.
+    */
+    DSS_CAPI_DLL int32_t Relays_Get_NormalState(void);
+
+    /*
+    Get/set normal state of relay.
+    */
+    DSS_CAPI_DLL void Relays_Set_NormalState(int32_t Value);
+
+    /*
     Array of Sensor names.
     */
     DSS_CAPI_DLL void Sensors_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
@@ -4682,6 +4807,17 @@ extern "C" {
     DSS_CAPI_DLL double Sensors_Get_kVbase(void);
 
     DSS_CAPI_DLL void Sensors_Set_kVbase(double Value);
+
+    /*
+    Array of doubles for the allocation factors for each phase.
+    */
+    DSS_CAPI_DLL void Sensors_Get_AllocationFactor(double** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as Sensors_Get_AllocationFactor but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void Sensors_Get_AllocationFactor_GR(void);
+    
 
     /*
     {True | False*} Designates whether to allow duplicate names of objects
@@ -6040,6 +6176,83 @@ extern "C" {
     DSS_CAPI_DLL void ReduceCkt_Do1phLaterals(void);
     DSS_CAPI_DLL void ReduceCkt_DoBranchRemove(void);
 
+    /*
+    Array of names of all Storage objects.
+    */
+    DSS_CAPI_DLL void Storages_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Sets first Storage to be active.  Returns 0 if none.
+    */
+    DSS_CAPI_DLL int32_t Storages_Get_First(void);
+
+    /*
+    Sets next Storage to be active.  Returns 0 if no more.
+    */
+    DSS_CAPI_DLL int32_t Storages_Get_Next(void);
+
+    /*
+    Number of Storage Objects in Active Circuit
+    */
+    DSS_CAPI_DLL int32_t Storages_Get_Count(void);
+
+    /*
+    Get/Set active Storage by index into Storages list.  1..Count
+    */
+    DSS_CAPI_DLL int32_t Storages_Get_idx(void);
+
+    /*
+    Get/Set active Storage by index into Storages list. 1..Count
+    */
+    DSS_CAPI_DLL void Storages_Set_idx(int32_t Value);
+
+    /*
+    Gets the name of the current active Storage object.
+    */
+    DSS_CAPI_DLL char* Storages_Get_Name(void);
+
+    /*
+    Sets a Storage active by name.
+    */
+    DSS_CAPI_DLL void Storages_Set_Name(char* Value);
+
+    /*
+    Array of Names of all Storage energy meter registers
+    */
+    DSS_CAPI_DLL void Storages_Get_RegisterNames(char*** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Array of values in Storage registers.
+    */
+    DSS_CAPI_DLL void Storages_Get_RegisterValues(double** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as Storages_Get_RegisterValues but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void Storages_Get_RegisterValues_GR(void);
+
+    /*
+    Per unit state of charge
+    */
+    DSS_CAPI_DLL double Storages_Get_puSOC(void);
+
+    /*
+    Per unit state of charge
+    */
+    DSS_CAPI_DLL void Storages_Set_puSOC(double Value);
+
+    /*
+    Get/set state: 0=Idling; 1=Discharging; -1=Charging;
+
+    Related enumeration: StorageStates
+    */
+    DSS_CAPI_DLL int32_t Storages_Get_State(void);
+
+    /*
+    Get/set state: 0=Idling; 1=Discharging; -1=Charging;
+
+    Related enumeration: StorageStates
+    */
+    DSS_CAPI_DLL void Storages_Set_State(int32_t Value);
 
     // Experimental API extensions
     DSS_CAPI_DLL int32_t CNData_Get_Count(void);

@@ -84,6 +84,7 @@ function Loads_Get_pctSeriesRL(): Double; CDECL;
 procedure Loads_Set_pctSeriesRL(Value: Double); CDECL;
 function Loads_Get_RelWeight(): Double; CDECL;
 procedure Loads_Set_RelWeight(Value: Double); CDECL;
+function Loads_Get_Sensor(): PAnsiChar; CDECL;
 
 // API extensions
 function Loads_Get_Phases(): Integer; CDECL;
@@ -1012,6 +1013,18 @@ begin
         Exit;
     pLoad.SetBus(1, Value);
     // LoadPropSideEffects(DSSPrime, LoadProps.bus1, pLoad); -- Nothing
+end;
+//------------------------------------------------------------------------------
+function Loads_Get_Sensor(): PAnsiChar; CDECL;
+var
+    pLoad: TLoadObj;
+begin
+    Result := NIL;
+    if not _activeObj(DSSPrime, pLoad) then
+        Exit;
+
+    if pLoad.SensorObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, pLoad.SensorObj.ElementName);
 end;
 //------------------------------------------------------------------------------
 end.

@@ -23,11 +23,19 @@ function Relays_Get_SwitchedTerm(): Integer; CDECL;
 procedure Relays_Set_SwitchedTerm(Value: Integer); CDECL;
 function Relays_Get_idx(): Integer; CDECL;
 procedure Relays_Set_idx(Value: Integer); CDECL;
+procedure Relays_Close(); CDECL;
+procedure Relays_Open(); CDECL;
+procedure Relays_Reset(); CDECL;
+function Relays_Get_NormalState(): Integer; CDECL;
+procedure Relays_Set_NormalState(Value: Integer); CDECL;
+function Relays_Get_State(): Integer; CDECL;
+procedure Relays_Set_State(Value: Integer); CDECL;
 
 implementation
 
 uses
     CAPI_Constants,
+    ControlElem,
     Executive,
     Relay,
     Circuit,
@@ -218,6 +226,85 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid Relay index: "' + IntToStr(Value) + '".', 656565);
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pRelay;
+end;
+//------------------------------------------------------------------------------
+procedure Relays_Close(); CDECL;
+var
+    elem: TRelayObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.PresentState := CTRL_CLOSE;
+end;
+//------------------------------------------------------------------------------
+procedure Relays_Open(); CDECL;
+var
+    elem: TRelayObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.PresentState := CTRL_OPEN;
+end;
+//------------------------------------------------------------------------------
+procedure Relays_Reset(); CDECL;
+var
+    elem: TRelayObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.Reset();
+end;
+//------------------------------------------------------------------------------
+function Relays_Get_NormalState(): Integer; CDECL;
+var
+    elem: TRelayObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := Ord(elem.NormalState);
+end;
+//------------------------------------------------------------------------------
+procedure Relays_Set_NormalState(Value: Integer); CDECL;
+var
+    elem: TRelayObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    if Value = dssActionOpen then
+        elem.NormalState := CTRL_OPEN
+    else if Value = dssActionClose then
+        elem.NormalState := CTRL_CLOSE
+    else
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid Relay normal state: "' + IntToStr(Value) + '".', 656569);
+    end;
+end;
+//------------------------------------------------------------------------------
+function Relays_Get_State(): Integer; CDECL;
+var
+    elem: TRelayObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := Ord(elem.PresentState);
+end;
+//------------------------------------------------------------------------------
+procedure Relays_Set_State(Value: Integer); CDECL;
+var
+    elem: TRelayObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    if Value = dssActionOpen then
+        elem.PresentState := CTRL_OPEN
+    else if Value = dssActionClose then
+        elem.PresentState := CTRL_CLOSE
+    else
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid Relay state: "' + IntToStr(Value) + '".', 656568);
+    end;
 end;
 //------------------------------------------------------------------------------
 end.

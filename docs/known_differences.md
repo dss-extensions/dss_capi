@@ -59,3 +59,6 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 
 - Notable omissions:
     - `Generic5` and `FMonitor` have not been ported yet due to lack of usage examples for validation. Please open an issue ticket on GitHub if you'd like us to port those.
+    - `WindGen` is also not ported yet.
+
+- Monitor headers: In the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS Extensions, we took the opportunity to rewrite the related code. As such, the implementation in DSS Extensions deviate from the official one. Extra spaces are not included and should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough.

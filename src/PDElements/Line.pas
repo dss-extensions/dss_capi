@@ -76,6 +76,7 @@ type
         FEarthModel: Integer;
         FCapSpecified: Boolean; // To make sure user specifies C in some form
         FLineType: Integer; // Pointer to code for type of line
+        UserLengthUnits: Integer; // keep track of the user's input length units
 
         procedure FMakeZFromGeometry(f: Double); // make new Z, Zinv, Yc, etc
         procedure KillGeometrySpecified;
@@ -182,7 +183,7 @@ const
     
     LINE_TYPES: Array of String = [
         'oh', 'ug', 'ug_ts', 'ug_cn', 'swt_ldbrk', 'swt_fuse', 
-        'swt_sect', 'swt_rec', 'swt1_disc', 'swt_brk', 'swt_elbow'
+        'swt_sect', 'swt_rec', 'swt_disc', 'swt_brk', 'swt_elbow'
     ];
 
 var
@@ -667,6 +668,7 @@ begin
                     else
                         FUnitsConvert := FUnitsConvert * ConvertLineUnits(LengthUnits, NewLengthUnits);
                     LengthUnits := NewLengthUnits;
+                    UserLengthUnits := LengthUnits;
                 end;
                 21:
                     FetchLineSpacing(Param);
@@ -915,6 +917,7 @@ begin
     GeometrySpecified := FALSE;
     GeometryCode := '';
     LengthUnits := UNITS_NONE; // Assume everything matches
+    UserLengthUnits := UNITS_NONE;
     FUnitsConvert := 1.0;
     FLineCodeUnits := UNITS_NONE;
     FLineCodeSpecified := FALSE;
@@ -2273,7 +2276,7 @@ procedure TLineObj.ResetLengthUnits;
 {If specify the impedances always assume the length units match}
 begin
     FUnitsConvert := 1.0;
-    LengthUnits := UNITS_NONE;
+    LengthUnits := UNITS_NONE; // but do not erase FUserLengthUnits, in case of CIM export
 end;
 
 function TLineObj.NumConductorData: Integer;

@@ -634,7 +634,11 @@ begin
             6:
                 DSS.ActiveCircuit.solution.Frequency := DSS.Parser.DblValue;
             7, 18:
-                DSS.ActiveCircuit.solution.DynaVars.h := InterpretTimeStepSize(DSS, Param);
+                with DSS.ActiveCircuit do
+                begin
+                    Solution.DynaVars.h := InterpretTimeStepSize(DSS, Param);
+                    Solution.IntervalHrs := Solution.DynaVars.h/3600.0;
+                end;
             8:
                 DSS.ActiveCircuit.solution.Mode := InterpretSolveMode(Param);  // see DSSGlobals
             9:

@@ -135,7 +135,7 @@ const
 
     LINE_TYPES: Array of String = [
         'oh', 'ug', 'ug_ts', 'ug_cn', 'swt_ldbrk', 'swt_fuse', 
-        'swt_sect', 'swt_rec', 'swt1_disc', 'swt_brk', 'swt_elbow'
+        'swt_sect', 'swt_rec', 'swt_disc', 'swt_brk', 'swt_elbow'
     ];
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -34,9 +34,6 @@ uses
 type
     TAutoAdd = class(TObject)
     PRIVATE
-        GeneratorClass: TGenerator;
-        CapacitorClass: TCapacitor;
-
         BusIdxList: pIntegerArray;
         BusIdxListSize: Integer;
         BusIdxListCreated: Boolean;
@@ -127,8 +124,6 @@ begin
     DSS := dssContext;
 
     BusIdxListCreated := FALSE;
-    GeneratorClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('generator'));
-    CapacitorClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('capacitor'));
 
          // AutoAdd defaults
     GenkW := 1000.0;
@@ -314,7 +309,7 @@ begin
         Done := TRUE;
         Inc(LastAddedGenerator);
         TrialName := 'Gadd' + IntToStr(LastAddedGenerator);
-        if GeneratorClass.Find(TrialName) <> NIL then
+        if DSS.GeneratorClass.Find(TrialName) <> NIL then
             Done := FALSE;
     until Done;
 
@@ -337,7 +332,7 @@ begin
         Done := TRUE;
         Inc(LastAddedCapacitor);
         TrialName := 'Cadd' + IntToStr(LastAddedCapacitor);
-        if CapacitorClass.Find(TrialName) <> NIL then
+        if DSS.CapacitorClass.Find(TrialName) <> NIL then
             Done := FALSE;
     until Done;
 

@@ -579,7 +579,7 @@ procedure WriteTerminalCurrents(DSS: TDSSContext; F: TFileStream; pElem: TDSSCkt
 
 var
 
-    j, i, k, Ncond, Nterm: Integer;
+    j, i, k, Ncond, Nterm, Ntimes: Integer;
     cBuffer: pComplexArray;
     FromBus: String;
     Ctotal: Complex;
@@ -601,7 +601,12 @@ begin
         for      j := 1 to NTerm do
         begin
             Ctotal := CZERO;
-            for    i := 1 to NCond do
+            if (CLASSMASK and pElem.DSSObjType) = AUTOTRANS_ELEMENT then
+                Ntimes := pElem.Nphases    // Special case for AutoTrans
+            else 
+                Ntimes := NCond;
+
+            for i := 1 to Ntimes do
             begin
                 Inc(k);
                 if ShowResidual then
@@ -616,6 +621,8 @@ begin
             if j < Nterm then
                 FSWriteln(F, '------------');
             FromBus := Pad(StripExtension(pElem.Nextbus), MaxBusNameLength);
+            if (CLASSMASK and pElem.DSSObjType) = AUTOTRANS_ELEMENT then 
+                Inc(k, Ntimes);  // Special case for AutoTrans
         end;
         FSWriteln(F);
 
@@ -851,7 +858,7 @@ var
     FromBus: String;
     F: TFileStream = nil;
     c_Buffer: pComplexArray;
-    NCond, Nterm, i, j, k: Integer;
+    NCond, Nterm, Ntimes, i, j, k: Integer;
     p_Elem: TDSSCktElement;
     PDElem: TPDElement;
     PCElem: TPCElement;
@@ -1186,6 +1193,11 @@ begin
                         FromBus := Pad(StripExtension(p_Elem.FirstBus), MaxBusNameLength);
                         FSWriteln(F, 'ELEMENT = ', FullName(p_elem));
 
+                        if (CLASSMASK and P_Elem.DSSObjType) = AUTOTRANS_ELEMENT then
+                            Ntimes := P_Elem.Nphases    // Special case for AutoTrans
+                        else
+                            Ntimes := NCond;
+
                         {**** Added April 6 2020 *****}
                         if (NTerm = 2) and (NCond = 1) then // 1-phase devices with two terminals that might be floating
                         begin
@@ -1220,7 +1232,7 @@ begin
                         for j := 1 to NTerm do
                         begin
                             Saccum := CZERO;
-                            for i := 1 to NCond do
+                            for i := 1 to Ntimes do
                             begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
@@ -1243,6 +1255,8 @@ begin
                             FromBus := Pad(StripExtension(p_Elem.Nextbus), MaxBusNameLength);
                         end;
                         FSWriteln(F);
+                        if (CLASSMASK and P_Elem.DSSObjType) = AUTOTRANS_ELEMENT then 
+                            Inc(k, Ntimes);
                     end;
                     p_Elem := DSS.ActiveCircuit.PDElements.Next;
                 end;
@@ -2742,6 +2756,8 @@ begin
 
                 if (CLASSMASK and PDElem.DSSObjType) = XFMR_ELEMENT then
                     Caccum(TransLosses, kLosses);
+                if (CLASSMASK and PDElem.DSSObjType) = AUTOTRANS_ELEMENT then
+                    Caccum(TransLosses, kLosses);
                 if (CLASSMASK and PDElem.DSSObjType) = LINE_ELEMENT then
                     Caccum(LineLosses, kLosses);
 
@@ -3657,7 +3673,7 @@ type
 
 var
     F: TFileStream = nil;
-    i, j: Integer;
+    i, j, k: Integer;
     nRef: Integer;
     Bname: String;
 
@@ -3689,13 +3705,33 @@ begin
                     with pCktElement do
                     begin
                         ComputeIterminal;
-                        for i := 1 to Yorder do
+                        IF (CLASSMASK AND pCktElement.DSSObjType) =  AUTOTRANS_ELEMENT   Then 
+                        Begin
+                            k:=0; // Special for Autotransformer
+                            for i:= 1 to Nterms do
+                            begin
+                                for j := 1 to Nphases do 
+                                begin
+                                    Inc(k);
+                                    Ctemp := Iterminal^[k];
+                                    nRef := NodeRef^[k];
+                                    Caccum(Currents^[nRef], Ctemp);  // Noderef=0 is OK
+                                    if Cabs(Ctemp) > MaxNodeCurrent^[nRef] then
+                                        MaxNodeCurrent^[nRef] := Cabs(Ctemp);
+                                end;
+                                Inc(k, Nphases);
+                            end;
+                        end
+                        else
                         begin
-                            Ctemp := Iterminal^[i];
-                            nRef := NodeRef^[i];
-                            Caccum(Currents^[nRef], Ctemp);  // Noderef=0 is OK
-                            if Cabs(Ctemp) > MaxNodeCurrent^[nRef] then
-                                MaxNodeCurrent^[nRef] := Cabs(Ctemp);
+                            for i := 1 to Yorder do
+                            begin
+                                Ctemp := Iterminal^[i];
+                                nRef := NodeRef^[i];
+                                Caccum(Currents^[nRef], Ctemp);  // Noderef=0 is OK
+                                if Cabs(Ctemp) > MaxNodeCurrent^[nRef] then
+                                    MaxNodeCurrent^[nRef] := Cabs(Ctemp);
+                            end;
                         end;
                     end;
                 pCktElement := CktElements.Next;

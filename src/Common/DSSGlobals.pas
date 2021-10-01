@@ -83,9 +83,8 @@ CONST
     // PI =  3.1415926535897932385;
     // TwoPi = 2.0 * PI;
     // RadiansToDegrees = 57.2957795130823208768;
-    PI =  3.14159265359;
     TwoPi = 2.0 * PI;
-    RadiansToDegrees = 57.29577951;
+    RadiansToDegrees = 180.0 / PI;
     EPSILON = 1.0e-12;   // Default tiny floating point
     EPSILON2 = 1.0e-3;   // Default for Real number mismatch testing
 

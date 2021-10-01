@@ -3,12 +3,10 @@ unit VCCS;
 {
   ----------------------------------------------------------
   Copyright (c) 2016, University of Pittsburgh
-  Copyright (c) 2019, Battelle Memorial Institute
+  Copyright (c) 2019-2021, Battelle Memorial Institute
   All rights reserved.
   ----------------------------------------------------------
 }
-
-{$ifdef fpc}{$mode delphi}{$endif}
 
 interface
 
@@ -46,6 +44,7 @@ type
         Ffilter: TXYcurveObj;
         Ffilter_name: String;
         BaseCurr: Double; // line current at Ppct
+        BaseVolt: Double; // line-to-neutral voltage at Vrated
         FsampleFreq: Double; // discretization frequency for Z filter
         Fwinlen: Integer;
         Ffiltlen: Integer;
@@ -66,8 +65,9 @@ type
         s4: Double; // Ipeak,    or Irms in phasor mode
         s5: Double; // BP1out,   or NA in phasor mode
         s6: Double; // Hout,     or NA in phasor mode
+        sV1: Complex; // positive-sequence voltage; use to inject I1 only
 
-        vlast: complex;
+        vlast: Complex;
         y2: pDoubleArray;
         z: pDoubleArray;     // current digital filter history terms
         whist: pDoubleArray;
@@ -79,6 +79,8 @@ type
         procedure InitPhasorStates;
         procedure GetInjCurrents(Curr: pComplexArray);
         procedure IntegratePhasorStates;
+        procedure ShutoffInjections;
+        procedure UpdateSequenceVoltage;
 
     PROTECTED
         function Get_Variable(i: Integer): Double; OVERRIDE;
@@ -125,6 +127,7 @@ uses
 
 var
     NumPropsThisClass: Integer;
+    ALPHA1, ALPHA2: complex;
 
 // helper functions for ring buffer indexing, 1..len
 function MapIdx(idx, len: Integer): Integer;
@@ -404,10 +407,14 @@ begin
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
 
     Irated := Prated / Vrated / FNphases;
-    if FNPhases = 3 then
+    BaseVolt := Vrated;
+    if FNPhases = 3 then 
+    begin
         Irated := Irated * sqrt(3);
+        BaseVolt := BaseVolt / sqrt(3);
+    end;
     BaseCurr := 0.01 * Ppct * Irated;
-    Fkv := 1.0 / Vrated / sqrt(2.0);
+    Fkv := 1.0 / BaseVolt / sqrt(2.0);
     Fki := BaseCurr * sqrt(2.0);
 
     if Length(Ffilter_name) > 0 then
@@ -471,19 +478,49 @@ begin
     end;
 end;
 
+procedure TVCCSObj.UpdateSequenceVoltage;
+begin
+    if FNPhases = 3 then
+        sV1 := cdivreal(cadd(Vterminal^[1], cadd(cmul(ALPHA1,Vterminal^[2]), cmul(ALPHA2,Vterminal^[3]))), 3.0)
+    else
+        sV1 := Vterminal^[1];
+end;
+
 procedure TVCCSObj.GetInjCurrents(Curr: pComplexArray);
 var
     i: Integer;
+    i1: complex;
 begin
+    if not Closed[1] then 
+    begin
+        for i := 1 to Fnphases do 
+            Curr^[i] := CZERO;
+        Exit;
+    end;
+
     ComputeVterminal;
-//  IterminalUpdated := FALSE;
+    UpdateSequenceVoltage;
+
+    // IterminalUpdated := FALSE;
     if DSS.ActiveSolutionObj.IsDynamicModel then
     begin
         if FrmsMode then
         begin
-            for i := 1 to Fnphases do
-            begin
-                Curr^[i] := pdegtocomplex(s4 * BaseCurr, cdang(Vterminal^[i]));
+            i1 := pdegtocomplex (s4 * BaseCurr, cdang (sV1));
+            case Fnphases of
+                1: 
+                    Curr^[1] := i1;
+                3: 
+                begin
+                    Curr^[1] := i1;
+                    Curr^[2] := cmul(i1, ALPHA2);
+                    Curr^[3] := cmul(i1, ALPHA1);
+                end;
+            else
+                for i := 1 to Fnphases do
+                begin
+                    Curr^[i] := pdegtocomplex(s4 * BaseCurr, cdang(Vterminal^[i]));
+                end;
             end;
         end
         else
@@ -550,18 +587,41 @@ end;
 
 // support for DYNAMICMODE
 // NB: in phasor mode, use load convention for OpenDSS
+procedure TVCCSObj.ShutoffInjections; // stop injecting if the terminal opens
+var
+    i: integer;
+begin
+    for i:= 1 to FFiltlen do 
+    begin
+        whist[i] := 0.0;
+        wlast[i] := 0.0;
+        z[i] := 0.0;
+        zlast[i] := 0.0;
+    end;
+    for i:= 1 to FWinlen do 
+        y2[i] := 0.0;
+
+    s1 := 0;
+    s2 := 0;
+    s3 := 0;
+    s4 := 0;
+    s5 := 0;
+    s6 := 0;
+end;
+
 procedure TVCCSObj.InitPhasorStates;
 var
     i, k: Integer;
 begin
     ComputeIterminal;
-    s1 := cabs(Vterminal^[1]) / Vrated;
+    s1 := cabs(Vterminal^[1]) / BaseVolt;
     s4 := cabs(Iterminal^[1]) / BaseCurr;
     s2 := s4;
     s3 := s4;
     s5 := 0;
     s6 := 0;
-    vlast := cdivreal(Vterminal^[1], Vrated);
+    sV1 := cmplx(1.0, 0.0);
+    vlast := cdivreal(Vterminal^[1], BaseVolt);
 
   // initialize the history terms for HW model source convention
     for i := 1 to Ffiltlen do
@@ -600,13 +660,14 @@ begin
     ComputeIterminal;
     iang := cang(Iterminal^[1]);
     vang := cang(Vterminal^[1]);
-    s1 := cabs(Vterminal^[1]) / Vrated;
+    s1 := cabs(Vterminal^[1]) / BaseVolt;
     s3 := cabs(Iterminal^[1]) / BaseCurr;
     s2 := s3;
     s4 := s3;
     s5 := 0;
     s6 := 0;
-    vlast := cdivreal(Vterminal^[1], Vrated);
+    sV1 := cmplx(1.0, 0.0);
+    vlast := cdivreal(Vterminal^[1], BaseVolt);
 
   // initialize the history terms for HW model source convention
     d := 1 / FsampleFreq;
@@ -642,7 +703,8 @@ var
     iu, i, k, nstep, corrector: Integer;
 begin
     ComputeIterminal;
-    vpu := cabs(Vterminal^[1]) / Vrated;
+    UpdateSequenceVoltage;
+    vpu := cabs(sV1) / BaseVolt;
     if vpu > 0.0 then
     begin
         h := DSS.ActiveSolutionObj.DynaVars.h;
@@ -705,6 +767,11 @@ var
     vnow: complex;
     iu, iy: Integer; // local copies of sIdxU and sIdxY for predictor
 begin
+    if not Closed[1] then 
+    begin
+        ShutoffInjections;
+        Exit;
+    end;
     if FrmsMode then
     begin
         IntegratePhasorStates;
@@ -721,7 +788,7 @@ begin
     nstep := trunc(1e-6 + h / d);
     w := 2 * Pi * f;
 
-    vnow := cdivreal(Vterminal^[1], Vrated);
+    vnow := cdivreal(Vterminal^[1], BaseVolt);
     vin := 0;
     y := 0;
     iu := sIdxU;
@@ -873,4 +940,7 @@ begin
     end;
 end;
 
+initialization
+    ALPHA1 := cmplx(-0.5, 0.5 * sqrt(3.0));  // 1 at 120 degrees
+    ALPHA2 := cmplx(-0.5, -ALPHA1.im); // 1 at 240 degrees
 end.

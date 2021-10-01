@@ -1348,6 +1348,8 @@ begin
     case Index of
         1:
             Result := GetBus(1);
+        4:
+            Result := Format('%-.5g',[Angle]);
         7:
             Result := Format('%-.5g', [MVAsc3]);
         8:

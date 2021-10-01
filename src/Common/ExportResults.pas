@@ -2100,7 +2100,7 @@ var
 
 begin
 
-    GeneratorClass := TGenerator(GetDSSClassPtr(DSS, 'generator'));
+    GeneratorClass := DSS.GeneratorClass;
     if GeneratorClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
@@ -2162,7 +2162,7 @@ var
 begin
 
 
-    GeneratorClass := TGenerator(GetDSSClassPtr(DSS, 'generator'));
+    GeneratorClass := DSS.GeneratorClass;
     if GeneratorClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';

@@ -40,6 +40,8 @@ const
     FUSEMAXDIM = 6;
 
 type
+    pStateArray = ^StateArray;
+    StateArray = array[1..FUSEMAXDIM] of EControlAction;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TFuse = class(TControlClass)
@@ -64,13 +66,18 @@ type
         MonitoredElement: TDSSCktElement;
 
         hAction: array[1..FUSEMAXDIM] of Integer;         // handle to control queue actions
-        PresentState: array[1..FUSEMAXDIM] of EControlAction;  // 0 = open 1 = close
+        FPresentState, FNormalState: pStateArray;
         ReadyToBlow: array[1..FUSEMAXDIM] of Boolean;
-
         CondOffset: Integer; // Offset for monitored terminal
-        cBuffer: pComplexArray;    // Complexarray buffer
+        cBuffer: pComplexArray; // Complexarray buffer
 
-        procedure InterpretFuseAction(const Action: String);
+        NormalStateSet: Boolean;
+
+        procedure InterpretFuseState(const param: string; const PropertyName: string);
+        function get_States(Idx: Integer): EControlAction;
+        procedure set_States(Idx: Integer; const Value: EControlAction);
+        function get_NormalStates(Idx: Integer): EControlAction;
+        procedure set_NormalStates(Idx: Integer; const Value: EControlAction);
 
     PUBLIC
 
@@ -98,6 +105,9 @@ type
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
+        property States[Idx: Integer]: EControlAction read get_States write set_States;
+        property NormalStates[Idx: Integer]: EControlAction read get_NormalStates write set_NormalStates;
+
     end;
 
 {--------------------------------------------------------------------------}
@@ -117,7 +127,7 @@ uses
 
 const
 
-    NumPropsThisClass = 8;
+    NumPropsThisClass = 10;
 
 var
     TCC_CurveClass: TDSSClass;
@@ -178,6 +188,8 @@ begin
     PropertyName[6] := 'RatedCurrent';
     PropertyName[7] := 'Delay';
     PropertyName[8] := 'Action';
+    PropertyName[9] := 'Normal';
+    PropertyName[10] := 'State';
 
     PropertyHelp[1] := 'Full object name of the circuit element, typically a line, transformer, load, or generator, ' +
         'to which the Fuse is connected.' +
@@ -196,9 +208,12 @@ begin
         'Multiplying the current values in the curve by the "RatedCurrent" value gives the actual current.';
     PropertyHelp[6] := 'Multiplier or actual phase amps for the phase TCC curve.  Defaults to 1.0.';
     PropertyHelp[7] := 'Fixed delay time (sec) added to Fuse blowing time determined from the TCC curve. Default is 0.0. Used to represent fuse clearing time or any other delay.';
-    PropertyHelp[8] := '{Trip/Open | Close}  Action that overrides the Fuse control. Simulates manual control on Fuse ' +
-        '"Trip" or "Open" causes the controlled element to open and lock out. ' +
-        '"Close" causes the controlled element to close and the Fuse to reset.';
+    PropertyHelp[8] := 'DEPRECATED. See "State" property.';
+    PropertyHelp[9] := 'ARRAY of strings {Open | Closed} representing the Normal state of the fuse in each phase of the controlled element. ' +
+        'The fuse reverts to this state for reset, change of mode, etc. ' +
+        'Defaults to "State" if not specifically declared.';
+    PropertyHelp[10] := 'ARRAY of strings {Open | Closed} representing the Actual state of the fuse in each phase of the controlled element. ' +
+        'Upon setting, immediately forces state of fuse(s). Simulates manual control on Fuse. Defaults to Closed for all phases.';
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -222,7 +237,7 @@ end;
 {--------------------------------------------------------------------------}
 function TFuse.Edit: Integer;
 var
-    ParamPointer: Integer;
+    ParamPointer, i: Integer;
     ParamName: String;
     Param: String;
 
@@ -267,11 +282,15 @@ begin
                     RatedCurrent := Parser.Dblvalue;
                 7:
                     DelayTime := Parser.DblValue;
-                8:
-                    InterpretFuseAction(Param);
-
+                9: 
+                begin
+                    InterpretFuseState(Param, ParamName); // set the normal state
+                    NormalStateSet := TRUE;
+                end;
+                8, 10:
+                    InterpretFuseState(Param, ParamName); // set the present state
             else
-           // Inherited parameters
+                // Inherited parameters
                 ClassEdit(DSS.ActiveFuseObj, ParamPointer - NumPropsthisClass)
             end;
 
@@ -281,6 +300,14 @@ begin
                     ElementName := MonitoredElementName;
                 2:
                     ElementTerminal := MonitoredElementTerminal;
+                10:
+                begin
+                    for i := 1 to FNPhases do 
+                        if not NormalStateSet then 
+                            FNormalState[i] := FPresentState[i];
+                    
+                    NormalStateSet := TRUE; // normal state will default to state only the 1st state is specified.
+                end;
             end;
 
             ParamName := Parser.NextParam;
@@ -302,35 +329,39 @@ begin
     Result := 0;
    {See if we can find this Fuse name in the present collection}
     OtherFuse := Find(FuseName);
-    if OtherFuse <> NIL then
-        with DSS.ActiveFuseObj do
-        begin
-
-            NPhases := OtherFuse.Fnphases;
-            NConds := OtherFuse.Fnconds; // Force Reallocation of terminal stuff
-
-            ElementName := OtherFuse.ElementName;
-            ElementTerminal := OtherFuse.ElementTerminal;
-            ControlledElement := OtherFuse.ControlledElement;  // Pointer to target circuit element
-
-            MonitoredElement := OtherFuse.MonitoredElement;  // Pointer to target circuit element
-            MonitoredElementName := OtherFuse.MonitoredElementName;  // Pointer to target circuit element
-            MonitoredElementTerminal := OtherFuse.MonitoredElementTerminal;  // Pointer to target circuit element
-
-            FuseCurve := OtherFuse.FuseCurve;
-            RatedCurrent := OtherFuse.RatedCurrent;
-
-        // can't copy action handles
-            PresentState := OtherFuse.PresentState;
-            CondOffset := OtherFuse.CondOffset;
-
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherFuse.PropertyValue[i];
-
-        end
-    else
+    if OtherFuse = NIL then
+    begin
         DoSimpleMsg('Error in Fuse MakeLike: "' + FuseName + '" Not Found.', 403);
+        Exit;
+    end;
 
+    with DSS.ActiveFuseObj do
+    begin
+        NPhases := OtherFuse.Fnphases;
+        NConds := OtherFuse.Fnconds; // Force Reallocation of terminal stuff
+
+        ElementName := OtherFuse.ElementName;
+        ElementTerminal := OtherFuse.ElementTerminal;
+        ControlledElement := OtherFuse.ControlledElement;  // Pointer to target circuit element
+
+        MonitoredElement := OtherFuse.MonitoredElement;  // Pointer to target circuit element
+        MonitoredElementName := OtherFuse.MonitoredElementName;  // Pointer to target circuit element
+        MonitoredElementTerminal := OtherFuse.MonitoredElementTerminal;  // Pointer to target circuit element
+
+        FuseCurve := OtherFuse.FuseCurve;
+        RatedCurrent := OtherFuse.RatedCurrent;
+
+        for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do 
+        begin
+            FPresentState[i] := OtherFuse.FPresentState[i];
+            FNormalState[i] := OtherFuse.FNormalState[i];
+        end;
+        CondOffset := OtherFuse.CondOffset;
+
+        for i := 1 to ParentClass.NumProperties do
+            PropertyValue[i] := OtherFuse.PropertyValue[i];
+
+    end
 end;
 
 
@@ -368,13 +399,21 @@ begin
 
     RatedCurrent := 1.0;
 
-    for i := 1 to Min(FUSEMAXDIM, FNPhases) do
-        PresentState[i] := CTRL_CLOSE;
-    for i := 1 to Min(FUSEMAXDIM, FNPhases) do
-        ReadyToBlow[i] := FALSE;
-    for i := 1 to Min(FUSEMAXDIM, FNPhases) do
-        hAction[i] := 0;
+    FPresentState := NIL;
+    FNormalState := NIL;
 
+    // Reallocate arrays (Must be initialized to nil for first call)
+    Reallocmem(FPresentState, Sizeof(FPresentState[1]) * FNPhases);
+    Reallocmem(FNormalState, Sizeof(FNormalState[1]) * FNPhases);
+
+    for i := 1 to Min(FUSEMAXDIM, FNPhases) do 
+    begin
+        FPresentState^[i] := CTRL_CLOSE;
+        FNormalState^[i] := CTRL_CLOSE; // default to present state
+        ReadyToBlow[i] := FALSE;
+        hAction[i] := 0;
+    End;
+    NormalStateSet := FALSE;
 
     cBuffer := NIL; // Complex buffer
 
@@ -391,6 +430,9 @@ destructor TFuseObj.Destroy;
 begin
     MonitoredElementName := '';
     Reallocmem(cBuffer, 0);
+    ReallocMem(FPresentState, 0);
+    ReallocMem(FNormalState, 0);
+
     inherited Destroy;
 end;
 
@@ -440,16 +482,13 @@ begin
         if Enabled then
             ControlledElement.HasOCPDevice := TRUE;  // For Reliability calcs
 
+        // Open/Close State of controlled element based on state assigned to the control
         for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
-            if ControlledElement.Closed[i]      // Check state of i-th phase of active terminal
-            then
-            begin
-                PresentState[i] := CTRL_CLOSE;
-            end
+            if FPresentState[i] = CTRL_OPEN then
+                ControlledElement.Closed[i] := FALSE
             else
-            begin
-                PresentState[i] := CTRL_OPEN;
-            end;
+                ControlledElement.Closed[i] := TRUE;
+
         for i := 1 to ControlledElement.Nphases do
             hAction[i] := 0;
         for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
@@ -487,77 +526,97 @@ procedure TFuseObj.DoPendingAction(const Phs, ProxyHdl: Integer);
 // Do what we're instructed by the control queue
 // Theoretically, there shouldn't be anything on the queue unless we have to do something
 {Only legal action is to open one phase}
-
-
 begin
-    if Phs <= FUSEMAXDIM then
-        with  ControlledElement do
-        begin
-            ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal of CktElement to terminal 1
-            case PresentState[Phs] of
-                CTRL_CLOSE:
-                    if ReadyToBlow[Phs] then
-                    begin   // ignore if we became disarmed in meantime
-                        ControlledElement.Closed[Phs] := FALSE;   // Open all phases of active terminal
-                        AppendtoEventLog('Fuse.' + Self.Name, 'Phase ' + IntToStr(Phs) + ' Blown');
-                        hAction[phs] := 0;
-                    end;
-            else
-            {Do Nothing }
-            end;
+    if Phs > FUSEMAXDIM then
+        Exit;
 
-        end;
+    with ControlledElement do
+    begin
+        ControlledElement.ActiveTerminalIdx := ElementTerminal;
+        if FPresentState[Phs] = CTRL_CLOSE then
+            if ReadyToBlow[Phs] then
+            begin   // ignore if we became disarmed in meantime
+                ControlledElement.Closed[Phs] := FALSE;   // Open all phases of active terminal
+                AppendtoEventLog('Fuse.' + Self.Name, 'Phase ' + IntToStr(Phs) + ' Blown');
+                hAction[phs] := 0;
+            end;
+    end;
 end;
 
 {--------------------------------------------------------------------------}
-
-
-procedure TFuseObj.InterpretFuseAction(const Action: String);
+procedure TFuseObj.InterpretFuseState(const param: String; const PropertyName: String);
+var
+    i: Integer;
+    DataStr2: String;
 begin
-
-    if ControlledElement <> NIL then
-    begin
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
-        case LowerCase(Action)[1] of
-
-            'o', 't':
-            begin
-                ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
-            end;
-            'c':
-            begin
-                ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
+    if (LowerCase(PropertyName[1]) = 'a') then
+    begin // action (deprecated)  Will be removed
+        for i := 1 to FUSEMAXDIM do
+        begin
+            case LowerCase(PropertyName[1]) of
+                'o':
+                    States[i] := CTRL_OPEN;
+                'c':
+                    States[i] := CTRL_CLOSE;
             end;
         end;
+
+        Exit;
     end;
 
-end;
+    AuxParser.CmdString := param;  // Load up Parser
+    {DataStr1 :=} AuxParser.NextParam;  // ignore
+    DataStr2 := AuxParser.StrValue;
+
+    i := 1;
+    while (Length(DataStr2) > 0) and (i < FUSEMAXDIM) do 
+    begin
+        if (LowerCase(PropertyName[1]) = 's') then 
+        begin // state
+            case LowerCase(DataStr2)[1] of
+                'o': 
+                    States[i] := CTRL_OPEN;
+                'c': 
+                    States[i] := CTRL_CLOSE;
+            end;
+        end
+        else // 'normal'
+        begin
+            case LowerCase(DataStr2)[1] of
+                'o': 
+                    NormalStates[i] := CTRL_OPEN;
+                'c': 
+                    NormalStates[i] := CTRL_CLOSE;
+            end;
+        end;
+
+        {DataStr1 :=} AuxParser.NextParam;  // ignore
+        DataStr2 := AuxParser.StrValue;
+        inc(i);
+    end;
+End;
 
 {--------------------------------------------------------------------------}
 procedure TFuseObj.Sample;
-
 var
     i: Integer;
     Cmag: Double;
     TripTime: Double;
 
 begin
-
-
     ControlledElement.ActiveTerminalIdx := ElementTerminal;
     MonitoredElement.GetCurrents(cBuffer);
 
-    with   MonitoredElement do
+    with MonitoredElement do
         for i := 1 to Min(FUSEMAXDIM, MonitoredElement.Nphases) do
         begin
-
             if ControlledElement.Closed[i]      // Check state of phases of active terminal
             then
-                PresentState[i] := CTRL_CLOSE
+                FPresentState[i] := CTRL_CLOSE
             else
-                PresentState[i] := CTRL_OPEN;
+                FPresentState[i] := CTRL_OPEN;
 
-            if PresentState[i] = CTRL_CLOSE then
+            if FPresentState[i] = CTRL_CLOSE then
             begin
                 TripTime := -1.0;
 
@@ -613,27 +672,99 @@ begin
 end;
 
 function TFuseObj.GetPropertyValue(Index: Integer): String;
-
+var
+    i: Integer;
 begin
-    Result := inherited GetPropertyValue(index);
-end;
+    case Index of
+      9..10: 
+        Result := '[';
+    else
+        Result := '';
+    end;
 
+    case index of  // Special cases
+       10:
+            if ControlledElement <> Nil Then
+                for i := 1 to ControlledElement.NPhases do
+                    if FPresentState[i] = CTRL_OPEN then
+                        Result := Result + 'open' + ', '
+                    else
+                        Result := Result + 'closed' + ', ';
+       9:
+            if ControlledElement <> Nil Then
+                for i := 1 to ControlledElement.NPhases do
+                    if FNormalState[i] = CTRL_OPEN then
+                        Result := Result + 'open' + ', '
+                    else
+                        Result := Result + 'closed' + ', ';
+
+    else
+        Result := inherited GetPropertyValue(index);
+    end;
+
+    case Index of
+      9..10: 
+        Result := Result + ']';
+    end;
+end;
 
 procedure TFuseObj.Reset;
 var
     i: Integer;
 begin
+    if ControlledElement = NIL then
+        Exit;
+
+    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+
+    for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
+    begin
+        FPresentState[i] := FNormalState[i];  // reset to normal state
+        ReadyToBlow[i] := FALSE;
+        hAction[i] := 0;
+
+        if FNormalState[i] = CTRL_OPEN then
+            ControlledElement.Closed[i] := FALSE
+        else
+            ControlledElement.Closed[i] := TRUE;
+    end;
+end;
+
+function TFuseObj.get_States(Idx: Integer): EControlAction;
+begin
     if ControlledElement <> NIL then
     begin
-        for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
-            PresentState[i] := CTRL_CLOSE;
-        for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
-            ReadyToBlow[i] := FALSE;
-        for i := 1 to Min(FUSEMAXDIM, ControlledElement.Nphases) do
-            hAction[i] := 0;
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Set active terminal
-        ControlledElement.Closed[0] := TRUE;             // Close all phases of active terminal
+        ControlledElement.ActiveTerminalIdx := ElementTerminal; 
+        if not ControlledElement.Closed[Idx] then
+            FPresentState[Idx]:= CTRL_OPEN
+        else
+            FPresentState[Idx]:= CTRL_CLOSE;
     end;
+    Result := FPresentState[Idx];
+end;
+
+procedure TFuseObj.set_States(Idx: Integer; const Value: EControlAction);
+begin
+    if States[Idx] = Value then 
+        Exit;
+
+    FPresentState[Idx] := Value;
+
+    if ControlledElement = NIL then
+        Exit;
+
+    ControlledElement.ActiveTerminalIdx := ElementTerminal;
+    if Value = CTRL_OPEN then
+        ControlledElement.Closed[Idx] := FALSE
+    else
+        ControlledElement.Closed[Idx] := TRUE;
+end;
+
+procedure TFuseObj.set_NormalStates(Idx: Integer; const Value: EControlAction);
+begin
+    //TODO: validate Idx if exposed through the end-user API
+    FNormalState[Idx] := Value;
+    NormalStateSet := TRUE;
 end;
 
 procedure TFuseObj.InitPropertyValues(ArrayOffset: Integer);
@@ -646,12 +777,17 @@ begin
     PropertyValue[5] := 'Tlink';
     PropertyValue[6] := '1.0';
     PropertyValue[7] := '0';
-    PropertyValue[8] := '';
+    PropertyValue[8] := ''; // action
+    PropertyValue[9] := '[close, close, close]'; // normal
+    PropertyValue[10] := '[close,close,close]'; // state
 
     inherited  InitPropertyValues(NumPropsThisClass);
 
 end;
 
-initialization
+function TFuseObj.get_NormalStates(Idx: Integer): EControlAction;
+begin
+    Result := FNormalState[Idx];
+end;
 
 end.

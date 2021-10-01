@@ -251,12 +251,15 @@ begin
                     begin
                         ControlledElement := ActiveCircuit.CktElements.Get(DevIndex);
                         if ControlledElement <> NIL then
+                        begin
+                            ControlledElement.ActiveTerminalIdx := ElementTerminal;
                             case PresentState of     // Force state
                                 CTRL_OPEN:
                                     ControlledElement.Closed[0] := FALSE;
                                 CTRL_CLOSE:
                                     ControlledElement.Closed[0] := TRUE;
                             end;
+                        end;
                     end;
                 end;
             end;

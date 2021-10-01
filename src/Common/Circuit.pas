@@ -184,6 +184,7 @@ TYPE
 
           // Variables for Diakoptics
           //TODO: migrate TSparse_Complex to KLUSolveX (most functionality already present in Eigen)
+          ContoursT        :  TSparse_Complex;    //  Contours matrix transposed
           Contours         :  TSparse_Complex;    //  Contours matrix
           ZLL              :  TSparse_Complex;    //  Link branch matrix
           ZCT              :  TSparse_Complex;    //  The transformation matrix (to go from one to other domain)
@@ -315,7 +316,7 @@ TYPE
           function Create_MeTIS_Zones(Filename : string): string; // Executes MeTiS and loads the zones into memory for further use
           procedure AggregateProfiles(mode: string);
           procedure Disable_All_DER();          
-          procedure Save_SubCircuits();
+          procedure Save_SubCircuits(AddISrc: Boolean);
           function getPCEatBus(BusName: String; useNone: Boolean = True): ArrayOfString;
           function getPDEatBus(BusName: String; useNone: Boolean = True): ArrayOfString;
           function ReportPCEatBus(BusName: String): String;
@@ -326,7 +327,8 @@ TYPE
           procedure Normalize_graph();
           procedure Get_paths_4_Coverage();                             // Calculates the paths inside the graph
                                                                         // To guarantee the desired coverage when tearing the system
-          procedure Format_SubCircuits(Path  : String; NumCkts  : Integer); // Arrange the files of the subcircuits to make them independent
+          procedure Format_SubCircuits(Path: String; NumCkts: Integer; AddISrc: Boolean); // Arrange the files of the subcircuits to make them independent
+          procedure AppendIsources(Path: string; BusNum: Integer; LinkBranch: String);
 
           property Name             : String         Read Get_Name;
           Property CaseName         : String         Read FCaseName         Write Set_CaseName;
@@ -852,7 +854,7 @@ Begin
   Begin
     SMEnd           :=  True;
     State           :=  0;
-    Sys_Size        :=  {$IFNDEF FPC}double{$ENDIF}(length(Inc_Mat_Cols));
+    Sys_Size        :=  length(Inc_Mat_Cols);
     setlength(Buses_Covered,1);
     setlength(Path_Idx,1);
     Actual_Coverage :=  -1;
@@ -901,6 +903,44 @@ Begin
   End;
 End;
 
+{*******************************************************************************
+*     Appends single phase ISources to the each node of bus specified          *
+*     if the given linkBranch. This actions take place within the given file.  *
+********************************************************************************
+}
+procedure TDSSCircuit.AppendIsources(Path : string; BusNum  : Integer; LinkBranch: String);
+VAR
+  jj,
+  kk            : Integer;
+  text,
+  BusName       : String;
+  pBus          : TDSSBus;
+  F: TFileStream = nil;
+
+Begin
+
+  F := TFileStream.Create(Path, fmOpenReadWrite);
+  F.Seek(0, soEnd);
+
+  With DSS.ActiveCircuit Do
+  Begin
+    SetElementActive(LinkBranch);
+    BusName :=  ActiveCktElement.GetBus(BusNum);
+    jj               :=  ansipos('.',BusName);     // removes the dot
+    if jj > 0 then BusName  :=  BusName.Substring(0,jj - 1);
+    SetActiveBus(DSS, BusName);
+    pBus             :=  Buses^[ActiveBusIndex];
+    for kk := 1 to pBus.NumNodesThisBus do
+    Begin
+      text := 'New ISource.' + inttostr(BusNum) + '_' + inttostr(kk) + ' phases=1 bus1=' + BusName +
+      '.' + inttostr(kk) + ' amps=0.000001 angle=0';
+      FSWriteLn(F, text);
+    End;
+  End;
+  F.Free;
+
+End;
+
 {$IFDEF UNIX}
 PROCEDURE CopyFile(inFn: String; outFn: String; failIfExists: Boolean);
 VAR
@@ -930,7 +970,7 @@ END;
 * This routine reads the master file of the torn circuit and creates the       *
 *  header definitions for declaring separate subcircuits in OpenDSS            *
 ********************************************************************************}
-procedure TDSSCircuit.Format_SubCircuits(Path  : String; NumCkts  : Integer);
+procedure TDSSCircuit.Format_SubCircuits(Path: String; NumCkts: Integer; AddISrc: Boolean);
 var
   myFile : TFileStream = nil;
   Temp_txt,
@@ -1004,6 +1044,10 @@ begin
     End;
     FreeAndNil(myFile);
     
+    // Adds Isources at the link branch edges if requested
+    if AddISrc then
+      AppendIsources(Path + PathDelim + 'master.dss', 1, Link_Branches[1]);
+
     // Copies the support files to the zones directories
     FS_Idx    :=  0;
     while FS_Idx <> -1 do
@@ -1051,6 +1095,18 @@ begin
         End;
       End;
       FreeAndNil(myFile);
+      // Adds Isources at the link branch edges if requested
+      if AddISrc then
+      Begin
+        text  :=  Path + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'master.dss';
+        AppendIsources(text, 2, Link_Branches[FS_Idx - 1]);
+        // If there is another link branch, means that this zone conencts with other through ZCC
+        // Add Another current source at the point of connection
+        if Length(Link_Branches) > FS_Idx then
+          AppendIsources(text, 1, Link_Branches[FS_Idx]);
+
+      End;
+
     End;
     // Sets the properties of the VSource on each subcricuit based on the latest voltage measured
     FS_Idx1     :=    0;
@@ -1089,9 +1145,12 @@ end;
 
 {*******************************************************************************
 *        Saves the subcircuits created in memory into the hard drive           *
+*        The flag AddISrc indicates if its necessary to create                 *
+*        Isources at the edges of the link branches, the ISource               *
+*        magnitude is equal to 0.000001, angle 0 (for A-Diakoptics)            *
 ********************************************************************************
 }
-procedure TDSSCircuit.Save_SubCircuits();
+procedure TDSSCircuit.Save_SubCircuits(AddISrc: Boolean);
 var
   Fileroot    : String;
 Begin
@@ -1102,7 +1161,7 @@ Begin
     DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
     DSS.DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
     // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
-    Format_SubCircuits(FileRoot, length(Locations));
+    Format_SubCircuits(FileRoot, length(Locations), AddISrc);
 End;
 
 {*******************************************************************************
@@ -1622,7 +1681,6 @@ Begin
   Solution.MaxControlIterations :=  100;
 
   // solves the circuit
-  // TODO: PM Version: IsSolveAll                    :=  False;
   solution.Solve() ;
 
   // Creates the folder for storign the results

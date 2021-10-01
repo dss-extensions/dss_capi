@@ -131,13 +131,16 @@ type
       QDesireWPpu             : Array of Double; // Q desired caculated in watt-pf curve
       QDesireWVpu             : Array of Double; // Q desired caculated in watt-var curve
       QDesireDRCpu            : Array of Double;  // Q desired from the DRC equation
+      QDesireAVRpu: Array of Double;
       QDesireLimitedpu        : Array of Double; // Calculates possible Q considering kVA (watt priority) and kvarlimit limits
       QDesireOptionpu         : Array of Double; // Calculates Q Limit considering LPF and RF
       QDesiredVV              : Array of Double; // volt-var new set-point
       QDesiredWP              : Array of Double; // watt-pf new set-point
       QDesiredWV              : Array of Double; // watt-var new set-point
+      QDesiredAVR: Array of Double;
       QOld                    : Array of Double;
       QOldVV                  : Array of Double;
+      QOldAVR: Array of Double;
       QOldDRC                 : Array of Double;
       QOldVVDRC               : Array of Double;
       QDesiredDRC             : Array of Double; //dynamic reactive power new set-point
@@ -150,6 +153,7 @@ type
       QoutputVVpu             : Array of Double;
       QoutputDRCpu            : Array of Double;
       QoutputVVDRCpu          : Array of Double;
+      QoutputAVRpu: Array of Double;
 
       FPriorvarspu            : Array of Double;
       FPriorvars              : Array of Double;
@@ -251,6 +255,12 @@ type
       FvoltwattCH_curve       : TXYcurveObj;
       FvoltwattCH_curvename   : String;
 
+      // Active voltage regulation (AVR)
+      Fv_setpoint: Double;
+      DQDV: Array of Double;
+      Fv_setpointLimited: Array of Double;
+      FAvgpAVRVpuPrior: Array of Double;
+
       {Flags used to record function states. They are interval variables of DER}
       FVVOperation            : Array of Double;
       FVWOperation            : Array of Double;
@@ -258,6 +268,7 @@ type
       FVVDRCOperation         : Array of Double;
       FWPOperation            : Array of Double;
       FWVOperation            : Array of Double;
+      FAVROperation: Array of Double;
 
       {Others}
       cBuffer                 : Array of Array of Complex;    // Complex array buffer
@@ -270,16 +281,20 @@ type
       function    InterpretAvgVWindowLen(const s:string):Integer;
       function    InterpretDRCAvgVWindowLen(const s:string):Integer;
       function    ReturnElementsList:String;
-      procedure   UpdateInvControl2(i:integer);
+      procedure   UpdateInvControl(i:integer);
       procedure   UpdateDERParameters(i: Integer);
       procedure   CalcVoltWatt_watts(j: Integer);
       procedure   CalcQVVcurve_desiredpu(j: Integer);
       procedure   CalcQWPcurve_desiredpu(j: Integer);
       procedure   CalcQWVcurve_desiredpu(j: Integer);
       procedure   CalcQDRC_desiredpu(j: Integer);
+      procedure   CalcQAVR_desiredpu(j: Integer);
       procedure   Check_Qlimits(j: Integer; Q: Double);
+      procedure   Check_Qlimits_WV(j: Integer; Q: Double);
+      procedure   Calc_PQ_WV(j: Integer);
       procedure   Calc_QHeadRoom(j: Integer);
       procedure   CalcVoltVar_vars(j: Integer);
+      procedure   CalcAVR_vars(j: Integer);
       procedure   CalcWATTPF_vars(j: Integer);
       procedure   CalcWATTVAR_vars(j: Integer);
       procedure   CalcDRC_vars(j: Integer);
@@ -358,6 +373,7 @@ type
       property monVoltageCalc            : Integer            read FMonBusesPhase;
       property monBus                    : TStringList             read FMonBusesNameList;
       property monBusVbase               : pDoubleArray       read FMonBusesVbase;
+      property v_setpoint: Double read Fv_setpoint;
       // Need to include the new modes here
 
   end;
@@ -373,7 +389,7 @@ uses
 
 const
 
-    NumPropsThisClass = 32;
+    NumPropsThisClass = 33;
 
     NONE = 0;
     CHANGEVARLEVEL = 1;
@@ -397,6 +413,7 @@ const
     DRC       = 3;
     WATTPF    = 4;
     WATTVAR   = 5;
+    AVR = 6;
 
     // Combi Modes
     NONE_COMBMODE = 0;
@@ -470,12 +487,13 @@ procedure TInvControl2.DefineProperties;
     PropertyName[30] := 'wattvar_curve';
     PropertyName[31] := 'VV_RefReactivePower';
     PropertyName[32] := 'PVSystemList';
+    PropertyName[33] := 'Vsetpoint';
 
     PropertyHelp[1] := 'Array list of PVSystem and/or Storage elements to be controlled. ' +
                        'If not specified, all PVSystem and Storage in the circuit are assumed to be controlled by this control. '  +CRLF+CRLF+
                       'No capability of hierarchical control between two controls for a single element is implemented at this time.';
 
-    PropertyHelp[2] := 'Smart inverter function in which the InvControl2 will control the PC elements specified in DERList, according to the options below:' +CRLF+CRLF+
+    PropertyHelp[2] := 'Smart inverter function in which the InvControl will control the PC elements specified in DERList, according to the options below:' +CRLF+CRLF+
                       'Must be one of: {VOLTVAR* | VOLTWATT | DYNAMICREACCURR | WATTPF | WATTVAR} ' +CRLF+
                       'if the user desires to use modes simultaneously, then set the CombiMode property. Setting the Mode to any valid value disables combination mode.'+
 
@@ -485,7 +503,7 @@ procedure TInvControl2.DefineProperties;
                        CRLF+CRLF+'In watt-pf mode. This mode attempts to CONTROL the vars, according to a watt-pf curve, depending on the present active power output, and the capabilities of the PVSystem/Storage. '+
                        CRLF+CRLF+'In watt-var mode. This mode attempts to CONTROL the vars, according to a watt-var curve, depending on the present active power output, and the capabilities of the PVSystem/Storage. ';
 
-    PropertyHelp[3] := 'Combination of smart inverter functions in which the InvControl2 will control the PC elements in DERList, according to the options below: '+CRLF+CRLF+
+    PropertyHelp[3] := 'Combination of smart inverter functions in which the InvControl will control the PC elements in DERList, according to the options below: '+CRLF+CRLF+
                       'Must be a combination of the following: {VV_VW | VV_DRC}. Default is to not set this property, in which case the single control mode in Mode is active.  ' +
 
                        CRLF+CRLF+'In combined VV_VW mode, both volt-var and volt-watt control modes are active simultaneously.  See help individually for volt-var mode and volt-watt mode in Mode property.'+
@@ -570,7 +588,7 @@ procedure TInvControl2.DefineProperties;
 
                         'This voltage tolerance value plus the var/watt tolerance value (VarChangeTolerance/ActivePChangeTolerance) determine, together, when to stop control iterations by the InvControl. '+CRLF+CRLF+
 
-                        'If an InvControl2 is controlling more than one PVSystem/Storage, each PVSystem/Storage has this quantity calculated independently, and so an individual '+
+                        'If an InvControl is controlling more than one PVSystem/Storage, each PVSystem/Storage has this quantity calculated independently, and so an individual '+
                         'PVSystem/Storage may reach the tolerance within different numbers of control iterations.';
 
     PropertyHelp[16] := 'Required for VOLTVAR and DYNAMICREACCURR modes.  Defaults to 0.025 per unit of the base provided or absorbed reactive power described in the RefReactivePower property '+
@@ -582,7 +600,7 @@ procedure TInvControl2.DefineProperties;
 
                        'This reactive power tolerance value plus the voltage tolerance value (VoltageChangeTolerance) determine, together, when to stop control iterations by the InvControl.  '+CRLF+CRLF+
 
-                       'If an InvControl2 is controlling more than one PVSystem/Storage, each PVSystem/Storage has this quantity calculated independently, and so an individual '+
+                       'If an InvControl is controlling more than one PVSystem/Storage, each PVSystem/Storage has this quantity calculated independently, and so an individual '+
                        'PVSystem/Storage may reach the tolerance within different numbers of control iterations.';
 
     PropertyHelp[17] := 'Required for VOLTWATT mode.  Must be one of: {PMPPPU* | PAVAILABLEPU| PCTPMPPPU | KVARATINGPU}.  The default is PMPPPU.  '+CRLF+CRLF+
@@ -629,7 +647,7 @@ procedure TInvControl2.DefineProperties;
 
                          'This reactive power tolerance value plus the voltage tolerance value (VoltageChangeTolerance) determine, together, when to stop control iterations by the InvControl.  '+CRLF+CRLF+
 
-                        'If an InvControl2 is controlling more than one PVSystem/Storage, each PVSystem/Storage has this quantity calculated independently, and so an individual '+
+                        'If an InvControl is controlling more than one PVSystem/Storage, each PVSystem/Storage has this quantity calculated independently, and so an individual '+
                         'PVSystem/Storage may reach the tolerance within different numbers of control iterations.';
 
     PropertyHelp[25] := 'Number of the phase being monitored or one of {AVG | MAX | MIN} for all phases. Default=AVG. ';
@@ -667,6 +685,7 @@ procedure TInvControl2.DefineProperties;
                       'Units for the x-axis are per-unit output active power, and the base active power is the Pmpp for PVSystem and kWrated for Storage.';
     PropertyHelp[31] := 'Deprecated, use RefReactivePower instead.';
     PropertyHelp[32] := 'Deprecated, use DERList instead.';
+    PropertyHelp[33] := 'Required for Active Voltage Regulation (AVR).';
 
 
     ActiveProperty  := NumPropsThisClass;
@@ -752,6 +771,11 @@ function TInvControl2.Edit():Integer;
                   else if CompareTextShortest(Parser.StrValue, 'wattvar')= 0 then
                     begin
                       ControlMode := WATTVAR;
+                      CombiControlMode := NONE_COMBMODE;
+                    end
+                  else if CompareTextShortest(Parser.StrValue, 'avr')= 0 then
+                    begin
+                      ControlMode := AVR;
                       CombiControlMode := NONE_COMBMODE;
                     end
                   else
@@ -950,7 +974,8 @@ function TInvControl2.Edit():Integer;
                     for CharPos := 0 to (FDERNameList.Count - 1) do
                       FDERNameList[CharPos] :=  'PVSystem.' + FDERNameList[CharPos];
                  end;
-
+              33: 
+                Fv_setpoint := Parser.DblValue;
               else
                 // Inherited parameters
                 ClassEdit( DSS.ActiveInvControl2Obj, ParamPointer - NumPropsthisClass)
@@ -1066,7 +1091,7 @@ function TInvControl2.MakeLike(const InvControl2Name:String):Integer;
       for j := 1 to ParentClass.NumProperties do PropertyValue[j] := OtherInvControl.PropertyValue[j];
 
     end
-   else  DoSimpleMsg('Error in InvControl2 MakeLike: "' + InvControl2Name + '" Not Found.', 370);
+   else  DoSimpleMsg('Error in InvControl MakeLike: "' + InvControl2Name + '" Not Found.', 370);
 
 end;
 
@@ -1136,6 +1161,7 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     QDesireWPpu              := nil;
     QDesireWVpu              := nil;
     QDesireDRCpu             := nil;
+    QDesireAVRpu := nil;
     QDesireLimitedpu         := nil;
     QDesireOptionpu          := nil;
     QDesiredVV               := nil;
@@ -1143,10 +1169,12 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     QDesiredWV               := nil;
     QOld                     := nil;
     QOldVV                   := nil;
+    QOldAVR := nil;
     QOldDRC                  := nil;
     QOldVVDRC                := nil;
     QDesiredDRC              := nil;
     QDesiredVVDRC            := nil;
+    QDesiredAVR := nil;
 
     {Variables of functions that CONTROL reactive power}
     QHeadRoom                := nil;
@@ -1155,9 +1183,10 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     QoutputVVpu              := nil;
     QoutputDRCpu             := nil;
     QoutputVVDRCpu           := nil;
+    QoutputAVRpu := nil;
 
-    FPriorvarspu             := nil;
-    FPriorvars               := nil;
+    FPriorvarspu := nil;
+    FPriorvars := nil;
 
     {Variables of functions that LIMIT active power}
     PBase                    := nil;
@@ -1253,6 +1282,12 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     FvoltwattCH_curve        := nil;
     FvoltwattCH_curvename    := '';
 
+    // AVR
+    Fv_setpoint := 1.0;
+    DQDV := nil;
+    Fv_setpointLimited := nil;
+    FAvgpAVRVpuPrior := nil;
+
     {Flags used to record function states. They are interval variables of DER}
     FVVOperation             := nil;
     FVWOperation             := nil;
@@ -1260,6 +1295,7 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     FVVDRCOperation          := nil;
     FWPOperation             := nil;
     FWVOperation             := nil;
+    FAVROperation := nil;
 
     {Others}
     FPendingChange           := nil;
@@ -1272,6 +1308,8 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
 destructor TInvControl2Obj.Destroy;
   begin
     ElementName := '';
+
+    //TODO: remove? This is probably not required
     Finalize(ControlledElement);
     Finalize(NPhasesDER);
     Finalize(NCondsDER);
@@ -1288,20 +1326,24 @@ destructor TInvControl2Obj.Destroy;
     Finalize(QDesiredVV);
     Finalize(QDesiredWP);
     Finalize(QDesiredWV);
+    Finalize(QDesiredAVR);
     Finalize(QOld);
     Finalize(QOldVV);
+    Finalize(QOldAVR);
     Finalize(QOldDRC);
     Finalize(QOldVVDRC);
     Finalize(QHeadroom);
     Finalize(QHeadroomNeg);
     Finalize(Qoutputpu);
     Finalize(QoutputVVpu);
+    Finalize(QoutputAVRpu);
     Finalize(QoutputDRCpu);
     Finalize(QoutputVVDRCpu);
     Finalize(QDesireEndpu);
     Finalize(QDesireVVpu);
     Finalize(QDesireWPpu);
     Finalize(QDesireWVpu);
+    Finalize(QDesireAVRpu);
     Finalize(QDesireLimitedpu);
     Finalize(QDesireOptionpu);
     Finalize(PLimitEndpu);
@@ -1333,6 +1375,7 @@ destructor TInvControl2Obj.Destroy;
     Finalize(DeltaV_old);
     Finalize(FFlagVWOperates);
     Finalize(FVVOperation);
+    Finalize(FAVROperation);
     Finalize(FVWOperation);
     Finalize(FDRCOperation);
     Finalize(FVVDRCOperation);
@@ -1355,6 +1398,10 @@ destructor TInvControl2Obj.Destroy;
     Finalize(FEffFactor);
     Finalize(FDCkW);
     Finalize(FPPriority);
+    Finalize(Fv_setpoint);
+    Finalize(DQDV);
+    Finalize(Fv_setpointLimited);
+    Finalize(FAvgpAVRVpuPrior);
 
     if Assigned(FMonBusesVbase) then ReallocMem(FMonBusesVbase, 0);
 
@@ -1593,6 +1640,111 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
               end;
           end
 
+        {Smart Inverter active voltage regulation function}
+        else if(ControlMode = AVR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
+          begin
+            // Set var mode to VARMODEKVAR to indicate we might change kvar
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
+              begin
+                TPVSystemObj(DERelem).VWmode  := FALSE;
+                TPVSystemObj(DERelem).Varmode := VARMODEKVAR;
+                TPVSystemObj(DERelem).AVRmode := TRUE;
+              end
+            else
+              begin
+                TStorageObj(DERelem).VWmode     := FALSE;
+                TStorageObj(DERelem).Varmode    := VARMODEKVAR;
+//                TStorageObj(DERelem).VVmode     := TRUE;
+              end;
+
+            //--------------------------------------------- Main process ---------------------------------------------//
+
+            if ActiveCircuit.Solution.ControlIteration = 1 then
+              begin
+                FAvgpVpuPrior[k] := FPresentVpu[k];
+                FAvgpAVRVpuPrior[k] := FPresentVpu[k];
+
+                 // Sets PVSystem/Storage's kvar_out
+                if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QHeadRoom[k] / 2
+                else TStorageObj(DERelem).kvarRequested := QHeadRoom[k] / 2;
+              end
+
+            else if ActiveCircuit.Solution.ControlIteration = 2 then
+              begin
+                // Sets PVSystem/Storage's kvar_out
+                if ControlledElement[k].DSSClassName = 'PVSystem' then
+                  DQDV[k] := abs(TPVSystemObj(DERelem).Presentkvar / QHeadRoom[k] / (FPresentVpu[k] - FAvgpVpuPrior[k]))
+                else
+                  DQDV[k] := abs(TStorageObj(DERelem).kvarRequested / QHeadRoom[k] / (FPresentVpu[k] - FAvgpVpuPrior[k]));
+              end
+
+            else
+              begin
+                // Calculates QDesireAVRpu[k]
+                CalcQAVR_desiredpu(k);
+
+
+                // Checks kVA (watt priority) and kvarlimit limits
+                Check_Qlimits(k, QDesireAVRpu[k]);
+                QDesireEndpu[k] := Min(abs(QDesireAVRpu[k]), abs(QDesireLimitedpu[k])) * sign(QDesireAVRpu[k]);
+
+                if abs(QDesireEndpu[k] - QDesireLimitedpu[k]) < 0.05  then
+                  Fv_setpointLimited[k] := FPresentVpu[k]
+                else
+                  Fv_setpointLimited[k] := Fv_setpoint;
+
+                // Calculates QDesiredVV[k] through the convergence algorithm
+                CalcAVR_vars(k);
+
+                //--------------------------------------------- end Main process ---------------------------------------------//
+
+                // Sets PVSystem/Storage's kvar_out
+                if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredAVR[k]
+                else TStorageObj(DERelem).kvarRequested := QDesiredAVR[k];
+
+                // Uptates PresentkW and Presentkvar considering watt and var priorities
+                if ControlledElement[k].DSSClassName = 'PVSystem' then
+                  begin
+                    TPVSystemObj(DERelem).SetNominalPVSystemOuput();
+
+                    if QDesiredAVR[k] >= 0.0 then Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroom[k]
+                    else Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg[k];
+                  end
+                else
+                  begin
+                    TStorageObj(DERelem).SetNominalStorageOutput();
+
+                    if QDesiredAVR[k] >= 0.0 then Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroom[k]
+                    else Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroomNeg[k];
+                  end;
+
+              // Values used in convergence
+              QoutputAVRpu[k] := Qoutputpu[k];
+              FAvgpVpuPrior[k] := FPresentVpu[k];
+
+              // Values used in CalcQVVcurve_desiredpu
+              if ControlledElement[k].DSSClassName = 'PVSystem' then
+                begin
+                  QOld[k]   := TPVSystemObj(DERelem).Presentkvar;
+                  QOldAVR[k] := TPVSystemObj(DERelem).Presentkvar;
+
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                                      Format('VOLTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                             [QDesiredAVR[k], TPVSystemObj(DERelem).Presentkvar]));
+                end
+              else
+                begin
+                  QOld[k]   := TStorageObj(DERelem).Presentkvar;
+                  QOldAVR[k] := TStorageObj(DERelem).Presentkvar;
+
+                  if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                                      Format('VOLTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
+                                                             [QDesiredAVR[k], TStorageObj(DERelem).Presentkvar]));
+
+                end;
+              end;
+          end
+
         {Smart Inverter watt-pf function}
         else if(ControlMode = WATTPF) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
           begin
@@ -1696,17 +1848,22 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             CalcQWVcurve_desiredpu(k);
 
             // Checks kVA (watt priority) and kvarlimit limits
-            Check_Qlimits(k, QDesireWVpu[k]);
+            Check_Qlimits_WV(k, QDesireWVpu[k]);
             QDesireEndpu[k] := Min(abs(QDesireWVpu[k]), abs(QDesireLimitedpu[k])) * sign(QDesireWVpu[k]);
 
-            // Calculates QDesiredWV[k] through the convergence algorithm
-            CalcWATTVAR_vars(k);
+            // It checks kVA or Q limits and makes sure the final P and Q stay in the watt-var curve (PauloRadatz - 2/16/2021)
+            Calc_PQ_WV(k);
 
             //--------------------------------------------- end Main process ---------------------------------------------//
 
             // Sets PVSystem/Storage's kvar_out
-            if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredWV[k]
-            else TStorageObj(DERelem).kvarRequested := QDesiredWV[k];
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
+            begin
+                TPVSystemObj(DERelem).Presentkvar := QDesiredWV[k];
+                TPVSystemObj(DERelem).PresentkW := PLimitEndpu[k] * Min(FkVARating[k], FDCkWRated[k]);
+            end
+            else 
+                TStorageObj(DERelem).kvarRequested := QDesiredWV[k];
 
             // Uptates PresentkW and Presentkvar considering watt and var priorities
             if ControlledElement[k].DSSClassName = 'PVSystem' then
@@ -2613,6 +2770,42 @@ procedure TInvControl2Obj.Sample();
                   end;
               end
 
+            else if ControlMode = AVR then // Active voltage regulation control mode
+              begin
+                // Sets internal variables of PVSystem/Storage.
+                // FAVROperation is a flag which indicates if volt-var function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
+
+
+                // if inverter is off then exit
+                if (FInverterON[i] = FALSE) and (FVarFollowInverter[i] = TRUE) then continue;
+
+
+                if (ControlledElement[i].DSSClassName = 'PVSystem') then PVSys.AVRmode  := TRUE
+                else Storage.VVmode  := TRUE;
+
+                  //Trigger from AVR mode
+
+                if (((Abs(FPresentVpu[i] - FAvgpVpuPrior[i]) > FVoltageChangeTolerance) or
+                    ((Abs(Abs(QoutputAVRpu[i]) - Abs(QDesireEndpu[i])) > FVarChangeTolerance)) or
+                    (Abs(FPresentVpu[i] - Fv_setpointLimited[i]) > FVoltageChangeTolerance)) or
+                    (ActiveCircuit.Solution.ControlIteration = 1)) then
+
+                  begin
+
+                    // Resets DER state variable only if it has not converged yet
+                    FAVROperation[i] := 0;
+
+                    Set_PendingChange(CHANGEVARLEVEL,i);
+
+                    with  ActiveCircuit.Solution.DynaVars do
+                      ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
+
+                    if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                                                          Format('**Ready to change var output due to AVR trigger in AVR mode**, Vavgpu= %.5g, VPriorpu=%.5g, Vsetpoint=%.5g, VsetpointLimited=%.5g',
+                                                                 [FPresentVpu[i],FAvgpVpuPrior[i], Fv_setpoint, Fv_setpointLimited[i]]));
+                  end;
+              end
+
             else if ControlMode = VOLTVAR then // volt-var control mode
               begin
                 // Sets internal variables of PVSystem/Storage.
@@ -2895,8 +3088,10 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(QDesiredVV,FListSize+1);
         SetLength(QDesiredWP,FListSize+1);
         SetLength(QDesiredWV,FListSize+1);
+        SetLength(QDesiredAVR,FListSize+1);
         SetLength(QOld,FListSize+1);
         SetLength(QOldVV,FListSize+1);
+        SetLength(QOldAVR,FListSize+1);
         SetLength(QOldDRC,FListSize+1);
         SetLength(QOldVVDRC,FListSize+1);
         SetLength(QDesiredDRC,FListSize+1);
@@ -2906,12 +3101,14 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(PBase,FListSize+1);
         SetLength(Qoutputpu,FListSize+1);
         SetLength(QoutputVVpu,FListSize+1);
+        SetLength(QoutputAVRpu,FListSize+1);
         SetLength(QoutputDRCpu,FListSize+1);
         SetLength(QoutputVVDRCpu,FListSize+1);
         SetLength(QDesireEndpu,FListSize+1);
         SetLength(QDesireVVpu, FListSize+1);
         SetLength(QDesireWPpu, FListSize+1);
         SetLength(QDesireWVpu, FListSize+1);
+        SetLength(QDesireAVRpu, FListSize+1);
         SetLength(QDesireLimitedpu, FListSize+1);
         SetLength(QDesireOptionpu, FListSize+1);
         SetLength(PLimitEndpu,FListSize+1);
@@ -2943,6 +3140,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(FPriorvars, FListSize+1);
         SetLength(FFlagVWOperates, FListSize+1);
         SetLength(FVVOperation, FListSize+1);
+        SetLength(FAVROperation, FListSize+1);
         SetLength(FWPOperation, FListSize+1);
         SetLength(FWVOperation, FListSize+1);
         SetLength(FVWOperation, FListSize+1);
@@ -2963,6 +3161,9 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(FEffFactor,            FListSize+1);
         SetLength(FDCkW,                 FListSize+1);
         SetLength(FPPriority,            FListSize+1);
+        SetLength(DQDV, FListSize+1);
+        SetLength(Fv_setpointLimited, FListSize+1);
+        SetLength(FAvgpAVRVpuPrior, FListSize+1);
 
 
         for i := 1 to FListSize do
@@ -3030,8 +3231,10 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(QDesiredVV,FListSize+1);
         SetLength(QDesiredWP,FListSize+1);
         SetLength(QDesiredWV,FListSize+1);
+        SetLength(QDesiredAVR,FListSize+1);
         SetLength(QOld,FListSize+1);
         SetLength(QOldVV,FListSize+1);
+        SetLength(QOldAVR,FListSize+1);
         SetLength(QOldDRC,FListSize+1);
         SetLength(QOldVVDRC,FListSize+1);
         SetLength(QDesiredDRC,FListSize+1);
@@ -3041,12 +3244,14 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(PBase,FListSize+1);
         SetLength(Qoutputpu,FListSize+1);
         SetLength(QoutputVVpu,FListSize+1);
+        SetLength(QoutputAVRpu,FListSize+1);
         SetLength(QoutputDRCpu,FListSize+1);
         SetLength(QoutputVVDRCpu,FListSize+1);
         SetLength(QDesireEndpu,FListSize+1);
         SetLength(QDesireVVpu, FListSize+1);
         SetLength(QDesireWPpu, FListSize+1);
         SetLength(QDesireWVpu, FListSize+1);
+        SetLength(QDesireAVRpu, FListSize+1);
         SetLength(QDesireLimitedpu, FListSize+1);
         SetLength(QDesireOptionpu, FListSize+1);
         SetLength(PLimitEndpu,FListSize+1);
@@ -3078,6 +3283,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(FPriorvars, FListSize+1);
         SetLength(FFlagVWOperates, FListSize+1);
         SetLength(FVVOperation, FListSize+1);
+        SetLength(FAVROperation, FListSize+1);
         SetLength(FWVOperation, FListSize+1);
         SetLength(FWPOperation, FListSize+1);
         SetLength(FVWOperation, FListSize+1);
@@ -3098,6 +3304,9 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(FEffFactor,            FListSize+1);
         SetLength(FDCkW,                 FListSize+1);
         SetLength(FPPriority,            FListSize+1);
+        SetLength(DQDV, FListSize+1);
+        SetLength(Fv_setpointLimited, FListSize+1);
+        SetLength(FAvgpAVRVpuPrior, FListSize+1);
 
 
       end;  {else}
@@ -3137,6 +3346,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         QDesiredWV[i]                            := 0.0;
         QOld[i]                                  := -1.0;
         QOldVV[i]                                := -1.0;
+        QOldAVR[i] := -PVSys.kvarLimitNeg / 2.0;
         QOldDRC[i]                               := -1.0;
         QOldVVDRC[i]                             := -1.0;
         QDesiredDRC[i]                           := 0.0;
@@ -3148,12 +3358,14 @@ function TInvControl2Obj.MakeDERList:Boolean;
         QHeadroomNeg[i]                          := 0.0;
         Qoutputpu[i]                             := 0.0;
         QoutputVVpu[i]                           := 0.0;
+        QoutputAVRpu[i] := 0.0;
         QoutputDRCpu[i]                          := 0.0;
         QoutputVVDRCpu[i]                        := 0.0;
         QDesireEndpu[i]                          := 0.0;
         QDesireVVpu[i]                           := 0.0;
         QDesireWPpu[i]                           := 0.0;
         QDesireWVpu[i]                           := 0.0;
+        QDesireAVRpu[i] := 0.0;
         QDesireLimitedpu[i]                      := 0.0;
         QDesireOptionpu[i]                       := 0.0;
         PLimitVWpu[i]                            := 0.0;
@@ -3190,6 +3402,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         FVVDRCOperation[i]                       := 0.0;
         FWPOperation[i]                          := 0.0;
         FWVOperation[i]                          := 0.0;
+        FAVROperation[i] := 0.0;
 
         for j := 1 to 2 do  FVpuSolution[i,j]    := 0.0;
 
@@ -3210,6 +3423,9 @@ function TInvControl2Obj.MakeDERList:Boolean;
         FEffFactor[i]                            := 0.0;
         FDCkW[i]                                 := 0.0;
         FPPriority[i]                            := False;
+        DQDV[i] := 0.0;
+        Fv_setpointLimited[i] := 0.0;
+        FAvgpAVRVpuPrior[i] := 0.0;
 
 
       end; {for}
@@ -3489,7 +3705,7 @@ procedure TInvControl2Obj.Set_PendingChange(Value: Integer;DevIndex: Integer);
     DblTraceParameter := Value;
   end;
 
-procedure TInvControl2Obj.UpdateInvControl2(i:integer);
+procedure TInvControl2Obj.UpdateInvControl(i:integer);
   Var
     j,k                    : Integer;
     solnvoltage            : Double;
@@ -3534,6 +3750,10 @@ procedure TInvControl2Obj.UpdateInvControl2(i:integer);
 
           FFlagVWOperates[j] := False;
 
+          // Reset DQDV - We might not need it
+          DQDV[j] := 0.0;
+
+
           // Reset the operation flags for the new time step
           FVVOperation[j]   := 0;
           FVWOperation[j]   := 0;
@@ -3541,6 +3761,7 @@ procedure TInvControl2Obj.UpdateInvControl2(i:integer);
           FVVDRCOperation[j]:= 0;
           FWPOperation[j]   := 0;
           FWVOperation[j]   := 0;
+          FAVROperation[j]  := 0;
 
           // Reinitialize convergence arrays.
           //FdeltaQFactor[j] := DELTAQDEFAULT;
@@ -3665,6 +3886,23 @@ procedure TInvControl2Obj.CalcVoltVar_vars(j: Integer);
       begin
         QDesiredVV[j] := Fpresentkvar[j]
       end;
+  end;
+
+procedure TInvControl2Obj.CalcAVR_vars(j: Integer);
+  VAR
+    DeltaQ                                   :Double;
+
+  begin
+    if QDesireEndpu[j] >= 0.0 then DeltaQ := QDesireEndpu[j] * QHeadRoom[j] - QOldAVR[j]
+    else DeltaQ := QDesireEndpu[j] * QHeadRoomNeg[j] - QOldAVR[j];
+
+    if FdeltaQ_factor = FLAGDELTAQ then Change_deltaQ_factor(j)
+    else FdeltaQFactor[j] := FdeltaQ_factor;
+
+    QDesiredAVR[j] := QOldAVR[j] + 0.2 * DeltaQ;
+
+//      QDesiredAVR[j] := QDesireEndpu[j] * QHeadRoomNeg[j]
+
   end;
 
 procedure TInvControl2Obj.CalcWATTPF_vars(j: Integer);
@@ -3943,21 +4181,81 @@ procedure TInvControl2Obj.CalcQVVcurve_desiredpu(j: Integer);
   end;
 
 procedure TInvControl2Obj.CalcQWVcurve_desiredpu(j: Integer);
-//VAR
-//    voltagechangesolution: Double;
-begin
-    // QDesireWVpu[j] := 0.0;
+  VAR
+    voltagechangesolution                    :Double;
+    Pbase                                    :Double;
+  begin
 
-    // voltagechangesolution := 0.0;
-    // 
-    // // for first two seconds, keep voltagechangesolution equal to zero
-    // // we don't have solutions from the time-series power flow, yet
-    // if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
-    // else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
-    // else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
+    QDesireWVpu[j] := 0.0;
 
-    QDesireWVpu[j] := Fwattvar_curve.GetYValue(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] / FDCkWRated[j]);
-end;
+    voltagechangesolution := 0.0;
+
+    // for first two seconds, keep voltagechangesolution equal to zero
+    // we don't have solutions from the time-series power flow, yet
+    if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
+    else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
+    else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
+
+    Pbase:= Min(FkVARating[j], FDCkWRated[j]); // Should include DC-to-AC and kW-to-KVA ratios to avoid to quick fix like this
+
+    QDesireWVpu[j] := Fwattvar_curve.GetYValue(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] / Pbase);
+
+  end;
+
+procedure TInvControl2Obj.CalcQAVR_desiredpu(j: Integer);
+  VAR
+    voltagechangesolution                    : Double;
+    DQ                                       : Double;
+    QPresentpu                               : Double;
+    DQmax                                    : Double;
+    DeltaV                                   : Double;
+    v                                        : Double;
+  begin
+
+    DQmax := 0.1 * Fkvarlimit[j] / QHeadRoomNeg[j];
+
+    QDesireAVRpu[j] := 0.0;
+
+    if Fpresentkvar[j] >= 0.0 then QPresentpu   := Fpresentkvar[j] / QHeadRoom[j]
+    else QPresentpu   := Fpresentkvar[j] / QHeadRoomNeg[j];
+
+    if (ActiveCircuit.Solution.ControlIteration = 3) then
+    begin
+      v := FAvgpAVRVpuPrior[j];
+      QPresentpu := 0.0;
+      QOldAVR[j] := 0.0;
+    end
+    else
+        v := FPresentVpu[j];
+
+    voltagechangesolution := 0.0;
+
+    // for first two seconds, keep voltagechangesolution equal to zero
+    // we don't have solutions from the time-series power flow, yet
+    if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
+    else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
+    else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
+
+    DeltaV := Abs(Fv_setpoint - FAvgpVpuPrior[j]);
+
+    if (abs(DeltaV) < 0.005) and (FdeltaQFactor[j] > 0.2) then FdeltaQFactor[j] := FdeltaQFactor[j] + 0.1
+    else if (abs(DeltaV) < 0.02) and (FdeltaQFactor[j] > 0.2) then FdeltaQFactor[j] := FdeltaQFactor[j] + 0.05
+    else if (abs(DeltaV) > 0.02) and (FdeltaQFactor[j] < 0.9) then FdeltaQFactor[j] := FdeltaQFactor[j] - 0.05
+    else if (abs(DeltaV) < 0.05) and (FdeltaQFactor[j] < 0.9) then FdeltaQFactor[j] := FdeltaQFactor[j] - 0.1;
+
+    FdeltaQFactor[j] := 0.2;
+
+    DeltaV_old[j] := Abs(FPresentVpu[j] - FAvgpVpuPrior[j]);
+
+    if (FPresentVpu[j] - FAvgpVpuPrior[j] = 0) then  DQ := 0
+    else
+      DQ := FdeltaQFactor[j] * DQDV[j] * (Fv_setpoint - v);
+      If (Abs(DQ) > DQmax) Then IF (DQ < 0.0) Then DQ := -DQmax Else DQ := DQmax;
+
+    QDesireAVRpu[j] := QPresentpu + DQ;
+
+
+  end;
 
 procedure TInvControl2Obj.CalcQWPcurve_desiredpu(j: Integer);
   VAR
@@ -4027,6 +4325,109 @@ procedure TInvControl2Obj.CalcQDRC_desiredpu(j: Integer);
 
   end;
 
+
+procedure TInvControl2Obj.Check_Qlimits_WV(j: Integer; Q: Double);
+  VAR
+    Q_Ppriority                              :Double;
+    currentkvarlimitpu                       :Double;
+    currentkvarlimitnegpu                    :Double;
+    FOperation                               :Double;
+    error                                    :Double;
+
+  begin
+
+    // Will organize this part into functions later
+
+    // states
+    error := 0;
+    if (ControlMode = WATTVAR)          then error := 0.005;
+
+    if Q < -error then FOperation := -1.0
+    else if Q > error then  FOperation := 1.0
+    else FOperation := 0.0;
+
+
+    QDesireLimitedpu[j] := 1.0; // Not limited
+
+    currentkvarlimitpu := FCurrentkvarLimit[j] / QHeadRoom[j];
+    currentkvarlimitnegpu := FCurrentkvarLimitNeg[j] / QHeadRoomNeg[j];
+
+    if currentkvarlimitpu > QDesireLimitedpu[j]  then  currentkvarlimitpu := QDesireLimitedpu[j];
+    if currentkvarlimitnegpu > QDesireLimitedpu[j]  then  currentkvarlimitnegpu := QDesireLimitedpu[j];
+
+    // Q curve desiredpu should be less than currentkvarlimit(neg)
+    if (Q > 0.0) and (abs(Q) >= abs(currentkvarlimitpu)) then
+      begin
+        FOperation := 0.2 * sign(Q); // When kvarlimit is exceeded
+        QDesireLimitedpu[j] := currentkvarlimitpu * sign(Q);
+      end
+    else if (Q < 0.0) and (abs(Q) >= abs(currentkvarlimitnegpu))  then
+      begin
+        FOperation := 0.2 * sign(Q); // When kvarlimitneg is exceeded
+        QDesireLimitedpu[j] := currentkvarlimitnegpu * sign(Q);
+      end;
+
+    // States Flags
+    if (ControlMode = WATTVAR)         then FWVOperation[j]    := FOperation;
+
+  end;
+
+
+procedure TInvControl2Obj.Calc_PQ_WV(j: Integer);
+VAR
+  coeff: TCoeff;
+  QPratio, 
+  pre_S, 
+  var_limit_operation_value, 
+  Pbase, 
+  Qbase, 
+  Qbasesign, 
+  A, 
+  B, 
+  C, 
+  a_line, 
+  b_line: Double;
+begin
+
+  Pbase := Min(FkVARating[j], FDCkWRated[j]);
+
+  if QDesiredWV[j] >= 0.0 then
+    begin
+      Qbase := QHeadroom[j];
+      Qbasesign := 1.0;
+    end
+  else
+    begin
+      Qbase := QHeadroomNeg[j];
+      Qbasesign := -1.0;
+    end;
+
+  var_limit_operation_value := 0.2;
+  if (abs(FWVOperation[j]) = var_limit_operation_value)  then PLimitEndpu[j] := Fwattvar_curve.GetXValue(QDesireEndpu[j])
+  else PLimitEndpu[j] := 1.0;
+
+  CalcWATTVAR_vars(j);
+
+  // Qdesiredpu should be less than the Q avaliable under watt priority  (works just for varmax)
+  if (Sqrt(Sqr(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] * PLimitEndpu[j]) + Sqr(QDesiredWV[j])) > FkVARating[j]) then
+    begin
+        coeff := Fwattvar_curve.GetCoefficients(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] / Pbase);
+
+        a_line := coeff[1] * Qbase / Pbase;
+        b_line := coeff[2] * Qbase;
+
+        A := 1 + Sqr(a_line);
+        B := 2 * a_line * b_line;
+        C := Sqr(b_line) - Sqr(FkVARating[j]);
+
+
+        PLimitEndpu[j] := (-B + Sqrt(sqr(B) - 4 * A * C)) / (2 * A * Pbase);
+        QDesireEndpu[j] := Fwattvar_curve.GetYValue(PLimitEndpu[j]);
+    end;
+
+      CalcWATTVAR_vars(j)
+end;
+
 procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double);
   VAR
     Q_Ppriority                              :Double;
@@ -4037,20 +4438,13 @@ procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double);
 
   begin
 
-    QDesireLimitedpu[j] := 1.0; // Not limited
-
-    currentkvarlimitpu := FCurrentkvarLimit[j] / QHeadRoom[j];
-    currentkvarlimitnegpu := FCurrentkvarLimitNeg[j] / QHeadRoomNeg[j];
-
-    if currentkvarlimitpu > QDesireLimitedpu[j]  then  currentkvarlimitpu := QDesireLimitedpu[j];
-    if currentkvarlimitnegpu > QDesireLimitedpu[j]  then  currentkvarlimitnegpu := QDesireLimitedpu[j];
-
     // states
     error := 0;
     if (ControlMode = VOLTVAR)          then error := 0.005;
     if (ControlMode = WATTPF)           then error := 0.005;
     if (ControlMode = WATTVAR)          then error := 0.005;
     if (ControlMode = DRC)              then error := 0.0005;
+    if (ControlMode = AVR) then error := 0.005;
     if (CombiControlMode = VV_DRC)      then error := 0.005;
     if (CombiControlMode = VV_VW)       then error := 0.005;
 
@@ -4058,7 +4452,18 @@ procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double);
     else if Q > error then  FOperation := 1.0
     else FOperation := 0.0;
 
-    // QVV curve desiredpu should be less than currentkvarlimit(neg)
+
+    QDesireLimitedpu[j] := 1.0; // Not limited
+
+    currentkvarlimitpu := FCurrentkvarLimit[j] / QHeadRoom[j];
+    currentkvarlimitnegpu := FCurrentkvarLimitNeg[j] / QHeadRoomNeg[j];
+
+    if currentkvarlimitpu > QDesireLimitedpu[j] then
+      currentkvarlimitpu := QDesireLimitedpu[j];
+    if currentkvarlimitnegpu > QDesireLimitedpu[j] then 
+      currentkvarlimitnegpu := QDesireLimitedpu[j];
+
+    // Q curve desiredpu should be less than currentkvarlimit(neg)
     if (Q > 0.0) and (abs(Q) >= abs(currentkvarlimitpu)) then
       begin
         FOperation := 0.2 * sign(Q); // When kvarlimit is exceeded
@@ -4090,6 +4495,7 @@ procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double);
     if (ControlMode = WATTPF)          then FWPOperation[j]    := FOperation;
     if (ControlMode = WATTVAR)         then FWVOperation[j]    := FOperation;
     if (ControlMode = DRC)             then FDRCOperation[j]   := FOperation;
+    if (ControlMode = AVR) then FAVROperation[j] := FOperation;
     if (CombiControlMode = VV_DRC)     then FVVDRCOperation[j] := FOperation;
     if (CombiControlMode = VV_VW)      then FVVOperation[j]    := FOperation;
 
@@ -4165,7 +4571,7 @@ procedure TInvControl2.UpdateAll();
 
     for i := 1 to ElementList.Count  do
       with TInvControl2Obj(ElementList.Get(i)) do
-        if Enabled then UpdateInvControl2(i);
+        if Enabled then UpdateInvControl(i);
 
   end;
 

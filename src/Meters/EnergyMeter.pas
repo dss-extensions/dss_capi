@@ -150,7 +150,7 @@ type
     end;
 
     pFeederSections = ^FeederSectionArray;
-    FeederSectionArray = array[1..100] of TFeederSection;   // Dummy dimension
+    FeederSectionArray = array[0..100] of TFeederSection;   // Dummy dimension
     //  --------- Feeder Section Definition -----------
 
     TSystemMeter = class(Tobject)
@@ -192,7 +192,6 @@ type
 
     TEnergyMeter = class(TMeterClass)    // derive strait from base class
     PRIVATE
-        GeneratorClass: TGenerator;
         FSaveDemandInterval: Boolean;
         FDI_Verbose: Boolean;
 
@@ -519,8 +518,6 @@ begin
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
 
-
-    GeneratorClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('generator'));
 
     SystemMeter := TSystemMeter.Create(DSS);
     OV_MHandle := NIL;
@@ -921,8 +918,8 @@ begin
         for i := 1 to EnergyMeters.Count do
         begin
             mtr := EnergyMeters.Get(i);
-            if Mtr.Enabled then
-                mtr.MakeMeterZoneLists;
+            //if Mtr.Enabled then
+            mtr.MakeMeterZoneLists;
         end;
 
         FreeAndNilBusAdjacencyLists(BusAdjPD, BusAdjPC);
@@ -1936,7 +1933,7 @@ begin
     begin
         ThisMeter := DSS.ActiveCircuit.EnergyMeters.Get(i);
         with ThisMeter do
-            if MeteredElement <> NIL then
+            if Enabled and (MeteredElement <> NIL) then
                 MeteredElement.HasEnergyMeter := TRUE;
     end;   {FOR}
 end;
@@ -1974,7 +1971,14 @@ begin
   // Make a new branch list
     if BranchList <> NIL then
         BranchList.Free;
-    BranchList := TCktTree.Create;     {Instantiates ZoneEndsList, too}
+    
+    if Enabled then
+        BranchList := TCktTree.Create     {Instantiates ZoneEndsList, too}
+    else
+    begin
+        BranchList := NIL;
+        Exit;
+    end;
 
   // Get Started
     if Assigned(MeteredElement) then
@@ -2252,6 +2256,7 @@ begin
                         PDelem.FirstBus, PDelem.NextBus,
                   {BusList.NameOfIndex(BranchList.PresentBranch.ToBusReference),}
                         Buses^[BranchList.PresentBranch.ToBusReference].DistFromMeter]));
+                    BranchList.PresentBranch.ResetToBusList;
                     LoadElem := Branchlist.FirstObject;
                     while LoadElem <> NIL do
                     begin
@@ -2443,7 +2448,10 @@ begin
                             ConnectedPhase := DSS.ActiveCircuit.MapNodeToBus^[NodeRef^[1]].NodeNum;
                             if (ConnectedPhase > 0) and (ConnectedPhase < 4)   // Restrict to phases 1..3
                             then
-                                AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[ConnectedPhase];
+                                if SensorObj.NPhases = 1 then
+                                    AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[1]
+                                else
+                                    AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[ConnectedPhase];
                         end;
                 else
                     with LoadElem do
@@ -2781,7 +2789,7 @@ begin
 
        // Now have number of sections  so allocate FeederSections array
     ReallocMem(FeederSections, SizeOf(FeederSections^[1]) * SectionCount);
-    for idx := 1 to SectionCount do
+    for idx := 0 to SectionCount do
         with FeederSections^[idx] do      // Initialize all Section data
         begin
             OCPDeviceType := 0; // 1=Fuse; 2=Recloser; 3=Relay
@@ -2835,7 +2843,7 @@ begin
 
     end;
 
-        {Compute Avg Interruption duration of each Section }
+    { Compute Avg Interruption duration of each Section  except 0 Section}
     for idx := 1 to SectionCount do
         with FeederSections^[idx] do
             AverageRepairTime := SumFltRatesXRepairHrs / SumBranchFltRates;
@@ -2854,7 +2862,7 @@ begin
 {$IFDEF DEBUG}
     WriteDLLDebugFile
     ('Meter, SectionID, NBranches, NCustomers, AvgRepairHrs, AvgRepairMins, FailureRate*RepairtimeHrs, SumFailureRates');
-    for idx := 1 to SectionCount do
+    for idx := 0 to SectionCount do
         with FeederSections^[idx] do
             WriteDLLDebugFile(Format('%s.%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
                 [ParentClass.Name, Name, idx, NBranches, NCustomers, AverageRepairTime,
@@ -2894,7 +2902,7 @@ begin
 
      // Compute SAIDI from Sections list
     SAIDI := 0.0;
-    for idx := 1 to SectionCount do
+    for idx := 1 to SectionCount do // ignore idx=0
         with FeederSections^[idx] do
         begin
             SAIDI := SAIDI + SectFaultRate * AverageRepairTime * TotalCustomers;

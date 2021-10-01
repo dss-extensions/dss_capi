@@ -31,6 +31,7 @@ procedure PVSystems_Set_kvar(Value: Double); CDECL;
 function PVSystems_Get_Pmpp(): Double; CDECL;
 procedure PVSystems_Set_Pmpp(Value: Double); CDECL;
 function PVSystems_Get_IrradianceNow(): Double; CDECL;
+function PVSystems_Get_Sensor(): PAnsiChar; CDECL;
 
 // API Extensions
 function PVSystems_Get_daily(): PAnsiChar; CDECL;
@@ -718,6 +719,28 @@ begin
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
     Result := elem2.IrradianceNow;
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_Sensor(): PAnsiChar; CDECL;
+var
+    elem: TPVSystemObj;
+    elem2: TPVSystem2Obj;
+begin
+    Result := NIL;
+    if DSS_CAPI_LEGACY_MODELS then
+    begin
+        if not _activeObj(DSSPrime, elem) then
+            Exit;
+        if elem.SensorObj <> NIL then
+            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.SensorObj.ElementName);
+
+        Exit;
+    end;
+    if not _activeObj2(DSSPrime, elem2) then
+        Exit;
+
+    if elem2.SensorObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.SensorObj.ElementName);
 end;
 //------------------------------------------------------------------------------
 end.

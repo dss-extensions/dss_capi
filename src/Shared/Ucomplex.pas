@@ -26,6 +26,7 @@ type
 function cmplx(const a, b: Double): complex; inline;
 function cinv(const A: COMPLEX): COMPLEX; inline;
 function cabs(const a: complex): Double; inline;
+Function cabs2(const a:complex):double; inline; // best when you don't need sqrt -- TODO: rename?
 function cang(const a: complex): Double;
 function cdang(const a: complex): Double; // angle of complex number, degrees
 function ctopolar(const a: complex): polar;
@@ -77,6 +78,11 @@ end;
 function Cabs(const a: complex): Double; inline;
 begin
     Result := SQRT(A.RE * A.RE + A.IM * A.IM)
+end;
+
+function Cabs2(const a: complex): Double; inline;
+begin
+    Result := (A.RE * A.RE + A.IM * A.IM)
 end;
 
 function Conjg(const a: complex): complex; inline;

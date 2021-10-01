@@ -176,6 +176,7 @@ uses
     OHLineConstants,
     CNLineConstants,
     TSLineConstants,
+    Math,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
@@ -185,7 +186,7 @@ const
 
     LINE_TYPES: Array of String = [
         'oh', 'ug', 'ug_ts', 'ug_cn', 'swt_ldbrk', 'swt_fuse', 
-        'swt_sect', 'swt_rec', 'swt1_disc', 'swt_brk', 'swt_elbow'
+        'swt_sect', 'swt_rec', 'swt_disc', 'swt_brk', 'swt_elbow'
     ];
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -274,12 +275,14 @@ begin
     PropertyHelp[16] := 'Array of TSData names for cable parameter calculation.' + CRLF +
         'All must be previously defined, and match "nphases" for this geometry.' + CRLF +
         'You can later define "nconds-nphases" wires for bare neutral conductors.';
-    PropertyHelp[17] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
+    PropertyHelp[17] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the ' +
+        '"Ratings" property. Defaults to first conductor if not specified.' ;
     PropertyHelp[18] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
-        CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
+        CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.' +
+        'Defaults to first conductor if not specified.';
     PropertyHelp[19] := 'Code designating the type of line. ' +  CRLF +
-                        'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
-                        'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
+        'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
+        'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -427,12 +430,19 @@ begin
                         if Assigned(DSS.ActiveConductorDataObj) then
                         begin
                             FWireData^[i] := DSS.ActiveConductorDataObj;
-                            if (i = 1) then
+                            if (i = 1) then with DSS do
                             begin
-                                if (DSS.ActiveConductorDataObj.NormAmps > 0.0) then
-                                    Normamps := DSS.ActiveConductorDataObj.NormAmps;
-                                if (DSS.ActiveConductorDataObj.Emergamps > 0.0) then
-                                    Emergamps := DSS.ActiveConductorDataObj.EmergAmps;
+                                if (ActiveConductorDataObj.NormAmps > 0.0) and (Normamps = 0.0) then 
+                                    Normamps  := ActiveConductorDataObj.NormAmps;
+                                if (ActiveConductorDataObj.Emergamps > 0.0) and (Emergamps = 0.0) then 
+                                    Emergamps := ActiveConductorDataObj.EmergAmps;
+                                if (ActiveConductorDataObj.NumAmpRatings > 1) and (NumAmpRatings = 1) then 
+                                    NumAmpRatings  := ActiveConductorDataObj.NumAmpRatings;
+                                if (Length(ActiveConductorDataObj.AmpRatings) > 1) and (length(AmpRatings) = 1) then
+                                begin
+                                    SetLength(AmpRatings, NumAmpRatings);
+                                    AmpRatings := ActiveConductorDataObj.AmpRatings;
+                                end;
                             end;
                         end
                         else
@@ -488,12 +498,21 @@ begin
                     begin
                         FWireData^[ActiveCond] := DSS.ActiveConductorDataObj;
                   {Default the current ratings for this geometry to the rating of the first conductor}
-                        if (ActiveCond = 1) then
+                        if (ActiveCond = 1) then with DSS do
                         begin
-                            if (DSS.ActiveConductorDataObj.NormAmps > 0.0) then
-                                Normamps := DSS.ActiveConductorDataObj.NormAmps;
-                            if (DSS.ActiveConductorDataObj.Emergamps > 0.0) then
-                                Emergamps := DSS.ActiveConductorDataObj.EmergAmps;
+                            if (ActiveConductorDataObj.NormAmps > 0.0) and (Normamps = 0.0) then
+                                Normamps  := ActiveConductorDataObj.NormAmps;
+                            if (ActiveConductorDataObj.Emergamps > 0.0) and (Emergamps = 0.0) then
+                                Emergamps := ActiveConductorDataObj.EmergAmps;
+                            if (ActiveConductorDataObj.NumAmpRatings > 1) and (NumAmpRatings = 1) then
+                                NumAmpRatings  := ActiveConductorDataObj.NumAmpRatings;
+                            if (length(ActiveConductorDataObj.AmpRatings) > 1) and (length(AmpRatings) = 1) then
+                            begin
+                                SetLength(AmpRatings, NumAmpRatings);
+                                AmpRatings := Copy(ActiveConductorDataObj.AmpRatings, 
+                                    0, Min(Length(ActiveConductorDataObj.AmpRatings), NumAmpRatings)
+                                );
+                            end;
                         end;
                     end
                     else
@@ -705,6 +724,10 @@ begin
             Result := Format('%-g', [FY^[FActiveCond]]);
         7:
             Result := LineUnitsStr(FUnits^[FActiveCond]);
+        8:
+            Result := Format('%-g',[NormAmps]);
+        9: 
+            Result := Format('%-g',[EmergAmps]);
         12, 15, 16:
         begin
             Result := '[';

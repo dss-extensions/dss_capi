@@ -86,12 +86,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    case elem.CurrentAction of
-        CTRL_OPEN:
-            Result := dssActionOpen;
-        CTRL_CLOSE:
-            Result := dssActionClose;
-    end;
+    Result := Ord(elem.CurrentAction);
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -273,13 +268,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-
-    case elem.NormalState of
-        CTRL_OPEN:
-            Result := dssActionOpen;
-    else
-        Result := dssActionClose;
-    end;
+    Result := Ord(elem.NormalState);
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_NormalState(Value: Integer); CDECL;
@@ -304,13 +293,7 @@ begin
     Result := dssActionNone;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-
-    case elem.PresentState of
-        CTRL_OPEN:
-            Result := dssActionOpen;
-        CTRL_CLOSE:
-            Result := dssActionClose;
-    end;
+    Result := Ord(elem.PresentState);
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_State(Value: Integer); CDECL;

@@ -2,10 +2,15 @@ unit Monitor;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
+
+// **For DSS Extensions:**
+// Note that the header implementation is now different from the 
+// official one. Compatibility could be added if required later,
+// adding extra spaces before most fields.
 
 {
    Change Log
@@ -103,10 +108,9 @@ uses
     Classes;
 
 type
-    TMonitorStrBuffer = array[1..256] of AnsiChar;
+    TLegacyMonitorStrBuffer = array[1..256] of AnsiChar;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   {This has to be named TDSSMonitor because Delphi has a TMonitor Class and the compiler will get confused}
     TDSSMonitor = class(TMeterClass)
     PRIVATE
 
@@ -159,7 +163,6 @@ type
         Ppolar: Boolean;
 
         FileSignature: Integer;
-        FileVersion: Integer;
 
         BaseFrequency: Double;
 
@@ -180,6 +183,10 @@ type
         Mode: Integer;
         MonitorStream: TMemoryStream;
         SampleCount: Integer;  // This is the number of samples taken
+        Header: TStringList;
+        RecordSize: Integer;
+        FileVersion: Integer;
+
 
         constructor Create(ParClass: TDSSClass; const MonitorName: String);
         destructor Destroy; OVERRIDE;
@@ -219,9 +226,6 @@ uses
     Transformer,
     AutoTrans,
     PCElement,
-    {$IFNDEF FPC}
-    AnsiStrings,
-{$ENDIF}
     Sysutils,
     ucmatrix,
     showresults,
@@ -245,15 +249,7 @@ const
     NumSolutionVars = 12;
 
 var
-    StrBuffer: TMonitorStrBuffer;
-
-{$IFNDEF FPC}
-function StrLCat(Dest: PAnsiChar; const Source: PAnsiChar; MaxLen: Cardinal): PAnsiChar; inline;
-begin
-    Result := System.AnsiStrings.StrLCat(Dest, Source, MaxLen);
-end;
-
-{$ENDIF}
+    EMPTY_LEGACY_HEADER: TLegacyMonitorStrBuffer;
 
 {--------------------------------------------------------------------------}
 constructor TDSSMonitor.Create(dssContext: TDSSContext);  // Creates superstructure for all Monitor objects
@@ -311,7 +307,8 @@ begin
         '8 = All winding currents (Transformer device only)' + CRLF +
         '9 = Losses, watts and var (of monitored device)' + CRLF +
         '10 = All Winding voltages (Transformer device only)' + CRLF + 
-        '11 = All terminal node voltages and line currents of monitored device' +CRLF+
+        '11 = All terminal node voltages and line currents of monitored device' + CRLF +
+        '12 = All terminal node voltages LL and line currents of monitored device' + CRLF +
         'Normally, these would be actual phasor quantities from solution.' + CRLF +
         'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF +
         '+16 = Sequence quantities' + CRLF +
@@ -359,7 +356,6 @@ var
 
 begin
 
-  // continue parsing with contents of Parser
   // continue parsing with contents of Parser
     DSS.ActiveMonitorObj := ElementList.Active;
     ActiveCircuit.ActiveCktElement := DSS.ActiveMonitorObj;
@@ -593,6 +589,8 @@ begin
     Bufferfile := '';
 
     MonitorStream := TMemoryStream.Create; // Create memory stream
+    Header := TStringList.Create;
+    RecordSize := 0;
 
     IsFileOpen := FALSE;
     MeteredTerminal := 1;
@@ -613,6 +611,7 @@ end;
 destructor TMonitorObj.Destroy;
 begin
     MonitorStream.Free;
+    Header.Free;
     ElementName := '';
     Bufferfile := '';
     ReAllocMem(MonBuffer, 0);
@@ -756,6 +755,11 @@ begin
                     ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
                     ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.Yorder);
                 end;
+                12: 
+                begin
+                    ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
+                    ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*(MeteredElement.Yorder + 1));
+                end;
             else
                 ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1]) * MeteredElement.Yorder);
                 ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1]) * MeteredElement.NConds);
@@ -821,8 +825,8 @@ end;
 
 {--------------------------------------------------------------------------}
 procedure TMonitorObj.ClearMonitorStream;
-
 var
+    PhaseLoc: Array of Integer;
     i, j: Integer;
     iMax: Integer;
     iMin: Integer;
@@ -830,84 +834,78 @@ var
     IsPower: Boolean;
     NameOfState: Ansistring;
     NumVI: Integer;
-    RecordSize: Integer;
-    strPtr: pANSIchar;
     Str_Temp: Ansistring;
-
 begin
     try
-
         MonitorStream.Clear;
+        Header.Clear;
         IsProcessed := FALSE;
         SampleCount := 0;
         IsPosSeq := FALSE;
-        fillchar(StrBuffer, Sizeof(TMonitorStrBuffer), 0);  {clear buffer}
-        strPtr := PAnsiChar(@StrBuffer);
-        // strPtr^ := chr(0);     // Init string -- it's already filled with 0
+        
         if ActiveCircuit.Solution.IsHarmonicModel then
-            strLcat(strPtr, pAnsichar('Freq, Harmonic, '), Sizeof(TMonitorStrBuffer))
+        begin
+            Header.Add('Freq');
+            Header.Add('Harmonic');
+        end
         else
-            strLcat(strPtr, pAnsichar('hour, t(sec), '), Sizeof(TMonitorStrBuffer));
+        begin
+            Header.Add('hour');
+            Header.Add('t(sec)');
+        end;
 
         case (Mode and MODEMASK) of
 
             2:
             begin
                 RecordSize := 1;     // Transformer Taps
-                strLcat(strPtr, pAnsichar('Tap (pu)'), Sizeof(TMonitorStrBuffer));
+                Header.Add('Tap (pu)');
             end;
             3:
             begin
                 RecordSize := NumStateVars;   // Statevariabes
                 for i := 1 to NumStateVars do
-                begin
-                    NameofState := Ansistring(TpcElement(MeteredElement).VariableName(i) + ',');
-                    strLcat(strPtr, pAnsichar(NameofState), Sizeof(TMonitorStrBuffer));
-                end;
+                    Header.Add(TpcElement(MeteredElement).VariableName(i));
             end;
             4:
             begin
                 RecordSize := 2 * FnPhases;
                 for i := 1 to FnPhases do
                 begin
-                    strLcat(strPtr, pAnsichar(Ansistring('Flk' + IntToStr(i) + ', Pst' + IntToStr(i))), Sizeof(TMonitorStrBuffer));
-                    if i < FnPhases then
-                        strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                    Header.Add('Flk' + IntToStr(i));
+                    Header.Add('Pst' + IntToStr(i));
                 end;
             end;
             5:
             begin
                 RecordSize := NumSolutionVars;
-                strLcat(strPtr, pAnsichar('TotalIterations, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('ControlIteration, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('MaxIterations, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('MaxControlIterations, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('Converged, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('IntervalHrs, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('SolutionCount, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('Mode, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('Frequency, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('Year, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('SolveSnap_uSecs, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('TimeStep_uSecs, '), Sizeof(TMonitorStrBuffer));
+                Header.Add('TotalIterations');
+                Header.Add('ControlIteration');
+                Header.Add('MaxIterations');
+                Header.Add('MaxControlIterations');
+                Header.Add('Converged');
+                Header.Add('IntervalHrs');
+                Header.Add('SolutionCount');
+                Header.Add('Mode');
+                Header.Add('Frequency');
+                Header.Add('Year');
+                Header.Add('SolveSnap_uSecs');
+                Header.Add('TimeStep_uSecs');
             end;
             6:
             begin
                 RecordSize := TCapacitorObj(MeteredElement).NumSteps;     // Capacitor Taps
                 for i := 1 to RecordSize do
-                begin
-                    Str_Temp := Ansistring('Step_' + inttostr(i) + ',');
-                    strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                end;
+                    Header.Add('Step_' + inttostr(i));
             end;
             7:
             begin
                 RecordSize := 5;     // Storage state vars
-                strLcat(strPtr, pAnsichar('kW output, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('kvar output, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('kW Stored, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('%kW Stored, '), Sizeof(TMonitorStrBuffer));
-                strLcat(strPtr, pAnsichar('State, '), Sizeof(TMonitorStrBuffer));
+                Header.Add('kW output');
+                Header.Add('kvar output');
+                Header.Add('kW Stored');
+                Header.Add('%kW Stored');
+                Header.Add('State');
             end;
             8:
             begin   // All winding Currents
@@ -916,32 +914,29 @@ begin
                     begin
                         RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
                         for i := 1 to Nphases do
-                        begin
                             for j := 1 to NumberOfWindings do
                             begin
-                                Str_Temp := Ansistring(Format('P%dW%d,Deg, ', [i, j]));
-                                strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                                Header.Add(Format('P%dW%d', [i, j]));
+                                Header.Add('Deg');
                             end;
-                        end;
                     end
                 else
                     with TTransfObj(MeteredElement) do
                     begin
                         RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
                         for i := 1 to Nphases do
-                        begin
                             for j := 1 to NumberOfWindings do
                             begin
-                                Str_Temp := Ansistring(Format('P%dW%d,Deg, ', [i, j]));
-                                strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                                Header.Add(Format('P%dW%d', [i, j]));
+                                Header.Add('Deg');
                             end;
-                        end;
                     end;
             end;
             9:
             begin // watts vars of meteredElement
                 RecordSize := 2;
-                strLcat(strPtr, pAnsichar('watts, vars'), Sizeof(TMonitorStrBuffer));
+                Header.Add('watts');
+                Header.Add('vars');
             end;
             10:
             begin // All Winding Voltages
@@ -950,49 +945,74 @@ begin
                     begin
                         RecordSize := 2 * NumberOfWindings * Nphases;     // Transformer Winding woltages
                         for i := 1 to Nphases do
-                        begin
                             for j := 1 to NumberOfWindings do
                             begin
-                                Str_Temp := Ansistring(Format('P%dW%d,Deg, ', [i, j]));
-                                strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                                Header.Add(Format('P%dW%d', [i, j]));
+                                Header.Add('Deg');
                             end;
-                        end;
                     end
                 else
                     with TTransfObj(MeteredElement) do
                     begin
                         RecordSize := 2 * NumberOfWindings * Nphases;     // Transformer Winding woltages
                         for i := 1 to Nphases do
-                        begin
                             for j := 1 to NumberOfWindings do
                             begin
-                                Str_Temp := Ansistring(Format('P%dW%d,Deg, ', [i, j]));
-                                strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                                Header.Add(Format('P%dW%d', [i, j]));
+                                Header.Add('Deg');
                             end;
-                        end;
                     end;
             end;
             11: {All terminal voltages and currents  *****}
             begin 
                 Recordsize := 2 * 2 * MeteredElement.Yorder;  // V and I
 
-                {Voltages}
+                // Voltages
                 for j := 1 to MeteredElement.NTerms do
                     for i := 1 to MeteredElement.NConds do
                     begin
-                        Str_Temp  :=  AnsiString(Format('V%dT%d,Deg, ', [i,j] ));
-                        strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                        Header.Add(Format('V%dT%d', [i, j]));
+                        Header.Add('Deg');
                     end;
 
-                {Currents}
+                // Currents
                 for j := 1 to MeteredElement.NTerms do
                     for i := 1 to MeteredElement.NConds do
                     begin
-                        Str_Temp  :=  AnsiString(Format('I%dT%d,Deg, ', [i,j] ));
-                        strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                        Header.Add(Format('I%dT%d', [i, j]));
+                        Header.Add('Deg');
+                    end;
+            end;
+            12: {All terminal voltages LL and currents  *****}
+            begin 
+                with MeteredElement do
+                begin
+                    Recordsize := 2 * ((NPhases * NTerms) + Yorder);  // V and I
+                    SetLength(PhaseLoc, NPhases + 1);
+                end;
+
+                // Creates the map of phase combinations (LL)
+                for j := 1 to MeteredElement.NPhases do
+                    PhaseLoc[j - 1] := j;
+
+                PhaseLoc[High(PhaseLoc)] := 1;
+
+                // Voltages
+                for j := 1 to MeteredElement.NTerms do
+                    for i := 1 to MeteredElement.NPhases do
+                    begin
+                        Header.Add(Format('V%d-%dT%d', [PhaseLoc[i-1], PhaseLoc[i], j]));
+                        Header.Add('Deg');
+                    end;
+
+                // Currents
+                for j := 1 to MeteredElement.NTerms do
+                    for i := 1 to MeteredElement.NConds do
+                    begin
+                        Header.Add(Format('I%dT%d', [i, j]));
+                        Header.Add('Deg');
                     end;
             end
-
         else
         begin
          // Compute RecordSize
@@ -1019,6 +1039,7 @@ begin
                     RecordSize := 0;
                     for i := 1 to NumVI do
                         Inc(RecordSize, 1);
+
                     if not IsPower then
                     begin
                         for i := 1 to NumVI do
@@ -1026,36 +1047,25 @@ begin
                         if IncludeResidual then
                             Inc(RecordSize, 2);
                         for i := 1 to NumVI do
-                        begin
-                            strLcat(strPtr, pAnsichar(Ansistring(Format('|V|%d (volts)', [i]))), Sizeof(TMonitorStrBuffer));
-                            strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
-                        end;
+                            Header.Add(Format('|V|%d (volts)', [i]));
+
                         if IncludeResidual then
-                        begin
-                            strLcat(strPtr, pAnsichar('|VN| (volts)'), Sizeof(TMonitorStrBuffer));
-                            strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
-                        end;
+                            Header.Add('|VN| (volts)');
+
                         for i := 1 to NumVI do
-                        begin
-                            strLcat(strPtr, pAnsichar(Ansistring('|I|' + IntToStr(i) + ' (amps)')), Sizeof(TMonitorStrBuffer));
-                            if i < NumVI then
-                                strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
-                        end;
+                            Header.Add('|I|' + IntToStr(i) + ' (amps)');
+
                         if IncludeResidual then
-                        begin
-                            strLcat(strPtr, pAnsichar(',|IN| (amps)'), Sizeof(TMonitorStrBuffer));
-                        end;
+                            Header.Add('|IN| (amps)');
                     end
                     else
                     begin  // Power
                         for i := 1 to NumVI do
                         begin
                             if PPolar then
-                                strLcat(strPtr, pAnsichar(Ansistring('S' + IntToStr(i) + ' (kVA)')), Sizeof(TMonitorStrBuffer))
+                                Header.Add('S' + IntToStr(i) + ' (kVA)')
                             else
-                                strLcat(strPtr, pAnsichar(Ansistring('P' + IntToStr(i) + ' (kW)')), Sizeof(TMonitorStrBuffer));
-                            if i < NumVI then
-                                strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                                Header.Add('P' + IntToStr(i) + ' (kW)');
                         end;
                     end;
                 end;
@@ -1066,16 +1076,32 @@ begin
                     begin
                         RecordSize := RecordSize + 2;
                         if VIPolar then
-                            strLcat(strPtr, pAnsichar('V1, V1ang, I1, I1ang'), Sizeof(TMonitorStrBuffer))
+                        begin
+                            Header.Add('V1');
+                            Header.Add('V1ang');
+                            Header.Add('I1');
+                            Header.Add('I1ang');
+                        end
                         else
-                            strLcat(strPtr, pAnsichar('V1.re, V1.im, I1.re, I1.im'), Sizeof(TMonitorStrBuffer));
+                        begin
+                            Header.Add('V1.re');
+                            Header.Add('V1.im');
+                            Header.Add('I1.re');
+                            Header.Add('I1.im');
+                        end;
                     end
                     else
                     begin
                         if Ppolar then
-                            strLcat(strPtr, pAnsichar('S1 (kVA), Ang '), Sizeof(TMonitorStrBuffer))
+                        begin
+                            Header.Add('S1 (kVA)');
+                            Header.Add('Ang');
+                        end
                         else
-                            strLcat(strPtr, pAnsichar('P1 (kW), Q1 (kvar)'), Sizeof(TMonitorStrBuffer));
+                        begin
+                            Header.Add('P1 (kW)');
+                            Header.Add('Q1 (kvar)');
+                        end;
                     end;
                 end;
                 96:
@@ -1084,14 +1110,15 @@ begin
                     if not IsPower then
                     begin
                         RecordSize := RecordSize + 1;
-                        strLcat(strPtr, pAnsichar('V, I '), Sizeof(TMonitorStrBuffer));
+                        Header.Add('V');
+                        Header.Add('I');
                     end
                     else
                     begin  // Power
                         if Ppolar then
-                            strLcat(strPtr, pAnsichar('S1 (kVA)'), Sizeof(TMonitorStrBuffer))
+                            Header.Add('S1 (kVA)')
                         else
-                            strLcat(strPtr, pAnsichar('P1 (kW)'), Sizeof(TMonitorStrBuffer));
+                            Header.Add('P1 (kW)');
                     end;
                 end;
 
@@ -1115,34 +1142,54 @@ begin
                     for i := iMin to iMax do
                     begin
                         if VIPolar then
-                            strLcat(strPtr, pAnsichar(Ansistring('V' + IntToStr(i) + ', VAngle' + IntToStr(i))), Sizeof(TMonitorStrBuffer))
+                        begin
+                            Header.Add('V' + IntToStr(i));
+                            Header.Add('VAngle' + IntToStr(i));
+                        end
                         else
-                            strLcat(strPtr, pAnsichar(Ansistring('V' + IntToStr(i) + '.re, V' + IntToStr(i) + '.im')), Sizeof(TMonitorStrBuffer));
-                        strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                        begin
+                            Header.Add('V' + IntToStr(i) + '.re');
+                            Header.Add('V' + IntToStr(i) + '.im');
+                        end;
                     end;
                     if IncludeResidual then
                     begin
                         if VIPolar then
-                            strLcat(strPtr, pAnsichar('VN, VNAngle'), Sizeof(TMonitorStrBuffer))
+                        begin
+                            Header.Add('VN');
+                            Header.Add('VNAngle');
+                        end
                         else
-                            strLcat(strPtr, pAnsichar('VN.re, VN.im'), Sizeof(TMonitorStrBuffer));
-                        strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                        begin
+                            Header.Add('VN.re');
+                            Header.Add('VN.im');
+                        end;
                     end;
                     for i := iMin to iMax do
                     begin
                         if VIPolar then
-                            strLcat(strPtr, pAnsichar(Ansistring('I' + IntToStr(i) + ', IAngle' + IntToStr(i))), Sizeof(TMonitorStrBuffer))
+                        begin
+                            Header.Add('I' + IntToStr(i));
+                            Header.Add('IAngle' + IntToStr(i));
+                        end
                         else
-                            strLcat(strPtr, pAnsichar(Ansistring('I' + IntToStr(i) + '.re, I' + IntToStr(i) + '.im')), Sizeof(TMonitorStrBuffer));
-                        if i < NumVI then
-                            strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                        begin
+                            Header.Add('I' + IntToStr(i) + '.re');
+                            Header.Add('I' + IntToStr(i) + '.im');
+                        end;
                     end;
                     if IncludeResidual then
                     begin
                         if VIPolar then
-                            strLcat(strPtr, pAnsichar(', IN, INAngle'), Sizeof(TMonitorStrBuffer))
+                        begin
+                            Header.Add('IN');
+                            Header.Add('INAngle');
+                        end
                         else
-                            strLcat(strPtr, pAnsichar(', IN.re, IN.im'), Sizeof(TMonitorStrBuffer));
+                        begin
+                            Header.Add('IN.re');
+                            Header.Add('IN.im');
+                        end;
                     end;
                 end
                 else
@@ -1160,11 +1207,15 @@ begin
                     for i := iMin to iMax do
                     begin
                         if Ppolar then
-                            strLcat(strPtr, pAnsichar(Ansistring('S' + IntToStr(i) + ' (kVA), Ang' + IntToStr(i))), Sizeof(TMonitorStrBuffer))
+                        begin
+                            Header.Add('S' + IntToStr(i) + ' (kVA)');
+                            Header.Add('Ang' + IntToStr(i));
+                        end
                         else
-                            strLcat(strPtr, pAnsichar(Ansistring('P' + IntToStr(i) + ' (kW), Q' + IntToStr(i) + ' (kvar)')), Sizeof(TMonitorStrBuffer));
-                        if i < NumVI then
-                            strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                        begin
+                            Header.Add('P' + IntToStr(i) + ' (kW)');
+                            Header.Add('Q' + IntToStr(i) + ' (kvar)');
+                        end;
                     end;
                 end;
             end;
@@ -1174,7 +1225,6 @@ begin
 
      // RecordSize is the number of singles in the sample (after the hour and sec)
 
-     // Write Header to Monitor Stream
      // Write ID so we know it is a DSS Monitor file and which version in case we
      // change it down the road
 
@@ -1184,16 +1234,18 @@ begin
             Write(FileVersion, Sizeof(FileVersion));
             Write(RecordSize, Sizeof(RecordSize));
             Write(Mode, Sizeof(Mode));
-            Write(StrBuffer, Sizeof(TMonitorStrBuffer));
+            // adds the empty dummy record to avoid
+            // killing apps relying on this space
+            Write(EMPTY_LEGACY_HEADER, Sizeof(TLegacyMonitorStrBuffer)); 
         end;
 
-{    So the file now looks like:
+{    So the file now looks like: (update 05-18-2021)
        FileSignature (4 bytes)    32-bit Integers
        FileVersion   (4)
        RecordSize    (4)
        Mode          (4)
-       String        (256)
-
+       String        (256) - > this is empty now
+      
        hr   (4)       all singles
        Sec  (4)
        Sample  (4*RecordSize)
@@ -1282,9 +1334,13 @@ procedure TMonitorObj.TakeSample;
 var
     dHour: Double;
     dSum: Double;
-    i, j, k: Integer;
     IsPower: Boolean;
     IsSequence: Boolean;
+    BuffInit, 
+    BuffEnd,
+    i, j, k,
+    myRefIdx,
+    CalcEnd,
     NumVI: Integer;
     Offset: Integer;
     ResidualCurr: Complex;
@@ -1536,6 +1592,52 @@ begin
             {Put Terminal currents into Monitor}
             AddDblsToBuffer(pDoubleArray(@CurrentBuffer^[1].re), 2 * MeteredElement.Yorder);
             Exit;
+        end;
+        12: 
+        begin // Get all terminal voltages LL and currents of this device - 05192021
+            with MeteredElement do
+            begin
+                // Get All node voltages at all terminals
+                ComputeVterminal();
+
+                for k := 1 to NTerms do // Adds each term separately
+                begin
+                    BuffInit := 1 + NPhases * (k - 1);
+                    BuffEnd := NPhases * k;
+                    for i := BuffInit to BuffEnd do
+                        VoltageBuffer^[i - (BuffInit - 1)] := Vterminal^[i];
+
+                    if NPhases = NConds then
+                        myRefIdx := NPhases + 1
+                    else
+                        myRefIdx := NConds;
+
+                    //Brings the first phase to the last place for calculations
+                    VoltageBuffer^[myRefIdx] := VoltageBuffer^[1];
+                    
+                    // Calculates the LL voltages
+                    for i := 1 to NPhases do
+                        VoltageBuffer^[i] := csub(VoltageBuffer^[i], VoltageBuffer^[i + 1]);
+                    
+                    ConvertComplexArrayToPolar(VoltageBuffer, Yorder);
+                    
+                    // Put Terminal Voltages into Monitor
+                    AddDblsToBuffer(pDoubleArray(@VoltageBuffer^[1].re), 2 * NPhases);
+                end;
+
+                // Get all terminsl currents
+                ComputeIterminal();   // only does calc if needed
+                
+                for i := 1 to Yorder do 
+                    CurrentBuffer^[i] := Iterminal^[i];
+                
+                ConvertComplexArrayToPolar(CurrentBuffer, Yorder);
+                
+                // Put Terminal currents into Monitor
+                AddDblsToBuffer(pDoubleArray(@CurrentBuffer^[1].re), 2 * Yorder);
+                
+                Exit;
+            end;
         end
     else
         Exit  // Ignore invalid mask
@@ -1750,7 +1852,7 @@ begin
         Read(Fversion, Sizeof(Fversion));
         Read(RecordSize, Sizeof(RecordSize));
         Read(Mode, Sizeof(Mode));
-        Read(StrBuffer, Sizeof(StrBuffer));
+        Seek(SizeOf(TLegacyMonitorStrBuffer), soFromCurrent);
         bStart := Position;
     end;
     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
@@ -1820,8 +1922,6 @@ end;
 
 {--------------------------------------------------------------------------}
 procedure TMonitorObj.TranslateToCSV(Show: Boolean);
-
-
 var
     CSVName: String;
     F: TFileStream = nil;
@@ -1831,7 +1931,6 @@ var
     i: Cardinal;
     Mode: Integer;
     Nread: Cardinal;
-    pStr: pAnsichar;
     RecordBytes: Cardinal;
     RecordSize: Cardinal;
     s: Single;
@@ -1876,15 +1975,13 @@ begin
         Read(Fversion, Sizeof(Fversion));
         Read(RecordSize, Sizeof(RecordSize));
         Read(Mode, Sizeof(Mode));
-        Read(StrBuffer, Sizeof(StrBuffer));
+        Seek(SizeOf(TLegacyMonitorStrBuffer), soFromCurrent);
     end;
-
-    pStr := PAnsiChar(@StrBuffer);
 
 {$IFDEF DSS_CAPI_PM}
     if not PMParent.ConcatenateReports or (PMParent = DSS) then
 {$ENDIF}
-        FSWriteln(F, pStr);
+        FSWriteln(F, Header.CommaText);
     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
 
     try
@@ -2024,4 +2121,6 @@ begin
     Result := DSS.OutputDirectory + DSS.CircuitName_ + 'Mon_' + Name + DSS._Name + '.csv'
 end;
 
+initialization
+    FillChar(EMPTY_LEGACY_HEADER, SizeOf(EMPTY_LEGACY_HEADER), 0);
 end.

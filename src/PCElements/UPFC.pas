@@ -2,7 +2,7 @@ unit UPFC;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2015,  Electric Power Research Institute, Inc.
+  Copyright (c) 2021,  Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -91,6 +91,8 @@ type
 
     PUBLIC
 
+        InCurr, OutCurr: Array of Complex; // for storing the input and output currents
+
         Z: TCmatrix;  // Base Frequency Series Z matrix
         Zinv: TCMatrix;
         VMag: Double;
@@ -103,6 +105,10 @@ type
 
         function InjCurrents: Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
+
+        // Uploads the input/output currents when commanded by the controller - 09/02/2021
+        procedure UploadCurrents;
+        function CheckStatus: Boolean;
 
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
@@ -124,6 +130,7 @@ implementation
 uses
     ParserDel,
     Circuit,
+    UPFCControl,
     DSSClassDefs,
     DSSGlobals,
     Dynamics,
@@ -203,8 +210,17 @@ begin
     PropertyHelp[7] := 'Reactance of the series transformer of the UPFC, ohms (default=0.7540 ... 2 mH)';
     PropertyHelp[8] := 'Tolerance in pu for the series PI controller' + CRLF +
         'Tol1=0.02 is the format used to define 2% tolerance (Default=2%)';
-    PropertyHelp[9] := 'Integer used to define the control mode of the UPFC: ' + CRLF + CRLF + '0 = Off, ' + CRLF +
-        '1 = Voltage regulator, ' + CRLF + '2 = Phase angle regulator, ' + CRLF + '3 = Dual mode';
+     PropertyHelp[9] := 'Integer used to define the control mode of the UPFC: '+ CRLF + CRLF +
+        '0 = Off, ' + CRLF +
+        '1 = Voltage regulator, ' + CRLF + 
+        '2 = Phase angle regulator, ' + CRLF +
+        '3 = Dual mode' + CRLF +
+        '4 = It is a control mode where the user can set two different set points to create a secure GAP,' +
+        ' these references must be defined in the parameters RefkV and RefkV2. The only restriction when ' +
+        'setting these values is that RefkV must be higher than RefkV2. ' + CRLF +
+        '5 = In this mode the user can define the same GAP using two set points as in control mode 4. The ' +
+        'only difference between mode 5 and mode 4 is that in mode 5, the UPFC controller performs dual control' +
+        ' actions just as in control mode 3';
     PropertyHelp[10] := 'Maximum voltage (in volts) delivered by the series voltage source (Default = 24 V)';
     PropertyHelp[11] := 'Name of the XYCurve for describing the losses behavior as a function of the voltage at the input of the UPFC';
     PropertyHelp[12] := 'High limit for the voltage at the input of the UPFC, if the voltage is above this value the UPFC turns off. This value is specified in Volts (default 300 V)';
@@ -283,6 +299,8 @@ begin
                 begin
                     Nphases := Parser.Intvalue; // num phases
                     NConds := Fnphases;  // Force Reallocation of terminal info
+                    SetLength(OutCurr, Nphases + 1);
+                    SetLength(InCurr, Nphases + 1);
                 end;
                 7:
                     Xs := Parser.DblValue; // Xs
@@ -387,6 +405,7 @@ end;
 constructor TUPFCObj.Create(ParClass: TDSSClass; const SourceName: String);
 var
     i: Integer;
+    ctrl: TUPFCControlObj;
 begin
     inherited create(ParClass);
     Name := LowerCase(SourceName);
@@ -430,6 +449,22 @@ begin
         ERR0[i] := 0; //For multiphase model
 
     InitPropertyValues(0);
+
+    SetLength(OutCurr, Nphases + 1);
+    SetLength(InCurr, Nphases + 1);
+    for i := 0 to Nphases do
+    begin
+        OutCurr[i] := CZERO; //For multiphase model
+        InCurr[i] := CZERO; //For multiphase model
+    end;
+
+    // If there is a controller, sets the flag for it to consider de new UPFC
+    if DSS.UPFCControlClass.ElementCount > 0 then
+    begin
+        ctrl := DSS.UPFCControlClass.ElementList.Get(1);
+        ctrl.UPFCList.Clear;
+        ctrl.ListSize := 0;
+    end;
 
     Yorder := Fnterms * Fnconds;
     RecalcElementData;
@@ -953,16 +988,125 @@ begin
             Vbin := NodeV^[NodeRef^[i]];           //Gets voltage at the input of UPFC Cond i
             Vbout := NodeV^[NodeRef^[i + fnphases]]; //Gets voltage at the output of UPFC Cond i
 
-//      these functions were modified to follow the UPFC Dynamic
-//      (Different from VSource)
-            Curr^[i + fnphases] := GetoutputCurr(i);
-            Curr^[i] := GetinputCurr(i);
+            // These functions were modified to follow the UPFC Dynamic
+            // (Different from VSource)
+            Curr^[i + fnphases] := OutCurr[i];
+            Curr^[i] := InCurr[i];
+
         end;
     end;
 end;
 
 //===========================================================================
+//|     Checks if the UPFC control needs an update, returns true if so      |
+//===========================================================================
+function TUPFCObj.CheckStatus: Boolean;
+var
+    i: Integer;
+    Error,
+    TError,
+    VinMag,
+    RefH,
+    RefL: Double;
+    Vpolar: polar;
+    VTemp,
+    CurrOut: Complex;
+begin
+    Result := FALSE;
+  
+    UPFCON := True;
+    VinMag := cabs(Vbin);
 
+    if (VinMag > VHLimit) or (VinMag < VLLimit) then
+    begin   // Check Limits (Voltage)
+        UPFCON := False;
+        CurrOut := cmplx(0,0);
+        Exit;
+    end;
+
+    // Limits OK
+    case ModeUPFC of
+        0:
+            CurrOut := cmplx(0,0); //UPFC off
+        1:  
+        begin //UPFC as a voltage regulator
+            Vpolar := ctopolar(Vbout);
+            Error := abs(1 - abs(Vpolar.mag / (VRef * 1000)));
+            if Error > Tol1 then 
+                Result := True;
+        end;
+        2:  
+            CurrOut := cmplx(0,0); //UPFC as a phase angle regulator
+        3:
+        begin //UPFC in Dual mode Voltage and Phase angle regulator
+            Vpolar := ctopolar(Vbout);
+            Error := abs(1 - abs(Vpolar.mag / (VRef * 1000)));
+            if Error > Tol1 then 
+                Result := TRUE;
+        end;
+        4:
+        begin // Double reference control mode (only voltage control)
+            Vpolar := ctopolar(Vbin); // Takes the input voltage to verify the operation
+            
+            // Verifies if the Voltage at the input is out of the gap defined with VRef and VRef2
+            RefH := (VRef*1000) + (VRef*1000*Tol1);
+            RefL := (VRef2*1000) - (VRef2*1000*Tol1);
+            if (Vpolar.mag > RefH) or (Vpolar.mag < RefL) then
+            begin
+                // Sets the New reference by considering the value at the input of the device
+                if (Vpolar.mag > RefH) then 
+                    VRefD:=VRef
+                else if (Vpolar.mag < RefL) then 
+                    VRefD:=VRef2;
+
+                // Starts the control routine for voltage control only
+                Vpolar := ctopolar(Vbout);
+                Error := abs(1 - abs(Vpolar.mag / (VRefD*1000)));
+                if Error > Tol1 then  
+                    Result  :=  True;
+            end
+        end;
+        5:  
+        begin // Double reference control mode (Dual mode)
+            Vpolar := ctopolar(Vbin); // Takes the input voltage to verify the operation
+            
+            // Verifies if the Voltage at the input is out of the gap defined with VRef and VRef2
+            RefH := (VRef * 1000) + (VRef * 1000 * Tol1);
+            RefL := (VRef2 * 1000) - (VRef2 * 1000 * Tol1);
+            if (Vpolar.mag > RefH) or (Vpolar.mag < RefL) then
+            begin
+                // Sets the New reference by considering the value at the input of the device
+                if (Vpolar.mag > RefH) then 
+                    VRefD:=VRef
+                else if (Vpolar.mag < RefL) then
+                    VRefD:=VRef2;
+
+                // Starts standard control (the same as Dual control mode)
+                Vpolar := ctopolar(Vbout);
+                Error := abs(1-abs(Vpolar.mag/(VRefD*1000)));
+                if Error > Tol1 then 
+                    Result :=  True;   // In case we need a control action
+            end
+        end
+    end;
+end;
+
+
+//===========================================================================
+//|      Uploads the calculated currents into memeory for further use       |
+//===========================================================================
+procedure TUPFCObj.UploadCurrents;
+var
+   i: Integer;
+begin
+    for i := 1 to fnphases do
+    begin
+        OutCurr[i] := GetOutputCurr(i);
+        InCurr[i] := GetInputCurr(i);
+    end;
+end;
+
+//===========================================================================
 
 procedure TUPFCObj.GetCurrents(Curr: pComplexArray);
 

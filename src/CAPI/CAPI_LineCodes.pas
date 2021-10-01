@@ -165,7 +165,7 @@ begin
             Edit;
         end
         else
-            DoSimpleMsg('Invalid line units integer sent via COM interface.  Please enter a value within range.', 183);
+            DoSimpleMsg('Invalid line units integer. Please enter a value within range.', 183);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -286,7 +286,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Result := pLineCode.C0;
+    Result := pLineCode.C0 * 1.0e9;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_C1(): Double; CDECL;
@@ -297,7 +297,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    Result := pLineCode.C1;
+    Result := pLineCode.C1 * 1.0e9;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_C0(Value: Double); CDECL;

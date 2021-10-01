@@ -281,7 +281,12 @@ procedure Solution_Set_Seconds(Value: Double); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    DSSPrime.ActiveCircuit.Solution.dynavars.t := Value;
+
+    with  DSSPrime.ActiveCircuit.Solution do
+    begin
+        DynaVars.t := Value;
+        Update_dblHour;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepSize(Value: Double); CDECL;
