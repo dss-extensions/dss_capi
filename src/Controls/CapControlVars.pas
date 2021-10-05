@@ -33,7 +33,7 @@ Type
 
 
   {Fixed record structure for Public CapControl variables}
-   TCapControlVars = Packed Record
+   TCapControlVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}Packed{$ENDIF} Record
 
             FCTPhase,
             FPTPhase  :Integer;   // "ALL" is -1

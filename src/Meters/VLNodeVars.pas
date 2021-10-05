@@ -20,11 +20,11 @@ type
    {Fmonitor public data/state variable structure}
 
    //value ot save communication delay
-   //TDelays = packed record
+   //TDelays = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
     Tdlys = array [0..99] of Double; //max 99
 
    //end;
-    TVLNodeVars = packed record
+    TVLNodeVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
    //properties for Node
         vl_strBusName: String;
         vl_strMeasuredName: String;

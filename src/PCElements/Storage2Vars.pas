@@ -17,7 +17,7 @@ uses
 type
 
 {Struct to pass basic data to user-written DLLs}
-    TStorage2Vars = packed record
+    TStorage2Vars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
 
         kWrating: Double;
         kWhRating: Double;

@@ -18,7 +18,7 @@ type
     pTGeneratorVars = ^TGeneratorVars;
 
    {Generator public data/state variable structure}
-    TGeneratorVars = packed record
+    TGeneratorVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
 
         Theta,      {Direct-Axis voltage magnitude & angle}
         Pshaft,

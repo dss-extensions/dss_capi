@@ -18,7 +18,7 @@ uses
 type
 
    {Fmonitor public data/state variable structure}
-    TLD_fm_infos = packed record
+    TLD_fm_infos = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
    //properties for Nodes
          // highest voltage node
         ndnum_hghst: Integer;

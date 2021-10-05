@@ -55,7 +55,7 @@ type
 
 
 {Struct to pass basic data to user-written DLLs}
-    TPVSystemVars = packed record
+    TPVSystemVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
 
         FkVArating: Double;
         kVPVSystemBase: Double;

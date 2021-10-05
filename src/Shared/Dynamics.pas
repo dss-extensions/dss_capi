@@ -41,7 +41,7 @@ type
 {$POP}
 
    {Variables needed for dynamics and user-written models.}
-    TDynamicsRec = packed record
+    TDynamicsRec = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
          {time vars}
         h,     // Time step size in sec for dynamics
         t,     // sec from top of hour

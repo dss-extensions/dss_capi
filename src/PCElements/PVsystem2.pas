@@ -53,7 +53,7 @@ const
 
 type
   {Struct to pass basic data to user-written DLLs}
-    TPVSystem2Vars = packed record
+    TPVSystem2Vars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
 
         FkVArating: Double;
         kVPVSystemBase: Double;
