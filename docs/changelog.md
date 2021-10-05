@@ -3,14 +3,13 @@
 **not released**
 
 - **Done**:
-    - use KLUSolveX, enabling incremental Y updates for transformers and capacitor banks.
     - drop the GR API for strings (bytes, ints and floats will continue)
     - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using `int32_t` instead -- this was an artifact to ensure initial compatibility with the COM code.
     - extend the API to work with 64-bit integers where appropriate
     - extend the API to allow 32-bit floats
 
 - **Planned**:
-    - expose the OpenDSS v8/v9 PM features
+    - expose the OpenDSS v8/v9 PM features as possible
     - continue work on the plotting and extended reporting API
     - see also the GitHub milestone: https://github.com/dss-extensions/dss_capi/milestone/6
 
@@ -22,10 +21,12 @@ Since version 0.11 accumulated too many changes for too long (nearly 2 years), m
 
 This version still maintains basic compatibility with the 0.10.x series of releases, but there are many important changes. Version 0.13 will break API and ABI compatibility since function signatures and datatypes will be extensively adjusted. Still, if you use DSS C-API through one of the projects from DSS Extensions, we expect that your code will require few or no changes.
 
+- The binary releases now use Free Pascal 3.2.2.
 - The library name was changed from `dss_capi_v7` to `dss_capi`. The codebase was cleaned up and reorganized.
 - The code was finally unified, merging remaining features from OpenDSS v8+ (with few exceptions). The DSS PM commands and functions will be enabled only in v0.13. To achieve this, most of the global variables from the OpenDSS engine were encapsulated in a new class, a DSS Context class. Multi-threaded features will be based on DSSContexts, both the original OpenDSS PM features and new extensions.
-- Experimental callbacks for plotting and message output. Expect initial support in Python soon.
 - Experimental ARM64/AARCH64 support added. ARM32 building scripts were also added.
+- Finally use KLUSolveX (our KLUSolve fork, rewritten and extended), enabling incremental Y updates for transformers and capacitor banks. **Documentation including usage notes and limitations still not written.** This was planned for version v0.13, but momved back to v0.12 to enable ARM32 (armv7l) support and better results in ARM64 (aarch64).
+- Experimental callbacks for plotting and message output. Expect initial support in Python soon.
 - Introduce `AllowChangeDir` mechanism: defaults to enabled state for backwards compatibility. When disabled, the engine will not change the current working directory in any situation. This is exposed through a new pair of functions
 `DSS_Set_AllowChangeDir` and `DSS_Get_AllowChangeDir`, besides the environment variable `DSS_CAPI_ALLOW_CHANGE_DIR`.
 - Use `OutputDirectory` more. `OutputDirectory` is set to the current `DataPath` if `DataPath` is writable. If not, it's set to a general location (`%LOCALAPPDATA%/dss-extensions` and `/tmp/dss-extensions` since this release). This should make life easier for a user running files from a read-only location. Note that this is only an issue when running a `compile` command. If the user only uses `redirect` commands, the `DataPath` and `OutputDirectory` are left empty, meaning the files are written to the current working directory (CWD), which the user can control through the programming language driving DSS C-API. Note that the official OpenDSS COM behavior is different, since it loads the `DataPath` saved in the registry and modifies the CWD accordingly when OpenDSS is initialized.
@@ -33,13 +34,13 @@ This version still maintains basic compatibility with the 0.10.x series of relea
 - Reworked `TPowerTerminal` to achieve better memory layout. This makes simulations running `LoadsTerminalCheck=false` and `LoadsTerminalCheck=true` closer in performance, yet disabling the check is still faster.
 - Use `TFPHashList` where possible (replacing the custom, original THashList implementation from OpenDSS).
 - New LoadShape functions and internals: 
-    - Port memory-shaped files from the official OpenDSS, used when `MemoryMapping=Yes` from a DSS script while creating a LoadShape object.
-    - release the `LoadShape_Set_Points` function, which can be used for faster LoadShape input, memory-mapping externally, shared memory, chunked input, etc.
+    - Port memory-mapped files from the official OpenDSS, used when `MemoryMapping=Yes` from a DSS script while creating a LoadShape object.
+    - Release the `LoadShape_Set_Points` function, which can be used for faster LoadShape input, memory-mapping externally, shared memory, chunked input, etc.
 - Some new functions: 
     - `Circuit_Get_ElementLosses`
     - `CktElement_Get_NodeRef`
 - Drop function aliases: previously deprecated function aliases (`LoadShapes_Set_Sinterval` and `LoadShapes_Get_sInterval`) were removed to simplify the build process. Use `LoadShapes_Set_SInterval` and `LoadShapes_Get_SInterval` instead.
-- Monitor headers: From the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS Extensions, we took the opportunity to rewrite the related code. As such, the implementation in DSS Extensions deviate from the official one. Extra space chars are not included and should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough.
+- Monitor headers: From the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS Extensions, we took the opportunity to rewrite the related code, simplifying it. As such, the implementation in DSS Extensions deviates from the official one. Extra blank chars are not included, and fields should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough.
 
 Due to the high number of IO changes, we recommend checking the performance before and after the upgrade to ensure your use case is not affected negatively. If issues are found, please do report.
 

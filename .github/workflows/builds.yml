@@ -12,7 +12,7 @@ jobs:
     container:
       image: 'docker://pmeira/manylinux_wheel_cmake_fpc320'
     env:
-      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_linux_x64.tar.gz'
+      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_linux_x64.tar.gz'
     steps: 
       - name: 'Checkout'
         run: |
@@ -42,7 +42,7 @@ jobs:
     name: 'Linux x86'
     runs-on: ubuntu-latest
     env:
-      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_linux_x86.tar.gz'
+      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_linux_x86.tar.gz'
     steps: 
       - name: 'Checkout'
         run: |
@@ -74,7 +74,7 @@ jobs:
     name: 'macOS x64'
     runs-on: macos-latest
     env:
-      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_darwin_x64.tar.gz'
+      KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_darwin_x64.tar.gz'
     steps:
       - uses: actions/checkout@v2
         with: 
@@ -82,9 +82,9 @@ jobs:
           path: 'dss_capi'
       - name: 'Install FreePascal'
         run: |
-          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.0/fpc-3.2.0.intel-macosx.dmg/download -Ofpc.dmg -q
+          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.2/fpc-3.2.2.intel-macosx.dmg/download -Ofpc.dmg -q
           sudo hdiutil attach fpc.dmg
-          sudo installer -package /Volumes/fpc-3.2.0.intel-macosx/fpc-3.2.0-intel-macosx.pkg -target /
+          sudo installer -package /Volumes/fpc-3.2.2.intel-macosx/fpc-3.2.2-intel-macosx.pkg -target /
       - name: 'Download/extract KLUSolve(X)'
         run: |
           wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
@@ -115,14 +115,14 @@ jobs:
       - name: 'Install FreePascal'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.exe/download -o fpc-win32.exe
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.cross.x86_64-win64.exe/download  -o fpc-win32.cross.x86_64-win64.exe
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.2/fpc-3.2.2.i386-win32.exe/download -o fpc-win32.exe
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.2/fpc-3.2.2.i386-win32.cross.x86_64-win64.exe/download  -o fpc-win32.cross.x86_64-win64.exe
           fpc-win32.exe /VERYSILENT
           fpc-win32.cross.x86_64-win64.exe /VERYSILENT
       - name: 'Download/extract KLUSolve(X)'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x64-gcc8.1.zip -o klusolve_x64.zip
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_win_x64-gcc8.1.zip -o klusolve_x64.zip
           7z x -y -o. klusolve_x64.zip
           xcopy /E klusolve\lib dss_capi\lib
       - name: Build
@@ -131,7 +131,7 @@ jobs:
         run: |
           cd dss_capi
           "c:\Program Files\Git\bin\bash" -c "bash ./build/make_metadata.sh"
-          set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
+          set PATH=%PATH%;C:\FPC\3.2.2\bin\i386-win32
           set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
           call build/build_win_x64.bat
       - name: 'Upload artifacts'
@@ -152,12 +152,12 @@ jobs:
       - name: 'Install FreePascal'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.0/fpc-3.2.0.i386-win32.exe/download -o fpc-win32.exe
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://sourceforge.net/projects/freepascal/files/Win32/3.2.2/fpc-3.2.2.i386-win32.exe/download -o fpc-win32.exe
           fpc-win32.exe /VERYSILENT
       - name: 'Download/extract KLUSolve(X)'
         shell: cmd
         run: |
-          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x86-msvc2017.zip -o klusolve_x86.zip
+          "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_win_x86-msvc2017.zip -o klusolve_x86.zip
           7z x -y -o. klusolve_x86.zip
           xcopy /E klusolve\lib dss_capi\lib
       - name: Build
@@ -166,7 +166,7 @@ jobs:
         run: |
           cd dss_capi
           "c:\Program Files\Git\bin\bash" -c "bash ./build/make_metadata.sh"
-          set PATH=%PATH%;C:\FPC\3.2.0\bin\i386-win32
+          set PATH=%PATH%;C:\FPC\3.2.2\bin\i386-win32
           set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
           call build/build_win_x86.bat
       - name: 'Upload artifacts'
