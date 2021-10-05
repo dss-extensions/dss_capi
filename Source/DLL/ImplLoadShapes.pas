@@ -161,8 +161,9 @@ end;
 
 function TLoadShapes.Get_Pmult: OleVariant;
 Var
-   k      : Integer;
-   Sample : Complex;
+   k        : Integer;
+   Sample   : Complex;
+   UseHour  : Boolean;
 
 begin
   Result := VarArrayCreate([0, 0], varDouble);
@@ -172,9 +173,13 @@ begin
       If ActiveLSObject <> Nil Then
       Begin
         VarArrayRedim(Result, ActiveLSObject.NumPoints-1);
+        UseHour   :=  ActiveLSObject.Interval = 0;
         For k:=1 to ActiveLSObject.NumPoints Do
         Begin
-          Sample        :=  ActiveLSObject.GetMult(k*ActiveLSObject.Interval); // This change adds compatibility with MMF
+          if  UseHour then
+            Sample        :=  ActiveLSObject.GetMult(ActiveLSObject.Hours^[k]) // For variable step
+          else
+            Sample        :=  ActiveLSObject.GetMult(k*ActiveLSObject.Interval); // This change adds compatibility with MMF
           Result[k - 1] :=  Sample.re;
         End;
       End Else Begin
@@ -185,8 +190,9 @@ end;
 
 function TLoadShapes.Get_Qmult: OleVariant;
 Var
-   k      : Integer;
-   Sample : Complex;
+   k        : Integer;
+   Sample   : Complex;
+   UseHour  : Boolean;
 
 begin
   Result := VarArrayCreate([0, 0], varDouble);
@@ -198,9 +204,13 @@ begin
       If assigned(ActiveLSObject.QMultipliers) Then
       Begin
         VarArrayRedim(Result, ActiveLSObject.NumPoints-1);
+        UseHour   :=  ActiveLSObject.Interval = 0;
         For k:=1 to ActiveLSObject.NumPoints Do
         Begin
-          Sample        :=  ActiveLSObject.GetMult(k*ActiveLSObject.Interval);     // This change adds compatibility with MMF
+          if  UseHour then
+            Sample        :=  ActiveLSObject.GetMult(ActiveLSObject.Hours^[k]) // For variable step
+          else
+            Sample        :=  ActiveLSObject.GetMult(k*ActiveLSObject.Interval);     // This change adds compatibility with MMF
           Result[k - 1] :=  Sample.im;
         End;
       End;
