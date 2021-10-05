@@ -986,11 +986,22 @@ Begin
                DUTYCYCLE:   Begin
                                  CalcDutyMult(DynaVars.dblHour);
                             End;
+              DYNAMICMODE:  Begin
+                                 // This mode allows use of one class of load shape in DYNAMIC mode
+                                 case ActiveCircuit[ActorID].ActiveLoadShapeClass of
+                                      USEDAILY:  CalcDailyMult(DynaVars.dblHour);
+                                      USEYEARLY: CalcYearlyMult(DynaVars.dblHour);
+                                      USEDUTY:   CalcDutyMult(DynaVars.dblHour);
+                                 else
+                                      ShapeFactor := Cmplx(1.0, 0.0);     // default to 1 + j0 if not known
+                                 end;
+                            End;
            end;
 
            If (Mode=DAILYMODE)  or     {If a loadshape mode simulation}
               (Mode=YEARLYMODE) or
-              (Mode=DUTYCYCLE)
+              (Mode=DUTYCYCLE)  or
+              (Mode=DYNAMICMODE)
            Then  Begin  {Loadshape cases}
                 If ShapeIsActual
                     Then Vmag := 1000.0 * ShapeFactor.re  // assumes actual L-N voltage or voltage across source
