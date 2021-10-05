@@ -724,35 +724,35 @@ begin
                 1:
                     FSWriteln(F, '~ conn=delta');
             end;
-            FSWriteln(F, Format('~ kV=%.2g', [kvll]));
-            FSWriteln(F, Format('~ kVA=%.1g', [kva]));
-            FSWriteln(F, Format('~ tap=%.3g', [putap]));
-            FSWriteln(F, Format('~ %R=%.2g', [(Rpu * 100.0)]));
+            FSWriteln(F, Format('~ kV=%.2f', [kvll]));
+            FSWriteln(F, Format('~ kVA=%.1f', [kva]));
+            FSWriteln(F, Format('~ tap=%.3f', [putap]));
+            FSWriteln(F, Format('~ %R=%.2f', [(Rpu * 100.0)]));
             FSWriteln(F, Format('~ RdcOhms=%.7g', [Rdcohms]));
-            FSWriteln(F, Format('~ rneut=%.3g', [rneut]));
-            FSWriteln(F, Format('~ xneut=%.3g', [xneut]));
+            FSWriteln(F, Format('~ rneut=%.3f', [rneut]));
+            FSWriteln(F, Format('~ xneut=%.3f', [xneut]));
         end;
     end;
 
-    FSWriteln(F, Format('~ XHL=%.3g', [xhl * 100.0]));
-    FSWriteln(F, Format('~ XHT=%.3g', [xht * 100.0]));
-    FSWriteln(F, Format('~ XLT=%.3g', [xlt * 100.0]));
-    FSWriteln(F, Format('~ X12=%.3g', [xhl * 100.0]));
-    FSWriteln(F, Format('~ X13=%.3g', [xht * 100.0]));
-    FSWriteln(F, Format('~ X23=%.3g', [xlt * 100.0]));
+    FSWriteln(F, Format('~ XHL=%.3f', [xhl * 100.0]));
+    FSWriteln(F, Format('~ XHT=%.3f', [xht * 100.0]));
+    FSWriteln(F, Format('~ XLT=%.3f', [xlt * 100.0]));
+    FSWriteln(F, Format('~ X12=%.3f', [xhl * 100.0]));
+    FSWriteln(F, Format('~ X13=%.3f', [xht * 100.0]));
+    FSWriteln(F, Format('~ X23=%.3f', [xlt * 100.0]));
     FSWrite(F, '~ Xscmatrix= "');
     for i := 1 to (NumWindings - 1) * NumWindings div 2 do
-        FSWrite(F, Format('%.2g ', [Xsc^[i] * 100.0]));
+        FSWrite(F, Format('%.2f ', [Xsc^[i] * 100.0]));
     FSWriteln(F, '"');
-    FSWriteln(F, Format('~ NormMAxHkVA=%.0g', [NormMAxHkVA]));
-    FSWriteln(F, Format('~ EmergMAxHkVA=%.0g', [EmergMAxHkVA]));
-    FSWriteln(F, Format('~ thermal=%.1g', [thermalTimeConst]));
-    FSWriteln(F, Format('~ n=%.1g', [n_thermal]));
-    FSWriteln(F, Format('~ m=%.1g', [m_thermal]));
-    FSWriteln(F, Format('~ flrise=%.0g', [flrise]));
-    FSWriteln(F, Format('~ hsrise=%.0g', [hsrise]));
-    FSWriteln(F, Format('~ %loadloss=%.0g', [pctLoadLoss]));
-    FSWriteln(F, Format('~ %noloadloss=%.0g', [pctNoLoadLoss]));
+    FSWriteln(F, Format('~ NormMAxHkVA=%.0f', [NormMAxHkVA]));
+    FSWriteln(F, Format('~ EmergMAxHkVA=%.0f', [EmergMAxHkVA]));
+    FSWriteln(F, Format('~ thermal=%.1f', [thermalTimeConst]));
+    FSWriteln(F, Format('~ n=%.1f', [n_thermal]));
+    FSWriteln(F, Format('~ m=%.1f', [m_thermal]));
+    FSWriteln(F, Format('~ flrise=%.0f', [flrise]));
+    FSWriteln(F, Format('~ hsrise=%.0f', [hsrise]));
+    FSWriteln(F, Format('~ %loadloss=%.0f', [pctLoadLoss]));
+    FSWriteln(F, Format('~ %noloadloss=%.0f', [pctNoLoadLoss]));
 
     for i := 28 to NumPropsThisClass do
         FSWriteln(F, '~ ' + ParentClass.PropertyName^[i] + '=' + PropertyValue[i]);

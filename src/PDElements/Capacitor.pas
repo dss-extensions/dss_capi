@@ -788,7 +788,7 @@ begin
         FSWriteln(F, Format('~ %s=%s', [PropertyName^[2], nextbus]));
         FSWriteln(F, Format('~ %s=%d', [PropertyName^[3], Fnphases]));
         FSWriteln(F, Format('~ %s=%s', [PropertyName^[4], GetPropertyValue(4)]));
-        FSWriteln(F, Format('~ %s=%-.3g', [PropertyName^[5], '=', kVRating]));
+        FSWriteln(F, Format('~ %s=%.3f', [PropertyName^[5], '=', kVRating]));
         case Connection of
             0:
                 FSWriteln(F, '~ ', PropertyName^[6], '=wye');
@@ -801,7 +801,7 @@ begin
             for i := 1 to Fnphases do
             begin
                 for j := 1 to i do
-                    FSWrite(F, Format('%.3g ', [(CMatrix^[(i - 1) * Fnphases + j] * 1.0e6)]));
+                    FSWrite(F, Format('%.3f ', [(CMatrix^[(i - 1) * Fnphases + j] * 1.0e6)]));
                 if i <> Fnphases then
                     FSWrite(F, '|');
             end;

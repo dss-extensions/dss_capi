@@ -756,19 +756,19 @@ begin
     begin
 
         FSWriteln(F, Format('~ %s=%d', [PropertyName^[1], FNphases]));
-        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[2], R1]));
-        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[3], X1]));
-        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[4], R0]));
-        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[5], X0]));
-        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[6], C1 * 1.0e9]));
-        FSWriteln(F, Format('~ %s=%.5g', [PropertyName^[7], C0 * 1.0e9]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[2], R1]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[3], X1]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[4], R0]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[5], X0]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[6], C1 * 1.0e9]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[7], C0 * 1.0e9]));
         FSWriteln(F, Format('~ %s=%s',   [PropertyName^[8], PropertyValue[8]]));
         FSWrite(F, '~ ' + PropertyName^[9] + '=' + '"');
         for i := 1 to FNPhases do
         begin
             for j := 1 to FNphases do
             begin
-                FSWrite(F, Format('%.8g ', [Z.GetElement(i, j).re]));
+                FSWrite(F, Format('%.8f ', [Z.GetElement(i, j).re]));
             end;
             FSWrite(F, '|');
         end;
@@ -778,7 +778,7 @@ begin
         begin
             for j := 1 to FNphases do
             begin
-                FSWrite(F, Format('%.8g ', [Z.GetElement(i, j).im]));
+                FSWrite(F, Format('%.8f ', [Z.GetElement(i, j).im]));
             end;
             FSWrite(F, '|');
         end;
@@ -788,7 +788,7 @@ begin
         begin
             for j := 1 to FNphases do
             begin
-                FSWrite(F, Format('%.8g ', [(Yc.GetElement(i, j).im / TwoPi / BaseFrequency * 1.0E9)]));
+                FSWrite(F, Format('%.8f ', [(Yc.GetElement(i, j).im / TwoPi / BaseFrequency * 1.0E9)]));
             end;
             FSWrite(F, '|');
         end;

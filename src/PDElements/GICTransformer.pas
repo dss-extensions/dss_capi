@@ -734,9 +734,9 @@ begin
         end;
         FSWriteln(F, Format('~ %s=%.8g', [PropertyName^[7], 1.0 / G1]));
         FSWriteln(F, Format('~ %s=%.8g', [PropertyName^[8], 1.0 / G2]));
-        FSWriteln(F, Format('~ %s=%.2g', [PropertyName^[9], FkV1]));
-        FSWriteln(F, Format('~ %s=%.2g', [PropertyName^[10], FkV2]));
-        FSWriteln(F, Format('~ %s=%.2g', [PropertyName^[11], FMVARating]));
+        FSWriteln(F, Format('~ %s=%.2f', [PropertyName^[9], FkV1]));
+        FSWriteln(F, Format('~ %s=%.2f', [PropertyName^[10], FkV2]));
+        FSWriteln(F, Format('~ %s=%.2f', [PropertyName^[11], FMVARating]));
         FSWriteln(F, Format('~ %s=%s', [PropertyName^[12], FVarcurve]));
         FSWriteln(F, Format('~ %s=%.8g', [PropertyName^[13], FpctR1]));
         FSWriteln(F, Format('~ %s=%.8g', [PropertyName^[14], FpctR2]));

@@ -312,10 +312,6 @@ type
 
     public
 
-      {$IFNDEF FPC}
-      MyMemoryManagerState: System.TMemoryManagerState;
-      {$ENDIF}
-
       constructor Create(ParClass:TDSSClass; const InvControl2Name:String);
       destructor  Destroy; override;
 

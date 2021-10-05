@@ -238,9 +238,6 @@ begin
         CreateDefaultDSSItems;
     End;
 
-{$IFNDEF FPC}
-    If Not IsDLL Then ControlPanel.UpdateElementBox ;
-{$ENDIF}
     DSS.DefaultEarthModel     := DERI;
     DSS.LogQueries            := FALSE;
     DSS.MaxAllocationIterations := 2;

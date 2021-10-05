@@ -569,22 +569,22 @@ begin
     begin
         FSWriteln(F, Format('~ %s=%d', [PropertyName^[1], Fnphases]));
         FSWriteln(F, Format('~ %s=%s', [PropertyName^[2], firstbus]));
-        FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[3], FkVac]));
-        FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[4], FkVdc]));
-        FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[5], FkW]));
+        FSWriteln(F, Format('~ %s=%8.1f', [PropertyName^[3], FkVac]));
+        FSWriteln(F, Format('~ %s=%8.1f', [PropertyName^[4], FkVdc]));
+        FSWriteln(F, Format('~ %s=%8.1f', [PropertyName^[5], FkW]));
         FSWriteln(F, Format('~ %s=%d', [PropertyName^[6], FNdc]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[7], FRac]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[8], FXac]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[9], Fm]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[10], Fd]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[11], FMinM]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[12], FMaxM]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[13], FMaxIac]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[14], FMaxIdc]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[15], FRefVac]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[16], FRefPac]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[17], FRefQac]));
-        FSWriteln(F, Format('~ %s=%.4g', [PropertyName^[18], FRefVdc]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[7], FRac]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[8], FXac]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[9], Fm]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[10], Fd]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[11], FMinM]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[12], FMaxM]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[13], FMaxIac]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[14], FMaxIdc]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[15], FRefVac]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[16], FRefPac]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[17], FRefQac]));
+        FSWriteln(F, Format('~ %s=%.4f', [PropertyName^[18], FRefVdc]));
         case Fmode of
             VSC_FIXED:
                 FSWriteln(F, '~ ' + PropertyName^[19] + '= Fixed');

@@ -1473,25 +1473,25 @@ begin
         end;
     end;
 
-    FSWriteln(F, Format('~ XHL=%.3g', [puXHX * 100.0]));
-    FSWriteln(F, Format('~ XHT=%.3g', [puXHT * 100.0]));
-    FSWriteln(F, Format('~ XLT=%.3g', [puXXT * 100.0]));
-    FSWriteln(F, Format('~ X12=%.3g', [puXHX * 100.0]));
-    FSWriteln(F, Format('~ X13=%.3g', [puXHT * 100.0]));
-    FSWriteln(F, Format('~ X23=%.3g', [puXXT * 100.0]));
+    FSWriteln(F, Format('~ XHL=%.3f', [puXHX * 100.0]));
+    FSWriteln(F, Format('~ XHT=%.3f', [puXHT * 100.0]));
+    FSWriteln(F, Format('~ XLT=%.3f', [puXXT * 100.0]));
+    FSWriteln(F, Format('~ X12=%.3f', [puXHX * 100.0]));
+    FSWriteln(F, Format('~ X13=%.3f', [puXHT * 100.0]));
+    FSWriteln(F, Format('~ X23=%.3f', [puXXT * 100.0]));
     FSWrite(F, '~ Xscmatrix= "');
     for i := 1 to (NumWindings - 1) * NumWindings div 2 do
-        FSWrite(F, Format('%.2g ', [puXSC^[i] * 100.0]));
+        FSWrite(F, Format('%.2f ', [puXSC^[i] * 100.0]));
     FSWriteln(F, '"');
-    FSWriteln(F, Format('~ NormMAxHkVA=%.0g', [NormMAxHkVA]));
-    FSWriteln(F, Format('~ EmergMAxHkVA=%.0g', [EmergMAxHkVA]));
-    FSWriteln(F, Format('~ thermal=%.1g', [thermalTimeConst]));
-    FSWriteln(F, Format('~ n=%.1g', [n_thermal]));
-    FSWriteln(F, Format('~ m=%.1g', [m_thermal]));
-    FSWriteln(F, Format('~ flrise=%.0g', [flrise]));
-    FSWriteln(F, Format('~ hsrise=%.0g', [hsrise]));
-    FSWriteln(F, Format('~ %loadloss=%.0g', [pctLoadLoss]));
-    FSWriteln(F, Format('~ %noloadloss=%.0g', [pctNoLoadLoss]));
+    FSWriteln(F, Format('~ NormMAxHkVA=%.0f', [NormMAxHkVA]));
+    FSWriteln(F, Format('~ EmergMAxHkVA=%.0f', [EmergMAxHkVA]));
+    FSWriteln(F, Format('~ thermal=%.1f', [thermalTimeConst]));
+    FSWriteln(F, Format('~ n=%.1f', [n_thermal]));
+    FSWriteln(F, Format('~ m=%.1f', [m_thermal]));
+    FSWriteln(F, Format('~ flrise=%.0f', [flrise]));
+    FSWriteln(F, Format('~ hsrise=%.0f', [hsrise]));
+    FSWriteln(F, Format('~ %loadloss=%.0f', [pctLoadLoss]));
+    FSWriteln(F, Format('~ %noloadloss=%.0f', [pctNoLoadLoss]));
 
     for i := 28 to NumPropsThisClass do
         FSWriteln(F, '~ ' + ParentClass.PropertyName^[i] + '=' + PropertyValue[i]);
@@ -1535,13 +1535,13 @@ begin
             for i := 1 to NumWindings - 1 do
             begin
                 for j := 1 to i do
-                    FSWrite(F, Format('%.4g ', [GetElement(i, j).re]));
+                    FSWrite(F, Format('%.4f ', [GetElement(i, j).re]));
                 FSWriteln(F);
             end;
             for i := 1 to NumWindings - 1 do
             begin
                 for j := 1 to i do
-                    FSWrite(F, Format('%.4g ', [GetElement(i, j).im]));
+                    FSWrite(F, Format('%.4f ', [GetElement(i, j).im]));
                 FSWriteln(F);
             end;
         end;  {WITH}
@@ -1553,13 +1553,13 @@ begin
             for i := 1 to NumWindings do
             begin
                 for j := 1 to i do
-                    FSWrite(F, Format('%.4g ', [GetElement(i, j).re]));
+                    FSWrite(F, Format('%.4f ', [GetElement(i, j).re]));
                 FSWriteln(F);
             end;
             for i := 1 to NumWindings do
             begin
                 for j := 1 to i do
-                    FSWrite(F, Format('%.4g ', [GetElement(i, j).im]));
+                    FSWrite(F, Format('%.4f ', [GetElement(i, j).im]));
                 FSWriteln(F);
             end;
         end;
@@ -1571,13 +1571,13 @@ begin
             for i := 1 to 2 * NumWindings do
             begin
                 for j := 1 to i do
-                    FSWrite(F, Format('%.4g ', [GetElement(i, j).re]));
+                    FSWrite(F, Format('%.4f ', [GetElement(i, j).re]));
                 FSWriteln(F);
             end;
             for i := 1 to 2 * NumWindings do
             begin
                 for j := 1 to i do
-                    FSWrite(F, Format('%.4g ', [GetElement(i, j).im]));
+                    FSWrite(F, Format('%.4f ', [GetElement(i, j).im]));
                 FSWriteln(F);
             end;
         end;

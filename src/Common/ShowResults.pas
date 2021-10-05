@@ -69,11 +69,7 @@ uses
     RegControl,
     ParserDel,
     CktTree,
-{$IFDEF FPC}
     CmdForms,
-{$ELSE}
-    DSSForms,
-{$ENDIF}
     Math,
     Line,
     LineUnits,
@@ -910,7 +906,7 @@ begin
 
                         for j := 1 to NTerm do
                         begin
-                            FSWrite(F, Pad(FullName(p_Elem), MaxDeviceNameLength + 2) + Format('%-3d', [j]));
+                            FSWrite(F, Pad(FullName(p_Elem), MaxDeviceNameLength + 2) + Format('%3d', [j]));
                             for i := 1 to min(3, p_Elem.Nphases) do
                             begin
                                 k := (j - 1) * Ncond + i;
@@ -945,18 +941,18 @@ begin
                             S := Cmul(V012[2], conjg(I012[2]));
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
-                            FSWrite(F, Format('%-11.1g', [S.re * 0.003]));
-                            FSWrite(F, Format('%-11.1g', [S.im * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.re * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.im * 0.003]));
                             S := Cmul(V012[3], conjg(I012[3]));
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
-                            FSWrite(F, Format('%-11.1g', [S.re * 0.003]));
-                            FSWrite(F, Format('%-11.1g', [S.im * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.re * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.im * 0.003]));
                             S := Cmul(V012[1], conjg(I012[1]));
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
-                            FSWrite(F, Format('%-8.1g', [S.re * 0.003]));
-                            FSWrite(F, Format('%-8.1g', [S.im * 0.003]));
+                            FSWrite(F, Format('%8.1f', [S.re * 0.003]));
+                            FSWrite(F, Format('%8.1f', [S.im * 0.003]));
                             FSWriteln(F);
 
                         end;
@@ -978,7 +974,7 @@ begin
 
                         for j := 1 to NTerm do
                         begin
-                            FSWrite(F, Pad(FullName(pDElem), MaxDeviceNameLength + 2) + Format('%-3d', [j]));
+                            FSWrite(F, Pad(FullName(pDElem), MaxDeviceNameLength + 2) + Format('%3d', [j]));
                             for i := 1 to Min(3, pdelem.Nphases) do
                             begin
                                 k := (j - 1) * Ncond + i;
@@ -1013,18 +1009,18 @@ begin
                             S := Cmul(V012[2], conjg(I012[2]));
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
-                            FSWrite(F, Format('%-11.1g', [S.re * 0.003]));
-                            FSWrite(F, Format('%-11.1g', [S.im * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.re * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.im * 0.003]));
                             S := Cmul(V012[3], conjg(I012[3]));
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
-                            FSWrite(F, Format('%-11.1g', [S.re * 0.003]));
-                            FSWrite(F, Format('%-11.1g', [S.im * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.re * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.im * 0.003]));
                             S := Cmul(V012[1], conjg(I012[1]));
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
-                            FSWrite(F, Format('%-8.1g', [S.re * 0.003]));
-                            FSWrite(F, Format('%-8.1g', [S.im * 0.003]));
+                            FSWrite(F, Format('%8.1f', [S.re * 0.003]));
+                            FSWrite(F, Format('%8.1f', [S.im * 0.003]));
 
                             if j = 1 then
                             begin
@@ -1032,13 +1028,13 @@ begin
                                 S := PDElem.ExcesskVANorm[1];
                                 if Opt = 1 then
                                     S := CmulReal(S, 0.001);
-                                FSWrite(F, Format('%-11.1g', [S.re]));
-                                FSWrite(F, Format('%-11.1g', [S.im]));
+                                FSWrite(F, Format('%11.1f', [S.re]));
+                                FSWrite(F, Format('%11.1f', [S.im]));
                                 S := PDElem.ExcesskVAEmerg[1];
                                 if Opt = 1 then
                                     S := CmulReal(S, 0.001);
-                                FSWrite(F, Format('%-11.1g', [S.re]));
-                                FSWrite(F, Format('%-11.1g', [S.im]));
+                                FSWrite(F, Format('%11.1f', [S.re]));
+                                FSWrite(F, Format('%11.1f', [S.im]));
                             end;
                             FSWriteln(F);
 
@@ -1060,7 +1056,7 @@ begin
 
                         for j := 1 to NTerm do
                         begin
-                            FSWrite(F, Pad(FullName(pCElem), MaxDeviceNameLength + 2) + Format('%-3d', [j]));
+                            FSWrite(F, Pad(FullName(pCElem), MaxDeviceNameLength + 2) + Format('%3d', [j]));
                             for i := 1 to min(3, pcElem.Nphases) do
                             begin
                                 k := (j - 1) * Ncond + i;
@@ -1096,18 +1092,18 @@ begin
                             S := Cmul(V012[2], conjg(I012[2]));
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
-                            FSWrite(F, Format('%-11.1g', [S.re * 0.003]));
-                            FSWrite(F, Format('%-11.1g', [S.im * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.re * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.im * 0.003]));
                             S := Cmul(V012[3], conjg(I012[3]));
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
-                            FSWrite(F, Format('%-11.1g', [S.re * 0.003]));
-                            FSWrite(F, Format('%-11.1g', [S.im * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.re * 0.003]));
+                            FSWrite(F, Format('%11.1f', [S.im * 0.003]));
                             S := Cmul(V012[1], conjg(I012[1]));
                             if Opt = 1 then
                                 S := CmulReal(S, 0.001);
-                            FSWrite(F, Format('%-8.1g', [S.re * 0.003]));
-                            FSWrite(F, Format('%-8.1g', [S.im * 0.003]));
+                            FSWrite(F, Format('%8.1f', [S.re * 0.003]));
+                            FSWrite(F, Format('%8.1f', [S.im * 0.003]));
 
 
                             FSWriteln(F);
@@ -1165,13 +1161,13 @@ begin
                                 if Opt = 1 then
                                     S := CmulReal(S, 0.001);
                                 Caccum(Saccum, S);
-                                FSWrite(F, Format('%s %-4d    %-8.1g +j %-8.1g', 
+                                FSWrite(F, Format('%s %4d    %8.1f +j %8.1f', 
                                     [UpperCase(FromBus), GetNodeNum(DSS, p_Elem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0]
                                 ));
-                                FSWriteln(F, Format('   %-8.1g     %-8.4g', [Cabs(S) / 1000.0, PowerFactor(S)]));
+                                FSWriteln(F, Format('   %8.1f     %8.4f', [Cabs(S) / 1000.0, PowerFactor(S)]));
                             end;
-                            FSWrite(F, Format('%s%-8.1g +j %-8.1g', [Paddots('   TERMINAL TOTAL', MaxBusNameLength + 10), Saccum.re / 1000.0, Saccum.im / 1000.0]));
-                            FSWriteln(F, Format('   %-8.1g     %-8.4g', [Cabs(Saccum) / 1000.0, PowerFactor(Saccum)]));
+                            FSWrite(F, Format('%s%8.1f +j %8.1f', [Paddots('   TERMINAL TOTAL', MaxBusNameLength + 10), Saccum.re / 1000.0, Saccum.im / 1000.0]));
+                            FSWriteln(F, Format('   %8.1f     %8.4f', [Cabs(Saccum) / 1000.0, PowerFactor(Saccum)]));
                             FromBus := Pad(StripExtension(p_Elem.Nextbus), MaxBusNameLength);
                         end;
                         FSWriteln(F);
@@ -1429,18 +1425,18 @@ begin
 
         if Opt = 1 then
             S := CmulReal(S, 0.001);
-        FSWrite(F, Format('%-11.1g', [S.re * 0.003]));
-        FSWrite(F, Format('%-11.1g', [S.im * 0.003]));
+        FSWrite(F, Format('%11.1f', [S.re * 0.003]));
+        FSWrite(F, Format('%11.1f', [S.im * 0.003]));
         S := Cmul(V012[3], conjg(I012[3]));
         if Opt = 1 then
             S := CmulReal(S, 0.001);
-        FSWrite(F, Format('%-11.1g', [S.re * 0.003]));
-        FSWrite(F, Format('%-11.1g', [S.im * 0.003]));
+        FSWrite(F, Format('%11.1f', [S.re * 0.003]));
+        FSWrite(F, Format('%11.1f', [S.im * 0.003]));
         S := Cmul(V012[1], conjg(I012[1]));
         if Opt = 1 then
             S := CmulReal(S, 0.001);
-        FSWrite(F, Format('%-8.1g', [S.re * 0.003]));
-        FSWrite(F, Format('%-8.1g', [S.im * 0.003]));
+        FSWrite(F, Format('%8.1f', [S.re * 0.003]));
+        FSWrite(F, Format('%8.1f', [S.im * 0.003]));
 
         FSWriteln(F);
 
@@ -2221,7 +2217,7 @@ begin
                 FSWrite(F, Pad(EncloseQuotes(BusList.NameOfIndex(i)), MaxBusNameLength) + ' ');
                 pBus := Buses^[i];
                 if pBus.kVBase > 0.0 then
-                    FSWrite(F, Format('%-7.3g', [pBus.kVbase * SQRT3]))
+                    FSWrite(F, Format('%7.3f', [pBus.kVbase * SQRT3]))
                 else
                     FSWrite(F, '   NA ');
                 FSWrite(F, '          (');
@@ -2234,11 +2230,11 @@ begin
                 else
                     FSWrite(F, '     No  ');
                 FSWrite(F, '     ');
-                FSWrite(F, Format('%-5d', [pBus.NumNodesThisBus]));
+                FSWrite(F, Format('%5d', [pBus.NumNodesThisBus]));
                 FSWrite(F, '       ');
                 for j := 1 to pBus.NumNodesThisBus do
                 begin
-                    FSWrite(F, Format('%-4d', [pBus.GetNum(j)]));
+                    FSWrite(F, Format('%4d ', [pBus.GetNum(j)]));
                 end;
                 FSWriteln(F);
             end;
@@ -2306,7 +2302,7 @@ begin
                         FSWrite(F, Pad(pElem.Name, 12));
                         for j := 1 to NumEMRegisters do
                         begin
-                            FSWrite(F, Format('%10.0g ', [PElem.Registers[j]]));
+                            FSWrite(F, Format('%10.0f ', [PElem.Registers[j]]));
                         end;
                     end;
                     pElem := DSS.ActiveCircuit.EnergyMeters.Next;
@@ -2361,7 +2357,7 @@ begin
                     FSWrite(F, Pad(pElem.Name, 12));
                     for j := 1 to NumGenRegisters do
                     begin
-                        FSWrite(F, Format('%10.0g ', [PElem.Registers[j]]));
+                        FSWrite(F, Format('%10.0f ', [PElem.Registers[j]]));
                     end;
                 end;
                 pElem := DSS.ActiveCircuit.Generators.Next;
@@ -2600,28 +2596,28 @@ begin
                         if (PdElem.Normamps > 0.0) or (PdElem.Emergamps > 0.0) then
                             if (CMax > PDElem.NormAmps) or (Cmax > pdelem.EmergAmps) then
                             begin
-                                FSWrite(F, Pad(FullName(PDelem), MaxDeviceNameLength + 2) + IntToStr(j));
-                                FSWrite(F, Format('%-8.1g', [I1]));
+                                FSWrite(F, Pad(FullName(PDelem), MaxDeviceNameLength + 2));
+                                FSWrite(F, Format('%3d%8.1f', [j, I1]));
                                 if PDElem.Normamps > 0.0 then
-                                    FSWrite(F, Format('%-8.2g', [Cmax - PDElem.Normamps]))
+                                    FSWrite(F, Format('%8.2f', [Cmax - PDElem.Normamps]))
                                 else
                                     FSWrite(F, '     0.0');
                                 if PDElem.Normamps > 0.0 then
-                                    FSWrite(F, Format('%-8.1g', [Cmax / PDElem.Normamps * 100.0]))
+                                    FSWrite(F, Format('%8.1f', [Cmax / PDElem.Normamps * 100.0]))
                                 else
                                     FSWrite(F, '     0.0');
                                 if PDElem.Emergamps > 0.0 then
-                                    FSWrite(F, Format('%-8.1g', [Cmax / PDElem.Emergamps * 100.0]))
+                                    FSWrite(F, Format('%8.1f', [Cmax / PDElem.Emergamps * 100.0]))
                                 else
                                     FSWrite(F, '     0.0');
-                                FSWrite(F, Format('%-8.1g', [I2]));
+                                FSWrite(F, Format('%8.1f', [I2]));
                                 if I1 > 0.0 then
-                                    FSWrite(F, Format('%-8.1g', [100.0 * I2 / I1]))
+                                    FSWrite(F, Format('%8.1f', [100.0 * I2 / I1]))
                                 else
                                     FSWrite(F, '     0.0');
-                                FSWrite(F, Format('%-8.1g', [I0]));
+                                FSWrite(F, Format('%8.1f', [I0]));
                                 if I1 > 0.0 then
-                                    FSWrite(F, Format('%-8.1g', [100.0 * I0 / I1]))
+                                    FSWrite(F, Format('%8.1f', [100.0 * I0 / I1]))
                                 else
                                     FSWrite(F, '     0.0');
                                 FSWriteln(F);
@@ -2683,9 +2679,9 @@ begin
                 begin
                     FSWrite(F, Pad(pLoad.Name, 20));
                     FSWrite(F, Pad(pLoad.GetBus(1), 10));
-                    FSWrite(F, Format('%-8.0g', [pLoad.kWBase]));
-                    FSWrite(F, Format('%-9.3g', [pLoad.EEN_Factor]));
-                    FSWrite(F, Format('%-9.3g', [pLoad.UE_Factor]));
+                    FSWrite(F, Format('%8.0f', [pLoad.kWBase]));
+                    FSWrite(F, Format('%9.3f', [pLoad.EEN_Factor]));
+                    FSWrite(F, Format('%9.3f', [pLoad.UE_Factor]));
                     FSWriteln(F);
                 end;
 
@@ -2764,9 +2760,9 @@ begin
                 FSWrite(F, Pad(FullName(PDelem), MaxDeviceNameLength + 2));
                 FSWrite(F, Format('%10.5f, ', [kLosses.re]));
                 if (TermPower.re <> 0.0) and (kLosses.re > 0.0009) then
-                    FSWrite(F, Format('%-8.2g', [(kLosses.re / Abs(TermPower.re) * 100.0)]))
+                    FSWrite(F, Format('%8.2f', [(kLosses.re / Abs(TermPower.re) * 100.0)]))
                 else
-                    FSWrite(F, Format('%-8.1g', [CZERO.RE]));
+                    FSWrite(F, Format('%8.1f', [CZERO.RE]));
                 FSWrite(F, Format('     %.6g', [kLosses.im]));
                 FSWriteln(F);
             end;

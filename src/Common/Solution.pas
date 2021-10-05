@@ -1919,8 +1919,8 @@ begin
     FSWriteln(F, StrYorN(DSS.ActiveCircuit.DuplicatesAllowed));
     FSWrite(F, 'Set zonelock=');
     FSWriteln(F, StrYorN(DSS.ActiveCircuit.ZonesLocked));
-    FSWriteln(F, Format('Set ueweight=%8.2g', [DSS.ActiveCircuit.UEWeight]));
-    FSWriteln(F, Format('Set lossweight=%8.2g', [DSS.ActiveCircuit.LossWeight]));
+    FSWriteln(F, Format('Set ueweight=%8.2f', [DSS.ActiveCircuit.UEWeight]));
+    FSWriteln(F, Format('Set lossweight=%8.2f', [DSS.ActiveCircuit.LossWeight]));
     FSWriteln(F, 'Set ueregs=', IntArraytoString(DSS.ActiveCircuit.UEregs, DSS.ActiveCircuit.NumUERegs));
     FSWriteln(F, 'Set lossregs=', IntArraytoString(DSS.ActiveCircuit.Lossregs, DSS.ActiveCircuit.NumLossRegs));
     FSWrite(F, 'Set voltagebases=(');  //  changes the default voltage base rules
@@ -1928,7 +1928,7 @@ begin
     with DSS.ActiveCircuit do
         while LegalVoltageBases^[i] > 0.0 do
         begin
-            FSWrite(F, Format('%10.2g', [LegalVoltageBases^[i]]));
+            FSWrite(F, Format('%10.2f', [LegalVoltageBases^[i]]));
             inc(i);
         end;
     FSWriteln(F, ')');

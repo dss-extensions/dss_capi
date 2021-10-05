@@ -1712,7 +1712,7 @@ begin
                                 MaxCurr := Cabs(BusCurrent^[i]);
                             ;
                         end;
-                        FSWrite(F, Separator, Format('%-10g', [maxCurr]));
+                        FSWrite(F, Separator, Format('%10f', [maxCurr]));
 
            {One Phase Faults}
 
@@ -1742,7 +1742,7 @@ begin
 
                         end; {For iphase}
              {Now, Stuff it in the Css Array where it belongs}
-                        FSWrite(F, Separator, Format('%-10g', [maxCurr]));
+                        FSWrite(F, Separator, Format('%10f', [maxCurr]));
 
                         Freemem(VFault);
                         YFault.Free;
@@ -1775,7 +1775,7 @@ begin
                         end; {For iphase}
              {Now, Stuff it in the Css Array where it belongs}
 
-                        FSWrite(F, Separator, Format('%-10g', [maxCurr]));
+                        FSWrite(F, Separator, Format('%10f', [maxCurr]));
 
                         Freemem(VFault);
                         YFault.Free;
@@ -1970,7 +1970,7 @@ begin
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
-                    FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                 FSWriteln(F);
                 AppendGlobalResult(DSS, FileNm);
             finally
@@ -2053,7 +2053,7 @@ begin
                 FSWrite(F, IntToStr(DSS.ActiveCircuit.Solution.DynaVars.intHour), Separator);
                 FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                 for j := 1 to NumEMRegisters do
-                    FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                    FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                 FSWriteln(F);
             end;
             pElem := DSS.ActiveCircuit.EnergyMeters.Next;
@@ -2133,7 +2133,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumGenRegisters do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
                 AppendGlobalResult(DSS, FileNm);
@@ -2223,7 +2223,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumGenRegisters do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));                        
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));                        
                     FSWriteln(F);
                 end;
 
@@ -2292,7 +2292,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
                 AppendGlobalResult(DSS, FileNm);
@@ -2350,7 +2350,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystem2Registers do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
                 AppendGlobalResult(DSS, FileNm);
@@ -2445,7 +2445,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystemRegisters do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
 
@@ -2534,7 +2534,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumPVSystem2Registers do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
 
@@ -2605,7 +2605,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorageRegisters do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
                 AppendGlobalResult(DSS, FileNm);
@@ -2661,7 +2661,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorage2Registers do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
                 AppendGlobalResult(DSS, FileNm);
@@ -2754,7 +2754,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorageRegisters do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
 
@@ -2842,7 +2842,7 @@ begin
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
                     for j := 1 to NumStorage2Registers do
-                        FSWrite(F, Separator, Format('%-10.0g', [PElem.Registers[j]]));
+                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
 
@@ -2973,7 +2973,7 @@ begin
                         Separator, kWBase: 8: 1,
                         Separator, kvarBase: 8: 1,
                         Separator, PFNominal: 5: 3,
-                        Separator, FLoadModel: 0
+                        Separator, Ord(FLoadModel): 0
                     );
                     FSWrite(F, sout);
                 end;

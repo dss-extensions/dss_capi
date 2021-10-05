@@ -2361,25 +2361,25 @@ begin
         begin
             case i of
                 4:
-                    FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[i], kWBase]));
+                    FSWriteln(F, Format('~ %s=%8.1f', [PropertyName^[i], kWBase]));
                 5:
-                    FSWriteln(F, Format('~ %s=%5.3g', [PropertyName^[i], PFNominal]));
+                    FSWriteln(F, Format('~ %s=%5.3f', [PropertyName^[i], PFNominal]));
                 12:
-                    FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[i], kvarBase]));
+                    FSWriteln(F, Format('~ %s=%8.1f', [PropertyName^[i], kvarBase]));
                 22:
-                    FSWriteln(F, Format('~ %s=%5.3g', [PropertyName^[i], FkVAAllocationFactor]));
+                    FSWriteln(F, Format('~ %s=%5.3f', [PropertyName^[i], FkVAAllocationFactor]));
                 23:
-                    FSWriteln(F, Format('~ %s=%8.1g', [PropertyName^[i], kVABase]));
+                    FSWriteln(F, Format('~ %s=%8.1f', [PropertyName^[i], kVABase]));
                 33:
                 if ZIPVset then
                 begin
                     FSWrite(F, '~ ' + PropertyName^[i] + '=');
                     for j := 1 to nZIPV do
-                        FSWrite(F, Format('%.2g ', [ZIPV[j]]));
+                        FSWrite(F, Format('%.2f ', [ZIPV[j]]));
                     FSWriteln(F, '"');
                 end;
                 34:
-                    FSWriteln(F, Format('~ %s=%8.1g', [(puSeriesRL * 100.0)]));
+                    FSWriteln(F, Format('~ %s=%8.1f', [(puSeriesRL * 100.0)]));
             else
                 FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
             end;

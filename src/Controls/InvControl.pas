@@ -206,9 +206,6 @@ end;
             FUNCTION  ReturnElementsList:String;
             PROCEDURE UpdateInvControl(i:integer);
      public
-            {$IFNDEF FPC}
-            MyMemoryManagerState: System.TMemoryManagerState;
-            {$ENDIF}
             constructor Create(ParClass:TDSSClass; const InvControlName:String);
             destructor  Destroy; override;
 

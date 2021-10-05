@@ -1315,7 +1315,7 @@ begin
         begin
             for j := 1 to Fnphases do
             begin
-                FSWrite(F, Format('%.9g ', [(Z.GetElement(i, j).re / LengthMult / FunitsConvert)]));
+                FSWrite(F, Format('%.9f ', [(Z.GetElement(i, j).re / LengthMult / FunitsConvert)]));
             end;
             FSWrite(F, '|');
         end;
@@ -1325,7 +1325,7 @@ begin
         begin
             for j := 1 to Fnphases do
             begin
-                FSWrite(F, Format('%.9g ', [(Z.GetElement(i, j).im / LengthMult / FunitsConvert)]));
+                FSWrite(F, Format('%.9f ', [(Z.GetElement(i, j).im / LengthMult / FunitsConvert)]));
             end;
             FSWrite(F, '|');
         end;
@@ -1335,7 +1335,7 @@ begin
         begin
             for j := 1 to Fnphases do
             begin
-                FSWrite(F, Format('%.3g ', [(Yc.GetElement(i, j).im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9)]));
+                FSWrite(F, Format('%.3f ', [(Yc.GetElement(i, j).im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9)]));
             end;
             FSWrite(F, '|');
         end;

@@ -1283,8 +1283,8 @@ begin
     if Complete then
     begin
         FSWriteln(F);
-        FSWriteln(F, Format('BaseFrequency=%.1g', [BaseFrequency]));
-        FSWriteln(F, Format('VMag=%.2g', [VMag]));
+        FSWriteln(F, Format('BaseFrequency=%.1f', [BaseFrequency]));
+        FSWriteln(F, Format('VMag=%.2f', [VMag]));
         FSWriteln(F, 'Z Matrix=');
         for i := 1 to Fnphases do
         begin

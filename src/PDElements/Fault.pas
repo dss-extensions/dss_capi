@@ -640,26 +640,26 @@ begin
         FSWriteln(F, '~ ' + PropertyName^[2] + '=' + nextbus);
 
         FSWriteln(F, Format('~ %s=%d', [PropertyName^[3], Fnphases]));
-        FSWriteln(F, Format('~ %s=%.2g', [PropertyName^[4], (1.0 / G)]));
-        FSWriteln(F, Format('~ %s=%.1g', [PropertyName^[5], (StdDev * 100.0)]));
+        FSWriteln(F, Format('~ %s=%.2f', [PropertyName^[4], (1.0 / G)]));
+        FSWriteln(F, Format('~ %s=%.1f', [PropertyName^[5], (StdDev * 100.0)]));
         if Gmatrix <> NIL then
         begin
             FSWrite(F, '~ ' + PropertyName^[6] + '= (');
             for i := 1 to Fnphases do
             begin
                 for j := 1 to i do
-                    FSWrite(F, Format('%.3g ', [(Gmatrix^[(i - 1) * Fnphases + j])]));
+                    FSWrite(F, Format('%.3f ', [(Gmatrix^[(i - 1) * Fnphases + j])]));
                 if i <> Fnphases then
                     FSWrite(F, '|');
             end;
             FSWriteln(F, ')');
         end;
-        FSWriteln(F, Format('~ %s=%.3g', [PropertyName^[7], ON_Time]));
+        FSWriteln(F, Format('~ %s=%.3f', [PropertyName^[7], ON_Time]));
         if IsTemporary then
             FSWriteln(F, '~ ' + PropertyName^[8] + '= Yes')
         else
             FSWriteln(F, '~ ' + PropertyName^[8] + '= No');
-        FSWriteln(F, Format('~ %s=%.1g', [PropertyName^[9], Minamps]));
+        FSWriteln(F, Format('~ %s=%.1f', [PropertyName^[9], Minamps]));
 
 
         for i := NumPropsthisClass to NumProperties do
