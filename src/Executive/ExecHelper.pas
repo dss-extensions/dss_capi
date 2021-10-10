@@ -2049,7 +2049,7 @@ Begin
     Begin
       NValues := NConds*Nterms;
       DSS.GlobalResult := '';
-      cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+      cBuffer := Allocmem(sizeof(Complex)*NValues);
       GetPhasePower(cBuffer);
       if Total = 0 then
       Begin

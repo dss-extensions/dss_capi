@@ -2939,7 +2939,7 @@ Procedure TInvControlObj.CalcDRC_vars(j: Integer);
 VAR
 
   DeltaQ,basekV,
-  QTemp,TempQ     :Double;
+  QTemp{,TempQ}     :Double;
   // SMonitoredElement                         :Complex;
 
 
@@ -3008,8 +3008,8 @@ BEGIN
         end;
       if FVV_ReacPower_ref = 'VARAVAL_WATTS' then DeltaQ := QDRCDesiredpu[j]*PVSys.kVARating - QoldDRC[j]
       else DeltaQ := QDRCDesiredpu[j]*PVSys.kvarLimit - QoldDRC[j];
-      if FVV_ReacPower_ref = 'VARAVAL_WATTS' then TempQ := QDRCDesiredpu[j]*PVSys.kVARating
-      else TempQ := QDRCDesiredpu[j]*PVSys.kvarLimit;
+      // if FVV_ReacPower_ref = 'VARAVAL_WATTS' then TempQ := QDRCDesiredpu[j]*PVSys.kVARating
+      // else TempQ := QDRCDesiredpu[j]*PVSys.kvarLimit;
       if abs(DeltaQ) > PVSys.kvarLimit then DeltaQ := 1.0*sign(DeltaQ)*PVSys.kvarLimit;
 
       QDRCNew[j]       := QoldDRC[j]+(DeltaQ*FDeltaQ_factor);

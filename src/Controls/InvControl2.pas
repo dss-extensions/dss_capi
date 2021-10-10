@@ -4178,19 +4178,19 @@ procedure TInvControl2Obj.CalcQVVcurve_desiredpu(j: Integer);
 
 procedure TInvControl2Obj.CalcQWVcurve_desiredpu(j: Integer);
   VAR
-    voltagechangesolution                    :Double;
+    // voltagechangesolution                    :Double;
     Pbase                                    :Double;
   begin
 
     QDesireWVpu[j] := 0.0;
 
-    voltagechangesolution := 0.0;
+    // voltagechangesolution := 0.0;
 
     // for first two seconds, keep voltagechangesolution equal to zero
     // we don't have solutions from the time-series power flow, yet
-    if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
-    else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
-    else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
+    // if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
+    // else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
+    // else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
 
     Pbase:= Min(FkVARating[j], FDCkWRated[j]); // Should include DC-to-AC and kW-to-KVA ratios to avoid to quick fix like this
 
@@ -4200,7 +4200,7 @@ procedure TInvControl2Obj.CalcQWVcurve_desiredpu(j: Integer);
 
 procedure TInvControl2Obj.CalcQAVR_desiredpu(j: Integer);
   VAR
-    voltagechangesolution                    : Double;
+    // voltagechangesolution                    : Double;
     DQ                                       : Double;
     QPresentpu                               : Double;
     DQmax                                    : Double;
@@ -4224,13 +4224,13 @@ procedure TInvControl2Obj.CalcQAVR_desiredpu(j: Integer);
     else
         v := FPresentVpu[j];
 
-    voltagechangesolution := 0.0;
+    // voltagechangesolution := 0.0;
 
     // for first two seconds, keep voltagechangesolution equal to zero
     // we don't have solutions from the time-series power flow, yet
-    if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
-    else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
-    else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
+    // if ((ActiveCircuit.Solution.DynaVars.dblHour*3600.0 / ActiveCircuit.Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
+    // else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
+    // else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
 
     DeltaV := Abs(Fv_setpoint - FAvgpVpuPrior[j]);
 
@@ -4324,7 +4324,7 @@ procedure TInvControl2Obj.CalcQDRC_desiredpu(j: Integer);
 
 procedure TInvControl2Obj.Check_Qlimits_WV(j: Integer; Q: Double);
   VAR
-    Q_Ppriority                              :Double;
+    // Q_Ppriority                              :Double;
     currentkvarlimitpu                       :Double;
     currentkvarlimitnegpu                    :Double;
     FOperation                               :Double;
@@ -4372,12 +4372,12 @@ procedure TInvControl2Obj.Check_Qlimits_WV(j: Integer; Q: Double);
 procedure TInvControl2Obj.Calc_PQ_WV(j: Integer);
 VAR
   coeff: TCoeff;
-  QPratio, 
-  pre_S, 
+  // QPratio, 
+  // pre_S, 
   var_limit_operation_value, 
   Pbase, 
   Qbase, 
-  Qbasesign, 
+  // Qbasesign, 
   A, 
   B, 
   C, 
@@ -4390,12 +4390,12 @@ begin
   if QDesiredWV[j] >= 0.0 then
     begin
       Qbase := QHeadroom[j];
-      Qbasesign := 1.0;
+      // Qbasesign := 1.0;
     end
   else
     begin
       Qbase := QHeadroomNeg[j];
-      Qbasesign := -1.0;
+      // Qbasesign := -1.0;
     end;
 
   var_limit_operation_value := 0.2;

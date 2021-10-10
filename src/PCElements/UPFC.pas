@@ -1002,15 +1002,12 @@ end;
 //===========================================================================
 function TUPFCObj.CheckStatus: Boolean;
 var
-    i: Integer;
     Error,
-    TError,
     VinMag,
     RefH,
     RefL: Double;
     Vpolar: polar;
-    VTemp,
-    CurrOut: Complex;
+    // CurrOut: Complex;
 begin
     Result := FALSE;
   
@@ -1020,14 +1017,15 @@ begin
     if (VinMag > VHLimit) or (VinMag < VLLimit) then
     begin   // Check Limits (Voltage)
         UPFCON := False;
-        CurrOut := cmplx(0,0);
+        //CurrOut := cmplx(0,0);
         Exit;
     end;
 
     // Limits OK
     case ModeUPFC of
         0:
-            CurrOut := cmplx(0,0); //UPFC off
+            // CurrOut := cmplx(0,0); //UPFC off
+            ;
         1:  
         begin //UPFC as a voltage regulator
             Vpolar := ctopolar(Vbout);
@@ -1036,7 +1034,8 @@ begin
                 Result := True;
         end;
         2:  
-            CurrOut := cmplx(0,0); //UPFC as a phase angle regulator
+            // CurrOut := cmplx(0,0); //UPFC as a phase angle regulator
+            ;
         3:
         begin //UPFC in Dual mode Voltage and Phase angle regulator
             Vpolar := ctopolar(Vbout);

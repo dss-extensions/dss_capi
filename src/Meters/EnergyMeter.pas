@@ -169,8 +169,7 @@ type
 
         procedure Clear;
         procedure Integrate(var Reg: Double; Value: Double; var Deriv: Double);
-        procedure WriteRegisters(F: TFileStream);
-        procedure WriteRegisterNames(F: TFileStream);
+        procedure WriteRegisters();
 
     PROTECTED
 
@@ -3578,8 +3577,8 @@ var
     RSignal: TXYCurveObj;
     i, j, k,
     RatingIdx: Integer;
-    cVector,
-    cBuffer: pDoubleArray;
+    dVector,
+    dBuffer: pDoubleArray;
 
 begin
 {
@@ -3641,11 +3640,11 @@ begin
                 begin
 
               // Gets the currents for the active Element
-                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * PDElem.NPhases * PDElem.NTerms);
-                    PDElem.Get_Current_Mags(cBuffer);
-                    cVector := Allocmem(sizeof(cBuffer^[1]) * 3); // for storing
+                    dBuffer := Allocmem(sizeof(Double) * PDElem.NPhases * PDElem.NTerms);
+                    PDElem.Get_Current_Mags(dBuffer);
+                    dVector := Allocmem(sizeof(Double) * 3); // for storing
                     for i := 1 to 3 do
-                        cVector^[i] := 0.0;
+                        dVector^[i] := 0.0;
                     if PDElem.NPhases < 3 then
                     begin
                         ClassName := PDElem.FirstBus;
@@ -3657,13 +3656,13 @@ begin
                             if j = 0 then
                             begin
                                 k := strtoint(ClassName);
-                                cVector^[k] := cBuffer^[i];
+                                dVector^[k] := dBuffer^[i];
                                 break
                             end
                             else
                             begin
                                 k := strtoint(ClassName.Substring(0, j - 1));
-                                cVector^[k] := cBuffer^[i];
+                                dVector^[k] := dBuffer^[i];
                                 ClassName := ClassName.Substring(j);
                             end;
                         end;
@@ -3671,7 +3670,7 @@ begin
                     else
                     begin
                         for i := 1 to 3 do
-                            cVector^[i] := cBuffer^[i];
+                            dVector^[i] := dBuffer^[i];
                     end;
 
                     with DSS.ActiveCircuit.Solution do
@@ -3691,7 +3690,7 @@ begin
                         WriteintoMem(OV_MHandle, Buses^[MapNodeToBus^[PDElem.NodeRef^[1]].BusRef].kVBase);
               // Adds the currents in Amps per phase at the end of the report
                     for i := 1 to 3 do
-                        WriteintoMem(OV_MHandle, cVector^[i]);
+                        WriteintoMem(OV_MHandle, dVector^[i]);
 
                     WriteintoMemStr(OV_MHandle, ' ' + Char(10));
 
@@ -3853,7 +3852,6 @@ end;
 
 procedure TSystemMeter.Save;
 var
-    F: TFileStream;
     CSVName, Folder: String;
 begin
     try
@@ -3882,7 +3880,7 @@ begin
             SM_MHandle := Create_Meter_Space('Year, ');
             WriteintoMemStr(SM_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
             WriteintoMemStr(SM_MHandle, inttostr(DSS.ActiveCircuit.Solution.Year));
-            WriteRegisters(F);
+            WriteRegisters();
             WriteintoMemStr(SM_MHandle, Char(10));
 
         finally
@@ -3952,12 +3950,7 @@ begin
     end;
 end;
 
-procedure TSystemMeter.WriteRegisterNames(F: TFileStream);
-begin
-// Does nothing
-end;
-
-procedure TSystemMeter.WriteRegisters(F: TFileStream);
+procedure TSystemMeter.WriteRegisters();
 begin
     with DSS.EnergyMeterClass do
     begin

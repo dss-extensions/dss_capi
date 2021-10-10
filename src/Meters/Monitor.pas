@@ -832,9 +832,7 @@ var
     iMin: Integer;
     IsPosSeq: Boolean;
     IsPower: Boolean;
-    NameOfState: Ansistring;
     NumVI: Integer;
-    Str_Temp: Ansistring;
 begin
     try
         MonitorStream.Clear;
@@ -1340,7 +1338,6 @@ var
     BuffEnd,
     i, j, k,
     myRefIdx,
-    CalcEnd,
     NumVI: Integer;
     Offset: Integer;
     ResidualCurr: Complex;
