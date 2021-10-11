@@ -129,7 +129,7 @@ begin
 
     DefineProperties;
 
-    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
     CommandList.Abbrev := FALSE;
 
 end;

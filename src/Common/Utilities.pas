@@ -1,3 +1,4 @@
+
 unit Utilities;
 
 {
@@ -180,6 +181,9 @@ procedure FSWrite(F: TFileStream; S: String; S2: String; S3: String); inline; ov
 
 procedure FSReadln(F: TFileStream; out S: String);
 procedure FSFlush(F: TFileStream);
+
+function SliceProps(props: pStringArray; count: Integer): ArrayOfString; // The built-in Slice was causing issues on ARM64
+
 implementation
 
 uses
@@ -3682,6 +3686,15 @@ begin
 {$ELSE}
     FPFSync(F.Handle);
 {$ENDIF}
+end;
+
+function SliceProps(props: pStringArray; count: Integer): ArrayOfString; // The built-in Slice was causing issues on ARM64
+var
+    i: Integer;
+begin
+    SetLength(Result, count);
+    for i := 1 to count do
+        Result[i - 1] := props[i];
 end;
 
 end.

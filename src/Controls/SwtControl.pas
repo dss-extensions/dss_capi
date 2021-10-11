@@ -94,6 +94,7 @@ uses
 const
 
     NumPropsThisClass = 8;
+
 constructor TSwtControl.Create(dssContext: TDSSContext);  // Creates superstructure for all SwtControl objects
 begin
     inherited Create(dssContext);
@@ -103,7 +104,7 @@ begin
 
     DefineProperties;
 
-    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
     CommandList.Abbrev := TRUE;
 end;
 

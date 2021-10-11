@@ -34,6 +34,8 @@ type
     PDoubleArray0 = CAPI_Types.PDoubleArray0;
     PSingleArray0 = CAPI_Types.PSingleArray0;
 
+    ArrayOfString = Array of String;
+
     //pDouble = ^Double;
     //pSingle = ^Single;
     //pSmallInt = ^Smallint;

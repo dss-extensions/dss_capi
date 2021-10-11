@@ -396,7 +396,7 @@ begin
 
      // Use the Command processor to manage property names
      // PropertyName is an array of String defined in DefineProperties
-    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
     CommandList.Abbrev := TRUE;
 
     Generic5Class := Self;

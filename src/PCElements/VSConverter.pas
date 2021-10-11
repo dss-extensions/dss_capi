@@ -108,7 +108,7 @@ begin
     DSSClassType := VS_CONVERTER + PC_ELEMENT;
     ActiveElement := 0;
     DefineProperties;
-    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
     CommandList.Abbrev := TRUE;
 end;
 

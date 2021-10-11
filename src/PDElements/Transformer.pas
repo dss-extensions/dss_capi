@@ -268,7 +268,7 @@ begin
     DefineProperties;
 
      {Make space for transformer property list}
-    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
     CommandList.Abbrev := TRUE;     {Allow property list abbreviations}
 
 end;

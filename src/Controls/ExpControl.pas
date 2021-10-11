@@ -127,7 +127,7 @@ Begin
   Class_name   := 'ExpControl';
   DSSClassType := DSSClassType + EXP_CONTROL;
   DefineProperties;
-  CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+  CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
   CommandList.Abbrev := TRUE;
 End;
 

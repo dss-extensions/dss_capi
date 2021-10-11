@@ -34,7 +34,6 @@ USES
 
 
 TYPE
-    ArrayOfString = Array of String;
     TReductionStrategy = (rsDefault, rsShortlines, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
 
      // for adding markers to Plot
