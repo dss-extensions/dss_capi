@@ -81,14 +81,14 @@ end;
       XY_CurveClass: TDSSClass;
      protected
         PROCEDURE DefineProperties;
-        FUNCTION MakeLike(const InvControlName:String):Integer;Override;
+        FUNCTION MakeLike(const InvControlName:AnsiString):Integer;Override;
      public
        constructor Create(dssContext: TDSSContext);
        destructor Destroy; override;
 
        FUNCTION Edit:Integer; override;     // uses global parser
-       FUNCTION NewObject(const ObjName:String):Integer; override;
-       Function GetXYCurve(Const CurveName: String; InvControlMode: String): TXYcurveObj;
+       FUNCTION NewObject(const ObjName:AnsiString):Integer; override;
+       Function GetXYCurve(Const CurveName: AnsiString; InvControlMode: AnsiString): TXYcurveObj;
        PROCEDURE UpdateAll;
    end;
 
@@ -98,8 +98,8 @@ end;
    TInvControlObj = class(TControlElem)
      private
 
-            ControlMode      : String;
-            CombiControlMode      : String;
+            ControlMode      : AnsiString;
+            CombiControlMode      : AnsiString;
             ControlActionHandle: Integer;
             ControlledElement: Array of TPVSystemObj;    // list of pointers to controlled PVSystem elements
 
@@ -120,7 +120,7 @@ end;
 
             Fvvc_curve_size: Integer; // length of the individual curve
             Fvvc_curve: TXYcurveObj;
-            Fvvc_curvename: String;
+            Fvvc_curvename: AnsiString;
             Fvvc_curveOffset: Double;
             Fvvc_curve2: TXYcurveObj;
             FActiveVVCurve: Array of Integer;
@@ -131,13 +131,13 @@ end;
             FDRCVAvgWindowLengthSec: Double; // rolling average window length in seconds
             cBuffer : Array of Array of Complex;    // Complexarray buffer
             CondOffset : Array of Integer; // Offset for monitored terminal
-            FVV_ReacPower_ref: String;
+            FVV_ReacPower_ref: AnsiString;
 
             FVVDeltaVtolerance: Double;
 
             Fvoltwatt_curve_size: Integer;
             Fvoltwatt_curve: TXYcurveObj;
-            Fvoltwatt_curvename: String;
+            Fvoltwatt_curvename: AnsiString;
 
             FAvgpVuPrior: Array of Double;
             FPriorWattspu: Array of Double;
@@ -179,12 +179,12 @@ end;
             FDbVMin, FDbVMax,FArGraLowV,FArGraHiV: Double;
             FRollAvgWindow : Array of TRollAvgWindow;
             FRollAvgWindowLength : Integer;
-            FRollAvgWindowLengthIntervalUnit: String;
+            FRollAvgWindowLengthIntervalUnit: AnsiString;
             deltaVDynReac: Array of Double;
             priorRollAvgWindow: Array of Double;
             FDRCRollAvgWindow : Array of TRollAvgWindow;
             FDRCRollAvgWindowLength : Integer;
-            FDRCRollAvgWindowLengthIntervalUnit: String;
+            FDRCRollAvgWindowLengthIntervalUnit: AnsiString;
             priorDRCRollAvgWindow: Array of Double;
             FlagChangeCurve: Array of Boolean;
             FVoltwattYAxis: Integer; // 1 = %Pmpp, 0 = %Available power
@@ -201,12 +201,12 @@ end;
 
             PROCEDURE Set_PendingChange(Value: Integer;DevIndex: Integer);
             FUNCTION  Get_PendingChange(DevIndex: Integer):Integer;
-            FUNCTION  InterpretAvgVWindowLen(const s:string):Integer;
-            FUNCTION  InterpretDRCAvgVWindowLen(const s:string):Integer;
-            FUNCTION  ReturnElementsList:String;
+            FUNCTION  InterpretAvgVWindowLen(const s:AnsiString):Integer;
+            FUNCTION  InterpretDRCAvgVWindowLen(const s:AnsiString):Integer;
+            FUNCTION  ReturnElementsList:AnsiString;
             PROCEDURE UpdateInvControl(i:integer);
      public
-            constructor Create(ParClass:TDSSClass; const InvControlName:String);
+            constructor Create(ParClass:TDSSClass; const InvControlName:AnsiString);
             destructor  Destroy; override;
 
             PROCEDURE Set_Enabled(Value:Boolean);Override;
@@ -226,13 +226,13 @@ end;
             PROCEDURE   CalcVoltWatt_pu(j: Integer);
             PROCEDURE   CalcVoltVar_vars(j: Integer);
             PROCEDURE   CalcDRC_vars(j: Integer);
-            FUNCTION    CalcLPF(m: Integer; powertype: String;PVSys:TPVSystemObj):Double;
-            FUNCTION    CalcRF(m: Integer; powertype: String;PVSys:TPVSystemObj):Double;
+            FUNCTION    CalcLPF(m: Integer; powertype: AnsiString;PVSys:TPVSystemObj):Double;
+            FUNCTION    CalcRF(m: Integer; powertype: AnsiString;PVSys:TPVSystemObj):Double;
             PROCEDURE   InitPropertyValues(ArrayOffset:Integer);Override;
             PROCEDURE   DumpProperties(F: TFileStream; Complete:Boolean);Override;
 
             FUNCTION    MakePVSystemList:Boolean;
-            FUNCTION    GetPropertyValue(Index:Integer):String;Override;
+            FUNCTION    GetPropertyValue(Index:Integer):AnsiString;Override;
 
             Property    PendingChange[DevIndex: Integer]:Integer Read Get_PendingChange Write Set_PendingChange;
 
@@ -495,7 +495,7 @@ Begin
 End;
 
 {--------------------------------------------------------------------------}
-FUNCTION TInvControl.NewObject(const ObjName:String):Integer;
+FUNCTION TInvControl.NewObject(const ObjName:AnsiString):Integer;
 Begin
     // Make a new InvControl and add it to InvControl class list
     WITH ActiveCircuit Do
@@ -509,8 +509,8 @@ End;
 FUNCTION TInvControl.Edit:Integer;
 VAR
    ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
+   ParamName:AnsiString;
+   Param:AnsiString;
 
 
 Begin
@@ -699,7 +699,7 @@ End;
 
 
 {--------------------------------------------------------------------------}
-FUNCTION TInvControl.MakeLike(const InvControlName:String):Integer;
+FUNCTION TInvControl.MakeLike(const InvControlName:AnsiString):Integer;
 VAR
    OtherInvControl:TInvControlObj;
    i, j:Integer;
@@ -789,7 +789,7 @@ End;
 
 
 {--------------------------------------------------------------------------}
-constructor TInvControlObj.Create(ParClass:TDSSClass; const InvControlName:String);
+constructor TInvControlObj.Create(ParClass:TDSSClass; const InvControlName:AnsiString);
 
 Begin
      Inherited Create(ParClass);
@@ -2578,7 +2578,7 @@ end;
 
 { -------------------------------------------------------------------------- }
 
-Function TInvControl.GetXYCurve(Const CurveName: String;InvControlMode: String): TXYcurveObj;
+Function TInvControl.GetXYCurve(Const CurveName: AnsiString;InvControlMode: AnsiString): TXYcurveObj;
 VAR
   i: Integer;
 Begin
@@ -2613,12 +2613,12 @@ End;
 
 { -------------------------------------------------------------------------- }
 
-FUNCTION  TInvControlObj.InterpretAvgVWindowLen(const s:string):Integer;
+FUNCTION  TInvControlObj.InterpretAvgVWindowLen(const s:AnsiString):Integer;
 
 Var
    Code :Integer;
    ch :char;
-   s2 :String;
+   s2 :AnsiString;
 
 Begin
      {Try to convert and see if we get an error}
@@ -2667,12 +2667,12 @@ Begin
      end;
 End;
 
-FUNCTION  TInvControlObj.InterpretDRCAvgVWindowLen(const s:string):Integer;
+FUNCTION  TInvControlObj.InterpretDRCAvgVWindowLen(const s:AnsiString):Integer;
 
 Var
    Code :Integer;
    ch :char;
-   s2 :String;
+   s2 :AnsiString;
 
 Begin
      {Try to convert and see if we get an error}
@@ -2722,7 +2722,7 @@ Begin
 End;
 
 {--------------------------------------------------------------------------}
-FUNCTION TInvControlObj.GetPropertyValue(Index: Integer): String;
+FUNCTION TInvControlObj.GetPropertyValue(Index: Integer): AnsiString;
 
 
 
@@ -2782,7 +2782,7 @@ End;
 {--------------------------------------------------------------------------}
 
 //----------------------------------------------------------------------------
-FUNCTION TInvControlObj.ReturnElementsList: String;
+FUNCTION TInvControlObj.ReturnElementsList: AnsiString;
 VAR
      i :Integer;
 Begin
@@ -3017,7 +3017,7 @@ BEGIN
 
 END;
 
-FUNCTION TInvControlObj.CalcLPF(m: Integer; powertype: String;PVSys:TPVSystemObj):Double;
+FUNCTION TInvControlObj.CalcLPF(m: Integer; powertype: AnsiString;PVSys:TPVSystemObj):Double;
 VAR
   Pdesiredpu                :Double;
   DeltaQ,alpha,DeltaP,
@@ -3051,7 +3051,7 @@ BEGIN
   end;
 END;
 
-FUNCTION TInvControlObj.CalcRF(m: Integer;powertype: String;PVSys:TPVSystemObj):Double;
+FUNCTION TInvControlObj.CalcRF(m: Integer;powertype: AnsiString;PVSys:TPVSystemObj):Double;
 VAR
   Pdesiredpu                                :Double;
   DeltaP,

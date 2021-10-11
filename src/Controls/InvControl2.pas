@@ -72,15 +72,15 @@ type
 
     protected
       procedure DefineProperties;
-      function MakeLike(const InvControl2Name:String):Integer;Override;
+      function MakeLike(const InvControl2Name:AnsiString):Integer;Override;
 
     public
       constructor Create(dssContext: TDSSContext);
       destructor Destroy; override;
 
       function Edit():Integer; override;     // uses global parser
-      function NewObject(const ObjName:String):Integer; override;
-      function GetXYCurve(Const CurveName: String; InvControl2Mode: Integer): TXYcurveObj;
+      function NewObject(const ObjName:AnsiString):Integer; override;
+      function GetXYCurve(Const CurveName: AnsiString; InvControl2Mode: Integer): TXYcurveObj;
       procedure UpdateAll();
    end;
 
@@ -190,7 +190,7 @@ type
       FMonBusesNameList       : TStringList;
       FMonBusesPhase          : Integer;
       FUsingMonBuses          : Boolean;
-      FMonBuses               : Array of String;
+      FMonBuses               : Array of AnsiString;
       FMonBusesIndex          : Integer;
       FMonBusesVbase          : pDoubleArray;
       FMonBusesNodes          : Array of Array of Integer;
@@ -204,13 +204,13 @@ type
 
       {Variables of the smart inverter functions}
       FVoltage_CurveX_ref     : Integer;  // valid values are 0: = Vref (rated), 1:= avg
-      FReacPower_ref          : String;
+      FReacPower_ref          : AnsiString;
       FVoltwattYAxis          : Integer; // 1 = %Pmpp, 0 = %Available power
 
       // volt-var
       Fvvc_curve_size         : Integer; // length of the individual curve
       Fvvc_curve              : TXYcurveObj;
-      Fvvc_curvename          : String;
+      Fvvc_curvename          : AnsiString;
       Fvvc_curveOffset        : Double;
       Fvvc_curve2             : TXYcurveObj;
       FlagChangeCurve         : Array of Boolean;
@@ -219,18 +219,18 @@ type
       FRollAvgWindow          : Array of TRollAvgWindow;
       FRollAvgWindowLength    : Integer;
       priorRollAvgWindow      : Array of Double;
-      FRollAvgWindowLengthIntervalUnit  : String;
+      FRollAvgWindowLengthIntervalUnit  : AnsiString;
 
       // watt-pf
       Fwattpf_curve_size    : Integer;
       Fwattpf_curve         : TXYcurveObj;
-      Fwattpf_curvename     : String;
+      Fwattpf_curvename     : AnsiString;
       pf_wp_nominal         : Double;
 
       // watt-var
       Fwattvar_curve_size   : Integer;
       Fwattvar_curve        : TXYcurveObj;
-      Fwattvar_curvename    : String;
+      Fwattvar_curvename    : AnsiString;
 
       // DRC
       FDbVMin                 : Double;
@@ -241,19 +241,19 @@ type
       FDRCRollAvgWindowpu     : Array of Double;
       FDRCRollAvgWindow       : Array of TRollAvgWindow;
       FDRCRollAvgWindowLength : Integer;
-      FDRCRollAvgWindowLengthIntervalUnit : String;
+      FDRCRollAvgWindowLengthIntervalUnit : AnsiString;
       priorDRCRollAvgWindow   : Array of Double;
       FDRCVAvgWindowLengthSec : Double; // rolling average window length in seconds
 
       // volt-watt
       Fvoltwatt_curve_size    : Integer;
       Fvoltwatt_curve         : TXYcurveObj;
-      Fvoltwatt_curvename     : String;
+      Fvoltwatt_curvename     : AnsiString;
 
       // volt-watt (charging)
       FvoltwattCH_curve_size  : Integer;
       FvoltwattCH_curve       : TXYcurveObj;
-      FvoltwattCH_curvename   : String;
+      FvoltwattCH_curvename   : AnsiString;
 
       // Active voltage regulation (AVR)
       Fv_setpoint: Double;
@@ -278,9 +278,9 @@ type
       {Functions and Procedures}
       procedure   Set_PendingChange(Value: Integer;DevIndex: Integer);
       function    Get_PendingChange(DevIndex: Integer):Integer;
-      function    InterpretAvgVWindowLen(const s:string):Integer;
-      function    InterpretDRCAvgVWindowLen(const s:string):Integer;
-      function    ReturnElementsList:String;
+      function    InterpretAvgVWindowLen(const s:AnsiString):Integer;
+      function    InterpretDRCAvgVWindowLen(const s:AnsiString):Integer;
+      function    ReturnElementsList:AnsiString;
       procedure   UpdateInvControl(i:integer);
       procedure   UpdateDERParameters(i: Integer);
       procedure   CalcVoltWatt_watts(j: Integer);
@@ -299,8 +299,8 @@ type
       procedure   CalcWATTVAR_vars(j: Integer);
       procedure   CalcDRC_vars(j: Integer);
       procedure   CalcVVDRC_vars(j: Integer);
-      procedure   CalcLPF(m: Integer; powertype: String; LPF_desiredpu: Double);
-      procedure   CalcRF(m: Integer; powertype: String; RF_desiredpu: Double);
+      procedure   CalcLPF(m: Integer; powertype: AnsiString; LPF_desiredpu: Double);
+      procedure   CalcRF(m: Integer; powertype: AnsiString; RF_desiredpu: Double);
       procedure   Calc_PBase(j: Integer);
       procedure   Check_Plimits(j: Integer; P:Double);
       procedure   CalcPVWcurve_limitpu(j: Integer);
@@ -312,7 +312,7 @@ type
 
     public
 
-      constructor Create(ParClass:TDSSClass; const InvControl2Name:String);
+      constructor Create(ParClass:TDSSClass; const InvControl2Name:AnsiString);
       destructor  Destroy; override;
 
       procedure Set_Enabled(Value:Boolean);Override;
@@ -336,7 +336,7 @@ type
 
 
       function    MakeDERList:Boolean;
-      function    GetPropertyValue(Index:Integer):String;Override;
+      function    GetPropertyValue(Index:Integer):AnsiString;Override;
 
       Property    PendingChange[DevIndex: Integer]:Integer Read Get_PendingChange Write Set_PendingChange;
 
@@ -344,12 +344,12 @@ type
       property Mode      				         : Integer            read ControlMode;
       property CombiMode 				         : Integer            read CombiControlMode;
       property DERNameList         	     : TStringList        read FDERNameList;
-      property vvc_curve1           	   : String             read Fvvc_curvename;
+      property vvc_curve1           	   : AnsiString             read Fvvc_curvename;
       property hysteresis_offset    	   : Double             read Fvvc_curveOffset;
       property voltage_curvex_ref   	   : Integer            read FVoltage_CurveX_ref;
       property avgwindowlen         	   : Integer            read FRollAvgWindowLength;
-      property voltwatt_curve       	   : String             read Fvoltwatt_curvename;
-      property voltwattCH_curve       	 : String             read FvoltwattCH_curvename;
+      property voltwatt_curve       	   : AnsiString             read Fvoltwatt_curvename;
+      property voltwattCH_curve       	 : AnsiString             read FvoltwattCH_curvename;
       property DbVMin               	   : Double             read FDbVMin;
       property DbVMax               	   : Double             read FDbVMax;
       property ArGraLowV            	   : Double             read FArGraLowV;
@@ -359,12 +359,12 @@ type
       property VoltageChangeTolerance    : Double             read FVoltageChangeTolerance;
       property VarChangeTolerance        : Double             read FVarChangeTolerance;
       property VoltwattYAxis             : Integer            read FVoltwattYAxis;
-      //property RateofChangeMode          : String             read
+      //property RateofChangeMode          : AnsiString             read
       property LPFTau                    : Double             read FLPFTau;
       property RiseFallLimit             : Double             read FRiseFallLimit;
       property DeltaP_factor             : Double             read FDeltaP_factor;
-      //property EventLog                  : String             read
-      property RefReactivePower          : String             read FReacPower_ref;
+      //property EventLog                  : AnsiString             read
+      property RefReactivePower          : AnsiString             read FReacPower_ref;
       property ActivePChangeTolerance    : Double             read FActivePChangeTolerance;
       property monVoltageCalc            : Integer            read FMonBusesPhase;
       property monBus                    : TStringList             read FMonBusesNameList;
@@ -689,7 +689,7 @@ procedure TInvControl2.DefineProperties;
 
   end;
 
-function TInvControl2.NewObject(const ObjName:String):Integer;
+function TInvControl2.NewObject(const ObjName:AnsiString):Integer;
   begin
     // Make a new InvControl and add it to InvControl class list
     with ActiveCircuit do
@@ -709,7 +709,7 @@ function TInvControl2.Edit():Integer;
 
     StrTemp,
     ParamName,
-    Param             : String;
+    Param             : AnsiString;
 
     NodeBuffer        : Array[1..10] of Integer;
 
@@ -995,7 +995,7 @@ function TInvControl2.Edit():Integer;
 
 end;
 
-function TInvControl2.MakeLike(const InvControl2Name:String):Integer;
+function TInvControl2.MakeLike(const InvControl2Name:AnsiString):Integer;
   VAR
     OtherInvControl   : TInvControl2Obj;
     i, j              : Integer;
@@ -1094,7 +1094,7 @@ end;
 {==========================================================================}
 {                    TInvControl2Obj                                        }
 {==========================================================================}
-constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:String);
+constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:AnsiString);
 
   begin
 
@@ -3435,7 +3435,7 @@ procedure TInvControl2Obj.Reset;
     // inherited;
   end;
 
-function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: Integer): TXYcurveObj;
+function TInvControl2.GetXYCurve(Const CurveName: AnsiString;InvControl2Mode: Integer): TXYcurveObj;
   VAR
     i   : Integer;
 
@@ -3496,12 +3496,12 @@ function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: Intege
 
   end;
 
-function  TInvControl2Obj.InterpretAvgVWindowLen(const s:string):Integer;
+function  TInvControl2Obj.InterpretAvgVWindowLen(const s:AnsiString):Integer;
 
   Var
     Code    : Integer;
     ch      : char;
-    s2      : String;
+    s2      : AnsiString;
 
   begin
     {Try to convert and see if we get an error}
@@ -3551,12 +3551,12 @@ function  TInvControl2Obj.InterpretAvgVWindowLen(const s:string):Integer;
     end;
   end;
 
-function  TInvControl2Obj.InterpretDRCAvgVWindowLen(const s:string):Integer;
+function  TInvControl2Obj.InterpretDRCAvgVWindowLen(const s:AnsiString):Integer;
 
   Var
     Code      : Integer;
     ch        : char;
-    s2        : String;
+    s2        : AnsiString;
 
   begin
     {Try to convert and see if we get an error}
@@ -3605,7 +3605,7 @@ function  TInvControl2Obj.InterpretDRCAvgVWindowLen(const s:string):Integer;
     end;
 end;
 
-function TInvControl2Obj.GetPropertyValue(Index: Integer): String;
+function TInvControl2Obj.GetPropertyValue(Index: Integer): AnsiString;
 
   begin
 
@@ -3666,7 +3666,7 @@ function TInvControl2Obj.GetPropertyValue(Index: Integer): String;
   end;
 
 
-function TInvControl2Obj.ReturnElementsList: String;
+function TInvControl2Obj.ReturnElementsList: AnsiString;
   VAR
     i   : Integer;
 
@@ -3983,7 +3983,7 @@ procedure TInvControl2Obj.Calc_PBase(j: Integer);
 
   end;
 
-procedure TInvControl2Obj.CalcLPF(m: Integer; powertype: String; LPF_desiredpu : Double);
+procedure TInvControl2Obj.CalcLPF(m: Integer; powertype: AnsiString; LPF_desiredpu : Double);
   VAR
     alpha                     :Double;
 
@@ -4002,7 +4002,7 @@ procedure TInvControl2Obj.CalcLPF(m: Integer; powertype: String; LPF_desiredpu :
 
   end;
 
-procedure TInvControl2Obj.CalcRF(m: Integer; powertype: String; RF_desiredpu: Double);
+procedure TInvControl2Obj.CalcRF(m: Integer; powertype: AnsiString; RF_desiredpu: Double);
 
   begin
     // Applies the Rise/Fall limiting function:
