@@ -103,7 +103,7 @@ uses
 
 const
 
-    NumPropsThisClass = 6;//TODO: check (@meira) -- shouldn't it be 7?
+    NumPropsThisClass = 7;
 
 
 {--------------------------------------------------------------------------}
