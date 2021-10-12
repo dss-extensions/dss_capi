@@ -23,28 +23,28 @@ type
     end;
 
   // 4-8-2010  added inlining selected often-used functions
-function cmplx(const a, b: Double): complex; inline;
-function cinv(const A: COMPLEX): COMPLEX; inline;
-function cabs(const a: complex): Double; inline;
-Function cabs2(const a:complex):double; inline; // best when you don't need sqrt -- TODO: rename?
+function cmplx(const a, b: Double): complex;
+function cinv(const A: COMPLEX): COMPLEX;
+function cabs(const a: complex): Double;
+Function cabs2(const a:complex):double; // best when you don't need sqrt -- TODO: rename?
 function cang(const a: complex): Double;
 function cdang(const a: complex): Double; // angle of complex number, degrees
 function ctopolar(const a: complex): polar;
 function ctopolardeg(const a: complex): polar;  // complex to polar, degrees
-function cadd(const a, b: complex): complex; inline;
-procedure caccum(var a: complex; const b: complex); inline; {a := a + b}
-function csub(const a, b: complex): complex; inline;
-function cmul(a, b: complex): complex; inline;
+function cadd(const a, b: complex): complex;
+procedure caccum(var a: complex; const b: complex); {a := a + b}
+function csub(const a, b: complex): complex;
+function cmul(a, b: complex): complex;
 procedure caccumarray(a, b: pComplexArray; N: Smallint);
-function cmulreal(const a: complex; const b: Double): Complex; inline; { := a*b }
-procedure cmulrealaccum(var a: complex; const b: Double); inline; { a=a*b}
-function cdiv(a, b: complex): complex; inline;
-function cdivreal(const a: complex; const b: Double): Complex; inline; { := a /b}
-function conjg(const a: complex): complex; inline;
-function cnegate(const a: complex): complex; inline;
+function cmulreal(const a: complex; const b: Double): Complex; { := a*b }
+procedure cmulrealaccum(var a: complex; const b: Double); { a=a*b}
+function cdiv(a, b: complex): complex;
+function cdivreal(const a: complex; const b: Double): Complex; { := a /b}
+function conjg(const a: complex): complex;
+function cnegate(const a: complex): complex;
 function csqrt(const a: complex): complex;
 function cln(const a: complex): complex;
-function topolar(const a, b: Double): polar; inline;  // scalar to polar
+function topolar(const a, b: Double): polar;  // scalar to polar
 function prel(const a: polar): Double;  // real part of polar number   |a| cos()
 function pimg(const a: polar): Double;  // imag part of polar number   |a| sin()
 function ptocomplex(const a: polar): complex;
@@ -60,13 +60,13 @@ var
 
 implementation
 
-function CMPLX(const a, b: Double): complex; inline;
+function CMPLX(const a, b: Double): complex;
 begin
     Result.RE := A;
     Result.IM := B
 end;
 
-function CInv(const A: COMPLEX): COMPLEX; inline;
+function CInv(const A: COMPLEX): COMPLEX;
 var
     DNOM: Double;
 begin
@@ -75,17 +75,17 @@ begin
     Result.IM := (-A.IM) / DNOM
 end;
 
-function Cabs(const a: complex): Double; inline;
+function Cabs(const a: complex): Double;
 begin
     Result := SQRT(A.RE * A.RE + A.IM * A.IM)
 end;
 
-function Cabs2(const a: complex): Double; inline;
+function Cabs2(const a: complex): Double;
 begin
     Result := (A.RE * A.RE + A.IM * A.IM)
 end;
 
-function Conjg(const a: complex): complex; inline;
+function Conjg(const a: complex): complex;
 begin
     Result.RE := A.RE;
     Result.im := -A.im;
@@ -141,13 +141,13 @@ begin
     end;
 end;
 
-function CADD(const a, b: complex): complex; inline;
+function CADD(const a, b: complex): complex;
 begin
     Result.RE := A.RE + B.RE;
     Result.IM := A.IM + B.IM
 end;
 
-procedure CACCUM(var a: complex; const b: complex); inline;
+procedure CACCUM(var a: complex; const b: complex);
 begin
     a.re := a.re + b.re;
     a.im := a.im + b.im;
@@ -165,13 +165,13 @@ begin
 end;
 
 
-function CSUB(const a, b: complex): complex; inline;
+function CSUB(const a, b: complex): complex;
 begin
     Result.RE := A.RE - B.RE;
     Result.IM := A.IM - B.IM
 end;
 
-function CMUL(a, b: complex): complex; inline;
+function CMUL(a, b: complex): complex;
 begin
     Result.RE := A.RE * B.RE - A.IM * B.IM;
     Result.IM := A.RE * B.IM + A.IM * B.RE
@@ -189,7 +189,7 @@ begin
     a.im := a.im * b;
 end;
 
-function CDIV(a, b: complex): complex; inline;
+function CDIV(a, b: complex): complex;
 var
     DNOM: Double;
 begin
@@ -198,13 +198,13 @@ begin
     Result.IM := (A.IM * B.RE - A.RE * B.IM) / DNOM
 end;
 
-function cdivreal(const a: complex; const b: Double): Complex; inline;  { := a /b}
+function cdivreal(const a: complex; const b: Double): Complex;  { := a /b}
 begin
     Result.re := a.re / b;
     Result.im := a.im / b;
 end;
 
-function cnegate(const a: complex): complex; inline;
+function cnegate(const a: complex): complex;
 
 begin
     Result.re := -a.re;
@@ -229,7 +229,7 @@ begin
     Result := cmplx(ln(x.mag), x.ang);
 end;
 
-function toPOLaR(const a, b: Double): polar; inline;
+function toPOLaR(const a, b: Double): polar;
 begin
     with Result do
     begin
