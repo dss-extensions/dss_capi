@@ -82,9 +82,9 @@ jobs:
           path: 'dss_capi'
       - name: 'Install FreePascal'
         run: |
-          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.2/fpc-3.2.2.intel-macosx.dmg/download -Ofpc.dmg -q
+          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.2/fpc-3.2.2.intelarm64-macosx.dmg/download -Ofpc.dmg -q
           sudo hdiutil attach fpc.dmg
-          sudo installer -package /Volumes/fpc-3.2.2.intel-macosx/fpc-3.2.2-intel-macosx.pkg -target /
+          sudo installer -package /Volumes/fpc-3.2.2.intelarm64-macosx/fpc-3.2.2.intelarm64-macosx.pkg -target /
       - name: 'Download/extract KLUSolve(X)'
         run: |
           wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
