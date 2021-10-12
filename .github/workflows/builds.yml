@@ -10,7 +10,7 @@ jobs:
     name: 'Linux x64'
     runs-on: ubuntu-latest
     container:
-      image: 'docker://pmeira/manylinux_wheel_cmake_fpc320'
+      image: 'docker://pmeira/manylinux_wheel_fpc322_x86_64'
     env:
       KLUSOLVE_URL: 'https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_linux_x64.tar.gz'
     steps: 
@@ -23,7 +23,7 @@ jobs:
         run: |
           curl -s -L "${KLUSOLVE_URL}" -o klusolve.tar.gz
           tar zxf klusolve.tar.gz
-          cp -r klusolve/lib/* dss_capi/lib/
+          cp -r klusolvex/lib/* dss_capi/lib/
       - name: Build
         run: |
           cd dss_capi
@@ -51,12 +51,12 @@ jobs:
           git checkout $GITHUB_SHA
       - name: 'Setup Docker'
         run: |
-          docker pull pmeira/manylinux_wheel_cmake_fpc320_i686
+          docker pull pmeira/manylinux_wheel_fpc322_i686
       - name: 'Download/extract KLUSolve(X)'
         run: |
           curl -s -L "${KLUSOLVE_URL}" -o klusolve.tar.gz
           tar zxf klusolve.tar.gz
-          cp -r klusolve/lib/* dss_capi/lib/
+          cp -r klusolvex/lib/* dss_capi/lib/
       - name: Build
         run: |
           cd dss_capi
@@ -82,14 +82,14 @@ jobs:
           path: 'dss_capi'
       - name: 'Install FreePascal'
         run: |
-          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.2/fpc-3.2.2.intel-macosx.dmg/download -Ofpc.dmg -q
+          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.2/fpc-3.2.2.intelarm64-macosx.dmg/download -Ofpc.dmg -q
           sudo hdiutil attach fpc.dmg
-          sudo installer -package /Volumes/fpc-3.2.2.intel-macosx/fpc-3.2.2-intel-macosx.pkg -target /
+          sudo installer -package /Volumes/fpc-3.2.2.intelarm64-macosx/fpc-3.2.2-intelarm64-macosx.mpkg -target /
       - name: 'Download/extract KLUSolve(X)'
         run: |
           wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
           tar zxf klusolve.tar.gz
-          cp -r klusolve/lib/* dss_capi/lib/
+          cp -r klusolvex/lib/* dss_capi/lib/
       - name: Build
         run: |
           cd dss_capi
@@ -124,7 +124,7 @@ jobs:
         run: |
           "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_win_x64-gcc8.1.zip -o klusolve_x64.zip
           7z x -y -o. klusolve_x64.zip
-          xcopy /E klusolve\lib dss_capi\lib
+          xcopy /E klusolvex\lib dss_capi\lib
       - name: Build
         #TODO? cv2pdb (generate PDB for MSVC) and dlltool (generate lib compatible with GCC)
         shell: cmd
@@ -159,7 +159,7 @@ jobs:
         run: |
           "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_win_x86-msvc2017.zip -o klusolve_x86.zip
           7z x -y -o. klusolve_x86.zip
-          xcopy /E klusolve\lib dss_capi\lib
+          xcopy /E klusolvex\lib dss_capi\lib
       - name: Build
         #TODO? cv2pdb (generate PDB for MSVC) and dlltool (generate lib compatible with GCC)
         shell: cmd
