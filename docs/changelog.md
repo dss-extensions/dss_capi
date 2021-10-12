@@ -39,6 +39,18 @@ This version still maintains basic compatibility with the 0.10.x series of relea
 - Some new functions: 
     - `Circuit_Get_ElementLosses`
     - `CktElement_Get_NodeRef`
+- `DSS_Get_COMErrorResults`/`DSS_Set_COMErrorResults`: New compatibility setting for error/empty result. If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the official OpenDSS COM interface. 
+    
+    For example, consider the function Loads_Get_ZIPV. If there is no active circuit or active load element:
+    - In the disabled state (COMErrorResults=False), the function will return "[]", an array with 0 elements.
+    - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
+      be compatible with the return value of the official COM interface.
+    
+    Defaults to True/1 (enabled state) in the v0.12.x series. This will change to false in future series.
+    
+    This can also be set through the environment variable DSS_CAPI_COM_DEFAULTS. Setting it to 0 disables
+    the legacy/COM behavior. The value can be toggled through the API at any time.
+
 - Drop function aliases: previously deprecated function aliases (`LoadShapes_Set_Sinterval` and `LoadShapes_Get_sInterval`) were removed to simplify the build process. Use `LoadShapes_Set_SInterval` and `LoadShapes_Get_SInterval` instead.
 - Monitor headers: From the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS Extensions, we took the opportunity to rewrite the related code, simplifying it. As such, the implementation in DSS Extensions deviates from the official one. Extra blank chars are not included, and fields should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough.
 
