@@ -13,13 +13,8 @@ if errorlevel 1 (
     )
 )
 
-if not exist .\build\units_x86 (
-    mkdir .\build\units_x86
-) 
-
-REM if not exist .\build\units_v8_x86 (
-    REM mkdir .\build\units_v8_x86
-REM ) 
+rd /s /q build\units_x86
+mkdir .\build\units_x86
 
 fpc -Pi386 @src\windows-x86.cfg -B src\dss_capi.lpr
 if errorlevel 1 exit /B 1
@@ -45,6 +40,9 @@ if exist lib\win_x86\dss_capi.dll (
     echo ERROR: DSS_CAPI.DLL file not found. Check previous messages for possible causes.
     exit /B 1
 )
+
+rd /s /q build\units_x86
+mkdir .\build\units_x86
 
 fpc -Pi386 @src\windows-x86-dbg.cfg -B src\dss_capid.lpr
 if errorlevel 1 exit /B 1

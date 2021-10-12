@@ -6,9 +6,8 @@ python3 src/classic_to_ctx.py
 
 export LDFLAGS=-L`pwd`/lib/darwin_x64/
 
-if [ ! -d "build/units_x64" ]; then
-    mkdir build/units_x64
-fi
+rm -rf build/units_x64
+mkdir build/units_x64
 fpc -Px86_64 @src/darwin-x64.cfg -B src/dss_capi.lpr
 
 # Make the lib look in the same folder for KLUSolve
@@ -18,6 +17,8 @@ NEW_LIBKLUSOLVE="@loader_path/./libklusolve.dylib"
 install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_LIB"
 install_name_tool -id "@loader_path/./libdss_capi.dylib" "$DSS_CAPI_LIB"
 
+rm -rf build/units_x64
+mkdir build/units_x64
 fpc -Px86_64 @src/darwin-x64-dbg.cfg -B src/dss_capid.lpr
 
 # Make the lib look in the same folder for KLUSolve

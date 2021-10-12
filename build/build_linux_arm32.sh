@@ -1,16 +1,18 @@
 #!/bin/bash
 
-# Tested with a arm7l phone
+# Tested with a phone (arm7l)
 # Tested with a Raspberry Pi 4 Model B with the official 32-bit OS
 
 set -e -x
 
 python3 src/classic_to_ctx.py
 
-if [ ! -d "build/units_arm32" ]; then
-    mkdir build/units_arm32
-fi
+rm -rf build/units_arm32
+mkdir build/units_arm32
 fpc @src/linux-arm32.cfg -B src/dss_capi.lpr
+
+rm -rf build/units_arm32
+mkdir build/units_arm32
 fpc @src/linux-arm32-dbg.cfg -B src/dss_capid.lpr
 
 mkdir -p release/dss_capi/lib

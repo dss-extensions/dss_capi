@@ -5,10 +5,12 @@ set -e -x
 
 python3 src/classic_to_ctx.py
 
-if [ ! -d "build/units_arm64" ]; then
-    mkdir build/units_arm64
-fi
+rm -rf build/units_arm64
+mkdir build/units_arm64
 fpc @src/linux-arm64.cfg -B src/dss_capi.lpr
+
+rm -rf build/units_arm64
+mkdir build/units_arm64
 fpc @src/linux-arm64-dbg.cfg -B src/dss_capid.lpr
 
 mkdir -p release/dss_capi/lib
