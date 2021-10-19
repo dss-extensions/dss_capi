@@ -1907,6 +1907,8 @@ Begin
         StartInstance (FunPrf, 'PhotovoltaicUnit', pName1);
         geoUUID := GetDevUuid (SolarLoc, pPV.localName, 1);
         UuidNode (GeoPrf, 'PowerSystemResource.Location', geoUUID);
+        DoubleNode (EpPrf, 'PowerElectronicsUnit.maxP', pPV.Pmpp * 1000.0);
+        DoubleNode (EpPrf, 'PowerElectronicsUnit.minP', min(pPV.PctCutIn, pPV.PctCutOut) * pPV.kVARating * 1000.0 / 100.0);
         EndInstance (FunPrf, 'PhotovoltaicUnit');
         StartInstance (FunPrf, 'PowerElectronicsConnection', pPV);
         CircuitNode (FunPrf, ActiveCircuit);
@@ -1937,6 +1939,8 @@ Begin
         pName1.LocalName := pBat.Name; // + '_Cells';
         pName1.UUID := GetDevUuid (Battery, pBat.LocalName, 1);
         StartInstance (FunPrf, 'BatteryUnit', pName1);
+        DoubleNode (EpPrf, 'PowerElectronicsUnit.maxP', pBat.StorageVars.kwRating * pBat.pctKwOut * 1000.0 / 100.0);
+        DoubleNode (EpPrf, 'PowerElectronicsUnit.minP', -pBat.StorageVars.kwRating * pBat.pctKwIn * 1000.0 / 100.0);
         DoubleNode (SshPrf, 'BatteryUnit.ratedE', pBat.StorageVars.kwhRating * 1000.0);
         DoubleNode (SshPrf, 'BatteryUnit.storedE', pBat.StorageVars.kwhStored * 1000.0);
         BatteryStateEnum (SshPrf, pBat.StorageState);

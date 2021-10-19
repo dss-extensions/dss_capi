@@ -318,8 +318,8 @@ TYPE
                               :Boolean read Get_VarFollowInverter  Write Set_VarFollowInverter;
         Property kvarLimit    :Double  Read PVSystemVars.Fkvarlimit  Write Set_Maxkvar;
         Property MinModelVoltagePU :Double Read VminPu;
-
-
+        Property PctCutIn: Double Read FPctCutIn;   // for CIM export
+        Property PctCutOut: Double Read FPctCutOut; // for CIM export
 
    End;
 
