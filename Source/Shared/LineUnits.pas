@@ -78,7 +78,7 @@ Function To_Meters(Units:Integer):Double;
 Begin
 
      CASE Units of
-         UNITS_MILES :Result := 1609.3;
+         UNITS_MILES :Result := 1609.344;
          UNITS_KFT   :Result := 304.8;
          UNITS_KM    :Result := 1000.0;
          UNITS_M     :Result := 1.0;
