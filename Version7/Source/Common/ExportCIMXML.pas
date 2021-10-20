@@ -288,49 +288,65 @@ begin
   Result := val;
 end;
 
-function PhaseOrderString (pElem:TDSSCktElement; bus: Integer):String; // for transposition
+function PhaseOrderString (pElem:TDSSCktElement; bus: Integer; bAllowSec: Boolean = True):String; // for transposition
 var
   phs: String;
   dot: Integer;
+  bSec: boolean;
 begin
   phs := pElem.FirstBus;
   for dot:= 2 to bus do phs := pElem.NextBus;
+
+  bSec := false;
+  if bAllowSec then begin
+    if pElem.NPhases = 2 then
+      if ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.25 then bSec := true;
+    if pElem.NPhases = 1 then
+      if ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.13 then bSec := true;
+  end;
 
   dot := pos('.',phs);
   if dot < 1 then begin
     Result := 'ABC';
   end else begin
     phs := Copy (phs, dot+1, Length(phs));
-    if Pos ('1.2.3', phs) > 0 then
-      Result := 'ABC'
-    else if Pos('1.3.2', phs) > 0 then
-      Result := 'ACB'
-    else if Pos('2.3.1', phs) > 0 then
-      Result := 'BCA'
-    else if Pos('2.1.3', phs) > 0 then
-      Result := 'BAC'
-    else if Pos('3.2.1', phs) > 0 then
-      Result := 'CBA'
-    else if Pos('3.1.2', phs) > 0 then
-      Result := 'CAB'
-    else if Pos('1.2', phs) > 0 then
-      Result := 'AB'
-    else if Pos('1.3', phs) > 0 then
-      Result := 'AC'
-    else if Pos('2.3', phs) > 0 then
-      Result := 'BC'
-    else if Pos('2.1', phs) > 0 then
-      Result := 'BA'
-    else if Pos('3.2', phs) > 0 then
-      Result := 'CB'
-    else if Pos('3.1', phs) > 0 then
-      Result := 'CA'
-    else if Pos('1', phs) > 0 then
-      Result := 'A'
-    else if Pos('2', phs) > 0 then
-      Result := 'B'
-    else
-      Result := 'C';
+    if Pos ('3', phs) > 0 then bSec := false; // i.e. it's a three-phase secondary, not split-phase
+    if bSec then begin
+      if Pos ('1', phs) > 0 then begin
+        Result := 's1';
+        if Pos ('2', phs) > 0 then Result := Result + '2';
+      end else if Pos ('2', phs) > 0 then Result := 's2';
+    end else
+      if Pos ('1.2.3', phs) > 0 then
+        Result := 'ABC'
+      else if Pos('1.3.2', phs) > 0 then
+        Result := 'ACB'
+      else if Pos('2.3.1', phs) > 0 then
+        Result := 'BCA'
+      else if Pos('2.1.3', phs) > 0 then
+        Result := 'BAC'
+      else if Pos('3.2.1', phs) > 0 then
+        Result := 'CBA'
+      else if Pos('3.1.2', phs) > 0 then
+        Result := 'CAB'
+      else if Pos('1.2', phs) > 0 then
+        Result := 'AB'
+      else if Pos('1.3', phs) > 0 then
+        Result := 'AC'
+      else if Pos('2.3', phs) > 0 then
+        Result := 'BC'
+      else if Pos('2.1', phs) > 0 then
+        Result := 'BA'
+      else if Pos('3.2', phs) > 0 then
+        Result := 'CB'
+      else if Pos('3.1', phs) > 0 then
+        Result := 'CA'
+      else if Pos('1', phs) > 0 then
+        Result := 'A'
+      else if Pos('2', phs) > 0 then
+        Result := 'B'
+      else
+        Result := 'C';
   end;
 end;
 
@@ -936,7 +952,7 @@ var
   pPhase: TNamedObject;
 begin
   pPhase := TNamedObject.Create('dummy');
-  s := PhaseString(pLine, 1);
+  s := PhaseOrderString(pLine, 1);
   if pLine.NumConductorsAvailable > length(s) then s := s + 'N'; // so we can specify the neutral conductor
   for i := 1 to length(s) do begin
     phs := s[i];
