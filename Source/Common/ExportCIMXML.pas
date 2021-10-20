@@ -2412,25 +2412,20 @@ Begin
 
     // done with the transformers
 
-    // series reactors, exported as lines
+    // series reactors, exported as SeriesCompensators
     pReac := ActiveCircuit.Reactors.First;
     while pReac <> nil do begin
       if pReac.Enabled then begin
-        StartInstance (FunPrf, 'ACLineSegment', pReac);
+        StartInstance (FunPrf, 'SeriesCompensator', pReac);
         CircuitNode (FunPrf, ActiveCircuit);
         VbaseNode (FunPrf, pReac);
         geoUUID := GetDevUuid (ReacLoc, pReac.Name, 1);
         UuidNode (GeoPrf, 'PowerSystemResource.Location', geoUUID);
-        DoubleNode (FunPrf, 'Conductor.length', 1.0);
-        DoubleNode (EpPrf, 'ACLineSegment.r', pReac.SimpleR);
-        DoubleNode (EpPrf, 'ACLineSegment.x', pReac.SimpleX);
-        DoubleNode (EpPrf, 'ACLineSegment.bch', 0.0);
-        DoubleNode (EpPrf, 'ACLineSegment.gch', 0.0);
-        DoubleNode (EpPrf, 'ACLineSegment.r0', pReac.SimpleR);
-        DoubleNode (EpPrf, 'ACLineSegment.x0', pReac.SimpleX);
-        DoubleNode (EpPrf, 'ACLineSegment.b0ch', 0.0);
-        DoubleNode (EpPrf, 'ACLineSegment.b0ch', 0.0);
-        EndInstance (FunPrf, 'ACLineSegment');
+        DoubleNode (EpPrf, 'SeriesCompensator.r', pReac.SimpleR);
+        DoubleNode (EpPrf, 'SeriesCompensator.x', pReac.SimpleX);
+        DoubleNode (EpPrf, 'SeriesCompensator.r0', pReac.SimpleR);
+        DoubleNode (EpPrf, 'SeriesCompensator.x0', pReac.SimpleX);
+        EndInstance (FunPrf, 'SeriesCompensator');
         // AttachLinePhases (F_, pReac); // for the 8500-node circuit, we only need 3 phase series reactors
         WriteTerminals (pReac, geoUUID, crsUUID, pReac.NormAmps, pReac.EmergAmps);
       end;
