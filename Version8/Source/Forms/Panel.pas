@@ -25,7 +25,7 @@ uses
   {$IFDEF VER300}    // Seattle
   ,System.ImageList
   {$ENDIF}
-  ,Splash_Screen
+  ,Splash_Screen, System.ImageList
   ;
 
 type
