@@ -397,6 +397,7 @@ BEGIN
        DataChanged := TRUE;
        NormAmps    := OtherLineGeometry.NormAmps;
        EmergAmps   := OtherLineGeometry.EmergAmps;
+       FReduce := OtherLineGeometry.FReduce;
 
        UpdateLineGeometryData(activecircuit.solution.Frequency );
 
