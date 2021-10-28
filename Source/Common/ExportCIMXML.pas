@@ -908,10 +908,36 @@ begin
   FD.EndInstance (prf, Root);
 end;
 
-procedure XfmrPhasesEnum (prf: ProfileChoice; pElem:TDSSCktElement; bus: Integer);
+procedure XfmrOrderedPhases (prf: ProfileChoice; pElem:TDSSCktElement; bus: Integer);
+var 
+  ordered_phs, phs: String;
+  reversed: Boolean;
 begin
+  reversed := False;
+  ordered_phs := PhaseOrderString(pElem, bus);
+  if (ordered_phs = 'BCA') or (ordered_phs = 'CAB') then begin  // 'ABC' already fine
+    phs := 'ABC'
+  end else if (ordered_phs = 'ACB') or (ordered_phs = 'BAC') or (ordered_phs = 'CBA') then begin
+    phs := 'ABC';
+    reversed := True
+  end else if (ordered_phs = 'BA') then begin
+    phs := 'AB';
+    reversed := True
+  end else if (ordered_phs = 'CA') then begin
+    phs := 'AC';
+    reversed := True
+  end else if (ordered_phs = 'CB') then begin
+    phs := 'BC';
+    reversed := True
+  end else if (ordered_phs = 's2') then begin
+    phs := 's2';
+    reversed := True
+  end else begin
+    phs := ordered_phs;
+  end;
   FD.WriteCimLn (prf, Format ('  <cim:TransformerTankEnd.phases rdf:resource="%s#PhaseCode.%s"/>',
-    [CIM_NS, PhaseString(pElem, bus)]));
+    [CIM_NS, phs]));
+  BooleanNode (prf, 'TransformerTankEnd.reversed', reversed);
 end;
 
 procedure PhaseNode (prf: ProfileChoice; Root: String; val: String);
@@ -2265,7 +2291,7 @@ Begin
         for i:=1 to NumberOfWindings do begin
           if bTanks then begin
             StartInstance (FunPrf, 'TransformerTankEnd', WdgList[i-1]);
-            XfmrPhasesEnum (FunPrf, pXf, i);
+            XfmrOrderedPhases (FunPrf, pXf, i);
             RefNode (FunPrf, 'TransformerTankEnd.TransformerTank', pXf);
           end else begin
             StartInstance (FunPrf, 'PowerTransformerEnd', WdgList[i-1]);
