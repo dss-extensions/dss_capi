@@ -370,11 +370,11 @@ Begin
      PropertyHelp[15] := 'Use this to specify the kVA ratings of all windings at once using an array.';
      PropertyHelp[16] := 'Use this to specify the p.u. tap of all windings at once using an array.';
      PropertyHelp[17] := 'Use this to specify the percent reactance, H-L (winding 1 to winding 2).  Use '+
-                         'for 2- or 3-winding AutoTranss. On the kVA base of winding 1(H-X). See also X12.';
+                         'for 2- or 3-winding AutoTranss. On the kVA base of winding 1(H-X). ';
      PropertyHelp[18] := 'Use this to specify the percent reactance, H-T (winding 1 to winding 3).  Use '+
-                         'for 3-winding AutoTranss only. On the kVA base of winding 1(H-X). See also X13.';
+                         'for 3-winding AutoTranss only. On the kVA base of winding 1(H-X). ';
      PropertyHelp[19] := 'Use this to specify the percent reactance, L-T (winding 2 to winding 3).  Use '+
-                         'for 3-winding AutoTranss only. On the kVA base of winding 1(H-X).  See also X23.';
+                         'for 3-winding AutoTranss only. On the kVA base of winding 1(H-X).  ';
      PropertyHelp[20] := 'Use this to specify the percent reactance between all pairs of windings as an array. '+
                          'All values are on the kVA base of winding 1.  The order of the values is as follows:'+CRLF+CRLF+
                          '(x12 13 14... 23 24.. 34 ..)  '+CRLF+CRLF+
