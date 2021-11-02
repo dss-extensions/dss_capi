@@ -908,13 +908,16 @@ begin
   FD.EndInstance (prf, Root);
 end;
 
-procedure XfmrOrderedPhases (prf: ProfileChoice; pElem:TDSSCktElement; bus: Integer);
+procedure XfmrTankPhasesAndGround (fprf: ProfileChoice; eprf: ProfileChoice; pXf:TTransfObj; bus: Integer);
 var 
   ordered_phs, phs: String;
   reversed: Boolean;
+  j1, j2: Integer;
+//  j, jmax: Integer;
 begin
+//  writeln(Format ('Xfmr Tank: %s end: %d Nconds: %d Nterms: %d Nphases: %d', [pXf.LocalName, bus, pXf.Nconds, pXf.Nterms, pXf.Nphases]));
   reversed := False;
-  ordered_phs := PhaseOrderString(pElem, bus);
+  ordered_phs := PhaseOrderString(pXf, bus);
   if (ordered_phs = 'BCA') or (ordered_phs = 'CAB') then begin  // 'ABC' already fine
     phs := 'ABC'
   end else if (ordered_phs = 'ACB') or (ordered_phs = 'BAC') or (ordered_phs = 'CBA') then begin
@@ -935,9 +938,34 @@ begin
   end else begin
     phs := ordered_phs;
   end;
-  FD.WriteCimLn (prf, Format ('  <cim:TransformerTankEnd.phases rdf:resource="%s#PhaseCode.%s"/>',
-    [CIM_NS, phs]));
-  BooleanNode (prf, 'TransformerTankEnd.reversed', reversed);
+  FD.WriteCimLn (fprf, Format ('  <cim:TransformerTankEnd.phases rdf:resource="%s#PhaseCode.%s"/>', [CIM_NS, phs]));
+  // interpret the grounding and reversal connections
+//  jmax := pXf.NConds * pXf.NTerms;
+//  for j := 1 to jmax do begin
+//    writeln(Format ('  j: %d, noderef^[j]: %d', [j, pXf.NodeRef^[j]]));
+//  end;
+  j1 := (bus-1) * pXf.NConds + 1;
+  j2 := j1 + pXf.Nphases;
+//  writeln(Format('  Testing %d and %d', [j1, j2]));
+  if (pXf.Winding^[bus].Connection = 1) then begin // delta
+    BooleanNode (fprf, 'TransformerEnd.grounded', false);
+  end else if (pXf.NodeRef^[j2] = 0) then begin // last conductor is grounded solidly
+    BooleanNode (FunPrf, 'TransformerEnd.grounded', true);
+    DoubleNode (EpPrf, 'TransformerEnd.rground', 0.0);
+    DoubleNode (EpPrf, 'TransformerEnd.xground', 0.0);
+  end else if (pXf.NodeRef^[j1] = 0) then begin // first conductor is grounded solidly, but should be reversed
+    BooleanNode (FunPrf, 'TransformerEnd.grounded', true);
+    DoubleNode (EpPrf, 'TransformerEnd.rground', 0.0);
+    DoubleNode (EpPrf, 'TransformerEnd.xground', 0.0);
+    reversed := True;
+  end else if (pXf.Winding^[bus].Rneut < 0.0) then begin // probably wye ungrounded
+    BooleanNode (FunPrf, 'TransformerEnd.grounded', false);
+  end else begin // not delta, not wye solidly grounded or ungrounded
+    BooleanNode (FunPrf, 'TransformerEnd.grounded', true);
+    DoubleNode (EpPrf, 'TransformerEnd.rground', pXf.Winding^[bus].Rneut);
+    DoubleNode (EpPrf, 'TransformerEnd.xground', pXf.Winding^[bus].Xneut);
+  end;
+  BooleanNode (fprf, 'TransformerTankEnd.reversed', reversed);
 end;
 
 procedure PhaseNode (prf: ProfileChoice; Root: String; val: String);
@@ -2291,7 +2319,7 @@ Begin
         for i:=1 to NumberOfWindings do begin
           if bTanks then begin
             StartInstance (FunPrf, 'TransformerTankEnd', WdgList[i-1]);
-            XfmrOrderedPhases (FunPrf, pXf, i);
+            XfmrTankPhasesAndGround (FunPrf, EpPrf, pXf, i);
             RefNode (FunPrf, 'TransformerTankEnd.TransformerTank', pXf);
           end else begin
             StartInstance (FunPrf, 'PowerTransformerEnd', WdgList[i-1]);
@@ -2311,24 +2339,22 @@ Begin
               IntegerNode (FunPrf, 'PowerTransformerEnd.phaseAngleClock', 1)
             else
               IntegerNode (FunPrf, 'PowerTransformerEnd.phaseAngleClock', 0);
+            j := (i-1) * pXf.NConds + pXf.Nphases + 1;
+            if (Winding^[i].Connection = 1) then begin // delta
+              BooleanNode (FunPrf, 'TransformerEnd.grounded', false);
+            end else if (pXf.NodeRef^[j] = 0) then begin // last conductor is grounded solidly
+              BooleanNode (FunPrf, 'TransformerEnd.grounded', true);
+              DoubleNode (EpPrf, 'TransformerEnd.rground', 0.0);
+              DoubleNode (EpPrf, 'TransformerEnd.xground', 0.0);
+            end else if (Winding^[i].Rneut < 0.0) then begin // probably wye ungrounded
+              BooleanNode (FunPrf, 'TransformerEnd.grounded', false);
+            end else begin // not delta, not wye solidly grounded or ungrounded
+              BooleanNode (FunPrf, 'TransformerEnd.grounded', true);
+              DoubleNode (EpPrf, 'TransformerEnd.rground', Winding^[i].Rneut);
+              DoubleNode (EpPrf, 'TransformerEnd.xground', Winding^[i].Xneut);
+            end;
           end;
           IntegerNode (FunPrf, 'TransformerEnd.endNumber', i);
-          j := (i-1) * pXf.NConds + pXf.Nphases + 1;
-//          Writeln (Format ('# %s wdg=%d conn=%d nterm=%d nref=%d',
-//            [pXf.Name, i, Winding^[i].Connection, j, pXf.NodeRef^[j]]));
-          if (Winding^[i].Connection = 1) then begin // delta
-            BooleanNode (FunPrf, 'TransformerEnd.grounded', false);
-          end else if (pXf.NodeRef^[j] = 0) then begin // last conductor is grounded solidly
-            BooleanNode (FunPrf, 'TransformerEnd.grounded', true);
-            DoubleNode (EpPrf, 'TransformerEnd.rground', 0.0);
-            DoubleNode (EpPrf, 'TransformerEnd.xground', 0.0);
-          end else if (Winding^[i].Rneut < 0.0) then begin // probably wye ungrounded
-            BooleanNode (FunPrf, 'TransformerEnd.grounded', false);
-          end else begin // not delta, not wye solidly grounded or ungrounded
-            BooleanNode (FunPrf, 'TransformerEnd.grounded', true);
-            DoubleNode (EpPrf, 'TransformerEnd.rground', Winding^[i].Rneut);
-            DoubleNode (EpPrf, 'TransformerEnd.xground', Winding^[i].Xneut);
-          end;
           j := pXf.Terminals^[i].BusRef;
           pName2.LocalName := pXf.Name + '_T' + IntToStr (i);
           pName2.UUID := GetTermUuid (pXf, i);
