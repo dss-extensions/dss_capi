@@ -41,7 +41,7 @@ program opendsscmd;
 {
 	08/17/2016  Created from OpenDSS
  ----------------------------------------------------------
-  Copyright (c) 2016-2020 Battelle Memorial Institute
+  Copyright (c) 2016-2021 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 
