@@ -2058,6 +2058,7 @@ Var
     Yadder     :Complex;
     Rmult      :Double;
     ZCorrected     :Double;
+    puXst, Vs, Vc: Double;
 {$IFDEF AUTOTRANDEBUG}
    F        :Textfile;
 {$ENDIF}
@@ -2083,13 +2084,21 @@ begin
 
   // Construct ZBMatrix;
        ZB.Clear;
-       ZBase := 1.0/(VABase/Fnphases); // base ohms on 1.0 volt basis
+       ZBase := 1.0/(VABase/Fnphases); // base ohms on 1.0 volt basis, as in Dommel (6.46) for Zct or puXSC^[3]
        // Adjust specified XSC by SQR(1 + Vcommon/Vseries)
-       ZCorrected := ZBase * SQR(1.0 + Winding^[2].vbase/Winding^[1].Vbase); // Correction factor for Series
+       ZCorrected := ZBase * SQR(1.0 + Winding^[2].vbase/Winding^[1].Vbase); // Correction factor for Series, as in Dommel (6.45) for Zsc or puXSC^[1]
+       // since the losses are correct as they are, mimic Dommel (6.50) for Zst or puXSC^[2], without disturbing Zbase or Zcorrected
+       // Dommel: Xst = Xhl*Vh*Vl/(Vh-Vl)^2 + Xht*Vh/(Vh-Vl) - Xlt*Vl/(Vh-Vl)
+       //             = Xhl*(Vs+Vc)*Vc/Vs^2 + Xht*(Vs+Vc)/Vs - Xlt*Vc/Vs
+       Vc := Winding^[2].VBase;
+       Vs := Winding^[1].VBase;
+       puXst := puXSC^[1]*(Vs+Vc)*Vc/Vs/Vs + puXSC^[2]*(Vs+Vc)/Vs - puXSC^[3]*Vc/Vs;
        FOR i := 1 to Numwindings-1 Do Begin
           { convert pu to ohms on one volt base as we go... }
           if i=1 then
               ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXSC^[i]), ZCorrected))
+          Else if i=2 then
+              ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXst), Zbase));
           Else
               ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXSC^[i]), Zbase));
        End;
