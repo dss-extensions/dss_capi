@@ -557,7 +557,7 @@ Begin
             Param := Parser.StrValue;
             If SetCurrentDir(Param) Then Begin
                CmdResult := 0  ;
-               SetDataPath(Param);  // change datadirectory
+               SetDataPath(GetCurrentDir);  // change datadirectory
             End
             Else DoSimpleMsg('Directory "'+Param+'" not found.', 282);
            End;
