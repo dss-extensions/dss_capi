@@ -15,7 +15,8 @@ unit CktElement;
 interface
 
 USES
-  Ucomplex,  Ucmatrix,  ArrayDef, Terminal, DSSObject, DSSClass, PointerList;
+  Ucomplex,  Ucmatrix,  ArrayDef, Terminal, DSSObject, DSSClass, PointerList,
+  DSSClassDefs;
 
 
 TYPE
@@ -666,26 +667,46 @@ FUNCTION TDSSCktElement.Get_Losses:Complex;
 
 VAR
    cLoss:Complex;
-   k,n:Integer;
+   i,j,k,n:Integer;
+
+   Procedure LossCalc;
+   Begin
+          n := NodeRef^[k];
+          WITH ActiveCircuit.Solution DO
+          IF  n > 0 THEN Begin
+             IF   ActiveCircuit.PositiveSequence
+             THEN  Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
+             ELSE  Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
+          End;
+
+   End;
 
 Begin
 
    cLoss := CZERO;
 
-   If FEnabled Then Begin
+   If FEnabled Then
+    Begin
        ComputeIterminal;
 
-    // Method: Sum complex power going into all conductors of all terminals
-       WITH ActiveCircuit.Solution DO
+       // Method: Sum complex power going into all conductors of all terminals
+         {Special for AutoTransformer - sum based on NPhases rather then Yorder}
+         IF (CLASSMASK AND self.DSSObjType) =  AUTOTRANS_ELEMENT Then
+         Begin
+            k:=0;
+            For j := 1 to Nterms  do Begin
+              For i := 1 to Nphases do Begin
+                 inc(k);
+                 LossCalc;
+              End;
+            Inc(k, Nphases)
+            End ;
+         End
+         Else  // for all other elements
          FOR k := 1 to Yorder Do Begin
-            n := NodeRef^[k];
-            IF  n > 0 THEN Begin
-               IF   ActiveCircuit.PositiveSequence
-               THEN  Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
-               ELSE  Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
-            END;
+            LossCalc;
          End;
-   End;
+    End;
 
 
    Result := cLoss;
