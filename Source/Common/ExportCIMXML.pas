@@ -1054,7 +1054,7 @@ begin
   end;
 end;
 
-procedure AttachCapPhases (pCap:TCapacitorObj; geoUUID: TUuid);
+procedure AttachCapPhases (pCap:TCapacitorObj; geoUUID: TUuid; sections: double);
 var
   s, phs: String;
   i: Integer;
@@ -1078,6 +1078,7 @@ begin
     DoubleNode (EpPrf, 'LinearShuntCompensatorPhase.gPerSection', 0.0);
     IntegerNode (EpPrf, 'ShuntCompensatorPhase.normalSections', pCap.NumSteps);
     IntegerNode (EpPrf, 'ShuntCompensatorPhase.maximumSections', pCap.NumSteps);
+    DoubleNode (SshPrf, 'ShuntCompensatorPhase.sections', sections);
     RefNode (FunPrf, 'ShuntCompensatorPhase.ShuntCompensator', pCap);
     UuidNode (GeoPrf, 'PowerSystemResource.Location', geoUUID);
     EndInstance (FunPrf, 'LinearShuntCompensatorPhase');
@@ -2113,10 +2114,13 @@ Begin
           DoubleNode (EpPrf, 'LinearShuntCompensator.g0PerSection', 0.0);
           IntegerNode (EpPrf, 'ShuntCompensator.normalSections', NumSteps);
           IntegerNode (EpPrf, 'ShuntCompensator.maximumSections', NumSteps);
+          val := 0;
+          for i := 1 to NumSteps do if States[i] > 0 then val := val + 1.0;
+          DoubleNode (SshPrf, 'ShuntCompensator.sections', val);
           geoUUID := GetDevUuid (CapLoc, pCap.localName, 1);
           UuidNode (GeoPrf, 'PowerSystemResource.Location', geoUUID);
           EndInstance (FunPrf, 'LinearShuntCompensator');
-          AttachCapPhases (pCap, geoUUID);
+          AttachCapPhases (pCap, geoUUID, val);
           WriteTerminals (pCap, geoUUID, crsUUID, pCap.NormAmps, pCap.EmergAmps);
         end;
       end;
