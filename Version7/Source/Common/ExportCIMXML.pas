@@ -288,6 +288,7 @@ begin
   Result := val;
 end;
 
+// returns s1, s12, s2, or an ordered combination of ABC
 function PhaseOrderString (pElem:TDSSCktElement; bus: Integer; bAllowSec: Boolean = True):String; // for transposition
 var
   phs: String;
@@ -1041,6 +1042,12 @@ begin
   for i := 1 to length(s1) do begin
     phs1 := s1[i];
     phs2 := s2[i];
+    if phs1 = 's' then continue;
+    if phs2 = 's' then continue;
+    if phs1 = '1' then phs1 := 's1';
+    if phs1 = '2' then phs1 := 's2';
+    if phs2 = '1' then phs2 := 's1';
+    if phs2 = '2' then phs2 := 's2';
     pPhase.LocalName := pLine.Name + '_' + phs1;
     pPhase.UUID := GetDevUuid (LinePhase, pPhase.LocalName, 1);
     StartInstance (FunPrf, 'SwitchPhase', pPhase);
