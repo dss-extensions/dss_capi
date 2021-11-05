@@ -235,7 +235,7 @@ begin
   Result := 0.0;
   elem := ActiveTransformer;
   if elem <> nil then
-    Result := elem.WdgResistance[elem.ActiveWinding];
+    Result := elem.WdgResistance[elem.ActiveWinding] * 100.0;
 end;
 
 function TTransformers.Get_Rneut: Double;
