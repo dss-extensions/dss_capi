@@ -39,7 +39,7 @@ Uses SysUtils, Utilities, Circuit, DSSClassDefs, DSSGlobals, CktElement,
      Vsource, Line, Transformer, Ucomplex, UcMatrix, LineCode,
      Fuse, Capacitor, CapControl, CapControlvars,  Reactor, Feeder, ConductorData, LineUnits,
      LineGeometry, StrUtils, Math, HashList, WireData, XfmrCode,
-     LineSpacing, CableData, CNData, TSData, Storage, PVSystem, Relay, Recloser,
+     LineSpacing, CableData, CNData, TSData, Storage, PVSystem, Relay, Recloser, AutoTrans,
      DSSObject, DSSClass;
 
 Type
@@ -59,6 +59,7 @@ Type
     maxWindings: Integer;
     nWindings: Integer;
     connections: array of Integer;
+    bAuto: Boolean;
     angles: array of Integer;
     phaseA: array of Integer;
     phaseB: array of Integer;
@@ -399,6 +400,7 @@ constructor TBankObject.Create(MaxWdg: Integer);
 begin
   maxWindings:=MaxWdg;
   nWindings:=0;
+  bAuto:=False;
   SetLength (connections, MaxWdg);
   SetLength (angles, MaxWdg);
   SetLength (phaseA, MaxWdg);
@@ -424,6 +426,13 @@ procedure TBankObject.BuildVectorGroup;
 var
   i: Integer;
 begin
+  if bAuto then begin
+    if nWindings < 3 then
+      vectorGroup := 'YNa'
+    else
+      vectorGroup := 'YNad1';
+    exit;
+  end;
   vectorGroup := '';
   i := 0; // dynamic arrays are zero-based
   while i < nWindings do begin
@@ -1711,6 +1720,7 @@ Var
   pCap  : TCapacitorObj;
   pCapC : TCapControlObj;
   pXf   : TTransfObj;
+  pAuto : TAutoTransObj;
   pReg  : TRegControlObj;
   pLine : TLineObj;
   pReac : TReactorObj;
@@ -2174,6 +2184,15 @@ Begin
         EndInstance (FunPrf, 'RegulatingControl');
       end;
       pCapC := ActiveCircuit.CapControls.Next;
+    end;
+
+    // do the autotransformers as balanced, three-phase autos, PowerTransformerEnd(s), mesh impedances and core admittances
+    // only considering 2 windings, vector group YNa, or 3 windings, vector group YNad1
+    pAuto := ActiveCircuit.AutoTransformers.First;
+    while pAuto <> nil do begin
+      if pAuto.Enabled then begin
+      end;
+      pAuto := ActiveCircuit.AutoTransformers.Next;
     end;
 
     // begin the transformers;
