@@ -6,7 +6,7 @@ program opendsscmd;
 {$ENDIF}
 
 { ----------------------------------------------------------
-  Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -394,7 +394,7 @@ end;
 procedure TMyApplication.WriteHelp;
 begin
   writeln('Usage: ', ExeName, ' [-v | -h | -f | -l] [stop_time] [filename]');
-  writeln(' [filename] optional DSS command file. If provided, runs this file and exits.');
+  writeln(' [filename] optional DSS command file.');
   writeln('      If provided, runs this file and exits.');
   writeln('      If not provided, accepts user commands at the >> prompt.');
   writeln(' -h displays this message and exits');
@@ -404,18 +404,18 @@ begin
 	writeln('      If filename is provided, that will be compiled before starting FNCS');
   writeln('      This option requires FNCS installation and opendss.yaml file');
 	writeln('      Run with Envar FNCS_LOG_LEVEL=WARNING (default), INFO or DEBUG* to generate more logging output,');
-	writeln('        DEBUG1 for fncs command echo, outside the time step loop,');
-	writeln('        DEBUG2 for fncs command echo, inside the time step loop,');
-	writeln('        DEBUG3 for fncs topic map echo.');
+	writeln('        DEBUG1 for FNCS command echo, outside the time step loop,');
+	writeln('        DEBUG2 for FNCS command echo, inside the time step loop,');
+	writeln('        DEBUG3 for FNCS topic map echo.');
   writeln(' -l stop_time [filename] starts in HELICS co-simulation mode');
 	writeln('      Stop_time is the co-simulation stopping time in seconds;');
 	writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
 	writeln('      If filename is provided, that will be compiled before starting HELICS');
   writeln('      This option requires HELICS installation and opendss.json file');
 	writeln('      Run with Envar HELICS_LOG_LEVEL=WARNING (default), INFO or DEBUG* to generate more logging output,');
-	writeln('        DEBUG1 for fncs command echo, outside the time step loop,');
-	writeln('        DEBUG2 for fncs command echo, inside the time step loop,');
-	writeln('        DEBUG3 for fncs topic map echo.');
+	writeln('        DEBUG1 for HELICS command echo, outside the time step loop,');
+	writeln('        DEBUG2 for HELICS command echo, inside the time step loop,');
+	writeln('        DEBUG3 for HELICS topic map echo.');
   writeln(' -v displays the version and exits');
 end;
 
