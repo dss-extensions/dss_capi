@@ -65,12 +65,13 @@ Type
     phaseB: array of Integer;
     phaseC: array of Integer;
     ground: array of Integer;
-    a_unit: TTransfObj;  // save this for writing the bank coordinates
+    pd_unit: TPDElement;  // save this for writing the bank coordinates
 
     constructor Create(MaxWdg: Integer);
     destructor Destroy; override;
 
     procedure AddTransformer (pXf: TTransfObj);
+    procedure AddAutoTransformer (pAuto: TAutoTransObj);
     procedure BuildVectorGroup;
   end;
 
@@ -418,7 +419,7 @@ begin
   phaseB := nil;
   phaseC := nil;
   ground := nil;
-  a_unit := nil;
+  pd_unit := nil;
   Inherited Destroy;
 end;
 
@@ -458,7 +459,7 @@ var
 begin
   if pXf.NumberOfWindings > nWindings then nWindings := pXf.NumberOfWindings;
 
-  a_unit := pXf;
+  pd_unit := pXf;
   for i:=1 to pXf.NumberOfWindings do begin
     phs := PhaseString (pXf, i);
     if Pos('A', phs) > 0 then phaseA[i-1] := 1;
@@ -469,6 +470,23 @@ begin
     if (pXf.WdgRneutral[i] >= 0.0) or (pXf.WdgXneutral[i] > 0.0) then
       if connections[i-1] < 1 then
         ground[i-1] := 1;
+  end;
+end;
+
+procedure TBankObject.AddAutoTransformer(pAuto: TAutoTransObj); // 3-phase, 2 or 3 windings
+var
+  i: integer;
+begin
+  if pAuto.NumberOfWindings > nWindings then nWindings := pAuto.NumberOfWindings;
+  bAuto := True;
+  pd_unit := pAuto;
+  for i:=1 to pAuto.NumberOfWindings do begin
+    phaseA[i-1] := 1;
+    phaseB[i-1] := 1;
+    phaseC[i-1] := 1;
+    connections[i-1] := pAuto.WdgConnection[i];
+    if i = 2 then
+      ground[i-1] := 1;
   end;
 end;
 
@@ -1769,7 +1787,7 @@ Begin
         i2 := ActiveCircuit.Transformers.ListSize * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
         StartUuidList (i1 + i2);
     end;
-    StartBankList (ActiveCircuit.Transformers.ListSize);
+    StartBankList (ActiveCircuit.Transformers.ListSize + ActiveCircuit.AutoTransformers.ListSize);
     StartOpLimitList (ActiveCircuit.Lines.ListSize);
 
     {$IFDEF FPC}
@@ -2186,11 +2204,133 @@ Begin
       pCapC := ActiveCircuit.CapControls.Next;
     end;
 
+    // size the auxiliary winding, mesh, and core lists for transformer export
+    maxWdg := 3; // start with the size of autos
+    pXf := ActiveCircuit.Transformers.First;
+    while pXf <> nil do begin
+      if pXf.Enabled then
+        if pXf.NumberOfWindings > maxWdg then maxWdg := pXf.NumberofWindings;
+      pXf := ActiveCircuit.Transformers.Next;
+    end;
+
+    if MaxWdg>0 then  Begin
+      SetLength (WdgList, maxWdg);
+      SetLength (CoreList, maxWdg);
+      SetLength (MeshList, (maxWdg-1)*maxWdg div 2);
+      for i:=1 to maxWdg do WdgList[i-1]:=TNamedObject.Create('dummy');
+      CoreList[0]:=TNamedObject.Create('dummy');
+      for i:=1 to ((maxWdg-1)*maxWdg div 2) do MeshList[i-1]:=TNamedObject.Create('dummy');
+    End;
+
     // do the autotransformers as balanced, three-phase autos, PowerTransformerEnd(s), mesh impedances and core admittances
     // only considering 2 windings, vector group YNa, or 3 windings, vector group YNad1
     pAuto := ActiveCircuit.AutoTransformers.First;
     while pAuto <> nil do begin
-      if pAuto.Enabled then begin
+      if pAuto.Enabled then with pAuto do begin
+        if XfmrBank = '' then
+          sBank := '=' + pAuto.Name
+        else
+          sBank := XfmrBank;
+        pBank := GetBank (sBank);
+        if pBank = nil then begin
+          pBank := TBankObject.Create(maxWdg);
+          pBank.localName := sBank;
+          pBank.UUID := GetDevUuid (Bank, sBank, 0);
+          AddBank (pBank);
+        end;
+        pBank.AddAutoTransformer (pAuto);
+        geoUUID := GetDevUuid (XfLoc, pAuto.Name, 1);
+        WritePositions (pAuto, geoUUID, crsUUID);
+        // pre-make the winding, mesh and core name objects for easy reference
+        for i:=1 to NumberOfWindings do begin
+          WdgList[i-1].localName := pAuto.Name + '_End_' + IntToStr(i);
+          WdgList[i-1].UUID := GetDevUuid (Wdg, pAuto.Name, i);
+        end;
+        CoreList[0].LocalName := pAuto.Name + '_Yc';
+        CoreList[0].UUID := GetDevUuid (XfCore, pAuto.Name, 1);
+        for i:=1 to ((maxWdg-1)*maxWdg div 2) do begin
+          MeshList[i-1].localName := pAuto.Name + '_Zsc_' + IntToStr(i);
+          MeshList[i-1].UUID := GetDevUuid (XfMesh, pAuto.Name, i);
+        end;
+        val := BaseKVLL[1]; // write core Y
+        zbase := 1000.0 * val * val / WdgKva[1];
+        StartInstance (EpPrf, 'TransformerCoreAdmittance', CoreList[0]);
+        val := pAuto.noLoadLossPct / 100.0 / zbase;
+        DoubleNode (EpPrf, 'TransformerCoreAdmittance.g', val);
+        DoubleNode (EpPrf, 'TransformerCoreAdmittance.g0', val);
+        val := pAuto.imagPct / 100.0 / zbase;
+        DoubleNode (EpPrf, 'TransformerCoreAdmittance.b', val);
+        DoubleNode (EpPrf, 'TransformerCoreAdmittance.b0', val);
+        RefNode (EpPrf, 'TransformerCoreAdmittance.TransformerEnd', WdgList[0]);
+        EndInstance (EpPrf, 'TransformerCoreAdmittance');
+        seq := 1; // write mesh Z
+        for i:=1 to NumberOfWindings do begin
+          for k := i+1 to NumberOfWindings do begin
+            val := BaseKVLL[i];
+            zbase := 1000.0 * val * val / WdgKva[i];
+            StartInstance (EpPrf, 'TransformerMeshImpedance', MeshList[seq-1]);
+            val := zbase * (WdgResistance[i] + WdgResistance[k]);
+            DoubleNode (EpPrf, 'TransformerMeshImpedance.r', val);
+            DoubleNode (EpPrf, 'TransformerMeshImpedance.r0', val);
+            val := zbase * XscVal[seq];
+            inc (seq);
+            DoubleNode (EpPrf, 'TransformerMeshImpedance.x', val);
+            DoubleNode (EpPrf, 'TransformerMeshImpedance.x0', val);
+            RefNode (EpPrf, 'TransformerMeshImpedance.FromTransformerEnd', WdgList[i-1]);
+            RefNode (EpPrf, 'TransformerMeshImpedance.ToTransformerEnd', WdgList[k-1]);
+            EndInstance (EpPrf, 'TransformerMeshImpedance');
+          end;
+        end;
+        // write the Ends, and a Terminal with operational limit for each End
+        for i:=1 to NumberOfWindings do begin
+          StartInstance (FunPrf, 'PowerTransformerEnd', WdgList[i-1]);
+          RefNode (FunPrf, 'PowerTransformerEnd.PowerTransformer', pBank);
+          DoubleNode (EpPrf, 'PowerTransformerEnd.ratedS', 1000 * WdgKva[i]);
+          DoubleNode (EpPrf, 'PowerTransformerEnd.ratedU', 1000 * Winding^[i].kvll);
+          zbase := 1000.0 * BaseKVLL[i] * BaseKVLL[i] / WdgKva[i];
+          DoubleNode (EpPrf, 'PowerTransformerEnd.r', zbase * WdgResistance[i]);
+          if i = 1 then begin
+            WindingConnectionKindNode (FunPrf, 'Y');
+            IntegerNode (FunPrf, 'PowerTransformerEnd.phaseAngleClock', 0);
+            BooleanNode (FunPrf, 'TransformerEnd.grounded', false);
+          end else if i = 2 then begin
+            WindingConnectionKindNode (FunPrf, 'A');
+            IntegerNode (FunPrf, 'PowerTransformerEnd.phaseAngleClock', 0);
+            BooleanNode (FunPrf, 'TransformerEnd.grounded', true);
+            DoubleNode (EpPrf, 'TransformerEnd.rground', 0.0); // no rneut or xneut for autotrans
+            DoubleNode (EpPrf, 'TransformerEnd.xground', 0.0);
+          end else begin
+            WindingConnectionKindNode (FunPrf, 'D');
+            IntegerNode (FunPrf, 'PowerTransformerEnd.phaseAngleClock', 1);
+            BooleanNode (FunPrf, 'TransformerEnd.grounded', false);
+          end;
+          IntegerNode (FunPrf, 'TransformerEnd.endNumber', i);
+          j := pAuto.Terminals^[i].BusRef;
+          pName2.LocalName := pAuto.Name + '_T' + IntToStr (i);
+          pName2.UUID := GetTermUuid (pAuto, i);
+          RefNode (FunPrf, 'TransformerEnd.Terminal', pName2);
+          UuidNode (FunPrf, 'TransformerEnd.BaseVoltage', GetBaseVUuid (sqrt(3.0) * ActiveCircuit.Buses^[j].kVBase));
+          EndInstance (FunPrf, 'PowerTransformerEnd');
+          // write the Terminal for this End
+          StartInstance (FunPrf, 'Terminal', pName2);
+          RefNode (FunPrf, 'Terminal.ConductingEquipment', pBank);
+          IntegerNode (FunPrf, 'ACDCTerminal.sequenceNumber', i);
+          FD.WriteCimLn (TopoPrf, Format('  <cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
+            [ActiveCircuit.Buses[j].CIM_ID]));
+          if i = 1 then begin   // write the current limit on HV winding, assuming that's winding 1
+            LimitName := GetOpLimIName (pAuto.NormAmps, pAuto.EmergAmps);
+            pILimit := GetOpLimit (LimitName);
+            if pILimit = nil then begin
+              pILimit := TOpLimitObject.Create(pAuto.NormAmps, pAuto.EmergAmps);
+              pILimit.localName := LimitName;
+              pILimit.UUID := GetDevUuid (OpLimI, LimitName, 0);
+              AddOpLimit (pILimit);
+            end;
+            LimiTUuid := GetDevUuid (OpLimI, LimitName, 0);
+            UuidNode (FunPrf, 'ACDCTerminal.OperationalLimitSet', LimiTUuid);
+          end;
+          EndInstance (FunPrf, 'Terminal');
+        end;
       end;
       pAuto := ActiveCircuit.AutoTransformers.Next;
     end;
@@ -2237,24 +2377,7 @@ Begin
       pXfCd := clsXfCd.ElementList.Next;
     end;
 
-    // create all the banks (CIM PowerTransformer)
-    maxWdg := 0;
-    pXf := ActiveCircuit.Transformers.First;
-    while pXf <> nil do begin
-      if pXf.Enabled then
-        if pXf.NumberOfWindings > maxWdg then maxWdg := pXf.NumberofWindings;
-      pXf := ActiveCircuit.Transformers.Next;
-    end;
-
-    if MaxWdg>0 then  Begin
-      SetLength (WdgList, maxWdg);
-      SetLength (CoreList, maxWdg);
-      SetLength (MeshList, (maxWdg-1)*maxWdg div 2);
-      for i:=1 to maxWdg do WdgList[i-1]:=TNamedObject.Create('dummy');
-      CoreList[0]:=TNamedObject.Create('dummy');
-      for i:=1 to ((maxWdg-1)*maxWdg div 2) do MeshList[i-1]:=TNamedObject.Create('dummy');
-    End;
-
+    // create all the banks (CIM PowerTransformer) for regular transformers
     pXf := ActiveCircuit.Transformers.First;
     while pXf <> nil do begin
       if pXf.Enabled  then  Begin
@@ -2418,7 +2541,7 @@ Begin
       pXf := ActiveCircuit.Transformers.Next;
     end;
 
-    // finally, write all the transformer banks (CIM PowerTransformer)
+    // finally, write all the transformer banks (CIM PowerTransformer), including autotransformers
     for i:=Low(BankList) to High(BankList) do begin
       pBank := BankList[i];
       if pBank = nil then break;
@@ -2430,7 +2553,7 @@ Begin
       CircuitNode (FunPrf, ActiveCircuit);
       StringNode (FunPrf, 'PowerTransformer.vectorGroup', pBank.vectorGroup);
       UuidNode (GeoPrf, 'PowerSystemResource.Location',
-        GetDevUuid (XfLoc, pBank.a_unit.Name, 1));
+        GetDevUuid (XfLoc, pBank.pd_unit.Name, 1));
       EndInstance (FunPrf, 'PowerTransformer');
     end;
 
