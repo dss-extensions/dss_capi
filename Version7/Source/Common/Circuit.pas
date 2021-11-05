@@ -136,10 +136,11 @@ TYPE
           Lines,
           Loads,
           ShuntCapacitors,
-		  Reactors, // added for CIM XML export
+          Reactors, // added for CIM XML export
           Relays, // added for CIM XML export
           Fuses, // added for CIM XML export
           Reclosers, // added for CIM XML export
+          AutoTransformers, // added for CIM XML export
           Feeders,
           SwtControls        :PointerList.TPointerList;
 
@@ -354,13 +355,14 @@ BEGIN
      Feeders         := TPointerList.Create(10);
      Substations     := TPointerList.Create(5);
      Transformers    := TPointerList.Create(10);
+     AutoTransformers:= TPointerList.Create(10);
      CapControls     := TPointerList.Create(10);
      SwtControls     := TPointerList.Create(50);
      RegControls     := TPointerList.Create(5);
      Lines           := TPointerList.Create(1000);
      Loads           := TPointerList.Create(1000);
      ShuntCapacitors := TPointerList.Create(20);
-	 Reactors        := TPointerList.Create(5);
+     Reactors        := TPointerList.Create(5);
      Reclosers       := TPointerList.Create(10);
      Relays          := TPointerList.Create(10);
      Fuses           := TPointerList.Create(50);
@@ -541,6 +543,7 @@ BEGIN
      Feeders.Free;
      Substations.Free;
      Transformers.Free;
+     AutoTransformers.Free;
      CapControls.Free;
      SwtControls.Free;
      RegControls.Free;
@@ -780,6 +783,7 @@ BEGIN
 
        { Keep Lines, Transformer, and Lines and Faults in PDElements and separate lists
          so we can find them quickly.}
+       AUTOTRANS_ELEMENT   :AutoTransformers.Add(ActiveCktElement);
        XFMR_ELEMENT   :Transformers.Add(ActiveCktElement);
        LINE_ELEMENT   :Lines.Add(ActiveCktElement);
        FAULTOBJECT    :Faults.Add(ActiveCktElement);
