@@ -1,6 +1,6 @@
 {
  ----------------------------------------------------------
-  Copyright (c) 2017-2019 Battelle Memorial Institute
+  Copyright (c) 2017-2020 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 unit FNCS;
@@ -19,27 +19,38 @@ unit FNCS;
 interface
 
 uses
-  Classes, SysUtils, Executive, {$IFDEF Unix} unix, {$ENDIF} dynlibs, fpjson, jsonparser, DSSGlobals,
-  UComplex, generics.collections, CktElement, Utilities,math,RegControl,ControlElem;
+  Classes, SysUtils, Executive, {$IFDEF Unix} unix, {$ENDIF} dynlibs, DSSGlobals,
+  UComplex, CktElement, Utilities, math;
 
 type
   fncs_time = qword;
-  //StringIntegerDict = TDictionary<string, Integer>;
-  //StringComplexDict = TDictionary<string, Complex>;
-  //StringBooleanDict = TDictionary<string, boolean>;
-  //StringObjectDict = TObjectDictionary<string, Tobject>;
-  //ObjectTermianlComplexDict = TObjectDictionary<string, StringComplexDict>;
-  //ObjectTermianlBoolDict = TObjectDictionary<string, StringBooleanDict>;
-  //ObjectTermianlIntDict = TObjectDictionary<string, StringIntegerDict>;
-  //ClassObjectComplexDict = TObjectDictionary<string, ObjectTermianlComplexDict>;
-  //ClassObjectIntDict = TObjectDictionary<string, ObjectTermianlIntDict>;
-  //ClassObjectBoolDict = TObjectDictionary<string, ObjectTermianlBoolDict>;
-  //AttributeClassDict = TObjectDictionary<string, ClassObjectComplexDict>;
-  ConductorValueDict = TDictionary<string, string>;
-  TerminalConductorDict = TObjectDictionary<string, ConductorValueDict>;
-  AttributeTerminalDict = TObjectDictionary<string, TerminalConductorDict>;
-  ObjectAttributeDict = TObjectDictionary<string, AttributeTerminalDict>;
-  ClassObjectDict = TObjectDictionary<string, ObjectAttributeDict>;
+
+  // lists for FNCS classic publications
+  TFNCSClass = (fncsBus, fncsLine, fncsSwitch, fncsCapacitor, fncsPVSystem, 
+                fncsVSource, fncsTransformer, fncsFault, fncsStorage, fncsNoClass);
+  TFNCSAttribute = (fncsVoltage, fncsCurrent, fncsPower, fncsSwitchState, 
+                fncsTapPosition, fncsEnergy, fncsNoAttribute);
+  TFNCSLogLevel = (fncsLogWarning, fncsLogInfo, fncsLogDebug1, fncsLogDebug2,
+                fncsLogDebug3, fncsLogDebug4);
+  TFNCSPublishMode = (fncsPublishJSON, fncsPublishText);
+  TFNCSSubTopic = class (TObject)
+  public
+    tag: String;            // what FNCS calls it
+    text_key: String;       // in Text-mode export we need to include the higher-level topic tag, and cache it
+    att: TFNCSAttribute;
+    trm: Integer;           // terminal number
+    ref: Integer;           // index into the phases
+    constructor Create(attKey, trmKey, phsKey: String; idxRoot: Integer);
+  end;
+  TFNCSTopic = class (TObject)
+  public
+    tag: String;            // what FNCS calls it
+    dss: String;            // what OpenDSS calls it
+    cls: TFNCSClass;
+    idx: Integer;           // index into BusList or DeviceList
+    sub: TList;             // list of attribute subtopics
+    constructor Create (clsKey, objKey: String);
+  end;
 
   TFNCS = class(TObject)
   private
@@ -103,77 +114,153 @@ type
     fncs_get_version: procedure (major:Plongint; minor:Plongint; patch:Plongint);FNCS_CALL;
     // Convenience wrapper around libc free.
     fncs_free: procedure (ptr:pointer);FNCS_CALL;
+    // faster versions for Pascal interface
+    fncs_count_events: function:size_t;FNCS_CALL;
+    fncs_count_values: function (key:Pchar):size_t;FNCS_CALL;
+    fncs_next_event: function:pchar;FNCS_CALL;
+    fncs_next_value: function:pchar;FNCS_CALL;
 
     function find_fncs_function (name: String): Pointer;
 
   private
-    topics:ClassObjectDict;
-    //tapTopics:ClassObjectIntDict;
-    //statusTopics:ClassObjectBoolDict;
-  //  terminalValueDict:TDictionary<string, double>;
+    in_fncs_loop:Boolean;
+    next_fncs_publish: fncs_time;
+    existing_fncs_grant: fncs_time;
+    ETFncsReadPub: Extended;
+    ETFncsPublish: Extended;
+    ETFncsLoad: Extended;
+    ETFncsTimeRequest: Extended;
+    ETFncsGetEvents: Extended;
+    log_level: TFNCSLogLevel;
+    topicList: TList;
+    fncsOutputStream: TStringStream;
+    procedure ReadFNCSJsonConfig (fname: string);
+    procedure ReadFNCSTextConfig (fname: string);
+    procedure SetPublishInterval (val: Integer);
+    procedure SetPublishMode (val: string);
 
   public
-    AttributeToPublish:TList<string>;
-    LineSwitchList:TList<string>;
-    VoltageTopics:TStringList;
-    CurrentTopics:TStringList;
-    PowerTopics:TStringList;
     PublishInterval:Integer;
-    PublishMode:string;
+    PublishMode:TFNCSPublishMode;
     FedName:string;
 
     function IsReady:Boolean;
+    function IsRunning:Boolean;
     procedure RunFNCSLoop (const s:string);
     constructor Create();
     destructor Destroy; override;
     function FncsTimeRequest (next_fncs:fncs_time):Boolean;
-    procedure ReadFncsPubConfig (fname: string);
-    procedure GetCurrentValuesForTopics;   
-    procedure GetCurrentValuesForTopics2;
-    procedure GetVoltageValuesForTopics;
-    procedure GetValuesForTopics;
-    procedure GetPowerValuesForTopics;
-    function TopicsToJsonFormat:string;
-    procedure AddCurrentsToDict(pElem:TDSSCktElement;Cbuffer:pComplexArray;topics:ClassObjectDict);
-    procedure AddCurrentsToDict2(pElem:TDSSCktElement;topics:ClassObjectDict);
-    procedure AddPowersToDict(pElem:TDSSCktElement;topics:ClassObjectDict);
-    function RoundToSignificantFigure(value:double;digit:Integer):double;
-    procedure GetTapPositionsForTopics;
-    procedure GetControlStatusForTopics;
-    procedure GetLineSwitchStateForTopics;
+    procedure ReadFNCSPubConfig (fname: string);
+    procedure TopicsListToPublication;
+    procedure DumpFNCSLists;
   end;
-  //TTopicValueComplexItem = record
-  //  AttributeName:string;
-  //  ClassName:string;
-  //  ObjectName:string;
-  //  TerminalName:string;
-  //  Value:Complex;
-  //  class operator = (item1:TTopicValueComplexItem;item2:TTopicValueComplexItem):boolean;
-  //end;
-  //TTopicValueList = specialize TFPGList<TTopicValueComplexItem>;
-  //
-  //TAttributeClassMapItem = record
-  //  AttributeName:string;
-  //  ClassName:string;
-  //end;
-  //TAttributeClassMapList = specialize TFPGList<TAttributeClassMapItem>;
-  //
-  //TClassObjectMapItem = record
-  //  ClassName:string;
-  //  ObjectName:string;
-  //end;
-  //TClassObjectMapList = specialize TFPGList<TClassObjectMapItem>;
-  //
-  //TObjectTerminalMapItem = record
-  //  ObjectName:string;
-  //  TerminalName:string;
-  //end;
-  //TObjectTerminalMapList = specialize TFPGList<TObjectTerminalMapItem>;
 
 var
   ActiveFNCS:TFNCS;
 
 implementation
+
+uses
+  fpjson, jsonparser, jsonscanner, strutils, Transformer, Load, Storage, EpikTimer; // RegControl,ControlElem;
+
+var
+  ET: TEpikTimer; // for profiling
+  sep: string;    // for delimiting tokens in a FNCS topic key; this is always '.' for DSS
+
+constructor TFNCSTopic.Create (clsKey, objKey: String);
+begin
+  dss := clsKey + '.' + objKey;
+  tag := clsKey + sep + objKey;
+  if clsKey = 'bus' then
+    cls := fncsBus
+  else if clsKey = 'line' then
+    cls := fncsLine
+  else if clsKey = 'switch' then
+    cls := fncsSwitch
+  else if clsKey = 'capacitor' then
+    cls := fncsCapacitor
+  else if clsKey = 'pvsystem' then
+    cls := fncsPVSystem
+  else if clsKey = 'storage' then
+    cls := fncsStorage
+  else if clsKey = 'vsource' then
+    cls := fncsVSource
+  else if clsKey = 'transformer' then
+    cls := fncsTransformer
+  else if clsKey = 'fault' then
+    cls := fncsFault
+  else
+    cls := fncsNoClass;
+  if cls = fncsBus then
+    idx := ActiveCircuit.BusList.Find (objKey)
+  else
+    idx := ActiveCircuit.SetElementActive (dss);
+  if idx = 0 then writeln ('*** can not find FNCS output for ' + dss);
+  sub := TList.Create();
+end;
+
+constructor TFNCSSubTopic.Create (attKey, trmKey, phsKey: String; idxRoot: Integer);
+var
+  idxPhs, idxLoc: Integer;
+  pElem :TDSSCktElement;
+  Ncond, Nterm, kmax, k: Integer;
+  PhaseTable: array[1..2, 0..3] of Integer; // index into cBuffer by terminal, then phase
+begin
+  trm := StrToInt (trmKey);
+  if attKey = 'voltage' then
+    att := fncsVoltage
+  else if attKey = 'current' then
+    att := fncsCurrent
+  else if attKey = 'power' then
+    att := fncsPower
+  else if attKey = 'switchstate' then
+    att := fncsSwitchState
+  else if attKey = 'tapposition' then
+    att := fncsTapPosition
+  else if attKey = 'kwhstored' then
+    att := fncsEnergy
+  else
+    att := fncsNoAttribute;
+  if trm > 0 then
+    if att = fncsVoltage then
+      tag := attKey + sep + phsKey
+    else
+      tag := attKey + sep + trmKey + sep + phsKey
+  else
+    tag := attKey;
+  ref := 0;
+  if idxRoot <= 0 then begin
+    att := fncsNoAttribute;
+    exit;
+  end;
+  if att = fncsVoltage then begin
+    idxPhs := 1 + Ord(phsKey[1]) - Ord('A');  // TODO: s1 and s2; can't ask for ground or neutral voltage
+    idxLoc := ActiveCircuit.Buses^[idxRoot].FindIdx(idxPhs);
+    ref := ActiveCircuit.Buses^[idxRoot].GetRef(idxLoc);
+  end else begin
+    if (trm > 0) then begin
+      idxPhs := 1 + Ord(phsKey[1]) - Ord('A');  // TODO: s1 and s2; can't ask for ground or neutral voltage
+      pElem := ActiveCircuit.CktElements.Get(idxRoot);
+      NCond := pElem.NConds;
+      Nterm := pElem.Nterms;
+      kmax := Ncond * Nterm;
+      for k :=  0 to 3 do begin
+        PhaseTable[1, k] := 0;
+        PhaseTable[2, k] := 0;
+      end;
+      for k := 1 to kmax do begin
+        idxLoc := GetNodeNum (pElem.NodeRef^[k]);
+        if k > Ncond then
+          PhaseTable[2, idxLoc] := k
+        else
+          PhaseTable[1, idxLoc] := k;
+      end;
+      if (idxPhs < 1) or (idxPhs > 3) then idxPhs := 0;
+      ref := PhaseTable[trm, idxPhs];
+    end else
+      ref := 0;
+  end;
+end;
 
 FUNCTION  InterpretStopTimeForFNCS(const s:string):fncs_time;
 Var
@@ -202,581 +289,259 @@ Begin
     writeln('Error in FNCS Stop Time: "' + s +'" Units can only be d, h, m, or s (single char only)');
   end;
 End;
-     
-procedure TFNCS.GetValuesForTopics;
-//var index:Integer;
-
-Begin
-  //if AttributeToPublish.Find('Voltages', index) Then
-  //  GetVoltageValuesForTopics
-  //else if AttributeToPublish.Find('Currents', index) Then
-  //  GetCurrentValuesForTopics
-  //else
-  //  Writeln('No topics need to be published.');
-  if AttributeToPublish.Contains('voltage') Then
-    GetVoltageValuesForTopics;
-  if AttributeToPublish.Contains('current') Then
-    GetCurrentValuesForTopics2;
-  if AttributeToPublish.Contains('power') Then
-    GetPowerValuesForTopics;
-  if AttributeToPublish.Contains('tapposition') Then
-    GetTapPositionsForTopics;
-  if AttributeToPublish.Contains('switchstate') Then
-    GetLineSwitchStateForTopics;
-  if AttributeToPublish.count=0 then
-    Writeln('No topics need to be published.');
+         
+procedure TFNCS.SetPublishInterval (val: Integer);
+begin
+  if val > 0 then PublishInterval := val;
 end;
-procedure TFNCS.GetVoltageValuesForTopics;
-  VAR
-     i,j,k:Integer;
-     Volts:Complex;
-     re:array of double;
-     names:TStringList;
-     thisBusName,sign,phaseStr:String;
-     BusName:string;
-     busref,phase:integer;
 
-  Begin
-      IF ActiveCircuit <> Nil THEN
-       WITH ActiveCircuit DO
-       Begin
-         setLength(re, 2*NumNodes-1);
-         k:=0;
-         names:=TStringList.Create;
-         FOR i := 1 to NumBuses DO
-         Begin
-           thisBusName:=Buses^[i].LocalName;
-           if topics['bus'].ContainsKey(thisBusName) Then
-           begin
-             For j := 1 to Buses^[i].NumNodesThisBus DO
-             Begin
-               //if topics['bus'][thisBusName]['voltage'].ContainsKey(IntToStr(j)) Then
-               //begin
-                 busref:=Buses^[i].GetRef(j);
-                 //nref := pElem.NodeRef^[k];
-                 Volts := ActiveCircuit.Solution.NodeV^[busref];//Bus.RefNo saves global numbering of a node in the circuit, the sequence of the numbers in RefNo will be used as local node index
-                 phase:=MapNodeToBus^[busref].nodenum;
-                 case phase of
-                   1:phaseStr:='A';
-                   2:phaseStr:='B';
-                   3:phaseStr:='C';
-                 else
-                   phaseStr:=IntToStr(phase);
-                 end;
-                 if Volts.im < 0 then
-                   sign:=''
-                 else
-                   sign:='+';
-                 if topics['bus'][thisBusName]['voltage']['1'].ContainsKey(phaseStr) Then
-                   topics['bus'][thisBusName]['voltage']['1'][phaseStr]:=RoundToSignificantFigure(Volts.re,6).ToString+sign+RoundToSignificantFigure(Volts.im,6).ToString+'i';
-               //end;
-             End;
-           end;
-         End;
-         names.Free;
-       End
-      ELSE setLength(re, 0);
+procedure TFNCS.SetPublishMode (val: string);
+var
+  tok: string;
+begin
+  tok := LowerCase(val);
+  if tok = 'json' then
+    PublishMode := fncsPublishJSON
+  else if tok = 'text' then
+    PublishMode := fncsPublishText;
 end;
-procedure TFNCS.GetCurrentValuesForTopics;
-  Var
-      F          :TextFile;
-      cBuffer    :pComplexArray;
-      pElem      :TDSSCktElement;
-      MaxCond, MaxTerm   :Integer;
-      i,j        :Integer;
 
-  Begin
-
-    cBuffer := nil;
-
-    Try
-       Getmem(cBuffer, sizeof(cBuffer^[1])*GetMaxCktElementSize);
-
-       // Sources first
-       pElem := ActiveCircuit.Sources.First;
-       WHILE pElem<>nil DO BEGIN
-         IF pElem.Enabled THEN BEGIN
-            pElem.GetCurrents(cBuffer);
-            AddCurrentsToDict(pElem, Cbuffer, topics);
-         END;
-          pElem := ActiveCircuit.Sources.Next;
-       END;
-
-
-       // PDELEMENTS first
-       pElem := ActiveCircuit.PDElements.First;
-       WHILE pElem<>nil DO BEGIN
-         IF pElem.Enabled THEN BEGIN
-          pElem.GetCurrents(cBuffer);
-          AddCurrentsToDict(pElem, Cbuffer, topics);
-         END;
-          pElem := ActiveCircuit.PDElements.Next;
-       END;
-
-       // Faults
-       pElem := ActiveCircuit.Faults.First;
-       WHILE pElem<>nil DO BEGIN
-         IF pElem.Enabled THEN BEGIN
-          pElem.GetCurrents(cBuffer);
-          AddCurrentsToDict(pElem, Cbuffer, topics);
-         END;
-          pElem := ActiveCircuit.Faults.Next;
-       END;
-
-       // PCELEMENTS next
-       pElem := ActiveCircuit.PCElements.First;
-       WHILE pElem<>nil DO BEGIN
-         IF pElem.Enabled THEN BEGIN
-          pElem.GetCurrents(cBuffer);
-          AddCurrentsToDict(pElem, Cbuffer, topics);
-         END;
-          pElem := ActiveCircuit.PCElements.Next;
-       END;
-    FINALLY
-       If Assigned(cBuffer) Then Freemem(cBuffer);
-    End;
-  End;
-PROCEDURE TFNCS.AddCurrentsToDict(pelem:TDSSCktElement; Cbuffer:pComplexArray; topics:ClassObjectDict);
-VAr
-    i,j,k:Integer;
-    value:Complex;
-    cls,obj,terminal,conductor,jstr,istr,sign:string;
-
-Begin
-    k:=0;
-    cls:=LowerCase(pelem.DSSClassName);
-    obj:=LowerCase(pelem.LocalName);
-    if topics.Containskey(cls) and topics[cls].containsKey(obj) then
-       For j := 1 to pElem.Nterms Do Begin
-         jstr:=IntToStr(j);
-         if topics[cls][obj]['current'].ContainsKey(jstr) then
-           For i:= 1 to pElem.NConds Do Begin
-             Inc(k);
-             istr:=IntToStr(i);
-             if topics[cls][obj]['current'][jstr].ContainsKey(istr) then
-             begin
-               value:=cBuffer^[k];
-               if value.im < 0 then
-                 sign:=''
-               else
-                 sign:='+';
-               topics[cls][obj]['current'][jstr][istr]:=value.re.ToString+sign+value.im.ToString+'i';
-             end
-           end
-         else
-           k:=k+pElem.NConds
-       END;
-End;
-procedure TFNCS.GetCurrentValuesForTopics2;
-  Var
-      F          :TextFile;
-      cBuffer    :pComplexArray;
-      pElem      :TDSSCktElement;
-      i,j        :Integer;
-
-  Begin
-
-    Try
-
-       // Sources first
-       pElem := ActiveCircuit.Sources.First;
-
-       WHILE pElem <> nil DO Begin
-         IF pElem.Enabled  THEN AddCurrentsToDict2(pElem, topics);
-          pElem := ActiveCircuit.Sources.Next;
-       End;
-
-       // PDELEMENTS first
-       pElem := ActiveCircuit.PDElements.First;
-
-       WHILE pElem<>nil  DO Begin
-         IF pElem.Enabled THEN AddCurrentsToDict2(pElem, topics);
-          pElem := ActiveCircuit.PDElements.Next;
-       End;
-
-       // Faults
-       pElem := ActiveCircuit.Faults.First;
-
-       WHILE pElem<>nil DO Begin
-         IF pElem.Enabled THEN AddCurrentsToDict2(pElem, topics);
-          pElem := ActiveCircuit.Faults.Next;
-       End;
-
-       // PCELEMENTS next
-       pElem := ActiveCircuit.PCElements.First;
-
-       WHILE pElem<>nil DO Begin
-         IF pElem.Enabled THEN AddCurrentsToDict2(pElem, topics);
-         pElem := ActiveCircuit.PCElements.Next;
-       End;
-    FINALLY
-    End;
-  End;
-PROCEDURE TFNCS.AddCurrentsToDict2(pElem:TDSSCktElement; topics:ClassObjectDict);
-
-Var
-
-    j,i,k, Ncond, Nterm, phase:Integer;
-    cBuffer :pComplexArray;
-    FromBus,cls,obj,jstr,istr,phaseStr,sign:String;
-    Ctotal,current:Complex;
-
-BEGIN
-
-  cBuffer := nil;
-
-  NCond := pElem.NConds;
-  Nterm := pElem.Nterms;
-  cls:=LowerCase(pelem.DSSClassName);
-  obj:=LowerCase(pelem.LocalName);
-
-  Try
-    //begin
-    Getmem(cBuffer, sizeof(cBuffer^[1])*Ncond*Nterm);
-    pElem.GetCurrents(cBuffer);
-    k:=0;
-    //FromBus:=StripExtension(pElem.FirstBus);
-    if topics.Containskey(cls) and topics[cls].containsKey(obj) then
-      For j:=1 to pElem.Nterms Do begin
-        jstr:=IntToStr(j);
-        if topics[cls][obj]['current'].containsKey(jstr) then
-          For i:=1 to pElem.NConds Do Begin
-            Inc(k);
-            //istr:=IntToStr(i);
-            phase:=GetNodeNum(pElem.NodeRef^[k]);
-            case phase of
-              1:phaseStr:='A';
-              2:phaseStr:='B';
-              3:phaseStr:='C';
-            else
-              phaseStr:=IntToStr(phase);
-            end;
-            if topics[cls][obj]['current'][jstr].ContainsKey(phaseStr) then begin
-              current:= cBuffer^[k];
-              if current.im<0 then
-                sign:=''
-              else
-                sign:='+';
-              topics[cls][obj]['current'][jstr][phaseStr]:=RoundToSignificantFigure(current.re,6).ToString+sign+RoundToSignificantFigure(current.im,6).toString+'i';
-            end
-          end
+// for performance reasons, we avoid concatenating strings or calling the Format function here         
+procedure TFNCS.TopicsListToPublication;
+var
+  top: TFNCSTopic;
+  sub: TFNCSSubTopic;
+  Flow, Volts: Complex;
+  sign: String;
+  pElem :TDSSCktElement;
+  pXf: TTransfObj;
+  pStore: TStorageObj;
+  cBuffer :pComplexArray;
+  k, kmax, idxWdg, tap: integer;
+  key, val: PChar;
+  firstObjectFlag:Boolean=true;
+  writeKeyComma:Boolean=false;
+  pos1,pos2,i:Int64;
+begin
+  ET.Clear;
+  ET.Start;
+  if log_level >= fncsLogDebug3 then writeln ('Entering TopicsListToPublication');
+  if PublishMode = fncsPublishJSON then begin
+    pos1 := fncsOutputStream.Position;
+    fncsOutputStream.Seek (0, soFromBeginning);
+//    fncsOutputStream.WriteString ('{"'+FedName+'":{');
+    fncsOutputStream.WriteString ('{"');
+    fncsOutputStream.WriteString (FedName);
+    fncsOutputStream.WriteString ('":{');
+  end;
+  kmax := GetMaxCktElementSize;
+  Getmem(cBuffer, sizeof(cBuffer^[1])*kmax);
+  for k := 1 to kmax do begin
+    cBuffer^[k].re := 0.0;
+    cBuffer^[k].im := 0.0;
+  end;
+  for top in topicList do begin
+    if PublishMode = fncsPublishJSON then begin
+      if not firstObjectFlag then fncsOutputStream.WriteString (',');
+//      fncsOutputStream.WriteString (Format('"%s":{', [top.tag]));
+      fncsOutputStream.WriteString ('"');
+      fncsOutputStream.WriteString (top.tag);
+      fncsOutputStream.WriteString ('":{');
+      firstObjectFlag := False;
+    end;
+    for sub in top.sub do begin
+      if PublishMode = fncsPublishJSON then
+        key := PChar (sub.tag)
+      else
+        key := PChar (sub.text_key);
+      val := nil;
+      if sub.att = fncsVoltage then begin
+        Volts := ActiveCircuit.Solution.NodeV^[sub.ref];
+        if Volts.im < 0 then
+          sign:='-'
         else
-          k:=k+pElem.NConds;
-        //end;
-      End
-      //FromBus := StripExtension(pElem.Nextbus);
-  Finally
-    If Assigned(cBuffer) Then Freemem(cBuffer);
-  End;
-END;
-procedure TFNCS.GetPowerValuesForTopics;
-Var
-    pElem :TDSSCktElement;
-Begin
-     {Branch Powers}
-
-     // Sources first
-     pElem := ActiveCircuit.sources.First;
-
-     WHILE pElem<>nil DO Begin
-       IF pElem.Enabled  THEN AddPowersToDict(pElem, topics);
-       pElem := ActiveCircuit.sources.Next;
-     End;
-
-     // PDELEMENTS first
-     pElem := ActiveCircuit.PDElements.First;
-     WHILE pElem<>nil DO Begin
-       IF pElem.Enabled  THEN AddPowersToDict(pElem, topics);
-       pElem := ActiveCircuit.PDElements.Next;
-     End;
-
-     // PCELEMENTS next
-     pElem := ActiveCircuit.PCElements.First;
-     WHILE pElem<>nil DO Begin
-      IF pElem.Enabled  THEN AddPowersToDict(pElem, topics);
-       pElem := ActiveCircuit.PCElements.Next;
-     End;
-end;
-procedure TFNCS.AddPowersToDict(pElem:TDSSCktElement; topics:ClassObjectDict);
-var
-  c_Buffer:pComplexArray;
-  FromBus,fullnme,cls,obj,phaseStr,sign,jstr:String;
-  NCond, Nterm, i, j, k,phase :Integer;
-  Volts:Complex;
-  S:Complex;
-  nref:Integer;
-begin
-  c_Buffer:= Nil;
-  cls:=LowerCase(pElem.DSSClassName);
-  obj:=LowerCase(pElem.LocalName);
-  NCond := pElem.NConds;
-  Nterm := pElem.Nterms;
-  Try
-  {Allocate c_Buffer big enough for largest circuit element}
-    Getmem(c_Buffer, sizeof(c_Buffer^[1])*Ncond*Nterm);
-    pElem.GetCurrents(c_Buffer);
-    k:=0;
-    //FromBus:=StripExtension(pElem.FirstBus);
-    fullnme:=FullName(pElem);
-    if topics.Containskey(cls) and topics[cls].containsKey(obj) then
-      FOR j:=1 to NTerm Do Begin
-        jstr:=IntToStr(j);
-        if topics[cls][obj]['power'].ContainsKey(jstr) then
-          For i:=1 to NCond Do Begin
-            Inc(k);
-            nref := pElem.NodeRef^[k];
-            phase:=GetNodeNum(nref);
-            case phase of
-              1:phaseStr:='A';
-              2:phaseStr:='B';
-              3:phaseStr:='C';
-            else
-              phaseStr:=IntToStr(phase);
-            end;
-            if topics[cls][obj]['power'][jstr].ContainsKey(phaseStr) then begin
-              Volts := ActiveCircuit.Solution.NodeV^[nref];
-              S:=Cmul(Volts, conjg(c_Buffer^[k]));
-              IF ActiveCircuit.PositiveSequence
-              THEN S:=CmulReal(S, 3.0);
-              if S.im<0 then
-                sign:=''
-              else
-                sign:='+';
-              topics[cls][obj]['power'][jstr][phaseStr]:=RoundToSignificantFigure(S.re*1000,6).ToString+sign+RoundToSignificantFigure(S.im*1000,6).toString+'i';
-            end;
-          End
+          sign:='+';
+        val := PChar (FloatToStrF(Volts.re, ffFixed, 0, 3) + sign + FloatToStrF(abs(Volts.im), ffFixed, 0, 3) + 'j');
+      end else if (sub.att = fncsCurrent) or (sub.att = fncsPower) then begin
+        pElem := ActiveCircuit.CktElements.Get(top.idx);
+        pElem.GetCurrents(cBuffer);
+        if (sub.att = fncsCurrent) then begin
+          Flow := cBuffer^[sub.ref];
+        end else begin
+          Volts := ActiveCircuit.Solution.NodeV^[pElem.NodeRef^[sub.ref]];
+          Flow:=Cmul(Volts, conjg(cBuffer^[sub.ref]));
+          if ActiveCircuit.PositiveSequence then Flow:=CmulReal(Flow, 3.0);
+        end;
+        if Flow.im < 0 then
+          sign:='-'
         else
-          k:=k+pElem.NConds;
-      //FromBus:=pElem.Nextbus;
-      End;
-  Finally
-     If Assigned(c_Buffer) then Freemem(c_Buffer);
-  End;
+          sign:='+';
+        val := PChar (FloatToStrF(Flow.re, ffFixed, 0, 3) + sign + FloatToStrF(abs(Flow.im), ffFixed, 0, 3) + 'j');
+      end else if (sub.att = fncsSwitchState) then begin
+        pElem := ActiveCircuit.CktElements.Get(top.idx);
+        if AllTerminalsClosed (pElem) then 
+          val := '1'
+        else
+          val := '0'
+      end else if (sub.att = fncsTapPosition) then begin
+        pXf := TTransfObj (ActiveCircuit.CktElements.Get(top.idx));
+        idxWdg := 2; // TODO: identify and map this using pReg.Transformer and pReg.TrWinding
+        tap := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
+        val := PChar (IntToStr (tap));
+      end else if (sub.att = fncsEnergy) then begin
+        pStore := TStorageObj (ActiveCircuit.CktElements.Get(top.idx));
+        val := PChar (FloatToStrF(pStore.StorageVars.kwhStored, ffFixed, 0, 3));
+      end;
+      if assigned(val) then begin
+        if PublishMode = fncsPublishJSON then begin
+          if writeKeyComma then fncsOutputStream.WriteString (',');
+          writeKeyComma := True;
+//          fncsOutputStream.WriteString (Format ('"%s":"%s"', [key, val]));
+          fncsOutputStream.WriteString ('"');
+          fncsOutputStream.WriteString (key);
+          fncsOutputStream.WriteString ('":"');
+          fncsOutputStream.WriteString (val);
+          fncsOutputStream.WriteString ('"');
+        end else begin
+          fncs_publish (key, val);
+          if log_level >= fncsLogDebug3 then writeln(Format ('Publish %s = %s', [key, val]));
+        end;
+      end;
+    end;
+    if PublishMode = fncsPublishJSON then begin
+      fncsOutputStream.WriteString ('}');
+      writeKeyComma:=False;
+    end;
+  end;
+  if PublishMode = fncsPublishJSON then begin
+    fncsOutputStream.WriteString ('}}');
+    pos2 := fncsOutputStream.Position;
+    if pos2 < pos1 then
+      for i := 1 to (pos1 - pos2) do
+        fncsOutputStream.WriteString (' ');
+    fncs_publish ('fncs_output', PChar(fncsOutputStream.DataString));
+  end;
+  ETFncsPublish := ETFncsPublish + ET.Elapsed;
+  ET.Clear;
 end;
-function TFNCS.RoundToSignificantFigure(value:double;digit:Integer):double;
+
+procedure TFNCS.DumpFNCSLists;
 var
-  factor:double=1.0;
+  top: TFNCSTopic;
+  sub: TFNCSSubTopic;
 begin
-     RoundToSignificantFigure:=value;
-     if value = 0.0 then
-        exit;
-     factor:=power(10.0,digit-ceil(log10(abs(value))));
-     if factor = 0.0 then
-        exit;
-     RoundToSignificantFigure:=round(value*factor)/factor;
+  writeln('***DumpFNCSLists');
+  for top in topicList do begin
+    writeln(Format('  %2d %5d %s',[top.cls, top.idx, top.tag]));
+    for sub in top.sub do begin
+      writeln(Format('    %2d %2d %5d %s',[sub.att, sub.trm, sub.ref, sub.tag]));
+    end;
+  end;
 end;
-procedure TFNCS.GetTapPositionsForTopics;
-Var
-   iWind :Integer;
-   pReg: TRegControlObj;
-   //Name:string;
-Begin
-  Try
-     WITH ActiveCircuit Do
-     Begin
-       pReg := RegControls.First;
-       WHILE pReg <> NIL Do
-       Begin
-          WITH pReg.Transformer Do
-          Begin
-            iWind := pReg.TrWinding;
-            //Name:=PresentTap[iWind];
-            if topics['transformer'].ContainsKey(Name) Then
-               topics['transformer'][Name]['tapposition']['1']['-1']:=Round((PresentTap[iWind]-(Maxtap[iWind]+Mintap[iWind])/2.0)/TapIncrement[iWind]).ToString();
-          End;
-          pReg := RegControls.Next;
-       End;
-     End;
-  FINALLY
-  End;
-end;
-PROCEDURE TFNCS.GetControlStatusForTopics;
 
-Var
-    ControlDevice:TControlElem;
-    parentName,thisName,cls,obj,clsobj:string;
-    isClosed,switchFound:Boolean;
-
-Begin
-  IF ActiveCircuit <> Nil THEN
-    With ActiveCircuit Do Begin
-          ControlDevice := Nil;
-          switchFound:=false;
-          TRY
-            // Sample all controls and set action times in control Queue
-            ControlDevice := DSSControls.First;
-            WHILE ControlDevice <> Nil Do
-            Begin
-                 parentName:=ControlDevice.ParentClass.Name;
-                 thisName:=ControlDevice.Name;
-                 obj:=ControlDevice.LocalName;
-                 cls:=ControlDevice.DSSClassName;
-                 clsobj:=ControlDevice.DisplayName;
-                 if parentName<>'RegControl' then
-                   switchFound:=True;
-                 IF ControlDevice.Enabled THEN ControlDevice.Sample;
-                 isClosed:=ControlDevice.Closed[0];
-                 ControlDevice := DSSControls.Next;
-            End;
-
-          EXCEPT
-             On E: Exception DO  Begin
-             //DoSimpleMsg(Format('Error Sampling Control Device "%s.%s" %s  Error = %s',[ControlDevice.ParentClass.Name, ControlDevice.Name, CRLF, E.message]), 484);
-             //Raise EControlProblem.Create('Solution aborted.');
-             End;
-          END;
-    End;
-
-End;
-procedure TFNCS.GetLineSwitchStateForTopics;
+procedure TFNCS.ReadFncsPubConfig (fname: string);
 var
-    elem:TDSSCktElement;
-    parentName,thisName,cls,obj,clsobj:string;
-    isClosed,switchFound:Boolean;
+  buf: String;
 begin
-    IF ActiveCircuit <> Nil THEN
-    With ActiveCircuit Do Begin
-          elem := Nil;
-          switchFound:=false;
-          TRY
-            // Sample all controls and set action times in control Queue
-            elem := CktElements.First;
-            WHILE elem <> Nil Do
-            Begin
-                 //parentName:=elem.ParentClass.Name;
-                 //thisName:=elem.Name;
-                 cls:=LowerCase(elem.DSSClassName);
-                 obj:=LowerCase(elem.LocalName);
-                 //clsobj:=elem.DisplayName;
-                 if LineSwitchList.Contains(obj) then
-                   if AllTerminalsClosed(elem) then
-                     topics[cls][obj]['switchstate']['1']['-1']:='1'
-                   else
-                     topics[cls][obj]['switchstate']['1']['-1']:='0';
-                 //if parentName<>'RegControl' then
-                 //  switchFound:=True;
-                 //IF elem.Enabled THEN elem.Sample;
-                 //isClosed:=elem.Closed[0];
-                 elem := CktElements.Next;
-            End;
+  ET.Clear;
+  ET.Start;
+  buf := '   ';
+  fncsOutputStream:=TStringStream.Create(buf);
+  next_fncs_publish := 0;
 
-          EXCEPT
-             On E: Exception DO  Begin
-             //DoSimpleMsg(Format('Error Sampling Control Device "%s.%s" %s  Error = %s',[ControlDevice.ParentClass.Name, ControlDevice.Name, CRLF, E.message]), 484);
-             //Raise EControlProblem.Create('Solution aborted.');
-             End;
-          END;
-    End;
+  if Pos ('.json', ExtractFileExt (LowerCase (fname))) > 0 then
+    ReadFncsJsonConfig (fname)
+  else
+    ReadFncsTextConfig (fname);
+  if log_level >= fncsLogInfo then begin
+    Writeln('  Exiting ReadFncsPubConfig');
+    system.flush (stdout);
+  end;
+  ETFncsReadPub := ETFncsReadPub + ET.Elapsed;
+  ET.Clear;
 end;
 
-procedure TFNCS.ReadFncsPubConfig(fname: string);
+procedure TFNCS.ReadFncsTextConfig (fname: string);
+var
+  lines: TStringList;
+  i: Integer;
+begin
+  try
+    lines := TStringList.Create;
+    lines.LoadFromFile (fname);
+    for i := 1 to lines.Count do begin
+      writeln(lines[i-1]);
+    end;
+    system.flush (stdout);
+  finally
+    if log_level >= fncsLogInfo then begin
+      Writeln(Format('  ReadFncsTextConfig processed %u lines', [lines.count]));
+      system.flush (stdout);
+    end;
+    lines.free;
+  end;
+  if log_level >= fncsLogInfo then begin
+    Writeln('  Exiting ReadFncsTextConfig');
+    system.flush (stdout);
+  end;
+end;
+
+procedure TFNCS.ReadFncsJsonConfig (fname: string);
 var
   inputfile:TFileStream;
   parser:TJSONParser;
   config:TJSONData;
   el,attri,cls,obj,terminal,conductor:TJSONEnum;
-  attriKey, clsKey, objKey, terminalKey, ss:string;
-  //numberOfTopics:Integer;
-  index:Integer;
+  attriKey, clsKey, objKey, terminalKey, condKey:string;
+  top: TFNCSTopic;
+  sub: TFNCSSubTopic;
 begin
   inputfile:=TFileStream.Create(fname, fmOpenRead);
-  //AttributeToPublish.Clear;
-  //VoltageTopics.Clear;
-  //CurrentTopics.Clear;
-  //PowerTopics.Clear;
   try
-    parser:=TJSONParser.Create(inputfile);
+    parser:=TJSONParser.Create(inputfile, [joUTF8]);
     try
       config:=parser.Parse;
-      //numberOfTopics:=config.Count;
-      //setLength(Topics, numberOfTopics);
-      //index:=0;
+      // build the lists
       for el in config do begin
         if el.Key = 'name' then
           FedName:=el.Value.AsString
         else if el.Key = 'publishInterval' then
-          PublishInterval:=el.Value.AsInteger
+          SetPublishInterval (el.Value.AsInteger)
         else if el.Key = 'publishMode' then
-          PublishMode:=el.Value.AsString
-        else if el.Key = 'topics' then
+          SetPublishMode (el.Value.AsString)
+        else if el.Key = 'topics' then begin
           for cls in el.Value do begin
             clsKey:=LowerCase(cls.Key);
-            //if attriKey='tappositions' then
-            //  for cls in attri.Value do begin
-            //    clsKey:=LowerCase(cls.Key);
-            //    if not tapTopics.ContainsKey(clsKey) then
-            //      tapTopics.AddOrSetvalue(clsKey,ObjectTermianlIntDict.create([doOwnsValues]));
-            //      for obj in cls.Value do begin
-            //         objKey:=LowerCase(obj.Key);
-            //         if not tapTopics[clsKey].ContainsKey(objKey) then
-            //            tapTopics[clsKey].AddOrSetvalue(objKey,StringIntegerDict.Create);
-            //         for terminal in obj.Value do begin
-            //           if not tapTopics[clsKey][objKey].ContainsKey(terminal.Value.AsString) then
-            //             tapTopics[clsKey][objKey].Add(LowerCase(terminal.Value.AsString), Integer.MinValue)
-            //         end;
-            //      end;
-            //  end
-            //else if attriKey='controlstatus' then
-            //  for cls in attri.Value do begin
-            //    clsKey:=LowerCase(cls.Key);
-            //    if not statusTopics.ContainsKey(clsKey) then
-            //      statusTopics.AddOrSetvalue(clsKey,ObjectTermianlBoolDict.create([doOwnsValues]));
-            //      for obj in cls.Value do begin
-            //         objKey:=LowerCase(obj.Key);
-            //         if not statusTopics[clsKey].ContainsKey(objKey) then
-            //            statusTopics[clsKey].AddOrSetvalue(objKey,StringBooleanDict.Create);
-            //         for terminal in obj.Value do begin
-            //           if not statusTopics[clsKey][objKey].ContainsKey(terminal.Value.AsString) then
-            //             statusTopics[clsKey][objKey].Add(LowerCase(terminal.Value.AsString), null)
-            //         end;
-            //      end;
-            //  end
-            //else
-              //begin
-              if not topics.ContainsKey(clsKey) then
-               topics.AddOrSetValue(clsKey,ObjectAttributeDict.create([doOwnsValues]));
-               for obj in cls.Value do begin
-                 objKey:=LowerCase(obj.Key);
-                 if not topics[clsKey].ContainsKey(objKey) then
-                   topics[clsKey].AddOrSetvalue(objKey,AttributeTerminalDict.create([doOwnsValues]));
-                   for attri in obj.Value do begin
-                     attriKey:=LowerCase(attri.Key);
-                     if not AttributeToPublish.Contains(attriKey) then
-                       AttributeToPublish.Add(attriKey);
-                     if (clsKey='line') And (attriKey='switchstate') And (not LineSwitchList.Contains(objKey)) then
-                       LineSwitchList.Add(objKey);
-                     if not topics[clsKey][objKey].ContainsKey(attriKey) then
-                       topics[clsKey][objKey].AddOrSetvalue(attriKey,TerminalConductorDict.Create([doOwnsValues]));
-                     if attri.Value is Tjsonarray then begin
-                       terminalKey:='1';
-                       if not topics[clsKey][objKey][attriKey].ContainsKey(terminalKey) then
-                         topics[clsKey][objKey][attriKey].AddOrSetvalue(terminalKey, ConductorValueDict.Create);
-                       if attri.Value.count=0 then
-                          topics[clsKey][objKey][attriKey][terminalKey].Add('-1', '');
-                       for conductor in attri.Value do begin
-                         if not topics[clsKey][objKey][attriKey][terminalKey].ContainsKey(conductor.Value.asstring) then
-                           topics[clsKey][objKey][attriKey][terminalKey].Add(conductor.Value.asstring, '');
-                       end
-                     end
-                     else
-                       for terminal in attri.Value do begin
-                         ////if cls = 'Transformer' then
-                           terminalKey:=LowerCase(terminal.Key);
-                           if not topics[clsKey][objKey][attriKey].ContainsKey(terminalKey) then
-                             topics[clsKey][objKey][attriKey].AddOrSetvalue(terminalKey, ConductorValueDict.Create);
-                           for conductor in terminal.Value do begin
-                             if not topics[clsKey][objKey][attriKey][terminalKey].ContainsKey(conductor.Value.asstring) then
-                               topics[clsKey][objKey][attriKey][terminalKey].Add(conductor.Value.asstring, '')
-                           end;
-                         ////else
-
-                      end;
+            for obj in cls.Value do begin
+              objKey:=LowerCase(obj.Key);
+              top := TFNCSTopic.Create (clsKey, objKey);
+              topicList.Add(top);
+              for attri in obj.Value do begin
+                attriKey := LowerCase(attri.Key);
+                if attri.Value is Tjsonarray then begin
+                  if attri.Value.Count=0 then begin
+                    sub := TFNCSSubTopic.Create (attriKey, '-1', '', top.idx); // switchstate, tapposition, etc.
+                    top.sub.Add(sub);
+                  end else
+                    for conductor in attri.Value do begin
+                      condKey := conductor.Value.asstring;
+                      sub := TFNCSSubTopic.Create (attriKey, '1', condKey, top.idx);
+                      top.sub.Add(sub);
+                    end;
+                end else begin  // attri.Value is not a TJSONArray
+                  for terminal in attri.Value do begin
+                    terminalKey:=LowerCase(terminal.Key);
+                    for conductor in terminal.Value do begin
+                      condKey := conductor.Value.asstring;
+                      sub := TFNCSSubTopic.Create (attriKey, terminalKey, condKey, top.idx);
+                      top.sub.Add(sub);
+                    end;
                   end;
                 end;
-              //end;
-          end
-        else
-            Writeln('unknown key found in OpenDSS config file.');
+              end;
+            end;
+          end;
+        end;
       end;
     finally
       parser.Free;
@@ -784,109 +549,93 @@ begin
   finally
     inputfile.Free;
   end;
-  writeln('Done! This is where we read FNCS publication requests from: ' + fname);
+
+  for top in topicList do
+    for sub in top.sub do
+      sub.text_key := Format ('%s%s%s',[top.tag, sep, sub.tag]);
+
+  if log_level >= fncsLogInfo then
+    writeln('Done reading FNCS publication requests from: ' + fname);
+  if log_level >= fncsLogDebug1 then begin
+    DumpFNCSLists;
+  end;
 end;
-function TFNCS.TopicsToJsonFormat;
-var
-  formatedString,objName,propertyName:string;
-  keyValuePairs:string='';
-  attri:TPair<string,TerminalConductorDict>;
-  cls:TPair<string,ObjectAttributeDict>;
-  obj:TPair<string,AttributeTerminalDict>;
-  terminal:TPair<string,ConductorValueDict>;
-  conductor:TPair<string,string>;
-  firstClassFlag:Boolean=true;
-  firstObjectFlag:Boolean=true;
-  firstAttriFlag:Boolean=true;
-  firstTerminalFlag:Boolean=true;
-begin
-  formatedString:='{'+FedName+':{';
-  if topics.Count > 0 then
-    //firstObjectFlag:=True;
-    for cls in topics do begin
-      //if not firstClassFlag then
-      //  formatedString:=formatedString+',';
-      //formatedString:=formatedString+cls.Key+':{';
-      for obj in cls.Value do begin
-        if not firstObjectFlag then
-          formatedString:=formatedString+',';
-        objName:=cls.Key+'.'+obj.Key;
-        formatedString:=formatedString+objName+':{';
-        //firstAttriFlag:=True;
-        for attri in obj.value do begin
-          //if not firstAttriFlag then
-            //formatedString:=formatedString+',';
-          //formatedString:=formatedString+attri.Key+':{';
-          //firstTerminalFlag:=True;
-          for terminal in attri.Value do begin
-            //if not firstTerminalFlag then
-              //formatedString:=formatedString+',';
-            //formatedString:=formatedString+terminal.Key+':{';
-            for conductor in terminal.Value do begin
-              if keyValuePairs='' then
-              else
-                keyValuePairs:=keyValuePairs+',';
-              if attri.Value.count > 1 Then
-                propertyName:=attri.Key+'.'+terminal.Key+'.'+conductor.Key
-              else if conductor.Key='-1' Then
-                propertyName:=attri.Key
-              else
-                propertyName:=attri.Key+'.'+conductor.Key;
-              keyValuePairs:=keyValuePairs+propertyName+':'+conductor.Value;
-            end;
-          end;
-          //formatedString:=formatedString+'}';
-          //firstAttriFlag:=False;
-        end;
-        formatedString:=formatedString+keyValuePairs+'}';
-        keyValuePairs:='';
-        firstTerminalFlag:=False;
-        //formatedString:=formatedString+'}';
-        firstObjectFlag:=False;
-      end;
-      //formatedString:=formatedString+'}';
-      //firstClassFlag:=False;
-    end;
-  formatedString:=formatedString+'}}';
-  TopicsToJsonFormat:=formatedString
-end;
+
 // called from ActiveSolution.Increment_time
 function TFNCS.FncsTimeRequest (next_fncs:fncs_time): Boolean;
 var
   time_granted: fncs_time;
-  events: ppchar;
   key, value: pchar;
   i: integer;
   ilast: size_t;
   nvalues, ival: size_t;
-  values: ppchar;
-  formatedStr:string;
-begin { TFNCS.FncsTimeRequest }
-//  writeln('  FNCS next time is ' + format('%u', [next_fncs]));
+  re, im: double;
+  ld: TLoadObj;
+  Hour: integer;
+  Sec: double;
+begin
   // execution blocks here, until FNCS permits the time step loop to continue
-  //do actual publiction here
-  //1, get all values that need to be published
-  GetValuesForTopics;
-  formatedStr:=TopicsToJsonFormat;
-  //2, form the json string that need to be published
-  fncs_publish ('fncs_output', PChar(formatedStr));
-  time_granted := fncs_time_request (next_fncs);
-//  writeln('  FNCS time granted is ' + format('%u', [time_granted]));
-  ilast := fncs_get_events_size();
-  // TODO: executing OpenDSS commands here may cause unwanted interactions
-  if ilast > 0 then begin
-    events := fncs_get_events();
-    for i := 0 to ilast-1 do begin
-      key := events[i];
-      nvalues := fncs_get_values_size (key);
-      values := fncs_get_values (key);
-      for ival := 0 to nvalues-1 do begin
-        value := values[ival];
-        writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
-        DSSExecutive.Command := value;
-        fncs_publish('fncs_output', value);
+  time_granted := 0;
+  while time_granted < next_fncs do begin
+    ET.Clear;
+    ET.Start;
+    time_granted := fncs_time_request (next_fncs);
+    ETFncsTimeRequest := ETFncsTimeRequest + ET.Elapsed;
+    ET.Clear;
+    if log_level >= fncsLogDebug2 then begin
+      Writeln(Format('  Already granted %u by FNCS and requested %u, granted %u', [existing_fncs_grant, next_fncs, time_granted]));
+      system.flush (stdout);
+    end;
+    Hour := ActiveCircuit.Solution.DynaVars.intHour;
+    Sec :=  ActiveCircuit.Solution.Dynavars.t;
+    if time_granted >= next_fncs_publish then begin
+      if topicList.Count > 0 then begin
+        if log_level >= fncsLogDebug2 then begin
+          Writeln(Format('  Stream size %u at %u, next at %u, interval %u, %d:%.3f', 
+            [fncsOutputStream.size, time_granted, next_fncs_publish, PublishInterval, Hour, Sec]));
+          system.flush (stdout);
+        end;
+        TopicsListToPublication;
+      end;
+      while next_fncs_publish <= time_granted do
+        next_fncs_publish := next_fncs_publish + PublishInterval;
+    end;
+    ET.Clear;
+    ET.Start;
+    ilast := fncs_count_events();
+    // TODO: executing OpenDSS commands here may cause unwanted interactions
+    for i := 1 to ilast do begin
+      key := fncs_next_event();
+      nvalues := fncs_count_values (key);
+      if CompareText (key, 'command') = 0 then begin
+        for ival := 1 to nvalues do begin
+          value := fncs_next_value();
+          if log_level >= fncsLogDebug2 then begin
+            writeln(Format('  FNCSTimeRequest command %s at %u, %d:%.3f', 
+              [value, time_granted, Hour, Sec]));
+            system.flush (stdout);
+          end;
+          DSSExecutive.Command := value;
+        end;
+      end else if Pos ('#load', key) > 0 then begin
+        value := fncs_next_value();
+        re := StrToFloat (ExtractWord (1, value, ['+', 'j', ' ']));
+        im := StrToFloat (ExtractWord (2, value, ['+', 'j', ' ']));
+        ActiveCircuit.SetElementActive ('load.F1_house_B0');
+        ld := TLoadObj (ActiveCircuit.ActiveCktElement);
+        ld.LoadSpecType := 1;
+        ld.kwBase := re;
+        ld.kvarBase := im;
+        ld.RecalcElementData;
+        if log_level >= fncsLogDebug2 then begin
+          writeln(Format ('FNCS Request %s to %g + j %g at %u, %d:%.3f', 
+            [ld.Name, re, im, time_granted, Hour, Sec]));
+          system.flush (stdout);
+        end;
       end;
     end;
+    ETFncsGetEvents := ETFncsGetEvents + ET.Elapsed;
+    ET.Clear;
   end;
   Result := True;
 end;
@@ -894,38 +643,66 @@ end;
 procedure TFNCS.RunFNCSLoop (const s:string);
 var
   time_granted, time_stop: fncs_time;
-  events: ppchar;
   key, value: pchar;
   i: integer;
   ilast: size_t;
   nvalues, ival: size_t;
-  values: ppchar;
 begin
   time_granted := 0;
   time_stop := InterpretStopTimeForFNCS(s);
-  writeln(Format('Starting FNCS loop to run %s or %u seconds', [s, time_stop]));
+  if log_level >= fncsLogInfo then
+    writeln(Format('Starting FNCS loop to run %s or %u seconds', [s, time_stop]));
+  ET.Clear;
+  ET.Start;
   fncs_initialize;
+  ETFncsLoad := ETFncsLoad + ET.Elapsed;
+  ET.Clear;
+  in_fncs_loop := True;
 
   Try
     while time_granted < time_stop do begin
+      ET.Clear;
+      ET.Start;
       time_granted := fncs_time_request (time_stop);
-      ilast := fncs_get_events_size();
-      if ilast > 0 then begin
-        events := fncs_get_events();
-        for i := 0 to ilast-1 do begin
-          key := events[i];
-          nvalues := fncs_get_values_size (key);
-          values := fncs_get_values (key);
-          for ival := 0 to nvalues-1 do begin
-            value := values[ival];
-            writeln(Format('FNCS command %s at %u', [value, time_granted]));
+      ETFncsTimeRequest := ETFncsTimeRequest + ET.Elapsed;
+      ET.Clear;
+      existing_fncs_grant := time_granted;
+      ET.Start;
+      ilast := fncs_count_events();
+      for i := 1 to ilast do begin
+        key := fncs_next_event();
+        nvalues := fncs_count_values (key);
+        if CompareText (key, 'command') = 0 then begin
+          for ival := 1 to nvalues do begin
+            value := fncs_next_value();
+            if log_level >= fncsLogDebug1 then begin
+              writeln(Format('FNCS command %s at %u, val %u of %u, evt %u of %u', 
+                [value, time_granted, ival, nvalues, i, ilast]));
+              system.flush (stdout);
+            end;
             DSSExecutive.Command := value;
-            fncs_publish ('fncs_output', value);
+            if log_level >= fncsLogDebug1 then begin
+              writeln(Format('Finished with %s at %u, val %u of %u, evt %u of %u', 
+                [value, time_granted, ival, nvalues, i, ilast]));
+              system.flush (stdout);
+            end;
+          end;
+        end else if Pos ('#load', key) > 0 then begin
+          value := fncs_next_value();
+          if log_level >= fncsLogDebug1 then begin
+            writeln(Format ('FNCS Loop %s to %s', [key, value]));
+            system.flush (stdout);
           end;
         end;
       end;
+      ETFncsGetEvents := ETFncsGetEvents + ET.Elapsed;
+      ET.Clear;
+      existing_fncs_grant := 0;
     end;
   finally
+    in_fncs_loop := False;
+    writeln(Format('FNCS Timing: LoadLib=%.6f, ReadConfig=%.6f, TimeRequests=%.6f, GetEvents=%.6f, Publish=%.6f', 
+      [ETFncsLoad, ETFncsReadPub, ETFncsTimeRequest, ETFncsGetEvents, ETFncsPublish]));
     fncs_finalize;
   end;
 end;
@@ -934,6 +711,11 @@ function TFNCS.IsReady:Boolean;
 begin
   Result := True;
   if FLibHandle = DynLibs.NilHandle then Result := False;
+end;
+
+function TFNCS.IsRunning:Boolean;
+begin
+  Result := in_fncs_loop;
 end;
 
 function TFNCS.find_fncs_function (name: String): Pointer;
@@ -946,21 +728,46 @@ begin
 end;
 
 constructor TFNCS.Create;
+var 
+  s: String;
 begin
+  sep := '/';
+  PublishInterval := 1;
+  PublishMode := fncsPublishJSON;
+  ET := TEpikTimer.Create(nil);
+  ETFncsReadPub := 0.0;
+  ETFncsPublish := 0.0;
+  ETFncsLoad := 0.0;
+  ETFncsGetEvents := 0.0;
+  ETFncsTimeRequest := 0.0;
+  existing_fncs_grant := 0;
+  in_fncs_loop := False;
+  log_level := fncsLogWarning;
+  s := GetEnvironmentVariable ('FNCS_LOG_LEVEL');
+  if s = 'INFO' then 
+    log_level := fncsLogInfo
+  else if s = 'DEBUG' then
+    log_level := fncsLogDebug1
+  else if s = 'DEBUG1' then
+    log_level := fncsLogDebug1
+  else if s = 'DEBUG2' then
+    log_level := fncsLogDebug2
+  else if s = 'DEBUG3' then
+    log_level := fncsLogDebug3
+  else if s = 'DEBUG4' then
+    log_level := fncsLogDebug4;
+
+  ET.Clear;
+  ET.Start;
+{$IFDEF Windows}
+  FLibHandle := SafeLoadLibrary ('fncs.' + SharedSuffix);
+{$ELSE} // Darwin and Unix
   FLibHandle := SafeLoadLibrary ('libfncs.' + SharedSuffix);
-  AttributeToPublish:=TList<string>.Create;
-  LineSwitchList:=TList<string>.Create;
-  VoltageTopics:=TStringList.Create;
-  CurrentTopics:=TStringList.Create;
-  PowerTopics:=TStringList.Create;
-  topics:=ClassObjectDict.create([doOwnsValues]);
-  //tapTopics:=ClassObjectIntDict.create([doOwnsValues]);
-  //statusTopics:=ClassObjectBoolDict.create([doOwnsValues]);
-//  writeln(FLibHandle);
+{$ENDIF}
+  topicList:=TList.Create();
   if FLibHandle <> DynLibs.NilHandle then begin
     FuncError := False;
     @fncs_initialize := find_fncs_function ('fncs_initialize');
-//    writeln (HexStr(PtrUInt(@fncs_initialize),8));
     if not FuncError then @fncs_initialize_config := find_fncs_function ('fncs_initialize_config');
     if not FuncError then @fncs_agentRegister := find_fncs_function ('fncs_agentRegister');
     if not FuncError then @fncs_agentRegisterConfig := find_fncs_function ('fncs_agentRegisterConfig');
@@ -989,23 +796,23 @@ begin
     if not FuncError then @fncs_get_simulator_count := find_fncs_function ('fncs_get_simulator_count');
     if not FuncError then @fncs_get_version := find_fncs_function ('fncs_get_version');
     if not FuncError then @fncs_free := find_fncs_function ('_fncs_free');
+    if not FuncError then @fncs_count_events := find_fncs_function ('fncs_count_events');
+    if not FuncError then @fncs_count_values := find_fncs_function ('fncs_count_values');
+    if not FuncError then @fncs_next_event := find_fncs_function ('fncs_next_event');
+    if not FuncError then @fncs_next_value := find_fncs_function ('fncs_next_value');
     if FuncError then begin
       UnloadLibrary(FlibHandle);
       FLibHandle := DynLibs.NilHandle;
     end;
   end;
+  ETFncsLoad := ETFncsLoad + ET.Elapsed;
+  ET.Clear;
 end;
 
 destructor TFNCS.Destroy;
 begin
-  AttributeToPublish.Free;
-  LineSwitchList.Free;
-  VoltageTopics.Free;
-  CurrentTopics.Free;
-  PowerTopics.Free;
-  topics.free;
-  //tapTopics.free;
-  //statusTopics.free;
+  in_fncs_loop := False;
+  topicList.Free;
   If FLibHandle <> DynLibs.NilHandle Then Begin
     UnloadLibrary(FLibHandle);
   End;

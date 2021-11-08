@@ -1,0 +1,150 @@
+#set double_format=%+.12lg
+#set profiler=1
+#set randomseed=10
+#set relax_naming_rules=1
+#set savefile=test.xml
+#set minimum_timestep=15
+
+clock {
+	timezone PST+8PDT;
+	starttime '2013-07-01 00:00:00';
+	stoptime '2013-07-02 00:00:00';
+}
+
+module climate;
+module connection; // FNCS
+module residential {
+	implicit_enduses NONE;
+}
+module tape;
+
+#include "water_and_setpoint_schedule_v3.glm"
+#include "appliance_schedules.glm"
+
+//object csv_reader {
+//  name CsvReader;
+//  filename weather.dat;
+//};
+object climate {
+  name localWeather;
+//  reader CsvReader;
+//  tmyfile weather.dat;
+  tmyfile "AZ-Tucson_International_Ap.tmy3";
+  interpolate QUADRATIC;
+	latitude 32.133;
+	longitude -111.95;
+};
+
+object house {
+	name F1_house_B0;
+	schedule_skew 577;
+	Rroof 17.618;
+	Rwall 6.872;
+	Rfloor 4.818;
+	Rdoors 3;
+	Rwindows 1.315;
+	airchange_per_hour 1.288;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.311;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 2.502;
+	floor_area 637.886;
+	number_of_doors 1;
+	air_temperature 68.886;
+	mass_temperature 68.886;
+  cooling_setpoint cooling5*1.099+1.19;
+	heating_setpoint heating5*1.043+1.41;
+  external_pf_mode TWOV;
+  external_v1N 120.0;
+  external_v2N -120.0;
+object ZIPload {
+	schedule_skew 577;
+	heat_fraction 0.889;
+	base_power LIGHTS*1.7284;
+	power_pf 0;
+	power_fraction 0;
+	current_pf 0;
+	current_fraction 0;
+	impedance_pf 1;
+	impedance_fraction 1;
+};
+object ZIPload {
+	schedule_skew 577;
+	heat_fraction 0.732;
+	base_power CLOTHESWASHER*0.9135;
+	power_pf 0.97;
+	power_fraction 1;
+	current_pf 0.97;
+	current_fraction 0;
+	impedance_pf 0.97;
+	impedance_fraction 0;
+};
+object ZIPload {
+	schedule_skew 577;
+	heat_fraction 0.853;
+	base_power REFRIGERATOR*0.8837;
+	power_pf 0.97;
+	power_fraction 1;
+	current_pf 0.97;
+	current_fraction 0;
+	impedance_pf 0.97;
+	impedance_fraction 0;
+};
+object ZIPload {
+	schedule_skew 577;
+	heat_fraction 0.875;
+	base_power DRYER*0.5453;
+	power_pf 0.9;
+	power_fraction 0.1;
+	current_pf 0.9;
+	current_fraction 0.1;
+	impedance_pf 1;
+	impedance_fraction 0.8;
+};
+object ZIPload {
+	schedule_skew 577;
+	heat_fraction 0.76;
+	base_power RANGE*0.6705;
+	power_pf 0;
+	power_fraction 0;
+	current_pf 0;
+	current_fraction 0;
+	impedance_pf 1;
+	impedance_fraction 1;
+};
+object ZIPload {
+	schedule_skew 577;
+	heat_fraction 0.951;
+	base_power MICROWAVE*0.7977;
+	power_pf 0.97;
+	power_fraction 1;
+	current_pf 0.97;
+	current_fraction 0;
+	impedance_pf 0.97;
+	impedance_fraction 0;
+};
+}
+
+object helics_msg {
+     name gridlabd;
+     message_type GENERAL;
+     configure gldhouseshelics.json;
+}
+
+object recorder {
+	parent localWeather;
+	property temperature,humidity,solar_flux;
+	interval 60;
+	file weather.csv;
+}
+object recorder {
+	parent F1_house_B0;
+	property hvac_load,panel.power,voltage_1N,voltage_2N,voltage_12;
+	interval 15;
+	file F1_house_B0.csv;
+}

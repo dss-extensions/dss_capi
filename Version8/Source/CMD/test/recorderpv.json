@@ -1,0 +1,14 @@
+{
+  "subscriptions" : [
+    {
+      "key" : "opendss/helics_output", 
+      "type" : "string",
+      "required" : true
+    },
+    {
+      "key" : "player/command", 
+      "type" : "string",
+      "required" : true
+    }
+  ]
+}

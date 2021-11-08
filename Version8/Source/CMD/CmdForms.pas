@@ -10,7 +10,7 @@ unit CmdForms;
 {
 	08/17/2016  Created from OpenDSS
  ----------------------------------------------------------
-  Copyright (c) 2016 Battelle Memorial Institute
+  Copyright (c) 2016-2020 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 
@@ -24,9 +24,9 @@ VAR
    PROCEDURE CreateControlPanel;
    PROCEDURE ExitControlPanel;
    PROCEDURE InitProgressForm;
-   Procedure ProgressCaption(const S:String; ActorID:Integer);
-   Procedure ProgressFormCaption(const S:String; ActorID:Integer);
-   Procedure ProgressHide(ActorID:Integer);
+   Procedure ProgressCaption(const S:String);
+   Procedure ProgressFormCaption(const S:String);
+   Procedure ProgressHide;
    PROCEDURE ShowControlPanel;
    PROCEDURE ShowHelpForm ;
    PROCEDURE ShowAboutBox;
@@ -40,6 +40,8 @@ VAR
    Procedure ShowTreeView(Const Fname:String);
    FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
    procedure ShowHeapUsage; // copied from Lazarus form; not used in command line yet
+
+{$INCLUDE VersionString.inc}
 
 implementation
 
@@ -66,26 +68,26 @@ PROCEDURE ShowPctProgress(Count:Integer);
 Begin
 End;
 
-Procedure ProgressCaption(const S:String; ActorID:Integer);
+Procedure ProgressCaption(const S:String);
 Begin
 	Writeln('Progress: ', S);
 End;
 
-Procedure ProgressFormCaption(const S:String; ActorID:Integer);
+Procedure ProgressFormCaption(const S:String);
 begin
 	Writeln('Progress: ', S);
 End;
 
-Procedure ProgressHide(ActorID:Integer);
+Procedure ProgressHide;
 Begin
 End;
 
 Procedure ShowAboutBox;
 begin
 	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
-	writeln (VersionString);
-	writeln ('Copyright (c) 2008-2017, Electric Power Research Institute, Inc.');
-	writeln ('Copyright (c) 2016-2017, Battelle Memorial Institute');
+	writeln ('Version: ' + VersionString);
+	writeln ('Copyright (c) 2008-2021, Electric Power Research Institute, Inc.');
+	writeln ('Copyright (c) 2016-2021, Battelle Memorial Institute');
 	writeln ('All rights reserved.');
 End;
 
@@ -134,11 +136,11 @@ Var
   pDSSClass :TDSSClass;
   i,j       :Integer;
 begin
-  HelpList := TList.Create();
-  pDSSClass := DSSClassList[ActiveActor].First;
+	HelpList := TList.Create();
+  pDSSClass := DSSClassList.First;
   WHILE pDSSClass<>Nil DO Begin
     If (pDSSClass.DSSClassType AND BASECLASSMASK) = BaseClass Then HelpList.Add (pDSSClass);
-    pDSSClass := DSSClassList[ActiveActor].Next;
+    pDSSClass := DSSClassList.Next;
   End;
   HelpList.Sort(@CompareClassNames);
 
@@ -203,7 +205,7 @@ var
   i :Integer;
 begin
   if Length(opt) > 0 then begin
-    pDSSClass := DSSClassList[ActiveActor].First;
+    pDSSClass := DSSClassList.First;
     while pDSSClass<>nil do begin
       if AnsiStartsStr (opt, LowerCase(pDSSClass.name)) then begin
         writeln (UpperCase (pDSSClass.name));
@@ -211,7 +213,7 @@ begin
         for i := 1 to pDSSClass.NumProperties do
           writeln ('  ', pDSSClass.PropertyName[i], ': ', pDSSClass.PropertyHelp^[i]);
       end;
-      pDSSClass := DSSClassList[ActiveActor].Next;
+      pDSSClass := DSSClassList.Next;
     end;
   end else begin
   	writeln('== Power Delivery Elements ==');
@@ -233,10 +235,10 @@ PROCEDURE ShowHelpForm;
 VAR
   Param, OptName:String;
 Begin
-  Parser[ActiveActor].NextParam;
-  Param := LowerCase(Parser[ActiveActor].StrValue);
-  Parser[ActiveActor].NextParam;
-  OptName := LowerCase(Parser[ActiveActor].StrValue);
+  Parser.NextParam;
+  Param := LowerCase(Parser.StrValue);
+  Parser.NextParam;
+  OptName := LowerCase(Parser.StrValue);
   if ANSIStartsStr ('com', param) then
   	ShowAnyHelp (NumExecCommands, @ExecCommand, @CommandHelp, OptName)
   else if ANSIStartsStr ('op', param) then

@@ -1,0 +1,25 @@
+{
+	"name":"opendss",
+	"publishInterval":5,
+	"publishMode":"Text",
+	"topics":{
+		"Bus":{
+      "house":{
+				"Voltage":["A","B"]
+      }
+    },
+		"Transformer":{
+			"REG1":{
+				"Power":["A"],
+				"TapPosition":[]
+			}
+    },
+    "Line":{
+			"671692":{
+				"Current":{"2":["A","B","C"]},
+				"SwitchState":[]
+			}
+		}
+	}
+}
+

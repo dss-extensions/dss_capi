@@ -1,0 +1,15 @@
+name: opendss
+time_delta: 1s
+broker: tcp://localhost:5570
+values:
+    command:
+        topic: player/command
+        default: 0
+        list: true
+    F1_house_B0#load:
+        topic: gld1/F1_house_B0/load
+        default: 0
+    solar_flux:
+        topic: gld1/weather/solar_flux
+        default: 0
+

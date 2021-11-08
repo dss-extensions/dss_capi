@@ -1,0 +1,55 @@
+{
+  "coreType" : "zmq",
+  "name" : "gridlabd",
+  "period" : 1,
+  "loglevel" : 0,
+//  "publications" : [
+//    {
+//      "global" : false,
+//      "key" : "localWeather/solar_flux", 
+//      "type" : "double",
+//      "info" : "{\"object\":\"localWeather\",\"property\":\"solar_direct\"}"
+//    },
+//    {
+//      "global" : false,
+//      "key" : "F1_house_B0/load", 
+//      "type" : "complex",
+//      "info" : "{\"object\":\"F1_house_B0\",\"property\":\"power\"}"
+//    }
+//  ],
+//  "subscriptions" : [
+//    {
+//      "key" : "opendss/bus/house/voltage/A", 
+//      "type" : "complex",
+//      "required" : true,
+//      "info" : "{\"object\":\"F1_house_B0\",\"property\":\"external_v1N\"}"
+//    },
+//    {
+//      "key" : "opendss/bus/house/voltage/B", 
+//      "type" : "complex",
+//      "required" : true,
+//      "info" : "{\"object\":\"F1_house_B0\",\"property\":\"external_v2N\"}"
+//    }
+//  ],
+  "endpoints" : [
+    {
+      "global" : false,
+      "name" : "gld_output",
+      "destination" : "opendss/helics_input_from_gld", 
+      "type" : "string",
+      "info": "{\"F1_house_B0\": [\"power\"], \"localWeather\": [\"solar_direct\"]}"
+    },
+//    {
+//      "global" : false,
+//      "name" : "gld_output2",
+//      "destination" : "recorder/gld_output", 
+//      "type" : "string",
+//      "info": "{\"F1_house_B0\": [\"power\"], \"localWeather\": [\"solar_direct\"]}"
+//    },
+    {
+      "global" : false,
+      "name" : "gld_input",
+      "type" : "string"
+    }
+  ]
+}

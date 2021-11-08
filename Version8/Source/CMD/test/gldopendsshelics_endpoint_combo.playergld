@@ -1,0 +1,22 @@
+#mess	time		src		dest			value
+M	1		command	opendss/helics_input_from_player	"redirect IEEE13Base.dss"
+M	2		command	opendss/helics_input_from_player	"new XfmrCode.CT5  phases=1 windings=3 kvs=[2.4 0.12 0.12] kVAs=[5.0 5.0 5.0] %imag=0.5 %Rs=[0.6 1.2 1.2] %noloadloss=0.2 Xhl=2.04 Xht=2.04 Xlt=1.36"
+M	3		command	opendss/helics_input_from_player	"new Transformer.Tpoletop XfmrCode=CT5 buses=[680.1 house.1.0 house.0.2]"
+M	4		command	opendss/helics_input_from_player	"new Load.F1_house_B0 phases=2 Bus1=house.1.2 kv=0.208 conn=wye model=1 kW=0.1 kvar=0"
+M	5		command	opendss/helics_input_from_player	"new pvsystem.pv1 bus1=634 phases=3 kV=0.48 irradiance=1 pmpp=285 kVA=300"
+M	6		command	opendss/helics_input_from_player	"new monitor.pv1v  element=pvsystem.pv1 terminal=1 mode=96"
+M	7		command	opendss/helics_input_from_player	"new monitor.pv1pq element=pvsystem.pv1 terminal=1 mode=65 PPolar=NO"
+M	8		command	opendss/helics_input_from_player	"new monitor.fdrpq element=line.650632 terminal=1 mode=65 PPolar=NO"
+M	9		command	opendss/helics_input_from_player	"new monitor.hsepq element=load.F1_house_B0 terminal=1 mode=65 PPolar=NO"
+M	10		command	opendss/helics_input_from_player	solve
+M	11		command	opendss/helics_input_from_player	"export summary pvsnap_summary.csv"
+M	12		command	opendss/helics_input_from_player	"set controlmode=static"
+M	13		command	opendss/helics_input_from_player	"set maxcontroliter=1000"
+M	14		command	opendss/helics_input_from_player	"helicspub"
+M	15		command	opendss/helics_input_from_player	"solve mode=daily stepsize=1s number=86400"
+M	42401500000000	command	opendss/helics_input_from_player	"open Line.671692 1"
+M	86400999999990	command	opendss/helics_input_from_player	"export monitors pv1v"
+M	86400999999992	command	opendss/helics_input_from_player	"export monitors pv1pq"
+M	86400999999994	command	opendss/helics_input_from_player	"export monitors fdrpq"
+M	86400999999996	command	opendss/helics_input_from_player	"export monitors hsepq"
+M	86401000000000	command	opendss/helics_input_from_player	quit

@@ -6,7 +6,7 @@ program opendsscmd;
 {$ENDIF}
 
 { ----------------------------------------------------------
-  Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -41,7 +41,7 @@ program opendsscmd;
 {
 	08/17/2016  Created from OpenDSS
  ----------------------------------------------------------
-  Copyright (c) 2016 Battelle Memorial Institute
+  Copyright (c) 2016-2021 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 
@@ -173,7 +173,8 @@ uses
   XYcurve in '..\General\XYcurve.pas',
   Ymatrix in '..\Common\Ymatrix.pas',
   FNCS in 'fncs.pas',
-//  editline in 'editline.pas',
+  HELICS in 'helics.pas',
+  epiktimer in '..\epiktimer\epiktimer.pas',
   linenoise in 'linenoise.pas';
 
 
@@ -250,17 +251,18 @@ begin
 
 	NoFormsAllowed := False;  // messages will go to the console
 
-  ActiveFNCS := TFNCS.Create;
-  if ActiveFNCS.IsReady then begin
-    writeln('FNCS available');
-  end else begin
-    writeln('FNCS not available');
-  end;
+  //ActiveFNCS := TFNCS.Create;
+  //if ActiveFNCS.IsReady then begin
+  //  writeln('FNCS available');
+  //end else begin
+  //  writeln('FNCS not available');
+  //end;
 
 	// quick check parameters
-  ErrorMsg:=CheckOptions('hf', 'help fncs');
+  ErrorMsg:=CheckOptions('hflv', 'help fncs helics version');
   if ErrorMsg<>'' then begin
     writeln(ErrorMsg);
+		WriteHelp;
 //    ShowException(Exception.Create(ErrorMsg));
     Terminate;
     Exit;
@@ -273,7 +275,19 @@ begin
     Exit;
   end;
 
+  if HasOption('v', 'version') then begin
+    ShowAboutBox;
+    Terminate;
+    Exit;
+  end;
+
   if HasOption('f', 'fncs') then begin
+      ActiveFNCS := TFNCS.Create;
+      if ActiveFNCS.IsReady then begin
+        writeln('FNCS available');
+      end else begin
+        writeln('FNCS not available');
+      end;
     if ActiveFNCS.IsReady and (paramcount > 1) then begin // ParamStr(2) is the required stop time
       if paramcount > 2 then begin
     	  Cmd := 'compile ' + ParamStr(3);
@@ -289,6 +303,33 @@ begin
       ActiveFNCS.RunFNCSLoop (ParamStr(2));
     end else begin
       writeln ('FNCS option failed: the FNCS library could not be loaded');
+    end;
+    Terminate;
+    Exit;
+  end;
+
+  if HasOption('l', 'helics') then begin
+      ActiveHELICS := THELICS.Create;
+      if ActiveHELICS.IsReady then begin
+        writeln('HELICS available');
+      end else begin
+        writeln('HELICS not available');
+      end;
+    if ActiveHELICS.IsReady and (paramcount > 1) then begin // ParamStr(2) is the required stop time
+      if paramcount > 2 then begin
+    	  Cmd := 'compile ' + ParamStr(3);
+        writeln(Cmd);
+        DSSExecutive.Command := Cmd;
+        if DSSExecutive.Error <> 0 then begin
+    		  writeln('Last Error: ' + DSSExecutive.LastError);
+          writeln('HELICS option failed: the optional filename would not compile first');
+          Terminate;
+          Exit;
+        end;
+      end;
+      ActiveHELICS.RunHELICSLoop (ParamStr(2));
+    end else begin
+      writeln ('HELICS option failed: the HELICS library could not be loaded');
     end;
     Terminate;
     Exit;
@@ -352,16 +393,30 @@ end;
 
 procedure TMyApplication.WriteHelp;
 begin
-  writeln('Usage: ', ExeName, ' [-h | -f] [stop_time] [filename]');
-  writeln(' [filename] optional DSS command file. If provided, runs this file and exits.');
+  writeln('Usage: ', ExeName, ' [-v | -h | -f | -l] [stop_time] [filename]');
+  writeln(' [filename] optional DSS command file.');
   writeln('      If provided, runs this file and exits.');
   writeln('      If not provided, accepts user commands at the >> prompt.');
   writeln(' -h displays this message and exits');
   writeln(' -f stop_time [filename] starts in FNCS co-simulation mode');
-	writeln('      stop_time is the co-simulation stopping time in seconds');
+	writeln('      Stop_time is the co-simulation stopping time in seconds;');
 	writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
-	writeln('      if filename is provided, that will be compiled before starting FNCS');
+	writeln('      If filename is provided, that will be compiled before starting FNCS');
   writeln('      This option requires FNCS installation and opendss.yaml file');
+	writeln('      Run with Envar FNCS_LOG_LEVEL=WARNING (default), INFO or DEBUG* to generate more logging output,');
+	writeln('        DEBUG1 for FNCS command echo, outside the time step loop,');
+	writeln('        DEBUG2 for FNCS command echo, inside the time step loop,');
+	writeln('        DEBUG3 for FNCS topic map echo.');
+  writeln(' -l stop_time [filename] starts in HELICS co-simulation mode');
+	writeln('      Stop_time is the co-simulation stopping time in seconds;');
+	writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
+	writeln('      If filename is provided, that will be compiled before starting HELICS');
+  writeln('      This option requires HELICS installation and opendss.json file');
+	writeln('      Run with Envar HELICS_LOG_LEVEL=WARNING (default), INFO or DEBUG* to generate more logging output,');
+	writeln('        DEBUG1 for HELICS command echo, outside the time step loop,');
+	writeln('        DEBUG2 for HELICS command echo, inside the time step loop,');
+	writeln('        DEBUG3 for HELICS topic map echo.');
+  writeln(' -v displays the version and exits');
 end;
 
 var

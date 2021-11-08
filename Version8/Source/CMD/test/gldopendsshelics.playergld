@@ -1,0 +1,22 @@
+#time	topic		value
+-1	command	"redirect IEEE13Base.dss"
+1 command "new XfmrCode.CT5  phases=1 windings=3 kvs=[2.4 0.12 0.12] kVAs=[5.0 5.0 5.0] %imag=0.5 %Rs=[0.6 1.2 1.2] %noloadloss=0.2 Xhl=2.04 Xht=2.04 Xlt=1.36"
+2 command "new Transformer.Tpoletop XfmrCode=CT5 buses=[680.1 house.1.0 house.0.2]"
+3 command "new Load.F1_house_B0 phases=2 Bus1=house.1.2 kv=0.208 conn=wye model=1 kW=0.1 kvar=0"
+4 command "new pvsystem.pv1 bus1=634 phases=3 kV=0.48 irradiance=1 pmpp=285 kVA=300"
+5 command "new monitor.pv1v  element=pvsystem.pv1 terminal=1 mode=96"
+6 command "new monitor.pv1pq element=pvsystem.pv1 terminal=1 mode=65 PPolar=NO"
+7 command "new monitor.fdrpq element=line.650632 terminal=1 mode=65 PPolar=NO"
+8 command "new monitor.hsepq element=load.F1_house_B0 terminal=1 mode=65 PPolar=NO"
+9 command solve
+10 command	"export summary pvsnap_summary.csv"
+11 command	"set controlmode=static"
+12 command	"set maxcontroliter=1000"
+13 command	 "helicspub fname=houses.json"
+14 command	 "solve mode=daily stepsize=1s number=86400"
+42401500000000 command "open Line.671692 1"
+86400999999990 command "export monitors pv1v"
+86400999999992 command "export monitors pv1pq"
+86400999999994 command "export monitors fdrpq"
+86400999999996 command "export monitors hsepq"
+86401000000000 command quit

@@ -1,0 +1,35 @@
+name: tracer
+time_delta: 1s
+broker: tcp://localhost:5570
+values:
+    v1:
+        topic: opendss/bus/house/voltage/A
+        default: 120
+    v2:
+        topic: opendss/bus/house/voltage/B
+        default: -120
+    tap:
+        topic: opendss/transformer/reg1/tapposition
+        default: 0
+    pa:
+        topic: opendss/transformer/reg1/power/1/A
+        default: 0
+    state:
+        topic: opendss/line/671692/switchstate
+        default: 0
+    ia:
+        topic: opendss/line/671692/current/2/A
+        default: 0
+    ib:
+        topic: opendss/line/671692/current/2/B
+        default: 0
+    ic:
+        topic: opendss/line/671692/current/2/C
+        default: 0
+    F1_house_B0#load:
+        topic: gld1/F1_house_B0/load
+        default: 0
+    solar_flux:
+        topic: gld1/weather/solar_flux
+        default: 0
+

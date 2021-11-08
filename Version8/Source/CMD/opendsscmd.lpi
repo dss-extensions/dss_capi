@@ -27,10 +27,22 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="IEEE13Nodeckt.dss"/>
+        <HostApplicationFilename Value="\home\xcosmos\src\OpenDSS\Version7\Source\CMD\test\opendsscmd"/>
+        <CommandLineParams Value="-l 25h"/>
+        <WorkingDirectory Value="\home\xcosmos\src\OpenDSS\Version7\Source\CMD\test"/>
       </local>
+      <environment>
+        <UserOverrides Count="6">
+          <Variable0 Name="FNCS_CONFIG_FILE" Value="opendssgld.yaml"/>
+          <Variable1 Name="FNCS_LOG_LEVEL" Value="DEBUG4"/>
+          <Variable2 Name="HELICS_CONFIG_FILE" Value="gldopendsshouseshelics.json"/>
+          <Variable3 Name="HELICS_CONFIG_FILE2" Value="gldopendsshelics_endpoints_combo.json"/>
+          <Variable4 Name="HELICS_CONFIG_FILE3" Value="opendss.json"/>
+          <Variable5 Name="HELICS_LOG_LEVEL" Value="DEBUG4"/>
+        </UserOverrides>
+      </environment>
     </RunParams>
-    <Units Count="122">
+    <Units Count="125">
       <Unit0>
         <Filename Value="opendsscmd.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -523,6 +535,19 @@
         <Filename Value="linenoise.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit121>
+      <Unit122>
+        <Filename Value="..\PDElements\AutoTrans.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit122>
+      <Unit123>
+        <Filename Value="..\epiktimer\epiktimer.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit123>
+      <Unit124>
+        <Filename Value="helics.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="HELICS"/>
+      </Unit124>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -533,7 +558,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Plot;..\Meters;..\PCElements;..\Executive;..\Parser;$(ProjOutDir)"/>
-      <Libraries Value="lib"/>
+      <Libraries Value="\lib\x86_64-linux-gnu\;..\..\..\..\KLUSolve\Lib;lib"/>
       <OtherUnitFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Meters;..\PCElements;..\Executive;..\Parser"/>
       <UnitOutputDirectory Value="units\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
@@ -543,23 +568,28 @@
       </SyntaxOptions>
     </Parsing>
     <CodeGeneration>
-      <Checks>
-        <StackChecks Value="True"/>
-      </Checks>
       <TargetCPU Value="x86_64"/>
       <Optimizations>
-        <OptimizationLevel Value="2"/>
+        <OptimizationLevel Value="0"/>
       </Optimizations>
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <GenerateDebugInfo Value="False"/>
+        <DebugInfoType Value="dsDwarf2Set"/>
       </Debugging>
       <Options>
-        <LinkerOptions Value="-lc -lm -lgcc_s -lstdc++"/>
+        <PassLinkerOptions Value="True"/>
+        <LinkerOptions Value="-lc -lm -lgcc_s -lstdc++ -lpthread"/>
       </Options>
     </Linking>
     <Other>
+      <Verbosity>
+        <ShoLineNum Value="True"/>
+        <ShowAll Value="True"/>
+      </Verbosity>
+      <ConfigFile>
+        <ConfigFilePath Value="linuxopts.cfg"/>
+      </ConfigFile>
       <CustomOptions Value="-dBorland -dVer150 -dDelphi7 -dCompiler6_Up -dPUREPASCAL"/>
     </Other>
   </CompilerOptions>
