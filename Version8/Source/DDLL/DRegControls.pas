@@ -294,7 +294,7 @@ begin
   2: begin  // RegControls.MonitoredBus read
       Result := pAnsiChar(AnsiString(''));
       elem := ActiveRegControl;
-      if elem <> nil then Result := pAnsiChar(AnsiString(elem.ControlledBusName));
+      if elem <> nil then Result := pAnsiChar(AnsiString(elem.RegulatedBusName));
   end;
   3: begin  // RegControls.MonitoredBus write
       Set_Parameter ('Bus', widestring(arg));

@@ -6,7 +6,7 @@ program opendsscmd;
 {$linkframework Carbon}
 
 { ----------------------------------------------------------
-  Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
