@@ -79,7 +79,7 @@ begin
      Result := pAnsiChar(AnsiString(VersionString +'; License Status: Open '));
   end;
   2: begin  // DSS.DataPath read
-     Result := pAnsiChar(AnsiString(DataDirectory));
+     Result := pAnsiChar(AnsiString(DataDirectory[ActiveActor]));
   end;
   3: begin  // DSS.DataPath write
      SetDataPath(widestring(arg));
