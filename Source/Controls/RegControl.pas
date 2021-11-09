@@ -176,6 +176,8 @@ TYPE
        Property MaxTapChange: Integer Read TapLimitPerChange;
        Property IsInverseTime: Boolean Read FInverseTime;
        Property TapNum: Integer Read Get_TapNum Write Set_TapNum;
+       property RegulatedBusName: String Read RegulatedBus;
+
    end;
 
 
