@@ -195,6 +195,14 @@ begin
   end;
   15: begin  // CapControls.DelayOff write
       Set_Parameter ('DelayOff', FloatToStr (arg));
+  end;
+  16: begin  // CapControls.DeadTime read
+      Result := 0.0;
+      elem := ActiveCapControl;
+      if elem <> nil then Result := elem.DeadTimeVal;
+  end;
+  17: begin  // CapControls.DeadTime write
+      Set_Parameter ('DeadTime', FloatToStr (arg));
   end
   else
       Result:=-1.0;
