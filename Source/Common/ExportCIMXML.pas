@@ -1788,7 +1788,7 @@ Begin
         StartUuidList (i1 + i2);
     end;
     StartBankList (ActiveCircuit.Transformers.ListSize + ActiveCircuit.AutoTransformers.ListSize);
-    StartOpLimitList (ActiveCircuit.Lines.ListSize);
+    StartOpLimitList (ActiveCircuit.Lines.ListSize + ActiveCircuit.Transformers.ListSize + ActiveCircuit.AutoTransformers.ListSize + 1);
 
     {$IFDEF FPC}
     // this only works in the command line version
