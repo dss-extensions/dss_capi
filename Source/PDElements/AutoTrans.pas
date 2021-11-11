@@ -161,7 +161,7 @@ TYPE
         Winding            :pAutoWindingArray;
         XfmrBank           :String;
         XfmrCode           :String;
-        CoreType           :Integer; {0=Shell; 1=1ph; 3-3leg; 5=5-leg}
+        CoreType           :Integer; {0=Shell; 1=1ph; 3-3leg; 5=5-leg;4=4-Leg;9=1phase core form}
         strCoreType        :String;
 
         constructor Create(ParClass:TDSSClass; const TransfName:String);
@@ -230,7 +230,7 @@ VAR
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 IMPLEMENTATION
 
-{$DEFINE  NOAUTOTRANDEBUG} {AUTOTRANDEBUG}
+{$DEFINE  NOAUTOTRANDEBUG} {NOAUTOTRANDEBUG AUTOTRANDEBUG}
 
 USES    DSSClassDefs, DSSGlobals, Sysutils, Utilities, XfmrCode;
 
@@ -354,7 +354,7 @@ Begin
                         'Is derived from the full load losses in the transformer test report.';
      PropertyHelp[10] := 'Winding dc resistance in OHMS. Specify this for GIC analysis. From transformer test report (divide by number of phases). ' +
                          'Defaults to 85% of %R property (the ac value that includes stray losses).';
-     PropertyHelp[11] := '{Shell*|5-leg|3-Leg|1-phase} Core Type. Used for GIC analysis in auxiliary programs. Not used inside OpenDSS.';
+     PropertyHelp[11] := '{Shell*|5-leg|3-Leg|1-phase|1-phase-core-form|4-leg} Core Type. Used for GIC analysis in auxiliary programs. Not used inside OpenDSS.';
 
    // General Data
      PropertyHelp[12] := 'Use this to specify all the bus connections at once using an array. Example:'+CRLF+CRLF+
@@ -1795,7 +1795,9 @@ begin
                    0: Result := 'shell';
                    1: Result := '1-phase';
                    3: Result := '3-leg';
+                   4: Result := '4-leg';
                    5: Result := '5-Leg';
+                   9: Result := 'core-1-phase';
                End;
            12: FOR i := 1 to NumWindings Do Result := Result + GetBus(i) + ', ';
            13: FOR i := 1 to NumWindings Do
@@ -2099,13 +2101,14 @@ begin
        ZB.Clear;
        ZBase := 1.0/(VABase/Fnphases); // base ohms on 1.0 volt basis
        // Adjust specified XSC by SQR(1 + Vcommon/Vseries)
-       ZCorrected := ZBase * SQR(1.0 + Winding^[2].vbase/Winding^[1].Vbase); // Correction factor for Series
+      // ZCorrected := ZBase * SQR(1.0 + Winding^[2].Vbase/Winding^[1].Vbase); // Correction factor for Series
        FOR i := 1 to Numwindings-1 Do Begin
           { convert pu to ohms on one volt base as we go... }
-          if i=1 then
+          ZCorrected := ZBase * SQR(1.0 + Winding^[i+1].Vbase/Winding^[1].Vbase); // Correction factor for Series
+          // **** if i=1 then
               ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXSC^[i]), ZCorrected))
-          Else
-              ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXSC^[i]), Zbase));
+          // **** Else
+          // ****     ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXSC^[i]), Zbase));
        End;
 
        // Off diagonals
@@ -2126,7 +2129,7 @@ begin
   {$IFDEF AUTOTRANDEBUG}
        AssignFile(F, CircuitName_[ActiveActor] + 'AutoTrans_'+Name+'.TXT');
        Rewrite(F);
-       Writeln(F, Format('Zbase=%g, VABase=%g, Nphases=%d, Rpu=%g ', [Zbase, VABase, Fnphases, Winding^[1].Rpu ]));
+       Writeln(F, Format('Zbase=%g, Zcorrected=%g, VABase=%g, Nphases=%d, Rpu=%g ', [Zbase, Zcorrected, VABase, Fnphases, Winding^[1].Rpu ]));
        Writeln(F,'ZB before inverting...');
        DumpComplexMatrix(F, ZB);
   {$ENDIF}

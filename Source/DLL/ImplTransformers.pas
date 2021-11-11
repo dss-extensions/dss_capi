@@ -462,7 +462,9 @@ begin
     Case Value of
        1: elem.strCoreType := '1-phase';
        3: elem.strCoreType := '3-leg';
+       4: elem.strCoreType := '4-leg';
        5: elem.strCoreType := '5-leg';
+       9: elem.strCoreType := '1-phase-core-form';
     Else
         elem.strCoreType := 'shell';
     End;
