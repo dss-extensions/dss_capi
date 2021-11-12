@@ -40,8 +40,7 @@ constructor TCommandList.Create(Commands:Array of string);
 VAR  i:Integer;
 BEGIN
      Inherited Create;
-     CommandList := THashList.Create(High(Commands)+1);
-
+     CommandList := THashList.Create(High(Commands) + 1);
      For i := 0 to High(Commands) DO BEGIN
       // Fill the HashList
          CommandList.Add(Commands[i]);

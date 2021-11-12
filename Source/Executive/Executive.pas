@@ -90,11 +90,11 @@ implementation
 USES ExecCommands, ExecOptions,
      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
      Utilities, Solution, DSSClass, IniRegSave,
-{$IFNDEF FPC} {$IFNDEF CONSOLE}
+{$IF Not (defined(FPC) or defined(CONSOLE))}
      DSSForms,
-{$ELSE} {$ELSE}
+{$ELSE}
      CmdForms,
-{$ENDIF} {$ENDIF}
+{$ENDIF}
      KLUSolve;
 
 
