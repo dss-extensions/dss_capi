@@ -161,7 +161,7 @@ TYPE
         Winding            :pAutoWindingArray;
         XfmrBank           :String;
         XfmrCode           :String;
-        CoreType           :Integer; {0=Shell; 1=1ph; 3-3leg; 5=5-leg;4=4-Leg;9=1phase core form}
+        CoreType           :Integer; {0=Shell; 1=1ph; 3-3leg; 5=5-leg;4=4-Leg;9=Core-1-phase}
         strCoreType        :String;
 
         constructor Create(ParClass:TDSSClass; const TransfName:String);
@@ -354,7 +354,7 @@ Begin
                         'Is derived from the full load losses in the transformer test report.';
      PropertyHelp[10] := 'Winding dc resistance in OHMS. Specify this for GIC analysis. From transformer test report (divide by number of phases). ' +
                          'Defaults to 85% of %R property (the ac value that includes stray losses).';
-     PropertyHelp[11] := '{Shell*|5-leg|3-Leg|1-phase|1-phase-core-form|4-leg} Core Type. Used for GIC analysis in auxiliary programs. Not used inside OpenDSS.';
+     PropertyHelp[11] := '{Shell*|5-leg|3-Leg|1-phase|core-1-phase|4-leg} Core Type. Used for GIC analysis in auxiliary programs. Not used inside OpenDSS.';
 
    // General Data
      PropertyHelp[12] := 'Use this to specify all the bus connections at once using an array. Example:'+CRLF+CRLF+
