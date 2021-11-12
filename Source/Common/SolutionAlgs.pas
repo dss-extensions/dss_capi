@@ -44,8 +44,9 @@ implementation
 
 Uses
     ArrayDef, DSSGlobals,
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
     DSSForms,
+{$ENDIF}
     System.Classes,
 {$ENDIF}
     Utilities, SysUtils, MathUtil, Math, Fault, uComplex, YMatrix,

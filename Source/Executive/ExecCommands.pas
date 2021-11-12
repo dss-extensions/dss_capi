@@ -32,7 +32,7 @@ Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
      sysutils, Utilities, SolutionAlgs,
      DSSClassDefs,
      Arraydef,
-{$IFDEF FPC}
+{$IF (defined(FPC) or defined(CONSOLE))}
      CmdForms,
 {$ELSE}
      PlotOptions,
@@ -751,7 +751,7 @@ Begin
            End;
        10: CmdResult := DoEnableCmd;
        11: CmdResult := DoDisableCmd;
-       {$IFNDEF FPC}
+       {$IF not (defined(FPC) or defined(CONSOLE))}
        12: CmdResult := DoPlotCmd; //'plot';
        {$ELSE}
        12: begin DSSInfoMessageDlg ('Plotting not supported in FPC version');CmdResult := 0; end;
@@ -849,7 +849,7 @@ Begin
       102: EndofTimeStepCleanup(ActiveActor);
       103: FinishTimeStep(ActiveActor);
       104: CmdResult := DoNodeListCmd;
-{$IFNDEF FPC}
+{$IF not (defined(FPC) or defined(CONSOLE))}
       112: CmdResult := DoConnectCmd; //'TCP/IP connect';
       113: CmdResult := DoDisConnectCmd; //'TCP/IP disconnect';
 {$ELSE}

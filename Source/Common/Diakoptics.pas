@@ -14,7 +14,16 @@ interface
 uses
   Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, EnergyMeter,
   SolutionAlgs, Line,
-  {$IFDEF FPC}CmdForms{$ELSE}DSSForms, ScriptEdit{$ENDIF}, System.classes;
+  {$IFDEF FPC}
+    CmdForms
+  {$ELSE}
+  {$IFNDEF CONSOLE}
+    DSSForms, ScriptEdit
+  {$ELSE}
+    CmdForms
+  {$ENDIF}
+  {$ENDIF},
+  System.classes;
 
 Function Solve_Diakoptics():Integer;
 Function ADiakoptics_Tearing(AddISrc  : Boolean): Integer;
@@ -546,7 +555,9 @@ var
   Links       : Array of String;                        // List of the Link Branches
   MQuit       : Boolean;                                // To quit the State Machine
   {$IFNDEF FPC}
+  {$IFNDEF CONSOLE}
   ScriptEd    : TScriptEdit;
+  {$ENDIF}
   {$ENDIF}
 
 Begin
@@ -759,11 +770,15 @@ Begin
   GlobalResult  :=  ErrorStr;
 
   {$IFNDEF FPC}
+  {$IFNDEF CONSOLE}
   if not IsDLL
   then
     ScriptEd.PublishMessage(prog_Str)
   else
     GlobalResult  :=  prog_str;
+  {$ELSE}
+    GlobalResult  :=  prog_str;
+  {$ENDIF}
   {$ELSE}
     GlobalResult  :=  prog_str;
   {$ENDIF}
