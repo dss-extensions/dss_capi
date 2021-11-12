@@ -381,7 +381,7 @@ begin
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         R1 := Value;
+         R1 := Value * UnitsConvert;
          SymComponentsChanged := True;
          YprimInvalid[ActiveActor] := True;
        END;
@@ -394,7 +394,7 @@ begin
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-         X1 := Value;
+         X1 := Value * UnitsConvert;
          SymComponentsChanged := True;
          YprimInvalid[ActiveActor] := True;
        END;
@@ -525,7 +525,7 @@ begin
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-         C0 := Value * 1.0e-9;
+         C0 := Value * 1.0e-9 * UnitsConvert;
          SymComponentsChanged := True;
          YprimInvalid[ActiveActor] := True;
        End;
@@ -538,7 +538,7 @@ begin
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-         C1 := Value * 1.0e-9;
+         C1 := Value * 1.0e-9 * UnitsConvert;
          SymComponentsChanged := True;
          YprimInvalid[ActiveActor] := True;
        End;
@@ -574,7 +574,7 @@ begin
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-           R0 := Value;
+           R0 := Value * UnitsConvert;
            SymComponentsChanged := True;
            YprimInvalid[ActiveActor] := True;
        END;
@@ -609,7 +609,7 @@ begin
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         X0 := Value;
+         X0 := Value * UnitsConvert;
          SymComponentsChanged := True;
          YprimInvalid[ActiveActor] := True;
        End;
