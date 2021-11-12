@@ -464,7 +464,7 @@ begin
        3: elem.strCoreType := '3-leg';
        4: elem.strCoreType := '4-leg';
        5: elem.strCoreType := '5-leg';
-       9: elem.strCoreType := '1-phase-core-form';
+       9: elem.strCoreType := 'core-1-phase';
     Else
         elem.strCoreType := 'shell';
     End;
