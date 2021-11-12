@@ -12,10 +12,11 @@ interface
 uses
   Windows,
   Messages,
+
   Graphics,
-  Controls,
   Forms,
   Dialogs,
+  Controls,
   StdCtrls,
   ComCtrls,
   SysUtils,

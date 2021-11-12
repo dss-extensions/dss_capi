@@ -62,7 +62,6 @@ USES
     Parallel_Lib,
     Windows,
     {$ENDIF}
-    Dialogs,
     Sparse_Math,
     SyncObjs,
     ExecHelper,
@@ -394,10 +393,11 @@ implementation
 
 USES  SolutionAlgs,
       DSSClassDefs, DSSGlobals,
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
       SHELLAPI,
       DSSForms,
-      ScriptEdit, 
+      ScriptEdit,
+{$ENDIF}
 {$ELSE}
       CmdForms,
 {$ENDIF}
@@ -624,10 +624,10 @@ End;
 
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve(ActorID : Integer);
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
 var
   ScriptEd    : TScriptEdit;
-{$ENDIF}
+{$ENDIF} {$ENDIF}
 Begin
      ActiveCircuit[ActorID].Issolved := False;
      SolutionWasAttempted[ActorID]   := TRUE;
@@ -1905,13 +1905,13 @@ End;
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
 var
   SourceLst: string;
   FOS: TSHFileOpStruct;
-{$ENDIF}
+{$ENDIF} {$ENDIF}
 begin
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
   FillChar(FOS, SizeOf(FOS), 0);
   FOS.wFunc := FO_DELETE;
   SourceLst := Directory + '\' + FileMask + #0;
@@ -1925,7 +1925,7 @@ begin
   {$IFDEF MSWINDOWS}
   SHFileOperation(FOS);
   {$ENDIF}
-{$ENDIF}
+{$ENDIF} {$ENDIF}
 end;
 {*******************************************************************************
 *   This routine evaluates if the current location is the best or if its       *
@@ -3102,10 +3102,10 @@ End;
 }
 
 procedure TSolver.Execute;
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
 var
-{$IFNDEF FPC}
   ScriptEd    : TScriptEdit;
-{$ENDIF}
+{$ENDIF} {$ENDIF}
 
   begin
     with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do

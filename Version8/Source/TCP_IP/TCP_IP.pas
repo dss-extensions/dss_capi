@@ -14,7 +14,12 @@ uses
   {$IFDEF MSWINDOWS}
   System.Win.ScktComp,
   TlHelp32,
-  Winsock,DSSPlot,
+  Winsock,
+  {$IFNDEF CONSOLE}
+  DSSPlot,
+  {$ELSE}
+  CmdForms,
+  {$ENDIF}
   {$ENDIF}
   Windows;
 

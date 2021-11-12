@@ -26,7 +26,7 @@ implementation
 
 Uses ShowResults, ParserDel, Monitor, Utilities,
      DSSGlobals, sysutils,
-{$IFNDEF FPC}
+{$IF not (defined(FPC) or defined(CONSOLE))}
      DSSForms,
 {$ELSE}
      CmdForms,

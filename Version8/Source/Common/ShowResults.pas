@@ -47,8 +47,11 @@ Uses uComplex,  Arraydef,  sysutils, Circuit, DSSClass, DSSClassDefs, DSSGlobals
      uCMatrix,  solution,  CktElement, Utilities, Bus, MathUtil,
      PDElement, PCElement, Generator, Transformer, EnergyMeter, Load, RegControl,
      ParserDel, CktTree,
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
      DSSForms,
+{$ELSE}
+     CmdForms,
+{$ENDIF}
 {$ELSE}
      CmdForms,
 {$ENDIF}

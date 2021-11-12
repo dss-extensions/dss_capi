@@ -21,8 +21,13 @@ unit DSSGlobals;
 interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList, PDELement,
-     UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC}
-     Graphics, System.IOUtils,
+     UComplex, Arraydef, CktElement, Circuit, IniRegSave, System.IOUtils,
+     {$IFNDEF FPC}
+      {$IFNDEF CONSOLE}
+        Graphics,
+      {$ELSE}
+        CmdForms,
+      {$ENDIF}
      {$ENDIF} inifiles,
 
      {Some units which have global vars defined here}
@@ -48,9 +53,13 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      ExpControl,
      variants,
      {$IFNDEF FPC}
+     {$IFNDEF CONSOLE}
      ProgressForm,
      vcl.dialogs,
      WinAPI.UrlMon,
+     {$ELSE}
+     UrlMon,
+     {$ENDIF}
      {$ENDIF}
      Strutils,
      Types,
@@ -223,7 +232,7 @@ VAR
    DefaultEditor    :String;     // normally, Notepad
    DefaultFontSize  :Integer;
    DefaultFontName  :String;
-   DefaultFontStyles :{$IFNDEF FPC}TFontStyles{$ELSE}Integer{$ENDIF};
+   DefaultFontStyles :{$IFNDEF FPC}{$IFNDEF CONSOLE}TFontStyles{$ELSE}Integer{$ENDIF}{$ELSE}Integer{$ENDIF};
    DSSFileName      :String;     // Name of current exe or DLL
    DSSDirectory     :String;     // where the current exe resides
    StartupDirectory :String;     // Where we started
@@ -277,7 +286,9 @@ VAR
    ActorStatus        : Array of integer;
    ActorProgressCount : Array of integer;
    {$IFNDEF FPC}
+   {$IFNDEF CONSOLE}
    ActorProgress      : Array of TProgress;
+   {$ENDIF}
    {$ENDIF}
    ActorPctProgress   : Array of integer;
    ActorHandle        : Array of TSolver;
@@ -419,8 +430,10 @@ USES  {Forms,   Controls,}
      {$IFDEF MSWINDOWS}
      SHFolder,
      {$ENDIF}
+     {$IFNDEF CONSOLE}
      ScriptEdit,
      DSSForms,
+     {$ENDIF}
      {$ELSE}
      resource, versiontypes, versionresource, dynlibs, CMDForms,
      {$ENDIF}
@@ -940,9 +953,13 @@ Begin
   {$IFDEF FPC}
      DefaultFontStyles := 1;
   {$ELSE}
+  {$IFDEF CONSOLE}
+     DefaultFontStyles := 1;
+  {$ELSE}
      DefaultFontStyles := [];
      If DSS_Registry.ReadBool('ScriptFontBold', TRUE)    Then DefaultFontStyles := DefaultFontStyles + [fsbold];
      If DSS_Registry.ReadBool('ScriptFontItalic', FALSE) Then DefaultFontStyles := DefaultFontStyles + [fsItalic];
+  {$ENDIF}
   {$ENDIF}
   DefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
   LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
@@ -959,8 +976,8 @@ Begin
       DSS_Registry.WriteString('Editor',        DefaultEditor);
       DSS_Registry.WriteString('ScriptFontSize', Format('%d',[DefaultFontSize]));
       DSS_Registry.WriteString('ScriptFontName', Format('%s',[DefaultFontName]));
-      DSS_Registry.WriteBool('ScriptFontBold', {$IFDEF FPC}False{$ELSE}(fsBold in DefaultFontStyles){$ENDIF});
-      DSS_Registry.WriteBool('ScriptFontItalic', {$IFDEF FPC}False{$ELSE}(fsItalic in DefaultFontStyles){$ENDIF});
+      DSS_Registry.WriteBool('ScriptFontBold', {$IFDEF FPC}False{$ELSE}{$IFDEF CONSOLE}False{$ELSE}(fsBold in DefaultFontStyles){$ENDIF}{$ENDIF});
+      DSS_Registry.WriteBool('ScriptFontItalic', {$IFDEF FPC}False{$ELSE}{$IFDEF CONSOLE}False{$ELSE}(fsItalic in DefaultFontStyles){$ENDIF}{$ENDIF});
       DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(DefaultBaseFreq)]));
       DSS_Registry.WriteString('LastFile',      LastFileCompiled);
       DSS_Registry.WriteString('DataPath', DataDirectory[ActiveActor]);
@@ -1129,6 +1146,14 @@ Begin
  ActorStatus[ActorID] :=  1;
 End;
 {$ELSE}
+{$IFDEF CONSOLE}
+Begin
+ ActorHandle[ActorID] :=  TSolver.Create(True,ActorCPU[ActorID],ActorID,nil,ActorMA_Msg[ActorID]); // TEMC: TODO: text-mode callback
+ ActorHandle[ActorID].Priority :=  tpTimeCritical;
+ ActorHandle[ActorID].Resume;  // TEMC: TODO: this reportedly does nothing on Unix and Mac
+ ActorStatus[ActorID] :=  1;
+End;
+{$ELSE}
 var
  ScriptEd    : TScriptEdit;
 Begin
@@ -1137,6 +1162,7 @@ Begin
  ActorHandle[ActorID].Resume;
  ActorStatus[ActorID] :=  1;
 End;
+{$ENDIF}
 {$ENDIF}
 
 {$IFNDEF FPC}
@@ -1219,9 +1245,17 @@ Begin
   myIdx     :=  pos(' ',myVersion);
   myVersion :=  myVersion.Substring(0,myIdx - 1);
   if myText <> myVersion then
-    ShowMessage('There is a new version of OpenDSS avaialable for download' + CRLF +
+  Begin
+    myPath    :=  'There is a new version of OpenDSS avaialable for download' + CRLF +
                 'The new version can be located at:' + CRLF + CRLF +
-                'https://sourceforge.net/projects/electricdss/');
+                'https://sourceforge.net/projects/electricdss/';
+  {$IFNDEF CONSOLE}
+    ShowMessage(myPath);
+  {$ELSE}
+    DSSMessageDlg(myPath, TRUE);
+  {$ENDIF}
+  End;
+
 End;
 
 //**********************Launches the COM Help file******************************
@@ -1349,7 +1383,7 @@ initialization
    Get_processor_info();
 
    setlength(ActiveCircuit,CPU_Cores + 1);
-   {$IFNDEF FPC}setlength(ActorProgress,CPU_Cores + 1);{$ENDIF}
+   {$IFNDEF FPC}{$IFNDEF CONSOLE}setlength(ActorProgress,CPU_Cores + 1);{$ENDIF}{$ENDIF}
    setlength(ActorCPU,CPU_Cores + 1);
    setlength(ActorProgressCount,CPU_Cores + 1);
    setlength(ActiveDSSClass,CPU_Cores + 1);
@@ -1424,7 +1458,11 @@ initialization
    for ActiveActor := 1 to CPU_Cores do
    begin
     ActiveCircuit[ActiveActor]        :=  nil;
-    {$IFNDEF FPC}ActorProgress[ActiveActor]        :=  nil; {$ENDIF}
+    {$IFNDEF FPC}
+    {$IFNDEF CONSOLE}
+    ActorProgress[ActiveActor]        :=  nil;
+    {$ENDIF}
+    {$ENDIF}
     ActiveDSSClass[ActiveActor]       :=  nil;
     EventStrings[ActiveActor]         := TStringList.Create;
     SavedFileList[ActiveActor]        := TStringList.Create;
@@ -1470,8 +1508,9 @@ initialization
    ADiak_Init             :=  False;
 
    GetDefaultPorts();                 // Gets the default ports to get connected to other add-ons
-
+   {$IFNDEF CONSOLE}
    DSSProgressFrm         :=  GetDSSProgress(DSSFileName);
+   {$ENDIF}
 
    SeasonalRating         :=  False;
    SeasonSignal           :=  '';
