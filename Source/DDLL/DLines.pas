@@ -183,7 +183,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-             R1 := arg;
+             R1 := arg * UnitsConvert;
              SymComponentsChanged := True;
              YprimInvalid[ActiveActor] := True;
            END;
@@ -202,7 +202,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-             X1 := arg;
+             X1 := arg * UnitsConvert;
              SymComponentsChanged := True;
              YprimInvalid[ActiveActor] := True;
            END;
@@ -221,7 +221,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-               R0 := arg;
+               R0 := arg * UnitsConvert;
                SymComponentsChanged := True;
                YprimInvalid[ActiveActor] := True;
            END;
@@ -240,7 +240,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-             X0 := arg;
+             X0 := arg * UnitsConvert;
              SymComponentsChanged := True;
              YprimInvalid[ActiveActor] := True;
            End;
@@ -259,7 +259,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-             C1 := arg * 1.0e-9;
+             C1 := arg * 1.0e-9 * UnitsConvert;
              SymComponentsChanged := True;
              YprimInvalid[ActiveActor] := True;
            End;
@@ -278,7 +278,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-             C0 := arg * 1.0e-9;
+             C0 := arg * 1.0e-9 * UnitsConvert;
              SymComponentsChanged := True;
              YprimInvalid[ActiveActor] := True;
            End;
