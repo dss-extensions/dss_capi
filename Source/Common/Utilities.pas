@@ -160,8 +160,14 @@ implementation
 
 Uses
 {$IFNDEF FPC}
-     Windows, ShellAPI, Dialogs, Graphics,
-     DSSForms,
+     Windows, ShellAPI,
+{$IFNDEF CONSOLE}
+    Dialogs,
+    DSSForms,
+    Graphics,
+{$ELSE}
+    CmdForms,
+    {$ENDIF}
 {$ELSE}
      Process, CmdForms,
 {$ENDIF}
@@ -2924,7 +2930,7 @@ End;
 
 FUNCTION  InterpretColorName(const s:string):Integer;
 Begin
-{$IFDEF FPC}
+{$IF (defined(FPC) or defined(CONSOLE))}
         Result := 0; // RGB for black
 {$ELSE}
 

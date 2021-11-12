@@ -27,7 +27,13 @@ FUNCTION DoGetCmd_NoCircuit:Boolean;  // Get Commands that do not require a circ
 implementation
 
 Uses DSSClassDefs, DSSGlobals, ParserDel, Math,     Executive,  ExecHelper,
-     LoadShape,    Utilities,  Sysutils, {$IFNDEF FPC}ScriptEdit,{$ENDIF}  Solution, Energymeter,
+     LoadShape,    Utilities,  Sysutils,
+     {$IFNDEF FPC}
+     {$IFNDEF CONSOLE}
+     ScriptEdit,
+     {$ENDIF}
+     {$ENDIF}
+     Solution, Energymeter,
      Diakoptics, Classes;
 
 
@@ -869,9 +875,9 @@ VAR
    TempString,
    ParamName:String;
    Param:String;
-   {$IFNDEF FPC}
+   {$IFNDEF FPC} {$IFNDEF CONSOLE}
    ScriptEd : TScriptEdit;
-   {$ENDIF}
+   {$ENDIF} {$ENDIF}
 
 Begin
 
@@ -1028,7 +1034,7 @@ Begin
                     AppendGlobalResult(Format('%d' ,[ActiveActor]));
                End;
           113: AppendGlobalResult(Format('%d' ,[ActorCPU[ActiveActor]]));
-          114: {$IFNDEF FPC} ScriptEd.UpdateProgressSummary {$ENDIF};
+          114: {$IFNDEF FPC} {$IFNDEF CONSOLE} ScriptEd.UpdateProgressSummary {$ENDIF} {$ENDIF};
           115: if parallel_enabled then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           116: if ConcatenateReports then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           117: if DSS_Viz_enable then AppendGlobalResult('Yes') else AppendGlobalResult('No');

@@ -26,7 +26,16 @@ USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
      AutoAdd, EnergyMeter, NamedObject, CktTree, Monitor,PCClass, PDClass,
-     {$IFNDEF FPC}MeTIS_Exec, {$IFDEF MSWINDOWS}Graphics, vcl.dialogs, {$ENDIF} {$ENDIF}
+     {$IFNDEF FPC}
+      MeTIS_Exec,
+        {$IFDEF MSWINDOWS}
+          {$IFNDEF CONSOLE}
+            Graphics, vcl.dialogs,
+          {$ELSE}
+            CmdForms,
+          {$ENDIF}
+        {$ENDIF}
+     {$ENDIF}
      math, Sparse_Math;
 
 TYPE
@@ -50,7 +59,11 @@ TYPE
       BusName: String;
       {$IFNDEF FPC}
         {$IFDEF MSWINDOWS}
-        AddMarkerColor: Tcolor;
+        {$IFNDEF CONSOLE}
+          AddMarkerColor: Tcolor;
+        {$ELSE}
+          AddMarkerColor,
+        {$ENDIF}
         {$ELSE}
         AddMarkerColor,
         {$ENDIF}
@@ -364,13 +377,17 @@ USES
      Line, Transformer,  Vsource,
      Utilities, Executive, Load,
      StrUtils,
-     PVSystem,
+     PVSystem
      {$IFNDEF FPC}
-     DSSForms,
-     SHELLAPI,
-     windows;
+     {$IFNDEF CONSOLE}
+       ,DSSForms,
+       SHELLAPI,
+       windows;
      {$ELSE}
-     CmdForms;
+      ;
+     {$ENDIF}
+     {$ELSE}
+     ,CmdForms;
      {$ENDIF}
 
 
@@ -688,13 +705,13 @@ END;
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
 var
   SourceLst: string;
   FOS: TSHFileOpStruct;
-{$ENDIF}
+{$ENDIF} {$ENDIF}
 begin
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
   FillChar(FOS, SizeOf(FOS), 0);
   FOS.wFunc := FO_DELETE;
   SourceLst := Directory + '\' + FileMask + #0;
@@ -708,7 +725,7 @@ begin
   {$IFDEF MSWINDOWS}
   SHFileOperation(FOS);
   {$ENDIF}
-{$ENDIF}
+{$ENDIF} {$ENDIF}
 end;
 {*******************************************************************************
 *         This routine retuns the index of the element within the array        *
@@ -1020,7 +1037,7 @@ begin
         Begin
           text    :=  stringreplace(File_Struc[FS_Idx], 'Redirect ', '',[rfReplaceAll, rfIgnoreCase]);
           {$IFNDEF FPC}
-            {$IFDEF MSWINDOWS}
+            {$IFnDEF CONSOLE}
             for FS_Idx1 := 2 to NumCkts do
               CopyFile(PChar(Path + '\' + text), PChar(Path + '\zone_' + inttostr(FS_Idx1) + '\' + text), true);
             {$ENDIF}
@@ -2922,7 +2939,7 @@ constructor TBusMarker.Create;
 begin
   inherited;
   BusName := '';
-  AddMarkerColor := {$IFNDEF FPC}{$IFDEF MSWINDOWS}clBlack{$ELSE}0{$ENDIF}{$ELSE}0{$ENDIF};
+  AddMarkerColor := {$IFNDEF FPC}{$IFNDEF CONSOLE}clBlack{$ELSE}0{$ENDIF}{$ELSE}0{$ENDIF};
   AddMarkerCode := 4;
   AddMarkerSize := 1;
 end;

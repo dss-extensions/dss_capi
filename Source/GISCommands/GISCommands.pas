@@ -22,7 +22,11 @@ uses
   Line,
   Utilities,
   ArrayDef,
+  {$IFNDEF CONSOLE}
   DSSForms,
+  {$ELSE}
+  Cmdforms,
+  {$ENDIF}
   ExecHelper,
   // TCP Indy libraries
   IdBaseComponent,
@@ -394,6 +398,7 @@ Begin
         Result := Get_JSONrouteGIS();
       8:
         begin
+        {$IFNDEF CONSOLE}
           if Not isDLL then
           Begin
             Result := WindowLR();
@@ -401,9 +406,13 @@ Begin
           end
           else
             Result := 'Available only for the EXE interface'
+        {$ELSE}
+            Result := 'Available only for the EXE, GUI interface'
+        {$ENDIF}
         End;
       9:
         Begin
+        {$IFNDEF CONSOLE}
           if Not isDLL then
           begin
             Result := WindowRL();
@@ -411,6 +420,9 @@ Begin
           end
           else
             Result := 'Available only for the EXE interface'
+        {$ELSE}
+            Result := 'Available only for the EXE, GUI interface'
+        {$ENDIF}
         End;
       10:
         Begin

@@ -90,11 +90,11 @@ implementation
 USES ExecCommands, ExecOptions,
      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
      Utilities, Solution, DSSClass, IniRegSave,
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
      DSSForms,
-{$ELSE}
+{$ELSE} {$ELSE}
      CmdForms,
-{$ENDIF}
+{$ENDIF} {$ENDIF}
      KLUSolve;
 
 
@@ -255,13 +255,14 @@ begin
             {Now, Start over}
           CreateDSSClasses;
           CreateDefaultDSSItems;
+{$IFNDEF CONSOLE}
           RebuildHelpForm := True; // because class strings have changed
-
+{$ENDIF}
        End;
 
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
-{$ENDIF}
+{$ENDIF} {$ENDIF}
 
        DefaultEarthModel     := DERI;
        LogQueries            := FALSE;
@@ -286,10 +287,12 @@ begin
        Parser[ActiveActor]    :=  Tparser.Create;
        AuxParser[ActiveActor] :=  Tparser.Create;
        CreateDefaultDSSItems;
+{$IFNDEF CONSOLE}
        RebuildHelpForm        := True; // because class strings have changed
-{$IFNDEF FPC}
-       If Not IsDLL Then ControlPanel.UpdateElementBox ;
 {$ENDIF}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
+       If Not IsDLL Then ControlPanel.UpdateElementBox ;
+{$ENDIF} {$ENDIF}
        {Prepare for new variables}
        ParserVars.Free;
        ParserVars := TParserVar.Create(100);  // start with space for 100 variables

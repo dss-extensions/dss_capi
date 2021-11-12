@@ -14,7 +14,11 @@ interface
 
 uses
 {$IFDEF MSWINDOWS}
- dialogs,
+  {$IFNDEF CONSOLE}
+    Dialogs,
+  {$ELSE}
+    CmdForms,
+  {$ENDIF}
 {$ENDIF}
   UComplex,
   Ucmatrix;

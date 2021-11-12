@@ -149,7 +149,15 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      DSSClass, DSSObject, Utilities, Solution,
      EnergyMeter, Generator, LoadShape, Load, PCElement,   CktElement,
      uComplex,  mathutil,  Bus,  SolutionAlgs,
-     {$IFNDEF FPC}DSSForms,DssPlot,{$ELSE}CmdForms,{$ENDIF} ExecCommands, Executive,
+     {$IFNDEF FPC} {$IFNDEF CONSOLE}
+        DSSForms, DssPlot,
+     {$ELSE}
+       CmdForms,
+     {$ENDIF}
+     {$ELSE}
+       CmdForms,
+     {$ENDIF}
+     ExecCommands, Executive,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  ExportCIMXML, NamedObject,
      {$IFNDEF FPC}RegularExpressionsCore,{$ELSE}RegExpr,{$ENDIF} PstCalc,
@@ -3125,7 +3133,7 @@ Begin
 End;
 
 FUNCTION DoDI_PlotCmd:Integer;
-{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+{$IF not (defined(DLL_ENGINE) or defined(FPC) or defined(CONSOLE))}
 Var
     ParamName, Param:String;
     ParamPointer, i:Integer;
@@ -3138,7 +3146,7 @@ Var
     PeakDay:Boolean;
 {$ENDIF}
 Begin
-{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+{$IF not (defined(DLL_ENGINE) or defined(FPC) or defined(CONSOLE))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
      {Defaults}
@@ -3193,7 +3201,7 @@ Var
     CaseName2, WhichFile:String;
 {$ENDIF}
 Begin
-{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+{$IF not (defined(DLL_ENGINE) or defined(FPC) or defined(CONSOLE))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
      CaseName1 := 'base';
@@ -3249,7 +3257,7 @@ Var
     WhichFile:String;
 {$ENDIF}
 Begin
-{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+{$IF not (defined(DLL_ENGINE) or defined(FPC) or defined(CONSOLE))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
 
@@ -3322,7 +3330,7 @@ Var
 {$ENDIF}
 Begin
      Result := 0;
-{$IF not defined(FPC)}
+{$IF not (defined(FPC) or defined(CONSOLE))}
      // Abort if no circuit or solution
      If not assigned(ActiveCircuit[ActiveActor]) Then
      Begin

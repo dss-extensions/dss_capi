@@ -71,8 +71,11 @@ VAR
    TOP_Object      :Variant;  // For Top Automation
 
 implementation
-{$IFNDEF FPC}
+{$IFNDEF FPC} {$IFNDEF CONSOLE}
 Uses ComObj, AnsiStrings, SysUtils, Dialogs, ActiveX, DSSGlobals;
+{$ELSE}
+Uses ComObj, AnsiStrings, SysUtils, CmdForms, ActiveX, DSSGlobals;
+{$ENDIF}
 {$ELSE}
 Uses SysUtils, DSSGlobals, CmdForms, Variants;
 {$ENDIF}
@@ -104,12 +107,21 @@ Begin
           StartTop;
           TOP_Object.OpenFile(TOPTransferFile.FName);
        Except
+       {$IFNDEF CONSOLE}
         ShowMessage('Export to TOP failed.  Connection lost?');
+        {$ELSE}
+          DSSInfoMessageDlg ('Export to TOP failed.  Connection lost?');
+        {$ENDIF}
        End;
    End;
   Except
 
-        On E:Exception Do ShowMessage('Error Connecting to TOP: '+E.Message);
+        On E:Exception Do
+        {$IFNDEF CONSOLE}
+          ShowMessage('Error Connecting to TOP: '+E.Message);
+        {$ELSE}
+          DSSInfoMessageDlg ('Error Connecting to TOP: '+E.Message);
+        {$ENDIF}
   End;
 {$ELSE}
   DSSInfoMessageDlg ('TOP Export (COM Interface) is not supported in FPC version');

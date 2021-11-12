@@ -1,7 +1,7 @@
 unit ProgressForm;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -15,7 +15,13 @@ unit ProgressForm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Windows, Messages, SysUtils, Classes,
+  {$IFNDEF CONSOLE}
+    Graphics, Dialogs,
+  {$ELSE}
+    CmdForms,
+  {$ENDIF}
+  Controls, Forms,
   StdCtrls, ComCtrls, Vcl.ExtCtrls;
 
 type
