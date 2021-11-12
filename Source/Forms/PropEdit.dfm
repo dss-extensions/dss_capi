@@ -13,14 +13,13 @@ object PropEditForm: TPropEditForm
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDesigned
   OnCreate = FormCreate
   OnShow = FormShow
+  PixelsPerInch = 96
   DesignSize = (
     254
     247)
-  PixelsPerInch = 96
   TextHeight = 13
   object StringGrid1: TStringGrid
     Left = 8
