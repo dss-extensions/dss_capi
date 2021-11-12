@@ -51,13 +51,17 @@ Uses ExecCommands, ExecOptions, ShowOptions, ExportOptions,
 const colwidth = 25; numcols = 4;  // for listing commands to the console
 
 procedure ShowHeapUsage;
+{$IFDEF FPC}
 var
    hstat: TFPCHeapStatus;
    s: string;
+{$ENDIF}
 begin
+{$IFDEF FPC}
   hstat := GetFPCHeapStatus;
   s := Format('Heap Memory Used: %dK',[hstat.CurrHeapUsed div 1024]);
   DSSInfoMessageDlg(s);
+{$ENDIF}
 end;
 
 Procedure InitProgressForm;
@@ -134,13 +138,15 @@ procedure AddHelpForClasses(BaseClass: WORD; bProperties: boolean);
 Var
 	HelpList  :TList;
   pDSSClass :TDSSClass;
-  i,j       :Integer;
+  i,j, idx  :Integer;
 begin
 	HelpList := TList.Create();
-  pDSSClass := DSSClassList.First;
+  idx := ActiveDSSClass[ActiveActor].First;
+  pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
   WHILE pDSSClass<>Nil DO Begin
     If (pDSSClass.DSSClassType AND BASECLASSMASK) = BaseClass Then HelpList.Add (pDSSClass);
-    pDSSClass := DSSClassList.Next;
+    idx := ActiveDSSClass[ActiveActor].Next;
+    pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
   End;
   HelpList.Sort(@CompareClassNames);
 
@@ -180,7 +186,12 @@ VAR
 begin
   if Length(opt) < 1 then begin
     lst := TStringList.Create;
-  	for i := 1 to num do lst.Add (PadRight (cmd[i], colwidth));
+  	for i := 1 to num do
+    {$IFDEF FPC}
+      lst.Add(PadRight(cmd[i], colwidth));
+    {$ELSE}
+      lst.Add(cmd[i].PadRight(colwidth));
+    {$ENDIF}
     lst.Sort;
   	for i :=  1 to num do
       if ((i mod numcols) = 0) then
@@ -202,10 +213,11 @@ end;
 procedure ShowClassHelp (const opt:String);
 var
   pDSSClass :TDSSClass;
-  i :Integer;
+  i, idx :Integer;
 begin
   if Length(opt) > 0 then begin
-    pDSSClass := DSSClassList.First;
+    idx := ActiveDSSClass[ActiveActor].First;
+    pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
     while pDSSClass<>nil do begin
       if AnsiStartsStr (opt, LowerCase(pDSSClass.name)) then begin
         writeln (UpperCase (pDSSClass.name));
@@ -213,7 +225,8 @@ begin
         for i := 1 to pDSSClass.NumProperties do
           writeln ('  ', pDSSClass.PropertyName[i], ': ', pDSSClass.PropertyHelp^[i]);
       end;
-      pDSSClass := DSSClassList.Next;
+    idx := ActiveDSSClass[ActiveActor].Next;
+    pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
     end;
   end else begin
   	writeln('== Power Delivery Elements ==');
@@ -235,10 +248,10 @@ PROCEDURE ShowHelpForm;
 VAR
   Param, OptName:String;
 Begin
-  Parser.NextParam;
-  Param := LowerCase(Parser.StrValue);
-  Parser.NextParam;
-  OptName := LowerCase(Parser.StrValue);
+  Parser[ActiveActor].NextParam;
+  Param := LowerCase(Parser[ActiveActor].StrValue);
+  Parser[ActiveActor].NextParam;
+  OptName := LowerCase(Parser[ActiveActor].StrValue);
   if ANSIStartsStr ('com', param) then
   	ShowAnyHelp (NumExecCommands, @ExecCommand, @CommandHelp, OptName)
   else if ANSIStartsStr ('op', param) then
