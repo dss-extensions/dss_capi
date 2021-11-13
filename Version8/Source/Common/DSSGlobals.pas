@@ -21,8 +21,9 @@ unit DSSGlobals;
 interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList, PDELement,
-     UComplex, Arraydef, CktElement, Circuit, IniRegSave, System.IOUtils,
+     UComplex, Arraydef, CktElement, Circuit, IniRegSave, 
      {$IFNDEF FPC}
+      System.IOUtils,
       {$IFNDEF CONSOLE}
         Graphics,
       {$ELSE}
@@ -72,15 +73,15 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      ShellApi,
 //     Parallel_Lib
 //   TCP Indy libraries
+{$IFNDEF FPC}
      IdBaseComponent,
      IdComponent,
      IdTCPConnection,
      IdTCPClient,
      IdThreadComponent,
+{$ENDIF}
      NumCPULib,
-     ISource
-
-;
+     ISource;
 
 
 CONST
@@ -455,10 +456,10 @@ VAR
 
    LastUserDLLHandle: THandle;
    DSSRegisterProc:TDSSRegister;        // of last library loaded
-
+{$IFNDEF FPC}
    idTCPClient         : TIdTCPClient;  // ... TIdThreadComponent
    idThreadComponent   : TIdThreadComponent;
-
+{$ENDIF}
 {$IFDEF FPC}
 FUNCTION GetDefaultDataDirectory: String;
 Begin
@@ -597,10 +598,11 @@ End;
 PROCEDURE DoThreadSafeMsg(Const S :String; ErrNum:Integer);
 // generates a dialog window thread safe using windows API
 VAR
-    myret,
     Retval:Integer;
 Begin
-
+{$IFDEF FPC}
+     DSSMessageDlg (Format('(%d) OpenDSS %s', [Errnum, S]), True);
+{$ELSE}
       IF Not NoFormsAllowed Then Begin
        IF   In_Redirect
        THEN Begin
@@ -611,7 +613,7 @@ Begin
        ELSE
          Windows.MessageBox(0, PChar(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S])), 'Warning', MB_OK);
       End;
-
+{$ENDIF}
      LastErrorMessage := S;
      ErrorNumber := ErrNum;
      AppendGlobalResultCRLF(S);
@@ -1196,25 +1198,33 @@ procedure Delay(TickTime : Integer);
  var
  Past: longint;
  begin
- Past := GetTickCount;
+ Past := GetTickCount64;
  repeat
 
- Until (GetTickCount - Past) >= longint(TickTime);
+ Until (GetTickCount64 - Past) >= longint(TickTime);
 end;
 //{$ENDIF}
 
 //*********Downloads a file from the internet into the folder specified*********
 function DownLoadInternetFile(Source, Dest : String): Boolean;
 begin
+{$IFNDEF FPC}
   try
     Result := URLDownloadToFile(nil,PChar(Source),PChar(Dest),0,nil) = 0
   except
     Result := False;
   end;
+{$ELSE}
+  Result := False;
+{$ENDIF}
 end;
 
 //******Verifies the OpenDSS version using the reference at Sourceforge*********
 procedure Check_DSS_WebVersion();
+{$IFDEF FPC}
+begin
+  DSSMessageDlg ('Check_DSS_Webversion() not implemented on FPC; needs Indy', False);
+{$ELSE}
 var
   myVersion,
   myText,
@@ -1256,12 +1266,17 @@ Begin
   {$ENDIF}
   End;
 
+{$ENDIF}
 End;
 
 //**********************Launches the COM Help file******************************
 procedure Show_COM_Help();
-Begin
+begin
+{$IFDEF FPC}
+  DSSMessageDlg ('Show_COM_Help() not implemented on FPC', False);
+{$ELSE}
   ShellExecute(0, 'open',pWidechar(DSSDirectory + '\OpenDSS_COM.chm'), nil, nil, SW_SHOWNORMAL);
+{$ENDIF}
 End;
 
 //*********************Gets the processor information***************************
@@ -1279,6 +1294,7 @@ constructor TProgressActor.Create();
 var
   J           : integer;
 begin
+{$IFNDEF FPC}
   ShellExecute(Handle, 'open',pWidechar(DSSProgressPath), nil, nil, SW_SHOWNORMAL) ;
   sleep(200);
   // ... create TIdTCPClient
@@ -1300,10 +1316,15 @@ begin
       raise;
     end;
   end;
+{$ENDIF}
   Inherited Create(False);
 end;
 
 procedure TProgressActor.Execute;
+{$IFDEF FPC}
+begin
+end;
+{$ELSE}
 var
   I, J    : Integer;
   AbortBtn,
@@ -1334,8 +1355,8 @@ Begin
     End;
     IdTCPClient.IOHandler.WriteLn('ext');
   End;
-
 End;
+{$ENDIF}
 
 procedure TProgressActor.DoTerminate;        // Is the end of the thread
 begin

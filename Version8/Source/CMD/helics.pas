@@ -297,9 +297,9 @@ begin
   else
     cls := helicsNoClass;
   if cls = helicsBus then
-    idx := ActiveCircuit.BusList.Find (objKey)
+    idx := ActiveCircuit[ActiveActor].BusList.Find (objKey)
   else
-    idx := ActiveCircuit.SetElementActive (dss);
+    idx := ActiveCircuit[ActiveActor].SetElementActive (dss);
   if idx = 0 then writeln ('*** can not find HELICS output for ' + dss);
   sub := TList.Create();
 end;
@@ -340,12 +340,12 @@ begin
   end;
   if att = helicsVoltage then begin
     idxPhs := 1 + Ord(phsKey[1]) - Ord('A');  // TODO: s1 and s2; can't ask for ground or neutral voltage
-    idxLoc := ActiveCircuit.Buses^[idxRoot].FindIdx(idxPhs);
-    ref := ActiveCircuit.Buses^[idxRoot].GetRef(idxLoc);
+    idxLoc := ActiveCircuit[ActiveActor].Buses^[idxRoot].FindIdx(idxPhs);
+    ref := ActiveCircuit[ActiveActor].Buses^[idxRoot].GetRef(idxLoc);
   end else begin
     if (trm > 0) then begin
       idxPhs := 1 + Ord(phsKey[1]) - Ord('A');  // TODO: s1 and s2; can't ask for ground or neutral voltage
-      pElem := ActiveCircuit.CktElements.Get(idxRoot);
+      pElem := ActiveCircuit[ActiveActor].CktElements.Get(idxRoot);
       NCond := pElem.NConds;
       Nterm := pElem.Nterms;
       kmax := Ncond * Nterm;
@@ -476,7 +476,7 @@ begin
         key := PChar (sub.text_key);
       val := nil;
       if sub.att = helicsVoltage then begin
-        Volts := ActiveCircuit.Solution.NodeV^[sub.ref];
+        Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[sub.ref];
         if Volts.im < 0 then
           sign:='-'
         else
@@ -485,14 +485,14 @@ begin
         imag := Volts.im;
         val := PChar (FloatToStrF(real, ffFixed, 0, 3) + sign + FloatToStrF(abs(imag), ffFixed, 0, 3) + 'j');
       end else if (sub.att = helicsCurrent) or (sub.att = helicsPower) then begin
-        pElem := ActiveCircuit.CktElements.Get(top.idx);
-        pElem.GetCurrents(cBuffer);
+        pElem := ActiveCircuit[ActiveActor].CktElements.Get(top.idx);
+        pElem.GetCurrents(cBuffer, ActiveActor);
         if (sub.att = helicsCurrent) then begin
           Flow := cBuffer^[sub.ref];
         end else begin
-          Volts := ActiveCircuit.Solution.NodeV^[pElem.NodeRef^[sub.ref]];
+          Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[pElem.NodeRef^[sub.ref]];
           Flow:=Cmul(Volts, conjg(cBuffer^[sub.ref]));
-          if ActiveCircuit.PositiveSequence then Flow:=CmulReal(Flow, 3.0);
+          if ActiveCircuit[ActiveActor].PositiveSequence then Flow:=CmulReal(Flow, 3.0);
         end;
         if Flow.im < 0 then
           sign:='-'
@@ -502,20 +502,20 @@ begin
         imag := Flow.im;
         val := PChar (FloatToStrF(real, ffFixed, 0, 3) + sign + FloatToStrF(abs(imag), ffFixed, 0, 3) + 'j');
       end else if (sub.att = helicsSwitchState) then begin
-        pElem := ActiveCircuit.CktElements.Get(top.idx);
+        pElem := ActiveCircuit[ActiveActor].CktElements.Get(top.idx);
         if AllTerminalsClosed (pElem) then
           ival := 1
         else
           ival := 0;
         val := PChar (IntToStr (ival));
       end else if (sub.att = helicsTapPosition) then begin
-        pXf := TTransfObj (ActiveCircuit.CktElements.Get(top.idx));
+        pXf := TTransfObj (ActiveCircuit[ActiveActor].CktElements.Get(top.idx));
         idxWdg := 2; // TODO: identify and map this using pReg.Transformer and pReg.TrWinding
-        tap := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
+        tap := Round((pXf.PresentTap[idxWdg,ActiveActor]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
         ival := tap;
         val := PChar (IntToStr (tap));
       end else if (sub.att = helicsEnergy) then begin
-        pStore := TStorageObj (ActiveCircuit.CktElements.Get(top.idx));
+        pStore := TStorageObj (ActiveCircuit[ActiveActor].CktElements.Get(top.idx));
         dval := pStore.StorageVars.kwhStored;
         val := PChar (FloatToStrF(dval, ffFixed, 0, 3));
       end;
@@ -627,7 +627,7 @@ begin
         key := PChar (sub.text_key);
       val := nil;
       if sub.att = helicsVoltage then begin
-        Volts := ActiveCircuit.Solution.NodeV^[sub.ref];
+        Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[sub.ref];
         if Volts.im < 0 then
           sign:='-'
         else
@@ -636,14 +636,14 @@ begin
         imag := Volts.im;
         val := PChar (FloatToStrF(real, ffFixed, 0, 3) + sign + FloatToStrF(abs(imag), ffFixed, 0, 3) + 'j');
       end else if (sub.att = helicsCurrent) or (sub.att = helicsPower) then begin
-        pElem := ActiveCircuit.CktElements.Get(top.idx);
-        pElem.GetCurrents(cBuffer);
+        pElem := ActiveCircuit[ActiveActor].CktElements.Get(top.idx);
+        pElem.GetCurrents(cBuffer,ActiveActor);
         if (sub.att = helicsCurrent) then begin
           Flow := cBuffer^[sub.ref];
         end else begin
-          Volts := ActiveCircuit.Solution.NodeV^[pElem.NodeRef^[sub.ref]];
+          Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[pElem.NodeRef^[sub.ref]];
           Flow:=Cmul(Volts, conjg(cBuffer^[sub.ref]));
-          if ActiveCircuit.PositiveSequence then Flow:=CmulReal(Flow, 3.0);
+          if ActiveCircuit[ActiveActor].PositiveSequence then Flow:=CmulReal(Flow, 3.0);
         end;
         if Flow.im < 0 then
           sign:='-'
@@ -653,20 +653,20 @@ begin
         imag := Flow.im;
         val := PChar (FloatToStrF(real, ffFixed, 0, 3) + sign + FloatToStrF(abs(imag), ffFixed, 0, 3) + 'j');
       end else if (sub.att = helicsSwitchState) then begin
-        pElem := ActiveCircuit.CktElements.Get(top.idx);
+        pElem := ActiveCircuit[ActiveActor].CktElements.Get(top.idx);
         if AllTerminalsClosed (pElem) then
           ival := 1
         else
           ival := 0;
         val := PChar (IntToStr (ival));
       end else if (sub.att = helicsTapPosition) then begin
-        pXf := TTransfObj (ActiveCircuit.CktElements.Get(top.idx));
+        pXf := TTransfObj (ActiveCircuit[ActiveActor].CktElements.Get(top.idx));
         idxWdg := 2; // TODO: identify and map this using pReg.Transformer and pReg.TrWinding
-        tap := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
+        tap := Round((pXf.PresentTap[idxWdg,ActiveActor]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
         ival := tap;
         val := PChar (IntToStr (tap));
       end else if (sub.att = helicsEnergy) then begin
-        pStore := TStorageObj (ActiveCircuit.CktElements.Get(top.idx));
+        pStore := TStorageObj (ActiveCircuit[ActiveActor].CktElements.Get(top.idx));
         dval := pStore.StorageVars.kwhStored;
         val := PChar (FloatToStrF(dval, ffFixed, 0, 3));
       end;
@@ -1075,8 +1075,8 @@ begin
       Writeln(Format('  Already granted %f by HELICS and requested %f, granted %f', [existing_helics_grant, next_helics, time_granted]));
       system.flush (stdout);
     end;
-    Hour := ActiveCircuit.Solution.DynaVars.intHour;
-    Sec :=  ActiveCircuit.Solution.Dynavars.t;
+    Hour := ActiveCircuit[ActiveActor].Solution.DynaVars.intHour;
+    Sec :=  ActiveCircuit[ActiveActor].Solution.Dynavars.t;
     if time_granted >= next_helics_publish then begin
       if pub_topic_list.Count > 0 then begin
         if log_level >= helicsLogDebug2 then begin
@@ -1115,14 +1115,14 @@ begin
     //          [value, time_granted, Hour, Sec]));
     //        system.flush (stdout);
     //      end;
-    //      DSSExecutive.Command := value;
+    //      DSSExecutive[ActiveActor].Command := value;
     //    end;
     //  end else if Pos ('#load', key) > 0 then begin
     //    //value := helics_next_value();
     //    re := StrToFloat (ExtractWord (1, value, ['+', 'j', ' ']));
     //    im := StrToFloat (ExtractWord (2, value, ['+', 'j', ' ']));
-    //    ActiveCircuit.SetElementActive ('load.F1_house_B0');
-    //    ld := TLoadObj (ActiveCircuit.ActiveCktElement);
+    //    ActiveCircuit[ActiveActor].SetElementActive ('load.F1_house_B0');
+    //    ld := TLoadObj (ActiveCircuit[ActiveActor].ActiveCktElement);
     //    ld.LoadSpecType := 1;
     //    ld.kwBase := re;
     //    ld.kvarBase := im;
@@ -1162,7 +1162,7 @@ begin
                                      [input_value, time_granted, i + 1, sub_count]));
               system.flush (stdout);
            end;
-           DSSExecutive.Command := input_value;
+           DSSExecutive[ActiveActor].Command := input_value;
            if log_level >= helicsLogDebug1 then begin
               writeln(Format('Finished with %s at %f, evt %u of %d',
                                        [input_value, time_granted, i + 1, sub_count]));
@@ -1172,12 +1172,12 @@ begin
           //input_value := helics_get_input_string(asub, @helics_error);
           re := StrToFloat (ExtractWord (1, input_value, ['+', 'j', ' ']));
           im := StrToFloat (ExtractWord (2, input_value, ['+', 'j', ' ']));
-          ActiveCircuit.SetElementActive ('load.F1_house_B0');
-          ld := TLoadObj (ActiveCircuit.ActiveCktElement);
+          ActiveCircuit[ActiveActor].SetElementActive ('load.F1_house_B0');
+          ld := TLoadObj (ActiveCircuit[ActiveActor].ActiveCktElement);
           ld.LoadSpecType := 1;
           ld.kwBase := re;
           ld.kvarBase := im;
-          ld.RecalcElementData;
+          ld.RecalcElementData(ActiveActor);
           if log_level >= helicsLogDebug2 then begin
             writeln(Format ('HELICS input received: %s, at %f, %d:%.3f',
               [cmd, time_granted, Hour, Sec]));
@@ -1211,12 +1211,12 @@ begin
                     //input_value := helics_get_input_string(asub, @helics_error);
                     re := StrToFloat (ExtractWord (1, value.value, ['+', 'j', ' ']));
                     im := StrToFloat (ExtractWord (2, value.value, ['+', 'j', ' ']));
-                    ActiveCircuit.SetElementActive ('load.F1_house_B0');
-                    ld := TLoadObj (ActiveCircuit.ActiveCktElement);
+                    ActiveCircuit[ActiveActor].SetElementActive ('load.F1_house_B0');
+                    ld := TLoadObj (ActiveCircuit[ActiveActor].ActiveCktElement);
                     ld.LoadSpecType := 1;
                     ld.kwBase := re;
                     ld.kvarBase := im;
-                    ld.RecalcElementData;
+                    ld.RecalcElementData(ActiveActor);
                     if log_level >= helicsLogDebug2 then begin
                       writeln(Format ('HELICS input received: %s, at %f, %d:%.3f',
                         [value.key, time_granted, Hour, Sec]));
@@ -1238,7 +1238,7 @@ begin
                                              [input_value, time_granted, i + 1, sub_count]));
                       system.flush (stdout);
                    end;
-                   DSSExecutive.Command := input_value;
+                   DSSExecutive[ActiveActor].Command := input_value;
                    if log_level >= helicsLogDebug1 then begin
                       writeln(Format('Finished with %s at %f, evt %u of %d',
                                                [input_value, time_granted, i + 1, sub_count]));
@@ -1510,7 +1510,7 @@ begin
                                        [input_value, time_granted, i + 1, sub_count]));
                 system.flush (stdout);
              end;
-             DSSExecutive.Command := input_value;
+             DSSExecutive[ActiveActor].Command := input_value;
              if log_level >= helicsLogDebug1 then begin
                 writeln(Format('Finished with %s at %f, evt %u of %d',
                                          [input_value, time_granted, i + 1, sub_count]));
@@ -1546,7 +1546,7 @@ begin
                                        [input_value, time_granted, i + 1, sub_count]));
                 system.flush (stdout);
              end;
-             DSSExecutive.Command := input_value;
+             DSSExecutive[ActiveActor].Command := input_value;
              if log_level >= helicsLogDebug1 then begin
                 writeln(Format('Finished with %s at %f, evt %u of %d',
                                          [input_value, time_granted, i + 1, sub_count]));
@@ -1598,7 +1598,7 @@ begin
                                        [input_value, time_granted, i + 1, sub_count]));
                 system.flush (stdout);
              end;
-             DSSExecutive.Command := input_value;
+             DSSExecutive[ActiveActor].Command := input_value;
              if log_level >= helicsLogDebug1 then begin
                 writeln(Format('Finished with %s at %f, evt %u of %d',
                                          [input_value, time_granted, i + 1, sub_count]));
@@ -1631,7 +1631,7 @@ begin
                                        [input_value, time_granted, i + 1, sub_count]));
                 system.flush (stdout);
              end;
-             DSSExecutive.Command := input_value;
+             DSSExecutive[ActiveActor].Command := input_value;
              if log_level >= helicsLogDebug1 then begin
                 writeln(Format('Finished with %s at %f, evt %u of %d',
                                          [input_value, time_granted, i + 1, sub_count]));

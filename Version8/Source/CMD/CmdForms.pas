@@ -143,10 +143,12 @@ begin
 	HelpList := TList.Create();
   idx := ActiveDSSClass[ActiveActor].First;
   pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
+  pDSSClass := DSSClassList[ActiveActor].First;
   WHILE pDSSClass<>Nil DO Begin
     If (pDSSClass.DSSClassType AND BASECLASSMASK) = BaseClass Then HelpList.Add (pDSSClass);
     idx := ActiveDSSClass[ActiveActor].Next;
     pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
+    pDSSClass := DSSClassList[ActiveActor].Next;
   End;
   HelpList.Sort(@CompareClassNames);
 
@@ -218,6 +220,7 @@ begin
   if Length(opt) > 0 then begin
     idx := ActiveDSSClass[ActiveActor].First;
     pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
+    pDSSClass := DSSClassList[ActiveActor].First;
     while pDSSClass<>nil do begin
       if AnsiStartsStr (opt, LowerCase(pDSSClass.name)) then begin
         writeln (UpperCase (pDSSClass.name));
@@ -227,6 +230,7 @@ begin
       end;
     idx := ActiveDSSClass[ActiveActor].Next;
     pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
+      pDSSClass := DSSClassList[ActiveActor].Next;
     end;
   end else begin
   	writeln('== Power Delivery Elements ==');

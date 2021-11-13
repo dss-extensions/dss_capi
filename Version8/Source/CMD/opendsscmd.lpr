@@ -103,6 +103,7 @@ uses
   GenUserModel in '..\PCElements\GenUserModel.pas',
   GICLine in '..\PCElements\GICLine.pas',
   GICTransformer in '..\PDElements\GICTransformer.pas',
+  GISCommands in '..\GISCommands\GISCommands.pas',
   GrowthShape in '..\General\GrowthShape.pas',
   HashList in '..\Shared\HashList.pas',
   IniRegSave in '..\Shared\IniRegSave.pas',
@@ -125,6 +126,7 @@ uses
   MyDSSClassDefs in 'MyDSSClassDefs.Pas',
   NamedObject in '..\General\NamedObject.pas',
   Notes in '..\Common\Notes.pas',
+  NumCPULib in '..\Parallel_Lib\NumCPULib.pas',
   OHLineConstants in '..\General\OHLineConstants.pas',
   ParserDel in '..\Parser\ParserDel.pas',
   PCClass in '..\PCElements\PCClass.pas',
@@ -155,6 +157,7 @@ uses
   StoreUserModel in '..\PCElements\StoreUserModel.pas',
   SwtControl in '..\Controls\SwtControl.pas',
   TCC_Curve in '..\General\TCC_Curve.pas',
+  TCP_IP in '..\TCP_IP\TCP_IP.pas',
   TempShape in '..\General\TempShape.pas',
   Terminal in '..\Common\Terminal.pas',
   TOPExport in '..\Common\TOPExport.pas',
@@ -239,15 +242,15 @@ var
   LNresult: Pchar;
 begin
 	NoFormsAllowed := True;
-	DSSExecutive := TExecutive.Create;  // Make a DSS object
-	DSSExecutive.CreateDefaultDSSItems;
-//	writeln('Startup Directory: ', StartupDirectory);
-//	writeln('Data Directory: ', DataDirectory);
-//	writeln('Output Directory: ', OutputDirectory);
-//	writeln('GetCurrentDir: ', GetCurrentDir);
-	DataDirectory := StartupDirectory;
-	OutputDirectory := StartupDirectory;
-  SetCurrentDir(DataDirectory);
+	DSSExecutive[ActiveActor] := TExecutive.Create;  // Make a DSS object
+	DSSExecutive[ActiveActor].CreateDefaultDSSItems;
+	writeln('Startup Directory: ', StartupDirectory);
+	writeln('Data Directory: ', DataDirectory[ActiveActor]);
+	writeln('Output Directory: ', OutputDirectory[ActiveActor]);
+	writeln('GetCurrentDir: ', GetCurrentDir);
+	DataDirectory[ActiveActor] := StartupDirectory;
+	OutputDirectory[ActiveActor] := StartupDirectory;
+  SetCurrentDir(DataDirectory[ActiveActor]);
 
 	NoFormsAllowed := False;  // messages will go to the console
 
@@ -292,9 +295,9 @@ begin
       if paramcount > 2 then begin
     	  Cmd := 'compile ' + ParamStr(3);
         writeln(Cmd);
-        DSSExecutive.Command := Cmd;
-        if DSSExecutive.Error <> 0 then begin
-    		  writeln('Last Error: ' + DSSExecutive.LastError);
+        DSSExecutive[ActiveActor].Command := Cmd;
+        if DSSExecutive[ActiveActor].Error <> 0 then begin
+    		  writeln('Last Error: ' + DSSExecutive[ActiveActor].LastError);
           writeln('FNCS option failed: the optional filename would not compile first');
           Terminate;
           Exit;
@@ -319,9 +322,9 @@ begin
       if paramcount > 2 then begin
     	  Cmd := 'compile ' + ParamStr(3);
         writeln(Cmd);
-        DSSExecutive.Command := Cmd;
-        if DSSExecutive.Error <> 0 then begin
-    		  writeln('Last Error: ' + DSSExecutive.LastError);
+        DSSExecutive[ActiveActor].Command := Cmd;
+        if DSSExecutive[ActiveActor].Error <> 0 then begin
+    		  writeln('Last Error: ' + DSSExecutive[ActiveActor].LastError);
           writeln('HELICS option failed: the optional filename would not compile first');
           Terminate;
           Exit;
@@ -338,15 +341,15 @@ begin
 	if paramcount > 0 then begin
 	  Cmd := 'compile ' + ParamStr(1);
     writeln(Cmd);
-    DSSExecutive.Command := Cmd;
-		writeln('Last Error: ' + DSSExecutive.LastError);
+    DSSExecutive[ActiveActor].Command := Cmd;
+		writeln('Last Error: ' + DSSExecutive[ActiveActor].LastError);
 		Terminate;
 	end else begin
 {		repeat begin  // this has no command history
 			write('>>');
 			readln(Cmd);
-			DSSExecutive.Command := Cmd;
-			writeln(DSSExecutive.LastError);
+			DSSExecutive[ActiveActor].Command := Cmd;
+			writeln(DSSExecutive[ActiveActor].LastError);
 		end until UserFinished (Cmd);
 }
  // the linenoise-ng library seems to be "sluggish" dropping typed characters on Windows
@@ -355,7 +358,7 @@ begin
       LNresult := linenoise.linenoise('>>');
       if LNResult <> nil then begin
         Cmd := LNResult;
-        DSSExecutive.Command := Cmd;
+        DSSExecutive[ActiveActor].Command := Cmd;
         linenoiseHistoryAdd (LNResult);
         linenoiseFree (LNResult);
       end;
@@ -368,7 +371,7 @@ begin
         writeln (LNResult);
         if LNResult <> nil then begin
           Cmd := LNResult;
-          DSSExecutive.Command := Cmd;
+          DSSExecutive[ActiveActor].Command := Cmd;
           editline.add_history (LNResult);
           editline.rl_free (LNResult);
         end;
@@ -427,6 +430,6 @@ var
 begin
   Application:=TMyApplication.Create(nil);
   Application.Run;
-  ExitCode := DSSExecutive.Error;
+  ExitCode := DSSExecutive[ActiveActor].Error;
   Application.Free;
 end.

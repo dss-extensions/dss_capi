@@ -1,6 +1,6 @@
 {
  ----------------------------------------------------------
-  Copyright (c) 2017-2020 Battelle Memorial Institute
+  Copyright (c) 2017-2021 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 unit FNCS;
@@ -192,9 +192,9 @@ begin
   else
     cls := fncsNoClass;
   if cls = fncsBus then
-    idx := ActiveCircuit.BusList.Find (objKey)
+    idx := ActiveCircuit[ActiveActor].BusList.Find (objKey)
   else
-    idx := ActiveCircuit.SetElementActive (dss);
+    idx := ActiveCircuit[ActiveActor].SetElementActive (dss);
   if idx = 0 then writeln ('*** can not find FNCS output for ' + dss);
   sub := TList.Create();
 end;
@@ -235,12 +235,12 @@ begin
   end;
   if att = fncsVoltage then begin
     idxPhs := 1 + Ord(phsKey[1]) - Ord('A');  // TODO: s1 and s2; can't ask for ground or neutral voltage
-    idxLoc := ActiveCircuit.Buses^[idxRoot].FindIdx(idxPhs);
-    ref := ActiveCircuit.Buses^[idxRoot].GetRef(idxLoc);
+    idxLoc := ActiveCircuit[ActiveActor].Buses^[idxRoot].FindIdx(idxPhs);
+    ref := ActiveCircuit[ActiveActor].Buses^[idxRoot].GetRef(idxLoc);
   end else begin
     if (trm > 0) then begin
       idxPhs := 1 + Ord(phsKey[1]) - Ord('A');  // TODO: s1 and s2; can't ask for ground or neutral voltage
-      pElem := ActiveCircuit.CktElements.Get(idxRoot);
+      pElem := ActiveCircuit[ActiveActor].CktElements.Get(idxRoot);
       NCond := pElem.NConds;
       Nterm := pElem.Nterms;
       kmax := Ncond * Nterm;
@@ -356,21 +356,21 @@ begin
         key := PChar (sub.text_key);
       val := nil;
       if sub.att = fncsVoltage then begin
-        Volts := ActiveCircuit.Solution.NodeV^[sub.ref];
+        Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[sub.ref];
         if Volts.im < 0 then
           sign:='-'
         else
           sign:='+';
         val := PChar (FloatToStrF(Volts.re, ffFixed, 0, 3) + sign + FloatToStrF(abs(Volts.im), ffFixed, 0, 3) + 'j');
       end else if (sub.att = fncsCurrent) or (sub.att = fncsPower) then begin
-        pElem := ActiveCircuit.CktElements.Get(top.idx);
-        pElem.GetCurrents(cBuffer);
+        pElem := ActiveCircuit[ActiveActor].CktElements.Get(top.idx);
+        pElem.GetCurrents(cBuffer, ActiveActor);
         if (sub.att = fncsCurrent) then begin
           Flow := cBuffer^[sub.ref];
         end else begin
-          Volts := ActiveCircuit.Solution.NodeV^[pElem.NodeRef^[sub.ref]];
+          Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[pElem.NodeRef^[sub.ref]];
           Flow:=Cmul(Volts, conjg(cBuffer^[sub.ref]));
-          if ActiveCircuit.PositiveSequence then Flow:=CmulReal(Flow, 3.0);
+          if ActiveCircuit[ActiveActor].PositiveSequence then Flow:=CmulReal(Flow, 3.0);
         end;
         if Flow.im < 0 then
           sign:='-'
@@ -378,18 +378,18 @@ begin
           sign:='+';
         val := PChar (FloatToStrF(Flow.re, ffFixed, 0, 3) + sign + FloatToStrF(abs(Flow.im), ffFixed, 0, 3) + 'j');
       end else if (sub.att = fncsSwitchState) then begin
-        pElem := ActiveCircuit.CktElements.Get(top.idx);
+        pElem := ActiveCircuit[ActiveActor].CktElements.Get(top.idx);
         if AllTerminalsClosed (pElem) then 
           val := '1'
         else
           val := '0'
       end else if (sub.att = fncsTapPosition) then begin
-        pXf := TTransfObj (ActiveCircuit.CktElements.Get(top.idx));
+        pXf := TTransfObj (ActiveCircuit[ActiveActor].CktElements.Get(top.idx));
         idxWdg := 2; // TODO: identify and map this using pReg.Transformer and pReg.TrWinding
-        tap := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
+        tap := Round((pXf.PresentTap[idxWdg,ActiveActor]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
         val := PChar (IntToStr (tap));
       end else if (sub.att = fncsEnergy) then begin
-        pStore := TStorageObj (ActiveCircuit.CktElements.Get(top.idx));
+        pStore := TStorageObj (ActiveCircuit[ActiveActor].CktElements.Get(top.idx));
         val := PChar (FloatToStrF(pStore.StorageVars.kwhStored, ffFixed, 0, 3));
       end;
       if assigned(val) then begin
@@ -586,8 +586,8 @@ begin
       Writeln(Format('  Already granted %u by FNCS and requested %u, granted %u', [existing_fncs_grant, next_fncs, time_granted]));
       system.flush (stdout);
     end;
-    Hour := ActiveCircuit.Solution.DynaVars.intHour;
-    Sec :=  ActiveCircuit.Solution.Dynavars.t;
+    Hour := ActiveCircuit[ActiveActor].Solution.DynaVars.intHour;
+    Sec :=  ActiveCircuit[ActiveActor].Solution.Dynavars.t;
     if time_granted >= next_fncs_publish then begin
       if topicList.Count > 0 then begin
         if log_level >= fncsLogDebug2 then begin
@@ -615,18 +615,18 @@ begin
               [value, time_granted, Hour, Sec]));
             system.flush (stdout);
           end;
-          DSSExecutive.Command := value;
+          DSSExecutive[ActiveActor].Command := value;
         end;
       end else if Pos ('#load', key) > 0 then begin
         value := fncs_next_value();
         re := StrToFloat (ExtractWord (1, value, ['+', 'j', ' ']));
         im := StrToFloat (ExtractWord (2, value, ['+', 'j', ' ']));
-        ActiveCircuit.SetElementActive ('load.F1_house_B0');
-        ld := TLoadObj (ActiveCircuit.ActiveCktElement);
+        ActiveCircuit[ActiveActor].SetElementActive ('load.F1_house_B0');
+        ld := TLoadObj (ActiveCircuit[ActiveActor].ActiveCktElement);
         ld.LoadSpecType := 1;
         ld.kwBase := re;
         ld.kvarBase := im;
-        ld.RecalcElementData;
+        ld.RecalcElementData(ActiveActor);
         if log_level >= fncsLogDebug2 then begin
           writeln(Format ('FNCS Request %s to %g + j %g at %u, %d:%.3f', 
             [ld.Name, re, im, time_granted, Hour, Sec]));
@@ -680,7 +680,7 @@ begin
                 [value, time_granted, ival, nvalues, i, ilast]));
               system.flush (stdout);
             end;
-            DSSExecutive.Command := value;
+            DSSExecutive[ActiveActor].Command := value;
             if log_level >= fncsLogDebug1 then begin
               writeln(Format('Finished with %s at %u, val %u of %u, evt %u of %u', 
                 [value, time_granted, ival, nvalues, i, ilast]));

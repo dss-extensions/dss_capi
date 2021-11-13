@@ -1,6 +1,6 @@
 {
  ----------------------------------------------------------
-  Copyright (c) 2017 Battelle Memorial Institute
+  Copyright (c) 2017-2021 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 unit linenoise;
