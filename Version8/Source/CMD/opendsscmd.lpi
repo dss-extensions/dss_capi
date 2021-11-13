@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="10"/>
+    <Version Value="12"/>
     <PathDelim Value="\"/>
     <General>
+      <Flags>
+        <CompatibilityMode Value="True"/>
+      </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <MainUnit Value="0"/>
       <Title Value="opendsscmd"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
@@ -26,10 +28,9 @@
     </PublishOptions>
     <RunParams>
       <local>
-        <FormatVersion Value="1"/>
-        <HostApplicationFilename Value="\home\xcosmos\src\OpenDSS\Version7\Source\CMD\test\opendsscmd"/>
-        <CommandLineParams Value="-l 25h"/>
-        <WorkingDirectory Value="\home\xcosmos\src\OpenDSS\Version7\Source\CMD\test"/>
+        <HostApplicationFilename Value="C:\src\OpenDSS\Version8\Source\CMD\test\opendsscmd.exe"/>
+        <CommandLineParams Value="dlc.dss"/>
+        <WorkingDirectory Value="C:\src\OpenDSS\Version8\Source\CMD\test"/>
       </local>
       <environment>
         <UserOverrides Count="6">
@@ -41,8 +42,28 @@
           <Variable5 Name="HELICS_LOG_LEVEL" Value="DEBUG4"/>
         </UserOverrides>
       </environment>
+      <FormatVersion Value="2"/>
+      <Modes Count="1">
+        <Mode0 Name="default">
+          <local>
+            <HostApplicationFilename Value="C:\src\OpenDSS\Version8\Source\CMD\test\opendsscmd.exe"/>
+            <CommandLineParams Value="dlc.dss"/>
+            <WorkingDirectory Value="C:\src\OpenDSS\Version8\Source\CMD\test"/>
+          </local>
+          <environment>
+            <UserOverrides Count="6">
+              <Variable0 Name="FNCS_CONFIG_FILE" Value="opendssgld.yaml"/>
+              <Variable1 Name="FNCS_LOG_LEVEL" Value="DEBUG4"/>
+              <Variable2 Name="HELICS_CONFIG_FILE" Value="gldopendsshouseshelics.json"/>
+              <Variable3 Name="HELICS_CONFIG_FILE2" Value="gldopendsshelics_endpoints_combo.json"/>
+              <Variable4 Name="HELICS_CONFIG_FILE3" Value="opendss.json"/>
+              <Variable5 Name="HELICS_LOG_LEVEL" Value="DEBUG4"/>
+            </UserOverrides>
+          </environment>
+        </Mode0>
+      </Modes>
     </RunParams>
-    <Units Count="125">
+    <Units Count="129">
       <Unit0>
         <Filename Value="opendsscmd.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -548,6 +569,22 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="HELICS"/>
       </Unit124>
+      <Unit125>
+        <Filename Value="..\GISCommands\GISCommands.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit125>
+      <Unit126>
+        <Filename Value="..\Parallel_Lib\NumCPULib.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit126>
+      <Unit127>
+        <Filename Value="..\Common\Sparse_Math.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit127>
+      <Unit128>
+        <Filename Value="..\TCP_IP\TCP_IP.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit128>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -558,7 +595,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Plot;..\Meters;..\PCElements;..\Executive;..\Parser;$(ProjOutDir)"/>
-      <Libraries Value="\lib\x86_64-linux-gnu\;..\..\..\..\KLUSolve\Lib;lib"/>
+      <Libraries Value="\lib\x86_64-linux-gnu;..\..\..\..\KLUSolve\Lib;lib"/>
       <OtherUnitFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Meters;..\PCElements;..\Executive;..\Parser"/>
       <UnitOutputDirectory Value="units\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
