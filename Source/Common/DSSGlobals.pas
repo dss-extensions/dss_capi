@@ -54,13 +54,14 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      ExpControl,
      variants,
      {$IFNDEF FPC}
-     {$IFNDEF CONSOLE}
-     ProgressForm,
-     vcl.dialogs,
-     WinAPI.UrlMon,
-     {$ELSE}
-     UrlMon,
-     {$ENDIF}
+       ShellApi,
+       {$IFNDEF CONSOLE}
+         ProgressForm,
+         vcl.dialogs,
+         WinAPI.UrlMon,
+       {$ELSE}
+         UrlMon,
+       {$ENDIF}
      {$ENDIF}
      Strutils,
      Types,
@@ -70,7 +71,6 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      VSource,
      Executive,
      ExecOptions,
-     ShellApi,
 //     Parallel_Lib
 //   TCP Indy libraries
 {$IFNDEF FPC}

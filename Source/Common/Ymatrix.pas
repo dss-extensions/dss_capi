@@ -17,7 +17,9 @@ interface
 uses
   uComplex,
   SysUtils,
+{$IFNDEF FPC}
   windows,
+{$ENDIF}
   DSSClass,
   DSSObject;
 

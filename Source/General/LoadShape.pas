@@ -44,7 +44,7 @@ Interface
  }
 
 USES
-   Command, DSSClass, DSSObject, UcMatrix, ucomplex, Arraydef, Windows;
+   Command, DSSClass, DSSObject, UcMatrix, ucomplex, Arraydef, {$IFDEF FPC}resource{$ELSE}Windows{$ENDIF};
 
 
 TYPE
@@ -374,6 +374,10 @@ Procedure TLoadShapeObj.LoadMMFView(const Parmname : string; MMF: THandle; Desti
 // Destination
 //  0   : P
 //  1   : Q
+{$IFDEF FPC}
+begin 
+end;
+{$ELSE}
 var
   FirstPos  : Integer;
   myLastCh  : Byte;
@@ -419,6 +423,7 @@ BEGIN
   End;
 
 END;
+{$ENDIF}
 
 {*******************************************************************************
 *   Creates the Memory mapping for the file specified, Destination is used to  *
@@ -426,6 +431,10 @@ END;
 ********************************************************************************}
 
 function TLoadShape.CreateMMF(const S: String; Destination : Integer): integer;
+{$IFDEF FPC}
+begin Result:=-1
+end;
+{$ELSE}
 VAR
 
   ParmName,
@@ -487,7 +496,7 @@ Begin
   END;
 
 End;
-
+{$ENDIF}
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Function TLoadShape.Edit(ActorID : Integer):Integer;
@@ -1012,10 +1021,10 @@ END;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLoadShapeObj.Destroy;
 BEGIN
-
     If Assigned(Hours)        Then  ReallocMem(Hours, 0);
     If Assigned(PMultipliers) Then  ReallocMem(PMultipliers, 0);
     If Assigned(QMultipliers) Then  ReallocMem(QMultipliers, 0);
+{$IFNDEF FPC}
     if UseMMF then
     Begin
       UnmapViewOfFile(myView);
@@ -1024,6 +1033,7 @@ BEGIN
       CloseHandle(myQMMF);
       CloseHandle(myQFile);
     End;
+{$ENDIF}
     Inherited destroy;
 END;
 
