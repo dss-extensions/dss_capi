@@ -17,11 +17,11 @@ uses
   {$IFDEF FPC}
     CmdForms
   {$ELSE}
-  {$IFNDEF CONSOLE}
-    DSSForms, ScriptEdit
-  {$ELSE}
-    CmdForms
-  {$ENDIF}
+    {$IFNDEF CONSOLE}
+      DSSForms, ScriptEdit
+    {$ELSE}
+      CmdForms
+    {$ENDIF}
   {$ENDIF},
   Classes;
 
@@ -725,7 +725,11 @@ Begin
           if ActorHandle[DIdx] <> nil then
           Begin
             ActorHandle[DIdx].CPU :=  ActorCPU[DIdx];
-            ActorHandle[DIdx].Priority :=  {$IFDEF MSWINDOWS}tpTimeCritical{$ELSE}6{$ENDIF};
+            {$IFDEF FPC}
+              ActorHandle[DIdx].Priority := tpTimeCritical;
+            {$ELSE}
+              ActorHandle[DIdx].Priority :=  {$IFDEF MSWINDOWS}tpTimeCritical{$ELSE}6{$ENDIF};
+            {$ENDIF}
           End;
         End;
         // Compiles the interconnected Circuit for further calculations on actor 1

@@ -10,20 +10,28 @@ interface
 
 uses
 
-  SysUtils,
-  {$IFDEF FPC}fpjson{$ELSE}System.JSON{$ENDIF},
-  ShellApi,
-  {$IFDEF MSWINDOWS}
-  {$IFDEF FPC}sockets{$ELSE}TlHelp32,System.Win.ScktComp{$ENDIF},
-  Winsock,
-  {$IFNDEF CONSOLE}
-  DSSPlot,
+  {$IFDEF FPC}
+    fpjson,
   {$ELSE}
-  CmdForms,
+    System.JSON,
   {$ENDIF}
+  {$IFDEF MSWINDOWS}
+    {$IFDEF FPC}
+      sockets,
+    {$ELSE}
+      TlHelp32,
+      System.Win.ScktComp,
+      ShellApi,
+      Windows,
+      Winsock,
+    {$ENDIF}
+    {$IFNDEF CONSOLE}
+      DSSPlot,
+    {$ELSE}
+      CmdForms,
+    {$ENDIF}
   {$ENDIF}
-  Windows;
-
+  SysUtils;
 
 type
   IntegerArray1d  = array of Integer;
