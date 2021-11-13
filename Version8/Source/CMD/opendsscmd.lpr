@@ -46,9 +46,9 @@ program opendsscmd;
 }
 
 uses
-  {$IFDEF UNIX}{$IFDEF UseCThreads}
+  {$IFDEF UNIX}
   cthreads,
-  {$ENDIF}{$ENDIF}
+  {$ENDIF}
   SysUtils,
   Classes,
   CustApp,
