@@ -91,9 +91,17 @@ USES ExecCommands, ExecOptions,
      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
      Utilities, Solution, DSSClass, IniRegSave,
 {$IF Not (defined(FPC) or defined(CONSOLE))}
+{$IFDEF FPC}
+     CmdForms,
+{$ELSE}
+  {$IFDEF CONSOLE}
+     CmdForms,
+  {$ELSE}
      DSSForms,
 {$ELSE}
      CmdForms,
+{$ENDIF}
+  {$ENDIF}
 {$ENDIF}
      KLUSolve;
 

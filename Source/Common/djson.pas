@@ -26,7 +26,7 @@ unit djson;
 
 interface
 
-uses System.SysUtils, System.Classes, System.Variants, generics.collections;
+uses SysUtils, Classes, Variants, generics.collections;
 
 type
   TdJSON = class;
@@ -93,7 +93,7 @@ var
 implementation
 
 uses
-  XSBuiltIns
+  {$IFDEF FPC}XMLUtils{$ELSE}XSBuiltIns{$ENDIF}
   {$IFDEF MSWINDOWS}, Windows{$ENDIF}
   ;
 
@@ -103,7 +103,7 @@ uses
 {$IFDEF MSWINDOWS}
 procedure DebugStr(const msg: variant);
 begin
-  OutputDebugString(PWideChar(format('%s: %s', [FormatDateTime('hh:nn:ss.zzz', now), msg])));
+  OutputDebugStringW(PWideChar(format('%s: %s', [FormatDateTime('hh:nn:ss.zzz', now), msg])));
 end;
 {$ENDIF}
 
@@ -134,6 +134,9 @@ function TdJSON.GetDateTime: TDateTime;
 var
   d: string;
 begin
+{$IFDEF FPC}  // TODO: need an FPC counterpart of TXSDateTime, for now returning something invalid
+  Result := 0.0;
+{$ELSE}
   d := VarToStr(FValue);
   if length(d) = 10 then // date
     result := StrToDate(d, DJSONFormatSettings)
@@ -147,6 +150,7 @@ begin
     finally
       Free();
     end;
+{$ENDIF}
 end;
 
 function TdJSON.GetDouble: double;
@@ -442,8 +446,9 @@ begin
 end;
 
 initialization
-
+{$IFNDEF FPC}
   DJSONFormatSettings := TFormatsettings.Create;
+{$ENDIF}
   with DJSONFormatSettings do
   begin
     DateSeparator := '-';
