@@ -196,7 +196,7 @@ End;
 // Returns the content of the BytesStream to be plotted with the OpenDSS Viewer
 //******************************************************************************
 procedure ReadMHandler(Mem_Space : TBytesStream; X_axis: pDoubleArray2d;
-          Ylabels: pStringArray1d; Y_axis: pDoubleArray2d); overload;
+          Ylabels: pStringArray1d; Y_axis: pDoubleArray2d); //overload;
 var
   buffer          : Uint8;
   idx             : integer;

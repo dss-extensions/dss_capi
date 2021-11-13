@@ -1334,6 +1334,10 @@ End;
 ********************************************************************************}
 
 Function TDSSCircuit.Create_MeTIS_Zones(Filename  : string): string;
+{$IFDEF FPC}
+begin
+end;
+{$ELSE}
 var
   TreeNm,                                           // For debugging
   MeTISCmd,
@@ -1436,6 +1440,7 @@ Begin
   Result  :=  TextCmd
 
 End;
+{$ENDIF}
 
 {*******************************************************************************
 *                   Disables all DER present in the model                      *

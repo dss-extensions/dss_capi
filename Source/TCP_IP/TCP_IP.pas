@@ -10,10 +10,11 @@ interface
 
 uses
 
-  SysUtils,System.JSON,ShellApi,
+  SysUtils,
+  {$IFDEF FPC}fpjson{$ELSE}System.JSON{$ENDIF},
+  ShellApi,
   {$IFDEF MSWINDOWS}
-  System.Win.ScktComp,
-  TlHelp32,
+  {$IFDEF FPC}sockets{$ELSE}TlHelp32,System.Win.ScktComp{$ENDIF},
   Winsock,
   {$IFNDEF CONSOLE}
   DSSPlot,
@@ -37,6 +38,11 @@ type
   pStringArray1d = ^StringArray1d;
   StringArray2d = array of array of string;
   pStringArray2d = ^StringArray2d;
+  {$IFDEF FPC}
+  TCustomWinSocket = integer;
+  TClientSocket = integer;
+  TErrorEvent = integer;
+  {$ENDIF}
   TDSSConnect = class(TObject)
     procedure MySocketRead(Sender: TObject; Socket:{$IFDEF MSWINDOWS}TCustomWinSocket{$ELSE}integer{$ENDIF});
     procedure MySocketDisconnect(Sender: TObject; Socket:{$IFDEF MSWINDOWS}TCustomWinSocket{$ELSE}integer{$ENDIF});
@@ -72,6 +78,32 @@ var
   DSSConnectObj: TDSSConnect;
 
 implementation
+
+{$IFDEF FPC}  // would probably need to implement from scratch in FPC
+constructor TDSSConnect.Create;begin end;
+destructor TDSSConnect.Destroy;begin inherited;end;
+procedure TDSSConnect.MySocketRead(Sender: TObject; Socket: TCustomWinSocket);begin end;
+procedure TDSSConnect.MySocketDisconnect(Sender: TObject; Socket: TCustomWinSocket);begin end;
+procedure TDSSConnect.MySocketError(Sender: TObject; Socket: TCustomWinSocket;ErrorEvent: TErrorEvent; var ErrorCode: Integer);begin end;
+procedure TDSSConnect.Connect;begin end;
+procedure TDSSConnect.Disconnect;begin end;
+procedure TDSSConnect.SetDefaults;begin end;
+procedure TDSSConnect.MonitorPlotMsg(ObjectName: string);begin end;
+procedure TDSSConnect.LoadshapePlotMsg(ObjectName: string);begin end;
+procedure TDSSConnect.ProfilePlotMsg(ObjectName: string; PlotID: string);begin end;
+procedure TDSSConnect.ScatterPlotMsg(PlotID: string);begin end;
+procedure TDSSConnect.EvolutionPlotMsg;begin end;
+procedure TDSSConnect.MatrixPlotMsg(MatrixType : Integer);begin end;
+procedure TDSSConnect.EnergyMeterPlotMsg(ObjectName: string);begin end;
+procedure TDSSConnect.PhaseVoltageMsg(ObjectName: string);begin end;
+function flat_int2str (number:integer): AnsiString;begin Result:='' end;
+function flatten2JSON (Model: string; Name: string; PlotType: string;
+  Xlabel: string; X_axis: pDoubleArray2d; Ylabels: pStringArray1d;
+  Y_axis: pDoubleArray2d; Phase: pIntegerArray1d; Z_axis: pDoubleArray2d;
+  PD_Elements: pStringArray2d; Bus_names: pStringArray1d; PlotID: string): AnsiString;begin Result:='' end;
+function StrippedOfNonAscii(const s: string): string;begin Result:='' end;
+function processExists(exeFileName: string): Boolean;begin Result:=False end;
+{$ELSE}
 
 uses
   Monitor,
@@ -1554,6 +1586,8 @@ destructor TDSSConnect.Destroy;
 begin
    inherited;
 end;
+
+{$ENDIF}
 
 initialization
 DSSConnectObj := nil; // Instantiate only if connect command issued

@@ -1186,8 +1186,8 @@ constructor TInvControlObj.Create(ParClass:TDSSClass; const InvControlName:Strin
     QoutputVVDRCpu           := nil;
     QoutputAVRpu             := nil;
 
-    FPriorvarspu             := 0;
-    FPriorvars               := 0;
+    FPriorvarspu             := nil;
+    FPriorvars               := nil;
 
     {Variables of functions that LIMIT active power}
     PBase                    := nil;

@@ -23,7 +23,7 @@ uses
     CmdForms
   {$ENDIF}
   {$ENDIF},
-  System.classes;
+  Classes;
 
 Function Solve_Diakoptics():Integer;
 Function ADiakoptics_Tearing(AddISrc  : Boolean): Integer;
