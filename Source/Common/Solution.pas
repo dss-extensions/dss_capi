@@ -2814,6 +2814,8 @@ begin
   MsgType                   :=  -1;
   ActorActive               :=  True;
   Processing                :=  False;
+  MyMessages                :=  TQueue<Integer>.Create;
+  MyMessages.Clear;     // clears the message queue
   Inherited Create(Susp);
 end;
 {$ENDIF}
