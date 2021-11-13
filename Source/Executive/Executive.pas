@@ -90,20 +90,12 @@ implementation
 USES ExecCommands, ExecOptions,
      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
      Utilities, Solution, DSSClass, IniRegSave,
-{$IF Not (defined(FPC) or defined(CONSOLE))}
-{$IFDEF FPC}
-     CmdForms,
+{$IF (defined(FPC) or defined(CONSOLE))}  // there are only two unit choices to use, it should be simple
+  CmdForms,
 {$ELSE}
-  {$IFDEF CONSOLE}
-     CmdForms,
-  {$ELSE}
-     DSSForms,
-{$ELSE}
-     CmdForms,
+  DSSForms,
 {$ENDIF}
-  {$ENDIF}
-{$ENDIF}
-     KLUSolve;
+  KLUSolve;
 
 
 //----------------------------------------------------------------------------
