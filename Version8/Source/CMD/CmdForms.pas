@@ -41,11 +41,16 @@ VAR
    FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
    procedure ShowHeapUsage; // copied from Lazarus form; not used in command line yet
 
+{$IFDEF FPC}
 {$INCLUDE VersionString.inc}
+{$ENDIF}
 
 implementation
 
 Uses ExecCommands, ExecOptions, ShowOptions, ExportOptions,
+{$IFNDEF FPC}
+  Windows,
+{$ENDIF}
 	DSSGlobals, DSSClass, DSSClassDefs, ParserDel, Sysutils, Strutils, ArrayDef;
 
 const colwidth = 25; numcols = 4;  // for listing commands to the console
@@ -100,8 +105,20 @@ Begin
 end;
 
 FUNCTION GetDSSExeFile: String;
+{$IFNDEF FPC}
+Var
+   TheFileName:Array[0..260] of char;
+{$ENDIF}
 Begin
+  {$IFDEF FPC}
   Result := 'todo'; // ExtractFilePath (Application.ExeName);
+  {$ELSE}
+    FillChar(TheFileName, SizeOF(TheFileName), #0);  // Fill it with nulls
+    GetModuleFileName(HInstance, TheFileName, SizeOF(TheFileName));
+    Result := TheFileName;
+
+    If IsLibrary then IsDLL := TRUE;
+  {$ENDIF}
 End;
 
 

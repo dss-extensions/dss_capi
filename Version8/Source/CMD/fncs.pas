@@ -4,11 +4,12 @@
  ----------------------------------------------------------
 }
 unit FNCS;
-
-{$mode delphi}
+{$IFDEF FPC}
+  {$mode delphi}
 //{$mode objfpc}{$H+}
 //{$MODESWITCH ADVANCEDRECORDS}
-{$MACRO ON}
+  {$MACRO ON}
+{$ENDIF}
 {$IFDEF Windows}
 {$DEFINE FNCS_CALL:=stdcall}
 //{$DEFINE FNCS_CALL:=cdecl}
@@ -19,11 +20,15 @@ unit FNCS;
 interface
 
 uses
-  Classes, SysUtils, Executive, {$IFDEF Unix} unix, {$ENDIF} dynlibs, DSSGlobals,
+  Classes, SysUtils, Executive, {$IFDEF Unix} unix, {$ENDIF}
+  {$IFDEF FPC}
+  dynlibs,
+  {$ENDIF}
+  DSSGlobals,
   UComplex, CktElement, Utilities, math;
 
 type
-  fncs_time = qword;
+  fncs_time = {$IFDEF FPC}qword{$ELSE}Uint64{$ENDIF};
 
   // lists for FNCS classic publications
   TFNCSClass = (fncsBus, fncsLine, fncsSwitch, fncsCapacitor, fncsPVSystem, 

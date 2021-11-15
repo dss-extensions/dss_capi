@@ -42,14 +42,15 @@ unit linenoise;
  */
 }
 
-{$mode delphi}
-
-{$MACRO ON}
-{$IFDEF Windows}
-{$DEFINE LINENOISE_CALL:=stdcall;external 'linenoise'}
-{$ELSE} // Darwin and Unix
-{$linklib linenoise}
-{$DEFINE LINENOISE_CALL:=cdecl;external}
+{$IFDEF FPC}
+  {$mode delphi}
+  {$MACRO ON}
+  {$IFDEF Windows}
+    {$DEFINE LINENOISE_CALL:=stdcall;external 'linenoise'}
+  {$ELSE} // Darwin and Unix
+    {$linklib linenoise}
+    {$DEFINE LINENOISE_CALL:=cdecl;external}
+  {$ENDIF}
 {$ENDIF}
 
 interface
@@ -61,7 +62,7 @@ const
   LINENOISE_VERSION = '1.0.0';
   LINENOISE_VERSION_MAJOR = 1;
   LINENOISE_VERSION_MINOR = 1;
-
+{$IFDEF FPC}
 //procedure linenoiseSetCompletionCallback(fn:PlinenoiseCompletionCallback);LINENOISE_CALL;
 //procedure linenoiseAddCompletion(lc:PlinenoiseCompletions; str:Pchar);LINENOISE_CALL;
 function linenoise(prompt:Pchar):Pchar;LINENOISE_CALL;
@@ -79,7 +80,23 @@ procedure linenoisePrintKeyCodes;LINENOISE_CALL;
 function linenoiseInstallWindowChangeHandler:longint;LINENOISE_CALL;
 { returns type of key pressed: 1 = CTRL-C, 2 = CTRL-D, 0 = other  }
 function linenoiseKeyType:longint;LINENOISE_CALL;
-
+{$ELSE}
+function linenoise(prompt:Pchar):Pchar;stdcall;external 'linenoise';
+procedure linenoiseFree(ptr:pointer);stdcall;external 'linenoise';
+procedure linenoisePreloadBuffer(preloadText:Pchar);stdcall;external 'linenoise';
+function linenoiseHistoryAdd(line:Pchar):longint;stdcall;external 'linenoise';
+function linenoiseHistorySetMaxLen(len:longint):longint;stdcall;external 'linenoise';
+function linenoiseHistoryLine(index:longint):Pchar;stdcall;external 'linenoise';
+function linenoiseHistorySave(filename:Pchar):longint;stdcall;external 'linenoise';
+function linenoiseHistoryLoad(filename:Pchar):longint;stdcall;external 'linenoise';
+procedure linenoiseHistoryFree;stdcall;external 'linenoise';
+procedure linenoiseClearScreen;stdcall;external 'linenoise';
+procedure linenoiseSetMultiLine(ml:longint);stdcall;external 'linenoise';
+procedure linenoisePrintKeyCodes;stdcall;external 'linenoise';
+function linenoiseInstallWindowChangeHandler:longint;stdcall;external 'linenoise';
+{ returns type of key pressed: 1 = CTRL-C, 2 = CTRL-D, 0 = other  }
+function linenoiseKeyType:longint;stdcall;external 'linenoise';
+{$ENDIF}
 implementation
 
 end.
