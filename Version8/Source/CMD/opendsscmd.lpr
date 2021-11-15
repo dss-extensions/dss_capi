@@ -245,10 +245,10 @@ begin
 	NoFormsAllowed := True;
 	DSSExecutive[ActiveActor] := TExecutive.Create;  // Make a DSS object
 	DSSExecutive[ActiveActor].CreateDefaultDSSItems;
-	writeln('Startup Directory: ', StartupDirectory);
-	writeln('Data Directory: ', DataDirectory[ActiveActor]);
-	writeln('Output Directory: ', OutputDirectory[ActiveActor]);
-	writeln('GetCurrentDir: ', GetCurrentDir);
+//	writeln('Startup Directory: ', StartupDirectory);
+//	writeln('Data Directory: ', DataDirectory[ActiveActor]);
+//	writeln('Output Directory: ', OutputDirectory[ActiveActor]);
+//	writeln('GetCurrentDir: ', GetCurrentDir);
 	DataDirectory[ActiveActor] := StartupDirectory;
 	OutputDirectory[ActiveActor] := StartupDirectory;
   SetCurrentDir(DataDirectory[ActiveActor]);
