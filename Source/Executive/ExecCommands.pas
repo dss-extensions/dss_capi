@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 129;
+     NumExecCommands = 130;
 
 Var
 
@@ -181,8 +181,7 @@ Begin
      ExecCommand[127] := 'COMHelp';
      ExecCommand[128] := 'GIS';
      ExecCommand[129] := 'GISCoords';
-
-
+     ExecCommand[130] := 'HELICSPublish';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -562,8 +561,7 @@ Begin
                           'Reads coordinates from a CSV file with records of the form: busname, Latitude, Longitude.'+CRLF+CRLF+
                           'Example: GISCoords [file=]xxxx.csv' + CRLF + CRLF +
                           'Note: For using only if OpenDSS-GIS is locally installed.';
-
-
+     CommandHelp[130] :=  'Read HELICS publication topics from a JSON file';
 
 End;
 
@@ -885,6 +883,7 @@ Begin
       126:  CmdResult     :=  DopowersCmd(1);
       128:  Globalresult  :=  DoGISCmd;
       129:  CmdResult     :=  DoBusCoordsCmd(FALSE, 1);   // GIS coordinates
+      130:  DoHELICSPubCmd;
 
      ELSE
        // Ignore excess parameters
