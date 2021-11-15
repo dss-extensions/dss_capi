@@ -1,6 +1,6 @@
 {
  ----------------------------------------------------------
-  Copyright (c) 2017-2020 Battelle Memorial Institute
+  Copyright (c) 2017-2021 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 unit HELICS;
@@ -1718,8 +1718,10 @@ begin
 {$ELSE} // Darwin and Unix
   if log_level < helicsLogDebug1 then
      FLibHandle := SafeLoadLibrary ('libhelicsSharedLib.' + SharedSuffix)
-  else
+  else begin
      FLibHandle := SafeLoadLibrary ('libhelicsSharedLibd.' + SharedSuffix);
+     if FLibHandle = DynLibs.NilHandle then FLibHandle := SafeLoadLibrary ('libhelicsSharedLib.' + SharedSuffix);
+  end;
 {$ENDIF}
 
   pub_topic_list:=TList.Create();
