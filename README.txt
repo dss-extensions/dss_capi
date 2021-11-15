@@ -3,10 +3,11 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.4.0.1
+Version 9.4.0.2
 
 Changes this version
 ====================
+- Solves a bug inserted when updating the sequence impedance entries through COM/DLL.
 - COM interface help link added to Help option at the menu bar in EXE.
 - UPFC device updated to operate at the control queue increasing the stability of the device when widely installed on a large-scale model.
 
