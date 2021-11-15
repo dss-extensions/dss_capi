@@ -15,4 +15,5 @@
 86401000000000 command export monitors pv1v
 86401000000000 command export monitors pv1pq
 86401000000000 command export monitors fdrpq
-86401000000000 command quit
+86402000000000 command help
+86403000000000 command quit

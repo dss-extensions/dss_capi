@@ -15,4 +15,5 @@
 86400999999990	command	"export monitors pv1v"
 86400999999992	command	"export monitors pv1pq"
 86400999999996	command	"export monitors fdrpq"
+86400999999998	command	"help"
 86401000000000	command	quit
