@@ -1129,9 +1129,7 @@ Procedure TMonitorObj.OpenMonitorStream;
 Begin
 
     If NOT IsFileOpen then Begin
-{$IFDEF MSWINDOWS}
        MonitorStream.Seek(0, soFromEnd	);    // Positioned at End of Stream
-{$ENDIF}
        IsFileOpen := True;
     End;
 
@@ -1143,9 +1141,7 @@ Begin
   Try
      If IsFileOpen THEN Begin  // only close open files
         PostProcess(ActorID);
-{$IFDEF MSWINDOWS}
         MonitorStream.Seek(0, soFromBeginning);   // just move stream position to the beginning
-{$ENDIF}
         IsFileOpen := false;
      End;
   Except
@@ -1614,9 +1610,7 @@ var
 begin
   N := SampleCount;
   With MonitorStream Do Begin
-{$IFDEF MSWINDOWS}
     Seek(0, soFromBeginning);  // Start at the beginning of the Stream
-{$ENDIF}
     Read( Fsignature, Sizeof(Fsignature));
     Read( Fversion,   Sizeof(Fversion));
     Read( RecordSize, Sizeof(RecordSize));
@@ -1718,9 +1712,7 @@ Begin
      End;
 
      With MonitorStream Do Begin
-{$IFDEF MSWINDOWS}
          Seek(0, soFromBeginning);  // Start at the beginning of the Stream
-{$ENDIF}
          Read( Fsignature, Sizeof(Fsignature));
          Read( Fversion,   Sizeof(Fversion));
          Read( RecordSize, Sizeof(RecordSize));
@@ -1925,9 +1917,7 @@ begin
 
            pStrBuffer := @StrBuffer;
            With MonitorStream Do Begin
-{$IFDEF MSWINDOWS}
                Seek(0, soFromBeginning);  // Start at the beginning of the Stream
-{$ENDIF}
                Read( Fsignature, Sizeof(Fsignature));
                Read( Fversion,   Sizeof(Fversion));
                Read( RecordSize, Sizeof(RecordSize));
@@ -1975,9 +1965,7 @@ begin
 
            {Now find Maxtime in Monitor}
            PositionSave := MonitorStream.Position;
-{$IFDEF MSWINDOWS}
            MonitorStream.Seek(-(Recordbytes+8), soFromEnd);
-{$ENDIF}
            If Not (MonitorStream.Position>=MonitorStream.Size) Then
              With MonitorStream Do Begin
                   Read( hr, 4);  // singles
@@ -1993,9 +1981,7 @@ begin
            END;
 
            {Go Back to where we were}
-{$IFDEF MSWINDOWS}
            MonitorStream.Seek(PositionSave, soFromBeginning);
-{$ENDIF}
 
            TopTransferFile.WriteHeader(Time, MaxTime, Time, RecordSize, 0, 16,  'DSS (TM), EPRI (R)');
            TopTransferFile.WriteNames(NameList, CNames);
