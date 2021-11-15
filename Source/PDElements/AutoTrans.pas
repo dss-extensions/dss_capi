@@ -2100,10 +2100,10 @@ begin
 
   // Construct ZBMatrix;
        ZB.Clear;
-       ZBase := 1.0/(VABase/Fnphases); // base ohms on 1.0 volt basis
+       ZBase := 1.0/(VABase/Fnphases); // base ohms on 1.0 volt basis, as in Dommel (6.46) for Zct or puXSC^[3]
        // Adjust specified XSC by SQR(1 + Vcommon/Vseries)
-       ZCorrected := ZBase * SQR(1.0 + Winding^[2].Vbase/Winding^[1].Vbase); // Correction factor for Series
-            // since the losses are correct as they are, mimic Dommel (6.50) for Zst or puXSC^[2], without disturbing Zbase or Zcorrected
+       ZCorrected := ZBase * SQR(1.0 + Winding^[2].vbase/Winding^[1].Vbase); // Correction factor for Series, as in Dommel (6.45) for Zsc or puXSC^[1]
+       // since the losses are correct as they are, mimic Dommel (6.50) for Zst or puXSC^[2], without disturbing Zbase or Zcorrected
        // Dommel: Xst = Xhl*Vh*Vl/(Vh-Vl)^2 + Xht*Vh/(Vh-Vl) - Xlt*Vl/(Vh-Vl)
        //             = Xhl*(Vs+Vc)*Vc/Vs^2 + Xht*(Vs+Vc)/Vs - Xlt*Vc/Vs
        if NumWindings > 2 then begin
