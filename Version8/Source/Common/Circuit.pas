@@ -162,6 +162,7 @@ TYPE
           Lines,
           Loads,
           ShuntCapacitors,
+          AutoTransformers, // added for CIM XML export
           Feeders,
           Reactors,
           Relays,
@@ -452,6 +453,7 @@ BEGIN
      Feeders         := TPointerList.Create(10);
      Substations     := TPointerList.Create(5);
      Transformers    := TPointerList.Create(10);
+     AutoTransformers:= TPointerList.Create(10);
      CapControls     := TPointerList.Create(10);
      SwtControls     := TPointerList.Create(50);
      RegControls     := TPointerList.Create(5);
@@ -678,6 +680,7 @@ BEGIN
      Reclosers.Free;
      Relays.Free;
      Fuses.Free;
+     AutoTransformers.Free;
 
      ControlQueue.Free;
 
@@ -2248,6 +2251,7 @@ BEGIN
 
        { Keep Lines, Transformer, and Lines and Faults in PDElements and separate lists
          so we can find them quickly.}
+       AUTOTRANS_ELEMENT   :AutoTransformers.Add(ActiveCktElement);
        XFMR_ELEMENT   :Transformers.Add(ActiveCktElement);
        LINE_ELEMENT   :Lines.Add(ActiveCktElement);
        FAULTOBJECT    :Faults.Add(ActiveCktElement);

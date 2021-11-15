@@ -55,7 +55,7 @@ Begin
       ExportOption[17] := 'Y';
       ExportOption[18] := 'seqz';
       ExportOption[19] := 'P_byphase';
-      ExportOption[20] := 'CDPSMCombined';
+      ExportOption[20] := 'CIM100Fragments';
       ExportOption[21] := 'CIM100';
       ExportOption[22] := 'CDPSMAsset';
       ExportOption[23] := 'Buscoords';
@@ -120,8 +120,16 @@ Begin
       ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
       ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
       ExportHelp[19] := '(Default file = EXP_P_BYPHASE.CSV) [MVA] [Filename] Power by phase. Default is kVA.';
-      ExportHelp[20] := '** Deprecated ** (IEC 61968-13, CIM16-17 version of the CDPSM Combined profile)';
-      ExportHelp[21] := '(Default file = CIM100x.XML) (IEC 61968-13, CIM100 for unbalanced load flow profile)' + CRLF
+      ExportHelp[20] := '(Default file ROOT = CIM100) (IEC 61968-13, CIM100 for unbalanced load flow profile)' + CRLF
+                      + ' produces 6 separate files ROOT_FUN.XML for Functional profile,' + CRLF
+                      + ' ROOT_EP.XML for Electrical Properties profile,' + CRLF
+                      + ' ROOT_TOPO.XML for Topology profile,' + CRLF
+                      + ' ROOT_CAT.XML for Asset Catalog profile,' + CRLF
+                      + ' ROOT_GEO.XML for Geographical profile and' + CRLF
+                      + ' ROOT_SSH.XML for Steady State Hypothesis profile' + CRLF
+                      + ' [File=fileroot fid=_uuidstring Substation=subname sid=_uuidstring' + CRLF
+                      + ' SubGeographicRegion=subgeoname sgrid=_uuidstring GeographicRegion=geoname rgnid=_uuidstring]';
+      ExportHelp[21] := '(Default file = CIM100x.XML) (IEC 61968-13, combined CIM100 for unbalanced load flow profile)' + CRLF
                       + ' [File=filename fid=_uuidstring Substation=subname sid=_uuidstring' + CRLF
                       + ' SubGeographicRegion=subgeoname sgrid=_uuidstring GeographicRegion=geoname rgnid=_uuidstring]';
       ExportHelp[22] := '** Deprecated ** (IEC 61968-13, CDPSM Asset profile)';
@@ -335,18 +343,18 @@ Begin
          17: Filename := 'EXP_Y.CSV';
          18: Filename := 'EXP_SEQZ.CSV';
          19: Filename := 'EXP_P_BYPHASE.CSV';
-         20: FileName := 'CIM17x.XML';
+         20: FileName := 'CIM100';
          21: FileName := 'CIM100x.XML';
-         22: FileName := 'CDPSM_Asset.XML';
+         22: FileName := '';
          23: FileName := 'EXP_BUSCOORDS.CSV';
          24: FileName := 'EXP_LOSSES.CSV';
          25: FileName := 'EXP_UUIDS.CSV';
          26: FileName := 'EXP_Counts.CSV';
          27: FileName := 'EXP_Summary.CSV';
-         28: FileName := 'CDPSM_ElectricalProperties.XML';
-         29: FileName := 'CDPSM_Geographical.XML';
-         30: FileName := 'CDPSM_Topology.XML';
-         31: FileName := 'CDPSM_StateVariables.XML';
+         28: FileName := '';
+         29: FileName := '';
+         30: FileName := '';
+         31: FileName := '';
          32: FileName := 'EXP_Profile.CSV';
          33: FileName := 'EXP_EventLog.CSV';
          34: FileName := 'AllocationFactors.Txt';
@@ -439,8 +447,8 @@ Begin
      17: ExportY(Filename, TripletOpt);
      18: ExportSeqZ(Filename);
      19: ExportPbyphase(Filename, MVAOpt);
-     20: DoSimpleMsg ('CDPSMCombined (CIM17) export no longer supported; use Export CIM100', 252);
-     21: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, FdrUuid, SubUuid, SubGeoUuid, RgnUuid, Combined);
+     20: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, FdrUuid, SubUuid, SubGeoUuid, RgnUuid, False);
+     21: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, FdrUuid, SubUuid, SubGeoUuid, RgnUuid, True);
      22: DoSimpleMsg ('Asset export no longer supported; use Export CIM100', 252);
      23: ExportBusCoords(Filename);
      24: ExportLosses(Filename);
