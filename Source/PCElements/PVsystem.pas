@@ -287,6 +287,8 @@ type
       Property MinModelVoltagePU : Double      Read VminPu;
       Property pf_wp_nominal : Double                                            Write Set_pf_wp_nominal;
       Property IrradianceNow :Double           Read ShapeFactor.re;
+      Property PctCutIn: Double Read FPctCutIn;   // for CIM export
+        Property PctCutOut:Double           Read FPctCutOut; // for CIM export
    End;
 var
   ActivePVSystemObj   : TPVsystemObj;
