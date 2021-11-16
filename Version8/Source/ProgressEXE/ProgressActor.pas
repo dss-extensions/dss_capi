@@ -107,7 +107,7 @@ begin
   AbortON       :=  False;
   With Memo1 do
   Begin
-    Height        :=  74;
+    Height        :=  64;
     Text          :=  '';
   End;
   newPath             :=  GetDSSExeFile();

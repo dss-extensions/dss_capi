@@ -2,15 +2,14 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 103
-  ClientWidth = 434
+  ClientHeight = 108
+  ClientWidth = 433
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -35,9 +34,10 @@ object Form1: TForm1
     Left = 8
     Top = 39
     Width = 336
-    Height = 74
+    Height = 68
     Lines.Strings = (
       'Memo1')
+    ScrollBars = ssVertical
     TabOrder = 1
   end
   object Timer1: TTimer
