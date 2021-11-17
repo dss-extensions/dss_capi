@@ -1256,7 +1256,7 @@ Begin
   myVersion :=  myVersion.Substring(0,myIdx - 1);
   if myText <> myVersion then
   Begin
-    myPath    :=  'There is a new version of OpenDSS avaialable for download' + CRLF +
+    myPath    :=  'There is a new version of OpenDSS available for download' + CRLF +
                 'The new version can be located at:' + CRLF + CRLF +
                 'https://sourceforge.net/projects/electricdss/';
   {$IFNDEF CONSOLE}
