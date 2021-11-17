@@ -3,7 +3,7 @@ unit ExpControl;
 {
   ----------------------------------------------------------
   Copyright (c) 2015-2016, University of Pittsburgh
-  Copyright (c) 2019-2020, Battelle Memorial Institute
+  Copyright (c) 2019-2021, Battelle Memorial Institute
   All rights reserved.
   ----------------------------------------------------------
 
@@ -103,6 +103,7 @@ INTERFACE
 
             Property    PendingChange[DevIndex: Integer]:Integer Read Get_PendingChange Write Set_PendingChange;
 
+            Property    DERNameList: TStringList read FPVSystemNameList; // for CIM export, Storage control not implemented internally
    end;
 
   VAR
