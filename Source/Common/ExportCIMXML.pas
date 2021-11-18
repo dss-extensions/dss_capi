@@ -40,7 +40,7 @@ Uses SysUtils, Utilities, Circuit, DSSClassDefs, DSSGlobals, CktElement,
      Fuse, Capacitor, CapControl, CapControlvars,  Reactor, Feeder, ConductorData, LineUnits,
      LineGeometry, StrUtils, Math, HashList, WireData, XfmrCode,
      LineSpacing, CableData, CNData, TSData, Storage, PVSystem, Relay, Recloser, AutoTrans,
-     InvControl, ExpControl, DSSObject, DSSClass;
+     InvControl, ExpControl, DSSObject, DSSClass, Classes;
 
 Type
   UuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
@@ -105,6 +105,38 @@ Type
     procedure StartInstance (prf: ProfileChoice; Root: String; Obj: TNamedObject);
     procedure StartFreeInstance (prf: ProfileChoice; Root: String; uuid: TUUID);
     procedure EndInstance (prf: ProfileChoice; Root: String);
+  end;
+
+  TIEEE1547Controller = class(TObject)
+  public
+    ND_acVmax, ND_acVmin, AD_pMax, AD_pMaxOverPF, AD_overPF, AD_pMaxUnderPF: Double;
+    AD_underPF, AD_sMax, AD_qMaxInj, AD_qMaxAbs, AD_pMaxCharge: Double;
+    AD_apparentPowerChargeMax, AD_acVnom: Double;
+    VV_vRef, VV_vRefOlrt, VV_curveV1, VV_curveV2, VV_curveV3, VV_curveV4: Double;
+    VV_olrt, VV_curveQ1, VV_curveQ2, VV_curveQ3, VV_curveQ4: Double;
+    Q_reactivePower, PF_powerFactor, VW_olrt, VW_curveV1, VW_curveV2: Double;
+    VW_curveP1, VW_curveP2gen, VW_curveP2load: Double;
+    WV_curveP1gen, WV_curveP2gen, WV_curveP3gen: Double;
+    WV_curveP1load, WV_curveP2load, WV_curveP3load: Double;
+    WV_curveQ1gen, WV_curveQ2gen, WV_curveQ3gen: Double;
+    WV_curveQ1load, WV_curveQ2load, WV_curveQ3load: Double;
+
+    ND_normalOPcatKind, PF_constPFexcitationKind: String;
+    VV_enabled, WV_enabled, PF_enabled, Q_enabled, VW_enabled: Boolean;
+    VV_vrefAutoModeEnabled: Boolean;
+
+    pInvName: TNamedObject;
+    pPlateName: TNamedObject;
+    pSetName: TNamedObject;
+    pDERNames: TStringList;
+
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure PullFromInvControl (pInv: TInvControlObj);
+    procedure PullFromExpControl (pExp: TExpControlObj);
+    procedure SetDefaults (bCatB: Boolean);
+    procedure WriteCIM (prf: ProfileChoice);
   end;
 
 Var
@@ -1732,13 +1764,232 @@ begin
   end;
 end;
 
+///////// begin helper class for exporting IEEE 1547 model parameters /////////////
+
+constructor TIEEE1547Controller.Create;
+begin
+  inherited Create;
+  SetDefaults (False);
+  pInvName := TNamedObject.Create('Inv');
+  pPlateName := TNamedObject.Create('Nameplate');
+  pSetName := TNamedObject.Create('Settings');
+  pDERNames := TStringList.Create;
+end;
+
+destructor TIEEE1547Controller.Destroy;
+begin
+  pInvName.Free;
+  pPlateName.Free;
+  pSetName.Free;
+  pDERNames.Free;
+  inherited Destroy;
+end;
+
+procedure TIEEE1547Controller.PullFromInvControl (pInv: TInvControlObj);
+begin
+  pInvName.LocalName := pInv.Name;
+  pInvName.UUID := pInv.UUID;
+  pDERNames.Assign(pInv.DERNameList);
+end;
+
+procedure TIEEE1547Controller.PullFromExpControl (pExp: TExpControlObj);
+begin
+  pInvName.LocalName := pExp.Name;
+  pInvName.UUID := pExp.UUID;
+  pDERNames.Assign(pExp.DERNameList);
+end;
+
+procedure TIEEE1547Controller.SetDefaults (bCatB: Boolean);
+begin
+  ND_acVmax:=0.0;
+  ND_acVmin:=0.0;
+  AD_pMax:=0.0;
+  AD_pMaxOverPF:=0.0;
+  AD_overPF:=0.0;
+  AD_pMaxUnderPF:=0.0;
+  AD_underPF:=0.0;
+  AD_sMax:=0.0;
+  AD_qMaxInj:=0.0;
+  AD_qMaxAbs:=0.0;
+  AD_pMaxCharge:=0.0;
+  AD_apparentPowerChargeMax:=0.0;
+  AD_acVnom:=0.0;
+  VV_vRef:=0.0;
+  VV_vRefOlrt:=0.0;
+  VV_curveV1:=0.0;
+  VV_curveV2:=0.0;
+  VV_curveV3:=0.0;
+  VV_curveV4:=0.0;
+  VV_olrt:=0.0;
+  VV_curveQ1:=0.0;
+  VV_curveQ2:=0.0;
+  VV_curveQ3:=0.0;
+  VV_curveQ4:=0.0;
+  Q_reactivePower:=0.0;
+  PF_powerFactor:=0.0;
+  VW_olrt:=0.0;
+  VW_curveV1:=0.0;
+  VW_curveV2:=0.0;
+  VW_curveP1:=0.0;
+  VW_curveP2gen:=0.0;
+  VW_curveP2load:=0.0;
+  WV_curveP1gen:=0.0;
+  WV_curveP2gen:=0.0;
+  WV_curveP3gen:=0.0;
+  WV_curveP1load:=0.0;
+  WV_curveP2load:=0.0;
+  WV_curveP3load:=0.0;
+  WV_curveQ1gen:=0.0;
+  WV_curveQ2gen:=0.0;
+  WV_curveQ3gen:=0.0;
+  WV_curveQ1load:=0.0;
+  WV_curveQ2load:=0.0;
+  WV_curveQ3load:=0.0;
+  ND_normalOPcatKind:='catA';
+  PF_constPFexcitationKind:='abs';
+  VV_enabled:=False;
+  WV_enabled:=False;
+  PF_enabled:=True;
+  Q_enabled:=False;
+  VW_enabled:=False;
+  VV_vrefAutoModeEnabled:=False;
+end;
+
+procedure TIEEE1547Controller.WriteCIM (prf: ProfileChoice);
+var
+  i: Integer;
+  pPV: TPVSystemObj;
+  pBat: TPVSystemObj;
+begin
+  StartInstance (prf, 'DERIEEEType1', pInvName);
+  BooleanNode (prf, 'DynamicsFunctionBlock.enabled', True);
+  with ActiveCircuit[ActiveActor] do begin
+    if pDERNames.Count < 1 then begin
+      pBat := StorageElements.First;
+      while pBat <> nil do begin
+        if pBat.Enabled then RefNode (prf, 'DERIEEEType1.PowerElectronicsConnection', pBat);
+        pBat := StorageElements.Next;
+      end;
+      pPV := PVSystems.First;
+      while pPV <> nil do begin
+        if pPV.Enabled then RefNode (prf, 'DERIEEEType1.PowerElectronicsConnection', pPV);
+        pPV := PVSystems.Next;
+      end;
+    end else begin
+      for i := 1 to pDERNames.Count do begin
+        ActiveCircuit[ActiveActor].SetElementActive (pDERNames.Strings[i-1]);
+        RefNode (prf, 'DERIEEEType1.PowerElectronicsConnection', ActiveCktElement);
+      end;
+    end;
+  end;
+  EndInstance (prf, 'DERIEEEType1');
+
+  pPlateName.LocalName := pInvName.LocalName;
+  pPlateName.UUID := GetDevUuid (I1547NameplateData, pInvName.LocalName, 1);
+  StartInstance (prf, 'DERNameplateData', pPlateName);
+  RefNode (prf, 'DERNameplateData.DERIEEEType1', pPlateName);
+  NormalOpCatEnum (prf, ND_normalOPcatKind);
+  if ND_normalOPcatKind = 'catB' then begin
+    SupportedModesEnum (prf, 'pv');
+    SupportedModesEnum (prf, 'qp');
+  end;
+  SupportedModesEnum (prf, 'constPF');
+  SupportedModesEnum (prf, 'constQ');
+  SupportedModesEnum (prf, 'qv');
+  DoubleNode (prf, 'DERNameplateData.acVmax', ND_acVmax);
+  DoubleNode (prf, 'DERNameplateData.acVmin', ND_acVmin);
+  EndInstance (prf, 'DERNameplateData');
+
+  pSetName.LocalName := pInvName.LocalName;
+  pSetName.UUID := GetDevUuid (I1547NameplateDataApplied, pSetName.LocalName, 1);
+  StartInstance (prf, 'DERNameplateDataApplied', pSetName);
+  RefNode (prf, 'DERNameplateDataApplied.DERNameplateData', pPlateName);
+  DoubleNode (prf, 'DERNameplateDataApplied.pMax', AD_pMax);
+  DoubleNode (prf, 'DERNameplateDataApplied.pMaxOverPF', AD_pMaxOverPF);
+  DoubleNode (prf, 'DERNameplateDataApplied.overPF', AD_overPF);
+  DoubleNode (prf, 'DERNameplateDataApplied.pMaxUnderPF', AD_pMaxUnderPF);
+  DoubleNode (prf, 'DERNameplateDataApplied.underPF', AD_underPF);
+  DoubleNode (prf, 'DERNameplateDataApplied.sMax', AD_sMax);
+  DoubleNode (prf, 'DERNameplateDataApplied.qMaxInj', AD_qMaxInj);
+  DoubleNode (prf, 'DERNameplateDataApplied.qMaxAbs', AD_qMaxAbs);
+  DoubleNode (prf, 'DERNameplateDataApplied.pMaxCharge', AD_pMaxCharge);
+  DoubleNode (prf, 'DERNameplateDataApplied.apparentPowerChargeMax', AD_apparentPowerChargeMax);
+  DoubleNode (prf, 'DERNameplateDataApplied.acVnom', AD_acVnom);
+  EndInstance (prf, 'DERNameplateDataApplied');
+
+  pSetName.UUID := GetDevUuid (I1547VoltVar, pSetName.LocalName, 1);
+  StartInstance (prf, 'VoltVarSettings', pSetName);
+  RefNode (prf, 'VoltVarSettings.DERIEEEType1', pInvName);
+  BooleanNode (prf, 'VoltVarSettings.enabled', VV_enabled);
+  BooleanNode (prf, 'VoltVarSettings.vrefAutoModeEnabled', VV_vrefAutoModeEnabled);
+  DoubleNode (prf, 'VoltVarSettings.vRef', VV_vRef);
+  DoubleNode (prf, 'VoltVarSettings.vRefOlrt', VV_vRefOlrt);
+  DoubleNode (prf, 'VoltVarSettings.curveV1', VV_curveV1);
+  DoubleNode (prf, 'VoltVarSettings.curveV2', VV_curveV2);
+  DoubleNode (prf, 'VoltVarSettings.curveV3', VV_curveV3);
+  DoubleNode (prf, 'VoltVarSettings.curveV4', VV_curveV4);
+  DoubleNode (prf, 'VoltVarSettings.curveQ1', VV_curveQ1);
+  DoubleNode (prf, 'VoltVarSettings.curveQ2', VV_curveQ2);
+  DoubleNode (prf, 'VoltVarSettings.curveQ3', VV_curveQ3);
+  DoubleNode (prf, 'VoltVarSettings.curveQ4', VV_curveQ4);
+  DoubleNode (prf, 'VoltVarSettings.olrt', VV_olrt);
+  EndInstance (prf, 'VoltVarSettings');
+
+  pSetName.UUID := GetDevUuid (I1547WattVar, pSetName.LocalName, 1);
+  StartInstance (prf, 'WattVarSettings', pSetName);
+  RefNode (prf, 'WattVarSettings.DERIEEEType1', pInvName);
+  BooleanNode (prf, 'WattVarSettings.enabled', WV_enabled);
+  DoubleNode (prf, 'WattVarSettings.curveP1gen', WV_curveP1gen);
+  DoubleNode (prf, 'WattVarSettings.curveP2gen', WV_curveP2gen);
+  DoubleNode (prf, 'WattVarSettings.curveP3gen', WV_curveP3gen);
+  DoubleNode (prf, 'WattVarSettings.curveQ1gen', WV_curveP1gen);
+  DoubleNode (prf, 'WattVarSettings.curveQ2gen', WV_curveQ2gen);
+  DoubleNode (prf, 'WattVarSettings.curveQ3gen', WV_curveQ3gen);
+  DoubleNode (prf, 'WattVarSettings.curveP1load', WV_curveP1load);
+  DoubleNode (prf, 'WattVarSettings.curveP2load', WV_curveP2load);
+  DoubleNode (prf, 'WattVarSettings.curveP3load', WV_curveP3load);
+  DoubleNode (prf, 'WattVarSettings.curveQ1load', WV_curveQ1load);
+  DoubleNode (prf, 'WattVarSettings.curveQ2load', WV_curveQ2load);
+  DoubleNode (prf, 'WattVarSettings.curveQ3load', WV_curveQ3load);
+  EndInstance (prf, 'WattVarSettings');
+
+  pSetName.UUID := GetDevUuid (I1547ConstPF, pSetName.LocalName, 1);
+  StartInstance (prf, 'ConstantPowerFactorSettings', pSetName);
+  RefNode (prf, 'ConstantPowerFactorSettings.DERIEEEType1', pInvName);
+  BooleanNode (prf, 'ConstantPowerFactorSettings.enabled', PF_enabled);
+  PowerFactorExcitationEnum (prf, PF_constPFexcitationKind);
+  DoubleNode (prf, 'ConstantPowerFactorSettings.powerFactor', PF_powerFactor);
+  EndInstance (prf, 'ConstantPowerFactorSettings');
+
+  pSetName.UUID := GetDevUuid (I1547ConstQ, pSetName.LocalName, 1);
+  StartInstance (prf, 'ConstantReactivePowerSettings', pSetName);
+  RefNode (prf, 'ConstantReactivePowerSettings.DERIEEEType1', pInvName);
+  BooleanNode (prf, 'ConstantReactivePowerSettings.enabled', Q_enabled);
+  DoubleNode (prf, 'ConstantReactivePowerSettings.reactivePower', Q_reactivePower);
+  EndInstance (prf, 'ConstantReactivePowerSettings');
+
+  pSetName.UUID := GetDevUuid (I1547VoltWatt, pSetName.LocalName, 1);
+  StartInstance (prf, 'VoltWattSettings', pSetName);
+  RefNode (prf, 'VoltWattSettings.DERIEEEType1', pInvName);
+  BooleanNode (prf, 'VoltWattSettings.enabled', VW_enabled);
+  DoubleNode (prf, 'VoltWattSettings.curveV1', VW_curveV1);
+  DoubleNode (prf, 'VoltWattSettings.curveV2', VW_curveV2);
+  DoubleNode (prf, 'VoltWattSettings.curveP1', VW_curveP1);
+  DoubleNode (prf, 'VoltWattSettings.curveP2gen', VW_curveP2gen);
+  DoubleNode (prf, 'VoltWattSettings.curveP2load', VW_curveP2load);
+  DoubleNode (prf, 'VoltWattSettings.olrt', VW_olrt);
+  EndInstance (prf, 'VoltWattSettings');
+end;
+
+///////// end helper class for exporting IEEE 1547 model parameters /////////////
+
 Procedure ExportCDPSM(FileNm:String;
   Substation:String;
   SubGeographicRegion:String;
   GeographicRegion: String;
-  FdrUUID: TUuid; 
+  FdrUUID: TUuid;
   SubUUID: TUuid;
-  SubGeoUUID: TUuid; 
+  SubGeoUUID: TUuid;
   RgnUUID: TUuid;
   Combined:Boolean);
 Var
@@ -1772,9 +2023,7 @@ Var
   sBank  : String;
   bTanks : boolean;
 
-  bOpCatB : boolean; // IEEE 1547
-
-  pLoad  : TLoadObj;
+   pLoad  : TLoadObj;
   pVsrc  : TVsourceObj;
   pGen   : TGeneratorObj;
   pPV    : TPVSystemObj;
@@ -1788,6 +2037,8 @@ Var
   pLine : TLineObj;
   pReac : TReactorObj;
   pInv  : TInvControlObj;
+  pExp  : TExpControlObj;
+  pI1547: TIEEE1547Controller;
 
   clsLnCd : TLineCode;
   clsGeom : TLineGeometry;
@@ -2120,135 +2371,27 @@ Begin
       pBat := ActiveCircuit[ActiveActor].StorageElements.Next;
     end;
 
-    pInv := ActiveCircuit[ActiveActor].InvControls2.First;
-    while pInv <> nil do begin
-      if pInv.Enabled then begin
-        StartInstance (DynPrf, 'DERIEEEType1', pInv);
-        BooleanNode (DynPrf, 'DynamicsFunctionBlock.enabled', True);
-        if pInv.DERNameList.Count < 1 then begin
-          pBat := ActiveCircuit[ActiveActor].StorageElements.First;
-          while pBat <> nil do begin
-            if pBat.Enabled then RefNode (DynPrf, 'DERIEEEType1.PowerElectronicsConnection', pBat);
-            pBat := ActiveCircuit[ActiveActor].StorageElements.Next;
+    with ActiveCircuit[ActiveActor] do begin
+      if (InvControls2.ListSize > 0) or (ExpControls.ListSize > 0) then begin
+        pI1547 := TIEEE1547Controller.Create;
+        pInv := InvControls2.First;
+        while pInv <> nil do begin
+          if pInv.Enabled then begin
+            pI1547.PullFromInvControl(pInv);
+            pI1547.WriteCIM(DynPrf);
           end;
-          pPV := ActiveCircuit[ActiveActor].PVSystems.First;
-          while pPV <> nil do begin
-            if pPV.Enabled then RefNode (DynPrf, 'DERIEEEType1.PowerElectronicsConnection', pPV);
-            pPV := ActiveCircuit[ActiveActor].PVSystems.Next;
-          end;
-        end else begin
-          for i := 1 to pInv.DERNameList.Count do begin
-            ActiveCircuit[ActiveActor].SetElementActive (pInv.DERNameList.Strings[i-1]);
-            RefNode (DynPrf, 'DERIEEEType1.PowerElectronicsConnection', ActiveCircuit[ActiveActor].ActiveCktElement);
-          end;
+          pInv := InvControls2.Next;
         end;
-        EndInstance (DynPrf, 'DERIEEEType1');
-
-        pName1.LocalName := pInv.Name;
-        pName1.UUID := GetDevUuid (I1547NameplateData, pInv.LocalName, 1);
-        bOpCatB := False;
-        StartInstance (DynPrf, 'DERNameplateData', pName1);
-        RefNode (DynPrf, 'DERNameplateData.DERIEEEType1', pName1);
-        if bOpCatB then begin
-          NormalOpCatEnum (DynPrf, 'catB');
-          SupportedModesEnum (DynPrf, 'pv');
-          SupportedModesEnum (DynPrf, 'qp');
-        end else begin
-          NormalOpCatEnum (DynPrf, 'catA');
+        pExp := ExpControls.First;
+        while pInv <> nil do begin
+          if pInv.Enabled then begin
+            pI1547.PullFromExpControl(pExp);
+            pI1547.WriteCIM(DynPrf);
+          end;
+          pExp := ExpControls.Next;
         end;
-        SupportedModesEnum (DynPrf, 'constPF');
-        SupportedModesEnum (DynPrf, 'constQ');
-        SupportedModesEnum (DynPrf, 'qv');
-        DoubleNode (DynPrf, 'DERNameplateData.acVmax', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateData.acVmin', 0.0);
-        EndInstance (DynPrf, 'DERNameplateData');
-
-        pName2.LocalName := pInv.Name;
-        pName2.UUID := GetDevUuid (I1547NameplateDataApplied, pInv.LocalName, 1);
-        StartInstance (DynPrf, 'DERNameplateDataApplied', pName2);
-        RefNode (DynPrf, 'DERNameplateDataApplied.DERNameplateData', pName1);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.pMax', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.pMaxOverPF', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.overPF', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.pMaxUnderPF', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.underPF', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.sMax', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.qMaxInj', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.qMaxAbs', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.pMaxCharge', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.apparentPowerChargeMax', 0.0);
-        DoubleNode (DynPrf, 'DERNameplateDataApplied.acVnom', 0.0);
-        EndInstance (DynPrf, 'DERNameplateDataApplied');
-
-        pName2.LocalName := pInv.Name;
-        pName2.UUID := GetDevUuid (I1547VoltVar, pInv.LocalName, 1);
-        StartInstance (DynPrf, 'VoltVarSettings', pName2);
-        RefNode (DynPrf, 'VoltVarSettings.DERIEEEType1', pInv);
-        BooleanNode (DynPrf, 'VoltVarSettings.enabled', False);
-        BooleanNode (DynPrf, 'VoltVarSettings.vrefAutoModeEnabled', False);
-        DoubleNode (DynPrf, 'VoltVarSettings.vRef', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.vRefOlrt', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.curveV1', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.curveV2', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.curveV3', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.curveV4', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.curveQ1', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.curveQ2', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.curveQ3', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.curveQ4', 0.0);
-        DoubleNode (DynPrf, 'VoltVarSettings.olrt', 0.0);
-        EndInstance (DynPrf, 'VoltVarSettings');
-
-        pName2.LocalName := pInv.Name;
-        pName2.UUID := GetDevUuid (I1547WattVar, pInv.LocalName, 1);
-        StartInstance (DynPrf, 'WattVarSettings', pName2);
-        RefNode (DynPrf, 'WattVarSettings.DERIEEEType1', pInv);
-        BooleanNode (DynPrf, 'WattVarSettings.enabled', False);
-        DoubleNode (DynPrf, 'WattVarSettings.curveP1gen', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveP2gen', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveP3gen', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveQ1gen', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveQ2gen', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveQ3gen', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveP1load', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveP2load', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveP3load', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveQ1load', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveQ2load', 0.0);
-        DoubleNode (DynPrf, 'WattVarSettings.curveQ3load', 0.0);
-        EndInstance (DynPrf, 'WattVarSettings');
-
-        pName2.LocalName := pInv.Name;
-        pName2.UUID := GetDevUuid (I1547ConstPF, pInv.LocalName, 1);
-        StartInstance (DynPrf, 'ConstantPowerFactorSettings', pName2);
-        RefNode (DynPrf, 'ConstantPowerFactorSettings.DERIEEEType1', pInv);
-        BooleanNode (DynPrf, 'ConstantPowerFactorSettings.enabled', True);
-        PowerFactorExcitationEnum (DynPrf, 'abs');
-        DoubleNode (DynPrf, 'ConstantPowerFactorSettings.powerFactor', 1.0);
-        EndInstance (DynPrf, 'ConstantPowerFactorSettings');
-
-        pName2.LocalName := pInv.Name;
-        pName2.UUID := GetDevUuid (I1547ConstQ, pInv.LocalName, 1);
-        StartInstance (DynPrf, 'ConstantReactivePowerSettings', pName2);
-        RefNode (DynPrf, 'ConstantReactivePowerSettings.DERIEEEType1', pInv);
-        BooleanNode (DynPrf, 'ConstantReactivePowerSettings.enabled', False);
-        DoubleNode (DynPrf, 'ConstantReactivePowerSettings.reactivePower', 0.0);
-        EndInstance (DynPrf, 'ConstantReactivePowerSettings');
-
-        pName2.LocalName := pInv.Name;
-        pName2.UUID := GetDevUuid (I1547VoltWatt, pInv.LocalName, 1);
-        StartInstance (DynPrf, 'VoltWattSettings', pName2);
-        RefNode (DynPrf, 'VoltWattSettings.DERIEEEType1', pInv);
-        BooleanNode (DynPrf, 'VoltWattSettings.enabled', False);
-        DoubleNode (DynPrf, 'VoltWattSettings.curveV1', 0.0);
-        DoubleNode (DynPrf, 'VoltWattSettings.curveV2', 0.0);
-        DoubleNode (DynPrf, 'VoltWattSettings.curveP1', 0.0);
-        DoubleNode (DynPrf, 'VoltWattSettings.curveP2gen', 0.0);
-        DoubleNode (DynPrf, 'VoltWattSettings.curveP2load', 0.0);
-        DoubleNode (DynPrf, 'VoltWattSettings.olrt', 0.0);
-        EndInstance (DynPrf, 'VoltWattSettings');
+        pI1547.Free;
       end;
-      pInv := ActiveCircuit[ActiveActor].InvControls2.Next;
     end;
 
     pVsrc := ActiveCircuit[ActiveActor].Sources.First; // pIsrc are in the same list
