@@ -378,8 +378,12 @@ type
       property v_setpoint                : Double             read Fv_setpoint;
       // Need to include the new modes here
 
+      // for CIM export
+      property VoltVarCurve: TXYCurveObj read Fvvc_curve;
+      property VoltWattCurve: TXYCurveObj read Fvoltwatt_curve;
+      property VoltWattChargingCurve: TXYCurveObj read FvoltwattCH_curve;
+      property WattVarCurve: TXYCurveObj read Fwattvar_curve;
   end;
-
 
 VAR
     ActiveInvControlObj : TInvControlObj;
@@ -4612,7 +4616,6 @@ procedure TInvControlObj.Change_deltaP_factor(ActorID : Integer; j: Integer);
 
     DeltaV_old[j] := Abs(FPresentVpu[j] - FAvgpVpuPrior[j]);
   end;
-
 
 //Called at end of main power flow solution loop
 procedure TInvControl.UpdateAll(ActorID : integer);
