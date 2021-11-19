@@ -104,6 +104,12 @@ INTERFACE
             Property    PendingChange[DevIndex: Integer]:Integer Read Get_PendingChange Write Set_PendingChange;
 
             Property    DERNameList: TStringList read FPVSystemNameList; // for CIM export, Storage control not implemented internally
+            Property    VregTau: Double read FVregTau;
+            Property    QVSlope: Double read FSlope;
+            Property    VregMin: Double read FVregMin;
+            Property    VregMax: Double read FVregMax;
+            Property    QMaxLead: Double read FQMaxLead;
+            Property    QMaxLag: Double read FQMaxLag;
    end;
 
   VAR
