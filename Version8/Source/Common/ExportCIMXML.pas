@@ -40,7 +40,7 @@ Uses SysUtils, Utilities, Circuit, DSSClassDefs, DSSGlobals, CktElement,
      Fuse, Capacitor, CapControl, CapControlvars,  Reactor, Feeder, ConductorData, LineUnits,
      LineGeometry, StrUtils, Math, HashList, WireData, XfmrCode,
      LineSpacing, CableData, CNData, TSData, Storage, PVSystem, Relay, Recloser, AutoTrans,
-     InvControl, ExpControl, DSSObject, DSSClass, Classes;
+     InvControl, ExpControl, DSSObject, DSSClass, Classes, XYCurve;
 
 Type
   UuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
@@ -1786,10 +1786,112 @@ begin
 end;
 
 procedure TIEEE1547Controller.PullFromInvControl (pInv: TInvControlObj);
+var
+  xy: TXYcurveObj;
+  bCatB: Boolean;
+  mode, combi: Integer;
 begin
   pInvName.LocalName := pInv.Name;
   pInvName.UUID := pInv.UUID;
   pDERNames.Assign(pInv.DERNameList);
+
+  bCatB := False;
+  xy := pInv.VoltVarCurve;
+  if (xy <> nil) and (xy.NumPoints > 1) then begin
+    if abs(xy.YValue_pt[1]) > 0.25 then begin
+      bCatB := True
+    end else begin
+      if xy.NumPoints > 3 then begin
+        if abs(xy.YValue_pt[3]) > 0.25 then begin
+          bCatB := True
+        end;
+      end;
+    end;
+  end;
+  SetDefaults (bCatB);
+
+  VV_olrt := pInv.LPFTau * 2.3026;
+  VW_olrt := VV_olrt;
+
+  if (xy <> nil) and (xy.NumPoints > 3) then begin
+    VV_curveV1 := xy.XValue_pt[1];
+    VV_curveQ1 := xy.YValue_pt[1];
+    VV_curveV2 := xy.XValue_pt[2];
+    VV_curveQ2 := xy.YValue_pt[2];
+    VV_curveV3 := xy.XValue_pt[3];
+    VV_curveQ3 := xy.YValue_pt[3];
+    VV_curveV4 := xy.XValue_pt[4];
+    VV_curveQ4 := xy.YValue_pt[4];
+  end;
+
+  xy := pInv.VoltWattCurve;
+  if (xy <> nil) and (xy.NumPoints > 1) then begin
+    VW_curveV1 := xy.XValue_pt[1];
+    VW_curveV2 := xy.XValue_pt[2];
+    VW_curveP1 := xy.YValue_pt[1];
+    if xy.YValue_pt[2] < 0.0 then begin
+      VW_curveP2gen := 0.2; // TODO: should have a pMin
+      VW_curveP2load := xy.YValue_pt[2];
+    end else begin
+      VW_curveP2gen := xy.YValue_pt[2];
+      VW_curveP2load := 0.0;
+    end;
+  end;
+
+  xy := pInv.VoltWattChargingCurve;
+  if (xy <> nil) and (xy.NumPoints > 1) then begin
+    VW_curveP2load := xy.YValue_pt[2]; // TODO: should check for storage
+  end;
+
+  xy := pInv.WattVarCurve;
+  if (xy <> nil) and (xy.NumPoints > 2) then begin
+    WV_curveP1gen := xy.XValue_pt[1];
+    WV_curveP2gen := xy.XValue_pt[2];
+    WV_curveP3gen := xy.XValue_pt[3];
+    WV_curveQ1gen := xy.YValue_pt[1];
+    WV_curveQ2gen := xy.YValue_pt[2];
+    WV_curveQ3gen := xy.YValue_pt[3];
+    WV_curveP1load := WV_curveP1gen;
+    WV_curveP2load := WV_curveP2gen;
+    WV_curveP3load := WV_curveP3gen;
+    WV_curveQ1load := WV_curveQ1gen;
+    WV_curveQ2load := WV_curveQ2gen;
+    WV_curveQ3load := WV_curveQ3gen;
+  end;
+{* copied from InvControl!!
+    // Modes
+    NONE_MODE = 0;
+    VOLTVAR   = 1;
+    VOLTWATT  = 2;
+    DRC       = 3;
+    WATTPF    = 4;
+    WATTVAR   = 5;
+    AVR       = 6;
+
+    // Combi Modes
+    NONE_COMBMODE = 0;
+    VV_VW         = 1;
+    VV_DRC        = 2;
+*}
+  mode := pInv.Mode;
+  combi := pInv.CombiMode;
+  if combi = 1 then begin
+    PF_enabled := False;
+    VV_enabled := True;
+    VW_enabled := True;
+  end else if combi = 2 then begin
+    PF_enabled := False;
+    VV_enabled := True;
+  end else if mode = 1 then begin
+    PF_enabled := False;
+    VV_enabled := True;
+  end else if mode = 2 then begin
+    PF_enabled := False;
+    VW_enabled := True;
+  end else if mode = 5 then begin
+    PF_enabled := False;
+    WV_enabled := True;
+  end;
 end;
 
 procedure TIEEE1547Controller.PullFromExpControl (pExp: TExpControlObj);
@@ -1797,56 +1899,89 @@ begin
   pInvName.LocalName := pExp.Name;
   pInvName.UUID := pExp.UUID;
   pDERNames.Assign(pExp.DERNameList);
+
+  if (pExp.QMaxLead > 0.25) or (pExp.QMaxLag > 0.25) then // catB estimate
+    SetDefaults (True)
+  else
+    SetDefaults (False);
+
+  VV_vRefAutoModeEnabled := True;
+  VV_vRefOlrt:=pExp.VregTau;
+  VV_curveQ1:=pExp.QMaxLead;
+  VV_curveQ2:=VV_curveQ1;
+  VV_curveQ3:=-pExp.QMaxLag;
+  VV_curveQ4:=VV_curveQ3;
+  VV_curveV1:=0.90;
+  VV_curveV2:=1.0 - VV_curveQ2 / pExp.QVSlope;
+  VV_curveV3:=1.0 - VV_curveQ3 / pExp.QVSlope;  // - because Q3 should be negative
+  VV_curveV4:=1.10;
 end;
 
 procedure TIEEE1547Controller.SetDefaults (bCatB: Boolean);
 begin
-  ND_acVmax:=0.0;
-  ND_acVmin:=0.0;
+  ND_acVmax:=1.05;
+  ND_acVmin:=0.95;
   AD_pMax:=0.0;
   AD_pMaxOverPF:=0.0;
   AD_overPF:=0.0;
   AD_pMaxUnderPF:=0.0;
   AD_underPF:=0.0;
   AD_sMax:=0.0;
-  AD_qMaxInj:=0.0;
-  AD_qMaxAbs:=0.0;
   AD_pMaxCharge:=0.0;
   AD_apparentPowerChargeMax:=0.0;
   AD_acVnom:=0.0;
-  VV_vRef:=0.0;
-  VV_vRefOlrt:=0.0;
-  VV_curveV1:=0.0;
-  VV_curveV2:=0.0;
-  VV_curveV3:=0.0;
-  VV_curveV4:=0.0;
-  VV_olrt:=0.0;
-  VV_curveQ1:=0.0;
-  VV_curveQ2:=0.0;
-  VV_curveQ3:=0.0;
-  VV_curveQ4:=0.0;
+  AD_qMaxInj:=0.44;
+  if bCatB then begin
+    ND_normalOPcatKind:='catB';
+    AD_qMaxAbs:=0.44;
+    VV_curveV1:=0.92;
+    VV_curveV2:=0.98;
+    VV_curveV3:=1.02;
+    VV_curveV4:=1.08;
+    VV_curveQ1:=0.44;
+    VV_curveQ2:=0.0;
+    VV_curveQ3:=0.0;
+    VV_curveQ4:=-0.44;
+    VV_olrt:=5.0;
+    WV_curveQ3load:=0.44;
+  end else begin
+    ND_normalOPcatKind:='catA';
+    AD_qMaxAbs:=0.25;
+    VV_curveV1:=0.90;
+    VV_curveV2:=1.00;
+    VV_curveV3:=1.00;
+    VV_curveV4:=1.10;
+    VV_curveQ1:=0.25;
+    VV_curveQ2:=0.0;
+    VV_curveQ3:=0.0;
+    VV_curveQ4:=-0.25;
+    VV_olrt:=10.0;
+    WV_curveQ3load:=0.25;
+  end;
+  VV_vRef:=1.0;
+  VV_vRefOlrt:=300.0;
   Q_reactivePower:=0.0;
-  PF_powerFactor:=0.0;
-  VW_olrt:=0.0;
-  VW_curveV1:=0.0;
-  VW_curveV2:=0.0;
-  VW_curveP1:=0.0;
-  VW_curveP2gen:=0.0;
-  VW_curveP2load:=0.0;
-  WV_curveP1gen:=0.0;
-  WV_curveP2gen:=0.0;
-  WV_curveP3gen:=0.0;
-  WV_curveP1load:=0.0;
+  PF_powerFactor:=1.0;
+  VW_olrt:=10.0;
+  VW_curveV1:=1.06;
+  VW_curveV2:=1.10;
+  VW_curveP1:=1.0;
+  VW_curveP2gen:=0.2;
+  VW_curveP2load:=0.0; // for storage, -1.0
+
+  WV_curveP1gen:=0.2;
+  WV_curveP2gen:=0.5;
+  WV_curveP3gen:=1.0;
+  WV_curveP1load:=0.0; // for storage, 0.2, 0.5, 1.0
   WV_curveP2load:=0.0;
   WV_curveP3load:=0.0;
   WV_curveQ1gen:=0.0;
   WV_curveQ2gen:=0.0;
-  WV_curveQ3gen:=0.0;
+  WV_curveQ3gen:=0.44;
   WV_curveQ1load:=0.0;
   WV_curveQ2load:=0.0;
-  WV_curveQ3load:=0.0;
-  ND_normalOPcatKind:='catA';
-  PF_constPFexcitationKind:='abs';
+
+  PF_constPFexcitationKind:='inj';
   VV_enabled:=False;
   WV_enabled:=False;
   PF_enabled:=True;
