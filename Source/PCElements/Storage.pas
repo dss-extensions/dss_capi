@@ -396,6 +396,8 @@ TYPE
 
         Property MinModelVoltagePU  :Double Read VminPu;
         Property pf_wp_nominal      : Double                                  Write Set_pf_wp_nominal;
+        // for CIM export
+        Property kWRating: Double Read StorageVars.kwRating;
    End;
 
 VAR
