@@ -108,7 +108,7 @@ Type
   end;
 
   TIEEE1547Controller = class(TObject)
-  public
+  private
     ND_acVmax, ND_acVmin, AD_pMax, AD_pMaxOverPF, AD_overPF, AD_pMaxUnderPF: Double;
     AD_underPF, AD_sMax, AD_qMaxInj, AD_qMaxAbs, AD_pMaxCharge: Double;
     AD_apparentPowerChargeMax, AD_acVnom: Double;
@@ -129,13 +129,21 @@ Type
     pPlateName: TNamedObject;
     pSetName: TNamedObject;
     pDERNames: TStringList;
+    pMonBuses: TStringList;
 
+    bNameplateSet: Boolean;
+
+    procedure FinishNameplate;
+    procedure SetStorageNameplate (pBat: TStorageObj);
+    procedure SetPhotovoltaicNameplate (pPV: TPVSystemObj);
+    procedure SetElementNameplate (pElem: TDSSCktElement);
+    procedure SetDefaults (bCatB: Boolean);
+  public
     constructor Create;
     destructor Destroy; override;
 
     procedure PullFromInvControl (pInv: TInvControlObj);
     procedure PullFromExpControl (pExp: TExpControlObj);
-    procedure SetDefaults (bCatB: Boolean);
     procedure WriteCIM (prf: ProfileChoice);
   end;
 
@@ -1774,6 +1782,7 @@ begin
   pPlateName := TNamedObject.Create('Nameplate');
   pSetName := TNamedObject.Create('Settings');
   pDERNames := TStringList.Create;
+  pMonBuses := TStringList.Create;
 end;
 
 destructor TIEEE1547Controller.Destroy;
@@ -1782,6 +1791,7 @@ begin
   pPlateName.Free;
   pSetName.Free;
   pDERNames.Free;
+  pMonBuses.Free;
   inherited Destroy;
 end;
 
@@ -1794,6 +1804,10 @@ begin
   pInvName.LocalName := pInv.Name;
   pInvName.UUID := pInv.UUID;
   pDERNames.Assign(pInv.DERNameList);
+  if pInv.monBus.Count > 0 then
+    pMonBuses.Assign(pInv.monBus)
+  else
+    pMonBuses.Clear;
 
   bCatB := False;
   xy := pInv.VoltVarCurve;
@@ -1899,6 +1913,7 @@ begin
   pInvName.LocalName := pExp.Name;
   pInvName.UUID := pExp.UUID;
   pDERNames.Assign(pExp.DERNameList);
+  pMonBuses.Clear;
 
   if (pExp.QMaxLead > 0.25) or (pExp.QMaxLag > 0.25) then // catB estimate
     SetDefaults (True)
@@ -1919,6 +1934,7 @@ end;
 
 procedure TIEEE1547Controller.SetDefaults (bCatB: Boolean);
 begin
+  bNameplateSet:=False;
   ND_acVmax:=1.05;
   ND_acVmin:=0.95;
   AD_pMax:=0.0;
@@ -1990,11 +2006,45 @@ begin
   VV_vrefAutoModeEnabled:=False;
 end;
 
+procedure TIEEE1547Controller.FinishNameplate;
+begin
+  ND_acVmax := 1.1 * AD_acVnom;
+  ND_acVmin := 0.9 * AD_acVnom;
+  bNameplateSet:=True;
+end;
+
+procedure TIEEE1547Controller.SetStorageNameplate (pBat: TStorageObj);
+begin
+  if bNameplateSet then exit;
+  AD_acVnom := pBat.PresentKV*1000.0;
+  AD_sMax := pBat.kVARating*1000.0;
+  AD_pMax := pBat.kWRating*1000.0;
+  FinishNameplate;
+end;
+
+procedure TIEEE1547Controller.SetPhotovoltaicNameplate (pPV: TPVSystemObj);
+begin
+  if bNameplateSet then exit;
+  AD_acVnom := pPV.PresentKV*1000.0;
+  AD_sMax := pPV.kVARating*1000.0;
+  FinishNameplate;
+end;
+
+procedure TIEEE1547Controller.SetElementNameplate (pElem: TDSSCktElement);
+begin
+  if bNameplateSet then exit;
+  if pElem.DSSObjType = (PC_ELEMENT+PVSYSTEM_ELEMENT) then
+    SetPhotovoltaicNameplate (TPVSystemObj(pElem));
+  if pElem.DSSObjType = (PC_ELEMENT+STORAGE_ELEMENT) then
+    SetStorageNameplate (TStorageObj(pElem));
+  FinishNameplate;
+end;
+
 procedure TIEEE1547Controller.WriteCIM (prf: ProfileChoice);
 var
   i: Integer;
   pPV: TPVSystemObj;
-  pBat: TPVSystemObj;
+  pBat: TStorageObj;
 begin
   StartInstance (prf, 'DERIEEEType1', pInvName);
   BooleanNode (prf, 'DynamicsFunctionBlock.enabled', True);
@@ -2002,20 +2052,30 @@ begin
     if pDERNames.Count < 1 then begin
       pBat := StorageElements.First;
       while pBat <> nil do begin
-        if pBat.Enabled then RefNode (prf, 'DERIEEEType1.PowerElectronicsConnection', pBat);
+        if pBat.Enabled then begin
+          RefNode (prf, 'DERIEEEType1.PowerElectronicsConnection', pBat);
+          SetStorageNameplate (pBat);
+        end;
         pBat := StorageElements.Next;
       end;
       pPV := PVSystems.First;
       while pPV <> nil do begin
-        if pPV.Enabled then RefNode (prf, 'DERIEEEType1.PowerElectronicsConnection', pPV);
+        if pPV.Enabled then begin
+          RefNode (prf, 'DERIEEEType1.PowerElectronicsConnection', pPV);
+          SetPhotovoltaicNameplate (pPV);
+        end;
         pPV := PVSystems.Next;
       end;
     end else begin
       for i := 1 to pDERNames.Count do begin
         ActiveCircuit[ActiveActor].SetElementActive (pDERNames.Strings[i-1]);
         RefNode (prf, 'DERIEEEType1.PowerElectronicsConnection', ActiveCktElement);
+        SetElementNameplate (ActiveCktElement);
       end;
     end;
+  end;
+  for i := 1 to pMonBuses.Count do begin
+    SetActiveBus (pMonBuses.Strings[i-1]);
   end;
   EndInstance (prf, 'DERIEEEType1');
 
