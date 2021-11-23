@@ -136,7 +136,20 @@ TYPE
             td21_Uref: pComplexArray; // reference (pre-fault) voltages
             td21_dV: pComplexArray; // incremental voltages
             td21_dI: pComplexArray; // incremental currents
-   
+
+            {Directional Overcurrent Relay}
+            DOC_TiltAngleLow,  // Tilt angle for lower current magnitude
+            DOC_TiltAngleHigh,  // Tilt angle for higher current magnitude
+            DOC_TripSetLow,  // Trip setting for lower current magnitude
+            DOC_TripSetHigh,  // Trip setting for higher current magnitude
+            DOC_TripSetMag,  // Current magnitude trip setting (define a circle for the relay characteristics)
+            DOC_DelayInner,  // Delay for trip in inner zone of the DOC characteristic
+            DOC_PhaseTripInner, // Multiplier for TCC Curve for tripping in inner zone of the DOC characteristic
+            DOC_TDPhaseInner: Double;  // Time Dial for DOC_PhaseTripInner
+
+            DOC_PhaseCurveInner :TTCC_CurveObj;  // TCC Curve for tripping in inner zone of the DOC characteristic
+
+
             {Generic Relay}
             OverTrip,
             UnderTrip:Double;
@@ -178,6 +191,7 @@ TYPE
             PROCEDURE GenericLogic(ActorID : Integer);
             PROCEDURE DistanceLogic(ActorID : Integer);
             PROCEDURE TD21Logic(ActorID : Integer);
+            PROCEDURE DirectionalOvercurrentLogic(ActorID : Integer);
 
      public
 
@@ -222,7 +236,7 @@ USES
 
 CONST
 
-    NumPropsThisClass = 40;
+    NumPropsThisClass = 49;
 
     CURRENT = 0;  {Default}
     VOLTAGE = 1;
@@ -232,6 +246,7 @@ CONST
     GENERIC = 6; {Use this for frequency, etc.  Generic over/under relay}
     DISTANCE = 7;
     TD21 = 8;
+    DOC = 9;
 
     MIN_DISTANCE_REACTANCE = -1.0e-8; {allow near-bolted faults to be detected}
 
@@ -296,7 +311,8 @@ Begin
                         '  47 (neg seq voltage)'+CRLF+
                         '  Generic (generic over/under relay)'+CRLF+
                         '  Distance'+CRLF+
-                        '  TD21'+CRLF+CRLF+
+                        '  TD21'+CRLF+
+                        '  DOC (directional overcurrent)'+CRLF+CRLF+
                         'Default is overcurrent relay (Current) ' +
                         'Specify the curve and pickup settings appropriate for each type. '+
                         'Generic relays monitor PC Element Control variables and trip on out of over/under range in definite time.');
@@ -358,6 +374,19 @@ Begin
      AddProperty('State', 40, '{Open | Closed} Actual state of the relay. Upon setting, immediately forces state of the relay, overriding the Relay control. ' +
                               'Simulates manual control on relay. Defaults to Closed. "Open" causes the controlled element to open and lock out. "Closed" causes the ' +
                               'controlled element to close and the relay to reset to its first operation.');
+     AddProperty('DOC_TiltAngleLow',41, 'Tilt angle for lower current magnitudes. Default is 90.');
+     AddProperty('DOC_TiltAngleHigh',42, 'Tilt angle for higher current magnitudes. Default is 90.');
+     AddProperty('DOC_TripSettingLow',43, 'Trip setting for lower current magnitude.  Default is 0.');
+     AddProperty('DOC_TripSettingHigh',44, 'Trip setting for higher current magnitude.  Default is -1 (deactivated). To activate, set a positive value. Must be greater than "DOC_TripSettingLow".');
+     AddProperty('DOC_TripSettingMag',45, 'Trip setting for current magnitude (define a circle for the relay characteristics). Default is -1 (deactivated). To activate, set a positive value.');
+     AddProperty('DOC_DelayInner',46, 'Trip time delay (sec) for operation in inner zone for DOC relay, defined when "DOC_TripSettingMag" or "DOC_TripSettingHigh" are activate. Default is -1.0 (deactivated), meaning that ' +
+                                      'the relay characteristic is insensitive in the inner zone (no trip). Set to 0 for instantaneous trip and >0 for a definite time delay. '+
+                                       'If "DOC_PhaseCurveInner" is specified, time delay from curve is utilized instead.');
+     AddProperty('DOC_PhaseCurveInner',47, 'Name of the TCC Curve object that determines the phase trip for operation in inner zone for DOC relay. Must have been previously defined as a TCC_Curve object. ' +
+                                           'Default is none (ignored). Multiplying the current values in the curve by the "DOC_PhaseTripInner" value gives the actual current.');
+     AddProperty('DOC_PhaseTripInner',48, 'Multiplier for the "DOC_PhaseCurveInner" TCC curve.  Defaults to 1.0.');
+     AddProperty('DOC_TDPhaseInner',49, 'Time dial for "DOC_PhaseCurveInner" TCC curve. Multiplier on time axis of specified curve. Default=1.0.');
+
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -433,7 +462,7 @@ Begin
            11: GroundInst  := Parser[ActorID].Dblvalue;
            12: ResetTime   := Parser[ActorID].Dblvalue;
            13: NumReclose  := Parser[ActorID].Intvalue -1 ;   // one less than number of shots
-           14: If Comparetext(Param, 'NONE')=0 Then NumReclose := 1 Else NumReclose  := Parser[ActorID].ParseAsVector(4, RecloseIntervals);   // max of 4 allowed
+           14: If Comparetext(Param, 'NONE')=0 Then NumReclose := 0 Else NumReclose  := Parser[ActorID].ParseAsVector(4, RecloseIntervals);   // max of 4 allowed
            15: OVCurve     := GetTCCCurve(Param);
            16: UVCurve     := GetTCCCurve(Param);
            17: kVBase      := Parser[ActorID].DblValue;
@@ -462,6 +491,16 @@ Begin
                   if not NormalStateSet then NormalStateSet := TRUE;
                End;
            19, 40: InterpretRelayState(ActorID, Param, ParamName);  // set state
+           41: DOC_TiltAngleLow     := Parser[ActorID].DblValue;
+           42: DOC_TiltAngleHigh    := Parser[ActorID].DblValue;
+           43: DOC_TripSetLow       := Parser[ActorID].DblValue;
+           44: DOC_TripSetHigh      := Parser[ActorID].DblValue;
+           45: DOC_TripSetMag       := Parser[ActorID].DblValue;
+           46: DOC_DelayInner       := Parser[ActorID].DblValue;
+           47: DOC_PhaseCurveInner  := GetTccCurve(Param);
+           48: DOC_PhaseTripInner   := Parser[ActorID].DblValue;
+           49: DOC_TDPhaseInner     := Parser[ActorID].DblValue;
+
          ELSE
            // Inherited parameters
            ClassEdit( ActiveRelayObj, ParamPointer - NumPropsthisClass)
@@ -476,10 +515,21 @@ Begin
                     CASE lowercase(param)[1] of
                       'c': PropertyValue[14] := '[0.5, 2.0, 2.0]';
                       'v': PropertyValue[14] := '[5.0]';
+                      'd': CASE lowercase(param)[2] of
+                             'o': Begin
+                                    PropertyValue[14] := 'NONE';
+                                    NumReclose := 0;
+                                  End;
+                           END;
                     END;
-                    AuxParser[ActorID].CmdString := PropertyValue[14];
-                    ParamName := AuxParser[ActorID].NextParam;
-                    NumReclose := AuxParser[ActorID].ParseAsVector(4, RecloseIntervals);
+
+                    If PropertyValue[14] <> 'NONE' Then
+                    Begin
+                      AuxParser[ActorID].CmdString := PropertyValue[14];
+                      ParamName := AuxParser[ActorID].NextParam;
+                      NumReclose := AuxParser[ActorID].ParseAsVector(4, RecloseIntervals);
+                    End;
+
                  End;
               19, 40: if not NormalStateSet then
                        Begin
@@ -662,6 +712,17 @@ Begin
      td21_quiet := 0;
      Dist_Reverse := False;
 
+     DOC_TiltAngleLow := 90.0;
+     DOC_TiltAngleHigh := 90.0;
+     DOC_TripSetLow := 0;
+     DOC_TripSetHigh := -1.0;
+     DOC_TripSetMag := -1.0;
+
+     DOC_DelayInner := -1.0;
+     DOC_PhaseCurveInner := NIL;
+     DOC_PhaseTripInner := 1.0;
+     DOC_TDPhaseInner := 1.0;
+
      Operationcount   := 1;
      LockedOut        := FALSE;
      ArmedForOpen     := FALSE;
@@ -725,7 +786,7 @@ Begin
                  Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
                // Allocate a buffer bigenough to hold everything from the monitored element
                  ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder );
-                 if (ControlType = Distance) or (ControlType = TD21) then
+                 if (ControlType = Distance) or (ControlType = TD21) or (ControlType = DOC) then
                    ReAllocMem(cvBuffer, SizeOF(cvBuffer^[1]) * MonitoredElement.Yorder);
                  CondOffset := (MonitoredElementTerminal-1) * MonitoredElement.NConds; // for speedy sampling
 
@@ -819,7 +880,7 @@ begin
     Setbus(1, MonitoredElement.GetBus(ElementTerminal));
     // Allocate a buffer big enough to hold everything from the monitored element
     ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder );
-    if (ControlType = Distance) or (ControlType = TD21) then
+    if (ControlType = Distance) or (ControlType = TD21) or (ControlType = DOC) then
       ReAllocMem(cvBuffer, SizeOF(cvBuffer^[1]) * MonitoredElement.Yorder );
     CondOffset := (ElementTerminal-1) * MonitoredElement.NConds; // for speedy sampling
   end;
@@ -955,6 +1016,7 @@ begin
               GENERIC:     GenericLogic(ActorID);// one shot to lockout
               DISTANCE:    DistanceLogic(ActorID);
               TD21:        TD21Logic(ActorID);
+              DOC:         DirectionalOvercurrentLogic(ActorID);
          End;
 end;
 
@@ -991,11 +1053,17 @@ begin
         Result := '';
         With ParentClass Do
           CASE Index of
+            13: Begin
+                  Result := Format('%d', [NumReclose + 1]);
+                End;
             14: Begin
-                  Result := '(';
                   If NumReclose=0 Then Result := Result + 'NONE' Else
+                  Begin
+                     Result := '(';
                      FOR i := 1 to NumReclose Do Result := Result + Format('%-g, ' , [RecloseIntervals^[i]]);
-                  Result := Result + ')';
+                     Result := Result + ')';
+                  End;
+
                 End;
             39: Begin
                   case FNormalState of
@@ -1159,6 +1227,15 @@ begin
      PropertyValue[37] := 'No';
      PropertyValue[39] := 'closed';
      PropertyValue[40] := 'closed';
+     PropertyValue[41] := '90.0';
+     PropertyValue[42] := '90.0';
+     PropertyValue[43] := '0.0';
+     PropertyValue[44] := '-1.0';
+     PropertyValue[45] := '-1.0';
+     PropertyValue[46] := '-1.0';
+     PropertyValue[47] := '';
+     PropertyValue[48] := '1.0';
+     PropertyValue[49] := '1.0';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -1176,7 +1253,10 @@ begin
                           '7':ControlType := NEGVOLTAGE;
                          End;
                     'g': ControlType := GENERIC;
-                    'd': ControlType := DISTANCE;
+                    'd': Case lowercase(S)[2] of
+                          'i': ControlType := DISTANCE;
+                          'o': ControlType := DOC;
+                         End;
                     't': ControlType := TD21;
                ELSE
                      ControlType := CURRENT;
@@ -1189,7 +1269,10 @@ begin
                     'r': Delay_Time := 0.1;
                     '4': Delay_Time := 0.1;
                     'g': Delay_Time := 0.1;
-                    'd': Delay_Time := 0.1;
+                    'd': Case lowercase(S)[2] of
+                          'i': Delay_Time := 0.1;
+                          'o': Delay_Time := 0.0;
+                         End;
                     't': Delay_Time := 0.1;
                ELSE
                      Delay_Time := 0.0;
@@ -1686,6 +1769,369 @@ begin
   End;  {With MonitoredElement}
 end;
 
+procedure TRelayObj.DirectionalOvercurrentLogic(ActorID : Integer);
+VAR
+
+   i: Integer;
+   TripTime, TimeTest : Double;
+   Cmag, Cangle: Double;
+
+begin
+
+ WITH   MonitoredElement Do
+   Begin
+
+      IF FPresentState = CTRL_CLOSE
+      THEN Begin
+
+        TripTime := -1.0;
+
+
+        MonitoredElement.GetCurrents(cBuffer,ActorID);
+        MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer, ActorID);
+
+        // Shift angle to cBuffer to be relative to cvBuffer
+        FOR i := (1 + CondOffset) to (Fnphases + CondOffset) Do
+          cBuffer^[i] := PDEGtoCompLeX(Cabs(cBuffer^[i]), CDANG(cBuffer^[i]) - CDANG(cvBuffer^[1 - CondOffset]));
+
+        FOR i := (1 + CondOffset) to (Fnphases + CondOffset) Do
+        Begin
+
+            TimeTest := -1.0;
+            Cmag := Cabs(cBuffer^[i]);
+            Cangle := Cdang(cBuffer^[i]);
+
+            IF (DOC_TiltAngleLow = 90.0) or (DOC_TiltAngleLow = 270.0) Then
+            Begin
+
+              IF cBuffer^[i].re <= -1 * DOC_TripSetLow Then Begin
+
+                IF (DOC_TripSetMag > 0.0) Then Begin // Circle Specified.
+
+                  IF Cmag <= DOC_TripSetMag Then Begin // Within the Circle
+
+                    IF DOC_TripSetHigh > 0.0 Then // High Straight-Line Specified.
+                    Begin
+
+                      IF (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) Then
+                      Begin
+
+                        IF cBuffer^[i].re < -1 * DOC_TripSetHigh Then Begin // Left-side of High Straight-Line
+
+                           IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                           Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                           Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                        End
+                        Else Begin  // Right-Side of High Straight-Line
+
+                           IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                           Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                           Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                        End;
+
+                      End
+                      Else
+                      Begin
+
+                         IF cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) Then Begin // Left-side of High Straight-Line
+
+                            IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                            Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                            Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                         End
+                         Else Begin // Right-Side of High Straight-Line
+
+                            IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                            Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                            Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                         End;
+
+                      End;
+
+                    End
+                    Else Begin // High Straight-Line Not Specified.
+
+                       IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                       Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                       Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                    End;
+
+                  End
+                  Else Begin // Out of the Circle
+
+                    IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                    Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                    Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                  End;
+
+                End
+                Else Begin // Circle not Specified
+
+                    IF DOC_TripSetHigh > 0.0 Then Begin // High Straight-Line Specified.
+
+                      IF (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) Then
+                      Begin
+
+                        IF cBuffer^[i].re < -1 * DOC_TripSetHigh Then Begin // Left-side of High Straight-Line
+
+                            IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                            Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                            Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                        End
+                        Else Begin  // Right-Side of High Straight-Line
+
+                            IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                            Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                            Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                        End;
+
+                      End
+                      Else
+                      Begin
+
+                         IF cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) Then Begin // Left-side of High Straight-Line
+
+                            IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                            Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                            Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                         End
+                         Else Begin // Right-Side of High Straight-Line
+
+                            IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                            Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                            Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                         End;
+
+                      End;
+
+                    End
+                    Else Begin  // High Straight-Line Not Specified.
+
+                        IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                        Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                        Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                    End;
+
+                End;
+
+              End;
+
+            End
+            Else Begin {90, 270}
+
+              IF cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleLow)) * (cBuffer^[i].re + DOC_TripSetLow) Then
+              Begin
+
+                  IF DOC_TripSetMag > 0.0 Then Begin // Circle Specified.
+
+                  IF Cmag <= DOC_TripSetMag Then Begin // Within the Circle
+
+                    IF DOC_TripSetHigh > 0.0 Then // High Straight-Line Specified.
+                    Begin
+
+                      IF (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) Then
+                      Begin
+
+                        IF cBuffer^[i].re < -1 * DOC_TripSetHigh Then Begin // Left-side of High Straight-Line
+
+                           IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                           Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                           Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                        End
+                        Else Begin  // Right-Side of High Straight-Line
+
+                           IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                           Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                           Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                        End;
+
+                      End
+                      Else
+                      Begin
+
+                         IF cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) Then Begin // Left-side of High Straight-Line
+
+                           IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                           Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                           Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                         End
+                         Else Begin // Right-Side of High Straight-Line
+
+                           IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                           Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                           Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                         End;
+
+                      End;
+
+                    End
+                    Else Begin // High Straight-Line Not Specified.
+
+                      IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                      Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                      Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                    End;
+
+                  End
+                  Else Begin // Out of the Circle
+
+                    IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                    Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                    Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                  End;
+
+                End
+                Else Begin // Circle not Specified
+
+                    IF DOC_TripSetHigh > 0.0 Then Begin // High Straight-Line Specified.
+
+                      IF (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) Then
+                      Begin
+
+                        IF cBuffer^[i].re < -1 * DOC_TripSetHigh Then Begin // Left-side of High Straight-Line
+
+                           IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                           Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                           Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                        End
+                        Else Begin  // Right-Side of High Straight-Line
+
+                           IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                           Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                           Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                        End;
+
+                      End
+                      Else
+                      Begin
+
+                         IF cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) Then Begin // Left-side of High Straight-Line
+
+                            IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                            Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                            Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                         End
+                         Else Begin // Right-Side of High Straight-Line
+
+                            IF DOC_DelayInner > 0.0 Then TimeTest := DOC_DelayInner
+                            Else If DOC_PhaseCurveInner <> NIL Then TimeTest := DOC_TDPhaseInner * DOC_PhaseCurveInner.GetTCCTime(Cmag/DOC_PhaseTripInner)
+                            Else if DOC_DelayInner = 0.0 then TimeTest := Delay_Time;
+
+                         End;
+
+                      End;
+
+                    End
+                    Else Begin  // High Straight-Line Not Specified.
+
+                       IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                       Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                       Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                    End;
+
+                End;
+
+              End
+              Else Begin
+                // There might be an intersection between Straight Line Low and High depending on their angles.
+                // Straight Line High takes precedence.
+                IF DOC_TripSetHigh > 0.0 Then Begin
+
+                  IF (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) Then
+                  Begin
+                      IF cBuffer^[i].re < -1 * DOC_TripSetHigh Then Begin // Left-side of High Straight-Line
+
+                         IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                         Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                         Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                      End
+                  End
+                  Else
+                  Begin
+
+                     IF cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) Then Begin // Left-side of High Straight-Line
+
+                        IF Delay_Time > 0.0 Then TimeTest := Delay_Time
+                        Else If PhaseCurve <> NIL Then TimeTest := TDPhase * PhaseCurve.GetTCCTime(Cmag/PhaseTrip)
+                        Else if Delay_Time = 0.0 then TimeTest := Delay_Time;
+
+                     End
+
+                  End;
+
+                End;
+
+
+              End;
+
+
+            End;
+
+            IF (TimeTest >= 0.0) THEN
+            Begin
+
+               IF DebugTrace Then
+               AppendToEventLog('Relay.'+ Self.Name, Format ('Directional Overcurrent - Phase %d Trip: Mag=%.5g, Ang=%.5g, Time=%.5g', [i-CondOffset, Cmag, Cangle, TimeTest]),ActorID);
+
+               IF TripTime<0.0 THEN TripTime := TimeTest
+               ELSE TripTime := Min(TripTime, TimeTest);
+
+            End;
+
+        End;
+
+
+        IF TripTime >= 0.0 Then
+        Begin
+          IF Not ArmedForOpen Then
+           WITH ActiveCircuit[ActorID] Do   // Then arm for an open operation
+            Begin
+               RelayTarget := 'DOC';
+               LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Breaker_time, CTRL_OPEN, 0, Self, ActorID);
+               IF OperationCount <= NumReclose THEN LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Breaker_time + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self, ActorID);
+               ArmedForOpen := TRUE;
+               ArmedForClose := TRUE;
+            End;
+        End
+        ELSE
+        Begin
+          IF ArmedForOpen  Then
+            WITH ActiveCircuit[ActorID] Do    // If current dropped below pickup, disarm trip and set for reset
+            Begin
+              LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self, ActorID);
+              ArmedForOpen := FALSE;
+              ArmedForClose := FALSE;
+            End;
+        End;
+
+
+
+      End; {IF PresentState=CLOSE}
+
+   End;  {With MonitoredElement}
+end;
 
 procedure TRelayObj.RevPowerLogic(ActorID : Integer);
 
