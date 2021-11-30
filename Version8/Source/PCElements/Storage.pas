@@ -266,6 +266,19 @@ TYPE
         FUNCTION  Get_CutOutkWAC: Double;
         FUNCTION  Get_CutInkWAC: Double;
 
+        // CIM support
+        function Get_Pmin:double;
+        function Get_Pmax:double;
+        function Get_QMaxInj:double;
+        function Get_QMaxAbs:double;
+        function Get_pMaxUnderPF:double;
+        function Get_pMaxOverPF:double;
+        function Get_acVnom:double;
+        function Get_acVmin:double;
+        function Get_acVmax:double;
+        function Get_sMaxCharge:double;
+        function Get_pMaxCharge:double;
+
       Protected
         PROCEDURE Set_ConductorClosed(Index:Integer; ActorID:integer; Value:Boolean); Override;
         PROCEDURE GetTerminalCurrents(Curr:pComplexArray; ActorID : Integer); Override ;
@@ -356,7 +369,6 @@ TYPE
         PROCEDURE DumpProperties(VAR F:TextFile; Complete:Boolean);Override;
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
 
-
         Property kW                 :Double  Read Get_kW                     Write Set_kW;
         Property kWDesired          :Double  Read Get_kWDesired;
         Property StateDesired       :Integer Write Set_StateDesired;
@@ -396,8 +408,19 @@ TYPE
 
         Property MinModelVoltagePU  :Double Read VminPu;
         Property pf_wp_nominal      : Double                                  Write Set_pf_wp_nominal;
-        // for CIM export
-        Property kWRating: Double Read StorageVars.kwRating;
+        // for CIM network export, using the k prefix
+        Property Pmin:Double     Read Get_Pmin;
+        Property Pmax:Double     Read Get_Pmax;
+        // for CIM dynamics and IEEE 1547 export, using the k prefix
+        Property qMaxInj:Double  Read Get_qMaxInj;
+        Property qMaxAbs:Double  Read Get_qMaxAbs;
+        Property acVmin:Double   Read Get_acVmin;
+        Property acVmax:Double   Read Get_acVmax;
+        Property acVnom:Double   Read Get_acVnom;
+        Property pMaxUnderPF:Double  Read Get_pMaxUnderPF;
+        Property pMaxOverPF:Double   Read Get_pMaxOverPF;
+        Property pMaxCharge:Double   Read Get_pMaxCharge;
+        Property apparentPowerChargeMax:Double Read Get_sMaxCharge;
    End;
 
 VAR
@@ -3708,6 +3731,62 @@ begin
 end;
 
 //----------------------------------------------------------------------------
+
+// for CIM export
+function TStorageObj.Get_Pmin:double;
+begin
+  Result := -StorageVars.kwRating * pctKwIn / 100.0;
+end;
+
+function TStorageObj.Get_Pmax:double;
+begin
+  Result := StorageVars.kwRating * pctKwOut / 100.0;
+end;
+
+function TStorageObj.Get_QMaxInj:double;
+begin
+  Result := StorageVars.Fkvarlimit;
+end;
+
+function TStorageObj.Get_QMaxAbs:double;
+begin
+  Result := StorageVars.FkvarlimitNeg;
+end;
+
+function TStorageObj.Get_pMaxUnderPF:double;
+begin
+  with StorageVars do Result := sqrt(FKvaRating*FKvaRating - FkvarLimitNeg*FkvarLimitNeg);
+end;
+
+function TStorageObj.Get_pMaxOverPF:double;
+begin
+  with StorageVars do Result := sqrt(FKvaRating*FKvaRating - FkvarLimit*FkvarLimit);
+end;
+
+function TStorageObj.Get_acVnom:double;
+begin
+  Result := PresentKV;
+end;
+
+function TStorageObj.Get_acVmin:double;
+begin
+  Result := PresentKV * Vminpu;
+end;
+
+function TStorageObj.Get_acVmax:double;
+begin
+  Result := PresentKV * Vmaxpu;
+end;
+
+function TStorageObj.Get_sMaxCharge:double;
+begin
+  Result := StorageVars.FkvaRating;
+end;
+
+function TStorageObj.Get_pMaxCharge:double;
+begin
+  Result := abs (Get_Pmin);
+end;
 
 // ===========================================================================================
 procedure TStorageObj.Set_WVmode(const Value: Boolean);
