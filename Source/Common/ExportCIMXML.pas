@@ -2008,25 +2008,42 @@ end;
 
 procedure TIEEE1547Controller.FinishNameplate;
 begin
-  ND_acVmax := 1.1 * AD_acVnom;
-  ND_acVmin := 0.9 * AD_acVnom;
+  AD_overPF:=AD_pMaxOverPF / AD_sMax;
+  AD_underPF:=AD_pMaxUnderPF / AD_sMax;
   bNameplateSet:=True;
 end;
 
 procedure TIEEE1547Controller.SetStorageNameplate (pBat: TStorageObj);
 begin
   if bNameplateSet then exit;
-  AD_acVnom := pBat.PresentKV*1000.0;
+  AD_acVnom := pBat.acVnom*1000.0;
+  ND_acVmax := pBat.acVmax*1000.0;
+  ND_acVmin := pBat.acVmin*1000.0;
   AD_sMax := pBat.kVARating*1000.0;
-  AD_pMax := pBat.kWRating*1000.0;
+  AD_pMax := pBat.pMax*1000.0;
+  AD_pMaxOverPF:=pBat.pMaxOverPF*1000.0;
+  AD_pMaxUnderPF:=pBat.pMaxUnderPF*1000.0;
+  AD_pMaxCharge:=pBat.pMaxCharge*1000.0;
+  AD_apparentPowerChargeMax:=pBat.apparentPowerChargeMax*1000.0;
+  AD_qMaxInj:=pBat.qMaxInj*1000.0;
+  AD_qMaxAbs:=pBat.qMaxAbs*1000.0;
   FinishNameplate;
 end;
 
 procedure TIEEE1547Controller.SetPhotovoltaicNameplate (pPV: TPVSystemObj);
 begin
   if bNameplateSet then exit;
-  AD_acVnom := pPV.PresentKV*1000.0;
+  AD_acVnom := pPV.acVnom*1000.0;
+  ND_acVmax := pPV.acVmax*1000.0;
+  ND_acVmin := pPV.acVmin*1000.0;
   AD_sMax := pPV.kVARating*1000.0;
+  AD_pMax := pPV.Pmax*1000.0;
+  AD_pMaxOverPF:=pPV.pMaxOverPF*1000.0;
+  AD_pMaxUnderPF:=pPV.pMaxUnderPF*1000.0;
+  AD_pMaxCharge:=pPV.pMaxCharge*1000.0;
+  AD_apparentPowerChargeMax:=pPV.apparentPowerChargeMax*1000.0;
+  AD_qMaxInj:=pPV.qMaxInj*1000.0;
+  AD_qMaxAbs:=pPV.qMaxAbs*1000.0;
   FinishNameplate;
 end;
 
@@ -2505,8 +2522,8 @@ Begin
         StartInstance (FunPrf, 'PhotovoltaicUnit', pName1);
   			geoUUID := GetDevUuid (SolarLoc, pPV.localName, 1);
         UuidNode (GeoPrf, 'PowerSystemResource.Location', geoUUID);
-        DoubleNode (EpPrf, 'PowerElectronicsUnit.maxP', pPV.Pmpp * 1000.0);
-        DoubleNode (EpPrf, 'PowerElectronicsUnit.minP', min(pPV.PctCutIn, pPV.PctCutOut) * pPV.kVARating * 1000.0 / 100.0);
+        DoubleNode (EpPrf, 'PowerElectronicsUnit.maxP', pPV.Pmax * 1000.0);
+        DoubleNode (EpPrf, 'PowerElectronicsUnit.minP', pPV.Pmin * 1000.0);
         EndInstance (FunPrf, 'PhotovoltaicUnit');
         StartInstance (FunPrf, 'PowerElectronicsConnection', pPV);
         CircuitNode (FunPrf, ActiveCircuit[ActiveActor]);
@@ -2537,8 +2554,8 @@ Begin
         pName1.LocalName := pBat.Name; // + '_Cells';
         pName1.UUID := GetDevUuid (Battery, pBat.LocalName, 1);
         StartInstance (FunPrf, 'BatteryUnit', pName1);
-        DoubleNode (EpPrf, 'PowerElectronicsUnit.maxP', pBat.StorageVars.kwRating * pBat.pctKwOut * 1000.0 / 100.0);
-        DoubleNode (EpPrf, 'PowerElectronicsUnit.minP', -pBat.StorageVars.kwRating * pBat.pctKwIn * 1000.0 / 100.0);
+        DoubleNode (EpPrf, 'PowerElectronicsUnit.maxP', pBat.Pmax * 1000.0);
+        DoubleNode (EpPrf, 'PowerElectronicsUnit.minP', pBat.Pmin * 1000.0);
         DoubleNode (SshPrf, 'BatteryUnit.ratedE', pBat.StorageVars.kwhRating * 1000.0);
         DoubleNode (SshPrf, 'BatteryUnit.storedE', pBat.StorageVars.kwhStored * 1000.0);
         BatteryStateEnum (SshPrf, pBat.StorageState);

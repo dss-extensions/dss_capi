@@ -200,6 +200,17 @@ type
       function  Get_AVRmode: Boolean;
       procedure Set_AVRmode(const Value: Boolean);
       procedure kWOut_Calc;
+      // CIM support
+      function Get_Pmin:double;
+      function Get_Pmax:double;
+      function Get_QMaxInj:double;
+      function Get_QMaxAbs:double;
+      function Get_pMaxUnderPF:double;
+      function Get_pMaxOverPF:double;
+      function Get_acVnom:double;
+      function Get_acVmin:double;
+      function Get_acVmax:double;
+      function Get_Zero:double;
     Protected
       PROCEDURE Set_ConductorClosed(Index:Integer; ActorID:integer; Value:Boolean); Override;
       PROCEDURE GetTerminalCurrents(Curr:pComplexArray; ActorID : Integer); Override ;
@@ -287,8 +298,19 @@ type
       Property MinModelVoltagePU : Double      Read VminPu;
       Property pf_wp_nominal : Double                                            Write Set_pf_wp_nominal;
       Property IrradianceNow :Double           Read ShapeFactor.re;
-      Property PctCutIn: Double Read FPctCutIn;   // for CIM export
-        Property PctCutOut:Double           Read FPctCutOut; // for CIM export
+      // for CIM network export, using the k prefix
+      Property Pmin:Double     Read Get_Pmin;
+      Property Pmax:Double     Read Get_Pmax;
+      // for CIM dynamics and IEEE 1547 export, using the k prefix
+      Property qMaxInj:Double  Read Get_qMaxInj;
+      Property qMaxAbs:Double  Read Get_qMaxAbs;
+      Property acVmin:Double   Read Get_acVmin;
+      Property acVmax:Double   Read Get_acVmax;
+      Property acVnom:Double   Read Get_acVnom;
+      Property pMaxUnderPF:Double  Read Get_pMaxUnderPF;
+      Property pMaxOverPF:Double   Read Get_pMaxOverPF;
+      Property pMaxCharge:Double   Read Get_Zero;
+      Property apparentPowerChargeMax:Double Read Get_Zero;
    End;
 var
   ActivePVSystemObj   : TPVsystemObj;
@@ -2223,6 +2245,66 @@ function TPVsystemObj.Get_AVRmode: Boolean;
     If FAVRmode Then Result := TRUE else Result := FALSE;                                                               //  engaged from InvControl (not ExpControl)
   end;
 // ============================================================kWOut_Calc===============================
+
+// for CIM export
+function TPVSystemObj.Get_Pmin:double;
+begin
+  Result :=  min (FPctCutIn, FPctCutOut) * kVARating / 100.0;
+end;
+
+function TPVSystemObj.Get_Pmax:double;
+begin
+  Result := Pmpp;
+end;
+
+function TPVSystemObj.Get_QMaxInj:double;
+begin
+  Result := PVSystemVars.Fkvarlimit;
+  if not kvarlimitset then Result:=0.25 * kvarating; // unlike storage, defaults to category A
+end;
+
+function TPVSystemObj.Get_QMaxAbs:double;
+begin
+  Result := PVSystemVars.FkvarlimitNeg;
+  if not kvarlimitnegset then Result:=0.25 * kvarating; // unlike storage, defaults to category A
+end;
+
+function TPVSystemObj.Get_pMaxUnderPF:double;
+var
+  q: Double;
+begin
+  q := Get_QMaxAbs;
+  with PVSystemVars do Result := sqrt(FKvaRating*FKvaRating - q*q);
+end;
+
+function TPVSystemObj.Get_pMaxOverPF:double;
+var
+  q: Double;
+begin
+  q := Get_QMaxInj;
+  with PVSystemVars do Result := sqrt(FKvaRating*FKvaRating - q*q);
+end;
+
+function TPVSystemObj.Get_acVnom:double;
+begin
+  Result := PresentKV;
+end;
+
+function TPVSystemObj.Get_acVmin:double;
+begin
+  Result := PresentKV * Vminpu;
+end;
+
+function TPVSystemObj.Get_acVmax:double;
+begin
+  Result := PresentKV * Vmaxpu;
+end;
+
+function TPVSystemObj.Get_Zero:double;
+begin
+  Result := 0.0;
+end;
+
 Procedure TPVsystemObj.kWOut_Calc;
   Var
     Pac           : Double;
