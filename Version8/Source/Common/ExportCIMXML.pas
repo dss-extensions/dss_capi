@@ -1806,21 +1806,27 @@ end;
 function TIEEE1547Controller.CheckSignalMatch (sig: TRemoteSignalObject; pElm:TDSSCktElement; seq: Integer) : Boolean;
 var
   elmPhases, trmBus: String;
+  dotpos: Integer;
 begin
   Result := False;
   trmBus := pElm.GetBus(seq);
+  dotpos := ansipos('.', trmBus);
+  if dotpos > 0 then begin
+    trmBus := trmBus.Substring(0, dotpos-1);
+  end;
+
   if CompareText (sig.busName, trmBus) = 0 then begin
     elmPhases := PhaseString (pElm, seq, True);
     if Pos (sig.phase, elmPhases) > 0 then begin
       sig.trm := seq;
       sig.pElem := pElm;
       Result := True;
-    end else if (Pos('s1', elmPhases) > 0) and (sig.phase = 'A') then begin  // switch to secondary phasing
+    end else if (Pos('1', elmPhases) > 0) and (sig.phase = 'A') then begin  // switch to secondary phasing
       sig.trm := seq;
       sig.pElem := pElm;
       sig.phase := 's1';
       Result := True;
-    end else if (Pos('s2', elmPhases) > 0) and (sig.phase = 'B') then begin  // switch to secondary phasing
+    end else if (Pos('2', elmPhases) > 0) and (sig.phase = 'B') then begin  // switch to secondary phasing
       sig.trm := seq;
       sig.pElem := pElm;
       sig.phase := 's2';
