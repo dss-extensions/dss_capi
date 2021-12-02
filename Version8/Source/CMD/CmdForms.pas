@@ -10,7 +10,7 @@ unit CmdForms;
 {
 	08/17/2016  Created from OpenDSS
  ----------------------------------------------------------
-  Copyright (c) 2016-2020 Battelle Memorial Institute
+  Copyright (c) 2016-2021 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 
@@ -159,12 +159,10 @@ Var
 begin
 	HelpList := TList.Create();
   idx := ActiveDSSClass[ActiveActor].First;
-  pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
   pDSSClass := DSSClassList[ActiveActor].First;
   WHILE pDSSClass<>Nil DO Begin
     If (pDSSClass.DSSClassType AND BASECLASSMASK) = BaseClass Then HelpList.Add (pDSSClass);
     idx := ActiveDSSClass[ActiveActor].Next;
-    pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
     pDSSClass := DSSClassList[ActiveActor].Next;
   End;
   HelpList.Sort(@CompareClassNames);
@@ -236,7 +234,6 @@ var
 begin
   if Length(opt) > 0 then begin
     idx := ActiveDSSClass[ActiveActor].First;
-    pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
     pDSSClass := DSSClassList[ActiveActor].First;
     while pDSSClass<>nil do begin
       if AnsiStartsStr (opt, LowerCase(pDSSClass.name)) then begin
@@ -245,8 +242,7 @@ begin
         for i := 1 to pDSSClass.NumProperties do
           writeln ('  ', pDSSClass.PropertyName[i], ': ', pDSSClass.PropertyHelp^[i]);
       end;
-    idx := ActiveDSSClass[ActiveActor].Next;
-    pDSSClass :=  TDSSClass(ActiveDSSObject[ActiveActor]);
+      idx := ActiveDSSClass[ActiveActor].Next;
       pDSSClass := DSSClassList[ActiveActor].Next;
     end;
   end else begin
