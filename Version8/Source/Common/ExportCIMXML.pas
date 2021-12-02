@@ -1928,7 +1928,6 @@ var
 begin
   pInvName.LocalName := pInv.Name;
   pInvName.UUID := pInv.UUID;
-  pDERNames.Clear;
   pDERNames.Assign(pInv.DERNameList);
   if pInv.monBus.Count > 0 then
     pMonBuses.Assign(pInv.monBus)
@@ -2038,7 +2037,6 @@ procedure TIEEE1547Controller.PullFromExpControl (pExp: TExpControlObj);
 begin
   pInvName.LocalName := pExp.Name;
   pInvName.UUID := pExp.UUID;
-  pDERNames.Clear;
   pDERNames.Assign(pExp.DERNameList);
   pMonBuses.Clear;
 
