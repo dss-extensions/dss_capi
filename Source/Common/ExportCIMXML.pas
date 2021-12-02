@@ -173,6 +173,7 @@ Var
 Const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
   CIM_NS = 'http://iec.ch/TC57/CIM100';
+  CatBQmin = 0.43; // for IEEE 1547 Category B estimate
 
 procedure StartCIMFile (var F: TextFile; FileNm:String; prf: ProfileChoice);forward;
 
@@ -1923,8 +1924,9 @@ end;
 procedure TIEEE1547Controller.PullFromInvControl (pInv: TInvControlObj);
 var
   xy: TXYcurveObj;
-  bCatB: Boolean;
-  mode, combi: Integer;
+  bCatB, bValid, bSet1, bSet2, bSet3, bSet4, bSet5, bSet6: Boolean;
+  mode, combi, i: Integer;
+  v, p, q: double;
 begin
   pInvName.LocalName := pInv.Name;
   pInvName.UUID := pInv.UUID;
@@ -1936,14 +1938,11 @@ begin
 
   bCatB := False;
   xy := pInv.VoltVarCurve;
-  if (xy <> nil) and (xy.NumPoints > 1) then begin
-    if abs(xy.YValue_pt[1]) > 0.25 then begin
-      bCatB := True
-    end else begin
-      if xy.NumPoints > 3 then begin
-        if abs(xy.YValue_pt[3]) > 0.25 then begin
-          bCatB := True
-        end;
+  if (xy <> nil) then begin
+    for i := 1 to xy.NumPoints do begin
+      if xy.YValue_pt[i] < -CatBQmin then begin
+        bCatB := True;
+        break;
       end;
     end;
   end;
@@ -1952,51 +1951,178 @@ begin
   VV_olrt := pInv.LPFTau * 2.3026;
   VW_olrt := VV_olrt;
 
-  if (xy <> nil) and (xy.NumPoints > 3) then begin
-    VV_curveV1 := xy.XValue_pt[1];
-    VV_curveQ1 := xy.YValue_pt[1];
-    VV_curveV2 := xy.XValue_pt[2];
-    VV_curveQ2 := xy.YValue_pt[2];
-    VV_curveV3 := xy.XValue_pt[3];
-    VV_curveQ3 := xy.YValue_pt[3];
-    VV_curveV4 := xy.XValue_pt[4];
-    VV_curveQ4 := xy.YValue_pt[4];
+  if (xy <> nil) then begin
+    i := 1;
+    bValid := False;
+    bSet1 := False;
+    bSet2 := False;
+    bSet3 := False;
+    bSet4 := False;
+    while i <= xy.NumPoints do begin
+      v := xy.XValue_pt[i];
+      if (v >= 0.77) and (v <= 1.25) then bValid := True;
+      if bValid then begin
+        if not bSet1 then begin
+          VV_curveV1 := v;
+          VV_curveQ1 := xy.YValue_pt[i];
+          bSet1 := True;
+        end else if not bSet2 then begin
+          if v > 1.05 then begin
+            VV_curveV2 := 1.0;
+            VV_curveQ2 := 0.0;
+            if v > 1.08 then begin
+              VV_curveV3 := 1.0;
+              VV_curveQ3 := 0.0;
+              bSet3 := True;
+              VV_curveV4 := v;
+              VV_curveQ4 := xy.YValue_pt[i];
+              bSet4 := True;
+            end;
+          end else begin
+            VV_curveV2 := v;
+            VV_curveQ2 := xy.YValue_pt[i];
+          end;
+          bSet2 := True;
+        end else if not bSet3 then begin
+          VV_curveV3 := v;
+          VV_curveQ3 := xy.YValue_pt[i];
+          bSet3 := True;
+        end else if not bSet4 then begin
+          VV_curveV4 := v;
+          VV_curveQ4 := xy.YValue_pt[i];
+          bSet4 := True;
+        end;
+      end;
+      inc(i);
+    end;
   end;
 
   xy := pInv.VoltWattCurve;
-  if (xy <> nil) and (xy.NumPoints > 1) then begin
-    VW_curveV1 := xy.XValue_pt[1];
-    VW_curveV2 := xy.XValue_pt[2];
-    VW_curveP1 := xy.YValue_pt[1];
-    if xy.YValue_pt[2] < 0.0 then begin
-      VW_curveP2gen := 0.2; // TODO: should have a pMin
-      VW_curveP2load := xy.YValue_pt[2];
-    end else begin
-      VW_curveP2gen := xy.YValue_pt[2];
-      VW_curveP2load := 0.0;
+  if (xy <> nil) then begin
+    i := 1;
+    bValid := False;
+    bSet1 := False;
+    bSet2 := False;
+    while i <= xy.NumPoints do begin
+      v := xy.XValue_pt[i];
+      p := xy.YValue_pt[i];
+      if (v >= 1.05) and (v <= 1.10) then bValid := True;
+      if bValid then begin
+        if not bSet1 then begin
+          VW_curveV1 := v;
+          VW_curveP1 := p; // this is actually supposed to be 1.0 always
+          bSet1 := True;
+        end else if not bSet2 then begin
+          VW_curveV2 := v;
+          if p < 0.0 then begin
+            VW_curveP2gen := 0.2; // TODO: should have a pMin
+            VW_curveP2load := p;
+          end else begin
+            VW_curveP2gen := p;
+            VW_curveP2load := 0.0;
+          end;
+          bSet2 := True;
+        end;
+      end;
+      inc(i);
     end;
   end;
 
   xy := pInv.VoltWattChargingCurve;
-  if (xy <> nil) and (xy.NumPoints > 1) then begin
-    VW_curveP2load := xy.YValue_pt[2]; // TODO: should check for storage
+  if (xy <> nil) then begin
+    p := 0.0;
+    i := 1;
+    while i <= xy.NumPoints do begin
+      if xy.YValue_pt[i] > p then p := xy.YValue_pt[i];
+      inc(i);
+    end;
+    if (-p < VW_curveP2load) then VW_curveP2load := -p;
   end;
 
   xy := pInv.WattVarCurve;
-  if (xy <> nil) and (xy.NumPoints > 2) then begin
-    WV_curveP1gen := xy.XValue_pt[1];
-    WV_curveP2gen := xy.XValue_pt[2];
-    WV_curveP3gen := xy.XValue_pt[3];
-    WV_curveQ1gen := xy.YValue_pt[1];
-    WV_curveQ2gen := xy.YValue_pt[2];
-    WV_curveQ3gen := xy.YValue_pt[3];
-    WV_curveP1load := WV_curveP1gen;
-    WV_curveP2load := WV_curveP2gen;
-    WV_curveP3load := WV_curveP3gen;
-    WV_curveQ1load := WV_curveQ1gen;
-    WV_curveQ2load := WV_curveQ2gen;
-    WV_curveQ3load := WV_curveQ3gen;
+  if (xy <> nil) then begin
+    i := 1;
+    bValid := False;
+    bSet1 := False;
+    bSet2 := False;
+    bSet3 := False;
+    bSet4 := False;
+    bSet5 := False;
+    bSet6 := False;
+    while i <= xy.NumPoints do begin
+      p := xy.XValue_pt[i];
+      q := xy.YValue_pt[i];
+      if (p >= -1.0) and (p <= 1.0) then bValid := True;
+      if bValid then begin
+        if not bSet1 then begin
+          if p <= -0.5 then begin
+            WV_curveP3load := p;
+            WV_curveQ3load := q;
+          end else begin
+            WV_curveP3load := -1.0;
+            WV_curveQ3load := 0.0;
+            dec(i); // re-scan
+          end;
+          bSet1 := True;
+        end else if not bSet2 then begin
+          if p <= -0.4 then begin
+            WV_curveP2load := p;
+            WV_curveQ2load := q;
+          end else begin
+            WV_curveP2load := -0.5;
+            WV_curveQ2load := 0.0;
+            dec(i); // re-scan
+          end;
+          bSet2 := True;
+        end else if not bSet3 then begin
+          if p <= 0.0 then begin
+            WV_curveP1load := p;
+            WV_curveQ1load := q;
+          end else begin
+            WV_curveP1load := -0.2;
+            WV_curveQ1load := 0.0;
+            dec(i); // re-scan
+          end;
+          bSet3 := True;
+        end else if not bSet4 then begin
+          if p <= 0.7 then begin
+            WV_curveP1gen := p;
+            WV_curveQ1gen := q;
+          end else begin
+            WV_curveP1gen := 0.2;
+            WV_curveQ1gen := 0.0;
+            dec(i); // re-scan
+          end;
+          bSet4 := True;
+        end else if not bSet5 then begin
+          if p <= 0.8 then begin
+            WV_curveP2gen := p;
+            WV_curveQ2gen := q;
+          end else begin
+            WV_curveP2gen := 0.5;
+            WV_curveQ2gen := 0.0;
+            dec(i); // re-scan
+          end;
+          bSet5 := True;
+        end else if not bSet6 then begin
+          if p <= 1.0 then begin
+            WV_curveP3gen := p;
+            WV_curveQ3gen := q;
+          end else begin
+            WV_curveP3gen := 1.0;
+            WV_curveQ3gen := 0.0;
+            dec(i); // re-scan
+          end;
+          bSet6 := True;
+        end;
+      end;
+      inc(i);
+    end;
+    // handle the edge cases when default zero watt-var points were not input
+    if WV_curveP1gen >= WV_curveP2gen then WV_curveP1gen := WV_curveP2gen - 0.1;
+    if WV_curveP1load <= WV_curveP2load then WV_curveP1load := WV_curveP2load + 0.1;
   end;
+
 {* copied from InvControl!!
     // Modes
     NONE_MODE = 0;
@@ -2040,7 +2166,7 @@ begin
   pDERNames.Assign(pExp.DERNameList);
   pMonBuses.Clear;
 
-  if (pExp.QMaxLead > 0.25) or (pExp.QMaxLag > 0.25) then // catB estimate
+  if pExp.QMaxLead > CatBQmin then // catB estimate
     SetDefaults (True)
   else
     SetDefaults (False);
@@ -2285,7 +2411,7 @@ begin
   DoubleNode (prf, 'WattVarSettings.curveP1gen', WV_curveP1gen);
   DoubleNode (prf, 'WattVarSettings.curveP2gen', WV_curveP2gen);
   DoubleNode (prf, 'WattVarSettings.curveP3gen', WV_curveP3gen);
-  DoubleNode (prf, 'WattVarSettings.curveQ1gen', WV_curveP1gen);
+  DoubleNode (prf, 'WattVarSettings.curveQ1gen', WV_curveQ1gen);
   DoubleNode (prf, 'WattVarSettings.curveQ2gen', WV_curveQ2gen);
   DoubleNode (prf, 'WattVarSettings.curveQ3gen', WV_curveQ3gen);
   DoubleNode (prf, 'WattVarSettings.curveP1load', WV_curveP1load);
