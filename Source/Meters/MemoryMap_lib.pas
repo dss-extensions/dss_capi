@@ -352,6 +352,7 @@ Begin
 {$ELSE}
   For idx := 1 to length(Content) do
       Mem_Space.Write(Content[idx],Length(Content[idx])); // TODO - verify AnsiString vs. unicode
+  Mem_Space.WriteByte(0);
 {$ENDIF}
 End;
 
