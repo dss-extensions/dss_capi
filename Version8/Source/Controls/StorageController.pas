@@ -1462,6 +1462,7 @@ var
   RatingIdx   : Integer;
   RSignal     : TXYCurveObj;
 Begin
+  RatingIdx:=0;Result:=0.0;
   if SeasonSignal <> '' then
   Begin
     RSignal     :=  XYCurveClass[ActorID].Find(SeasonSignal);
@@ -1511,6 +1512,7 @@ Var
    ActualkWDispatch   :Double;
 
 Begin
+     AmpsDiff:=0.0;
 
      // If list is not defined, go make one from all storage elements in circuit
      IF FleetPointerList.ListSize=0 Then  MakeFleetList;
@@ -1820,6 +1822,7 @@ Var
    ActualkWDispatch   : Double;
 
 Begin
+     AmpsDiff:=0.0;
      // If list is not defined, go make one from all storage elements in circuit
      IF FleetPointerList.ListSize=0 Then  MakeFleetList;
 

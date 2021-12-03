@@ -46,7 +46,8 @@ uses SysUtils;
 Function AllocStringArray(Size:Integer):pStringArray;
 // Allocates a string array initialized with nil values
 Begin
-      Result := AllocMem(SizeOf(Result^[1])*Size);
+  {$IFDEF FPC}initialize(Result);{$ENDIF}
+  Result := AllocMem(SizeOf(Result^[1])*Size);
 End;
 
 Procedure FreeStringArray(var pS:pStringArray; Size:Integer);

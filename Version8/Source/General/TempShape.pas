@@ -759,6 +759,7 @@ Var
    ObjList:TPointerList;
 
 Begin
+     {$IFDEF FPC}initialize(Vbuf);{$ENDIF}
      TOPTransferFile.FileName := GetOutputDirectory + 'TOP_TShape.STO';
      TRY
          TOPTransferFile.Open;

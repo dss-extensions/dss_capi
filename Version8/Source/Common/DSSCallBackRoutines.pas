@@ -89,7 +89,7 @@ Procedure ParserStrValue(s:pAnsiChar; Maxlen:Cardinal); StdCall;
 
 Begin
     With CallBackParser Do Begin
-      SysUtils.StrlCopy(s, pAnsiChar(AnsiString(CB_Param)), Maxlen) ;
+      {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrlCopy(s, pAnsiChar(AnsiString(CB_Param)), Maxlen) ;
     End;
 End;
 
@@ -102,7 +102,7 @@ Begin
         CB_ParamName  := NextParam ;
         CB_Param      := StrValue;
    End;
-   SysUtils.StrlCopy(ParamName, pAnsiChar(AnsiString(CB_ParamName)), Maxlen) ; // Copies up to Maxlen
+   {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrlCopy(ParamName, pAnsiChar(AnsiString(CB_ParamName)), Maxlen) ; // Copies up to Maxlen
    Result := Length(CB_Param);
 End;
 
@@ -124,19 +124,19 @@ Var
    CktElement :TDSSCktElement;
    BusIdx     :Integer;
 Begin
-   SysUtils.StrlCopy(Name1, pAnsiChar(''), Len1) ;  // Initialize to null
-   SysUtils.StrlCopy(Name2, pAnsiChar(''), Len2) ;
+   {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrlCopy(Name1, pAnsiChar(''), Len1) ;  // Initialize to null
+   {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrlCopy(Name2, pAnsiChar(''), Len2) ;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
      CktElement :=  ActiveCircuit[ActiveActor].Activecktelement ;
      If CktElement <> Nil Then Begin
      {First bus}
        BusIdx := CktElement.Terminals^[1].busref;
        If BusIdx > 0 Then With  ActiveCircuit[ActiveActor].Buses^[BusIdx]  Do
-         If CoordDefined Then SysUtils.StrlCopy(Name1,pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len1) ;
+         If CoordDefined Then {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrlCopy(Name1,pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len1) ;
       {Second bus}
        BusIdx := CktElement.Terminals^[2].busref;
        If BusIdx > 0 Then With  ActiveCircuit[ActiveActor].Buses^[BusIdx] do
-         If CoordDefined Then SysUtils.StrlCopy(Name2, pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len2) ;
+         If CoordDefined Then {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrlCopy(Name2, pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len2) ;
       End; {If CktElement}
    End;  {If ActiveCircuit[ActiveActor]}
 End;
@@ -399,7 +399,7 @@ Begin
            With ActiveCktElement Do Begin
               S := ParentClass.Name + '.' + Name;
 
-          SysUtils.StrlCopy(FullName, pAnsiChar(AnsiString(S)), Maxlen) ;
+          {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrlCopy(FullName, pAnsiChar(AnsiString(S)), Maxlen) ;
           Result := Length(FullName);
         End;
 End;
@@ -416,7 +416,7 @@ End;
 
 Procedure GetResultStrCallBack(S:pAnsiChar; Maxlen:Cardinal); StdCall;
 Begin
-     SysUtils.StrlCopy(S, pAnsiChar(AnsiString( GlobalResult )), Maxlen) ;
+     {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrlCopy(S, pAnsiChar(AnsiString( GlobalResult )), Maxlen) ;
 End;
 
 {====================================================================================================================}

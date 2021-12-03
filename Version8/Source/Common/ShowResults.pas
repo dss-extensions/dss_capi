@@ -537,6 +537,7 @@ Var
     Cmax    :Double;
 
 Begin
+ {$IFDEF FPC}initialize(cBuffer);{$ENDIF}
 
  SetMaxDeviceNameLength;
  SetMaxBusNameLength;
@@ -1585,6 +1586,7 @@ Var
 
 Begin
 
+  {$IFDEF FPC}initialize(Vfault);{$ENDIF}
   SetMaxBusNameLength;
 
   Try

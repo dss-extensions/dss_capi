@@ -2513,6 +2513,7 @@ procedure TInvControlObj.Sample(ActorID : Integer);
     Storage                     :TStorageObj;
 
   begin
+     PVSys:=nil;Storage:=nil;
     // if list is not defined, go make one from all PVSystem/Storage in circuit
      if FDERPointerList.ListSize=0 then   RecalcElementData(ActorID);
 
@@ -3094,7 +3095,7 @@ function TInvControlObj.MakeDERList:Boolean;
     Result := FALSE;
     PVSysClass := GetDSSClassPtr('PVSystem');
     StorageClass := GetDSSClassPtr('Storage');
-    PVSys := nil;
+    PVSys := nil;DERElem:=nil;
 
     if FListSize > 0 then
       begin    // Name list is defined - Use it
@@ -3741,6 +3742,7 @@ procedure TInvControlObj.UpdateInvControl(i:integer; ActorID : Integer);
 
   begin
     tempVbuffer := Nil;   // Initialize for Reallocmem
+    PVSys:=nil;Storage:=nil;
 
       for j := 1 to FDERPointerList.ListSize do
         begin
@@ -4323,6 +4325,8 @@ procedure TInvControlObj.CalcQWPcurve_desiredpu(j: Integer; ActorID : Integer);
     QDesireWPpu[j] := 0.0;
 
     voltagechangesolution := 0.0;
+
+    pf_priority := False;
 
     // for first two seconds, keep voltagechangesolution equal to zero
     // we don't have solutions from the time-series power flow, yet

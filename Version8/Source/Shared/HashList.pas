@@ -362,6 +362,7 @@ VAR
   i,j:Integer;
 
 BEGIN
+   {$IFDEF FPC}initialize(NewStringPtr);initialize(NewListPtr);{$ENDIF}
    IF NewSize > NumElementsAllocated THEN BEGIN
 
      OldNumLists := NumLists;
