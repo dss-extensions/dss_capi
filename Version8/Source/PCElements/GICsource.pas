@@ -10,6 +10,7 @@ unit GICsource;
    Develpoed from Isource and GICLine May 2018
 }
 
+{$HINTS OFF}
 
 interface
 

@@ -5,10 +5,8 @@ unit Diakoptics;
   All rights reserved.
   ----------------------------------------------------------
 }
+{$HINTS OFF}
 
-{
-
-}
 interface
 
 uses

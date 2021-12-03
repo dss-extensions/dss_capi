@@ -6,6 +6,7 @@ unit Monitor;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 {
    Change Log
    12-7-99 Modified Getcurrents override

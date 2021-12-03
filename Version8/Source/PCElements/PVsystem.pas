@@ -5,6 +5,7 @@ unit PVSystem;
   All rights reserved.
   ----------------------------------------------------------
 }
+{$HINTS OFF}
 {   Change Log
     1/28/2011 Created from Storage Model
 

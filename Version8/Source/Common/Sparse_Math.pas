@@ -8,6 +8,7 @@
  https://www.geeksforgeeks.org/operations-sparse-matrices/
 *******************************************************************************}
 
+{$HINTS OFF}
 unit Sparse_Math;
 
 interface

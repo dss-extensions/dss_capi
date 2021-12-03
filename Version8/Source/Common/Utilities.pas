@@ -6,6 +6,7 @@ unit Utilities;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 
 {
   12-18-2002 RCD Converted Eventlog to in-memory rather than file

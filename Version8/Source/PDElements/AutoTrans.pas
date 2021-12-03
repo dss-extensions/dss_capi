@@ -6,6 +6,7 @@ unit AutoTrans;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 {
    Change log
    7-14-2018  Created from Transformer

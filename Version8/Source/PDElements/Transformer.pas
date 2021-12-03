@@ -6,6 +6,7 @@ unit Transformer;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 {
    Change log
    1-28-00 Added tap properties so that regulator can control it.

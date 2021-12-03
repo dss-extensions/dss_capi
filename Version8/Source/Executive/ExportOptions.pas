@@ -6,6 +6,7 @@ unit ExportOptions;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 interface
 
 Uses Command;
