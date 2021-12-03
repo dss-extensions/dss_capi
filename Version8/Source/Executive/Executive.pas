@@ -142,11 +142,11 @@ Begin
 
      ClearAllCircuits;
 
-     CommandList.Free;
-     OptionList.Free;
-     Circuits.Free;
+     FreeAndNil (CommandList);
+     FreeAndNil (OptionList);
+     FreeAndNil (Circuits);
      DisposeDSSClasses(True);
-     Parser[ActiveActor].Free;
+     FreeAndNil (Parser[ActiveActor]);
 
      Inherited Destroy;
 End;
@@ -238,7 +238,7 @@ begin
        IF   (ActiveCircuit[ActiveActor] <> nil)  THEN
        Begin
           {First get rid of all existing stuff}
-          Circuits.Free;
+          FreeAndNil (Circuits);
           Circuits := TPointerList.Create(2);         // Make a new list of circuits
           DisposeDSSClasses(False);
 
@@ -270,7 +270,7 @@ begin
        MaxAllocationIterations := 2;
 
        {Prepare for new variables}
-       ParserVars.Free;
+       FreeAndNil (ParserVars);
        ParserVars := TParserVar.Create(100);  // start with space for 100 variables
 
 end;
@@ -295,7 +295,7 @@ begin
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
 {$ENDIF} {$ENDIF}
        {Prepare for new variables}
-       ParserVars.Free;
+       FreeAndNil (ParserVars);
        ParserVars := TParserVar.Create(100);  // start with space for 100 variables
        ActiveActor  :=  1;
        NumOfActors  :=  1;

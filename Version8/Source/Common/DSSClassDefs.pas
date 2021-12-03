@@ -304,16 +304,18 @@ BEGIN
   if not AllActors then
   begin
     TRY
-       SuccessFree := 'First Object';
-       For i := 1 to DSSObjs[ActiveActor].ListSize Do
-       Begin
-           DSSObj    := DSSObjs[ActiveActor].Get(i);
-           TraceName := DSSObj.DSSClassName + '.' + DSSObj.Name;
-           DSSObj.Free;
-           SuccessFree := TraceName;
-       End;
-       TraceName := '(DSSObjs Class)';
-       FreeAndNil(DSSObjs[ActiveActor]);
+      if assigned (DSSObjs[ActiveActor]) then begin
+        SuccessFree := 'First Object';
+        For i := 1 to DSSObjs[ActiveActor].ListSize Do
+        Begin
+          DSSObj    := DSSObjs[ActiveActor].Get(i);
+          TraceName := DSSObj.DSSClassName + '.' + DSSObj.Name;
+          FreeAndNil (DSSObj);
+          SuccessFree := TraceName;
+        End;
+        TraceName := '(DSSObjs Class)';
+        FreeAndNil(DSSObjs[ActiveActor]);
+      end;
     EXCEPT
         On E: Exception Do
           Dosimplemsg('Exception disposing of DSS Obj "'+TraceName+'". '+CRLF +
@@ -322,19 +324,20 @@ BEGIN
     END;
 
     TRY
-       For i := 1 to DSSClassList[ActiveActor].ListSize Do
-       Begin
-        DSSClass_idx  :=  DSSClassList[ActiveActor].Get(i);
-        TraceName :=  DSSClass_idx.Name;
-        TDSSClass(DSSClass_idx).Free;
-       End;
-       TraceName                  :=  '(DSS Class List)';
-       FreeAndNil(DSSClassList[ActiveActor]);
-       TraceName                  := '(DSS Classes)';
-       FreeAndNil(DSSClasses);
-       TraceName                  :=  '(ClassNames)';
-       FreeAndNil(ClassNames[ActiveActor]);
-
+      if assigned (DSSClassList[ActiveActor]) then begin
+        For i := 1 to DSSClassList[ActiveActor].ListSize Do
+        Begin
+          DSSClass_idx  :=  DSSClassList[ActiveActor].Get(i);
+          TraceName :=  DSSClass_idx.Name;
+          FreeAndNil (TDSSClass(DSSClass_idx));
+        End;
+        TraceName                  :=  '(DSS Class List)';
+        FreeAndNil(DSSClassList[ActiveActor]);
+        TraceName                  := '(DSS Classes)';
+        FreeAndNil(DSSClasses);
+        TraceName                  :=  '(ClassNames)';
+        FreeAndNil(ClassNames[ActiveActor]);
+      end;
     EXCEPT
         On E: Exception Do
           Dosimplemsg('Exception disposing of DSS Class"'+TraceName+'". '+CRLF + E.Message, 902);
