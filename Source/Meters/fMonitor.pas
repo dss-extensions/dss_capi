@@ -3076,7 +3076,7 @@ begin
                 begin
                     tmp := Calc_Grdt_for_Alpha_vivj(NodeNumofDG, phase_num,ActorID);//  vl_gradient1_dg updated inside
                     if vl_Qmax_phase_dg <> 0 then
-                        dynBeta := (beta* abs(Bii)*100/j) *vl_V_ref1_dg *vl_V_ref1_dg
+                        dynBeta := (beta* abs(Bii)*100/Nodes) *vl_V_ref1_dg *vl_V_ref1_dg
                                         /vl_Qmax_phase_dg;
                     vl_alpha1_dg :=TempAlpha  + dynBeta * vl_gradient1_dg;
                     if vl_alpha1_dg >1 then vl_alpha1_dg := 1;
@@ -3115,7 +3115,7 @@ begin
                 begin
                   tmp := Calc_Grdt_for_Alpha_vivj(NodeNumofDG, phase_num, ActorID);
                   if vl_Qmax_phase_dg <> 0 then
-                    dynBeta := (beta* abs(Bii)*100/j)/vl_Qmax_phase_dg*vl_V_ref2_dg *vl_V_ref2_dg; //
+                    dynBeta := (beta* abs(Bii)*100/Nodes)/vl_Qmax_phase_dg*vl_V_ref2_dg *vl_V_ref2_dg; //
                   vl_alpha2_dg :=TempAlpha  + dynBeta * vl_gradient2_dg;
                   if vl_alpha2_dg >1 then vl_alpha2_dg := 1;
                   if vl_alpha2_dg <-1 then vl_alpha2_dg := -1;
@@ -3153,7 +3153,7 @@ begin
                 begin
                     tmp := Calc_Grdt_for_Alpha_vivj(NodeNumofDG, phase_num, ActorID);
                     if vl_Qmax_phase_dg <> 0 then
-                        dynBeta := (beta* abs(Bii)*100/j)/vl_Qmax_phase_dg*vl_V_ref3_dg *vl_V_ref3_dg   ; //
+                        dynBeta := (beta* abs(Bii)*100/Nodes)/vl_Qmax_phase_dg*vl_V_ref3_dg *vl_V_ref3_dg   ; //
                     vl_alpha3_dg :=TempAlpha  + dynBeta * vl_gradient3_dg;
                     if vl_alpha3_dg >1 then vl_alpha3_dg := 1;
                     if vl_alpha3_dg <-1 then vl_alpha3_dg := -1;
@@ -3213,7 +3213,7 @@ begin
                 begin
                     tmp := Calc_Grdt_for_Alpha(NodeNumofDG, phase_num,ActorID);//  vl_gradient1_dg updated inside
                     if vl_Qmax_phase_dg <> 0 then
-                        dynBeta := (beta* abs(Bii)*100/j) *vl_V_ref1_dg *vl_V_ref1_dg
+                        dynBeta := (beta* abs(Bii)*100/Nodes) *vl_V_ref1_dg *vl_V_ref1_dg
                                         /vl_Qmax_phase_dg;
                     vl_alpha1_dg :=TempAlpha  + dynBeta * vl_gradient1_dg;
                     if vl_alpha1_dg >1 then vl_alpha1_dg := 1;
@@ -3252,7 +3252,7 @@ begin
                 begin
                   tmp := Calc_Grdt_for_Alpha(NodeNumofDG, phase_num,ActorID);
                   if vl_Qmax_phase_dg <> 0 then
-                    dynBeta := (beta* abs(Bii)*100/j)/vl_Qmax_phase_dg*vl_V_ref2_dg *vl_V_ref2_dg; //
+                    dynBeta := (beta* abs(Bii)*100/Nodes)/vl_Qmax_phase_dg*vl_V_ref2_dg *vl_V_ref2_dg; //
                   vl_alpha2_dg :=TempAlpha  + dynBeta * vl_gradient2_dg;
                   if vl_alpha2_dg >1 then vl_alpha2_dg := 1;
                   if vl_alpha2_dg <-1 then vl_alpha2_dg := -1;
@@ -3290,7 +3290,7 @@ begin
                 begin
                     tmp := Calc_Grdt_for_Alpha(NodeNumofDG, phase_num,ActorID);
                     if vl_Qmax_phase_dg <> 0 then
-                        dynBeta := (beta* abs(Bii)*100/j)/vl_Qmax_phase_dg*vl_V_ref3_dg *vl_V_ref3_dg   ; //
+                        dynBeta := (beta* abs(Bii)*100/Nodes)/vl_Qmax_phase_dg*vl_V_ref3_dg *vl_V_ref3_dg   ; //
                     vl_alpha3_dg :=TempAlpha  + dynBeta * vl_gradient3_dg;
                     if vl_alpha3_dg >1 then vl_alpha3_dg := 1;
                     if vl_alpha3_dg <-1 then vl_alpha3_dg := -1;
