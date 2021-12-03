@@ -340,6 +340,7 @@ begin
     fncsOutputStream.WriteString ('":{');
   end;
   kmax := GetMaxCktElementSize;
+  {$IFDEF FPC}initialize(cBuffer);{$ENDIF}
   Getmem(cBuffer, sizeof(cBuffer^[1])*kmax);
   for k := 1 to kmax do begin
     cBuffer^[k].re := 0.0;
