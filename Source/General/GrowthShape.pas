@@ -195,6 +195,7 @@ VAR
 
 BEGIN
   Result := 0;
+  {$IFDEF FPC}initialize(YrBuffer);{$ENDIF}
   // continue parsing with contents of Parser
   ActiveGrowthShapeObj := ElementList.Active;
   ActiveDSSObject[ActorID] := ActiveGrowthShapeObj;

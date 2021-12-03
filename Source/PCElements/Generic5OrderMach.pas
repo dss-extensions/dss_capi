@@ -1339,6 +1339,7 @@ var
   j: Integer;
   temp_pref,temp_qref,temp_vref,Pref3 : double;
 begin
+  temp_qref:=0.0;temp_pref:=0.0;temp_vref:=0.0;
     //Update_PQlimits;
     ///////////////////////////////////
     //local control input and alpha gradient calculation
@@ -2245,6 +2246,7 @@ Var
     flmt : double;
     p_mode : integer;
 begin
+      temp_qref:=0.0;temp_pref:=0.0;temp_alpha:=0.0;
       flmt := 0.9;
       Update_Pqlimits; //  Pmax_phase, Qmax_phase will be used in the following steps
       update_pV_f_CC_M2(ActorID);  // pV_f_CC, updated from virtual leader
@@ -2659,6 +2661,7 @@ procedure TGeneric5Obj.InitModelVIabc(ActorID:integer);
 var
        cBuffer:pComplexArray;
 begin
+        {$IFDEF FPC}initialize(cBuffer);{$ENDIF}
         cBuffer := Allocmem(sizeof(cBuffer^[1])*fnPhases);//define cBuffer
         GetPhasePower(cBuffer,ActorID);
 
@@ -2701,6 +2704,7 @@ Var
     cBuffer:pComplexArray;
 
 begin
+        {$IFDEF FPC}initialize(cBuffer);{$ENDIF}
 
         YPrimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
 
@@ -3121,7 +3125,7 @@ Var
    GenHarmonic :double;
 
 Begin
-
+   E:=cZERO; // it's never assigned below, because of the ??? line commented out
    // Set the VTerminal array
    ComputeVterminal(ActorID);
 

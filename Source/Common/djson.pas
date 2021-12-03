@@ -30,12 +30,11 @@ uses SysUtils, Classes, Variants, generics.collections;
 
 type
   TdJSON = class;
-
+{$IFDEF FPC}{$push}{$warn 4046 off}{$notes off}{$ENDIF}
   TdJSONItems = class(TDictionary<string,TdJSON>)
     public
       destructor Destroy; override;
   end;
-
   TdJSONListItems = class(TList<TdJSON>)
     public
       destructor Destroy; override;
@@ -235,7 +234,7 @@ var
     prev, prevPrev: char;
     ubuf, i, skip: integer;
     s: string;
-    resultS: string;
+    resultS: {$IFDEF FPC}WideString{$ELSE}string{$ENDIF};
   begin
     s := trim(AJSON.Substring(tag-1, index-tag));
     result := unassigned;
@@ -270,7 +269,7 @@ var
         if (prev = '\') and (prevPrev <> '\') then
         begin
           case s.chars[i] of
-            '\', '/', '"': resultS := resultS + s.chars[i];
+            '\', '/', '"': resultS := resultS + {$IFDEF FPC}WideString(s.chars[i]){$ELSE}s.chars[i]{$ENDIF};
             'u':
             begin
               if not TryStrToInt('$' + s.Substring(i+1, 4), ubuf) then
@@ -290,7 +289,7 @@ var
           case s.chars[i] of
             '\', '"': continue;
           else
-            resultS := resultS + s.chars[i];
+            resultS := resultS + {$IFDEF FPC}WideString(s.chars[i]){$ELSE}s.chars[i]{$ENDIF};
           end;
       finally
         if (prev = '\') and (prevPrev = '\') then
@@ -458,5 +457,7 @@ initialization
     ShortTimeFormat := 'hh:nn:ss';
     LongTimeFormat := 'hh:nn:ss';
   end;
-
+{$IFDEF FPC}{$pop}{$ENDIF}
 end.
+
+

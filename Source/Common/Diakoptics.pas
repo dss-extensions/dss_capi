@@ -242,6 +242,7 @@ var
 //  Text      : String;
 
 Begin
+  {$IFDEF FPC}initialize(CVector);initialize(ZVector);{$ENDIF}
   WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
   Begin
     GetSize(hY, @NNodes);
@@ -559,6 +560,7 @@ var
   {$ENDIF}
 
 Begin
+  ErrorCode:=0;Diak_Actors:=0;
 // The program is built as a state machine to facilitate the error detection
 // and quitting the routines after an error is detected wihtout killing the prog
   MQuit       :=  False;

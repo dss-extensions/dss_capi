@@ -760,6 +760,7 @@ Var
    ObjList:TPointerList;
 
 Begin
+     {$IFDEF FPC}initialize(Vbuf);{$ENDIF}
      TOPTransferFile.FileName := GetOutputDirectory + 'TOP_PriceShape.STO';
      TRY
          TOPTransferFile.Open;

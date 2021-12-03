@@ -1504,6 +1504,7 @@ var
   Targets: TStringList;
   PickedUp: Boolean;
 begin
+  Targets:=nil;
   If Not LockedOut Then with MonitoredElement Do Begin
     PickedUp := False;
     min_distance := 1.0e30;

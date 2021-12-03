@@ -1346,6 +1346,7 @@ End;
 Function TDSSCircuit.Create_MeTIS_Zones(Filename  : string): string;
 {$IFDEF FPC}
 begin
+  Result:='';
 end;
 {$ELSE}
 var
@@ -1494,6 +1495,7 @@ Var
    myBusList    : DynStringArray;
 
 Begin
+  {$IFDEF FPC}initialize(Result);{$ENDIF}
   setlength(myBus,2);
   setlength(Result,1);
   Result[0]       :=  'None';
@@ -1540,6 +1542,7 @@ Var
    myBusList    : DynStringArray;
 
 Begin
+  {$IFDEF FPC}initialize(Result);{$ENDIF}
   setlength(Result,1);
   Result[0]       :=  'None';
   BusName         :=  LowerCase(BusName);
@@ -1874,7 +1877,8 @@ function TDSSCircuit.Tear_Circuit(): Integer;
 {$IFDEF FPC}
 begin
   DoErrorMsg('Tear_Circuit','MeTIS cannot start.',
-             'The MeTIS program is not supported in FPC; TFileSearchReplace is unavailable.', 7006)
+             'The MeTIS program is not supported in FPC; TFileSearchReplace is unavailable.', 7006);
+  Result:=0;
 end;
 {$ELSE}
 var
@@ -1906,6 +1910,7 @@ var
   myPDEList     : DynStringArray;
 
 Begin
+  Result:=0;
   if UseUserLinks and (length(Link_Branches) > 0) then Num_pieces := length(Link_Branches) + 1
   else  Num_pieces    :=  Num_SubCkts;
   with solution do
