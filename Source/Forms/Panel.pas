@@ -6,6 +6,7 @@ unit Panel;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 interface
 
 uses
@@ -512,7 +513,7 @@ Var
   SelectedMonitor :String;
 
 Const
-  MaxTimeOutValue = 3;  // the time in second that the splash screen will remain open
+  MaxTimeOutValue = 3; // 0;  // the time in second that the splash screen will remain open
 
 Function WinStateToInt(WindowState:TWindowState):Integer;
 Begin
