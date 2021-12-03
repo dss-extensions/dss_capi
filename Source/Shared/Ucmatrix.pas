@@ -165,6 +165,7 @@ implementation
 {Allocate LT}
 //     LT:=nil;
 
+     {$IFDEF FPC}initialize(LT);{$ENDIF}
      GetMem(LT,SizeOf(LT^[1])*L);
      IF LT=nil THEN
      BEGIN
