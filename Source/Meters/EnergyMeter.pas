@@ -3171,10 +3171,12 @@ Var
    cBuffer    : pDoubleArray;
 
 begin
+  {$IFDEF FPC}initialize(cBuffer);{$ENDIF}
 {
   Scans the active circuit for overloaded PD elements and writes each to a file
   This is called only if in Demand Interval (DI) mode and the file is open.
 }
+  RatingIdx:=0;
 {    Prepares everything for using seasonal ratings if required}
   if SeasonalRating then
   Begin

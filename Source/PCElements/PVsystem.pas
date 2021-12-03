@@ -1306,6 +1306,7 @@ PROCEDURE TPVsystemObj.ComputeInverterPower;
     CutInkWAC       : Double;
   Begin
     // Reset CurrentkvarLimit to kvarLimit
+    Qramp_limit := 0.0;TempPF := 0.0;
     CurrentkvarLimit    := PVSystemVars.Fkvarlimit;
     CurrentkvarLimitNeg := PVSystemVars.Fkvarlimitneg;
     With PVSystemVars Do

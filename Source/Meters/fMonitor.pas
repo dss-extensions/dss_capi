@@ -1328,6 +1328,7 @@ var
     pLoad: TLoadObj;
     cBuffer:pComplexArray;
 begin
+    {$IFDEF FPC}initialize(cBuffer);{$ENDIF}
 
     with  pNodeFMs^[i_NodeNum] do
     beGIn

@@ -197,6 +197,7 @@ implementation
     Var
       LProcInfo : TLogicalProcessorInformation;
     Begin
+      Result:=0;
       LProcInfo := GetLogicalProcessorInfo;
       case InfoType of
         NumCPU:     Result  :=  LProcInfo.LogicalProcessorCount; // gets the number of CPUs (Threads)

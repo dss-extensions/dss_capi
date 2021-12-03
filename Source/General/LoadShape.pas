@@ -331,7 +331,7 @@ VAR
   ParmName,
   Param     : String;
 BEGIN
-
+  myType:=0;
   AuxParser[ActiveActor].CmdString := myFileCmd;
   ParmName := AuxParser[ActiveActor].NextParam ;
   Param := AuxParser[ActiveActor].StrValue;
@@ -1070,6 +1070,7 @@ BEGIN
 
   Result.re := 1.0;
   Result.im := 1.0;    // default return value if no points in curve
+  Index:=0;
 
   IF FNumPoints > 0 THEN         // Handle Exceptional cases
     IF FNumPoints = 1 THEN
@@ -1405,6 +1406,7 @@ Var
    ObjList:TPointerList;
 
 begin
+     {$IFDEF FPC}initialize(Vbuf);{$ENDIF}
      TOPTransferFile.FileName := GetOutputDirectory + 'TOP_LoadShape.STO';
      TRY
          TOPTransferFile.Open;

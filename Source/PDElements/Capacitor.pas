@@ -1057,6 +1057,7 @@ Var
         i:Integer;
         FTemp:pDoubleArray;
 begin
+    {$IFDEF FPC}initialize(FTemp);{$ENDIF}
 
     Result := '';
     CASE Index of  // Special cases
