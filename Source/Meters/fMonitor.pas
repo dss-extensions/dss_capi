@@ -1422,7 +1422,7 @@ var
     strTemp : string;
     Devindex, i, j: integer;
     PCindex_ld :integer;
-    pElem  :TDSSCktElement   ;
+    pElem  :TDSSCktElement;
 
     pDG : TGeneric5Obj;
     pLd : TLoadObj;
@@ -1432,7 +1432,7 @@ var
     ctmp : complex;
     cBuffer:pComplexArray;
 begin
-
+    pElem:=nil;
     //init all info of this node
     with  pNodeFMs^[iNodeNum] do
     beGIn
@@ -1663,6 +1663,7 @@ var
     V012 : Array[0..2] of Complex;
     VaVbVc :Array[1..3] of Complex;
 begin
+  tempElement:=nil;
         Devindex := GetCktElementIndex(devName);                   // Global function
          IF DevIndex>0 THEN Begin                                       // Monitored element must already exist
              tempElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
@@ -2353,6 +2354,7 @@ var
       nodeRefj : integer;// ref number of the upper node
       den : double;
 begin
+      pElem:=nil;nodeRefi:=0;nodeRefj:=0;Result:=0.0;
       //pNodeFMs^[NodeNuminClstr].vl_strMeasuredName;//element followed by this bus
       Devindex := GetCktElementIndex(pNodeFMs^[NodeNuminClstr].vl_strMeasuredName);
       IF DevIndex>0 THEN Begin                                       // Monitored element must already exist
@@ -2557,6 +2559,7 @@ var
       nodeRefj : integer;// ref number of the upper node
       den : double;
 begin
+      pElem:=nil;nodeRefi:=0;nodeRefj:=0;Result:=0.0;
       //pNodeFMs^[NodeNuminClstr].vl_strMeasuredName;//element followed by this bus
       Devindex := GetCktElementIndex(pNodeFMs^[NodeNuminClstr].vl_strMeasuredName);
       IF DevIndex>0 THEN Begin                                       // Monitored element must already exist
@@ -2667,6 +2670,7 @@ var
   PGtemp, ptemp : double;
 
 begin
+  Result:=0.0;
        //tempCplx
       ptemp := get_power_trans(ActorID);  // get power on trans point
       //tempCplx := cnegate(tempCplx);//
@@ -2704,6 +2708,7 @@ var
   j                 : integer;
   den_dij,TempAlpha : Double;
 begin
+  Result:=0.0;
      //alphaP = avg (alphaP) + Beta * Gp
      nn := NodeNuminClstr;
          case phase_num of //pos seq
@@ -2833,6 +2838,7 @@ var
   tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7: double;
 
 begin
+  Result:=0.0;
 
       update_all_nodes_info(ActorID);     // update voltages on all buses
 
@@ -3023,6 +3029,7 @@ begin
      result := (1-Lambda) *tmp + Lambda * tmp1;
      //result := Calc_Alpha_L_vivj(NodeNumofDG, phase_num, dbNodeRef, Bii,beta,Volt_Trhd) ;
 end;
+
 Function TFMonitorObj.Calc_Alpha_L_vivj(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double ; ActorID: integer):Double;
 Var
   i,j : integer;
@@ -3032,6 +3039,7 @@ Var
   dynBeta : double;
   //tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7: double;
 begin
+  Result:=0.0;dynBeta:=0.0;
       update_all_nodes_info(ActorID);     // update voltages on all buses
       Get_PQ_DI( NodeNumofDG, ActorID) ; // load measure
       // calclate alpha
@@ -3168,6 +3176,7 @@ Var
   dynBeta : double;
   //tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7: double;
 begin
+  Result:=0.0;dynBeta:=0.0;
       update_all_nodes_info(ActorID);     // update voltages on all buses
       Get_PQ_DI( NodeNumofDG,ActorID ) ; // load measure
       // calclate alpha
@@ -3301,6 +3310,7 @@ var
   j : integer;
   sum_Sij_j : double;
 begin
+  Result:=0.0;
      update_all_nodes_info(ActorID);
 
      // calclate alpha
@@ -3381,6 +3391,7 @@ begin
          else
          end;
 end;
+
 Function TFMonitorObj.AvgPmax : double;
 var
      i,k : integer;
@@ -3433,7 +3444,8 @@ var
   den_dij,TempAlpha,
   tmp,
   dfs_hide: double;
-  begin
+begin
+    Result:=0.0;
 
         //update_all_nodes_info;     // update voltages on all buses
         //with pNodeFMs^[NodeNumofDG] do
@@ -3581,6 +3593,7 @@ var
        //end;
        //result := 0;
   end;
+
   Function TFMonitorObj.Calc_fm_us_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer): double;
   var
     i,j : integer;
@@ -3590,6 +3603,7 @@ var
     den_dij, tempUl : double;
     phi : double;
   begin
+        Result:=0.0;phi:=0.0;
         //update voltage
         j := NodeNumofDG ;
         Get_PDElem_terminal_voltage(NodeNumofDG,pNodeFMs^[NodeNumofDG].vl_strMeasuredName,pNodeFMs^[NodeNumofDG].vl_terminalNum,ActorID ) ;
@@ -3685,6 +3699,7 @@ var
           end;
        //end;
   end;
+
   function TFMonitorObj.Coef_Phi(x : double): double;
   Var
     x1, x2, x3,
@@ -3723,6 +3738,7 @@ var
     v, vref, den : double;
     tmp : double;
   begin
+        Result:=0.0;
         v := pNodeFMs^[j].vl_V;
         vref := pNodeFMs^[j].vl_V_ref_dg;
 
@@ -3820,6 +3836,7 @@ var
   dvDGtemp : double;
   Grdnt_P : double;
 begin
+  Result:=0.0;Grdnt_P:=0.0;
        //tempCplx
        dvDGtemp := (pNodeFMs^[NodeNuminClstr].vl_V - pNodeFMs^[NodeNuminClstr].vl_V_ref_dg)
                 /pNodeFMs^[NodeNuminClstr].vl_V_ref_dg; //
@@ -3858,6 +3875,7 @@ var
   dly : integer;
 
 begin
+  Result:=0.0;
      //alphaP = sum (alphaP) + Beta * Gp
 
      //with pNodeFMs^[NodeNuminClstr] do
@@ -3956,6 +3974,7 @@ begin
          end;
      // end;
 end;
+
 Procedure  TFMonitorObj.update_node_info_each_time_step(ActorID: integer); //all nodes , p.u. value
 var
   den,
@@ -4154,6 +4173,7 @@ begin
   if (dfs = false)                                           // if no defense
      //or (ActiveCircuit[ActorID].Solution.DynaVars.t < atk_time) // if no attack
   then exit;
+  den_dij_z:=1;
   if (ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE)  then
   begin
         if (ActiveCircuit[ActorID].Solution.DynaVars.t <= atk_time) then
