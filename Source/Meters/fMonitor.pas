@@ -3775,9 +3775,10 @@ begin
           //
           if pNodeFMs^[NodeNumofDG].vl_SmplCnt=0 then//the first step
           begin
-              for i:= 1 to MaxLocalMem do
+              for i:= 1 to MaxLocalMem do begin
                   pNodeFMs^[NodeNumofDG].vl_smpl_dg[1][i] := pNodeFMs^[NodeNumofDG].vl_Alpha_dg ;
                   pNodeFMs^[NodeNumofDG].vl_smpl_dg[2][i] := pNodeFMs^[NodeNumofDG].vl_AlphaP_dg;
+              end;
           end;
           //
           crnt_time := ActiveCircuit[ActorID].Solution.DynaVars.intHour*3600+ActiveCircuit[ActorID].Solution.DynaVars.t ;
@@ -4051,12 +4052,13 @@ begin
                  //update pNodeFMs^[i].vl_smpl_dg[i][j] first
                   if pNodeFMs^[i].vl_SmplCnt=0 then//the first step
                          begin
-                             for j:= 0 to MaxLocalMem do
+                             for j:= 0 to MaxLocalMem do begin
                                  //alphas
                                  pNodeFMs^[i].vl_smpl_dg[1][j] := pNodeFMs^[i].vl_Alpha_dg ;
                                  pNodeFMs^[i].vl_smpl_dg[2][j] := pNodeFMs^[i].vl_AlphaP_dg;
                                  //voltage
                                  pNodeFMs^[i].vl_smpl_dg[3][j] := pNodeFMs^[i].vl_V ;  // 0 seq.
+                             end;
                          end;
                  //
                  crnt_time := ActiveCircuit[ActorID].Solution.DynaVars.intHour*3600+ActiveCircuit[ActorID].Solution.DynaVars.t ;
