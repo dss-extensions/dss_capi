@@ -174,15 +174,7 @@ BEGIN
          IdxCurrentNames := IdxVoltNames + NVoltages * VoltNameSize;
          IDXData := IDXCurrentNames + NCurrents * CurrNameSize;
          IdxBaseData := 0;
-{$IFDEF FPC}
-        StrCopy(Title1,pAnsiChar(Title));
-{$ELSE}
-//    {$IFDEF MSWINDOWS}
-         sysutils.StrCopy(Title1,pAnsichar(Title));
-//    {$ELSE}
-//         sysutils.StrCopy(Title1,pWidechar(Title));
-//    {$ENDIF}
-{$ENDIF}
+         {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrCopy(Title1,pAnsichar(Title));
          Title2[0] := #0;
          Title3[0] := #0;
          Title4[0] := #0;
@@ -201,28 +193,20 @@ Procedure TOutFile32.WriteNames(var Vnames, Cnames:TStringList);
 VAR
    NumWrite : Integer;
    i:integer;
-   Buf:Array[0..120] of {$IFDEF MSWINDOWS}AnsiChar{$ELSE}WideChar{$ENDIF};  //120 char buffer to hold names  + null terminator
+   Buf:Array[0..120] of AnsiChar;  //120 char buffer to hold names  + null terminator
 
 BEGIN
 
      If Header.NVoltages > 0 Then
      For i:=0 to Vnames.Count-1 Do Begin
-{$IFDEF MSWINDOWS}
-        Sysutils.StrCopy(Buf, pAnsiChar(AnsiString(Vnames.Strings[i])));    // Assign string to a buffer
-{$ELSE}
-        Sysutils.StrCopy(Buf, pWideChar(String(Vnames.Strings[i])));    // Linux
-{$ENDIF}
+        {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrCopy(Buf, pAnsiChar(AnsiString(Vnames.Strings[i])));    // Assign string to a buffer
         BlockWrite(Fout, Buf, Header.VoltNameSize, NumWrite);    // Strings is default property of TStrings
 
      END;
 
      If Header.NCurrents > 0 Then
      For i:=0 to Cnames.Count-1 Do Begin
-{$IFDEF MSWINDOWS}
-        Sysutils.StrCopy(Buf, pAnsichar(AnsiString(Cnames.Strings[i])));    // Assign string to a buffer
-{$ELSE}
-        Sysutils.StrCopy(Buf, pWidechar(String(Cnames.Strings[i])));    // Linux
-{$ENDIF}
+        {$IFNDEF FPC}AnsiStrings.{$ENDIF}StrCopy(Buf, pAnsichar(AnsiString(Cnames.Strings[i])));    // Assign string to a buffer
         BlockWrite(Fout, Buf, Header.CurrNameSize, NumWrite);
      END;
 
