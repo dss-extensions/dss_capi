@@ -1,5 +1,6 @@
 unit MeTIS_Exec;
 
+{$HINTS OFF}
 interface
 
 uses

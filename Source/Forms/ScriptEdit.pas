@@ -7,6 +7,7 @@ unit ScriptEdit;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 interface
 //{$IFDEF MSWINDOWS}
 uses

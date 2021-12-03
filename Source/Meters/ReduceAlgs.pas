@@ -6,6 +6,7 @@ unit ReduceAlgs;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 {Reduction Algorithms}
 
 {Primarily called from EnergyMeter}

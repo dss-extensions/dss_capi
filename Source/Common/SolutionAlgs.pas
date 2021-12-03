@@ -6,6 +6,7 @@ unit SolutionAlgs;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 { Solution Algorithms}
 
 {

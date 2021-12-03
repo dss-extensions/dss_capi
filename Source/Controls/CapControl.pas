@@ -6,6 +6,7 @@ unit CapControl;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 {
    Change Log
    2-14-00 Created

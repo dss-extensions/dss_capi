@@ -19,6 +19,7 @@ unit Circuit;
 }
 
 {$WARN UNIT_PLATFORM OFF}
+{$HINTS OFF}
 
 interface
 

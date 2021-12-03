@@ -5,6 +5,7 @@ unit Fuse;
   All rights reserved.
   ----------------------------------------------------------
 }
+{$HINTS OFF}
 
 {
     Created 11-1-00 from Recloser Control

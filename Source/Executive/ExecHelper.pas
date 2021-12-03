@@ -19,6 +19,7 @@ unit ExecHelper;
 }
 
 {$WARN UNIT_PLATFORM OFF}
+{$HINTS OFF}
 
 interface
 

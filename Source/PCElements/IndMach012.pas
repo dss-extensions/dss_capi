@@ -1,3 +1,5 @@
+{$HINTS OFF}
+
 unit IndMach012;
 
 // Symmetrical component Induction Machine model

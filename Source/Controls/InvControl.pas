@@ -5,6 +5,7 @@ unit InvControl;
   All rights reserved.
   ----------------------------------------------------------
 }
+{$HINTS OFF}
 {
   A InvControl is a control element that is connected to a terminal of another
   circuit element and sends kW and/or kvar signals to a set of PVSystem objects it controls

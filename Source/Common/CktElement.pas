@@ -12,6 +12,7 @@ unit CktElement;
      8-17-06 Caught BusnameRedefined error when nconds changed
 }
 
+{$HINTS OFF}
 interface
 
 USES

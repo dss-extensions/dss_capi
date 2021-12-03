@@ -40,6 +40,7 @@ unit Executive;
 
 }
 
+{$HINTS OFF}
 interface
 
 USES

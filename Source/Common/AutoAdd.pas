@@ -6,6 +6,7 @@ unit AutoAdd;
   All rights reserved.
   ----------------------------------------------------------
 }
+{$HINTS OFF}
 {  Unit for processing the AutoAdd Solution FUNCTIONs
 
   Note: Make sure this class in instantiated after energymeter class

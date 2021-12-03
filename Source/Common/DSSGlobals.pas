@@ -6,6 +6,7 @@ unit DSSGlobals;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 
 { Change Log
  8-14-99  SolutionAbort Added

@@ -6,6 +6,8 @@ unit Solution;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
+
 { Change Log
  8-14-99 Added progress display and abort on longer solution types
  11-3-99 added calc voltage base
