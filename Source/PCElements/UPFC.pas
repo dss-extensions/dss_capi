@@ -11,6 +11,7 @@ unit UPFC;
 
 }
 
+{$HINTS OFF}
 interface
 
 USES DSSClass, PCClass,PCElement, ucmatrix, ucomplex, Spectrum, Arraydef, Loadshape, XYCurve;

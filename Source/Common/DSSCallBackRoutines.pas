@@ -6,6 +6,7 @@ unit DSSCallBackRoutines;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 interface
 
 Uses 

@@ -6,6 +6,7 @@ unit ExecCommands;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 interface
 
 Uses Command;

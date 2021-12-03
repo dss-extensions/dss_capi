@@ -7,6 +7,7 @@ unit DSSClassDefs;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 interface
 
 USES

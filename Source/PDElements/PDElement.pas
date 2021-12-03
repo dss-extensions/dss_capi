@@ -12,6 +12,7 @@ unit PDElement;
             where the rating was not specified.
    4/11/01  Fixed error in computin excess kVAs (factor readjustment)
 }
+{$HINTS OFF}
 
 interface
 

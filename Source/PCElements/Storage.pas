@@ -6,7 +6,7 @@ unit Storage;
   All rights reserved.
   ----------------------------------------------------------
 }
-
+{$HINTS OFF}
 {   Change Log
 
     10/04/2009 Created from Generator Model

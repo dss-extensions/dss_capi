@@ -8,6 +8,7 @@ unit LoadShape;
 
 {  8-18-00 Added call to InterpretDblArrayto allow File=Syntax }
 
+{$HINTS OFF}
 Interface
 
 {The LoadShape object is a general DSS object used by all circuits

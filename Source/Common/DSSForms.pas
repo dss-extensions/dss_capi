@@ -5,6 +5,7 @@ unit DSSForms;
   All rights reserved.
   ----------------------------------------------------------
 }
+{$HINTS OFF}
 
 interface
 {$IFNDEF CMD}

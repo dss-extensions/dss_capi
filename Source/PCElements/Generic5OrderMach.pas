@@ -8,6 +8,7 @@
      Darhey  Xu
 
 }
+{$HINTS OFF}
 
 interface
 uses

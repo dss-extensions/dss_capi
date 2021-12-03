@@ -13,6 +13,8 @@ unit fMonitor;
 
 }
 
+{$HINTS OFF}
+
 interface
 
 USES

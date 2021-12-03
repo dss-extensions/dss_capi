@@ -6,7 +6,7 @@ unit GISCommands;
   All rights reserved.
   ----------------------------------------------------------
 }
-
+{$HINTS OFF}
 interface
 
 uses

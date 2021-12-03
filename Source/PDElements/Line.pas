@@ -6,6 +6,7 @@ unit Line;
   ----------------------------------------------------------
 }
 
+{$HINTS OFF}
 {  3-1-00 Reactivated line dump
    3-13-03  Fixed bug where terminal quantities were not getting reallocated in FetchCondCode
    2018	    Added GIC stuff
