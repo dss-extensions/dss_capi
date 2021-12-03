@@ -807,10 +807,10 @@ BEGIN
                 ' release ' + IntToStr(fi.FileVersion[2]) + ' build ' + IntToStr(fi.FileVersion[3]) + LineEnding;
          vr.SetCustomRawDataStream(nil)
        FINALLY
-         vr.Free
+         FreeAndNil (vr)
        END
      FINALLY
-       Stream.Free
+       FreeAndNil (Stream)
      END
    EXCEPT
    END
@@ -1675,7 +1675,7 @@ Finalization
   // Dosimplemsg('Enter DSSGlobals Unit Finalization.');
 //  YBMatrix.Finish_Ymatrix_Critical;   // Ends the critical segment for the YMatrix class
 
-  ClearAllCircuits; // this is also done later, when Executive destroyed from LocalFinalization
+//  ClearAllCircuits; // this is also done later, when Executive destroyed from LocalFinalization
   LocalFinalization;
 End.
 
