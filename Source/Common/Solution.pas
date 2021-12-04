@@ -2815,7 +2815,9 @@ begin
   {$IFDEF MSWINDOWS}              // Only for windows
 //  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 //  Parallel.Set_Thread_affinity(handle,local_CPU);     // Commenting this line to give to the actor affinity to any CPU by default
+  Parallel := TParallel_Lib.Create;
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
+  FreeAndNil (Parallel);
   {$ENDIF}
 end;
 {$ELSE}
@@ -3011,8 +3013,10 @@ var
 Begin
   ActorCPU[ActorID] :=  CPU;
   {$IFDEF MSWINDOWS}
+  Parallel := TParallel_Lib.Create;
   Parallel.Set_Thread_affinity(handle,CPU_Cores, CPU);
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
+  FreeAndNil (Parallel);
   {$ENDIF}
 End;
 {$ELSE}
