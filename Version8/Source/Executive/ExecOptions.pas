@@ -1043,7 +1043,11 @@ Begin
                     AppendGlobalResult(Format('%d' ,[ActiveActor]));
                End;
           113: AppendGlobalResult(Format('%d' ,[ActorCPU[ActiveActor]]));
-          114: {$IFNDEF FPC} {$IFNDEF CONSOLE} ScriptEd.UpdateProgressSummary {$ENDIF} {$ENDIF};
+          114: begin {$IFNDEF FPC} {$IFNDEF CONSOLE}
+                  ScriptEd := TScriptEdit.Create;
+                  ScriptEd.UpdateProgressSummary;
+                  FreeAndNil (ScriptEd);
+                {$ENDIF} {$ENDIF} end;
           115: if parallel_enabled then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           116: if ConcatenateReports then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           117: if DSS_Viz_enable then AppendGlobalResult('Yes') else AppendGlobalResult('No');
