@@ -82,7 +82,6 @@ begin
      Result := pAnsiChar(AnsiString(DataDirectory[ActiveActor]));
   end;
   3: begin  // DSS.DataPath write
-     SetCurrentDir(arg);
      SetDataPath(widestring(arg));
   end;
   4: begin  // DSS.DefaultEditor
