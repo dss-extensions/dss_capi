@@ -1,11 +1,10 @@
 #!/bin/bash
 
-#TODO: process $GITHUB_REF to extract valid version tags
-#if [ -n "$GITHUB_SHA" ]; then
-#    export DSS_CAPI_VERSION=$GITHUB_SHA
-#else
-export DSS_CAPI_VERSION=`grep DSS_CAPI_VERSION include/dss_capi.h | grep -o '".*"' | tr -d '"'`
-#fi
+if [[ "${GITHUB_REF}" == "refs/tags/"* ]]; then
+    export DSS_CAPI_VERSION="${GITHUB_REF/refs\/tags\//}"
+else
+    export DSS_CAPI_VERSION=`grep DSS_CAPI_VERSION include/dss_capi.h | grep -o '".*"' | tr -d '"'`
+fi
 
 export DSS_CAPI_REV=`git rev-parse HEAD`
 export DSS_CAPI_SVN_REV=`git log | grep -m 1 -E "trunk@[0-9]+" -o | grep -E "[0-9]+" -o`
@@ -29,3 +28,8 @@ echo 'Updated src/CAPI/CAPI_Metadata.pas'
 echo '// --->'
 cat src/CAPI/CAPI_Metadata.pas
 echo '// <---'
+
+if [[ "$1" == "write" ]]; then
+    mkdir -p build/generated
+    echo SET DSS_CAPI_VERSION=$DSS_CAPI_VERSION > build/generated/set_version.bat
+fi

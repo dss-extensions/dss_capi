@@ -24,7 +24,7 @@ else
     cp ../klusolvex/LICENSE release/dss_capi/KLUSOLVE_LICENSE
 fi
 cd release
-tar zcf "dss_capi_${GITHUB_SHA}_linux_x86.tar.gz" dss_capi
+tar zcf "dss_capi_${DSS_CAPI_VERSION}_linux_x86.tar.gz" dss_capi
 cd ..
 rm -rf release/dss_capi
 
