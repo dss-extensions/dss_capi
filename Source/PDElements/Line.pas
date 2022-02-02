@@ -441,7 +441,7 @@ Begin
 
    End
    ELSE
-      DoSimpleMsg('Line Code:' + Code + ' not found.', 180);
+      DoSimpleMsg('Line Code:' + Code + ' not found for Line object Line.' + Name, 180);
 
 End;
 
