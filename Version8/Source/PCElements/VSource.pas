@@ -1007,9 +1007,9 @@ Begin
                     Then Vmag := 1000.0 * ShapeFactor.re  // assumes actual L-N voltage or voltage across source
                     Else
                          CASE Fnphases OF
-                               1:Vmag := kVBase * ShapeFactor.re * 1000.0;
+                               1:Vmag := kVBase * PerUnit * ShapeFactor.re * 1000.0;
                          ELSE
-                                 Vmag := kVBase * ShapeFactor.re * 1000.0/2.0/Sin((180.0/Fnphases)*PI/180.0);
+                                 Vmag := kVBase * PerUnit * ShapeFactor.re * 1000.0/2.0/Sin((180.0/Fnphases)*PI/180.0);
                          End;
            End
            Else  // Normal Case
