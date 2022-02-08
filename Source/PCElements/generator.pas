@@ -312,6 +312,8 @@ VAR
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
+{$DEFINE  NODYNAMICDEBUG} {DYNAMICDEBUG, NODYNAMICDEBUG}
+// Conditional compile for debugging Generator in Dynamic mode. Set to  DYNAMICDEBUG for debugging.
 
 USES  ParserDel, Circuit,  Sysutils, Command, Math, MathUtil, DSSClassDefs, DSSGlobals, Utilities;
 
@@ -1847,6 +1849,11 @@ Var
    V012,
    I012  : Array[0..2] of Complex;
 
+{$IFDEF DYNAMICDEBUG}
+       Vabc  : Array[0..2] of Complex;
+       Temp  : Complex;  // Debug variable
+       Pemp  : Polar;
+{$ENDIF}
 Begin
 
    CalcYPrimContribution(InjCurrent, ActorID);  // Init InjCurrent Array  and computes VTerminal L-N
@@ -1926,7 +1933,36 @@ Begin
                          Else I012[0] := Cdiv(V012[0], Cmplx(0.0, Xdpp));
 
                       SymComp2Phase(ITerminal, @I012);  // Convert back to phase components
+{$IFDEF  DYNAMICDEBUG}
+        {DEBUG************************************************************************}
 
+                WriteDLLDebugFile('After solution ****');
+                WriteDLLDebugFile(Format('VthevMag = %g V = %g pu', [VthevMag, VthevMag/ 13856.0 ]));
+                Pemp := CtoPolarDeg(Vthev);
+                WriteDLLDebugFile(Format('Vthev = %g V /_ %g deg = %g pu', [Pemp.mag	, Pemp.ang, Pemp.mag / 13856.0 ]));
+
+                Pemp := CtoPolarDeg(ZtheV);
+                WriteDLLDebugFile(Format('Zthev (ohms) = %g +j %g ohms', [Zthev.re,  Zthev.im, Zthev.re/ 0.25946, Zthev.im/ 0.25946, Pemp.mag/0.25946, Pemp.ang]));
+                WriteDLLDebugFile(Format('Zthev (pu) = %g +j %g pu; Mag/Angle = %g pu /_ %g deg', [Zthev.re/ 0.25946, Zthev.im/ 0.25946, Pemp.mag/0.25946, Pemp.ang]));
+
+
+                Pemp := CtoPolarDeg(Cnegate(I012[1]));
+                WriteDLLDebugFile(Format('I1 (Amps) = %g +j %g,  (%g +j %g pu); ', [I012[1].re,  I012[1].im, I012[1].re/ 53406.0, I012[1].im/ 53406.0]));
+                WriteDLLDebugFile(Format('I1 (Amps)  Mag/Angle = %g pu /_ %g deg', [ Pemp.mag/53406.0, Pemp.ang]));
+                WriteDLLDebugFile(Format('Neg Seq Current in = %g +j %g per phase',[I012[2].re, I012[2].im]));
+                WriteDLLDebugFile(Format('Zero Seq Current in = %g +j %g per phase',[I012[0].re, I012[0].im]));
+                Pemp := CtoPolarDeg(V012[1]);
+                WriteDLLDebugFile(Format('Pos Seq Voltage in = %g +j %g, pu= %g /_ %g ',[V012[1].re, V012[1].im, Pemp.mag/13856.0, Pemp.ang]));
+
+
+                Temp := Cmul(V012[1], Conjg(I012[1]));
+                WriteDLLDebugFile(Format('Pos Seq Power (V1 I1*) in = %g +j %g per phase',[Temp.re, Temp.im]));
+
+                SymComp2Phase(@Vabc, @V012);
+                Temp := TerminalPowerIn(@Vabc, ITerminal,Nphases);
+                WriteDLLDebugFile(Format('Terminal Power in = %g +j %g from Dynamics solution',[Temp.re, Temp.im]));
+        {DEBUG************************************************************************}
+{$ENDIF}
                       // Neutral current
                       If Connection=0 Then ITerminal^[FnConds] := Cnegate(CmulReal(I012[0], 3.0));
                 End;
@@ -2477,6 +2513,12 @@ Var
     V012,
     I012  :Array[0..2] of Complex;
     Vabc  :Array[1..3] of Complex;
+    IXd   :Complex;  // voltage drop through machine
+
+{$IFDEF DYNAMICDEBUG}
+        Temp :Complex;
+        Pemp :Polar;
+{$ENDIF}
 
 begin
   YprimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
@@ -2517,8 +2559,39 @@ begin
                      if not ADiakoptics or (ActorID = 1) then Vabc[i] := NodeV^[NodeRef^[i]]   // Wye Voltage
                      else Vabc[i] := VoltInActor1(NodeRef^[i]);   // Wye Voltage
                      Phase2SymComp(@Vabc, @V012);
-                     Edp      := Csub( V012[1] , Cmul(I012[1], Zthev));    // Pos sequence
+                     IXd := Cmul(I012[1], Zthev);
+                     Edp      := Csub( V012[1] , IXd );    // Pos sequence
                      VThevMag := Cabs(Edp);
+
+{$IFDEF  DYNAMICDEBUG}
+                 // Debug ****
+                      WriteDLLDebugFile(Format('kVARating = %g ',[Genvars.kVArating	]));
+                      Temp := TerminalPowerIn(@Vabc, ITerminal,Nphases);
+                      WriteDLLDebugFile(Format('Terminal Power in = %g +j %g from PF solution',[Temp.re, Temp.im]));
+                      Temp := Cmul(V012[1], Conjg(I012[1]));
+                      WriteDLLDebugFile(Format('Pos Seq Power (V1 I1*) in = %g +j %g per phase',[Temp.re, Temp.im]));
+                      Pemp := CtoPolarDeg(V012[1]);
+                      WriteDLLDebugFile(Format('Pos Seq Voltage in = %g +j %g, pu= %g /_ %g <==== matches Kundur',[V012[1].re, V012[1].im, Pemp.mag/13856.0, Pemp.ang]));
+                      Pemp := CtoPolarDeg(Edp);
+                      WriteDLLDebugFile(Format('Edp= %g +j %g  Volts L-N',[Edp.re, Edp.im]));
+                      Pemp := CtoPolarDeg(Edp);
+                      WriteDLLDebugFile(Format('Edp (polar) mag/Ang = %g V, %g deg, pu= %g (compare with 1.1626)', [Pemp.mag, Pemp.ang, Pemp.mag/ 13856.0 ]));
+                      WriteDLLDebugFile(Format('VthevMag = %g V = %g pu', [VthevMag, VthevMag/ 13856.0 ]));
+                      Pemp := CtoPolarDeg(Cnegate(I012[1]));
+                      WriteDLLDebugFile(Format('I1 (Amps) = %g +j %g,  (%g +j %g pu); ', [I012[1].re,  I012[1].im, I012[1].re/ 53406.0, I012[1].im/ 53406.0]));
+                      WriteDLLDebugFile(Format('I1 (Amps)  Mag/Angle = %g pu /_ %g deg', [ Pemp.mag/53406.0, Pemp.ang]));
+                      WriteDLLDebugFile(Format('Neg Seq Current in = %g +j %g per phase',[I012[2].re, I012[2].im]));
+                      WriteDLLDebugFile(Format('Zero Seq Current in = %g +j %g per phase',[I012[0].re, I012[0].im]));
+                      Pemp := CtoPolarDeg(Cnegate(Ixd));
+                      WriteDLLDebugFile(Format('IXd (volts), mag/angle= %g V /_  %g deg',[ Pemp.mag, Pemp.ang]));
+                      WriteDLLDebugFile(Format('IXd (pu volts), mag/angle= %g pu /_  %g deg',[ Pemp.mag/13856.0, Pemp.ang]));
+                      Pemp := CtoPolarDeg(ZtheV);
+                      WriteDLLDebugFile(Format('Zthev (ohms) = %g +j %g ohms', [Zthev.re,  Zthev.im, Zthev.re/ 0.25946, Zthev.im/ 0.25946, Pemp.mag/0.25946, Pemp.ang]));
+                      WriteDLLDebugFile(Format('Zthev (pu) = %g +j %g pu; Mag/Angle = %g pu /_ %g deg', [Zthev.re/ 0.25946, Zthev.im/ 0.25946, Pemp.mag/0.25946, Pemp.ang]));
+
+                 // Debug ****
+
+ {$ENDIF}
                  End;
          Else
               DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.'+name+' has %d phases.', [Fnphases]), 5672);
@@ -2529,7 +2602,7 @@ begin
          // Shaft variables
          // Theta is angle on Vthev[1] relative to system reference
          //Theta  := Cang(Vthev^[1]);   // Assume source at 0
-         Theta  := Cang(Edp) ;
+         Theta  := Cang(Edp);
          If GenModel=7 Then Model7LastAngle := Theta;
 
          dTheta := 0.0;
