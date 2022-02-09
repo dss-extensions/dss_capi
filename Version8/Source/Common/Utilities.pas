@@ -2033,7 +2033,7 @@ Begin
 
    Try
      ClassName := DSS_Class.Name;
-     If Length(FileName)=0 Then FileName := ClassName + '.DSS';   // default file name
+     If Length(FileName)=0 Then FileName := ClassName + '.dss';   // default file name
      AssignFile(F, FileName);
      Rewrite(F);
 
