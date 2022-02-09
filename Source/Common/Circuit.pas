@@ -973,7 +973,7 @@ const
 
 begin
     // Reads the master file
-    AssignFile(myFile, Path  + '\master.dss');
+    AssignFile(myFile, Path  + '\Master.dss');
     Reset(myFile);                                        // Prepares for reading
     setlength(File_Struc,0);
     FS_Idx    :=  0;
@@ -1013,7 +1013,7 @@ begin
     CloseFile(myFile);
 
     // removes the unnecessary information from the master file (deletes the other zones)
-    AssignFile(myFile, Path  + '\master.dss');
+    AssignFile(myFile, Path  + '\Master.dss');
     ReWrite(myFile);                                      // Prepares for writing
     for FS_Idx := 0 to High(File_Struc) do
     Begin
@@ -1033,7 +1033,7 @@ begin
 
     // Adds Isources at the link branch edges if requested
     if AddISrc then
-      AppendIsources(Path  + '\master.dss', 1, Link_Branches[1]);
+      AppendIsources(Path  + '\Master.dss', 1, Link_Branches[1]);
 
     // Copies the support files to the zones directories
     FS_Idx    :=  0;
@@ -1061,7 +1061,7 @@ begin
     // Creates the master file for each subcircuit
     for FS_Idx := 2 to NumCkts do
     Begin
-      AssignFile(myFile, Path  + '\zone_' + inttostr(FS_Idx) + '\master.dss');
+      AssignFile(myFile, Path  + '\zone_' + inttostr(FS_Idx) + '\Master.dss');
       ReWrite(myFile);
       WriteLn(myFile,'Clear');
       WriteLn(myFile,'New Circuit.Zone_' + inttostr(FS_Idx));
@@ -1091,7 +1091,7 @@ begin
       // Adds Isources at the link branch edges if requested
       if AddISrc then
       Begin
-        text  :=  Path  + '\zone_' + inttostr(FS_Idx) + '\master.dss';
+        text  :=  Path  + '\zone_' + inttostr(FS_Idx) + '\Master.dss';
         AppendIsources(text, 2, Link_Branches[FS_Idx - 1]);
         // If there is another link branch, means that this zone conencts with other through ZCC
         // Add Another current source at the point of connection
@@ -2713,7 +2713,7 @@ Begin
 
      Result := FALSE;
      Try
-        AssignFile(F, 'BusVoltageBases.DSS');
+        AssignFile(F, 'BusVoltageBases.dss');
         Rewrite(F);
 
 //        For i := 1 to NumBuses do
@@ -2740,7 +2740,7 @@ Var
 begin
   Result := FALSE;
   Try
-      AssignFile(F, 'Master.DSS');
+      AssignFile(F, 'Master.dss');
       Rewrite(F);
 
       Writeln(F, 'Clear');
@@ -2759,14 +2759,14 @@ begin
       Writeln(F,'MakeBusList');
       Writeln(F,'Redirect BusVoltageBases.dss  ! set voltage bases');
 
-      If FileExists('buscoords.dss') Then
+      If FileExists('BusCoords.dss') Then
       Begin
-         Writeln(F, 'Buscoords buscoords.dss');
+         Writeln(F, 'Buscoords BusCoords.dss');
       End;
 
-      If FileExists('GIScoords.dss') Then
+      If FileExists('GISCoords.dss') Then
       Begin
-         Writeln(F, 'GIScoords GIScoords.dss');
+         Writeln(F, 'GIScoords GISCoords.dss');
       End;
 
       CloseFile(F);
