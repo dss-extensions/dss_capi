@@ -3,10 +3,11 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.4.0.3
+Version 9.4.0.4
 
 Changes this version
 ====================
+- Fixes issue when reporting Elements in class.
 - Normalizes the progress form.
 - Solves an issue detected when presenting the help form, the button at the bottom were missing.
 - Solves a bug inserted when updating the sequence impedance entries through COM/DLL.
