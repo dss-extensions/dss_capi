@@ -20,7 +20,6 @@ type
       Function ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer):Integer;
       Procedure ClassMakeLike(Const OtherObj:Pointer);
     public
-      NumCableClassProps: Integer;
       constructor Create;
       destructor Destroy; override;
    end;
@@ -43,17 +42,19 @@ type
 
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
         PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-//        FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+        FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+        FUNCTION  GetNumProperties(ArrayOffset:Integer):Integer;Override;
    end;
 
 implementation
 
 uses  ParserDel, DSSGlobals, DSSClassDefs, Sysutils, Ucomplex, Arraydef, LineUnits;
 
+Const NumCableClassProps = 4;
+
 constructor TCableData.Create;  // Creates superstructure for all Line objects
 BEGIN
   Inherited Create;
-  NumCableClassProps := 4;
   DSSClassType := DSS_OBJECT;
 END;
 
@@ -165,22 +166,26 @@ Begin
     End;
   End;
 end;
-{
+
+Function TCableDataObj.GetNumProperties(ArrayOffset:Integer):Integer;
+Begin
+    Result:= NumCableClassProps+ArrayOffset;
+end;
+
 Function TCableDataObj.GetPropertyValue(Index:Integer):String;
-Var
-  i :Integer;
 Begin
   Result := '';
-  Case i of
+  Case Index of
     1: Result :=  Format('%.3g',[FEpsR]);
     2: Result :=  Format('%.6g',[FInsLayer]);
     3: Result :=  Format('%.6g',[FDiaIns]);
     4: Result :=  Format('%.6g',[FDiaCable]);
   ELSE
-    Result := Inherited GetPropertyValue(index);
+    Result := Inherited GetPropertyValue(index-NumCableClassProps);
   END;
 end;
-}
+
+
 procedure TCableDataObj.InitPropertyValues(ArrayOffset: Integer);
 begin
   PropertyValue[ArrayOffset + 1] := '2.3';

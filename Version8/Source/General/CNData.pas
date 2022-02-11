@@ -48,7 +48,8 @@ TYPE
 
       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
       PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-//      FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+      FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+      FUNCTION GetNumProperties(ArrayOffset: Integer):Integer;Override;
   end;
 
 implementation
@@ -236,22 +237,25 @@ Begin
     End;
   End;
 end;
-{
+
 FUNCTION TCNDataObj.GetPropertyValue(Index: Integer): String;
-Var
-  i :Integer;
 Begin
   Result := '';
-  Case i of
+  Case Index of
     1: Result :=  Format('%d',[FkStrand]);
     2: Result :=  Format('%.6g',[FDiaStrand]);
     3: Result :=  Format('%.6g',[FGmrStrand]);
     4: Result :=  Format('%.6g',[FRStrand]);
   ELSE
-    Result := Inherited GetPropertyValue(index);
+    Result := Inherited GetPropertyValue(index - NumPropsThisClass);
   END;
 end;
-}
+
+Function TCNDataObj.GetNumProperties(ArrayOffset: Integer):Integer;
+Begin
+    Result:= Inherited GetNumProperties(NumPropsThisClass+ArrayOffset);
+end;
+
 procedure TCNDataObj.InitPropertyValues(ArrayOffset: Integer);
 begin
   PropertyValue[1] := '2';
