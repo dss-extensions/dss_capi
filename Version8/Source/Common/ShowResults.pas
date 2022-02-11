@@ -1776,7 +1776,7 @@ Begin
                   ActiveDSSClass[ActiveActor].Active := i;
                   If (ActiveDSSClass[ActiveActor].DSSClassType And BASECLASSMASK)>0 Then
                    Begin
-                     If TDSSCktElement(ActiveDSSObject).Enabled Then  Writeln(F, UpperCase(ActiveDssObject[ActiveActor].Name))
+                     If TDSSCktElement(ActiveDSSObject[ActiveActor]).Enabled Then  Writeln(F, UpperCase(ActiveDssObject[ActiveActor].Name))
                      Else Writeln(Fdisabled, UpperCase(ActiveDssObject[ActiveActor].Name));
                    End
                   Else Writeln(F, UpperCase(ActiveDssObject[ActiveActor].Name));   // non cktelements
