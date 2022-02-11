@@ -37,7 +37,6 @@ TYPE
       Function ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer):Integer;
       Procedure ClassMakeLike(Const OtherObj:Pointer);
     public
-      NumConductorClassProps: Integer;
       constructor Create;
       destructor Destroy; override;
   end;
@@ -72,7 +71,8 @@ TYPE
 
       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
       PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-//      FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+      FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+      FUNCTION GetNumProperties(ArrayOffset: Integer):Integer;Virtual;
     end;
 
    TConductorDataArray = Array[1..100] of TConductorDataObj;
@@ -86,12 +86,12 @@ USES  ParserDel,  DSSGlobals, DSSClassDefs, Sysutils, Ucomplex,  LineUNits, Util
 
 Const
   LineUnitsHelp = '{mi|kft|km|m|Ft|in|cm|mm} Default=none.';
+  NumConductorClassProps = 13;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TConductorData.Create;  // Creates superstructure for all Line objects
 BEGIN
   Inherited Create;
-  NumConductorClassProps := 13;
   DSSClassType := DSS_OBJECT;
 END;
 
@@ -286,13 +286,12 @@ Begin
     End;
   End;
 end;
-{
+
 function TConductorDataObj.GetPropertyValue(Index: Integer): String;
 Var
-        i, j:Integer;
-        Tempstr : String;
+    j:Integer;
+    Tempstr : String;
 begin
-
     Result := '';
     CASE Index of  // Special cases
         1 : Result := Format('%.6g',[FRDC]);
@@ -315,11 +314,18 @@ begin
             End;
        13: Result := Format('%.6g',[Fcapradius60]);
     ELSE
-       Result := Inherited GetPropertyValue(index);
+       Result := Inherited GetPropertyValue(GetNumProperties(0) + index);  // add num properties of child classes
     END;
 
 end;
-}
+
+function TConductorDataObj.GetNumProperties(ArrayOffset: Integer):Integer;
+begin
+     DoErrorMsg('Something is Wrong.  Got to base Conductor GetNumProperties for Object:'+CRLF+DSSClassName+'.'+Name,
+               'N/A',
+               'Should not be able to get here. Probable Programming Error.', 400);
+end;
+
 procedure TConductorDataObj.InitPropertyValues(ArrayOffset: Integer);
 begin
   PropertyValue[ArrayOffset + 1] := '-1';
