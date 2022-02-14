@@ -155,8 +155,8 @@ Var
 Begin
   Inherited DumpProperties(F, Complete);
   WITH ParentClass Do Begin
-    For i := 1 to NumProperties Do Begin
-      Write(F,'~ ',PropertyName^[i],'=');
+      For i := 1 to NumCableClassProps Do Begin
+      Write(F,'~ ',PropertyName^[GetNumProperties(0) - NumCableClassProps + i],'=');
       Case i of
         1: Writeln(F, Format('%.3g',[FEpsR]));
         2: Writeln(F, Format('%.6g',[FInsLayer]));

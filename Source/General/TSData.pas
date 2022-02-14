@@ -214,7 +214,7 @@ Var
 Begin
   Inherited DumpProperties(F, Complete);
   WITH ParentClass Do Begin
-    For i := 1 to NumProperties Do Begin
+    For i := 1 to NumPropsThisClass Do Begin
       Write(F,'~ ',PropertyName^[i],'=');
       Case i of
         1: Writeln(F, Format('%.6g',[FDiaShield]));
