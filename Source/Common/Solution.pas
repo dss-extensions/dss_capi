@@ -2747,11 +2747,11 @@ Begin
     SetLength (cVals, nNZ);
     nNZ_Yii := nNZ;//how many lines of Y sparse
     IF (pColIdx_Yii  <> Nil)   Then ReallocMem(pColIdx_Yii,0);
-    pColIdx_Yii      := AllocMem(sizeof(pColIdx_Yii^[1]) * nNZ_Yii);
+    pColIdx_Yii      := AllocMem(sizeof(pColIdx_Yii^[1]) * ( nNZ_Yii + 1));
     IF (pRowIdx_Yii  <> Nil)   Then ReallocMem(pRowIdx_Yii,0);
-    pRowIdx_Yii      := AllocMem(sizeof(pRowIdx_Yii^[1]) * nNZ_Yii);
+    pRowIdx_Yii      := AllocMem(sizeof(pRowIdx_Yii^[1]) * ( nNZ_Yii + 1));
     IF (pcVals_Yii  <> Nil)   Then ReallocMem(pcVals_Yii,0);
-    pcVals_Yii      := AllocMem(Sizeof(pcVals_Yii^[1]) * nNZ_Yii);
+    pcVals_Yii      := AllocMem(Sizeof(pcVals_Yii^[1]) * ( nNZ_Yii + 1));
 
     sf := GetTripletMatrix (hY,  nNZ, @ColIdx[0], @RowIdx[0], @cVals[0]);
     // shows how to easily traverse the triplet format
