@@ -11,7 +11,6 @@ object SplashScreen: TSplashScreen
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -3209,6 +3208,5 @@ object SplashScreen: TSplashScreen
     ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 0
-    Zoom = 100
   end
 end
