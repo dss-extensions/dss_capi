@@ -45,7 +45,7 @@ begin
      Version.Caption := VersionString;
 
      LicenseText.Lines.Clear();
-     LicenseText.Lines.Add('Copyright (c) 2008-2021, Electric Power Research Institute, Inc.');
+     LicenseText.Lines.Add('Copyright (c) 2008-2022, Electric Power Research Institute, Inc.');
      LicenseText.Lines.Add('All rights reserved.');
      LicenseText.Lines.Add('');
      LicenseText.Lines.Add('Redistribution and use in source and binary forms, with or without');

@@ -1,12 +1,18 @@
 The Open Distribution System Simulator, OpenDSS
 
-Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.4.0.4
+Version 9.4.0.5
 
 Changes this version
 ====================
+- Fixes version sync between exe, COM and DLL versions.
+- Solves old bug located within the fmonitor variables (proposed by UCF). 
+- Fixes DumpProperties procedures for conductor objects by utilizing the proper indexing. 
+- Brings back GetPropertyValue functions for ConductorData and child classes that allows properties to be kept in synch. Fixed indexing that was preventing those functions from properly working
+- Adds conditional compiles for debugging during Dynamic mode. Update comments in Vsource.
+- Fix bug in Dynamics calc where PerUnit was not taken into account.
 - Fixes issue when reporting Elements in class.
 - Normalizes the progress form.
 - Solves an issue detected when presenting the help form, the button at the bottom were missing.
