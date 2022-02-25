@@ -13,7 +13,7 @@ unit VSource;
  6-18-00  Added ability to do specify impedance in ohms or short circuit current
  5-17-01 Moved Spectrum to Base class
  2-10-09 Converted to 2-terminal voltage source
- 2-08-22 Fixed perunit bug in Dynamics mode
+ 2-24-22 Fixed perunit bug in Dynamics mode
 
 }
 
@@ -979,7 +979,7 @@ Begin
            case Mode of
                {Uses same logic as LOAD}
                DAILYMODE:   Begin
-                                 CalcDailyMult(DynaVars.dblHour);
+                                 CalcDailyMult(DynaVars.dblHour);  // set Shapefactor.re = Pmult(t) or PerUnit
                             End;
                YEARLYMODE:  Begin
                                  CalcYearlyMult(DynaVars.dblHour);
@@ -989,12 +989,13 @@ Begin
                             End;
               DYNAMICMODE:  Begin
                                  // This mode allows use of one class of load shape in DYNAMIC mode
+                                 // Sets Shapefactor.re = pmult(t) or PerUnit value
                                  case ActiveCircuit[ActorID].ActiveLoadShapeClass of
                                       USEDAILY:  CalcDailyMult(DynaVars.dblHour);
                                       USEYEARLY: CalcYearlyMult(DynaVars.dblHour);
                                       USEDUTY:   CalcDutyMult(DynaVars.dblHour);
                                  else
-                                      ShapeFactor := Cmplx(1.0, 0.0);     // default to 1 + j0 if not known
+                                      ShapeFactor := Cmplx(PerUnit, 0.0);     // default to PerUnit + j0 if not known
                                  end;
                             End;
            end;
@@ -1006,14 +1007,15 @@ Begin
            Then  Begin  {Loadshape cases}
                 If ShapeIsActual
                     Then Vmag := 1000.0 * ShapeFactor.re  // assumes actual L-N voltage or voltage across source
-                    Else   // added PerUnit value 2/07/22 to fix Dynamics mode bug where per unit value was lost
+                    Else // is pu value
                          CASE Fnphases OF
-                               1:Vmag := kVBase * PerUnit * ShapeFactor.re * 1000.0;
+                               1:Vmag := kVBase * ShapeFactor.re * 1000.0;
                          ELSE
-                                 Vmag := kVBase * PerUnit * ShapeFactor.re * 1000.0/2.0/Sin((180.0/Fnphases)*PI/180.0);
+                                 Vmag := kVBase * ShapeFactor.re * 1000.0/2.0/Sin((180.0/Fnphases)*PI/180.0);
                          End;
            End
-           Else  // Normal Case
+           Else
+           // Normal Case
                  CASE Fnphases OF
                    1:Vmag := kVBase * PerUnit * 1000.0;
                    ELSE
@@ -1249,7 +1251,7 @@ Begin
          ShapeFactor   := DailyShapeObj.GetMult(Hr);
          ShapeIsActual := DailyShapeObj.UseActual;
        End
-     ELSE ShapeFactor := cmplx(PerUnit, 0.0); // CDOUBLEONE;  // Default to no daily variation
+     ELSE ShapeFactor := cmplx(PerUnit, 0.0);   // Default to no daily variation
 End;
 
 
@@ -1274,7 +1276,7 @@ Begin
            ShapeFactor   := YearlyShapeObj.GetMult(Hr);
            ShapeIsActual := YearlyShapeObj.UseActual;
      End
-     ELSE ShapeFactor := cmplx(PerUnit, 0.0); // CDOUBLEONE;   // Defaults to no variation
+     ELSE ShapeFactor := cmplx(PerUnit, 0.0);   // Defaults to no variation
 End;
 
 //=============================================================================
