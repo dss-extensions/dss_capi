@@ -7,12 +7,6 @@ unit ControlQueue;
   ----------------------------------------------------------
 }
 
-{
-   11-1-00 added Handle and delete function
-}
-
-{$M+}
-
 interface
 
 uses
@@ -115,7 +109,6 @@ var
     ActionInserted: Boolean;
 
 begin
-
 
     Inc(ctrlHandle); // just a serial number
 
@@ -332,7 +325,6 @@ begin
 
     Freemem(ActionList.Items[i], Sizeof(TActionRecord));
     ActionList.Delete(i);
-
 end;
 
 function TControlQueue.DoActions(const Hour: Integer; const sec: Double): Boolean;
@@ -350,7 +342,6 @@ begin
     Result := FALSE;
     if ActionList.Count > 0 then
     begin
-
         t.Hour := Hour;
         t.Sec := Sec;
         pElem := Pop(t, Code, ProxyHdl, hdl);
@@ -363,7 +354,6 @@ begin
             pElem := Pop(t, Code, ProxyHdl, hdl);
         end;
     end;
-
 end;
 
 function TControlQueue.DoMultiRate(const Hour: Integer; const sec: Double): Boolean;
@@ -487,11 +477,10 @@ begin
     FreeAndNil(TraceFile);
     if DebugTrace then
     begin
-        TraceFile := TFileStream.Create(DSS.OutputDirectory + 'Trace_ControlQueue.CSV', fmCreate);
+        TraceFile := TFileStream.Create(DSS.OutputDirectory + 'Trace_ControlQueue.csv', fmCreate);
         FSWriteLn(TraceFile, '"Hour", "sec", "Control Iteration", "Element", "Action Code", "Trace Parameter", "Description"');
         FSFlush(TraceFile);
     end;
-
 end;
 
 procedure TControlQueue.ShowQueue(const Filenm: String);
@@ -519,14 +508,11 @@ begin
         FreeAndNil(F);
         FireOffEditor(DSS, FileNm);
     end;
-
-
 end;
 
 procedure TControlQueue.WriteTraceRecord(const ElementName: String; const Code: Integer; TraceParameter: Double; const s: String);
 
 begin
-
     try
         if (not DSS.InShowResults) then
         begin
@@ -547,7 +533,6 @@ begin
         end;
 
     end;
-
 end;
 
 procedure TControlQueue.Delete(Hdl: Integer);

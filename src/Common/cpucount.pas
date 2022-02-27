@@ -4,7 +4,7 @@ unit cpucount;
 interface
 //returns number of cores: a computer with two hyperthreaded cores will report 4
 function GetLogicalCpuCount: Integer;
- 
+
 implementation
  
 {$IF defined(windows)}

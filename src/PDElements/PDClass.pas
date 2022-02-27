@@ -7,8 +7,6 @@ unit PDClass;
   ----------------------------------------------------------
 }
 
-{$M+}
-
 interface
 
 uses
@@ -16,123 +14,84 @@ uses
     CktElementClass;
 
 type
+{$SCOPEDENUMS ON}
+    TPDElementProp = (
+        INVALID = 0,
+        normamps=1,
+        emergamps=2,
+        faultrate=3,
+        pctperm=4,
+        repair=5
+    );
+{$SCOPEDENUMS OFF}
+
     TPDClass = class(TCktElementClass)
-    PRIVATE
-
     PROTECTED
-        procedure ClassEdit(const ActivePDObj: Pointer; const ParamPointer: Integer);
-        procedure ClassMakeLike(const OtherObj: Pointer);
-        procedure CountProperties;  // Add no. of intrinsic properties
-        procedure DefineProperties;  // Add Properties of this class to propName
+        procedure CountPropertiesAndAllocate; override;
+        procedure DefineProperties; override;
     PUBLIC
-        NumPDClassProps: Integer;
-        constructor Create(dssContext: TDSSContext);
+        constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
-    PUBLISHED
-
     end;
-
 
 implementation
 
 uses
     DSSClassDefs,
     PDElement,
-    ParserDel,
     DSSGlobals,
     Utilities,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
 
-constructor TPDClass.Create(dssContext: TDSSContext);
+type
+    TObj = TPDElement;
+    TProp = TPDElementProp;
+const
+    NumPropsThisClass = Ord(High(TProp));
+var
+    PropInfo: Pointer;    
+
+constructor TPDClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
 begin
-    inherited Create(dssContext);
-    NumPDClassProps := 5;
-    DSSClassType := PD_ELEMENT;
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
+
+    inherited Create(dssContext, DSSClsType, DSSClsName);
+    if (DSSClassType and NON_PCPD_ELEM) <> NON_PCPD_ELEM then
+        DSSClassType := DSSClassType or PD_ELEMENT;
+
+    ClassParents.Add('PDClass');
 end;
 
 destructor TPDClass.Destroy;
-
 begin
     inherited Destroy;
 end;
 
-procedure TPDClass.CountProperties;
+procedure TPDClass.CountPropertiesAndAllocate;
 begin
-    NumProperties := NumProperties + NumPDClassProps;
-    inherited CountProperties;
+    NumProperties := NumProperties + NumPropsThisClass;
+    inherited CountPropertiesAndAllocate;
 end;
 
 procedure TPDClass.DefineProperties;
-
-// Define the properties for the base power delivery element class
-
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
-    PropertyName^[ActiveProperty + 1] := 'normamps';
-    PropertyName^[ActiveProperty + 2] := 'emergamps';
-    PropertyName^[ActiveProperty + 3] := 'faultrate';
-    PropertyName^[ActiveProperty + 4] := 'pctperm';
-    PropertyName^[ActiveProperty + 5] := 'repair';
+    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False);
 
-    PropertyHelp^[ActiveProperty + 1] := 'Normal rated current.';
-    PropertyHelp^[ActiveProperty + 2] := 'Maximum or emerg current.';
-    PropertyHelp^[ActiveProperty + 3] := 'Failure rate per year.';
-    PropertyHelp^[ActiveProperty + 4] := 'Percent of failures that become permanent.';
-    PropertyHelp^[ActiveProperty + 5] := 'Hours to repair.';
+    PropertyOffset[ActiveProperty + ord(TProp.normamps)] := ptruint(@obj.NormAmps);
+    PropertyOffset[ActiveProperty + ord(TProp.emergamps)] := ptruint(@obj.EmergAmps);
+    PropertyOffset[ActiveProperty + ord(TProp.faultrate)] := ptruint(@obj.FaultRate);
+    PropertyOffset[ActiveProperty + ord(TProp.pctperm)] := ptruint(@obj.PctPerm);
+    PropertyOffset[ActiveProperty + ord(TProp.repair)] := ptruint(@obj.HrsToRepair);
 
-    ActiveProperty := ActiveProperty + NumPDClassProps;
-
+    ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties;
 end;
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TPDClass.ClassEdit(const ActivePDObj: Pointer; const ParamPointer: Integer);
-begin
-  // continue parsing with contents of Parser
-
-    if ParamPointer > 0 then
-        with TPDElement(ActivePDObj) do
-        begin
-
-            case ParamPointer of
-                1:
-                    NormAmps := Parser.Dblvalue;
-                2:
-                    EmergAmps := Parser.Dblvalue;
-                3:
-                    FaultRate := Parser.Dblvalue;
-                4:
-                    PctPerm := Parser.Dblvalue;
-                5:
-                    HrsToRepair := Parser.DblValue;
-            else
-                inherited ClassEdit(ActivePDObj, ParamPointer - NumPDClassProps)
-            end;
-        end;
-
-end;
-
-procedure TPDClass.ClassMakeLike(const OtherObj: Pointer);
-
-var
-    OtherPDObj: TPDElement;
-begin
-
-    OtherPDObj := TPDElement(OtherObj);
-
-    with TPDElement(ActiveDSSObject) do
-    begin
-        NormAmps := OtherPDObj.NormAmps;
-        EmergAmps := OtherPDObj.EmergAmps;
-        FaultRate := OtherPDObj.FaultRate;
-        PctPerm := OtherPDObj.PctPerm;
-        HrsToRepair := OtherPDObj.HrsToRepair;
-    end;
-
-    inherited ClassMakeLike(OtherObj);
-
-end;
-
+initialization
+    PropInfo := NIL;
 end.

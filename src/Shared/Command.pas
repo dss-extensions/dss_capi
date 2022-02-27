@@ -7,9 +7,6 @@ unit Command;
   ----------------------------------------------------------
 }
 
-
-{$M+}
-
 interface
 
 uses
@@ -21,24 +18,20 @@ type
         CommandList: TCommandHashListType;
         AbbrevAllowed: Boolean;
         function Get_NumCommands: Integer;
-    PROTECTED
-
     PUBLIC
-        constructor Create(Commands: array of String);
+        constructor Create(Commands: array of String; AllowAbbrev: Boolean = True);
         destructor Destroy; OVERRIDE;
         procedure AddCommand(const cmd: String);
         function Getcommand(const Cmd: String): Integer;
         function Get(i: Integer): String;
         property Abbrev: Boolean READ AbbrevAllowed WRITE AbbrevAllowed;
         property NumCommands: Integer READ Get_NumCommands;
-    PUBLISHED
-
     end;
 
 
 implementation
 
-constructor TCommandList.Create(Commands: array of String);
+constructor TCommandList.Create(Commands: array of String; AllowAbbrev: Boolean = True);
 var
     i: Integer;
 begin
@@ -51,7 +44,7 @@ begin
         CommandList.Add(Commands[i]);
     end;
 
-    AbbrevAllowed := TRUE;
+    AbbrevAllowed := AllowAbbrev;
 end;
 
 destructor TCommandList.Destroy;
@@ -69,14 +62,12 @@ end;
 function TCommandList.Getcommand(const Cmd: String): Integer;
 
 begin
-
     Result := CommandList.Find(Cmd);
-{If no match found on whole command, check for abbrev}
-{This routine will generally be faster if one enters the whole command}
+    // If no match found on whole command, check for abbrev
+    // This routine will generally be faster if one enters the whole command
     if Result = 0 then
         if AbbrevAllowed then
             Result := CommandList.FindAbbrev(Cmd);
-
 end;
 
 

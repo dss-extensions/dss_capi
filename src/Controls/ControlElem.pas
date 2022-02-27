@@ -13,24 +13,31 @@ interface
 uses
     CktElement,
     Bus,
-    ucomplex,
+    UComplex, DSSUcomplex,
     DSSClass;
 
-{$INCLUDE ControlActionDefs.txt}
-
 type
+{$PUSH}
+{$Z4} // keep enums as int32 values
+    EControlAction = (
+        CTRL_NONE,
+        CTRL_OPEN,
+        CTRL_CLOSE,
+        CTRL_RESET,
+        CTRL_LOCK,
+        CTRL_UNLOCK,
+        CTRL_TAPUP,
+        CTRL_TAPDOWN
+    );
+{$POP}
 
     TControlElem = class(TDSSCktElement)
 
     PRIVATE
+        procedure RemoveSelfFromControlelementList(CktElem: TDSSCktElement);
+    PUBLIC
         FControlledElement: TDSSCktElement;
         FMonitoredElement: TDSSCktElement;
-        procedure Set_ControlledElement(const Value: TDSSCktElement);  // Pointer to target circuit element
-        procedure RemoveSelfFromControlelementList(CktElem: TDSSCktElement);
-        procedure Set_MonitoredElement(const Value: TDSSCktElement);
-    PUBLIC
-
-        ElementName: String;
         ElementTerminal: Integer;
         ControlledBusName: String;  // If different than terminal
         ControlledBus: TDSSBus;
@@ -43,14 +50,20 @@ type
         constructor Create(ParClass: TDSSClass);
         destructor Destroy; OVERRIDE;
 
+        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Always Zero
+        procedure CalcYPrim; OVERRIDE; // Always Zero
+
         procedure Sample; VIRTUAL;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); VIRTUAL;   // Do the action that is pending from last sample
         procedure Reset; VIRTUAL;
-
+        procedure Set_ControlledElement(const Value: TDSSCktElement);  // Pointer to target circuit element
+        procedure Set_MonitoredElement(const Value: TDSSCktElement);
         property ControlledElement: TDSSCktElement READ FControlledElement WRITE Set_ControlledElement;
         property MonitoredElement: TDSSCktElement READ FMonitoredElement WRITE Set_MonitoredElement;
-
     end;
+
+procedure SetMonitoredElement(obj: TControlElem; el: TDSSCktElement);
+procedure SetControlledElement(obj: TControlElem; el: TDSSCktElement);
 
 const
     USER_BASE_ACTION_CODE = 100;
@@ -62,6 +75,16 @@ uses
     DSSGlobals,
     Sysutils,
     DSSPointerList;
+
+procedure SetMonitoredElement(obj: TControlElem; el: TDSSCktElement);
+begin
+    obj.Set_MonitoredElement(el);
+end;
+
+procedure SetControlledElement(obj: TControlElem; el: TDSSCktElement);
+begin
+    obj.Set_ControlledElement(el);
+end;
 
 constructor TControlElem.Create(ParClass: TDSSClass);
 begin
@@ -83,7 +106,7 @@ end;
 procedure TControlElem.DoPendingAction;
 begin
   // virtual function - should be overridden
-    DoSimpleMsg('Programming Error:  Reached base class for DoPendingAction.' + CRLF + 'Device: ' + DSSClassName + '.' + Name, 460);
+    DoSimpleMsg('Programming Error:  Reached base class for DoPendingAction.' + CRLF + 'Device: ' + FullName, 460);
 end;
 
 procedure TControlElem.RemoveSelfFromControlElementList(CktElem: TDSSCktElement);
@@ -111,26 +134,24 @@ end;
 
 procedure TControlElem.Reset;
 begin
-    DoSimpleMsg('Programming Error: Reached base class for Reset.' + CRLF + 'Device: ' + DSSClassName + '.' + Name, 461);
+    DoSimpleMsg('Programming Error: Reached base class for Reset.' + CRLF + 'Device: ' + FullName, 461);
 end;
 
 procedure TControlElem.Sample;
 begin
   // virtual function - should be overridden
-    DoSimpleMsg('Programming Error:  Reached base class for Sample.' + CRLF + 'Device: ' + DSSClassName + '.' + Name, 462);
+    DoSimpleMsg('Programming Error:  Reached base class for Sample.' + CRLF + 'Device: ' + FullName, 462);
 end;
-
 
 procedure TControlElem.Set_ControlledElement(const Value: TDSSCktElement);
 begin
-
     try
       // Check for reassignment of Controlled element and remove from list
         if Assigned(FControlledElement) then
             with FControlledElement do
             begin
                 if ControlElementList.Count = 1 then
-                    HasControl := FALSE;
+                    Exclude(Flags, Flg.HasControl);
                 RemoveSelfFromControlElementList(FControlledElement);
             end;
     finally
@@ -138,7 +159,7 @@ begin
         if Assigned(FControlledElement) then
             with FControlledElement do
             begin
-                HasControl := TRUE;
+                Include(Flags, Flg.HasControl);
                 ControlElementList.Add(Self);
             end;
     end;
@@ -148,7 +169,23 @@ procedure TControlElem.Set_MonitoredElement(const Value: TDSSCktElement);
 begin
     FMonitoredElement := Value;
     if Assigned(FMonitoredElement) then
-        FMonitoredElement.IsMonitored := TRUE;
+        Include(FMonitoredElement.Flags, Flg.IsMonitored);
 end;
+
+procedure TControlElem.GetCurrents(Curr: pComplexArray);
+var
+    i: Integer;
+begin
+    for i := 1 to Fnconds do
+        Curr^[i] := CZERO;
+end;
+
+procedure TControlElem.CalcYPrim;
+begin
+  // leave YPrims as nil and they will be ignored
+  // Yprim is zeroed when created.  Leave it as is.
+  //  IF YPrim=nil THEN YPrim := TcMatrix.CreateMatrix(Yorder);
+end;
+
 
 end.

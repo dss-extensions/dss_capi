@@ -16,33 +16,46 @@ uses
     PCClass,
     PCElement,
     ucmatrix,
-    ucomplex,
+    UComplex, DSSUcomplex,
     XYCurve,
     ArrayDef;
 
 type
+{$SCOPEDENUMS ON}
+    TVCCSProp = (
+        INVALID = 0,
+        bus1 = 1,
+        phases = 2,
+        prated = 3,
+        vrated = 4,
+        ppct = 5,
+        bp1 = 6,
+        bp2 = 7,
+        filter = 8,
+        fsample = 9,
+        rmsmode = 10,
+        imaxpu = 11,
+        vrmstau = 12,
+        irmstau = 13
+    );
+{$SCOPEDENUMS OFF}
+
     TVCCS = class(TPCClass)
-    PRIVATE
-        XY_CurveClass: TDSSClass;
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const OtherSource: String): Integer; OVERRIDE;
+        procedure DefineProperties; override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
     end;
 
     TVCCSObj = class(TPCElement)
     PRIVATE
         Fbp1: TXYcurveObj;
-        Fbp1_name: String;
         Fbp2: TXYcurveObj;
-        Fbp2_name: String;
         Ffilter: TXYcurveObj;
-        Ffilter_name: String;
         BaseCurr: Double; // line current at Ppct
         BaseVolt: Double; // line-to-neutral voltage at Vrated
         FsampleFreq: Double; // discretization frequency for Z filter
@@ -89,17 +102,16 @@ type
         Ppct, Prated, Vrated: Double;
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
 
-        procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
+        procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
         function InjCurrents: Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
-
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
 
         // Support for Dynamics Mode
         procedure InitStateVars; OVERRIDE;
@@ -113,7 +125,6 @@ type
 implementation
 
 uses
-    ParserDel,
     Circuit,
     DSSClassDefs,
     DSSGlobals,
@@ -125,8 +136,13 @@ uses
     DSSObjectHelper,
     TypInfo;
 
+type
+    TObj = TVCCSObj;
+    TProp = TVCCSProp;
+const
+    NumPropsThisClass = Ord(High(TProp));
 var
-    NumPropsThisClass: Integer;
+    PropInfo: Pointer;    
     ALPHA1, ALPHA2: complex;
 
 // helper functions for ring buffer indexing, 1..len
@@ -144,19 +160,12 @@ begin
     Result := MapIdx(idx + offset, len);
 end;
 
-constructor TVCCS.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
+constructor TVCCS.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
-    Class_Name := 'VCCS';
-    DSSClassType := VCCS_ELEMENT + PC_ELEMENT; // participates in dynamics
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
 
-    ActiveElement := 0;
-
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
-    XY_CurveClass := GetDSSClassPtr(DSS, 'XYCurve');
+    inherited Create(dssContext, VCCS_ELEMENT, 'VCCS');
 end;
 
 destructor TVCCS.Destroy;
@@ -165,189 +174,110 @@ begin
 end;
 
 procedure TVCCS.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
-    NumPropsThisClass := 13;
-
     Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, False);
 
-     // Define Property names
-    PropertyName[1] := 'bus1';
-    PropertyName[2] := 'phases';
-    PropertyName[3] := 'prated';
-    PropertyName[4] := 'vrated';
-    PropertyName[5] := 'ppct';
-    PropertyName[6] := 'bp1';
-    PropertyName[7] := 'bp2';
-    PropertyName[8] := 'filter';
-    PropertyName[9] := 'fsample';
-    PropertyName[10] := 'rmsmode';
-    PropertyName[11] := 'imaxpu';
-    PropertyName[12] := 'vrmstau';
-    PropertyName[13] := 'irmstau';
+    // integer properties
+    PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
-     // define Property help values
-    PropertyHelp[1] := 'Name of bus to which source is connected.' + CRLF + 'bus1=busname' + CRLF + 'bus1=busname.1.2.3';
-    PropertyHelp[2] := 'Number of phases.  Defaults to 1.';
-    PropertyHelp[3] := 'Total rated power, in Watts.';
-    PropertyHelp[4] := 'Rated line-to-line voltage, in Volts';
-    PropertyHelp[5] := 'Steady-state operating output, in percent of rated.';
-    PropertyHelp[6] := 'XYCurve defining the input piece-wise linear block.';
-    PropertyHelp[7] := 'XYCurve defining the output piece-wise linear block.';
-    PropertyHelp[8] := 'XYCurve defining the digital filter coefficients (x numerator, y denominator).';
-    PropertyHelp[9] := 'Sample frequency [Hz} for the digital filter.';
-    PropertyHelp[10] := 'True if only Hz is used to represent a phase-locked loop (PLL), ignoring the BP1, BP2 and time-domain transformations. Default is no.';
-    PropertyHelp[11] := 'Maximum output current in per-unit of rated; defaults to 1.1';
-    PropertyHelp[12] := 'Time constant in sensing Vrms for the PLL; defaults to 0.0015';
-    PropertyHelp[13] := 'Time constant in producing Irms from the PLL; defaults to 0.0015';
+    // bus properties
+    PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
+    PropertyOffset[ord(TProp.bus1)] := 1;
+
+    // boolean properties
+    PropertyType[ord(TProp.rmsmode)] := TPropertyType.BooleanProperty;
+    PropertyOffset[ord(TProp.rmsmode)] := ptruint(@obj.FrmsMode);
+
+    // object properties
+    PropertyType[ord(TProp.bp1)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyType[ord(TProp.bp2)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyType[ord(TProp.filter)] := TPropertyType.DSSObjectReferenceProperty;
+    
+    PropertyOffset[ord(TProp.bp1)] := ptruint(@obj.Fbp1);
+    PropertyOffset[ord(TProp.bp2)] := ptruint(@obj.Fbp2);
+    PropertyOffset[ord(TProp.filter)] := ptruint(@obj.Ffilter);
+
+    PropertyOffset2[ord(TProp.bp1)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset2[ord(TProp.bp2)] := ptruint(DSS.XYCurveClass);
+    PropertyOffset2[ord(TProp.filter)] := ptruint(DSS.XYCurveClass);
+
+    // double properties (default type)
+    PropertyOffset[ord(TProp.prated)] := ptruint(@obj.Prated);
+    PropertyOffset[ord(TProp.vrated)] := ptruint(@obj.Vrated);
+    PropertyOffset[ord(TProp.ppct)] := ptruint(@obj.Ppct);
+    PropertyOffset[ord(TProp.fsample)] := ptruint(@obj.FsampleFreq);
+    PropertyOffset[ord(TProp.imaxpu)] := ptruint(@obj.FmaxIpu);
+    PropertyOffset[ord(TProp.vrmstau)] := ptruint(@obj.FvrmsTau);
+    PropertyOffset[ord(TProp.irmstau)] := ptruint(@obj.FirmsTau);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
-     // Override help string
-    PropertyHelp[NumPropsThisClass + 1] := 'Harmonic spectrum assumed for this source.  Default is "default".';
+    inherited DefineProperties;
 end;
 
-function TVCCS.NewObject(const ObjName: String): Integer;
-begin
-    with ActiveCircuit do
-    begin
-        ActiveCktElement := TVCCSObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
-end;
-
-function TVCCS.Edit: Integer;
+function TVCCS.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    ParamPointer: Integer;
-    ParamName,
-    Param: String;
+    Obj: TObj;
 begin
-  // continue parsing with contents of Parser
-    DSS.ActiveVCCSObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := DSS.ActiveVCCSObj;
-    Result := 0;
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        ActiveCircuit.ActiveCktElement := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
 
-    with DSS.ActiveVCCSObj do
+procedure TVCCSObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+begin
+    case Idx of
+        ord(TProp.phases):
+            if FNPhases <> previousIntVal then
+                NConds := Fnphases;  // Force Reallocation of terminal info
+    end;
+    inherited PropertySideEffects(Idx, previousIntVal);
+end;
+
+function TVCCS.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+begin
+    with TObj(ptr) do
     begin
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
-        begin
-            if Length(ParamName) = 0 then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
-
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
-                1:
-                    SetBus(1, param);
-                2:
-                begin
-                    Nphases := Parser.IntValue; // num phases
-                    NConds := Fnphases;  // Force Reallocation of terminal info
-                end;
-                3:
-                    Prated := Parser.DblValue;
-                4:
-                    Vrated := Parser.DblValue;
-                5:
-                    Ppct := Parser.DblValue;
-                6:
-                begin
-                    Fbp1_name := Parser.StrValue;
-                    if Length(Fbp1_name) > 0 then
-                    begin
-                        Fbp1 := XY_CurveClass.Find(Fbp1_name);
-                    end;
-                end;
-                7:
-                begin
-                    Fbp2_name := Parser.StrValue;
-                    if Length(Fbp2_name) > 0 then
-                    begin
-                        Fbp2 := XY_CurveClass.Find(Fbp2_name);
-                    end;
-                end;
-                8:
-                begin
-                    Ffilter_name := Parser.StrValue;
-                    if Length(Ffilter_name) > 0 then
-                    begin
-                        Ffilter := XY_CurveClass.Find(Ffilter_name);
-                    end;
-                end;
-                9:
-                    FsampleFreq := Parser.DblValue;
-                10:
-                    FrmsMode := InterpretYesNo(Param);
-                11:
-                    FmaxIpu := Parser.DblValue;
-                12:
-                    FvrmsTau := Parser.DblValue;
-                13:
-                    FirmsTau := Parser.DblValue;
-            else
-                ClassEdit(DSS.ActiveVCCSObj, ParamPointer - NumPropsThisClass)
-            end;
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
-        end;
         RecalcElementData;
         YPrimInvalid := TRUE;
+        Exclude(Flags, Flg.EditionActive);
     end;
+    Result := True;
 end;
 
-//----------------------------------------------------------------------------
-function TVCCS.MakeLike(const OtherSource: String): Integer;
+procedure TVCCSObj.MakeLike(OtherPtr: Pointer);
 var
-    OtherVCCS: TVCCSObj;
-    i: Integer;
+    Other: TObj;
 begin
-    Result := 0;
-  {See if we can find this line name in the present collection}
-    OtherVCCS := Find(OtherSource);
-    if OtherVCCS <> NIL then
-        with DSS.ActiveVCCSObj do
-        begin
-            if Fnphases <> OtherVCCS.Fnphases then
-            begin
-                Nphases := OtherVCCS.Fnphases;
-                NConds := Fnphases;  // Forces reallocation of terminal stuff
+    inherited MakeLike(OtherPtr);
 
-                Yorder := Fnconds * Fnterms;
-                YPrimInvalid := TRUE;
-            end;
-            Prated := OtherVCCS.Prated;
-            Vrated := OtherVCCS.Vrated;
-            Ppct := OtherVCCS.Ppct;
-            Fbp1 := OtherVCCS.Fbp1;
-            Fbp2 := OtherVCCS.Fbp2;
-            Ffilter := OtherVCCS.Ffilter;
-            Fbp1_name := OtherVCCS.Fbp1_name;
-            Fbp2_name := OtherVCCS.Fbp2_name;
-            Ffilter_name := OtherVCCS.Ffilter_name;
-            FsampleFreq := OtherVCCS.FsampleFreq;
-            FrmsMode := OtherVCCS.FrmsMode;
-            FmaxIpu := OtherVCCS.FmaxIpu;
-            FvrmsTau := OtherVCCS.FvrmsTau;
-            FirmsTau := OtherVCCS.FirmsTau;
+    Other := TObj(OtherPtr);
+    if Fnphases <> Other.Fnphases then
+    begin
+        FNphases := Other.Fnphases;
+        NConds := Fnphases;  // Forces reallocation of terminal stuff
 
-            ClassMakeLike(OtherVCCS); // set spectrum,  base frequency
-
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherVCCS.PropertyValue[i];
-            Result := 1;
-        end
-    else
-        DoSimpleMsg('Error in VCCS MakeLike: "' + OtherSource + '" Not Found.', 332);
+        Yorder := Fnconds * Fnterms;
+        YPrimInvalid := TRUE;
+    end;
+    Prated := Other.Prated;
+    Vrated := Other.Vrated;
+    Ppct := Other.Ppct;
+    Fbp1 := Other.Fbp1;
+    Fbp2 := Other.Fbp2;
+    Ffilter := Other.Ffilter;
+    FsampleFreq := Other.FsampleFreq;
+    FrmsMode := Other.FrmsMode;
+    FmaxIpu := Other.FmaxIpu;
+    FvrmsTau := Other.FvrmsTau;
+    FirmsTau := Other.FirmsTau;
 end;
 
 constructor TVCCSObj.Create(ParClass: TDSSClass; const SourceName: String);
@@ -356,7 +286,7 @@ begin
     Name := LowerCase(SourceName);
     DSSObjType := ParClass.DSSClassType;
 
-    Nphases := 1;
+    FNphases := 1;
     Fnconds := 1;
     Nterms := 1;
 
@@ -372,16 +302,16 @@ begin
     FirmsTau := 0.0015;
 
     Fwinlen := 0;
-    Ffilter_name := '';
-    Fbp1_name := '';
-    Fbp2_name := '';
+
+    Ffilter := NIL;
+    Fbp1 := NIL;
+    Fbp2 := NIL;
+
     y2 := NIL;
     z := NIL;
     whist := NIL;
     zlast := NIL;
     wlast := NIL;
-
-    InitPropertyValues(0);
 
     Yorder := Fnterms * Fnconds;
     RecalcElementData;
@@ -399,11 +329,6 @@ end;
 
 procedure TVCCSObj.RecalcElementData;
 begin
-    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
-    if SpectrumObj = NIL then
-    begin
-        DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device VCCS.' + Name + ' Not Found.', 333);
-    end;
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
 
     Irated := Prated / Vrated / FNphases;
@@ -417,7 +342,7 @@ begin
     Fkv := 1.0 / BaseVolt / sqrt(2.0);
     Fki := BaseCurr * sqrt(2.0);
 
-    if Length(Ffilter_name) > 0 then
+    if Ffilter <> NIL then
     begin
         Ffiltlen := Ffilter.NumPoints;
         Fwinlen := Trunc(FsampleFreq / BaseFrequency);
@@ -470,18 +395,18 @@ begin
         GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
     // Add Together with yprim currents
         for i := 1 to Yorder do
-            Curr^[i] := Cnegate(ComplexBuffer^[i]);
+            Curr^[i] := -ComplexBuffer^[i];
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for VCCS Element: ' + Name + '.'), E.Message,
-                'Inadequate storage allotted for circuit element?', 335);
+            DoErrorMsg(Format(_('GetCurrents for VCCS Element: %s.'), [Name]), 
+                E.Message, _('Inadequate storage allotted for circuit element?'), 335);
     end;
 end;
 
 procedure TVCCSObj.UpdateSequenceVoltage;
 begin
     if FNPhases = 3 then
-        sV1 := cdivreal(cadd(Vterminal^[1], cadd(cmul(ALPHA1,Vterminal^[2]), cmul(ALPHA2,Vterminal^[3]))), 3.0)
+        sV1 := (Vterminal^[1] + (ALPHA1 * Vterminal^[2] + ALPHA2 * Vterminal^[3])) / 3.0
     else
         sV1 := Vterminal^[1];
 end;
@@ -502,7 +427,7 @@ begin
     UpdateSequenceVoltage;
 
     // IterminalUpdated := FALSE;
-    if DSS.ActiveSolutionObj.IsDynamicModel then
+    if ActiveCircuit.Solution.IsDynamicModel then
     begin
         if FrmsMode then
         begin
@@ -513,8 +438,8 @@ begin
                 3: 
                 begin
                     Curr^[1] := i1;
-                    Curr^[2] := cmul(i1, ALPHA2);
-                    Curr^[3] := cmul(i1, ALPHA1);
+                    Curr^[2] := i1 * ALPHA2;
+                    Curr^[3] := i1 * ALPHA1;
                 end;
             else
                 for i := 1 to Fnphases do
@@ -540,48 +465,10 @@ begin
     end;
 end;
 
-procedure TVCCSObj.DumpProperties(F: TFileStream; Complete: Boolean);
-var
-    i: Integer;
-begin
-    inherited DumpProperties(F, Complete);
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
-        end;
-    if Complete then
-    begin
-        FSWriteln(F);
-        FSWriteln(F);
-    end;
-end;
-
-procedure TVCCSObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-    PropertyValue[1] := GetBus(1);
-    PropertyValue[2] := '1';
-    PropertyValue[3] := '250';
-    PropertyValue[4] := '208';
-    PropertyValue[5] := '100';
-    PropertyValue[6] := 'NONE';
-    PropertyValue[7] := 'NONE';
-    PropertyValue[8] := 'NONE';
-    PropertyValue[9] := '5000';
-    PropertyValue[10] := 'no';
-    PropertyValue[11] := '1.1';
-    PropertyValue[12] := '0.0015';
-    PropertyValue[13] := '0.0015';
-    inherited  InitPropertyValues(NumPropsThisClass);
-end;
-
-procedure TVCCSObj.MakePosSequence;
+procedure TVCCSObj.MakePosSequence();
 begin
     if Fnphases > 1 then
-    begin
-        Parser.CmdString := 'phases=1';
-        Edit;
-    end;
+        SetInteger(ord(TProp.Phases), 1);
     inherited;
 end;
 
@@ -621,7 +508,7 @@ begin
     s5 := 0;
     s6 := 0;
     sV1 := cmplx(1.0, 0.0);
-    vlast := cdivreal(Vterminal^[1], BaseVolt);
+    vlast := Vterminal^[1] / BaseVolt;
 
   // initialize the history terms for HW model source convention
     for i := 1 to Ffiltlen do
@@ -667,11 +554,11 @@ begin
     s5 := 0;
     s6 := 0;
     sV1 := cmplx(1.0, 0.0);
-    vlast := cdivreal(Vterminal^[1], BaseVolt);
+    vlast := Vterminal^[1] / BaseVolt;
 
   // initialize the history terms for HW model source convention
     d := 1 / FsampleFreq;
-    wd := 2 * Pi * DSS.ActiveSolutionObj.Frequency * d;
+    wd := 2 * Pi * ActiveCircuit.Solution.Frequency * d;
     for i := 1 to Ffiltlen do
     begin
         wt := vang - wd * (Ffiltlen - i);
@@ -707,8 +594,8 @@ begin
     vpu := cabs(sV1) / BaseVolt;
     if vpu > 0.0 then
     begin
-        h := DSS.ActiveSolutionObj.DynaVars.h;
-        corrector := DSS.ActiveSolutionObj.DynaVars.IterationFlag;
+        h := ActiveCircuit.Solution.DynaVars.h;
+        corrector := ActiveCircuit.Solution.DynaVars.IterationFlag;
         nstep := trunc(1e-6 + h * FSampleFreq);
     // Vrms from LPF
         d := vpu - s1;
@@ -780,15 +667,15 @@ begin
 
     ComputeIterminal;
 
-    t := DSS.ActiveSolutionObj.DynaVars.t;
-    h := DSS.ActiveSolutionObj.DynaVars.h;
-    f := DSS.ActiveSolutionObj.Frequency;
-    corrector := DSS.ActiveSolutionObj.DynaVars.IterationFlag;
+    t := ActiveCircuit.Solution.DynaVars.t;
+    h := ActiveCircuit.Solution.DynaVars.h;
+    f := ActiveCircuit.Solution.Frequency;
+    corrector := ActiveCircuit.Solution.DynaVars.IterationFlag;
     d := 1 / FSampleFreq;
     nstep := trunc(1e-6 + h / d);
     w := 2 * Pi * f;
 
-    vnow := cdivreal(Vterminal^[1], BaseVolt);
+    vnow := Vterminal^[1] / BaseVolt;
     vin := 0;
     y := 0;
     iu := sIdxU;
@@ -943,4 +830,5 @@ end;
 initialization
     ALPHA1 := cmplx(-0.5, 0.5 * sqrt(3.0));  // 1 at 120 degrees
     ALPHA2 := cmplx(-0.5, -ALPHA1.im); // 1 at 240 degrees
+    PropInfo := NIL;
 end.

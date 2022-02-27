@@ -48,12 +48,12 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_CommandHelp(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime, CommandHelp[i]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Command.' + ExecCommand[i]));
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_OptionHelp(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime, OptionHelp[i]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Executive.' + ExecOption[i]));
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_OptionValue(i: Integer): PAnsiChar; CDECL;

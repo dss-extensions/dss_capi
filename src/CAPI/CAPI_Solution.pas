@@ -166,7 +166,6 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_Mode(): Integer; CDECL;
 begin
-     //If not InvalidCircuit(DSSPrime) Then Result := GetSolutionModeID      changed to integer 8/16/00
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
@@ -260,7 +259,7 @@ begin
     if (Mode >= Ord(Low(TSolveMode))) and (Mode <= Ord(High(TSolveMode))) then
         DSSPrime.ActiveCircuit.Solution.Mode := TSolveMode(Mode)
     else
-        DoSimpleMsg(DSSPrime, Format('Invalid solution mode (%d).', [Mode]), 5004);
+        DoSimpleMsg(DSSPrime, 'Invalid solution mode (%d).', [Mode], 5004);
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Number(Value: Integer); CDECL;
@@ -323,7 +322,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, GetSolutionModeID(DSSPrime))
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.SolveModeEnum.OrdinalToString(ord(DSSPrime.ActiveCircuit.Solution.Mode)))
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_LoadModel(): Integer; CDECL;
@@ -362,7 +361,7 @@ begin
         LoadDurCurve := Value;
         LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(LoadDurCurve);
         if LoadDurCurveObj = NIL then
-            DoSimpleMsg(DSSPrime, 'Load-Duration Curve not found.', 5001);
+            DoSimpleMsg(DSSPrime, _('Load-Duration Curve not found.'), 5001);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -866,23 +865,24 @@ begin
     DSSPrime.ActiveCircuit.Solution.MinIterations := Value;
 end;
 
-{$IFDEF DSS_CAPI_PM}
 //------------------------------------------------------------------------------
 procedure Solution_SolveAll();cdecl;
+{$IFDEF DSS_CAPI_PM}
 var
     i : Integer;
+    PMParent: TDSSContext;
 begin
-    for i := 0 to High(DSSPrime.Children) do
+    PMParent := DSSPrime.GetPrime();
+    for i := 0 to High(PMParent.Children) do
     begin
-        DSSPrime.CmdResult := DoSetCmd(DSSPrime.Children[i], 1);
+        PMParent.ActiveChild := PMParent.Children[i];
+        DSSPrime.CmdResult := DoSetCmd(PMParent.Children[i], 1);
     end;
-end;
 {$ELSE}
-procedure Solution_SolveAll();cdecl;
 begin
-    DoSimpleMsg(DSSPrime, 'Parallel machine functions were not compiled', 7983);
-end;
+    DoSimpleMsg(DSSPrime, _('Parallel machine functions were not compiled'), 7983);
 {$ENDIF}
+end;
 //------------------------------------------------------------------------------
 procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 var
@@ -935,7 +935,7 @@ begin
         with DSSPrime.ActiveCircuit.Solution do
         begin
             ArrSize := IncMat.NZero * 3;
-            Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); // TODO: remove +1?
+            Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); // TODO: remove +1? Left for compatibility with the official version
             Counter := 0;
             IMIdx := 0;
             while IMIdx < ArrSize do

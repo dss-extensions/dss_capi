@@ -11,7 +11,7 @@ interface
 
 uses
     ArrayDef,
-    uComplex;
+    UComplex, DSSUcomplex;
 
 {$INCLUDE DSSCallBackStructDef.pas}
 
@@ -27,11 +27,7 @@ uses
     ParserDel,
     DSSGlobals,
     Executive,
-{$IFNDEF FPC}
-    AnsiStrings,
-{$ELSE}
     SysUtils,
-{$ENDIF}
     CktElement,
     Math,
     PDElement,
@@ -39,7 +35,7 @@ uses
     DSSHelper;
 
 var
-    CallBackParser: TParser;
+    CallBackParser: TDSSParser;
     CB_ParamName,
     CB_Param: String;
 
@@ -359,7 +355,6 @@ begin
     begin
         DynamicsStruct := @DSSPrime.ActiveCircuit.Solution.DynaVars;
     end;
-
 end;
 
 {====================================================================================================================}
@@ -380,7 +375,6 @@ begin
     begin
         Result := DSSPrime.ActiveCircuit.Solution.DynaVars.t;
     end;
-
 end;
 
 {====================================================================================================================}
@@ -398,7 +392,6 @@ end;
 procedure GetPublicDataPtrCallBack(var pPublicData: Pointer; var PublicDataBytes: Integer); STDCALL;
 
 begin
-
     if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
         with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
@@ -406,12 +399,10 @@ begin
                 pPublicData := PublicDataStruct;
                 PublicDataBytes := PublicDataSize;
             end;
-
 end;
 
-function GetActiveElementNameCallBack(FullName: pAnsiChar; Maxlen: Cardinal): Integer; STDCALL;
-{Maxlen is num of chars the calling program allocates for the string}
-
+function GetActiveElementNameCallBack(ElFullName: pAnsiChar; Maxlen: Cardinal): Integer; STDCALL;
+// Maxlen is num of chars the calling program allocates for the string
 var
     S: String;
 begin
@@ -420,10 +411,9 @@ begin
         with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
-                S := ParentClass.Name + '.' + Name;
-
-                StrlCopy(FullName, pAnsiChar(Ansistring(S)), Maxlen);
-                Result := Length(FullName);
+                S := FullName;
+                StrlCopy(ElFullName, pAnsiChar(Ansistring(S)), Maxlen);
+                Result := Length(ElFullName);
             end;
 end;
 
@@ -487,7 +477,7 @@ initialization
         GetResultStr := GetResultStrCallBack;
     end;
 
-    CallBackParser := TParser.Create;
+    CallBackParser := TDSSParser.Create;
 
 {====================================================================================================================}
 

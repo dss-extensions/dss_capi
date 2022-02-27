@@ -5,18 +5,18 @@ unit CapControlVars;
   All rights reserved.
   ----------------------------------------------------------
 }
-{Header file for CapControlVars}
+// Header file for CapControlVars
 
 interface
 
-{ For user DLL, import Definitions of control actions directly }
+// For user DLL, import Definitions of control actions directly
 
 
 {$IFDEF USER_DLL}
-Uses ucomplex;
+Uses UComplex, DSSUcomplex;
 {$INCLUDE ControlActionDefs.txt}
 {$ELSE}
-Uses ucomplex, ControlElem;
+Uses UComplex, DSSUcomplex, ControlElem;
 {$ENDIF}
 
 Type

@@ -65,7 +65,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active Generator object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Generator'], 8989);
         end;
         Exit;
     end;
@@ -194,7 +194,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Generator "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Generator "%s" not found in Active Circuit.', [Value], 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -270,7 +270,8 @@ begin
     if not _activeObj(DSSPrime, pGen) then
         Exit;
 
-    pGen.Presentkvar := Value;
+    pGen.kvarBase := Value;
+    pGen.PropertySideEffects(ord(TGeneratorProp.kvar))
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kW(Value: Double); CDECL;
@@ -295,12 +296,18 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Phases(Value: Integer); CDECL;
 var
-    pGen: TGeneratorObj;
+    elem: TGeneratorObj;
 begin
-    if not _activeObj(DSSPrime, pGen) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    pGen.Nphases := Value;
+    if Value < 1 then
+    begin
+        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName], 6568);
+        Exit;
+    end;
+    elem.FNphases := Value;
+    //TODO: missing side-effects?
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Count(): Integer; CDECL;
@@ -328,7 +335,7 @@ begin
     pGen := DSSPrime.ActiveCircuit.Generators.Get(Value);
     if pGen = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Generator index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Generator', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pGen;

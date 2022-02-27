@@ -1,6 +1,5 @@
 unit PCElement;
 
-{$M+}
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -13,7 +12,7 @@ interface
 uses
     Classes,
     CktElement,
-    ucomplex,
+    UComplex, DSSUcomplex,
     DSSClass,
     Spectrum,
     Arraydef,
@@ -27,14 +26,10 @@ type
         procedure GetTerminalCurrents(Curr: pComplexArray); VIRTUAL;
         function Get_Variable(i: Integer): Double; VIRTUAL;
         procedure Set_Variable(i: Integer; Value: Double); VIRTUAL;
-
     PUBLIC
-
-
-        Spectrum: String;
         SpectrumObj: TSpectrumObj;
 
-        MeterObj,  {Upline Energymeter}
+        MeterObj,  // Upline Energymeter
         SensorObj: TMeterElement; // Upline Sensor for this element
 
         InjCurrent: pComplexArray;
@@ -42,15 +37,14 @@ type
 
         constructor Create(ParClass: TDSSClass);
         destructor Destroy; OVERRIDE;
-
+        procedure MakeLike(OtherObj: Pointer); override;
         procedure ZeroInjCurrent;
 
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
         procedure ComputeIterminal; OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray); INLINE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
         procedure set_ITerminalUpdated(const Value: Boolean);
 
       // Sweep solution removed  PROCEDURE BackwardSweep;Override;
@@ -70,9 +64,7 @@ type
         property Variable[i: Integer]: Double READ Get_Variable WRITE Set_Variable;
 
         property ITerminalUpdated: Boolean READ FITerminalUpdated WRITE set_ITerminalUpdated;
-
     end;
-
 
 implementation
 
@@ -90,8 +82,7 @@ uses
 constructor TPCElement.Create(ParClass: TDSSClass);
 begin
     inherited Create(ParClass);
-    Spectrum := 'default';
-    SpectrumObj := NIL;  // have to allocate later because not guaranteed there will be one now.
+    SpectrumObj := DSS.SpectrumClass.DefaultGeneral;
     SensorObj := NIL;
     MeterObj := NIL;
     InjCurrent := NIL;
@@ -108,28 +99,22 @@ begin
 end;
 
 function TPCElement.InjCurrents: Integer;
-
 // Add injection currents into System currents array
-
 var
     i: Integer;
 begin
     Result := 0;
     with ActiveCircuit.Solution do
         for i := 1 to Yorder do
-            Caccum(Currents^[NodeRef^[i]], InjCurrent^[i]);
+            Currents^[NodeRef^[i]] += InjCurrent^[i];
 end;
 
-//= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TPCElement.GetTerminalCurrents(Curr: pComplexArray);
-
 // This is called only if we need to compute the terminal currents from the inj currents
 // Such as for Harmonic model
-
 var
     i: Integer;
 begin
-
     if ITerminalUpdated then
     begin   // Just copy iTerminal unless iTerminal=Curr
         if Curr <> ITerminal then
@@ -140,44 +125,32 @@ begin
     begin
         YPrim.MVmult(Curr, VTerminal);
         for i := 1 to Yorder do
-            CAccum(Curr^[i], CNegate(Injcurrent^[i]));
+            Curr^[i] -= Injcurrent^[i];
         IterminalUpdated := TRUE;
     end;
     IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
 end;
 
-//= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
 procedure TPCElement.GetCurrents(Curr: pComplexArray);
-
-{Gets total Currents going INTO a devices terminals}
-
+// Gets total Currents going INTO a devices terminals
 var
     i: Integer;
-
 begin
     try
-
         with ActiveCircuit.Solution do
         begin
             if (Enabled) then
             begin
-
                 if (LastSolutionWasDirect) and (not (IsDynamicModel or IsHarmonicModel)) then
                 begin
-
            // Take a short cut and get Currents from YPrim only
            // For case where model is entirely in Y matrix
-
                     CalcYPrimContribution(Curr);
-
                 end
                 else
                 begin
-
                     GetTerminalCurrents(Curr);
-                end; {IF}
-
+                end;
             end
             else
             begin   // not enabled
@@ -189,14 +162,12 @@ begin
 
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
-                'Inadequate storage allotted for circuit element.', 641);
+            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), E.Message,
+                _('Inadequate storage allotted for circuit element.'), 641);
     end;
-
 end;
 
 procedure TPCElement.CalcYPrimContribution(Curr: pComplexArray);
-
 begin
     ComputeVTerminal;
       // Apply these voltages to Yprim
@@ -206,34 +177,22 @@ end;
 procedure TPCElement.InitHarmonics;
 begin
   // By default do nothing in the base class
-
-end;
-
-procedure TPCElement.InitPropertyValues(ArrayOffset: Integer);
-begin
-
-    PropertyValue[ArrayOffset + 1] := Spectrum;
-
-    inherited InitPropertyValues(ArrayOffset + 1);
-
 end;
 
 procedure TPCElement.InitStateVars;
 begin
     // By default do nothing
-
 end;
 
 procedure TPCElement.IntegrateStates;
 begin
  // inherited;
  // By default do nothing
-
 end;
 
 procedure TPCElement.GetAllVariables(States: pDoubleArray);
 begin
-     {Do Nothing}
+    // Do Nothing
 end;
 
 function TPCElement.NumVariables: Integer;
@@ -243,18 +202,15 @@ end;
 
 function TPCElement.VariableName(i: Integer): String;
 begin
-   {Do Nothing}
+    // Do Nothing
     Result := '';
 end;
 
 function TPCElement.LookupVariable(const S: String): Integer;
-
-{Search through variable name list and return index if found}
-{Compare up to length of S}
-
+// Search through variable name list and return index if found
+// Compare up to length of S
 var
     i, TestLength: Integer;
-
 begin
     Result := -1;   // Returns -1 for error not found
     TestLength := Length(S);
@@ -268,8 +224,7 @@ begin
     end;
 end;
 
-
-procedure TPCElement.DumpProperties(F: TFileStream; Complete: Boolean);
+procedure TPCElement.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
 var
     i: Integer;
 begin
@@ -284,19 +239,32 @@ begin
         end;
     end;
 
+    if Leaf then
+    begin
+        with ParentClass do
+            for i := 1 to NumProperties do
+            begin
+                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            end;
+
+        if Complete then
+        begin
+            FSWriteln(F);
+            FSWriteln(F);
+        end;
+    end;
 end;
 
 function TPCElement.Get_Variable(i: Integer): Double;
 begin
-   {do Nothing here -- up to override function}
+    // do Nothing here -- up to override function
     Result := -9999.99;
 end;
 
 procedure TPCElement.Set_Variable(i: Integer; Value: Double);
 begin
-  {Do Nothing}
+    // Do Nothing
 end;
-
 
 procedure TPCElement.ComputeIterminal;
 begin
@@ -305,7 +273,6 @@ begin
         GetCurrents(Iterminal);
         IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
     end;
-
 end;
 
 procedure TPCElement.ZeroInjCurrent;
@@ -321,6 +288,17 @@ begin
     FITerminalUpdated := Value;
     if Value then
         ITerminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
+end;
+
+procedure TPCElement.MakeLike(OtherObj: Pointer);
+var
+    Other: TPCElement;
+begin
+    inherited MakeLike(OtherObj);
+
+    Other := TPCElement(OtherObj);
+
+    SpectrumObj := Other.SpectrumObj;
 end;
 
 end.

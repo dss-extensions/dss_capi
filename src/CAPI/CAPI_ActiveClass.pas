@@ -136,7 +136,7 @@ function ActiveClass_Get_ActiveClassParent(): PAnsiChar; CDECL;
 begin
     if DSSPrime.ActiveDSSClass = NIL then
     begin
-        Result := DSS_GetAsPAnsiChar(DSSPrime, 'Parent Class unknonwn');
+        Result := DSS_GetAsPAnsiChar(DSSPrime, 'Parent Class unknown');
         Exit;
     end;
 
@@ -147,7 +147,7 @@ begin
     else  if DSSPrime.ActiveDSSClass.ClassType.InheritsFrom(TPDClass) then
         Result := DSS_GetAsPAnsiChar(DSSPrime, 'TPDClass')
     else if DSSPrime.ActiveDSSClass.ClassType.InheritsFrom(TPCClass) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, 'TPCClas') //NOTE: kept as "Clas" for compatibility
+        Result := DSS_GetAsPAnsiChar(DSSPrime, 'TPCClass')
     else 
         Result := DSS_GetAsPAnsiChar(DSSPrime, 'Generic Object');
 end;

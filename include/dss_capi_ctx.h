@@ -45,7 +45,7 @@ extern "C" {
     previous prime instance returned by ctx_Set_Prime, if required.
     */
     DSS_CAPI_DLL void *ctx_Set_Prime(void *ctx);
-    
+
 
     DSS_CAPI_DLL void ctx_DSS_ResetStringBuffer(void* ctx);
 
@@ -740,7 +740,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Circuit_Get_SubstationLosses_GR(void* ctx);
 
     /*
-    Total power, watts delivered to the circuit
+    Total power, kW delivered to the circuit
     */
     DSS_CAPI_DLL void ctx_Circuit_Get_TotalPower(void* ctx, double** ResultPtr, int32_t* ResultCount);
     /*
@@ -3378,79 +3378,79 @@ extern "C" {
     /*
     Delivers the number of CPUs on the current PC
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_NumCPUs(void);
+    DSS_CAPI_DLL int32_t ctx_Parallel_Get_NumCPUs(void* ctx);
 
     /*
     Delivers the number of Cores of the local PC
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_NumCores(void);
+    DSS_CAPI_DLL int32_t ctx_Parallel_Get_NumCores(void* ctx);
 
     /*
     Gets the ID of the Active Actor
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ActiveActor(void);
+    DSS_CAPI_DLL int32_t ctx_Parallel_Get_ActiveActor(void* ctx);
 
     /*
     Sets the Active Actor
     */
-    // DSS_CAPI_DLL void Parallel_Set_ActiveActor(int32_t Value);
+    DSS_CAPI_DLL void ctx_Parallel_Set_ActiveActor(void* ctx, int32_t Value);
 
-    // DSS_CAPI_DLL void Parallel_CreateActor(void);
+    DSS_CAPI_DLL void ctx_Parallel_CreateActor(void* ctx);
 
     /*
     Gets the CPU of the Active Actor
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ActorCPU(void);
+    DSS_CAPI_DLL int32_t ctx_Parallel_Get_ActorCPU(void* ctx);
 
     /*
     Sets the CPU for the Active Actor
     */
-    // DSS_CAPI_DLL void Parallel_Set_ActorCPU(int32_t Value);
+    DSS_CAPI_DLL void ctx_Parallel_Set_ActorCPU(void* ctx, int32_t Value);
 
     /*
     Gets the number of Actors created
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_NumOfActors(void);
+    DSS_CAPI_DLL int32_t ctx_Parallel_Get_NumOfActors(void* ctx);
 
-    // DSS_CAPI_DLL void Parallel_Wait(void);
+    DSS_CAPI_DLL void ctx_Parallel_Wait(void* ctx);
 
     /*
     Gets the progress of all existing actors in pct
     */
-    // DSS_CAPI_DLL void Parallel_Get_ActorProgress(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void ctx_Parallel_Get_ActorProgress(void* ctx, int32_t** ResultPtr, int32_t* ResultCount);
     /*
     Same as Parallel_Get_ActorProgress but using the global buffer interface for results
     */
-    // DSS_CAPI_DLL void Parallel_Get_ActorProgress_GR(void);
+    DSS_CAPI_DLL void ctx_Parallel_Get_ActorProgress_GR(void* ctx);
 
     /*
     Gets the status of each actor
     */
-    // DSS_CAPI_DLL void Parallel_Get_ActorStatus(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void ctx_Parallel_Get_ActorStatus(void* ctx, int32_t** ResultPtr, int32_t* ResultCount);
     /*
     Same as Parallel_Get_ActorStatus but using the global buffer interface for results
     */
-    // DSS_CAPI_DLL void Parallel_Get_ActorStatus_GR(void);
+    DSS_CAPI_DLL void ctx_Parallel_Get_ActorStatus_GR(void* ctx);
 
     /*
     Sets ON/OFF (1/0) Parallel features of the Engine
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ActiveParallel(void);
+    DSS_CAPI_DLL int32_t ctx_Parallel_Get_ActiveParallel(void* ctx);
 
     /*
     Delivers if the Parallel features of the Engine are Active
     */
-    // DSS_CAPI_DLL void Parallel_Set_ActiveParallel(int32_t Value);
+    DSS_CAPI_DLL void ctx_Parallel_Set_ActiveParallel(void* ctx, int32_t Value);
 
     /*
     Reads the values of the ConcatenateReports option (1=enabled, 0=disabled)
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ConcatenateReports(void);
+    DSS_CAPI_DLL int32_t ctx_Parallel_Get_ConcatenateReports(void* ctx);
 
     /*
     Enable/Disable (1/0) the ConcatenateReports option for extracting monitors data
     */
-    // DSS_CAPI_DLL void Parallel_Set_ConcatenateReports(int32_t Value);
+    DSS_CAPI_DLL void ctx_Parallel_Set_ConcatenateReports(void* ctx, int32_t Value);
 
     /*
     String to be parsed. Loading this string resets the Parser to the beginning of the line. Then parse off the tokens in sequence.
@@ -3724,7 +3724,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllPctEmerg but using the global buffer interface for results
     */
-    DSS_CAPI_DLL void ctx_PDElements_Get_AllPctEmerg_GR(void* ctx);
+    DSS_CAPI_DLL void ctx_PDElements_Get_AllPctEmerg_GR(void* ctx, uint16_t AllNodes);
 
 
     /*
@@ -5259,7 +5259,7 @@ extern "C" {
     */
     DSS_CAPI_DLL void ctx_Solution_Set_MinIterations(void* ctx, int32_t Value);
 
-    // DSS_CAPI_DLL void Solution_SolveAll(void);
+    DSS_CAPI_DLL void ctx_Solution_SolveAll(void* ctx);
 
     DSS_CAPI_DLL void ctx_Solution_Get_IncMatrix(void* ctx, int32_t** ResultPtr, int32_t* ResultCount);
 
@@ -6543,6 +6543,44 @@ extern "C" {
     DSS_CAPI_DLL void ctx_YMatrix_Set_SolverOptions(void* ctx, uint64_t opts);
     DSS_CAPI_DLL uint64_t ctx_YMatrix_Get_SolverOptions(void* ctx);
     
+    DSS_CAPI_DLL void ctx_Text_CommandBlock(void* ctx, char *Value);
+    DSS_CAPI_DLL void ctx_Text_CommandArray(void* ctx, char** ValuePtr, int32_t ValueCount);
+
+    DSS_CAPI_DLL void ctx_ZIP_Open(void* ctx, char* FileName);
+    DSS_CAPI_DLL void ctx_ZIP_Redirect(void* ctx, char* FileInZip);
+    DSS_CAPI_DLL void ctx_ZIP_Close(void* ctx);
+
+    /*
+    Functions for the new API
+    */
+
+
+
+
+    /*
+    Activates an object. The object is set as the current
+    active DSSObject or CktElement, and in the list of its parent class.
+    If AllLists is true, other internal lists of OpenDSS are also
+    updated (implies slow/linear searches).
+    */
+
+    
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #ifdef __cplusplus
 } // extern "C"

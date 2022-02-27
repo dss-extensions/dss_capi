@@ -7,19 +7,12 @@ unit Isource;
   ----------------------------------------------------------
 }
 
-{  Ideal current source
-
-   Stick'em on wherever you want as many as you want
-
-   ISource maintains a positive sequence for harmonic scans.  If you want zero sequence,
-   use three single-phase ISource.
-
-
- 10-25-00  Created from Vsource
- 5-17-02  Moved spectrum to base class
- 2-19-03 Added Phaseshift variable for n-phase elements
-
-}
+// Ideal current source
+// 
+// Stick'em on wherever you want as many as you want
+// 
+// ISource maintains a positive sequence for harmonic scans.  If you want zero sequence,
+// use three single-phase ISource.
 
 interface
 
@@ -29,27 +22,39 @@ uses
     PCClass,
     PCElement,
     ucmatrix,
-    ucomplex,
+    UComplex, DSSUcomplex,
     Spectrum,
     Loadshape;
 
 type
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+{$SCOPEDENUMS ON}
+    TIsourceProp = (
+        INVALID = 0,
+        bus1 = 1,
+        amps = 2,
+        angle = 3,
+        frequency = 4,
+        phases = 5,
+        scantype = 6,
+        sequence = 7,
+        Yearly = 8,
+        Daily = 9,
+        Duty = 10,
+        Bus2 = 11
+    );
+{$SCOPEDENUMS OFF}
+
     TIsource = class(TPCClass)
-    PRIVATE
-        procedure IsourceSetBus1(const S: String);
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const OtherSource: String): Integer; OVERRIDE;
+        procedure DefineProperties; override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
     end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TIsourceObj = class(TPCElement)
     PRIVATE
 
@@ -72,34 +77,27 @@ type
         ScanType,
         SequenceType: Integer;
         PerUnit: Double;
-        DailyShape: String;         // Daily (24 HR) load shape
-        DailyShapeObj: TLoadShapeObj;  // Daily load Shape FOR this load
-        DutyShape: String;         // Duty cycle load shape FOR changes typically less than one hour
-        DutyShapeObj: TLoadShapeObj;  // Shape for this load
-        YearlyShape: String;  // ='fixed' means no variation  exempt from variation
+        DailyShapeObj: TLoadShapeObj;  // Daily (24 HR) load shape
+        DutyShapeObj: TLoadShapeObj;  // Duty cycle load shape FOR changes typically less than one hour
         YearlyShapeObj: TLoadShapeObj;  // Shape for this load
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;        
+        procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
 
-        procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
+        procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
         function InjCurrents: Integer; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
-
     end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
-
 uses
-    ParserDel,
     Circuit,
     DSSClassDefs,
     DSSGlobals,
@@ -111,369 +109,213 @@ uses
     DSSObjectHelper,
     TypInfo;
 
-
+type
+    TObj = TISourceObj;
+    TProp = TIsourceProp;
+const
+    NumPropsThisClass = Ord(High(TProp));
 var
-    NumPropsThisClass: Integer;
+    PropInfo: Pointer;    
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TIsource.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
+constructor TIsource.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
-    Class_Name := 'Isource';
-    DSSClassType := SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
 
-    ActiveElement := 0;
-
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
-
+    inherited Create(dssContext, SOURCE or NON_PCPD_ELEM, 'Isource');
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TIsource.Destroy;
-
 begin
-    // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
-
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TIsource.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
-    NumPropsThisClass := 11;
-
     Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    // integer properties
+    PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
-     // Define Property names
-    PropertyName[1] := 'bus1';
-    PropertyName[2] := 'amps';
-    PropertyName[3] := 'angle';
-    PropertyName[4] := 'frequency';
-    PropertyName[5] := 'phases';
-    PropertyName[6] := 'scantype';
-    PropertyName[7] := 'sequence';
-    PropertyName[8] := 'Yearly';
-    PropertyName[9] := 'Daily';
-    PropertyName[10] := 'Duty';
-    PropertyName[11] := 'Bus2';
+    // bus properties
+    PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
+    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
+    PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyOffset[ord(TProp.bus2)] := 2;
 
-     // define Property help values
-    PropertyHelp[1] := 'Name of bus to which source is connected.' + CRLF + 'bus1=busname' + CRLF + 'bus1=busname.1.2.3';
-    PropertyHelp[2] := 'Magnitude of current source, each phase, in Amps.';
-    PropertyHelp[3] := 'Phase angle in degrees of first phase: e.g.,Angle=10.3.' + CRLF +
-        'Phase shift between phases is assumed 120 degrees when ' +
-        'number of phases <= 3';
-    PropertyHelp[4] := 'Source frequency.  Defaults to  circuit fundamental frequency.';
-    PropertyHelp[5] := 'Number of phases.  Defaults to 3. For 3 or less, phase shift is 120 degrees.';
-    PropertyHelp[6] := '{pos*| zero | none} Maintain specified sequence for harmonic solution. Default is positive sequence. ' +
-        'Otherwise, angle between phases rotates with harmonic.';
-    PropertyHelp[7] := '{pos*| neg | zero} Set the phase angles for the specified symmetrical component sequence for non-harmonic solution modes. ' +
-        'Default is positive sequence. ';
-    PropertyHelp[8] := 'LOADSHAPE object to use for the per-unit current for YEARLY-mode simulations. Set the Mult property of the LOADSHAPE ' +
-        'to the pu curve. Qmult is not used. If UseActual=Yes then the Mult curve should be actual Amp.' + CRLF + CRLF +
-        'Must be previously defined as a LOADSHAPE object. ' + CRLF + CRLF +
-        'Is set to the Daily load shape when Daily is defined.  The daily load shape is repeated in this case. ' +
-        'Set to NONE to reset to no loadahape for Yearly mode. ' +
-        'The default is no variation.';
-    PropertyHelp[9] := 'LOADSHAPE object to use for the per-unit current for DAILY-mode simulations. Set the Mult property of the LOADSHAPE ' +
-        'to the pu curve. Qmult is not used. If UseActual=Yes then the Mult curve should be actual A.' + CRLF + CRLF +
-        'Must be previously defined as a LOADSHAPE object. ' + CRLF + CRLF +
-        'Sets Yearly curve if it is not already defined.   ' +
-        'Set to NONE to reset to no loadahape for Yearly mode. ' +
-        'The default is no variation.';
-    PropertyHelp[10] := 'LOADSHAPE object to use for the per-unit current for DUTYCYCLE-mode simulations. Set the Mult property of the LOADSHAPE ' +
-        'to the pu curve. Qmult is not used. If UseActual=Yes then the Mult curve should be actual A.' + CRLF + CRLF +
-        'Must be previously defined as a LOADSHAPE object. ' + CRLF + CRLF +
-        'Defaults to Daily load shape when Daily is defined.   ' +
-        'Set to NONE to reset to no loadahape for Yearly mode. ' +
-        'The default is no variation.';
-    PropertyHelp[11] := 'Name of bus to which 2nd terminal is connected.' + CRLF + 'bus2=busname' + CRLF + 'bus2=busname.1.2.3' +
-        CRLF + CRLF +
-        'Default is Bus1.0.0.0 (grounded-wye connection)';
+    // enum properties
+    PropertyType[ord(TProp.ScanType)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.ScanType)] := ptruint(@obj.ScanType);
+    PropertyOffset2[ord(TProp.ScanType)] := PtrInt(DSS.ScanTypeEnum);
+
+    PropertyType[ord(TProp.Sequence)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.Sequence)] := ptruint(@obj.Sequencetype);
+    PropertyOffset2[ord(TProp.Sequence)] := PtrInt(DSS.SequenceEnum);
+
+    // object properties
+    PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
+    
+    PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
+    PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyShapeObj);
+    PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
+
+    PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
+
+    // double properties
+    PropertyOffset[ord(TProp.amps)] := ptruint(@obj.Amps);
+    PropertyOffset[ord(TProp.angle)] := ptruint(@obj.Angle);
+    PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.SrcFrequency);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
-     // Override help string
-    PropertyHelp[NumPropsThisClass + 1] := 'Harmonic spectrum assumed for this source.  Default is "default".';
-
+    inherited DefineProperties;
 end;
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TIsource.NewObject(const ObjName: String): Integer;
-begin
-    // Make a new voltage source and add it to Isource class list
-    with ActiveCircuit do
-    begin
-        ActiveCktElement := TIsourceObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
-end;
-
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TIsource.Edit: Integer;
+function TIsource.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    ParamPointer: Integer;
-    ParamName,
-    Param: String;
-
+    Obj: TObj;
 begin
-  // continue parsing with contents of Parser
-    DSS.ActiveIsourceObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := DSS.ActiveIsourceObj;
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        ActiveCircuit.ActiveCktElement := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
 
-    Result := 0;
-
-    with DSS.ActiveIsourceObj do
-    begin
-
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
+procedure TIsourceObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+var
+    S, S2: String;
+    i, dotpos: Integer;
+begin
+    case Idx of
+        ord(TProp.Phases):
         begin
-            if Length(ParamName) = 0 then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
-
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
+            case FNphases of
                 1:
-                    IsourceSetBus1(param);
-                2:
-                    Amps := Parser.DblValue;
-                3:
-                    Angle := Parser.DblValue; // Ang
-                4:
-                    SrcFrequency := Parser.DblValue; // freq
-                5:
-                begin
-                    Nphases := Parser.IntValue; // num phases
-                    case FNphases of
-                        1:
-                            FphaseShift := 0.0;
-                        2, 3:
-                            FphaseShift := 120.0;
-                    else     // higher order systems
-                        FphaseShift := 360.0 / FNphases;
-                    end;
-                    NConds := Fnphases;  // Force Reallocation of terminal info
-                end;
-                6:
-                    case Uppercase(Param)[1] of
-                        'P':
-                            ScanType := 1;
-                        'Z':
-                            ScanType := 0;
-                        'N':
-                            ScanType := -1;
-                    else
-                        DoSimpleMsg('Unknown Scan Type for "' + Class_Name + '.' + Name + '": ' + Param, 331);
-                    end;
-                7:
-                    case Uppercase(Param)[1] of
-                        'P':
-                            SequenceType := 1;
-                        'Z':
-                            SequenceType := 0;
-                        'N':
-                            SequenceType := -1;
-                    else
-                        DoSimpleMsg('Unknown Sequence Type for "' + Class_Name + '.' + Name + '": ' + Param, 331);
-                    end;
-                8:
-                    YearlyShape := Param;
-                9:
-                    DailyShape := Param;
-                10:
-                    DutyShape := Param;
-                11:
-                    SetBus(2, Param);
-            else
-                ClassEdit(DSS.ActiveIsourceObj, ParamPointer - NumPropsThisClass);
+                    FphaseShift := 0.0;
+                2, 3:
+                    FphaseShift := 120.0;
+            else     // higher order systems
+                FphaseShift := 360.0 / FNphases;
             end;
-
-            case ParamPointer of
-            {Set shape objects;  returns nil if not valid}
-            {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
-                8:
-                    YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
-                9:
-                begin
-                    DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
-                  {If Yearly load shape is not yet defined, make it the same as Daily}
-                    if YearlyShapeObj = NIL then
-                        YearlyShapeObj := DailyShapeObj;
-                end;
-                10:
-                    DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
-            end;
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            NConds := Fnphases;  // Force Reallocation of terminal info
         end;
+        ord(TProp.bus1):
+            // Special handling for Bus 1
+            // Set Bus2 = Bus1.0.0.0
+            if not Bus2Defined then // Default Bus2 to zero node of Bus1. (Grounded-Y connection)
+            begin
+            // Strip node designations from S
+                S := GetBus(1);
+                dotpos := Pos('.', S);
+                if dotpos > 0 then
+                    S2 := Copy(S, 1, dotpos - 1)
+                else
+                    S2 := Copy(S, 1, Length(S));  // copy up to Dot
+                for i := 1 to Fnphases do
+                    S2 := S2 + '.0';   // append series of ".0"'s
 
+                SetBus(2, S2);    // default setting for Bus2
+            end;
+        9:
+            // If Yearly load shape is not yet defined, make it the same as Daily
+            if YearlyShapeObj = NIL then
+                YearlyShapeObj := DailyShapeObj;
+    end;
+    inherited PropertySideEffects(Idx, previousIntVal);
+end;
+
+function TIsource.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+begin
+    with TObj(ptr) do
+    begin
         RecalcElementData;
+        YPrimInvalid := TRUE;
+        Exclude(Flags, Flg.EditionActive);
+    end;
+    Result := True;
+end;
+
+procedure TIsourceObj.MakeLike(OtherPtr: Pointer);
+var
+    Other: TObj;
+begin
+    inherited MakeLike(OtherPtr); // set spectrum,  base frequency
+
+    Other := TObj(OtherPtr);
+    if Fnphases <> Other.Fnphases then
+    begin
+        FNphases := Other.Fnphases;
+        NConds := Fnphases;  // Forces reallocation of terminal stuff
+
+        Yorder := Fnconds * Fnterms;
         YPrimInvalid := TRUE;
     end;
 
+    Amps := Other.Amps;
+    Angle := Other.Angle;
+    SrcFrequency := Other.SrcFrequency;
+    Scantype := Other.Scantype;
+    Sequencetype := Other.Sequencetype;
+
+    ShapeIsActual := Other.ShapeIsActual;
+    DailyShapeObj := Other.DailyShapeObj;
+    DutyShapeObj := Other.DutyShapeObj;
+    YearlyShapeObj := Other.YearlyShapeObj;
+
+    Bus2Defined := Other.Bus2Defined;
 end;
 
-//----------------------------------------------------------------------------
-function TIsource.MakeLike(const OtherSource: String): Integer;
-var
-    OtherIsource: TIsourceObj;
-    i: Integer;
-
-begin
-    Result := 0;
-   {See if we can find this line name in the present collection}
-    OtherIsource := Find(OtherSource);
-    if OtherIsource <> NIL then
-        with DSS.ActiveIsourceObj do
-        begin
-
-            if Fnphases <> OtherIsource.Fnphases then
-            begin
-                Nphases := OtherIsource.Fnphases;
-                NConds := Fnphases;  // Forces reallocation of terminal stuff
-
-                Yorder := Fnconds * Fnterms;
-                YPrimInvalid := TRUE;
-            end;
-
-            Amps := OtherIsource.Amps;
-            Angle := OtherIsource.Angle;
-            SrcFrequency := OtherIsource.SrcFrequency;
-            Scantype := OtherIsource.Scantype;
-            Sequencetype := OtherIsource.Sequencetype;
-
-            ShapeIsActual := OtherIsource.ShapeIsActual;
-            DailyShape := OtherIsource.DailyShape;
-            DailyShapeObj := OtherIsource.DailyShapeObj;
-            DutyShape := OtherIsource.DutyShape;
-            DutyShapeObj := OtherIsource.DutyShapeObj;
-            YearlyShape := OtherIsource.YearlyShape;
-            YearlyShapeObj := OtherIsource.YearlyShapeObj;
-
-            Bus2Defined := OtherIsource.Bus2Defined;
-
-            ClassMakeLike(OtherIsource); // set spectrum,  base frequency
-
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherIsource.PropertyValue[i];
-            Result := 1;
-        end
-    else
-        DoSimpleMsg('Error in Isource MakeLike: "' + OtherSource + '" Not Found.', 332);
-
-end;
-
-//----------------------------------------------------------------------------
-procedure TIsource.IsourceSetBus1(const S: String);
-var
-    s2: String;
-    i, dotpos: Integer;
-
-   // Special handling for Bus 1
-   // Set Bus2 = Bus1.0.0.0
-
-begin
-    with DSS.ActiveISourceObj do
-    begin
-        SetBus(1, S);
-
-        if not Bus2Defined then // Default Bus2 to zero node of Bus1. (Grounded-Y connection)
-        begin
-         // Strip node designations from S
-            dotpos := Pos('.', S);
-            if dotpos > 0 then
-                S2 := Copy(S, 1, dotpos - 1)
-            else
-                S2 := Copy(S, 1, Length(S));  // copy up to Dot
-            for i := 1 to Fnphases do
-                S2 := S2 + '.0';   // append series of ".0"'s
-
-            SetBus(2, S2);    // default setting for Bus2
-        end;
-    end;
-
-end;
-
-//----------------------------------------------------------------------------
 constructor TIsourceObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
     inherited create(ParClass);
     Name := LowerCase(SourceName);
     DSSObjType := ParClass.DSSClassType; // SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
-    Nphases := 3;
+    FNphases := 3;
     Fnconds := 3;
     Nterms := 2;   // 4/27/2018 made a 2-terminal I source
 
     Amps := 0.0;
     Angle := 0.0;
+    // TODO: remember to check if PerUnit is correctly applied if is exposed in the future
     PerUnit := 1.0;  // for future use if pu property added,
     SrcFrequency := BaseFrequency;
     FphaseShift := 120.0;
     ScanType := 1;  // Pos Sequence
     Sequencetype := 1;
     Bus2Defined := FALSE;
-    InitPropertyValues(0);
     ShapeIsActual := FALSE;
-    YearlyShape := '';
-    YearlyShapeObj := NIL;  // IF YearlyShapeobj = nil THEN the Vsource alway stays nominal
-    DailyShape := '';
-    DailyShapeObj := NIL;  // IF DaillyShapeobj = nil THEN the Vsource alway stays nominal
-    DutyShape := '';
-    DutyShapeObj := NIL;  // IF DutyShapeobj = nil THEN the Vsource alway stays nominal
+    YearlyShapeObj := NIL;
+    DailyShapeObj := NIL;
+    DutyShapeObj := NIL;
 
     Yorder := Fnterms * Fnconds;
     RecalcElementData;
-
 end;
 
-
-//----------------------------------------------------------------------------
 destructor TIsourceObj.Destroy;
 begin
     inherited Destroy;
 end;
 
-//----------------------------------------------------------------------------
 procedure TIsourceObj.RecalcElementData;
 begin
-
-    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
-
-    if SpectrumObj = NIL then
-    begin
-        DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device Isource.' + Name + ' Not Found.', 333);
-    end;
-
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
-
 end;
 
-//----------------------------------------------------------------------------
 procedure TIsourceObj.CalcYPrim;
-
-
 begin
-
- // Build only YPrim Series
+     // Build only YPrim Series
     if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) {YPrimInvalid} then
     begin
         if YPrim_Series <> NIL then
@@ -489,39 +331,33 @@ begin
         YPrim.Clear;
     end;
 
+    // Yprim = 0  for Ideal Current Source;  just leave it zeroed
 
-     {Yprim = 0  for Ideal Current Source;  just leave it zeroed}
-
-     {Now Account for Open Conductors}
-     {For any conductor that is open, zero out row and column}
+    // Now Account for Open Conductors
+    // For any conductor that is open, zero out row and column
     inherited CalcYPrim;
 
     YPrimInvalid := FALSE;
-
 end;
 
 function TIsourceObj.GetBaseCurr: Complex;
-
 var
     SrcHarmonic: Double;
     NAmps: Double;
-
 begin
-
     try
-
         with ActiveCircuit.Solution do
-  {Get first Phase Current}
+            // Get first Phase Current
             if IsHarmonicModel then
             begin
                 SrcHarmonic := Frequency / SrcFrequency;
-                Result := CMulReal(SpectrumObj.GetMult(SrcHarmonic), Amps);  // Base current for this harmonic
+                Result := SpectrumObj.GetMult(SrcHarmonic) * Amps;  // Base current for this harmonic
                 RotatePhasorDeg(Result, SrcHarmonic, Angle);
             end
             else
             begin
                 case Mode of
-               {Uses same logic as LOAD}
+                    // Uses same logic as LOAD
                     TSolveMode.DAILYMODE:
                     begin
                         CalcDailyMult(DynaVars.dblHour);
@@ -534,11 +370,26 @@ begin
                     begin
                         CalcDutyMult(DynaVars.dblHour);
                     end;
+                    TSolveMode.DYNAMICMODE:
+                    begin
+                        // This mode allows use of one class of load shape in DYNAMIC mode
+                        case ActiveCircuit.ActiveLoadShapeClass of
+                            USEDAILY:
+                                CalcDailyMult(DynaVars.dblHour);
+                            USEYEARLY:
+                                CalcYearlyMult(DynaVars.dblHour);
+                            USEDUTY:
+                                CalcDutyMult(DynaVars.dblHour);
+                        else
+                            ShapeFactor := Cmplx(1.0, 0.0);     // default to 1 + j0 if not known
+                        end;
+                    end;
                 end;
                 NAmps := Amps;
-                if (Mode = TSolveMode.DAILYMODE) or     {If a loadshape mode simulation}
+                if (Mode = TSolveMode.DAILYMODE) or     // If a loadshape mode simulation
                     (Mode = TSolveMode.YEARLYMODE) or
-                    (Mode = TSolveMode.DUTYCYCLE) then
+                    (Mode = TSolveMode.DUTYCYCLE) or 
+                    (Mode = TSolveMode.DYNAMICMODE) then
                     NAmps := Amps * ShapeFactor.re;
                 if abs(Frequency - SrcFrequency) < EPSILON2 then
                     Result := pdegtocomplex(NAmps, Angle)
@@ -547,17 +398,14 @@ begin
             end;
 
     except
-        DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
+        DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName], 334);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;
-
 end;
 
 function TIsourceObj.InjCurrents: Integer;
-
-{Sum Currents directly into solution array}
-
+// Sum Currents directly into solution array
 begin
     GetInjCurrents(InjCurrent);
 
@@ -566,37 +414,29 @@ begin
 end;
 
 procedure TIsourceObj.GetCurrents(Curr: pComplexArray);
-
-{Total currents into a device}
-
+// Total currents into a device
 var
     i: Integer;
-
 begin
-
     try
         GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
-      // Add Together  with yprim currents
+        // Add Together  with yprim currents
         for i := 1 to Yorder do
-            Curr^[i] := Cnegate(ComplexBuffer^[i]);
+            Curr^[i] := -ComplexBuffer^[i];
 
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for Isource Element: ' + Name + '.'), E.Message,
-                'Inadequate storage allotted for circuit element?', 335);
+            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [FullName]), 
+                E.Message, _('Inadequate storage allotted for circuit element?'), 335);
     end;
-
 end;
 
 procedure TIsourceObj.GetInjCurrents(Curr: pComplexArray);
-
-{Fill Up an array of injection currents}
-
+// Fill Up an array of injection currents
 var
     i: Integer;
     BaseCurr: complex;
 begin
-
     with ActiveCircuit.solution do
     begin
         BaseCurr := GetBaseCurr;   // this func applies spectrum if needed
@@ -604,10 +444,9 @@ begin
         for i := 1 to Fnphases do
         begin
             Curr^[i] := BaseCurr;
-            Curr^[i + FnPhases] := Cnegate(BaseCurr);  // 2nd Terminal
+            Curr^[i + FnPhases] := -BaseCurr;  // 2nd Terminal
             if (i < Fnphases) then
             begin
-
                 if IsHarmonicModel then
 
                     case ScanType of
@@ -616,11 +455,10 @@ begin
                         0: ;  // Do not rotate for zero sequence
                     else
                         RotatePhasorDeg(BaseCurr, Harmonic, -FphaseShift) // rotate by frequency
-                     {Harmonic 1 will be pos; 2 is neg; 3 is zero, and so on.}
+                        // Harmonic 1 will be pos; 2 is neg; 3 is zero, and so on.
                     end
 
                 else
-
                     case SequenceType of
                         -1:
                             RotatePhasorDeg(BaseCurr, 1.0, FphaseShift); // Neg seq
@@ -628,67 +466,19 @@ begin
                     else
                         RotatePhasorDeg(BaseCurr, 1.0, -FphaseShift); // Maintain pos seq
                     end;
-
             end;
         end;
     end;
 end;
 
-procedure TIsourceObj.DumpProperties(F: TFileStream; Complete: Boolean);
-
-var
-    i: Integer;
-
+procedure TIsourceObj.MakePosSequence();
 begin
-    inherited DumpProperties(F, Complete);
-
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
-        end;
-
-    if Complete then
-    begin
-        FSWriteln(F);
-        FSWriteln(F);
-    end;
-
-end;
-
-procedure TIsourceObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-
-    PropertyValue[1] := GetBus(1);
-    PropertyValue[2] := '0';
-    PropertyValue[3] := '0';
-    PropertyValue[4] := Format('%-.6g', [SrcFrequency]);
-    PropertyValue[5] := '3';
-    PropertyValue[6] := 'pos';
-    PropertyValue[7] := 'pos';
-    PropertyValue[8] := '';
-    PropertyValue[9] := '';
-    PropertyValue[10] := '';
-    PropertyValue[11] := '';
-
-    inherited  InitPropertyValues(NumPropsThisClass);
-
-end;
-
-procedure TIsourceObj.MakePosSequence;
-begin
-
     if Fnphases > 1 then
-    begin
-        Parser.CmdString := 'phases=1';
-        Edit;
-    end;
+        SetInteger(ord(TProp.Phases), 1);
     inherited;
-
 end;
 
 procedure TISourceObj.CalcDailyMult(Hr: Double);
-
 begin
     if DailyShapeObj <> NIL then
     begin
@@ -700,7 +490,6 @@ begin
 end;
 
 procedure TISourceObj.CalcDutyMult(Hr: Double);
-
 begin
     if DutyShapeObj <> NIL then
     begin
@@ -711,11 +500,9 @@ begin
         CalcDailyMult(Hr);  // Default to Daily Mult IF no duty curve specified
 end;
 
-//----------------------------------------------------------------------------
 procedure TISourceObj.CalcYearlyMult(Hr: Double);
-
 begin
-{Yearly curve is assumed to be hourly only}
+    // Yearly curve is assumed to be hourly only
     if YearlyShapeObj <> NIL then
     begin
         ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr);
@@ -725,4 +512,6 @@ begin
         ShapeFactor := cmplx(PerUnit, 0.0); // CDOUBLEONE;   // Defaults to no variation
 end;
 
+initialization
+    PropInfo := NIL;
 end.

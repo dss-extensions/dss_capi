@@ -83,15 +83,15 @@ uses
     DSSClassDefs,
     DSSGlobals,
     CktElement,
-    uComplex,
+    UComplex, DSSUcomplex,
     ExecHelper,
     Sysutils,
-    ParserDel,
     Math,
     LineUnits,
     XYCurve,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    DSSObjectHelper;
 
 //------------------------------------------------------------------------------
 function _activeObj(DSS: TDSSContext; out obj: TLineObj): Boolean; inline;
@@ -111,7 +111,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active Line object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Line'], 8989);
         end;
         Exit;
     end;
@@ -121,8 +121,8 @@ begin
         
     if obj = NIL {((CktElem.DssObjtype and CLASSMASK) <> LINE_ELEMENT)} then
     begin
-        DoSimpleMsg(DSS, 'Line Type Expected, but another found. DSS Class=' + CktElem.DSSClassName + CRLF +
-            'Element name=' + CktElem.Name, 5007);
+        DoSimpleMsg(DSS, 'Line Type Expected, but another found. DSS Class=%s, Element Name="%s"', 
+            [CktElem.DSSClassName, CktElem.Name], 5007);
         Exit;
     end;
 
@@ -197,7 +197,8 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.CondCode);
+    if elem.LineCodeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineCodeObj.Name);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Name(): PAnsiChar; CDECL;
@@ -242,7 +243,7 @@ end;
 //------------------------------------------------------------------------------
 function Lines_New(const Name: PAnsiChar): Integer; CDECL;
 begin
-    Result := DSSPrime.DSSExecutive.AddObject('line', Name);    // Returns handle to object
+    DSSPrime.LineClass.NewObject(Name, True, Result);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Bus1(const Value: PAnsiChar); CDECL;
@@ -279,7 +280,14 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FetchLineCode(Value);
+    
+    elem.LineCodeObj := DSSPrime.LineCodeClass.Find(Value);
+    if elem.LineCodeObj = NIL then
+    begin
+        DoSimpleMsg(DSSPrime, 'LineCode "%s" not found.', [Value], 5009);
+        Exit;
+    end;
+    elem.FetchLineCode(); // Note: original didn't reproduce all side-effects from parser
     elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -294,7 +302,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Line "' + Value + '" Not Found in Active Circuit.', 5008);
+        DoSimpleMsg(DSSPrime, 'Line "%s" not found in Active Circuit.', [Value], 5008);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -304,7 +312,12 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.Nphases := Value;
+    if Value < 1 then
+    begin
+        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName], 6568);
+        Exit;
+    end;
+    elem.FNphases := Value;
     elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -314,7 +327,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.R1 := Value;
+    elem.R1 := Value * elem.UnitsConvert;
     elem.SymComponentsChanged := TRUE;
     elem.YprimInvalid := TRUE;
 end;
@@ -325,7 +338,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.X1 := Value;
+    elem.X1 := Value * elem.UnitsConvert;
     elem.SymComponentsChanged := TRUE;
     elem.YprimInvalid := TRUE;
 end;
@@ -484,7 +497,7 @@ begin
         Exit;
     with elem do
     begin
-        C0 := Value * 1.0e-9;
+        C0 := Value * 1.0e-9 * UnitsConvert;
         SymComponentsChanged := TRUE;
         YprimInvalid := TRUE;
     end;
@@ -498,7 +511,7 @@ begin
         Exit;
     with elem do
     begin
-        C1 := Value * 1.0e-9;
+        C1 := Value * 1.0e-9 * UnitsConvert;
         SymComponentsChanged := TRUE;
         YprimInvalid := TRUE;
     end;
@@ -518,10 +531,10 @@ begin
     begin
         if (NPhases * NPhases) <> ValueCount then
         begin
-            DoSimpleMsg(Format(
+            DoSimpleMsg(
                 'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, NPhases * NPhases]
-            ), 183);
+                [ValueCount, NPhases * NPhases],
+            183);
             Exit;
         end;
     
@@ -545,7 +558,7 @@ begin
         Exit;
     with elem do
     begin
-        R0 := Value;
+        R0 := Value * UnitsConvert;
         SymComponentsChanged := TRUE;
         YprimInvalid := TRUE;
     end;
@@ -565,10 +578,10 @@ begin
     begin
         if (NPhases * NPhases) <> ValueCount then
         begin
-            DoSimpleMsg(Format(
+            DoSimpleMsg(
                 'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, NPhases * NPhases]
-            ), 183);
+                [ValueCount, NPhases * NPhases],
+            183);
             Exit;
         end;
     
@@ -592,7 +605,7 @@ begin
         Exit;
     with elem do
     begin
-        X0 := Value;
+        X0 := Value * UnitsConvert;
         SymComponentsChanged := TRUE;
         YprimInvalid := TRUE;
     end;
@@ -613,9 +626,9 @@ begin
     begin
         if (NPhases * NPhases) <> ValueCount then
         begin
-            DoSimpleMsg(Format('The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, NPhases * NPhases]
-            ), 183);
+            DoSimpleMsg('The number of values provided (%d) does not match the expected (%d).', 
+                [ValueCount, NPhases * NPhases],
+            183);
             Exit;
         end;
 
@@ -676,7 +689,8 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GeometryCode);
+    if elem.LineGeometryObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineGeometryObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Geometry(const Value: PAnsiChar); CDECL;
@@ -685,12 +699,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
-    begin
-        DSSPrime.Parser.CmdString := 'geometry=' + Value;
-        Edit;
-        YprimInvalid := TRUE;
-    end;
+    elem.ParsePropertyValue(ord(TLineProp.geometry), Value); // calls FetchGeometryCode and sets YPrimInvalid
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Rg(): Double; CDECL;
@@ -729,12 +738,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
-    begin
-        DSSPrime.Parser.CmdString := Format('rg=%.7g', [Value]);
-        Edit;
-        YprimInvalid := TRUE;
-    end;
+    elem.SetDouble(ord(TLineProp.Rg), Value); //TODO: it doesn't seem to set YPrimInvalid
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Rho(Value: Double); CDECL;
@@ -743,12 +748,8 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
-    begin
-        DSSPrime.Parser.CmdString := Format('rho=%.7g', [Value]);
-        Edit;
-        YprimInvalid := TRUE;
-    end;
+    elem.SetDouble(ord(TLineProp.rho), Value); //TODO: it doesn't seem to set YPrimInvalid
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Xg(Value: Double); CDECL;
@@ -757,16 +758,12 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
-    begin
-        DSSPrime.Parser.CmdString := Format('xg=%.7g', [Value]);
-        Edit;
-        YprimInvalid := TRUE;
-    end;
+    elem.SetDouble(ord(TLineProp.xg), Value); //TODO: it doesn't seem to set YPrimInvalid
+    elem.YprimInvalid := TRUE;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-{ Return the YPrim matrix for this element }
+// Return the YPrim matrix for this element
 var
     NValues: Integer;
     cValues: pComplexArray;
@@ -806,9 +803,9 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
         
-    {Do Nothing for now}
+    // Do Nothing for now
     
-    DoSimpleMsg(DSSPrime, 'Setting Yprim is currently not allowed.', 1833);
+    DoSimpleMsg(DSSPrime, _('Setting Yprim is currently not allowed.'), 1833);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_NumCust(): Integer; CDECL;
@@ -866,7 +863,8 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.SpacingCode);
+    if elem.LineSpacingObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.LineSpacingObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;
@@ -875,12 +873,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    with elem do
-    begin
-        DSSPrime.Parser.CmdString := 'spacing=' + Value;
-        Edit;
-        YprimInvalid := TRUE;
-    end;
+    elem.ParsePropertyValue(ord(TLineProp.spacing), Value); // Sets YprimInvalid
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Units(): Integer; CDECL;
@@ -894,10 +887,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Units(Value: Integer); CDECL;
-{
- This code assumes the present value of line units is NONE.
- The Set functions in this interface all set values in this length unit.
-}
+// This code assumes the present value of line units is NONE.
+// The Set functions in this interface all set values in this length unit.
 var
     elem: TLineObj;
 begin
@@ -907,12 +898,11 @@ begin
     begin
         if (Value >= dssLineUnitsNone) and (Value < dssLineUnitsMaxnum) then
         begin
-            DSSPrime.Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
-            Edit;
+            ParsePropertyValue(ord(TLineProp.units), LineUnitsStr(Value));
             YprimInvalid := TRUE;
         end
         else
-            DoSimpleMsg('Invalid line units code. Please enter a value within range.', 183);
+            DoSimpleMsg(_('Invalid line units code. Please enter a value within range.'), 183);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -933,7 +923,7 @@ begin
     pLine := DSSPrime.ActiveCircuit.Lines.Get(Value);
     if pLine = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Line index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Line', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pLine;
@@ -983,8 +973,8 @@ begin
         // Side effects from Line.pas
         SymComponentsChanged := TRUE;
         YprimInvalid := TRUE;
-        GeometrySpecified := FALSE;
-        SpacingSpecified := FALSE;
+        KillGeometrySpecified();
+        KillSpacingSpecified();
         r1 := 1.0;
         x1 := 1.0;
         r0 := 1.0;

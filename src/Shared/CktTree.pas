@@ -6,12 +6,6 @@ unit CktTree;
   All rights reserved.
   ----------------------------------------------------------
 }
-{  Change Log
-
-   8/12/99  Added level number to node
-}
-
-{$M+}
 
 interface
 
@@ -23,13 +17,10 @@ uses
     CktElement;
 
 type
-
     TAdjArray = array of TList;
-
 
     TCktTreeNode = class(TObject)
     PRIVATE
-
         FChildBranches: TDSSPointerList;  // List of CktTreeNode pointers
 
         NumToBuses, ToBusPtr: Integer;
@@ -39,7 +30,6 @@ type
         function Get_NextChild: TCktTreeNode;
         function Get_Parent: TCktTreeNode;
         procedure Set_AddChild(const Value: TCktTreeNode);
-        procedure Set_AddObject(Value: Pointer);
         function Get_NumChildren: Integer;
         function Get_NumObjects: Integer;
         function Get_ToBusReference: Integer;
@@ -66,7 +56,7 @@ type
 
         procedure ResetToBusList;
         property AddChildBranch: TCktTreeNode WRITE Set_AddChild;
-        property AddShuntObject: Pointer WRITE Set_AddObject;
+        procedure AddShuntObject(Value: Pointer);
         property FirstChildBranch: TCktTreeNode READ Get_FirstChild;
         property NextChildBranch: TCktTreeNode READ Get_NextChild;
         property FirstShuntObject: Pointer READ Get_FirstObject;
@@ -76,9 +66,6 @@ type
         property NumChildBranches: Integer READ Get_NumChildren;  // Number of children at present node
         property NumShuntObjects: Integer READ Get_NumObjects; // Number of objects at present node
         property ToBusReference: Integer READ Get_ToBusReference WRITE Set_ToBusReference;
-
-    PUBLISHED
-
     end;
 
 
@@ -86,8 +73,6 @@ type
     PRIVATE
         EndNodeList: TDSSPointerList;
         EndBuses: pIntegerArray;
-
-    PROTECTED
 
     PUBLIC
         NumEnds: Integer;
@@ -97,13 +82,10 @@ type
 
         procedure Add(const Node: TCktTreeNode; EndBusRef: Integer);
         function Get(i: Integer; var Node: TCktTreeNode): Integer;
-    PUBLISHED
-
     end;
 
 
     TCktTree = class(TObject)
-
     PRIVATE
         FirstNode: TCktTreeNode;
 
@@ -117,13 +99,9 @@ type
         function Get_NextObject: Pointer;
         function Get_Active: Pointer;
         function Get_Level: Integer;
-        procedure Set_New(Value: Pointer);
 
-        procedure Set_NewObject(Value: Pointer);
         procedure Set_Active(p: Pointer);  // Set present node to this value
         procedure PushAllChildren;
-    PROTECTED
-
     PUBLIC
         PresentBranch: TCktTreeNode;
         ZoneEndsList: TZoneEndsList;
@@ -134,10 +112,10 @@ type
         procedure StartHere;   // Start Forward Search at the present location
                               // can also use active
         procedure AddNewChild(Value: Pointer; BusRef, TerminalNo: Integer);
-
-        property New: Pointer WRITE Set_New; // Adds Child and makes it present
+        procedure Add(Value: Pointer); // Adds Child and makes it present -- previously "New"
        //Property NewChild  :Pointer Write Set_NewChild; // Adds child to present, but doesn't change present
-        property NewObject: Pointer WRITE Set_NewObject; // Adds a pointer to an object to be associated with the current node
+        
+        procedure AddNewObject(Value: Pointer); // Adds a pointer to an object to be associated with the current node
         property First: Pointer READ Get_First;  // Returns pointer to first cktobject
         property Parent: Pointer READ Get_Parent;
         property FirstObject: Pointer READ Get_FirstObject;
@@ -146,9 +124,6 @@ type
         property GoBackward: Pointer READ Get_Backward;
         property Active: Pointer READ Get_Active WRITE Set_Active;
         property Level: Integer READ Get_Level;  {Get lexical level of present node}
-
-    PUBLISHED
-
     end;
 
    // build a tree of connected elements beginning at StartElement
@@ -186,7 +161,6 @@ begin
     ToBusList := NIL;
     ToBusPtr := 0;
     ChildAdded := FALSE;
-     // TEMc - initialize some topology variables, 10/2009
     IsDangling := TRUE;
     IsLoopedHere := FALSE;
     IsParallel := FALSE;
@@ -214,13 +188,13 @@ end;
 
 procedure TcktTreeNode.Set_AddChild(const Value: TCktTreeNode);
 begin
-    FChildBranches.New := Value;
+    FChildBranches.Add(Value);
     ChildAdded := TRUE;
 end;
 
-procedure TcktTreeNode.Set_AddObject(Value: Pointer);
+procedure TcktTreeNode.AddShuntObject(Value: Pointer);
 begin
-    FShuntObjects.New := Value;
+    FShuntObjects.Add(Value);
 end;
 
 function TcktTreeNode.Get_FirstChild: TCktTreeNode;
@@ -238,7 +212,6 @@ begin
     Result := FParentBranch;
 end;
 
-
 constructor TcktTree.Create;
 begin
     inherited create;
@@ -246,7 +219,6 @@ begin
     PresentBranch := NIL;
     ZoneEndsList := TZoneEndsList.Create;
     ForwardStack := Tpstack.Create(20);
-
 end;
 
 destructor TcktTree.Destroy;
@@ -259,9 +231,7 @@ begin
     inherited Destroy;
 end;
 
-
-procedure TcktTree.Set_New(Value: Pointer);
-
+procedure TcktTree.Add(Value: Pointer);
 begin
     PresentBranch := TcktTreeNode.Create(PresentBranch, Value);
     if FirstNode = NIL then
@@ -272,10 +242,9 @@ procedure TcktTree.AddNewChild(Value: Pointer; BusRef, TerminalNo: Integer);
 var
     TempNode: TCktTreeNode;
 begin
-
     if PresentBranch = NIL then
     begin
-        Set_New(Value);
+        Add(Value);
     end
     else
     begin
@@ -288,14 +257,13 @@ begin
 
         PresentBranch.AddChildBranch := TempNode;
     end;
-
 end;
 
-procedure TcktTree.Set_NewObject(Value: Pointer);
+procedure TcktTree.AddNewObject(Value: Pointer);
 begin
     if PresentBranch <> NIL then
     begin
-        PresentBranch.AddShuntObject := Value;
+        PresentBranch.AddShuntObject(Value);
     end;
 end;
 
@@ -318,14 +286,14 @@ end;
 
 function TcktTree.Get_Forward: Pointer;
 begin
-// MoveForward from Present node
+    // MoveForward from Present node
 
-// If we have added children to the present node since we opened it push em on
+    // If we have added children to the present node since we opened it push em on
     if PresentBranch <> NIL then
         if PresentBranch.ChildAdded then
             PushAllChildren;
 
-  // If the forward stack is empty push stuff on it to get started
+    // If the forward stack is empty push stuff on it to get started
     if ForwardStack.Size = 0 then
         PushAllChildren;
 
@@ -338,28 +306,23 @@ begin
 end;
 
 function TcktTree.Get_Backward: Pointer;
-
 begin
-
-// Move Backwardfrom Present node and reset forward stack
+    // Move Backwardfrom Present node and reset forward stack
     PresentBranch := PresentBranch.ParentBranch;
     ForwardStack.Clear;
     if PresentBranch <> NIL then
         Result := PresentBranch.CktObject
     else
         Result := NIL;
-
 end;
 
 function TcktTree.Get_Parent: Pointer;
-
 begin
     if PresentBranch.FParentBranch <> NIL then
         Result := PresentBranch.FParentBranch.CktObject
     else
         Result := NIL;
 end;
-
 
 function TcktTree.Get_First: Pointer;
 begin
@@ -371,7 +334,6 @@ begin
         Result := PresentBranch.CktObject
     else
         Result := NIL;
-
 end;
 
 function TcktTree.Get_FirstObject: Pointer;
@@ -390,7 +352,6 @@ begin
         Result := NIL;
 end;
 
-
 function TcktTree.Get_Active: Pointer;
 begin
     if PresentBranch <> NIL then
@@ -400,12 +361,9 @@ begin
 end;
 
 procedure TcktTree.Set_Active(p: Pointer);
-
 var
     Temp: Pointer;
-
 begin
-
     Temp := Get_First;
     while Temp <> NIL do
     begin
@@ -415,7 +373,6 @@ begin
     end;
 
     ForwardStack.Clear;
-
 end;
 
 procedure TcktTree.StartHere;
@@ -445,12 +402,11 @@ begin
     Result := FShuntObjects.Count;
 end;
 
-{ TZoneEndsList }
 
 procedure TZoneEndsList.Add(const Node: TCktTreeNode; EndBusRef: Integer);
 begin
     Inc(NumEnds);
-    EndnodeList.New := Node;
+    EndnodeList.Add(Node);
     Reallocmem(EndBuses, Sizeof(EndBuses) * NumEnds);
     EndBuses^[NumEnds] := EndBusRef;
 end;
@@ -464,25 +420,20 @@ end;
 
 destructor TZoneEndsList.Destroy;
 begin
-
     EndnodeList.Free;
     Reallocmem(EndBuses, 0);
     inherited;
-
 end;
 
 function TZoneEndsList.Get(i: Integer; var Node: TCktTreeNode): Integer;
 begin
-
     Node := EndnodeList.Get(i);
     Result := EndBuses^[i];
-
 end;
 
 function TCktTreeNode.Get_ToBusReference: Integer;
 {Sequentially access the To Bus list if more than one with each invocation of the property}
 begin
-
     if NumToBuses = 1 then
     begin
         Result := ToBusList^[1];  // Always return the first
@@ -540,26 +491,26 @@ begin
         begin
             if psrc.Enabled then
             begin
-                if Analyze or (not psrc.Checked) then
+                if Analyze or (not (Flg.Checked in psrc.Flags)) then
                 begin
                     if (psrc.Terminals[0].BusRef = BusNum) then
                     begin  // ?Connected to this bus ?
                         if Analyze then
                         begin
-                            psrc.IsIsolated := FALSE;
+                            Exclude(psrc.Flags, Flg.IsIsolated);
                             BranchList.PresentBranch.IsDangling := FALSE;
                         end;
-                        if not psrc.checked then
+                        if not (Flg.Checked in psrc.Flags) then
                         begin
-                            BranchList.NewObject := psrc;
-                            psrc.Checked := TRUE;
+                            BranchList.AddNewObject(psrc);
+                            Include(psrc.Flags, Flg.Checked);
                         end;
                     end;
                 end;
             end;
             psrc := Sources.Next;
         end;
-    end;{With}
+    end;
 end;
 
 procedure GetPCElementsConnectedToBus(adjLst: TList; BranchList: TCktTree; Analyze: Boolean);
@@ -574,13 +525,13 @@ begin
         begin
             if Analyze then
             begin
-                p.IsIsolated := FALSE;
+                Exclude(p.Flags, Flg.IsIsolated);
                 BranchList.PresentBranch.IsDangling := FALSE;
             end;
-            if not p.Checked then
+            if not (Flg.Checked in p.Flags) then
             begin
-                BranchList.NewObject := p;
-                p.Checked := TRUE;
+                BranchList.AddNewObject(p);
+                Include(p.Flags, Flg.Checked);
             end;
         end;
     end;
@@ -597,7 +548,7 @@ begin
         p := adjLst[i];
         if p.Enabled and not (p = ActiveBranch) then
         begin
-            if Analyze or (not p.Checked) then
+            if Analyze or (not (Flg.Checked in p.Flags)) then
             begin
                 if (not IsShuntElement(p)) and AllTerminalsClosed(p) then
                 begin
@@ -607,9 +558,9 @@ begin
                         begin
                             if Analyze then
                             begin
-                                p.IsIsolated := FALSE;
+                                Exclude(p.Flags, Flg.IsIsolated);
                                 BranchList.PresentBranch.IsDangling := FALSE;
-                                if p.Checked and (BranchList.Level > 0) then
+                                if (Flg.Checked in p.Flags) and (BranchList.Level > 0) then
                                 begin
                                     BranchList.PresentBranch.IsLoopedHere := TRUE;
                                     BranchList.PresentBranch.LoopLineObj := p;
@@ -618,12 +569,12 @@ begin
                                             BranchList.PresentBranch.IsParallel := TRUE;
                                 end;
                             end;
-                            if not p.Checked then
+                            if not (Flg.Checked in p.Flags) then
                             begin
                                 BranchList.AddNewChild(p, BusNum, j);
                                 p.TerminalsChecked[j - 1] := TRUE;
-                                p.Checked := TRUE;
-                                Break; {For}
+                                Include(p.Flags, Flg.Checked);
+                                Break; // For
                             end;
                         end;
                     end;
@@ -645,13 +596,13 @@ begin
         begin
             if Analyze then
             begin
-                p.IsIsolated := FALSE;
+                Exclude(p.Flags, Flg.IsIsolated);
                 BranchList.PresentBranch.IsDangling := FALSE;
             end;
-            if not p.Checked then
+            if not (Flg.Checked in p.Flags) then
             begin
-                BranchList.NewObject := p;
-                p.Checked := TRUE;
+                BranchList.AddNewObject(p);
+                Include(p.Flags, Flg.Checked);
             end;
         end;
     end;
@@ -674,17 +625,17 @@ begin
     BranchList := TCktTree.Create;
     TestElement := StartElement;
 
-    BranchList.New := TestElement;
+    BranchList.Add(TestElement);
     if Analyze then
-        TestElement.IsIsolated := FALSE;
-    TestElement.LastTerminalChecked := 0;  // We'll check things connected to both sides
+        Exclude(TestElement.Flags, Flg.IsIsolated);
+    // TestElement.LastTerminalChecked := 0;  // We'll check things connected to both sides
 
-  // Check off this element so we don't use it again
-    TestElement.Checked := TRUE;
+    // Check off this element so we don't use it again
+    Include(TestElement.Flags, Flg.Checked);
 
-  // Now start looking for other branches
-  // Finds any branch connected to the TestBranch and adds it to the list
-  // Goes until end of circuit, another energy meter, an open terminal, or disabled device.
+    // Now start looking for other branches
+    // Finds any branch connected to the TestBranch and adds it to the list
+    // Goes until end of circuit, another energy meter, an open terminal, or disabled device.
     TestBranch := TestElement;
     while TestBranch <> NIL do
     begin
@@ -692,8 +643,8 @@ begin
         begin
             if not TestBranch.TerminalsChecked[iTerm - 1] then
             begin
-        // Now find all pc Elements connected to the bus on this end of branch
-        // attach them as generic objects to cktTree node.
+                // Now find all pc Elements connected to the bus on this end of branch
+                // attach them as generic objects to cktTree node.
                 TestBusNum := TestBranch.Terminals[iTerm - 1].BusRef;
                 BranchList.PresentBranch.ToBusReference := TestBusNum;   // Add this as a "to" bus reference
                 if TestBusNum > 0 then
@@ -705,9 +656,9 @@ begin
                     FindAllChildBranches(lstPD[TestBusNum], TestBusNum, BranchList, Analyze, TestBranch);
                 end;
             end;
-        end;   {FOR iTerm}
+        end;
         TestBranch := BranchList.GoForward;
-    end; {WHILE}
+    end;
     Result := BranchList;
 end;
 
@@ -719,7 +670,7 @@ var
 begin
     Ckt := TDSSCircuit(Circuit);
     nBus := Ckt.NumBuses;
-  // Circuit.Buses is effectively 1-based; bus 0 is ground
+    // Circuit.Buses is effectively 1-based; bus 0 is ground
     SetLength(lstPD, nBus + 1);
     SetLength(lstPC, nBus + 1);
     for i := 0 to nBus do
@@ -740,7 +691,7 @@ begin
     end;
 
     pCktElement := Ckt.PDElements.First;
-  {Put only eligible PDElements in the list}
+    // Put only eligible PDElements in the list
     while pCktElement <> NIL do
     begin
         if pCktElement.Enabled then

@@ -80,12 +80,13 @@ uses
     EnergyMeter,
     DSSGlobals,
     SysUtils,
-    ucomplex,
+    UComplex, DSSUcomplex,
     CktElement,
     PDElement,
     CktTree,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    DSSObjectHelper;
 
 //------------------------------------------------------------------------------
 function _activeObj(DSS: TDSSContext; out obj: TEnergyMeterObj): Boolean; inline;
@@ -100,7 +101,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active EnergyMeter object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['EnergyMeter'], 8989);
         end;
         Exit;
     end;
@@ -110,7 +111,7 @@ end;
 //------------------------------------------------------------------------------
 procedure InvalidActiveSection(DSS: TDSSContext); inline;
 begin
-    DoSimpleMsg(DSS, 'Invalid active section. Has SetActiveSection been called?', 5055);
+    DoSimpleMsg(DSS, _('Invalid active section. Has SetActiveSection been called?'), 5055);
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -250,7 +251,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'EnergyMeter "' + Value + '" Not Found in Active Circuit.', 5005);
+        DoSimpleMsg(DSSPrime, 'EnergyMeter "%s" not found in Active Circuit.', [Value], 5005);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -307,7 +308,7 @@ begin
 
     if ValueCount <> pMeterObj.NPhases then
     begin
-        DoSimpleMsg(DSSPrime, 'The provided number of values does not match the element''s number of phases.', 5026);
+        DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5026);
         Exit;
     end;
     Move(ValuePtr^, pMeterObj.SensorCurrent[1], ValueCount * SizeOf(Double));    
@@ -348,7 +349,7 @@ begin
 
     if ValueCount <> pMeterObj.NPhases then
     begin
-        DoSimpleMsg(DSSPrime, 'The provided number of values does not match the element''s number of phases.', 5025);
+        DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5025);
         Exit;
     end;
         
@@ -390,7 +391,7 @@ begin
     Value := PDoubleArray0(ValuePtr);
     if ValueCount <> pMeterObj.NPhases then
     begin
-        DoSimpleMsg(DSSPrime, 'The provided number of values does not match the element''s number of phases.', 5026);
+        DoSimpleMsg(DSSPrime, _('The provided number of values does not match the element''s number of phases.'), 5026);
         Exit;
     end;
 
@@ -408,7 +409,8 @@ begin
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pMeterObj.ElementName);
+    if pMeterObj.MeteredElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, LowerCase(pMeterObj.MeteredElement.FullName));
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_MeteredTerminal(): Integer; CDECL;
@@ -429,7 +431,7 @@ begin
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
 
-    pMeterObj.elementName := Value;
+    pMeterObj.ParsePropertyValue(ord(TEnergyMeterProp.element), Value);
     pMeterObj.MeteredElementChanged := TRUE;
     pMeterObj.RecalcElementData;
 end;
@@ -506,7 +508,7 @@ begin
     begin
         pMeterObj.BranchList.ZoneEndsList.Get(k + 1, node);
         elem := node.CktObject;
-        Result[k] := DSS_CopyStringAsPChar(Format('%s.%s', [elem.ParentClass.Name, elem.Name]));
+        Result[k] := DSS_CopyStringAsPChar(elem.FullName);
     end;
 end;
 
@@ -567,7 +569,7 @@ begin
     k := 0;
     while pElem <> NIL do
     begin
-        Result[k] := DSS_CopyStringAsPChar(Format('%s.%s', [pElem.ParentClass.Name, pElem.Name]));
+        Result[k] := DSS_CopyStringAsPChar(pElem.FullName);
         inc(k);
         pElem := pMeterObj.BranchList.GoForward;
     end;
@@ -636,7 +638,7 @@ begin
         if (Value > 0) and (Value <= SequenceList.Count) then
             DSSPrime.ActiveCircuit.ActiveCktElement := SequenceList.Get(Value)
         else
-            DoSimpleMsg(Format('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.Count]), 500501);
+            DoSimpleMsg('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.Count], 500501);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -899,7 +901,7 @@ begin
     pEnergyMeter := DSSPrime.ActiveCircuit.EnergyMeters.Get(Value);
     if pEnergyMeter = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Meter index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Meter', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pEnergyMeter;

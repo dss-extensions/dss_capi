@@ -1,45 +1,39 @@
 unit Ucmatrix;
-
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  Copyright (c) 2018-2020, Paulo Meira
+  Copyright (c) 2018-2021, Paulo Meira
   All rights reserved.
   ----------------------------------------------------------
 }
-
 interface
 
 uses
-    UComplex;
-
-{
-   12-4-99 Added MvMultAccum
-   2/4/03  Added Avg routines
-}
+    UComplex, DSSUcomplex;
 
 type
+    PCMatrix = ^TCMatrix;
+    
     TcMatrix = class(TObject)
 
     PRIVATE
-    { Private declarations }
         Norder: Integer;
         Values: pComplexArray;
-
+        OwnsData: Boolean;
 
     PUBLIC
-    { Public declarations }
         InvertError: Integer;
 
         constructor CreateMatrix(N: Integer);
+        constructor CreateMatrixInplace(N: Integer; pValues: pComplex);
+
         destructor Destroy; OVERRIDE;
         procedure Invert;
         procedure Negate;
         function IsZero: Boolean;
         function IsColRowZero(n: Integer): Boolean;
-        procedure Clear; inline; {Zero out matrix}
+        procedure Clear; inline; // Zero out matrix
         procedure AddFrom(OtherMatrix: TcMatrix);
-        procedure SubtractOther(OtherMatrix: TcMatrix);
         procedure CopyFrom(OtherMatrix: TcMatrix);
         procedure SetElement(i, j: Integer; Value: Complex);
         procedure SetElemsym(i, j: Integer; Value: Complex);
@@ -47,59 +41,63 @@ type
         procedure AddElemsym(i, j: Integer; Value: Complex);
         function GetElement(i, j: Integer): Complex;
         function GetErrorCode: Integer;
-        // function SumBlock(row1, row2, col1, col2: Integer): Complex;
         procedure MVmult(b, x: pComplexArray); {inline;} {b = Ax}
-        // procedure MVmultAccum(b, x: pComplexArray);  {b = Ax}
         function GetValuesArrayPtr(var Order: Integer): pComplexArray;
         procedure ZeroRow(iRow: Integer);
         procedure ZeroCol(iCol: Integer);
         function AvgDiagonal: Complex;   // Average of Diagonal Elements
         function AvgOffDiagonal: Complex;
-        procedure MultByConst(x: Double);  // Multiply all elements by a constant
         function MtrxMult(B: TcMatrix): TcMatrix; // Multiply two square matrices of same order.  Result = A*B
 
         function Kron(EliminationRow: Integer): TcMatrix;  // Perform Kron reduction on last row/col and return new matrix
 
         property Order: Integer READ Norder;
-
     end;
-
-{--------------------------------------------------------------------------}
-
 
 implementation
 
 uses 
     KLUSolve;
 
-{$R-}  { Turn off range checking}
-{--------------------------------------------------------------------------}
 constructor TcMatrix.CreateMatrix(N: Integer);
 begin
-
     try
         inherited Create;
         Norder := N;
         InvertError := 0;
-        Values := NIL;
-        Reallocmem(Values, Sizeof(Complex) * Norder * Norder);    {Allocate}
-        FillByte(Values^, Sizeof(Complex) * Norder * Norder, 0);
+        Values := Allocmem(Sizeof(Complex) * Norder * Norder); // alloc and fill with 0
+        OwnsData := True;
     except
         Destroy;
     end;
 end;
-{--------------------------------------------------------------------------}
+
+constructor TcMatrix.CreateMatrixInplace(N: Integer; pValues: pComplex);
+begin
+    try
+        inherited Create;
+        Norder := N;
+        InvertError := 0;
+        Values := pComplexArray(pValues); // assume zeroed
+        OwnsData := False;
+    except
+        Destroy;
+    end;
+end;
+
+
 destructor TcMatrix.Destroy;
 begin
-    Freemem(Values, Sizeof(Complex) * Norder * Norder);
+    if OwnsData then
+        Freemem(Values, Sizeof(Complex) * Norder * Norder);
     inherited Destroy;
 end;
-{--------------------------------------------------------------------------}
+
 procedure TcMatrix.Clear; inline;
 begin
     FillByte(Values^, Sizeof(Complex) * Norder * Norder, 0);
 end;
-{--------------------------------------------------------------------------}
+
 function TcMatrix.IsZero: Boolean; // This only check for exactly zero, no epsilon is used on purpose
 var 
     i: integer;
@@ -117,7 +115,7 @@ begin
         inc(v);
     end;
 end;
-{--------------------------------------------------------------------------}
+
 function TcMatrix.IsColRowZero(n: Integer): Boolean; // This only check for exactly zero, no epsilon is used on purpose
 var 
     i, j: integer;
@@ -144,7 +142,7 @@ begin
         end;
     end;
 end;
-{--------------------------------------------------------------------------}
+
 procedure TcMatrix.MvMult(b, x: pComplexArray); {inline;}
 {$IFDEF DSS_CAPI_MVMULT}
 begin
@@ -160,40 +158,20 @@ begin
         Sum := Cmplx(0.0, 0.0);
         for j := 1 to Norder do
         begin
-            Caccum(Sum, cmul(Values^[((j - 1) * Norder + i)], x^[j]));
+            Sum += (Values^[((j - 1) * Norder + i)]) * x^[j]);
         end;
         b^[i] := Sum;
     end;
 end;
 {$ENDIF}
-{--------------------------------------------------------------------------}
-// procedure TcMatrix.MvMultAccum(b, x: pComplexArray);
-//    // Same as MVMult except accumulates b
-// var
-//     Sum: Complex;
-//     i, j: Integer;
-// begin
-// 
-//     for i := 1 to Norder do
-//     begin
-//         Sum := Cmplx(0.0, 0.0);
-//         for j := 1 to Norder do
-//         begin
-//             Caccum(Sum, cmul(Values^[((j - 1) * Norder + i)], x^[j]));
-//         end;
-//         Caccum(b^[i], Sum);
-//     end;
-// 
-// end;
-// 
-{--------------------------------------------------------------------------}
+
 procedure TcMatrix.Negate;
 var i: integer;
 begin
     for i := 1 to Norder * Norder do
-        Values^[i] := Cnegate(Values^[i]);
+        Values^[i] := -Values^[i];
 end;
-{--------------------------------------------------------------------------}
+
 procedure TcMatrix.Invert;
 type
     pIntArray = ^IntArray;
@@ -214,15 +192,13 @@ var
 
 
 begin
-
     L := Norder;
     InvertError := 0;
 
-    A := Values;  {  Assign pointer to something we can use}
+    A := Values;  //  Assign pointer to something we can use
 
-{Allocate LT}
-//     LT:=nil;
-
+    // Allocate LT
+    //     LT:=nil;
     GetMem(LT, SizeOf(Integer) * L);
     if LT = NIL then
     begin
@@ -230,31 +206,30 @@ begin
         Exit;
     end;
 
-{Zero LT}
+    // Zero LT
     for j := 1 to L do
         LT^[j] := 0;
 
     T1 := Cmplx(0.0, 0.0);
     K := 1;
 
-{M Loop }
-
+    // M Loop
     for  M := 1 to L do
     begin
         for  LL := 1 to L do
         begin
             if LT^[LL] <> 1 then
             begin
-                RMY := Cabs(A^[Index(LL, LL)]) - CAbs(T1);  {Will this work??}
+                RMY := Cabs(A^[Index(LL, LL)]) - CAbs(T1);  // Will this work??
                 if RMY > 0.0 then
                 begin
                     T1 := A^[Index(LL, LL)];
                     K := LL;
-                end; {RMY}
-            end; {IF LT}
-        end; {LL}
+                end;
+            end;
+        end;
 
-{Error Check.  If RMY ends up zero, matrix is non-inversible}
+        // Error Check.  If RMY ends up zero, matrix is non-inversible
         RMY := Cabs(T1);
         if RMY = 0.0 then
         begin
@@ -269,90 +244,60 @@ begin
                 for j := 1 to L do
                     if j <> k then
                         A^[Index(i, j)] :=
-                            Csub(A^[Index(i, j)], Cdiv(Cmul(A^[Index(i, k)], A^[Index(k, j)]), A^[Index(k, k)]));
+                            A^[Index(i, j)] - (A^[Index(i, k)] * A^[Index(k, j)]) / A^[Index(k, k)];
 
-        A^[Index(k, k)] := Cnegate(Cinv(A^[Index(k, k)])); {Invert and negate k,k element}
+        A^[Index(k, k)] := -Cinv(A^[Index(k, k)]); // Invert and negate k,k element
 
         for  i := 1 to L do
             if i <> k then
             begin
-                A^[Index(i, k)] := Cmul(A^[Index(i, k)], A^[Index(k, k)]);
-                A^[Index(k, i)] := Cmul(A^[Index(k, i)], A^[Index(k, k)]);
-            end;  {if}
+                A^[Index(i, k)] := A^[Index(i, k)] * A^[Index(k, k)];
+                A^[Index(k, i)] := A^[Index(k, i)] * A^[Index(k, k)];
+            end;
 
-    end; {M loop}
+    end; // M loop
 
     for  j := 1 to L do
         for  k := 1 to L do
-            A^[Index(j, k)] := Cnegate(A^[Index(j, k)]);
+            A^[Index(j, k)] := -A^[Index(j, k)];
 
-    FreeMem(LT, SizeOF(LT^[1]) * L);  {Dispose of LT}
-
+    FreeMem(LT, SizeOF(LT^[1]) * L);
 end;
 
-{--------------------------------------------------------------------------}
 procedure TcMatrix.SetElement(i, j: Integer; Value: Complex);
 begin
     Values^[((j - 1) * Norder + i)] := Value;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TcMatrix.AddElement(i, j: Integer; Value: Complex);
 begin
-    cAccum(Values^[((j - 1) * Norder + i)], Value);
+    Values^[((j - 1) * Norder + i)] += Value;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TcMatrix.SetElemsym(i, j: Integer; Value: Complex);
 begin
     Values^[((j - 1) * Norder + i)] := Value;
     if i <> j then
-        Values^[((i - 1) * Norder + j)] := Value;  {ensure symmetry}
+        Values^[((i - 1) * Norder + j)] := Value; // ensure symmetry
 end;
-
-   {--------------------------------------------------------------------------}
+   
 procedure TcMatrix.AddElemsym(i, j: Integer; Value: Complex);
 begin
-    cAccum(Values^[((j - 1) * Norder + i)], Value);
+    Values^[((j - 1) * Norder + i)] += Value;
     if i <> j then
-        cAccum(Values^[((i - 1) * Norder + j)], Value);  {ensure symmetry}
+        Values^[((i - 1) * Norder + j)] += Value; // ensure symmetry
 end;
 
-{--------------------------------------------------------------------------}
 function TcMatrix.GetElement(i, j: Integer): Complex;
 begin
     Result := Values^[((j - 1) * Norder + i)];
 end;
 
-{--------------------------------------------------------------------------}
 function TcMatrix.GetErrorCode: Integer;
 begin
     Result := InvertError;
 end;
 
-{--------------------------------------------------------------------------}
-// function TcMatrix.SumBlock(row1, row2, col1, col2: Integer): Complex;
-//     { Sum all elements in a given block of the matrix}
-// 
-// var
-//     i, j, rowstart: Integer;
-//     Sum: Complex;
-// 
-// begin
-//     Sum := Cmplx(0.0, 0.0);
-// 
-//     for j := col1 to col2 do
-//     begin
-//         Rowstart := (j - 1) * Norder;
-//         for i := (rowstart + row1) to (rowstart + row2) do
-//             Sum := Cadd(Sum, Values^[i]);
-//     end;
-// 
-//     Result := Sum;
-// 
-// end;
-// 
-{--------------------------------------------------------------------------}
 procedure TcMatrix.CopyFrom(OtherMatrix: TcMatrix);
 var
     i, j: Integer;
@@ -365,7 +310,6 @@ begin
         end;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TcMatrix.AddFrom(OtherMatrix: TcMatrix);
 var
     i, j: Integer;
@@ -378,32 +322,16 @@ begin
         end;
 end;
 
-{--------------------------------------------------------------------------}
-procedure TcMatrix.SubtractOther(OtherMatrix: TcMatrix);
-var
-    i, j: Integer;
-begin
-    if Norder = OtherMatrix.Norder then
-        for i := 1 to Norder do
-        begin
-            for j := 1 to Norder do
-                AddElement(i, j, cNegate(OtherMatrix.GetElement(i, j)));
-        end;
-end;
-
-{--------------------------------------------------------------------------}
 function TcMatrix.GetValuesArrayPtr(var Order: Integer): pComplexArray;
 begin
     Result := Values;
     Order := Norder;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TcMatrix.ZeroRow(iRow: Integer);
 var
     i, j: Integer;
     Zero: Complex;
-
 begin
     Zero := Cmplx(0.0, 0.0);
 
@@ -415,14 +343,11 @@ begin
     end;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TcMatrix.ZeroCol(iCol: Integer);
-
 var
     i: Integer;
     Zero: Complex;
 begin
-
     Zero := Cmplx(0.0, 0.0);
     for i := ((iCol - 1) * Norder + 1) to (iCol * Norder) do
     begin
@@ -434,16 +359,14 @@ function TcMatrix.AvgDiagonal: Complex;
 var
     i: Integer;
 begin
-
     Result := Cmplx(0.0, 0.0);
     for i := 1 to Norder do
     begin
-        Caccum(Result, Values^[((i - 1) * Norder + i)]);
+        Result += Values^[((i - 1) * Norder + i)];
     end;
 
     if Norder > 0 then
-        Result := CdivReal(Result, (Norder));
-
+        Result := Result / Norder;
 end;
 
 function TcMatrix.AvgOffDiagonal: Complex;
@@ -451,25 +374,22 @@ function TcMatrix.AvgOffDiagonal: Complex;
 var
     i, j, Ntimes: Integer;
 begin
-
     Result := Cmplx(0.0, 0.0);
     Ntimes := 0;
     for i := 1 to Norder do
         for j := i + 1 to Norder do
         begin
             Inc(Ntimes);
-            Caccum(Result, Values^[((j - 1) * Norder + i)]);
+            Result += Values^[((j - 1) * Norder + i)];
         end;
 
     if Ntimes > 0 then
-        Result := CdivReal(Result, (Ntimes));
+        Result := Result / Ntimes;
 end;
 
 function TcMatrix.Kron(EliminationRow: Integer): TcMatrix;
-
-{Do Kron reduction on present matrix and return a new one}
-{Eliminates specified row/column}
-
+// Do Kron reduction on present matrix and return a new one
+// Eliminates specified row/column
 var
     i, j, N: Integer;
     ii, jj: Integer;
@@ -492,7 +412,7 @@ begin
                     if j <> N then
                     begin
                         Inc(jj);
-                        Result.SetElement(ii, jj, CSub(GetElement(i, j), Cdiv(Cmul(GetElement(i, N), GetElement(N, j)), NNElement)));
+                        Result.SetElement(ii, jj, GetElement(i, j) - GetElement(i, N) * GetElement(N, j) / NNElement);
                     end;
             end;
     end;
@@ -521,16 +441,6 @@ begin
         end;
         Reallocmem(cTemp1, 0);    // Discard temp arrays
         Reallocmem(cTemp2, 0);
-    end;
-end;
-
-procedure TcMatrix.MultByConst(x: Double);
-var
-    i: Integer;
-begin
-    for i := 1 to Norder * Norder do
-    begin
-        Values^[i] := CmulReal(Values^[i], x);
     end;
 end;
 

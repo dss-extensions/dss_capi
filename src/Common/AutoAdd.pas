@@ -6,23 +6,16 @@ unit AutoAdd;
   All rights reserved.
   ----------------------------------------------------------
 }
-{  Unit for processing the AutoAdd Solution FUNCTIONs
-
-  Note: Make sure this class in instantiated after energymeter class
-
-  There is one of these per circuit
-
-  6/11/00 - reorganized object
-  6/14/00 - resolved sign issue with normal and Newton solution in AddCurrents
-  9/13/03 - Modified to use pu improvement in losses and EEN instead of kW
-}
-
-{$M+}
+//  Unit for processing the AutoAdd Solution FUNCTIONs
+//
+//  Note: Make sure this class in instantiated after energymeter class
+//
+//  There is one of these per circuit
 
 interface
 
 uses
-    uComplex,
+    UComplex, DSSUcomplex,
     EnergyMeter,
     HashList,
     Arraydef,
@@ -58,12 +51,8 @@ type
 
         function GetUniqueGenName: String;
         function GetUniqueCapName: String;
-
-    PROTECTED
-
     PUBLIC
-
-    {Autoadd mode Variables}
+        // Autoadd mode Variables
         GenkW,
         GenPF,
         Genkvar,
@@ -84,9 +73,6 @@ type
         function Solve: Integer; // Automatically add caps or generators
 
         property WeightedLosses: Double READ Get_WeightedLosses;
-
-    PUBLISHED
-
     end;
 
 implementation
@@ -98,11 +84,7 @@ uses
     Utilities,
     SysUtils,
     Executive,
-{$IFDEF FPC}
     CmdForms,
-{$ELSE}
-    DSSForms,
-{$ENDIF}
     {ProgressForm, Forms,} Solution,
     DSSHelper;
 
@@ -134,8 +116,6 @@ begin
     LastAddedCapacitor := 0;
 
     ModeChanged := TRUE;
-
-
 end;
 
 destructor TAutoAdd.Destroy;
@@ -161,7 +141,6 @@ var
     FBusListCreatedHere: Boolean;
 
 begin
-
     if (BusIdxListCreated) then
         ReallocMem(BusIdxList, 0);
 
@@ -198,7 +177,6 @@ begin
         pMeter := DSS.ActiveCircuit.EnergyMeters.First;
         while pMeter <> NIL do
         begin
-
             if pMeter.BranchList <> NIL then
             begin
                 PDElem := pMeter.BranchList.First;
@@ -246,7 +224,6 @@ function TAutoAdd.Get_WeightedLosses: Double;
 
 
 begin
-
     ComputekWLosses_EEN;
 
     if DSS.ActiveCircuit.EnergyMeters.Count = 0 then
@@ -287,8 +264,7 @@ begin
         FSWriteLn(F, S);
     except
         On E: EXCEPTion do
-            DoSimpleMsg(DSS, 'Error TRYing to append to ' + Fname + CRLF +
-                E.Message, 438);
+            DoSimpleMsg(DSS, 'Error trying to append to "%s": %s', [Fname, E.Message], 438);
     end;
     if F <> nil then
         F.Free();
@@ -304,7 +280,6 @@ var
     Done: Boolean;
 
 begin
-
     repeat
         Done := TRUE;
         Inc(LastAddedGenerator);
@@ -314,7 +289,6 @@ begin
     until Done;
 
     Result := TrialName;
-
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -337,7 +311,6 @@ begin
     until Done;
 
     Result := TrialName;
-
 end;
 
 
@@ -389,7 +362,6 @@ begin
         with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
 
-
             if (LoadModel = ADMITTANCE) then
             begin
                 LoadModel := POWERFLOW;
@@ -421,7 +393,7 @@ begin
 
         {Start up Log File}
 
-            FLog := TFileStream.Create(DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAddLog.CSV', fmCreate);
+            FLog := TFileStream.Create(DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAddLog.csv', fmCreate);
             FSWriteLn(FLog, '"Bus", "Base kV", "kW Losses", "% Improvement", "kW UE", "% Improvement", "Weighted Total", "Iterations"');
 
 
@@ -471,14 +443,12 @@ begin
 
                     for i := 1 to BusIdxListSize do
                     begin
-
                         Inc(ProgressCount);
 
                         BusIndex := BusIdxList^[i];
 
                         if BusIndex > 0 then
                         begin
-
                             TestBus := BusList.NameOfIndex(BusIndex);
                              // ProgressFormCaption( 'Testing bus ' + TestBus);
                             if ((ProgressCount mod 20) = 0) or (i = BusIdxListSize) then
@@ -539,7 +509,6 @@ begin
                     if MinLossBus > 0 then
                         with DSS.DSSExecutive do
                         begin
-
                             if MinBusPhases >= 3 then
                                 kVrat := Buses^[MinLossBus].kVBase * SQRT3
                             else
@@ -553,7 +522,7 @@ begin
                                 Format('! Factor =  %-g (%-.3g, %-.3g)', [MaxLossImproveFactor, LossWeight, UEWeight]);
                             Command := CommandString;    // Defines Generator
 
-                           // AppEnd this command to '...AutoAddedGenerators.Txt'
+                           // AppEnd this command to '...AutoAddedGenerators.txt'
                             AppendToFile('Generators', CommandString);
 
                             SolveSnap;  // Force rebuilding of lists
@@ -573,7 +542,6 @@ begin
 
                 CAPADD:
                 begin
-
                     MinLossBus := 0;   // null string
                     MaxLossImproveFactor := -1.0e50;  // Some very large number
                     MinBusPhases := 3;
@@ -590,7 +558,6 @@ begin
 
                     for i := 1 to BusIdxListSize do
                     begin
-
                         Inc(ProgressCount);
                        {Make sure testbus is actually in the circuit}
                         BusIndex := BusIdxList^[i];
@@ -656,7 +623,6 @@ begin
                     if MinLossBus > 0 then
                         with DSS.DSSExecutive do
                         begin
-
                             if MinBusPhases >= 3 then
                                 kVrat := Buses^[MinLossBus].kVBase * SQRT3
                             else
@@ -669,7 +635,7 @@ begin
                                 ', kv=' + Format('%-g', [kVrat]);
                             Command := CommandString;     // Defines capacitor
 
-                           // AppEnd this command to 'DSSAutoAddedCapacitors.Txt'
+                           // AppEnd this command to 'DSSAutoAddedCapacitors.txt'
                             AppendToFile('Capacitors', CommandString);
 
 
@@ -704,13 +670,12 @@ var
     Nref: Integer;
 
 begin
-
     case AddType of
 
         GENADD:
             with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
             begin
-           {For buses with voltage <> 0, add into aux current array}
+                // For buses with voltage <> 0, add into aux current array
                 for i := 1 to Phases do
                 begin
                     Nref := Buses^[BusIndex].GetRef(i);
@@ -718,12 +683,12 @@ begin
                     begin   // add in only non-ground currents
                         BusV := NodeV^[Nref];
                         if (BusV.re <> 0.0) or (BusV.im <> 0.0) then
-                      {Current  INTO the system network}
+                            // Current  INTO the system network
                             case SolveType of
                                 NEWTONSOLVE:
-                                    Caccum(Currents^[NRef], Cnegate(Conjg(Cdiv(GenVA, BusV))));  // Terminal Current
+                                    Currents^[NRef] -= cong(GenVA / BusV);  // Terminal Current
                                 NORMALSOLVE:
-                                    Caccum(Currents^[NRef], Conjg(Cdiv(GenVA, BusV)));   // Injection Current
+                                    Currents^[NRef] += cong(GenVA / BusV);   // Injection Current
                             end;
                     end;
                 end;
@@ -732,8 +697,7 @@ begin
         CAPADD:
             with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
             begin
-
-           {For buses with voltage <> 0, add into aux current array}
+                // For buses with voltage <> 0, add into aux current array
                 for i := 1 to Phases do
                 begin
                     Nref := Buses^[BusIndex].GetRef(i);
@@ -744,9 +708,9 @@ begin
                          {Current  INTO the system network}
                             case SolveType of
                                 NEWTONSOLVE:
-                                    Caccum(Currents^[NRef], Cmul(Cmplx(0.0, Ycap), BusV)); // Terminal Current
+                                    Currents^[NRef] += Cmplx(0.0, Ycap) * BusV; // Terminal Current
                                 NORMALSOLVE:
-                                    Caccum(Currents^[NRef], Cmul(Cmplx(0.0, -Ycap), BusV)); // Injection Current
+                                    Currents^[NRef] += Cmplx(0.0, -Ycap) * BusV; // Injection Current
                             end;  // Constant Y model
                     end;
                 end;
@@ -761,10 +725,8 @@ var
     pMeter: TEnergyMeterObj;
 
 begin
-
     if DSS.ActiveCircuit.EnergyMeters.Count = 0 then
     begin
-
         // No energymeters in circuit
         // Just go by total system losses
         kWLosses := DSS.ActiveCircuit.Losses.re * 0.001;
@@ -778,11 +740,9 @@ begin
 
         with DSS.ActiveCircuit do
         begin
-
             pMeter := DSS.ActiveCircuit.Energymeters.First;
             while pMeter <> NIL do
             begin
-
                 kWLosses := kWLosses + SumSelectedRegisters(pMeter, LossRegs, NumLossRegs);
                 kWEEN := kWEEN + SumSelectedRegisters(pMeter, UEregs, NumUEregs);
 
@@ -790,8 +750,6 @@ begin
             end;
         end;
     end;
-
-
 end;
 
 procedure TAutoAdd.SetBaseLosses;

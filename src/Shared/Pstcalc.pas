@@ -16,21 +16,14 @@ uses
 // Adapted from Jeff Smith's original C++ code
 // note: the scaling factor being used has been corrected.  It is scaling the output of Block 4 to
 // 1.0 for the values given in Table 1 and Table 2. The last table in the std should be used for checking Pst
-// 4/12/05 The meter is verified using Table 2 and Table 5 (Pinst and Pst tables)
-// 7/28/05: This cpp is designed to receive a 6-cycle rms data stream from the dss and return Pst
-// 8/3/05: Updated to receive single to 6-cycle rms data streams.  The rms window "DeltaT" determines which scaling factor to use
-// 8/4/05: added back functionality to receive AC data.  Now these are 2 separate loops
-// 8/31/11 Converted to Object Pascal
-// 9/6/11  Removed PstAC code
-// 1/22/2013 added RMS flickermeter implementation (temc)
 
 // Note: allocates result array of doubles!!!
 function PstRMS(var PstResult: pDoubleArray; pVoltages: pdoubleArray; Freqbase: Double; NcyclesperSample, Npts, Lamp: Integer): Integer;
-      // returns number of Pst elements computed  in PstResult array
-      // That is the number of 10-minute intervals
-      // will automatically clean up and reallocate PstStruct when this function is called
-      // Init PstResult to Nil in calling routine.
-      // Dispose of result in colling routine when done with it.
+// returns number of Pst elements computed  in PstResult array
+// That is the number of 10-minute intervals
+// will automatically clean up and reallocate PstStruct when this function is called
+// Init PstResult to Nil in calling routine.
+// Dispose of result in colling routine when done with it.
 
 // input: N points of RMS voltage in pT, pRms
 //        fBase (50 or 60) determines the weighting coefficients
@@ -97,7 +90,6 @@ var
     found: Boolean;
 
 begin
-
     found := FALSE;
     n := 0;
 
@@ -115,7 +107,6 @@ begin
     end
     else
         Result := 0.0;
-
 end;
 
 procedure ZeroOutBins;
@@ -140,7 +131,6 @@ var
     P01, P1s, P3s, P10s, P50s: Double;
 
 begin
-
     num_pts := 0;
     for n := 0 to number_bins - 1 do
     begin
@@ -172,7 +162,6 @@ begin
  // This is the Pst
 
     Result := sqrt(0.0314 * P01 + 0.0525 * P1s + 0.0657 * P3s + 0.28 * P10s + 0.08 * P50s);
-
 end;
 
 //////////////////////////////////////////////////////////////////////
@@ -184,7 +173,6 @@ var
     K, Lambda, W1, W2, W3, W4: Double;
 
 begin
-
     // Coefficients for Input Voltage Adapter
     // L = 8.93125 H
     // C = 35.725 F
@@ -313,7 +301,6 @@ end;
 procedure Get_Pinst;
 
 begin
-
   {RMS input}
 
     RMSVin[0] := rms_reference * RMS_sample / rms_input; // per unitize rms value
@@ -336,11 +323,8 @@ begin
     // Sliding Mean filter
     X9[0] := (X8[0] * X8[0] + X8[1] * X8[1] - (1 - 2 * SA / Tstep) * X9[1]) / (1 + 2 * SA / Tstep);
     X10[0] := X9[0] / internal_reference;
-
 end;
 
-//*******************************************************************
-//*******************************************************************
 procedure Init6Array(var Y: Double6Array; V1, V2, V3, V4, V5, V6: Double);
 begin
     Y[0] := V1;
@@ -351,8 +335,6 @@ begin
     Y[5] := V6;
 end;
 
-//*******************************************************************
-//*******************************************************************
 function _Pst(var PstResult: pDoubleArray; Varray: pDoubleArray; Npts: Integer): Integer;
 
 var
@@ -369,7 +351,6 @@ var
     SynthesizedSamples: Integer;
     SamplesPerDeltaT: Double;    // this value is used when RMS data is used as input
 begin
-
     rms_reference := 120.0;    // internal rms reference value (do not change)
 
     init6Array(Vin, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
@@ -439,7 +420,6 @@ begin
         // The following loop holds the rms input samples constant over the RMS period
         for SynthesizedSamples := 1 to round(SamplesPerDeltaT) do
         begin
-
             Get_Pinst;    // Computes what gets through filter (X10[0] )
 
             {////////////// This starts the Pst calculations //////////////}
@@ -470,7 +450,6 @@ begin
 
     reallocmem(Bins0, 0);
     reallocmem(Bins1, 0);
-
 end;
 
 // Function call for executing PST calculator using RMS data
@@ -480,7 +459,6 @@ function PstRMS(var PstResult: pDoubleArray; pVoltages: pdoubleArray; Freqbase: 
       // will automatically clean up PstStruct when it is reallocated; Init to nil
 
 begin
-
     Fbase := Freqbase;
 
     // lamp_type  := 0;            // 0 for 120V filters, 1 for 230V filters
@@ -498,13 +476,10 @@ begin
     DeltaT := NcyclesperSample / Fbase;
 
     Result := _Pst(PstResult, pVoltages, Npts);
-
 end;
 
 /////////////////////////////////////////////////////////
-//
 //  RMS flickermeter implementation
-//
 /////////////////////////////////////////////////////////
 
 procedure Fhp(N: Integer; Ts: Single; whp: Single;
@@ -626,7 +601,7 @@ procedure FlickerMeter(N: Integer; fBase: Double; vBase: Double; pT: pSingleArra
 var
     i, ipst, ihst: Integer;
     t, tPst: Single;
-  // filter coefficients
+    // filter coefficients
     whp, w1, w2, w3, w4, k, lam, tau, ts, cf: Single;
     pBuf: pSingleArray;
     hst: array of Single;
@@ -670,7 +645,7 @@ begin
     for i := 1 to N do
         pRms[i] := cf * pRms[i];
 
-  // build the Blcok 5 Pst outputs from Block 4 instantaneous flicker levels
+    // build the Blcok 5 Pst outputs from Block 4 instantaneous flicker levels
     SetLength(hst, trunc(600.0 / Ts) + 1);
     ihst := Low(hst);
     for i := 1 to N do
@@ -715,8 +690,5 @@ begin
         end;
     end;
 end;
-
-
-initialization
 
 end.

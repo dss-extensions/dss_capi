@@ -6,76 +6,38 @@ unit EnergyMeter;
   All rights reserved.
   ----------------------------------------------------------
 }
-{
-     This class of device accumulates the energy of the voltage and current in the
-     terminal of the device to which it is connected.
-
-     It is an intelligent energy meter capable of measuring losses of all
-     devices within its "zone".
-
-     The Zone is determined automatically after a circuit change.  The Zone starts on the
-     opposite side of the branch on which the meter is located and continues in the same
-     direction through the network until
-       a) an open point is encountered
-       b) an open terminal or switch is encountered
-       c) another energy meter is encountered
-       d) a branch that is already included in a zone is encountered
-
-     It keeps track of kwh, kvarh, UE,  EEN, Losses, etc., having registers FOR each
-     of these quantities.
-
-     In EEN/UE calculations, line overload takes precedence.
-
-     If the Max Zone kW limits are specified, then these replace the line overload UE/EEN numbers.
-     These limits were added so that the user can override line limits in cases
-     such as networks where it is difficult to judge the UE from the individual
-     line limits.
-
-     Only the maximum |kVA| overload is accumulated, not all.  Loads downline from
-     an overload are marked WITH a factor representing the degree of overload.  This
-     is used to compute EEN/UE FOR loads.
-
-     FOR low voltages, the full kW FOR loads below the emergency min voltage are counted.
-     The EEN is proportioned based on how low the voltage is.
-
-     Emergency min voltage must be less than normal min voltage.
-
-}
-
-{                 CHANGE LOG
-
-8-3-99  Added Option property
-        Revised EEN/UE computation to do either total or excess
-8-4-99 Save always rewrites file now and returns file name.
-
-11-11-99 Fixed bug in Take sample to use the maxvalue of the overload_EEN
-
-1-4-99  Modified tree checking to avoid picking up the same load more than once
-        Fixed bugs in sampling load EEN/UE
-        Modified Overload UE; added kwnormal, kwemerg properties for whole zone
-
-1-28-00 Changed to derived from Meter Element
-2-2-00  Trapezoidal Integration option
-4-14-00 Added load allocation algorithm
-4-17-00 Removed shunt capacitors from meter zones
-5-3-00  Corrected Zone kW, kvar accumulation to be actual power not target power
-5-29-00 Fixed problem with Nphases not being set right for 1-phase devices.
-6-15-01 Added Zonelist and LocalOnly options
-7/6/01  Added Voltage Only option for Load UE calcs.
-7/19/01 Added Totalizer Function for meterclass
-7/24/01 Added Generator registers and code for adding generators to zone lists.
-        Changed to use zone loads and gens even if local only. If you only want the local
-        measurements, specify a null zone manually.
-8/2/01  Fixed hole in Local only options.
-4/29/03 Added ReduceZone Function
-2/7/07  Fixed overload formulas
-9/18/08 Added load loss and no load loss registers  and aux registers
-11/8/08 Revamped TakeSample to fix bugs with Demand Interval reporting
-8/8/13  Added initial reliability calcs
-3/27/2018 Corrected SAIDI calcs
-}
-
-{$WARN UNIT_PLATFORM OFF}
+//     This class of device accumulates the energy of the voltage and current in the
+//     terminal of the device to which it is connected.
+//
+//     It is an intelligent energy meter capable of measuring losses of all
+//     devices within its "zone".
+//
+//     The Zone is determined automatically after a circuit change.  The Zone starts on the
+//     opposite side of the branch on which the meter is located and continues in the same
+//     direction through the network until
+//       a) an open point is encountered
+//       b) an open terminal or switch is encountered
+//       c) another energy meter is encountered
+//       d) a branch that is already included in a zone is encountered
+//
+//     It keeps track of kwh, kvarh, UE,  EEN, Losses, etc., having registers FOR each
+//     of these quantities.
+//
+//     In EEN/UE calculations, line overload takes precedence.
+//
+//     If the Max Zone kW limits are specified, then these replace the line overload UE/EEN numbers.
+//     These limits were added so that the user can override line limits in cases
+//     such as networks where it is difficult to judge the UE from the individual
+//     line limits.
+//
+//     Only the maximum |kVA| overload is accumulated, not all.  Loads downline from
+//     an overload are marked WITH a factor representing the degree of overload.  This
+//     is used to compute EEN/UE FOR loads.
+//
+//     FOR low voltages, the full kW FOR loads below the emergency min voltage are counted.
+//     The EEN is proportioned based on how low the voltage is.
+//
+//     Emergency min voltage must be less than normal min voltage.
 
 interface
 
@@ -88,7 +50,7 @@ uses
     arrayDef,
     DSSPointerList,
     CktTree,
-    ucomplex,
+    UComplex, DSSUcomplex,
     Load,
     Generator,
     XYCurve,
@@ -98,7 +60,8 @@ uses
 const
     NumEMVbase = 7;
     NumEMRegisters = 32 + 5 * NumEMVbase;   // Total Number of energy meter registers
-    {Fixed Registers}
+    
+    // Fixed Registers
     Reg_kWh = 1;
     Reg_kvarh = 2;
     Reg_MaxkW = 3;
@@ -134,6 +97,36 @@ const
     Reg_VBaseStart = 32;  // anchor for the voltage base loss registers
 
 type
+{$SCOPEDENUMS ON}
+    TEnergyMeterProp = (
+        INVALID = 0,
+        element = 1,
+        terminal = 2,
+        action = 3,
+        option = 4,
+        kVAnormal = 5,
+        kVAemerg = 6,
+        peakcurrent = 7,
+        Zonelist = 8,
+        LocalOnly = 9,
+        Mask = 10,
+        Losses = 11,
+        LineLosses = 12,
+        XfmrLosses = 13,
+        SeqLosses = 14,
+        __3phaseLosses = 15,
+        VbaseLosses = 16, // segregate losses by voltage base
+        PhaseVoltageReport = 17, // Compute Avg phase voltages in zone
+        Int_Rate = 18,
+        Int_Duration = 19,
+        SAIFI = 20, // Read only
+        SAIFIkW = 21, // Read only
+        SAIDI = 22, // Read only
+        CAIDI = 23, // Read only
+        CustInterrupts = 24 // Read only
+    );
+{$SCOPEDENUMS OFF}
+
     TRegisterArray = array[1..NumEMregisters] of Double;
 
     //  --------- Feeder Section Definition -----------
@@ -152,6 +145,8 @@ type
     pFeederSections = ^FeederSectionArray;
     FeederSectionArray = array[0..100] of TFeederSection;   // Dummy dimension
     //  --------- Feeder Section Definition -----------
+
+    TEnergyMeter = class;
 
     TSystemMeter = class(Tobject)
     PRIVATE
@@ -184,9 +179,8 @@ type
         procedure Reset;
         procedure Save;
 
-        constructor Create(dssContext: TDSSContext);
+        constructor Create(EnergyMeterClass: TEnergyMeter);
         destructor Destroy; OVERRIDE;
-
     end;
 
     TEnergyMeter = class(TMeterClass)    // derive strait from base class
@@ -194,7 +188,6 @@ type
         FSaveDemandInterval: Boolean;
         FDI_Verbose: Boolean;
 
-        procedure ProcessOptions(const Opts: String);
         procedure Set_SaveDemandInterval(const Value: Boolean);
         function Get_SaveDemandInterval: Boolean;
         procedure CreateMeterTotals;
@@ -205,7 +198,6 @@ type
         procedure OpenVoltageReportFile;
         procedure WriteOverloadReport;
         procedure WriteVoltageReport;
-        procedure InterpretRegisterMaskArray(var Mask: TRegisterArray);
         procedure Set_DI_Verbose(const Value: Boolean);
         function Get_DI_Verbose: Boolean;
 
@@ -213,51 +205,46 @@ type
         // Moved from global unit vars
 
         Delta_Hrs: Double;
-       // adjacency lists for PC and PD elements at each bus, built for faster searches
+        // adjacency lists for PC and PD elements at each bus, built for faster searches
         BusAdjPC: TAdjArray; // also includes shunt PD elements
         BusAdjPD: TAdjArray;
 
-    {*******************************************************************************
-    *    Nomenclature:                                                             *
-    *                  OV_ Overloads                                               *
-    *                  VR_ Voltage report                                          *
-    *                  DI_ Demand interval                                         *
-    *                  SI_ System Demand interval                                  *
-    *                  TDI_ DI Totals                                              *
-    *                  FM_  Meter Totals                                           *
-    *                  SM_  System Mater                                           *
-    *                  EMT_  Energy Meter Totals                                   *
-    *                  PHV_  Phase Voltage Report                                  *
-    *     These prefixes are applied to the variables of each file mapped into     *
-    *     Memory using the MemoryMap_Lib                                           *
-    ********************************************************************************
-    }
+    // ********************************************************************************
+    // *    Nomenclature:                                                             *
+    // *                  OV_ Overloads                                               *
+    // *                  VR_ Voltage report                                          *
+    // *                  DI_ Demand interval                                         *
+    // *                  SI_ System Demand interval                                  *
+    // *                  TDI_ DI Totals                                              *
+    // *                  FM_  Meter Totals                                           *
+    // *                  SM_  System Mater                                           *
+    // *                  EMT_  Energy Meter Totals                                   *
+    // *                  PHV_  Phase Voltage Report                                  *
+    // *     These prefixes are applied to the variables of each file mapped into     *
+    // *     Memory using the MemoryMap_Lib                                           *
+    // ********************************************************************************
+   
     PUBLIC
         OV_MHandle: TBytesStream;  // a. Handle to the file in memory
         VR_MHandle: TBytesStream;
         OV_Append: Boolean;
         VR_Append: Boolean;
-        
-    PROTECTED
-        DI_MHandle: TBytesStream;
-        SDI_MHandle: TBytesStream;
-        TDI_MHandle: TBytesStream;
-        SM_MHandle: TBytesStream;
-        EMT_MHandle: TBytesStream;
-        PHV_MHandle: TBytesStream;
-        FM_MHandle: TBytesStream;
-
-    //*********** Flags for appending Files*****************************************
-        DI_Append: Boolean;
         SDI_Append: Boolean;
         TDI_Append: Boolean;
         SM_Append: Boolean;
         EMT_Append: Boolean;
-        PHV_Append: Boolean;
         FM_Append: Boolean;
 
-        procedure DefineProperties;
-        function MakeLike(const EnergyMeterName: String): Integer; OVERRIDE;
+        
+    PROTECTED
+        SDI_MHandle: TBytesStream;
+        TDI_MHandle: TBytesStream;
+        SM_MHandle: TBytesStream;
+        EMT_MHandle: TBytesStream;
+        FM_MHandle: TBytesStream;
+
+
+        procedure DefineProperties; override;
         procedure SetHasMeterFlag;
 
     PUBLIC
@@ -276,8 +263,9 @@ type
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;     // uses global parser
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
+        function BeginEdit(ptr: Pointer; SetActive_: Boolean=True): Pointer; override;
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
 
         procedure ResetMeterZonesAll;
         procedure ResetAll; OVERRIDE;  // Reset all meters in active circuit to zero
@@ -309,15 +297,14 @@ type
         FVBaseLosses: Boolean;
         FPhaseVoltageReport: Boolean;
 
-        DefinedZoneList: pStringArray;
-        DefinedZoneListSize: Integer;
+        DefinedZoneList: TStringList;
 
-       {Limits on the entire load in the zone for networks where UE cannot be determined
-        by the individual branches}
+        // Limits on the entire load in the zone for networks where UE cannot be determined
+        // by the individual branches
         MaxZonekVA_Norm: Double;
         MaxZonekVA_Emerg: Double;
 
-       {Voltage bases in the Meter Zone}
+        // Voltage bases in the Meter Zone
         VBaseTotalLosses: pDoubleArray;    // allocated array
         VBaseLineLosses: pDoubleArray;
         VBaseLoadLosses: pDoubleArray;
@@ -327,14 +314,14 @@ type
         VBaseCount: Integer;
         MaxVBaseCount: Integer;
 
-       { Arrays for phase voltage report  }
+        // Arrays for phase voltage report
         VphaseMax: pDoubleArray;
         VPhaseMin: pDoubleArray;
         VPhaseAccum: pDoubleArray;
         VPhaseAccumCount: pIntegerArray;
         VPhaseReportFileIsOpen: Boolean;
 
-       {Demand Interval File variables}
+        // Demand Interval File variables
         This_Meter_DIFileIsOpen: Boolean;
 
 
@@ -359,6 +346,24 @@ type
         procedure AppendDemandIntervalFile;
 
     PUBLIC
+    // ********************************************************************************
+    // *    Nomenclature:                                                             *
+    // *                  OV_ Overloads                                               *
+    // *                  VR_ Voltage report                                          *
+    // *                  DI_ Demand interval                                         *
+    // *                  SI_ System Demand interval                                  *
+    // *                  TDI_ DI Totals                                              *
+    // *                  FM_  Meter Totals                                           *
+    // *                  SM_  System Mater                                           *
+    // *                  EMT_  Energy Meter Totals                                   *
+    // *                  PHV_  Phase Voltage Report                                  *
+    // *     These prefixes are applied to the variables of each file mapped into     *
+    // *     Memory using the MemoryMap_Lib                                           *
+    // ********************************************************************************
+
+        DI_MHandle: TBytesStream;
+        PHV_MHandle: TBytesStream;
+
         RegisterNames: array[1..NumEMregisters] of String;
 
         BranchList: TCktTree;      // Pointers to all circuit elements in meter's zone
@@ -385,46 +390,16 @@ type
         FeederSections: pFeederSections;
         ZonePCE: Array of string;
 
-    {*******************************************************************************
-    *    Nomenclature:                                                             *
-    *                  OV_ Overloads                                               *
-    *                  VR_ Voltage report                                          *
-    *                  DI_ Demand interval                                         *
-    *                  SI_ System Demand interval                                  *
-    *                  TDI_ DI Totals                                              *
-    *                  FM_  Meter Totals                                           *
-    *                  SM_  System Mater                                           *
-    *                  EMT_  Energy Meter Totals                                   *
-    *                  PHV_  Phase Voltage Report                                  *
-    *     These prefixes are applied to the variables of each file mapped into     *
-    *     Memory using the MemoryMap_Lib                                           *
-    ********************************************************************************
-    }
-        OV_MHandle: TBytesStream;  // a. Handle to the file in memory
-        VR_MHandle: TBytesStream;
-        DI_MHandle: TBytesStream;
-        SDI_MHandle: TBytesStream;
-        TDI_MHandle: TBytesStream;
-        SM_MHandle: TBytesStream;
-        EMT_MHandle: TBytesStream;
-        PHV_MHandle: TBytesStream;
-        FM_MHandle: TBytesStream;
-
-    //*********** Flags for appending Files*****************************************
-        OV_Append: Boolean;
-        VR_Append: Boolean;
+        //*********** Flags for appending Files*****************************************
         DI_Append: Boolean;
-        SDI_Append: Boolean;
-        TDI_Append: Boolean;
-        SM_Append: Boolean;
-        EMT_Append: Boolean;
         PHV_Append: Boolean;
-        FM_Append: Boolean;
-        
+
         constructor Create(ParClass: TDSSClass; const EnergyMeterName: String);
         destructor Destroy; OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model, reset nphases
+        procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model, reset nphases
         procedure RecalcElementData; OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; //Get present value of terminal Curr
@@ -443,16 +418,13 @@ type
 
         procedure CalcReliabilityIndices(AssumeRestoration: Boolean);
 
-        function GetPropertyValue(Index: Integer): String; OVERRIDE;
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
     end;
 
 implementation
 
 uses
-    ParserDel,
     DSSClassDefs,
     DSSGlobals,
     Bus,
@@ -466,40 +438,51 @@ uses
     Line,
     LineUnits,
     ReduceAlgs,
-{$IFNDEF FPC}
-    Windows,
-{$ENDIF}
     Math,
     MemoryMap_Lib,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
 
- //     {$DEFINE DEBUG}
-{$UNDEF DEBUG}
-
+type
+    TObj = TEnergyMeterObj;
+    TProp = TEnergyMeterProp;
+{$PUSH}
+{$Z4} // keep enums as int32 values
+    TEnergyMeterAction = (
+        Allocate = 0,
+        Clear = 1,
+        Reduce = 2,
+        Save = 3,
+        Take = 4,
+        ZoneDump = 5
+    );
+{$POP}
 
 const
-    NumPropsThisClass = 24;
+    NumPropsThisClass = Ord(High(TProp));
+var
+    PropInfo: Pointer;    
+    ActionEnum: TDSSEnum;
 
-
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function jiIndex(i, j: Integer): Integer; inline;
 begin
     Result := (j - 1) * 3 + i;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TEnergyMeter.Create(dssContext: TDSSContext);  // Creates superstructure FOR all EnergyMeter objects
+constructor TEnergyMeter.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
-    Class_Name := 'EnergyMeter';
-    DSSClassType := DSSClassType + ENERGY_METER;
+    if PropInfo = NIL then
+    begin
+        PropInfo := TypeInfo(TProp);
+        ActionEnum := TDSSEnum.Create('EnergyMeter: Action', True, 1, 2, 
+            ['Allocate', 'Clear', 'Reduce', 'Save', 'Take', 'ZoneDump'],
+            [0, 1, 2, 3, 4, 5]);
+    end;
 
-    ActiveElement := 0;
+    inherited Create(dssContext, ENERGY_METER, 'EnergyMeter');
 
-     {Initialice demand interval options to off}
+    // Initialize demand interval options to off
     FSaveDemandInterval := FALSE;
     FDI_Verbose := FALSE;
 
@@ -507,40 +490,27 @@ begin
     OverLoadFileIsOpen := FALSE;
     VoltageFileIsOpen := FALSE;
 
-
     Do_VoltageExceptionReport := FALSE;
 
     DI_Dir := '';
 
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
-
-
-    SystemMeter := TSystemMeter.Create(DSS);
+    SystemMeter := TSystemMeter.Create(self);
     OV_MHandle := NIL;
     VR_MHandle := NIL;
-    DI_MHandle := NIL;
     SDI_MHandle := NIL;
     TDI_MHandle := NIL;
     SM_MHandle := NIL;
     EMT_MHandle := NIL;
-    PHV_MHandle := NIL;
     FM_MHandle := NIL;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TEnergyMeter.Destroy;
-
 begin
     SystemMeter.Free;
     if OV_MHandle <> NIL then
         OV_MHandle.Free;
     if VR_MHandle <> NIL then
         VR_MHandle.Free;
-    if DI_MHandle <> NIL then
-        DI_MHandle.Free;
     if SDI_MHandle <> NIL then
         SDI_MHandle.Free;
     if TDI_MHandle <> NIL then
@@ -549,343 +519,270 @@ begin
         SM_MHandle.Free;
     if EMT_MHandle <> NIL then
         EMT_MHandle.Free;
-    if PHV_MHandle <> NIL then
-        PHV_MHandle.Free;
     if FM_MHandle <> NIL then
         FM_MHandle.Free;
-    // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
 end;
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TEnergyMeter.DefineProperties;
+procedure DoAction(Obj: TObj; action: TEnergyMeterAction);
 begin
-
-    Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
-
-     // Define Property names
-
-    PropertyName^[1] := 'element';
-    PropertyName^[2] := 'terminal';
-    PropertyName^[3] := 'action';
-    PropertyName^[4] := 'option';
-    PropertyName^[5] := 'kVAnormal';
-    PropertyName^[6] := 'kVAemerg';
-    PropertyName^[7] := 'peakcurrent';
-    PropertyName^[8] := 'Zonelist';
-    PropertyName^[9] := 'LocalOnly';
-    PropertyName^[10] := 'Mask';
-    PropertyName^[11] := 'Losses';
-    PropertyName^[12] := 'LineLosses';
-    PropertyName^[13] := 'XfmrLosses';
-    PropertyName^[14] := 'SeqLosses';
-    PropertyName^[15] := '3phaseLosses';
-    PropertyName^[16] := 'VbaseLosses'; // segregate losses by voltage base
-    PropertyName^[17] := 'PhaseVoltageReport'; // Compute Avg phase voltages in zone
-    PropertyName^[18] := 'Int_Rate';
-    PropertyName^[19] := 'Int_Duration';
-    PropertyName^[20] := 'SAIFI';    // Read only
-    PropertyName^[21] := 'SAIFIkW';    // Read only
-    PropertyName^[22] := 'SAIDI';    // Read only
-    PropertyName^[23] := 'CAIDI';    // Read only
-    PropertyName^[24] := 'CustInterrupts';    // Read only
-
-{     PropertyName^[11] := 'Feeder';  **** removed - not used}
-
-    PropertyHelp[1] := 'Name (Full Object name) of element to which the monitor is connected.';
-    PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. ' +
-        '1 or 2, typically.';
-    PropertyHelp[3] := '{Clear (reset) | Save | Take | Zonedump | Allocate | Reduce} ' + CRLF + CRLF +
-        '(A)llocate = Allocate loads on the meter zone to match PeakCurrent.' + CRLF +
-        '(C)lear = reset all registers to zero' + CRLF +
-        '(R)educe = reduces zone by merging lines (see Set Keeplist & ReduceOption)' + CRLF +
-        '(S)ave = saves the current register values to a file.' + CRLF +
-        '   File name is "MTR_metername.CSV".' + CRLF +
-        '(T)ake = Takes a sample at present solution' + CRLF +
-        '(Z)onedump = Dump names of elements in meter zone to a file' + CRLF +
-        '   File name is "Zone_metername.CSV".';
-    PropertyHelp[4] := 'Enter a string ARRAY of any combination of the following. Options processed left-to-right:' + CRLF + CRLF +
-        '(E)xcess : (default) UE/EEN is estimate of energy over capacity ' + CRLF +
-        '(T)otal : UE/EEN is total energy after capacity exceeded' + CRLF +
-        '(R)adial : (default) Treats zone as a radial circuit' + CRLF +
-        '(M)esh : Treats zone as meshed network (not radial).' + CRLF +
-        '(C)ombined : (default) Load UE/EEN computed from combination of overload and undervoltage.' + CRLF +
-        '(V)oltage : Load UE/EEN computed based on voltage only.' + CRLF + CRLF +
-        'Example: option=(E, R)';
-    PropertyHelp[5] := 'Upper limit on kVA load in the zone, Normal configuration. Default is 0.0 (ignored). ' +
-        'Overrides limits on individual lines for overload EEN. ' +
-        'With "LocalOnly=Yes" option, uses only load in metered branch.';
-    PropertyHelp[6] := 'Upper limit on kVA load in the zone, Emergency configuration. Default is 0.0 (ignored). ' +
-        'Overrides limits on individual lines for overload UE. ' +
-        'With "LocalOnly=Yes" option, uses only load in metered branch.';
-    PropertyHelp[7] := 'ARRAY of current magnitudes representing the peak currents measured at this location ' +
-        'for the load allocation function.  Default is (400, 400, 400). Enter one current for each phase';
-    PropertyHelp[8] := 'ARRAY of full element names for this meter''s zone.  Default is for meter to find it''s own zone. ' +
-        'If specified, DSS uses this list instead.  Can access the names in a single-column text file.  Examples: ' + crlf + crlf +
-        'zonelist=[line.L1, transformer.T1, Line.L3] ' + CRLF +
-        'zonelist=(file=branchlist.txt)';
-    PropertyHelp[9] := '{Yes | No}  Default is NO.  If Yes, meter considers only the monitored element ' +
-        'for EEN and UE calcs.  Uses whole zone for losses.';
-    PropertyHelp[10] := 'Mask for adding registers whenever all meters are totalized.  Array of floating point numbers ' +
-        'representing the multiplier to be used for summing each register from this meter. ' +
-        'Default = (1, 1, 1, 1, ... ).  You only have to enter as many as are changed (positional). ' +
-        'Useful when two meters monitor same energy, etc.';
-    PropertyHelp[11] := '{Yes | No}  Default is YES. Compute Zone losses. If NO, then no losses at all are computed.';
-    PropertyHelp[12] := '{Yes | No}  Default is YES. Compute Line losses. If NO, then none of the losses are computed.';
-    PropertyHelp[13] := '{Yes | No}  Default is YES. Compute Transformer losses. If NO, transformers are ignored in loss calculations.';
-    PropertyHelp[14] := '{Yes | No}  Default is YES. Compute Sequence losses in lines and segregate by line mode losses and zero mode losses.';
-    PropertyHelp[15] := '{Yes | No}  Default is YES. Compute Line losses and segregate by 3-phase and other (1- and 2-phase) line losses. ';
-    PropertyHelp[16] := '{Yes | No}  Default is YES. Compute losses and segregate by voltage base. If NO, then voltage-based tabulation is not reported.';
-    PropertyHelp[17] := '{Yes | No}  Default is NO.  Report min, max, and average phase voltages for the zone and tabulate by voltage base. ' +
-        'Demand Intervals must be turned on (Set Demand=true) and voltage bases must be defined for this property to take effect. ' +
-        'Result is in a separate report file.';
-    PropertyHelp[18] := 'Average number of annual interruptions for head of the meter zone (source side of zone or feeder).';
-    PropertyHelp[19] := 'Average annual duration, in hr, of interruptions for head of the meter zone (source side of zone or feeder).';
-    PropertyHelp[20] := '(Read only) Makes SAIFI result available via return on query (? energymeter.myMeter.SAIFI.';
-    PropertyHelp[21] := '(Read only) Makes SAIFIkW result available via return on query (? energymeter.myMeter.SAIFIkW.';
-    PropertyHelp[22] := '(Read only) Makes SAIDI result available via return on query (? energymeter.myMeter.SAIDI.';
-    PropertyHelp[23] := '(Read only) Makes CAIDI result available via return on query (? energymeter.myMeter.CAIDI.';
-    PropertyHelp[24] := '(Read only) Makes Total Customer Interrupts value result available via return on query (? energymeter.myMeter.CustInterrupts.';
-(**** Not used in present version
-      PropertyHelp[11]:= '{Yes/True | No/False}  Default is NO. If set to Yes, a Feeder object is created corresponding to ' +
-                         'the energymeter.  Feeder is enabled if Radial=Yes; diabled if Radial=No.  Feeder is ' +
-                         'synched automatically with the meter zone.  Do not create feeders for zones in meshed transmission systems.';
-*****)
-
-    ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TEnergyMeter.NewObject(const ObjName: String): Integer;
-begin
-   // create a new object of this class and add to list
-    with ActiveCircuit do
-    begin
-        ActiveCktElement := TEnergyMeterObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+    case action of
+        TEnergyMeterAction.Allocate:
+            Obj.AllocateLoad;
+        TEnergyMeterAction.Clear:
+            Obj.ResetRegisters;
+        TEnergyMeterAction.Reduce:
+            Obj.ReduceZone;
+        TEnergyMeterAction.Save:
+            Obj.SaveRegisters;
+        TEnergyMeterAction.Take:
+            Obj.TakeSample;
+        TEnergyMeterAction.Zonedump:
+            Obj.ZoneDump;
     end;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TEnergyMeter.Edit: Integer;
-
+procedure SetOptions(Obj: TObj; Value: TStringList);
 var
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
-
-    DoRecalc: Boolean;
-
-begin
-
-  // continue parsing WITH contents of Parser
-  // continue parsing WITH contents of Parser
-    DSS.ActiveEnergyMeterObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveEnergyMeterObj;
-
-    Result := 0;
-
-    DoRecalc := FALSE;
-
-    with DSS.ActiveEnergyMeterObj do
-    begin
-
-        MeteredElementChanged := FALSE;
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
-        begin
-            if (Length(ParamName) = 0) then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
-
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 520);
-                1:
-                    ElementName := lowercase(param);
-                2:
-                    MeteredTerminal := Parser.IntValue;
-                3:
-                begin  {Actions}
-                    param := lowercase(param);
-                    case param[1] of
-                        'a':
-                            AllocateLoad;
-                        'c':
-                            ResetRegisters;
-                        'r':
-                            ReduceZone;
-                        's':
-                            SaveRegisters;
-                        't':
-                            TakeSample;
-                        'z':
-                            ZoneDump;
-                    end;
-                end;
-                4:
-                    ProcessOptions(Param);
-                5:
-                    MaxZonekVA_Norm := Parser.DblValue;
-                6:
-                    MaxZonekVA_Emerg := Parser.DblValue;
-                7:
-                    parser.ParseAsVector(Fnphases, SensorCurrent);   // Inits to zero
-                8:
-                    InterpretAndAllocStrArray(Param, DefinedZoneListSize, DefinedZoneList);
-                9:
-                    LocalOnly := InterpretYesNo(Param);
-                10:
-                    InterpretRegisterMaskArray(TotalsMask);
-                11:
-                    FLosses := InterpretYesNo(Param);
-                12:
-                    FLineLosses := InterpretYesNo(Param);
-                13:
-                    FXfmrLosses := InterpretYesNo(Param);
-                14:
-                    FSeqLosses := InterpretYesNo(Param);
-                15:
-                    F3PhaseLosses := InterpretYesNo(Param);
-                16:
-                    FVBaseLosses := InterpretYesNo(Param);
-                17:
-                    FPhaseVoltageReport := InterpretYesNo(Param);
-                18:
-                    Source_NumInterruptions := Parser.dblvalue; // Annual interruptions for upline circuit
-                19:
-                    Source_IntDuration := Parser.dblValue; // hours
-                20:
-                    PropertyValue[20] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
-                21:
-                    PropertyValue[21] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
-                22:
-                    PropertyValue[22] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
-                23:
-                    PropertyValue[23] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
-                24:
-                    PropertyValue[24] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
-            else
-                ClassEdit(DSS.ActiveEnergyMeterObj, ParamPointer - NumPropsthisClass)
-            end;
-
-            case ParamPointer of
-                1, 2:
-                begin
-                    MeteredElementChanged := TRUE;
-                    DoRecalc := TRUE;
-                end;
-            end;
-
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
-        end;
-
-        if DoRecalc then
-            RecalcElementData;   // When some basic data have changed
-    end;
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TEnergyMeter.MakeLike(const EnergyMeterName: String): Integer;
-var
-    OtherEnergyMeter: TEnergyMeterObj;
     i: Integer;
 begin
-    Result := 0;
-   {See IF we can find this EnergyMeter name in the present collection}
-    OtherEnergyMeter := Find(EnergyMeterName);
-    if OtherEnergyMeter <> NIL then
-        with DSS.ActiveEnergyMeterObj do
-        begin
-
-            NPhases := OtherEnergyMeter.Fnphases;
-            NConds := OtherEnergyMeter.Fnconds; // Force Reallocation of terminal stuff
-
-            ElementName := OtherEnergyMeter.ElementName;
-            MeteredElement := OtherEnergyMeter.MeteredElement;  // Pointer to target circuit element
-            MeteredTerminal := OtherEnergyMeter.MeteredTerminal;
-            ExcessFlag := OtherEnergyMeter.ExcessFlag;
-
-            MaxZonekVA_Norm := OtherEnergyMeter.MaxZonekVA_Norm;
-            MaxZonekVA_Emerg := OtherEnergyMeter.MaxZonekVA_emerg;
-
-       // Reliability
-            Source_NumInterruptions := OtherEnergyMeter.Source_NumInterruptions;
-            Source_IntDuration := OtherEnergyMeter.Source_IntDuration;
-
-            FreeStringArray(DefinedZoneList, DefinedZoneListSize);
-            DefinedZoneListSize := OtherEnergyMeter.DefinedZoneListSize;
-            DefinedZoneList := AllocStringArray(DefinedZoneListSize);
-       // Copy Strings over (actually incr ref count on string)
-            for i := 1 to DefinedZoneListSize do
-                DefinedZoneList^[i] := OtherEnergyMeter.DefinedZoneList^[i];
-
-            LocalOnly := OtherEnergyMeter.LocalOnly;
-            VoltageUEOnly := OtherEnergyMeter.VoltageUEOnly;
-
-       {Boolean Flags}
-            FLosses := OtherEnergyMeter.FLosses;
-            FLineLosses := OtherEnergyMeter.FLineLosses;
-            FXfmrLosses := OtherEnergyMeter.FXfmrLosses;
-            FSeqLosses := OtherEnergyMeter.FSeqLosses;
-            F3PhaseLosses := OtherEnergyMeter.F3PhaseLosses;
-            FVBaseLosses := OtherEnergyMeter.FVBaseLosses;
-            FPhaseVoltageReport := OtherEnergyMeter.FPhaseVoltageReport;
-
-            for i := 1 to ParentClass.NumProperties do
-         // Skip Read Only properties
-                if i < 20 then
-                    PropertyValue[i] := OtherEnergyMeter.PropertyValue[i];
-
-        end
-    else
-        DoSimpleMsg('Error in EnergyMeter MakeLike: "' + EnergyMeterName + '" Not Found.', 521);
-
+    for i := 0 to Value.Count - 1 do
+        case LowerCase(Value.Strings[i][1]) of
+            'e':
+                Obj.ExcessFlag := TRUE;
+            't':
+                Obj.ExcessFlag := FALSE;
+            'r':
+                Obj.ZoneIsRadial := TRUE;
+            'm':
+                Obj.ZoneIsRadial := FALSE;
+            'c':
+                Obj.VoltageUEOnly := FALSE;
+            'v':
+                Obj.VoltageUEOnly := TRUE;
+        end;
+    Value.Free;
 end;
 
-{--------------------------------------------------------------------------}
-procedure TEnergyMeter.ResetMeterZonesAll;  // Force all EnergyMeters in the circuit to reset their meter zones
+function GetOptions(Obj: TObj; Index: Integer): TStringList;
+begin
+    Result := TStringList.Create();
+    
+    if Obj.ExcessFlag then
+        Result.Add('E')
+    else
+        Result.Add('T');
+    
+    if Obj.ZoneIsRadial then
+        Result.Add('R')
+    else
+        Result.Add('M');
+    
+    if Obj.VoltageUEOnly then
+        Result.Add('V')
+    else
+        Result.Add('C');
+end;
 
+procedure TEnergyMeter.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
+begin
+    Numproperties := NumPropsThisClass;
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+
+    PropertyType[ord(TProp.peakcurrent)] := TPropertyType.DoubleVArrayProperty;
+    PropertyOffset[ord(TProp.peakcurrent)] := ptruint(@obj.SensorCurrent);
+    PropertyOffset2[ord(TProp.peakcurrent)] := ptruint(@obj.Fnphases);
+
+    PropertyType[ord(TProp.Mask)] := TPropertyType.DoubleFArrayProperty;
+    PropertyOffset[ord(TProp.Mask)] := ptruint(@obj.TotalsMask); //TODO: validate the actual values?
+    PropertyOffset2[ord(TProp.Mask)] := NumEMRegisters;
+
+    // boolean properties
+    PropertyType[ord(TProp.LocalOnly)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.Losses)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.LineLosses)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.XfmrLosses)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.SeqLosses)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.__3PhaseLosses)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.VBaseLosses)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.PhaseVoltageReport)] := TPropertyType.BooleanProperty;
+    PropertyOffset[ord(TProp.LocalOnly)] := ptruint(@obj.LocalOnly);
+    PropertyOffset[ord(TProp.Losses)] := ptruint(@obj.FLosses);
+    PropertyOffset[ord(TProp.LineLosses)] := ptruint(@obj.FLineLosses);
+    PropertyOffset[ord(TProp.XfmrLosses)] := ptruint(@obj.FXfmrLosses);
+    PropertyOffset[ord(TProp.SeqLosses)] := ptruint(@obj.FSeqLosses);
+    PropertyOffset[ord(TProp.__3PhaseLosses)] := ptruint(@obj.F3PhaseLosses);
+    PropertyOffset[ord(TProp.VBaseLosses)] := ptruint(@obj.FVBaseLosses);
+    PropertyOffset[ord(TProp.PhaseVoltageReport)] := ptruint(@obj.FPhaseVoltageReport);
+
+    // object reference
+    PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyOffset[ord(TProp.element)] := ptruint(@obj.MeteredElement);
+    PropertyOffset2[ord(TProp.element)] := 0;
+    //PropertyFlags[ord(TProp.element)] := [TPropertyFlag.CheckForVar]; // not required for general cktelements
+
+    // integer properties
+    PropertyType[ord(TProp.terminal)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.terminal)] := ptruint(@obj.MeteredTerminal);
+
+    // read-only doubles
+    PropertyFlags[ord(TProp.SAIFI)] := [TPropertyFlag.SilentReadOnly];
+    PropertyFlags[ord(TProp.SAIFIkW)] := [TPropertyFlag.SilentReadOnly];
+    PropertyFlags[ord(TProp.SAIDI)] := [TPropertyFlag.SilentReadOnly];
+    PropertyFlags[ord(TProp.CAIDI)] := [TPropertyFlag.SilentReadOnly];
+    PropertyFlags[ord(TProp.CustInterrupts)] := [TPropertyFlag.SilentReadOnly];
+    PropertyOffset[ord(TProp.SAIFI)] := ptruint(@obj.SAIFI);
+    PropertyOffset[ord(TProp.SAIFIkW)] := ptruint(@obj.SAIFIkW);
+    PropertyOffset[ord(TProp.SAIDI)] := ptruint(@obj.SAIDI);
+    PropertyOffset[ord(TProp.CAIDI)] := ptruint(@obj.CAIDI);
+    PropertyOffset[ord(TProp.CustInterrupts)] := ptruint(@obj.CustInterrupts);
+
+    // double properties (default type)
+    PropertyOffset[ord(TProp.kVAnormal)] := ptruint(@obj.MaxZonekVA_Norm);
+    PropertyOffset[ord(TProp.kVAemerg)] := ptruint(@obj.MaxZonekVA_Emerg);
+    PropertyOffset[ord(TProp.Int_Rate)] := ptruint(@obj.Source_NumInterruptions);
+    PropertyOffset[ord(TProp.Int_Duration)] := ptruint(@obj.Source_IntDuration);
+
+    // string list
+    PropertyType[ord(TProp.Zonelist)] := TPropertyType.StringListProperty;
+    PropertyOffset[ord(TProp.Zonelist)] := ptruint(@obj.DefinedZoneList);
+
+    // custom list
+    PropertyType[ord(TProp.option)] := TPropertyType.StringListProperty;
+    PropertyOffset[ord(TProp.option)] := 1; // dummy value
+    PropertyWriteFunction[ord(TProp.option)] := @SetOptions;
+    PropertyReadFunction[ord(TProp.option)] := @GetOptions;
+    PropertyFlags[ord(TProp.option)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction];
+
+    // enum action
+    PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
+    PropertyOffset[ord(TProp.Action)] := ptruint(@DoAction); 
+    PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum);
+
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;
+end;
+
+function TEnergyMeter.NewObject(const ObjName: String; Activate: Boolean): Pointer;
+var
+    Obj: TObj;
+begin
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        ActiveCircuit.ActiveCktElement := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
+
+procedure TEnergyMeterObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+var
+    i: Integer;
+begin
+    case Idx of
+        1, 2:
+        begin
+            MeteredElementChanged := TRUE;
+            Include(Flags, Flg.NeedsRecalc);
+        end;
+        ord(TProp.Mask):
+            for i := previousIntVal + 1 to NumEMRegisters do
+                TotalsMask[i] := 1.0;  // Set the rest to 1
+    end;
+    inherited PropertySideEffects(Idx, previousIntVal);
+end;
+
+function TEnergyMeter.BeginEdit(ptr: Pointer; SetActive_: Boolean): Pointer;
+var
+    Obj: TObj;
+begin
+    Obj := TObj(inherited BeginEdit(ptr, SetActive_));
+    if SetActive_ then
+        DSS.ActiveEnergyMeterObj := Obj;
+    Obj.MeteredElementChanged := FALSE;
+    Result := Obj;
+end;
+
+function TEnergyMeter.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+begin
+    with TObj(ptr) do
+    begin
+        if flg.NeedsRecalc in Flags then
+            RecalcElementData;   // When some basic data have changed
+        Exclude(Flags, Flg.EditionActive);
+    end;
+    Result := True;
+end;
+
+procedure TEnergyMeterObj.MakeLike(OtherPtr: Pointer);
+var
+    Other: TObj;
+    i: Integer;
+begin
+    inherited MakeLike(OtherPtr);
+    Other := TObj(OtherPtr);
+    FNPhases := Other.Fnphases;
+    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+
+    MeteredElement := Other.MeteredElement;  // Pointer to target circuit element
+    MeteredTerminal := Other.MeteredTerminal;
+    ExcessFlag := Other.ExcessFlag;
+
+    MaxZonekVA_Norm := Other.MaxZonekVA_Norm;
+    MaxZonekVA_Emerg := Other.MaxZonekVA_emerg;
+
+    // Reliability
+    Source_NumInterruptions := Other.Source_NumInterruptions;
+    Source_IntDuration := Other.Source_IntDuration;
+
+    DefinedZoneList.Clear;
+    // Copy Strings over (actually incr ref count on string)
+    for i := 0 to (Other.DefinedZoneList.Count - 1) do
+        DefinedZoneList.Add(Other.DefinedZoneList[i]);
+
+    LocalOnly := Other.LocalOnly;
+    VoltageUEOnly := Other.VoltageUEOnly;
+
+    // Boolean Flags
+    FLosses := Other.FLosses;
+    FLineLosses := Other.FLineLosses;
+    FXfmrLosses := Other.FXfmrLosses;
+    FSeqLosses := Other.FSeqLosses;
+    F3PhaseLosses := Other.F3PhaseLosses;
+    FVBaseLosses := Other.FVBaseLosses;
+    FPhaseVoltageReport := Other.FPhaseVoltageReport;
+end;
+
+procedure TEnergyMeter.ResetMeterZonesAll;  // Force all EnergyMeters in the circuit to reset their meter zones
 var
     mtr: TEnergyMeterObj;
     pCktElement: TDSSCktElement;
     PDElem: TPDElement;
     PCElem: TPCElement;
     i: Integer;
-
 begin
     with ActiveCircuit do
     begin
         if Energymeters.Count = 0 then
             Exit;  // Do not do anything
 
-    // initialize the Checked Flag FOR all circuit Elements
+        // initialize the Checked Flag FOR all circuit Elements
         pCktElement := CktElements.First;
         while (pCktElement <> NIL) do
         begin
             with pCktElement do
             begin
-                Checked := FALSE;
-                IsIsolated := TRUE;
+                Exclude(Flags, Flg.Checked);
+                Include(Flags, Flg.IsIsolated);
                 for i := 1 to NTerms do
                     TerminalsChecked[i - 1] := FALSE;
             end;
             pCktElement := CktElements.Next;
         end;
 
-    {Clear some things that will be set by the Meter Zone}
+        // Clear some things that will be set by the Meter Zone
         PDElem := PDElements.First;
         while PDElem <> NIL do
         begin
@@ -903,14 +800,14 @@ begin
             PCElem := PCElements.Next;
         end;
 
-    // Set up the bus adjacency lists for faster searches to build meter zone lists.
+        // Set up the bus adjacency lists for faster searches to build meter zone lists.
         BuildActiveBusAdjacencyLists(ActiveCircuit, BusAdjPD, BusAdjPC);
 
-    {Set Hasmeter flag for all cktelements}
+        // Set Hasmeter flag for all cktelements
         SetHasMeterFlag;
         DSS.SensorClass.SetHasSensorFlag;  // Set all Sensor branch flags, too.
 
-    // initialize the Checked Flag for all Buses
+        // initialize the Checked Flag for all Buses
         for i := 1 to NumBuses do
             Buses^[i].BusChecked := FALSE;
 
@@ -925,31 +822,26 @@ begin
     end;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TEnergyMeter.ResetAll;  // Force all EnergyMeters in the circuit to reset
-
 var
     mtr: TEnergyMeterObj;
     CasePath: String;
-
 begin
-
     if DSS.DIFilesAreOpen then
         CloseAllDIFiles;
 
     if FSaveDemandInterval then
     begin
-
         CasePath := DSS.OutputDirectory + DSS.ActiveCircuit.CaseName;
-          {Make directories to save data}
-
+        
+        //Make directories to save data
         if not DirectoryExists(CasePath) then
         begin
             try
                 mkDir(CasePath);
             except
                 On E: Exception do
-                    DoSimpleMsg('Error making  Directory: "' + CasePath + '". ' + E.Message, 522);
+                    DoSimpleMsg('Error making  Directory: "%s". %s', [CasePath, E.Message], 522);
             end;
         end;
         DI_Dir := CasePath + PathDelim + 'DI_yr_' + Trim(IntToStr(ActiveCircuit.Solution.Year));
@@ -959,7 +851,7 @@ begin
                 mkDir(DI_Dir);
             except
                 On E: Exception do
-                    DoSimpleMsg('Error making Demand Interval Directory: "' + DI_Dir + '". ' + E.Message, 523);
+                    DoSimpleMsg('Error making Demand Interval Directory: "%s". %s', [DI_Dir, E.Message], 523);
             end;
         end;
 
@@ -975,8 +867,7 @@ begin
 
     SystemMeter.Reset;
 
-
-      // Reset Generator Objects, too
+    // Reset Generator Objects, too
     DSS.GeneratorClass.ResetRegistersAll;
 
     if DSS_CAPI_LEGACY_MODELS then
@@ -991,15 +882,11 @@ begin
     end;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TEnergyMeter.SampleAll;  // Force all EnergyMeters in the circuit to take a sample
-
 var
     mtr: TEnergyMeterObj;
     i: Integer;
-
 begin
-
     mtr := DSS.ActiveCircuit.EnergyMeters.First;
     while mtr <> NIL do
     begin
@@ -1011,7 +898,8 @@ begin
     SystemMeter.TakeSample;
 
     if FSaveDemandInterval then
-    begin  {Write Totals Demand interval file}
+    begin  
+        // Write Totals Demand interval file
         with DSS.ActiveCircuit.Solution do
             WriteintoMem(TDI_MHandle, DynaVars.dblHour);
         for i := 1 to NumEMRegisters do
@@ -1024,7 +912,7 @@ begin
             WriteVoltageReport;
     end;
 
-      // Sample Generator ans Storage Objects, too
+    // Sample Generator ans Storage Objects, too
     DSS.GeneratorClass.SampleAll;
     
     if DSS_CAPI_LEGACY_MODELS then
@@ -1039,12 +927,9 @@ begin
     end;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TEnergyMeter.SaveAll;  // Force all EnergyMeters in the circuit to take a sample
-
 var
     mtr: TEnergyMeterObj;
-
 begin
     mtr := DSS.ActiveCircuit.EnergyMeters.First;
     while mtr <> NIL do
@@ -1055,38 +940,27 @@ begin
     end;
 
     SystemMeter.Save;
-
 end;
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//      TEnergyMeter Obj
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 constructor TEnergyMeterObj.Create(ParClass: TDSSClass; const EnergyMeterName: String);
-
 var
     i: Integer;
-
 begin
     inherited Create(ParClass);
     Name := LowerCase(EnergyMeterName);
     DSSObjType := ParClass.DSSClassType; //ENERGY_METER;
 
-    NPhases := 3;  // Directly set conds and phases
+    FNPhases := 3;  // Directly set conds and phases
     Fnconds := 3;
     Nterms := 1;  // this forces allocation of terminals and conductors in base class
     ExcessFlag := TRUE;  // Default to Excess energy FOR UE
-    ElementName := 'Vsource.' + TDSSCktElement(ActiveCircuit.CktElements.Get(1)).Name; // Default to first circuit element (source)
-    MeteredElement := NIL;
+    MeteredElement := TDSSCktElement(ActiveCircuit.CktElements.Get(1)); // Default to first circuit element (source)
     BranchList := NIL;  // initialize to NIL, set later when inited
     SequenceList := NIL;
     LoadList := NIL;
 
     This_Meter_DIFileIsOpen := FALSE;
     VPhaseReportFileIsOpen := FALSE;
-
-    InitPropertyValues(0);
 
      // Max zone kW limits ignored unless the user provides a rating
     MaxZonekVA_Norm := 0.0;
@@ -1101,12 +975,10 @@ begin
     Source_NumInterruptions := 0.0; // Annual interruptions for upline circuit
     Source_IntDuration := 0.0; // Aver interruption duration of upline circuit
 
-
     ZoneIsRadial := TRUE;
-    DefinedZoneList := NIL;
-    DefinedZoneListSize := 0;
+    DefinedZoneList := TStringList.Create();
 
-    FLosses := TRUE;   {Loss Reporting switches}
+    FLosses := TRUE;   // Loss Reporting switches
     FLineLosses := TRUE;
     FXfmrLosses := TRUE;
     FSeqLosses := TRUE;
@@ -1128,13 +1000,13 @@ begin
     ReallocMem(VBaseNoLoadLosses, MaxVBaseCount * SizeOf(VBaseNoLoadLosses^[1]));
     ReallocMem(VBaseLoad, MaxVBaseCount * SizeOf(VBaseLoad^[1]));
 
-//  Init pointers to Nil before allocating
+    //  Init pointers to Nil before allocating
     VphaseMax := NIL;
     VPhaseMin := NIL;
     VPhaseAccum := NIL;
     VPhaseAccumCount := NIL;
 
-     // Arrays for phase voltage report
+    // Arrays for phase voltage report
     ReallocMem(VphaseMax, MaxVBaseCount * 3 * SizeOf(Double));
     ReallocMem(VPhaseMin, MaxVBaseCount * 3 * SizeOf(Double));
     ReallocMem(VPhaseAccum, MaxVBaseCount * 3 * SizeOf(Double));
@@ -1143,17 +1015,23 @@ begin
     LocalOnly := FALSE;
     VoltageUEOnly := FALSE;
 
-//*************No append files by default***************************************
+    //*************No append files by default***************************************
+    //TODO: 
+    // 1. These seem to be always false
+    // 2. If not always false, check below. Since these vars were globals in the 
+    //    original codebase, this means that a new meter resets the append status for 
+    //    all meters.
+
+    DI_Append := FALSE;
+    PHV_Append := FALSE;
     with DSS.EnergyMeterClass do
     begin
         OV_Append := FALSE;
         VR_Append := FALSE;
-        DI_Append := FALSE;
         SDI_Append := FALSE;
         TDI_Append := FALSE;
         SM_Append := FALSE;
         EMT_Append := FALSE;
-        PHV_Append := FALSE;
         FM_Append := FALSE;
     end;
      // Set Register names  that correspond to the register quantities
@@ -1192,7 +1070,7 @@ begin
     RegisterNames[30] := 'Gen kvarh';
     RegisterNames[31] := 'Gen Max kW';
     RegisterNames[32] := 'Gen Max kVA';
-     {Registers for capturing losses by base voltage, names assigned later}
+    // Registers for capturing losses by base voltage, names assigned later
     for i := Reg_VBaseStart + 1 to NumEMRegisters do
         RegisterNames[i] := '';
 
@@ -1214,7 +1092,6 @@ begin
     // RecalcElementData;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TEnergyMeterObj.Destroy;
 var
     i: Integer;
@@ -1249,7 +1126,8 @@ begin
         SequenceList.Free;
     if Assigned(LoadList) then
         LoadList.Free;
-    FreeStringArray(DefinedZoneList, DefinedZoneListSize);
+    
+    DefinedZoneList.Free;
 
     if Assigned(FeederSections) then
         Reallocmem(FeederSections, 0);
@@ -1257,42 +1135,37 @@ begin
     inherited destroy;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TEnergyMeterObj.RecalcElementData;
-
-var
-    DevIndex: Integer;
-
 begin
-    Devindex := GetCktElementIndex(ElementName);   // Global function
-    if DevIndex > 0 then
+    Exclude(Flags, Flg.NeedsRecalc);
+    if MeteredElement <> NIL then
     begin  // Monitored element must already exist
-        MeteredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex); // Get pointer to metered element
-         {MeteredElement must be a PDElement}
+        // MeteredElement must be a PDElement
         if not (MeteredElement is TPDElement) then
         begin
             MeteredElement := NIL;   // element not found
-            DoErrorMsg('EnergyMeter: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" is not a Power Delivery (PD) element.',
-                ' Element must be a PD element.', 525);
+            DoErrorMsg(
+                Format(_('EnergyMeter: "%s"'), [Self.Name]), 
+                Format(_('Circuit Element "%s" is not a Power Delivery (PD) element.'), [MeteredElement.Name]),
+                _('Element must be a PD element.'), 525);
             Exit;
         end;
 
-
         if MeteredTerminal > MeteredElement.Nterms then
         begin
-            DoErrorMsg('EnergyMeter: "' + Name + '"',
-                'Terminal no. "' + IntToStr(MeteredTerminal) + '" does not exist.',
-                'Respecify terminal no.', 524);
+            DoErrorMsg(
+                Format(_('EnergyMeter: "%s"'), [Self.Name]), 
+                Format(_('Terminal no. "%d" does not exist.'), [MeteredTerminal]),
+                _('Respecify terminal no.'), 524);
         end
         else
         begin
-
             if MeteredElementChanged then
             begin
                // Sets name of i-th terminal's connected bus in monitor's buslist
                // This value will be used to set the NodeRef array (see TakeSample)
                 Setbus(1, MeteredElement.GetBus(MeteredTerminal));
-                Nphases := MeteredElement.NPhases;
+                FNphases := MeteredElement.NPhases;
                 Nconds := MeteredElement.Nconds;
                 AllocateSensorArrays;
 
@@ -1301,23 +1174,22 @@ begin
                     BranchList.Free;
                 BranchList := NIL;
             end;
-
         end;
-    end
-    else
-    begin
-        MeteredElement := NIL;   // element not found
-        DoErrorMsg('EnergyMeter: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" Not Found.',
-            ' Element must be defined previously.', 525);
+        Exit;
     end;
+
+    // element not found/set
+    DoErrorMsg(Format(_('EnergyMeter: "%s"'), [Self.Name]), 
+        _('Circuit Element not set.'),
+        _('Element must be defined previously.'), 525);
 end;
 
-procedure TEnergyMeterobj.MakePosSequence;
+procedure TEnergyMeterobj.MakePosSequence();
 begin
     if MeteredElement <> NIL then
     begin
         Setbus(1, MeteredElement.GetBus(MeteredTerminal));
-        Nphases := MeteredElement.NPhases;
+        FNphases := MeteredElement.NPhases;
         Nconds := MeteredElement.Nconds;
         AllocateSensorArrays;
         if BranchList <> NIL then
@@ -1329,21 +1201,18 @@ end;
 
 function TEnergyMeterObj.MakeVPhaseReportFileName: String;
 begin
-    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport' + DSS._Name + '.CSV';
+    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport' + DSS._Name + '.csv';
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TEnergyMeterObj.ResetRegisters;
-
 var
     i: Integer;
-
 begin
     for i := 1 to NumEMregisters do
         Registers[i] := 0.0;
     for i := 1 to NumEMregisters do
         Derivatives[i] := 0.0;
-   {Initialize DragHand registers to some big negative number}
+    // Initialize DragHand registers to some big negative number
     Registers[Reg_MaxkW] := -1.0e50;
     Registers[Reg_MaxkVA] := -1.0e50;
     Registers[Reg_ZoneMaxkW] := -1.0e50;
@@ -1358,31 +1227,22 @@ begin
 
     FirstSampleAfterReset := TRUE;  // initialize for trapezoidal integration
    // Removed .. open in solution loop See Solve Yearly If EnergyMeterClass.SaveDemandInterval Then OpenDemandIntervalFile;
-
 end;
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TEnergyMeterObj.CalcYPrim;
-
 begin
-
- // YPrim is all zeros.  Just leave as NIL so it is ignored.
-
+    // YPrim is all zeros.  Just leave as NIL so it is ignored.
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TEnergyMeterObj.SaveRegisters;
-
 var
     CSVName: String;
     F: TFileStream = nil;
     i: Integer;
     sout: String;
 begin
-
     try
-        CSVName := 'MTR_' + Name + '.CSV';
+        CSVName := 'MTR_' + Name + '.csv';
         F := TFileStream.Create(DSS.OutputDirectory + CSVName, fmCreate);
         DSS.GlobalResult := CSVName;
         SetLastResultFile(DSS, CSVName);
@@ -1390,7 +1250,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening Meter File "' + CRLF + CSVName + '": ' + E.Message, 526);
+            DoSimpleMsg('Error opening Meter File "%s": %s', [CSVName, E.Message], 526);
             FreeAndNil(F);
             Exit;
         end
@@ -1408,36 +1268,29 @@ begin
     finally
         F.Free();
     end;
-
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TEnergyMeterObj.Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
-
 begin
     if DSS.ActiveCircuit.TrapezoidalIntegration then
     begin
-        {Trapezoidal Rule Integration}
+        // Trapezoidal Rule Integration
         if not FirstSampleAfterReset then
             Registers[Reg] := Registers[Reg] + 0.5 * Interval * (Deriv + Derivatives[Reg]);
     end
     else
-    begin {Plain Euler integration}
+    begin // Plain Euler integration
         Registers[Reg] := Registers[Reg] + Interval * Deriv;
     end;
 
-{ Set the derivatives so that the proper value shows up in Demand Interval Files
-  and prepare for next time step in Trapezoidal integration }
+    // Set the derivatives so that the proper value shows up in Demand Interval Files
+    // and prepare for next time step in Trapezoidal integration 
     Derivatives[Reg] := Deriv;
-
-
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TEnergyMeterObj.TakeSample;
 // Update registers from metered zone
 // Assumes one time period has taken place since last sample.
-
 var
     i, j, idx: Integer;
 
@@ -1486,10 +1339,10 @@ begin
     if not CheckBranchList(545) then
         Exit;
 
-// Compute energy in branch  to which meter is connected
+    // Compute energy in branch  to which meter is connected
 
      //----MeteredElement.ActiveTerminalIdx := MeteredTerminal;  // needed for Excess kVA calcs
-    S_Local := CmulReal(MeteredElement.Power[MeteredTerminal], 0.001);
+    S_Local := MeteredElement.Power[MeteredTerminal] * 0.001;
     S_Local_kVA := Cabs(S_Local);
     DSS.EnergyMeterClass.Delta_Hrs := DSS.ActiveCircuit.Solution.IntervalHrs;
     Integrate(Reg_kWh, S_Local.re, DSS.EnergyMeterClass.Delta_Hrs);   // Accumulate the power
@@ -1497,9 +1350,9 @@ begin
     SetDragHandRegister(Reg_MaxkW, S_Local.re);   // 3-10-04 removed abs()
     SetDragHandRegister(Reg_MaxkVA, S_Local_kVA);
 
-// Compute Maximum overload energy in all branches in zone
-// and mark all load downline from an overloaded branch as unserved
-// If localonly, check only metered element
+    // Compute Maximum overload energy in all branches in zone
+    // and mark all load downline from an overloaded branch as unserved
+    // If localonly, check only metered element
 
     TotalLosses := CZERO;     // Initialize loss accumulators
     TotalLoadLosses := CZERO;
@@ -1539,9 +1392,9 @@ begin
     MaxExcesskWNorm := 0.0;
     MaxExcesskWEmerg := 0.0;
 
-     {--------------------------------------------------------------------------}
-     {------------------------ Local Zone  Only --------------------------------}
-     {--------------------------------------------------------------------------}
+    //--------------------------------------------------------------------------
+    //------------------------ Local Zone  Only --------------------------------
+    //--------------------------------------------------------------------------
     if LocalOnly then
     begin
         CktElem := MeteredElement as TPDElement;
@@ -1549,21 +1402,21 @@ begin
         MaxExcesskWEmerg := Abs(CktElem.ExcesskVAEmerg[MeteredTerminal].re);
     end
     else
-     {--------------------------------------------------------------------------}
-     {--------Cyle Through Entire Zone Setting EEN/UE --------------------------}
-     {--------------------------------------------------------------------------}
+        //--------------------------------------------------------------------------
+        //--------Cyle Through Entire Zone Setting EEN/UE --------------------------
+        //--------------------------------------------------------------------------
         while CktElem <> NIL do
         begin       // loop thru all ckt elements on zone
 
             with CktElem do
             begin
                 ActiveTerminalIdx := BranchList.Presentbranch.FromTerminal;
-         // Invoking this property sets the Overload_UE flag in the PD Element
+                // Invoking this property sets the Overload_UE flag in the PD Element
                 EEN := Abs(ExcesskVANorm[ActiveTerminalIdx].re);
                 UE := Abs(ExcesskVAEmerg[ActiveTerminalIdx].re);
             end;
 
-         {For radial circuits just keep the maximum overload; for mesh, add 'em up}
+            // For radial circuits just keep the maximum overload; for mesh, add 'em up
             if (ZoneIsRadial) then
             begin
                 if UE > MaxExcesskWEmerg then
@@ -1577,9 +1430,9 @@ begin
                 MaxExcesskWNorm := MaxExcesskWNorm + EEN;
             end;
 
-         // Even if this branch is not overloaded, if the parent element is overloaded
-         // mark load on this branch as unserved also
-         // Use the larger of the two factors
+            // Even if this branch is not overloaded, if the parent element is overloaded
+            // mark load on this branch as unserved also
+            // Use the larger of the two factors
             ParenElem := BranchList.Parent;
             if (ParenElem <> NIL) then
             begin
@@ -1587,9 +1440,9 @@ begin
                 CktElem.OverLoad_UE := Max(CktElem.OverLoad_UE, ParenElem.OverLoad_UE);
             end;
 
-         // Mark loads (not generators) by the degree of overload if the meter's zone is to be considered radial
-         // This overrides and supercedes the load's own determination of unserved based on voltage
-         // If voltage only is to be used for Load UE/EEN, don't mark (set to 0.0 and load will calc UE based on voltage)
+            // Mark loads (not generators) by the degree of overload if the meter's zone is to be considered radial
+            // This overrides and supercedes the load's own determination of unserved based on voltage
+            // If voltage only is to be used for Load UE/EEN, don't mark (set to 0.0 and load will calc UE based on voltage)
             PCElem := Branchlist.FirstObject;
             while (PCElem <> NIL) do
             begin
@@ -1613,7 +1466,7 @@ begin
         end;
 
 
-     // Get the Losses, and unserved bus energies
+    // Get the Losses, and unserved bus energies
     TotalZonekw := 0.0;
     TotalZonekvar := 0.0;
     TotalLoad_EEN := 0.0;
@@ -1622,9 +1475,9 @@ begin
     TotalGenkvar := 0.0;
 
 
-     {--------------------------------------------------------------------------}
-     {--------       Cycle Through Zone Accumulating Load and Losses    --------}
-     {--------------------------------------------------------------------------}
+    //--------------------------------------------------------------------------
+    //--------       Cycle Through Zone Accumulating Load and Losses    --------
+    //--------------------------------------------------------------------------
     CktElem := BranchList.First;
     while (CktElem <> NIL) do
     begin
@@ -1648,7 +1501,7 @@ begin
                     Accumulate_Gen(pGen, TotalGenkW, TotalGenkvar);
                 end;
             else
-                {Ignore other types of PC Elements}
+                //Ignore other types of PC Elements
             end;
             PCElem := BranchList.NextObject
         end;
@@ -1656,43 +1509,43 @@ begin
         if Flosses then
         begin  // Compute and Report Losses
 
-           {Get losses from the present circuit element}
+            // Get losses from the present circuit element
             CktElem.GetLosses(S_TotalLosses, S_LoadLosses, S_NoLoadLosses);  // returns watts, vars
-           {Convert to kW}
-            CmulRealAccum(S_TotalLosses, 0.001);
-            CmulRealAccum(S_LoadLosses, 0.001);
-            CmulRealAccum(S_NoLoadLosses, 0.001);
-           {Update accumulators}
-            Caccum(TotalLosses, S_TotalLosses); // Accumulate total losses in meter zone
-            Caccum(TotalLoadLosses, S_LoadLosses);  // Accumulate total load losses in meter zone
-            Caccum(TotalNoLoadLosses, S_NoLoadLosses); // Accumulate total no load losses in meter zone
+            // Convert to kW
+            S_TotalLosses *= 0.001;
+            S_LoadLosses *= 0.001;
+            S_NoLoadLosses *= 0.001;
+            // Update accumulators
+            TotalLosses += S_TotalLosses; // Accumulate total losses in meter zone
+            TotalLoadLosses += S_LoadLosses;  // Accumulate total load losses in meter zone
+            TotalNoLoadLosses += S_NoLoadLosses; // Accumulate total no load losses in meter zone
 
-           {Line and Transformer Elements}
+            // Line and Transformer Elements
             if IsLineElement(Cktelem) and FLineLosses then
             begin
-                Caccum(TotalLineLosses, S_TotalLosses); // Accumulate total losses in meter zone
+                TotalLineLosses += S_TotalLosses; // Accumulate total losses in meter zone
                 if FseqLosses then
                 begin
                     CktElem.GetSeqLosses(S_PosSeqLosses, S_NegSeqLosses, S_ZeroSeqLosses);
-                    Caccum(S_PosSeqLosses, S_NegSeqLosses);  // add line modes together
-                    CmulRealAccum(S_PosSeqLosses, 0.001); // convert to kW
-                    CmulRealAccum(S_ZeroSeqLosses, 0.001);
-                    Caccum(TotalLineModeLosses, S_PosSeqLosses);
-                    Caccum(TotalZeroModeLosses, S_ZeroSeqLosses);
+                    S_PosSeqLosses += S_NegSeqLosses;  // add line modes together
+                    S_PosSeqLosses *= 0.001; // convert to kW
+                    S_ZeroSeqLosses *= 0.001;
+                    TotalLineModeLosses += S_PosSeqLosses;
+                    TotalZeroModeLosses += S_ZeroSeqLosses;
                 end;
-               {Separate Line losses into 3- and "1-phase" losses}
+                // Separate Line losses into 3- and "1-phase" losses
                 if F3PhaseLosses then
                 begin
                     if Cktelem.NPhases = 3 then
-                        Caccum(Total3phaseLosses, S_TotalLosses)
+                        Total3phaseLosses += S_TotalLosses
                     else
-                        Caccum(Total1phaseLosses, S_TotalLosses);
+                        Total1phaseLosses += S_TotalLosses;
                 end;
             end
             else
             if IsTransformerElement(Cktelem) and FXfmrLosses then
             begin
-                Caccum(TotalTransformerLosses, S_TotalLosses); // Accumulate total losses in meter zone
+                TotalTransformerLosses += S_TotalLosses; // Accumulate total losses in meter zone
             end;
 
             if FVbaseLosses then
@@ -1710,7 +1563,7 @@ begin
                         end;
                     end;
 
-           // Compute min, max, and average pu voltages for 1st 3 phases  (nodes designated 1, 2, or 3)
+            // Compute min, max, and average pu voltages for 1st 3 phases  (nodes designated 1, 2, or 3)
             if FPhaseVoltageReport then
                 with BranchList.PresentBranch do
                     if VoltBaseIndex > 0 then
@@ -1722,18 +1575,18 @@ begin
                                     j := Buses^[FromBusReference].GetNum(i);
                                     if (j > 0) and (j < 4) then
                                     begin
-                                        puV := Cabs(Solution.NodeV^[Buses^[FromBusReference].GetRef(i)]) / Buses^[FromBusReference].kVBase;
+                                        puV := Cabs(Solution.NodeV^[Buses^[FromBusReference].RefNo[i]]) / Buses^[FromBusReference].kVBase;
                                         idx := jiIndex(j, VoltBaseIndex);
                                         if puV > VphaseMax^[idx] then
                                         begin
                                             VphaseMax^[jiIndex(j, VoltBaseIndex)] := puV;
-                         // VmaxBus := FromBusReference;
+                                            // VmaxBus := FromBusReference;
                                         end;
 
                                         if puV < VphaseMin^[idx] then
                                         begin
                                             VphaseMin^[jiIndex(j, VoltBaseIndex)] := puV;
-                         // VminBus := FromBusReference;
+                                            // VminBus := FromBusReference;
                                         end;
 
                                         DblInc(VphaseAccum^[jiIndex(j, VoltBaseIndex)], puV);
@@ -1741,18 +1594,18 @@ begin
                                     end;
                                 end;
                             end;
-        end;  {If FLosses}
+        end; // If FLosses
 
         CktElem := BranchList.GoForward;
     end;
 
     Delta_hrs_local := DSS.EnergyMeterClass.Delta_Hrs;
     
-    {NOTE: Integrate proc automatically sets derivatives array}
+    // NOTE: Integrate proc automatically sets derivatives array
     Integrate(Reg_LoadEEN, TotalLoad_EEN, Delta_hrs_local);
     Integrate(Reg_LoadUE, TotalLoad_UE, Delta_hrs_local);
 
-    {Accumulate losses in appropriate registers}
+    // Accumulate losses in appropriate registers
     Integrate(Reg_ZoneLosseskWh, TotalLosses.re, Delta_hrs_local);
     Integrate(Reg_ZoneLosseskvarh, TotalLosses.im, Delta_hrs_local);
     Integrate(Reg_LoadLosseskWh, TotalLoadLosses.re, Delta_hrs_local);
@@ -1775,9 +1628,9 @@ begin
     end;
 
 
-     {--------------------------------------------------------------------------}
-     {---------------   Total Zone Load and Generation -------------------------}
-     {--------------------------------------------------------------------------}
+    //--------------------------------------------------------------------------
+    //---------------   Total Zone Load and Generation -------------------------
+    //--------------------------------------------------------------------------
 
     Integrate(Reg_ZonekWh, TotalZonekW, Delta_hrs_local);
     Integrate(Reg_Zonekvarh, TotalZonekvar, Delta_hrs_local);
@@ -1786,9 +1639,9 @@ begin
     GenkVA := Sqrt(Sqr(TotalGenkvar) + Sqr(TotalGenkW));
     LoadkVA := Sqrt(Sqr(TotalZonekvar) + Sqr(TotalZonekW));
 
-     {--------------------------------------------------------------------------}
-     {---------------   Set Drag Hand Registers  ------------------------------}
-     {--------------------------------------------------------------------------}
+    //--------------------------------------------------------------------------
+    //---------------   Set Drag Hand Registers  -------------------------------
+    //--------------------------------------------------------------------------
 
     SetDragHandRegister(Reg_LossesMaxkW, Abs(TotalLosses.Re));
     SetDragHandRegister(Reg_LossesMaxkvar, Abs(TotalLosses.im));
@@ -1796,23 +1649,23 @@ begin
     SetDragHandRegister(Reg_MaxNoLoadLosses, Abs(TotalNoLoadLosses.Re));
     SetDragHandRegister(Reg_ZoneMaxkW, TotalZonekW); // Removed abs()  3-10-04
     SetDragHandRegister(Reg_ZoneMaxkVA, LoadkVA);
-     {Max total generator registers}
+    // Max total generator registers
     SetDragHandRegister(Reg_GenMaxkW, TotalGenkW); // Removed abs()  3-10-04
     SetDragHandRegister(Reg_GenMaxkVA, GenkVA);
 
-     {--------------------------------------------------------------------------}
-     {---------------------   Overload Energy  ---------------------------------}
-     {--------------------------------------------------------------------------}
-     {Overload energy for the entire zone}
+    //--------------------------------------------------------------------------
+    //---------------------   Overload Energy  ---------------------------------
+    //--------------------------------------------------------------------------
+    // Overload energy for the entire zone
     if LocalOnly then
         ZonekW := S_Local.Re
     else
         ZonekW := TotalZonekW;
 
-     {Either the max excess kW of any PD element or the excess over zone limits}
+    // Either the max excess kW of any PD element or the excess over zone limits
 
-     {regs 9 and 10}
-     {Fixed these formulas 2-7-07 per discussions with Daniel Brooks }
+    // regs 9 and 10
+    // Fixed these formulas 2-7-07 per discussions with Daniel Brooks
     if (MaxZonekVA_Norm > 0.0) then
     begin
         if (S_Local_KVA = 0.0) then
@@ -1840,113 +1693,98 @@ begin
         WriteDemandIntervalData;
 end;
 
-{---------------------------------------------------------------------------------}
-
 procedure TEnergyMeterObj.TotalUpDownstreamCustomers;
 var
     i: Integer;
-  {, Accumulator}
- // PresentNode: TCktTreeNode;
+    //, Accumulator
+    // PresentNode: TCktTreeNode;
     CktElem: TPDElement;
-
 begin
     if not CheckBranchList(529) then
         Exit;
 
-    {Init totsls and checked flag}
+    // Init totals and checked flag
     CktElem := SequenceList.First;
     while CktElem <> NIL do
     begin
-        CktElem.Checked := FALSE;
+        Exclude(CktElem.Flags, Flg.Checked);
         CktElem.BranchTotalCustomers := 0;
         CktElem := SequenceList.Next;
     end;
 
-  {This algorithm could be made more efficient with a Sequence list}
-    (*********
-     For i := 1 to Branchlist.ZoneEndsList.NumEnds Do
-     Begin
-       {Busref := } Branchlist.ZoneEndsList.Get(i, PresentNode);
-       If PresentNode <> Nil Then
-       Begin
-          CktElem     := PresentNode.CktObject;
-          if Not CktElem.Checked  then    // don't do a zone end element more than once
-          Begin
-            CktElem.Checked := TRUE;
-            Accumulator := CktElem.NumCustomers;
-            Repeat  {Trace back to the source}
+    // This algorithm could be made more efficient with a Sequence list
+    
+    // For i := 1 to Branchlist.ZoneEndsList.NumEnds Do
+    // Begin
+    //   {Busref := } Branchlist.ZoneEndsList.Get(i, PresentNode);
+    //   If PresentNode <> Nil Then
+    //   Begin
+    //      CktElem     := PresentNode.CktObject;
+    //      if Not CktElem.Checked  then    // don't do a zone end element more than once
+    //      Begin
+    //        CktElem.Checked := TRUE;
+    //        Accumulator := CktElem.NumCustomers;
+    //        Repeat  // Trace back to the source
+    //            Inc(CktElem.TotalCustomers, Accumulator);
+    //            PresentNode := PresentNode.ParentBranch;
+    //            If PresentNode=Nil Then Break;
+    //            CktElem     := PresentNode.CktObject;
+    //            If not CktElem.Checked Then Begin   // avoid double counting
+    //               Inc(Accumulator, CktElem.NumCustomers);
+    //               CktElem.Checked := TRUE;
+    //            End;
+    //        Until FALSE;
+    //      End;
+    //   End;
+    // End;
 
-                Inc(CktElem.TotalCustomers, Accumulator);
-                PresentNode := PresentNode.ParentBranch;
-                If PresentNode=Nil Then Break;
-                CktElem     := PresentNode.CktObject;
-                If not CktElem.Checked Then Begin   // avoid double counting
-                   Inc(Accumulator, CktElem.NumCustomers);
-                   CktElem.Checked := TRUE;
-                End;
-
-            Until FALSE;
-          End;
-       End;
-     End; {For}
-     *******)
-
-     // Backward Sweep  -  Order is guaranteed to process end branches first
-     // sum numcustomers branch by branch
+    // Backward Sweep  -  Order is guaranteed to process end branches first
+    // sum numcustomers branch by branch
     for i := SequenceList.Count downto 1 do
     begin
         CktElem := SequenceList.Get(i);
-        if not CktElem.Checked then    // Avoid double counting
+        if not (Flg.Checked in CktElem.Flags) then    // Avoid double counting
             with CktElem do
             begin
-                Checked := TRUE;
+                Include(Flags, Flg.Checked);
                 Inc(BranchTotalCustomers, BranchNumCustomers);
                 if ParentPDElement <> NIL then
                     Inc(ParentPDElement.BranchTotalCustomers, BranchTotalCustomers);
             end;
-    end;  {For i}
-
+    end;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TEnergyMeter.SetHasMeterFlag;
 // Set the HasMeter Flag for all cktElement;
 var
     i: Integer;
     ThisMeter: TEnergyMeterObj;
     CktElem: TDSSCktElement;
-
 begin
-   {Initialize all to FALSE}
+    // Initialize all to FALSE
     with  ActiveCircuit do
     begin
         CktElem := PDElements.First;
         while CktElem <> NIL do
         begin
-            CktElem.HasEnergyMeter := FALSE;
+            Exclude(CktElem.Flags, Flg.HasEnergyMeter);
             CktElem := PDElements.Next;
-        end;  {WHILE}
-    end; {WITH}
+        end;
+    end;
 
     for i := 1 to DSS.ActiveCircuit.EnergyMeters.Count do
     begin
         ThisMeter := DSS.ActiveCircuit.EnergyMeters.Get(i);
         with ThisMeter do
             if Enabled and (MeteredElement <> NIL) then
-                MeteredElement.HasEnergyMeter := TRUE;
-    end;   {FOR}
+                Include(MeteredElement.Flags, Flg.HasEnergyMeter);
+    end;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TEnergyMeterObj.MakeMeterZoneLists;
-
 // This gets fired off whenever the buslists are rebuilt
 // Must be updated whenever there is a change in the circuit
-
 var
-
     TestBusNum,
     ZoneListCounter: Integer;
     j, iTerm,
@@ -1961,37 +1799,36 @@ var
     BusAdjPC: TAdjArray;
     BusAdjPD: TAdjArray;
 begin
-
     ZoneListCounter := 0;
-    VBasecount := 0; {Build the voltage base list over in case a base added or deleted}
+    VBasecount := 0; // Build the voltage base list over in case a base added or deleted
     for j := 1 to MaxVBaseCount do
         VBaseList^[j] := 0.0;
 
-  // Make a new branch list
+    // Make a new branch list
     if BranchList <> NIL then
         BranchList.Free;
     
     if Enabled then
-        BranchList := TCktTree.Create     {Instantiates ZoneEndsList, too}
+        BranchList := TCktTree.Create // Instantiates ZoneEndsList, too
     else
     begin
         BranchList := NIL;
         Exit;
     end;
 
-  // Get Started
+    // Get Started
     if Assigned(MeteredElement) then
-        BranchList.New := MeteredElement
+        BranchList.Add(MeteredElement)
     else
     begin   // oops
-        DoSimpleMsg('Metered Element for EnergyMeter ' + Name + ' not defined.', 527);
+        DoSimpleMsg('Metered Element for EnergyMeter %s not defined.', [Name], 527);
         Exit;
     end;
 
-  {Initialize SensorObj property of the first branch to this TMeterElement Object.
-   Before starting, all sensorObj definitions are cleared in PCElements and PDElements. The
-   SensorObj property is passed down to the Load objects for LoadAllocation and State Estimation
-  }
+    // Initialize SensorObj property of the first branch to this TMeterElement Object.
+    // Before starting, all sensorObj definitions are cleared in PCElements and PDElements. The
+    // SensorObj property is passed down to the Load objects for LoadAllocation and State Estimation
+  
     if MeteredElement is TPDElement then
         with TPDElement(MeteredElement) do
         begin
@@ -2010,7 +1847,7 @@ begin
     MeteredElement.TerminalsChecked[MeteredTerminal - 1] := TRUE;
     with BranchList.PresentBranch do
     begin
-    // This bus is the head of the feeder or zone; do not mark as radial bus
+        // This bus is the head of the feeder or zone; do not mark as radial bus
         FromBusReference := MeteredElement.Terminals[MeteredTerminal - 1].BusRef;
         DSS.ActiveCircuit.Buses^[FromBusReference].DistFromMeter := 0.0;
         VoltBaseIndex := AddToVoltBaseList(FromBusReference);
@@ -2019,15 +1856,15 @@ begin
             TPDElement(MeteredElement).FromTerminal := MeteredTerminal;
     end;
 
-  // Check off this element so we don't use it  again
+    // Check off this element so we don't use it  again
     with MeteredElement do
     begin
-        Checked := TRUE;
-        IsIsolated := FALSE;
+        Include(Flags, Flg.Checked);
+        Exclude(Flags, Flg.IsIsolated);
     end;
 
-  // Make SequenceList for use in reliability calcs or anything that
-  // needs to run through the tree quickly in a radial sequence
+    // Make SequenceList for use in reliability calcs or anything that
+    // needs to run through the tree quickly in a radial sequence
     if Assigned(SequenceList) then
         SequenceList.Free;
     SequenceList := TDSSPointerList.Create(1024); //make it a big initial allocation
@@ -2035,17 +1872,16 @@ begin
         LoadList.Free;
     LoadList := TDSSPointerList.Create(1024); //make it a big initial allocation
 
-  // Now start looking for other branches
-  // Finds any branch connected to the TestBranch and adds it to the list
-  // Goes until end of circuit, another energy meter, an open terminal, or disabled device.
+    // Now start looking for other branches
+    // Finds any branch connected to the TestBranch and adds it to the list
+    // Goes until end of circuit, another energy meter, an open terminal, or disabled device.
     ActiveBranch := MeteredElement;
 
-  { ****************  MAIN LOOP *****************************}
+    // ****************  MAIN LOOP *****************************
     BusAdjPC := DSS.EnergyMeterClass.BusAdjPC;
     BusAdjPD := DSS.EnergyMeterClass.BusAdjPD;
     while ActiveBranch <> NIL do
     begin
-
         Sequencelist.Add(ActiveBranch); // When done, this should be the correct order.
 
         with BranchList.PresentBranch do
@@ -2063,8 +1899,8 @@ begin
             if not ActiveBranch.TerminalsChecked[iTerm - 1] then
                 with ActiveCircuit do
                 begin
-        // Now find all loads and generators connected to the bus on this end of branch
-        // attach them as generic objects to cktTree node.
+                    // Now find all loads and generators connected to the bus on this end of branch
+                    // attach them as generic objects to cktTree node.
                     TestBusNum := ActiveBranch.Terminals[iTerm - 1].BusRef;
                     with BranchList.PresentBranch do
                     begin
@@ -2080,63 +1916,63 @@ begin
                     for iPC := 0 to adjLst.Count - 1 do
                     begin
                         pPCelem := adjLst[iPC];
-            //  IF pPCelem.Enabled Then Begin   only enabled elements in the search list
-                        if not pPCelem.Checked then
+                        //  IF pPCelem.Enabled Then Begin   only enabled elements in the search list
+                        if not (Flg.Checked in pPCelem.Flags) then
                         begin
                             ; // skip ones we already checked
                             BranchList.PresentBranch.IsDangling := FALSE;   // Something is connected here
-                // Is this a load or a generator or a Capacitor or reactor??
+                            // Is this a load or a generator or a Capacitor or reactor??
                             PCElementType := (pPCelem.DSSObjType and CLASSMASK);
                             if (PCElementType = LOAD_ELEMENT) or (PCElementType = GEN_ELEMENT) or (PCElementType = PVSYSTEM_ELEMENT) or (PCElementType = STORAGE_ELEMENT) or (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
                                 or (PCElementType = REACTOR_ELEMENT) then
                             begin
-                                BranchList.NewObject := pPCelem; // This adds element to the Shunt list in CktTree
-                                pPCelem.Checked := TRUE;    // So we don't pick this element up again
-                                pPCelem.IsIsolated := FALSE;
+                                BranchList.AddNewObject(pPCelem); // This adds element to the Shunt list in CktTree
+                                Include(pPCelem.Flags, Flg.Checked);    // So we don't pick this element up again
+                                Exclude(pPCelem.Flags, Flg.IsIsolated);
                                 pPCelem.ActiveTerminalIdx := 1;
-                      {Totalize Number of Customers if Load Type}
+                                // Totalize Number of Customers if Load Type
                                 if (pPCelem is TLoadObj) then
                                 begin
                                     pLoad := pPCelem as TLoadObj;
                                     Inc(TPDElement(ActiveBranch).BranchNumCustomers, pLoad.NumCustomers);
                                     LoadList.Add(pPCElem);  // Add to list of loads in this zone.)
                                 end;
-                      {If object does not have a sensor attached, it acquires the sensor of its parent branch}
-                                if not pPCelem.HasSensorObj then
+                                // If object does not have a sensor attached, it acquires the sensor of its parent branch
+                                if not (Flg.HasSensorObj in pPCelem.Flags) then
                                     pPCelem.SensorObj := TPDElement(ActiveBranch).SensorObj;
                                 pPCelem.MeterObj := Self;
-                            end; {IF}
+                            end;
                         end;
                     end;
 
-        // Now find all branches connected to this bus that we haven't found already
-        // Do not include in this zone if branch has open terminals or has another meter
+                    // Now find all branches connected to this bus that we haven't found already
+                    // Do not include in this zone if branch has open terminals or has another meter
 
-                    if DefinedZoneListSize = 0 then
+                    if DefinedZoneList.Count = 0 then
                     begin  // Search tree for connected branches (default)
                         IsFeederEnd := TRUE;
                         adjLst := BusAdjPD[TestBusNum];
                         for iPD := 0 to adjLst.Count - 1 do
                         begin
                             TestElement := adjLst[iPD];  // Only enabled objects are in this list
-            // **** See ResetMeterZonesAll
+                            // **** See ResetMeterZonesAll
                             if not (TestElement = ActiveBranch) then  // Skip self
-                                if not TestElement.HasEnergyMeter then
+                                if not (Flg.HasEnergyMeter in TestElement.Flags) then
                                 begin  // Stop at other meters  so zones don't interfere
                                     for j := 1 to TestElement.Nterms do
                                     begin     // Check each terminal
                                         if TestBusNum = TestElement.Terminals[j - 1].BusRef then
                                         begin
                                             BranchList.PresentBranch.IsDangling := FALSE; // We found something it was connected to
-                    {Check for loops and parallel branches and mark them}
-                                            if (TestElement.Checked) then     {This branch is on some meter's list already }
+                                            // Check for loops and parallel branches and mark them
+                                            if (Flg.Checked in TestElement.Flags) then // This branch is on some meter's list already
                                                 with BranchList.PresentBranch do
                                                 begin
-                                                    IsLoopedHere := TRUE; {It's a loop}
+                                                    IsLoopedHere := TRUE; // It's a loop
                                                     LoopLineObj := TestElement;
                                                     if IsLineElement(ActiveBranch) and IsLineElement(TestElement) then
                                                         if CheckParallel(ActiveBranch, TestElement) then
-                                                            IsParallel := TRUE; {It's paralleled with another line}
+                                                            IsParallel := TRUE; // It's paralleled with another line
                                                 end
                                             else
                                             begin  // push TestElement onto stack and set properties
@@ -2146,31 +1982,31 @@ begin
                                                 begin
                                                     TerminalsChecked[j - 1] := TRUE;
                                                     FromTerminal := j;
-                                                    Checked := TRUE;
-                                                    IsIsolated := FALSE;
-                                  {Branch inherits sensor of upline branch if it doesn't have its own}
-                                                    if not HasSensorObj then
+                                                    Include(Flags, Flg.Checked);
+                                                    Exclude(Flags, Flg.IsIsolated);
+                                                    // Branch inherits sensor of upline branch if it doesn't have its own
+                                                    if not (Flg.HasSensorObj in Flags) then
                                                         SensorObj := TPDElement(ActiveBranch).SensorObj;
                                                     MeterObj := Self;   // Set meterobj to this meter
                                                     ParentPDElement := TPDElement(ActiveBranch);  // record the parent so we can easily back up for reconductoring, etc.
                                                 end;
                                                 Break;
-                                            end; {Else}
-                                        end; {IF TestBusNum}
-                                    end;  {FOR terminals}
-                                end; {ELSE}
-                        end; {FOR iPD}
+                                            end;
+                                        end; // IF TestBusNum
+                                    end;  // FOR terminals
+                                end; // ELSE
+                        end; // FOR iPD
 
                         if IsFeederEnd then
                             BranchList.ZoneEndsList.Add(BranchList.PresentBranch, TestBusNum);
-             {This is an end of the feeder and testbusnum is the end bus}
+                            // This is an end of the feeder and testbusnum is the end bus
                     end
                     else
                     begin   // Zone is manually specified; Just add next element in list as a child
                         Inc(ZoneListCounter);
-                        while ZoneListCounter <= DefinedZoneListSize do
+                        while ZoneListCounter <= DefinedZoneList.Count do
                         begin
-                            if SetElementActive(DefinedZoneList^[ZoneListCounter]) = 0 then
+                            if SetElementActive(DefinedZoneList[ZoneListCounter - 1]) = 0 then
                                 Inc(ZoneListCounter) // Not Found. Let's search for another
                             else
                             begin
@@ -2188,11 +2024,11 @@ begin
                             end;
                         end; // while
                     end;
-                end;  {WITH Active Circuit}
-        end;   {FOR iTerm}
+                end;  // WITH Active Circuit
+        end;  // FOR iTerm
 
         ActiveBranch := BranchList.GoForward;   // Sets PresentBranch
-  { ****************  END MAIN LOOP *****************************}
+        // ****************  END MAIN LOOP *****************************
     end;
 
     TotalupDownstreamCustomers;
@@ -2200,46 +2036,35 @@ begin
     AssignVoltBaseRegisterNames;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TEnergyMeterObj.GetCurrents(Curr: pComplexArray);  //Get present value of terminal Curr FOR reports
-
 var
     i: Integer;
-
 begin
     for i := 1 to Fnconds do
         Curr^[i] := CZERO;
 end;
 
-{--------------------------------------------------------------------------}
-
 procedure TEnergyMeterObj.ZoneDump;
-
 var
     CSVName: String;
     F: TFileStream = nil;
     pdelem: TPDelement;
     LoadElem: TDSSCktElement;
-
 begin
-
     try
-
-        CSVName := 'Zone_' + Name + '.CSV';
+        CSVName := 'Zone_' + Name + '.csv';
         F := TFileStream.Create(DSS.OutputDirectory + CSVName, fmCreate);
 
         DSS.GlobalResult := CSVName;
         SetLastResultFile(DSS, CSVName);
-
     except
 
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening File "' + CSVName + '": ' + E.Message, 528);
+            DoSimpleMsg('Error opening File "%s": %s', [CSVName, E.Message], 528);
             FreeAndNil(F);
             Exit;
         end;
-
     end;
 
     try
@@ -2253,7 +2078,7 @@ begin
                     FSWriteln(F, Format('%d, %s.%s, %s, %s, %10.4f',
                         [BranchList.Level, PDelem.ParentClass.Name, PDelem.Name,
                         PDelem.FirstBus, PDelem.NextBus,
-                  {BusList.NameOfIndex(BranchList.PresentBranch.ToBusReference),}
+                        // BusList.NameOfIndex(BranchList.PresentBranch.ToBusReference),
                         Buses^[BranchList.PresentBranch.ToBusReference].DistFromMeter]));
                     BranchList.PresentBranch.ResetToBusList;
                     LoadElem := Branchlist.FirstObject;
@@ -2272,48 +2097,20 @@ begin
     end;
 end;
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TEnergyMeterObj.DumpProperties(F: TFileStream; Complete: Boolean);
-
+procedure TEnergyMeterObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
 var
     i: Integer;
     pdelem: TPDelement;
     LoadElem: TDSSCktElement;
-
-
 begin
     inherited DumpProperties(F, complete);
 
     with ParentClass do
         for i := 1 to NumProperties do
-            case i of
-                4:
-                begin     // option
-                    FSWrite(F, '~ ', PropertyName^[i], '=(');
-                    if ExcessFlag then
-                        FSWrite(F, 'E,')
-                    else
-                        FSWrite(F, 'T,');
-                    if ZoneIsRadial then
-                        FSWrite(F, ' R,')
-                    else
-                        FSWrite(F, ' M,');
-                    if VoltageUEOnly then
-                        FSWrite(F, ' V')
-                    else
-                        FSWrite(F, ' C');
-                    FSWriteln(F, ')');
-                end;
-                7:
-                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[i] + ')');
-            else
-                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
-            end;
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
 
     if complete then
     begin
-
         FSWriteln(F, 'Registers');
         for i := 1 to NumEMregisters do
         begin
@@ -2331,54 +2128,19 @@ begin
                 LoadElem := Branchlist.FirstObject;
                 while LoadElem <> NIL do
                 begin
-                    FSWriteln(F, '   Shunt Element = ' + LoadElem.ParentClass.name + '.' + LoadElem.Name);
+                    FSWriteln(F, '   Shunt Element = ' + LoadElem.FullName);
                     LoadElem := BranchList.NextObject
                 end;
                 PDElem := BranchList.GoForward;
             end;
         end;
-
     end;
-
-end;
-
-procedure TEnergyMeter.ProcessOptions(const Opts: String);
-
-var
-    {S1,} S2: String;
-begin
-
-    AuxParser.CmdString := Opts;  // Load up aux Parser
-
-    {Loop until no more options found}
-    with DSS.ActiveEnergymeterObj do
-        repeat
-            {S1 := }AuxParser.NextParam; // ignore any parameter name  not expecting any
-            S2 := lowercase(AuxParser.StrValue);
-            if Length(S2) > 0 then
-                case s2[1] of
-                    'e':
-                        ExcessFlag := TRUE;
-                    't':
-                        ExcessFlag := FALSE;
-                    'r':
-                        ZoneIsRadial := TRUE;
-                    'm':
-                        ZoneIsRadial := FALSE;
-                    'c':
-                        VoltageUEOnly := FALSE;
-                    'v':
-                        VoltageUEOnly := TRUE;
-                end;
-        until Length(S2) = 0;
-
 end;
 
 function TEnergyMeterObj.AddToVoltBaseList(BusRef: Integer): Integer;
-{Add to VoltBase list if not already there and return index}
+// Add to VoltBase list if not already there and return index
 var
     i: Integer;
-
 begin
     with DSS.ActiveCircuit.Buses^[BusRef] do
     begin
@@ -2400,37 +2162,30 @@ begin
         else
             Result := 0;
     end;
-
 end;
 
 procedure TEnergyMeterObj.AllocateLoad;
-
 var
     ConnectedPhase: Integer;
     CktElem: TPDElement;
     LoadElem: TLoadobj;
-
 begin
+    // PREREQUISITE: EXECUTE CALCALLOCATIONFACTORS FOR ALL ENERGYMETERS AND SENSORS
+    // ****Done in calling procedure  now ***   CalcAllocationFactors;     for this meter. Inherited from Meterelement
+    // See ExecHelper
 
+    // Now go through the meter's zone and adjust the loads.
 
-{PREREQUISITE: EXECUTE CALCALLOCATIONFACTORS FOR ALL ENERGYMETERS AND SENSORS}
-{****Done in calling procedure  now ***   CalcAllocationFactors;}     {for this meter. Inherited from Meterelement}
-{See ExecHelper}
+    // While the AllocationFactor property is adjusted for all loads, it will only
+    // have an effect on loads defined with either the XFKVA property or the
+    // kWh property.
 
-    { Now go through the meter's zone and adjust the loads.
+    // Loads have a SensorObj property that points to its upstream sensor that has the adjustments for
+    // the allocation factors.  This is established in the MakeMeterZoneLists proc in this Unit.
 
-      While the AllocationFactor property is adjusted for all loads, it will only
-      have an effect on loads defined with either the XFKVA property or the
-      kWh property.
-
-      Loads have a SensorObj property that points to its upstream sensor that has the adjustments for
-      the allocation factors.  This is established in the MakeMeterZoneLists proc in this Unit.
-
-      Sensors consist of EnergyMeters, which drive the load allocation process and Sensor objects that
-      are simply voltage and current measuring points.  A Sensor may be attached to a line or transformer
-      or it may be connected directly to a load.
-     }
-
+    // Sensors consist of EnergyMeters, which drive the load allocation process and Sensor objects that
+    // are simply voltage and current measuring points.  A Sensor may be attached to a line or transformer
+    // or it may be connected directly to a load.
 
     CktElem := BranchList.First;
     while CktElem <> NIL do
@@ -2440,7 +2195,7 @@ begin
         begin
             if (LoadElem.DSSObjType and CLASSMASK) = LOAD_ELEMENT then  // only for loads not other shunts
                 case LoadElem.NPhases of
-                 {For Single phase loads, allocate based on phase factor, else average factor}
+                    // For Single phase loads, allocate based on phase factor, else average factor
                     1:
                         with LoadElem do
                         begin
@@ -2455,52 +2210,11 @@ begin
                 else
                     with LoadElem do
                         AllocationFactor := AllocationFactor * SensorObj.AvgAllocFactor;
-                end;  {CASE}
-            LoadElem := BranchList.NextObject    {Next load at this bus}
-        end;   {While Loadelem}
-        CktElem := BranchList.GoForward;    {Go on down the tree}
-    end;  {While CktElem}
-
-end;
-
-procedure TEnergyMeterObj.InitPropertyValues(ArrayOffset: Integer);
-var
-    i: Integer;
-    S: String;
-begin
-
-    PropertyValue[1] := ''; //'element';
-    PropertyValue[2] := '1'; //'terminal';
-    PropertyValue[3] := 'clear'; //'action';
-    PropertyValue[4] := '(E, R, C)'; //'Option';
-    PropertyValue[5] := '0.0'; //'kWnormal';
-    PropertyValue[6] := '0.0'; //'kwEmerg';
-    PropertyValue[7] := '(400, 400, 400)'; //'PeakCurrent';
-    PropertyValue[8] := ''; // ZoneList
-    PropertyValue[9] := 'No';
-     {Define mask as 1 for all registers}
-    S := '[';
-    for i := 1 to NumEMregisters do
-        S := S + '1 ';
-    PropertyValue[10] := S + ']';
-    PropertyValue[11] := 'Yes';
-    PropertyValue[12] := 'Yes';
-    PropertyValue[13] := 'Yes';
-    PropertyValue[14] := 'Yes';
-    PropertyValue[15] := 'Yes'; // segregate losses by voltage base
-    PropertyValue[16] := 'Yes';
-    PropertyValue[17] := 'No';
-    PropertyValue[18] := '0';
-    PropertyValue[19] := '0';
-    PropertyValue[20] := '0';
-    PropertyValue[21] := '0';
-    PropertyValue[22] := '0';
-    PropertyValue[23] := '0';
-    PropertyValue[24] := '0';
-
-
-    inherited  InitPropertyValues(NumPropsThisClass);
-
+                end;
+            LoadElem := BranchList.NextObject // Next load at this bus
+        end;
+        CktElem := BranchList.GoForward; // Go on down the tree
+    end;
 end;
 
 procedure TEnergyMeterObj.Accumulate_Gen;
@@ -2508,10 +2222,9 @@ var
     S: Complex;
 begin
      //----pGen.ActiveTerminalIdx := 1;
-    S := Cnegate(CmulReal(pGen.Power[1], 0.001));
+    S := -pGen.Power[1] * 0.001;
     TotalZonekw := TotalZonekW + S.re;
     TotalZonekvar := TotalZonekvar + S.im;
-
 end;
 
 function TEnergyMeterObj.Accumulate_Load(pLoad: TLoadObj;
@@ -2522,20 +2235,21 @@ var
     Load_EEN,
     Load_UE: Double;
 begin
-    with   pLoad do
+    with pLoad do
     begin
        //----ActiveTerminalIdx := 1;
-        S_Load := CmulReal(pLoad.Power[1], 0.001);   // Get Power in Terminal 1
+        S_Load := pLoad.Power[1] * 0.001;   // Get Power in Terminal 1
         kW_Load := S_Load.re;
         Result := kw_Load;
 
-       {Accumulate load in zone}
+        // Accumulate load in zone
         TotalZonekw := TotalZonekW + kW_Load;
         TotalZonekvar := TotalZonekvar + S_Load.im;
 
-       {always integrate even if the value is 0.0
-        otherwise the Integrate function is not correct}
-       {Invoking the ExceedsNormal and Unserved Properties causes the factors to be computed}
+        // always integrate even if the value is 0.0
+        // otherwise the Integrate function is not correct
+       
+        // Invoking the ExceedsNormal and Unserved Properties causes the factors to be computed
         if ExcessFlag then
         begin   // Return Excess load as EEN/UE
             if (ExceedsNormal) then
@@ -2562,24 +2276,22 @@ begin
         TotalLoad_EEN := TotalLoad_EEN + Load_EEN;
         TotalLoad_UE := TotalLoad_UE + Load_UE;
 
-    end; {WITH}
+    end;
 end;
 
 
 procedure TEnergyMeterObj.ReduceZone;
-
-{Reduce the zone by merging lines}
-
+// Reduce the zone by merging lines
 begin
- // Make  sure zone list is built
+     // Make  sure zone list is built
     if not assigned(BranchList) then
         MakeMeterZoneLists;
 
     case DSS.ActiveCircuit.ReductionStrategy of
 
         rsShortlines:
-            DoReduceShortLines(DSS, BranchList);    {See ReduceAlgs.Pas}
-         {rsTapEnds:       DoReduceTapEnds (BranchList);}
+            DoReduceShortLines(DSS, BranchList); // See ReduceAlgs.Pas
+        // rsTapEnds:       DoReduceTapEnds (BranchList);
         rsMergeParallel:
             DoMergeParallelLines(DSS, BranchList);
         rsDangling:
@@ -2592,7 +2304,7 @@ begin
             DoRemoveAll_1ph_Laterals(DSS, BranchList);
 
     else
-       {Default}
+        // Default
         DoReduceDefault(DSS, BranchList);
     end;
 end;
@@ -2602,7 +2314,7 @@ begin
     if not Assigned(BranchList) then
     begin
         Result := FALSE;
-        DoSimpleMsg('Meter Zone Lists need to be built. Do Solve or Makebuslist first!', code);
+        DoSimpleMsg(_('Meter Zone Lists need to be built. Do Solve or Makebuslist first!'), code);
         Exit;
     end;
     Result := TRUE;
@@ -2610,8 +2322,8 @@ end;
 
 
 procedure TEnergyMeterObj.InterpolateCoordinates;
-{Start at the ends of the zone and work toward the start
- interpolating between known coordinates}
+// Start at the ends of the zone and work toward the start
+// interpolating between known coordinates
 var
     i, BusRef,
     FirstCoordRef, SecondCoordRef,
@@ -2625,14 +2337,13 @@ begin
 
     with ActiveCircuit do
     begin
-
         for i := 1 to Branchlist.ZoneEndsList.NumEnds do
         begin
             Busref := Branchlist.ZoneEndsList.Get(i, PresentNode);
 
             FirstCoordRef := BusRef;
-            SecondCoordRef := FirstCoordRef;  {so compiler won't issue stupid warning}
-       {Find a bus with a coordinate}
+            SecondCoordRef := FirstCoordRef;  // so compiler won't issue stupid warning
+            // Find a bus with a coordinate
             if not Buses^[BusRef].CoordDefined then
             begin
                 while not Buses^[PresentNode.FromBusReference].CoordDefined do
@@ -2647,12 +2358,13 @@ begin
 
             while PresentNode <> NIL do
             begin
-          {Back up until we find another Coord defined}
-                LineCount := 0;   {number of line segments in this segment}
+                // Back up until we find another Coord defined
+                LineCount := 0; // number of line segments in this segment
                 StartNode := PresentNode;
                 CktElem := PresentNode.CktObject;
                 if FirstCoordRef <> PresentNode.FromBusReference then
-                begin   {Handle special case for end branch}
+                begin 
+                    // Handle special case for end branch
                     if Buses^[PresentNode.FromBusReference].CoordDefined then
                         FirstCoordRef := PresentNode.FromBusReference
                     else
@@ -2660,14 +2372,14 @@ begin
                 end;
 
                 repeat
-                    CktElem.Checked := TRUE;
+                    Include(CktElem.Flags, Flg.Checked);
                     PresentNode := PresentNode.ParentBranch;
                     if PresentNode = NIL then
                         Break;
                     CktElem := PresentNode.CktObject;
                     SecondCoordRef := PresentNode.FromBusReference;
                     Inc(LineCount);
-                until Buses^[SecondCoordRef].CoordDefined or CktElem.Checked;
+                until Buses^[SecondCoordRef].CoordDefined or (Flg.Checked in CktElem.Flags);
 
                 if (PresentNode <> NIL) and (LineCount > 1) then
                     if Buses^[SecondCoordRef].CoordDefined then
@@ -2675,26 +2387,21 @@ begin
                         CalcBusCoordinates(StartNode, FirstCoordRef, SecondCoordRef, LineCount);
                     end
                     else
-                        Break; {While - went as far as we could go this way}
+                        Break; // While - went as far as we could go this way
 
                 FirstCoordRef := SecondCoordRef;
             end;
-
-        end; {For}
-
-    end; {With}
-
+        end; // For
+    end; // With
 end;
 
 procedure TEnergyMeterObj.CalcBusCoordinates(StartBranch: TCktTreeNode;
     FirstCoordRef, SecondCoordref, LineCount: Integer);
-
 var
     X, Y, Xinc, Yinc: Double;
 begin
-
     if LineCount = 1 then
-        Exit;  {Nothing to do!}
+        Exit;  // Nothing to do!
 
     with ActiveCircuit do
     begin
@@ -2704,7 +2411,7 @@ begin
         X := Buses^[FirstCoordref].X;
         Y := Buses^[FirstCoordref].Y;
 
-       {Either start with the "to" end of StartNode or the "from" end;}
+        // Either start with the "to" end of StartNode or the "from" end;
         if FirstCoordRef <> StartBranch.FromBusReference then
         begin  // Start with "to" end
             X := X - Xinc;
@@ -2729,9 +2436,6 @@ begin
     end;
 end;
 
-
-{--------------------------- CalcReliabilityIndices ----------------------------}
-
 procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration: Boolean);
 var
     PD_Elem: TPDElement;
@@ -2740,12 +2444,10 @@ var
     pBus: TDSSBus;
     dblNcusts: Double;
     dblkW: Double;
-
 begin
-
     if not Assigned(SequenceList) then
     begin
-        DoSimpleMsg('Energymeter.' + Name + ' Zone not defined properly.', 52901);
+        DoSimpleMsg('%s Zone not defined properly.', [FullName], 52901);
         Exit;
     end;
 
@@ -2764,14 +2466,14 @@ begin
     end;
 
     // Forward sweep to get number of interruptions
-       // Initialize number of interruptions and Duration
+    // Initialize number of interruptions and Duration
     PD_Elem := TPDElement(SequenceList.Get(1));
     pBus := DSS.ActiveCircuit.Buses^[PD_Elem.Terminals[PD_Elem.FromTerminal - 1].BusRef];
     pBus.Bus_Num_Interrupt := Source_NumInterruptions;
     pBus.BusCustInterrupts := Source_NumInterruptions * pBus.BusTotalNumCustomers;
     pBus.Bus_Int_Duration := Source_IntDuration;
 
-       // init for defining sections
+    // init for defining sections
     SectionCount := 0;
     pBus.BusSectionID := SectionCount; // section before 1st OCP device is zero
 
@@ -2781,12 +2483,12 @@ begin
     if SectionCount = 0 then
     begin // Error - no OCP devices
         DoSimpleMsg
-        ('Error: No Overcurrent Protection device (Relay, Recloser, or Fuse) defined. Aborting Reliability calc.',
+        (_('Error: No Overcurrent Protection device (Relay, Recloser, or Fuse) defined. Aborting Reliability calc.'),
             52902);
         Exit;
     end;
 
-       // Now have number of sections  so allocate FeederSections array
+    // Now have number of sections  so allocate FeederSections array
     ReallocMem(FeederSections, SizeOf(FeederSections^[1]) * SectionCount);
     for idx := 0 to SectionCount do
         with FeederSections^[idx] do      // Initialize all Section data
@@ -2818,7 +2520,7 @@ begin
         pBus := DSS.ActiveCircuit.Buses^[PD_Elem.Terminals[PD_Elem.ToTerminal - 1].BusRef];
         DblInc(pSection.SumBranchFltRates, pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
         DblInc(pSection.SumFltRatesXRepairHrs, (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
-        if PD_Elem.HasOCPDevice then
+        if Flg.HasOCPDevice in PD_Elem.Flags then
         begin  // set Section properties
             pSection.OCPDeviceType := GetOCPDeviceType(PD_Elem);
             pSection.SeqIndex := idx;  // index of pdelement with OCP device at head of section
@@ -2842,13 +2544,12 @@ begin
 
     end;
 
-    { Compute Avg Interruption duration of each Section  except 0 Section}
+    // Compute Avg Interruption duration of each Section  except 0 Section
     for idx := 1 to SectionCount do
         with FeederSections^[idx] do
             AverageRepairTime := SumFltRatesXRepairHrs / SumBranchFltRates;
 
-        { Set Bus_int_Duration}
-
+    // Set Bus_int_Duration
     with ActiveCircuit do
         for idx := 1 to NumBuses do
         begin
@@ -2868,9 +2569,9 @@ begin
                 AverageRepairTime * 60.0, SumFltRatesXRepairHrs, SumBranchFltRates]));
 {$ENDIF}
 
-       {Compute SAIFI based on numcustomers and load kW}
-       {SAIFI is weighted by specified load weights}
-       {SAIFI is for the EnergyMeter Zone}
+    // Compute SAIFI based on numcustomers and load kW
+    // SAIFI is weighted by specified load weights
+    // SAIFI is for the EnergyMeter Zone
     SAIFI := 0.0;
     CAIDI := 0.0;
     SAIFIkW := 0.0;
@@ -2878,28 +2579,28 @@ begin
     dblkW := 0.0;
     CustInterrupts := 0.0;
 
-       // Use LoadList for SAIFI calculation
+    // Use LoadList for SAIFI calculation
     with ActiveCircuit do
     begin
         for idx := 1 to LoadList.Count do  // all loads in meter zone
         begin
-      // Compute CustInterrupts based on interrupts at each load
+            // Compute CustInterrupts based on interrupts at each load
             with TLoadObj(LoadList.Get(idx)) do
             begin
                 pBus := Buses^[Terminals[0].BusRef]; // pointer to Load's bus
                 CustInterrupts := CustInterrupts + (NumCustomers * RelWeighting * pBus.Bus_Num_Interrupt);
                 SAIFIkW := SAIFIkW + kWBase * RelWeighting * pBus.Bus_Num_Interrupt;
                 DblInc(dblNcusts, NumCustomers * RelWeighting);
-          // total up weighted numcustomers
+                // total up weighted numcustomers
                 DblInc(dblkW, kWBase * RelWeighting); // total up weighted kW
-          // Set BusCustDurations for Branch reliability export
+                // Set BusCustDurations for Branch reliability export
                 pBus.BusCustDurations := (pBus.BusTotalNumCustomers + NumCustomers) *
                     RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt;
             end;
         end;
     end;
 
-     // Compute SAIDI from Sections list
+    // Compute SAIDI from Sections list
     SAIDI := 0.0;
     for idx := 1 to SectionCount do // ignore idx=0
         with FeederSections^[idx] do
@@ -2918,54 +2619,6 @@ begin
 
     if dblkW > 0.0 then
         SAIFIkW := SAIFIkW / dblkW; // Normalize to total kW
-
-end;
-
-{-------------------------------------------------------------------------------}
-function TEnergyMeterObj.GetPropertyValue(Index: Integer): String;
-begin
-    case Index of
-        4, 7:
-            Result := '(';
-    else
-        Result := '';
-    end;
-
-    case Index of
-        4:
-        begin     // option
-            if ExcessFlag then
-                Result := Result + 'E,'
-            else
-                Result := Result + 'T,';
-            if ZoneIsRadial then
-                Result := Result + ' R,'
-            else
-                Result := Result + ' M,';
-            if VoltageUEOnly then
-                Result := Result + ' V'
-            else
-                Result := Result + ' C';
-        end;
-        20:
-            Result := Format('%.11g', [SAIFI]);
-        21:
-            Result := Format('%.11g', [SAIFIkW]);
-        22:
-            Result := Format('%.11g', [SAIDI]);
-        23:
-            Result := Format('%.11g', [CAIDI]);
-        24:
-            Result := Format('%.11g', [CustInterrupts]);
-    else
-        Result := Result + inherited GetPropertyValue(index);
-    end;
-
-    case Index of
-        4, 7:
-            Result := Result + ')';
-    else
-    end;
 end;
 
 procedure TEnergyMeterObj.SaveZone(const dirname: String);
@@ -2976,9 +2629,9 @@ var
     FBranches, FShunts, FLoads, FGens, FCaps, FXfmrs: TFileStream;
     NBranches, NShunts, Nloads, NGens, NCaps, NXfmrs: Integer;
 begin
- {We are in the directory indicated by dirname}
+    // We are in the directory indicated by dirname
 
-{Run down the zone and write each element into a file}
+    // Run down the zone and write each element into a file
 
     if BranchList = NIL then
         Exit;
@@ -2990,80 +2643,79 @@ begin
     FCaps := nil; 
     FXfmrs := nil;
         
-    {Open some files:}
+    // Open some files:
 
     try
-        FBranches := TFileStream.Create(DSS.CurrentDSSDir + 'Branches.dss', fmCreate);     // Both lines and transformers
+        FBranches := TFileStream.Create(DSS.OutputDirectory {DSS.CurrentDSSDir} + 'Branches.dss', fmCreate);     // Both lines and transformers
         NBranches := 0;
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Branches.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 530);
+            DoSimpleMsg('Error creating Branches.dss for Energymeter: %s. %s', [Self.Name, E.Message], 530);
             FreeAndNil(FBranches);
             Exit;
         end;
     end;
 
     try
-        FXfmrs := TFileStream.Create(DSS.CurrentDSSDir + 'Transformers.dss', fmCreate);     // Both lines and transformers
+        FXfmrs := TFileStream.Create(DSS.OutputDirectory {DSS.CurrentDSSDir} + 'Transformers.dss', fmCreate);     // Both lines and transformers
         NXfmrs := 0;
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Transformers.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 53001);
+            DoSimpleMsg('Error creating Transformers.dss for Energymeter: %s. %s', [Self.Name, E.Message], 53001);
             FreeAndNil(FXfmrs);
             Exit;
         end;
     end;
 
     try
-        FShunts := TFileStream.Create(DSS.CurrentDSSDir + 'Shunts.dss', fmCreate);
+        FShunts := TFileStream.Create(DSS.OutputDirectory {DSS.CurrentDSSDir} + 'Shunts.dss', fmCreate);
         NShunts := 0;
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Shunts.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 531);
+            DoSimpleMsg('Error creating Shunts.dss for Energymeter: %s. %s', [Self.Name, E.Message], 531);
             FreeAndNil(FShunts);
             Exit;
         end;
     end;
 
     try
-        FLoads := TFileStream.Create(DSS.CurrentDSSDir + 'Loads.dss', fmCreate);
+        FLoads := TFileStream.Create(DSS.OutputDirectory {DSS.CurrentDSSDir} + 'Loads.dss', fmCreate);
         Nloads := 0;
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Loads.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 532);
+            DoSimpleMsg('Error creating Loads.dss for Energymeter: %s. %s', [Self.Name, E.Message], 532);
             FreeAndNil(FLoads);
             Exit;
         end;
     end;
 
     try
-        FGens := TFileStream.Create(DSS.CurrentDSSDir + 'Generators.dss', fmCreate);
+        FGens := TFileStream.Create(DSS.OutputDirectory {DSS.CurrentDSSDir} + 'Generators.dss', fmCreate);
         NGens := 0;
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Generators.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 533);
+            DoSimpleMsg('Error creating Generators.dss for Energymeter: %s. %s', [Self.Name, E.Message], 533);
             FreeAndNil(FGens);
             Exit;
         end;
     end;
 
     try
-        FCaps := TFileStream.Create(DSS.CurrentDSSDir + 'Capacitors.dss', fmCreate);
+        FCaps := TFileStream.Create(DSS.OutputDirectory {DSS.CurrentDSSDir} + 'Capacitors.dss', fmCreate);
         Ncaps := 0;
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error creating Capacitors.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 534);
+            DoSimpleMsg('Error creating Capacitors.dss for Energymeter: %s. %s', [Self.Name, E.Message], 534);
             FreeAndNil(FCaps);
             Exit;
         end;
     end;
-
 
     cktElem := BranchList.First;
     with ActiveCircuit do
@@ -3077,7 +2729,7 @@ begin
                 begin
                     Inc(NXfmrs);
                     WriteActiveDSSObject(DSS, FXfmrs, 'New');     // sets HasBeenSaved := TRUE
-                    if cktElem.HasControl then
+                    if Flg.HasControl in cktElem.Flags then
                     begin
                         pControlElem := cktElem.ControlElementList.First;
                         while pControlElem <> NIL do
@@ -3089,10 +2741,11 @@ begin
                     end;
                 end
                 else
-                begin  {Mostly LINE elements}
+                begin  
+                    // Mostly LINE elements
                     Inc(NBranches);
                     WriteActiveDSSObject(DSS, FBranches, 'New');     // sets HasBeenSaved := TRUE
-                    if cktElem.HasControl then
+                    if Flg.HasControl in cktElem.Flags then
                     begin
                         pControlElem := cktElem.ControlElementList.First;
                         while pControlElem <> NIL do
@@ -3114,9 +2767,9 @@ begin
                         LoadElement := TLoadObj(shuntElement);
                         if LoadElement.HasBeenAllocated then
                         begin
-                   {Manually set the allocation factor so it shows up}
-                            Parser.CmdString := 'allocationfactor=' + Format('%-.4g', [LoadElement.AllocationFactor]);
-                            LoadElement.Edit;
+                            // Manually set the allocation factor so it shows up
+                            DSS.Parser.CmdString := 'allocationfactor=' + Format('%-.4g', [LoadElement.AllocationFactor]);
+                            LoadElement.Edit(DSS.Parser);
                         end;
                         ActiveCktElement := shuntElement; // reset in case Edit mangles it
                         Inc(NLoads);
@@ -3127,7 +2780,7 @@ begin
                     begin
                         Inc(NGens);
                         WriteActiveDSSObject(DSS, FGens, 'New');
-                        if shuntElement.HasControl then
+                        if Flg.HasControl in shuntElement.Flags then
                         begin
                             pControlElem := shuntElement.ControlElementList.First;
                             while pControlElem <> NIL do
@@ -3143,7 +2796,7 @@ begin
                     begin
                         Inc(NCaps);
                         WriteActiveDSSObject(DSS, FCaps, 'New');
-                        if shuntElement.HasControl then
+                        if Flg.HasControl in shuntElement.Flags then
                         begin
                             pControlElem := shuntElement.ControlElementList.First;
                             while pControlElem <> NIL do
@@ -3161,10 +2814,10 @@ begin
                     end;
                     shuntElement := BranchList.NextObject
                 end;
-            end; {if enabled}
+            end; // if enabled
 
             cktElem := BranchList.GoForward;
-        end;{WHILE}
+        end; // WHILE
 
     FreeAndNil(FBranches);
     FreeAndNil(FXfmrs);
@@ -3173,7 +2826,7 @@ begin
     FreeAndNil(FGens);
     FreeAndNil(FCaps);
 
-    {If any records were written to the file, record their relative names}
+    // If any records were written to the file, record their relative names
     if NBranches > 0 then
         DSS.SavedFileList.Add(dirname + PathDelim + 'Branches.dss')
     else
@@ -3199,7 +2852,6 @@ begin
     else
         DeleteFile('Capacitors.dss');
 end;
-
 
 procedure TEnergyMeterObj.GetPCEatZone(const allowEmpty: Boolean);
 var
@@ -3235,7 +2887,7 @@ begin
                 begin
                     ActiveCktElement := shuntElement;
                     SetLength(ZonePCE, length(ZonePCE) + 1);
-                    ZonePCE[high(ZonePCE)] := shuntElement.DSSClassName + '.' + shuntElement.Name;
+                    ZonePCE[high(ZonePCE)] := shuntElement.FullName;
                     shuntElement := BranchList.NextObject;
                 end;
             end;
@@ -3263,11 +2915,10 @@ procedure TEnergyMeterObj.CloseDemandIntervalFile;
 var
     i: Integer;
 begin
-
     try
-        if This_Meter_DIFileIsOpen then with DSS.EnergyMeterClass do
+        if This_Meter_DIFileIsOpen then
         begin
-            if DSS.EnergyMeterClass.DI_MHandle <> NIL then
+            if DI_MHandle <> NIL then
                 CloseMHandler(DSS, DI_MHandle, MakeDIFileName, DI_Append);
             DI_MHandle := NIL;
             This_Meter_DIFileIsOpen := FALSE;
@@ -3279,11 +2930,10 @@ begin
         end;
     except
         ON E: Exception do
-            DoSimpleMsg('Error Closing Demand Interval file for Meter "' + Name + '"', 534);
+            DoSimpleMsg('Error Closing Demand Interval file for Meter "%s"', [Name], 534);
     end;
 
-
-     {Write Registers to Totals File}
+    // Write Registers to Totals File
     with DSS.EnergyMeterClass do
     begin
         WriteintoMemStr(EMT_MHandle, '"' + Self.Name + '"');
@@ -3297,16 +2947,13 @@ procedure TEnergyMeterObj.OpenDemandIntervalFile;
 var
     i, j: Integer;
     vbase: Double;
-
 begin
-
     try
         if This_Meter_DIFileIsOpen then
             CloseDemandIntervalFile;
 
-        if (DSS.EnergyMeterClass.DI_Verbose) then with DSS.EnergyMeterClass do
+        if (DSS.EnergyMeterClass.DI_Verbose) then
         begin
-
             This_Meter_DIFileIsOpen := TRUE;
             if DI_MHandle <> NIL then
                 DI_MHandle.free;
@@ -3315,7 +2962,7 @@ begin
                 WriteintoMemStr(DI_MHandle, ', "' + RegisterNames[i] + '"');
             WriteintoMemStr(DI_MHandle, Char(10));
 
-         {Phase Voltage Report, if requested}
+            // Phase Voltage Report, if requested
             if FPhaseVoltageReport then
             begin
                 if PHV_MHandle <> NIL then
@@ -3341,9 +2988,8 @@ begin
         end;
     except
         On E: Exception do
-            DoSimpleMsg('Error opening demand interval file "' + Name + DSS._Name + '.CSV' + ' for writing.' + CRLF + E.Message, 535);
+            DoSimpleMsg('Error opening demand interval file "%s.csv" for writing. %s', [Name + DSS._Name, CRLF + E.Message], 535);
     end;
-
 end;
 
 procedure TEnergyMeterObj.WriteDemandIntervalData;
@@ -3359,7 +3005,7 @@ var
     end;
 
 begin
-    if DSS.EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then with DSS.EnergyMeterClass do
+    if DSS.EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then
     begin
         with DSS.ActiveCircuit.Solution do
             WriteintoMem(DI_MHandle, DynaVars.dblHour);
@@ -3368,14 +3014,14 @@ begin
         WriteIntoMemStr(DI_MHandle, Char(10));
     end;
 
-      {Add to Class demand interval registers}
+    // Add to Class demand interval registers
     with DSS.EnergyMeterClass do
         for i := 1 to NumEMRegisters do
             DI_RegisterTotals[i] := DI_RegisterTotals[i] + Derivatives[i] * TotalsMask[i];
 
 
-      {Phase Voltage Report, if requested}
-    if VPhaseReportFileIsOpen then with DSS.EnergyMeterClass do
+    // Phase Voltage Report, if requested
+    if VPhaseReportFileIsOpen then
     begin
         with DSS.ActiveCircuit.Solution do
             WriteintoMem(PHV_MHandle, DynaVars.dblHour);
@@ -3391,25 +3037,23 @@ begin
             end;
         WriteintoMemStr(PHV_MHandle, Char(10));
     end;
-
 end;
 
 procedure TEnergyMeter.CloseAllDIFiles;
 var
     mtr: TEnergyMeterObj;
-
 begin
     if FSaveDemandInterval then
     begin
-        {While closing DI files, write all meter registers to one file}
+        // While closing DI files, write all meter registers to one file
         try
             CreateMeterTotals;
         except
             On E: Exception do
-                DoSimpleMsg('Error on Rewrite of totals file: ' + E.Message, 536);
+                DoSimpleMsg('Error on Rewrite of totals file: %s', [E.Message], 536);
         end;
 
-        {Close all the DI file for each meter}
+        // Close all the DI file for each meter
         mtr := DSS.ActiveCircuit.EnergyMeters.First;
         while mtr <> NIL do
         begin
@@ -3418,27 +3062,27 @@ begin
             mtr := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
 
-        WriteTotalsFile;  // Sum all energymeter registers to "Totals_{}.CSV"
+        WriteTotalsFile;  // Sum all energymeter registers to "Totals_{}.csv"
         SystemMeter.CloseDemandIntervalFile;
         SystemMeter.Save;
         if EMT_MHandle <> NIL then
-            CloseMHandler(DSS, EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals' + DSS._Name + '.CSV', EMT_Append);
+            CloseMHandler(DSS, EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals' + DSS._Name + '.csv', EMT_Append);
         EMT_MHandle := NIL;
         if TDI_MHandle <> NIL then
-            CloseMHandler(DSS, TDI_MHandle, DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.CSV', TDI_Append);
+            CloseMHandler(DSS, TDI_MHandle, DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.csv', TDI_Append);
         TDI_MHandle := NIL;
         DSS.DIFilesAreOpen := FALSE;
         if OverloadFileIsOpen then
         begin
             if OV_MHandle <> NIL then
-                CloseMHandler(DSS, OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads' + DSS._Name + '.CSV', OV_Append);
+                CloseMHandler(DSS, OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads' + DSS._Name + '.csv', OV_Append);
             OV_MHandle := NIL;
             OverloadFileIsOpen := FALSE;
         end;
         if VoltageFileIsOpen then
         begin
             if VR_MHandle <> NIL then
-                CloseMHandler(DSS, VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions' + DSS._Name + '.CSV', VR_Append);
+                CloseMHandler(DSS, VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions' + DSS._Name + '.csv', VR_Append);
             VR_MHandle := NIL;
             VoltageFileIsOpen := FALSE;
         end;
@@ -3446,18 +3090,16 @@ begin
 end;
 
 procedure TEnergyMeterObj.AppendDemandIntervalFile;
-
 var
     FileNm: String;
 begin
-
-  {Only called if "SaveDemandInterval"}
+    // Only called if "SaveDemandInterval"
 
     if This_Meter_DIFileIsOpen then
         Exit;
 
     try
-        if DSS.Energymeterclass.FDI_Verbose then with DSS.EnergyMeterClass do
+        if DSS.Energymeterclass.FDI_Verbose then
         begin
             FileNm := MakeDIFileName;   // Creates directory if it doesn't exist
             if FileExists(FileNm) then
@@ -3471,7 +3113,7 @@ begin
         end;
     except
         On E: Exception do
-            DoSimpleMsg('Error opening demand interval file "' + Name + DSS._Name + '.CSV' + ' for appending.' + CRLF + E.Message, 537);
+            DoSimpleMsg('Error opening demand interval file "%s.csv" for appending. %s', [Name + DSS._Name, CRLF + E.Message], 537);
     end;
 end;
 
@@ -3517,11 +3159,9 @@ procedure TEnergyMeter.AppendAllDIFiles;
 var
     mtr: TEnergyMeterObj;
     Filenm: String;
-
 begin
     if FSaveDemandInterval then
     begin
-
         ClearDI_Totals;  // clears accumulator arrays
 
         mtr := DSS.ActiveCircuit.EnergyMeters.First;
@@ -3534,26 +3174,27 @@ begin
 
         SystemMeter.AppendDemandIntervalFile;
 
-          {Open FDI_Totals}
+        // Open FDI_Totals
         try
-            FileNm := DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.CSV';
-              {File Must Exist}
+            FileNm := DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.csv';
+            
+            // File Must Exist
             if FileExists(FileNm) then
                 TDI_Append := TRUE;
             CreateFDI_Totals;
         except
             On E: Exception do
-                DoSimpleMsg('Error opening demand interval file "' + Name + DSS._Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
+                DoSimpleMsg('Error opening demand interval file "%s.csv" for appending.', [Name + DSS._Name, CRLF + E.Message], 538);
         end;
 
         DSS.DIFilesAreOpen := TRUE;
 
-    end;{IF}
+    end;
 end;
 
 function TEnergyMeterObj.MakeDIFileName: String;
 begin
-    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Self.Name + DSS._Name + '.CSV';
+    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Self.Name + DSS._Name + '.csv';
 end;
 
 procedure TEnergyMeter.Set_SaveDemandInterval(const Value: Boolean);
@@ -3581,11 +3222,10 @@ var
     dBuffer: pDoubleArray;
 
 begin
-{
-  Scans the active circuit for overloaded PD elements and writes each to a file
-  This is called only if in Demand Interval (DI) mode and the file is open.
-}
-{    Prepares everything for using seasonal ratings if required}
+// Scans the active circuit for overloaded PD elements and writes each to a file
+// This is called only if in Demand Interval (DI) mode and the file is open.
+
+    // Prepares everything for using seasonal ratings if required
     RatingIdx := -1;
     if DSS.SeasonalRating then
     begin
@@ -3601,7 +3241,7 @@ begin
             DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
     end;
 
- { CHECK PDELEMENTS ONLY}
+    // CHECK PDELEMENTS ONLY
     PDelem := DSS.ActiveCircuit.PDElements.First;
     while PDelem <> NIL do
     begin
@@ -3613,8 +3253,8 @@ begin
                 PDelem.ComputeIterminal;
                 Cmax := PDelem.MaxTerminalOneImag; // For now, check only terminal 1 for overloads
                 
-             // Section introduced in 02/20/2019 for allowing the automatic change of ratings
-             // when the seasonal ratings option is active
+                // Section introduced in 02/20/2019 for allowing the automatic change of ratings
+                // when the seasonal ratings option is active
                 ClassName := lowercase(PDElem.DSSClassName);
                 if DSS.SeasonalRating and (ClassName = 'line') and (PDElem.NumAmpRatings > 1) then
                 begin
@@ -3638,8 +3278,7 @@ begin
 
                 if (Cmax > NormAmps) or (Cmax > EmergAmps) then
                 begin
-
-              // Gets the currents for the active Element
+                    // Gets the currents for the active Element
                     dBuffer := Allocmem(sizeof(Double) * PDElem.NPhases * PDElem.NTerms);
                     PDElem.Get_Current_Mags(dBuffer);
                     dVector := Allocmem(sizeof(Double) * 3); // for storing
@@ -3675,7 +3314,7 @@ begin
 
                     with DSS.ActiveCircuit.Solution do
                         WriteintoMem(OV_MHandle, DynaVars.dblHour);
-                    WriteintoMemStr(OV_MHandle, ', ' + FullName(PDelem));
+                    WriteintoMemStr(OV_MHandle, ', ' + EncloseQuotes(PDelem.FullName));
                     WriteintoMem(OV_MHandle, PDElem.NormAmps);
                     WriteintoMem(OV_MHandle, pdelem.EmergAmps);
                     if PDElem.Normamps > 0.0 then
@@ -3688,14 +3327,14 @@ begin
                         WriteintoMem(OV_MHandle, 0.0);
                     with ActiveCircuit do // Find bus of first terminal
                         WriteintoMem(OV_MHandle, Buses^[MapNodeToBus^[PDElem.NodeRef^[1]].BusRef].kVBase);
-              // Adds the currents in Amps per phase at the end of the report
+                    // Adds the currents in Amps per phase at the end of the report
                     for i := 1 to 3 do
                         WriteintoMem(OV_MHandle, dVector^[i]);
 
                     WriteintoMemStr(OV_MHandle, ' ' + Char(10));
 
                 end;
-            end; { }
+            end;
         end;
         PDelem := DSS.ActiveCircuit.PDElements.Next;
     end;
@@ -3730,28 +3369,25 @@ begin
         WriteintoMemStr(TDI_MHandle, Char(10));
     except
         On E: Exception do
-            DoSimpleMsg('Error creating: "' + DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.CSV": ' + E.Message, 539)
+            DoSimpleMsg('Error creating: "%sDI_Totals%s.csv": %s', [DI_Dir + PathDelim, DSS._Name, E.Message], 539)
     end;
 end;
-
-{ TSystemMeter }
 
 procedure TSystemMeter.AppendDemandIntervalFile;
 var
     FileNm: String;
 begin
-
-  {Only called if "SaveDemandInterval"}
+    // Only called if "SaveDemandInterval"
 
     if This_Meter_DIFileIsOpen then
         Exit;
 
     try
-        FileNm := DSS.EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter' + DSS._Name + '.CSV';
-      {File Must Exist}
+        FileNm := DSS.EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter' + DSS._Name + '.csv';
+        // File Must Exist
         if FileExists(FileNm) then
         begin
-//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir+ PathDelim + 'DI_SystemMeter' + DSS._Name + '.CSV', DI_MMFHandle);
+//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir+ PathDelim + 'DI_SystemMeter' + DSS._Name + '.csv', DI_MMFHandle);
 //        DI_Cursor :=  GetMMFCursor(DI_MMFView);
         end
         else
@@ -3760,10 +3396,9 @@ begin
     except
         On E: Exception do
         begin
-            DosimpleMsg(DSS, 'Error opening demand interval file "' + FileNm + ' for appending.' + CRLF + E.Message, 540);
+            DosimpleMsg(DSS, 'Error opening demand interval file "%s" for appending. %s', [FileNm, CRLF + E.Message], 540);
         end;
     end;
-
 end;
 
 procedure TSystemMeter.Clear;
@@ -3788,39 +3423,56 @@ var
 begin
     if This_Meter_DIFileIsOpen then with DSS.EnergyMeterClass do
     begin
-        File_Path := DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter' + DSS._Name + '.CSV';
-        CloseMHandler(DSS, SDI_MHandle, File_Path, SDI_Append);
+        File_Path := DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter' + DSS._Name + '.csv';
+        CloseMHandler(DSS, SDI_MHandle, File_Path, DSS.EnergyMeterClass.SDI_Append);
         SDI_MHandle := NIL;
         This_Meter_DIFileIsOpen := FALSE;
     end;
 end;
 
-constructor TSystemMeter.Create(dssContext: TDSSContext);
+constructor TSystemMeter.Create(EnergyMeterClass: TEnergyMeter);
 begin
-    DSS := dssContext;
+    DSS := EnergyMeterClass.DSS;
     Clear;
     This_Meter_DIFileIsOpen := FALSE;
+    with EnergyMeterClass do
+    begin
+        SDI_MHandle := NIL;
+        TDI_MHandle := NIL;
+        VR_MHandle := NIL;
+        OV_MHandle := NIL;
+    end;
 end;
 
 destructor TSystemMeter.Destroy;
 begin
+    with DSS.EnergyMeterClass do
+    begin
+        if SDI_MHandle <> NIL then
+            FreeAndNil(SDI_MHandle);
+        if TDI_MHandle <> NIL then
+            FreeAndNil(TDI_MHandle);
+        if VR_MHandle <> NIL then
+            FreeAndNil(VR_MHandle);
+        if OV_MHandle <> NIL then
+            FreeAndNil(OV_MHandle);
+    end;
     inherited;
-
 end;
 
 procedure TSystemMeter.Integrate(var Reg: Double; Value: Double; var Deriv: Double);
 begin
     if DSS.ActiveCircuit.TrapezoidalIntegration then
     begin
-        {Trapezoidal Rule Integration}
+        // Trapezoidal Rule Integration
         if not FirstSampleAfterReset then
             Reg := Reg + 0.5 * DSS.ActiveCircuit.Solution.IntervalHrs * (Value + Deriv);
     end
-    else   {Plain Euler integration}
+    else   
+        // Plain Euler integration
         Reg := Reg + DSS.ActiveCircuit.Solution.IntervalHrs * Value;
 
     Deriv := Value;
-
 end;
 
 procedure TSystemMeter.OpenDemandIntervalFile;
@@ -3838,10 +3490,8 @@ begin
         end;
     except
         On E: Exception do
-            DoSimpleMsg(DSS, 'Error opening demand interval file "DI_SystemMeter' + DSS._Name + '.CSV"  for writing.' + CRLF + E.Message, 541);
+            DoSimpleMsg(DSS, 'Error opening demand interval file "DI_SystemMeter%s.csv" for writing.', [DSS._Name, CRLF + E.Message], 541);
     end;
-
-
 end;
 
 procedure TSystemMeter.Reset;
@@ -3855,9 +3505,9 @@ var
     CSVName, Folder: String;
 begin
     try
-        CSVName := 'SystemMeter' + DSS._Name + '.CSV';
-       {If we are doing a simulation and saving interval data, create this in the
-        same directory as the demand interval data}
+        CSVName := 'SystemMeter' + DSS._Name + '.csv';
+        // If we are doing a simulation and saving interval data, create this in the
+        // same directory as the demand interval data
         if DSS.energyMeterClass.SaveDemandInterval then
             Folder := DSS.energyMeterClass.DI_DIR + PathDelim
         else
@@ -3868,7 +3518,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error opening System Meter File "' + CRLF + CSVName + '": ' + E.Message, 542);
+            DoSimpleMsg(DSS, 'Error opening System Meter File "%s": %s', [CSVName, E.Message], 542);
             Exit;
         end
     end;
@@ -3890,12 +3540,10 @@ begin
 end;
 
 procedure TSystemMeter.TakeSample;
-
 begin
+    // Get total system energy out of the sources
 
-  {Get total system energy out of the sources}
-
-    cPower := CmulReal(GetTotalPowerFromSources(DSS), 0.001);  // convert to kW
+    cPower := GetTotalPowerFromSources(DSS) * 0.001;  // convert to kW
 
     Integrate(kWh, cPower.re, dkwh);
     Integrate(kvarh, cPower.im, dkvarh);
@@ -3903,9 +3551,9 @@ begin
     PeakkW := Max(cPower.re, PeakkW);
     Peakkva := Max(Cabs(cPower), Peakkva);
 
-  {Get total circuit losses}
+    // Get total circuit losses
     cLosses := DSS.ActiveCircuit.Losses;  // PD Elements except shunts
-    cLosses := CmulReal(cLosses, 0.001);  // convert to kW
+    cLosses := cLosses * 0.001;  // convert to kW
 
     Integrate(Losseskwh, cLosses.re, dLosseskwh);
     Integrate(Losseskvarh, cLosses.im, dLosseskvarh);
@@ -3915,7 +3563,6 @@ begin
     FirstSampleAfterReset := FALSE;
     if This_Meter_DIFileIsOpen then
         WriteDemandIntervalData;
-
 end;
 
 procedure TEnergyMeter.CreateMeterTotals;
@@ -3981,7 +3628,7 @@ var
     Regsum: TRegisterArray;
     i: Integer;
 begin
-  {Sum up all registers of all meters and write to Totals.CSV}
+    // Sum up all registers of all meters and write to Totals.csv
     for i := 1 to NumEMRegisters do
         RegSum[i] := 0.0;
 
@@ -4010,14 +3657,13 @@ begin
         for i := 1 to NumEMRegisters do
             WriteintoMem(FM_MHandle, Double(RegSum[i]));
         WriteintoMemStr(FM_MHandle, Char(10));
-        CloseMHandler(DSS, FM_MHandle, DI_Dir + PathDelim + 'Totals' + DSS._Name + '.CSV', FM_Append);
+        CloseMHandler(DSS, FM_MHandle, DI_Dir + PathDelim + 'Totals' + DSS._Name + '.csv', FM_Append);
         FM_MHandle := NIL;
 
     except
         On E: Exception do
-            DoSimpleMsg('Error writing demand interval file Totals' + DSS._Name + '.CSV.' + CRLF + E.Message, 543);
+            DoSimpleMsg('Error writing demand interval file Totals%s.csv. %s', [DSS._Name, CRLF + E.Message], 543);
     end;
-
 end;
 
 procedure TEnergyMeter.WriteVoltageReport;
@@ -4031,9 +3677,8 @@ var
     MinBus: Integer;
     MaxBus: Integer;
     BusCounted: Boolean;
-
 begin
-     {For any bus with a defined voltage base, test for > Vmax or < Vmin}
+    // For any bus with a defined voltage base, test for > Vmax or < Vmin
 
     OverCount := 0;
     UnderCount := 0;
@@ -4052,7 +3697,7 @@ begin
                 begin
                     for j := 1 to NumNodesThisBus do
                     begin
-                        Vmagpu := Cabs(Solution.NodeV^[GetRef(j)]) / kvbase * 0.001;
+                        Vmagpu := Cabs(Solution.NodeV^[RefNo[j]]) / kvbase * 0.001;
                         if Vmagpu > 0.1 then
                         begin // ignore neutral buses
                             if Vmagpu < underVmin then
@@ -4087,7 +3732,7 @@ begin
                         end;
                     end;
                 end;
-            end; {For i}
+            end; // For i
 
         with Solution do
             WriteintoMem(VR_MHandle, DynaVars.dblHour);
@@ -4098,8 +3743,8 @@ begin
         WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(minbus));
         WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(maxbus));
 
-     // Klugy but it works
-     // now repeat for buses under 1 kV
+        // Klugy but it works
+        // now repeat for buses under 1 kV
         OverCount := 0;
         UnderCount := 0;
         MinBus := 0;
@@ -4115,7 +3760,7 @@ begin
                 begin
                     for j := 1 to NumNodesThisBus do
                     begin
-                        Vmagpu := Cabs(Solution.NodeV^[GetRef(j)]) / kvbase * 0.001;
+                        Vmagpu := Cabs(Solution.NodeV^[RefNo[j]]) / kvbase * 0.001;
                         if Vmagpu > 0.1 then
                         begin // ignore neutral buses
                             if Vmagpu < underVmin then
@@ -4150,7 +3795,7 @@ begin
                         end;
                     end;
                 end;
-            end; {For i}
+            end; // For i
 
         WriteintoMemStr(VR_MHandle, ', ' + inttostr(UnderCount));
         WriteintoMem(VR_MHandle, UnderVmin);
@@ -4160,30 +3805,16 @@ begin
         WriteintoMemStr(VR_MHandle, ', ' + BusList.NameOfIndex(maxbus));
         WriteintoMemStr(VR_MHandle, Char(10));
     end;
-
-end;
-
-procedure TEnergyMeter.InterpretRegisterMaskArray(var Mask: TRegisterArray);
-
-var
-    i, n: Integer;
-begin
-    n := Parser.ParseAsVector(NumEMRegisters, pDoubleArray(@Mask));
-    for i := n + 1 to NumEMRegisters do
-        Mask[i] := 1.0;  // Set the rest to 1
 end;
 
 procedure TEnergyMeter.OpenAllDIFiles;
-{Similar to Append, by creates the files.}
-
+// Similar to Append, by creates the files.
 var
     mtr: TEnergyMeterObj;
   // Filenm:String;
 begin
-
     if FSaveDemandInterval then
     begin
-
         ClearDI_Totals;  // clears accumulator arrays
 
         mtr := DSS.ActiveCircuit.EnergyMeters.First;
@@ -4196,26 +3827,24 @@ begin
 
         SystemMeter.OpenDemandIntervalFile;
 
-          {Optional Exception Reporting}
+        // Optional Exception Reporting
         if Do_OverloadReport then
             OpenOverloadReportFile;
         if Do_VoltageExceptionReport then
             OpenVoltageReportFile;
 
-          {Open FDI_Totals}
+        // Open FDI_Totals
         try
             CreateFDI_Totals;
 
         except
             On E: Exception do
-                DoSimpleMsg('Error creating the memory space for demand interval "' + Name + DSS._Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
+                DoSimpleMsg('Error creating the memory space for demand interval "%s.csv" for appending.', [Name + DSS._Name, CRLF + E.Message], 538);
         end;
 
         DSS.DIFilesAreOpen := TRUE;
 
-    end;{IF}
-
-
+    end;
 end;
 
 procedure TEnergyMeter.OpenOverloadReportFile;
@@ -4229,9 +3858,8 @@ begin
         OV_MHandle := Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase", "I1(A)", "I2(A)", "I3(A)"' + Char(10));
     except
         On E: Exception do
-            DosimpleMsg('Error creating memory space (Overload report) for writing.' + CRLF + E.Message, 541);
+            DosimpleMsg('Error creating memory space (Overload report) for writing: %s', [E.Message], 541);
     end;
-
 end;
 
 procedure TEnergyMeter.OpenVoltageReportFile;
@@ -4246,19 +3874,12 @@ begin
         WriteintoMemStr(VR_MHandle, ', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
     except
         On E: Exception do
-            DosimpleMsg('Error creating memory space (Voltage report) for writing.' + CRLF + E.Message, 541);
+            DosimpleMsg('Error creating memory space (Voltage report) for writing: %s', [E.Message], 541);
     end;
-
 end;
 
 initialization
-
-  {RegisterNameList := TCommandList.Create(['kWh', 'kvarh', 'Max kW', 'Max kVA', 'Zone kWh',
-  'Zone kvarh', 'Zone Max kW','Zone Max kVA','Overload kWh Normal','Overload kWh Emerg','Load EEN',
-  'Load UE', 'Zone Losses kWh', 'Zone Losses kvarh', 'Zone Max kW Losses', 'Zone Max kvar Losses',
-  'Gen kWh', 'Gen kvarh', 'Gen Max kW', 'Gen Max kVA']); }
-
-
+    PropInfo := NIL;
 finalization
-
+    ActionEnum.Free;
 end.

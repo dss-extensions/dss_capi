@@ -6,16 +6,17 @@ unit DSSGlobals;
   ----------------------------------------------------------
 }
 
-{$WARN UNIT_PLATFORM OFF}
-
 interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, DSSPointerList,
-     UComplex, Arraydef, CktElement, Circuit,
+     UComplex, DSSUcomplex, Arraydef, CktElement, Circuit,
 
-     {$IFDEF UNIX}BaseUnix,{$ENDIF}
+     {$IFDEF UNIX}BaseUnix, {$ENDIF}
 
-     {Some units which have global vars defined here}
+     gettext,
+     CpuCount,
+
+     // Some units which have global vars defined here
      Spectrum,
      LoadShape,
      TempShape,
@@ -74,6 +75,9 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, DSSPointer
 CONST
     CRLF = sLineBreak;
     IsDLL = True;
+
+    // TODO: CALPHA has exceptionally bad precision here... change for v0.13
+    CALPHA: Complex = (re:-0.5; im: -0.866025); // -120 degrees phase shift
 
     // TODO: toggle for v0.13
     // SQRT2 = 1.4142135623730950488;
@@ -138,10 +142,12 @@ CONST
     PROFILE120KFT = 9992;  // not mutually exclusive to the other choices 9999..9994
     
     ProgramName = 'dss-extensions';
-    MaxCircuits = 2; //TODO: remove limit?
+    MaxCircuits = 2; //TODO: remove limit? or completely remove the concept of a separate circuit, i.e., make it so a DSSContext always contains one circuit
 
      
 VAR
+    DSSMessages: TMOFile = NIL;
+    DSSPropertyHelp: TMOFile = NIL;
     DSS_CAPI_INFO_SPARSE_COND: Boolean;
     DSS_CAPI_EARLY_ABORT: Boolean;
     DSS_CAPI_ITERATE_DISABLED: Integer = 0; // default to 0 for compatibility
@@ -158,8 +164,7 @@ VAR
     DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True; //TODO: one per context?
     DSS_CAPI_LEGACY_MODELS: Boolean = False; //TODO: one per context?
     NoFormsAllowed: Boolean = True; //TODO: one per context?
-    QueryLogFile: TFileStream = nil; //TODO: one per context?
-    CALPHA: Complex;  {120-degree shift constant}
+    
     SQRT2: Double;
     SQRT3: Double;
     InvSQRT3: Double;
@@ -173,9 +178,13 @@ VAR
 
 function VersionString: String;
 procedure DoErrorMsg(DSS: TDSSContext; Const S, Emsg, ProbCause :String; ErrNum:Integer);
-procedure DoSimpleMsg(DSS: TDSSContext; Const S :String; ErrNum:Integer);
+procedure DoSimpleMsg(DSS: TDSSContext; Const S :String; ErrNum:Integer);overload;
+procedure DoSimpleMsg(DSS: TDSSContext; Const S :String; fmtArgs: Array of Const; ErrNum:Integer);overload;
 
-procedure ClearAllCircuits(DSS: TDSSContext);
+procedure ClearAllCircuits_SingleContext(DSS: TDSSContext);
+{$IFDEF DSS_CAPI_PM}
+procedure ClearAllCircuits_AllContexts(DSS: TDSSContext);
+{$ENDIF}
 
 procedure SetObject(DSS: TDSSContext; const param :string);
 function  SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
@@ -195,15 +204,15 @@ procedure ResetQueryLogFile(DSS: TDSSContext);
 procedure WriteQueryLogFile(DSS: TDSSContext; Const Prop, S:String);
 
 {$IFDEF DSS_CAPI_PM}
-procedure Wait4Actors(DSS: TDSSContext; ActorOffset: Integer);
-procedure DoClone(DSS: TDSSContext);
-procedure New_Actor_Slot(DSS: TDSSContext);
-procedure New_Actor(DSS: TDSSContext);
+procedure Wait4Actors(MainDSS: TDSSContext; ActorOffset: Integer);
+procedure DoClone(MainDSS: TDSSContext);
+procedure New_Actor_Slot(MainDSS: TDSSContext);
 {$ENDIF}
 
+function DSSTranslate(const s: String): String;
+function DSSHelp(const s: String): String;
+
 implementation
-
-
 
 USES  {Forms,   Controls,}
      {$IFDEF MSWINDOWS}
@@ -223,11 +232,6 @@ USES  {Forms,   Controls,}
      ExecOptions,
      DSSHelper;
 
-TYPE
-
-   THandle = NativeUint;
-
-{$IFDEF FPC}
 FUNCTION GetDefaultDataDirectory: String;
 Begin
 {$IFDEF UNIX}
@@ -247,56 +251,28 @@ Begin
   Result := SysUtils.GetEnvironmentVariable('LOCALAPPDATA');
   {$ENDIF}
 End;
-{$ELSE}
-FUNCTION GetDefaultDataDirectory: String;
-Var
-  ThePath:Array[0..MAX_PATH] of char;
-Begin
-  FillChar(ThePath, SizeOF(ThePath), #0);
-  SHGetFolderPath (0, CSIDL_PERSONAL, 0, 0, ThePath);
-  Result := ThePath;
-End;
 
-FUNCTION GetDefaultScratchDirectory: String;
-Var
-  ThePath:Array[0..MAX_PATH] of char;
-Begin
-  FillChar(ThePath, SizeOF(ThePath), #0);
-  SHGetFolderPath (0, CSIDL_LOCAL_APPDATA, 0, 0, ThePath);
-  Result := ThePath;
-End;
-{$ENDIF}
-
-//----------------------------------------------------------------------------
 PROCEDURE DoErrorMsg(DSS: TDSSContext; Const S, Emsg, ProbCause:String; ErrNum:Integer);
 
 VAR
     Msg:String;
     Retval:Integer;
-Begin
+begin
+    Msg := Format(_('Error %d Reported From OpenDSS Intrinsic Function: '), [Errnum])+ CRLF  + S
+        + CRLF + CRLF + _('Error Description: ') + CRLF + Emsg
+        + CRLF + CRLF + _('Probable Cause: ') + CRLF+ ProbCause;
 
-     Msg := Format('Error %d Reported From OpenDSS Intrinsic Function: ', [Errnum])+ CRLF  + S
-             + CRLF   + CRLF + 'Error Description: ' + CRLF + Emsg
-             + CRLF   + CRLF + 'Probable Cause: ' + CRLF+ ProbCause;
-
-     If Not NoFormsAllowed Then Begin
-
-         If DSS.In_Redirect Then
-         Begin
-           RetVal := DSSMessageDlg(Msg, FALSE);
-           If RetVal = -1 Then DSS.Redirect_Abort := True;
-         End
-         Else
-           DSSMessageDlg(Msg, TRUE);
-
-     End
-     Else
-     Begin
-        {$IFDEF DSS_CAPI}
-        if DSS_CAPI_EARLY_ABORT then
-            DSS.Redirect_Abort := True;
-        {$ENDIF}
-     End;
+    if not NoFormsAllowed then
+    begin
+        if DSS.In_Redirect then
+        begin
+            RetVal := DSSMessageDlg(Msg, FALSE);
+        end
+        else
+            DSSMessageDlg(Msg, TRUE);
+    end;
+    if DSS_CAPI_EARLY_ABORT then
+        DSS.Redirect_Abort := True;
 
      DSS.LastErrorMessage := Msg;
      DSS.ErrorNumber := ErrNum;
@@ -304,52 +280,42 @@ Begin
      DSS.SolutionAbort  :=  True;
 End;
 
-//----------------------------------------------------------------------------
-PROCEDURE AppendGlobalResultCRLF(DSS: TDSSContext; const S:String);
-
-Begin
-    If Length(DSS.GlobalResult) > 0
-    THEN DSS.GlobalResult := DSS.GlobalResult + CRLF + S
-    ELSE DSS.GlobalResult := S;
+PROCEDURE AppendGlobalResultCRLF(DSS: TDSSContext; const S: String);
+begin
+    if Length(DSS.GlobalResult) > 0 then
+        DSS.GlobalResult := DSS.GlobalResult + CRLF + S
+    ELSE 
+        DSS.GlobalResult := S;
 
     DSS.ErrorStrings.Add(Format('(%d) %s' ,[DSS.ErrorNumber, S]));  // Add to Error log
-End;
+end;
 
-//----------------------------------------------------------------------------
 PROCEDURE DoSimpleMsg(DSS: TDSSContext; Const S:String; ErrNum:Integer);
-
-VAR
+var
     Retval:Integer;
 Begin
-    IF Not NoFormsAllowed Then Begin
-        IF DSS.In_Redirect THEN
-        Begin
+    if not NoFormsAllowed then 
+    begin
+        if DSS.In_Redirect then
+        begin
             RetVal := DSSMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]), FALSE);
-            {$IFDEF DSS_CAPI}
-            if DSS_CAPI_EARLY_ABORT then
-                DSS.Redirect_Abort := True;
-            {$ENDIF}
-            IF RetVal = -1 THEN
-                DSS.Redirect_Abort := True;
-        End
-        ELSE
+        end
+        else
             DSSInfoMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]));
-    End
-    Else
-    Begin
-        {$IFDEF DSS_CAPI}
-        if DSS_CAPI_EARLY_ABORT then
-            DSS.Redirect_Abort := True;
-        {$ENDIF}
-    End;
+    end;
+    if DSS_CAPI_EARLY_ABORT then
+        DSS.Redirect_Abort := True;
 
     DSS.LastErrorMessage := S;
     DSS.ErrorNumber := ErrNum;
     AppendGlobalResultCRLF(DSS, S);
 End;
 
+procedure DoSimpleMsg(DSS: TDSSContext; Const S: String; fmtArgs: Array of Const; ErrNum:Integer);
+begin
+    DoSimpleMsg(DSS, Format(_(S), fmtArgs), ErrNum)
+end;
 
-//----------------------------------------------------------------------------
 PROCEDURE SetObject(DSS: TDSSContext; const param :string);
 
 {Set object active by name}
@@ -377,7 +343,7 @@ Begin
       Begin
         IF Not DSS.ActiveDSSClass.SetActive(Objname) THEN
         Begin // scroll through list of objects untill a match
-          DoSimpleMsg(DSS, 'Error! Object "' + ObjName + '" not found.'+ CRLF + DSS.Parser.CmdString, 904);
+          DoSimpleMsg(DSS, Format(_('Error! Object "%s" not found.'), [ObjName]) + CRLF + DSS.Parser.CmdString, 904);
         End
         ELSE
         With DSS.ActiveCircuit Do
@@ -392,14 +358,11 @@ Begin
         End;
       End
       ELSE
-        DoSimpleMsg(DSS, 'Error! Active object type/class is not set.', 905);
+        DoSimpleMsg(DSS, _('Error! Active object type/class is not set.'), 905);
+end;
 
-End;
-
-//----------------------------------------------------------------------------
 FUNCTION SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
-Begin
-
+begin
    // Now find the bus and set active
    Result := 0;
 
@@ -410,14 +373,12 @@ Begin
         IF   ActiveBusIndex=0 Then
           Begin
             Result := 1;
-            AppendGlobalResult(DSS, 'SetActiveBus: Bus ' + BusName + ' Not Found.');
+            AppendGlobalResult(DSS, Format(_('SetActiveBus: Bus "%s" notfound'), [BusName]));
           End;
      End;
+end;
 
-End;
-
-{$IFNDEF DSS_CAPI_PM}
-procedure ClearAllCircuits(DSS: TDSSContext);
+procedure ClearAllCircuits_SingleContext(DSS: TDSSContext);
 Begin
     DSS.ActiveCircuit := DSS.Circuits.First;
     while DSS.ActiveCircuit <> nil do
@@ -434,8 +395,8 @@ Begin
     DSS.LogQueries            := FALSE;
     DSS.MaxAllocationIterations := 2;
 End;
-{$ELSE}
-procedure ClearAllCircuits(DSS: TDSSContext);
+{$IFDEF DSS_CAPI_PM}
+procedure ClearAllCircuits_AllContexts(DSS: TDSSContext);
 var
     i : integer;
     PMParent: TDSSContext;
@@ -445,29 +406,29 @@ begin
     for i := 0 to High(PMParent.Children) do
         with PMParent.Children[i] do
         begin
+            // In case the actor hasn't been destroyed
+            if ActorThread <> nil then
+            begin
+                SolutionAbort := True;
+                ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
+                ActorThread.WaitFor();
+                ActorThread.Free;
+                ActorThread := nil;
+            end;
+
             ActiveCircuit := Circuits.First;
             while ActiveCircuit <> nil do
             begin
                 ActiveCircuit.Free;
                 ActiveCircuit := Circuits.Next;
             end;
-            ActiveCircuit.NumCircuits := 0;
+            ActiveCircuit := Circuits.First;
+            NumCircuits := 0;
             Circuits.Free;
             Circuits := TDSSPointerList.Create(2);   // Make a new list of circuits
             
             //TODO: check why v8 does this:
-            //Parser.Free;
-            //Parser := nil;
-            
-            // In case the actor hasn't been destroyed
-            if ActorThread <> nil then
-            begin
-                //TODO: set SolutionAbort?
-                ActorThread.Send_Message(EXIT_ACTOR);
-                ActorThread.WaitFor;
-                ActorThread.Free;
-                ActorThread := nil;
-            end;
+            // FreeAndNil(Parser);
             
             // Revert on key global flags to Original States
             DefaultEarthModel := DERI;
@@ -480,30 +441,29 @@ begin
 End;
 {$ENDIF}// DSS_CAPI_PM
 
-
 PROCEDURE MakeNewCircuit(DSS: TDSSContext; Const Name:String);
 Var
     S: String;
 Begin
-     If DSS.NumCircuits <= MaxCircuits - 1 Then
-     Begin
-         DSS.ActiveCircuit := TDSSCircuit.Create(DSS, Name);
-         DSS.ActiveDSSObject := DSS.ActiveSolutionObj;
-         {*Handle := *} DSS.Circuits.Add(DSS.ActiveCircuit);
-         Inc(DSS.NumCircuits);
-         S := DSS.Parser.Remainder;    // Pass remainder of string on to vsource.
-         {Create a default Circuit}
-         DSS.SolutionAbort := False;
-         {Voltage source named "source" connected to SourceBus}
-         DSS.DSSExecutive.Command := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
-     End
-     Else
-     Begin
-         DoErrorMsg(DSS, 'MakeNewCircuit',
-                    'Cannot create new circuit.',
-                    'Max. Circuits Exceeded.'+CRLF+
-                    '(Max no. of circuits='+inttostr(Maxcircuits)+')', 906);
-     End;
+    If DSS.NumCircuits <= MaxCircuits - 1 Then
+    Begin
+        DSS.ActiveCircuit := TDSSCircuit.Create(DSS, Name);
+        // DSS.ActiveDSSObject := DSS.ActiveCircuit.Solution;
+        DSS.Circuits.Add(DSS.ActiveCircuit);
+        Inc(DSS.NumCircuits);
+        S := DSS.Parser.Remainder;    // Pass remainder of string on to vsource.
+        // Create a default Circuit
+        DSS.SolutionAbort := False;
+        // Voltage source named "source" connected to SourceBus
+        DSS.DSSExecutive.Command := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
+    End
+    Else
+    Begin
+        DoErrorMsg(DSS, 'MakeNewCircuit',
+           _('Cannot create new circuit.'),
+           Format(_('Max. Circuits Exceeded. (Max no. of circuits=%d)'), 
+           [Maxcircuits]), 906);
+    End;
 End;
 
 
@@ -596,7 +556,7 @@ BEGIN
   if (Length(PathName) > 0) and not DirectoryExists(PathName) then Begin
   // Try to create the directory
     if not CreateDir(PathName) then Begin
-      DoSimpleMsg(DSS, 'Cannot create ' + PathName + ' directory.', 907);
+      DoSimpleMsg(DSS, 'Cannot create directory: "%s"', [PathName], 907);
       Exit;
     End;
   End;
@@ -629,7 +589,7 @@ PROCEDURE WriteQueryLogfile(DSS: TDSSContext; Const Prop, S:String);
 {Log file is written after a query command if LogQueries is true.}
 Begin
     TRY
-        DSS.QueryLogFileName :=  DSS.OutputDirectory + 'QueryLog.CSV';
+        DSS.QueryLogFileName :=  DSS.OutputDirectory + 'QueryLog.csv';
         If DSS.QueryFirstTime then
         Begin
             DSS.QueryLogFile := TFileStream.Create(DSS.QueryLogFileName, fmCreate);
@@ -645,7 +605,7 @@ Begin
         FSWriteln(DSS.QueryLogFile,Format('%.10g, %s, %s',[DSS.ActiveCircuit.Solution.DynaVars.dblHour, Prop, S]));
         FreeAndNil(DSS.QueryLogFile);
     EXCEPT
-        On E:Exception Do DoSimpleMsg(DSS, 'Error writing Query Log file: ' + E.Message, 908);
+        On E:Exception Do DoSimpleMsg(DSS, 'Error writing Query Log file: %s', [E.Message], 908);
     END;
 End;
 
@@ -657,45 +617,45 @@ End;
 
 {$IFDEF DSS_CAPI_PM}
 // Waits for all the actors running tasks
-procedure Wait4Actors(DSS: TDSSContext; ActorOffset: Integer);
+procedure Wait4Actors(MainDSS: TDSSContext; ActorOffset: Integer);
 var
     i: Integer;
-    Flag: Boolean;
-    PMParent: TDSSContext;
-    Child: TDSSContext;
+    PMParent, Child, DSS: TDSSContext;
 begin
-    PMParent := DSS.GetPrime();
-    // ActorOffset defines the starting point in which the actors will be evaluated,
-    // modification introduced in 01-10-2019 to facilitate the coordination
-    // between actors when a simulation is performed using A-Diakoptics
+    PMParent := MainDSS.GetPrime();
+    DSS := MainDSS.ActiveChild;
     for i := ActorOffset to High(PMParent.Children) do
     begin
         try
             Child := PMParent.Children[i];
-            if Child.ActorStatus = TActorStatus.Busy then
+            if Child.ActorStatus = TActorStatus.Idle then
+                continue;
+
+            Child.ThreadStatusEvent.ResetEvent();
+            while (Child.ActorStatus <> TActorStatus.Idle) do
             begin
-                Flag := True;
-                while Flag do
-                    Flag := (Child.ActorMA_Msg.WaitFor(10) = TWaitResult.wrTimeout);
+                if Child.ThreadStatusEvent.WaitFor(10) = TWaitResult.wrTimeout then
+                    continue;
             end;
         except
         on EOutOfMemory do
-            Dosimplemsg(DSS, 'Exception Waiting for the parallel thread to finish a job"', 7006);
+            Dosimplemsg(DSS, _('Exception Waiting for the parallel thread to finish a job'), 7006);
         end;
     end;
 end;
 
 // Clones the active Circuit as many times as requested if possible
-procedure DoClone(DSS: TDSSContext);
+procedure DoClone(MainDSS: TDSSContext);
 var
-    PMParent: TDSSContext;
     i,
     NumClones: Integer;
     Ref_Ckt: String;
-Begin
-    //TODO: DSS must be DSSPrime here?
-    PMParent := DSS.GetPrime();
-    Ref_Ckt := DSS.LastFileCompiled;
+    PMParent, DSS, ChDSS: TDSSContext;
+begin
+    PMParent := MainDSS.GetPrime();
+    DSS := MainDSS.ActiveChild;
+
+    Ref_Ckt := MainDSS.LastFileCompiled;
     DSS.Parser.NextParam;
     NumClones := DSS.Parser.IntValue;
     PMParent.Parallel_enabled := False;
@@ -704,29 +664,38 @@ Begin
         for i := 1 to NumClones do
         begin
             New_Actor_Slot(PMParent);
-            PMParent.ActiveChild.DSSExecutive.Command := 'compile "' + Ref_Ckt + '"';
+            ChDSS := PMParent.ActiveChild;
+            ChDSS.DSSExecutive.Command := 'compile "' + Ref_Ckt + '"';
+            if ChDSS.ActiveCircuit = NIL then
+            begin
+                DoSimpleMsg(DSS, 'Could not compile the script "%s"', [Ref_Ckt], 7008);
+                Exit;
+            end;
+
             // sets the previous maxiterations and controliterations
-            PMParent.ActiveChild.ActiveCircuit.Solution.MaxIterations := DSS.ActiveCircuit.Solution.MaxIterations;
-            PMParent.ActiveChild.ActiveCircuit.Solution.MaxControlIterations := DSS.ActiveCircuit.Solution.MaxControlIterations;
+            ChDSS.ActiveCircuit.Solution.MaxIterations := DSS.ActiveCircuit.Solution.MaxIterations;
+            ChDSS.ActiveCircuit.Solution.MaxControlIterations := DSS.ActiveCircuit.Solution.MaxControlIterations;
+
             // Solves the circuit
-            DSS.CmdResult := ExecOptions.DoSetCmd(PMParent.ActiveChild, 1);
+            DSS.CmdResult := ExecOptions.DoSetCmd(ChDSS, 1);
         end;
     end
     else
     begin
         if NumClones > 0 then
-            DoSimpleMsg(DSS, 'There are no more CPUs available', 7001)
+            DoSimpleMsg(DSS, _('There are no more CPUs available'), 7001)
         else
-            DoSimpleMsg(DSS, 'The number of clones requested is invalid', 7004)
+            DoSimpleMsg(DSS, _('The number of clones requested is invalid'), 7004)
     end;
 end;
 
 // Prepares memory to host a new actor
-procedure New_Actor_Slot(DSS: TDSSContext);
+procedure New_Actor_Slot(MainDSS: TDSSContext);
 var
-    PMParent: TDSSContext;
+    PMParent, DSS: TDSSContext;
 begin
-    PMParent := DSS.GetPrime();
+    PMParent := MainDSS.GetPrime();
+    DSS := MainDSS.ActiveChild;
 
     if (High(PMParent.Children) + 1) < CPU_Cores then
     begin
@@ -735,36 +704,50 @@ begin
         PMParent.ActiveChild := TDSSContext.Create(PMParent);
         PMParent.Children[PMParent.ActiveChildIndex] := PMParent.ActiveChild;
         PMParent.ActiveChild._Name := '_' + inttostr(PMParent.ActiveChildIndex + 1);
-        PMParent.ActiveChild.CPU := PMParent.ActiveChildIndex;
+        // PMParent.ActiveChild.CPU := PMParent.ActiveChildIndex;
         DSS.GlobalResult := inttostr(PMParent.ActiveChildIndex + 1);
     end
     else 
-        DoSimpleMsg(DSS, 'There are no more CPUs available', 7001)
+        DoSimpleMsg(DSS, _('There are no more CPUs available'), 7001)
 End;
-
-// Creates a new actor
-procedure New_Actor(DSS: TDSSContext);
-begin
-    DSS.ActorThread := TSolver.Create(DSS, True, DSS.CPU, nil, DSS.ActorMA_Msg);
-//    Child.ActorThread.Priority :=  tpTimeCritical;
-    DSS.ActorThread.Start();
-    DSS.ActorStatus := TActorStatus.Idle;
-end;
-
 {$ENDIF}
 
 
+function DSSTranslate(const s: String): String;
+begin
+    if DSSMessages = NIL then
+    begin
+        Result := s;
+        Exit;
+    end;
+    Result := DSSMessages.Translate(s);
+    if Length(Result) = 0 then
+        Result := s;
+end;
+
+function DSSHelp(const s: String): String;
+begin
+    if DSSPropertyHelp = NIL then
+    begin
+        Result := 'NO HELP OR DESCRIPTION AVAILABLE.';
+        Exit;
+    end;
+    Result := DSSPropertyHelp.Translate(s);
+    if Length(Result) = 0 then
+        Result := s;
+end;
+
+
+
 initialization
-    // TODO: CALPHA has exceptionally bad precision here... change for v0.13
-    CALPHA := Cmplx(-0.5, -0.866025); // -120 degrees phase shift
     SQRT2 := Sqrt(2.0);
     SQRT3 := Sqrt(3.0);
     InvSQRT3 := 1.0/SQRT3;
     InvSQRT3x1000 := InvSQRT3 * 1000.0;
 
-    {Initialize filenames and directories}
+    // Initialize filenames and directories
 
-    DSSDirectory  := ExtractFilePath('');
+    DSSDirectory := ExpandFileName('');
     // want to know if this was built for 64-bit, not whether running on 64 bits
     // (i.e. we could have a 32-bit build running on 64 bits; not interested in that
 
@@ -801,7 +784,7 @@ initialization
 {$ELSE}
     QueryPerformanceFrequency(CPU_Freq);
 {$ENDIF}
-    CPU_Cores        :=  CPUCount;
+    CPU_Cores := GetLogicalCpuCount;
 
     DSS_CAPI_INFO_SPARSE_COND := (SysUtils.GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
 

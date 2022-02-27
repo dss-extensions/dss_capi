@@ -66,7 +66,7 @@ uses
     DSSPointerList,
     Bus,
     XYCurve,
-    ucomplex,
+    UComplex, DSSUcomplex,
     ArrayDef,
     Utilities,
     Math,
@@ -88,7 +88,7 @@ begin
         begin
             if DSS_CAPI_EXT_ERRORS then
             begin
-                DoSimpleMsg(DSS, 'No active PD Element found! Activate one and retry.', 8989);
+                DoSimpleMsg(DSS, _('No active PD Element found! Activate one and retry.'), 8989);
             end;
             Exit;
         end;
@@ -97,7 +97,7 @@ begin
         begin
             if DSS_CAPI_EXT_ERRORS then
             begin
-                DoSimpleMsg(DSS, 'No active PD Element found! Activate one and retry.', 8989);
+                DoSimpleMsg(DSS, _('No active PD Element found! Activate one and retry.'), 8989);
             end;
             Exit;
         end;
@@ -188,7 +188,7 @@ begin
     Result := NIL;   // return null if not a PD element
     if not _activeObj(DSSPrime, ActivePDElement) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, Format('%s.%s', [ActivePDElement.Parentclass.Name, ActivePDElement.Name]));  // full name
+    Result := DSS_GetAsPAnsiChar(DSSPrime, ActivePDElement.FullName);  // full name
 end;
 
 //------------------------------------------------------------------------------
@@ -208,7 +208,7 @@ begin
         while Assigned(ActivePDElement) do
             with ActivePDelement do
             begin
-                if (CompareText(TestString, Format('%s.%s', [Parentclass.Name, Name])) = 0) then
+                if (CompareText(TestString, FullName) = 0) then
                 begin
                     ActiveCktElement := ActivePDElement;
                     Break;
@@ -361,7 +361,7 @@ begin
     begin
         // if (elem.Enabled or DSS_CAPI_ITERATE_DISABLED) then
         begin
-            Result[k] := DSS_CopyStringAsPChar(elem.DSSClassName + '.' + elem.Name);
+            Result[k] := DSS_CopyStringAsPChar(elem.FullName);
             Inc(k);
         end;
         elem := pList.Next;
@@ -882,7 +882,7 @@ begin
                         k := (j - 1) * NConds;
                         n := NodeRef^[k + 1];
                         Vph[1] := Solution.NodeV^[n];  // Get voltage at node
-                        S := Cmul(Vph[1], conjg(cBuffer^[k + 1]));   // Compute power per phase
+                        S := Vph[1] * cong(cBuffer^[k + 1]);   // Compute power per phase
                         Result[icount] := S.re * 0.003; // 3-phase kW conversion
                         Result[icount + 1] := S.im * 0.003; // 3-phase kvar conversion
                         Inc(icount, 6);
@@ -917,7 +917,7 @@ begin
 
                     for i := 1 to 3 do
                     begin
-                        S := Cmul(V012[i], conjg(I012[i]));
+                        S := V012[i] * cong(I012[i]);
                         Result[icount] := S.re * 0.003; // 3-phase kW conversion
                         Result[icount + 1] := S.im * 0.003; // 3-phase kW conversion
                         Inc(icount, 2);

@@ -7,37 +7,25 @@ unit XYcurve;
   ----------------------------------------------------------
 }
 
-{  2-15-2011 Converted from TempShape.
-
-   General X-Y Curve Data Support Class
-
-}
-
 interface
 
-{
-
- The XYcurve object is a general DSS object used by all circuit elements
- as a reference for obtaining yearly, daily, and other Temperature shapes.
-
- The values are set by the normal New and Edit PROCEDUREs for any DSS object.
-
- The values may be retrieved by setting the Code Property in the XYCurve Class.
- This sets the active XYCurve object to be the one referenced by the Code Property;
-
- Then the values of that code can be retrieved via the public variables.  Or you
- can pick up the ActiveTXYcurveObj object and save the direct reference to the object.
-
- The user may place the curve data in CSV or binary files as well as passing through the
- command interface. Obviously, for large amounts of data such as 8760 load curves, the
- command interface is cumbersome.  CSV files are text separated by commas, or white space
- one point to a line.
-
- There are two binary formats permitted: 1) a file of Singles; 2) a file of Doubles.
-
-
-
- }
+// The XYcurve object is a general DSS object used by all circuit elements
+// as a reference for obtaining yearly, daily, and other Temperature shapes.
+//
+// The values are set by the normal New and Edit PROCEDUREs for any DSS object.
+//
+// The values may be retrieved by setting the Code Property in the XYCurve Class.
+// This sets the active XYCurve object to be the one referenced by the Code Property;
+//
+// Then the values of that code can be retrieved via the public variables.  Or you
+// can pick up the ActiveTXYcurveObj object and save the direct reference to the object.
+//
+// The user may place the curve data in CSV or binary files as well as passing through the
+// command interface. Obviously, for large amounts of data such as 8760 load curves, the
+// command interface is cumbersome.  CSV files are text separated by commas, or white space
+// one point to a line.
+//
+// There are two binary formats permitted: 1) a file of Singles; 2) a file of Doubles.
 
 uses
     Classes,
@@ -47,33 +35,36 @@ uses
     Arraydef;
 
 type
+{$SCOPEDENUMS ON}
+    TXYcurveProp = (
+        INVALID = 0,
+        npts = 1, // Number of points to expect
+        Points = 2,
+        Yarray = 3, // vector of Y values
+        Xarray = 4, // vector of X values corresponding to Y values
+        csvfile = 5, // Switch input to a csvfile
+        sngfile = 6, // switch input to a binary file of singles
+        dblfile = 7, // switch input to a binary file of singles
+        x = 8,
+        y = 9,
+        Xshift = 10,
+        Yshift = 11,
+        Xscale = 12,
+        Yscale = 13 
+    );
+{$SCOPEDENUMS OFF}
+
     TCoeff = array[1..2] of Double;
 
     TXYcurve = class(TDSSClass)
-    PRIVATE
-        TempPointsBuffer: pDoubleArray;
-        function Get_Code: String;  // Returns active TShape string
-        procedure Set_Code(const Value: String);  // sets the  active TShape
-
-        procedure DoCSVFile(const FileName: String);
-        procedure DoSngFile(const FileName: String);
-        procedure DoDblFile(const FileName: String);
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const CurveName: String): Integer; OVERRIDE;
+        procedure DefineProperties; override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;     // uses global parser
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
-
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
         function Find(const ObjName: String; const ChangeActive: Boolean=True): Pointer; OVERRIDE;  // Find an obj of this class by name
-
-
-       // Set this property to point ActiveTShapeObj to the right value
-        property Code: String READ Get_Code WRITE Set_Code;
-
     end;
 
     TXYcurveObj = class(TDSSObject)
@@ -81,16 +72,11 @@ type
         XValues,
         YValues: pDoubleArray;
     PRIVATE
-        LastValueAccessed,
-        FNumPoints: Integer;  // Number of points in curve
-        ArrayPropertyIndex: Integer;
+        LastValueAccessed: Integer;
         FX,
         FY: Double;
 
-        procedure Set_NumPoints(const Value: Integer);
         function InterpolatePoints(i, j: Integer; X: Double; Xarray, Yarray: pDoubleArray): Double;
-       // PROCEDURE SaveToDblFile;
-       // PROCEDURE SaveToSngFile;
         function Get_YValue(i: Integer): Double;  // get Y Value by index
         function Get_XValue(i: Integer): Double;  // get X Value corresponding to point index
         procedure Set_XValue(Index: Integer; Value: Double);
@@ -102,261 +88,250 @@ type
         procedure Set_Y(Value: Double);
 
     PUBLIC
+        FNumPoints: Integer;  // Number of points in curve
 
-       // Make these vars available to COM interface
         FXshift,
         FYshift,
         FXscale,
         FYscale: Double;
+        
+        csvfile, dblfile, sngfile: String;
 
         constructor Create(ParClass: TDSSClass; const XYCurveName: String);
         destructor Destroy; OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
 
         function GetYValue(X: Double): Double;  // Get Y value at specified X Value
         function GetXValue(Y: Double): Double;  // Get X value at specified Y Value
         function GetCoefficients(X: Double): TCoeff;
 
-        function GetPropertyValue(Index: Integer): String; OVERRIDE;
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(F: TFileStream); OVERRIDE;
-
-        property NumPoints: Integer READ FNumPoints WRITE Set_NumPoints;
+        property NumPoints: Integer READ FNumPoints;
         property XValue_pt[Index: Integer]: Double READ Get_XValue WRITE Set_XValue;
         property YValue_pt[Index: Integer]: Double READ Get_YValue WRITE Set_YValue;
 
         property X: Double READ Get_X WRITE Set_X;
         property Y: Double READ Get_Y WRITE Set_Y;
-
     end;
-
 
 implementation
 
 uses
-    ParserDel,
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
     MathUtil,
     Utilities,
-    BufStream,
     Math,
     DSSPointerList,
     DSSHelper,
     DSSObjectHelper,
-    TypInfo;
+    TypInfo,
+    CAPI_Types,
+    CAPI_Utils;
 
+type
+    TObj = TXYcurveObj;
+    TProp = TXYcurveProp;
 const
-    NumPropsThisClass = 13;
+    NumPropsThisClass = Ord(High(TProp));
+var
+    PropInfo: Pointer;    
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TXYcurve.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
+constructor TXYcurve.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
-    Class_Name := 'XYcurve';
-    DSSClassType := DSS_OBJECT;
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
 
-    ActiveElement := 0;
-    TempPointsBuffer := NIL;  // Has to start off Nil for Reallocmem call
-
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
+    inherited Create(dssContext, DSS_OBJECT, 'XYcurve');
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TXYcurve.Destroy;
-
 begin
-    // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TXYcurve.DefineProperties;
+
+procedure SetX(Obj: TObj; Value: Double);
 begin
+    Obj.X := Value;
+end;
 
+procedure SetY(Obj: TObj; Value: Double);
+begin
+    Obj.Y := Value;
+end;
+
+function GetX(Obj: TObj): Double;
+begin
+    Result := Obj.X;
+end;
+
+function GetY(Obj: TObj): Double;
+begin
+    Result := Obj.Y;
+end;
+
+function Get2xNumPoints(Obj: TObj): Integer;
+begin
+    Result := Obj.FNumPoints * 2;
+end;
+
+procedure SetPoints(obj: TObj; Values: PDouble; ValueCount: Integer);
+var
+    i: Integer;
+begin
+    with obj do
+    begin
+        // Allow possible Resetting (to a lower value) of num points when specifying temperatures not Hours
+        FNumPoints := ValueCount div 2;
+        ReAllocmem(YValues, Sizeof(Double) * FNumPoints);
+        ReAllocmem(XValues, Sizeof(Double) * FNumPoints);
+        for i := 1 to FNumPoints do
+        begin
+            XValues[i] := Values^;
+            Inc(Values);
+            YValues[i] := Values^;
+            Inc(Values);
+        end;
+        X := Xvalues[1];
+        Y := Yvalues[1];
+    end;
+end;
+
+procedure GetPoints(obj: TObj; var ResultPtr: PDouble; ResultCount: PAPISize);
+var
+    i: Integer;
+    Result: PDoubleArray0;
+begin
+    with Obj do
+        if (XValues <> NIL) and (YValues <> NIL) then
+        begin
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, FNumPoints * 2);
+            for i := 1 to FNumPoints do
+            begin
+                Result[2 * (i - 1)] := XValues^[i];
+                Result[2 * (i - 1) + 1] := YValues^[i];
+            end;
+            Exit;
+        end;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    Result[0] := 0;
+    Result[1] := 0;
+end;
+
+procedure TXYcurve.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
+begin
     Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    // integer properties
+    PropertyType[ord(TProp.Npts)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.FNumPoints);
+          
+    // double arrays
+    PropertyType[ord(TProp.Xarray)] := TPropertyType.DoubleArrayProperty;
+    PropertyOffset[ord(TProp.Xarray)] := ptruint(@obj.XValues);
+    PropertyOffset2[ord(TProp.Xarray)] := ptruint(@obj.FNumPoints);
 
-     // Define Property names
-    PropertyName[1] := 'npts';     // Number of points to expect
-    PropertyName[2] := 'Points';
-    PropertyName[3] := 'Yarray';     // vector of Y values
-    PropertyName[4] := 'Xarray';     // vector of X values corresponding to Y values
-    PropertyName[5] := 'csvfile';  // Switch input to a csvfile
-    PropertyName[6] := 'sngfile';  // switch input to a binary file of singles
-    PropertyName[7] := 'dblfile';    // switch input to a binary file of singles
-    PropertyName[8] := 'x';
-    PropertyName[9] := 'y';
-    PropertyName[10] := 'Xshift';
-    PropertyName[11] := 'Yshift';
-    PropertyName[12] := 'Xscale';
-    PropertyName[13] := 'Yscale';
+    PropertyType[ord(TProp.Yarray)] := TPropertyType.DoubleArrayProperty;
+    PropertyOffset[ord(TProp.Yarray)] := ptruint(@obj.YValues);
+    PropertyOffset2[ord(TProp.Yarray)] := ptruint(@obj.FNumPoints);
 
-     // define Property help values
+    // strings
+    PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
+    PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename];
 
-    PropertyHelp[1] := 'Max number of points to expect in curve. This could get reset to the actual number of points defined ' +
-        'if less than specified.';     // Number of points to expect
-    PropertyHelp[2] := 'One way to enter the points in a curve. Enter x and y values as one array ' +
-        'in the order [x1, y1, x2, y2, ...]. For example:' + CRLF + CRLF +
-        'Points=[1,100 2,200 3, 300] ' + CRLF + CRLF +
-        'Values separated by commas or white space. Zero fills arrays if insufficient number of values.';
-    PropertyHelp[3] := 'Alternate way to enter Y values. Enter an array of Y values corresponding to the X values.  ' +
-        'You can also use the syntax: ' + CRLF +
-        'Yarray = (file=filename)     !for text file one value per line' + CRLF +
-        'Yarray = (dblfile=filename)  !for packed file of doubles' + CRLF +
-        'Yarray = (sngfile=filename)  !for packed file of singles ' + CRLF + CRLF +
-        'Note: this property will reset Npts to a smaller value if the  number of values in the files are fewer.';     // vextor of hour values
-    PropertyHelp[4] := 'Alternate way to enter X values. Enter an array of X values corresponding to the Y values.  ' +
-        'You can also use the syntax: ' + CRLF +
-        'Xarray = (file=filename)     !for text file one value per line' + CRLF +
-        'Xarray = (dblfile=filename)  !for packed file of doubles' + CRLF +
-        'Xarray = (sngfile=filename)  !for packed file of singles ' + CRLF + CRLF +
-        'Note: this property will reset Npts to a smaller value if the  number of values in the files are fewer.';     // vextor of hour values
-    PropertyHelp[5] := 'Switch input of  X-Y curve data to a CSV file ' +
-        'containing X, Y points one per line. ' +
-        'NOTE: This action may reset the number of points to a lower value.';   // Switch input to a csvfile
-    PropertyHelp[6] := 'Switch input of  X-Y curve data to a binary file of SINGLES ' +
-        'containing X, Y points packed one after another. ' +
-        'NOTE: This action may reset the number of points to a lower value.';  // switch input to a binary file of singles
-    PropertyHelp[7] := 'Switch input of  X-Y  curve data to a binary file of DOUBLES ' +
-        'containing X, Y points packed one after another. ' +
-        'NOTE: This action may reset the number of points to a lower value.';   // switch input to a binary file of singles
-    PropertyHelp[8] := 'Enter a value and then retrieve the interpolated Y value from the Y property. On input shifted then scaled to original curve. Scaled then shifted on output.';
-    PropertyHelp[9] := 'Enter a value and then retrieve the interpolated X value from the X property. On input shifted then scaled to original curve. Scaled then shifted on output.';
-    PropertyHelp[10] := 'Shift X property values (in/out) by this amount of offset. Default = 0. Does not change original definition of arrays.';
-    PropertyHelp[11] := 'Shift Y property values (in/out) by this amount of offset. Default = 0. Does not change original definition of arrays.';
-    PropertyHelp[12] := 'Scale X property values (in/out) by this factor. Default = 1.0. Does not change original definition of arrays.';
-    PropertyHelp[13] := 'Scale Y property values (in/out) by this factor. Default = 1.0. Does not change original definition of arrays.';
+    PropertyType[ord(TProp.dblfile)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.dblfile)] := ptruint(@obj.dblfile);
+    PropertyFlags[ord(TProp.dblfile)] := [TPropertyFlag.IsFilename];
+
+    PropertyType[ord(TProp.sngfile)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.sngfile)] := ptruint(@obj.sngfile);
+    PropertyFlags[ord(TProp.sngfile)] := [TPropertyFlag.IsFilename];
+
+    // doubles
+    PropertyOffset[ord(TProp.Xshift)] := ptruint(@obj.FXshift);
+    PropertyOffset[ord(TProp.Yshift)] := ptruint(@obj.FYshift);
+    PropertyOffset[ord(TProp.Xscale)] := ptruint(@obj.FXscale);
+    PropertyOffset[ord(TProp.Yscale)] := ptruint(@obj.FYscale);
+
+    // doubles with setter and getters
+    PropertyType[ord(TProp.X)] := TPropertyType.DoubleProperty;
+    PropertyOffset[ord(TProp.X)] := 1; // dummy
+    PropertyWriteFunction[ord(TProp.X)] := @SetX;
+    PropertyReadFunction[ord(TProp.X)] := @GetX;
+    PropertyFlags[ord(TProp.X)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction];
+    
+    PropertyType[ord(TProp.Y)] := TPropertyType.DoubleProperty;
+    PropertyOffset[ord(TProp.Y)] := 1; // dummy
+    PropertyWriteFunction[ord(TProp.Y)] := @SetY;
+    PropertyReadFunction[ord(TProp.Y)] := @GetY;
+    PropertyFlags[ord(TProp.Y)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction];
+
+    // ...and just mark Points as custom
+    PropertyType[ord(TProp.Points)] := TPropertyType.DoubleDArrayProperty;
+    PropertyOffset[ord(TProp.Points)] := 1; // dummy
+    PropertyWriteFunction[ord(TProp.Points)] := @SetPoints;
+    PropertyReadFunction[ord(TProp.Points)] := @GetPoints;
+    PropertyOffset3[ord(TProp.Points)] := ptruint(@Get2xNumPoints);
+    PropertyFlags[ord(TProp.Points)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction, TPropertyFlag.SizeIsFunction, TPropertyFlag.Redundant];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
+    inherited DefineProperties;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TXYcurve.NewObject(const ObjName: String): Integer;
-begin
-   // create a new object of this class and add to list
-    DSS.ActiveDSSObject := TXYcurveObj.Create(Self, ObjName);
-    Result := AddObjectToList(DSS.ActiveDSSObject);
-end;
-
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TXYcurve.Edit: Integer;
+function TXYcurve.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
-
-    i: Integer;
-
+    Obj: TObj;
 begin
-    Result := 0;
-  // continue parsing with contents of Parser
-    DSS.ActiveXYcurveObj := ElementList.Active;
-    DSS.ActiveDSSObject := DSS.ActiveXYcurveObj;
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        DSS.ActiveDSSObject := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
 
-    with DSS.ActiveXYcurveObj do
-    begin
+procedure TXYcurveObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+begin
+    case Idx of
+        ord(TProp.csvfile):
+            DoCSVFile(DSS, Xvalues, Yvalues, FNumPoints, False, csvfile, ParentClass.Name); // file of x,y points, one to a line
+        ord(TProp.sngfile):
+            DoSngFile(DSS, Xvalues, Yvalues, FNumPoints, False, sngfile, ParentClass.Name);
+        ord(TProp.dblfile):
+            DoDblFile(DSS, Xvalues, Yvalues, FNumPoints, False, dblfile, ParentClass.Name);
+    end;
 
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
+    case Idx of
+        ord(TProp.npts):
         begin
-            if Length(ParamName) = 0 then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
+            // Force as the always first property when saving in a later point
+            PrpSequence[Idx] := -10;
+            ReAllocmem(YValues, Sizeof(YValues^[1]) * FNumPoints);
+            ReAllocmem(XValues, Sizeof(XValues^[1]) * FNumPoints);
+        end;
+        ord(TProp.Yarray):
+            Y := Yvalues^[1];
+        ord(TProp.Xarray):
+            X := Xvalues^[1];
+        ord(TProp.csvfile), ord(TProp.sngfile), ord(TProp.dblfile): 
+        begin
+            X := Xvalues^[1];
+            Y := Yvalues^[1];
+        end;
+    end;
 
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
-                1:
-                    NumPoints := Parser.Intvalue;
-                2:
-                begin
-                    ReAllocmem(TempPointsBuffer, Sizeof(TempPointsBuffer^[1]) * FNumPoints * 2);
-                 // Allow possible Resetting (to a lower value) of num points when specifying temperatures not Hours
-                    NumPoints := InterpretDblArray(Param, (FNumPoints * 2), TempPointsBuffer) div 2;  // Parser.ParseAsVector(Npts, Temperatures);
-                    ReAllocmem(YValues, Sizeof(YValues^[1]) * FNumPoints);
-                    ReAllocmem(XValues, Sizeof(XValues^[1]) * FNumPoints);
-                    for i := 1 to FNumPoints do
-                    begin
-                        XValues^[i] := TempPointsBuffer^[2 * i - 1];
-                        YValues^[i] := TempPointsBuffer^[2 * i];
-                    end;
-                    X := Xvalues^[1];
-                    Y := Yvalues^[1];
-                    ReAllocmem(TempPointsBuffer, 0);  // Throw away temp array
-                end;
-                3:
-                begin
-                    ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
-                    NumPoints := InterpretDblArray(Param, NumPoints, YValues);
-                    Y := Yvalues^[1];
-                end;
-                4:
-                begin
-                    ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
-                    NumPoints := InterpretDblArray(Param, NumPoints, XValues);
-                    X := Xvalues^[1];
-                end;
-                5:
-                    DoCSVFile(AdjustInputFilePath(Param));   // file of x,y points, one to a line
-                6:
-                    DoSngFile(AdjustInputFilePath(Param));
-                7:
-                    DoDblFile(AdjustInputFilePath(Param));
-                8:
-                    X := Parser.dblvalue;
-                9:
-                    Y := Parser.dblvalue;
-                10:
-                    FXshift := Parser.dblvalue;
-                11:
-                    FYshift := Parser.dblvalue;
-                12:
-                    FXscale := Parser.dblvalue;
-                13:
-                    FYscale := Parser.dblvalue;
-            else
-           // Inherited parameters
-                ClassEdit(DSS.ActiveXYcurveObj, ParamPointer - NumPropsThisClass)
-            end;
-
-            case ParamPointer of
-                5..7:
-                begin
-                    X := Xvalues^[1];
-                    Y := Yvalues^[1];
-                end;
-            end;
-
-            case ParamPointer of
-                2..7:
-                begin
-                    ArrayPropertyIndex := ParamPointer;
-                    NumPoints := FNumPoints;  // Keep Properties in order for save command
-                    LastValueAccessed := 1;
-                end;
-            end;
-
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
-        end; {While}
-
-    end; {WITH}
+    case Idx of
+        2..7:
+        begin
+            LastValueAccessed := 1;
+        end;
+    end;
+    inherited PropertySideEffects(Idx, previousIntVal);
 end;
 
 function TXYcurve.Find(const ObjName: String; const ChangeActive: Boolean): Pointer;
@@ -367,230 +342,28 @@ begin
         Result := inherited Find(ObjName, ChangeActive);
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TXYcurve.MakeLike(const CurveName: String): Integer;
+procedure TXYcurveObj.MakeLike(OtherPtr: Pointer);
 var
-    OtherXYCurve: TXYcurveObj;
+    Other: TObj;
     i: Integer;
 begin
-    Result := 0;
-   {See if we can find this curve in the present collection}
-    OtherXYCurve := Find(CurveName);
-    if OtherXYCurve <> NIL then
-        with DSS.ActiveXYcurveObj do
-        begin
-            NumPoints := OtherXYCurve.NumPoints;
-            ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
-            ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
-            for i := 1 to NumPoints do
-                XValues^[i] := OtherXYCurve.XValues^[i];
-            for i := 1 to NumPoints do
-                YValues^[i] := OtherXYCurve.YValues^[i];
+    inherited MakeLike(OtherPtr);
+    Other := TObj(OtherPtr);
+    FNumPoints := Other.NumPoints;
+    ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
+    ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
+    for i := 1 to NumPoints do
+        XValues^[i] := Other.XValues^[i];
+    for i := 1 to NumPoints do
+        YValues^[i] := Other.YValues^[i];
 
-            FXshift := OtherXYCurve.FXshift;
-            FYshift := OtherXYCurve.FYshift;
-            FXscale := OtherXYCurve.FXscale;
-            FYscale := OtherXYCurve.FYscale;
-
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherXYCurve.PropertyValue[i];
-        end
-    else
-        DoSimpleMsg('Error in XYCurve MakeLike: "' + CurveName + '" Not Found.', 611);
-
-
+    FXshift := Other.FXshift;
+    FYshift := Other.FYshift;
+    FXscale := Other.FXscale;
+    FYscale := Other.FYscale;
 end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TXYcurve.Get_Code: String;  // Returns active line code string
-var
-    XYCurveObj: TXYcurveObj;
-
-begin
-
-    XYCurveObj := ElementList.Active;
-    Result := XYCurveObj.Name;
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TXYcurve.Set_Code(const Value: String);  // sets the  active TShape
-
-var
-    XYCurveObj: TXYcurveObj;
-
-begin
-
-    DSS.ActiveXYcurveObj := NIL;
-    XYCurveObj := ElementList.First;
-    while XYCurveObj <> NIL do
-    begin
-
-        if CompareText(XYCurveObj.Name, Value) = 0 then
-        begin
-            DSS.ActiveXYcurveObj := XYCurveObj;
-            Exit;
-        end;
-
-        XYCurveObj := ElementList.Next;
-    end;
-
-    DoSimpleMsg('XYCurve: "' + Value + '" not Found.', 612);
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TXYcurve.DoCSVFile(const FileName: String);
-
-var
-    F: TBufferedFileStream = nil;
-    i: Integer;
-    s: String;
-
-begin
-    try
-        F := TBufferedFileStream.Create(FileName, fmOpenRead);
-    except
-        DoSimpleMsg('Error Opening File: "' + FileName, 613);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-    try
-
-        with DSS.ActiveXYcurveObj do
-        begin
-            ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
-            ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
-            i := 0;
-            while ((F.Position + 1) < F.Size) and (i < FNumPoints) do
-            begin
-                Inc(i);
-                FSReadln(F, s); // read entire line  and parse with AuxParser
-            {AuxParser allows commas or white space}
-                with AuxParser do
-                begin
-                    CmdString := s;
-                    NextParam;
-                    XValues^[i] := DblValue;
-                    NextParam;
-                    YValues^[i] := DblValue;
-                end;
-            end;
-            FreeAndNil(F);
-            if i <> FNumPoints then
-                NumPoints := i;
-        end;
-
-    except
-        On E: Exception do
-        begin
-            DoSimpleMsg('Error Processing XYCurve CSV File: "' + FileName + '. ' + E.Message, 614);
-            FreeAndNil(F);
-            Exit;
-        end;
-    end;
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TXYcurve.DoSngFile(const FileName: String);
-var
-    F: TFileStream = nil;
-    sX,
-    sY: Single;
-    i: Integer;
-
-begin
-    try
-        F := TFileStream.Create(FileName, fmOpenRead);
-    except
-        DoSimpleMsg('Error Opening File: "' + FileName, 615);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-    try
-        with DSS.ActiveXYcurveObj do
-        begin
-            ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
-            ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
-            i := 0;
-            while ((F.Position + 1) < F.Size) and (i < FNumPoints) do
-            begin
-                Inc(i);
-
-                if F.Read(sX, SizeOf(sX)) <> SizeOf(sX) then 
-                    Break;
-
-                XValues^[i] := sX;
-
-                if F.Read(sY, SizeOf(sY)) <> SizeOf(sY) then 
-                    Break;
-
-                YValues^[i] := sY;
-            end;
-            FreeAndNil(F);
-            if i <> FNumPoints then
-                NumPoints := i;
-        end;
-    except
-        DoSimpleMsg('Error Processing binary (single) XYCurve File: "' + FileName, 616);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TXYcurve.DoDblFile(const FileName: String);
-var
-    F: TFileStream = nil;
-    i: Integer;
-
-begin
-
-    try
-        F := TFileStream.Create(FileName, fmOpenRead);
-    except
-        DoSimpleMsg('Error Opening File: "' + FileName, 617);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-    try
-        with DSS.ActiveXYcurveObj do
-        begin
-            ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
-            ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
-            i := 0;
-            while ((F.Position + 1) < F.Size) and (i < FNumPoints) do
-            begin
-                Inc(i);
-                if F.Read(XValues^[i], SizeOf(Double)) <> SizeOf(Double) then 
-                    Break;
-
-                if F.Read(YValues^[i], SizeOf(Double)) <> SizeOf(Double) then 
-                    Break;
-            end;
-            FreeAndNil(F);
-            if i <> FNumPoints then
-                NumPoints := i;
-        end;
-    except
-        DoSimpleMsg('Error Processing binary (double) XYCurve File: "' + FileName, 618);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//      TTShape Obj
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 constructor TXYcurveObj.Create(ParClass: TDSSClass; const XYCurveName: String);
-
 begin
     inherited Create(ParClass);
     Name := LowerCase(XYCurveName);
@@ -609,16 +382,13 @@ begin
     FXscale := 1.0;
     FYscale := 1.0;
 
-    ArrayPropertyIndex := 0;
-
-    InitPropertyValues(0);
-
+    csvfile := '';
+    dblfile := '';
+    sngfile := '';
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TXYcurveObj.Destroy;
 begin
-
     if Assigned(XValues) then
         ReallocMem(XValues, 0);
     if Assigned(YValues) then
@@ -626,136 +396,120 @@ begin
     inherited destroy;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TXYcurveObj.GetYValue(X: Double): Double;
-
 // This function returns the interpolated Y value for the given X.
 // If no points exist in the curve, the result is  0.0
 // If Xvalue is outside the range of defined X values,
 // the curve is extrapolated from the Ends.
-
 var
     i: Integer;
-
 begin
-
     Result := 0.0;    // default return value if no points in curve
 
-    if FNumPoints > 0 then         // Handle Exceptional cases
-        if FNumPoints = 1 then
-            Result := YValues^[1]
-        else
+    if FNumPoints <= 0 then         // Handle Exceptional cases
+        Exit;
+
+    if FNumPoints = 1 then
+    begin
+        Result := YValues^[1];
+        Exit;
+    end;
+
+    // Start with previous value accessed under the assumption that most
+    // of the time, the values won't change much
+    if (XValues^[LastValueAccessed] > X) then
+        LastValueAccessed := 1; // Start over from Beginning
+
+    // if off the curve for the first point, extrapolate from the first two points
+    if (LastValueAccessed = 1) and (XValues[1] > X) then
+    begin
+        Result := InterpolatePoints(1, 2, X, XValues, YValues);
+        Exit;
+    end;
+
+    // In the middle of the arrays
+    for i := LastValueAccessed + 1 to FNumPoints do
+    begin
+        if (Abs(XValues^[i] - X) < 0.00001) then  // If close to an actual point, just use it.
         begin
-
-    { Start with previous value accessed under the assumption that most
-      of the time, the values won't change much}
-
-            if (XValues^[LastValueAccessed] > X) then
-                LastValueAccessed := 1; // Start over from Beginning
-
-     // if off the curve for the first point, extrapolate from the first two points
-            if (LastValueAccessed = 1) and (XValues[1] > X) then
-            begin
-                Result := InterpolatePoints(1, 2, X, XValues, YValues);
-                Exit;
-            end;
-
-     // In the middle of the arrays
-            for i := LastValueAccessed + 1 to FNumPoints do
-            begin
-                if (Abs(XValues^[i] - X) < 0.00001) then  // If close to an actual point, just use it.
-                begin
-                    Result := YValues^[i];
-                    LastValueAccessed := i;
-                    Exit;
-                end
-                else
-                if (XValues^[i] > X) then
-         // INTERPOLATE between two values
-                begin
-                    LastValueAccessed := i - 1;
-                    Result := InterpolatePoints(i, LastValueAccessed, X, XValues, YValues);
-                    Exit;
-                end;
-            end;
-
-     // If we fall through the loop, Extrapolate from last two points
-            LastValueAccessed := FNumPoints - 1;
-            Result := InterpolatePoints(FNumPoints, LastValueAccessed, X, XValues, YValues);
+            Result := YValues^[i];
+            LastValueAccessed := i;
+            Exit;
+        end
+        else
+        if (XValues^[i] > X) then
+        // INTERPOLATE between two values
+        begin
+            LastValueAccessed := i - 1;
+            Result := InterpolatePoints(i, LastValueAccessed, X, XValues, YValues);
+            Exit;
         end;
+    end;
+
+    // If we fall through the loop, Extrapolate from last two points
+    LastValueAccessed := FNumPoints - 1;
+    Result := InterpolatePoints(FNumPoints, LastValueAccessed, X, XValues, YValues);
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TXYcurveObj.GetCoefficients(X: Double): TCoeff;
-
 // This function returns the coefficients of the line interpolated line for the given X (a*X + b).
 // If no points exist in the curve (or just a single point), the result is  (a = 0, b = 0)
 // If Xvalue is outside the range of defined X values,
 // the curve is extrapolated from the Ends (a = 0, b = extrapolated value)
-
 var
     i: Integer;
 //   coef: pDoubleArray;
     coef: TCoeff;
 begin
-
-  // default return value if no points in curve
+    // default return value if no points in curve
     coef[1] := 0.0;
     coef[2] := 0.0;
     Result := coef;
 
-    if FNumPoints > 0 then         // Handle Exceptional cases
-        if FNumPoints = 1 then
-            Result := coef
-        else
-        begin
+    if FNumPoints <= 0 then         // Handle Exceptional cases
+        Exit;
 
-    { Start with previous value accessed under the assumption that most
-      of the time, the values won't change much}
+    if FNumPoints = 1 then
+    begin
+        Result := coef;
+        Exit;
+    end;
 
-            if (XValues^[LastValueAccessed] > X) then
-                LastValueAccessed := 1; // Start over from Beginning
+    // Start with previous value accessed under the assumption that most
+    // of the time, the values won't change much
+    if (XValues^[LastValueAccessed] > X) then
+        LastValueAccessed := 1; // Start over from Beginning
 
-      // if off the curve for the first point, extrapolate from the first two points
-            if (LastValueAccessed = 1) and (XValues[1] > X) then
-            begin
-
+    // if off the curve for the first point, extrapolate from the first two points
+    if (LastValueAccessed = 1) and (XValues[1] > X) then
+    begin
         // Assume the same coefficients determined by the first two points. Necessary to keep
         // consistency with TXYcurveObj.GetYValue function.
-                coef[1] := (YValues^[2] - YValues^[1]) / (XValues^[2] - XValues^[1]);
-                coef[2] := YValues^[2] - coef[1] * XValues^[2];
+        coef[1] := (YValues^[2] - YValues^[1]) / (XValues^[2] - XValues^[1]);
+        coef[2] := YValues^[2] - coef[1] * XValues^[2];
 
-                Result := coef;
-                Exit;
-            end;
+        Result := coef;
+        Exit;
+    end;
 
-      // In the middle of the arrays
-            for i := LastValueAccessed + 1 to FNumPoints do
-            begin
-                if (XValues^[i] > X) then
-          // INTERPOLATE between two values
-                begin
-                    LastValueAccessed := i - 1;
-
-                    coef[1] := (YValues^[i] - YValues^[i - 1]) / (XValues^[i] - XValues^[i - 1]);
-
-                    coef[2] := YValues^[i] - coef[1] * XValues^[i];
-
-                    Result := coef;
-                    Exit;
-                end;
-            end;
-
-
-      // Assume the same coefficients determined by the last two points. Necessary to keep
-      // consistency with TXYcurveObj.GetYValue function.
-            coef[1] := (YValues^[FNumPoints] - YValues^[FNumPoints - 1]) / (XValues^[FNumPoints] - XValues^[FNumPoints - 1]);
-            coef[2] := YValues^[FNumPoints] - coef[1] * XValues^[FNumPoints];
+    // In the middle of the arrays
+    for i := LastValueAccessed + 1 to FNumPoints do
+        if (XValues^[i] > X) then
+        // INTERPOLATE between two values
+        begin
+            LastValueAccessed := i - 1;
+            coef[1] := (YValues^[i] - YValues^[i - 1]) / (XValues^[i] - XValues^[i - 1]);
+            coef[2] := YValues^[i] - coef[1] * XValues^[i];
             Result := coef;
-
+            Exit;
         end;
-end;
 
+    // Assume the same coefficients determined by the last two points. Necessary to keep
+    // consistency with TXYcurveObj.GetYValue function.
+    coef[1] := (YValues^[FNumPoints] - YValues^[FNumPoints - 1]) / (XValues^[FNumPoints] - XValues^[FNumPoints - 1]);
+    coef[2] := YValues^[FNumPoints] - coef[1] * XValues^[FNumPoints];
+    Result := coef;
+end;
 
 function TXYcurveObj.Get_Y: Double;
 begin
@@ -764,7 +518,6 @@ end;
 
 function TXYcurveObj.Get_YValue(i: Integer): Double;
 begin
-
     if (i <= FNumPoints) and (i > 0) then
     begin
         Result := YValues^[i];
@@ -772,7 +525,6 @@ begin
     end
     else
         Result := 0.0;
-
 end;
 
 function TXYcurveObj.Get_X: Double;
@@ -782,7 +534,6 @@ end;
 
 function TXYcurveObj.Get_XValue(i: Integer): Double;
 begin
-
     if (i <= FNumPoints) and (i > 0) then
     begin
         Result := XValues^[i];
@@ -790,83 +541,6 @@ begin
     end
     else
         Result := 0.0;
-
-end;
-
-
-procedure TXYcurveObj.DumpProperties(F: TFileStream; Complete: Boolean);
-
-var
-    i: Integer;
-
-begin
-    inherited DumpProperties(F, Complete);
-
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            case i of
-                3, 4:
-                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[i] + ')');
-            else
-                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
-            end;
-        end;
-
-
-end;
-
-function TXYcurveObj.GetPropertyValue(Index: Integer): String;
-var
-    i: Integer;
-begin
-    case Index of
-        2..4:
-            Result := '[';
-    else
-        Result := '';
-    end;
-
-    case Index of
-        2:
-            if (XValues <> NIL) and (YValues <> NIL) then
-                for i := 1 to FNumPoints do
-                    Result := Result + Format('%.8g, %.8g ', [XValues^[i], YValues^[i]])
-            else
-                Result := '0, 0';
-        3:
-            if (YValues <> NIL) then
-                for i := 1 to FNumPoints do
-                    Result := Result + Format('%-g, ', [YValues^[i]])
-            else
-                Result := '0';
-        4:
-            if (XValues <> NIL) then
-                for i := 1 to FNumPoints do
-                    Result := Result + Format('%-g, ', [XValues^[i]])
-            else
-                Result := '0';
-        8:
-            Result := Format('%.8g', [Get_X]);
-        9:
-            Result := Format('%.8g', [Get_Y]);
-        10:
-            Result := Format('%.8g', [FXshift]);
-        11:
-            Result := Format('%.8g', [FYshift]);
-        12:
-            Result := Format('%.8g', [FXscale]);
-        13:
-            Result := Format('%.8g', [FYscale]);
-    else
-        Result := inherited GetPropertyValue(index);
-    end;
-
-    case Index of
-        2..4:
-            Result := Result + ']';
-    else
-    end;
 end;
 
 function TXYcurveObj.GetXValue(Y: Double): Double;
@@ -876,119 +550,52 @@ function TXYcurveObj.GetXValue(Y: Double): Double;
 // the curve is extrapolated from the Ends.
 // TEMc: change to relax assumption that Y values are increasing monotonically
 //       if Y is not monotonic (increasing or decreasing) then X is not unique
-
 var
     i: Integer;
-
 begin
-
     Result := 0.0;    // default return value if no points in curve
 
-    if FNumPoints > 0 then
-        if FNumPoints = 1 then
-            Result := XValues^[1]
-        else
+    if FNumPoints <= 0 then
+        Exit;
+
+    if FNumPoints = 1 then
+    begin
+        Result := XValues^[1];
+        Exit;
+    end;
+
+    for i := 2 to FNumPoints do
+    begin
+        if ((Y >= YValues^[i - 1]) and (Y <= YValues^[i])) then
         begin
-            for i := 2 to FNumPoints do
-            begin
-                if ((Y >= YValues^[i - 1]) and (Y <= YValues^[i])) then
-                begin
-                    Result := InterpolatePoints(i - 1, i, Y, YValues, XValues);
-                    Exit;
-                end;
-                if ((Y <= YValues^[i - 1]) and (Y >= YValues^[i])) then
-                begin
-                    Result := InterpolatePoints(i - 1, i, Y, YValues, XValues);
-                    Exit;
-                end;
-            end;
-      // Y is out of range, need to determine which end to extrapolate from
-            if YValues^[1] <= YValues^[FNumPoints] then
-            begin // increasing Y values
-                if Y <= YValues^[1] then
-                begin
-                    Result := InterpolatePoints(1, 2, Y, YValues, XValues);
-                end
-                else
-                begin
-                    Result := InterpolatePoints(FNumPoints - 1, FNumPoints, Y, YValues, XValues);
-                end
-            end
-            else
-            begin // decreasing Y values
-                if Y >= YValues^[1] then
-                begin
-                    Result := InterpolatePoints(1, 2, Y, YValues, XValues);
-                end
-                else
-                begin
-                    Result := InterpolatePoints(FNumPoints - 1, FNumPoints, Y, YValues, XValues);
-                end
-            end;
+            Result := InterpolatePoints(i - 1, i, Y, YValues, XValues);
+            Exit;
         end;
-    {
-  IF FNumPoints>0 Then         // Handle Exceptional cases
-  IF FNumPoints=1 Then Result := XValues^[1]
-  ELSE
-    Begin
+        if ((Y <= YValues^[i - 1]) and (Y >= YValues^[i])) then
+        begin
+            Result := InterpolatePoints(i - 1, i, Y, YValues, XValues);
+            Exit;
+        end;
+    end;
 
-     IF (YValues^[LastValueAccessed] > Y) Then LastValueAccessed := 1; // Start over from Beginning
-
-     // if off the curve for the first point, extrapolate from the first two points
-     IF (LastValueAccessed = 1) AND (YValues[1] > Y) Then Begin
-         Result := InterpolatePoints(1, 2, Y, YValues, XValues);
-         Exit;
-     End;
-
-     FOR i := LastValueAccessed+1 TO FNumPoints do
-       Begin
-         IF (Abs(YValues^[i]-Y) < 0.00001) Then  // If close to an actual point, just use it.
-           Begin
-               Result := XValues^[i];
-               LastValueAccessed := i;
-               Exit;
-           End
-         ELSE IF (YValues^[i] > Y) Then
-// INTERPOLATE
-           Begin
-             LastValueAccessed := i-1;
-             Result := InterpolatePoints(i, LastValueAccessed, Y, YValues, XValues);
-             Exit ;
-           End;
-       End;
-
-     // If we fall through the loop, Extrapolate from last two points
-     LastValueAccessed := FNumPoints-1;
-     Result := InterpolatePoints(FNumPoints, LastValueAccessed,  Y, YValues, XValues);
-    End;
-    }
+    // Y is out of range, need to determine which end to extrapolate from
+    if YValues^[1] <= YValues^[FNumPoints] then
+    begin // increasing Y values
+        if Y <= YValues^[1] then
+            Result := InterpolatePoints(1, 2, Y, YValues, XValues)
+        else
+            Result := InterpolatePoints(FNumPoints - 1, FNumPoints, Y, YValues, XValues);
+    end
+    else
+    begin // decreasing Y values
+        if Y >= YValues^[1] then
+            Result := InterpolatePoints(1, 2, Y, YValues, XValues)
+        else
+            Result := InterpolatePoints(FNumPoints - 1, FNumPoints, Y, YValues, XValues);
+    end;
 end;
 
-procedure TXYcurveObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-
-    PropertyValue[1] := '0';     // Number of points to expect
-    PropertyValue[2] := '';
-    PropertyValue[3] := '';
-    PropertyValue[4] := '';
-    PropertyValue[5] := '';
-    PropertyValue[6] := '';
-    PropertyValue[7] := '';
-    PropertyValue[8] := '';
-    PropertyValue[9] := '';
-    PropertyValue[10] := '0';
-    PropertyValue[11] := '0';
-    PropertyValue[12] := '1';
-    PropertyValue[13] := '1';
-
-    inherited  InitPropertyValues(NumPropsThisClass);
-
-end;
-
-
-function TXYcurveObj.InterpolatePoints(i, j: Integer; X: Double; Xarray,
-    Yarray: pDoubleArray): Double;
-
+function TXYcurveObj.InterpolatePoints(i, j: Integer; X: Double; Xarray, Yarray: pDoubleArray): Double;
 var
     Den: Double;
 begin
@@ -998,7 +605,6 @@ begin
     else
         Result := Yarray^[i]; // Y is undefined, return ith value
 end;
-
 
 procedure TXYcurveObj.Set_X(Value: Double);
 begin
@@ -1024,50 +630,6 @@ begin
         YValues^[Index] := Value;
 end;
 
-procedure TXYcurveObj.SaveWrite(F: TFileStream);
-
-{Override standard SaveWrite}
-{Transformer structure not conducive to standard means of saving}
-var
-    iprop: Integer;
-begin
-   {Write only properties that were explicitly set in the final order they were actually set}
-
-   {Write Npts out first so that arrays get allocated properly}
-    FSWrite(F, Format(' Npts=%d', [NumPoints]));
-    iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
-    while iProp > 0 do
-    begin
-        with ParentClass do
-       {Trap npts= and write out array properties instead}
-            case RevPropertyIdxMap[iProp] of
-                1:
-{Ignore Npts};
-
-            else
-                FSWrite(F, Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
-            end;
-        iProp := GetNextPropertySet(iProp);
-    end;
-
-end;
-
-procedure TXYcurveObj.Set_NumPoints(const Value: Integer);
-begin
-    PropertyValue[1] := IntToStr(Value);   // Update property list variable
-
-    // Reset array property values to keep them in propoer order in Save
-
-    if ArrayPropertyIndex > 0 then
-        PropertyValue[ArrayPropertyIndex] := PropertyValue[ArrayPropertyIndex];
-
-    FNumPoints := Value;   // Now assign the value
-
-    // reallocate the curve memory
-    ReAllocmem(YValues, Sizeof(YValues^[1]) * FNumPoints);
-    ReAllocmem(XValues, Sizeof(XValues^[1]) * FNumPoints);
-
-end;
-
-
+initialization
+    PropInfo := NIL;
 end.

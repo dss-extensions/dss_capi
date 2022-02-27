@@ -34,12 +34,7 @@ Function GetNumEdges(MeTISSrc : string): String;
 implementation
 
 uses
-{$IFNDEF FPC}
-  System.IOUtils,
-  System.StrUtils,
-{$ELSE}  
   StrUtils,
-{$ENDIF}  
   Math;
 
 { TFileSearchReplace }
@@ -154,9 +149,9 @@ var
 
     BufStr := FEncoding.GetString(Buf, 0, ReadedBufLen);
     if rfIgnoreCase in ReplaceFlags then
-      IsReplaced := {$IFDEF FPC}ANSIContainsText{$ELSE}ContainsText{$ENDIF}(BufStr, AFrom)
+      IsReplaced := ANSIContainsText(BufStr, AFrom)
     else
-      IsReplaced := {$IFDEF FPC}ANSIContainsStr{$ELSE}ContainsStr{$ENDIF}(BufStr, AFrom);
+      IsReplaced := ANSIContainsStr(BufStr, AFrom);
 
     if IsReplaced then
       begin

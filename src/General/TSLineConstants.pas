@@ -11,7 +11,7 @@ interface
 uses
     Arraydef,
     Ucmatrix,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     LineUnits,
     LineConstants,
     CableConstants;
@@ -119,7 +119,7 @@ begin
     FYCMatrix.Clear;
 
   // add concentric neutrals to the end of conductor list; they are always reduced
-    N := FNumConds + FNumPhases;
+    N := FNumConds + FNPhases;
     Zmat := TCMatrix.CreateMatrix(N);
 
   {For less than 1 kHz use GMR to better match published data}
@@ -136,24 +136,24 @@ begin
         if PowerFreq then
         begin // for less than 1 kHz, use published GMR
             Zi.im := 0.0;
-            Zspacing := CmulReal(Lfactor, ln(1.0 / FGMR^[i]));  // use GMR
+            Zspacing := Lfactor * ln(1.0 / FGMR^[i])  // use GMR
         end
         else
         begin
-            Zspacing := CmulReal(Lfactor, ln(1.0 / Fradius^[i]));
+            Zspacing := Lfactor * ln(1.0 / Fradius^[i]);
         end;
-        Zmat.SetElement(i, i, Cadd(Zi, Cadd(Zspacing, Get_Ze(i, i, EarthModel))));
+        Zmat.SetElement(i, i, Zi + Zspacing + Get_Ze(i, i, EarthModel));
     end;
 
   // TS self impedances
-    for i := 1 to FNumPhases do
+    for i := 1 to FNPhases do
     begin
         ResTS := 0.3183 * RhoTS / (FDiaShield^[i] * FTapeLayer^[i] * sqrt(50.0 / (100.0 - FTapeLap^[i])));
         GmrTS := 0.5 * (FDiaShield^[i] - FTapeLayer^[i]);  // per Kersting, to center of TS
-        Zspacing := CMulReal(Lfactor, ln(1.0 / GmrTS));
+        Zspacing := Lfactor * ln(1.0 / GmrTS);
         Zi := cmplx(ResTS, 0.0);
         idxi := i + FNumConds;
-        Zmat.SetElement(idxi, idxi, Cadd(Zi, Cadd(Zspacing, Get_Ze(i, i, EarthModel))));
+        Zmat.SetElement(idxi, idxi, Zi + Zspacing + Get_Ze(i, i, EarthModel));
     end;
 
   // Mutual Impedances - between TS cores and bare neutrals
@@ -162,19 +162,19 @@ begin
         for j := 1 to i - 1 do
         begin
             Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-            Zmat.SetElemSym(i, j, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j, EarthModel)));
+            Zmat.SetElemSym(i, j, Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel));
         end;
     end;
 
   // Mutual Impedances - TS to other TS, cores, and bare neutrals
-    for i := 1 to FNumPhases do
+    for i := 1 to FNPhases do
     begin
         idxi := i + FNumConds;
         for j := 1 to i - 1 do
         begin  // TS to other TS
             idxj := j + FNumConds;
             Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-            Zmat.SetElemSym(idxi, idxj, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j, EarthModel)));
+            Zmat.SetElemSym(idxi, idxj, Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel));
         end;
         for j := 1 to FNumConds do
         begin // CN to cores and bare neutrals
@@ -188,7 +188,7 @@ begin
             begin // TS to another phase or bare neutral
                 Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
             end;
-            Zmat.SetElemSym(idxi, idxj, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j, EarthModel)));
+            Zmat.SetElemSym(idxi, idxj, Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel));
         end;
     end;
 
@@ -204,7 +204,7 @@ begin
 
   // for shielded cables, build the capacitance matrix directly
   // assumes the insulation may lie between semicon layers
-    for i := 1 to FNumPhases do
+    for i := 1 to FNPhases do
     begin
         Yfactor := twopi * e0 * FEpsR^[i] * Fw; // includes frequency so C==>Y
         RadOut := 0.5 * FDiaIns^[i];
@@ -235,7 +235,5 @@ begin
     Reallocmem(FTapeLap, 0);
     inherited;
 end;
-
-initialization
 
 end.

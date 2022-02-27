@@ -6,12 +6,7 @@ unit ControlClass;
   All rights reserved.
   ----------------------------------------------------------
 }
-{
-   Base for control classes
-}
-
-{$M+}
-
+//   Base for control classes
 interface
 
 uses
@@ -20,21 +15,13 @@ uses
 
 type
     TControlClass = class(TCktElementClass)
-    PRIVATE
-
     PROTECTED
-        procedure ClassEdit(const ActiveControlObj: Pointer; const ParamPointer: Integer);
-        procedure ClassMakeLike(const OtherObj: Pointer);
-
-        procedure CountProperties;  // Add no. of intrinsic properties
-        procedure DefineProperties;  // Add Properties of this class to propName
+        procedure CountPropertiesAndAllocate; override;
+        procedure DefineProperties; override;
 
     PUBLIC
-        NumControlClassProps: Integer;
-        constructor Create(dssContext: TDSSContext);
+        constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
-    PUBLISHED
-
     end;
 
 
@@ -42,76 +29,34 @@ implementation
 
 uses
     ControlElem,
-    ParserDel,
     DSSClassDefs,
     DSSGlobals;
 
-constructor TControlClass.Create(dssContext: TDSSContext);
-begin
+const
+    NumPropsThisClass = 0;
 
-    inherited Create(dssContext);
-    NumControlClassProps := 0;
-    DSSClassType := CTRL_ELEMENT;
+constructor TControlClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
+begin
+    inherited Create(dssContext, DSSClsType or CTRL_ELEMENT, DSSClsName);
+    ClassParents.Add('ControlClass');
 end;
 
 destructor TControlClass.Destroy;
-
 begin
     inherited Destroy;
 end;
 
-procedure TControlClass.CountProperties;
+procedure TControlClass.CountPropertiesAndAllocate;
 begin
-    NumProperties := NumProperties + NumControlClassProps;
-    inherited CountProperties;
+    NumProperties := NumProperties + NumPropsThisClass;
+    inherited CountPropertiesAndAllocate;
 end;
 
 procedure TControlClass.DefineProperties;
-
-// Define the properties for the base power delivery element class
-
 begin
-   // no properties
-     // PropertyName^[ActiveProperty + 1] := 'propname';
-     // PropertyHelp^[ActiveProperty + 1] := 'prop help';
-
-    ActiveProperty := ActiveProperty + NumControlClassProps;
-
+    // no properties
+    ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties;
 end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TControlClass.ClassEdit(const ActiveControlObj: Pointer; const ParamPointer: Integer);
-begin
-  // continue parsing with contents of Parser
-    if ParamPointer > 0 then
-        with TControlElem(ActiveControlObj) do
-        begin
-
-      //CASE ParamPointer OF
-       //1: BaseFrequency := Parser.Dblvalue;
-       //ELSE
-            inherited ClassEdit(ActiveControlObj, ParamPointer - NumControlClassProps)
-      //END;
-        end;
-
-end;
-
-procedure TControlClass.ClassMakeLike(const OtherObj: Pointer);
-
-//Var
-//   OtherControlObj : TControlElem;
-begin
-
-//   OtherControlObj := TControlElem(OtherObj);
-    TControlElem.Create(OtherObj);
-
-     //With TPCElement(ActiveDSSObject) Do
-     //Begin
-     //  value:= OtherControlObj.value;
-     //End;
-
-end;
-
 
 end.

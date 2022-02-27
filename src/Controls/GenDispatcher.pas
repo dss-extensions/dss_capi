@@ -6,16 +6,12 @@ unit GenDispatcher;
   All rights reserved.
   ----------------------------------------------------------
 }
-{
-  A GenDispatcher is a control element that is connected to a terminal of another
-  circuit element and sends dispatch kW signals to a set of generators it controls
-
-  A GenDispatcher is defined by a New command:
-
-  New GenDispatcher.Name=myname Element=devclass.name terminal=[ 1|2|...] CapacitorList = (gen1  gen2 ...)
-
- 
-}
+//  A GenDispatcher is a control element that is connected to a terminal of another
+//  circuit element and sends dispatch kW signals to a set of generators it controls
+//
+//  A GenDispatcher is defined by a New command:
+//
+//  New GenDispatcher.Name=myname Element=devclass.name terminal=[ 1|2|...] CapacitorList = (gen1  gen2 ...)
 
 interface
 
@@ -26,33 +22,39 @@ uses
     CktElement,
     DSSClass,
     Arraydef,
-    ucomplex,
+    UComplex, DSSUcomplex,
     utilities,
     DSSPointerList,
     Classes;
 
 type
+{$SCOPEDENUMS ON}
+    TGenDispatcherProp = (
+        INVALID = 0,
+        Element = 1,
+        Terminal = 2,
+        kWLimit = 3,
+        kWBand = 4,
+        kvarlimit = 5,
+        GenList = 6,
+        Weights = 7
+     );
+{$SCOPEDENUMS OFF}
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TGenDispatcher = class(TControlClass)
     PRIVATE
 
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const GenDispatcherName: String): Integer; OVERRIDE;
+        procedure DefineProperties; override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;     // uses global parser
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
-
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
     end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TGenDispatcherObj = class(TControlElem)
     PRIVATE
-
         FkWLimit,
         FkWBand,
         HalfkWBand,
@@ -64,31 +66,24 @@ type
         FWeights: pDoubleArray;
 
     PUBLIC
-
         constructor Create(ParClass: TDSSClass; const GenDispatcherName: String);
         destructor Destroy; OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
+        procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
         procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;    // Always Zero for a GenDispatcher
 
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset; OVERRIDE;  // Reset to initial defined state
 
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
-
         function MakeGenList: Boolean;
     end;
 
-{--------------------------------------------------------------------------}
 implementation
 
 uses
-    ParserDel,
     DSSClassDefs,
     DSSGlobals,
     Circuit,
@@ -101,220 +96,118 @@ uses
     DSSObjectHelper,
     TypInfo;
 
+type
+    TObj = TGenDispatcherObj;
+    TProp = TGenDispatcherProp;
 const
+    NumPropsThisClass = Ord(High(TProp));
+var
+    PropInfo: Pointer;    
 
-    NumPropsThisClass = 7;
-
-
-{--------------------------------------------------------------------------}
-constructor TGenDispatcher.Create(dssContext: TDSSContext);  // Creates superstructure for all GenDispatcher objects
+constructor TGenDispatcher.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
 
-    Class_name := 'GenDispatcher';
-    DSSClassType := DSSClassType + GEN_CONTROL;
-
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
+    inherited Create(dssContext, GEN_CONTROL, 'GenDispatcher');
 end;
 
-{--------------------------------------------------------------------------}
 destructor TGenDispatcher.Destroy;
-
 begin
     inherited Destroy;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TGenDispatcher.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
-
     Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    // string list
+    PropertyType[ord(TProp.GenList)] := TPropertyType.StringListProperty;
+    PropertyOffset[ord(TProp.GenList)] := ptruint(@obj.FGeneratorNameList);
 
-     // Define Property names
+    // double arrays
+    PropertyType[ord(TProp.Weights)] := TPropertyType.DoubleArrayProperty;
+    PropertyOffset[ord(TProp.Weights)] := ptruint(@obj.FWeights);
+    PropertyOffset2[ord(TProp.Weights)] := ptruint(@obj.FListSize);
 
-    PropertyName[1] := 'Element';
-    PropertyName[2] := 'Terminal';
-    PropertyName[3] := 'kWLimit';
-    PropertyName[4] := 'kWBand';
-    PropertyName[5] := 'kvarlimit';
-    PropertyName[6] := 'GenList';
-    PropertyName[7] := 'Weights';
+    // object reference
+    PropertyType[ord(TProp.Element)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyOffset[ord(TProp.Element)] := ptruint(@obj.FMonitoredElement);
+    PropertyOffset2[ord(TProp.Element)] := 0;
+    PropertyWriteFunction[ord(TProp.Element)] := @SetMonitoredElement;
+    PropertyFlags[ord(TProp.Element)] := [TPropertyFlag.WriteByFunction];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
-    PropertyHelp[1] := 'Full object name of the circuit element, typically a line or transformer, ' +
-        'which the control is monitoring. There is no default; must be specified.';
-    PropertyHelp[2] := 'Number of the terminal of the circuit element to which the GenDispatcher control is connected. ' +
-        '1 or 2, typically.  Default is 1. Make sure you have the direction on the power matching the sign of kWLimit.';
-    PropertyHelp[3] := 'kW Limit for the monitored element. The generators are dispatched to hold the power in band.';
-    PropertyHelp[4] := 'Bandwidth (kW) of the dead band around the target limit.' +
-        'No dispatch changes are attempted if the power in the monitored terminal stays within this band.';
-    PropertyHelp[5] := 'Max kvar to be delivered through the element.  Uses same dead band as kW.';
-    PropertyHelp[6] := 'Array list of generators to be dispatched.  If not specified, all generators in the circuit are assumed dispatchable.';
-    PropertyHelp[7] := 'Array of proportional weights corresponding to each generator in the GenList.' +
-        ' The needed kW to get back to center band is dispatched to each generator according to these weights. ' +
-        'Default is to set all weights to 1.0.';
+    // integer properties
+    PropertyType[ord(TProp.Terminal)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.Terminal)] := ptruint(@obj.ElementTerminal);
+
+    // double properties (default type)
+    PropertyOffset[ord(TProp.kWLimit)] := ptruint(@obj.FkWLimit);
+    PropertyOffset[ord(TProp.kWBand)] := ptruint(@obj.FkWBand);
+    PropertyOffset[ord(TProp.kvarlimit)] := ptruint(@obj.FkvarLimit);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
+    inherited DefineProperties;
 end;
 
-{--------------------------------------------------------------------------}
-function TGenDispatcher.NewObject(const ObjName: String): Integer;
-begin
-    // Make a new GenDispatcher and add it to GenDispatcher class list
-    with ActiveCircuit do
-    begin
-        ActiveCktElement := TGenDispatcherObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
-end;
-
-{--------------------------------------------------------------------------}
-function TGenDispatcher.Edit: Integer;
+function TGenDispatcher.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
-    i: Integer;
-
+    Obj: TObj;
 begin
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        ActiveCircuit.ActiveCktElement := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
 
-  // continue parsing WITH contents of Parser
-    DSS.ActiveGenDispatcherObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := DSS.ActiveGenDispatcherObj;
-
-    Result := 0;
-
-    with DSS.ActiveGenDispatcherObj do
-    begin
-
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
-        begin
-            if Length(ParamName) = 0 then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
-
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 364);
-                1:
-                    ElementName := lowercase(param);
-                2:
-                    ElementTerminal := Parser.IntValue;
-                3:
-                    FkWLimit := Parser.DblValue;
-                4:
-                    FkWBand := Parser.DblValue;
-                5:
-                    FkvarLimit := Parser.DblValue;
-                6:
-                    InterpretTStringListArray(Param, FGeneratorNameList);
-                7:
-                begin
-                    FListSize := FGeneratorNameList.count;
-                    if FListSize > 0 then
-                    begin
-                        Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
-                        FListSize := InterpretDblArray(Param, FListSize, FWeights);
-                    end;
-                end;
-
-            else
-                // Inherited parameters
-                ClassEdit(DSS.ActiveGenDispatcherObj, ParamPointer - NumPropsthisClass)
-            end;
-
-            case ParamPointer of
-                4:
-                    HalfkWBand := FkWBand / 2.0;
-                6:
-                begin   // levelize the list
-                    FGenPointerList.Clear;  // clear this for resetting on first sample
-                    FListSize := FGeneratorNameList.count;
-                    Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
-                    for i := 1 to FListSize do
-                        FWeights^[i] := 1.0;
-                end;
-            else
-
-            end;
-
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+procedure TGenDispatcherObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+var
+    i: Integer;
+begin
+    case Idx of
+        4:
+            HalfkWBand := FkWBand / 2.0;
+        6:
+        begin   // levelize the list
+            FGenPointerList.Clear;  // clear this for resetting on first sample
+            FListSize := FGeneratorNameList.count;
+            Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
+            for i := 1 to FListSize do
+                FWeights^[i] := 1.0;
         end;
-
-        RecalcElementData;
     end;
-
+    inherited PropertySideEffects(Idx, previousIntVal);
 end;
 
-
-{--------------------------------------------------------------------------}
-function TGenDispatcher.MakeLike(const GenDispatcherName: String): Integer;
+procedure TGenDispatcherObj.MakeLike(OtherPtr: Pointer);
 var
-    OtherGenDispatcher: TGenDispatcherObj;
-    i: Integer;
+    Other: TObj;
 begin
-    Result := 0;
-   {See if we can find this GenDispatcher name in the present collection}
-    OtherGenDispatcher := Find(GenDispatcherName);
-    if OtherGenDispatcher <> NIL then
-        with DSS.ActiveGenDispatcherObj do
-        begin
-
-            NPhases := OtherGenDispatcher.Fnphases;
-            NConds := OtherGenDispatcher.Fnconds; // Force Reallocation of terminal stuff
-
-            ElementName := OtherGenDispatcher.ElementName;
-            ControlledElement := OtherGenDispatcher.ControlledElement;  // Pointer to target circuit element
-            MonitoredElement := OtherGenDispatcher.MonitoredElement;  // Pointer to target circuit element
-
-            ElementTerminal := OtherGenDispatcher.ElementTerminal;
-
-
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherGenDispatcher.PropertyValue[i];
-
-        end
-    else
-        DoSimpleMsg('Error in GenDispatcher MakeLike: "' + GenDispatcherName + '" Not Found.', 370);
-
+    inherited MakeLike(OtherPtr);
+    Other := TObj(OtherPtr);
+    FNPhases := Other.Fnphases;
+    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
+    // ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
+    MonitoredElement := Other.MonitoredElement;  // Pointer to target circuit element
+    ElementTerminal := Other.ElementTerminal;
 end;
 
-
-{==========================================================================}
-{                    TGenDispatcherObj                                           }
-{==========================================================================}
-
-
-{--------------------------------------------------------------------------}
 constructor TGenDispatcherObj.Create(ParClass: TDSSClass; const GenDispatcherName: String);
-
 begin
     inherited Create(ParClass);
     Name := LowerCase(GenDispatcherName);
     DSSObjType := ParClass.DSSClassType;
 
-    NPhases := 3;  // Directly set conds and phases
+    FNPhases := 3;  // Directly set conds and phases
     Fnconds := 3;
     Nterms := 1;  // this forces allocation of terminals and conductors
                          // in base class
 
-
-    ElementName := '';
     ControlledElement := NIL;  // not used in this control
     ElementTerminal := 1;
     MonitoredElement := NIL;
@@ -327,40 +220,26 @@ begin
     FkWBand := 100.0;
     TotalWeight := 1.0;
     HalfkWBand := FkWBand / 2.0;
-    InitPropertyValues(0);
     FkvarLimit := FkWLimit / 2.0;
 
-
    //  RecalcElementData;
-
 end;
 
 destructor TGenDispatcherObj.Destroy;
 begin
-    ElementName := '';
     inherited Destroy;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TGenDispatcherObj.RecalcElementData;
-
-var
-    DevIndex: Integer;
-
 begin
-
-
-{Check for existence of monitored element}
-
-    Devindex := GetCktElementIndex(ElementName); // Global function
-    if DevIndex > 0 then
+    {Check for existence of monitored element}
+    if MonitoredElement <> NIL then
     begin
-        MonitoredElement := ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
-            DoErrorMsg('GenDispatcher: "' + Name + '"',
-                'Terminal no. "' + '" does not exist.',
-                'Re-specify terminal no.', 371);
+            DoErrorMsg(Format(_('GenDispatcher: "%s"'), [Name]),
+                Format(_('Terminal no. "%d" does not exist.'), [ElementTerminal]),
+                _('Re-specify terminal no.'), 371);
         end
         else
         begin
@@ -369,75 +248,26 @@ begin
         end;
     end
     else
-        DoSimpleMsg('Monitored Element in GenDispatcher.' + Name + ' does not exist:"' + ElementName + '"', 372);
-
-
+        DoSimpleMsg('Monitored Element in %s is not set', [FullName], 372);
 end;
 
-procedure TGenDispatcherObj.MakePosSequence;
+procedure TGenDispatcherObj.MakePosSequence();
 begin
     if MonitoredElement <> NIL then
     begin
-        Nphases := ControlledElement.NPhases;
+        FNphases := ControlledElement.NPhases;
         Nconds := FNphases;
         Setbus(1, MonitoredElement.GetBus(ElementTerminal));
     end;
     inherited;
 end;
 
-{--------------------------------------------------------------------------}
-procedure TGenDispatcherObj.CalcYPrim;
-begin
-  // leave YPrims as nil and they will be ignored
-  // Yprim is zeroed when created.  Leave it as is.
-  //  IF YPrim=nil THEN YPrim := TcMatrix.CreateMatrix(Yorder);
-end;
-
-
-{--------------------------------------------------------------------------}
-procedure TGenDispatcherObj.GetCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-begin
-
-    for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
-
-end;
-
-{--------------------------------------------------------------------------}
-procedure TGenDispatcherObj.DumpProperties(F: TFileStream; Complete: Boolean);
-
-var
-    i: Integer;
-
-begin
-    inherited DumpProperties(F, Complete);
-
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
-        end;
-
-    if Complete then
-    begin
-        FSWriteln(F);
-    end;
-
-end;
-
-
-{--------------------------------------------------------------------------}
 procedure TGenDispatcherObj.DoPendingAction;
 begin
-
         {Do Nothing}
 end;
 
-{--------------------------------------------------------------------------}
 procedure TGenDispatcherObj.Sample;
-
 var
     i: Integer;
     PDiff,
@@ -454,7 +284,6 @@ begin
 
     if FListSize > 0 then
     begin
-
        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
         S := MonitoredElement.Power[ElementTerminal];  // Power in active terminal
 
@@ -506,74 +335,46 @@ begin
             // Push present time onto control queue to force re solve at new dispatch value
                 ControlQueue.Push(DynaVars.intHour, DynaVars.t, 0, 0, Self);
             end;
-
-
        {Else just continue}
     end;
-
-
-end;
-
-
-procedure TGenDispatcherObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-
-    PropertyValue[1] := '';   //'element';
-    PropertyValue[2] := '1';   //'terminal';
-    PropertyValue[3] := '8000';
-    PropertyValue[4] := '100';
-    PropertyValue[5] := '0';
-    PropertyValue[6] := '';
-    PropertyValue[7] := '';
-
-
-    inherited  InitPropertyValues(NumPropsThisClass);
-
 end;
 
 function TGenDispatcherObj.MakeGenList: Boolean;
-
 var
     GenClass: TDSSClass;
     Gen: TGeneratorObj;
     i: Integer;
 
 begin
-
     Result := FALSE;
     GenClass := GetDSSClassPtr(DSS, 'generator');
 
     if FListSize > 0 then
     begin    // Name list is defined - Use it
-
         for i := 1 to FListSize do
         begin
             Gen := GenClass.Find(FGeneratorNameList.Strings[i - 1]);
             if Assigned(Gen) and Gen.Enabled then
-                FGenPointerList.New := Gen;
+                FGenPointerList.Add(Gen);
         end;
-
     end
     else
     begin
-     {Search through the entire circuit for enabled generators and add them to the list}
-
+        // Search through the entire circuit for enabled generators and add them to the list
         for i := 1 to GenClass.ElementCount do
         begin
             Gen := GenClass.ElementList.Get(i);
             if Gen.Enabled then
-                FGenPointerList.New := Gen;
+                FGenPointerList.Add(Gen);
         end;
-
-     {Allocate uniform weights}
+        // Allocate uniform weights
         FListSize := FGenPointerList.Count;
         Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
         for i := 1 to FListSize do
             FWeights^[i] := 1.0;
-
     end;
 
-   // Add up total weights
+    // Add up total weights
     TotalWeight := 0.0;
     for i := 1 to FlistSize do
         TotalWeight := TotalWeight + FWeights^[i];
@@ -586,11 +387,8 @@ end;
 procedure TGenDispatcherObj.Reset;
 begin
   // inherited;
-
 end;
 
-
 initialization
-
-
+    PropInfo := NIL;
 end.

@@ -6,17 +6,12 @@ unit CktElement;
   All rights reserved.
   ----------------------------------------------------------
 }
-{
-     2-17-00 Modified Get_ConductorClosed to handle Index=0
-     7-14-01 Changed way Enabled property works.
-     8-17-06 Caught BusnameRedefined error when nconds changed
-}
 
 interface
 
 uses
     Classes,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     Ucmatrix,
     ArrayDef,
     Terminal,
@@ -31,17 +26,15 @@ type
     PROTECTED
         FEnabled: Boolean;
     PRIVATE
-        FBusNames: pStringArray;
-        FEnabledProperty: Integer;
-        FActiveTerminal: Integer;
+        FBusNames: pStringArray; // Bus + Nodes (a.1.2.3.0)
+        FActiveTerminal: Int8;
         FYPrimInvalid: Boolean;
         FHandle: Integer;
 
         procedure Set_Freq(Value: Double);  // set freq and recompute YPrim.
 
-        procedure Set_Nconds(Value: Integer);
-        procedure Set_NPhases(Value: Integer);
-        procedure Set_ActiveTerminal(value: Integer);
+        procedure Set_Nconds(Value: Int8);
+        procedure Set_ActiveTerminal(value: Int8);
         function Get_ConductorClosed(Index: Integer): Boolean;
         procedure Set_YprimInvalid(const Value: Boolean);
         function Get_FirstBus: String;
@@ -54,15 +47,10 @@ type
 
         procedure DoYprimCalcs(Ymatrix: TCMatrix);
 
-{$IFDEF DSS_CAPI}
     PUBLIC
-{$ELSE}
-    PROTECTED
-{$ENDIF}
-
-        Fnterms: Integer;
-        Fnconds: Integer;  // no. conductors per terminal
-        Fnphases: Integer;  // Phases, this device
+        Fnterms: Int8;
+        Fnconds: Int8;  // no. conductors per terminal
+        Fnphases: Integer;  // Phases, this device -- TODO: Int8 someday...
 
         ComplexBuffer: pComplexArray;
 
@@ -76,29 +64,16 @@ type
 
         procedure Set_Enabled(Value: Boolean); VIRTUAL;
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); VIRTUAL;
-        procedure Set_NTerms(Value: Integer); VIRTUAL;
+        procedure Set_NTerms(Value: Int8);
         procedure Set_Handle(Value: Integer);
     PUBLIC
 
-      {Total Noderef array for element}
+        // Total Noderef array for element
         NodeRef: pIntegerArray;  // Need fast access to this
         Yorder: Integer;
 
-        LastTerminalChecked: Integer;  // Flag used in tree searches
+        // LastTerminalChecked: Int8;  // Flag used in tree searches -- UNUSED
 
-        //TODO: use bit flags to reduce the size of this?
-        Checked,
-        HasEnergyMeter,
-        HasSensorObj,
-        IsIsolated,
-        HasControl,
-        IsMonitored,
-        IsPartofFeeder,
-        Drawn: Boolean;  // Flag used in tree searches etc
-
-        HasOCPDevice: Boolean; // Fuse, Relay, or Recloser
-        HasAutoOCPDevice: Boolean; // Relay or Recloser only
-        HasSwtControl: Boolean; // Has a remotely-controlled Switch
         ControlElementList: TDSSPointerList; //Pointer to control for this device
 
         Iterminal: pComplexArray;  // Others need this
@@ -117,6 +92,7 @@ type
 
         constructor Create(ParClass: TDSSClass);
         destructor Destroy; OVERRIDE;
+        procedure MakeLike(OtherObj: Pointer); override;
 
         function GetYPrim(var Ymatrix: TCmatrix; Opt: Integer): Integer; VIRTUAL;  //returns values of array
         function GetYPrimValues(Opt: Integer): pComplexArray; VIRTUAL;
@@ -128,12 +104,12 @@ type
         function InjCurrents: Integer; VIRTUAL; // Applies to PC Elements Puts straight into Solution Array
 
         function GetBus(i: Integer): String;  // Get bus name by index
-        procedure SetBus(i: Integer; const s: String);  // Set bus name by index
+        procedure SetBus(i: Integer; const s: String); virtual;  // Set bus name by index
         procedure SetNodeRef(iTerm: Integer; NodeRefArray: pIntegerArray); VIRTUAL;  // Set NodeRef Array for fast solution with intrinsics
         procedure RecalcElementData; VIRTUAL; ABSTRACT;
         procedure CalcYPrim; VIRTUAL;
 
-        procedure MakePosSequence; VIRTUAL;  // Make a positive Sequence Model
+        procedure MakePosSequence(); VIRTUAL;  // Make a positive Sequence Model
 
         procedure GetTermVoltages(iTerm: Integer; VBuffer: PComplexArray);
         procedure GetPhasePower(PowerBuffer: pComplexArray); VIRTUAL;
@@ -141,17 +117,15 @@ type
         procedure GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex); VIRTUAL;
         procedure GetSeqLosses(var PosSeqLosses, NegSeqLosses, ZeroModeLosses: complex); VIRTUAL;
 
-        function GetPropertyValue(Index: Integer): String; OVERRIDE;
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
         property Handle: Integer READ FHandle WRITE Set_Handle;
         property Enabled: Boolean READ FEnabled WRITE Set_Enabled;
         property YPrimInvalid: Boolean READ FYPrimInvalid WRITE set_YprimInvalid;
         property YPrimFreq: Double READ FYprimFreq WRITE Set_Freq;
-        property NTerms: Integer READ Fnterms WRITE Set_NTerms;
-        property NConds: Integer READ Fnconds WRITE Set_Nconds;
-        property NPhases: Integer READ Fnphases WRITE Set_NPhases;
+        property NTerms: Int8 READ Fnterms WRITE Set_NTerms;
+        property NConds: Int8 READ Fnconds WRITE Set_Nconds;
+        property NPhases: Integer READ Fnphases;
         property FirstBus: String READ Get_FirstBus;
         property NextBus: String READ Get_NextBus;    // null string if no more values
         property Losses: Complex READ Get_Losses;
@@ -159,7 +133,7 @@ type
         property MaxPower[idxTerm: Integer]: Complex READ Get_MaxPower;  // Total power in active terminal
         property MaxCurrent[idxTerm: Integer]: Double READ Get_MaxCurrent;  // Max current in active terminal
         property MaxVoltage[idxTerm: Integer]: Double READ Get_MaxVoltage;  // Max voltage in active terminal
-        property ActiveTerminalIdx: Integer READ FActiveTerminal WRITE Set_ActiveTerminal;
+        property ActiveTerminalIdx: Int8 READ FActiveTerminal WRITE Set_ActiveTerminal;
         property Closed[Index: Integer]: Boolean READ Get_ConductorClosed WRITE Set_ConductorClosed;
         procedure SumCurrents;
         
@@ -181,10 +155,9 @@ uses
     TypInfo,
     CktElementClass;
 
-var
-    cEpsilon : Complex;
+const
+    cEpsilon : Complex = (re: EPSILON; im: 0.0);
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TDSSCktElement.Create(ParClass: TDSSClass);
 begin
     inherited Create(ParClass);
@@ -196,6 +169,8 @@ begin
     FBusNames := NIL;
     Vterminal := NIL;
     Iterminal := NIL;  // present value of terminal current
+    Terminals := NIL;
+    TerminalsChecked := NIL;
 
     ComplexBuffer := NIL;
     PublicDataStruct := NIL;   // pointer to fixed struct of data to be shared
@@ -211,32 +186,19 @@ begin
 
     YPrimInvalid := TRUE;
     FEnabled := TRUE;
-    HasEnergyMeter := FALSE;
-    HasSensorObj := FALSE;
-    HasOCPDevice := FALSE;
-    HasAutoOCPDevice := FALSE;
-    HasSwtControl := FALSE;
-    HasControl := FALSE;
-    IsMonitored := FALSE; // indicates some control is monitoring this element
-    IsPartofFeeder := FALSE;
-    IsIsolated := FALSE;
 
-    Drawn := FALSE;
-
-     // Make list for a small number of controls with an increment of 1
+    // Make list for a small number of controls with an increment of 1
     ControlElementList := TDSSPointerList.Create(1);
 
     FActiveTerminal := 1;
-    LastTerminalChecked := 0;
+    // LastTerminalChecked := 0;
 
-{    Indicates which solution Itemp is computed for    }
+    // Indicates which solution Itemp is computed for
     IterminalSolutionCount := -1;
 
     BaseFrequency := ActiveCircuit.Fundamental;
-
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TDSSCktElement.Destroy;
 var
     i: Integer;
@@ -250,6 +212,7 @@ begin
         FBusNames^[i] := ''; // Free up strings
 
     SetLength(Terminals, 0);
+    SetLength(TerminalsChecked, 0);
     Reallocmem(FBusNames, 0);
     Reallocmem(Iterminal, 0);
     Reallocmem(Vterminal, 0);
@@ -269,7 +232,7 @@ begin
 
     inherited Destroy;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.Set_YprimInvalid(const Value: Boolean);
 begin
     FYPrimInvalid := value;
@@ -277,8 +240,8 @@ begin
         // If this device is in the circuit, then we have to rebuild Y on a change in Yprim
         ActiveCircuit.Solution.SystemYChanged := TRUE;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TDSSCktElement.Set_ActiveTerminal(value: Integer);
+
+procedure TDSSCktElement.Set_ActiveTerminal(value: Int8);
 begin
     if (Value > 0) and (Value <= fNterms) then
     begin
@@ -316,7 +279,7 @@ begin
     else
         Result := FALSE;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.Set_ConductorClosed(Index: Integer; Value: Boolean);
 var
     i: Integer;
@@ -338,15 +301,14 @@ begin
         end;
     end;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TDSSCktElement.Set_NConds(Value: Integer);
 
+procedure TDSSCktElement.Set_NConds(Value: Int8);
 begin
-// Check for an almost certain programming error
+    // Check for an almost certain programming error
     if Value <= 0 then
     begin
-        DoSimpleMsg(Format('Invalid number of terminals (%d) for "%s.%s"',
-            [Value, Parentclass.Name, name]), 749);
+        DoSimpleMsg('Invalid number of terminals (%d) for "%s"',
+            [Value, FullName], 749);
         Exit;
     end;
 
@@ -356,25 +318,16 @@ begin
     Set_Nterms(fNterms);  // ReallocTerminals    NEED MORE EFFICIENT WAY TO DO THIS
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TDSSCktElement.Set_NPhases(Value: Integer);
-begin
-    if Value > 0 then
-        Fnphases := Value;
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TDSSCktElement.Set_NTerms(Value: Integer);
+procedure TDSSCktElement.Set_NTerms(Value: Int8);
 var
     i: Integer;
     NewBusNames: pStringArray;
 begin
-
-// Check for an almost certain programming error
+    // Check for an almost certain programming error
     if Value <= 0 then
     begin
-        DoSimpleMsg(Format('Invalid number of terminals (%d) for "%s.%s"',
-            [Value, Parentclass.Name, name]), 749);
+        DoSimpleMsg('Invalid number of terminals (%d) for "%s"',
+            [Value, FullName], 749);
         Exit;
     end;
 
@@ -383,16 +336,15 @@ begin
     if (value = FNterms) and ((Value * Fnconds) = Yorder) then
         Exit;
     
-    {Sanity Check}
+    // Sanity Check
     if Fnconds > 101 then
     begin
-        DoSimpleMsg(Format('Warning: Number of conductors is very large (%d) for Circuit Element: "%s.%s.' +
-            'Possible error in specifying the Number of Phases for element.',
-            [Fnconds, Parentclass.Name, name]), 750);
+        DoSimpleMsg('Warning: Number of conductors is very large (%d) for Circuit Element: "%s". Possible error in specifying the Number of Phases for element.',
+            [Fnconds, FullName], 750);
     end;
 
 
-     {ReAllocate BusNames    }
+     // ReAllocate BusNames
      // because they are Strings, we have to do it differently
 
     if Value < fNterms then
@@ -402,11 +354,11 @@ begin
         if FBusNames = NIL then
         begin
             // First allocation
-              {  Always allocate  arrays of strings with AllocMem so that the pointers are all nil
-                 else Delphi thinks non-zero values are pointing to an existing string.}
+            //  Always allocate  arrays of strings with AllocMem so that the pointers are all nil
+            // else Delphi thinks non-zero values are pointing to an existing string.
             FBusNames := AllocMem(Sizeof(FBusNames^[1]) * Value); //    fill with zeros or strings will crash
             for i := 1 to Value do
-                FBusNames^[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
+                FBusNames[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
                  // This is so devices like transformers which may be defined on multiple commands
                  // will have something in the BusNames array.
         end
@@ -414,9 +366,9 @@ begin
         begin
             NewBusNames := AllocMem(Sizeof(FBusNames^[1]) * Value);  // make some new space
             for i := 1 to fNterms do
-                NewBusNames^[i] := FBusNames^[i];   // copy old into new
+                NewBusNames[i] := FBusNames^[i];   // copy old into new
             for i := 1 to fNterms do
-                FBusNames^[i] := '';   // decrement usage counts by setting to nil string
+                FBusNames[i] := '';   // decrement usage counts by setting to nil string
             for i := fNterms + 1 to Value do
                 NewBusNames^[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
             ReAllocMem(FBusNames, 0);  // dispose of old array storage
@@ -424,10 +376,11 @@ begin
         end;
     end;
 
-    {Reallocate Terminals if Nconds or NTerms changed}
+    // Reallocate Terminals if Nconds or NTerms changed
     SetLength(Terminals, Value);
-    SetLength(TerminalsChecked, 0);
     SetLength(TerminalsChecked, Value);
+    for i := 1 to Value do
+        TerminalsChecked[i - 1] := False;
 
     FNterms := Value;    // Set new number of terminals
     Yorder := FNterms * Fnconds;
@@ -439,7 +392,6 @@ begin
         Terminals[i - 1].Init(Fnconds);
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.Set_Enabled(Value: Boolean);
 //  If disabled, but defined, just have to processBusDefs.  Adding a bus OK
 // If being removed from circuit, could remove a node or bus so have to rebuild
@@ -450,7 +402,7 @@ begin
     FEnabled := Value;
     ActiveCircuit.BusNameRedefined := TRUE;  // forces rebuilding of Y matrix and bus lists
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 function TDSSCktElement.GetYPrim(var Ymatrix: TCmatrix; Opt: Integer): Integer;
 //returns pointer to actual YPrim
 begin
@@ -464,7 +416,7 @@ begin
     end;
     Result := 0;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 function TDSSCktElement.GetYPrimValues(Opt: Integer): pComplexArray;
 // Return a pointer to the Beginning the storage arrays for fast access
 var
@@ -483,45 +435,43 @@ begin
                 Result := YPrim_Shunt.GetValuesArrayPtr(Norder);
     end;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 procedure TDSSCktElement.GetLosses(var TotalLosses, LoadLosses,
     NoLoadLosses: Complex);
 begin
-  {For no override, Default behavior is:
-    Just return total losses and set LoadLosses=total losses and noload losses =0}
+    // For no override, Default behavior is:
+    // Just return total losses and set LoadLosses=total losses and noload losses =0
 
     TotalLosses := Losses;  // Watts, vars
     LoadLosses := TotalLosses;
     NoLoadLosses := CZERO;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TDSSCktElement.InjCurrents: Integer;  // Applies to PC Elements
 
+function TDSSCktElement.InjCurrents: Integer;  // Applies to PC Elements
 begin
     Result := 0;
-    DoErrorMsg(('Improper call to InjCurrents for Element: ' + Name + '.'), '****',
+    DoErrorMsg(Format(_('Improper call to InjCurrents for Element: "%s".'), [FullName]), '****',
         'Called CktElement class base function instead of actual.', 753)
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.SetNodeRef(iTerm: Integer; NodeRefArray: pIntegerArray);
 // Also allocates VTemp  & Itemp
 var
     Size, Size2: Integer;
 begin
-// Allocate NodeRef and move new values into it.
+    // Allocate NodeRef and move new values into it.
     Size := Yorder * SizeOf(NodeRef^[1]);
     Size2 := SizeOf(NodeRef^[1]) * Fnconds;  // Size for one terminal
     ReallocMem(NodeRef, Size);  // doesn't do anything if already properly allocated
     Move(NodeRefArray^[1], NodeRef^[(iTerm - 1) * Fnconds + 1], Size2);  // Zap
     Move(NodeRefArray^[1], Terminals[iTerm - 1].TermNodeRef[0], Size2);  // Copy in Terminal as well
 
-// Allocate temp array used to hold voltages and currents for calcs
+    // Allocate temp array used to hold voltages and currents for calcs
     ReallocMem(Vterminal, Yorder * SizeOf(Vterminal^[1]));
     ReallocMem(Iterminal, Yorder * SizeOf(Iterminal^[1]));
     ReallocMem(ComplexBuffer, Yorder * SizeOf(ComplexBuffer^[1]));
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 function TDSSCktElement.Get_FirstBus: String;
 begin
     if FNterms > 0 then
@@ -532,7 +482,7 @@ begin
     else
         Result := '';
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 function TDSSCktElement.Get_NextBus: String;
 begin
     Result := '';
@@ -545,7 +495,7 @@ begin
             BusIndex := FNterms;
     end;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 function TDSSCktElement.GetBus(i: Integer): String;  // Get bus name by index
 
 begin
@@ -554,7 +504,7 @@ begin
     else
         Result := '';
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.SetBus(i: Integer; const s: String); // Set bus name by index
 begin
     if i <= FNterms then
@@ -563,15 +513,15 @@ begin
         ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
     end
     else
-        DoSimpleMsg(Format('Attempt to set bus name for non-existent circuit element terminal(%d): "%s"', [i, s]), 7541);
+        DoSimpleMsg('Attempt to set bus name for non-existent circuit element terminal(%d): "%s"', [i, s], 7541);
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.Set_Freq(Value: Double);
 begin
     if Value > 0.0 then
         FYprimFreq := Value;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.CalcYPrim;
 begin
     if YPrim_Series <> NIL then
@@ -586,20 +536,19 @@ begin
         YPrimInvalid := False;
 {$ENDIF}
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.ComputeIterminal;
 begin
-// to save time, only recompute if a different solution than last time it was computed.
+    // to save time, only recompute if a different solution than last time it was computed.
     if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
     begin
         GetCurrents(Iterminal);
         IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
     end;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 function TDSSCktElement.MaxTerminalOneIMag: Double;
-{ Get max of phase currents on the first terminal; Requires computing Iterminal
-}
+// Get max of phase currents on the first terminal; Requires computing Iterminal
 var
     i: Integer;
 begin
@@ -614,7 +563,6 @@ begin
     Result := Sqrt(Result);  // just do the sqrt once and save a little time
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.Get_Current_Mags(cMBuffer: pDoubleArray);
 var
     i: Integer;
@@ -623,7 +571,6 @@ begin
         cMBuffer^[i] := cabs(Iterminal^[i]);
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TDSSCktElement.Get_Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
 var
     i, k, n: Integer;
@@ -643,14 +590,14 @@ begin
         begin
             n := ActiveTerminal^.TermNodeRef[i - 1]; // don't bother for grounded node
             if n > 0 then
-                Caccum(Result, Cmul(NodeV^[n], conjg(Iterminal[k + i])));
+                Result += NodeV^[n] * cong(Iterminal[k + i]);
         end;
     end;
-   {If this is a positive sequence circuit, then we need to multiply by 3 to get the 3-phase power}
+    // If this is a positive sequence circuit, then we need to multiply by 3 to get the 3-phase power
     if ActiveCircuit.PositiveSequence then
-        Result := cMulReal(Result, 3.0);
+        Result := Result * 3.0;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 function TDSSCktElement.Get_Losses: Complex;
 // get total losses in circuit element, all phases, all terminals.
 // Returns complex losses (watts, vars)
@@ -672,15 +619,15 @@ begin
             if n > 0 then
             begin
                 if ActiveCircuit.PositiveSequence then
-                    Caccum(Result, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
+                    Result += NodeV^[n] * cong(Iterminal^[k]) * 3.0
                 else
-                    Caccum(Result, Cmul(NodeV^[n], conjg(Iterminal^[k])));
+                    Result += NodeV^[n] * cong(Iterminal^[k]);
             end;
         end;
 end;
 
 function TDSSCktElement.Get_MaxVoltage(idxTerm: Integer): Double;
-{Get Voltage at the specified terminal 09/17/2019}
+// Get Voltage at the specified terminal 09/17/2019
 var
     volts: Complex;
     ClassIdx,
@@ -722,14 +669,14 @@ begin
         if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
             volts := NodeV^[nref]
         else
-            volts := csub(NodeV^[nref], NodeV^[nrefN]);
+            volts := NodeV^[nref] - NodeV^[nrefN];
     end;
     Result := cabs(volts);
 end;
 
 function TDSSCktElement.Get_MaxPower(idxTerm: Integer): Complex;
-{Get power in the phase with the max current and return equivalent power as if it were balanced in all phases
- 2/12/2019}
+//Get power in the phase with the max current and return equivalent power as if it were balanced in all phases
+// 2/12/2019
 var
     volts: Complex;
     ClassIdx,
@@ -763,31 +710,29 @@ begin
         end;
     end;
 
-
     ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
     nref := ActiveTerminal^.TermNodeRef[MaxPhase - 1]; // reference to the phase voltage with the max current
     nrefN := ActiveTerminal^.TermNodeRef[Fnconds - 1];  // reference to the ground terminal (GND or other phase)
     with ActiveCircuit.Solution do     // Get power into max phase of active terminal
     begin
-
         if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
             volts := NodeV^[nref]
         else
-            volts := csub(NodeV^[nref], NodeV^[nrefN]);
-        Result := Cmul(volts, conjg(Iterminal[k + MaxPhase]));
+            volts := NodeV^[nref] - NodeV^[nrefN];
+        Result := volts * cong(Iterminal[k + MaxPhase]);
     end;
 
-   // Compute equivalent total power of all phases assuming equal to max power in all phases
+    // Compute equivalent total power of all phases assuming equal to max power in all phases
     with Result do
     begin
         re := re * Fnphases;  // let compiler handle type coercion
         im := im * Fnphases;
     end;
 
-   {If this is a positive sequence circuit (Fnphases=1),
-    then we need to multiply by 3 to get the 3-phase power}
+    // If this is a positive sequence circuit (Fnphases=1),
+    // then we need to multiply by 3 to get the 3-phase power
     if ActiveCircuit.PositiveSequence then
-        Result := cMulReal(Result, 3.0);
+        Result := Result * 3.0;
 end;
 
 function TDSSCktElement.Get_MaxCurrent(idxTerm: Integer): Double;
@@ -815,7 +760,7 @@ begin
         end;
     end;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.GetPhasePower(PowerBuffer: pComplexArray);
 // Get the power in each phase (complex losses) of active terminal
 // neutral conductors are ignored by this routine
@@ -837,13 +782,13 @@ begin
             if n > 0 then
             begin
                 if ActiveCircuit.PositiveSequence then
-                    PowerBuffer^[i] := CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[i])), 3.0)
+                    PowerBuffer^[i] := NodeV^[n] * cong(Iterminal^[i]) * 3.0
                 else
-                    PowerBuffer^[i] := Cmul(NodeV^[n], conjg(Iterminal^[i]));
+                    PowerBuffer^[i] := NodeV^[n] * cong(Iterminal^[i]);
             end;
         end;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.GetPhaseLosses(var Num_Phases: Integer; LossBuffer: pComplexArray);
 // Get the losses in each phase (complex losses);  Power difference coming out
 // each phase. Note: This can be misleading if the nodev voltage is greatly unbalanced.
@@ -873,16 +818,16 @@ begin
                 if n > 0 then
                 begin
                     if ActiveCircuit.PositiveSequence then
-                        Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
+                        cLoss += NodeV^[n] * cong(Iterminal^[k]) * 3.0
                     else
-                        Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
+                        cLoss += NodeV^[n] * cong(Iterminal^[k]);
                 end;
             end;
             LossBuffer^[i] := cLoss;
         end;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TDSSCktElement.DumpProperties(F: TFileStream; Complete: Boolean);
+
+procedure TDSSCktElement.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
 begin
@@ -943,9 +888,9 @@ begin
                 FSWriteln(F);
             end;
         end;
-    end;  {If complete}
+    end;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TDSSCktElement.DoYprimCalcs(Ymatrix: TCMatrix);
 var
     i, j, k, ii, jj, ElimRow: Integer;
@@ -953,10 +898,9 @@ var
     RowEliminated: pIntegerArray;
     ElementOpen: Boolean;
 begin
-     {Now Account for Open Conductors
-      Perform a Kron Reduction on rows where I is forced to zero.
-      Then for any conductor that is open, zero out row and column.
-      }
+    // Now Account for Open Conductors
+    // Perform a Kron Reduction on rows where I is forced to zero.
+    // Then for any conductor that is open, zero out row and column.
     with Ymatrix do
     begin
         ElementOpen := FALSE;
@@ -988,23 +932,22 @@ begin
                                 begin
                                     Yij := GetElement(ii, jj);
                                     Ynj := GetElement(ElimRow, jj);
-                                    SetElemSym(ii, jj, Csub(Yij, Cdiv(cmul(Yin, Ynj), Ynn)));
+                                    SetElemSym(ii, jj, Yij - ((Yin * Ynj) / Ynn));
                                 end;
                         end;
                     end;
-                // Now zero out row and column
+                    // Now zero out row and column
                     ZeroRow(ElimRow);
                     ZeroCol(ElimRow);
-                // put a small amount on the diagonal in case node gets isolated
+                    // put a small amount on the diagonal in case node gets isolated
                     SetElement(ElimRow, ElimRow, cEpsilon);
                 end;
             end;
             k := k + Fnconds;
         end;
-       { Clean up at end of loop.
-         Add in cEpsilon to diagonal elements of remaining rows to avoid leaving a bus hanging.
-         This happens on low-impedance simple from-to elements when one terminal opened.
-       }
+        // Clean up at end of loop.
+        // Add in cEpsilon to diagonal elements of remaining rows to avoid leaving a bus hanging.
+        // This happens on low-impedance simple from-to elements when one terminal opened.
         if ElementOpen then
         begin
             for ii := 1 to Yorder do
@@ -1015,7 +958,7 @@ begin
         end;
     end;
 end;
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
 procedure TDSSCktElement.SumCurrents;
 // sum Terminal Currents into System  Currents Array
 // Primarily for Newton Iteration
@@ -1028,7 +971,7 @@ begin
     ComputeIterminal;
     with ActiveCircuit.Solution do
         for i := 1 to Yorder do
-            Caccum(Currents^[NodeRef^[i]], Iterminal^[i]);  // Noderef=0 is OK
+            Currents^[NodeRef^[i]] += Iterminal^[i];  // Noderef=0 is OK
 end;
 
 procedure TDSSCktElement.GetTermVoltages(iTerm: Integer; VBuffer: PComplexArray);
@@ -1040,7 +983,7 @@ begin
     try
         ncond := NConds;
 
-     {return Zero if terminal number improperly specified}
+        // return Zero if terminal number improperly specified
         if (iTerm < 1) or (iTerm > fNterms) then
         begin
             for i := 1 to Ncond do
@@ -1054,33 +997,14 @@ begin
 
     except
         On E: Exception do
-            DoSimpleMsg('Error filling voltage buffer in GetTermVoltages for Circuit Element:' + DSSclassName + '.' + Name + CRLF +
-                'Probable Cause: Invalid definition of element.' + CRLF +
-                'System Error Message: ' + E.Message, 755);
+            DoSimpleMsg('Error filling voltage buffer in GetTermVoltages for Circuit Element: "%s". Probable Cause: Invalid definition of element. System Error Message: %s', [FullName, E.Message], 755);
     end;
-end;
-
-procedure TDSSCktElement.InitPropertyValues(ArrayOffset: Integer);
-begin
-    PropertyValue[ArrayOffset + 1] := Format('%-g', [BaseFrequency]);  // Base freq
-    PropertyValue[ArrayOffset + 2] := 'true';  // Enabled
-    FEnabledProperty := ArrayOffset + 2;     // keep track of this
-
-    inherited InitPropertyValues(ArrayOffset + 2);
-end;
-
-function TDSSCktElement.GetPropertyValue(Index: Integer): String;
-begin
-    if Index = FEnabledProperty then
-        Result := StrTOrF(Enabled)
-    else
-        Result := inherited GetPropertyValue(Index);
 end;
 
 procedure TDSSCktElement.GetSeqLosses(var PosSeqLosses, NegSeqLosses, ZeroModeLosses: complex);
 begin
-{ For the base class, just return CZERO}
-{Derived classes have to supply appropriate function}
+// For the base class, just return CZERO
+// Derived classes have to supply appropriate function
     PosSeqLosses := CZERO;
     NegSeqLosses := CZERO;
     ZeroModeLosses := CZERO;
@@ -1105,7 +1029,7 @@ begin
         Result := FALSE;
 end;
 
-procedure TDSSCktElement.MakePosSequence;
+procedure TDSSCktElement.MakePosSequence();
 var
     i: Integer;
     grnd: Boolean;
@@ -1120,7 +1044,7 @@ begin
 end;
 
 procedure TDSSCktElement.ComputeVterminal;
-{Put terminal voltages in an array}
+// Put terminal voltages in an array
 var
     i: Integer;
 begin
@@ -1134,7 +1058,14 @@ begin
     FillDWord(ITerminal^, Yorder * ((SizeOf(Double) * 2) div 4), 0);
 end;
 
-initialization
-    cEpsilon.re := EPSILON;
-    cEpsilon.im := 0.0;
+procedure TDSSCktElement.MakeLike(OtherObj: Pointer);
+var
+    OtherCktObj: TDSSCktElement;
+begin
+    OtherCktObj := TDSSCktElement(OtherObj);
+    BaseFrequency := OtherCktObj.BaseFrequency;
+    Enabled := TRUE;
+end;
+
+
 end.

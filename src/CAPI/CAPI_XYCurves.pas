@@ -62,7 +62,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active XYCurve object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['XYCurve'], 8989);
         end;
         Exit;
     end;
@@ -116,7 +116,7 @@ begin
         Exit;
 
     if not DSSPrime.XYCurveClass.SetActive(Value) then
-        DoSimpleMsg(DSSPrime, 'XYCurve "' + Value + '" Not Found in Active Circuit.', 51008);
+        DoSimpleMsg(DSSPrime, 'XYCurve "%s" not found in Active Circuit.', [Value], 51008);
 
     // Still same active object if not found
 end;
@@ -129,7 +129,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51009);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51009);
         Exit;
     end;
     
@@ -144,7 +144,7 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51013);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51013);
         Exit;
     end;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pXYCurve.NumPoints);
@@ -161,15 +161,17 @@ end;
 procedure XYCurves_Set_Npts(Value: Integer); CDECL;
 var
     pXYCurve: TXYCurveObj;
-
+    prev: Integer;
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51014);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51014);
         Exit;
     end;
 
-    pXYCurve.NumPoints := Value;
+    prev := pXYCurve.FNumPoints;
+    pXYCurve.FNumPoints := Value;
+    pXYCurve.PropertySideEffects(ord(TXYcurveProp.npts), prev);
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -180,13 +182,13 @@ var
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51015);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51015);
         Exit;
     end;
 
     if (pXYCurve.NumPoints <> ValueCount) and DSS_CAPI_EXT_ERRORS then
     begin
-        DoSimpleMsg(DSSPrime, Format('The number of values provided (%d) does not match the expected (%d).', [ValueCount, pXYCurve.NumPoints]), 183);
+        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the expected (%d).', [ValueCount, pXYCurve.NumPoints], 183);
         Exit;
     end;
     
@@ -207,7 +209,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51010);
         Exit;
     end;
     
@@ -221,7 +223,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51011);
         Exit;
     end;
     
@@ -236,7 +238,7 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51013);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51013);
         Exit;
     end;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, pXYCurve.NumPoints);
@@ -256,7 +258,7 @@ var
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51010);
         Exit;
     end;
 
@@ -269,7 +271,7 @@ var
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51010);
         Exit;
     end;
     
@@ -283,13 +285,13 @@ var
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51016);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51016);
         Exit;
     end;
 
     if (pXYCurve.NumPoints <> ValueCount) and DSS_CAPI_EXT_ERRORS then
     begin
-        DoSimpleMsg(DSSPrime, Format('The number of values provided (%d) does not match the expected (%d).', [ValueCount, pXYCurve.NumPoints]), 183);
+        DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the expected (%d).', [ValueCount, pXYCurve.NumPoints], 183);
         Exit;
     end;
     
@@ -309,7 +311,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51011);
         Exit;
     end;
 
@@ -324,7 +326,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51011);
         Exit;
     end;
     
@@ -339,7 +341,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51011);
         Exit;
     end;
 
@@ -354,7 +356,7 @@ begin
     Result := 0;
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51011);
         Exit;
     end;
 
@@ -368,7 +370,7 @@ var
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51010);
         Exit;
     end;
     
@@ -381,7 +383,7 @@ var
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51010);
         Exit;
     end;
 
@@ -394,7 +396,7 @@ var
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51010);
         Exit;
     end;
 
@@ -407,7 +409,7 @@ var
 begin
     if not _activeObj(DSSPrime, pXYCurve) then
     begin
-        DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
+        DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['XYCurve'], 51010);
         Exit;
     end;
 
@@ -422,7 +424,7 @@ end;
 procedure XYCurves_Set_idx(Value: Integer); CDECL;
 begin
     if (DSSPrime.XYCurveClass.ElementList.Get(Value) = NIL) then
-        DoSimpleMsg(DSSPrime, 'Invalid XYCurve index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['XYCurve', Value], 656565);
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
