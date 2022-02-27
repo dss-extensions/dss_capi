@@ -51,7 +51,7 @@ end;
 const
   param: string = 'hw.logicalcpu';
 var
-  len: cint;
+  len: size_t;
   t: size_t;
 begin
   len := sizeof(t);
