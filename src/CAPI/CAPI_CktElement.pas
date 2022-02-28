@@ -87,7 +87,7 @@ uses
     CAPI_Constants,
     DSSClassDefs,
     DSSGlobals,
-    UComplex,
+    UComplex, DSSUcomplex,
     Sysutils,
     PDElement,
     PCElement,
@@ -222,7 +222,7 @@ begin
     Result := (DSSPrime.ActiveCircuit.ActiveCktElement = NIL);
     if Result and DSS_CAPI_EXT_ERRORS then
     begin
-        DoSimpleMsg(DSS, 'No active circuit element found! Activate one and retry.', 97800);
+        DoSimpleMsg(DSS, _('No active circuit element found! Activate one and retry.'), 97800);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -260,7 +260,7 @@ begin
         Exit;
 
     with DSSPrime.ActiveCircuit.ActiveCktElement do
-        Result := DSS_GetAsPAnsiChar(DSSPrime, ParentClass.Name + '.' + Name);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, FullName);
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumConductors(): Integer; CDECL;
@@ -308,9 +308,9 @@ begin
         if (Count <> ActiveCktElement.NTerms) AND (DSS_CAPI_EXT_ERRORS) then
         begin
             DoSimpleMsg(DSSPrime, 
-                Format('The number of buses provided (%d) does not match the number of terminals (%d).', 
+                'The number of buses provided (%d) does not match the number of terminals (%d).', 
                     [ValueCount, Integer(ActiveCktElement.NTerms)]
-                ), 97895
+                , 97895
             );
             Exit;
         end;
@@ -597,7 +597,7 @@ begin
                     k := (j - 1) * NConds;
                     n := NodeRef^[k + 1];
                     Vph[1] := Solution.NodeV^[n];  // Get voltage at node
-                    S := Cmul(Vph[1], conjg(cBuffer^[k + 1]));   // Compute power per phase
+                    S := Vph[1] * cong(cBuffer^[k + 1]);   // Compute power per phase
                     Result[icount] := S.re * 0.003; // 3-phase kW conversion
                     inc(icount);
                     Result[icount] := S.im * 0.003; // 3-phase kvar conversion
@@ -626,7 +626,7 @@ begin
                 Phase2SymComp(@Vph, @V012);
                 for i := 1 to 3 do
                 begin
-                    S := Cmul(V012[i], conjg(I012[i]));
+                    S := V012[i] * cong(I012[i]);
                     Result[icount] := S.re * 0.003; // 3-phase kW conversion
                     inc(icount);
                     Result[icount] := S.im * 0.003; // 3-phase kW conversion
@@ -847,7 +847,7 @@ begin
             for j := 1 to Nconds do
             begin
                 inc(k);
-                Caccum(cResid, CBuffer^[k]);
+                cResid += CBuffer^[k];
             end;
             Result[iV] := Cabs(cResid);
             Inc(iV);
@@ -898,7 +898,13 @@ begin
     if InvalidCktElement(DSSPrime) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName)
+    if DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName <> '' then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName)
+    else
+        Result := DSS_GetAsPAnsiChar(DSSPrime, 
+            DSSPrime.ActiveCircuit.ActiveCktElement.ParentClass.Name + '_' +
+            DSSPrime.ActiveCircuit.ActiveCktElement.Name
+        );
 end;
 
 //------------------------------------------------------------------------------
@@ -942,7 +948,7 @@ begin
         begin
             ctrl := ActiveCktElement.ControlElementList.Get(idx);
             if ctrl <> NIL then
-                Result := DSS_GetAsPAnsiChar(DSSPrime, Format('%s.%s', [ctrl.ParentClass.Name, ctrl.Name]));
+                Result := DSS_GetAsPAnsiChar(DSSPrime, ctrl.FullName);
         end;
     end;
 end;
@@ -956,7 +962,7 @@ begin
     if InvalidCktElement(DSSPrime) then
         Exit;
 
-    if DSSPrime.ActiveCircuit.ActiveCktElement.HasEnergyMeter then
+    if Flg.HasEnergyMeter in DSSPrime.ActiveCircuit.ActiveCktElement.Flags then
     begin
         pd := DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement;
         Result := DSS_GetAsPAnsiChar(DSSPrime, pd.MeterObj.Name);
@@ -1228,7 +1234,7 @@ begin
         if NodeRef = NIL then
         begin
             // Warn and exit
-            DoSimpleMsg('Nodes are not initialized. Try solving the system first.', 15013);
+            DoSimpleMsg(_('Nodes are not initialized. Try solving the system first.'), 15013);
             DefaultResult(ResultPtr, ResultCount);
             Exit;
         end;
@@ -1260,7 +1266,7 @@ begin
         Result := FALSE;
         Exit;
     end;
-    Result := DSSPrime.ActiveCircuit.ActiveCktElement.HasOCPDevice;
+    Result := Flg.HasOCPDevice in DSSPrime.ActiveCircuit.ActiveCktElement.Flags;
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumControls(): Integer; CDECL;
@@ -1399,7 +1405,7 @@ begin
         Exit;
     end;
 
-    Result := DSSPrime.ActiveCircuit.ActiveCktElement.IsIsolated;
+    Result := Flg.IsIsolated in DSSPrime.ActiveCircuit.ActiveCktElement.Flags;
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -1433,7 +1439,7 @@ begin
             myEnd := NConds * j;
             for i := myInit to myEnd do
             begin
-                myBuffer[j - 1] := cadd(myBuffer[j - 1], cBuffer^[i]);
+                myBuffer[j - 1] := myBuffer[j - 1] + cBuffer^[i];
             end;
             Result[iV + 0] := myBuffer[j - 1].re * 0.001;
             Result[iV + 1] := myBuffer[j - 1].im * 0.001; 
@@ -1459,7 +1465,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'NodeRef is not populated for the current element!', 97801);
+            DoSimpleMsg(DSSPrime, _('NodeRef is not populated for the current element!'), 97801);
         end;
         Exit;
     end;

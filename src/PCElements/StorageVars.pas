@@ -12,11 +12,11 @@ unit StorageVars;
 interface
 
 uses
-    Ucomplex;
+    UComplex, DSSUcomplex;
 
 type
 
-{Struct to pass basic data to user-written DLLs}
+    // Struct to pass basic data to user-written DLLs
     TStorageVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
 
         kWrating: Double;

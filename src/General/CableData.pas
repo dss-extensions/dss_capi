@@ -16,52 +16,53 @@ uses
     ConductorData;
 
 type
-    TCableData = class(TConductorData)
-    PRIVATE
+{$SCOPEDENUMS ON}
+    TCableDataProp = (
+        INVALID = 0,
+        EpsR = 1,
+        InsLayer = 2,
+        DiaIns = 3,
+        DiaCable = 4
+    );
+{$SCOPEDENUMS OFF}
 
+    TCableData = class(TConductorData)
     PROTECTED
-        procedure CountProperties;
-        procedure DefineProperties;
-        procedure ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer);
-        procedure ClassMakeLike(const OtherObj: Pointer);
+        PropertyOffset_CableData: Integer;
+
+        procedure CountPropertiesAndAllocate; override;
+        procedure DefineProperties; override;
     PUBLIC
-        NumCableClassProps: Integer;
-        constructor Create(dssContext: TDSSContext);
+        constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
     end;
 
     TCableDataObj = class(TConductorDataObj)
-{$IFDEF DSS_CAPI}
     PUBLIC
-{$ELSE}
-    PRIVATE
-{$ENDIF}
         FEpsR: Double;
         // next 3 use parent RadiusUnits
         FInsLayer: Double;
         FDiaIns: Double;
         FDiaCable: Double;
-    PUBLIC
+
         constructor Create(ParClass: TDSSClass; const CableDataName: String);
         destructor Destroy; OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherObj: Pointer); override;
 
         property EpsR: Double READ FEpsR;
         property DiaIns: Double READ FDiaIns;
         property DiaCable: Double READ FDiaCable;
         property InsLayer: Double READ FInsLayer;
-
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
     end;
 
 implementation
 
 uses
-    ParserDel,
     DSSGlobals,
     DSSClassDefs,
     Sysutils,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     Arraydef,
     LineUnits,
     Utilities,
@@ -69,11 +70,21 @@ uses
     DSSObjectHelper,
     TypInfo;
 
-constructor TCableData.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
+type
+    TObj = TCableDataObj;
+    TProp = TCableDataProp;
+const
+    NumPropsThisClass = Ord(High(TProp));
+var
+    PropInfo: Pointer = NIL;    
+
+constructor TCableData.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
 begin
-    NumCableClassProps := 4;
-    inherited Create(dssContext);
-    DSSClassType := DSS_OBJECT;
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
+
+    inherited Create(dssContext, DSSClsType or DSS_OBJECT, DSSClsName);
+    ClassParents.Add('CableData');
 end;
 
 destructor TCableData.Destroy;
@@ -81,88 +92,63 @@ begin
     inherited Destroy;
 end;
 
-procedure TCableData.CountProperties;
+procedure TCableData.CountPropertiesAndAllocate;
 begin
-    NumProperties := NumProperties + NumCableClassProps;
-    inherited CountProperties;
+    NumProperties := NumProperties + NumPropsThisClass;
+    inherited CountPropertiesAndAllocate;
 end;
 
 procedure TCableData.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
-    PropertyName^[ActiveProperty + 1] := 'EpsR';
-    PropertyName^[ActiveProperty + 2] := 'InsLayer';
-    PropertyName^[ActiveProperty + 3] := 'DiaIns';
-    PropertyName^[ActiveProperty + 4] := 'DiaCable';
+    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo);
 
-    PropertyHelp^[ActiveProperty + 1] := 'Insulation layer relative permittivity; default is 2.3.';
-    PropertyHelp^[ActiveProperty + 2] := 'Insulation layer thickness; same units as radius; no default. ' +
-        'With DiaIns, establishes inner radius for capacitance calculation.';
-    PropertyHelp^[ActiveProperty + 3] := 'Diameter over insulation layer; same units as radius; no default. ' +
-        'Establishes outer radius for capacitance calculation.';
-    PropertyHelp^[ActiveProperty + 4] := 'Diameter over cable; same units as radius; no default.';
+    PropertyOffset_CableData := ActiveProperty;
 
-    ActiveProperty := ActiveProperty + NumCableClassProps;
+    // double properties (default type)
+    PropertyOffset[ActiveProperty + ord(TProp.EpsR)] := ptruint(@obj.FEpsR);
+    PropertyOffset[ActiveProperty + ord(TProp.InsLayer)] := ptruint(@obj.FInsLayer);
+    PropertyOffset[ActiveProperty + ord(TProp.DiaIns)] := ptruint(@obj.FDiaIns);
+    PropertyOffset[ActiveProperty + ord(TProp.DiaCable)] := ptruint(@obj.FDiaCable);
+
+    ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TCableData.ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer);
+procedure TCableDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
 begin
-  // continue parsing with contents of Parser
-    if ParamPointer > 0 then
-        with TCableDataObj(ActiveObj) do
-        begin
-            case ParamPointer of
-                1:
-                    FEpsR := Parser.Dblvalue;
-                2:
-                    FInsLayer := Parser.DblValue;
-                3:
-                    FDiaIns := Parser.DblValue;
-                4:
-                    FDiaCable := Parser.DblValue;
-            else
-                inherited ClassEdit(ActiveObj, ParamPointer - NumCableClassProps)
-            end;
-      {Check for critical errors}
-            case ParamPointer of
-                1:
-                    if (FEpsR < 1.0) then
-                        DoSimpleMsg('Error: Insulation permittivity must be greater than one for CableData ' + Name, 999);
-                2:
-                    if (FInsLayer <= 0.0) then
-                        DoSimpleMsg('Error: Insulation layer thickness must be positive for CableData ' + Name, 999);
-                3:
-                    if (FDiaIns <= 0.0) then
-                        DoSimpleMsg('Error: Diameter over insulation layer must be positive for CableData ' + Name, 999);
-                4:
-                    if (FDiaCable <= 0.0) then
-                        DoSimpleMsg('Error: Diameter over cable must be positive for CableData ' + Name, 999);
-            end;
-        end;
-end;
-
-procedure TCableData.ClassMakeLike(const OtherObj: Pointer);
-var
-    OtherCableData: TCableDataObj;
-begin
-    OtherCableData := TCableDataObj(OtherObj);
-    with TCableDataObj(ActiveDSSObject) do
-    begin
-        FEpsR := OtherCableData.FEpsR;
-        FInsLayer := OtherCableData.FInsLayer;
-        FDiaIns := OtherCableData.FDiaIns;
-        FDiaCable := OtherCableData.FDiaCable;
+    // Check for critical errors
+    case (Idx - (ParentClass as TCableData).PropertyOffset_CableData)  of
+        ord(TProp.EpsR):
+            if (FEpsR < 1.0) then
+                DoSimpleMsg('Error: Insulation permittivity must be greater than one for CableData %s', [Name], 999);
+        ord(TProp.InsLayer):
+            if (FInsLayer <= 0.0) then
+                DoSimpleMsg('Error: Insulation layer thickness must be positive for CableData %s', [Name], 999);
+        ord(TProp.DiaIns):
+            if (FDiaIns <= 0.0) then
+                DoSimpleMsg('Error: Diameter over insulation layer must be positive for CableData %s', [Name], 999);
+        ord(TProp.DiaCable):
+            if (FDiaCable <= 0.0) then
+                DoSimpleMsg('Error: Diameter over cable must be positive for CableData %s', [Name], 999);
     end;
-    inherited ClassMakeLike(OtherObj);
+    inherited PropertySideEffects(Idx, previousIntVal);
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//      TConductorData Obj
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+procedure TCableDataObj.MakeLike(OtherObj: Pointer);
+var
+    Other: TObj;
+begin
+    inherited MakeLike(OtherObj);
+    Other := TCableDataObj(OtherObj);
+    FEpsR := Other.FEpsR;
+    FInsLayer := Other.FInsLayer;
+    FDiaIns := Other.FDiaIns;
+    FDiaCable := Other.FDiaCable;
+end;
 
 constructor TCableDataObj.Create(ParClass: TDSSClass; const CableDataName: String);
-
 begin
     inherited Create(ParClass, CableDataName);
     Name := LowerCase(CableDataName);
@@ -174,43 +160,9 @@ begin
     FDiaCable := -1.0;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TCableDataObj.Destroy;
 begin
     inherited destroy;
-end;
-
-procedure TCableDataObj.DumpProperties(F: TFileStream; Complete: Boolean);
-var
-    i: Integer;
-begin
-    inherited DumpProperties(F, Complete);
-    with ParentClass do
-    begin
-        for i := 1 to NumProperties do
-        begin
-            FSWrite(F, '~ ' + PropertyName^[i] + '=');
-            case i of
-                1:
-                    FSWriteln(F, Format('%.3g', [FEpsR]));
-                2:
-                    FSWriteln(F, Format('%.6g', [FInsLayer]));
-                3:
-                    FSWriteln(F, Format('%.6g', [FDiaIns]));
-                4:
-                    FSWriteln(F, Format('%.6g', [FDiaCable]));
-            end;
-        end;
-    end;
-end;
-
-procedure TCableDataObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-    PropertyValue[ArrayOffset + 1] := '2.3';
-    PropertyValue[ArrayOffset + 2] := '-1';
-    PropertyValue[ArrayOffset + 3] := '-1';
-    PropertyValue[ArrayOffset + 4] := '-1';
-    inherited InitPropertyValues(ArrayOffset + 4);
 end;
 
 end.

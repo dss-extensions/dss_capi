@@ -59,7 +59,8 @@ uses
     ExecHelper,
     Executive,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    SysUtils;
 
 function Settings_Get_AllowDuplicates(): TAPIBoolean; CDECL;
 begin
@@ -393,7 +394,7 @@ begin
         PriceCurve := Value;
         PriceCurveObj := DSSPrime.LoadShapeClass.Find(Pricecurve);
         if PriceCurveObj = NIL then
-            DoSimpleMsg(DSSPrime, 'Price Curve: "' + Pricecurve + '" not found.', 5006);
+            DoSimpleMsg(DSSPrime, 'Price Curve: "%s" not found.', [PriceCurve], 5006);
     end;
 end;
 //------------------------------------------------------------------------------

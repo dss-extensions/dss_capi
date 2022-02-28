@@ -7,19 +7,17 @@ unit OHLineConstants;
   ----------------------------------------------------------
 }
 
-{Manages the geometry data and calculates the impedance matrices for an overhead line}
-
+// Manages the geometry data and calculates the impedance matrices for an overhead line
 interface
 
 uses
     Arraydef,
     Ucmatrix,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     LineUnits,
     LineConstants;
 
 type
-
     TOHLineConstants = class(TLineConstants)
     PRIVATE
 
@@ -41,7 +39,5 @@ destructor TOHLineConstants.Destroy;
 begin
     inherited;
 end;
-
-initialization
 
 end.

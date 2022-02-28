@@ -43,7 +43,6 @@ var
     Stest: String;
 
 begin
-
     Result := 0;
     Stest := Copy(S, 1, 2);  // copy first 2 chars for MOST OF the test
     if CompareText(Stest, 'no') = 0 then
@@ -80,7 +79,6 @@ end;
 
 function LineUnitsStr(Units: Integer): String;
 begin
-
     case Units of
         0:
             Result := 'none';
@@ -107,10 +105,9 @@ end;
 
 function To_Meters(Units: Integer): Double;
 begin
-
     case Units of
         UNITS_MILES:
-            Result := 1609.3;
+            Result := 1609.344;
         UNITS_KFT:
             Result := 304.8;
         UNITS_KM:

@@ -1,7 +1,5 @@
 unit CAPI_Monitors;
 
-//TODO: remove AuxParser usage
-
 interface
 
 uses
@@ -81,7 +79,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, 'No active Monitor object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['Monitor'], 8989);
         end;
         Exit;
     end;
@@ -215,7 +213,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Monitor "' + Value + '" Not Found in Active Circuit.', 5004);
+        DoSimpleMsg(DSSPrime, 'Monitor "%s" not found in Active Circuit.', [Value], 5004);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -311,10 +309,10 @@ begin
 
     if (Index < 1) or (Index > pMon.RecordSize {NumChannels}) then
     begin
-        DoSimpleMsg(DSSPrime, Format(
+        DoSimpleMsg(DSSPrime,
             'Monitors.Channel: invalid channel index (%d), monitor "%s" has %d channels.',
-            [Index, pMon.Name, pMon.RecordSize]
-            ), 5888);
+            [Index, pMon.Name, pMon.RecordSize],
+            5888);
         Exit;
     end;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
@@ -518,7 +516,9 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pMon.ElementName);
+
+    if pMon.MeteredElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, LowerCase(pMon.MeteredElement.FullName));
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Set_Element(const Value: PAnsiChar); CDECL;
@@ -527,8 +527,8 @@ var
 begin
     if not _activeObj(DSSPrime, pMon) then
         Exit;
-    pMon.ElementName := Value;
-    pMon.PropertyValue[1] := Value;
+    pMon.ParsePropertyValue(ord(TMonitorProp.element), Value);
+    pMon.SetAsNextSeq(ord(TMonitorProp.Element));
     pMon.RecalcElementData;
 end;
 //------------------------------------------------------------------------------
@@ -570,7 +570,7 @@ begin
     pMonitor := DSSPrime.ActiveCircuit.Monitors.Get(Value);
     if pMonitor = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Monitor index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Monitor', Value], 656565);
         Exit;
     end;
 

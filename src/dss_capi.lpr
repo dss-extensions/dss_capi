@@ -3,8 +3,9 @@ library dss_capi;
 {$ENDIF}
 
 {$MODE Delphi}
+{$IFDEF WINDOWS}
 {$APPTYPE CONSOLE}
-
+{$ENDIF}
 { ----------------------------------------------------------
   Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
   All rights reserved.
@@ -34,48 +35,48 @@ library dss_capi;
   POSSIBILITY OF SUCH DAMAGE.
 }
 
-{
-Copyright (c) 2017-2021, Paulo Meira
-All rights reserved.
+// Although barely anything remains, the initial version of this file based on work
+// Copyright (c) 2016 Battelle Memorial Institute
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
 
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-}
-
-{
-  08/05/2008  Created from ESI DSS
-}
-
-{
-	08/17/2016  Created from OpenDSS
- ----------------------------------------------------------
-  Copyright (c) 2016 Battelle Memorial Institute
- ----------------------------------------------------------
-}
+// Copyright (c) 2017-2022, Paulo Meira
+// Copyright (c) 2017-2022, DSS C-API contributors
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+// 
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+// 
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 uses
+{$IFDEF DSS_CAPI_CONTEXT}
+{$IFDEF UNIX}
+    {$IF NOT DECLARED(UseHeapTrace)}
+    cmem,
+    {$ENDIF}
+    cthreads,
+{$ENDIF}
+{$ENDIF}
     SysUtils,
     Classes,
     CustApp,
@@ -104,11 +105,9 @@ uses
     DSSCallBackRoutines in 'src/Common/DSSCallBackRoutines.pas',
     DSSClass in 'src/Common/DSSClass.pas',
     DSSClassDefs in 'src/Common/DSSClassDefs.pas',
-    DSSGlobals in 'src/Common/DSSGlobals.pas',
     DSSObject in 'src/General/DSSObject.pas',
     Dynamics in 'src/Shared/Dynamics.pas',
     EnergyMeter in 'src/Meters/EnergyMeter.pas',
-    EventQueue in 'src/Common/EventQueue.pas',
     ExecCommands in 'src/Executive/ExecCommands.pas',
     ExecHelper in 'src/Executive/ExecHelper.pas',
     ExecOptions in 'src/Executive/ExecOptions.pas',
@@ -230,6 +229,7 @@ uses
     CAPI_Meters in 'CAPI_Meters.pas',
     CAPI_Monitors in 'CAPI_Monitors.pas',
     CAPI_Parallel in 'CAPI_Parallel.pas',
+    CAPI_NoParallel in 'CAPI_NoParallel.pas',
     CAPI_Parser in 'CAPI_Parser.pas',
     CAPI_PDElements in 'CAPI_PDElements.pas',
     CAPI_PVSystems in 'CAPI_PVSystems.pas',
@@ -250,7 +250,12 @@ uses
     CAPI_Vsources in 'CAPI_Vsources.pas',
     CAPI_WireData in 'CAPI_WireData.pas', // API extension
     CAPI_XYCurves in 'CAPI_XYCurves.pas',
-    CAPI_YMatrix in 'CAPI_YMatrix.pas'
+    CAPI_YMatrix in 'CAPI_YMatrix.pas',
+    CAPI_Obj in 'CAPI_Obj.pas', // new experimental API
+    CAPI_ZIP in 'CAPI_ZIP.pas', // new experimental API
+    
+    DSSGlobals in 'src/Common/DSSGlobals.pas'
+
 {$IFDEF DSS_CAPI_CONTEXT},
     {$I '../build/generated/ctx_files.inc'}
 {$ENDIF}
@@ -1945,8 +1950,91 @@ exports
     YMatrix_Set_SolverOptions,
     YMatrix_Get_SolverOptions,
 
+    Text_CommandBlock,
+    Text_CommandArray,
+    ZIP_Open,
+    ZIP_Close,
+    ZIP_Redirect,
+
     DSS_RegisterPlotCallback,
-    DSS_RegisterMessageCallback
+    DSS_RegisterMessageCallback,
+
+    DSS_Dispose_String,
+    DSS_Dispose_PPointer,
+    Obj_New,
+    Obj_GetHandleByName,
+    Obj_GetHandleByIdx,
+    Obj_GetName,
+    Obj_PropertySideEffects,
+    Obj_BeginEdit,
+    Obj_EndEdit,
+    Obj_Activate,
+    Obj_GetFloat64,
+    Obj_GetInt32,
+    Obj_GetString,
+    Obj_GetObject,
+    Obj_GetAsString,
+    Obj_GetFloat64Array,
+    Obj_GetInt32Array,
+    Obj_GetStringArray,
+    Obj_GetObjectArray,
+    Obj_SetAsString,
+    Obj_SetFloat64,
+    Obj_SetInt32,
+    Obj_SetString,
+    Obj_SetObject,
+    Obj_SetFloat64Array,
+    Obj_SetInt32Array,
+    Obj_SetStringArray,
+    Obj_SetObjectArray,
+    Obj_GetIdx,
+    Obj_GetClassName,
+    Obj_GetClassIdx,
+
+    Batch_CreateFromNew,
+    Batch_CreateByRegExp,
+    Batch_CreateByIndex,
+    Batch_CreateByInt32Property,
+    Batch_CreateByClass,
+    Batch_Dispose,
+    Batch_BeginEdit,
+    Batch_EndEdit,
+    Batch_GetFloat64,
+    Batch_GetInt32,
+    Batch_GetString,
+    Batch_GetAsString,
+    Batch_GetObject,
+    // Batch_SetAsString,
+    Batch_Float64,
+    Batch_Int32,
+    Batch_SetString,
+    Batch_SetObject,
+    Batch_SetFloat64Array,
+    Batch_SetInt32Array,
+    Batch_SetStringArray,
+    Batch_SetObjectArray,
+
+    Batch_CreateFromNewS,
+    Batch_CreateByRegExpS,
+    Batch_CreateByIndexS,
+    Batch_CreateByInt32PropertyS,
+    Batch_CreateByClassS,
+    Batch_GetFloat64S,
+    Batch_GetInt32S,
+    Batch_GetStringS,
+    Batch_GetAsStringS,
+    Batch_GetObjectS,
+    // Batch_SetAsStringS,
+    Batch_Float64S,
+    Batch_Int32S,
+    Batch_SetStringS,
+    Batch_SetObjectS,
+    Batch_SetFloat64ArrayS,
+    Batch_SetInt32ArrayS,
+    Batch_SetStringArrayS,
+    Batch_SetObjectArrayS
+
+
 
 {$IFDEF DSS_CAPI_CONTEXT},
     {$I '../build/generated/ctx_functions.inc'}

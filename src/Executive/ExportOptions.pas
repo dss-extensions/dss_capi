@@ -13,15 +13,84 @@ uses
     Command,
     DSSClass;
 
+type
+{$SCOPEDENUMS ON}
+    TExportOption = (
+        INVALID = 0,
+        Voltages = 1,
+        SeqVoltages = 2,
+        Currents = 3,
+        SeqCurrents = 4,
+        Estimation = 5,
+        Capacity = 6,
+        Overloads = 7,
+        Unserved = 8,
+        Powers = 9,
+        SeqPowers = 10,
+        Faultstudy = 11,
+        Generators = 12,
+        Loads = 13,
+        Meters = 14,
+        Monitors = 15,
+        Yprims = 16,
+        Y = 17,
+        seqz = 18,
+        P_byphase = 19,
+        CIM100Fragments = 20,
+        CIM100 = 21,
+        CDPSMAsset = 22,
+        Buscoords = 23,
+        Losses = 24,
+        Uuids = 25,
+        Counts = 26,
+        Summary = 27,
+        CDPSMElec = 28,
+        CDPSMGeo = 29,
+        CDPSMTopo = 30,
+        CDPSMStateVar = 31,
+        Profile = 32,
+        EventLog = 33,
+        AllocationFactors = 34,
+        VoltagesElements = 35,
+        GICMvars = 36,
+        BusReliability = 37,
+        BranchReliability = 38,
+        NodeNames = 39,
+        Taps = 40,
+        NodeOrder = 41,
+        ElemCurrents = 42,
+        ElemVoltages = 43,
+        ElemPowers = 44,
+        Result = 45,
+        YNodeList = 46,
+        YVoltages = 47,
+        YCurrents = 48,
+        PVSystem_Meters = 49,
+        Storage_Meters = 50,
+        Sections = 51,
+        ErrorLog = 52,
+        IncMatrix = 53,
+        IncMatrixRows = 54,
+        IncMatrixCols = 55,
+        BusLevels = 56,
+        Laplacian = 57
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        ,
+        ZLL = 58,
+        ZCC = 59,
+        Contours = 60,
+        Y4 = 61
+{$ENDIF}        
+    );
+{$SCOPEDENUMS OFF}
+
 const
-    NumExportOptions = 61;
+    NumExportOptions = ord(High(TExportOption));
 
-function DoExportCmd(DSS: TDSSContext): Integer;
-
+function DoExportCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
 
 var
-    ExportOption,
-    ExportHelp: array[1..NumExportOptions] of String;
+    ExportOption: array[1..NumExportOptions] of String;
     ExportCommands: TCommandList;
 
 implementation
@@ -36,7 +105,8 @@ uses
     ExportCIMXML,
     Utilities,
     NamedObject,
-    DSSHelper;
+    DSSHelper,
+    TypInfo;
 
 function AssignNewUUID(val: String): TUuid;
 begin
@@ -46,145 +116,16 @@ begin
 end;
 
 procedure DefineOptions;
-
+var
+    info: Pointer;
+    i: Integer;
 begin
-
-    ExportOption[1] := 'Voltages';
-    ExportOption[2] := 'SeqVoltages';
-    ExportOption[3] := 'Currents';
-    ExportOption[4] := 'SeqCurrents';
-    ExportOption[5] := 'Estimation';
-    ExportOption[6] := 'Capacity';
-    ExportOption[7] := 'Overloads';
-    ExportOption[8] := 'Unserved';
-    ExportOption[9] := 'Powers';
-    ExportOption[10] := 'SeqPowers';
-    ExportOption[11] := 'Faultstudy';
-    ExportOption[12] := 'Generators';
-    ExportOption[13] := 'Loads';
-    ExportOption[14] := 'Meters';
-    ExportOption[15] := 'Monitors';
-    ExportOption[16] := 'Yprims';
-    ExportOption[17] := 'Y';
-    ExportOption[18] := 'seqz';
-    ExportOption[19] := 'P_byphase';
-    ExportOption[20] := 'CIM100Fragments';
-    ExportOption[21] := 'CIM100';
-    ExportOption[22] := 'CDPSMAsset';
-    ExportOption[23] := 'Buscoords';
-    ExportOption[24] := 'Losses';
-    ExportOption[25] := 'Uuids';
-    ExportOption[26] := 'Counts';
-    ExportOption[27] := 'Summary';
-    ExportOption[28] := 'CDPSMElec';
-    ExportOption[29] := 'CDPSMGeo';
-    ExportOption[30] := 'CDPSMTopo';
-    ExportOption[31] := 'CDPSMStateVar';
-    ExportOption[32] := 'Profile';
-    ExportOption[33] := 'EventLog';
-    ExportOption[34] := 'AllocationFactors';
-    ExportOption[35] := 'VoltagesElements';
-    ExportOption[36] := 'GICMvars';
-    ExportOption[37] := 'BusReliability';
-    ExportOption[38] := 'BranchReliability';
-    ExportOption[39] := 'NodeNames';
-    ExportOption[40] := 'Taps';
-    ExportOption[41] := 'NodeOrder';
-    ExportOption[42] := 'ElemCurrents';
-    ExportOption[43] := 'ElemVoltages';
-    ExportOption[44] := 'ElemPowers';
-    ExportOption[45] := 'Result';
-    ExportOption[46] := 'YNodeList';
-    ExportOption[47] := 'YVoltages';
-    ExportOption[48] := 'YCurrents';
-    ExportOption[49] := 'PVSystem_Meters';
-    ExportOption[50] := 'Storage_Meters';
-    ExportOption[51] := 'Sections';
-    ExportOption[52] := 'ErrorLog';
-    ExportOption[53] := 'IncMatrix';
-    ExportOption[54] := 'IncMatrixRows';
-    ExportOption[55] := 'IncMatrixCols';
-    ExportOption[56] := 'BusLevels';
-    ExportOption[57] := 'Laplacian';
-    ExportOption[58] := 'ZLL';
-    ExportOption[59] := 'ZCC';
-    ExportOption[60] := 'Contours';
-    ExportOption[61] := 'Y4';
-
-    ExportHelp[1] := '(Default file = EXP_VOLTAGES.CSV) Voltages to ground by bus/node.';
-    ExportHelp[2] := '(Default file = EXP_SEQVOLTAGES.CSV) Sequence voltages.';
-    ExportHelp[3] := '(Default file = EXP_CURRENTS.CSV) Currents in each conductor of each element.';
-    ExportHelp[4] := '(Default file = EXP_SEQCURRENTS.CSV) Sequence currents in each terminal of 3-phase elements.';
-    ExportHelp[5] := '(Default file = EXP_ESTIMATION.CSV) Results of last estimation.';
-    ExportHelp[6] := '(Default file = EXP_CAPACITY.CSV) Capacity report.';
-    ExportHelp[7] := '(Default file = EXP_OVERLOADS.CSV) Overloaded elements report.';
-    ExportHelp[8] := '(Default file = EXP_UNSERVED.CSV) [UEonly] [Filename] Report on elements that are unserved due to violation of ratings.';
-    ExportHelp[9] := '(Default file = EXP_POWERS.CSV) [MVA] [Filename] Powers (kVA by default) into each terminal of each element.';
-    ExportHelp[10] := '(Default file = EXP_SEQPOWERS.CSV) Sequence powers into each terminal of 3-phase elements.';
-    ExportHelp[11] := '(Default file = EXP_FAULTS.CSV) results of a fault study.';
-    ExportHelp[12] := '(Default file = EXP_GENMETERS.CSV) Present values of generator meters. Adding the switch "/multiple" or "/m" will ' +
-        ' cause a separate file to be written for each generator.';
-    ExportHelp[13] := '(Default file = EXP_LOADS.CSV) Report on loads from most recent solution.';
-    ExportHelp[14] := '(Default file = EXP_METERS.CSV) Energy meter exports. Adding the switch "/multiple" or "/m" will ' +
-        ' cause a separate file to be written for each meter.';
-    ExportHelp[15] := '(file name is assigned by Monitor export) Monitor values. The argument is the name of the monitor (e.g. Export Monitor XYZ, XYZ is the name of the monitor).' + CRLF +
-        'The argument can be ALL, which means that all the monitors will be exported';
-    ExportHelp[16] := '(Default file = EXP_YPRIMS.CSV) All primitive Y matrices.';
-    ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
-    ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
-    ExportHelp[19] := '(Default file = EXP_P_BYPHASE.CSV) [MVA] [Filename] Power by phase. Default is kVA.';
-    ExportHelp[20] := '(Default file ROOT = CIM100) (IEC 61968-13, CIM100 for unbalanced load flow profile)' + CRLF + ' produces 6 separate files ROOT_FUN.XML for Functional profile,' + CRLF + ' ROOT_EP.XML for Electrical Properties profile,' + CRLF + ' ROOT_TOPO.XML for Topology profile,' + CRLF + ' ROOT_CAT.XML for Asset Catalog profile,' + CRLF + ' ROOT_GEO.XML for Geographical profile and' + CRLF + ' ROOT_SSH.XML for Steady State Hypothesis profile' + CRLF + ' [File=fileroot fid=_uuidstring Substation=subname sid=_uuidstring' + CRLF + ' SubGeographicRegion=subgeoname sgrid=_uuidstring GeographicRegion=geoname rgnid=_uuidstring]';
-    ExportHelp[21] := '(Default file = CIM100x.XML) (IEC 61968-13, combined CIM100 for unbalanced load flow profile)' + CRLF + ' [File=filename fid=_uuidstring Substation=subname sid=_uuidstring' + CRLF + ' SubGeographicRegion=subgeoname sgrid=_uuidstring GeographicRegion=geoname rgnid=_uuidstring]';
-    ExportHelp[22] := '** Deprecated ** (IEC 61968-13, CDPSM Asset profile)';
-    ExportHelp[23] := '[Default file = EXP_BUSCOORDS.CSV] Bus coordinates in csv form.';
-    ExportHelp[24] := '[Default file = EXP_LOSSES.CSV] Losses for each element.';
-    ExportHelp[25] := '[Default file = EXP_UUIDS.CSV] Uuids for each element. This frees the UUID list after export.';
-    ExportHelp[26] := '[Default file = EXP_Counts.CSV] (instance counts for each class)';
-    ExportHelp[27] := '[Default file = EXP_Summary.CSV] Solution summary.';
-    ExportHelp[28] := '** Deprecated ** (IEC 61968-13, CDPSM Electrical Properties profile)';
-    ExportHelp[29] := '** Deprecated ** (IEC 61968-13, CDPSM Geographical profile)';
-    ExportHelp[30] := '** Deprecated ** (IEC 61968-13, CDPSM Topology profile)';
-    ExportHelp[31] := '** Deprecated ** (IEC 61968-13, CDPSM State Variables profile)';
-    ExportHelp[32] := '[Default file = EXP_Profile.CSV] Coordinates, color of each line section in Profile plot. Same options as Plot Profile Phases property.' + CRLF + CRLF +
-        'Example:  Export Profile Phases=All [optional file name]';
-    ExportHelp[33] := '(Default file = EXP_EventLog.CSV) All entries in the present event log.';
-    ExportHelp[34] := 'Exports load allocation factors. File name is assigned.';
-    ExportHelp[35] := '(Default file = EXP_VOLTAGES_ELEM.CSV) Voltages to ground by circuit element.';
-    ExportHelp[36] := '(Default file = EXP_GIC_Mvar.CSV) Mvar for each GICtransformer object by bus for export to power flow programs ';
-    ExportHelp[37] := '(Default file = EXP_BusReliability.CSV) Failure rate, number of interruptions and other reliability data at each bus.';
-    ExportHelp[38] := '(Default file = EXP_BranchReliability.CSV) Failure rate, number of interruptions and other reliability data for each PD element.';
-    ExportHelp[39] := '(Default file = EXP_NodeNames.CSV) Exports Single-column file of all node names in the active circuit. Useful for making scripts.';
-    ExportHelp[40] := '(Default file = EXP_Taps.CSV)  Exports the regulator tap report similar to Show Taps.';
-    ExportHelp[41] := '(Default file = EXP_NodeOrder.CSV)  Exports the present node order for all conductors of all circuit elements';
-    ExportHelp[42] := '(Default file = EXP_ElemCurrents.CSV)  Exports the current into all conductors of all circuit elements';
-    ExportHelp[43] := '(Default file = EXP_ElemVoltages.CSV)  Exports the voltages to ground at all conductors of all circuit elements';
-    ExportHelp[44] := '(Default file = EXP_elemPowers.CSV)  Exports the powers into all conductors of all circuit elements';
-    ExportHelp[45] := '(Default file = EXP_Result.CSV)  Exports the result of the most recent command.';
-    ExportHelp[46] := '(Default file = EXP_YNodeList.CSV)  Exports a list of nodes in the same order as the System Y matrix.';
-    ExportHelp[47] := '(Default file = EXP_YVoltages.CSV)  Exports the present solution complex Voltage array in same order as YNodeList.';
-    ExportHelp[48] := '(Default file = EXP_YCurrents.CSV)  Exports the present solution complex Current array in same order as YNodeList. This is generally the injection current array';
-    ExportHelp[49] := '(Default file = EXP_PVMETERS.CSV) Present values of PVSystem meters. Adding the switch "/multiple" or "/m" will ' +
-        ' cause a separate file to be written for each PVSystem.';
-    ExportHelp[50] := '(Default file = EXP_STORAGEMETERS.CSV) Present values of Storage meters. Adding the switch "/multiple" or "/m" will ' +
-        ' cause a separate file to be written for each Storage device.';
-    ExportHelp[51] := '(Default file = EXP_SECTIONS.CSV) Data for each section between overcurrent protection devices. ' + CRLF + CRLF +
-        'Examples: ' + CRLF + '  Export Sections [optional filename]' + CRLF + 'Export Sections meter=M1 [optional filename]';
-    ExportHelp[52] := '(Default file = EXP_ErrorLog.TXT) All entries in the present Error log.';
-    ExportHelp[53] := 'Exports the Branch-to-Node Incidence matrix calculated for the circuit in compressed coordianted format (Row,Col,Value)';
-    ExportHelp[54] := 'Exports the names of the rows (PDElements) used for calculating the Branch-to-Node Incidence matrix for the active circuit';
-    ExportHelp[55] := 'Exports the names of the Cols (Buses) used for calculating the Branch-to-Node Incidence matrix for the active circuit';
-    ExportHelp[56] := 'Exports the names and the level of each Bus inside the Circuit based on its topology information. The level value defines' +
-        'how far or close is the bus from the circuits backbone (0 means that the bus is at the backbone)';
-    ExportHelp[57] := 'Exports the Laplacian matrix calculated using the branch-to-node Incidence matrix in compressed coordinated format (Row,Col,Value)';
-    ExportHelp[58] := 'Exports the Link branches matrix (ZLL) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates. If A-Diakoptics is not initialized this command does nothing';
-    ExportHelp[59] := 'Exports the connectivity matrix (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
-    ExportHelp[60] := 'Exports the Contours matrix (C) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are integers.  If A-Diakoptics is not initialized this command does nothing';
-    ExportHelp[61] := 'Exports the inverse of Z4 (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
+    info := TypeInfo(TExportOption);
+    for i := 1 to NumExportOptions do
+        ExportOption[i] := GetEnumName(info, i);
 end;
 
-//----------------------------------------------------------------------------
-function DoExportCmd(DSS: TDSSContext): Integer;
-
+function DoExportCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
 var
     ParamName,
     Parm1,
@@ -202,9 +143,10 @@ var
     FdrUuid, SubUuid, SubGeoUuid, RgnUuid: TUuid;              // for CIM export
 {$IFDEF DSS_CAPI_PM}
     InitP, FinalP, idxP: Integer;
-    PMParent: TDSSContext;
+    PMParent, DSS: TDSSContext;
 begin
-    PMParent := DSS.GetPrime();
+    PMParent := MainDSS.GetPrime();
+    DSS := MainDSS.ActiveChild;
 {$ELSE}
 begin
 {$ENDIF}
@@ -370,42 +312,42 @@ begin
     begin
         case ParamPointer of
             1:
-                FileName := 'EXP_VOLTAGES.CSV';
+                FileName := 'EXP_VOLTAGES.csv';
             2:
-                FileName := 'EXP_SEQVOLTAGES.CSV';
+                FileName := 'EXP_SEQVOLTAGES.csv';
             3:
-                FileName := 'EXP_CURRENTS.CSV';
+                FileName := 'EXP_CURRENTS.csv';
             4:
-                FileName := 'EXP_SEQCURRENTS.CSV';
+                FileName := 'EXP_SEQCURRENTS.csv';
             5:
-                FileName := 'EXP_ESTIMATION.CSV';   // Estimation error
+                FileName := 'EXP_ESTIMATION.csv';   // Estimation error
             6:
-                FileName := 'EXP_CAPACITY.CSV';
+                FileName := 'EXP_CAPACITY.csv';
             7:
-                FileName := 'EXP_OVERLOADS.CSV';
+                FileName := 'EXP_OVERLOADS.csv';
             8:
-                FileName := 'EXP_UNSERVED.CSV';
+                FileName := 'EXP_UNSERVED.csv';
             9:
-                FileName := 'EXP_POWERS.CSV';
+                FileName := 'EXP_POWERS.csv';
             10:
-                FileName := 'EXP_SEQPOWERS.CSV';
+                FileName := 'EXP_SEQPOWERS.csv';
             11:
-                FileName := 'EXP_FAULTS.CSV';
+                FileName := 'EXP_FAULTS.csv';
             12:
-                FileName := 'EXP_GENMETERS.CSV';
+                FileName := 'EXP_GENMETERS.csv';
             13:
-                FileName := 'EXP_LOADS.CSV';
+                FileName := 'EXP_LOADS.csv';
             14:
-                FileName := 'EXP_METERS.CSV';
+                FileName := 'EXP_METERS.csv';
          {15: Filename is assigned}
             16:
-                Filename := 'EXP_YPRIM.CSV';
+                Filename := 'EXP_YPRIM.csv';
             17:
-                Filename := 'EXP_Y.CSV';
+                Filename := 'EXP_Y.csv';
             18:
-                Filename := 'EXP_SEQZ.CSV';
+                Filename := 'EXP_SEQZ.csv';
             19:
-                Filename := 'EXP_P_BYPHASE.CSV';
+                Filename := 'EXP_P_BYPHASE.csv';
             20:
                 FileName := 'CIM100.XML';
             21:
@@ -413,15 +355,15 @@ begin
             22:
                 FileName := '';
             23:
-                FileName := 'EXP_BUSCOORDS.CSV';
+                FileName := 'EXP_BUSCOORDS.csv';
             24:
-                FileName := 'EXP_LOSSES.CSV';
+                FileName := 'EXP_LOSSES.csv';
             25:
-                FileName := 'EXP_UUIDS.CSV';
+                FileName := 'EXP_UUIDS.csv';
             26:
-                FileName := 'EXP_Counts.CSV';
+                FileName := 'EXP_Counts.csv';
             27:
-                FileName := 'EXP_Summary.CSV';
+                FileName := 'EXP_Summary.csv';
             28:
                 FileName := '';
             29:
@@ -431,45 +373,45 @@ begin
             31:
                 FileName := '';
             32:
-                FileName := 'EXP_Profile.CSV';
+                FileName := 'EXP_Profile.csv';
             33:
-                FileName := 'EXP_EventLog.CSV';
+                FileName := 'EXP_EventLog.csv';
             34:
-                FileName := 'AllocationFactors.Txt';
+                FileName := 'AllocationFactors.txt';
             35:
-                FileName := 'EXP_VOLTAGES_ELEM.CSV';
+                FileName := 'EXP_VOLTAGES_ELEM.csv';
             36:
-                FileName := 'EXP_GIC_Mvar.CSV';
+                FileName := 'EXP_GIC_Mvar.csv';
             37:
-                FileName := 'EXP_BusReliability.CSV';
+                FileName := 'EXP_BusReliability.csv';
             38:
-                FileName := 'EXP_BranchReliability.CSV';
+                FileName := 'EXP_BranchReliability.csv';
             39:
-                FileName := 'EXP_NodeNames.CSV';
+                FileName := 'EXP_NodeNames.csv';
             40:
-                FileName := 'EXP_Taps.CSV';
+                FileName := 'EXP_Taps.csv';
             41:
-                FileName := 'EXP_NodeOrder.CSV';
+                FileName := 'EXP_NodeOrder.csv';
             42:
-                FileName := 'EXP_ElemCurrents.CSV';
+                FileName := 'EXP_ElemCurrents.csv';
             43:
-                FileName := 'EXP_ElemVoltages.CSV';
+                FileName := 'EXP_ElemVoltages.csv';
             44:
-                FileName := 'EXP_ElemPowers.CSV';
+                FileName := 'EXP_ElemPowers.csv';
             45:
-                FileName := 'EXP_Result.CSV';
+                FileName := 'EXP_Result.csv';
             46:
-                FileName := 'EXP_YNodeList.CSV';
+                FileName := 'EXP_YNodeList.csv';
             47:
-                FileName := 'EXP_YVoltages.CSV';
+                FileName := 'EXP_YVoltages.csv';
             48:
-                FileName := 'EXP_YCurrents.CSV';
+                FileName := 'EXP_YCurrents.csv';
             49:
-                FileName := 'EXP_PVMeters.CSV';
+                FileName := 'EXP_PVMeters.csv';
             50:
-                FileName := 'EXP_STORAGEMeters.CSV';
+                FileName := 'EXP_STORAGEMeters.csv';
             51:
-                FileName := 'EXP_SECTIONS.CSV';
+                FileName := 'EXP_SECTIONS.csv';
             52:
                 FileName := 'EXP_ErrorLog.txt';
             53:
@@ -482,6 +424,7 @@ begin
                 FileName := 'Bus_Levels.csv';
             57:
                 FileName := 'Laplacian.csv';
+{$IFDEF DSS_CAPI_PM}                
             58:
                 FileName := 'ZLL.csv';
             59:
@@ -490,9 +433,9 @@ begin
                 FileName := 'C.csv';
             61:
                 FileName := 'Y4.csv';
-
+{$ENDIF}
         else
-            FileName := 'EXP_VOLTAGES.CSV';    // default
+            FileName := 'EXP_VOLTAGES.csv';    // default
         end;
         FileName := DSS.OutputDirectory + DSS.CircuitName_ + FileName;  // Explicitly define directory
     end;
@@ -528,7 +471,7 @@ begin
             ExportMeters(DSS, FileName);
         15:
             if Length(Parm2) = 0 then
-                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + DSS.Parser.CmdString, 251)
+                DoSimpleMsg(DSS, 'Monitor name not specified. %s', [CRLF + DSS.Parser.CmdString], 251)
             else
             begin
 {$IFDEF DSS_CAPI_PM}
@@ -557,7 +500,7 @@ begin
                             FileName := DSS.GlobalResult;
                         end
                         else
-                            DoSimpleMsg(DSS, 'Monitor "' + Parm2 + '" not found.' + CRLF + DSS.Parser.CmdString, 250);
+                            DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [Parm2, CRLF + DSS.Parser.CmdString], 250);
                     end;
 {$IFDEF DSS_CAPI_PM}
                 end
@@ -589,7 +532,7 @@ begin
                                 FileName := DSS.GlobalResult;
                             end
                             else
-                                DoSimpleMsg(DSS, 'Monitor "' + Parm2 + '" not found.' + CRLF + DSS.Parser.CmdString, 250);
+                                DoSimpleMsg(DSS, 'Monitor "%s" not found. %s', [Parm2, CRLF + DSS.Parser.CmdString], 250);
                         end;
                     end;
                 end;
@@ -608,7 +551,7 @@ begin
         21:
             DSS.CIMExporter.ExportCDPSM(Filename, Substation, SubGeographicRegion, GeographicRegion, FdrUuid, SubUuid, SubGeoUuid, RgnUuid, TRUE);
         22:
-            DoSimpleMsg(DSS, 'Asset export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, _('Asset export no longer supported; use Export CIM100'), 252);
         23:
             ExportBusCoords(DSS, Filename);
         24:
@@ -620,13 +563,13 @@ begin
         27:
             ExportSummary(DSS, Filename);
         28:
-            DoSimpleMsg(DSS, 'ElectricalProperties export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, _('ElectricalProperties export no longer supported; use Export CIM100'), 252);
         29:
-            DoSimpleMsg(DSS, 'Geographical export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, _('Geographical export no longer supported; use Export CIM100'), 252);
         30:
-            DoSimpleMsg(DSS, 'Topology export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, _('Topology export no longer supported; use Export CIM100'), 252);
         31:
-            DoSimpleMsg(DSS, 'StateVariables export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, _('StateVariables export no longer supported; use Export CIM100'), 252);
         32:
             ExportProfile(DSS, FileName, PhasesToPlot);
         33:
@@ -682,6 +625,7 @@ begin
             ExportBusLevels(DSS, Filename);
         57:
             ExportLaplacian(DSS, FileName);
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
         58:
             ExportZLL(DSS, Filename);
         59:
@@ -690,9 +634,10 @@ begin
             ExportC(DSS, Filename);
         61:
             ExportY4(DSS, FileName);
+{$ENDIF}
     else
         // ExportVoltages(DSS, Filename);    // default
-        DoSimpleMsg(DSS, 'Error: Unknown Export command: "' + parm1 + '"', 24713);
+        DoSimpleMsg(DSS, 'Error: Unknown Export command: "%s"', [parm1], 24713);
         AbortExport := TRUE;
     end;
 
@@ -706,7 +651,6 @@ begin
         if DSS.AutoShowExport then
             FireOffEditor(DSS, FileName);
     end;
-
 end;
 
 
@@ -718,17 +662,12 @@ begin
     for i := 1 to NumExportOptions do
     begin
         ExportOption[i] := '';
-        ExportHelp[i] := '';
     end;
-
 end;
 
 initialization
-
     DefineOptions;
-
-    ExportCommands := TCommandList.Create(ExportOption);
-    ExportCommands.Abbrev := TRUE;
+    ExportCommands := TCommandList.Create(ExportOption, True);
 
 finalization
 

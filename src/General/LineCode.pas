@@ -9,17 +9,15 @@ unit LineCode;
 
 interface
 
-{The Linecode object is a general DSS object used by all circuits
- as a reference for obtaining line impedances.
-
- The values are set by the normal New and Edit procedures for any DSS object.
-
- The values are retrieved by setting the Code Property in the LineCode Class.
- This sets the active Linecode object to be the one referenced by the Code Property;
-
- Then the values of that code can be retrieved via the public variables.
-
- }
+// The Linecode object is a general DSS object used by all circuits
+// as a reference for obtaining line impedances.
+//
+// The values are set by the normal New and Edit procedures for any DSS object.
+//
+// The values are retrieved by setting the Code Property in the LineCode Class.
+// This sets the active Linecode object to be the one referenced by the Code Property;
+//
+// Then the values of that code can be retrieved via the public variables.
 
 uses
     Classes,
@@ -30,55 +28,61 @@ uses
     Arraydef;
 
 type
+{$SCOPEDENUMS ON}
+    TLineCodeProp = (
+        INVALID = 0,
+        nphases = 1,
+        r1 = 2,
+        x1 = 3,
+        r0 = 4,
+        x0 = 5,
+        C1 = 6,
+        C0 = 7,
+        units = 8,
+        rmatrix = 9,
+        xmatrix = 10,
+        cmatrix = 11,
+        baseFreq = 12,
+        normamps = 13,
+        emergamps = 14,
+        faultrate = 15,
+        pctperm = 16,
+        repair = 17,
+        Kron = 18,
+        Rg = 19,
+        Xg = 20,
+        rho = 21,
+        neutral = 22,
+        B1 = 23,
+        B0 = 24,
+        Seasons = 25,
+        Ratings = 26,
+        LineType = 27
+    );
+{$SCOPEDENUMS OFF}
 
     TLineCode = class(TDSSClass)
-    PRIVATE
-        SymComponentsChanged: Boolean;
-        MatrixChanged: Boolean;
-
-        function Get_Code: String;  // Returns active line code string
-        procedure Set_Code(const Value: String);  // sets the  active linecode
-
-        procedure SetZ1Z0(i: Integer; Value: Double);
-        procedure SetUnits(const s: String);  // decode units specification
-
-        procedure DoMatrix(i: Integer);  // set impedances as matrices
-
-
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const LineName: String): Integer; OVERRIDE;
+        procedure DefineProperties; override;
     PUBLIC
-        LineTypeList: TCommandList;
-        
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;     // uses global parser
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
-
-       // Set this property to point ActiveLineCodeObj to the right value
-        property Code: String READ Get_Code WRITE Set_Code;
-
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
     end;
 
     TLineCodeObj = class(TDSSObject)
     PRIVATE
-
         FNeutralConductor: Integer;
 
-        procedure Set_NPhases(Value: Integer);
         procedure DoKronReduction;
-        function get_Rmatrix: String;
-        function get_Xmatrix: String;
-        function get_CMatrix: String;
 
     PUBLIC
         NumAmpRatings,
         FNPhases: Integer;
 
-        SymComponentsModel,
-        ReduceByKron: Boolean;
+        SymComponentsModel: Boolean;
 
         Z,         // Base Frequency Series Z matrix
         Zinv,
@@ -103,532 +107,249 @@ type
         AmpRatings: array of Double;
         FLineType: Integer; // Pointer to code for type of line
 
-        Units: Integer;  {See LineUnits}
+        Units: Integer; // See LineUnits
 
         constructor Create(ParClass: TDSSClass; const LineCodeName: String);
         destructor Destroy; OVERRIDE;
-        property NumPhases: Integer READ FNPhases WRITE Set_Nphases;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
+        
         procedure CalcMatricesFromZ1Z0;
-
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
+        procedure Set_NumPhases(Value: Integer);
+        property NumPhases: Integer read FNPhases write Set_NumPhases;
     end;
 
 implementation
 
 uses
-    ParserDel,
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     Utilities,
     LineUnits,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
 
+type
+    TObj = TLineCodeObj;
+    TProp = TLineCodeProp;
 const
-    NumPropsThisClass = 27;
+    NumPropsThisClass = Ord(High(TProp));
+var
+    PropInfo: Pointer = NIL;    
 
-    LINE_TYPES: Array of String = [
-        'oh', 'ug', 'ug_ts', 'ug_cn', 'swt_ldbrk', 'swt_fuse', 
-        'swt_sect', 'swt_rec', 'swt_disc', 'swt_brk', 'swt_elbow'
-    ];
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLineCode.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
+constructor TLineCode.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
-    Class_Name := 'LineCode';
-    DSSClassType := DSS_OBJECT;
-    ActiveElement := 0;
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
 
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
-
-    LineTypeList := TCommandList.Create(LINE_TYPES);
-    LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
+    inherited Create(dssContext, DSS_OBJECT, 'LineCode');
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLineCode.Destroy;
 begin
-    LineTypeList.Free();
-
-    // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TLineCode.DefineProperties;
+
+function GetYCScale(obj: TLineCodeObj): Double;
 begin
+    Result := TwoPi * obj.BaseFrequency * 1.0e-9;
+end;
 
+function GetC1C0Scale(obj: TLineCodeObj): Double;
+begin
+    Result := 1 / (TwoPi * obj.BaseFrequency) * 1.0e-6;
+end;
+
+procedure Action_KronReduction(obj: TObj);
+begin
+    obj.DoKronReduction(); 
+end;
+
+procedure TLineCode.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
+begin
     Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo, False);
 
+    // matrix parts
+    PropertyType[ord(TProp.rmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
+    PropertyOffset[ord(TProp.rmatrix)] := ptruint(@obj.Z);
+    PropertyFlags[ord(TProp.rmatrix)] := [TPropertyFlag.RealPart];
+    
+    PropertyType[ord(TProp.xmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
+    PropertyOffset[ord(TProp.xmatrix)] := ptruint(@obj.Z);
+    PropertyFlags[ord(TProp.xmatrix)] := [TPropertyFlag.ImagPart];
 
-    PropertyName[1] := 'nphases';
-    PropertyName[2] := 'r1';
-    PropertyName[3] := 'x1';
-    PropertyName[4] := 'r0';
-    PropertyName[5] := 'x0';
-    PropertyName[6] := 'C1';
-    PropertyName[7] := 'C0';
-    PropertyName[8] := 'units';
-    PropertyName[9] := 'rmatrix';
-    PropertyName[10] := 'xmatrix';
-    PropertyName[11] := 'cmatrix';
-    PropertyName[12] := 'baseFreq';
-    PropertyName[13] := 'normamps';
-    PropertyName[14] := 'emergamps';
-    PropertyName[15] := 'faultrate';
-    PropertyName[16] := 'pctperm';
-    PropertyName[17] := 'repair';
-    PropertyName[18] := 'Kron';
-    PropertyName[19] := 'Rg';
-    PropertyName[20] := 'Xg';
-    PropertyName[21] := 'rho';
-    PropertyName[22] := 'neutral';
-    PropertyName[23] := 'B1';
-    PropertyName[24] := 'B0';
-    PropertyName[25] := 'Seasons';
-    PropertyName[26] := 'Ratings';
-    PropertyName[27] := 'LineType';
+    PropertyType[ord(TProp.cmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;
+    PropertyOffset[ord(TProp.cmatrix)] := ptruint(@obj.YC);
+    PropertyOffset2[ord(TProp.cmatrix)] := ptruint(@GetYCScale);
+    PropertyFlags[ord(TProp.cmatrix)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.ImagPart];
 
-    PropertyHelp[1] := 'Number of phases in the line this line code data represents.  Setting this property reinitializes the line code.  Impedance matrix is reset for default symmetrical component.';
-    PropertyHelp[2] := 'Positive-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
-        'the program to use the symmetrical component line definition. See also Rmatrix.';
-    PropertyHelp[3] := 'Positive-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
-        'the program to use the symmetrical component line definition. See also Xmatrix';
-    PropertyHelp[4] := 'Zero-sequence Resistance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
-        'the program to use the symmetrical component line definition.';
-    PropertyHelp[5] := 'Zero-sequence Reactance, ohms per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
-        'the program to use the symmetrical component line definition.';
-    PropertyHelp[6] := 'Positive-sequence capacitance, nf per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
-        'the program to use the symmetrical component line definition. See also Cmatrix and B1.';
-    PropertyHelp[7] := 'Zero-sequence capacitance, nf per unit length. Setting any of R1, R0, X1, X0, C1, C0 forces ' +
-        'the program to use the symmetrical component line definition. See also B0.';
-    PropertyHelp[8] := 'One of (ohms per ...) {none|mi|km|kft|m|me|ft|in|cm}.  Default is none; assumes units agree with length units' +
-        'given in Line object';
-    PropertyHelp[9] := 'Resistance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. ' +
-        'May be used to specify the impedance of any line configuration.  For balanced line models, you may ' +
-        'use the standard symmetrical component data definition instead.';
-    PropertyHelp[10] := 'Reactance matrix, lower triangle, ohms per unit length. Order of the matrix is the number of phases. ' +
-        'May be used to specify the impedance of any line configuration.  For balanced line models, you may ' +
-        'use the standard symmetrical component data definition instead.';
-    PropertyHelp[11] := 'Nodal Capacitance matrix, lower triangle, nf per unit length.Order of the matrix is the number of phases. ' +
-        'May be used to specify the shunt capacitance of any line configuration.  For balanced line models, you may ' +
-        'use the standard symmetrical component data definition instead.';
-    PropertyHelp[12] := 'Frequency at which impedances are specified.';
-    PropertyHelp[13] := 'Normal ampere limit on line.  This is the so-called Planning Limit. It may also be ' +
-        'the value above which load will have to be dropped in a contingency.  Usually about ' +
-        '75% - 80% of the emergency (one-hour) rating.';
-    PropertyHelp[14] := 'Emergency ampere limit on line (usually one-hour rating).';
-    PropertyHelp[15] := 'Number of faults per unit length per year.';
-    PropertyHelp[16] := 'Percentage of the faults that become permanent.';
-    PropertyHelp[17] := 'Hours to repair.';
-    PropertyHelp[18] := 'Kron = Y/N. Default=N.  Perform Kron reduction on the impedance matrix after it is formed, reducing order by 1. ' +
-        'Eliminates the conductor designated by the "Neutral=" property. ' +
-        'Do this after the R, X, and C matrices are defined. Ignored for symmetrical components. ' +
-        'May be issued more than once to eliminate more than one conductor by resetting the Neutral property after the previous ' +
-        'invoking of this property. Generally, you do not want to do a Kron reduction on the matrix if you intend to solve at a ' +
-        'frequency other than the base frequency and exploit the Rg and Xg values.';
-    PropertyHelp[19] := 'Carson earth return resistance per unit length used to compute impedance values at base frequency.  For making better frequency adjustments. ' +
-        'Default is 0.01805 = 60 Hz value in ohms per kft (matches default line impedances). ' +
-        'This value is required for harmonic solutions if you wish to adjust the earth return impedances for frequency. ' +
-        'If not, set both Rg and Xg = 0.';
-    PropertyHelp[20] := 'Carson earth return reactance per unit length used to compute impedance values at base frequency.  For making better frequency adjustments. ' +
-        'Default value is 0.155081 = 60 Hz value in ohms per kft (matches default line impedances). ' +
-        'This value is required for harmonic solutions if you wish to adjust the earth return impedances for frequency. ' +
-        'If not, set both Rg and Xg = 0.';
-    PropertyHelp[21] := 'Default=100 meter ohms.  Earth resitivity used to compute earth correction factor.';
-    PropertyHelp[22] := 'Designates which conductor is the "neutral" conductor that will be eliminated by Kron reduction. ' +
-        'Default is the last conductor (nphases value). After Kron reduction is set to 0. Subsequent issuing of Kron=Yes ' +
-        'will not do anything until this property is set to a legal value. Applies only to LineCodes defined by R, X, and C matrix.';
+    // boolean properties
+    PropertyType[ord(TProp.Kron)] := TPropertyType.BooleanActionProperty;
+    PropertyOffset[ord(TProp.Kron)] := ptruint(@Action_KronReduction);
 
-    PropertyHelp[23] := 'Alternate way to specify C1. MicroS per unit length';
-    PropertyHelp[24] := 'Alternate way to specify C0. MicroS per unit length';
-    PropertyHelp[25] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
-    PropertyHelp[26] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
-        CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
-    PropertyHelp[27] := 'Code designating the type of line. ' +  CRLF +
-                        'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
-                        'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
+    // enums
+    PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.units)] := ptruint(@obj.Units);
+    PropertyOffset2[ord(TProp.units)] := PtrInt(DSS.UnitsEnum);
+
+    PropertyType[ord(TProp.linetype)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.linetype)] := ptruint(@obj.FLineType);
+    PropertyOffset2[ord(TProp.linetype)] := PtrInt(DSS.LineTypeEnum);
+
+    // double arrays
+    PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
+    PropertyOffset[ord(TProp.Ratings)] := ptruint(@obj.AmpRatings);
+    PropertyOffset2[ord(TProp.Ratings)] := ptruint(@obj.NumAmpRatings);
+
+    // integers
+    PropertyType[ord(TProp.neutral)] := TPropertyType.IntegerProperty;
+    PropertyType[ord(TProp.Seasons)] := TPropertyType.IntegerProperty;
+    PropertyType[ord(TProp.nphases)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.neutral)] := ptruint(@obj.FNeutralConductor);
+    PropertyOffset[ord(TProp.Seasons)] := ptruint(@obj.NumAmpRatings);
+    PropertyOffset[ord(TProp.nphases)] := ptruint(@obj.FNPhases);
+
+    // doubles
+    PropertyOffset[ord(TProp.baseFreq)] := ptruint(@obj.BaseFrequency);
+    PropertyOffset[ord(TProp.normamps)] := ptruint(@obj.NormAmps);
+    PropertyOffset[ord(TProp.emergamps)] := ptruint(@obj.EmergAmps);
+    PropertyOffset[ord(TProp.faultrate)] := ptruint(@obj.FaultRate);
+    PropertyOffset[ord(TProp.pctperm)] := ptruint(@obj.PctPerm);
+    PropertyOffset[ord(TProp.repair)] := ptruint(@obj.HrsToRepair);
+    PropertyOffset[ord(TProp.Rg)] := ptruint(@obj.Rg);
+    PropertyOffset[ord(TProp.Xg)] := ptruint(@obj.Xg);
+    PropertyOffset[ord(TProp.rho)] := ptruint(@obj.rho);
+
+    PropertyOffset[ord(TProp.R1)] := ptruint(@obj.R1);
+    PropertyOffset[ord(TProp.X1)] := ptruint(@obj.X1);
+    PropertyOffset[ord(TProp.R0)] := ptruint(@obj.R0);
+    PropertyOffset[ord(TProp.X0)] := ptruint(@obj.X0);
+    
+    // adv doubles
+    PropertyOffset[ord(TProp.C1)] := ptruint(@obj.C1);
+    PropertyOffset[ord(TProp.C0)] := ptruint(@obj.C0);
+    PropertyScale[ord(TProp.C1)] := 1.0e-9;
+    PropertyScale[ord(TProp.C0)] := 1.0e-9;
+
+    PropertyOffset[ord(TProp.B1)] := ptruint(@obj.C1);
+    PropertyOffset2[ord(TProp.B1)] := ptruint(@GetC1C0Scale);
+    PropertyFlags[ord(TProp.B1)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.Redundant];
+
+    PropertyOffset[ord(TProp.B0)] := ptruint(@obj.C0);
+    PropertyOffset2[ord(TProp.B0)] := ptruint(@GetC1C0Scale);
+    PropertyFlags[ord(TProp.B0)] := [TPropertyFlag.ScaledByFunction, TPropertyFlag.Redundant];
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
-end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TLineCode.NewObject(const ObjName: String): Integer;
-begin
-   // create a new object of this class and add to list
-    DSS.ActiveDSSObject := TLineCodeObj.Create(Self, ObjName);
-    Result := AddObjectToList(DSS.ActiveDSSObject);
+    inherited DefineProperties;
 end;
 
-function TLineCodeObj.get_Rmatrix: String;
+function TLineCode.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    j: Integer;
-    i: Integer;
+    Obj: TObj;
 begin
-    Result := '[';
-    for i := 1 to FNPhases do
-    begin
-        for j := 1 to FNphases do
-        begin
-            Result := Result + Format('%12.8f ', [Z.GetElement(i, j).re]);
-        end;
-        if i < FNphases then
-            Result := Result + '|';
-    end;
-    Result := Result + ']';
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        DSS.ActiveDSSObject := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
 end;
 
-function TLineCodeObj.get_Xmatrix: String;
-var
-    j: Integer;
-    i: Integer;
+procedure TLineCodeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
 begin
-    Result := '[';
-    for i := 1 to FNPhases do
-    begin
-        for j := 1 to FNphases do
-        begin
-            Result := Result + Format('%12.8f ', [Z.GetElement(i, j).im]);
-        end;
-        if i < FNphases then
-            Result := Result + '|';
-    end;
-    Result := Result + ']';
-end;
-
-function TLineCodeObj.get_CMatrix: String;
-var
-    i, j: Integer;
-begin
-    Result := '[';
-    for i := 1 to FNPhases do
-    begin
-        for j := 1 to FNphases do
-        begin
-            Result := Result + Format('%12.8f ', [Yc.GetElement(i, j).im / TwoPi / BaseFrequency * 1.0E9]);
-        end;
-        if i < FNphases then
-            Result := Result + '|';
-    end;
-    Result := Result + ']';
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TLineCode.SetUnits(const s: String);
-// decodes the units string and sets the Units variable
-
-begin
-    DSS.ActiveLineCodeObj.Units := GetUnitsCode(S);
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TLineCode.SetZ1Z0(i: Integer; Value: Double);
-// set symmetrical component impedances and a flag to indicate they were changed
-begin
-
-    SymComponentsChanged := TRUE;
-
-
-    with DSS.ActiveLineCodeObj do
-    begin
-        SymComponentsModel := TRUE;
-        case i of
-            1:
-                R1 := Value;
-            2:
-                X1 := Value;
-            3:
-                R0 := Value;
-            4:
-                X0 := Value;
-            5:
-                C1 := Value;
-            6:
-                C0 := Value;
-        else
-        end;
-    end;
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TLineCode.DoMatrix(i: Integer);
-
-var
-    OrderFound, Norder, j: Integer;
-    MatBuffer: pDoubleArray;
-    Zvalues: pComplexArray;
-    Factor: Double;
-
-begin
-    with DSS.ActiveLineCodeObj do
-    begin
-        MatrixChanged := TRUE;
-        MatBuffer := Allocmem(Sizeof(Double) * FNphases * FNphases);
-        OrderFound := Parser.ParseAsSymMatrix(FNphases, MatBuffer);
-
-        if OrderFound > 0 then    // Parse was successful
-            case i of
-                1:
-                begin    {R}
-                    ZValues := Z.GetValuesArrayPtr(Norder);
-                    if Norder = FNphases then
-                        for j := 1 to FNphases * FNphases do
-                            ZValues^[j].Re := MatBuffer^[j];
-                end;
-                2:
-                begin   {X}
-                    ZValues := Z.GetValuesArrayPtr(Norder);
-                    if Norder = FNphases then
-                        for j := 1 to FNphases * FNphases do
-                            ZValues^[j].im := MatBuffer^[j];
-                end;
-                3:
-                begin    {YC Matrix}
-                    Factor := TwoPi * BaseFrequency * 1.0e-9;
-                    ZValues := YC.GetValuesArrayPtr(Norder);
-                    if Norder = FNphases then
-                        for j := 1 to FNphases * FNphases do
-                            ZValues^[j].im := Factor * MatBuffer^[j];
-                end;
-            else
+    case Idx of
+        ord(TProp.nphases):
+            if FNphases <> previousIntVal then
+            begin
+                FNeutralConductor := FNphases;  // Init to last conductor
+                // Put some reasonable values in these matrices
+                CalcMatricesFromZ1Z0;  // reallocs matrices
             end;
-
-        Freemem(MatBuffer, Sizeof(Double) * FNphases * FNphases);
     end;
+    case Idx of
+        1..6, 23, 24:
+            SymComponentsModel := TRUE;
+        9..11:
+        begin
+            Include(Flags, Flg.NeedsRecalc);
+            SymComponentsModel := FALSE;
+        end;
+        25:
+            setlength(AmpRatings, NumAmpRatings);
+    end;
+    inherited PropertySideEffects(Idx, previousIntVal);
 end;
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TLineCode.Edit: Integer;
-var
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
-
+function TLineCode.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
 begin
-    Result := 0;
-  // continue parsing with contents of Parser
-    DSS.ActiveLineCodeObj := ElementList.Active;
-    DSS.ActiveDSSObject := DSS.ActiveLineCodeObj;
-    SymComponentsChanged := FALSE;
-    MatrixChanged := FALSE;
-    DSS.ActiveLineCodeObj.ReduceByKron := FALSE;  // Allow all matrices to be computed it raw form
-
-    with DSS.ActiveLineCodeObj do
+    with TObj(ptr) do
     begin
-
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
-        begin
-            if Length(ParamName) = 0 then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
-
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
-                1:
-                    Numphases := Parser.IntValue;  // Use property value to force reallocations
-                2:
-                    SetZ1Z0(1, Parser.Dblvalue);  {R1}
-                3:
-                    SetZ1Z0(2, Parser.Dblvalue);  {X0}
-                4:
-                    SetZ1Z0(3, Parser.Dblvalue);  {R1}
-                5:
-                    SetZ1Z0(4, Parser.Dblvalue);  {X0}
-                6:
-                    SetZ1Z0(5, Parser.Dblvalue * 1.0e-9); {C1}   // Convert from nano to farads
-                7:
-                    SetZ1Z0(6, Parser.Dblvalue * 1.0e-9); {C0}
-                8:
-                    SetUnits(Param);
-                9:
-{Rmatrix} DoMatrix(1);
-                10:
-{Xmatrix} DoMatrix(2);
-                11:
-{Cmatrix} DoMatrix(3);
-                12:
-                    BaseFrequency := Parser.DblValue;
-                13:
-                    NormAmps := Parser.Dblvalue;
-                14:
-                    EmergAmps := Parser.Dblvalue;
-                15:
-                    FaultRate := Parser.Dblvalue;
-                16:
-                    PctPerm := Parser.Dblvalue;
-                17:
-                    HrsToRepair := Parser.Dblvalue;
-                18:
-                    ReduceByKron := InterpretYesNo(Param);
-                19:
-                    Rg := Parser.DblValue;
-                20:
-                    Xg := Parser.DblValue;
-                21:
-                    rho := Parser.DblValue;
-                22:
-                    FNeutralConductor := Parser.IntValue;
-                23:
-                    SetZ1Z0(5, Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B1 -> C1}
-                24:
-                    SetZ1Z0(6, Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B0 -> C0}
-                25:
-                begin
-                    NumAmpRatings := Parser.IntValue;
-                    setlength(AmpRatings, NumAmpRatings);
-                end;
-                26:
-                begin
-                    setlength(AmpRatings, NumAmpRatings);
-                    Param := Parser.StrValue;
-                    NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
-                end;
-                27: 
-                    FLineType := LineTypeList.Getcommand(Param);
-            else
-                ClassEdit(DSS.ActiveLineCodeObj, Parampointer - NumPropsThisClass)
-            end;
-
-            case ParamPointer of
-                9..11:
-                    SymComponentsModel := FALSE;
-                18:
-                    if ReduceByKron and not SymComponentsModel then
-                        DoKronReduction;
-            end;
-
-
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
-        end;
-
         if SymComponentsModel then
             CalcMatricesFromZ1Z0;
-        if MatrixChanged then
+        if Flg.NeedsRecalc in Flags then
         begin
+            Exclude(Flags, Flg.NeedsRecalc);
             Zinv.Copyfrom(Z);
             Zinv.Invert;
         end;
+        Exclude(Flags, Flg.EditionActive);
     end;
-
+    Result := True;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TLineCode.MakeLike(const LineName: String): Integer;
+procedure TLineCodeObj.MakeLike(OtherPtr: Pointer);
 var
-    OtherLineCode: TLineCodeObj;
-    i: Integer;
+    Other: TObj;
 begin
-    Result := 0;
-   {See if we can find this line code in the present collection}
-    OtherLineCode := Find(LineName);
-    if OtherLineCode <> NIL then
-        with DSS.ActiveLineCodeObj do
-        begin
-
-            if FNPhases <> OtherLineCode.FNphases then
-            begin
-                FNphases := OtherLineCode.FNphases;
-
-                if Z <> NIL then
-                    Z.Free;
-                if Zinv <> NIL then
-                    Zinv.Free;
-                if Yc <> NIL then
-                    Yc.Free;
-
-                Z := TCmatrix.CreateMatrix(FNphases);
-                Zinv := TCMatrix.CreateMatrix(FNphases);
-                Yc := TCMatrix.CreateMatrix(FNphases);
-            end;
-
-            Z.CopyFrom(OtherLineCode.Z);
-            Zinv.CopyFrom(OtherLineCode.Zinv);
-            Yc.CopyFrom(OtherLineCode.Yc);
-            BaseFrequency := OtherLineCode.BaseFrequency;
-            R1 := OtherLineCode.R1;
-            X1 := OtherLineCode.X1;
-            R0 := OtherLineCode.R0;
-            X0 := OtherLineCode.X0;
-            C1 := OtherLineCode.C1;
-            C0 := OtherLineCode.C0;
-            Rg := OtherLineCode.Rg;
-            Xg := OtherLineCode.Xg;
-            rho := OtherLineCode.rho;
-            FNeutralConductor := OtherLineCode.FNeutralConductor;
-            NormAmps := OtherLineCode.NormAmps;
-            EmergAmps := OtherLineCode.EmergAmps;
-            FaultRate := OtherLineCode.FaultRate;
-            PctPerm := OtherLineCode.PctPerm;
-            HrsToRepair := OtherLineCode.HrsToRepair;
-
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherLineCode.PropertyValue[i];
-            Result := 1;
-        end
-    else
-        DoSimpleMsg('Error in Line MakeLike: "' + LineName + '" Not Found.', 102);
-
-
-end;
-
-function TLineCode.Get_Code: String;  // Returns active line code string
-begin
-    Result := TlineCodeObj(ElementList.Active).Name;
-end;
-
-procedure TLineCode.Set_Code(const Value: String);  // sets the  active linecode
-var
-    LineCodeObj: TLineCodeObj;
-begin
-
-    DSS.ActiveLineCodeObj := NIL;
-    LineCodeObj := ElementList.First;
-    while LineCodeObj <> NIL do
+    inherited MakeLike(OtherPtr);
+    Other := TObj(OtherPtr);
+    if FNPhases <> Other.FNphases then
     begin
+        FNphases := Other.FNphases;
 
-        if CompareText(LineCodeObj.Name, Value) = 0 then
-        begin
-            DSS.ActiveLineCodeObj := LineCodeObj;
-            Exit;
-        end;
+        if Z <> NIL then
+            Z.Free;
+        if Zinv <> NIL then
+            Zinv.Free;
+        if Yc <> NIL then
+            Yc.Free;
 
-        LineCodeObj := ElementList.Next;
+        Z := TCmatrix.CreateMatrix(FNphases);
+        Zinv := TCMatrix.CreateMatrix(FNphases);
+        Yc := TCMatrix.CreateMatrix(FNphases);
     end;
 
-    DoSimpleMsg('Linecode: "' + Value + '" not Found.', 103);
-
+    Z.CopyFrom(Other.Z);
+    Zinv.CopyFrom(Other.Zinv);
+    Yc.CopyFrom(Other.Yc);
+    BaseFrequency := Other.BaseFrequency;
+    R1 := Other.R1;
+    X1 := Other.X1;
+    R0 := Other.R0;
+    X0 := Other.X0;
+    C1 := Other.C1;
+    C0 := Other.C0;
+    Rg := Other.Rg;
+    Xg := Other.Xg;
+    rho := Other.rho;
+    FNeutralConductor := Other.FNeutralConductor;
+    NormAmps := Other.NormAmps;
+    EmergAmps := Other.EmergAmps;
+    FaultRate := Other.FaultRate;
+    PctPerm := Other.PctPerm;
+    HrsToRepair := Other.HrsToRepair;
 end;
-
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//      TLineCode Obj
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 constructor TLineCodeObj.Create(ParClass: TDSSClass; const LineCodeName: String);
-
 begin
     inherited Create(ParClass);
     Name := LowerCase(LineCodeName);
@@ -658,17 +379,13 @@ begin
     rho := 100.0;
 
     SymComponentsModel := TRUE;
-    ReduceByKron := FALSE;
     CalcMatricesFromZ1Z0;  // put some reasonable values in
 
     NumAmpRatings := 1;
     setlength(AmpRatings, NumAmpRatings);
     AmpRatings[0] := NormAmps;
-
-    InitPropertyValues(0);
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLineCodeObj.Destroy;
 begin
     Z.Free;
@@ -678,11 +395,9 @@ begin
     inherited destroy;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TLineCodeObj.Set_NPhases(Value: Integer);
+procedure TLineCodeObj.Set_NumPhases(Value: Integer);
 // Set the number of phases and reallocate phase-sensitive arrays
 // Need to preserve values in Z matrices
-
 begin
     if Value > 0 then
     begin
@@ -690,19 +405,17 @@ begin
         begin    // If size is no different, we don't need to do anything
             FNPhases := Value;
             FNeutralConductor := FNphases;  // Init to last conductor
-        // Put some reasonable values in these matrices
+            // Put some reasonable values in these matrices
             CalcMatricesFromZ1Z0;  // reallocs matrices
         end;
     end;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TLineCodeObj.CalcMatricesFromZ1Z0;
 var
     Zs, Zm, Ys, Ym, Ztemp: Complex;
     i, j: Integer;
     Yc1, Yc0, OneThird: Double;
-
 begin
     if Z <> NIL then
         Z.Free;
@@ -718,15 +431,15 @@ begin
 
     OneThird := 1.0 / 3.0;  // Do this to get more precision in next few statements
 
-    Ztemp := CmulReal(cmplx(R1, X1), 2.0);
-    Zs := CmulReal(CAdd(Ztemp, Cmplx(R0, X0)), OneThird);
-    Zm := CmulReal(Csub(cmplx(R0, X0), Cmplx(R1, X1)), OneThird);
+    Ztemp := cmplx(R1, X1) * 2;
+    Zs := (Ztemp + Cmplx(R0, X0)) * OneThird;
+    Zm := (cmplx(R0, X0) - Cmplx(R1, X1)) * OneThird;
 
     Yc1 := TwoPi * BaseFrequency * C1;
     Yc0 := TwoPi * BaseFrequency * C0;
 
-    Ys := CMulReal(Cadd(CMulReal(Cmplx(0.0, Yc1), 2.0), Cmplx(0.0, Yc0)), OneThird);
-    Ym := CmulReal(Csub(cmplx(0.0, Yc0), Cmplx(0.0, Yc1)), OneThird);
+    Ys := (Cmplx(0.0, Yc1) * 2 + Cmplx(0.0, Yc0)) * OneThird;
+    Ym := (cmplx(0.0, Yc0) - Cmplx(0.0, Yc1)) * OneThird;
 
     for i := 1 to FNphases do
     begin
@@ -742,19 +455,16 @@ begin
     Zinv.Invert;
 end;
 
-procedure TLineCodeObj.DumpProperties(F: TFileStream; Complete: Boolean);
-
+procedure TLineCodeObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
 var
     k,
     i, j: Integer;
     TempStr: String;
-
 begin
     inherited DumpProperties(F, Complete);
 
     with ParentClass do
     begin
-
         FSWriteln(F, Format('~ %s=%d', [PropertyName^[1], FNphases]));
         FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[2], R1]));
         FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[3], X1]));
@@ -808,141 +518,31 @@ begin
         TempStr := TempStr + ']';
         FSWriteln(F, Format('~ %s=%s', [PropertyName^[26]]) + TempStr);
 
-
 		// TODO: check missing linetype here
     end;
-
 end;
 
 function TLineCodeObj.GetPropertyValue(Index: Integer): String;
-var
-    j: Integer;
 begin
-    case Index of
-        1:
-            Result := Format('%d', [FnPhases]);
-        2:
-            if SymComponentsModel then
-                Result := Format('%.5g', [R1])
-            else
+    if not SymComponentsModel then
+        case Index of
+            2, 3, 4, 5, 6, 7, 23, 24:
+            begin
                 Result := '----';
-        3:
-            if SymComponentsModel then
-                Result := Format('%.5g', [X1])
-            else
-                Result := '----';
-        4:
-            if SymComponentsModel then
-                Result := Format('%.5g', [R0])
-            else
-                Result := '----';
-        5:
-            if SymComponentsModel then
-                Result := Format('%.5g', [X0])
-            else
-                Result := '----';
-        6:
-            if SymComponentsModel then
-                Result := Format('%.5g', [C1 * 1.0e9])
-            else
-                Result := '----';
-        7:
-            if SymComponentsModel then
-                Result := Format('%.5g', [C0 * 1.0e9])
-            else
-                Result := '----';
-        8:
-            Result := LineUnitsStr(Units);
-        9:
-            Result := Get_Rmatrix;
-        10:
-            Result := Get_Xmatrix;
-        11:
-            Result := get_Cmatrix;
-        12:
-            Result := Format('%.g', [Basefrequency]); //  was defaultbasefrequency ??? 'baseFreq';
-        18:
-            if ReduceByKron then
-                Result := 'Y'
-            else
-                Result := 'N';
-        19:
-            Result := Format('%.5g', [Rg]);
-        20:
-            Result := Format('%.5g', [Xg]);
-        21:
-            Result := Format('%.5g', [Rho]);
-        22:
-            Result := IntToStr(FNeutralConductor);
-        23:
-            if SymComponentsModel then
-                Result := Format('%.5g', [twopi * Basefrequency * C1 * 1.0e6])
-            else
-                Result := '----';
-        24:
-            if SymComponentsModel then
-                Result := Format('%.5g', [twopi * Basefrequency * C0 * 1.0e6])
-            else
-                Result := '----';
-        25:
-            Result := inttostr(NumAmpRatings);
-        26:
-        begin
-            Result := '[';
-            for  j := 1 to NumAmpRatings do
-                Result := Result + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
-            Result := Result + ']';
+                Exit
+            end;
         end;
-        27: 
-            if (FLineType >= 1) and (FLineType <= (High(LINE_TYPES) + 1)) then
-                Result := LINE_TYPES[FLineType - 1]
-            else
-                Result := '';
-    else
-        Result := inherited GetPropertyValue(index);
-    end;
-end;
 
-procedure TLineCodeObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-
-    PropertyValue[1] := '3'; // 'nphases';
-    PropertyValue[2] := '.058'; // 'r1';
-    PropertyValue[3] := '.1206'; // 'x1';
-    PropertyValue[4] := '0.1784'; // 'r0';
-    PropertyValue[5] := '0.4047'; // 'x0';
-    PropertyValue[6] := '3.4'; // 'c1';
-    PropertyValue[7] := '1.6'; // 'c0';
-    PropertyValue[8] := 'none'; // 'units';
-    PropertyValue[9] := ''; // 'rmatrix';
-    PropertyValue[10] := ''; // 'xmatrix';
-    PropertyValue[11] := ''; // 'cmatrix';
-    PropertyValue[12] := Format('%6.1f', [DSS.DefaultBaseFreq]); // 'baseFreq';
-    PropertyValue[13] := '400'; // 'normamps';
-    PropertyValue[14] := '600'; // 'emergamps';
-    PropertyValue[15] := '0.1'; // 'faultrate';
-    PropertyValue[16] := '20'; // 'pctperm';
-    PropertyValue[17] := '3'; // 'Hrs to repair';
-    PropertyValue[18] := 'N'; // 'Kron';
-    PropertyValue[19] := '.01805'; // 'Rg';
-    PropertyValue[20] := '.155081'; // 'Xg';
-    PropertyValue[21] := '100'; // 'rho';
-    PropertyValue[22] := '3'; // 'Neutral';
-    PropertyValue[23] := '1.2818'; // B1  microS
-    PropertyValue[24] := '0.60319'; // B0  microS
-    PropertyValue[25] := '1'; // 1 season
-    PropertyValue[26] := '[400]'; // 1 rating
-    PropertyValue[27] :=  'OH';
-
-    inherited  InitPropertyValues(NumPropsThisClass);
-
+    Result := inherited GetPropertyValue(index);
 end;
 
 procedure TLineCodeObj.DoKronReduction;
 var
     NewZ, NewYC: TcMatrix;
-
 begin
+    if SymComponentsModel then
+        Exit;
+
     if FneutralConductor = 0 then
         Exit;   // Do Nothing
 
@@ -953,19 +553,18 @@ begin
     begin
         try
             NewZ := Z.Kron(FNeutralConductor);       // Perform Kron Reductions into temp space
-        { Have to invert the Y matrix to eliminate properly}
+            // Have to invert the Y matrix to eliminate properly
             YC.Invert;  // Vn = 0 not In
             NewYC := YC.Kron(FNeutralConductor);
         except
             On E: Exception do
-                DoSimpleMsg(Format('Kron Reduction failed: LineCode.%s. Attempting to eliminate Neutral Conductor %d.', [Name, FNeutralConductor]), 103);
+                DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName, FNeutralConductor], 103);
         end;
 
         // Reallocate into smaller space   if Kron was successful
 
         if (NewZ <> NIL) and (NewYC <> NIL) then
         begin
-
             NewYC.Invert;  // Back to Y
 
             Numphases := NewZ.order;
@@ -978,28 +577,22 @@ begin
             YC := NewYC;
 
             FNeutralConductor := 0;
-            ReduceByKron := FALSE;
 
-            {Change Property values to reflect Kron reduction for save circuit function}
-            PropertyValue[1] := Format('%d', [FnPhases]);
-            PropertyValue[9] := get_Rmatrix;
-            PropertyValue[10] := get_Xmatrix;
-            PropertyValue[11] := get_Cmatrix;
-
+            // Change Property values to reflect Kron reduction for save circuit function
+            SetAsNextSeq(1);
+            SetAsNextSeq(9);
+            SetAsNextSeq(10);
+            SetAsNextSeq(11);
         end
         else
         begin
-            DoSimpleMsg(Format('Kron Reduction failed: LineCode.%s. Attempting to eliminate Neutral Conductor %d.', [Name, FNeutralConductor]), 103);
+            DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName, FNeutralConductor], 103);
         end;
-
     end
     else
     begin
-        DoSimpleMsg('Cannot perform Kron Reduction on a 1-phase LineCode: LineCode.' + Name, 103);
+        DoSimpleMsg('Cannot perform Kron Reduction on a 1-phase LineCode: %s', [FullName], 103);
     end;
-    ;
-
 end;
-
 
 end.

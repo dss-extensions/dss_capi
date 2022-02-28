@@ -59,6 +59,21 @@ uses
     DSSClass,
     DSSHelper;
 
+
+function ErrorIfTShapeNil(DSS: TDSSContext; name: String): Pointer;
+begin
+    Result := DSS.TShapeClass.Find(name);
+    if (Result = NIL) and (DSS_CAPI_EXT_ERRORS) then
+        DoSimpleMsg(DSS, 'TShape "%s" not found!', [name], 89891);
+end;
+
+function ErrorIfLoadShapeNil(DSS: TDSSContext; name: String): Pointer;
+begin
+    Result := DSS.LoadShapeClass.Find(name);
+    if (Result = NIL) and (DSS_CAPI_EXT_ERRORS) then
+        DoSimpleMsg(DSS, 'LoadShape "%s" not found!', [name], 89891);
+end;
+
 //------------------------------------------------------------------------------
 function _activeObj(DSS: TDSSContext; out obj: TPVSystemObj): Boolean; inline;
 begin
@@ -72,7 +87,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active PVSystem object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['PVSystem'], 8989);
         end;
         Exit;
     end;
@@ -92,7 +107,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active PVSystem object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['PVSystem'], 8989);
         end;
         Exit;
     end;
@@ -230,7 +245,7 @@ begin
     pPVSystem := DSSPrime.ActiveCircuit.PVSystems.Get(Value);
     if pPVSystem = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid PVSystem index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['PVSystem', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pPVSystem;
@@ -268,7 +283,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg(DSSPrime, 'PVSystem "' + Value + '" Not Found in Active Circuit.', 5003);
+            DoSimpleMsg(DSSPrime, 'PVSystem "%s" not found in Active Circuit.', [Value], 5003);
         end;
         Exit;
     end;
@@ -280,7 +295,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'PVSystem "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'PVSystem "%s" not found in Active Circuit.', [Value], 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -456,12 +471,14 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShape);
+        if elem.DailyShapeObj <> NIL then
+            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShapeObj.Name);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DailyShape);
+    if elem2.DailyShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DailyShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_daily(const Value: PAnsiChar); CDECL;
@@ -473,14 +490,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        elem.DailyShape := Value;
-        elem.DailyShapeObj := DSSPrime.LoadShapeClass.Find(elem.DailyShape);
+        elem.DailyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    elem2.DailyShape := Value;
-    elem2.DailyShapeObj := DSSPrime.LoadShapeClass.Find(elem2.DailyShape);
+    elem2.DailyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_duty(): PAnsiChar; CDECL;
@@ -493,12 +508,15 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShape);
+        if elem.DutyShapeObj <> NIL then
+            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DutyShape);
+
+    if elem2.DutyShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DutyShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_duty(const Value: PAnsiChar); CDECL;
@@ -510,14 +528,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        elem.DutyShape := Value;
-        elem.DutyShapeObj := DSSPrime.LoadShapeClass.Find(elem.DutyShape);
+        elem.DutyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    elem2.DutyShape := Value;
-    elem2.DutyShapeObj := DSSPrime.LoadShapeClass.Find(elem2.DutyShape);
+    elem2.DutyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_yearly(): PAnsiChar; CDECL;
@@ -530,12 +546,14 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShape);
+        if elem.YearlyShapeObj <> NIL then
+            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.YearlyShape);
+    if elem2.YearlyShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.YearlyShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_yearly(const Value: PAnsiChar); CDECL;
@@ -547,14 +565,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        elem.YearlyShape := Value;
-        elem.YearlyShapeObj := DSSPrime.LoadShapeClass.Find(elem.YearlyShape);
+        elem.YearlyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    elem2.YearlyShape := Value;
-    elem2.YearlyShapeObj := DSSPrime.LoadShapeClass.Find(elem2.YearlyShape);
+    elem2.YearlyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Tdaily(): PAnsiChar; CDECL;
@@ -567,12 +583,14 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyTShape);
+        if elem.DailyTShapeObj <> NIL then        
+            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyTShapeObj.Name);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DailyTShape);
+    if elem2.DailyTShapeObj <> NIL then        
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DailyTShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tdaily(const Value: PAnsiChar); CDECL;
@@ -584,14 +602,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        elem.DailyTShape := Value;
-        elem.DailyTShapeObj := DSSPrime.TShapeClass.Find(elem.DailyTShape);
+        elem.DailyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    elem2.DailyTShape := Value;
-    elem2.DailyTShapeObj := DSSPrime.TShapeClass.Find(elem2.DailyTShape);
+    elem2.DailyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Tduty(): PAnsiChar; CDECL;
@@ -604,12 +620,15 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyTShape);
+        if elem.DutyTShapeObj <> NIL then
+            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyTShapeObj.Name);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DutyTShape);
+
+    if elem2.DutyTShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DutyTShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tduty(const Value: PAnsiChar); CDECL;
@@ -621,14 +640,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        elem.DutyTShape := Value;
-        elem.DutyTShapeObj := DSSPrime.TShapeClass.Find(elem.DutyTShape);
+        elem.DutyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    elem2.DutyTShape := Value;
-    elem2.DutyTShapeObj := DSSPrime.TShapeClass.Find(elem2.DutyTShape);
+    elem2.DutyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Tyearly(): PAnsiChar; CDECL;
@@ -641,12 +658,15 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyTShape);
+        if elem.YearlyTShapeObj <> NIL then
+            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyTShapeObj.Name);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.YearlyTShape);
+
+    if elem2.YearlyTShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.YearlyTShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tyearly(const Value: PAnsiChar); CDECL;
@@ -658,14 +678,12 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        elem.YearlyTShape := Value;
-        elem.YearlyTShapeObj := DSSPrime.TShapeClass.Find(elem.YearlyTShape);
+        elem.YearlyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
-    elem2.YearlyTShape := Value;
-    elem2.YearlyTShapeObj := DSSPrime.TShapeClass.Find(elem2.YearlyTShape);
+    elem2.YearlyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Pmpp(): Double; CDECL;
@@ -731,16 +749,16 @@ begin
     begin
         if not _activeObj(DSSPrime, elem) then
             Exit;
-        if elem.SensorObj <> NIL then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.SensorObj.ElementName);
+        if (elem.SensorObj <> NIL) and (elem.SensorObj.MeteredElement <> NIL) then
+            Result := DSS_GetAsPAnsiChar(DSSPrime, LowerCase(elem.SensorObj.MeteredElement.FullName));
 
         Exit;
     end;
     if not _activeObj2(DSSPrime, elem2) then
         Exit;
 
-    if elem2.SensorObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.SensorObj.ElementName);
+    if (elem2.SensorObj <> NIL) and (elem2.SensorObj.MeteredElement <> NIL) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, LowerCase(elem2.SensorObj.MeteredElement.FullName));
 end;
 //------------------------------------------------------------------------------
 end.

@@ -7,22 +7,17 @@ unit Ymatrix;
   ----------------------------------------------------------
 }
 
-{
-   Unit to manage System Y matrix
-
-   6-11-00  Created from Solution.Pas
-}
 
 interface
 
 uses
-    uComplex,
+    UComplex, DSSUcomplex,
     ucMatrix,
     SysUtils,
     DSSClass;
 
 
-{Options for building Y matrix}
+// Options for building Y matrix
 const
     SERIESONLY = 1;
     WHOLEMATRIX = 2;
@@ -68,7 +63,7 @@ begin
     with Ckt do
     begin
         if LogEvents then
-            LogThisEvent(Ckt.DSS, 'Recalc All Yprims');
+            LogThisEvent(Ckt.DSS, _('Recalc All Yprims'));
         pElem := CktElements.First;
         while pElem <> NIL do
         begin
@@ -76,7 +71,6 @@ begin
             pElem := CktElements.Next;
         end;
     end;
-
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -89,7 +83,7 @@ begin
     with Ckt do
     begin
         if LogEvents then
-            LogThisEvent(Ckt.DSS, 'Recalc Invalid Yprims');
+            LogThisEvent(Ckt.DSS, _('Recalc Invalid Yprims'));
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         pElem := IncrCktElements.First;
@@ -122,11 +116,10 @@ procedure ResetSparseMatrix(var hY: NativeUint; size: Integer);
 
 
 begin
-
     if hY <> 0 then
     begin
         if DeleteSparseSet(hY) < 1  {Get rid of existing one beFore making a new one} then
-            raise EEsolv32Problem.Create('Error Deleting System Y Matrix in ResetSparseMatrix. Problem with Sparse matrix solver.');
+            raise EEsolv32Problem.Create(_('Error Deleting System Y Matrix in ResetSparseMatrix. Problem with Sparse matrix solver.'));
 
         hY := 0;
     end;
@@ -135,7 +128,7 @@ begin
     hY := NewSparseSet(Size);
     if hY < 1 then
     begin
-        raise EEsolv32Problem.Create('Error Creating System Y Matrix. Problem WITH Sparse matrix solver.');
+        raise EEsolv32Problem.Create(_('Error Creating System Y Matrix. Problem WITH Sparse matrix solver.'));
     end;
 end;
 
@@ -334,7 +327,6 @@ begin
     CmatArray := NIL;
     with DSS.ActiveCircuit, Solution do
     begin
-
         if PreserveNodeVoltages then
             UpdateVBus; // Update voltage values stored with Bus object
 
@@ -391,7 +383,7 @@ begin
 
         if DSS.SolutionAbort then
         begin
-            DoSimpleMsg('Y matrix build aborted due to error in primitive Y calculations.', 11001);
+            DoSimpleMsg(DSS, _('Y matrix build aborted due to error in primitive Y calculations.'), 11001);
             Exit;  // Some problem occured building Yprims
         end;
 
@@ -403,13 +395,13 @@ begin
                 WHOLEMATRIX:
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
                     if Incremental then
-                        LogThisEvent(DSS, 'Building Whole Y Matrix -- using incremental method')
+                        LogThisEvent(DSS, _('Building Whole Y Matrix -- using incremental method'))
                     else
 {$ENDIF}
-                        LogThisEvent(DSS, 'Building Whole Y Matrix');
+                        LogThisEvent(DSS, _('Building Whole Y Matrix'));
 
                 SERIESONLY:
-                    LogThisEvent(DSS, 'Building Series Y Matrix');
+                    LogThisEvent(DSS, _('Building Series Y Matrix'));
             end;
           // Add in Yprims for all devices
           
@@ -434,7 +426,7 @@ begin
                // new function adding primitive Y matrix to KLU system Y matrix
                         if CMatArray <> NIL then
                             if AddPrimitiveMatrix(hY, Yorder, PLongWord(@NodeRef[1]), @CMatArray[1]) < 1 then
-                                raise EEsolv32Problem.Create('Node index out of range adding to System Y Matrix')
+                                raise EEsolv32Problem.Create(_('Node index out of range adding to System Y Matrix'))
                     end;   // If Enabled
                 pElem := CktElements.Next;
             end;
@@ -451,7 +443,7 @@ begin
         if AllocateVI then
         begin
             if LogEvents then
-                LogThisEvent(DSS, 'ReAllocating Solution Arrays');
+                LogThisEvent(DSS, _('Reallocating Solution Arrays'));
             ReAllocMem(NodeV, SizeOf(NodeV^[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
             NodeV^[0] := CZERO;
             ReAllocMem(Currents, SizeOf(Currents^[1]) * (NumNodes + 1)); // Allocate System current array
@@ -466,8 +458,8 @@ begin
             ErrorSaved := AllocMem(Sizeof(ErrorSaved^[1]) * NumNodes);  // zero fill
             NodeVBase := AllocMem(Sizeof(NodeVBase^[1]) * NumNodes);  // zero fill
             InitializeNodeVbase(DSS);
-{$IFDEF DSS_CAPI_PM}
-            {A-Diakoptics vectors memory allocation}
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+            // A-Diakoptics vectors memory allocation
             ReAllocMem(Node_dV, SizeOf(Node_dV^[1]) * (NumNodes + 1)); // Allocate the partial solution voltage
             ReAllocMem(Ic_Local, SizeOf(Ic_Local^[1]) * (NumNodes + 1)); // Allocate the Complementary currents
 {$ENDIF}
@@ -483,9 +475,8 @@ begin
                 SeriesYInvalid := FALSE;  // SystemYChange unchanged
         end;
 
-    // Deleted RCD only done now on mode change
-    // SolutionInitialized := False;  //Require initialization of voltages if Y changed
-
+        // Deleted RCD only done now on mode change
+        // SolutionInitialized := False;  //Require initialization of voltages if Y changed
         if PreserveNodeVoltages then
             RestoreNodeVfromVbus;
 
@@ -503,7 +494,6 @@ var
     nIslands, iCount, iFirst, p: Longword;
     Cliques: array of Longword;
 begin
-
     Result := '';
     with DSS.ActiveCircuit do
     begin
@@ -514,7 +504,7 @@ begin
             if Cabs(C) = 0.0 then
                 with MapNodeToBus^[i] do
                 begin
-                    Result := Result + Format('%sZero diagonal for bus %s, node %d', [CRLF, BusList.NameOfIndex(Busref), NodeNum]);
+                    Result := Result + Format(_('%sZero diagonal for bus %s, node %d'), [CRLF, BusList.NameOfIndex(Busref), NodeNum]);
                 end;
         end;
 
@@ -523,14 +513,14 @@ begin
         if sCol > 0 then
             with MapNodeToBus^[sCol] do
             begin
-                Result := Result + Format('%sMatrix singularity at bus %s, node %d', [CRLF, BusList.NameOfIndex(Busref), sCol]);
+                Result := Result + Format(_('%sMatrix singularity at bus %s, node %d'), [CRLF, BusList.NameOfIndex(Busref), sCol]);
             end;
 
         SetLength(Cliques, NumNodes);
         nIslands := FindIslands(hY, NumNodes, @Cliques[0]);
         if nIslands > 1 then
         begin
-            Result := Result + Format('%sFound %d electrical islands:', [CRLF, nIslands]);
+            Result := Result + Format(_('%sFound %d electrical islands:'), [CRLF, nIslands]);
             for i := 1 to nIslands do
             begin
                 iCount := 0;
@@ -546,12 +536,11 @@ begin
                 end;
                 with MapNodeToBus^[iFirst] do
                 begin
-                    Result := Result + Format('%s  #%d has %d nodes, including bus %s (node %d)', [CRLF, i, iCount, BusList.NameOfIndex(Busref), iFirst]);
+                    Result := Result + CRLF + Format(_('  #%d has %d nodes, including bus %s (node %d)'), [i, iCount, BusList.NameOfIndex(Busref), iFirst]);
                 end;
             end;
         end;
     end;
-
 end;
 
 

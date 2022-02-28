@@ -74,7 +74,7 @@ begin
     obj := DSS.LoadshapeClass.GetActiveObj;
     if obj = NIL then
     begin
-        DoSimpleMsg(DSS, 'No active Loadshape Object found.', 61001);
+        DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Loadshape'], 61001);
         Exit;
     end;
     
@@ -98,7 +98,7 @@ begin
         Exit;
     if DSSPrime.LoadshapeClass.SetActive(Value) then
         Exit;
-    DoSimpleMsg(DSSPrime, 'LoadShape "' + Value + '" Not Found in Active Circuit.', 77003);
+    DoSimpleMsg(DSSPrime, 'LoadShape "%s" not found in Active Circuit.', [Value], 77003);
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Count(): Integer; CDECL;
@@ -228,14 +228,14 @@ begin
     begin
         if elem.ExternalMemory then
         begin
-            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
             Exit;
         end;
     
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
-            DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61100);
+            DoSimpleMsg('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints], 61100);
             Exit;
         end;
         ReallocMem(sP, 0);
@@ -256,14 +256,14 @@ begin
     begin
         if ExternalMemory then
         begin
-            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
             Exit;
         end;
         
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
-            DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61101);
+            DoSimpleMsg('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints], 61101);
             Exit;
         end;
         ReallocMem(sQ, 0);
@@ -317,14 +317,14 @@ begin
     begin
         if elem.ExternalMemory then
         begin
-            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory! Reset the data first.'), 61101);
             Exit;
         end;
         
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
-            DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61102);
+            DoSimpleMsg('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints], 61102);
             Exit;
         end;
         ReallocMem(sH, 0);
@@ -393,7 +393,7 @@ end;
 //------------------------------------------------------------------------------
 function LoadShapes_New(const Name: PAnsiChar): Integer; CDECL;
 begin
-    Result := DSSPrime.DSSExecutive.AddObject('loadshape', Name);    // Returns handle to object
+    DSSPrime.LoadShapeClass.NewObject(Name, True, Result);
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_PBase(): Double; CDECL;
@@ -461,7 +461,7 @@ end;
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.LoadShapeClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg(DSSPrime, 'Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['LoadShape', Value], 656565);
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Points(Npts: TAPISize; HoursPtr: Pointer; PMultPtr: Pointer; QMultPtr: Pointer; ExternalMemory: TAPIBoolean; IsFloat32: TAPIBoolean; Stride: Integer); CDECL;

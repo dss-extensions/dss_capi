@@ -71,7 +71,7 @@ uses
     CAPI_Constants,
     DSSGlobals,
     Circuit,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     MathUtil,
     sysutils,
     ExecHelper,
@@ -95,7 +95,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active bus found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, _('No active bus found! Activate one and retry.'), 8989);
         end;
         Exit;
     end;
@@ -106,10 +106,10 @@ function _activeObj(DSS: TDSSContext; out obj: TDSSBus): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    
+
     if not _hasActiveBus(DSS) then
         Exit;
-    
+
     obj := DSS.ActiveCircuit.Buses[DSS.ActiveCircuit.ActiveBusIndex];
     Result := True;
 end;
@@ -146,7 +146,7 @@ var
     VPh, V012: Complex3;
 
 begin
-    if (InvalidCircuit(DSSPrime)) or 
+    if (InvalidCircuit(DSSPrime)) or
         (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
     begin
         DefaultResult(ResultPtr, ResultCount);
@@ -282,7 +282,7 @@ var
     i, iV, NValues: Integer;
 
 begin
-    if (InvalidCircuit(DSSPrime)) or 
+    if (InvalidCircuit(DSSPrime)) or
         (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
     begin
         DefaultResult(ResultPtr, ResultCount);
@@ -325,7 +325,7 @@ var
     i, iV, NValues: Integer;
 
 begin
-    if (InvalidCircuit(DSSPrime)) or 
+    if (InvalidCircuit(DSSPrime)) or
         (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
     begin
         DefaultResult(ResultPtr, ResultCount);
@@ -426,7 +426,7 @@ var
     Z: Complex;
 
 begin
-    if (InvalidCircuit(DSSPrime)) or 
+    if (InvalidCircuit(DSSPrime)) or
         (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
     begin
         DefaultResult(ResultPtr, ResultCount);
@@ -454,13 +454,13 @@ var
     Result: PDoubleArray0;
     Z: Complex;
 begin
-    if (InvalidCircuit(DSSPrime)) or 
+    if (InvalidCircuit(DSSPrime)) or
         (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    
+
     with DSSPrime.ActiveCircuit do
     begin
         Z := Buses^[ActiveBusIndex].Zsc1;
@@ -485,7 +485,7 @@ var
 
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if (InvalidCircuit(DSSPrime)) or 
+    if (InvalidCircuit(DSSPrime)) or
         (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
         Exit;
 
@@ -511,7 +511,7 @@ begin
         end
     except
         On E: Exception do
-            DoSimpleMsg(DSSPrime, 'ZscMatrix Error: ' + E.message + CRLF, 5016);
+            DoSimpleMsg(DSSPrime, 'ZscMatrix Error: %s', [E.message], 5016);
     end;
 end;
 
@@ -524,7 +524,6 @@ end;
 //------------------------------------------------------------------------------
 function Bus_ZscRefresh(): TAPIBoolean; CDECL;
 begin
-
     Result := FALSE;   // Init in case of failure
 
     if DSSPrime.DSSExecutive.DoZscRefresh = 0 then
@@ -540,7 +539,7 @@ var
 
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if (InvalidCircuit(DSSPrime)) or 
+    if (InvalidCircuit(DSSPrime)) or
         (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
         Exit;
 
@@ -565,7 +564,7 @@ begin
             end
     except
         On E: Exception do
-            DoSimpleMsg(DSSPrime, 'ZscMatrix Error: ' + E.message + CRLF, 5017);
+            DoSimpleMsg(DSSPrime, 'ZscMatrix Error: %s', [E.message], 5017);
     end;
 end;
 
@@ -649,7 +648,7 @@ begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-        
+
     with DSSPrime.ActiveCircuit do
         if ActiveBusIndex > 0 then
             Result := Utilities.GetUniqueNodeNumber(DSSPrime, BusList.NameOfIndex(ActiveBusIndex), StartNumber);
@@ -665,7 +664,7 @@ var
     VPh, V012: Complex3;
 
 begin
-    if (InvalidCircuit(DSSPrime)) or 
+    if (InvalidCircuit(DSSPrime)) or
         (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
     begin
         DefaultResult(ResultPtr, ResultCount);
@@ -816,8 +815,8 @@ begin
                         NodeIdxi := FindIdx(jj);  // Get the index of the Node that matches i
                         inc(jj);
                     until NodeIdxi > 0;
-                    
-                    // (2020-03-01) Changed in DSS C-API to avoid some corner 
+
+                    // (2020-03-01) Changed in DSS C-API to avoid some corner
                     // cases that resulted in infinite loops
                     for k := 1 to 3 do
                     begin
@@ -827,7 +826,7 @@ begin
                         else
                             inc(jj);
 
-                        if NodeIdxj > 0 then 
+                        if NodeIdxj > 0 then
                             break;
                     end;
                     if NodeIdxj = 0 then
@@ -838,13 +837,13 @@ begin
                     end;
 //------------------------------------------------------------------------------------------------
                     with Solution do
-                        Volts := Csub(NodeV^[GetRef(NodeIdxi)], NodeV^[GetRef(NodeIdxj)]);
+                        Volts := NodeV^[GetRef(NodeIdxi)] - NodeV^[GetRef(NodeIdxj)];
                     Result[iV] := Volts.re / BaseFactor;
                     Inc(iV);
                     Result[iV] := Volts.im / BaseFactor;
                     Inc(iV);
                 end;
-            end;  {With pBus}
+            end;  // With pBus
         end
         else
         begin  // for 1-phase buses, do not attempt to compute.
@@ -900,8 +899,8 @@ begin
                         NodeIdxi := FindIdx(jj);  // Get the index of the Node that matches i
                         inc(jj);
                     until NodeIdxi > 0;
-                    
-                    // (2020-03-01) Changed in DSS C-API to avoid some corner 
+
+                    // (2020-03-01) Changed in DSS C-API to avoid some corner
                     // cases that resulted in infinite loops
                     for k := 1 to 3 do
                     begin
@@ -911,7 +910,7 @@ begin
                         else
                             inc(jj);
 
-                        if NodeIdxj > 0 then 
+                        if NodeIdxj > 0 then
                             break;
                     end;
                     if NodeIdxj = 0 then
@@ -922,7 +921,7 @@ begin
                     end;
 //------------------------------------------------------------------------------------------------
                     with Solution do
-                        Volts := Csub(NodeV^[GetRef(NodeIdxi)], NodeV^[GetRef(NodeIdxj)]);
+                        Volts := NodeV^[GetRef(NodeIdxi)] - NodeV^[GetRef(NodeIdxj)];
                     Result[iV] := Volts.re;
                     Inc(iV);
                     Result[iV] := Volts.im;
@@ -1011,7 +1010,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    
+
     with DSSPrime.ActiveCircuit do
     begin
         Nvalues := pBus.NumNodesThisBus;
@@ -1044,7 +1043,7 @@ end;
 
 //------------------------------------------------------------------------------
 function Bus_Get_TotalMiles(): Double; CDECL;
-var 
+var
     pBus : TDSSBus;
 begin
     Result := 0.0;
@@ -1054,7 +1053,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_SectionID(): Integer; CDECL;
-var 
+var
     pBus : TDSSBus;
 begin
     Result := 0;
@@ -1157,7 +1156,7 @@ end;
 
 //------------------------------------------------------------------------------
 procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
-{ Returns list of LOAD elements connected to this bus}
+// Returns list of LOAD elements connected to this bus
 var
     BusReference, j, k, LoadCount: Integer;
     pElem: TDSSCktElement;
@@ -1173,7 +1172,7 @@ begin
     with DSSPrime.ActiveCircuit do
     begin
         BusReference := ActiveBusIndex;
-        { Count number of LOAD elements connected to this bus }
+        // Count number of LOAD elements connected to this bus
         LoadCount := 0;
         pElem := TDSSCktElement(Loads.First);
         while pElem <> NIL do
@@ -1188,9 +1187,9 @@ begin
             DefaultResult(ResultPtr, ResultCount, '');
             Exit;
         end;
-        
-        //TODO: same list of elements to avoid a second loop through them all?
-        
+
+        //TODO: save list of elements to avoid a second loop through them all?
+
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, LoadCount);
         k := 0;
         pElem := TDSSCktElement(Loads.First);
@@ -1225,7 +1224,7 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    
+
     with pBus do
     begin
         if NumNodesThisBus <> 3 then
@@ -1233,7 +1232,7 @@ begin
             DefaultResult(ResultPtr, ResultCount);
             Exit;
         end;
-        
+
         Nvalues := SQR(NumNodesThisBus) * 2;  // Should be 9 complex numbers
         // Compute ZSC012 for 3-phase buses else leave it zeros
         // ZSC012 = Ap2s Zsc As2p

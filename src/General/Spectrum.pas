@@ -7,14 +7,10 @@ unit Spectrum;
   ----------------------------------------------------------
 }
 
-{ Created 10/25/00
-
-   Harmonic Spectrum specified as Harmonic, pct magnitude and angle
-
-   Spectrum is shifted by the fundamental angle and stored in MultArray
-   so that the fundamental is at zero degrees phase shift
-
-}
+// Harmonic Spectrum specified as Harmonic, pct magnitude and angle
+//
+// Spectrum is shifted by the fundamental angle and stored in MultArray
+// so that the fundamental is at zero degrees phase shift
 
 interface
 
@@ -24,30 +20,37 @@ uses
     DSSClass,
     DSSObject,
     Arraydef,
-    ucomplex;
+    UComplex, DSSUcomplex;
 
 type
+{$SCOPEDENUMS ON}
+    TSpectrumProp = (
+        INVALID = 0,
+        NumHarm = 1,
+        harmonic = 2,
+        pctmag = 3,
+        angle = 4,
+        CSVFile = 5
+    );
+{$SCOPEDENUMS OFF}
+    
+    TSpectrumObj = class;
 
     TSpectrum = class(TDSSClass)
-    PRIVATE
-
-        function Get_Code: String;  // Returns active spectrum code string
-        procedure Set_Code(const Value: String);  // sets the  active Spectrum
-        procedure DoCSVFile(const FileName: String);
-
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const LineName: String): Integer; OVERRIDE;
+        procedure DefineProperties; override;
     PUBLIC
+        DefaultGeneral: TSpectrumObj;
+        DefaultLoad: TSpectrumObj;
+        DefaultGen: TSpectrumObj;
+        DefaultVSource: TSpectrumObj;
+
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;     // uses global parser
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
-
-       // Set this property to point ActiveSpectrumObj to the right value
-        property Code: String READ Get_Code WRITE Set_Code;
-
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
+        procedure BindDefaults();
     end;
 
     TSpectrumObj = class(TDSSObject)
@@ -55,6 +58,7 @@ type
         puMagArray,
         AngleArray: pDoubleArray;
         MultArray: pComplexArray;
+        csvfile: string;
 
         procedure SetMultArray;
         function HarmArrayHasaZero(var zeropoint: Integer): Boolean;
@@ -65,280 +69,177 @@ type
 
         constructor Create(ParClass: TDSSClass; const SpectrumName: String);
         destructor Destroy; OVERRIDE;
+        procedure MakeLike(OtherPtr: Pointer); override;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
 
         function GetMult(const h: Double): Complex;
 
-        function GetPropertyValue(Index: Integer): String; OVERRIDE;
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
-
-
+        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
-
 
 implementation
 
 uses
-    ParserDel,
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
     Utilities,
-    BufStream,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
 
+type
+    TObj = TSpectrumObj;
+    TProp = TSpectrumProp;
 const
-    NumPropsThisClass = 5;
+    NumPropsThisClass = Ord(High(TProp));
+var
+    PropInfo: Pointer = NIL;    
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TSpectrum.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
+procedure DoCSVFile(Obj: TObj; const FileName: String);forward;
+
+constructor TSpectrum.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
-    Class_Name := 'Spectrum';
-    DSSClassType := DSS_OBJECT;
-    ActiveElement := 0;
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
 
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
+    inherited Create(dssContext, DSS_OBJECT, 'Spectrum');
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TSpectrum.Destroy;
-
 begin
-    // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TSpectrum.DefineProperties;
+
+procedure TSpectrum.BindDefaults();
 begin
+    DefaultGeneral := Find('default');
+    DefaultLoad := Find('defaultload');
+    DefaultGen := Find('defaultgen');
+    DefaultVSource := Find('defaultvsource');
+end;
 
+procedure TSpectrum.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
+begin
     NumProperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    // strings
+    PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
+    PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename];
 
-    PropertyName[1] := 'NumHarm';
-    PropertyName[2] := 'harmonic';
-    PropertyName[3] := '%mag';
-    PropertyName[4] := 'angle';
-    PropertyName[5] := 'CSVFile';
+    // integer properties
+    PropertyType[ord(TProp.NumHarm)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.NumHarm)] := ptruint(@obj.NumHarm);
 
-    PropertyHelp[1] := 'Number of frequencies in this spectrum. (See CSVFile)';
-    PropertyHelp[2] := 'Array of harmonic values. You can also use the syntax' + CRLF +
-        'harmonic = (file=filename)     !for text file one value per line' + CRLF +
-        'harmonic = (dblfile=filename)  !for packed file of doubles' + CRLF +
-        'harmonic = (sngfile=filename)  !for packed file of singles ';
-    PropertyHelp[3] := 'Array of magnitude values, assumed to be in PERCENT. You can also use the syntax' + CRLF +
-        '%mag = (file=filename)     !for text file one value per line' + CRLF +
-        '%mag = (dblfile=filename)  !for packed file of doubles' + CRLF +
-        '%mag = (sngfile=filename)  !for packed file of singles ';
-    PropertyHelp[4] := 'Array of phase angle values, degrees.You can also use the syntax' + CRLF +
-        'angle = (file=filename)     !for text file one value per line' + CRLF +
-        'angle = (dblfile=filename)  !for packed file of doubles' + CRLF +
-        'angle = (sngfile=filename)  !for packed file of singles ';
-    PropertyHelp[5] := 'File of spectrum points with (harmonic, magnitude-percent, angle-degrees) values, one set of 3 per line, in CSV format. ' +
-        'If fewer than NUMHARM frequencies found in the file, NUMHARM is set to the smaller value.';
+    // double arrays
+    PropertyType[ord(TProp.harmonic)] := TPropertyType.DoubleArrayProperty;
+    PropertyOffset[ord(TProp.harmonic)] := ptruint(@obj.HarmArray);
+    PropertyOffset2[ord(TProp.harmonic)] := ptruint(@obj.NumHarm);
 
+    PropertyType[ord(TProp.angle)] := TPropertyType.DoubleArrayProperty;
+    PropertyOffset[ord(TProp.angle)] := ptruint(@obj.AngleArray);
+    PropertyOffset2[ord(TProp.angle)] := ptruint(@obj.NumHarm);
+
+    PropertyType[ord(TProp.pctmag)] := TPropertyType.DoubleArrayProperty;
+    PropertyOffset[ord(TProp.pctmag)] := ptruint(@obj.puMagArray);
+    PropertyOffset2[ord(TProp.pctmag)] := ptruint(@obj.NumHarm);
+    PropertyScale[ord(TProp.pctmag)] := 0.01;
 
     ActiveProperty := NumPropsThisClass;
-    inherited;  // Add defs of inherited properties to bottom of list
-
-end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TSpectrum.NewObject(const ObjName: String): Integer;
-begin
-   // create a new object of this class and add to list
-    DSS.ActiveDSSObject := TSpectrumObj.Create(Self, ObjName);
-    Result := AddObjectToList(DSS.ActiveDSSObject);
+    inherited;
 end;
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TSpectrum.Edit: Integer;
+function TSpectrum.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    i,
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
-    iZeroPoint: Integer;  // for error trapping
-
+    Obj: TObj;
 begin
-    Result := 0;
-  // continue parsing with contents of Parser
-    DSS.ActiveSpectrumObj := ElementList.Active;
-    DSS.ActiveDSSObject := DSS.ActiveSpectrumObj;
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        DSS.ActiveDSSObject := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
 
-    with DSS.ActiveSpectrumObj do
-    begin
-
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
+procedure TSpectrumObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+var
+    i: Integer;
+begin
+    case Idx of
+        ord(TProp.NumHarm):
         begin
-            if Length(ParamName) = 0 then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
+            if (HarmArray <> NIL) then // leave it NIL since there is a validation that uses that in Edit
+                ReAllocmem(HarmArray, Sizeof(Double) * NumHarm); 
+            //if (HarmArray <> NIL) then
+            ReAllocmem(AngleArray, Sizeof(Double) * NumHarm); // Make a dummy Angle array
+            for i := 1 to NumHarm do
+                AngleArray^[i] := 0.0; //TODO: remove -- left for backwards compatiblity, but this is kinda buggy
+        end;
+        ord(TProp.csvfile):
+            DoCSVFile(self, csvfile);
+    end;
+    inherited PropertySideEffects(Idx, previousIntVal);
+end;
 
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Name + '"', 650);
-                1:
-                begin
-                    NumHarm := Parser.IntValue;
-                    ReAllocmem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm); // Make a dummy Angle array
-                    for i := 1 to NumHarm do
-                        AngleArray^[i] := 0.0;
-                end;
-                2:
-                begin
-                    ReAllocmem(HarmArray, Sizeof(HarmArray^[1]) * NumHarm);
-                    NumHarm := InterpretDblArray(Param, NumHarm, HarmArray);
-                end;
-                3:
-                begin
-                    ReAllocmem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);
-                    NumHarm := InterpretDblArray(Param, NumHarm, puMagArray);
-                    for i := 1 to NumHarm do
-                        puMagArray^[i] := puMagArray^[i] * 0.01;  // convert to per unit
-                end;
-                4:
-                begin
-                    ReAllocmem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm);
-                    NumHarm := InterpretDblArray(Param, NumHarm, AngleArray);
-                end;
-                5:
-                    DoCSVFile(AdjustInputFilePath(Param));
-            else
-                // Inherited parameters
-                ClassEdit(DSS.ActiveSpectrumObj, Parampointer - NumPropsThisClass)
-            end;
-
-
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
-        end;       {WHILE}
-
+function TSpectrum.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    iZeroPoint: Integer;  // for error trapping
+begin
+    with TObj(ptr) do
+    begin
         if (HarmArray <> NIL) then   // Check this after HarmArray is allocated  2/20/2018
         begin
             if HarmArrayHasaZero(iZeroPoint) then
-
-                DoSimpleMsg(Format('Error: Zero frequency detected in Spectrum.%s, point %d. Not allowed', [Name, iZeroPoint]), 65001)
+                DoSimpleMsg('Error: Zero frequency detected in %s, point %d. Not allowed', [FullName, iZeroPoint], 65001)
 
             else
             if (HarmArray <> NIL) and (puMagArray <> NIL) and (AngleArray <> NIL) then
                 SetMultArray;
-
-        end
-
-    end; {WITH}
-
+        end;
+        Exclude(Flags, Flg.EditionActive);
+    end;
+    Result := True;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TSpectrum.MakeLike(const LineName: String): Integer;
+procedure TSpectrumObj.MakeLike(OtherPtr: Pointer);
 var
-    OtherSpectrum: TSpectrumObj;
+    Other: TObj;
     i: Integer;
 begin
-    Result := 0;
-   {See if we can find this line code in the present collection}
-    OtherSpectrum := Find(LineName);
-    if OtherSpectrum <> NIL then
-        with DSS.ActiveSpectrumObj do
-        begin
+    inherited MakeLike(OtherPtr);
+    Other := TObj(OtherPtr);
+    NumHarm := Other.NumHarm;
 
-            NumHarm := OtherSpectrum.NumHarm;
+    ReallocMem(HarmArray, Sizeof(HarmArray^[1]) * NumHarm);
+    ReallocMem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);
+    ReallocMem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm);
 
-            ReallocMem(HarmArray, Sizeof(HarmArray^[1]) * NumHarm);
-            ReallocMem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);
-            ReallocMem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm);
-
-            for i := 1 to NumHarm do
-            begin
-                HarmArray^[i] := OtherSpectrum.HarmArray^[i];
-                puMagArray^[i] := OtherSpectrum.puMagArray^[i];
-                AngleArray^[i] := OtherSpectrum.AngleArray^[i];
-            end;
-
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherSpectrum.PropertyValue[i];
-            Result := 1;
-        end
-    else
-        DoSimpleMsg('Error in Spectrum MakeLike: "' + LineName + '" Not Found.', 651);
-
-
-end;
-
-
-function TSpectrum.Get_Code: String;  // Returns active line code string
-var
-    SpectrumObj: TSpectrumObj;
-
-begin
-
-    SpectrumObj := ElementList.Active;
-    Result := SpectrumObj.Name;
-
-end;
-
-procedure TSpectrum.Set_Code(const Value: String);  // sets the  active Spectrum
-var
-    SpectrumObj: TSpectrumObj;
-begin
-
-    DSS.ActiveSpectrumObj := NIL;
-    SpectrumObj := ElementList.First;
-    while SpectrumObj <> NIL do
+    for i := 1 to NumHarm do
     begin
-
-        if CompareText(SpectrumObj.Name, Value) = 0 then
-        begin
-            DSS.ActiveSpectrumObj := SpectrumObj;
-            Exit;
-        end;
-
-        SpectrumObj := ElementList.Next;
+        HarmArray^[i] := Other.HarmArray^[i];
+        puMagArray^[i] := Other.puMagArray^[i];
+        AngleArray^[i] := Other.AngleArray^[i];
     end;
-
-    DoSimpleMsg('Spectrum: "' + Value + '" not Found.', 652);
-
 end;
-
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//      TSpectrum Obj
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 constructor TSpectrumObj.Create(ParClass: TDSSClass; const SpectrumName: String);
-
 begin
     inherited Create(ParClass);
     Name := LowerCase(SpectrumName);
     DSSObjType := ParClass.DSSClassType;
-
 
     NumHarm := 0;
     HarmArray := NIL;
     puMagArray := NIL;
     AngleArray := NIL;
     MultArray := NIL;
-
-
-    InitPropertyValues(0);
+    csvfile := '';
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TSpectrumObj.Destroy;
 begin
     Reallocmem(HarmArray, 0);
@@ -348,26 +249,23 @@ begin
     inherited destroy;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TSpectrum.DoCSVFile(const FileName: String);
-
+procedure DoCSVFile(Obj: TObj; const FileName: String);
 var
-    F: TBufferedFileStream = nil;
+    F: TStream = nil;
     i: Integer;
     s: String;
 begin
-    try
-        F := TBufferedFileStream.Create(FileName, fmOpenRead);
-    except
-        DoSimpleMsg('Error Opening CSV File: "' + FileName, 653);
-        FreeAndNil(F);
-        Exit;
-    end;
+    with Obj do
+    begin
+        try
+            F := DSS.GetROFileStream(FileName);
+        except
+            DoSimpleMsg('Error Opening CSV File: "%s"', [FileName], 653);
+            FreeAndNil(F);
+            Exit;
+        end;
 
-    try
-
-        with DSS.ActiveSpectrumObj do
-        begin
+        try
             ReAllocmem(HarmArray, Sizeof(HarmArray^[1]) * NumHarm);
             ReAllocmem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);
             ReAllocmem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm);
@@ -388,59 +286,27 @@ begin
                 end;
             end;
             F.Free();
-            if i <> NumHarm then
-                NumHarm := i;   // reset number of points
-        end;
-
-    except
-        On E: Exception do
-        begin
-            DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 654);
-            F.Free();
-            Exit;
+            NumHarm := i;   // reset number of points
+        except
+            On E: Exception do
+            begin
+                DoSimpleMsg('Error Processing CSV File: "%s". %s', [FileName, E.Message], 654);
+                F.Free();
+                Exit;
+            end;
         end;
     end;
-
 end;
 
-
-procedure TSpectrumObj.DumpProperties(F: TFileStream; Complete: Boolean);
-
+procedure TSpectrumObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
 var
-    i, j: Integer;
-
+    i: Integer;
 begin
     inherited DumpProperties(F, Complete);
 
     with ParentClass do
         for i := 1 to NumProperties do
-        begin
-            case i of
-                2:
-                begin
-                    FSWrite(F, '~ ', PropertyName^[i], '=(');
-                    for j := 1 to NumHarm do
-                        FSWrite(F, Format('%-g, ', [HarmArray^[j]]));
-                    FSWriteln(F, ')');
-                end;
-                3:
-                begin
-                    FSWrite(F, '~ ', PropertyName^[i], '=(');
-                    for j := 1 to NumHarm do
-                        FSWrite(F, Format('%-g, ', [puMagArray^[j] * 100.0]));
-                    FSWriteln(F, ')');
-                end;
-                4:
-                begin
-                    FSWrite(F, '~ ', PropertyName^[i], '=(');
-                    for j := 1 to NumHarm do
-                        FSWrite(F, Format('%-g, ', [AngleArray^[j]]));
-                    FSWriteln(F, ')');
-                end;
-            else
-                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
-            end;
-        end;
+            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
 
     if Complete then
     begin
@@ -456,14 +322,10 @@ begin
     end;
 end;
 
-
 function TSpectrumObj.GetMult(const h: Double): Complex;
-
 var
     i: Integer;
-
 begin
-
      {Search List for  harmonic (nearest 0.01 harmonic) and return multiplier}
     for i := 1 to NumHarm do
     begin
@@ -476,41 +338,6 @@ begin
 
      {None Found, return zero}
     Result := cZERO;
-end;
-
-function TSpectrumObj.GetPropertyValue(Index: Integer): String;
-var
-    i: Integer;
-begin
-    case Index of
-        2..4:
-            Result := '(';
-    else
-        Result := '';
-    end;
-
-    case Index of
-        1:
-            Result := IntToStr(NumHarm);
-        2:
-            for i := 1 to NumHarm do
-                Result := Result + Format('%-g, ', [HarmArray^[i]]);
-        3:
-            for i := 1 to NumHarm do
-                Result := Result + Format('%-g, ', [puMagArray^[i] * 100.0]);
-        4:
-            for i := 1 to NumHarm do
-                Result := Result + Format('%-g, ', [AngleArray^[i]]);
-    else
-        Result := inherited GetPropertyValue(index);
-    end;
-
-    case Index of
-        2..4:
-            Result := Result + ')';
-    else
-    end;
-
 end;
 
 function TSpectrumObj.HarmArrayHasaZero(var ZeroPoint: Integer): Boolean;
@@ -528,29 +355,13 @@ begin
         end;
 end;
 
-procedure TSpectrumObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-
-    PropertyValue[1] := '0';
-    PropertyValue[2] := '';
-    PropertyValue[3] := '';
-    PropertyValue[4] := '';
-    PropertyValue[5] := '';
-
-    inherited InitPropertyValues(NumPropsThisClass);
-
-end;
-
 procedure TSpectrumObj.SetMultArray;
-
 {Rotate all phase angles so that the fundamental is at zero}
-
 var
     i: Integer;
     FundAngle: Double;
 
 begin
-
     try
 
         FundAngle := 0.0;
@@ -568,11 +379,10 @@ begin
             MultArray^[i] := pdegtocomplex(puMagArray^[i], (AngleArray^[i] - HarmArray^[i] * FundAngle));
 
     except
-        DoSimpleMsg('Exception while computing Spectrum.' + Name + '. Check Definition. Aborting', 655);
+        DoSimpleMsg('Exception while computing %s. Check Definition. Aborting', [FullName], 655);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;
-
 end;
 
 end.

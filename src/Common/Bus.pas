@@ -7,36 +7,30 @@ unit Bus;
   ----------------------------------------------------------
 }
 
-{
- 2/4/03 added Zsc and Zsc1, Zsc0 properties
-}
-
 interface
 
 uses
     ArrayDef,
-    uComplex,
+    UComplex, DSSUcomplex,
     uCMatrix,
     NamedObject,
     DSSClass,
     DSSObject;
 
 type
-
-
     TDSSBus = class(TNamedObject)
     PRIVATE
         FNumNodesThisBus: SmallInt;
 
         Nodes: pIntegerArray;
         Allocation: SmallInt;
-        RefNo: pIntegerArray;
 
         procedure AddANode;
         function Get_Zsc0: Complex;
         function Get_Zsc1: Complex;
 
     PUBLIC
+        RefNo: pIntegerArray;
 
         VBus,
         BusCurrent: pComplexArray;
@@ -52,7 +46,7 @@ type
         BusChecked,
         Keep: Boolean;  // Flag for general use in bus searches
 
-       // ***** Reliability Variables
+        // ***** Reliability Variables
         BusFltRate: Double;  // Accumulated failure rate  downstream from this bus faults per year
         Bus_Num_Interrupt: Double;  // Number of interruptions this bus per year
         Bus_Int_Duration: Double; // Avg Annual Interruption duration for this bus
@@ -66,8 +60,7 @@ type
         destructor Destroy; OVERRIDE;
 
         procedure AllocateBusQuantities;
-        procedure AllocateBusVoltages;
-        procedure AllocateBusCurrents;
+        procedure AllocateBusState;
 
         function Add(Circuit: TNamedObject; NodeNum: SmallInt): Integer;
         function Find(NodeNum: SmallInt): Integer; // Returns reference num for node by node number
@@ -81,7 +74,7 @@ type
 
     end;
 
-   // Bus Collection
+    // Bus Collection
     pTBusArray = ^TBusArray;
     TBusArray = array[1..10] of TDSSBus;
 
@@ -127,16 +120,14 @@ end;
 
 destructor TDSSBus.Destroy;
 begin
-    ReallocMem(Nodes, 0);
-    ReallocMem(RefNo, 0);
+    FreeMem(Nodes);
+    FreeMem(RefNo);
     if Ysc <> NIL then
         Ysc.Free;
     if Zsc <> NIL then
         Zsc.Free;
-    if VBus <> NIL then
-        Reallocmem(VBus, 0);
-    if BusCurrent <> NIL then
-        Reallocmem(BusCurrent, 0);
+    FreeMem(VBus);
+    FreeMem(BusCurrent);
 
     inherited Destroy;
 end;
@@ -156,10 +147,8 @@ function TDSSBus.Add(Circuit: TNamedObject; NodeNum: SmallInt): Integer;
 begin
     if NodeNum = 0 then
         Result := 0
-
     else
     begin
-
         Result := Find(NodeNum);
         if Result = 0 then
         begin
@@ -177,7 +166,6 @@ begin
     end;
 end;
 
-
 function TDSSBus.Find(NodeNum: SmallInt): Integer;
 // Returns reference number
 var
@@ -193,7 +181,6 @@ begin
     end;
     Result := 0;
 end;
-
 
 function TDSSBus.GetRef(NodeIndex: Integer): Integer;
 begin
@@ -221,16 +208,14 @@ begin
     Ysc := Tcmatrix.CreateMatrix(FNumNodesThisBus);
     Zsc := Tcmatrix.CreateMatrix(FNumNodesThisBus);
     Zsc012 := Tcmatrix.CreateMatrix(3); //  can only be 3x3  -- 0, 1, 2
-    AllocateBusVoltages;
-    AllocateBusCurrents;
-
+    AllocateBusState;
 end;
 
 function TDSSBus.Get_Zsc0: Complex;
 // = Zs + 2 Zm
 begin
     if Assigned(Zsc) then
-        Result := Cadd(Zsc.AvgDiagonal, CmulReal(Zsc.AvgOffDiagonal, 2.0))
+        Result := Zsc.AvgDiagonal + Zsc.AvgOffDiagonal * 2
     else
         Result := cZERO;
 end;
@@ -238,12 +223,10 @@ end;
 function TDSSBus.Get_Zsc1: Complex;
 // = Zs-Zm
 begin
-
     if Assigned(Zsc) then
-        Result := Csub(Zsc.AvgDiagonal, Zsc.AvgOffDiagonal)
+        Result := Zsc.AvgDiagonal - Zsc.AvgOffDiagonal
     else
         Result := cZERO;
-
 end;
 
 function TDSSBus.FindIdx(NodeNum: SmallInt): Integer;
@@ -260,25 +243,14 @@ begin
         end;
     end;
     Result := 0;
-
 end;
 
-procedure TDSSBus.AllocateBusVoltages;
-var
-    i: Integer;
+procedure TDSSBus.AllocateBusState;
 begin
-    Reallocmem(VBus, Sizeof(VBus^[1]) * FNumNodesThisBus);
-    for i := 1 to FNumNodesThisBus do
-        VBus^[i] := CZERO;
-end;
-
-procedure TDSSBus.AllocateBusCurrents;
-var
-    i: Integer;
-begin
-    Reallocmem(BusCurrent, Sizeof(BusCurrent^[1]) * FNumNodesThisBus);
-    for i := 1 to FNumNodesThisBus do
-        BusCurrent^[i] := CZERO;
+    FreeMem(VBus);
+    FreeMem(BusCurrent);
+    VBus := AllocMem(Sizeof(Complex) * FNumNodesThisBus);
+    BusCurrent := AllocMem(Sizeof(Complex) * FNumNodesThisBus);
 end;
 
 end.

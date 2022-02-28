@@ -11,65 +11,60 @@ interface
 
 uses
     Classes,
+    ParserDel,
     Arraydef,
     DSSClass,
     NamedObject;
 
 type
+    TDSSObjectPtr = ^TDSSObject;
 
     TDSSObject = class(TNamedObject)
     PRIVATE
-        function Get_PropertyValue(Index: Integer): String;
-        procedure Set_PropertyValue(Index: Integer; const Value: String);
-        function Get_Name: String;
         procedure Set_Name(const Value: String);
 
-{$IFDEF DSS_CAPI}
     PUBLIC
-{$ELSE}
-    PROTECTED
-{$ENDIF}
         DSS: TDSSContext;
 
         PropSeqCount: Integer;
-        FPropertyValue: pStringArray;
         PrpSequence: pIntegerArray;
 
         function GetNextPropertySet(idx: Integer): Integer;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); virtual;
 
         // DSSContext convenience functions
         procedure DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);inline;
-        procedure DoSimpleMsg(Const S: String; ErrNum:Integer);inline;
+        procedure DoSimpleMsg(Const S: String; ErrNum:Integer);inline;overload;
+        procedure DoSimpleMsg(Const S: String; fmtArgs: Array of Const; ErrNum:Integer);overload;inline;
+
         procedure AppendToEventLog(const opdev: String; const action: String);inline;
-        function GetCktElementIndex(const FullObjName: String): Integer;inline;
 
     PUBLIC
-
-        DSSObjType: Integer; // PD, PC, Monitor, CondCode, etc.
+        DSSObjType: Integer; // PD, PC, Monitor, LineCode, etc.
         ParentClass: TDSSClass;
         ClassIndex: Integer;    // Index into the class collection list
 
-        HasBeenSaved: Boolean;
-        Flag: Boolean;  // General purpose Flag for each object  don't assume inited
+        Flags: TDSSObjectFlags;
 
         constructor Create(ParClass: TDSSClass);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer;  // Allow Calls to edit from object itself
+        function Edit(Parser: TDSSParser): Integer;  // Allow Calls to edit from object itself
+        procedure MakeLike(OtherPtr: Pointer); virtual;
 
-      {Get actual values of properties}
+        procedure SetAsNextSeq(Index: Integer);
+
         function GetPropertyValue(Index: Integer): String; VIRTUAL;  // Use dssclass.propertyindex to get index by name
-        procedure InitPropertyValues(ArrayOffset: Integer); VIRTUAL;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); VIRTUAL;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); VIRTUAL;
         procedure SaveWrite(F: TFileStream); VIRTUAL;
+        procedure CustomSetRaw(Idx: Integer; Value: String); virtual;
 
-        procedure ClearPropSeqArray;
+        property PropertyValue[Index: Integer]: String READ GetPropertyValue;
 
-        property PropertyValue[Index: Integer]: String READ Get_PropertyValue WRITE Set_PropertyValue;
-
-        property Name: String READ Get_Name WRITE Set_Name;
+        property Name: String READ LName WRITE Set_Name;
+        function FullName: String;
+        function DSSClassName: String;
     end;
-
 
 implementation
 
@@ -77,16 +72,14 @@ uses
     Sysutils,
     Utilities,
     LoadShape,
-    DSSGlobals;
+    DSSGlobals,
+    UComplex, DSSUcomplex,
+    DSSObjectHelper;
 
-procedure TDSSObject.ClearPropSeqArray;
-var
-    i: Integer;
+
+procedure TDSSObject.CustomSetRaw(Idx: Integer; Value: String);
 begin
-    PropSeqCount := 0;
-    for i := 1 to ParentClass.NumProperties do
-        PrpSequence^[i] := 0;
-
+    DoSimpleMsg('Error: base CustomSetRaw reached', 8754);
 end;
 
 constructor TDSSObject.Create(ParClass: TDSSClass);
@@ -97,64 +90,54 @@ begin
     DSSObjType := 0;
     PropSeqCount := 0;
     ParentClass := ParClass;
-    FPropertyValue := Allocmem(SizeOf(FPropertyValue^[1]) * ParentClass.NumProperties);
-
-   // init'd to zero when allocated
+    // init'd to zero when allocated
     PrpSequence := Allocmem(SizeOf(PrpSequence^[1]) * ParentClass.NumProperties);
 
-    HasBeenSaved := FALSE;
-
+    Flags := [];
 end;
 
 destructor TDSSObject.Destroy;
-
-var
-    i: Integer;
 begin
     if DSS = nil then
     begin
         inherited Destroy;
         exit;
     end;
-
-    for i := 1 to ParentClass.NumProperties do
-        FPropertyValue^[i] := '';
-    Reallocmem(FPropertyValue, 0);
     Reallocmem(PrpSequence, 0);
 
     inherited Destroy;
 end;
 
-
-procedure TDSSObject.DumpProperties(F: TFileStream; Complete: Boolean);
+procedure TDSSObject.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
+var
+    i: Integer;
 begin
     FSWriteln(F);
-    FSWriteln(F, 'New ' + DSSClassName + '.' + Name);
+    FSWriteln(F, 'New ' + EncloseQuotes(FullName));
+    if Leaf then
+    begin
+        with ParentClass do
+            for i := 1 to NumProperties do
+                FSWriteLn(F, '~ ' + PropertyName^[i] + '=' + GetPropertyValue(i));
+        
+        if Complete then
+            FSWriteln(F);        
+    end;
 end;
 
-function TDSSObject.Edit: Integer;
+function TDSSObject.Edit(Parser: TDSSParser): Integer;
 begin
     ParentClass.Active := ClassIndex;
-    Result := ParentClass.Edit;
+    Result := ParentClass.Edit(Parser);
+end;
+
+procedure TDSSObject.MakeLike(OtherPtr: Pointer);
+begin
 end;
 
 function TDSSObject.GetPropertyValue(Index: Integer): String;
 begin
-    Result := FPropertyValue^[Index];  // Default Behavior   for all DSS Objects
-end;
-
-function TDSSObject.Get_PropertyValue(Index: Integer): String;
-begin
-    Result := GetPropertyValue(Index);  // This is virtual function that may call routine
-end;
-
-procedure TDSSObject.InitPropertyValues(ArrayOffset: Integer);
-begin
-    PropertyValue[ArrayOffset + 1] := ''; //Like   Property
-
-     // Clear propertySequence Array  after initialization
-    ClearPropSeqArray;
-
+    ParentClass.GetObjPropertyValue(self, Index, Result);
 end;
 
 procedure TDSSObject.SaveWrite(F: TFileStream);
@@ -164,8 +147,8 @@ var
     LShpFlag,
     NptsRdy: Boolean;    // Created to  know the that object is loadshape
 begin
-   {Write only properties that were explicitly set in the
-   final order they were actually set}
+    // Write only properties that were explicitly set in the
+    // final order they were actually set
     LShpFlag := FALSE;
     NptsRdy := FALSE;
     with ParentClass do
@@ -176,7 +159,7 @@ begin
             LShpFlag := TRUE
         end
         else
-            iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
+            iProp := GetNextPropertySet(0);
     end;
 //  The part above was created to guarantee that the npts property will be the
 //  first to be declared when saving LoadShapes
@@ -188,7 +171,7 @@ begin
         if Length(str) > 0 then
         begin
             with ParentClass do
-                FSWrite(F, ' ' + PropertyName^[RevPropertyIdxMap[iProp]]);
+                FSWrite(F, ' ' + PropertyName[iProp]);
             FSWrite(F, '=' + CheckForBlanks(str));
         end;
         if LShpFlag then
@@ -237,39 +220,45 @@ begin
     LocalName := Value;
 end;
 
-function TDSSObject.Get_Name: String;
+procedure TDSSObject.SetAsNextSeq(Index: Integer);
 begin
-    Result := LocalName;
-end;
-
-procedure TDSSObject.Set_PropertyValue(Index: Integer;
-    const Value: String);
-begin
-    FPropertyValue^[Index] := Value;
-
     // Keep track of the order in which this property was accessed for Save Command
     Inc(PropSeqCount);
     PrpSequence^[Index] := PropSeqCount;
 end;
 
-procedure TDSSObject.DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);inline;
+procedure TDSSObject.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+begin
+end;
+
+procedure TDSSObject.DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);
 begin
     DSSGlobals.DoErrorMsg(DSS, S, Emsg, ProbCause, ErrNum)
 end;
 
-procedure TDSSObject.DoSimpleMsg(Const S: String; ErrNum:Integer);inline;
+procedure TDSSObject.DoSimpleMsg(Const S: String; ErrNum:Integer);
 begin
     DSSGlobals.DoSimpleMsg(DSS, S, ErrNum)
 end;
+          
+procedure TDSSObject.DoSimpleMsg(Const S: String; fmtArgs: Array of Const; ErrNum:Integer);
+begin
+    DSSGlobals.DoSimpleMsg(DSS, DSSTranslate(S), fmtArgs, ErrNum)
+end;
 
-procedure TDSSObject.AppendToEventLog(const opdev: String; const action: String);inline;
+procedure TDSSObject.AppendToEventLog(const opdev: String; const action: String);
 begin
     Utilities.AppendtoEventLog(DSS, opdev, action);
 end;
 
-function TDSSObject.GetCktElementIndex(const FullObjName: String): Integer;inline;
+function TDSSObject.FullName: String;
 begin
-    Result := Utilities.GetCktElementIndex(DSS, FullObjName)
+    Result := ParentClass.Name + '.' + Name;
+end;
+
+function TDSSObject.DSSClassName: String;
+begin
+    Result := ParentClass.Name;
 end;
 
 end.

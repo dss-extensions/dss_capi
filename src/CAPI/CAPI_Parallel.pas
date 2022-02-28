@@ -6,6 +6,7 @@ uses
     CAPI_Utils,
     CAPI_Types;
 
+{$IFDEF DSS_CAPI_PM}
 function Parallel_Get_NumCPUs(): Integer; CDECL;
 function Parallel_Get_NumCores(): Integer; CDECL;
 function Parallel_Get_ActiveActor(): Integer; CDECL;
@@ -23,9 +24,9 @@ function Parallel_Get_ActiveParallel(): Integer; CDECL;
 procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
 function Parallel_Get_ConcatenateReports(): Integer; CDECL;
 procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
-
+{$ENDIF}
 implementation
-
+{$IFDEF DSS_CAPI_PM}
 uses
     CAPI_Constants,
     DSSGlobals,
@@ -33,14 +34,12 @@ uses
     SysUtils,
     solution,
     CktElement,
-    ParserDel,
     KLUSolve,
     Classes,
     DSSClass,
     DSSHelper;
 
 
-{$IFDEF DSS_CAPI_PM}
 function Parallel_Get_NumCPUs(): Integer; CDECL;
 begin
     Result := CPU_Cores;
@@ -48,12 +47,12 @@ end;
 //------------------------------------------------------------------------------
 function Parallel_Get_NumCores(): Integer; CDECL;
 begin
-    Result := round(CPU_Cores / 2); //TODO: fix
+    Result := CPU_Cores div 2; //TODO: fix
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ActiveActor(): Integer; CDECL;
 begin
-    Result := DSSPrime.ActiveChildIndex;
+    Result := DSSPrime.ActiveChildIndex + 1;
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
@@ -64,7 +63,7 @@ begin
         DSSPrime.ActiveChild := DSSPrime.Children[DSSPrime.ActiveChildIndex];
     end
     else
-        DoSimpleMsg(DSSPrime, 'The actor does not exists', 7002);
+        DoSimpleMsg(DSSPrime, _('The actor does not exists'), 7002);
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_CreateActor(); CDECL;
@@ -85,7 +84,7 @@ begin
         if DSSPrime.ActiveChild.ActorThread <> nil then
             DSSPrime.ActiveChild.ActorThread.CPU := value;
     end
-    else DoSimpleMsg(DSSPrime, 'The CPU does not exist', 7004);
+    else DoSimpleMsg(DSSPrime, _('The CPU does not exist'), 7004);
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_NumOfActors(): Integer; CDECL;
@@ -94,8 +93,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Wait(); CDECL;
-var
-    i: Integer;
 begin
     if DSSPrime.Parallel_enabled then
         Wait4Actors(DSSPrime, 0);
@@ -127,12 +124,7 @@ var
 begin
     Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors);
     for idx := 0 to High(DSSPrime.Children) do
-    begin
-        if DSSPrime.Children[idx].ActorThread.Is_Busy then
-            Result[idx] := Ord(TActorStatus.Busy)
-        else
-            Result[idx] := Ord(TActorStatus.Idle);
-    end;
+        Result[idx] := Ord(DSSPrime.Children[idx].ActorStatus);
 end;
 
 procedure Parallel_Get_ActorStatus_GR(); CDECL;
@@ -152,7 +144,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
 begin
-    DSSPrime.Parallel_enabled := (Value = 1); //TODO
+    DSSPrime.Parallel_enabled := (Value = 1);
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ConcatenateReports(): Integer; CDECL;
@@ -168,96 +160,5 @@ begin
     DSSPrime.ConcatenateReports := (Value = 1);
 end;
 //------------------------------------------------------------------------------
-{$ELSE}
-function NotAvailable(DSS: TDSSContext): Integer;
-begin
-    DoSimpleMsg(DSS, 'Parallel machine functions were not compiled', 7982);
-    Result := -1;
-end;
-
-function Parallel_Get_NumCPUs(): Integer; CDECL;
-begin
-    Result := NotAvailable(DSSPrime);
-end;
-
-function Parallel_Get_NumCores(): Integer; CDECL;
-begin
-    Result := NotAvailable(DSSPrime);
-end;
-
-function Parallel_Get_ActiveActor(): Integer; CDECL;
-begin
-    Result := NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_CreateActor(); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
-
-function Parallel_Get_ActorCPU(): Integer; CDECL;
-begin
-    Result := NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_Set_ActorCPU(Value: Integer); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
-
-function Parallel_Get_NumOfActors(): Integer; CDECL;
-begin
-    Result := NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_Wait(); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_Get_ActorProgress_GR(); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_Get_ActorStatus_GR(); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
-
-function Parallel_Get_ActiveParallel(): Integer; CDECL;
-begin
-    Result := NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
-
-function Parallel_Get_ConcatenateReports(): Integer; CDECL;
-begin
-    Result := NotAvailable(DSSPrime);
-end;
-
-procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
-begin
-    NotAvailable(DSSPrime);
-end;
 {$ENDIF}
 end.

@@ -38,8 +38,7 @@ uses
     sysutils,
     DSSGlobals,
     LineUnits,
-    ParserDel,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     Line,
     UcMatrix,
     DSSClass,
@@ -58,7 +57,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active LineSpacing object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['LineSpacing'], 8989);
         end;
         Exit;
     end;
@@ -107,7 +106,7 @@ begin
         Exit;
 
     if not DSSPrime.LineSpacingClass.SetActive(Value) then
-        DoSimpleMsg(DSSPrime, 'LineSpacing "' + Value + '" Not Found in Active Circuit.', 51008);
+        DoSimpleMsg(DSSPrime, 'LineSpacing "%s" not found in Active Circuit.', [Value], 51008);
 
     // Still same active object if not found
 end;
@@ -129,12 +128,12 @@ var
 begin
     if (Value < 1) then
     begin
-        DoSimpleMsg(DSSPrime, Format('Invalid number of conductors (%d) sent via C-API. Please use a value within the valid range (>0).', [Value]), 183);
+        DoSimpleMsg(DSSPrime, 'Invalid number of conductors (%d) sent via C-API. Please use a value within the valid range (>0).', [Value], 183);
     end;
     if not _activeObj(DSSPrime, pLineSpacing) then
         Exit;
-    pLineSpacing.DataChanged := TRUE;
-    pLineSpacing.NWires := Value;
+    pLineSpacing.FNConds := Value;
+    pLineSpacing.PropertySideEffects(ord(TLineSpacingProp.NConds), 0);
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Phases(): Integer; CDECL;
@@ -193,10 +192,10 @@ begin
     begin
         if NWires <> ValueCount then
         begin
-            DoSimpleMsg(Format(
+            DoSimpleMsg(
                 'The number of values provided (%d) does not match the number of wires (%d).', 
-                [ValueCount, NWires]
-            ), 183);
+                [ValueCount, NWires],
+            183);
             Exit;
         end;
         Move(ValuePtr^, FY[1], ValueCount * SizeOf(Double));
@@ -239,10 +238,10 @@ begin
     begin
         if NWires <> ValueCount then
         begin
-            DoSimpleMsg(Format(
+            DoSimpleMsg(
                 'The number of values provided (%d) does not match the number of wires (%d).', 
-                [ValueCount, NWires]
-            ), 183);
+                [ValueCount, NWires],
+            183);
             Exit;
         end;
         Move(ValuePtr^, FX[1], ValueCount * SizeOf(Double));
@@ -296,7 +295,7 @@ end;
 procedure LineSpacings_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.LineSpacingClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg(DSSPrime, 'Invalid LineSpacing index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['LineSpacing', Value], 656565);
 end;
 //------------------------------------------------------------------------------
 end.

@@ -1,6 +1,5 @@
 unit GenUserModel;
 
-{$M+}
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -16,7 +15,7 @@ unit GenUserModel;
 
 interface
 
-USES  GeneratorVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
+USES  GeneratorVars, Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -79,15 +78,13 @@ TYPE
         
         constructor Create(dssContext: TDSSContext; ActiveGeneratorVars:pTGeneratorVars);
         destructor  Destroy; override;
-      published
-
       end;
 
 
 
 implementation
 
-Uses Generator, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils,
+Uses Generator, DSSGlobals, dynlibs, Sysutils,
      DSSHelper;
 
 { TGenUserModel }
@@ -96,7 +93,7 @@ function TGenUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Pointer
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg(DSS, 'Generator User Model Does Not Have Required Function: ' + FuncName, 569);
+            DoSimpleMsg(DSS, 'Generator User Model Does Not Have Required Function: %s', [FuncName], 569);
             FuncError := True;
           End;
         Result := Addr;
@@ -110,19 +107,16 @@ begin
     FName   := '';
 
     FActiveGeneratorVars := ActiveGeneratorVars;
-
 end;
 
 destructor TGenUserModel.Destroy;
 begin
-
   If FID <> 0 Then
     Begin
           FDelete(FID);       // Clean up all memory associated with this instance
           FreeLibrary(FHandle);
     End;
   inherited;
-
 end;
 
 function TGenUserModel.Get_Exists: Boolean;
@@ -156,7 +150,6 @@ procedure TGenUserModel.Set_Name(const Value:String);
 
 
 begin
-
     {If Model already points to something, then free it}
 
         IF FHandle <> 0 Then
@@ -181,7 +174,7 @@ begin
           End;
 
         If FHandle = 0 Then
-              DoSimpleMsg(DSS, 'Generator User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 570)
+              DoSimpleMsg(DSS, 'Generator User Model %s Not Loaded. DSS Directory = %s', [Value, DSSDirectory], 570)
         Else
         Begin
             FName := Value;

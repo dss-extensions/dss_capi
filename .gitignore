@@ -66,3 +66,5 @@ __recovery
 *.dproj.local
 __history
 .vscode
+__pycache__
+*.out.*

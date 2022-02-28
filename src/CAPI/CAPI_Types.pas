@@ -5,6 +5,9 @@ unit CAPI_Types;
 interface
 
 type
+    PointerArray0 = array[0..$effffff] of Pointer;
+    PPointerArray0 = ^PointerArray0;
+
     DoubleArray0 = array[0..$effffff] of Double;
     PDoubleArray0 = ^DoubleArray0;
 
