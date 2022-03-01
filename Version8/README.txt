@@ -3,10 +3,12 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.4.0.5
+Version 9.4.0.6
 
 Changes this version
 ====================
+
+- Corrects a recent bug introduced while fixing pu values for VSource when working on Dynamics mode.
 - Fixes version sync between exe, COM and DLL versions.
 - Solves old bug located within the fmonitor variables (proposed by UCF). 
 - Fixes DumpProperties procedures for conductor objects by utilizing the proper indexing. 
