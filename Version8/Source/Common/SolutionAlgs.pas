@@ -112,6 +112,7 @@ FUNCTION SolveYearly(ActorID : integer):Integer;
 VAR
    N, Twopct, i :Integer;
 
+  mytmp : Integer; //dmdbug
 Begin
  Result := 0;
 { ProgressCaption( 'Solving Year '+ IntToStr(ActiveCircuit[ActorID].Solution.Year) + ' Actor: ' + IntToStr(ActorID) + ' CPU: ' + IntToStr(ActorCPU[ActorID]),ActorID);
@@ -119,7 +120,6 @@ Begin
  ShowPctProgress(ActorProgressCount[ActorID],ActorID);
 }
  WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-
  Begin
   Try
 
