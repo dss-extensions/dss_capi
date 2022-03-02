@@ -1679,7 +1679,7 @@ Begin
                     SetFleetToDischarge;
 //                    StorekWChanged:= TRUE;  // if not already discharging, force new power flow.
                   End;
-                 If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name, Format('Attempting to dispatch %-.6g kW with %-.6g kWh remaining and %-.6g kWh reserve.', [kWNeeded, RemainingkWh, ReservekWh]),ActorID);
+                 If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name, Format('Attempting to dispatch %-.6g kW with %-.6g kWh remaining and %-.6g kWh reserve.', [kWNeeded, RemainingkWh, ReservekWh]),ActorID);
                  For i := 1 to FleetSize Do
                  Begin
                     StorageObj := FleetPointerList.Get(i);
@@ -1709,7 +1709,7 @@ Begin
                             ActualkWDispatch := PresentkW;
                             StorekWChanged := TRUE; // if not idling at first, force a new powerflow
 
-                            If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name,
+                            If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name,
                             Format('Requesting ' + StorageObj.QualifiedName + ' to dispatch %-.6g kW. Setting ' + StorageObj.QualifiedName + ' to idling state. Final kWOut is %-.6g kW', [DispatchkW, ActualkWDispatch]),ActorID);
                           End
 //                          DispatchkW := 0.0;
@@ -1732,7 +1732,7 @@ Begin
                                      ActualkWDispatch := PresentkW;
                                      StorekWChanged := TRUE;     // This is what keeps the control iterations going
 
-                                     If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name,
+                                     If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name,
                                                                             Format('Requesting ' + StorageObj.QualifiedName + ' to dispatch %-.6g kW, less than CutIn/CutOut.'
                                                                             + ' Final kWOut is %-.6g kW', [DispatchkW, ActualkWDispatch]), ActorID);
                                   End;
@@ -1745,7 +1745,7 @@ Begin
                                       StorageState := STORE_IDLING;     // overrides SetFleetToDischarge
                                       SetNominalStorageOutput(ActorID); // to update current kvarLimit
                                       ActualkWDispatch := PresentkW;
-                                      If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name,
+                                      If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name,
                                                                              Format('Requesting ' + StorageObj.QualifiedName + ' to dispatch %-.6g kW, less than CutIn/CutOut.'
                                                                              + ' Inverter is OFF. Final kWOut is %-.6g kW', [DispatchkW, ActualkWDispatch]),ActorID);
                                 end
@@ -1759,7 +1759,7 @@ Begin
                                    ActualkWDispatch := PresentkW;
                                    StorekWChanged := TRUE;     // This is what keeps the control iterations going
 
-                                   If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name,
+                                   If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name,
                                                                           Format('Requesting ' + StorageObj.QualifiedName + ' to dispatch %-.6g kW. Final kWOut is %-.6g kW',
                                                                           [DispatchkW, ActualkWDispatch]),ActorID);
                               End;
@@ -1780,7 +1780,7 @@ Begin
                   End;
                   ChargingAllowed := TRUE;
                   OutOfOomph := TRUE;
-                  If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name,
+                  If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name,
                   Format('Ran out of OOMPH: %-.6g kWh remaining and %-.6g reserve. Fleet has been set to idling state.', [RemainingkWh, ReservekWh]),ActorID);
             End;
        End;
@@ -1941,7 +1941,7 @@ Begin
 //                      StorekWChanged:= TRUE;  // if not already charging, force new power flow.
                    End;
   //                       If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name, Format('Attempting to charge %-.6g kW with %-.6g kWh remaining and %-.6g rating.', [kWNeeded, (TotalRatingkWh-ActualkWh), TotalRatingkWh]), ActorID);
-                   If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name, Format('Attempting to charge %-.6g kW with %-.6g kWh remaining and %-.6g rating.', [kWNeeded, (TotalRatingkWh-ActualkWh), TotalRatingkWh]), ActorID);
+                   If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name, Format('Attempting to charge %-.6g kW with %-.6g kWh remaining and %-.6g rating.', [kWNeeded, (TotalRatingkWh-ActualkWh), TotalRatingkWh]), ActorID);
                    For i := 1 to FleetSize Do
                    Begin
                      StorageObj := FleetPointerList.Get(i);
@@ -1976,7 +1976,7 @@ Begin
                             ActualkWDispatch := PresentkW;
                             StorekWChanged := TRUE; // if not idling at first, force a new powerflow
 
-                            If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name,
+                            If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name,
                             Format('Requesting ' + StorageObj.QualifiedName + ' to dispatch %-.6g kW. Setting ' + StorageObj.QualifiedName + ' to idling state. Final kWOut is %-.6g kW', [ChargekW, ActualkWDispatch]),ActorID);
                           End
 
@@ -2000,7 +2000,7 @@ Begin
                                      ActualkWDispatch := PresentkW;
                                      StorekWChanged := TRUE;     // This is what keeps the control iterations going
 
-                                     If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name,
+                                     If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name,
                                                                             Format('Requesting ' + StorageObj.QualifiedName + ' to dispatch %-.6g kW, less than CutIn/CutOut.'
                                                                             + ' Final kWOut is %-.6g kW', [ChargekW, ActualkWDispatch]), ActorID);
                                   End;
@@ -2013,7 +2013,7 @@ Begin
                                       StorageState := STORE_IDLING;     // overrides SetFleetToCharge
                                       SetNominalStorageOutput(ActorID); // to update current kvarLimit
                                       ActualkWDispatch := PresentkW;
-                                      If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name,
+                                      If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name,
                                                                              Format('Requesting ' + StorageObj.QualifiedName + ' to dispatch %-.6g kW, less than CutIn/CutOut.'
                                                                              + ' Inverter is OFF. Final kWOut is %-.6g kW', [ChargekW, ActualkWDispatch]),ActorID);
                                 end
@@ -2029,7 +2029,7 @@ Begin
         //                                           StorageObj.pctkWin := abs(KwtoPercentagekW);                // old approach
                                    StorekWChanged        := TRUE;     // This is what keeps the control iterations going
 
-                                   If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name,
+                                   If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name,
                                                                           Format('Requesting ' + StorageObj.QualifiedName + ' to dispatch %-.6g kW. Final kWOut is %-.6g kW',
                                                                           [ChargekW, ActualkWDispatch]),ActorID);
 
@@ -2050,7 +2050,7 @@ Begin
                 PushTimeOntoControlQueue(STORE_IDLING, ActorID);  // force a new power flow solution
               End;
               ChargingAllowed := FALSE;
-              If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name, Format('Fully charged: %-.6g kWh of rated %-.6g.', [ActualkWh, TotalRatingkWh]), ActorID);
+              If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name, Format('Fully charged: %-.6g kWh of rated %-.6g.', [ActualkWh, TotalRatingkWh]), ActorID);
             End;
        End;
 
