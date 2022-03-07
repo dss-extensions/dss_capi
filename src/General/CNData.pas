@@ -17,56 +17,51 @@ uses
     CableData;
 
 type
+{$SCOPEDENUMS ON}
+    TCNDataProp = (
+        INVALID = 0,
+        k = 1,
+        DiaStrand = 2,
+        GmrStrand = 3,
+        Rstrand = 4
+    );
+{$SCOPEDENUMS OFF}
+
     TCNData = class(TCableData)
-    PRIVATE
-        function Get_Code: String;  // Returns active line code string
-        procedure Set_Code(const Value: String);  // sets the  active CNData
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const CNName: String): Integer; OVERRIDE;
+        procedure DefineProperties; override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;     // uses global parser
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
-
-      // Set this property to point ActiveCNDataObj to the right value
-        property Code: String READ Get_Code WRITE Set_Code;
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
     end;
 
     TCNDataObj = class(TCableDataObj)
-{$IFDEF DSS_CAPI}
     PUBLIC
-{$ELSE}
-    PRIVATE
-{$ENDIF}
         FkStrand: Integer;
         FDiaStrand: Double;
         FGmrStrand: Double;
         FRStrand: Double;
-    PUBLIC
 
         constructor Create(ParClass: TDSSClass; const CNDataName: String);
         destructor Destroy; OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
 
         property NStrand: Integer READ FkStrand;
         property DiaStrand: Double READ FDiaStrand;
         property GmrStrand: Double READ FGmrStrand;
         property RStrand: Double READ FRStrand;
-
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
     end;
 
 implementation
 
 uses
-    ParserDel,
     DSSGlobals,
     DSSClassDefs,
     Sysutils,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     Arraydef,
     LineUnits,
     Utilities,
@@ -74,20 +69,20 @@ uses
     DSSObjectHelper,
     TypInfo;
 
+type
+    TObj = TCNDataObj;
+    TProp = TCNDataProp;
 const
-    NumPropsThisClass = 4;
+    NumPropsThisClass = Ord(High(TProp));
+var
+    PropInfo: Pointer = NIL;    
 
-constructor TCNData.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
+constructor TCNData.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
-    Class_Name := 'CNData';
-    DSSClassType := DSS_OBJECT;
-    ActiveElement := 0;
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
 
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
+    inherited Create(dssContext, DSS_OBJECT, 'CNData');
 end;
 
 destructor TCNData.Destroy;
@@ -96,195 +91,86 @@ begin
 end;
 
 procedure TCNData.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
     NumProperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
-    PropertyName[1] := 'k';
-    PropertyName[2] := 'DiaStrand';
-    PropertyName[3] := 'GmrStrand';
-    PropertyName[4] := 'Rstrand';
+    // integer properties
+    PropertyType[ActiveProperty + ord(TProp.k)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ActiveProperty + ord(TProp.k)] := ptruint(@obj.FkStrand);
 
-    PropertyHelp[1] := 'Number of concentric neutral strands; default is 2';
-    PropertyHelp[2] := 'Diameter of a concentric neutral strand; same units as core conductor radius; no default.';
-    PropertyHelp[3] := 'Geometric mean radius of a concentric neutral strand; same units as core conductor GMR; defaults to 0.7788 * CN strand radius.';
-    PropertyHelp[4] := 'AC resistance of a concentric neutral strand; same units as core conductor resistance; no default.';
+    // double properties (default type)
+    PropertyOffset[ActiveProperty + ord(TProp.DiaStrand)] := ptruint(@obj.FDiaStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.GmrStrand)] := ptruint(@obj.FGmrStrand);
+    PropertyOffset[ActiveProperty + ord(TProp.Rstrand)] := ptruint(@obj.FRStrand);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    inherited DefineProperties;
 end;
 
-function TCNData.NewObject(const ObjName: String): Integer;
-begin
-    DSS.ActiveDSSObject := TCNDataObj.Create(Self, ObjName);
-    Result := AddObjectToList(DSS.ActiveDSSObject);
-end;
-
-function TCNData.Edit: Integer;
+function TCNData.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
+    Obj: TObj;
 begin
-    Result := 0;
-  // continue parsing with contents of Parser
-    DSS.ActiveConductorDataObj := ElementList.Active;
-    DSS.ActiveDSSObject := DSS.ActiveConductorDataObj;
-    with TCNDataObj(DSS.ActiveConductorDataObj) do
-    begin
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
-        begin
-            if Length(ParamName) = 0 then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        DSS.ActiveDSSObject := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
 
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
-                1:
-                    FkStrand := Parser.IntValue;
-                2:
-                    FDiaStrand := Parser.DblValue;
-                3:
-                    FGmrStrand := Parser.DblValue;
-                4:
-                    FRStrand := Parser.DblValue;
-            else
-                // Inherited parameters
-                ClassEdit(DSS.ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
-            end;
-
-      {Set defaults}
-            case ParamPointer of
-                2:
-                    if FGmrStrand <= 0.0 then
-                        FGmrStrand := 0.7788 * 0.5 * FDiaStrand;
-            end;
-
-      {Check for critical errors}
-            case ParamPointer of
-                1:
-                    if (FkStrand < 2) then
-                        DoSimpleMsg('Error: Must have at least 2 concentric neutral strands for CNData ' + Name, 999);
-                2:
-                    if (FDiaStrand <= 0.0) then
-                        DoSimpleMsg('Error: Neutral strand diameter must be positive for CNData ' + Name, 999);
-                3:
-                    if (FGmrStrand <= 0.0) then
-                        DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData ' + Name, 999);
-            end;
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
-        end;
+procedure TCNDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+begin
+    // Set defaults
+    case Idx of
+        2:
+            if FGmrStrand <= 0.0 then
+                FGmrStrand := 0.7788 * 0.5 * FDiaStrand;
     end;
-end;
-
-function TCNData.MakeLike(const CNName: String): Integer;
-var
-    OtherData: TCNDataObj;
-    i: Integer;
-begin
-    Result := 0;
-    OtherData := Find(CNName);
-    if OtherData <> NIL then
-        with TCNDataObj(DSS.ActiveConductorDataObj) do
-        begin
-            FkStrand := OtherData.FkStrand;
-            FDiaStrand := OtherData.FDiaStrand;
-            FGmrStrand := OtherData.FGmrStrand;
-            FRStrand := OtherData.FRStrand;
-            ClassMakeLike(OtherData);
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherData.PropertyValue[i];
-            Result := 1;
-        end
-    else
-        DoSimpleMsg('Error in Concentric Neutral MakeLike: "' + CNName + '" Not Found.', 102);
-end;
-
-function TCNData.Get_Code: String;  // Returns active line code string
-begin
-    Result := TCNDataObj(ElementList.Active).Name;
-end;
-
-procedure TCNData.Set_Code(const Value: String);  // sets the  active CNData
-var
-    CNDataObj: TCNDataObj;
-begin
-    DSS.ActiveConductorDataObj := NIL;
-    CNDataObj := ElementList.First;
-    while CNDataObj <> NIL do
-    begin
-        if CompareText(CNDataObj.Name, Value) = 0 then
-        begin
-            DSS.ActiveConductorDataObj := CNDataObj;
-            Exit;
-        end;
-        CNDataObj := ElementList.Next;
+    // Check for critical errors
+    case Idx of
+        1:
+            if (FkStrand < 2) then
+                DoSimpleMsg('Error: Must have at least 2 concentric neutral strands for CNData %s', [Name], 999);
+        2:
+            if (FDiaStrand <= 0.0) then
+                DoSimpleMsg('Error: Neutral strand diameter must be positive for CNData %s', [Name], 999);
+        3:
+            if (FGmrStrand <= 0.0) then
+                DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData %s', [Name], 999);
     end;
-    DoSimpleMsg('CNData: "' + Value + '" not Found.', 103);
+    inherited PropertySideEffects(Idx, previousIntVal);
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//      TCNData Obj
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+procedure TCNDataObj.MakeLike(OtherPtr: Pointer);
+var
+    Other: TObj;
+begin
+    inherited MakeLike(OtherPtr);
+    Other := TObj(OtherPtr);
+    FkStrand := Other.FkStrand;
+    FDiaStrand := Other.FDiaStrand;
+    FGmrStrand := Other.FGmrStrand;
+    FRStrand := Other.FRStrand;
+end;
 
 constructor TCNDataObj.Create(ParClass: TDSSClass; const CNDataName: String);
 begin
     inherited Create(ParClass, CNDataName);
-    Name := LowerCase(CNDataName);
+    Name := AnsiLowerCase(CNDataName);
     DSSObjType := ParClass.DSSClassType;
     FkStrand := 2;
     FDiaStrand := -1.0;
     FGmrStrand := -1.0;
     FRStrand := -1.0;
-    InitPropertyValues(0);
 end;
 
 destructor TCNDataObj.Destroy;
 begin
     inherited destroy;
-end;
-
-procedure TCNDataObj.DumpProperties(F: TFileStream; Complete: Boolean);
-var
-    i: Integer;
-begin
-    inherited DumpProperties(F, Complete);
-    with ParentClass do
-    begin
-        for i := 1 to NumProperties do
-        begin
-            FSWrite(F, '~ ' + PropertyName^[i] + '=');
-            case i of
-                1:
-                    FSWriteln(F, Format('%d', [FkStrand]));
-                2:
-                    FSWriteln(F, Format('%.6g', [FDiaStrand]));
-                3:
-                    FSWriteln(F, Format('%.6g', [FGmrStrand]));
-                4:
-                    FSWriteln(F, Format('%.6g', [FRStrand]));
-            end;
-        end;
-    end;
-end;
-
-procedure TCNDataObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-    PropertyValue[1] := '2';
-    PropertyValue[2] := '-1';
-    PropertyValue[3] := '-1';
-    PropertyValue[4] := '-1';
-    inherited InitPropertyValues(ArrayOffset + NumPropsThisClass);
 end;
 
 end.

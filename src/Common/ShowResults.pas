@@ -6,9 +6,6 @@ unit ShowResults;
   All rights reserved.
   ----------------------------------------------------------
 }
-{
-   5-30-00 Added code for handling positive sequence mode
-}
 
 interface
 
@@ -48,7 +45,8 @@ implementation
 
 uses
     Classes,
-    uComplex,
+    BufStream,
+    UComplex, DSSUcomplex,
     Arraydef,
     sysutils,
     Circuit,
@@ -120,14 +118,11 @@ var
 
 
 begin
-
     with DSS.ActiveCircuit do
     begin
-
         if Buses^[i].NumNodesThisBus >= 3 then
         begin
-
-     // compute sequence voltages for Nodes 1, 2, and 3 only
+            // compute sequence voltages for Nodes 1, 2, and 3 only
 
             with Buses^[i] do
                 for j := 1 to 3 do
@@ -140,7 +135,7 @@ begin
                     k := j + 1;
                     if k > 3 then
                         k := 1;
-                    VLL[j] := Csub(Vph[j], Vph[k]);
+                    VLL[j] := Vph[j] - Vph[k];
                 end;
                 Phase2SymComp(@VLL, @V012);
             end
@@ -233,7 +228,7 @@ begin
                     if kk <= NumNodesThisBus then
                     begin
                         nref2 := Buses^[i].GetRef(kk); // reference for next phase in sequence
-                        VoltsLL := Csub(Volts, DSS.ActiveCircuit.Solution.NodeV^[nref2]);
+                        VoltsLL := Volts - DSS.ActiveCircuit.Solution.NodeV^[nref2];
                     end;
                 end;
 
@@ -263,13 +258,13 @@ begin
                 begin
                     if kk > 0 then
                     begin
-                        FSWriteln(F, Format('%s %s %10.5g /_ %6.1f %9.5g %9.3f', [UpperCase(Bname), NodeNameLL, VmagLL, cdang(VoltsLL), VpuLL, kvbase * SQRT3]));
+                        FSWriteln(F, Format('%s %s %10.5g /_ %6.1f %9.5g %9.3f', [AnsiUpperCase(Bname), NodeNameLL, VmagLL, cdang(VoltsLL), VpuLL, kvbase * SQRT3]));
                         Bname := Pad('   -', MaxBusNameLength);
                     end;
                 end
                 else
                 begin
-                    FSWrite(F, Format('%s %s %10.5g /_ %6.1f %9.5g %9.3f', [UpperCase(Bname), NodeName, Vmag, cdang(Volts), Vpu, kvbase * SQRT3]));
+                    FSWrite(F, Format('%s %s %10.5g /_ %6.1f %9.5g %9.3f', [AnsiUpperCase(Bname), NodeName, Vmag, cdang(Volts), Vpu, kvbase * SQRT3]));
                     if (NumNodesThisBus > 1) and (kk > 0) and (jj <= 4) then
                         FSWrite(F, Format('        %s %10.5g /_ %6.1f %9.5g', [NodeNameLL, VmagLL, cdang(VoltsLL), VpuLL]));
                     FSWriteln(F);
@@ -293,7 +288,7 @@ begin
     Nterm := pElem.Nterms;
     k := 0;
     BusName := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
-    FSWriteln(F, 'ELEMENT = "' + pElem.dssclassname + '.' + UpperCase(pElem.Name) + '"');
+    FSWriteln(F, 'ELEMENT = "' + pElem.dssclassname + '.' + AnsiUpperCase(pElem.Name) + '"');
     for j := 1 to NTerm do
     begin
         for i := 1 to NCond do
@@ -316,7 +311,7 @@ begin
                 end;
                 if LL then
                     Vpu := Vpu / SQRT3;
-                FSWriteln(F, Format('%s  (%3d) %4d    %13.5g (%8.4g) /_ %6.1f', [UpperCase(BusName), nref, MapNodeToBus^[nref].nodenum, Vmag, Vpu, cdang(Volts)]));
+                FSWriteln(F, Format('%s  (%3d) %4d    %13.5g (%8.4g) /_ %6.1f', [AnsiUpperCase(BusName), nref, MapNodeToBus^[nref].nodenum, Vmag, Vpu, cdang(Volts)]));
             end;
         end;
         if j < Nterm then
@@ -341,7 +336,7 @@ var
 begin
     NCond := pElem.NConds;
 
-    ElemName := Pad(pElem.dssclassname + '.' + UpperCase(pElem.Name), MaxDeviceNameLength);
+    ElemName := Pad(pElem.dssclassname + '.' + AnsiUpperCase(pElem.Name), MaxDeviceNameLength);
     for i := 1 to NCond do
     begin
         Node1 := pElem.NodeRef^[i];
@@ -358,7 +353,7 @@ begin
         begin
             Volts1 := DSS.ActiveCircuit.Solution.NodeV^[Node1];   // OK if Node1 or Node2 = 0
             Volts2 := DSS.ActiveCircuit.Solution.NodeV^[Node2];
-            Volts1 := Csub(Volts1, Volts2);   // diff voltage
+            Volts1 := Volts1 - Volts2;   // diff voltage
             with DSS.ActiveCircuit do
             begin
                 if Buses^[Bus1].kVBase <> Buses^[Bus2].kVBase then
@@ -388,11 +383,10 @@ var
     pElem: TDSSCktElement;
 
 begin
-
     try
         SetMaxBusNameLength(DSS);
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         case ShowOptionCode of
             0:
@@ -412,7 +406,6 @@ begin
 
             1:
             begin
-
                 FSWriteln(F);
                 if LL then
                     FSWriteln(F, 'LINE-LINE VOLTAGES BY BUS & NODE')
@@ -494,7 +487,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -565,8 +557,7 @@ begin
 
     FSWriteln(F,
         Format('%s %3d  %10.5g   %10.5g %8.2f  %10.5g %8.2f  %8.2f %8.2f',
-        [UpperCase(Name), j, I1, I2, I2I1, I0, I0I1, Inormal, Iemerg]));
-
+        [AnsiUpperCase(Name), j, I1, I2, I2I1, I0, I0I1, Inormal, Iemerg]));
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -582,7 +573,6 @@ var
     ResidPolar: Polar;
 
 begin
-
     cBuffer := NIL;
 
     NCond := pElem.NConds;
@@ -593,7 +583,7 @@ begin
         pElem.GetCurrents(cBuffer);
         k := 0;
         FromBus := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
-        FSWriteln(F, 'ELEMENT = ', FullName(Pelem));
+        FSWriteln(F, 'ELEMENT = ', EncloseQuotes(Pelem.FullName));
         for      j := 1 to NTerm do
         begin
             Ctotal := CZERO;
@@ -606,13 +596,13 @@ begin
             begin
                 Inc(k);
                 if ShowResidual then
-                    Caccum(Ctotal, cBuffer^[k]);
-                FSWriteln(F, Format('%s  %4d    %13.5g /_ %6.1f =  %9.5g +j %9.5g', [UpperCase(FromBus), GetNodeNum(DSS, pElem.NodeRef^[k]), Cabs(cBuffer^[k]), cdang(cBuffer^[k]), cBuffer^[k].re, cBuffer^[k].im]));
+                    Ctotal += cBuffer^[k];
+                FSWriteln(F, Format('%s  %4d    %13.5g /_ %6.1f =  %9.5g +j %9.5g', [AnsiUpperCase(FromBus), GetNodeNum(DSS, pElem.NodeRef^[k]), Cabs(cBuffer^[k]), cdang(cBuffer^[k]), cBuffer^[k].re, cBuffer^[k].im]));
             end;
             if ShowResidual and (pElem.NPhases > 1) then
             begin
-                ResidPolar := CtoPolardeg(cnegate(Ctotal));
-                FSWriteln(F, Format('%s Resid    %13.5g /_ %6.1f =   %9.5g +j %9.5g', [UpperCase(FromBus), ResidPolar.mag, ResidPolar.ang, -cTotal.re, -Ctotal.im]));
+                ResidPolar := CtoPolardeg(-Ctotal);
+                FSWriteln(F, Format('%s Resid    %13.5g /_ %6.1f =   %9.5g +j %9.5g', [AnsiUpperCase(FromBus), ResidPolar.mag, ResidPolar.ang, -cTotal.re, -Ctotal.im]));
             end;
             if j < Nterm then
                 FSWriteln(F, '------------');
@@ -628,7 +618,6 @@ begin
             Freemem(cBuffer);
 
     end;
-
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ShowCurrents(DSS: TDSSContext; FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
@@ -645,13 +634,12 @@ var
     Cmax: Double;
 
 begin
-
     SetMaxDeviceNameLength(DSS);
     SetMaxBusNameLength(DSS);
     try
         try
 
-            F := TFileStream.Create(FileNm, fmCreate);
+            F := TBufferedFileStream.Create(FileNm, fmCreate);
             case ShowOptionCode of
 
                 0:
@@ -679,7 +667,7 @@ begin
                             begin
                                 GetI0I1I2(I0, I1, I2, Cmax, pelem.Nphases, (j - 1) * Ncond, cBuffer);
                                 with PElem do
-                                    WriteSeqCurrents(F, Paddots(FullName(pElem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
+                                    WriteSeqCurrents(F, Paddots(EncloseQuotes(pElem.FullName), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
                             Freemem(cBuffer);
                         end;
@@ -703,7 +691,7 @@ begin
                             begin
                                 GetI0I1I2(I0, I1, I2, Cmax, pDelem.Nphases, (j - 1) * Ncond, cBuffer);
                                 with PDElem do
-                                    WriteSeqCurrents(F, Paddots(FullName(pdElem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, Normamps, Emergamps, j, DSSObjType);
+                                    WriteSeqCurrents(F, Paddots(EncloseQuotes(pdElem.FullName), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, Normamps, Emergamps, j, DSSObjType);
                             end; {For}
                             Freemem(cBuffer);
                         end;
@@ -726,7 +714,7 @@ begin
                             begin
                                 GetI0I1I2(I0, I1, I2, Cmax, pCelem.Nphases, (j - 1) * Ncond, cBuffer);
                                 with PCElem do
-                                    WriteSeqCurrents(F, Paddots(FullName(pcElem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
+                                    WriteSeqCurrents(F, Paddots(EncloseQuotes(pcElem.FullName), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
                             Freemem(cBuffer);
                         end;
@@ -740,7 +728,6 @@ begin
                     begin
                         if (pelem.Enabled) then
                         begin
-
                             NCond := pelem.NConds;
                             Nterm := pelem.Nterms;
                             Getmem(cBuffer, Sizeof(cBuffer^[1]) * NCond * Nterm);
@@ -750,7 +737,7 @@ begin
                             begin
                                 GetI0I1I2(I0, I1, I2, Cmax, pelem.Nphases, (j - 1) * Ncond, cBuffer);
                                 with PElem do
-                                    WriteSeqCurrents(F, Paddots(FullName(pElem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
+                                    WriteSeqCurrents(F, Paddots(EncloseQuotes(pElem.FullName), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
                             Freemem(cBuffer);
                         end;
@@ -838,9 +825,8 @@ begin
 
     except
         On E: Exception do
-            DoSimpleMsg(DSS, 'Exception raised in ShowCurrents: ' + E.Message, 2190);
+            DoSimpleMsg(DSS, 'Exception raised in ShowCurrents: %s', [E.Message], 2190);
     end;
-
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -867,13 +853,12 @@ var
     sout: String;
 
 begin
-
     c_Buffer := NIL;
     SetMaxDeviceNameLength(DSS);
     SetMaxBusNameLength(DSS);
 
     try
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
       {Allocate c_Buffer big enough for largest circuit element}
         Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize(DSS));
@@ -906,7 +891,7 @@ begin
 
                         for j := 1 to NTerm do
                         begin
-                            FSWrite(F, Pad(FullName(p_Elem), MaxDeviceNameLength + 2) + Format('%3d', [j]));
+                            FSWrite(F, Pad(EncloseQuotes(p_Elem.FullName), MaxDeviceNameLength + 2) + Format('%3d', [j]));
                             for i := 1 to min(3, p_Elem.Nphases) do
                             begin
                                 k := (j - 1) * Ncond + i;
@@ -938,19 +923,19 @@ begin
                                 end;
                             end;
 
-                            S := Cmul(V012[2], conjg(I012[2]));
+                            S := V012[2] * cong(I012[2]);
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
+                                S := S * 0.001;
                             FSWrite(F, Format('%11.1f', [S.re * 0.003]));
                             FSWrite(F, Format('%11.1f', [S.im * 0.003]));
-                            S := Cmul(V012[3], conjg(I012[3]));
+                            S := V012[3] * cong(I012[3]);
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
+                                S := S * 0.001;
                             FSWrite(F, Format('%11.1f', [S.re * 0.003]));
                             FSWrite(F, Format('%11.1f', [S.im * 0.003]));
-                            S := Cmul(V012[1], conjg(I012[1]));
+                            S := V012[1] * cong(I012[1]);
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
+                                S := S * 0.001;
                             FSWrite(F, Format('%8.1f', [S.re * 0.003]));
                             FSWrite(F, Format('%8.1f', [S.im * 0.003]));
                             FSWriteln(F);
@@ -974,7 +959,7 @@ begin
 
                         for j := 1 to NTerm do
                         begin
-                            FSWrite(F, Pad(FullName(pDElem), MaxDeviceNameLength + 2) + Format('%3d', [j]));
+                            FSWrite(F, Pad(EncloseQuotes(pDElem.FullName), MaxDeviceNameLength + 2) + Format('%3d', [j]));
                             for i := 1 to Min(3, pdelem.Nphases) do
                             begin
                                 k := (j - 1) * Ncond + i;
@@ -1006,19 +991,19 @@ begin
                                 end;
                             end;
 
-                            S := Cmul(V012[2], conjg(I012[2]));
+                            S := V012[2] * cong(I012[2]);
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
+                                S := S * 0.001;
                             FSWrite(F, Format('%11.1f', [S.re * 0.003]));
                             FSWrite(F, Format('%11.1f', [S.im * 0.003]));
-                            S := Cmul(V012[3], conjg(I012[3]));
+                            S := V012[3] * cong(I012[3]);
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
+                                S := S * 0.001;
                             FSWrite(F, Format('%11.1f', [S.re * 0.003]));
                             FSWrite(F, Format('%11.1f', [S.im * 0.003]));
-                            S := Cmul(V012[1], conjg(I012[1]));
+                            S := V012[1] * cong(I012[1]);
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
+                                S := S * 0.001;
                             FSWrite(F, Format('%8.1f', [S.re * 0.003]));
                             FSWrite(F, Format('%8.1f', [S.im * 0.003]));
 
@@ -1027,12 +1012,12 @@ begin
                //----PDelem.ActiveTerminalIdx := 1;
                                 S := PDElem.ExcesskVANorm[1];
                                 if Opt = 1 then
-                                    S := CmulReal(S, 0.001);
+                                    S := S * 0.001;
                                 FSWrite(F, Format('%11.1f', [S.re]));
                                 FSWrite(F, Format('%11.1f', [S.im]));
                                 S := PDElem.ExcesskVAEmerg[1];
                                 if Opt = 1 then
-                                    S := CmulReal(S, 0.001);
+                                    S := S * 0.001;
                                 FSWrite(F, Format('%11.1f', [S.re]));
                                 FSWrite(F, Format('%11.1f', [S.im]));
                             end;
@@ -1056,7 +1041,7 @@ begin
 
                         for j := 1 to NTerm do
                         begin
-                            FSWrite(F, Pad(FullName(pCElem), MaxDeviceNameLength + 2) + Format('%3d', [j]));
+                            FSWrite(F, Pad(EncloseQuotes(pCElem.FullName), MaxDeviceNameLength + 2) + Format('%3d', [j]));
                             for i := 1 to min(3, pcElem.Nphases) do
                             begin
                                 k := (j - 1) * Ncond + i;
@@ -1089,19 +1074,19 @@ begin
                                 end;
                             end;
 
-                            S := Cmul(V012[2], conjg(I012[2]));
+                            S := V012[2] * cong(I012[2]);
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
+                                S := S * 0.001;
                             FSWrite(F, Format('%11.1f', [S.re * 0.003]));
                             FSWrite(F, Format('%11.1f', [S.im * 0.003]));
-                            S := Cmul(V012[3], conjg(I012[3]));
+                            S := V012[3] * cong(I012[3]);
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
+                                S := S * 0.001;
                             FSWrite(F, Format('%11.1f', [S.re * 0.003]));
                             FSWrite(F, Format('%11.1f', [S.im * 0.003]));
-                            S := Cmul(V012[1], conjg(I012[1]));
+                            S := V012[1] * cong(I012[1]);
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
+                                S := S * 0.001;
                             FSWrite(F, Format('%8.1f', [S.re * 0.003]));
                             FSWrite(F, Format('%8.1f', [S.im * 0.003]));
 
@@ -1116,7 +1101,6 @@ begin
 
             1:
             begin
-
      {Branch Powers}
                 FSWriteln(F);
                 FSWriteln(F, 'CIRCUIT ELEMENT POWER FLOW');
@@ -1146,7 +1130,7 @@ begin
                         p_Elem.GetCurrents(c_Buffer);
                         k := 0;
                         FromBus := Pad(StripExtension(p_Elem.FirstBus), MaxBusNameLength);
-                        FSWriteln(F, 'ELEMENT = ', FullName(P_Elem));
+                        FSWriteln(F, 'ELEMENT = ', EncloseQuotes(P_Elem.FullName));
                         for j := 1 to NTerm do
                         begin
                             Saccum := CZERO;
@@ -1155,14 +1139,14 @@ begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
                                 Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
-                                S := Cmul(Volts, conjg(c_Buffer^[k]));
+                                S := Volts * cong(c_Buffer^[k]);
                                 if { (p_Elem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
-                                    S := CmulReal(S, 3.0);
+                                    S := S * 3;
                                 if Opt = 1 then
-                                    S := CmulReal(S, 0.001);
-                                Caccum(Saccum, S);
+                                    S := S * 0.001;
+                                Saccum += S;
                                 FSWrite(F, Format('%s %4d    %8.1f +j %8.1f', 
-                                    [UpperCase(FromBus), GetNodeNum(DSS, p_Elem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0]
+                                    [AnsiUpperCase(FromBus), GetNodeNum(DSS, p_Elem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0]
                                 ));
                                 FSWriteln(F, Format('   %8.1f     %8.4f', [Cabs(S) / 1000.0, PowerFactor(S)]));
                             end;
@@ -1187,7 +1171,7 @@ begin
                         p_Elem.GetCurrents(c_Buffer);
                         k := 0;
                         FromBus := Pad(StripExtension(p_Elem.FirstBus), MaxBusNameLength);
-                        FSWriteln(F, 'ELEMENT = ', FullName(p_elem));
+                        FSWriteln(F, 'ELEMENT = ', EncloseQuotes(p_elem.FullName));
 
                         if (CLASSMASK and P_Elem.DSSObjType) = AUTOTRANS_ELEMENT then
                             Ntimes := P_Elem.Nphases    // Special case for AutoTrans
@@ -1202,15 +1186,15 @@ begin
                             nref1 := p_Elem.NodeRef^[k];
                             nref2 := p_Elem.NodeRef^[k + 1];
                             with DSS.ActiveCircuit.Solution do
-                                Volts := CSub(NodeV^[nref1], NodeV^[nref2]);
-                            S := Cmul(Volts, conjg(c_Buffer^[k]));
+                                Volts := NodeV^[nref1] - NodeV^[nref2];
+                            S := Volts * cong(c_Buffer^[k]);
                             if { (p_Elem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
-                                S := CmulReal(S, 3.0);
+                                S := S * 3;
                             if Opt = 1 then
-                                S := CmulReal(S, 0.001);
-                            Caccum(Saccum, S);
+                                S := S * 0.001;
+                            Saccum += S;
                             
-                            WriteStr(sout, UpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
+                            WriteStr(sout, AnsiUpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
                             FSWrite(F, sout);
 
                             WriteStr(sout, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
@@ -1233,13 +1217,13 @@ begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
                                 Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
-                                S := Cmul(Volts, conjg(c_Buffer^[k]));
+                                S := Volts * cong(c_Buffer^[k]);
                                 if { (p_Elem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
-                                    S := CmulReal(S, 3.0);
+                                    S := S * 3;
                                 if Opt = 1 then
-                                    S := CmulReal(S, 0.001);
-                                Caccum(Saccum, S);
-                                WriteStr(sout, UpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
+                                    S := S * 0.001;
+                                Saccum += S;
+                                WriteStr(sout, AnsiUpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
                                 FSWrite(F, sout);
                                 WriteStr(sout, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
                                 FSWriteln(F, sout);
@@ -1276,13 +1260,12 @@ begin
                 begin
                     if p_Elem.Enabled then
                     begin
-
                         NCond := p_Elem.NConds;
                         Nterm := p_Elem.Nterms;
                         p_Elem.GetCurrents(c_Buffer);
                         k := 0;
                         FromBus := Pad(StripExtension(p_Elem.FirstBus), MaxBusNameLength);
-                        FSWriteln(F, 'ELEMENT = ', Fullname(P_Elem));
+                        FSWriteln(F, 'ELEMENT = ', EncloseQuotes(P_Elem.FullName));
                         for j := 1 to NTerm do
                         begin
                             Saccum := CZERO;
@@ -1291,13 +1274,13 @@ begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
                                 Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
-                                S := Cmul(Volts, conjg(c_Buffer^[k]));
+                                S := Volts * cong(c_Buffer^[k]);
                                 if { (p_Elem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
-                                    S := CmulReal(S, 3.0);
+                                    S := S * 3;
                                 if Opt = 1 then
-                                    S := CmulReal(S, 0.001);
-                                Caccum(Saccum, S);
-                                WriteStr(sout, UpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 6: 1, ' +j ', S.im / 1000.0: 6: 1);
+                                    S := S * 0.001;
+                                Saccum += S;
+                                WriteStr(sout, AnsiUpperCase(FromBus), '  ', GetNodeNum(DSS, p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 6: 1, ' +j ', S.im / 1000.0: 6: 1);
                                 FSWrite(F, sout);
                                 WriteStr(sout, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
                                 FSWriteln(F, sout);
@@ -1314,15 +1297,12 @@ begin
                 end;
 
             end; {ShowOptionCode=1}
-
-        else
-
         end; {CASE}
 
         FSWriteln(F);
-        S := CmulReal(DSS.ActiveCircuit.Losses, 0.001);
+        S := DSS.ActiveCircuit.Losses * 0.001;
         if Opt = 1 then
-            S := CmulReal(S, 0.001);
+            S := S * 0.001;
         
         WriteStr(sout, 'Total Circuit Losses = ', S.re: 6: 1, ' +j ', S.im: 6: 1);
         FSWriteln(F, sout);
@@ -1369,7 +1349,6 @@ var
     c_Buffer: pComplexArray;  // Allocate to max total conductors
 
 begin
-
     c_Buffer := NIL;
 
 
@@ -1379,7 +1358,7 @@ begin
 
         NCond := cktElem.NConds;
         cktElem.GetCurrents(c_Buffer);
-        FSWrite(F, Pad(FullName(cktElem), MaxDeviceNameLength + 2) + IntToStr(j));
+        FSWrite(F, Pad(EncloseQuotes(cktElem.FullName), MaxDeviceNameLength + 2) + IntToStr(j));
         for i := 1 to Min(cktElem.Nphases, 3) do
         begin
             k := (j - 1) * Ncond + i;
@@ -1416,25 +1395,25 @@ begin
   // Pos Seq or Single Phase
         case cktElem.Nphases of
             1:
-                S := Cmul(Vph[1], conjg(Iph[1]));
+                S := Vph[1] * cong(Iph[1]);
             2:
-                S := Cadd(Cmul(Vph[1], conjg(Iph[1])), Cmul(Vph[2], conjg(Iph[3])));
+                S := Vph[1] * cong(Iph[1]) + Vph[2] * cong(Iph[3]);
         else
-            S := Cmul(V012[2], conjg(I012[2]));
+            S := V012[2] * cong(I012[2]);
         end;
 
         if Opt = 1 then
-            S := CmulReal(S, 0.001);
+            S := S * 0.001;
         FSWrite(F, Format('%11.1f', [S.re * 0.003]));
         FSWrite(F, Format('%11.1f', [S.im * 0.003]));
-        S := Cmul(V012[3], conjg(I012[3]));
+        S := V012[3] * cong(I012[3]);
         if Opt = 1 then
-            S := CmulReal(S, 0.001);
+            S := S * 0.001;
         FSWrite(F, Format('%11.1f', [S.re * 0.003]));
         FSWrite(F, Format('%11.1f', [S.im * 0.003]));
-        S := Cmul(V012[1], conjg(I012[1]));
+        S := V012[1] * cong(I012[1]);
         if Opt = 1 then
-            S := CmulReal(S, 0.001);
+            S := S * 0.001;
         FSWrite(F, Format('%8.1f', [S.re * 0.003]));
         FSWrite(F, Format('%8.1f', [S.im * 0.003]));
 
@@ -1444,7 +1423,6 @@ begin
         if Assigned(C_buffer) then
             Freemem(c_Buffer);
     end;
-
 end;
 
 
@@ -1459,7 +1437,6 @@ var
     FromBus: String;
 
 begin
-
     c_Buffer := NIL;
 
     try
@@ -1469,7 +1446,7 @@ begin
         NCond := CktElem.NConds;
         CktElem.GetCurrents(c_Buffer);
         FromBus := Pad(StripExtension(CktElem.GetBus(jTerm)), 12);
-        FSWriteln(F, 'ELEMENT = ', Pad(FullName(cktElem), MaxDeviceNameLength + 2));
+        FSWriteln(F, 'ELEMENT = ', Pad(EncloseQuotes(cktElem.FullName), MaxDeviceNameLength + 2));
 
         Saccum := CZERO;
         for i := 1 to NCond do
@@ -1477,14 +1454,14 @@ begin
             k := (jTerm - 1) * Ncond + i;
             nref := CktElem.NodeRef^[k];
             Volts := DSS.ActiveCircuit.Solution.NodeV^[nref];
-            S := Cmul(Volts, conjg(c_Buffer^[k]));
+            S := Volts * cong(c_Buffer^[k]);
             if { (CktElem.nphases=1) and } DSS.ActiveCircuit.PositiveSequence then
-                S := CmulReal(S, 3.0);
+                S := S * 3;
             if Opt = 1 then
-                S := CmulReal(S, 0.001);
-            Caccum(Saccum, S);
+                S := S * 0.001;
+            Saccum += S;
             FSWriteln(F, Format('%s %4d %10.5g +j %10.5g    %10.5g    %8.4f',
-                [UpperCase(FromBus), GetNodeNum(DSS, CktElem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0,
+                [AnsiUpperCase(FromBus), GetNodeNum(DSS, CktElem.NodeRef^[k]), S.re / 1000.0, S.im / 1000.0,
                 Cabs(S) / 1000.0, PowerFactor(S)]));
         end;
         FSWriteln(F, Format(' TERMINAL TOTAL   %10.5g +j %10.5g    %10.5g    %8.4f',
@@ -1495,7 +1472,6 @@ begin
         if Assigned(C_buffer) then
             Freemem(c_Buffer);
     end;
-
 end;
 
 
@@ -1523,7 +1499,6 @@ var
 
 
 begin
-
     SetMaxDeviceNameLength(DSS);
     c_Buffer := NIL;
 
@@ -1531,11 +1506,11 @@ begin
     BusReference := DSS.ActiveCircuit.BusList.Find(BusName);
     if BusReference = 0 then
     begin
-        DoSimpleMsg(DSS, 'Bus "' + UpperCase(BusName) + '" not found.', 219);
+        DoSimpleMsg(DSS, 'Bus "%s" not found.', [AnsiUpperCase(BusName)], 219);
         Exit;
     end;
     try
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
       {Allocate c_Buffer big enough for largest circuit element}
         Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize(DSS));
@@ -1543,7 +1518,6 @@ begin
         case ShowOptionCode of
             0:
             begin
-
      {Write Bus Voltage}
 
                 FSWriteln(F);
@@ -1567,7 +1541,6 @@ begin
                     if (p_Elem.Enabled) then
                         if CheckBusReference(p_Elem, BusReference, j) then
                         begin
-
                             NCond := p_elem.NConds;
                             Nterm := p_elem.Nterms;
                             p_elem.GetCurrents(c_Buffer);
@@ -1576,7 +1549,7 @@ begin
                             begin
                                 GetI0I1I2(I0, I1, I2, Cmax, p_elem.Nphases, (j - 1) * Ncond, c_Buffer);
                                 with p_elem do
-                                    WriteSeqCurrents(F, Paddots(FullName(p_Elem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
+                                    WriteSeqCurrents(F, Paddots(EncloseQuotes(p_Elem.FullName), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
 
                         end;
@@ -1599,7 +1572,7 @@ begin
                             begin
                                 GetI0I1I2(I0, I1, I2, Cmax, PDElem.Nphases, (j - 1) * Ncond, c_Buffer);
                                 with PDElem do
-                                    WriteSeqCurrents(F, Paddots(FullName(PDElem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
+                                    WriteSeqCurrents(F, Paddots(EncloseQuotes(PDElem.FullName), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
                         end;
                     PDElem := DSS.ActiveCircuit.PDElements.Next;
@@ -1620,7 +1593,7 @@ begin
                             begin
                                 GetI0I1I2(I0, I1, I2, Cmax, PCElem.Nphases, (j - 1) * Ncond, c_Buffer);
                                 with PCElem do
-                                    WriteSeqCurrents(F, Paddots(FullName(PCelem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
+                                    WriteSeqCurrents(F, Paddots(EncloseQuotes(PCelem.FullName), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
                         end;
                     PCElem := DSS.ActiveCircuit.PCElements.Next;
@@ -1680,7 +1653,6 @@ begin
 
             1:
             begin
-
      {Write Bus Voltage}
 
                 FSWriteln(F);
@@ -1873,19 +1845,17 @@ var
     sout: String;
 
 begin
-
     SetMaxBusNameLength(DSS);
 
     try
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
    { Set source voltage injection currents }
         with DSS.ActiveCircuit do
         begin
             with Solution do
             begin
-
      {All Phase Faults}
                 FSWriteln(F, 'FAULT STUDY REPORT');
                 FSWriteln(F);
@@ -1897,7 +1867,7 @@ begin
            {Bus Norton Equivalent Current, Isc has been previously computed}
                     with Buses^[iBus] do
                     begin
-                        WriteStr(sout, Pad(EncloseQuotes(UpperCase(BusList.NameOfIndex(iBus))) + ',', MaxBusNameLength + 2));
+                        WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))) + ',', MaxBusNameLength + 2));
                         FSWrite(F, sout);
                         for i := 1 to NumNodesThisBus do
                         begin
@@ -1911,7 +1881,7 @@ begin
                             
                             if Currmag > 0.0 then
                             begin
-                                WriteStr(sout, ', ', GetXR(Cdiv(VBus^[i], BusCurrent^[i])): 5: 1);
+                                WriteStr(sout, ', ', GetXR(VBus^[i] / BusCurrent^[i]): 5: 1);
                                 FSWrite(F, sout)
                             end
                             else
@@ -1940,13 +1910,13 @@ begin
 
                         for iphs := 1 to NumNodesThisBus do
                         begin
-                            IFault := Cdiv(VBus[iphs], Zsc.GetElement(iphs, iphs));
+                            IFault := VBus[iphs] / Zsc.GetElement(iphs, iphs);
 
-                            S := Format('%s %4u %12.0f ', [Pad(EncloseQuotes(UpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(iphs), Cabs(Ifault)]);
+                            S := Format('%s %4u %12.0f ', [Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(iphs), Cabs(Ifault)]);
                             FSWrite(F, S, '   ');
                             for i := 1 to NumNodesThisBus do
                             begin
-                                Vphs := Cabs(Csub(VBus[i], Cmul(Zsc.GetElement(i, iphs), IFault)));
+                                Vphs := Cabs(VBus[i] - (Zsc.GetElement(i, iphs) * IFault));
                                 if kVbase > 0.0 then
                                 begin
                                     VPhs := 0.001 * Vphs / kVBase;
@@ -1975,9 +1945,9 @@ begin
                 FSWriteln(F, 'Bus          Node-Node      Amps        Node 1     Node 2     Node 3    ...');
                 FSWriteln(F);
 
-   { Solve for Fault Injection Currents}
+                // Solve for Fault Injection Currents
                 for iBus := 1 to NumBuses do
-           {Bus Norton Equivalent Current, Isc has been previously computed}
+                    // Bus Norton Equivalent Current, Isc has been previously computed
                     with Buses^[iBus] do
                     begin
                         YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
@@ -1990,13 +1960,13 @@ begin
                             YFault.CopyFrom(Ysc);
                             YFault.AddElement(iphs, iphs, GFault);
                             YFault.AddElement(iphs + 1, iphs + 1, GFault);
-                            YFault.AddElemSym(iphs, iphs + 1, Cnegate(GFault));
+                            YFault.AddElemSym(iphs, iphs + 1, -GFault);
 
-                   { Solve for Injection Currents}
+                            // Solve for Injection Currents
                             YFault.Invert;
-                            YFault.MvMult(VFault, BusCurrent);  {Gets voltage appearing at fault}
+                            YFault.MvMult(VFault, BusCurrent); // Gets voltage appearing at fault
 
-                            WriteStr(sout, Pad(EncloseQuotes(UpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(Iphs): 4, GetNum(Iphs + 1): 4, Cabs(Cmul(Csub(VFault^[iphs], VFault^[iphs + 1]), GFault)): 12: 0, '   ');
+                            WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(Iphs): 4, GetNum(Iphs + 1): 4, Cabs((VFault^[iphs] - VFault^[iphs + 1]) * GFault): 12: 0, '   ');
                             FSWrite(F, sout);
                             for i := 1 to NumNodesThisBus do
                             begin
@@ -2015,16 +1985,16 @@ begin
                             end;
                             FSWriteln(F);
 
-                        end; {For iphase}
-             {Now, Stuff it in the Css Array where it belongs}
+                        end; // For iphase
 
+                        // Now, Stuff it in the Css Array where it belongs
                         Freemem(VFault);
                         YFault.Free;
 
-                    end;  {With bus}
+                    end;  //With bus
 
-            end; {With Solution}
-        end; {With ActiveCircuit}
+            end; // With Solution
+        end; // With ActiveCircuit
 
     finally
 
@@ -2041,10 +2011,10 @@ var
 begin
     Nterm := pElem.Nterms;
     BusName := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
-    FSWrite(F, Pad(FullName(PElem), MaxDeviceNameLength + 2), ' ');
+    FSWrite(F, Pad(EncloseQuotes(PElem.FullName), MaxDeviceNameLength + 2), ' ');
     for j := 1 to NTerm do
     begin
-        FSWrite(F, UpperCase(Busname), ' ');
+        FSWrite(F, AnsiUpperCase(Busname), ' ');
         BusName := Pad(StripExtension(pElem.Nextbus), MaxBusNameLength);
     end;
     FSWriteln(F);
@@ -2068,18 +2038,18 @@ begin
 
     try
         try
-            F := TFileStream.Create(FileNm, fmCreate);
+            F := TBufferedFileStream.Create(FileNm, fmCreate);
         except
             On E: Exception do
-                DoSimpleMsg(DSS, 'Error Trying to open element file "' + FileNm + '" file:' + E.message, 219000);
+                DoSimpleMsg(DSS, 'Error trying to open element file "%s" file: %s', [FileNm, E.message], 219000);
         end;
 
         try
             DisabledFileNm := StripExtension(FileNm) + '_Disabled.txt';
-            FDisabled := TFileStream.Create(DisabledFileNm, fmCreate);
+            FDisabled := TBufferedFileStream.Create(DisabledFileNm, fmCreate);
         except
             On E: Exception do
-                DoSimpleMsg(DSS, 'Error Trying to open disabled element file "' + DisabledFilenm + '" file:' + E.message, 219000);
+                DoSimpleMsg(DSS, 'Error trying to open disabled element file "%s" file: %s', [DisabledFilenm, E.message], 219000);
         end;
 
         if Length(ClassName) > 0 then
@@ -2097,12 +2067,12 @@ begin
                     if (DSS.ActiveDSSClass.DSSClassType and BASECLASSMASK) > 0 then
                     begin
                         if TDSSCktElement(DSS.ActiveDSSObject).Enabled then
-                            FSWriteln(F, UpperCase(DSS.ActiveDssObject.Name))
+                            FSWriteln(F, AnsiUpperCase(DSS.ActiveDssObject.Name))
                         else
-                            FSWriteln(Fdisabled, UpperCase(DSS.ActiveDssObject.Name));
+                            FSWriteln(Fdisabled, AnsiUpperCase(DSS.ActiveDssObject.Name));
                     end
                     else
-                        FSWriteln(F, UpperCase(DSS.ActiveDssObject.Name));   // non cktelements
+                        FSWriteln(F, AnsiUpperCase(DSS.ActiveDssObject.Name));   // non cktelements
                 end;
             end;
         end
@@ -2183,7 +2153,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-
 end;
 
 
@@ -2198,11 +2167,10 @@ var
     pBus: TDSSBus;
 
 begin
-
     try
         SetMaxBusNameLength(DSS);
         Inc(MaxBusNameLength, 2);
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F);
         FSWriteln(F, 'BUSES AND NODES IN ACTIVE CIRCUIT: ' + DSS.ActiveCircuit.name);
@@ -2247,7 +2215,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-
 end;
 
 
@@ -2263,9 +2230,8 @@ var
     MeterClass: TEnergyMeter;
 
 begin
-
     try
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F);
         FSWriteln(F, 'ENERGY METER VALUES');
@@ -2319,7 +2285,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -2334,9 +2299,8 @@ var
     GeneratorClass: TGenerator;
 
 begin
-
     try
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F);
         FSWriteln(F, 'GENERATOR ENERGY METER VALUES');
@@ -2372,7 +2336,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-
 end;
 
 function TapPosition(const Transformer: TTransfObj; iWind: Integer): Integer;
@@ -2382,7 +2345,6 @@ function TapPosition(const Transformer: TTransfObj; iWind: Integer): Integer;
 begin
     with Transformer do
         Result := Round((PresentTap[iWind] - (Maxtap[iWind] + Mintap[iWind]) / 2.0) / TapIncrement[iWind]);
-
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -2395,9 +2357,8 @@ var
 
 
 begin
-
     try
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F);
         FSWriteln(F, 'CONTROLLED TRANSFORMER TAP SETTINGS');
@@ -2424,7 +2385,6 @@ begin
         FireOffEditor(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
-
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -2441,7 +2401,6 @@ var
     Param: String;
 
 begin
-
     try
         FileNm := StripExtension(FileNm);
         {ParamName :=} DSS.Parser.NextParam;
@@ -2449,7 +2408,7 @@ begin
 
         FileNm := FileNm + '_' + Param + '.txt';
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         DSS.GlobalResult := FileNm;
 
@@ -2459,7 +2418,7 @@ begin
         begin
             pMtr := pMtrClass.Find(Param);
             if pMtr = NIL then
-                DoSimpleMsg(DSS, 'EnergyMeter "' + Param + '" not found.', 220)
+                DoSimpleMsg(DSS, 'EnergyMeter "%s" not found.', [Param], 220)
             else
             if pMtr.BranchList <> NIL then
             begin
@@ -2477,10 +2436,10 @@ begin
                         if IsParallel then
                             FSWrite(F, '(PARALLEL:' + TDSSCktElement(LoopLineObj).Name + ')');
                         if IsLoopedHere then
-                            FSWrite(F, '(LOOP:' + TDSSCktElement(LoopLineObj).ParentClass.Name + '.' + TDSSCktElement(LoopLineObj).Name + ')');
+                            FSWrite(F, '(LOOP:' + TDSSCktElement(LoopLineObj).FullName + ')');
                     end;
                     if Assigned(PDElem.SensorObj) then
-                        FSWrite(F, Format(' (Sensor: %s.%s) ', [PDElem.SensorObj.ParentClass.Name, PDElem.SensorObj.Name]))
+                        FSWrite(F, Format(' (Sensor: %s) ', [PDElem.SensorObj.FullName]))
                     else
                         FSWrite(F, ' (Sensor: NIL)');
                     FSWriteln(F);
@@ -2491,7 +2450,7 @@ begin
                             FSWrite(F, TABCHAR);
                         FSWrite(F, LoadElem.ParentClass.Name, '.', LoadElem.Name);
                         if Assigned(LoadElem.SensorObj) then
-                            FSWrite(F, Format(' (Sensor: %s.%s) ', [LoadElem.SensorObj.ParentClass.Name, LoadElem.SensorObj.Name]))
+                            FSWrite(F, Format(' (Sensor: %s) ', [LoadElem.SensorObj.FullName]))
                         else
                             FSWrite(F, ' (Sensor: NIL)');
                         FSWriteln(F);
@@ -2502,13 +2461,13 @@ begin
             end;
         end
         else
-            DoSimpleMsg(DSS, 'Meter Name Not Specified.' + CRLF + DSS.Parser.CmdString, 221);
+            DoSimpleMsg(DSS, 'Meter Name Not Specified. %s', [CRLF + DSS.Parser.CmdString], 221);
 
     finally
 
         FreeAndNil(F);
 
-        {ParamName :=} DSS.Parser.NextParam;
+        DSS.Parser.NextParam;
         Param := DSS.Parser.strvalue;
 
         case length(Param) of
@@ -2520,7 +2479,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
      //
     end;
-
 end;
 
 procedure ShowOverloads(DSS: TDSSContext; FileNm: String);
@@ -2535,13 +2493,12 @@ var
     Cmag, Cmax: Double;
 
 begin
-
     c_Buffer := NIL;
     SetMaxDeviceNameLength(DSS);
 
     try
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
       {Allocate c_Buffer big enough for largest circuit element}
         Getmem(c_buffer, sizeof(c_Buffer^[1]) * GetMaxCktElementSize(DSS));
@@ -2596,7 +2553,7 @@ begin
                         if (PdElem.Normamps > 0.0) or (PdElem.Emergamps > 0.0) then
                             if (CMax > PDElem.NormAmps) or (Cmax > pdelem.EmergAmps) then
                             begin
-                                FSWrite(F, Pad(FullName(PDelem), MaxDeviceNameLength + 2));
+                                FSWrite(F, Pad(EncloseQuotes(PDelem.FullName), MaxDeviceNameLength + 2));
                                 FSWrite(F, Format('%3d%8.1f', [j, I1]));
                                 if PDElem.Normamps > 0.0 then
                                     FSWrite(F, Format('%8.2f', [Cmax - PDElem.Normamps]))
@@ -2635,7 +2592,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-
 end;
 
 { - -- - - - - ------------------------------}
@@ -2648,10 +2604,9 @@ var
     DoIt: Boolean;
 
 begin
-
     try
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F);
         FSWriteln(F, 'UNSERVED  LOAD  REPORT');
@@ -2696,7 +2651,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-
 end;
 
 
@@ -2716,12 +2670,11 @@ var
 
     sout: String;
 begin
-
     setMaxDeviceNameLength(DSS);
 
     try
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
      {Sequence Currents}
         FSWriteln(F);
@@ -2746,18 +2699,18 @@ begin
             then
             begin
         //----PDelem.ActiveTerminalIdx := 1;  // activate 1st terminal for Power call
-                kLosses := CmulReal(PDelem.Losses, 0.001);   // kW Losses in element
-                Caccum(TotalLosses, kLosses);
-                TermPower := CmulReal(PDelem.power[1], 0.001);     // Terminal 1 power
+                kLosses := PDelem.Losses * 0.001;   // kW Losses in element
+                TotalLosses += kLosses;
+                TermPower := PDelem.power[1] * 0.001;     // Terminal 1 power
 
                 if (CLASSMASK and PDElem.DSSObjType) = XFMR_ELEMENT then
-                    Caccum(TransLosses, kLosses);
+                    TransLosses += kLosses;
                 if (CLASSMASK and PDElem.DSSObjType) = AUTOTRANS_ELEMENT then
-                    Caccum(TransLosses, kLosses);
+                    TransLosses += kLosses;
                 if (CLASSMASK and PDElem.DSSObjType) = LINE_ELEMENT then
-                    Caccum(LineLosses, kLosses);
+                    LineLosses += kLosses;
 
-                FSWrite(F, Pad(FullName(PDelem), MaxDeviceNameLength + 2));
+                FSWrite(F, Pad(EncloseQuotes(PDelem.FullName), MaxDeviceNameLength + 2));
                 FSWrite(F, Format('%10.5f, ', [kLosses.re]));
                 if (TermPower.re <> 0.0) and (kLosses.re > 0.0009) then
                     FSWrite(F, Format('%8.2f', [(kLosses.re / Abs(TermPower.re) * 100.0)]))
@@ -2788,11 +2741,11 @@ begin
         begin
             if PcElem.Enabled then
             begin
-                Caccum(LoadPower, PCelem.Power[1]);
+                LoadPower += PCelem.Power[1];
             end;
             PCelem := DSS.ActiveCircuit.Loads.Next;
         end;
-        LoadPower := CmulReal(LoadPower, 0.001);
+        LoadPower := LoadPower * 0.001;
 
         FSWriteln(F);
         WriteStr(sout, Pad('TOTAL LOAD POWER = ', 30), Abs(LoadPower.re): 10: 1, ' kW');
@@ -2812,7 +2765,6 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-
 end;
 
 procedure ShowVariables(DSS: TDSSContext; FileNm: String);
@@ -2824,10 +2776,9 @@ var
     i: Integer;
 
 begin
-
     try
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
      {Sequence Currents}
         FSWriteln(F);
@@ -2860,15 +2811,11 @@ begin
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
-
 end;
 
 procedure ShowIsolated(DSS: TDSSContext; FileNm: String);
-
-{Show isolated buses/branches in present circuit}
-
+// Show isolated buses/branches in present circuit
 var
-
     Branch_List,
     SubArea: TCktTree;      // Pointers to all circuit elements
 
@@ -2878,21 +2825,19 @@ var
     i, j: Integer;
     sout: String;
 begin
-
      // Make sure bus list is built
     if DSS.ActiveCircuit.BusNameRedefined then
         DSS.ActiveCircuit.ReProcessBusDefs;
 
     with DSS.ActiveCircuit do
     begin
-
-         {Initialize all Circuit Elements to not checked}
+        // Initialize all Circuit Elements to not checked
         TestElement := CktElements.First;
         while (TestElement <> NIL) do
         begin
             with TestElement do
             begin
-                Checked := FALSE;
+                Exclude(Flags, Flg.Checked);
                 for i := 1 to Nterms do
                     TerminalsChecked[i - 1] := FALSE;
             end;
@@ -2909,10 +2854,9 @@ begin
     TestElement := DSS.ActiveCircuit.Sources.First;
     Branch_List := GetIsolatedSubArea(DSS.ActiveCircuit, TestElement);
 
-    {Show Report of Elements connected and not connected}
+    // Show Report of Elements connected and not connected
     try
-
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F);
         FSWriteln(F, 'ISOLATED CIRCUIT ELEMENT REPORT');
@@ -2928,7 +2872,6 @@ begin
                     FSWriteln(F, EncloseQuotes(BusList.NameOfIndex(j)));
         end;
 
-
         FSWriteln(F);
         FSWriteln(F, '***********  THE FOLLOWING SUB NETWORKS ARE ISOLATED ************');
         FSWriteln(F);
@@ -2940,10 +2883,9 @@ begin
             while TestElement <> NIL do
             begin
                 if TestElement.Enabled then
-                    if not TestElement.Checked then
+                    if not (Flg.Checked in TestElement.Flags) then
                         if (TestElement.DSSObjType and BASECLASSMASK) = PD_ELEMENT then
                         begin
-
                             SubArea := GetIsolatedSubArea(DSS.ActiveCircuit, TestElement);
                             FSWriteln(F, '*** START SUBAREA ***');
                             TestBranch := SubArea.First;
@@ -2972,22 +2914,21 @@ begin
 
         with DSS.ActiveCircuit do
         begin
-
-       {Mark all controls, energy meters and monitors as checked so they don't show up}
+            // Mark all controls, energy meters and monitors as checked so they don't show up
 
             for i := 1 to DSSControls.Count do
-                TDSSCktElement(DSSControls.Get(i)).Checked := TRUE;
+                Include(TDSSCktElement(DSSControls.Get(i)).Flags, Flg.Checked);
             for i := 1 to MeterElements.Count do
-                TDSSCktElement(MeterElements.Get(i)).Checked := TRUE;
+                Include(TDSSCktElement(MeterElements.Get(i)).Flags, Flg.Checked);
 
             TestElement := CktElements.First;
 
             while TestElement <> NIL do
             begin
                 if TestElement.Enabled then
-                    if not TestElement.Checked then
+                    if not (Flg.Checked in TestElement.Flags) then
                     begin
-                        FSWrite(F, '"' + TestElement.ParentClass.Name + '.' + TestElement.Name + '"');
+                        FSWrite(F, '"' + TestElement.FullName + '"');
                         FSWrite(F, '  Buses:');
                         for j := 1 to TestElement.nterms do
                             FSWrite(F, '  "', TestElement.GetBus(j), '"');
@@ -3036,7 +2977,6 @@ begin
         FireOffEditor(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
-
 end;
 
 procedure ShowRatings(DSS: TDSSContext; FileNm: String);
@@ -3048,7 +2988,7 @@ var
 begin
     try
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F, 'Power Delivery Elements Normal and Emergency (max) Ratings');
         FSWriteln(F);
@@ -3056,8 +2996,7 @@ begin
         pdElem := DSS.ActiveCircuit.PDElements.First;
         while pdElem <> NIL do
         begin
-
-            FSWrite(F, '"' + pdElem.ParentClass.Name + '.' + pdElem.Name + '", normamps=');
+            FSWrite(F, '"' + pdElem.FullName + '", normamps=');
             FSWrite(F, Format('%-.4g,  %-.4g  !Amps', [pdElem.Normamps, pdElem.EmergAmps]));
             FSWriteln(F);
 
@@ -3069,22 +3008,18 @@ begin
         FireOffEditor(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
-
 end;
 
 procedure ShowLoops(DSS: TDSSContext; FileNm: String);
-{Show loops and paralleled branches in Meter zones}
-
+// Show loops and paralleled branches in Meter zones
 var
     F: TFileStream = nil;
     pdElem: TPDElement;
     hMeter: Integer;
     pMtr: TEnergyMeterObj;
-
 begin
     try
-
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F, 'Loops and Paralleled Lines in all EnergyMeter Zones');
         FSWriteln(F);
@@ -3093,22 +3028,19 @@ begin
 
         while hMeter > 0 do
         begin
-
             pMtr := TEnergyMeterObj(DSS.ActiveDSSObject);
 
             if pMtr.BranchList <> NIL then
             begin
-
                 PDElem := pMtr.BranchList.First;
                 while PDElem <> NIL do
                 begin
-
                     with pMtr.BranchList.PresentBranch do
                     begin
                         if IsParallel then
-                            FSWriteln(F, ['(', pMtr.Name, ') ', PDElem.ParentClass.Name, '.', UpperCase(PDelem.Name), ': PARALLEL WITH ', TDSSCktElement(LoopLineObj).Parentclass.Name, '.', TDSSCktElement(LoopLineObj).Name]);
+                            FSWriteln(F, ['(', pMtr.Name, ') ', PDElem.ParentClass.Name, '.', AnsiUpperCase(PDelem.Name), ': PARALLEL WITH ', TDSSCktElement(LoopLineObj).Parentclass.Name, '.', TDSSCktElement(LoopLineObj).Name]);
                         if IsLoopedHere then
-                            FSWriteln(F, ['(', pMtr.Name, ') ', PDElem.ParentClass.Name, '.', UpperCase(PDelem.Name), ': LOOPED TO     ', TDSSCktElement(LoopLineObj).parentclass.Name, '.', TDSSCktElement(LoopLineObj).Name]);
+                            FSWriteln(F, ['(', pMtr.Name, ') ', PDElem.ParentClass.Name, '.', AnsiUpperCase(PDelem.Name), ': LOOPED TO     ', TDSSCktElement(LoopLineObj).parentclass.Name, '.', TDSSCktElement(LoopLineObj).Name]);
                     end;
                     PDElem := pMtr.BranchList.GoForward;
                 end;
@@ -3150,14 +3082,14 @@ var
     nLoops, nParallel, nLevels, nIsolated, nSwitches: Integer;
 begin
     try
-        FileNm := FileRoot + 'TopoSumm.Txt';
-        TreeNm := FileRoot + 'TopoTree.Txt';
+        FileNm := FileRoot + 'TopoSumm.txt';
+        TreeNm := FileRoot + 'TopoTree.txt';
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
         FSWriteln(F, 'Topology analysis for switch control algorithms');
         FSWriteln(F);
 
-        Ftree := TFileStream.Create(TreeNm, fmCreate);
+        Ftree := TBufferedFileStream.Create(TreeNm, fmCreate);
         FSWriteln(Ftree, 'Branches and Loads in Circuit ' + DSS.ActiveCircuit.Name);
         FSWriteln(Ftree);
 
@@ -3182,29 +3114,27 @@ begin
                     if IsParallel then
                     begin
                         Inc(nParallel);
-                        FSWrite(Ftree, '(PARALLEL:' + TDSSCktElement(LoopLineObj).Name + ')');
+                        FSWrite(Ftree, '(PARALLEL:' + TDSSCktElement(LoopLineObj).FullName + ')');
                     end;
                     if IsLoopedHere then
                     begin
                         Inc(nLoops);
-                        FSWrite(Ftree, '(LOOP:' + TDSSCktElement(LoopLineObj).ParentClass.Name + '.' + TDSSCktElement(LoopLineObj).Name + ')');
+                        FSWrite(Ftree, '(LOOP:' + TDSSCktElement(LoopLineObj).FullName + ')');
                     end;
-                    if PDElem.HasSensorObj then
-                        FSWrite(Ftree, Format(' (Sensor: %s.%s) ',
-                            [PDElem.SensorObj.ParentClass.Name, PDElem.SensorObj.Name]));
-                    if PDElem.HasControl then
+                    if Flg.HasSensorObj in PDElem.Flags then
+                        FSWrite(Ftree, Format(' (Sensor: %s) ', [PDElem.SensorObj.FullName]));
+                    if Flg.HasControl in PDElem.Flags then
                     begin
                         pControlElem := PDElem.ControlElementList.First;
                         while pControlElem <> NIL do
                         begin                                // accommodate multiple controls on same branch
-                            FSWrite(Ftree, Format(' (Control: %s.%s) ',
-                                [pControlElem.ParentClass.Name, pControlElem.Name]));
+                            FSWrite(Ftree, Format(' (Control: %s) ', [pControlElem.FullName]));
                             if ((pControlElem.DSSObjType and CLASSMASK) = SWT_CONTROL) then
                                 Inc(nSwitches);
                             pControlElem := PDElem.ControlElementList.Next;
                         end;
                     end;
-                    if PDElem.HasEnergyMeter then
+                    if Flg.HasEnergyMeter in PDElem.Flags then
                         FSWrite(Ftree, Format(' (Meter: %s) ', [PDElem.MeterObj.Name]));
                 end;
                 FSWriteln(Ftree);
@@ -3214,23 +3144,20 @@ begin
                 begin
                     TopoLevelTabs(Ftree, topo.Level + 1);
                     FSWrite(Ftree, LoadElem.ParentClass.Name, '.', LoadElem.Name);
-                    if LoadElem.HasSensorObj then
-                        FSWrite(Ftree, Format(' (Sensor: %s.%s) ',
-                            [LoadElem.SensorObj.ParentClass.Name, LoadElem.SensorObj.Name]));
-                    if LoadElem.HasControl then
+                    if Flg.HasSensorObj in LoadElem.Flags then
+                        FSWrite(Ftree, Format(' (Sensor: %s) ',[LoadElem.SensorObj.FullName]));
+                    if Flg.HasControl in LoadElem.Flags then
                     begin
-
                         pControlElem := LoadElem.ControlElementList.First;
                         while pControlElem <> NIL do
                         begin                                // accommodate multiple controls on same branch
-                            FSWrite(Ftree, Format(' (Control: %s.%s) ',
-                                [pControlElem.ParentClass.Name, pControlElem.Name]));
+                            FSWrite(Ftree, Format(' (Control: %s) ', [pControlElem.FullName]));
                             if ((pControlElem.DSSObjType and CLASSMASK) = SWT_CONTROL) then
                                 Inc(nSwitches);
                             pControlElem := LoadElem.ControlElementList.Next;
                         end;
                     end;
-                    if LoadElem.HasEnergyMeter then
+                    if Flg.HasEnergyMeter in LoadElem.Flags then
                         FSWrite(Ftree, Format(' (Meter: %s) ', [LoadElem.MeterObj.Name]));
                     FSWriteln(Ftree);
                     LoadElem := topo.NextObject
@@ -3243,26 +3170,24 @@ begin
         pdElem := DSS.ActiveCircuit.PDElements.First;
         while assigned(pdElem) do
         begin
-            if pdElem.IsIsolated then
+            if Flg.IsIsolated in pdElem.Flags then
             begin
-                FSWrite(Ftree, Format('Isolated: %s.%s', [PDElem.ParentClass.Name, PDElem.Name]));
-                if PDElem.HasSensorObj then
-                    FSWrite(Ftree, Format(' (Sensor: %s.%s) ',
-                        [PDElem.SensorObj.ParentClass.Name, PDElem.SensorObj.Name]));
-                if PDElem.HasControl then
+                FSWrite(Ftree, Format('Isolated: %s', [PDElem.FullName]));
+                if Flg.HasSensorObj in PDElem.Flags then
+                    FSWrite(Ftree, Format(' (Sensor: %s) ', [PDElem.SensorObj.FullName]));
+                if Flg.HasControl in PDElem.Flags then
                 begin
                     pControlElem := PDElem.ControlElementList.First;
                     while pControlElem <> NIL do
                     begin                                // accommodate multiple controls on same branch
-                        FSWrite(Ftree, Format(' (Control: %s.%s) ',
-                            [pControlElem.ParentClass.Name, pControlElem.Name]));
+                        FSWrite(Ftree, Format(' (Control: %s) ', [pControlElem.FullName]));
                         if ((pControlElem.DSSObjType and CLASSMASK) = SWT_CONTROL) then
                             Inc(nSwitches);
                         pControlElem := PDElem.ControlElementList.Next;
                     end;
 
                 end;
-                if PDElem.HasEnergyMeter then
+                if Flg.HasEnergyMeter in PDElem.Flags then
                     FSWrite(Ftree, Format(' (Meter: %s) ', [PDElem.MeterObj.Name]));
                 FSWriteln(Ftree);
                 Inc(nIsolated);
@@ -3303,25 +3228,22 @@ var
     XCM: Double;
     CCM: Double;  // Common mode capacitance
     LineCodesFileNm: String;
-
 begin
-
     try
-
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F, 'LINE CONSTANTS');
         FSWriteln(F, Format('Frequency = %.6g Hz, Earth resistivity = %.6g ohm-m', [Freq, Rho]));
-        FSWriteln(F, 'Earth Model = ', GetEarthModel(DSS.DefaultEarthModel));
+        FSWriteln(F, 'Earth Model = ', DSS.EarthModelEnum.OrdinalToString(DSS.DefaultEarthModel));
         FSWriteln(F);
 
         // DSS C-API change: saves the file in the same folder as FileNm
-        LineCodesFileNm := ExtractFilePath(FileNm) + 'LineConstantsCode.DSS';
-        F2 := TFileStream.Create(LineCodesFileNm, fmCreate);        
+        LineCodesFileNm := ExtractFilePath(FileNm) + 'LineConstantsCode.dss';
+        F2 := TBufferedFileStream.Create(LineCodesFileNm, fmCreate);        
 
         FSWriteln(F2, '!--- OpenDSS Linecodes file generated from Show LINECONSTANTS command');
         FSWriteln(F2, Format('!--- Frequency = %.6g Hz, Earth resistivity = %.6g ohm-m', [Freq, Rho]));
-        FSWriteln(F2, '!--- Earth Model = ', GetEarthModel(DSS.DefaultEarthModel));
+        FSWriteln(F2, '!--- Earth Model = ', DSS.EarthModelEnum.OrdinalToString(DSS.DefaultEarthModel));
 
         Z := NIL;
         YC := NIL;
@@ -3342,8 +3264,7 @@ begin
                 YC := pelem.YCmatrix[freq, 1.0, Units];
             except
                 on E: Exception do
-                    DoSimpleMsg(DSS, 'Error computing line constants for LineGeometry.' + pelem.Name +
-                        '; Error message: ' + E.Message, 9934);
+                    DoSimpleMsg(DSS, 'Error computing line constants for %s; Error message: %s', [pelem.FullName, E.Message], 9934);
             end;
 
             FSWriteln(F);
@@ -3406,7 +3327,7 @@ begin
                 FSWriteln(F);
             end;
 
-            {Write DSS LineCode record}
+            //Write DSS LineCode record
             //Writeln(F);
             //Writeln(F,'-------------------------------------------------------------------');
             //Writeln(F,'-------------------DSS Linecode Definition-------------------------');
@@ -3463,13 +3384,13 @@ begin
                 FSWriteln(F, '-------------------------------------------------------------------');
                 FSWriteln(F);
                 for i := 1 to 3 do
-                    Caccum(Zs, Z.GetElement(i, i));
+                    Zs += Z.GetElement(i, i);
                 for i := 1 to 3 do
                     for j := 1 to i - 1 do
-                        Caccum(Zm, Z.GetElement(i, j));
+                        Zm += Z.GetElement(i, j);
 
-                Z1 := CDivReal(Csub(Zs, Zm), 3.0);
-                Z0 := CDivReal(Cadd(CMulReal(Zm, 2.0), Zs), 3.0);
+                Z1 := (Zs - Zm) / 3;
+                Z0 := (Zm * 2 + Zs) / 3;
                 w := freq * twopi / 1000.0;
                 FSWriteln(F);
                 FSWriteln(F, 'Z1, ohms per ', LineUnitsStr(Units), Format(' = %.6g + j %.6g (L1 = %.6g mH) ', [Z1.re, Z1.im, Z1.im / w]));
@@ -3481,7 +3402,7 @@ begin
                 YCM := CZERO;
                 for i := 1 to 3 do    // Add up all elements of Z inverse
                     for j := 1 to 3 do
-                        Caccum(YCM, Z.GetElement(i, j));
+                        YCM += Z.GetElement(i, j);
                 XCM := Cinv(YCM).im;
 
                 w := freq * twopi / 1.0E9;
@@ -3499,7 +3420,7 @@ begin
                 YCM := CZERO;
                 for i := 1 to 3 do    // Add up all elements of Z inverse
                     for j := 1 to 3 do
-                        Caccum(YCM, YC.GetElement(i, j));
+                        YCM += YC.GetElement(i, j);
                 CCM := YCM.im / w;
 
                 FSWriteln(F, 'C1, nF per ', LineUnitsStr(Units), Format(' = %.6g', [C1]));
@@ -3540,63 +3461,46 @@ var
     i, j: Integer;
 
 begin
+    if (DSS.ActiveCircuit = NIL) or (DSS.ActiveCircuit.ActiveCktElement = NIL) then
+        Exit;
+    with DSS.ActiveCircuit, ActiveCktElement do
+    try
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
+        FSWriteln(F, 'Yprim of active circuit element: ', FullName);
+        FSWriteln(F);
 
-    if DSS.ActiveCircuit <> NIL then
-        with DSS.ActiveCircuit do
+        cValues := GetYprimValues(ALL_YPRIM);
+        if cValues <> NIL then
         begin
-            if ActiveCktElement <> NIL then
+            FSWriteln(F);
+            FSWriteln(F, 'G matrix (conductance), S');
+            FSWriteln(F);
+
+            for i := 1 to Yorder do
             begin
-                try
-                    F := TFileStream.Create(FileNm, fmCreate);
-
-                    with ActiveCktElement do
-                    begin
-
-                        FSWriteln(F, 'Yprim of active circuit element: ', ParentClass.Name + '.' + Name);
-                        FSWriteln(F);
-
-                        cValues := GetYprimValues(ALL_YPRIM);
-                        if cValues <> NIL then
-                        begin
-
-                            FSWriteln(F);
-                            FSWriteln(F, 'G matrix (conductance), S');
-                            FSWriteln(F);
-
-                            for i := 1 to Yorder do
-                            begin
-                                for j := 1 to i do
-                                    FSWrite(F, Format('%13.10g ', [cValues^[i + (j - 1) * Yorder].re]));
-                                FSWriteln(F);
-                            end;
-
-                            FSWriteln(F);
-                            FSWriteln(F, 'jB matrix (Susceptance), S');
-                            FSWriteln(F);
-
-                            for i := 1 to Yorder do
-                            begin
-                                for j := 1 to i do
-                                    FSWrite(F, Format('%13.10g ', [cValues^[i + (j - 1) * Yorder].im]));
-                                FSWriteln(F);
-                            end;
-                        end
-                        else
-                            FSWriteln(F, 'Yprim matrix is Nil');
-
-                    end;
-
-                finally
-
-                    FreeAndNil(F);
-                    FireOffEditor(DSS, FileNm);
-                    DSS.ParserVars.Add('@lastshowfile', FileNm);
-                end;
-
-
+                for j := 1 to i do
+                    FSWrite(F, Format('%13.10g ', [cValues^[i + (j - 1) * Yorder].re]));
+                FSWriteln(F);
             end;
-        end;
 
+            FSWriteln(F);
+            FSWriteln(F, 'jB matrix (Susceptance), S');
+            FSWriteln(F);
+
+            for i := 1 to Yorder do
+            begin
+                for j := 1 to i do
+                    FSWrite(F, Format('%13.10g ', [cValues^[i + (j - 1) * Yorder].im]));
+                FSWriteln(F);
+            end;
+        end
+        else
+            FSWriteln(F, 'Yprim matrix is Nil');
+    finally
+        FreeAndNil(F);
+        FireOffEditor(DSS, FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
+    end;
 end;
 
 // shows how to retrieve the System Y in Triplet form
@@ -3612,13 +3516,12 @@ var
     cVals: array of Complex;
 
 begin
-
     if DSS.ActiveCircuit = NIL then
         Exit;
     hY := DSS.ActiveCircuit.Solution.hY;
     if hY <= 0 then
     begin
-        DoSimpleMsg(DSS, 'Y Matrix not Built.', 222);
+        DoSimpleMsg(DSS, _('Y Matrix not Built.'), 222);
         Exit;
     end;
   // print lower triangle of G and B using new functions
@@ -3633,7 +3536,7 @@ begin
         SetLength(cVals, nNZ);
         GetTripletMatrix(hY, nNZ, @RowIdx[0], @ColIdx[0], @cVals[0]);
 
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         FSWriteln(F, 'System Y Matrix (Lower Triangle by Columns)');
         FSWriteln(F);
@@ -3658,7 +3561,6 @@ begin
         FireOffEditor(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
-
 end;
 
 procedure ShowNodeCurrentSum(DSS: TDSSContext; FileNm: String);
@@ -3682,7 +3584,7 @@ var
 begin
     MaxNodeCurrent := NIL;
     try
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         with DSS.ActiveCircuit, DSS.ActiveCircuit.solution do
         begin
@@ -3711,7 +3613,7 @@ begin
                                     Inc(k);
                                     Ctemp := Iterminal^[k];
                                     nRef := NodeRef^[k];
-                                    Caccum(Currents^[nRef], Ctemp);  // Noderef=0 is OK
+                                    Currents^[nRef] += Ctemp;  // Noderef=0 is OK
                                     if Cabs(Ctemp) > MaxNodeCurrent^[nRef] then
                                         MaxNodeCurrent^[nRef] := Cabs(Ctemp);
                                 end;
@@ -3724,7 +3626,7 @@ begin
                             begin
                                 Ctemp := Iterminal^[i];
                                 nRef := NodeRef^[i];
-                                Caccum(Currents^[nRef], Ctemp);  // Noderef=0 is OK
+                                Currents^[nRef] += Ctemp;  // Noderef=0 is OK
                                 if Cabs(Ctemp) > MaxNodeCurrent^[nRef] then
                                     MaxNodeCurrent^[nRef] := Cabs(Ctemp);
                             end;
@@ -3794,9 +3696,8 @@ var
     BusName: String;
 
 begin
-
     try
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         {Check Loads}
         if DSS.ActiveCircuit.Loads.Count > 0 then
@@ -3819,9 +3720,9 @@ begin
                 begin
                     if abs(pLoad.kVLoadBase - pBus.kVBase) > 0.10 * pBus.kVBase then
                     begin
-                        FSWriteln(F, Format('!!!!! Voltage Base Mismatch, Load.%s.kV=%.6g, Bus %s LN kvBase = %.6g', [pLoad.Name, pLoad.kVLoadBase, pLoad.GetBus(1), pBus.kVBase]));
+                        FSWriteln(F, Format('!!!!! Voltage Base Mismatch, %s.kV=%.6g, Bus %s LN kvBase = %.6g', [pLoad.FullName, pLoad.kVLoadBase, pLoad.GetBus(1), pBus.kVBase]));
                         FSWriteln(F, Format('!setkvbase %s kVLN=%.6g', [Busname, pLoad.kVLoadBase]));
-                        FSWriteln(F, Format('!Load.%s.kV=%.6g', [pLoad.Name, pBus.kVBase]));
+                        FSWriteln(F, Format('!%s.kV=%.6g', [pLoad.FullName, pBus.kVBase]));
                     end;
                 end
                 else
@@ -3829,9 +3730,9 @@ begin
                     BuskV := pBus.kVBase * SQRT3;
                     if abs(pLoad.kVLoadBase - BuskV) > 0.10 * BuskV then
                     begin
-                        FSWriteln(F, Format('!!!!! Voltage Base Mismatch, Load.%s.kV=%.6g, Bus %s kvBase = %.6g', [pLoad.Name, pLoad.kVLoadBase, pLoad.GetBus(1), BuskV]));
+                        FSWriteln(F, Format('!!!!! Voltage Base Mismatch, %s.kV=%.6g, Bus %s kvBase = %.6g', [pLoad.FullName, pLoad.kVLoadBase, pLoad.GetBus(1), BuskV]));
                         FSWriteln(F, Format('!setkvbase %s kVLL=%.6g', [Busname, pLoad.kVLoadBase]));
-                        FSWriteln(F, Format('!Load.%s.kV=%.6g', [pLoad.Name, BuskV]));
+                        FSWriteln(F, Format('!%s.kV=%.6g', [pLoad.FullName, BuskV]));
                     end;
                 end;
             end;
@@ -3861,9 +3762,9 @@ begin
                 begin
                     if abs(pGen.Genvars.kVGeneratorBase - pBus.kVBase) > 0.10 * pBus.kVBase then
                     begin
-                        FSWriteln(F, Format('!!! Voltage Base Mismatch, Generator.%s.kV=%.6g, Bus %s LN kvBase = %.6g', [pGen.Name, pGen.Genvars.kVGeneratorBase, pGen.GetBus(1), pBus.kVBase]));
+                        FSWriteln(F, Format('!!! Voltage Base Mismatch, %s.kV=%.6g, Bus %s LN kvBase = %.6g', [pGen.FullName, pGen.Genvars.kVGeneratorBase, pGen.GetBus(1), pBus.kVBase]));
                         FSWriteln(F, Format('!setkvbase %s kVLN=%.6g', [Busname, pGen.Genvars.kVGeneratorBase]));
-                        FSWriteln(F, Format('!Generator.%s.kV=%.6g', [pGen.Name, pBus.kVBase]));
+                        FSWriteln(F, Format('!%s.kV=%.6g', [pGen.FullName, pBus.kVBase]));
                     end;
                 end
                 else
@@ -3871,9 +3772,9 @@ begin
                     BuskV := pBus.kVBase * SQRT3;
                     if abs(pGen.Genvars.kVGeneratorBase - BuskV) > 0.10 * BuskV then
                     begin
-                        FSWriteln(F, Format('!!! Voltage Base Mismatch, Generator.%s.kV=%.6g, Bus %s kvBase = %.6g', [pGen.Name, pGen.Genvars.kVGeneratorBase, pGen.GetBus(1), BuskV]));
+                        FSWriteln(F, Format('!!! Voltage Base Mismatch, %s.kV=%.6g, Bus %s kvBase = %.6g', [pGen.FullName, pGen.Genvars.kVGeneratorBase, pGen.GetBus(1), BuskV]));
                         FSWriteln(F, Format('!setkvbase %s kVLL=%.6g', [Busname, pGen.Genvars.kVGeneratorBase]));
-                        FSWriteln(F, Format('!Generator.%s.kV=%.6g', [pGen.Name, BuskV]));
+                        FSWriteln(F, Format('!%s.kV=%.6g', [pGen.FullName, BuskV]));
                     end;
                 end;
             end;
@@ -3896,9 +3797,8 @@ var
 
 
 begin
-
     try
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         SetMaxDeviceNameLength(DSS);
 
@@ -3970,34 +3870,30 @@ begin
         FireOffEditor(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
-
 end;
 
 procedure ShowControlledElements(DSS: TDSSContext; FileNm: String);
-
 var
     F: TFileStream = nil;
     pdelem: TPDElement;
     pctrlelem: TDSSCktElement;
     i: Integer;
-
 begin
     try
-
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         pdelem := DSS.ActiveCircuit.PDElements.First;
         while pdelem <> NIL do
         begin
-            if pdelem.HasControl then
+            if Flg.HasControl in pdelem.Flags then
             begin
                 with pdelem do
-                    FSWrite(F, Format('%s.%s', [ParentClass.Name, Name]));
+                    FSWrite(F, FullName);
                 for i := 1 to pdelem.ControlElementList.Count do
                 begin
                     pctrlelem := pdelem.ControlElementList.Get(i);
                     with  pctrlelem do
-                        FSWrite(F, Format(', %s.%s ', [ParentClass.Name, Name]));
+                        FSWrite(F, Format(', %s ', [FullName]));
                 end;
                 FSWriteln(F);
             end;
@@ -4005,24 +3901,18 @@ begin
         end;
 
     finally
-
         FreeAndNil(F);
         FireOffEditor(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
-
     end;
-
 end;
 
 procedure ShowResult(DSS: TDSSContext; FileNm: String);
-
 var
     F: TFileStream = nil;
-
 begin
-
     try
-        F := TFileStream.Create(FileNm, fmCreate);
+        F := TBufferedFileStream.Create(FileNm, fmCreate);
 
         DSS.ParserVars.Lookup('@result');
         FSWriteln(F, DSS.Parservars.Value);
@@ -4035,8 +3925,6 @@ begin
         FireOffEditor(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
-
-
 end;
 
 procedure ShowEventLog(DSS: TDSSContext; FileNm: String);
@@ -4052,7 +3940,6 @@ begin
         FireOffEditor(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
-
 end;
 
 

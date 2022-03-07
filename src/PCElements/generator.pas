@@ -7,80 +7,45 @@ unit generator;
   ----------------------------------------------------------
 }
 
-{   Change Log
+//    Change Log
+//    8-28-13 Forced re-initializing solution if Model 3 generator added.
+//    7-??-18 Corrected Generator Model 7 1-phase Model
 
-    11/30/99 Added new properties to support conventional load flow
-              Vset, Qmin, Qmax
-    12/1/99 Split out ComputeYsc(ibus)
-            Added Code to estimate DQDV
-    12/2/99 Fixed bug in CalcYPrimMatrix - same bug as was in Load
-    12/6/99 revised 95% - 105% limits - same as Load
-    1-8-00 made voltage limites variable just like the Load.  Added vminpu
-           and vmaxpu properties and modified YEq95, etc.
-    2-2-00 Trapezoidal integration option
-    2-28-00 Corrected Errors in Take Sample function
-    8-23-00 Added FixedQ models; Added Price register and related dispatchmode
-    8-24-00 Fixed Pnominalperphase so that it is never 0.0 to avoid divide by zero error
-    9-20-00 Added InitStateVars  Function for Dynamics mode
-    10-6-00 Fixed error in TakeSample for positive sequence model
-    10-25-00 Added Spectrum   and code for Harmonic mode analysis
-    10-27-00 Deleted GetCurrents Override;
-    3-7-01 Fixed bug related to setting kvar=  (Index wrong)
-    3-27-01 Added check to prevent divide by zero on calculation of PFNominal
-    5-17-01 moved spectrum editing back to base class
-    7-2-01 Corrected TakeSample to integrate only when GenON instead of S>0
-           Also corrected kVA Max for Positive Seq only
-    8-14-01 Added price signal integration, which had been omitted
-            Fixed TakeSample so it would integrate on Trapezoidal when not GenON
-    1-17/02 Fixed sign error for Type 5 model.
-    7/11/02 Added code to change Yprim when generator changes ON/OFF state
-    7/30/02 Fixed problem with propertyvalues and maxkvar
-    11/08/02  Added Dynamics model
-    11/11/02 Add user-written exciter and Shaft Models
-    3/6/03   Revised user-written dll interface.
-             added control terminal code for PCELement override.
-    3-17-03  Revised user-written models and harmonic models
-    5-11-09  Added properties to support kW, kvar, PV, and kV  through COM
-    8-28-13 Forced re-initializing solution if Model 3 generator added.
-    7-??-18 Corrected Generator Model 7 1-phase Model
-}
-{
-  The generator is essentially a negative load that can be dispatched.
+//  The generator is essentially a negative load that can be dispatched.
+//
+//  If the dispatch value (DispValue) is 0, the generator always follows the
+//  appropriate dispatch curve, which are simply load curves. If DispValue>0 then
+//  the generator only comes on when the global circuit load multiplier exceeds
+//  DispValue.  When the generator is on, it always follows the dispatch curve
+//  appropriate for the type of solution being performed.
+//
+//  If you want to model a generator that is fully on whenever it is dispatched on,
+//  simply designate "Status=Fixed".  The default is "Status=Variable" (i.e., it follows
+//  a dispatch curve.  You could also define a dispatch curve that is always 1.0.
+//
+//  Generators have their own energy meters that record:
+//  1. Total kwh
+//  2. Total kvarh
+//  3. Max kW
+//  4. Max kVA
+//  5. Hours in operation
+//  6. Price * kwH
+//
+//  Generator meters reset with the circuit energy meters and take a sample with
+//  the circuit energy meters as well. The Energy meters also used trapezoidal integration
+//  so that they are compatible with Load-Duration simulations.
+//
+//  Generator models are:
+//  1. Constant P, Q  (* dispatch curve, if appropriate).
+//  2. Constant Z  (For simple solution)
+//  3. Constant P, |V|  like a standard power flow
+//  4. Constant P, Fixed Q  (vars)
+//  5. Constant P, Fixed Q  (reactance)
+//  6. User model
+//  7. Approximate Inverter model
+//
+//  Most of the time you will use #1 for planning studies.
 
-  If the dispatch value (DispValue) is 0, the generator always follows the
-  appropriate dispatch curve, which are simply load curves. If DispValue>0 then
-  the generator only comes on when the global circuit load multiplier exceeds
-  DispValue.  When the generator is on, it always follows the dispatch curve
-  appropriate for the type of solution being performed.
-
-  If you want to model a generator that is fully on whenever it is dispatched on,
-  simply designate "Status=Fixed".  The default is "Status=Variable" (i.e., it follows
-  a dispatch curve.  You could also define a dispatch curve that is always 1.0.
-
-  Generators have their own energy meters that record:
-  1. Total kwh
-  2. Total kvarh
-  3. Max kW
-  4. Max kVA
-  5. Hours in operation
-  6. Price * kwH
-
-  Generator meters reset with the circuit energy meters and take a sample with
-  the circuit energy meters as well. The Energy meters also used trapezoidal integration
-  so that they are compatible with Load-Duration simulations.
-
-  Generator models are:
-  1. Constant P, Q  (* dispatch curve, if appropriate).
-  2. Constant Z  (For simple solution)
-  3. Constant P, |V|  like a standard power flow
-  4. Constant P, Fixed Q  (vars)
-  5. Constant P, Fixed Q  (reactance)
-  6. User model
-  7. Approximate Inverter model
-
-  Most of the time you will use #1 for planning studies.
-
-}
 
 //  The Generator is assumed balanced over the no. of phases defined
 
@@ -99,9 +64,9 @@ uses
     PCClass,
     PCElement,
     ucmatrix,
-    ucomplex,
+    UComplex, DSSUcomplex,
     LoadShape,
-    GrowthShape,
+    // GrowthShape,
     Spectrum,
     ArrayDef,
     Dynamics;
@@ -111,34 +76,75 @@ const
     NumGenVariables = 6;
 
 type
+{$SCOPEDENUMS ON}
+    TGeneratorProp = (
+        INVALID = 0,
+        phases,
+        bus1,
+        kv,
+        kW,
+        pf,
+        kvar, // 13
+        model, // 6
+        Vminpu, // 23
+        Vmaxpu, // 24
+        yearly, // 7
+        daily, // 8
+        duty, // 9
+        dispmode, // 10
+        dispvalue, // 11
+        conn, // 12
+        status, // 16
+        cls, // 17
+        Vpu, // 18
+        maxkvar, // 19
+        minkvar, // 20
+        pvfactor, // 21
+        forceon, // 25
+        kVA, // 26
+        MVA, // 27
+        Xd, // 28
+        Xdp, // 29
+        Xdpp, // 30
+        H, // 31
+        D, // 32
+        UserModel, // 33
+        UserData, // 34
+        ShaftModel, // 35
+        ShaftData, // 36
+        DutyStart, // 37
+        debugtrace, // 22
+        Balanced,
+        XRdp,
+        UseFuel,
+        FuelkWh,
+        pctFuel,
+        pctReserve,
+        Refuel
+    );
+{$SCOPEDENUMS OFF}
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TGenerator = class(TPCClass)
-    PRIVATE
-
-        procedure InterpretConnection(const S: String);
-        procedure SetNcondsForConnection;
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const OtherGeneratorName: String): Integer; OVERRIDE;
+        cBuffer: TCBuffer24;  // Temp buffer for calcs  24-phase generator?
+
+        procedure DefineProperties; override;
     PUBLIC
         RegisterNames: array[1..NumGenregisters] of String;
 
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
 
         procedure ResetRegistersAll;
         procedure SampleAll;
-
     end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TGeneratorObj = class(TPCElement)
     PRIVATE
-// Moved to GeneratorVars        Zthev           :Complex;
+        // Moved to GeneratorVars        Zthev           :Complex;
         Yeq: Complex;   // at nominal
         Yeq95: Complex;   // at 95%
         Yeq105: Complex;   // at 105%
@@ -147,15 +153,14 @@ type
         PhaseCurrentLimit: Complex;
         Model7MaxPhaseCurr: Double;
         Model7LastAngle: Double;
-        DebugTrace: Boolean;
+        DebugTrace: LongBool;
         DeltaQMax: Double;  // Max allowable var change on Model=3 per iteration
         DispatchMode: Integer;
         DispatchValue: Double;
         DQDV: Double;
         DQDVSaved: Double;
-        FForcedON: Boolean;
         FirstSampleAfterReset: Boolean;
-        IsFixed: Boolean;   // if Fixed, always at base value
+        IsFixed: LongBool;   // if Fixed, always at base value
         GeneratorSolutionCount: Integer;
         GenFundamental: Double;  {Thevinen equivalent voltage mag and angle reference for Harmonic model}
         GenON: Boolean;           {Indicates whether generator is currently on}
@@ -176,6 +181,7 @@ type
 // moved to GeneratorVars        Thetaharm       :Double;  {Thevinen equivalent voltage angle reference for Harmonic model}
         TraceFile: TFileStream;
         UserModel, ShaftModel: TGenUserModel;   {User-Written Models}
+        UserModelNameStr, UserModelEditStr, ShaftModelNameStr, ShaftModelEditStr: String;
         V_Avg: Double;
         V_Remembered: Double;
         var_Remembered: Double;
@@ -191,7 +197,7 @@ type
         YPrimOpenCond: TCmatrix;  // To handle cases where one conductor of load is open ; We revert to admittance for inj currents
         YQFixed: Double;  // Fixed value of y for type 7 load
         ShapeIsActual: Boolean;
-        ForceBalanced: Boolean;
+        ForceBalanced: LongBool;
 
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);  // now incorporates DutyStart offset
@@ -228,7 +234,6 @@ type
         function Get_Presentkvar: Double;
         function Get_PresentkV: Double;
         procedure Set_PresentkV(const Value: Double);
-        procedure Set_Presentkvar(const Value: Double);
         procedure Set_PresentkW(const Value: Double);
         procedure Set_PowerFactor(const Value: Double);
 
@@ -238,12 +243,10 @@ type
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
     PUBLIC
-
         Connection: Integer;  {0 = line-neutral; 1=Delta}
-        DailyDispShape: String;  // Daily (24 HR) Generator shape
         DailyDispShapeObj: TLoadShapeObj;  // Daily Generator Shape for this load
-        DutyShape: String;  // Duty cycle load shape for changes typically less than one hour
         DutyShapeObj: TLoadShapeObj;  // Shape for this generator
+        YearlyShapeObj: TLoadShapeObj;  // Shape for this Generator
         DutyStart: Double; // starting time offset into the DutyShape [hrs] for this generator
         GenClass: Integer;
         GenModel: Integer;   // Variation with voltage
@@ -257,21 +260,21 @@ type
         Vmaxpu: Double;
         Vminpu: Double;
         
+        ForcedON: LongBool;
+
         // Fuel related variables
-        GenActive,
-        UseFuel: Boolean;
+        GenActive: Boolean;
+        UseFuel: LongBool;
         FuelkWh,
         pctFuel,
         pctReserve: Double;
-
-// moved to GeneratorVars        VTarget         :Double;  // Target voltage for generator with voltage control
-        YearlyShape: String;  // ='fixed' means no variation  on all the time
-        YearlyShapeObj: TLoadShapeObj;  // Shape for this Generator
 
         Registers, Derivatives: array[1..NumGenregisters] of Double;
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
 
         procedure RecalcElementData; OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
@@ -304,29 +307,24 @@ type
         // Support for Harmonics Mode
         procedure InitHarmonics; OVERRIDE;
 
-        procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
-
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
-        function GetPropertyValue(Index: Integer): String; OVERRIDE;
+        procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
         property PresentkW: Double READ Get_PresentkW WRITE Set_PresentkW;
-        property Presentkvar: Double READ Get_Presentkvar WRITE Set_Presentkvar;
-        property ForcedON: Boolean READ FForcedON WRITE FForcedON;
-        property PresentkV: Double READ Get_PresentkV WRITE Set_PresentkV;
         property PowerFactor: Double READ PFNominal WRITE Set_PowerFactor;
+
+        //TODO: remove?
+        property PresentkV: Double READ Get_PresentkV WRITE Set_PresentkV;
+        property Presentkvar: Double READ Get_Presentkvar;
 
     end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
-
 uses
-    ParserDel,
+    BufStream,
     Circuit,
     Sysutils,
-    Command,
+    // Command,
     Math,
     MathUtil,
     DSSClassDefs,
@@ -336,195 +334,177 @@ uses
     DSSObjectHelper,
     TypInfo;
 
+type
+    TObj = TGeneratorObj;
+    TProp = TGeneratorProp;
 const
-    NumPropsThisClass = 44;
-  // Dispatch modes
-    DEFAULT = 0;
+    NumPropsThisClass = Ord(High(TProp));
+    // Dispatch modes
+    // DEFAULT = 0;
     LOADMODE = 1;
     PRICEMODE = 2;
-
 var
-    cBuffer: array[1..24] of Complex;  // Temp buffer for calcs  24-phase generator?
-    CDOUBLEONE: Complex;
-//    TwoPI3:Double;
+    PropInfo: Pointer = NIL;
+    GenStatusEnum, GenDispModeEnum: TDSSEnum;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGenerator.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
+constructor TGenerator.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
-    Class_Name := 'Generator';
-    DSSClassType := DSSClassType + GEN_ELEMENT;  // In both PCelement and Genelement list
+    if PropInfo = NIL then
+    begin
+        PropInfo := TypeInfo(TProp);
+        GenDispModeEnum := TDSSEnum.Create('Generator: Dispatch Mode', True, 1, 1, 
+            ['Default', 'LoadLevel', 'Price'], [0, 1, 2]
+        );
+        GenDispModeEnum.DefaultValue := 0;
+        GenStatusEnum := TDSSEnum.Create('Generator: Status', True, 1, 1, 
+            ['Variable', 'Fixed'], [0, Integer(True)]);
+        GenStatusEnum.DefaultValue := 0;
+    end;
 
-    ActiveElement := 0;
-
-     // Set Register names
+    inherited Create(dssContext, GEN_ELEMENT, 'Generator');
+    
+    // Set Register names
     RegisterNames[1] := 'kWh';
     RegisterNames[2] := 'kvarh';
     RegisterNames[3] := 'Max kW';
     RegisterNames[4] := 'Max kVA';
     RegisterNames[5] := 'Hours';
     RegisterNames[6] := '$';
-
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TGenerator.Destroy;
-
 begin
-    // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
-
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+procedure DoRefuel(Obj: TObj);
+begin
+    Obj.pctFuel := 100.0;
+    Obj.GenActive := True;
+end;
+
 procedure TGenerator.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
-
     Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;   {see DSSClass}
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
-     // Define Property names
-    AddProperty('phases', 1, 'Number of Phases, this Generator.  Power is evenly divided among phases.');
-    AddProperty('bus1', 2, 'Bus to which the Generator is connected.  May include specific node specification.');
-    AddProperty('kv', 3, 'Nominal rated (1.0 per unit) voltage, kV, for Generator. For 2- and 3-phase Generators, specify phase-phase kV. ' +
-        'Otherwise, for phases=1 or phases>3, specify actual kV across each branch of the Generator. ' +
-        'If wye (star), specify phase-neutral kV. ' +
-        'If delta or phase-phase connected, specify phase-phase kV.');  // line-neutral voltage//  base voltage
-    AddProperty('kW', 4, 'Total base kW for the Generator.  A positive value denotes power coming OUT of the element, ' + CRLF +
-        'which is the opposite of a load. This value is modified depending on the dispatch mode. ' +
-        'Unaffected by the global load multiplier and growth curves. ' +
-        'If you want there to be more generation, you must add more generators or change this value.');
-    AddProperty('pf', 5, 'Generator power factor. Default is 0.80. Enter negative for leading powerfactor ' +
-        '(when kW and kvar have opposite signs.)' + CRLF +
-        'A positive power factor for a generator signifies that the generator produces vars ' + CRLF +
-        'as is typical for a synchronous generator.  Induction machines would be ' + CRLF +
-        'specified with a negative power factor.');
-    AddProperty('kvar', 13, 'Specify the base kvar.  Alternative to specifying the power factor.  Side effect: ' +
-        ' the power factor value is altered to agree based on present value of kW.');
-    AddProperty('model', 6, 'Integer code for the model to use for generation variation with voltage. ' +
-        'Valid values are:' + CRLF + CRLF +
-        '1:Generator injects a constant kW at specified power factor.' + CRLF +
-        '2:Generator is modeled as a constant admittance.' + CRLF +
-        '3:Const kW, constant kV.  Somewhat like a conventional transmission power flow P-V generator.' + CRLF +
-        '4:Const kW, Fixed Q (Q never varies)' + CRLF +
-        '5:Const kW, Fixed Q(as a constant reactance)' + CRLF +
-        '6:Compute load injection from User-written Model.(see usage of Xd, Xdp)' + CRLF +
-        '7:Constant kW, kvar, but current-limited below Vminpu. Approximates a simple inverter. See also Balanced.');
-    AddProperty('Vminpu', 23, 'Default = 0.90.  Minimum per unit voltage for which the Model is assumed to apply. ' +
-        'Below this value, the load model reverts to a constant impedance model. For model 7, the current is ' +
-        'limited to the value computed for constant power at Vminpu.');
-    AddProperty('Vmaxpu', 24, 'Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ' +
-        'Above this value, the load model reverts to a constant impedance model.');
-    AddProperty('yearly', 7, 'Dispatch shape to use for yearly simulations.  Must be previously defined ' +
-        'as a Loadshape object. If this is not specified, a constant value is assumed (no variation). ' +
-        'If the generator is assumed to be ON continuously, specify Status=FIXED, or ' +
-        'designate a curve that is 1.0 per unit at all times. ' +
-        'Set to NONE to reset to no loadahape. ' +
-        'Nominally for 8760 simulations.  If there are fewer points in the designated shape than ' +
-        'the number of points in the solution, the curve is repeated.');
-    AddProperty('daily', 8, 'Dispatch shape to use for daily simulations.  Must be previously defined ' +
-        'as a Loadshape object of 24 hrs, typically.  If generator is assumed to be ' +
-        'ON continuously, specify Status=FIXED, or designate a Loadshape object' +
-        'that is 1.0 perunit for all hours. ' +
-        'Set to NONE to reset to no loadahape. '); // daily dispatch (hourly)
-    AddProperty('duty', 9, 'Load shape to use for duty cycle dispatch simulations such as for wind generation. ' +
-        'Must be previously defined as a Loadshape object. ' +
-        'Typically would have time intervals less than 1 hr -- perhaps, in seconds. ' +
-        'Set Status=Fixed to ignore Loadshape designation. ' +
-        'Set to NONE to reset to no loadahape. ' +
-        'Designate the number of points to solve using the Set Number=xxxx command. ' +
-        'If there are fewer points in the actual shape, the shape is assumed to repeat.');  // as for wind generation
-    AddProperty('dispmode', 10, '{Default* | Loadlevel | Price } Default = Default. Dispatch mode. ' +
-        'In default mode, gen is either always on or follows dispatch curve as specified. ' +
-        'Otherwise, the gen comes on when either the global default load level (Loadshape "default") or the price level ' +
-        'exceeds the dispatch value.'); // = 0 | >0
-    AddProperty('dispvalue', 11, 'Dispatch value. ' + CRLF +
-        'If = 0.0 (default) then Generator follow dispatch curves, if any. ' + CRLF +
-        'If > 0  then Generator is ON only when either the price signal (in Price dispatch mode) ' +
-        'exceeds this value or the active circuit load multiplier * "default" loadshape value * the default yearly growth factor ' +
-        'exceeds this value.  Then the generator follows dispatch curves (duty, daily, or yearly), if any (see also Status).');  // = 0 | >0
-    AddProperty('conn', 12, '={wye|LN|delta|LL}.  Default is wye.');
-    AddProperty('Rneut', 14, 'Removed due to causing confusion - Add neutral impedance externally.');
-    AddProperty('Xneut', 15, 'Removed due to causing confusion - Add neutral impedance externally.');
-    AddProperty('status', 16, '={Fixed | Variable*}.  If Fixed, then dispatch multipliers do not apply. ' +
-        'The generator is alway at full power when it is ON. ' +
-        ' Default is Variable  (follows curves).');  // fixed or variable
-    AddProperty('class', 17, 'An arbitrary integer number representing the class of Generator so that Generator values may ' +
-        'be segregated by class.'); // integer
-    AddProperty('Vpu', 18, 'Per Unit voltage set point for Model = 3  (typical power flow model).  Default is 1.0. '); // per unit set point voltage for power flow model
-    AddProperty('maxkvar', 19, 'Maximum kvar limit for Model = 3.  Defaults to twice the specified load kvar.  ' +
-        'Always reset this if you change PF or kvar properties.');
-    AddProperty('minkvar', 20, 'Minimum kvar limit for Model = 3. Enter a negative number if generator can absorb vars.' +
-        ' Defaults to negative of Maxkvar.  Always reset this if you change PF or kvar properties.');
-    AddProperty('pvfactor', 21, 'Deceleration factor for P-V generator model (Model=3).  Default is 0.1. ' +
-        'If the circuit converges easily, you may want to use a higher number such as 1.0. ' +
-        'Use a lower number if solution diverges. Use Debugtrace=yes to create a file that will ' +
-        'trace the convergence of a generator model.');
-    AddProperty('forceon', 25, '{Yes | No}  Forces generator ON despite requirements of other dispatch modes. ' +
-        'Stays ON until this property is set to NO, or an internal algorithm cancels the forced ON state.');
-    AddProperty('kVA', 26, 'kVA rating of electrical machine. Defaults to 1.2* kW if not specified. Applied to machine or inverter definition for Dynamics mode solutions. ');
-    AddProperty('MVA', 27, 'MVA rating of electrical machine.  Alternative to using kVA=.');
-    AddProperty('Xd', 28, 'Per unit synchronous reactance of machine. Presently used only for Thevinen impedance for power flow calcs of user models (model=6). ' +
-        'Typically use a value 0.4 to 1.0. Default is 1.0');
-    AddProperty('Xdp', 29, 'Per unit transient reactance of the machine.  Used for Dynamics mode and Fault studies.  Default is 0.27.' +
-        'For user models, this value is used for the Thevinen/Norton impedance for Dynamics Mode.');
-    AddProperty('Xdpp', 30, 'Per unit subtransient reactance of the machine.  Used for Harmonics. Default is 0.20.');
-    AddProperty('H', 31, 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.');
-    AddProperty('D', 32, 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping');
-    AddProperty('UserModel', 33, 'Name of DLL containing user-written model, which computes the terminal currents for Dynamics studies, ' +
-        'overriding the default model.  Set to "none" to negate previous setting.');
-    AddProperty('UserData', 34, 'String (in quotes or parentheses) that gets passed to user-written model for defining the data required for that model.');
-    AddProperty('ShaftModel', 35, 'Name of user-written DLL containing a Shaft model, which models the prime mover and determines the power on the shaft for Dynamics studies. ' +
-        'Models additional mass elements other than the single-mass model in the DSS default model. Set to "none" to negate previous setting.');
-    AddProperty('ShaftData', 36, 'String (in quotes or parentheses) that gets passed to user-written shaft dynamic model for defining the data for that model.');
-    AddProperty('DutyStart', 37, 'Starting time offset [hours] into the duty cycle shape for this generator, defaults to 0');
-    AddProperty('debugtrace', 22, '{Yes | No }  Default is no.  Turn this on to capture the progress of the generator model ' +
-        'for each iteration.  Creates a separate file for each generator named "GEN_name.CSV".');
-    AddProperty('Balanced', 38, '{Yes | No*} Default is No.  For Model=7, force balanced current only for 3-phase generators. Force zero- and negative-sequence to zero.');
-    AddProperty('XRdp', 39, 'Default is 20. X/R ratio for Xdp property for FaultStudy and Dynamic modes.');
-    AddProperty('UseFuel',  40, '{Yes | *No}. Activates the use of fuel for the operation of the generator. When the fuel level' +
-                                ' reaches the reserve level, the generator stops until it gets refueled. By default, the generator ' +
-                                'is connected to a continuous fuel supply, Use this mode to mimic dependency on fuel level for different ' +
-                                'generation technologies.');
-    AddProperty('FuelkWh',  41, '{*0}Is the nominal level of fuel for the generator (kWh). It only applies if UseFuel = Yes/True');
-    AddProperty('%Fuel',  42, 'It is a number between 0 and 100 representing the current amount of fuel avaiable in percentage ' +
-                              'of FuelkWh. It only applies if UseFuel = Yes/True');
-    AddProperty('%Reserve',  43, 'It is a number between 0 and 100 representing the reserve level in percentage of FuelkWh. ' +
-                                 'It only applies if UseFuel = Yes/True');
-    AddProperty('Refuel',  44, 'It is a boolean value (Yes/True, No/False) that can be used to manually refuel the generator when needed. ' +
-                               'It only applies if UseFuel = Yes/True');
+    // enum properties
+    PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
+    PropertyOffset2[ord(TProp.conn)] := PtrInt(DSS.ConnectionEnum);
+
+    PropertyType[ord(TProp.dispmode)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.dispmode)] := ptruint(@obj.DispatchMode);
+    PropertyOffset2[ord(TProp.dispmode)] := PtrInt(GenDispModeEnum);
+
+    PropertyType[ord(TProp.status)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.status)] := ptruint(@obj.IsFixed); // LongBool as Integer
+    PropertyOffset2[ord(TProp.status)] := PtrInt(GenStatusEnum);
+
+    // string properties
+    PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
+    PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
+    PropertyType[ord(TProp.ShaftModel)] := TPropertyType.StringProperty;
+    PropertyType[ord(TProp.ShaftData)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
+    PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
+    PropertyOffset[ord(TProp.ShaftModel)] := ptruint(@obj.ShaftModelNameStr);
+    PropertyOffset[ord(TProp.ShaftData)] := ptruint(@obj.ShaftModelEditStr);
+
+    // bus properties
+    PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
+    PropertyOffset[ord(TProp.bus1)] := 1;
+
+    // boolean properties
+    PropertyType[ord(TProp.debugtrace)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.forceon)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.Balanced)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.UseFuel)] := TPropertyType.BooleanProperty;
+    PropertyOffset[ord(TProp.debugtrace)] := ptruint(@obj.DebugTrace);
+    PropertyOffset[ord(TProp.forceon)] := ptruint(@obj.ForcedON);
+    PropertyOffset[ord(TProp.Balanced)] := ptruint(@obj.ForceBalanced);
+    PropertyOffset[ord(TProp.UseFuel)] := ptruint(@obj.UseFuel);
+
+    // integer properties
+    PropertyType[ord(TProp.cls)] := TPropertyType.IntegerProperty;
+    PropertyType[ord(TProp.model)] := TPropertyType.IntegerProperty; //TODO: enum
+    PropertyOffset[ord(TProp.cls)] := ptruint(@obj.GenClass);
+    PropertyOffset[ord(TProp.model)] := ptruint(@obj.GenModel);
+
+    PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
+    PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
+
+    // object properties
+    PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
+    
+    PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
+    PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyDispShapeObj);
+    PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
+
+    PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
+
+    // double properties (default type)
+    PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kWBase);
+    PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFNominal);
+    PropertyOffset[ord(TProp.Vpu)] := ptruint(@obj.Vpu);
+    PropertyOffset[ord(TProp.maxkvar)] := ptruint(@obj.kvarMax);
+    PropertyOffset[ord(TProp.minkvar)] := ptruint(@obj.kvarMin);
+    PropertyOffset[ord(TProp.pvfactor)] := ptruint(@obj.PVFactor);
+    PropertyOffset[ord(TProp.dispvalue)] := ptruint(@obj.DispatchValue);
+    PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
+    PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
+    PropertyOffset[ord(TProp.DutyStart)] := ptruint(@obj.DutyStart);
+    PropertyOffset[ord(TProp.FuelkWh)] := ptruint(@obj.FuelkWh);
+    PropertyOffset[ord(TProp.pctFuel)] := ptruint(@obj.pctFuel);
+    PropertyOffset[ord(TProp.pctReserve)] := ptruint(@obj.pctReserve);
+
+    PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.GenVars.kVArating);
+    PropertyOffset[ord(TProp.Xd)] := ptruint(@obj.GenVars.puXd);
+    PropertyOffset[ord(TProp.Xdp)] := ptruint(@obj.GenVars.puXdp);
+    PropertyOffset[ord(TProp.Xdpp)] := ptruint(@obj.GenVars.puXdpp);
+    PropertyOffset[ord(TProp.H)] := ptruint(@obj.GenVars.Hmass);
+    PropertyOffset[ord(TProp.D)] := ptruint(@obj.GenVars.Dpu);
+    PropertyOffset[ord(TProp.XRdp)] := ptruint(@obj.Genvars.XRdp);// X/R for dynamics model
+
+    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.Genvars.kVGeneratorBase);
+    PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarBase);
+
+    // adv doubles
+    PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.GenVars.kVArating);
+    PropertyScale[ord(TProp.MVA)] := 1000.0;
+    PropertyFlags[ord(TProp.MVA)] := [TPropertyFlag.Redundant];
+    PropertyRedundantWith[ord(TProp.MVA)] := ord(TProp.kVA);
+
+    // boolean action
+    PropertyType[ord(TProp.Refuel)] := TPropertyType.BooleanActionProperty;
+    PropertyOffset[ord(TProp.Refuel)] := ptruint(@DoRefuel);
+
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
-     // Override default help string
-    PropertyHelp[NumPropsThisClass + 1] := 'Name of harmonic voltage or current spectrum for this generator. ' +
-        'Voltage behind Xd" for machine - default. Current injection for inverter. ' +
-        'Default value is "default", which is defined when the DSS starts.';
-
+    inherited DefineProperties;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TGenerator.NewObject(const ObjName: String): Integer;
+function TGenerator.NewObject(const ObjName: String; Activate: Boolean): Pointer;
+var
+    Obj: TObj;
 begin
-    // Make a new Generator and add it to Generator class list
-    with ActiveCircuit do
-    begin
-        ActiveCktElement := TGeneratorObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        ActiveCircuit.ActiveCktElement := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TGenerator.SetNcondsForConnection;
-
+procedure SetNcondsForConnection(Obj: TObj);
 begin
-    with DSS.ActiveGeneratorObj do
-    begin
+    with Obj do
         case Connection of
             0:
                 NConds := Fnphases + 1;
@@ -536,384 +516,199 @@ begin
                     NConds := Fnphases;
                 end;
         end;
-    end;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TGenerator.InterpretConnection(const S: String);
-
-// Accepts
-//    delta or LL           (Case insensitive)
-//    Y, wye, or LN
+procedure TGeneratorObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
 var
-    TestS: String;
-
+    i: Integer;
+    kVA_Gen: Double;
 begin
-    with DSS.ActiveGeneratorObj do
-    begin
-        TestS := lowercase(S);
-        case TestS[1] of
-            'y', 'w':
-                Connection := 0;  {Wye}
-            'd':
-                Connection := 1;  {Delta or line-Line}
-            'l':
-                case Tests[2] of
-                    'n':
-                        Connection := 0;
-                    'l':
-                        Connection := 1;
+    if (Idx > 0) and (Idx <= NumPropsThisClass) then
+        case TProp(Idx) of
+            TProp.Conn:
+            begin
+                SetNCondsForConnection(self);
+                // VBase is always L-N voltage unless 1-phase device or more than 3 phases
+                with GenVars do 
+                    // CASE Connection OF
+                    // 1: VBase := kVGeneratorBase * 1000.0 ;
+                    // Else
+                    case Fnphases of
+                        2, 3:
+                            VBase := kVGeneratorBase * InvSQRT3x1000;    // L-N Volts
+                    else
+                        VBase := kVGeneratorBase * 1000.0;   // Just use what is supplied
+                    end;
+                VBase95 := Vminpu * VBase;
+                VBase105 := Vmaxpu * VBase;
+
+                Yorder := Fnconds * Fnterms;
+                YPrimInvalid := TRUE;
+            end;
+            TProp.kV:
+                with Genvars do
+                begin
+                    case FNphases of
+                        2, 3:
+                            VBase := kVGeneratorBase * InvSQRT3x1000;
+                    else
+                        VBase := kVGeneratorBase * 1000.0;
+                    end;
                 end;
 
+            TProp.kvar:
+            begin
+                Genvars.Qnominalperphase := 1000.0 * kvarBase / Fnphases; // init to something reasonable
+                kVA_Gen := Sqrt(Sqr(kWBase) + Sqr(kvarBase));
+                if kVA_Gen <> 0.0 then
+                    PFNominal := kWBase / kVA_Gen
+                else
+                    PFNominal := 1.0;
+                if (kWBase * kvarBase) < 0.0 then
+                    PFNominal := -PFNominal;
+
+                kvarMax := 2.0 * kvarBase;
+                kvarMin := -kvarMax;
+            end;
+
+            TProp.phases:
+                SetNCondsForConnection(self);  // Force Reallocation of terminal info
+
+            // keep kvar nominal up to date with kW and PF
+            TProp.kW, TProp.pf:
+                SyncUpPowerQuantities;
+
+            TProp.UserModel:
+                UserModel.Name := UserModelNameStr;  // Connect to user written models
+            TProp.UserData:
+                if UserModel.Exists then
+                    UserModel.Edit := UserModelEditStr;  // Send edit string to user model
+            TProp.ShaftModel:
+                ShaftModel.Name := ShaftModelNameStr;
+            TProp.ShaftData:
+                if ShaftModel.Exists then
+                    ShaftModel.Edit := ShaftModelEditStr;
+
+            // if a model 3 generator added, force calc of dQdV
+            TProp.model:
+                if GenModel = 3 then
+                    ActiveCircuit.Solution.SolutionInitialized := FALSE;
+
+            // Set shape objects;  returns nil if not valid
+            // Sets the kW and kvar properties to match the peak kW demand from the Loadshape
+            TProp.yearly:
+                if Assigned(YearlyShapeObj) then
+                    with YearlyShapeObj do
+                        if UseActual then
+                            SetkWkvar(MaxP, MaxQ);
+            TProp.daily:
+                if Assigned(DailyDispShapeObj) then
+                    with DailyDispShapeObj do
+                        if UseActual then
+                            SetkWkvar(MaxP, MaxQ);
+            TProp.duty:
+                if Assigned(DutyShapeObj) then
+                    with DutyShapeObj do
+                        if UseActual then
+                            SetkWkvar(MaxP, MaxQ);
+
+            TProp.debugtrace:
+                if DebugTrace then
+                begin
+                    FreeAndNil(TraceFile);
+                    TraceFile := TBufferedFileStream.Create(DSS.OutputDirectory + 'GEN_' + Name + '.csv', fmCreate);
+                    FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, GenModel, dQdV, Avg_Vpu, Vdiff, MQnominalperphase, MPnominalperphase, CurrentType');
+                    for i := 1 to fnphases do
+                        FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
+                    for i := 1 to fnphases do
+                        FSWrite(Tracefile, ', |Iterm' + IntToStr(i) + '|');
+                    for i := 1 to fnphases do
+                        FSWrite(Tracefile, ', |Vterm' + IntToStr(i) + '|');
+                    FSWrite(TraceFile, ',Vthev, Theta');
+                    FSWriteln(TraceFile);
+                    FSFlush(Tracefile);
+                end
+                else
+                begin
+                    FreeAndNil(TraceFile);
+                end;
+                
+            TProp.kVA, TProp.MVA:
+                kVANotSet := FALSE;
         end;
 
-        SetNCondsForConnection;
+    inherited PropertySideEffects(Idx, previousIntVal);
+end;
 
-            {VBase is always L-N voltage unless 1-phase device or more than 3 phases}
+function TGenerator.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+begin
+    with TObj(ptr) do
+    begin
+        RecalcElementData;
+        YPrimInvalid := TRUE;
+        Exclude(Flags, Flg.EditionActive);
+    end;
+    Result := True;
+end;
 
-        with GenVars do {CASE Connection OF
-              1: VBase := kVGeneratorBase * 1000.0 ;
-              Else}
-            case Fnphases of
-                2, 3:
-                    VBase := kVGeneratorBase * InvSQRT3x1000;    // L-N Volts
-            else
-                VBase := kVGeneratorBase * 1000.0;   // Just use what is supplied
-            end;
-            {End;}
-        VBase95 := Vminpu * VBase;
-        VBase105 := Vmaxpu * VBase;
+procedure TGeneratorObj.MakeLike(OtherPtr: Pointer);
+var
+    Other: TObj;
+begin
+    inherited MakeLike(OtherPtr);
+
+    Other := TObj(OtherPtr);
+    if (Fnphases <> Other.Fnphases) then
+    begin
+        FNphases := Other.Fnphases;
+        NConds := Fnphases;  // Forces reallocation of terminal stuff
 
         Yorder := Fnconds * Fnterms;
         YPrimInvalid := TRUE;
     end;
 
+    Vbase := Other.Vbase;
+    Vminpu := Other.Vminpu;
+    Vmaxpu := Other.Vmaxpu;
+    Vbase95 := Other.Vbase95;
+    Vbase105 := Other.Vbase105;
+    kWBase := Other.kWBase;
+    kvarBase := Other.kvarBase;
+
+    GenVars := Other.GenVars; // record, copy everything at once
+    PFNominal := Other.PFNominal;
+    varMin := Other.varMin;
+    varMax := Other.varMax;
+    Connection := Other.Connection;
+    YearlyShapeObj := Other.YearlyShapeObj;
+    DailyDispShapeObj := Other.DailyDispShapeObj;
+    DutyShapeObj := Other.DutyShapeObj;
+    DutyStart := Other.DutyStart;
+    DispatchMode := Other.DispatchMode;
+    DispatchValue := Other.DispatchValue;
+    GenClass := Other.GenClass;
+    GenModel := Other.GenModel;
+    IsFixed := Other.IsFixed;
+
+    Vpu := Other.Vpu;
+    kvarMax := Other.kvarMax;
+    kvarMin := Other.kvarMin;
+    ForcedON := Other.ForcedON;
+    kVANotSet := Other.kVANotSet;
+    UseFuel := Other.UseFuel;
+    FuelkWh := Other.FuelkWh;
+    pctFuel := Other.pctFuel;
+    pctReserve := Other.pctReserve;
+
+    UserModel.Name := Other.UserModel.Name;  // Connect to user written models
+    ShaftModel.Name := Other.ShaftModel.Name;
+    UserModelNameStr := Other.UserModelNameStr;
+    ShaftModelNameStr := Other.ShaftModelNameStr;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function InterpretDispMode(const S: String): Integer;
-begin
-
-    case lowercase(S)[1] of
-        'l':
-            Result := LOADMODE;
-        'p':
-            Result := PRICEMODE;
-    else
-        Result := DEFAULT;
-    end;
-
-end;
-
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TGenerator.Edit: Integer;
-var
-    i,
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
-
-
-begin
-  // continue parsing with contents of Parser
-    DSS.ActiveGeneratorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := DSS.ActiveGeneratorObj;
-
-    Result := 0;
-
-    with DSS.ActiveGeneratorObj do
-    begin
-
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
-        begin
-            if (Length(ParamName) = 0) then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
-
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[PropertyIdxMap[ParamPointer]] := Param
-            else
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for Generator "' + Name + '"', 560);
-
-            if ParamPointer > 0 then
-                case PropertyIdxMap[ParamPointer] of
-                    0:
-                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
-                    1:
-                        NPhases := Parser.Intvalue; // num phases
-                    2:
-                        SetBus(1, param);
-                    3:
-                        PresentkV := Parser.DblValue;
-                    4:
-                        kWBase := Parser.DblValue;
-                    5:
-                        PFNominal := Parser.DblValue;
-                    6:
-                        GenModel := Parser.IntValue;
-                    7:
-                        YearlyShape := Param;
-                    8:
-                        DailyDispShape := Param;
-                    9:
-                        DutyShape := Param;
-                    10:
-                        DispatchMode := InterpretDispMode(Param);
-                    11:
-                        DispatchValue := Parser.DblValue;
-                    12:
-                        InterpretConnection(Param);
-                    13:
-                        Presentkvar := Parser.DblValue;
-                    14:
-                        DoSimpleMsg('Rneut property has been deleted. Use external impedance.', 5611);
-                    15:
-                        DoSimpleMsg('Xneut property has been deleted. Use external impedance.', 5612);
-                    16:
-                        if lowercase(Param[1]) = 'f' then
-                            IsFixed := TRUE
-                        else
-                            IsFixed := FALSE;
-                    17:
-                        GenClass := Parser.IntValue;
-                    18:
-                        Vpu := Parser.DblValue;
-                    19:
-                        kvarMax := Parser.DblValue;
-                    20:
-                        kvarMin := Parser.DblValue;
-                    21:
-                        PVFactor := Parser.DblValue;  //decelaration factor
-                    22:
-                        DebugTrace := InterpretYesNo(Param);
-                    23:
-                        VMinPu := Parser.DblValue;
-                    24:
-                        VMaxPu := Parser.DblValue;
-                    25:
-                        FForcedON := InterpretYesNo(Param);
-                    26:
-                        GenVars.kVArating := Parser.DblValue;
-                    27:
-                        GenVars.kVArating := Parser.DblValue * 1000.0;  // 'MVA';
-                    28:
-                        GenVars.puXd := Parser.DblValue;
-                    29:
-                        GenVars.puXdp := Parser.DblValue;
-                    30:
-                        GenVars.puXdpp := Parser.DblValue;
-                    31:
-                        GenVars.Hmass := Parser.DblValue;
-                    32:
-                        GenVars.Dpu := Parser.DblValue;
-                    33:
-                        UserModel.Name := Parser.StrValue;  // Connect to user written models
-                    34:
-                        if UserModel.Exists then
-                            UserModel.Edit := Parser.StrValue;  // Send edit string to user model
-                    35:
-                        ShaftModel.Name := Parser.StrValue;
-                    36:
-                        ShaftModel.Edit := Parser.StrValue;
-                    37:
-                        DutyStart := Parser.DblValue;
-                    38:
-                        ForceBalanced := InterpretYesNo(Param);
-                    39:
-                        Genvars.XRdp := Parser.DblValue;  // X/R for dynamics model
-                    40: 
-                        UseFuel := InterpretYesNo(Param);
-                    41: 
-                        FuelkWh := Parser.DblValue;
-                    42: 
-                        pctFuel := Parser.DblValue;
-                    43: 
-                        pctReserve := Parser.DblValue;
-                    44: 
-                        if InterpretYesNo(Param) then
-                        begin
-                            pctFuel := 100.0;
-                            GenActive := True;
-                        end
-                else
-           // Inherited parameters
-                    ClassEdit(DSS.ActiveGeneratorObj, ParamPointer - NumPropsThisClass)
-                end;
-
-            if ParamPointer > 0 then
-                case PropertyIdxMap[ParamPointer] of
-                    1:
-                        SetNcondsForConnection;  // Force Reallocation of terminal info
-
-            // keep kvar nominal up to date with kW and PF
-                    4, 5:
-                        SyncUpPowerQuantities;
-
-            // if a model 3 generator added, force calc of dQdV
-                    6:
-                        if GenModel = 3 then
-                            ActiveCircuit.Solution.SolutionInitialized := FALSE;
-
-    {Set shape objects;  returns nil if not valid}
-     {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
-                    7:
-                    begin
-                        YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
-                        if Assigned(YearlyShapeObj) then
-                            with YearlyShapeObj do
-                                if UseActual then
-                                    SetkWkvar(MaxP, MaxQ);
-                    end;
-                    8:
-                    begin
-                        DailyDispShapeObj := DSS.LoadShapeClass.Find(DailyDispShape);
-                        if Assigned(DailyDispShapeObj) then
-                            with DailyDispShapeObj do
-                                if UseActual then
-                                    SetkWkvar(MaxP, MaxQ);
-                    end;
-                    9:
-                    begin
-                        DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
-                        if Assigned(DutyShapeObj) then
-                            with DutyShapeObj do
-                                if UseActual then
-                                    SetkWkvar(MaxP, MaxQ);
-                    end;
-
-                    22:
-                        if DebugTrace then
-                        begin
-                            FreeAndNil(TraceFile);
-                            TraceFile := TFileStream.Create(DSS.OutputDirectory + 'GEN_' + Name + '.CSV', fmCreate);
-                            FSWrite(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, GenModel, dQdV, Avg_Vpu, Vdiff, MQnominalperphase, MPnominalperphase, CurrentType');
-                            for i := 1 to nphases do
-                                FSWrite(Tracefile, ', |Iinj' + IntToStr(i) + '|');
-                            for i := 1 to nphases do
-                                FSWrite(Tracefile, ', |Iterm' + IntToStr(i) + '|');
-                            for i := 1 to nphases do
-                                FSWrite(Tracefile, ', |Vterm' + IntToStr(i) + '|');
-                            FSWrite(TraceFile, ',Vthev, Theta');
-                            FSWriteln(TraceFile);
-                            FSFlush(Tracefile);
-                        end
-                        else
-                        begin
-                            FreeAndNil(TraceFile);
-                        end;
-                        
-                    26, 27:
-                        kVANotSet := FALSE;
-                end;
-
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
-        end;
-
-        RecalcElementData;
-        YPrimInvalid := TRUE;
-    end;
-
-end;
-
-//----------------------------------------------------------------------------
-function TGenerator.MakeLike(const OtherGeneratorName: String): Integer;
-var
-    OtherGenerator: TGeneratorObj;
-    i: Integer;
-begin
-    Result := 0;
-   {See if we can find this line name in the present collection}
-    OtherGenerator := Find(OtherGeneratorName);
-    if (OtherGenerator <> NIL) then
-        with DSS.ActiveGeneratorObj do
-        begin
-
-            if (Fnphases <> OtherGenerator.Fnphases) then
-            begin
-                Nphases := OtherGenerator.Fnphases;
-                NConds := Fnphases;  // Forces reallocation of terminal stuff
-
-                Yorder := Fnconds * Fnterms;
-                YPrimInvalid := TRUE;
-            end;
-
-            GenVars.kVGeneratorBase := OtherGenerator.GenVars.kVGeneratorBase;
-            Vbase := OtherGenerator.Vbase;
-            Vminpu := OtherGenerator.Vminpu;
-            Vmaxpu := OtherGenerator.Vmaxpu;
-            Vbase95 := OtherGenerator.Vbase95;
-            Vbase105 := OtherGenerator.Vbase105;
-            kWBase := OtherGenerator.kWBase;
-            kvarBase := OtherGenerator.kvarBase;
-            Genvars.Pnominalperphase := OtherGenerator.Genvars.Pnominalperphase;
-            PFNominal := OtherGenerator.PFNominal;
-            Genvars.Qnominalperphase := OtherGenerator.Genvars.Qnominalperphase;
-            varMin := OtherGenerator.varMin;
-            varMax := OtherGenerator.varMax;
-            Connection := OtherGenerator.Connection;
-            YearlyShape := OtherGenerator.YearlyShape;
-            YearlyShapeObj := OtherGenerator.YearlyShapeObj;
-            DailyDispShape := OtherGenerator.DailyDispShape;
-            DailyDispShapeObj := OtherGenerator.DailyDispShapeObj;
-            DutyShape := OtherGenerator.DutyShape;
-            DutyShapeObj := OtherGenerator.DutyShapeObj;
-            DutyStart := OtherGenerator.DutyStart;
-            DispatchMode := OtherGenerator.DispatchMode;
-            DispatchValue := OtherGenerator.DispatchValue;
-            GenClass := OtherGenerator.GenClass;
-            GenModel := OtherGenerator.GenModel;
-            IsFixed := OtherGenerator.IsFixed;
-            GenVars.VTarget := OtherGenerator.Genvars.VTarget;
-            Vpu := OtherGenerator.Vpu;
-            kvarMax := OtherGenerator.kvarMax;
-            kvarMin := OtherGenerator.kvarMin;
-            FForcedON := OtherGenerator.FForcedON;
-            kVANotSet := OtherGenerator.kVANotSet;
-            UseFuel := OtherGenerator.UseFuel;
-            FuelkWh := OtherGenerator.FuelkWh;
-            pctFuel := OtherGenerator.pctFuel;
-            pctReserve := OtherGenerator.pctReserve;
-
-            GenVars.kVArating := OtherGenerator.GenVars.kVArating;
-            GenVars.puXd := OtherGenerator.GenVars.puXd;
-            GenVars.puXdp := OtherGenerator.GenVars.puXdp;
-            GenVars.puXdpp := OtherGenerator.GenVars.puXdpp;
-            GenVars.Hmass := OtherGenerator.GenVars.Hmass;
-            GenVars.Theta := OtherGenerator.GenVars.Theta;
-            GenVars.Speed := OtherGenerator.GenVars.Speed;
-            GenVars.w0 := OtherGenerator.GenVars.w0;
-            GenVars.dSpeed := OtherGenerator.GenVars.dSpeed;
-            GenVars.D := OtherGenerator.GenVars.D;
-            GenVars.Dpu := OtherGenerator.GenVars.Dpu;
-            GenVars.XRdp := OtherGenerator.GenVars.Xrdp;
-
-            UserModel.Name := OtherGenerator.UserModel.Name;  // Connect to user written models
-            ShaftModel.Name := OtherGenerator.ShaftModel.Name;
-
-            ClassMakeLike(OtherGenerator);
-
-            for i := 1 to ParentClass.NumProperties do
-                FPropertyValue^[i] := OtherGenerator.FPropertyValue^[i];
-
-            Result := 1;
-        end
-    else
-        DoSimpleMsg('Error in Load MakeLike: "' + OtherGeneratorName + '" Not Found.', 562);
-
-end;
-
-{--------------------------------------------------------------------------}
 procedure TGenerator.ResetRegistersAll;  // Force all EnergyMeters in the circuit to reset
-
 var
     pGen: TGeneratorObj;
-
 begin
     pGen := ActiveCircuit.Generators.First;
     while (pGen <> NIL) do
@@ -921,15 +716,11 @@ begin
         pGen.ResetRegisters;
         pGen := ActiveCircuit.Generators.Next;
     end;
-
 end;
 
-{--------------------------------------------------------------------------}
 procedure TGenerator.SampleAll;  // Force all EnergyMeters in the circuit to take a sample
-
 var
     pGen: TGeneratorObj;
-
 begin
     pGen := ActiveCircuit.Generators.First;
     while pGen <> NIL do
@@ -940,31 +731,26 @@ begin
     end;
 end;
 
-//----------------------------------------------------------------------------
 constructor TGeneratorObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
     inherited create(ParClass);
-    Name := LowerCase(SourceName);
+    Name := AnsiLowerCase(SourceName);
     DSSObjType := ParClass.DSSClassType; // + GEN_ELEMENT;  // In both PCelement and Genelement list
 
     TraceFile := nil;
 
-    Nphases := 3;
+    FNphases := 3;
     Fnconds := 4;  // defaults to wye
     Yorder := 0;  // To trigger an initial allocation
     Nterms := 1;  // forces allocations
     kWBase := 1000.0;
     kvarBase := 60.0;
 
-
     kvarMax := kvarBase * 2.0;
     kvarMin := -kvarmax;
     PFNominal := 0.88;
-    YearlyShape := '';
     YearlyShapeObj := NIL;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
-    DailyDispShape := '';
     DailyDispShapeObj := NIL;  // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
-    DutyShape := '';
     DutyShapeObj := NIL;  // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
     DutyStart := 0.0;
     Connection := 0;    // Wye (star)
@@ -974,7 +760,6 @@ begin
     LastGrowthFactor := 1.0;
 
     DQDVSaved := 0.0;  // Initialize this here.  Allows generators to be turned off and on
-
 
     GeneratorSolutionCount := -1;  // For keep track of the present solution in Injcurrent calcs
     OpenGeneratorSolutionCount := -1;
@@ -992,13 +777,11 @@ begin
     RandomMult := 1.0;
     IsFixed := FALSE;
 
-     {Machine rating stuff}
+    // Machine rating stuff
     GenVars.kVArating := kWBase * 1.2;
     kVANotSet := TRUE;  // Flag for default value for kVA
 
-     //GenVars.Vd         := 7200.0;
-
-
+    //GenVars.Vd         := 7200.0;
     with GenVars do
     begin
         puXd := 1.0;
@@ -1016,13 +799,17 @@ begin
         XRdp := 20.0;
     end;
 
-     {Advertise Genvars struct as public}
+    // Advertise Genvars struct as public
 
     PublicDataStruct := pointer(@Genvars);
     PublicDataSize := SizeOf(TGeneratorVars);
 
     UserModel := TGenUserModel.Create(DSS, @Genvars);
     ShaftModel := TGenUserModel.Create(DSS, @Genvars);
+    UserModelNameStr := '';
+    UserModelEditStr := '';
+    ShaftModelNameStr := '';
+    ShaftModelEditStr := '';
 
     DispatchValue := 0.0;   // Follow curves
 
@@ -1035,12 +822,12 @@ begin
 
     PVFactor := 0.1;
     DebugTrace := FALSE;
-    FForcedON := FALSE;
+    ForcedON := FALSE;
     GenSwitchOpen := FALSE;
     ShapeIsActual := FALSE;
     ForceBalanced := FALSE;
 
-    Spectrum := 'defaultgen';  // override base class
+    SpectrumObj := DSS.SpectrumClass.DefaultGen;  // override base class
 
     UseFuel := False;
     GenActive := True;
@@ -1048,14 +835,9 @@ begin
     pctFuel := 100.0;
     pctReserve := 20.0;
 
-    InitPropertyValues(0);
-
     RecalcElementData;
-
 end;
 
-
-//----------------------------------------------------------------------------
 destructor TGeneratorObj.Destroy;
 begin
     FreeAndNil(TraceFile);
@@ -1065,7 +847,6 @@ begin
     inherited Destroy;
 end;
 
-//----------------------------------------------------------------------------
 procedure TGeneratorObj.Randomize(Opt: Integer);
 begin
     case Opt of
@@ -1080,9 +861,7 @@ begin
     end;
 end;
 
-//----------------------------------------------------------------------------
 procedure TGeneratorObj.CalcDailyMult(Hr: Double);
-
 begin
     if (DailyDispShapeObj <> NIL) then
     begin
@@ -1093,10 +872,7 @@ begin
         ShapeFactor := CDOUBLEONE;  // Default to no daily variation
 end;
 
-
-//----------------------------------------------------------------------------
 procedure TGeneratorObj.CalcDutyMult(Hr: Double);
-
 begin
     if DutyShapeObj <> NIL then
     begin
@@ -1107,11 +883,9 @@ begin
         CalcDailyMult(Hr);  // Default to Daily Mult if no duty curve specified
 end;
 
-//----------------------------------------------------------------------------
 procedure TGeneratorObj.CalcYearlyMult(Hr: Double);
-
 begin
-{Yearly curve is assumed to be hourly only}
+    // Yearly curve is assumed to be hourly only
     if YearlyShapeObj <> NIL then
     begin
         ShapeFactor := YearlyShapeObj.GetMultAtHour(Hr);
@@ -1119,16 +893,12 @@ begin
     end
     else
         ShapeFactor := CDOUBLEONE;  // Defaults to no variation
-
 end;
 
-
-//----------------------------------------------------------------------------
 procedure TGeneratorObj.SetNominalGeneration;
 var
     Factor: Double;
     GenOn_Saved: Boolean;
-
 begin
     GenOn_Saved := GenON;
     ShapeFactor := CDOUBLEONE;
@@ -1138,7 +908,7 @@ begin
         if not (IsDynamicModel or IsHarmonicModel) then     // Leave generator in whatever state it was prior to entering Dynamic mode
         begin
             GenON := TRUE;   // Init to on then check if it should be off
-            if not FForcedON then
+            if not ForcedON then
                 case DispatchMode of
                     LOADMODE:
                         if (DispatchValue > 0.0) and (GeneratorDispatchReference < DispatchValue) then
@@ -1149,12 +919,11 @@ begin
                 end;
         end;
 
-
         if not GenON then
         begin
-         // If Generator is OFF enter as tiny resistive load (.0001 pu) so we don't get divide by zero in matrix
+            // If Generator is OFF enter as tiny resistive load (.0001 pu) so we don't get divide by zero in matrix
             Genvars.Pnominalperphase := -0.1 * kWBase / Fnphases;
-          // Pnominalperphase   := 0.0;
+            // Pnominalperphase   := 0.0;
             Genvars.Qnominalperphase := 0.0;
         end
         else
@@ -1188,7 +957,7 @@ begin
                         TSolveMode.DYNAMICMODE:
                         begin
                             Factor := ActiveCircuit.GenMultiplier;
-                                       // This mode allows use of one class of load shape
+                            // This mode allows use of one class of load shape
                             case ActiveCircuit.ActiveLoadShapeClass of
                                 USEDAILY:
                                     CalcDailyMult(DynaVars.dblHour);
@@ -1224,7 +993,7 @@ begin
                     end;
                 end;
 
-            if not (IsDynamicModel or IsHarmonicModel) then         //******
+            if not (IsDynamicModel or IsHarmonicModel) then
             begin
                 if ShapeIsActual then
                     Genvars.Pnominalperphase := 1000.0 * ShapeFactor.re / Fnphases
@@ -1233,7 +1002,7 @@ begin
 
                 with Genvars do
                     if GenModel = 3 then
-                    begin   { Just make sure present value is reasonable}
+                    begin   // Just make sure present value is reasonable
                         if Qnominalperphase > varMax then
                             Qnominalperphase := varMax
                         else
@@ -1242,58 +1011,51 @@ begin
                     end
                     else
                     begin
-                   { for other generator models}
+                        // for other generator models
                         if ShapeIsActual then
                             Qnominalperphase := 1000.0 * ShapeFactor.im / Fnphases
                         else
                             Qnominalperphase := 1000.0 * kvarBase * Factor * ShapeFactor.im / Fnphases;
                     end;
             end;
-        end; {ELSE GenON}
+        end; // ELSE GenON
 
         if not (IsDynamicModel or IsHarmonicModel) then
-        begin       //******
-
+        begin
             case GenModel of
                 6:
                     Yeq := Cinv(cmplx(0.0, -Genvars.Xd));  // Gets negated in CalcYPrim
             else
                 with Genvars do
-                    Yeq := CDivReal(Cmplx(Pnominalperphase, -Qnominalperphase), Sqr(Vbase));   // Vbase must be L-N for 3-phase
+                    Yeq := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase);   // Vbase must be L-N for 3-phase
                 if (Vminpu <> 0.0) then
-                    Yeq95 := CDivReal(Yeq, sqr(Vminpu))  // at 95% voltage
+                    Yeq95 := Yeq / sqr(Vminpu)  // at 95% voltage
                 else
                     Yeq95 := Yeq; // Always a constant Z model
 
                 if (Vmaxpu <> 0.0) then
-                    Yeq105 := CDivReal(Yeq, Sqr(Vmaxpu))   // at 105% voltage
+                    Yeq105 := Yeq / Sqr(Vmaxpu)   // at 105% voltage
                 else
                     Yeq105 := Yeq;
             end;
 
-          { When we leave here, all the Yeq's are in L-N values}
-
+            // When we leave here, all the Yeq's are in L-N values
             if GenModel = 7 then
                 with Genvars do
                 begin
-                    PhaseCurrentLimit := Cdivreal(Cmplx(Pnominalperphase, -Qnominalperphase), VBase95);
+                    PhaseCurrentLimit := Cmplx(Pnominalperphase, -Qnominalperphase) / VBase95;
                     Model7MaxPhaseCurr := Cabs(PhaseCurrentLimit);
                 end;
-
         end;
-    end;  {With ActiveCircuit}
+    end; // With ActiveCircuit
 
-   // If generator state changes, force re-calc of Y matrix
+    // If generator state changes, force re-calc of Y matrix
     if GenON <> GenON_Saved then
         YPrimInvalid := TRUE;
-
 end;
 
-//----------------------------------------------------------------------------
 procedure TGeneratorObj.RecalcElementData;
-
 begin
-
     VBase95 := VMinPu * VBase;
     VBase105 := VMaxPu * VBase;
 
@@ -1301,7 +1063,7 @@ begin
     varMin := 1000.0 * kvarMin / Fnphases;
     varMax := 1000.0 * kvarMax / Fnphases;
 
-    {Populate data structures used for interchange with user-written models.}
+    // Populate data structures used for interchange with user-written models.
     with GenVars do
     begin
         Xd := puXd * 1000.0 * SQR(kVGeneratorBase) / kVARating;
@@ -1313,29 +1075,6 @@ begin
     end;
 
     SetNominalGeneration;
-
-    {Now check for errors.  If any of these came out nil and the string was not nil, give warning}
-    if CompareText(YearlyShape, 'none') = 0 then
-        YearlyShape := '';
-    if CompareText(DailyDispShape, 'none') = 0 then
-        DailyDispShape := '';
-    if CompareText(DutyShape, 'none') = 0 then
-        DutyShape := '';
-
-    if YearlyShapeObj = NIL then
-        if Length(YearlyShape) > 0 then
-            DoSimpleMsg('WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
-    if DailyDispShapeObj = NIL then
-        if Length(DailyDispShape) > 0 then
-            DoSimpleMsg('WARNING! Daily load shape: "' + DailyDispShape + '" Not Found.', 564);
-    if DutyShapeObj = NIL then
-        if Length(DutyShape) > 0 then
-            DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
-
-    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
-    if SpectrumObj = NIL then
-        DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
-
 
     YQFixed := -varBase / Sqr(VBase);   //10-17-02  Fixed negative sign
     GenVars.Vtarget := Vpu * 1000.0 * GenVars.kVGeneratorBase;
@@ -1350,24 +1089,19 @@ begin
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
 
-    {Update any user-written models}
+    // Update any user-written models
     if Usermodel.Exists then
         UserModel.FUpdateModel;
     if Shaftmodel.Exists then
         Shaftmodel.FUpdateModel;
-
 end;
 
-//----------------------------------------------------------------------------
 procedure TGeneratorObj.CalcYPrimMatrix(Ymatrix: TcMatrix);
-
 var
     Y, Yij: Complex;
     i, j: Integer;
     FreqMultiplier: Double;
-
 begin
-
     FYprimFreq := ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
@@ -1380,9 +1114,9 @@ begin
                 Y := Cmplx(EPSILON, 0.0);
 
             if Connection = 1 then
-                Y := CDivReal(Y, 3.0); // Convert to delta impedance
+                Y := Y / 3.0; // Convert to delta impedance
             Y.im := Y.im / FreqMultiplier;
-            Yij := Cnegate(Y);
+            Yij := -Y;
             for i := 1 to Fnphases do
             begin
                 case Connection of
@@ -1402,34 +1136,29 @@ begin
                 end;
             end;
 
-      (**** Removed Neutral / Neutral may float
-
-       IF Connection = 0 Then   With Ymatrix Do  // Take care of neutral issues
-         Begin
-           AddElement(Fnconds, Fnconds, YNeut);  // Add in user specified Neutral Z, if any
-           // Bump up neutral-ground in case neutral ends up floating
-           SetElement(Fnconds, Fnconds, CmulReal(GetElement(Fnconds, Fnconds), 1.000001));
-         End;
-
-      *)
+//       Removed Neutral / Neutral may float
+//
+//       IF Connection = 0 Then   With Ymatrix Do  // Take care of neutral issues
+//         Begin
+//           AddElement(Fnconds, Fnconds, YNeut);  // Add in user specified Neutral Z, if any
+//           // Bump up neutral-ground in case neutral ends up floating
+//           SetElement(Fnconds, Fnconds, GetElement(Fnconds, Fnconds) * 1.000001);
+//         End;
+//
+//      
         end
-
         else
         begin  //  Regular power flow generator model
-
-       {Yeq is always expected as the equivalent line-neutral admittance}
-
-            Y := cnegate(Yeq);  // negate for generation    Yeq is L-N quantity
-
-       // ****** Need to modify the base admittance for real harmonics calcs
+            // Yeq is always expected as the equivalent line-neutral admittance
+            Y := -Yeq;  // negate for generation    Yeq is L-N quantity
+            // ****** Need to modify the base admittance for real harmonics calcs
             Y.im := Y.im / FreqMultiplier;
 
             case Connection of
-
                 0:
                     with YMatrix do
                     begin // WYE
-                        Yij := Cnegate(Y);
+                        Yij := -Y;
                         for i := 1 to Fnphases do
                         begin
                             SetElement(i, i, Y);
@@ -1440,8 +1169,8 @@ begin
                 1:
                     with YMatrix do
                     begin  // Delta  or L-L
-                        Y := CDivReal(Y, 3.0); // Convert to delta impedance
-                        Yij := Cnegate(Y);
+                        Y := Y / 3.0; // Convert to delta impedance
+                        Yij := -Y;
                         for i := 1 to Fnphases do
                         begin
                             j := i + 1;
@@ -1453,21 +1182,15 @@ begin
                         end;
                     end;
             end;
-        end;  {ELSE IF Solution.mode}
-
+        end; // ELSE IF Solution.mode
 end;
 
-
-//----------------------------------------------------------------------------
 procedure TGeneratorObj.CalcYPrim;
-
 var
     i: Integer;
-
 begin
-
-     // Build only shunt Yprim
-     // Build a dummy Yprim Series so that CalcV does not fail
+    // Build only shunt Yprim
+    // Build a dummy Yprim Series so that CalcV does not fail
     if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
     begin
         if YPrim_Shunt <> NIL then
@@ -1489,39 +1212,31 @@ begin
 
     if ActiveCircuit.Solution.LoadModel = POWERFLOW then
     begin
-
         // 12-7-99 we'll start with Yeq in system matrix
         SetNominalGeneration;
         CalcYPrimMatrix(YPrim_Shunt);
-
     end
     else
     begin
-
-         // ADMITTANCE model wanted
-
+        // ADMITTANCE model wanted
         SetNominalGeneration;
         CalcYPrimMatrix(YPrim_Shunt);
-
     end;
 
-     // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
+    // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
     for i := 1 to Yorder do
-        Yprim_Series.SetElement(i, i, CmulReal(Yprim_Shunt.Getelement(i, i), 1.0e-10));
+        Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
 
     YPrim.CopyFrom(YPrim_Shunt);
 
-     // Account for Open Conductors
+    // Account for Open Conductors
     inherited CalcYPrim;
-
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
- {Add the current into the proper location according to connection}
+// Add the current into the proper location according to connection
 
- {Reverse of similar routine in load  (Cnegates are switched)}
-
+// Reverse of similar routine in load  (Cnegates are switched)
 var
     j: Integer;
 
@@ -1530,29 +1245,26 @@ begin
 
         0:
         begin  //Wye
-            Caccum(TermArray^[i], Curr);
-            Caccum(TermArray^[Fnconds], Cnegate(Curr)); // Neutral
+            TermArray^[i] += Curr;
+            TermArray^[Fnconds] -= Curr; // Neutral
         end;
 
         1:
         begin //DELTA
-            Caccum(TermArray^[i], Curr);
+            TermArray^[i] += Curr;
             j := i + 1;
             if j > Fnconds then
                 j := 1;
-            Caccum(TermArray^[j], Cnegate(Curr));
+            TermArray^[j] -= Curr;
         end;
     end;
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.WriteTraceRecord(const s: String);
-
 var
     i: Integer;
     sout: String;
 begin
-
     try
         if (not DSS.InShowResults) then
         begin
@@ -1560,8 +1272,8 @@ begin
                 [ActiveCircuit.Solution.DynaVars.t + ActiveCircuit.Solution.Dynavars.IntHour * 3600.0,
                 ActiveCircuit.Solution.Iteration,
                 ActiveCircuit.LoadMultiplier]),
-                GetSolutionModeID(DSS), ', ',
-                GetLoadModel(DSS), ', ',
+                DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
+                DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
                 GenModel: 0, ', ',
                 DQDV: 8: 0, ', ',
                 (V_Avg * 0.001732 / GenVars.kVgeneratorbase): 8: 3, ', ',
@@ -1571,17 +1283,17 @@ begin
                 s, ', '
             );
             FSWrite(TraceFile, sout);
-            for i := 1 to nphases do
+            for i := 1 to fnphases do
             begin
                 WriteStr(sout, (Cabs(InjCurrent^[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
             end;
-            for i := 1 to nphases do
+            for i := 1 to fnphases do
             begin
                 WriteStr(sout, (Cabs(ITerminal^[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
             end;
-            for i := 1 to nphases do
+            for i := 1 to fnphases do
             begin
                 WriteStr(sout, (Cabs(Vterminal^[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
@@ -1598,7 +1310,7 @@ begin
 
     end;
 end;
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+
 function TGeneratorObj.CheckOnFuel(const Deriv: Double; Const Interval: Double): Boolean;
 Begin
     Result := True;
@@ -1611,11 +1323,9 @@ Begin
         // GenON   :=  False;
     end;
 end;
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+
 procedure TGeneratorObj.DoConstantPQGen;
-
-{Compute total terminal current for Constant PQ}
-
+// Compute total terminal current for Constant PQ
 var
     i: Integer;
     Curr, V: Complex;
@@ -1623,7 +1333,7 @@ var
 //   V012,I012 :Array[0..2] of Complex;
 //   Iabc :Array[1..3] of Complex;
 begin
-     //Treat this just like the Load model
+    //Treat this just like the Load model
 
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     ZeroITerminal;
@@ -1638,13 +1348,13 @@ begin
             0:
             begin  {Wye}
                 if VMag <= VBase95 then
-                    Curr := Cmul(Yeq95, V)  // Below 95% use an impedance model
+                    Curr := Yeq95 * V  // Below 95% use an impedance model
                 else
                 if VMag > VBase105 then
-                    Curr := Cmul(Yeq105, V)  // above 105% use an impedance model
+                    Curr := Yeq105 * V  // above 105% use an impedance model
                 else
                     with Genvars do
-                        Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), V));  // Between 95% -105%, constant PQ
+                        Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / V);  // Between 95% -105%, constant PQ
             end;
             1:
             begin  {Delta}
@@ -1652,17 +1362,17 @@ begin
                     2, 3:
                         VMag := VMag / SQRT3;  // L-N magnitude
                 else
-                        {leave Vmag as is}
+                    // leave Vmag as is
                 end;
 
                 if VMag <= VBase95 then
-                    Curr := Cmul(CdivReal(Yeq95, 3.0), V)  // Below 95% use an impedance model
+                    Curr := (Yeq95 / 3.0) * V  // Below 95% use an impedance model
                 else
                 if VMag > VBase105 then
-                    Curr := Cmul(CdivReal(Yeq105, 3.0), V)  // above 105% use an impedance model
+                    Curr := (Yeq105 / 3.0) * V  // above 105% use an impedance model
                 else
                     with Genvars do
-                        Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), V));  // Between 95% -105%, constant PQ
+                        Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / V);  // Between 95% -105%, constant PQ
             end;
         end;
 
@@ -1670,60 +1380,50 @@ begin
         if UseFuel and (not GenActive) then
             Curr := cmplx(0, 0);
 
-        StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
+        StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
-    {END;}
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.DoConstantZGen;
 var
     i: Integer;
     Curr,
     Yeq2: Complex;
-
 begin
-
-// Assume Yeq is kept up to date
+    // Assume Yeq is kept up to date
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     CalcVTerminalPhase; // get actual voltage across each phase of the load
     ZeroITerminal;
     if Connection = 0 then
         Yeq2 := Yeq
     else
-        Yeq2 := CdivReal(Yeq, 3.0);
+        Yeq2 := Yeq / 3.0;
 
     for i := 1 to Fnphases do
     begin
-        Curr := Cmul(Yeq2, Vterminal^[i]);   // Yeq is always line to neutral
+        Curr := Yeq2 * Vterminal^[i];   // Yeq is always line to neutral
 
         // Checks the output in case of using Fuel
         if UseFuel and (not GenActive) then
             Curr := cmplx(0, 0);
 
-        StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
+        StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
-
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.DoPVTypeGen;
-{Compute total terminal current for Constant P,|V|}
+// Compute total terminal current for Constant P,|V|
 
 // Constant P, constant |V|
-
 var
-
     i: Integer;
     DQ: Double;
     Curr: Complex;
-
 begin
-
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     CalcVTerminalPhase; // get actual voltage across each phase of the generator
     ZeroITerminal;
@@ -1738,8 +1438,6 @@ begin
     else
         V_Avg := V_Avg / Fnphases;
 
-   // 12-9-99 added empirical 0.7 factor to improve iteration
-   // 12-17-99 changed to 0.1 because first guess was consistently too high
     DQ := PVFactor * DQDV * (GenVars.Vtarget - V_Avg);   // Vtarget is L-N
     if (Abs(DQ) > DeltaQMax) then
         if (DQ < 0.0) then
@@ -1749,7 +1447,7 @@ begin
     with Genvars do
         Qnominalperphase := Qnominalperphase + DQ;
 
-   { Test Limits}
+    // Test Limits
     with Genvars do
     begin
         if (Qnominalperphase > varMax) then
@@ -1758,29 +1456,26 @@ begin
         if (Qnominalperphase < varMin) then
             Qnominalperphase := varMin;
 
-       // Compute injection currents using W and var values
-       // Do not use comstant Z models outside normal range
-       // Presumably the var source will take care of the voltage problems
+        // Compute injection currents using W and var values
+        // Do not use comstant Z models outside normal range
+        // Presumably the var source will take care of the voltage problems
         for i := 1 to Fnphases do
         begin
-            Curr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), Vterminal^[i]));
+            Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / Vterminal^[i]);
             
             // Checks the output in case of using Fuel
             if UseFuel and (not GenActive) then
                 Curr := cmplx(0, 0);
             
-            StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
+            StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
             IterminalUpdated := TRUE;
             StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
         end;
     end; {With}
 end;
 
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.DoFixedQGen;
-
-{Compute total terminal current for Fixed Q}
+// Compute total terminal current for Fixed Q
 // Constant P, Fixed Q  Q is always kvarBase
 var
     i: Integer;
@@ -1802,12 +1497,12 @@ begin
             0:
             begin
                 if VMag <= VBase95 then
-                    Curr := Cmul(Cmplx(Yeq95.re, YQfixed), V)  // Below 95% use an impedance model
+                    Curr := Cmplx(Yeq95.re, YQfixed) * V  // Below 95% use an impedance model
                 else
                 if VMag > VBase105 then
-                    Curr := Cmul(Cmplx(Yeq105.re, YQfixed), V)  // above 105% use an impedance model
+                    Curr := Cmplx(Yeq105.re, YQfixed) * V  // above 105% use an impedance model
                 else
-                    Curr := Conjg(Cdiv(Cmplx(Genvars.Pnominalperphase, varBase), V));
+                    Curr := cong(Cmplx(Genvars.Pnominalperphase, varBase) / V);
             end;
             1:
             begin
@@ -1818,12 +1513,12 @@ begin
                     {leave Vmag as is}
                 end;
                 if VMag <= VBase95 then
-                    Curr := Cmul(Cmplx(Yeq95.re / 3.0, YQfixed / 3.0), V)  // Below 95% use an impedance model
+                    Curr := Cmplx(Yeq95.re / 3.0, YQfixed / 3.0) * V  // Below 95% use an impedance model
                 else
                 if VMag > VBase105 then
-                    Curr := Cmul(Cmplx(Yeq105.re / 3.0, YQfixed / 3.0), V)  // above 105% use an impedance model
+                    Curr := Cmplx(Yeq105.re / 3.0, YQfixed / 3.0) * V  // above 105% use an impedance model
                 else
-                    Curr := Conjg(Cdiv(Cmplx(Genvars.Pnominalperphase, varBase), V));
+                    Curr := cong(Cmplx(Genvars.Pnominalperphase, varBase) / V);
             end;
         end;
         
@@ -1831,16 +1526,14 @@ begin
         if UseFuel and (not GenActive) then
             Curr := cmplx(0, 0);
         
-        StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
+        StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
     end;
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.DoFixedQZGen;
-
-{Compute total terminal current for }
+// Compute total terminal current for
 // Constant P, Fixed Q  Q is always a fixed Z derived from kvarBase
 var
     i: Integer;
@@ -1849,7 +1542,6 @@ var
     Vmag: Double;
 
 begin
-
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     CalcVTerminalPhase; // get actual voltage across each phase of the load
     ZeroITerminal;
@@ -1863,14 +1555,14 @@ begin
             0:
             begin
                 if Vmag <= VBase95 then
-                    Curr := Cmul(Cmplx(Yeq95.re, YQfixed), V)  // Below 95% use an impedance model
+                    Curr := Cmplx(Yeq95.re, YQfixed) * V  // Below 95% use an impedance model
                 else
                 if VMag > VBase105 then
-                    Curr := Cmul(Cmplx(Yeq105.re, YQfixed), V)
+                    Curr := Cmplx(Yeq105.re, YQfixed) * V
                 else
                 begin
-                    Curr := Conjg(Cdiv(Cmplx(Genvars.Pnominalperphase, 0.0), V)); // P component of current
-                    Caccum(Curr, Cmul(Cmplx(0.0, YQFixed), V));  // add in Q component of current
+                    Curr := cong(Cmplx(Genvars.Pnominalperphase, 0.0) / V); // P component of current
+                    Curr += Cmplx(0.0, YQFixed) * V;  // add in Q component of current
                 end;
             end;
             1:
@@ -1879,17 +1571,17 @@ begin
                     2, 3:
                         VMag := VMag / SQRT3;  // L-N magnitude
                 else
-                      {leave Vmag as is}
+                    // leave Vmag as is
                 end;
                 if Vmag <= VBase95 then
-                    Curr := Cmul(Cmplx(Yeq95.re / 3.0, YQfixed / 3.0), V)  // Below 95% use an impedance model
+                    Curr := Cmplx(Yeq95.re / 3.0, YQfixed / 3.0) * V  // Below 95% use an impedance model
                 else
                 if VMag > VBase105 then
-                    Curr := Cmul(Cmplx(Yeq105.re / 3.0, YQfixed / 3.0), V)
+                    Curr := Cmplx(Yeq105.re / 3.0, YQfixed / 3.0) * V
                 else
                 begin
-                    Curr := Conjg(Cdiv(Cmplx(Genvars.Pnominalperphase, 0.0), V)); // P component of current
-                    Caccum(Curr, Cmul(Cmplx(0.0, YQFixed / 3.0), V));  // add in Q component of current
+                    Curr := cong(Cmplx(Genvars.Pnominalperphase, 0.0) / V); // P component of current
+                    Curr += Cmplx(0.0, YQFixed / 3.0) * V;  // add in Q component of current
                 end;
             end;
         end;
@@ -1898,19 +1590,17 @@ begin
         if UseFuel and (not GenActive) then
             Curr := cmplx(0, 0);
 
-        StickCurrInTerminalArray(ITerminal, Cnegate(Curr), i);  // Put into Terminal array taking into account connection
+        StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
-    end; {FOR}
+    end;
 end;
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+
 procedure TGeneratorObj.DoUserModel;
-{Compute total terminal Current from User-written model}
+// Compute total terminal Current from User-written model
 var
     i: Integer;
-
 begin
-
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
 
     if UserModel.Exists then    // Check automatically selects the usermodel if true
@@ -1921,22 +1611,17 @@ begin
         with ActiveCircuit.Solution do
         begin          // Negate currents from user model for power flow generator model
             for i := 1 to FnConds do
-                Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
+                InjCurrent^[i] -= Iterminal^[i];
         end;
     end
     else
     begin
-        DoSimpleMsg('Generator.' + name + ' model designated to use user-written model, but user-written model is not defined.', 567);
+        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName], 567);
     end;
-
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.DoCurrentLimitedPQ;
-{Compute total terminal current for Constant PQ, but limit to max current below
- Vminpu}
-
-
+// Compute total terminal current for Constant PQ, but limit to max current below Vminpu
 var
     i: Integer;
     PhaseCurr, DeltaCurr, VLN, VLL: Complex;
@@ -1944,7 +1629,7 @@ var
     V012: array[0..2] of Complex;  // Sequence voltages
 
 begin
-     //Treat this just like the Load model
+    //Treat this just like the Load model
 
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     CalcVTerminalPhase; // get actual voltage across each phase of the load
@@ -1961,18 +1646,17 @@ begin
 
     for i := 1 to Fnphases do
     begin
-
         case Connection of
             0:
             begin
                 VLN := Vterminal^[i];   // VTerminal is LN for this connection
                 VMagLN := Cabs(VLN);
                 with Genvars do
-                    PhaseCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLN));
+                    PhaseCurr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLN);
                 if Cabs(PhaseCurr) > Model7MaxPhaseCurr then
-                    PhaseCurr := Conjg(Cdiv(PhaseCurrentLimit, CDivReal(VLN, VMagLN)));
+                    PhaseCurr := cong(PhaseCurrentLimit / (VLN / VMagLN));
 
-                StickCurrInTerminalArray(ITerminal, Cnegate(PhaseCurr), i);  // Put into Terminal array taking into account connection
+                StickCurrInTerminalArray(ITerminal, -PhaseCurr, i);  // Put into Terminal array taking into account connection
                 ITerminalUpdated := TRUE;
                 StickCurrInTerminalArray(InjCurrent, PhaseCurr, i);  // Put into Terminal array taking into account connection
             end;
@@ -1984,47 +1668,39 @@ begin
                     2, 3:   // 2 or 3 phase generator model 7
                     begin
                         with Genvars do
-                            DeltaCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLL));
+                            DeltaCurr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLL);
                         if Cabs(DeltaCurr) * SQRT3 > Model7MaxPhaseCurr then
-                            DeltaCurr := Conjg(Cdiv(PhaseCurrentLimit, CDivReal(VLL, VMagLL / SQRT3)));
+                            DeltaCurr := cong(PhaseCurrentLimit / (VLL / (VMagLL / SQRT3)));
                     end
                 else  // 1-phase generator model 7
                     with Genvars do
-                        DeltaCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLL));
+                        DeltaCurr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLL);
                     if Cabs(DeltaCurr) > Model7MaxPhaseCurr then
-                        DeltaCurr := Conjg(Cdiv(PhaseCurrentLimit, CDivReal(VLL, VMagLL)));
+                        DeltaCurr := cong(PhaseCurrentLimit / (VLL / VMagLL));
                 end;
 
                 // Checks the output in case of using Fuel
                 if UseFuel and (not GenActive) then
                     DeltaCurr := cmplx(0, 0);
 
-                StickCurrInTerminalArray(ITerminal, Cnegate(DeltaCurr), i);  // Put into Terminal array taking into account connection
+                StickCurrInTerminalArray(ITerminal, -DeltaCurr, i);  // Put into Terminal array taking into account connection
                 ITerminalUpdated := TRUE;
                 StickCurrInTerminalArray(InjCurrent, DeltaCurr, i);  // Put into Terminal array taking into account connection
             end;
         end;
-
     end;
-
 end;
 
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.DoDynamicMode;
-
-{Compute Total Current and add into InjTemp}
-
+// Compute Total Current and add into InjTemp
 var
     i: Integer;
     V012,
     I012: array[0..2] of Complex;
-
 begin
-
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array  and computes VTerminal L-N
 
-   {Inj = -Itotal (in) - Yprim*Vtemp}
+    // Inj = -Itotal (in) - Yprim*Vtemp
 
     case GenModel of
 
@@ -2035,7 +1711,7 @@ begin
             end
             else
             begin
-                DoSimpleMsg(Format('Dynamics model missing for Generator.%s ', [Name]), 5671);
+                DoSimpleMsg('Dynamics model missing for %s ', [FullName], 5671);
                 DSS.SolutionAbort := TRUE;
             end;
     else
@@ -2048,22 +1724,22 @@ begin
                     case Genmodel of
                         7:
                         begin  // simple inverter model
-                                  // Assume inverter stays in phase with terminal voltage
-                            CalcVthev_Dyn_Mod7(CSub(VTerminal^[1], VTerminal^[2]));
+                            // Assume inverter stays in phase with terminal voltage
+                            CalcVthev_Dyn_Mod7(VTerminal^[1] - VTerminal^[2]);
                         end;
                     else
                         CalcVthev_Dyn;  // Update for latest phase angle
                     end;
 
 
-                    ITerminal^[1] := CDiv(CSub(Csub(VTerminal^[1], Vthev), VTerminal^[2]), Zthev);  // ZThev is based on Xd'
+                    ITerminal^[1] := (VTerminal^[1] - Vthev - VTerminal^[2]) / Zthev;  // ZThev is based on Xd'
                     if Genmodel = 7 then
                     begin
                         if Cabs(Iterminal^[1]) > Model7MaxPhaseCurr then   // Limit the current but keep phase angle
                             ITerminal^[1] := ptocomplex(topolar(Model7MaxPhaseCurr, cang(Iterminal^[1])));
                     end;
 
-                    ITerminal^[2] := Cnegate(ITerminal^[1]);
+                    ITerminal^[2] := -ITerminal^[1];
                 end;
 
             3:
@@ -2074,15 +1750,15 @@ begin
                     case GenModel of
                         7:
                         begin  // simple inverter model
-                                // Positive Sequence Contribution to Iterminal
-                                // Assume inverter stays in phase with pos seq voltage
-                                // and pos seq current is limited
+                            // Positive Sequence Contribution to Iterminal
+                            // Assume inverter stays in phase with pos seq voltage
+                            // and pos seq current is limited
                             CalcVthev_Dyn_Mod7(V012[1]);
 
-                                // Positive Sequence Contribution to Iterminal
-                                // Ref Frame here is all L-N
+                            // Positive Sequence Contribution to Iterminal
+                            // Ref Frame here is all L-N
 
-                            I012[1] := CDiv(Csub(V012[1], Vthev), Zthev); // ZThev is based on Xd'
+                            I012[1] := (V012[1] - Vthev) / Zthev; // ZThev is based on Xd'
                             if Cabs(I012[1]) > Model7MaxPhaseCurr  // Limit the current but keep phase angle
                             then
                                 I012[1] := ptocomplex(topolar(Model7MaxPhaseCurr, cang(I012[1])));
@@ -2090,32 +1766,32 @@ begin
                             then
                                 I012[2] := CZERO
                             else
-                                I012[2] := Cdiv(V012[2], Zthev);  // for inverter ZThev is  (Xd' + j0)
+                                I012[2] := V012[2] / Zthev;  // for inverter ZThev is  (Xd' + j0)
 
                         end
                     else
-                            // Positive Sequence Contribution to Iterminal
+                        // Positive Sequence Contribution to Iterminal
                         CalcVthev_Dyn;  // Update for latest phase angle
 
-                            // Positive Sequence Contribution to Iterminal
-                        I012[1] := CDiv(Csub(V012[1], Vthev), Zthev);  // ZThev is based on Xd'
-                        I012[2] := Cdiv(V012[2], Cmplx(0.0, Xdpp));  // machine use Xd"
+                        // Positive Sequence Contribution to Iterminal
+                        I012[1] := (V012[1] - Vthev) / Zthev;  // ZThev is based on Xd'
+                        I012[2] := V012[2] / Cmplx(0.0, Xdpp);  // machine use Xd"
                     end;
 
-                      {Adjust for generator connection}
+                    // Adjust for generator connection
                     if (Connection = 1) or ForceBalanced then
                         I012[0] := CZERO
                     else
-                        I012[0] := Cdiv(V012[0], Cmplx(0.0, Xdpp));
+                        I012[0] := V012[0] / Cmplx(0.0, Xdpp);
 
                     SymComp2Phase(ITerminal, pComplexArray(@I012));  // Convert back to phase components
 
-                      // Neutral current
+                    // Neutral current
                     if Connection = 0 then
-                        ITerminal^[FnConds] := Cnegate(CmulReal(I012[0], 3.0));
+                        ITerminal^[FnConds] := -I012[0] * 3;
                 end;
         else
-            DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
+            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName, Fnphases], 5671);
             DSS.SolutionAbort := TRUE;
         end;
 
@@ -2123,67 +1799,57 @@ begin
 
     IterminalUpdated := TRUE;
 
-    {Add it into inj current array}
+    // Add it into inj current array
     for i := 1 to FnConds do
-        Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
+        InjCurrent^[i] -= Iterminal^[i];
 
-   {Take Care of any shaft model calcs}
+    // Take Care of any shaft model calcs
     if (GenModel = 6) and ShaftModel.Exists then      // auto selects model
     begin           // Compute Mech Power to shaft
         ShaftModel.FCalc(Vterminal, Iterminal);     // Returns pshaft at least
     end;
 end;
 
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.DoHarmonicMode;
+// Compute Injection Current Only when in harmonics mode
 
-{Compute Injection Current Only when in harmonics mode}
-
-{Assumes spectrum is a voltage source behind subtransient reactance and YPrim has been built}
-{Vd is the fundamental frequency voltage behind Xd" for phase 1}
-
+// Assumes spectrum is a voltage source behind subtransient reactance and YPrim has been built
+// Vd is the fundamental frequency voltage behind Xd" for phase 1
 var
     i: Integer;
     E: Complex;
     GenHarmonic: Double;
-
+    pBuffer: PCBuffer24;
 begin
-
+    pBuffer := @TGenerator(ParentClass).cBuffer;
     ComputeVterminal;
 
     with ActiveCircuit.Solution do
     begin
         GenHarmonic := Frequency / GenFundamental;
-        E := CmulReal(SpectrumObj.GetMult(GenHarmonic), GenVars.VThevHarm); // Get base harmonic magnitude
+        E := SpectrumObj.GetMult(GenHarmonic) * GenVars.VThevHarm; // Get base harmonic magnitude
         RotatePhasorRad(E, GenHarmonic, GenVars.ThetaHarm);  // Time shift by fundamental frequency phase shift
         for i := 1 to Fnphases do
         begin
-            cBuffer[i] := E;
+            pBuffer[i] := E;
             if i < Fnphases then
                 RotatePhasorDeg(E, GenHarmonic, -120.0);  // Assume 3-phase generator
         end;
     end;
 
-   {Handle Wye Connection}
+    // Handle Wye Connection
     if Connection = 0 then
-        cbuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
+        pBuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
 
-   {Inj currents = Yprim (E) }
-    YPrim.MVMult(InjCurrent, pComplexArray(@cBuffer));
-
+    // Inj currents = Yprim (E)
+    YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
 end;
 
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.CalcVTerminalPhase;
-
 var
     i, j: Integer;
-
 begin
-
-{ Establish phase voltages and stick in Vterminal}
+    // Establish phase voltages and stick in Vterminal
     case Connection of
 
         0:
@@ -2204,32 +1870,20 @@ begin
                     Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[j]);
                 end;
         end;
-
     end;
-
     GeneratorSolutionCount := ActiveCircuit.Solution.SolutionCount;
-
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.CalcVTerminal;
-
-{Put terminal voltages in an array}
-
-
+// Put terminal voltages in an array
 begin
-
     ComputeVTerminal;
-
     GeneratorSolutionCount := ActiveCircuit.Solution.SolutionCount;
-
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.CalcGenModelContribution;
 // Calculates generator current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
-
 begin
     IterminalUpdated := FALSE;
     with  ActiveCircuit, ActiveCircuit.Solution do
@@ -2260,85 +1914,26 @@ begin
             else
                 DoConstantPQGen;  // for now, until we implement the other models.
             end;
-        end; {ELSE}
-    end; {WITH}
-
-   {When this is done, ITerminal is up to date}
-
+        end;
+    end;
+   // When this is done, ITerminal is up to date
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.CalcInjCurrentArray;
-
-
 // Difference between currents in YPrim and total current
-
-
 begin
-
-
-// Now Get Injection Currents
+    // Now Get Injection Currents
     if GenSwitchOpen then
         ZeroInjCurrent
     else
         CalcGenModelContribution;
 
-(*  We're not going to mess with this logic here -- too complicated: Use an open line in series
-    to look at open phase conditions.
-
-  ELSE Begin
-
-   // some terminals not closed  use admittance model for injection
-      If OpenGeneratorSolutionCount <> ActiveCircuit.Solution.SolutionCount Then Begin
-
-      // Rebuild the Yprimopencond if a new solution because values may have changed.
-
-        // only reallocate when necessary
-        If YPrimOpenCond=nil Then YPrimOpenCond := TcMatrix.CreateMatrix(Yorder)
-        ELSE YPrimOpenCond.Clear;
-        If YPrimOpenCond.Order <> Yorder Then Begin
-           YPrimOpenCond.Free;
-           YPrimOpenCond := TcMatrix.CreateMatrix(Yorder);
-        End;
-        CalcYPrimMatrix(YPrimOpenCond);
-
-        {Now Account for the Open Conductors}
-        {For any conductor that is open, zero out row and column}
-         With YPrimOpenCond Do Begin
-           k := 0;
-           FOR i := 1 TO Fnterms Do Begin
-             FOR j := 1 TO Fnconds Do Begin
-                 If Not Terminals[i - 1].ConductorsClosed[j - 1] Then Begin
-                    ZeroRow(j+k);
-                    ZeroCol(j+k);
-                    SetElement(j+k, j+k, Cmplx(1.0e-12,0.0));  // In case node gets isolated
-                 End;
-             End;
-             k := k+Fnconds;
-           End;
-         End;
-         OpenGeneratorSolutionCount := ActiveCircuit.Solution.SolutionCount;
-         
-      End;
-
-      With ActiveCircuit.Solution Do
-      FOR i := 1 TO Yorder Do Begin
-          Ref := NodeRef^[i];
-          If Ref=0 Then Vterminal^[i] := cZero
-          ELSE  Vterminal^[i] := V^[ref];
-      End;
-      YPrimOpenCond.MVmult(InjTemp, Vterminal);
-      For i := 1 to Yorder Do InjTemp^[i] := Cnegate(InjTemp^[i]);
-   End;
- *)
+    // We're not going to mess with this logic here -- too complicated: Use an open line in series
+    // to look at open phase conditions. 
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.GetTerminalCurrents(Curr: pComplexArray);
-
 // Compute total Currents
-
-
 begin
     with ActiveCircuit.Solution do
     begin
@@ -2352,39 +1947,27 @@ begin
 
     if (DebugTrace) then
         WriteTraceRecord('TotalCurrent');
-
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 function TGeneratorObj.InjCurrents: Integer;
-
-
 begin
-
     with ActiveCircuit.Solution do
     begin
         if LoadsNeedUpdating then
             SetNominalGeneration; // Set the nominal kW, etc for the type of solution being done
 
         CalcInjCurrentArray;          // Difference between currents in YPrim and total terminal current
-
         if (DebugTrace) then
             WriteTraceRecord('Injection');
 
-       // Add into System Injection Current Array
-
+        // Add into System Injection Current Array
         Result := inherited InjCurrents;
-
     end;
-
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.ResetRegisters;
-
 var
     i: Integer;
-
 begin
     for i := 1 to NumGenregisters do
         Registers[i] := 0.0;
@@ -2393,37 +1976,31 @@ begin
     FirstSampleAfterReset := TRUE;  // initialize for trapezoidal integration
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
-
 begin
     if ActiveCircuit.TrapezoidalIntegration then
     begin
-        {Trapezoidal Rule Integration}
+        // Trapezoidal Rule Integration
         if not FirstSampleAfterReset then
             Registers[Reg] := Registers[Reg] + 0.5 * Interval * (Deriv + Derivatives[Reg]);
     end
-    else   {Plain Euler integration}
+    else   
+        // Plain Euler integration
         Registers[Reg] := Registers[Reg] + Interval * Deriv;
 
     Derivatives[Reg] := Deriv;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.TakeSample;
 // Update Energy from metered zone
-
 var
     S: Complex;
     Smag: Double;
     HourValue: Double;
-
 begin
-
-// Compute energy in Generator branch
+    // Compute energy in Generator branch
     if Enabled then
     begin
-
         if GenON then
         begin
             S := cmplx(Get_PresentkW, Get_Presentkvar);
@@ -2438,13 +2015,13 @@ begin
         end;
 
         if GenON or ActiveCircuit.TrapezoidalIntegration then
-      {Make sure we always integrate for Trapezoidal case
-       Don't need to for Gen Off and normal integration}
+            // Make sure we always integrate for Trapezoidal case
+            // Don't need to for Gen Off and normal integration
             with ActiveCircuit.Solution do
             begin
                 if ActiveCircuit.PositiveSequence then
                 begin
-                    S := CmulReal(S, 3.0);
+                    S := S * 3;
                     Smag := 3.0 * Smag;
                 end;
                 Integrate(Reg_kWh, S.re, IntervalHrs);   // Accumulate the power
@@ -2456,18 +2033,15 @@ begin
                 FirstSampleAfterReset := FALSE;
                 if UseFuel then 
                     GenActive := CheckonFuel(S.re, IntervalHrs);
-
             end;
     end;
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 function TGeneratorObj.Get_PresentkW: Double;
 begin
     Result := Genvars.Pnominalperphase * 0.001 * Fnphases;
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 function TGeneratorObj.Get_PresentkV: Double;
 begin
     Result := Genvars.kVGeneratorBase;
@@ -2478,25 +2052,20 @@ begin
     Result := Genvars.Qnominalperphase * 0.001 * Fnphases;
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.InitDQDVCalc;
-
 begin
     DQDV := 0.0;
     Genvars.Qnominalperphase := 0.5 * (varmax + varmin);   // avg of the limits
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.BumpUpQ;
-{Bump up vars by 10% of range for next calc}
+// Bump up vars by 10% of range for next calc
 begin
     with Genvars do
         Qnominalperphase := Qnominalperphase + 0.1 * (varmax - varmin);
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.RememberQV;
-
 var
     i: Integer;
 
@@ -2510,13 +2079,11 @@ begin
     V_Remembered := V_Avg;
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.CalcDQDV;
 var
     Vdiff: Double;
     i: Integer;
 begin
-
     CalcVTerminal;
     V_Avg := 0.0;
     for i := 1 to Fnphases do
@@ -2532,78 +2099,36 @@ begin
     DQDVSaved := DQDV;  //Save for next time  Allows generator to be enabled/disabled during simulation
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TGeneratorObj.ResetStartPoint;
-
 begin
     Genvars.Qnominalperphase := 1000.0 * kvarBase / Fnphases;
 end;
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TGeneratorObj.DumpProperties(F: TFileStream; Complete: Boolean);
-
-var
-    i, idx: Integer;
-
-begin
-    inherited DumpProperties(F, Complete);
-
-    FSWriteln(F, Format('!DQDV=%10.2g', [DQDV]));
-
-
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            idx := PropertyIdxMap[i];
-            case idx of
-                34, 36:
-                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[idx] + ')');
-                44:
-                    FSWriteln(F,'~ ',PropertyName^[i],'=False')  // This one has no variable associated, not needed
-            else
-                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[idx]);
-            end;
-        end;
-
-    FSWriteln(F);
-
-end;
-
 
 procedure TGeneratorObj.InitHarmonics;
 var
     E, Va: complex;
 begin
-
     YPrimInvalid := TRUE;  // Force rebuild of YPrims
     GenFundamental := ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
 
     with GenVars do
     begin
-
         Yeq := Cinv(Cmplx(0.0, Xdpp));      // used for current calcs  Always L-N
 
-         {Compute reference Thevinen voltage from phase 1 current}
-
+        // Compute reference Thevinen voltage from phase 1 current
         if GenON then
         begin
-
             ComputeIterminal;  // Get present value of current
 
             with ActiveCircuit.solution do
                 case Connection of
-                    0:
-                    begin {wye - neutral is explicit}
-                        Va := Csub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[Fnconds]]);
-                    end;
-                    1:
-                    begin  {delta -- assume neutral is at zero}
+                    0:{wye - neutral is explicit}
+                        Va := NodeV^[NodeRef^[1]] - NodeV^[NodeRef^[Fnconds]];
+                    1:{delta -- assume neutral is at zero}
                         Va := NodeV^[NodeRef^[1]];
-                    end;
                 end;
 
-            E := Csub(Va, Cmul(Iterminal^[1], cmplx(0.0, Xdpp)));
+            E := Va - Iterminal^[1] * cmplx(0.0, Xdpp);
             Vthevharm := Cabs(E);   // establish base mag and angle
             ThetaHarm := Cang(E);
         end
@@ -2613,77 +2138,20 @@ begin
             ThetaHarm := 0.0;
         end;
     end;
-
-end;
-
-procedure TGeneratorObj.InitPropertyValues(ArrayOffset: Integer);
-
-begin
-
-    PropertyValue[1] := '3';     //'phases';
-    PropertyValue[2] := Getbus(1);         //'bus1';
-    PropertyValue[3] := '12.47';
-    PropertyValue[4] := '100';
-    PropertyValue[5] := '.80';
-    PropertyValue[6] := '1';
-    PropertyValue[7] := '';
-    PropertyValue[8] := '';
-    PropertyValue[9] := '';
-    PropertyValue[10] := 'Default';
-    PropertyValue[11] := '0.0';
-    PropertyValue[12] := 'wye';
-    PropertyValue[13] := '60';
-    PropertyValue[14] := '0'; // 'rneut'; // if entered -, assume open
-    PropertyValue[15] := '0';  //'xneut';
-    PropertyValue[16] := 'variable'; //'status'  fixed or variable
-    PropertyValue[17] := '1'; //'class'
-    PropertyValue[18] := '1.0';
-    PropertyValue[19] := Str_Real(kvarMax, 3);
-    PropertyValue[20] := Str_Real(kvarMin, 3);
-    PropertyValue[21] := '0.1';
-    PropertyValue[22] := 'no';
-    PropertyValue[23] := '0.90';
-    PropertyValue[24] := '1.10';
-    PropertyValue[25] := 'No';
-    PropertyValue[26] := Format('%-g', [GenVars.kVARating]);
-    PropertyValue[27] := Format('%-g', [GenVars.kVARating * 0.001]);
-    PropertyValue[28] := Format('%-g', [GenVars.puXd]);
-    PropertyValue[29] := Format('%-g', [GenVars.puXdp]);
-    PropertyValue[30] := Format('%-g', [GenVars.puXdpp]);
-    PropertyValue[31] := Format('%-g', [GenVars.Hmass]);
-    PropertyValue[32] := Format('%-g', [GenVars.Dpu]);
-    PropertyValue[33] := '';
-    PropertyValue[34] := '';
-    PropertyValue[35] := '';
-    PropertyValue[36] := '';
-    PropertyValue[37] := '0';
-    PropertyValue[38] := 'No';
-    PropertyValue[39] := '20';
-    PropertyValue[40] := 'No';
-    PropertyValue[41] := '0.0';
-    PropertyValue[42] := '100.0';
-    PropertyValue[43] := '20.0';
-    PropertyValue[44] := 'No';
-
-    inherited  InitPropertyValues(NumPropsThisClass);
-
 end;
 
 procedure TGeneratorObj.InitStateVars;
 var
-    {VNeut,}
-
+    // VNeut,
     i: Integer;
     V012,
     I012: array[0..2] of Complex;
     Vabc: array[1..3] of Complex;
-
 begin
     YPrimInvalid := TRUE;  // Force rebuild of YPrims
 
     with GenVars do
     begin
-
         case Genmodel of
             7:
                 Zthev := Cmplx(Xdp, 0.0); // use Xd' as an equivalent R for the inverter
@@ -2693,19 +2161,17 @@ begin
 
         Yeq := Cinv(Zthev);
 
-     {Compute nominal Positive sequence voltage behind transient reactance}
-
+        // Compute nominal Positive sequence voltage behind transient reactance
         if GenON then
             with ActiveCircuit.Solution do
             begin
-
                 ComputeIterminal;
 
                 case Fnphases of
 
                     1:
                     begin
-                        Edp := Csub(CSub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[2]]), Cmul(ITerminal^[1], Zthev));
+                        Edp := NodeV^[NodeRef^[1]] - NodeV^[NodeRef^[2]] - ITerminal^[1] * Zthev;
                         VThevMag := Cabs(Edp);
                     end;
 
@@ -2718,25 +2184,23 @@ begin
                         for i := 1 to FNphases do
                             Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
                         Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
-                        Edp := Csub(V012[1], Cmul(I012[1], Zthev));    // Pos sequence
+                        Edp := V012[1] - I012[1] * Zthev;    // Pos sequence
                         VThevMag := Cabs(Edp);
                     end;
                 else
-                    DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.' + name + ' has %d phases.', [Fnphases]), 5672);
+                    DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName, Fnphases], 5672);
                     DSS.SolutionAbort := TRUE;
                 end;
-
-
-         // Shaft variables
-         // Theta is angle on Vthev[1] relative to system reference
-         //Theta  := Cang(Vthev^[1]);   // Assume source at 0
+                // Shaft variables
+                // Theta is angle on Vthev[1] relative to system reference
+                //Theta  := Cang(Vthev^[1]);   // Assume source at 0
                 Theta := Cang(Edp);
                 if GenModel = 7 then
                     Model7LastAngle := Theta;
 
                 dTheta := 0.0;
                 w0 := Twopi * ActiveCircuit.Solution.Frequency;
-         // recalc Mmass and D in case the frequency has changed
+                // recalc Mmass and D in case the frequency has changed
                 with GenVars do
                 begin
                     GenVars.Mmass := 2.0 * GenVars.Hmass * GenVars.kVArating * 1000.0 / (w0);   // M = W-sec
@@ -2747,8 +2211,8 @@ begin
                 Speed := 0.0;    // relative to synch speed
                 dSpeed := 0.0;
 
-         // Init User-written models
-         //Ncond:Integer; V, I:pComplexArray; const X,Pshaft,Theta,Speed,dt,time:Double
+                // Init User-written models
+                //Ncond:Integer; V, I:pComplexArray; const X,Pshaft,Theta,Speed,dt,time:Double
                 with ActiveCircuit.Solution do
                     if GenModel = 6 then
                     begin
@@ -2768,26 +2232,22 @@ begin
             Speed := 0.0;
             dSpeed := 0.0;
         end;
-    end;  {With}
+    end;
 end;
 
 procedure TGeneratorObj.IntegrateStates;
-
 var
     TracePower: Complex;
-
-
 begin
    // Compute Derivatives and then integrate
 
     ComputeIterminal;
 
-// Check for user-written exciter model.
+    // Check for user-written exciter model.
     //Function(V, I:pComplexArray; const Pshaft,Theta,Speed,dt,time:Double)
 
     with ActiveCircuit.Solution, GenVars do
     begin
-
         with DynaVars do
             if (IterationFlag = 0) then
             begin {First iteration of new time step}
@@ -2795,20 +2255,20 @@ begin
                 SpeedHistory := Speed + 0.5 * h * dSpeed;
             end;
 
-      // Compute shaft dynamics
+        // Compute shaft dynamics
         TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases);
         dSpeed := (Pshaft + TracePower.re - D * Speed) / Mmass;
 //      dSpeed := (Torque + TerminalPowerIn(Vtemp,Itemp,FnPhases).re/Speed) / (Mmass);
         dTheta := Speed;
 
-     // Trapezoidal method
+        // Trapezoidal method
         with DynaVars do
         begin
             Speed := SpeedHistory + 0.5 * h * dSpeed;
             Theta := ThetaHistory + 0.5 * h * dTheta;
         end;
 
-      // Write Dynamics Trace Record
+        // Write Dynamics Trace Record
         if DebugTrace then
         begin
             FSWrite(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
@@ -2829,17 +2289,13 @@ begin
             if ShaftModel.Exists then
                 ShaftModel.Integrate;
         end;
-
-
     end;
 end;
 
 function TGeneratorObj.Get_Variable(i: Integer): Double;
-{Return variables one at a time}
-
+// Return variables one at a time
 var
     N, k: Integer;
-
 begin
     N := 0;
     Result := -9999.99;  // error return value
@@ -2861,34 +2317,32 @@ begin
             6:
                 Result := dTheta;
         else
-        begin
-            if UserModel.Exists then
             begin
-                N := UserModel.FNumVars;
-                k := (i - NumGenVariables);
-                if k <= N then
+                if UserModel.Exists then
                 begin
-                    Result := UserModel.FGetVariable(k);
-                    Exit;
+                    N := UserModel.FNumVars;
+                    k := (i - NumGenVariables);
+                    if k <= N then
+                    begin
+                        Result := UserModel.FGetVariable(k);
+                        Exit;
+                    end;
+                end;
+
+                // If we get here, must be in the Shaft Model if anywhere
+                if ShaftModel.Exists then
+                begin
+                    k := i - (NumGenVariables + N);
+                    if k > 0 then
+                        Result := ShaftModel.FGetVariable(k);
                 end;
             end;
-
-           {If we get here, must be in the Shaft Model if anywhere}
-            if ShaftModel.Exists then
-            begin
-                k := i - (NumGenVariables + N);
-                if k > 0 then
-                    Result := ShaftModel.FGetVariable(k);
-            end;
         end;
-        end;
-
 end;
 
 procedure TGeneratorObj.Set_Variable(i: Integer; Value: Double);
 var
     N, k: Integer;
-
 begin
     N := 0;
     if i < 1 then
@@ -2987,134 +2441,108 @@ begin
         6:
             Result := 'dTheta (Deg)';
     else
-    begin
-        if UserModel.Exists then  // Checks for existence and Selects
         begin
-            pName := PAnsiChar(@Buff);
-            n := UserModel.FNumVars;
-            i2 := i - NumGenVariables;
-            if i2 <= n then
+            if UserModel.Exists then  // Checks for existence and Selects
             begin
-                 // DLL functions require AnsiString type
-                UserModel.FGetVarName(i2, pName, BuffSize);
+                pName := PAnsiChar(@Buff);
+                n := UserModel.FNumVars;
+                i2 := i - NumGenVariables;
+                if i2 <= n then
+                begin
+                    // DLL functions require AnsiString type
+                    UserModel.FGetVarName(i2, pName, BuffSize);
+                    Result := String(pName);
+                    Exit;
+                end;
+            end;
+
+            if ShaftModel.Exists then
+            begin
+                pName := PAnsiChar(Buff);
+                i2 := i - NumGenVariables - n;
+                if i2 > 0 then
+                    UserModel.FGetVarName(i2, pName, BuffSize);
                 Result := String(pName);
-                Exit;
             end;
         end;
-
-        if ShaftModel.Exists then
-        begin
-            pName := PAnsiChar(Buff);
-            i2 := i - NumGenVariables - n;
-            if i2 > 0 then
-                UserModel.FGetVarName(i2, pName, BuffSize);
-            Result := String(pName);
-        end;
-    end;
-    end;
-
-end;
-
-function TGeneratorObj.GetPropertyValue(Index: Integer): String;
-
-begin
-    Result := '';
-    case Index of
-        3:
-            Result := Format('%.6g', [Genvars.kVGeneratorBase]);
-        4:
-            Result := Format('%.6g', [kWBase]);
-        5:
-            Result := Format('%.6g', [PFNominal]);
-        7:
-            Result := Yearlyshape;
-        8:
-            Result := Dailydispshape;
-        9:
-            Result := DutyShape;
-        13:
-            Result := Format('%.6g', [kvarBase]);
-        19:
-            Result := Format('%.6g', [kvarMax]);
-        20:
-            Result := Format('%.6g', [kvarMin]);
-        26:
-            Result := Format('%.6g', [Genvars.kVArating]);
-        27:
-            Result := Format('%.6g', [Genvars.kVArating * 0.001]);
-        34, 36:
-        begin
-            Result := '(' + inherited GetPropertyValue(index) + ')';
-        end;
-        37:
-            Result := Format('%.6g', [DutyStart]);
-        38:
-            Result := StrYorN(ForceBalanced);
-        40: 
-            Result := StrYorN(UseFuel);
-        41: 
-            Result := Format('%.6g', [FuelkWh]);
-        42: 
-            Result := Format('%.6g', [pctFuel]);
-        43: 
-            Result := Format('%.6g', [pctReserve]);
-        44: 
-            Result := 'No';
-    else
-        Result := inherited GetPropertyValue(index);
     end;
 end;
 
-procedure TGeneratorObj.MakePosSequence;
-
+procedure TGeneratorObj.MakePosSequence();
 var
-    S: String;
     V: Double;
-
+    had_kVA, had_MVA, had_kvars: Boolean;
+    kW_new, PF_new, new_kVA, new_MVA, new_minkvar, new_maxkvar: Double;
+    oldPhases, changes: Integer;
 begin
-
-    S := 'Phases=1 conn=wye';
-
-  // Make sure voltage is line-neutral
+    // Make sure voltage is line-neutral
     if (Fnphases > 1) or (connection <> 0) then
         V := GenVars.kVGeneratorBase / SQRT3
     else
         V := GenVars.kVGeneratorBase;
 
-    S := S + Format(' kV=%-.5g', [V]);
-
-  // Divide the load by no. phases
+    // Divide the load by no. phases
+    changes := 3;
+    oldPhases := Fnphases;
     if Fnphases > 1 then
     begin
-        S := S + Format(' kW=%-.5g  PF=%-.5g', [kWbase / Fnphases, PFNominal]);
-        if (PrpSequence^[19] <> 0) or (PrpSequence^[20] <> 0) then
-            S := S + Format(' maxkvar=%-.5g  minkvar=%-.5g', [kvarmax / Fnphases, kvarmin / Fnphases]);
-        if PrpSequence^[26] > 0 then
-            S := S + Format(' kva=%-.5g  ', [genvars.kvarating / Fnphases]);
-        if PrpSequence^[27] > 0 then
-            S := S + Format(' MVA=%-.5g  ', [genvars.kvarating / 1000.0 / Fnphases]);
+        had_kVA := PrpSequence[26] > 0;
+        had_MVA := PrpSequence[27] > 0;
+        had_kvars := (PrpSequence[19] <> 0) or (PrpSequence[20] <> 0);
+        kW_new := kWbase / Fnphases;
+        PF_new := PFNominal;
+        if had_kvars then
+        begin
+            new_minkvar := kvarmin / Fnphases;
+            new_maxkvar := kvarmax / Fnphases;
+            Inc(changes);
+        end;
+        if had_kVA then
+        begin
+            new_kVA := genvars.kvarating / Fnphases;
+            Inc(changes);
+        end;
+        if had_MVA then
+        begin
+            new_MVA := genvars.kvarating / 1000.0 / Fnphases;
+            Inc(changes);
+        end;
     end;
 
-    Parser.CmdString := S;
-    Edit;
+    BeginEdit(True);
+    SetInteger(ord(TProp.Phases), 1);
+    SetInteger(ord(TProp.conn), 0);
+    SetDouble(ord(TProp.kV), V);
+    if oldPhases > 1 then
+    begin
+        SetDouble(ord(TProp.kW), kW_new);
+        SetDouble(ord(TProp.PF), PF_new);
+        if had_kvars then
+        begin
+            SetDouble(ord(TProp.minkvar), new_minkvar);
+            SetDouble(ord(TProp.maxkvar), new_maxkvar);
+        end;
+        if had_kVA then
+            SetDouble(ord(TProp.kVA), new_kVA);
+        if had_MVA then
+            SetDouble(ord(TProp.MVA), new_MVA);
+    end;
+    EndEdit(changes);
 
     inherited;
 end;
 
-procedure TGeneratorObj.Set_ConductorClosed(Index: Integer;
-    Value: Boolean);
+procedure TGeneratorObj.Set_ConductorClosed(Index: Integer; Value: Boolean);
 begin
     inherited;
 
- // Just turn generator on or off;
+    // Just turn generator on or off;
 
     if Value then
         GenSwitchOpen := FALSE
     else
         GenSwitchOpen := TRUE;
-
 end;
-
 
 procedure TGeneratorObj.Set_PowerFactor(const Value: Double);
 begin
@@ -3124,49 +2552,19 @@ end;
 
 procedure TGeneratorObj.Set_PresentkV(const Value: Double);
 begin
-    with Genvars do
-    begin
-        kVGeneratorBase := Value;
-        case FNphases of
-            2, 3:
-                VBase := kVGeneratorBase * InvSQRT3x1000;
-        else
-            VBase := kVGeneratorBase * 1000.0;
-        end;
-    end;
-end;
-
-procedure TGeneratorObj.Set_Presentkvar(const Value: Double);
-var
-    kVA_Gen: Double;
-
-begin
-    kvarBase := Value;
-    Genvars.Qnominalperphase := 1000.0 * kvarBase / Fnphases; // init to something reasonable
-    kVA_Gen := Sqrt(Sqr(kWBase) + Sqr(kvarBase));
-    if kVA_Gen <> 0.0 then
-        PFNominal := kWBase / kVA_Gen
-    else
-        PFNominal := 1.0;
-    if (kWBase * kvarBase) < 0.0 then
-        PFNominal := -PFNominal;
-
-    kvarMax := 2.0 * kvarBase;
-    kvarMin := -kvarMax;
+    Genvars.kVGeneratorBase := Value;
+    PropertySideEffects(ord(TProp.kV));
 end;
 
 procedure TGeneratorObj.Set_PresentkW(const Value: Double);
 begin
-
     kWBase := Value;
     SyncUpPowerQuantities;
-
 end;
 
 procedure TGeneratorObj.SyncUpPowerQuantities;
 begin
-
-   // keep kvar nominal up to date with kW and PF
+    // keep kvar nominal up to date with kW and PF
     if (PFNominal <> 0.0) then
     begin
         kvarBase := kWBase * sqrt(1.0 / Sqr(PFNominal) - 1.0);
@@ -3179,9 +2577,7 @@ begin
 
         if kVANotSet then
             GenVars.kVARating := kWBase * 1.2;
-
     end;
-
 end;
 
 procedure TGeneratorObj.SetDragHandRegister(Reg: Integer;
@@ -3193,10 +2589,9 @@ end;
 
 procedure TGeneratorObj.SetkWkvar(const PkW, Qkvar: Double);
 begin
-
     kWBase := PkW;
-    Presentkvar := Qkvar;
-
+    kvarBase := Qkvar;
+    PropertySideEffects(ord(TProp.kvar));
 end;
 
 procedure TGeneratorObj.CalcVthev_Dyn;
@@ -3207,21 +2602,18 @@ begin
 end;
 
 procedure TGeneratorObj.CalcVthev_Dyn_Mod7(const V: Complex);
-{Adjust VThev to be in phase with V, if possible}
-{
- If the voltage magnitude drops below 15% or so, the accuracy of determining the
- phase angle gets flaky. This algorithm approximates the action of a PLL that will
- hold the last phase angle until the voltage recovers.
-}
+// Adjust VThev to be in phase with V, if possible
+
+// If the voltage magnitude drops below 15% or so, the accuracy of determining the
+// phase angle gets flaky. This algorithm approximates the action of a PLL that will
+// hold the last phase angle until the voltage recovers.
 var
     Model7angle: Double;
 begin
     if GenSwitchOpen then
         GenVars.VThevMag := 0.0;
-   {
-      For Phases=1, Vbase is voltage across the terminals.
-      Else it is LN voltage.
-   }
+    // For Phases=1, Vbase is voltage across the terminals.
+    // Else it is LN voltage.
     if Cabs(V) > 0.2 * Vbase then
         Model7angle := Cang(V)
     else
@@ -3229,12 +2621,8 @@ begin
 
     Vthev := pclx(GenVars.VthevMag, Model7angle);
     Model7Lastangle := Model7angle;
-
 end;
 
-initialization
-
-    CDOUBLEONE := CMPLX(1.0, 1.0);
-//   TWOPI3     := twopi/3.0;
-
+finalization    GenStatusEnum.Free;
+    GenDispModeEnum.Free;
 end.

@@ -57,7 +57,7 @@ uses
     sysutils,
     DSSGlobals,
     LineUnits,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     Line,
     UcMatrix,
     DSSClass,
@@ -77,7 +77,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active LineGeometry object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['LineGeometry'], 8989);
         end;
         Exit;
     end;
@@ -126,7 +126,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     if not DSSPrime.LineGeometryClass.SetActive(Value) then
-        DoSimpleMsg(DSSPrime, 'LineGeometry "' + Value + '" Not Found in Active Circuit.', 51008);
+        DoSimpleMsg(DSSPrime, 'LineGeometry "%s" not found in Active Circuit.', [Value], 51008);
 
      // Still same active object if not found
 end;
@@ -148,7 +148,7 @@ var
 begin
     if (Value < 1) then
     begin
-        DoSimpleMsg(DSSPrime, Format('Invalid number of conductors (%d). Please use a value within the valid range (>0).', [Value]), 183);
+        DoSimpleMsg(DSSPrime, 'Invalid number of conductors (%d). Please use a value within the valid range (>0).', [Value], 183);
         Exit;
     end;
     if not _activeObj(DSSPrime, pLineGeometry) then
@@ -175,7 +175,7 @@ var
 begin
     if (Value < 1) then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid number of phases sent via C-API. Please enter a value within range.', 184);
+        DoSimpleMsg(DSSPrime, _('Invalid number of phases sent via C-API. Please enter a value within range.'), 184);
     end;
 
     if not _activeObj(DSSPrime, pLineGeometry) then
@@ -398,7 +398,7 @@ begin
     begin
         if Nconds <> ValueCount then
         begin
-            DoSimpleMsg(Format('The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, NConds]), 183);
+            DoSimpleMsg('The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, NConds], 183);
             Exit;
         end;
         Move(ValuePtr[0], FUnits[1], ValueCount * SizeOf(Double));
@@ -440,7 +440,7 @@ begin
     begin
         if Nconds <> ValueCount then
         begin
-            DoSimpleMsg(Format('The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, NConds]), 188);
+            DoSimpleMsg('The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, NConds], 188);
             Exit;
         end;
         Move(ValuePtr[0], FY[1], ValueCount * SizeOf(Double));
@@ -482,7 +482,7 @@ begin
     begin
         if Nconds <> ValueCount then
         begin
-            DoSimpleMsg(Format('The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, NConds]), 187);
+            DoSimpleMsg('The number of values provided (%d) does not match the number of conductors (%d).', [ValueCount, NConds], 187);
             Exit;
         end;
         Move(ValuePtr[0], FX[1], ValueCount * SizeOf(Double));
@@ -568,7 +568,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     if DSSPrime.LineGeometryClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg(DSSPrime, 'Invalid LineGeometry index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['LineGeometry', Value], 656565);
 end;
 //------------------------------------------------------------------------------
 end.

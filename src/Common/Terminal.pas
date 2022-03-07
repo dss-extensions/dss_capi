@@ -7,7 +7,7 @@ unit Terminal;
   ----------------------------------------------------------
 }
 
-{ Definition of classes for all terminals of a DSS element}
+// Definition of classes for all terminals of a DSS element
 
 interface
 
@@ -29,17 +29,12 @@ type
 
     TerminalArray = array of TPowerTerminal;
 
-  {
-   Control Terminal is managed by override functions in classes that are derived from this class
-  }
+//   Control Terminal is managed by override functions in classes that are derived from this class
 
 implementation
 
 uses
     SysUtils;
-
-
-{TPowerTerminal}
 
 procedure TPowerTerminal.Init(Ncond: Integer);
 var
@@ -53,12 +48,10 @@ begin
     ActiveConductor := 1;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TPowerTerminal.Set_ActiveConductor(value: Integer);
 begin
     if (Value > 0) and (Value <= Length(ConductorsClosed)) then
         ActiveConductor := Value;
 end;
-
 
 end.

@@ -59,7 +59,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active GICSource object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['GICSource'], 8989);
         end;
         Exit;
     end;
@@ -126,7 +126,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'GICSource "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'GICSource "%s" not found in Active Circuit.', [Value], 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -148,7 +148,12 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    elem.nphases := Value;
+    if Value < 1 then
+    begin
+        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName], 6568);
+        Exit;
+    end;
+    elem.Fnphases := Value;
     Elem.NConds := Value;  // Force reallocation of terminal info
 end;
 //------------------------------------------------------------------------------
@@ -344,7 +349,7 @@ begin
     elem := DSSPrime.GICSourceClass.ElementList.Get(Value);
     if elem = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid GICSource index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['GICSource', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := elem;

@@ -84,7 +84,7 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Line,
-    UComplex,
+    UComplex, DSSUcomplex,
     sysutils,
     CktElement,
     DSSObject,
@@ -148,7 +148,7 @@ begin
         Loss := Cmplx(0.0, 0.0);
         while pLine <> NIL do
         begin
-            CAccum(Loss, pLine.Losses);
+            Loss += pLine.Losses;
             pLine := Lines.Next;
         end;
         Result[0] := Loss.re * 0.001;
@@ -275,7 +275,7 @@ begin
         for i := 1 to NumDevices do
         begin
             with  TDSSCktElement(CktElements.Get(i)) do
-                Result[i - 1] := DSS_CopyStringAsPChar(ParentClass.Name + '.' + Name);
+                Result[i - 1] := DSS_CopyStringAsPChar(FullName);
         end;
     end
 end;
@@ -304,7 +304,7 @@ begin
         while pTransf <> NIL do
         begin
             if pTransf.Issubstation then
-                Caccum(Loss, pTransf.Losses);
+                Loss += pTransf.Losses;
             pTransf := Transformers.Next;
         end;
         Result[0] := Loss.re * 0.001;
@@ -338,7 +338,7 @@ begin
         cPower := Cmplx(0.0, 0.0);
         while pCktElem <> NIL do
         begin
-            CAccum(cPower, pcktElem.Power[1]);
+            cPower += pcktElem.Power[1];
             pCktElem := Sources.Next;
         end;
         Result[0] := cPower.re * 0.001;
@@ -494,7 +494,7 @@ begin
     Result := -1;
     if InvalidCircuit(DSSPrime) then
     begin
-        DoSimpleMsg(DSSPrime, 'Create a circuit before trying to set an element active!', 5015);
+        DoSimpleMsg(DSSPrime, _('Create a circuit before trying to set an element active!'), 5015);
         Exit;
     end;
 
@@ -921,7 +921,7 @@ begin
     DevClassIndex := DSSPrime.ClassNames.Find(ClassName);
     if DevClassIndex = 0 then
     begin
-        DoSimplemsg(DSSPrime, 'Error: Class ' + ClassName + ' not found.', 5016);
+        DoSimpleMsg(DSSPrime, 'Class %s not found.', [ClassName], 5016);
         Exit;
     end;
 
@@ -999,7 +999,7 @@ begin
         for i := 1 to NumNodes do
         begin
             with MapNodeToBus^[i] do
-                Result[k] := DSS_CopyStringAsPChar(Format('%s.%-d', [Uppercase(BusList.NameOfIndex(Busref)), NodeNum]));
+                Result[k] := DSS_CopyStringAsPChar(Format('%s.%-d', [AnsiUpperCase(BusList.NameOfIndex(Busref)), NodeNum]));
             Inc(k);
         end;
     end
@@ -1075,7 +1075,7 @@ procedure Circuit_SetCktElementIndex(const Value: Integer); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
     begin
-        DoSimpleMsg(DSSPrime, 'Create a circuit before trying to set an element active!', 5015);
+        DoSimpleMsg(DSSPrime, _('Create a circuit before trying to set an element active!'), 5015);
         Exit;
     end;
 
@@ -1084,7 +1084,7 @@ begin
         if NumDevices > Value then
             ActiveCktElement := CktElements.Get(Value + 1)
         else
-            DoSimpleMsg(DSSPrime, 'Invalid CktElement index', 5030);
+            DoSimpleMsg(DSSPrime, _('Invalid CktElement index'), 5030);
     end;
 end;
 
@@ -1092,7 +1092,7 @@ procedure Circuit_SetCktElementName(const Value: PAnsiChar); CDECL;
 begin
     if Circuit_SetActiveElement(Value) = -1 then
     begin
-        DoSimpleMsg(DSSPrime, Format('Invalid CktElement name "%s"', [Value]), 5031);
+        DoSimpleMsg(DSSPrime, 'Invalid CktElement name "%s"', [Value], 5031);
     end;
 end;
 //------------------------------------------------------------------------------

@@ -1,17 +1,10 @@
 unit MeterClass;
-
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
-{
-   Base for Meter classes
-}
-
-
-{$M+}
 
 interface
 
@@ -21,42 +14,32 @@ uses
 
 type
     TMeterClass = class(TCktElementClass)
-    PRIVATE
-
     PROTECTED
-        procedure ClassEdit(const ActiveMeterObj: Pointer; const ParamPointer: Integer);
-        procedure ClassMakeLike(const OtherObj: Pointer);
-
-        procedure CountProperties;  // Add no. of intrinsic properties
-        procedure DefineProperties;  // Add Properties of this class to propName
-
+        procedure CountPropertiesAndAllocate; override;
+        procedure DefineProperties; override;
     PUBLIC
-        NumMeterClassProps: Integer;
-        constructor Create(dssContext: TDSSContext);
+        constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
 
         procedure ResetAll; VIRTUAL;
         procedure SampleAll; VIRTUAL;  // Force all monitors to take a sample
         procedure SaveAll; VIRTUAL;   // Force all monitors to save their buffers to disk
-    PUBLISHED
-
     end;
-
 
 implementation
 
 uses
     MeterElement,
-    ParserDel,
     DSSClassDefs,
     DSSGlobals;
 
-constructor TMeterClass.Create(dssContext: TDSSContext);
-begin
+const
+    NumPropsThisClass = 0;
 
-    inherited Create(dssContext);
-    NumMeterClassProps := 0;
-    DSSClassType := METER_ELEMENT;
+constructor TMeterClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
+begin
+    inherited Create(dssContext, DSSClsType or METER_ELEMENT, DSSClsName);
+    ClassParents.Add('MeterClass');
 end;
 
 destructor TMeterClass.Destroy;
@@ -65,55 +48,17 @@ begin
     inherited Destroy;
 end;
 
-procedure TMeterClass.CountProperties;
+procedure TMeterClass.CountPropertiesAndAllocate;
 begin
-    NumProperties := NumProperties + NumMeterClassProps;
-    inherited CountProperties;
+    NumProperties := NumProperties + NumPropsThisClass;
+    inherited CountPropertiesAndAllocate;
 end;
 
 procedure TMeterClass.DefineProperties;
-
-// Define the properties for the base power delivery element class
-
 begin
-   // no properties
-     // PropertyName^[ActiveProperty + 1] := 'propname';
-     // PropertyHelp^[ActiveProperty + 1] := 'prop help';
-
-    ActiveProperty := ActiveProperty + NumMeterClassProps;
-
+    // no properties
+    ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties;
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TMeterClass.ClassEdit(const ActiveMeterObj: Pointer; const ParamPointer: Integer);
-begin
-  // continue parsing with contents of Parser
-    if ParamPointer > 0 then
-        with TMeterElement(ActiveMeterObj) do
-        begin
-
-      //CASE ParamPointer OF
-       //1: BaseFrequency := Parser.Dblvalue;
-       //ELSE
-            inherited ClassEdit(ActiveMeterObj, ParamPointer - NumMeterClassProps)
-      //END;
-        end;
-end;
-
-procedure TMeterClass.ClassMakeLike(const OtherObj: Pointer);
-
-//Var
-//   OtherMeterObj : TMeterElement;
-begin
-
-//     OtherMeterObj := TMeterElement(OtherObj);
-    TMeterElement.Create(OtherObj);
-     //With TPCElement(ActiveDSSObject) Do
-     //Begin
-     //  value:= OtherMeterObj.value;
-     //End;
-
 end;
 
 procedure TMeterClass.ResetAll;

@@ -39,7 +39,7 @@ function OldModels(DSS: TDSSContext): Boolean;
 begin
     Result := DSS_CAPI_LEGACY_MODELS;
     if DSS_CAPI_LEGACY_MODELS then
-        DoSimpleMsg(DSS, 'The Storages API is not available in the legacy-models mode!', 18990);
+        DoSimpleMsg(DSS, _('The Storages API is not available in the legacy-models mode!'), 18990);
 end;
 
 //------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active Storage object found! Activate one and retry.', 18989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Storage'], 18989);
         end;
         Exit;
     end;
@@ -118,7 +118,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Storage "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Storage "%s" not found in Active Circuit.', [Value], 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -139,7 +139,7 @@ begin
     pStorage := DSSPrime.ActiveCircuit.StorageElements.Get(Value);
     if pStorage = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Storage index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Storage', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pStorage;
@@ -223,7 +223,7 @@ begin
        (Value <> STORE_IDLING) and
        (Value <> STORE_DISCHARGING) then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Storage state: "' + IntToStr(Value) + '".', 656568);
+        DoSimpleMsg(DSSPrime, 'Invalid Storage state: "%d".', [Value], 656568);
     end;
     elem.StorageState := Value;
 end;

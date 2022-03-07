@@ -57,10 +57,14 @@ uses
     DSSGlobals,
     DSSClassDefs,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    DSSObjectHelper;
+
+type
+    TObj = TRecloserObj;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSS: TDSSContext; out obj: TRecloserObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
@@ -72,7 +76,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active Recloser object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Recloser'], 8989);
         end;
         Exit;
     end;
@@ -80,17 +84,34 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: String); overload;
 var
-    cmd: String;
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     if not _activeObj(DSS, elem) then
         Exit;
-
     DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('recloser.%s.%s=%s', [elem.Name, parm, val]);
-    DSS.DSSExecutive.Command := cmd;
+    elem.ParsePropertyValue(idx, val);
+end;
+//------------------------------------------------------------------------------
+procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: Double); overload;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSS, elem) then
+        Exit;
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    elem.SetDouble(idx, val);
+end;
+//------------------------------------------------------------------------------
+procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: Integer); overload;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSS, elem) then
+        Exit;
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    elem.SetInteger(idx, val);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -134,7 +155,7 @@ end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_Name(): PAnsiChar; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
@@ -154,13 +175,13 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Recloser "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Recloser "%s" not found in Active Circuit.', [Value], 77003);
     end;
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_MonitoredTerm(): Integer; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -170,37 +191,39 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_MonitoredTerm(Value: Integer); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'monitoredterm', IntToStr(Value));
+    Set_Parameter(DSSPrime, ord(TRecloserProp.monitoredterm), Value);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_SwitchedObj(): PAnsiChar; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ElementName);
+    if elem.ControlledElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.ControlledElement.FullName));
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'SwitchedObj', Value);
+    Set_Parameter(DSSPrime, ord(TRecloserProp.SwitchedObj), Value);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_MonitoredObj(): PAnsiChar; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.MonitoredElementName);
+    if elem.MonitoredElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement.FullName));
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_SwitchedTerm(): Integer; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -210,17 +233,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'monitoredObj', Value);
+    Set_Parameter(DSSPrime, ord(TRecloserProp.monitoredObj), Value);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_SwitchedTerm(Value: Integer); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'SwitchedTerm', IntToStr(Value));
+    Set_Parameter(DSSPrime, ord(TRecloserProp.SwitchedTerm), Value);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_NumFast(): Integer; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -232,7 +255,7 @@ procedure Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PA
 // return reclose intervals in seconds
 var
     Result: PDoubleArray0;
-    elem: TRecloserObj;
+    elem: TObj;
     i, k: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
@@ -259,7 +282,7 @@ end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_Shots(): Integer; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -269,17 +292,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_NumFast(Value: Integer); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'numfast', IntToStr(Value));
+    Set_Parameter(DSSPrime, ord(TRecloserProp.numfast), Value);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_Shots(Value: Integer); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'shots', IntToStr(Value));
+    Set_Parameter(DSSPrime, ord(TRecloserProp.shots), Value);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_PhaseTrip(): Double; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -289,12 +312,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_PhaseTrip(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'PhaseTrip', Format('%.g', [Value]));
+    Set_Parameter(DSSPrime, ord(TRecloserProp.PhaseTrip), Value);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_GroundInst(): Double; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -304,7 +327,7 @@ end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_GroundTrip(): Double; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -314,7 +337,7 @@ end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_PhaseInst(): Double; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -324,27 +347,27 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_GroundInst(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'GroundInst', Format('%.g', [Value]));
+    Set_Parameter(DSSPrime, ord(TRecloserProp.GroundInst), Value);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_GroundTrip(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'GroundTrip', Format('%.g', [Value]));
+    Set_Parameter(DSSPrime, ord(TRecloserProp.GroundTrip), Value);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_PhaseInst(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'Phaseinst', Format('%.g', [Value]));
+    Set_Parameter(DSSPrime, ord(TRecloserProp.PhaseInst), Value);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Close(); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'Action', 'close');
+    Set_Parameter(DSSPrime, ord(TRecloserProp.Action), 'close');
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Open(); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'Action', 'open');
+    Set_Parameter(DSSPrime, ord(TRecloserProp.Action), 'open');
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_idx(): Integer; CDECL;
@@ -357,14 +380,14 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_idx(Value: Integer); CDECL;
 var
-    pRecloser: TRecloserObj;
+    pRecloser: TObj;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     pRecloser := DSSPrime.ActiveCircuit.Reclosers.Get(Value);
     if pRecloser = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Recloser index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Recloser', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pRecloser;
@@ -372,7 +395,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Reset(); CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
@@ -381,7 +404,7 @@ end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_NormalState(): Integer; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -391,23 +414,29 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_NormalState(Value: Integer); CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     if Value = dssActionOpen then //TODO: use the same enum
-        elem.NormalState := CTRL_OPEN
+    begin
+        elem.NormalState := CTRL_OPEN;
+        elem.NormalStateSet := True;
+    end
     else if Value = dssActionClose then
-        elem.NormalState := CTRL_CLOSE
+    begin
+        elem.NormalState := CTRL_CLOSE;
+        elem.NormalStateSet := True;
+    end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Recloser normal state: "' + IntToStr(Value) + '".', 656566);
+        DoSimpleMsg(DSSPrime, 'Invalid Recloser normal state: "%d".', [Value], 656566);
     end;
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_State(): Integer; CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -417,7 +446,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_State(Value: Integer); CDECL;
 var
-    elem: TRecloserObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
@@ -427,7 +456,7 @@ begin
         elem.PresentState := CTRL_CLOSE
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Recloser state: "' + IntToStr(Value) + '".', 656567);
+        DoSimpleMsg(DSSPrime, 'Invalid Recloser state: "%d".', [Value], 656567);
     end;
 end;
 //------------------------------------------------------------------------------

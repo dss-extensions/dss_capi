@@ -55,10 +55,10 @@ uses
     sysutils,
     DSSGlobals,
     LineUnits,
-    ParserDel,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    DSSObjectHelper;
 
 //------------------------------------------------------------------------------
 function _activeObj(DSS: TDSSContext; out obj: TLineCodeObj): Boolean; inline;
@@ -73,7 +73,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active LineCode object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['LineCode'], 8989);
         end;
         Exit;
     end;
@@ -123,7 +123,7 @@ begin
         Exit;
         
     if not DSSPrime.LineCodeClass.SetActive(Value) then
-        DoSimpleMsg(DSSPrime, 'LineCode "' + Value + '" Not Found in Active Circuit.', 51008);
+        DoSimpleMsg(DSSPrime, 'LineCode "%s" not found in Active Circuit.', [Value], 51008);
 
     // Still same active object if not found
 end;
@@ -160,12 +160,9 @@ begin
     with pLineCode do
     begin
         if Value < dssLineUnitsMaxnum then
-        begin
-            DSSPrime.Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
-            Edit;
-        end
+            SetInteger(ord(TLineCodeProp.Units), Value)
         else
-            DoSimpleMsg('Invalid line units integer. Please enter a value within range.', 183);
+            DoSimpleMsg(_('Invalid line units integer. Please enter a value within range.'), 183);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -208,8 +205,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    DSSPrime.Parser.CmdString := Format('R1=%g', [Value]);
-    pLineCode.Edit;
+    pLineCode.SetDouble(ord(TLineCodeProp.R1), Value)
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_X1(): Double; CDECL;
@@ -230,8 +226,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    DSSPrime.Parser.CmdString := Format('X1=%g', [Value]);
-    pLineCode.Edit;
+    pLineCode.SetDouble(ord(TLineCodeProp.X1), Value);
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_R0(): Double; CDECL;
@@ -263,8 +258,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    DSSPrime.Parser.CmdString := Format('R0=%g', [Value]);
-    pLineCode.Edit;
+    pLineCode.SetDouble(ord(TLineCodeProp.R0), Value);
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_X0(Value: Double); CDECL;
@@ -274,8 +268,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    DSSPrime.Parser.CmdString := Format('X0=%g', [Value]);
-    pLineCode.Edit;
+    pLineCode.SetDouble(ord(TLineCodeProp.X0), Value);
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_C0(): Double; CDECL;
@@ -307,8 +300,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    DSSPrime.Parser.CmdString := Format('C0=%g', [Value]);
-    pLineCode.Edit;
+    pLineCode.SetDouble(ord(TLineCodeProp.C0), Value);
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_C1(Value: Double); CDECL;
@@ -318,8 +310,7 @@ begin
     if not _activeObj(DSSPrime, pLineCode) then
         Exit;
 
-    DSSPrime.Parser.CmdString := Format('C1=%g', [Value]);
-    pLineCode.Edit;
+    pLineCode.SetDouble(ord(TLineCodeProp.C1), Value);
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -438,10 +429,10 @@ begin
     begin
         if (FNPhases * FNPhases) <> ValueCount then
         begin
-            DoSimpleMsg(Format(
+            DoSimpleMsg(
                 'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, FNPhases * FNPhases]
-            ), 183);
+                [ValueCount, FNPhases * FNPhases],
+            183);
             Exit;
         end;
     
@@ -473,10 +464,10 @@ begin
     begin
         if (FNPhases * FNPhases) <> ValueCount then
         begin
-            DoSimpleMsg(Format(
+            DoSimpleMsg(
                 'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, FNPhases * FNPhases]
-            ), 183);
+                [ValueCount, FNPhases * FNPhases],
+            183);
             Exit;
         end;
 
@@ -508,10 +499,10 @@ begin
     begin
         if (FNPhases * FNPhases) <> ValueCount then
         begin
-            DoSimpleMsg(Format(
+            DoSimpleMsg(
                 'The number of values provided (%d) does not match the expected (%d).', 
-                [ValueCount, FNPhases * FNPhases]
-            ), 183);
+                [ValueCount, FNPhases * FNPhases],
+            183);
             Exit;
         end;
     
@@ -594,7 +585,7 @@ end;
 procedure LineCodes_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.LineCodeClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg(DSSPrime, 'Invalid LineCode index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['LineCode', Value], 656565);
 end;
 //------------------------------------------------------------------------------
 end.

@@ -7,42 +7,38 @@ unit GrowthShape;
   ----------------------------------------------------------
 }
 
-{  8-18-00 Added call to InterpretDblArrayto allow File=Syntax }
-
 interface
 
-{The GrowthShape object is a general DSS object used by all circuits
- as a reference for obtaining yearly growth curves.
-
- The values are set by the normal New and Edit procedures as for any DSS object.
-
- The values are retrieved by setting the Code Property in the GrowthShape Class.
- This sets the active GrowthShapeObj object to be the one referenced by the Code Property;
-
- Then the values of that code can be retrieved via the public variables.  Or you
- can pick up the ActiveGrowthShapeObj object and save the direct reference to the object.
-
- Growth shapes are entered as multipliers for the previous year's load.  If the
- load grows by 2.5% in a year, the multiplier is entered as 1.025.  You do not need
- to enter subsequent years if the multiplier remains the same.  You need only enter
- the years in which the growth rate is assumed to have changed.
-
- The user may place the data in CSV or binary files as well as passing through the
- command interface. The rules are the same as for LoadShapes except that the year
- is always entered.  CSV files are text separated by commas, one interval to a line.
- There are two binary formats permitted: 1) a file of Singles; 2) a file of Doubles.
-
- (Year, multiplier) pairs are expected in all formats.  Through the COM interface,
- supply separate arrays of Year and Mult.
-
- Edit growthshape.allisonsub npts=5
- ~   year="1999 2000 2001 2005 2010"
- ~   mult="1.10 1.07 1.05 1.025 1.01"
-
- This example describes a growth curve that start off relatively fast (10%) and after
- 10 years tapers off to 1%
-
- }
+// The GrowthShape object is a general DSS object used by all circuits
+// as a reference for obtaining yearly growth curves.
+//
+// The values are set by the normal New and Edit procedures as for any DSS object.
+//
+// The values are retrieved by setting the Code Property in the GrowthShape Class.
+// This sets the active GrowthShapeObj object to be the one referenced by the Code Property;
+//
+// Then the values of that code can be retrieved via the public variables.  Or you
+// can pick up the ActiveGrowthShapeObj object and save the direct reference to the object.
+//
+// Growth shapes are entered as multipliers for the previous year's load.  If the
+// load grows by 2.5% in a year, the multiplier is entered as 1.025.  You do not need
+// to enter subsequent years if the multiplier remains the same.  You need only enter
+// the years in which the growth rate is assumed to have changed.
+//
+// The user may place the data in CSV or binary files as well as passing through the
+// command interface. The rules are the same as for LoadShapes except that the year
+// is always entered.  CSV files are text separated by commas, one interval to a line.
+// There are two binary formats permitted: 1) a file of Singles; 2) a file of Doubles.
+//
+// (Year, multiplier) pairs are expected in all formats.  Through the COM interface,
+// supply separate arrays of Year and Mult.
+//
+// Edit growthshape.allisonsub npts=5
+// ~   year="1999 2000 2001 2005 2010"
+// ~   mult="1.10 1.07 1.05 1.025 1.01"
+//
+// This example describes a growth curve that start off relatively fast (10%) and after
+// 10 years tapers off to 1%
 
 uses
     Classes,
@@ -53,422 +49,177 @@ uses
     Arraydef;
 
 type
+{$SCOPEDENUMS ON}
+    TGrowthShapeProp = (
+        INVALID = 0,
+        npts = 1, // Number of points to expect
+        year = 2, // vector of year values
+        mult = 3, // vector of multiplier values corresponding to years
+        csvfile = 4, // Switch input to a csvfile (year, mult)
+        sngfile = 5, // switch input to a binary file of singles  (year, mult)
+        dblfile = 6 // switch input to a binary file of doubles (year, mult)
+    );
+{$SCOPEDENUMS OFF}
 
     TGrowthShape = class(TDSSClass)
-    PRIVATE
-
-        function Get_Code: String;  // Returns active GrowthShape string
-        procedure Set_Code(const Value: String);  // sets the  active GrowthShape
-
-        procedure DoCSVFile(const FileName: String);
-        procedure DoSngFile(const FileName: String);
-        procedure DoDblFile(const FileName: String);
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const ShapeName: String): Integer; OVERRIDE;
+        procedure DefineProperties; override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;     // uses global parser
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
-
-       // Set this property to point ActiveGrowthShapeObj to the right value
-        property Code: String READ Get_Code WRITE Set_Code;
-
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
     end;
 
     TGrowthShapeObj = class(TDSSObject)
     PRIVATE
         Npts: Integer;  // Number of points in curve
         NYears: Integer;    // Number of years presently allocated in look up table
-        BaseYear: Integer;
-
-        Year: pIntegerArray;          // Year values
+        Year, // Year values
         YearMult,
         Multiplier: pDoubleArray;  // Multipliers
+        csvfile, dblfile, sngfile: String;
 
         procedure ReCalcYearMult;
     PUBLIC
-
         constructor Create(ParClass: TDSSClass; const GrowthShapeName: String);
         destructor Destroy; OVERRIDE;
-
-        function GetPropertyValue(Index: Integer): String; OVERRIDE;
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
         function GetMult(Yr: Integer): Double;  // Get multiplier for Specified Year
     end;
 
 implementation
 
 uses
-    ParserDel,
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     MathUtil,
     Utilities,
-    BufStream,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
 
+type
+    TObj = TGrowthShapeObj;
+    TProp = TGrowthShapeProp;
 const
-    NumPropsThisClass = 6;
+    NumPropsThisClass = Ord(High(TProp));
+var
+    PropInfo: Pointer = NIL;    
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGrowthShape.Create(dssContext: TDSSContext);  // Creates superstructure for all Line objects
+constructor TGrowthShape.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
-    Class_Name := 'GrowthShape';
-    DSSClassType := DSS_OBJECT;
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
 
-    ActiveElement := 0;
-
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := FALSE;
-
+    inherited Create(dssContext, DSS_OBJECT, 'GrowthShape');
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TGrowthShape.Destroy;
-
 begin
-
-    // ElementList and  CommandList freed in inherited destroy
     inherited Destroy;
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 procedure TGrowthShape.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
-
     Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
-    AllocatePropertyArrays;
+    PropertyType[ord(TProp.year)] := TPropertyType.DoubleArrayProperty;
+    PropertyOffset[ord(TProp.year)] := ptruint(@obj.Year);
+    PropertyOffset2[ord(TProp.year)] := ptruint(@obj.Npts);
+    PropertyFlags[ord(TProp.year)] := [TPropertyFlag.IntegerToDouble];
 
+    PropertyType[ord(TProp.mult)] := TPropertyType.DoubleArrayProperty;
+    PropertyOffset[ord(TProp.mult)] := ptruint(@obj.Multiplier);
+    PropertyOffset2[ord(TProp.mult)] := ptruint(@obj.Npts);
 
-     // Define Property names
+    // strings
+    PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
+    PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename];
 
-    PropertyName[1] := 'npts';     // Number of points to expect
-    PropertyName[2] := 'year';     // vextor of year values
-    PropertyName[3] := 'mult';     // vector of multiplier values corresponding to years
-    PropertyName[4] := 'csvfile';   // Switch input to a csvfile                 (year, mult)
-    PropertyName[5] := 'sngfile';  // switch input to a binary file of singles  (year, mult)
-    PropertyName[6] := 'dblfile';   // switch input to a binary file of doubles (year, mult)
+    PropertyType[ord(TProp.dblfile)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.dblfile)] := ptruint(@obj.dblfile);
+    PropertyFlags[ord(TProp.dblfile)] := [TPropertyFlag.IsFilename];
 
-    PropertyHelp[1] := 'Number of points to expect in subsequent vector.';
-    PropertyHelp[2] := 'Array of year values, or a text file spec, corresponding to the multipliers. ' +
-        'Enter only those years where the growth changes. ' +
-        'May be any integer sequence -- just so it is consistent. See help on Mult.';
-    PropertyHelp[3] := 'Array of growth multiplier values, or a text file spec, corresponding to the year values. ' +
-        'Enter the multiplier by which you would multiply the previous year''s load to get the present year''s.' +
-        CRLF + CRLF + 'Examples:' + CRLF + CRLF +
-        '  Year = [1, 2, 5]   Mult=[1.05, 1.025, 1.02].' + CRLF +
-        '  Year= (File=years.txt) Mult= (file=mults.txt).' + CRLF + CRLF +
-        'Text files contain one value per line.';
-    PropertyHelp[4] := 'Switch input of growth curve data to a csv file containing (year, mult) points, one per line.';
-    PropertyHelp[5] := 'Switch input of growth curve data to a binary file of singles ' +
-        'containing (year, mult) points, packed one after another.';
-    PropertyHelp[6] := 'Switch input of growth curve data to a binary file of doubles ' +
-        'containing (year, mult) points, packed one after another.';
+    PropertyType[ord(TProp.sngfile)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.sngfile)] := ptruint(@obj.sngfile);
+    PropertyFlags[ord(TProp.sngfile)] := [TPropertyFlag.IsFilename];
 
+    // integer properties
+    PropertyType[ord(TProp.Npts)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.Npts);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    inherited DefineProperties;
 
+    CommandList.Abbrev := FALSE; //TODO: why only this class?
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TGrowthShape.NewObject(const ObjName: String): Integer;
-begin
-   // create a new object of this class and add to list
-    DSS.ActiveDSSObject := TGrowthShapeObj.Create(Self, ObjName);
-    Result := AddObjectToList(DSS.ActiveDSSObject);
-end;
-
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TGrowthShape.Edit: Integer;
+function TGrowthShape.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
-    YrBuffer: pDoubleArray;
-    i: Integer;
-
+    Obj: TObj;
 begin
-    Result := 0;
-  // continue parsing with contents of Parser
-    DSS.ActiveGrowthShapeObj := ElementList.Active;
-    DSS.ActiveDSSObject := DSS.ActiveGrowthShapeObj;
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        DSS.ActiveDSSObject := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
 
-    with DSS.ActiveGrowthShapeObj do
-    begin
-
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
+procedure TGrowthShapeObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+begin
+    case Idx of 
+        ord(TProp.Npts):
         begin
-            if Length(ParamName) = 0 then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
-
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 600);
-                1:
-                    Npts := Parser.Intvalue;
-                2:
-                begin
-                    ReAllocmem(Year, Sizeof(Year^[1]) * Npts);
-                    YrBuffer := Allocmem(Sizeof(Double) * Npts);
-                    Npts := InterpretDblArray(Param, Npts, YrBuffer);  // Parser.ParseAsVector(Npts, Yrbuffer);
-
-                    for i := 1 to Npts do
-                        Year^[i] := Round(YrBuffer^[i]);
-                    BaseYear := Year^[1];
-                    FreeMem(YrBuffer, Sizeof(Double) * Npts);
-                end;
-                3:
-                begin
-                    ReAllocmem(Multiplier, Sizeof(Multiplier^[1]) * Npts);
-                    Npts := InterpretDblArray(Param, Npts, Multiplier);   //Parser.ParseAsVector(Npts, Multiplier);
-
-                end;
-                4:
-                    DoCSVFile(AdjustInputFilePath(Param));
-                5:
-                    DoSngFile(AdjustInputFilePath(Param));
-                6:
-                    DoDblFile(AdjustInputFilePath(Param));
-            else
-                // Inherited parameters
-                ClassEdit(DSS.ActiveGrowthShapeObj, ParamPointer - NumPropsThisClass)
-            end;
-
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
-        end; {WHILE}
-
-        ReCalcYearMult;
-    end; {WITH}
+            ReAllocmem(Year, Sizeof(Double) * Npts);
+            ReAllocmem(Multiplier, Sizeof(Double) * Npts);
+        end;
+        ord(TProp.csvfile):
+            DoCSVFile(DSS, Year, Multiplier, Npts, False, csvfile, ParentClass.Name, True);
+        ord(TProp.sngfile):
+            DoSngFile(DSS, Year, Multiplier, Npts, False, sngfile, ParentClass.Name, True);
+        ord(TProp.dblfile):
+            DoDblFile(DSS, Year, Multiplier, Npts, False, dblfile, ParentClass.Name, True);
+    end;
+    inherited PropertySideEffects(Idx, previousIntVal);
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TGrowthShape.MakeLike(const ShapeName: String): Integer;
+function TGrowthShape.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+begin
+    TObj(ptr).ReCalcYearMult;
+    Exclude(TObj(ptr).Flags, Flg.EditionActive);
+    Result := True;
+end;
+
+procedure TGrowthShapeObj.MakeLike(OtherPtr: Pointer);
 var
-    OtherGrowthShape: TGrowthShapeObj;
+    Other: TObj;
     i: Integer;
 begin
-    Result := 0;
-   {See if we can find this line code in the present collection}
-    OtherGrowthShape := Find(ShapeName);
-    if OtherGrowthShape <> NIL then
-        with DSS.ActiveGrowthShapeObj do
-        begin
-            Npts := OtherGrowthShape.Npts;
-            ReallocMem(Multiplier, SizeOf(Multiplier^[1]) * Npts);
-            for i := 1 to Npts do
-                Multiplier^[i] := OtherGrowthShape.Multiplier^[i];
-            ReallocMem(Year, SizeOf(Year^[1]) * Npts);
-            for i := 1 to Npts do
-                Year^[i] := OtherGrowthShape.Year^[i];
-
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherGrowthShape.PropertyValue[i];
-
-        end
-    else
-        DoSimpleMsg('Error in GrowthShape MakeLike: "' + ShapeName + '" Not Found.', 601);
-
-
+    inherited MakeLike(OtherPtr);
+    Other := TObj(OtherPtr);
+    Npts := Other.Npts;
+    ReallocMem(Multiplier, SizeOf(Double) * Npts);
+    for i := 1 to Npts do
+        Multiplier^[i] := Other.Multiplier^[i];
+    ReallocMem(Year, SizeOf(Double) * Npts);
+    for i := 1 to Npts do
+        Year^[i] := Other.Year^[i];
 end;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TGrowthShape.Get_Code: String;  // Returns active line code string
-var
-    GrowthShapeObj: TGrowthShapeObj;
-
-begin
-
-    GrowthShapeObj := ElementList.Active;
-    Result := GrowthShapeObj.Name;
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TGrowthShape.Set_Code(const Value: String);  // sets the  active GrowthShape
-
-var
-    GrowthShapeObj: TGrowthShapeObj;
-
-begin
-
-    DSS.ActiveGrowthShapeObj := NIL;
-    GrowthShapeObj := ElementList.First;
-    while GrowthShapeObj <> NIL do
-    begin
-
-        if CompareText(GrowthShapeObj.Name, Value) = 0 then
-        begin
-            DSS.ActiveGrowthShapeObj := GrowthShapeObj;
-            Exit;
-        end;
-
-        GrowthShapeObj := ElementList.Next;
-    end;
-
-    DoSimpleMsg('GrowthShape: "' + Value + '" not Found.', 602);
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TGrowthShape.DoCSVFile(const FileName: String);
-
-var
-    F: TBufferedFileStream = nil;
-    i: Integer;
-    s: String;
-
-begin
-    try
-        F := TBufferedFileStream.Create(FileName, fmOpenRead);
-    except
-        DoSimpleMsg('Error Opening File: "' + FileName, 603);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-    try
-        with DSS.ActiveGrowthShapeObj do
-        begin
-            i := 0;
-            while ((F.Position + 1) < F.Size) and (i < Npts) do
-            begin
-                Inc(i);
-                FSReadln(F, s);  {Use AuxParser to allow flexible formats}
-                with AuxParser do
-                begin
-             // Readln(F,Year^[i], Multiplier^[i]);
-                    CmdString := S;
-                    NextParam;
-                    Year^[i] := IntValue;
-                    NextParam;
-                    Multiplier^[i] := DblValue;
-                end;
-            end;
-            F.Free();
-        end;
-    except
-        On E: Exception do
-        begin
-            DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 604);
-            FreeAndNil(F);
-            Exit;
-        end;
-    end;
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TGrowthShape.DoSngFile(const FileName: String);
-var
-    F: TFileStream = nil;
-    Y, M: Single;
-    i: Integer;
-
-begin
-    try
-        F := TFileStream.Create(FileName, fmOpenRead);
-    except
-        DoSimpleMsg('Error Opening File: "' + FileName, 605);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-    try
-        with DSS.ActiveGrowthShapeObj do
-        begin
-            i := 0;
-            while ((F.Position + 1) < F.Size) and (i < Npts) do
-            begin
-                Inc(i);
-                if F.Read(Y, SizeOf(Y)) <> SizeOf(Y) then 
-                    Break;
-                if F.Read(M, SizeOf(M)) <> SizeOf(M) then 
-                    Break;
-
-                Year^[i] := Round(Y);
-                Multiplier^[i] := M;
-            end;
-            F.Free();
-        end;
-    except
-        DoSimpleMsg('Error Processing GrowthShape File: "' + FileName, 606);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TGrowthShape.DoDblFile(const FileName: String);
-var
-    F: TFileStream = nil;
-    i: Integer;
-    Yr: Double;
-
-begin
-    try
-        F := TFileStream.Create(FileName, fmOpenRead);
-    except
-        DoSimpleMsg('Error Opening File: "' + FileName, 607);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-    try
-        with DSS.ActiveGrowthShapeObj do
-        begin
-            i := 0;
-            while ((F.Position + 1) < F.Size) and (i < Npts) do
-            begin
-                Inc(i);
-                if F.Read(Yr, SizeOf(Yr)) <> SizeOf(Yr) then 
-                    Break;
-                if F.Read(Multiplier^[i], SizeOf(Double)) <> SizeOf(Double) then 
-                    Break;
-                Year^[i] := Round(Yr);
-            end;
-            F.Free();
-        end;
-    except
-        DoSimpleMsg('Error Processing GrowthShape File: "' + FileName, 608);
-        FreeAndNil(F);
-        Exit;
-    end;
-
-
-end;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//      TGrowthShape Obj
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 constructor TGrowthShapeObj.Create(ParClass: TDSSClass; const GrowthShapeName: String);
-
 begin
     inherited Create(ParClass);
-    Name := LowerCase(GrowthShapeName);
+    Name := AnsiLowerCase(GrowthShapeName);
     DSSObjType := ParClass.DSSClassType;
 
     Npts := 0;
@@ -476,71 +227,55 @@ begin
     Multiplier := NIL;
     NYears := 30;
     YearMult := AllocMem(SizeOf(yearMult^[1]) * NYears);
-
-    InitPropertyValues(0);
-
+    csvfile := '';
+    dblfile := '';
+    sngfile := '';
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TGrowthShapeObj.Destroy;
 begin
-
     ReallocMem(Year, 0);
     ReallocMem(Multiplier, 0);
     ReallocMem(YearMult, 0);
     inherited destroy;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TGrowthShapeObj.GetMult(Yr: Integer): Double;
-
 // This function returns the multiplier to use for a load in the given year.
 // The first year specified in the curve is the base year.  The Base value
 // is the beginning of the first year.
-
 var
     Index: Integer;
-
 begin
-
     Result := 1.0;    // default return value if no points in curve
 
     if NPts > 0 then
     begin         // Handle Exceptional cases
-        Index := Yr - BaseYear;
+        Index := Yr - Round(Year^[1]);
         if Index > 0 then
         begin     // Returns 1.0 for base year or any year previous
-
             if Index > Nyears then
             begin  // Make some more space
                 NYears := Index + 10;
                 ReallocMem(YearMult, SizeOf(YearMult^[1]) * NYears);
                 ReCalcYearMult;
             end;
-
             Result := YearMult^[Index];
-
         end;
-
     end;
-
 end;
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TGrowthShapeObj.ReCalcYearMult;
-
 var
     i, DataPtr, Yr: Integer;
     Mult, MultInc: Double;
-
 begin
   // Fill up the YearMult array with total yearly multiplier from base year
     Mult := Multiplier^[1];
     MultInc := Mult;
     YearMult^[1] := Mult;
     DataPtr := 1;
-    Yr := BaseYear;
+    Yr := Round(Year^[1]);
     for i := 2 to NYears do
     begin
         Inc(Yr);
@@ -556,75 +291,5 @@ begin
         YearMult^[i] := Mult;
     end;
 end;
-
-procedure TGrowthShapeObj.DumpProperties(F: TFileStream; Complete: Boolean);
-
-var
-    i: Integer;
-
-begin
-    inherited DumpProperties(F, Complete);
-
-
-    with ParentClass do
-    begin
-        for i := 1 to NumProperties do
-        begin
-            case i of
-                2, 3:
-                    FSWriteln(F, '~ ' + PropertyName^[i] + '=(' + PropertyValue[i] + ')');
-            else
-                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
-            end;
-        end;
-
-    end;
-
-end;
-
-
-function TGrowthShapeObj.GetPropertyValue(Index: Integer): String;
-var
-    i: Integer;
-begin
-    case Index of
-        2, 3:
-            Result := '(';
-    else
-        Result := '';
-    end;
-
-    case Index of
-        2:
-            for i := 1 to Npts do
-                Result := Result + Format('%-d, ', [Year^[i]]);
-        3:
-            for i := 1 to Npts do
-                Result := Result + Format('%-g, ', [Multiplier^[i]]);
-    else
-        Result := inherited GetPropertyValue(index);
-    end;
-
-    case Index of
-        2, 3:
-            Result := Result + ')';
-    else
-    end;
-
-end;
-
-procedure TGrowthShapeObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-
-    PropertyValue[1] := '0';     // Number of points to expect
-    PropertyValue[2] := '';     // vextor of year values
-    PropertyValue[3] := '';     // vector of multiplier values corresponding to years
-    PropertyValue[4] := '';   // Switch input to a csvfile                 (year, mult)
-    PropertyValue[5] := '';  // switch input to a binary file of singles  (year, mult)
-    PropertyValue[6] := '';   // switch input to a binary file of doubles (year, mult)
-
-    inherited InitPropertyValues(NumPropsThisClass);
-end;
-
 
 end.

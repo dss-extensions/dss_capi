@@ -34,12 +34,8 @@ Function GetNumEdges(MeTISSrc : string): String;
 implementation
 
 uses
-{$IFNDEF FPC}
-  System.IOUtils,
-  System.StrUtils,
-{$ELSE}  
+  BufStream,
   StrUtils,
-{$ENDIF}  
   Math;
 
 { TFileSearchReplace }
@@ -48,8 +44,8 @@ constructor TFileSearchReplace.Create(const AFileName: string);
 begin
   inherited Create;
 
-  FSourceFile := TFileStream.Create(AFileName, fmOpenReadWrite);
-  FtmpFile := TFileStream.Create(ChangeFileExt(AFileName, '.tmp'), fmCreate);
+  FSourceFile := TBufferedFileStream.Create(AFileName, fmOpenReadWrite);
+  FtmpFile := TBufferedFileStream.Create(ChangeFileExt(AFileName, '.tmp'), fmCreate);
 end;
 
 destructor TFileSearchReplace.Destroy;
@@ -107,8 +103,8 @@ procedure TFileSearchReplace.Replace(const AFrom, ATo: string;
       end
     else
       begin
-        tmpStr := UpperCase(Str);
-        tmpSubStr := UpperCase(SubStr);
+        tmpStr := AnsiUpperCase(Str);
+        tmpSubStr := AnsiUpperCase(SubStr);
         i := Pos(tmpSubStr, tmpStr);
         Result := i;
         while i > 0 do
@@ -154,9 +150,9 @@ var
 
     BufStr := FEncoding.GetString(Buf, 0, ReadedBufLen);
     if rfIgnoreCase in ReplaceFlags then
-      IsReplaced := {$IFDEF FPC}ANSIContainsText{$ELSE}ContainsText{$ENDIF}(BufStr, AFrom)
+      IsReplaced := ANSIContainsText(BufStr, AFrom)
     else
-      IsReplaced := {$IFDEF FPC}ANSIContainsStr{$ELSE}ContainsStr{$ENDIF}(BufStr, AFrom);
+      IsReplaced := ANSIContainsStr(BufStr, AFrom);
 
     if IsReplaced then
       begin

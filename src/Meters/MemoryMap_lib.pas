@@ -12,7 +12,8 @@ unit MemoryMap_lib;
 interface
 
 uses
-    Classes, DSSClass;
+    Classes,
+    DSSClass;
 
 type
     DoubleArray1d = array of Double;
@@ -25,7 +26,7 @@ type
 function Create_Meter_Space(Init_Str: String): TBytesStream; OVERLOAD;
 procedure WriteintoMemStr(Mem_Space: TBytesStream; Content: String); OVERLOAD;
 procedure WriteintoMem(Mem_Space: TBytesStream; Content: Double); OVERLOAD;
-procedure CloseMHandler(DSS: TDSSContext; Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean); OVERLOAD;
+procedure CloseMHandler(DSS: TDSSContext; var Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean);
 procedure ReadMHandler(Mem_Space: TBytesStream; X_axis: pDoubleArray2d; Ylabels: pStringArray1d; Y_axis: pDoubleArray2d); OVERLOAD;
 procedure Write_String(Mem_Space: TBytesStream; const Content: String);
 
@@ -36,6 +37,7 @@ uses
     windows,
     {$ENDIF}
     sysutils,
+    BufStream,
     math,
     DSSGlobals,
     Utilities,
@@ -56,12 +58,8 @@ var
     wordBuf: Word;
 begin
     Mem_Space := TBytesStream.Create();
-{$IFNDEF FPC}
-    Mem_Space.WriteData($01A0);   // Header for identifying String type data
-{$ELSE}
     wordBuf := $01A0;
     Mem_Space.Write(wordBuf, 2);
-{$ENDIF}
     ;
     Write_String(Mem_Space, Init_Str);
     Result := Mem_Space;
@@ -73,13 +71,8 @@ procedure WriteintoMemStr(Mem_Space: TBytesStream; Content: String); OVERLOAD;
 var
     wordBuf: Word;
 begin
-{$IFNDEF FPC}
-    Mem_Space.WriteData($01A0);   // Header for identifying String type data
-{$ELSE}
     wordBuf := $01A0;
     Mem_Space.Write(wordBuf, 2);
-{$ENDIF}
-    ;
     Write_String(Mem_Space, Content);
 end;
 //******************************************************************************
@@ -89,21 +82,15 @@ procedure WriteintoMem(Mem_Space: TBytesStream; Content: Double); OVERLOAD;
 var
     wordBuf: Word;
 begin
-{$IFNDEF FPC}
-    Mem_Space.WriteData($02A0);   // Header for identifying a double type data
-    Mem_Space.WriteData(Content);
-{$ELSE}
     wordBuf := $02A0;
     Mem_Space.Write(wordBuf, 2);
     Mem_Space.Write(Content, sizeof(Double));
-{$ENDIF}
-    ;
 end;
 //******************************************************************************
 // Saves the content of the BytesStream into the specified file path
 // and destroys the ByteStream
 //******************************************************************************
-procedure CloseMHandler(DSS: TDSSContext; Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean); OVERLOAD;
+procedure CloseMHandler(DSS: TDSSContext; var Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean);
 var
     F: TFileStream = nil;
     buffer: Uint8;
@@ -113,23 +100,23 @@ var
     MSize: Longint;
     TVariableDbl: Double;
 begin
-
-{ Open Output file; check for errors}
+    // Open Output file; check for errors
     try
         if AppendFile then
         begin
-            F := TFileStream.Create(Dest_path, fmOpenReadWrite);
+            F := TBufferedFileStream.Create(Dest_path, fmOpenReadWrite);
             F.Seek(0, soEnd);
         end
         else
         begin
-            F := TFileStream.Create(Dest_path, fmCreate);
+            F := TBufferedFileStream.Create(Dest_path, fmCreate);
         end;
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error Attempting to open file: "' + Dest_path + '. ' + E.Message, 159000);
+            DoSimpleMsg(DSS, 'Error Attempting to open file: "%s". %s', [Dest_path, E.Message], 159000);
             FreeAndNil(F);
+            FreeAndNil(Mem_Space);
             Exit;
         end;
     end;
@@ -205,6 +192,7 @@ begin
         end;
     finally    // make sure we close the file
         FreeAndNil(F);
+        FreeAndNil(Mem_Space);
     end;
 end;
 //******************************************************************************
@@ -225,7 +213,6 @@ var
     dblXCounter: Integer;
 
 begin
-
     SetLength(X_axis^, 1, 0);
     SetLength(Y_axis^, 1, 0);
     SetLength(Ylabels^, 1);
@@ -355,26 +342,16 @@ begin
     finally
     end;
 end;
-//******************************************************************************
+
 // Writes the incomming String into the specified BytesStream
-//******************************************************************************
 procedure Write_String(Mem_Space: TBytesStream; const Content: String);
 var
-  // Str_Sz  : Integer;
     idx: Integer;
 begin
-
-{  Str_Sz  :=  length(Content)-1;
-  For idx := 0 to Str_Sz do Mem_Space.WriteData(Content[idx+1]);}
-{$IFNDEF FPC}
-    for idx := 1 to length(Content) do
-        Mem_Space.WriteData(Content[idx]);
-{$ELSE}
     for idx := 1 to length(Content) do
         Mem_Space.Write(Content[idx], Length(Content[idx])); // TODO - verify AnsiString vs. unicode
 
     Mem_Space.WriteByte(0);
-{$ENDIF}
 end;
 
 end.

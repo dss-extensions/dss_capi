@@ -4,7 +4,7 @@ unit CAPI_YMatrix;
 interface
 
 uses
-    UComplex,
+    UComplex, DSSUcomplex,
     Solution,
     CAPI_Utils,
     CAPI_Types;
@@ -44,7 +44,8 @@ uses
     Ymatrix,
     KLUSolve,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    SysUtils;
 
 procedure YMatrix_GetCompressedYMatrix(factor: TAPIBoolean; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
 {Returns Pointers to column and row and matrix values}
@@ -58,7 +59,7 @@ begin
     Yhandle := DSSPrime.ActiveCircuit.Solution.hY;
     if Yhandle <= 0 then
     begin
-        DoSimpleMsg(DSSPrime, 'Y Matrix not Built.', 222);
+        DoSimpleMsg(DSSPrime, _('Y Matrix was not built.'), 222);
         Exit;
     end;
 
@@ -227,7 +228,7 @@ begin
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg(DSSPrime, 'From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSSPrime), 7073);
+            DoSimpleMsg(DSSPrime, 'From DoPFLOWsolution.SetGeneratordQdV: %s%s', [E.Message, CheckYMatrixforZeroes(DSSPrime)], 7073);
         end;
     end;
 end;
@@ -249,7 +250,7 @@ begin
         if hY <> 0 then
             KLUSolve.SetOptions(hY, SolverOptions and $FFFFFFFF);
 {$ELSE}
-    DoSimpleMsg('This version of DSS C-API was not compiled with extended solver options.', 7074);
+    DoSimpleMsg(_('This version of DSS C-API was not compiled with extended solver options.'), 7074);
 {$ENDIF}
     end;
 end;

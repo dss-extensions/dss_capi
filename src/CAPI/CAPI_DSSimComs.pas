@@ -5,7 +5,7 @@ interface
 uses
     CAPI_Utils,
     CAPI_Types,
-    UComplex;
+    UComplex, DSSUcomplex;
 
 procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PAPISize; Index: PtrUInt); CDECL;
 procedure DSSimComs_BusVoltagepu_GR(Index: PtrUInt); CDECL;

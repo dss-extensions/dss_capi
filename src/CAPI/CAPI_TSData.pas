@@ -8,9 +8,6 @@ uses
     TSData,
     CableData;
 
-type
-    TSDataProps = (DiaShield = 1, TapeLayer, TapeLap);
-
 // Common to all classes
 function TSData_Get_Count(): Integer; CDECL;
 function TSData_Get_First(): Integer; CDECL;
@@ -75,6 +72,10 @@ uses
     DSSClass,
     DSSHelper;
 
+const
+    ConductorPropOffset = ord(High(TCableDataProp)) + ord(High(TTSDataProp));
+    CableDataPropOffset = ord(High(TTSDataProp));
+
 //------------------------------------------------------------------------------
 function _activeObj(DSS: TDSSContext; out obj: TTSDataObj): Boolean; inline;
 begin
@@ -88,32 +89,12 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active TSData object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['TSData'], 8989);
         end;
         Exit;
     end;
     
     Result := True;
-end;
-//------------------------------------------------------------------------------  
-procedure TSDataSetDefaults(prop: TSDataProps; conductor: TTSDataObj);
-begin
-  {Set defaults}
-    with conductor do
-    begin
-    {Check for critical errors}
-        case prop of
-            TSDataProps.DiaShield:
-                if (FDiaShield <= 0.0) then
-                    DoSimpleMsg('Error: Diameter over shield must be positive for TapeShieldData ' + Name, 999);
-            TSDataProps.TapeLayer:
-                if (FTapeLayer <= 0.0) then
-                    DoSimpleMsg('Error: Tape shield thickness must be positive for TapeShieldData ' + Name, 999);
-            TSDataProps.TapeLap:
-                if ((FTapeLap < 0.0) or (FTapeLap > 100.0)) then
-                    DoSimpleMsg('Error: Tap lap must range from 0 to 100 for TapeShieldData ' + Name, 999);
-        end;
-    end;
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_Count(): Integer; CDECL;
@@ -142,12 +123,12 @@ end;
 //------------------------------------------------------------------------------
 function TSData_Get_Name(): PAnsiChar; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := NIL;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pTSData.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Name(const Value: PAnsiChar); CDECL;
@@ -158,7 +139,7 @@ begin
         Exit;
 
     if not DSSPrime.TSDataClass.SetActive(Value) then
-        DoSimpleMsg(DSSPrime, 'TSData "' + Value + '" Not Found in Active Circuit.', 51008);
+        DoSimpleMsg(DSSPrime, 'TSData "%s" not found in Active Circuit.', [Value], 51008);
 
     // Still same active object if not found
 end;
@@ -179,344 +160,350 @@ end;
 //------------------------------------------------------------------------------
 function TSData_Get_NormAmps(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.NormAmps;
+    Result := elem.NormAmps;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_NormAmps(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.NormAmps := Value;
-    ConductorSetDefaults(ConductorProps.NormAmps, pTSData);
+    elem.NormAmps := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.NormAmps))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_EmergAmps(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData := DSSPrime.TSDataClass.GetActiveObj;
-    Result := pTSData.EmergAmps;
+    elem := DSSPrime.TSDataClass.GetActiveObj;
+    Result := elem.EmergAmps;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_EmergAmps(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.EmergAmps := Value;
-    ConductorSetDefaults(ConductorProps.EmergAmps, pTSData);
+    elem.EmergAmps := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.EmergAmps))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_Diameter(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FRadius * 2.0;
+    Result := elem.FRadius * 2.0;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Diameter(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FRadius := Value / 2.0;
-    ConductorSetDefaults(ConductorProps.diam, pTSData);
+    elem.FRadius := Value / 2.0;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.diam))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_Radius(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FRadius;
+    Result := elem.FRadius;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Radius(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FRadius := Value;
-    ConductorSetDefaults(ConductorProps.Radius, pTSData);
+    elem.FRadius := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Radius))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_GMRac(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FGMR60;
+    Result := elem.FGMR60;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_GMRac(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FGMR60 := Value;
-    ConductorSetDefaults(ConductorProps.GMRac, pTSData);
+    elem.FGMR60 := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRac))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_Rac(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FR60;
+    Result := elem.FR60;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Rac(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FR60 := Value;
-    ConductorSetDefaults(ConductorProps.Rac, pTSData);
+    elem.FR60 := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rac))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_Rdc(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FRDC;
+    Result := elem.FRDC;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Rdc(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FRDC := Value;
-    ConductorSetDefaults(ConductorProps.Rdc, pTSData);
+    elem.FRDC := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rdc))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_GMRUnits(): Integer; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FGMRUnits;
+    Result := elem.FGMRUnits;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_GMRUnits(Value: Integer); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
+    prevVal: Integer;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FGMRUnits := Value;
-    ConductorSetDefaults(ConductorProps.GMRunits, pTSData);
+    prevVal := elem.FGMRUnits;
+    elem.FGMRUnits := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRunits), prevVal)
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_RadiusUnits(): Integer; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FRadiusUnits;
+    Result := elem.FRadiusUnits;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_RadiusUnits(Value: Integer); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
+    prevVal: Integer;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FRadiusUnits := Value;
-    ConductorSetDefaults(ConductorProps.radunits, pTSData);
+    prevVal := elem.FRadiusUnits;
+    elem.FRadiusUnits := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.radunits), prevVal)
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_ResistanceUnits(): Integer; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FResistanceUnits;
+    Result := elem.FResistanceUnits;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_ResistanceUnits(Value: Integer); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
+    prevVal: Integer;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FResistanceUnits := Value;
-    ConductorSetDefaults(ConductorProps.Runits, pTSData);
+    prevVal := elem.FResistanceUnits;
+    elem.FResistanceUnits := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Runits), prevVal)
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_EpsR(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FEpsR;
+    Result := elem.FEpsR;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_EpsR(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FEpsR := Value;
-    CableDataSetDefaults(CableDataProps.EpsR, pTSData);
+    elem.FEpsR := Value;
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.EpsR))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_InsLayer(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FInsLayer;
+    Result := elem.FInsLayer;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_InsLayer(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FInsLayer := Value;
-    CableDataSetDefaults(CableDataProps.InsLayer, pTSData);
+    elem.FInsLayer := Value;
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.InsLayer))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_DiaIns(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FDiaIns;
+    Result := elem.FDiaIns;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_DiaIns(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    pTSData.FDiaIns := Value;
-    CableDataSetDefaults(CableDataProps.DiaIns, pTSData);
+    elem.FDiaIns := Value;
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaIns))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_DiaCable(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FDiaCable;
+    Result := elem.FDiaCable;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_DiaCable(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FDiaCable := Value;
-    CableDataSetDefaults(CableDataProps.DiaCable, pTSData);
+    elem.FDiaCable := Value;
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaCable))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_DiaShield(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FDiaShield;
+    Result := elem.DiaShield;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_DiaShield(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FDiaShield := Value;
-    TSDataSetDefaults(TSDataProps.DiaShield, pTSData);
+    elem.DiaShield := Value;
+    elem.PropertySideEffects(ord(TTSDataProp.DiaShield))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_TapeLayer(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FTapeLayer;
+    Result := elem.TapeLayer;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_TapeLayer(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FTapeLayer := Value;
-    TSDataSetDefaults(TSDataProps.TapeLayer, pTSData);
+    elem.TapeLayer := Value;
+    elem.PropertySideEffects(ord(TTSDataProp.TapeLayer))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_TapeLap(): Double; CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pTSData.FTapeLap;
+    Result := elem.TapeLap;
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_TapeLap(Value: Double); CDECL;
 var
-    pTSData: TTSDataObj;
+    elem: TTSDataObj;
 begin
-    if not _activeObj(DSSPrime, pTSData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    pTSData.FTapeLap := Value;
-    TSDataSetDefaults(TSDataProps.TapeLap, pTSData);
+    elem.TapeLap := Value;
+    elem.PropertySideEffects(ord(TTSDataProp.TapeLap))
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_idx(): Integer; CDECL;
@@ -527,7 +514,7 @@ end;
 procedure TSData_Set_idx(Value: Integer); CDECL;
 begin
     if (DSSPrime.TSDataClass = NIL) or (DSSPrime.TSDataClass.ElementList.Get(Value) = NIL) then
-        DoSimpleMsg(DSSPrime, 'Invalid TSData index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['TSData', Value], 656565);
 end;
 //------------------------------------------------------------------------------
 end.

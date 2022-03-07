@@ -12,11 +12,11 @@ unit Storage2Vars;
 interface
 
 uses
-    Ucomplex;
+    UComplex, DSSUcomplex;
 
 type
 
-{Struct to pass basic data to user-written DLLs}
+    // Struct to pass basic data to user-written DLLs
     TStorage2Vars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
 
         kWrating: Double;
@@ -34,9 +34,9 @@ type
         FkVArating: Double;
         Fkvarlimit: Double;
         Fkvarlimitneg: Double;
-        P_Priority: Boolean;
-        PF_Priority: Boolean;
-        FpctkWrated: Double;
+        P_Priority: LongBool;
+        PF_Priority: LongBool;
+        pctkWrated: Double;
         EffFactor: Double;
 
 
@@ -70,7 +70,6 @@ type
 
 
     end;
-
 
 implementation
 

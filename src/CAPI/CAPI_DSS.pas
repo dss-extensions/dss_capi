@@ -52,7 +52,6 @@ uses
     Exechelper,
     sysUtils,
     Executive,
-    ParserDel,
     CmdForms,
     DSSHelper;
 
@@ -71,7 +70,7 @@ begin
 {$IFDEF WINDOWS}
     if (Value) and (GetConsoleWindow() = 0) and ((@DSSPrime.DSSMessageCallback) = NIL) then
     begin
-        DoSimplemsg(DSSPrime, 'Cannot activate output with no console available! If you want to use a message output callback, register it before enabling AllowForms.', 5096);
+        DoSimplemsg(DSSPrime, _('Cannot activate output with no console available! If you want to use a message output callback, register it before enabling AllowForms.'), 5096);
         Exit;
     end;
 {$ENDIF}
@@ -99,7 +98,11 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_ClearAll(); CDECL;
 begin
+{$IFDEF DSS_CAPI_PM}
+    DSSPrime.DSSExecutive.DoClearAllCmd;
+{$ELSE}
     DSSPrime.DSSExecutive.DoClearCmd;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_Version(): PAnsiChar; CDECL;
@@ -118,7 +121,6 @@ var
     i, k: Integer;
 
 begin
-
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, DSSPrime.NumIntrinsicClasses);
     k := 0;
     for i := 1 to DSSPrime.NumIntrinsicClasses do
@@ -165,6 +167,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
 begin
+    DSSPrime.SetCurrentDSSDir(Value);
     SetDataPath(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
@@ -187,7 +190,7 @@ begin
     DevClassIndex := DSSPrime.ClassNames.Find(ClassName);
     if DevClassIndex = 0 then
     begin
-        DoSimplemsg(DSSPrime, 'Error: Class ' + ClassName + ' not found.', 5016);
+        DoSimpleMsg(DSSPrime, 'Class %s not found.', [ClassName], 5016);
         Exit;
     end;
 

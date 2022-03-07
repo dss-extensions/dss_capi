@@ -13,10 +13,7 @@ unit Sparse_Math;
 interface
 
 uses
-{$IFNDEF FPC}
-    dialogs,
-{$ENDIF}
-    UComplex,
+    UComplex, DSSUcomplex,
     Ucmatrix;
 
 type
@@ -72,7 +69,7 @@ type
 
         function checkifexists(r, c: Integer): Integer;
         procedure getrow(index: Integer; cols: PData; vals: PComplexArr);
-        function getvalue(row, col: Integer): Complex;
+        function getvalue(r, c: Integer): Complex;
         function R_equal(acols, bcols: PData; avals, bvals: PComplexArr): Boolean;
 
     PUBLIC
@@ -231,7 +228,6 @@ begin
         if row < r then
             row := r;
     end;
-
 end;
 
 // Adds another sparse matrix to this matrix
@@ -294,7 +290,6 @@ begin
         end;
 
     end;
-
 end;
 
 // Transposes the sparse matrix
@@ -470,7 +465,7 @@ begin
 end;
 
   // Returns the value contained at the specific position
-function Tsparse_Complex.getvalue(row, col: Integer): Complex;
+function Tsparse_Complex.getvalue(r, c: Integer): Complex;
 var
     go_flag: Boolean;
     i: Integer;
@@ -480,7 +475,7 @@ begin
     i := 0;
     while go_flag do
     begin
-        if (CData[i].Row = row) and (CData[i].Col = col) then
+        if (CData[i].Row = r) and (CData[i].Col = c) then
         begin
             Result := CData[i].Value;
             go_flag := FALSE;
@@ -492,7 +487,6 @@ begin
                 go_flag := FALSE;
         end;
     end;
-
 end;
 
 // Gets the columns and values at each columns for the row specified
@@ -615,7 +609,6 @@ begin
         if row < r then
             row := r;
     end;
-
 end;
 
 // Adds another sparse matrix to this matrix
@@ -657,7 +650,7 @@ begin
                 end
                 else
                 begin
-                    addeval := cadd(CData[apos].Value, b.CData[bpos].Value);
+                    addeval := CData[apos].Value + b.CData[bpos].Value;
                     if (addeval.re <> 0) and (addeval.im <> 0) then
                         Result.insert(CData[apos].Row, CData[apos].Col, addeval);
                     inc(apos);
@@ -678,7 +671,6 @@ begin
         end;
 
     end;
-
 end;
 
 // Transposes the sparse matrix
@@ -793,7 +785,7 @@ begin
         Result.CData[rpos].Col := CData[i].Row;
 
       // same value
-        Result.CData[rpos].Value := Conjg(CData[i].Value);
+        Result.CData[rpos].Value := cong(CData[i].Value);
     end;
 
     // the above method ensures
@@ -864,8 +856,8 @@ begin
                             inc(tempb)  //skip b
                         else
                         begin
-                  // same col, so multiply and increment
-                            sum := cadd(sum, cmul(CData[tempa].Value, b.CData[tempb].Value));
+                            // same col, so multiply and increment
+                            sum := sum + CData[tempa].Value * b.CData[tempb].Value;
                             inc(tempa);
                             inc(tempb);
                         end;

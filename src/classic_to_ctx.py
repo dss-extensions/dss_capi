@@ -57,9 +57,17 @@ usefns = [
     "CAPI_Context in 'src/CAPI/CAPI_Context.pas'"
 ]
 
+def skip(fun):
+    prefixes = [' DSS_Dispose_', ' DSS_Get_PAnsiChar(', ' Obj_', 'Batch_', ' DSS_ExtractSchema']
+    for p in prefixes:
+        if p in fun:
+            return True
+
+    return False
+
 for fn in glob('src/CAPI/*.pas'):
     bn = os.path.basename(fn)
-    if bn in ['CAPI_Utils.pas', 'CAPI_Types.pas', 'CAPI_Metadata.pas', 'CAPI_Context.pas']:
+    if bn in ['CAPI_Utils.pas', 'CAPI_Types.pas', 'CAPI_Metadata.pas', 'CAPI_Context.pas', 'CAPI_Obj.pas']:
         continue
         
     bnctx = bn.replace('CAPI_', 'CAPICtx_')
@@ -76,12 +84,14 @@ for fn in glob('src/CAPI/*.pas'):
         usefns.append(f"{ctxunitname} in 'build/generated/{bnctx}'")
         
         
-        iface = src.split('implementation')[0]
+        iface, _ = src.split('implementation', 1)
         funcs = [x.split('//')[0].strip() for x in iface.split('\n') if x.lower().startswith('function') or x.lower().startswith('procedure')]
-        
+        file_funcnames = []
+        file_ftypes = []
         for func in funcs:
             assert '(' in func, (bn, func)
-            
+            file_ftypes.append(func.split(' ', 1)[0])
+
             try:
                 funcname = func.split()[1].split('(')[0]
             except:
@@ -89,15 +99,46 @@ for fn in glob('src/CAPI/*.pas'):
                     funcname = func.split()[1].split(':')[0]
                 except:
                     funcname = func.split()[1].split(';')[0]
-    
+
             src = src.replace(func, func.replace('()', '(DSS: TDSSContext)'))
             src = src.replace(func, func.replace('(', '(DSS: TDSSContext; '))
             src = src.replace(funcname + '(', funcname + '(DSS, ')
             src = src.replace(funcname + '(DSS, )', funcname + '(DSS)')
             src = src.replace(funcname + '(DSS, DSS:', funcname + '(DSS:')
             src = src.replace(' ' + funcname + '(', ' ctx_' + funcname + '(')
-            funcnames.append('ctx_' + funcname)
-    
+            file_funcnames.append('ctx_' + funcname)
+
+        funcnames += file_funcnames
+
+        # This block is required to use the correct "actor" for the PM implementation
+        impls = src.split('implementation', 1)[1].split('\nend;\n')
+        assert '\nend; ' not in src, fn
+        fstarts = [ftype + ' ' + funcname + '(' for ftype, funcname in zip(file_ftypes, file_funcnames)]
+        n = '\n'
+        file_used_funcs = set()
+        if 'CAPI_Parallel' not in fn:
+            for impl in impls:
+                for fstart, ftype, funcname in zip(fstarts, file_ftypes, file_funcnames):
+                    if fstart not in impl:
+                        continue
+
+                    if not '_GR(' in fstart:
+                        new_impl, sub_count = re.subn(
+                            rf'{re.escape(fstart)}(.*?){n}begin{n}(.*?)', 
+                            rf'{fstart}\1{n}begin{n}    DSSPrime := DSSPrime.ActiveChild;{n}\2',
+                            impl, 
+                            1,
+                            flags=re.DOTALL|re.IGNORECASE
+                        )
+                        assert sub_count == 1
+                        assert fstart not in file_used_funcs, fstart
+                        src = src.replace(impl, new_impl)
+                        file_used_funcs.add(fstart)
+                    break
+            
+            missing = (set(fstart for fstart in fstarts if not '_GR(' in fstart) - file_used_funcs)
+            assert not missing, missing
+
         src = src.replace(f'unit {unitname};', f'unit {ctxunitname};')
         # src = src.replace('ctx_ctx_', 'ctx_')
         # src = src.replace('ctx_ctx_', 'ctx_')
@@ -111,9 +152,10 @@ for fn in glob('src/CAPI/*.pas'):
         
         fo.write('// \n')
         fo.write(src)
+
         
 with open('build/generated/ctx_functions.inc', 'w') as fo:
-    fo.write('    ' + ',\n    '.join(sorted(funcnames)))
+    fo.write('    ' + ',\n    '.join(sorted(set(funcnames))))
     
 with open('build/generated/ctx_files.inc', 'w') as fo:
     fo.write('    ' + ',\n    '.join(sorted(usefns)))
@@ -137,7 +179,7 @@ with open('include/dss_capi_ctx.h', 'w') as fo:
     functions = [
         re.sub(r'(    DSS_CAPI_DLL [^ ]+[ \*]*)([a-zA-Z0-9_]+)\(', r'\1ctx_\2(void* ctx, ', function) 
         for function in functions
-        if (' DSS_Dispose_' not in function and ' DSS_Get_PAnsiChar(' not in function)
+        if not skip(function)
     ]
     functions = '\n'.join(functions).replace('(void* ctx, void)', '(void* ctx)')
     
@@ -180,7 +222,7 @@ extern "C" {
     previous prime instance returned by ctx_Set_Prime, if required.
     */
     DSS_CAPI_DLL void *ctx_Set_Prime(void *ctx);
-    
+
 ''')
     fo.write(functions)
     fo.write('''

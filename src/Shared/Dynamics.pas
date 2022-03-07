@@ -7,11 +7,11 @@ unit Dynamics;
   ----------------------------------------------------------
 }
 
-{Definitions of constants and structures for the Solution object and user-written dynamic models}
+// Definitions of constants and structures for the Solution object and user-written dynamic models
 
 interface
 
-{Solution modes}
+// Solution modes
 
 type
 {$PUSH}
@@ -40,14 +40,13 @@ type
 {$SCOPEDENUMS OFF}
 {$POP}
 
-   {Variables needed for dynamics and user-written models.}
+    // Variables needed for dynamics and user-written models.
     TDynamicsRec = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
-         {time vars}
         h,     // Time step size in sec for dynamics
         t,     // sec from top of hour
         tstart,
         tstop: Double;
-        IterationFlag: Integer;  {0=New Time Step; 1= Same Time Step as last iteration}
+        IterationFlag: Integer; // 0=New Time Step; 1= Same Time Step as last iteration
         SolutionMode: TSolveMode;   //  PEAKSNAP, DAILYMODE, YEARLYMODE, MONTECARLO, etc.  (see DSSGlobals)
         intHour: Integer;  // time, in hours as an integer
         dblHour: Double;   // time, in hours as a floating point number including fractional part

@@ -50,10 +50,14 @@ uses
     DSSPointerlist,
     DSSGlobals,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    DSSObjectHelper;
+
+type
+    TObj = TFuseObj;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSS: TDSSContext; out obj: TFuseObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
@@ -65,7 +69,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active Fuse object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Fuse'], 8989);
         end;
         Exit;
     end;
@@ -73,17 +77,34 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: String); overload;
 var
-    cmd: String;
-    obj: TFuseObj;
+    elem: TObj;
 begin
-    if not _activeObj(DSS, obj) then
+    if not _activeObj(DSS, elem) then
         Exit;
-    
     DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('Fuse.%s.%s=%s', [obj.Name, parm, val]);
-    DSS.DSSExecutive.Command := cmd;
+    elem.ParsePropertyValue(idx, val);
+end;
+//------------------------------------------------------------------------------
+procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: Double); overload;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSS, elem) then
+        Exit;
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    elem.SetDouble(idx, val);
+end;
+//------------------------------------------------------------------------------
+procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: Integer); overload;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSS, elem) then
+        Exit;
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    elem.SetInteger(idx, val);
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -127,7 +148,7 @@ end;
 //------------------------------------------------------------------------------
 function Fuses_Get_Name(): PAnsiChar; CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
@@ -148,24 +169,25 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Fuse "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Fuse "%s" not found in Active Circuit.', [Value], 77003);
     end;
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_MonitoredObj(): PAnsiChar; CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.MonitoredElementName);
+    if elem.MonitoredElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement.FullName));
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_MonitoredTerm(): Integer; CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -176,48 +198,49 @@ end;
 //------------------------------------------------------------------------------
 function Fuses_Get_SwitchedObj(): PAnsiChar; CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ElementName);
+    if elem.ControlledElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.ControlledElement.FullName));
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Set_Parameter(DSSPrime, 'monitoredObj', Value);
+    Set_Parameter(DSSPrime, ord(TFuseProp.monitoredObj), Value);
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_MonitoredTerm(Value: Integer); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Set_Parameter(DSSPrime, 'monitoredterm', IntToStr(Value));
+    Set_Parameter(DSSPrime, ord(TFuseProp.monitoredterm), Value);
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Set_Parameter(DSSPrime, 'SwitchedObj', Value);
+    Set_Parameter(DSSPrime, ord(TFuseProp.SwitchedObj), Value);
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_SwitchedTerm(): Integer; CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -228,17 +251,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_SwitchedTerm(Value: Integer); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Set_Parameter(DSSPrime, 'SwitchedTerm', IntToStr(Value));
+    Set_Parameter(DSSPrime, ord(TFuseProp.SwitchedTerm), Value);
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_TCCcurve(): PAnsiChar; CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
     begin
@@ -246,22 +269,25 @@ begin
         Exit;
     end;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FuseCurve.Name);
+    If elem.FuseCurve <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.FuseCurve.Name)
+    else
+        Result := NIL;
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_TCCcurve(const Value: PAnsiChar); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Set_Parameter(DSSPrime, 'FuseCurve', Value);
+    Set_Parameter(DSSPrime, ord(TFuseProp.FuseCurve), Value);
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_RatedCurrent(): Double; CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     Result := -1.0;
     if not _activeObj(DSSPrime, elem) then
@@ -272,17 +298,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_RatedCurrent(Value: Double); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Set_Parameter(DSSPrime, 'RatedCurrent', Format('%.8g ', [Value]));
+    Set_Parameter(DSSPrime, ord(TFuseProp.RatedCurrent), Format('%.8g ', [Value]));
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_Delay(): Double; CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     Result := -1.0;
     if not _activeObj(DSSPrime, elem) then
@@ -293,29 +319,35 @@ end;
 //------------------------------------------------------------------------------
 procedure Fuses_Open(); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
+    i: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
     elem.ControlledElement.Closed[0] := FALSE; // Open all phases
+
+    // TODO: check why original code doesn't do this (see related issue with GetPropertyValue)
+    for i := 1 to elem.ControlledElement.NPhases do 
+        elem.FPresentState[i] := CTRL_OPEN; // Open all phases
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Close(); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
     i: Integer;
 begin
     if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
         Exit;
 
     for i := 1 to elem.ControlledElement.NPhases do 
-        elem.States[i] := CTRL_CLOSE; // Close all phases
+        elem.FPresentState[i] := CTRL_CLOSE; // Close all phases
+    elem.PropertySideEffects(ord(TFuseProp.State));
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Reset(); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
@@ -325,18 +357,18 @@ end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_Delay(Value: Double); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Set_Parameter(DSSPrime, 'Delay', Format('%.8g ', [Value]));
+    Set_Parameter(DSSPrime, ord(TFuseProp.Delay), Format('%.8g ', [Value]));
 end;
 //------------------------------------------------------------------------------
 function Fuses_IsBlown(): TAPIBoolean; CDECL;
 // Return TRUE if any phase blown
 var
-    elem: TFuseObj;
+    elem: TObj;
     i: Integer;
 begin
     Result := FALSE;
@@ -358,14 +390,14 @@ end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_idx(Value: Integer); CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     elem := DSSPrime.ActiveCircuit.Fuses.Get(Value);
     if elem = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Fuse index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Fuse', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := elem;
@@ -373,7 +405,7 @@ end;
 //------------------------------------------------------------------------------
 function Fuses_Get_NumPhases(): Integer; CDECL;
 var
-    elem: TFuseObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -385,7 +417,7 @@ end;
 procedure Fuses_Get_NormalState(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray0;
-    elem: TFuseObj;
+    elem: TObj;
     i: Integer;
 begin
     if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
@@ -396,7 +428,7 @@ begin
 
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.ControlledElement.NPhases);
     for i := 1 to elem.ControlledElement.NPhases do
-        if elem.NormalStates[i] = CTRL_CLOSE then 
+        if elem.FNormalState[i] = CTRL_CLOSE then 
             Result[i - 1] := 'closed' 
         else 
             Result[i - 1] := 'open';
@@ -405,7 +437,7 @@ end;
 procedure Fuses_Get_State(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
     Result: PPAnsiCharArray0;
-    elem: TFuseObj;
+    elem: TObj;
     i: Integer;
 begin
     if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
@@ -427,7 +459,7 @@ var
     Value: PPAnsiCharArray0;
     i: Integer;
     Count: Integer;
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
         Exit;
@@ -438,9 +470,9 @@ begin
     if (Count <> elem.ControlledElement.NPhases) AND (DSS_CAPI_EXT_ERRORS) then
     begin
         DoSimpleMsg(DSSPrime, 
-            Format('The number of states provided (%d) does not match the number of phases (%d).', 
-                [ValueCount, Integer(elem.ControlledElement.NPhases)]
-            ), 97896
+            'The number of states provided (%d) does not match the number of phases (%d).', 
+                [ValueCount, Integer(elem.ControlledElement.NPhases)],
+            97896
         );
         Exit;
     end;
@@ -451,11 +483,12 @@ begin
     for i := 1 to Count Do 
     begin
         if Length(Value[i - 1]) > 0 then
-            case LowerCase(Value[i - 1])[1] of
-                'o': elem.States[i] := CTRL_OPEN;
-                'c': elem.States[i] := CTRL_CLOSE;
+            case AnsiLowerCase(Value[i - 1])[1] of
+                'o': elem.FPresentState[i] := CTRL_OPEN;
+                'c': elem.FPresentState[i] := CTRL_CLOSE;
             end;
     end;
+    elem.PropertySideEffects(ord(TFuseProp.State));
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_NormalState(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
@@ -463,7 +496,7 @@ var
     Value: PPAnsiCharArray0;
     i: Integer;
     Count: Integer;
-    elem: TFuseObj;
+    elem: TObj;
 begin
     if (not _activeObj(DSSPrime, elem)) or (elem.ControlledElement = NIL) then
         Exit;
@@ -474,9 +507,9 @@ begin
     if (Count <> elem.ControlledElement.NPhases) AND (DSS_CAPI_EXT_ERRORS) then
     begin
         DoSimpleMsg(DSSPrime, 
-            Format('The number of states provided (%d) does not match the number of phases (%d).', 
-                [ValueCount, Integer(elem.ControlledElement.NPhases)]
-            ), 97897
+            'The number of states provided (%d) does not match the number of phases (%d).', 
+                [ValueCount, Integer(elem.ControlledElement.NPhases)],
+            97897
         );
         Exit;
     end;
@@ -487,11 +520,12 @@ begin
     for i := 1 to Count Do 
     begin
         if Length(Value[i - 1]) > 0 then
-            case LowerCase(Value[i - 1])[1] of
-                'o': elem.NormalStates[i] := CTRL_OPEN;
-                'c': elem.NormalStates[i] := CTRL_CLOSE;
+            case AnsiLowerCase(Value[i - 1])[1] of
+                'o': elem.FNormalState[i] := CTRL_OPEN;
+                'c': elem.FNormalState[i] := CTRL_CLOSE;
             end;
     end;
+    elem.NormalStateSet := True;
 end;
 //------------------------------------------------------------------------------
 end.

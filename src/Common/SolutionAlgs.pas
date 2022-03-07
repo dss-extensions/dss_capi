@@ -7,14 +7,7 @@ unit SolutionAlgs;
   ----------------------------------------------------------
 }
 
-{ Solution Algorithms}
-
-{
-   9-20-00  Added SolveDynamic
-
-   1/22/01 Added SolutionAbort Check wherever solution in a potentially long loop
-   4/2/04  Updated SolutionAbort to work through redirect files  and long scripts
-}
+// Solution Algorithms
 
 interface
 
@@ -60,17 +53,13 @@ implementation
 
 uses
     DSSGlobals,
-{$IFDEF FPC}
     CmdForms,
-{$ELSE}
-    DSSForms,
-{$ENDIF}
     Utilities,
     SysUtils,
     MathUtil,
     Math,
     Fault,
-    uComplex,
+    UComplex, DSSUcomplex,
     YMatrix,
     Spectrum,
     Vsource,
@@ -153,7 +142,7 @@ begin
     ShowPctProgress(0);
 {$ENDIF}
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         try
             IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage elements
@@ -207,7 +196,7 @@ var
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
       // t:=0.0;
       // DSS.MonitorClass.ResetAll;
@@ -263,7 +252,7 @@ var
 
 begin
     Result := 0;
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         DynaVars.t := 0.0;
 
@@ -318,7 +307,7 @@ begin
     ShowPctProgress(0);
 {$ENDIF}
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
      //   t:=0.0;
         // DSS.MonitorClass.ResetAll;
@@ -367,7 +356,7 @@ var
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         for N := 1 to NumberOfTimes do
@@ -417,7 +406,7 @@ var
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         try
             SolutionInitialized := TRUE; // If we're in dynamics mode, no need to re-initialize.
@@ -457,7 +446,7 @@ var
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         try
             LoadMultiplier := 1.0;   // Always set with prop in case matrix must be rebuilt
@@ -505,7 +494,6 @@ begin
 {$ENDIF}
         end;
     end;
-
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -519,7 +507,7 @@ var
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         try
             DynaVars.t := 0.0;
@@ -603,7 +591,7 @@ var
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
     // Time must be set beFore entering this routine
         try
@@ -627,7 +615,6 @@ begin
             for N := 1 to NumberOfTimes do
                 if not DSS.SolutionAbort then
                 begin
-
         // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
                     case Randomtype of
                         UNIFORM:
@@ -680,12 +667,12 @@ var
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         try
             if LoadDurCurveObj = NIL then
             begin
-                DoSimpleMsg('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 470);
+                DoSimpleMsg(DSS, _('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.'), 470);
                 Exit;
             end;
 
@@ -709,7 +696,6 @@ begin
             with DynaVars do
                 for i := 1 to Ndaily do
                 begin
-
       // Set the time
                     Increment_time;
 
@@ -719,7 +705,6 @@ begin
                     begin
                         for N := 1 to LoadDurCurveObj.NumPoints do
                         begin
-
                             LoadMultiplier := LoadDurCurveObj.Mult(N);  // Always set LoadMultiplier with prop in case matrix must be rebuilt
               // Adjust meter interval to interval on value of present Load-Duration Curve
                             IntervalHrs := LoadDurCurveObj.PresentInterval;
@@ -777,11 +762,11 @@ var
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         if LoadDurCurveObj = NIL then
         begin
-            DoSimpleMsg('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 471);
+            DoSimpleMsg(DSS, _('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.'), 471);
             Exit;
         end;
 
@@ -808,7 +793,6 @@ begin
 
             for N := 1 to LoadDurCurveObj.NumPoints do
             begin
-
         // Adjust meter interval to interval on value of present Load-Duration Curve
                 LoadMultiplier := LoadDurCurveObj.Mult(N);     // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
                 IntervalHrs := LoadDurCurveObj.PresentInterval;
@@ -869,7 +853,7 @@ var
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         try
             LoadModel := ADMITTANCE;   // All Direct solution
@@ -910,10 +894,8 @@ begin
 {$ENDIF}
         end;
     end;
-
 end;
 
-{--------------------------------------------------------------------------}
 procedure TSolutionAlgs.AllocateAllSCParms;
 var
     i: Integer;
@@ -926,7 +908,6 @@ begin
 end;
 
 
-{--------------------------------------------------------------------------}
 procedure TSolutionAlgs.ComputeIsc;
 { Compute Isc at all buses for current values of Voc and Ysc }
 var
@@ -942,59 +923,48 @@ begin
     end;
 end;
 
-
-{--------------------------------------------------------------------------}
 procedure TSolutionAlgs.ComputeYsc(iB: Integer);
-
-{Compute YSC for I-th bus}
-{Assume InjCurr is zeroed}
-
+// Compute YSC for I-th bus
+// Assume InjCurr is zeroed
 var
     i,
     j,
     ref1: Integer;
-
 begin
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         with Buses^[iB] do
         begin
             Zsc.Clear;
             for i := 1 to NumNodesThisBus do
             begin
-                ref1 := GetRef(i);
+                ref1 := RefNo[i];
                 if ref1 > 0 then
                 begin
                     Currents^[ref1] := cONE;
-          {SparseSet expects 1st element of voltage array, not 0-th element}
+                    // SparseSet expects 1st element of voltage array, not 0-th element
                     if SolveSparseSet(hYsystem, pComplexArray(@NodeV^[1]), pComplexArray(@Currents^[1])) < 1 then
                         raise EEsolv32Problem.Create('Error Solving System Y Matrix in ComputeYsc. Problem with Sparse matrix solver.');
-          {Extract Voltage Vector = column of Zsc}
+                    // Extract Voltage Vector = column of Zsc
                     for j := 1 to NumNodesThisBus do
                     begin
-                        Zsc.SetElement(j, i, NodeV^[GetRef(j)]);
+                        Zsc.SetElement(j, i, NodeV^[RefNo[j]]);
                     end;
                     Currents^[Ref1] := cZERO;
-                end; {IF ref...}
+                end;
             end;
             Ysc.CopyFrom(Zsc);
-            Ysc.invert; {Save as admittance}
+            Ysc.invert; // Save as admittance
         end;
     end;
 end;
 
-
-{--------------------------------------------------------------------------}
 procedure TSolutionAlgs.ComputeAllYsc;
 var
     iB, j: Integer;
-
-
 begin
-
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
-
         for j := 1 to NumNodes do
             Currents^[j] := cZERO;
 
@@ -1015,7 +985,6 @@ begin
     end;
 end;
 
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TSolutionAlgs.DisableAllFaults;
 begin
     with DSS.ActiveCircuit do
@@ -1029,11 +998,7 @@ begin
     end;
 end;
 
-
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 function TSolutionAlgs.SolveFaultStudy: Integer;
-
-
 begin
     Result := 0;
 
@@ -1080,21 +1045,20 @@ begin
    // Now should have all we need to make a short circuit report
 end;
 
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TSolutionAlgs.AddFrequency(var FreqList: pDoublearray; var NumFreq, MaxFreq: Integer; F: Double);
-{Add unique Frequency, F to list in ascending order, reallocating if necessary}
+// Add unique Frequency, F to list in ascending order, reallocating if necessary
 var
     i, j: Integer;
 begin
-    {See if F is in List}
+    // See if F is in List
     for i := 1 to NumFreq do
     begin
-         {Allow a little tolerance (0.1 hz) for the Frequency for round off error}
+         // Allow a little tolerance (0.1 hz) for the Frequency for round off error
         if Abs(F - FreqList^[i]) < 0.1 then
             Exit; // Already in List, nothing to do
     end;
 
-    {OK, it's not in list, so let's Add it}
+    // OK, it's not in list, so let's Add it
     Inc(NumFreq);
     if NumFreq > MaxFreq then
     begin  // Let's make a little more room
@@ -1102,7 +1066,7 @@ begin
         ReallocMem(FreqList, SizeOf(FreqList^[1]) * MaxFreq);
     end;
 
-    {Let's add it in ascending order}
+    // Let's add it in ascending order
     for i := 1 to NumFreq - 1 do
     begin
         if F < FreqList^[i] then
@@ -1115,17 +1079,15 @@ begin
         end;
     end;
 
-     {If we fall through, tack it on to the end}
+    // If we fall through, tack it on to the end
     FreqList^[NumFreq] := F;
 end;
 
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 function TSolutionAlgs.GetSourceFrequency(pc: TPCElement): Double; // TODO - applicable to VCCS?
 var
     pVsrc: TVsourceObj;
     pIsrc: TIsourceObj;
 begin
-
     if Comparetext(pc.DSSClassName, 'vsource') = 0 then
     begin
         pVsrc := pc as TVsourceObj;
@@ -1136,10 +1098,8 @@ begin
         pIsrc := pc as TIsourceObj;
         Result := pIsrc.srcFrequency;
     end;
-
 end;
 
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TSolutionAlgs.CollectAllFrequencies(var FreqList: pDoubleArray; var NumFreq: Integer);
 
 var
@@ -1150,23 +1110,23 @@ var
     f: Double;
 
 begin
-    {Make a List of all frequencies in Use}
+    // Make a List of all frequencies in Use
 
-    {accumulate all unique Frequencies}
+    // accumulate all unique Frequencies
     MaxFreq := 20;    // Initial List size
     NumFreq := 0;
     Reallocmem(FreqList, Sizeof(FreqList^[1]) * MaxFreq);
 
     with DSS.ActiveCircuit do
     begin
-        {Check Sources -- each could have a different base frequency}
+        // Check Sources -- each could have a different base frequency
         p := Sources.First;
         while p <> NIL do
         begin
             if p.Enabled then
-                if DSS.SpectrumClass.Find(p.Spectrum) <> NIL then
+                if p.SpectrumObj <> NIL then
                 begin
-                    pSpectrum := DSS.SpectrumClass.GetActiveObj;
+                    pSpectrum := p.SpectrumObj;
                     f := GetSourceFrequency(p);
                     for j := 1 to pSpectrum.NumHarm do
                     begin
@@ -1177,8 +1137,8 @@ begin
         end;
     end;
 
-    {Mark Spectra being used}
-        {Check loads and generators - these are assumed to be at fundamental frequency}
+    // Mark Spectra being used
+    // Check loads and generators - these are assumed to be at fundamental frequency
     SpectrumInUse := AllocMem(SizeOf(Integer) * DSS.SpectrumClass.ElementCount);  //Allocate and zero
     with DSS.ActiveCircuit do
     begin
@@ -1186,15 +1146,15 @@ begin
         while p <> NIL do
         begin
             if p.enabled then
-                if DSS.SpectrumClass.Find(p.Spectrum) <> NIL then
+                if (p.SpectrumObj <> NIL) and (DSS.SpectrumClass.Find(p.SpectrumObj.Name) <> NIL) then
                 begin
                     SpectrumInUse^[DSS.SpectrumClass.Active] := 1;
                 end;
             p := PCelements.Next;
         end;
-    end; {With}
+    end;
 
-    {Add marked Spectra to list}
+    // Add marked Spectra to list
     for i := 1 to DSS.SpectrumClass.ElementCount do
     begin
         if SpectrumInUse^[i] = 1 then
@@ -1211,8 +1171,6 @@ begin
     ReallocMem(SpectrumInUse, 0);
 end;
 
-
-//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 function TSolutionAlgs.SolveHarmonic: Integer;
 var
     FrequencyList: pDoubleArray;
@@ -1228,7 +1186,7 @@ begin
     ProgressCaption('Performing Harmonic Solution');
 {$ENDIF}
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         try
 
@@ -1241,7 +1199,7 @@ begin
 
             DSS.MonitorClass.SampleAll;   // Store the fundamental frequency in the monitors
 
-       { Get the list of Harmonic Frequencies to solve at}
+            // Get the list of Harmonic Frequencies to solve at
             if DoAllHarmonics then
                 CollectAllFrequencies(FrequencyList, NFreq)   // Allocates FrequencyList
             else
@@ -1254,7 +1212,6 @@ begin
 
             for i := 1 to NFreq do
             begin
-
                 Frequency := FrequencyList^[i];   // forces rebuild of SystemY
                 if Abs(Harmonic - 1.0) > EPSILON then
                 begin    // Skip fundamental
@@ -1270,7 +1227,7 @@ begin
                    // Storage devices are assumed to stay the same since there is no time variation in this mode
                 end;
 
-            end; {FOR}
+            end;
 
             {$IFDEF DSS_CAPI_PM}
             DSS.ActorPctProgress := 100;
@@ -1288,15 +1245,13 @@ begin
      // Now should have all we need to make a short circuit report
 
     end;
-
 end;
-//========================================================================================
-function TSolutionAlgs.SolveHarmTime: Integer;     // It is based in SolveGeneralTime routine
 
+function TSolutionAlgs.SolveHarmTime: Integer;     // It is based in SolveGeneralTime routine
 begin
     Result := 0;
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         if not DSS.SolutionAbort then
@@ -1310,7 +1265,7 @@ begin
             end;
     end;
 end;
-//=============================================================================
+
 function TSolutionAlgs.SolveHarmonicT: Integer;
 var
     FrequencyList: pDoubleArray;
@@ -1321,7 +1276,7 @@ begin
 
     FrequencyList := NIL;   // Set up for Reallocmem
 
-    with DSS.ActiveCircuit, DSS.ActiveCircuit.solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         try
@@ -1351,7 +1306,6 @@ begin
 
             for i := 1 to NFreq do
             begin
-
                 Frequency := FrequencyList^[i]; // forces rebuild of SystemY
                 if Abs(Harmonic - 1.0) > EPSILON then
                 begin    // Skip fundamental
@@ -1368,7 +1322,6 @@ begin
             ReallocMem(FrequencyList, 0);
         end;
     end;
-
 end;
 
 end.

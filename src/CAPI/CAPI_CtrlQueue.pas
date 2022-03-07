@@ -87,7 +87,7 @@ procedure CtrlQueue_Show(); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    DSSPrime.ActiveCircuit.ControlQueue.ShowQueue(DSSPrime.OutputDirectory + 'COMProxy_ControlQueue.CSV');
+    DSSPrime.ActiveCircuit.ControlQueue.ShowQueue(DSSPrime.OutputDirectory + 'COMProxy_ControlQueue.csv');
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_ClearActions(); CDECL;

@@ -44,7 +44,8 @@ uses
     SysUtils,
     DSSPointerList,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    DSSObjectHelper;
 
 function _activeObj(DSS: TDSSContext; out obj: TSwtControlObj): Boolean; inline;
 begin
@@ -58,24 +59,12 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active SwtControl object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['SwtControl'], 8989);
         end;
         Exit;
     end;
         
     Result := True;
-end;
-//------------------------------------------------------------------------------
-procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
-var
-    cmd: String;
-    obj: TSwtControlObj;
-begin
-    if not _activeObj(DSS, obj) then
-        exit;
-    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('swtcontrol.%s.%s=%s', [obj.Name, parm, val]);
-    DSS.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Action(): Integer; CDECL;
@@ -141,7 +130,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := elem.IsLocked;   // Fixed bug here
+    Result := elem.Locked;   // Fixed bug here
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Name(): PAnsiChar; CDECL;
@@ -163,7 +152,8 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ElementName);
+    if elem.ControlledElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.ControlledElement.FullName));
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_SwitchedTerm(): Integer; CDECL;
@@ -240,18 +230,28 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'SwtControl "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'SwtControl "%s" not found in Active Circuit.', [Value], 5003);
     end;
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
+var
+    elem: TSwtControlObj;
 begin
-    Set_Parameter(DSSPrime, 'SwitchedObj', Value);
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    elem.ParsePropertyValue(ord(TSwtControlProp.SwitchedObj), Value);
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_SwitchedTerm(Value: Integer); CDECL;
+var
+    elem: TSwtControlObj;
 begin
-    Set_Parameter(DSSPrime, 'SwitchedTerm', IntToStr(Value));
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    elem.SetInteger(ord(TSwtControlProp.SwitchedTerm), Value);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Count(): Integer; CDECL;
@@ -340,7 +340,7 @@ begin
     pSwtControl := DSSPrime.ActiveCircuit.SwtControls.Get(Value);
     if pSwtControl = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid SwtControl index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['SwtControl', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pSwtControl;

@@ -29,7 +29,8 @@ type
         Progress = 3,
         ProgressCaption = 4,
         ProgressFormCaption = 5,
-        ProgressPercent = 6
+        ProgressPercent = 6,
+        FireOffEditor = 7
     );
 {$SCOPEDENUMS OFF}
 
@@ -47,8 +48,6 @@ function DSSMessageDlg(const Msg: String; err: Boolean): Integer;
 procedure DSSInfoMessageDlg(const Msg: String);
 procedure CloseDownForms;
 procedure ShowTreeView(const Fname: String);
-function MakeChannelSelection(NumFieldsToSkip: Integer; const Filename: String): Boolean;
-procedure ShowHeapUsage; // copied from Lazarus form; not used in command line yet
 
 implementation
 
@@ -65,7 +64,8 @@ uses
     Strutils,
     ArrayDef,
     DSSHelper,
-    DSSPointerList;
+    DSSPointerList,
+    Utilities;
 
 const
     colwidth = 25;
@@ -80,20 +80,13 @@ begin
         WriteLn(s);
 end;
 
-
-
-procedure ShowHeapUsage;
-var
-    hstat: TFPCHeapStatus;
-    s: String;
-begin
-    hstat := GetFPCHeapStatus;
-    s := Format('Heap Memory Used: %dK', [hstat.CurrHeapUsed div 1024]);
-    DSSInfoMessageDlg(s);
-end;
-
 procedure InitProgressForm;
 begin
+    if (@DSSPrime.DSSMessageCallback) <> NIL then
+    begin
+        DSSPrime.DSSMessageCallback(DSSPrime, PChar('0'), ord(DSSMessageType.ProgressPercent));
+        Exit;
+    end;
 end;
 
 procedure ShowPctProgress(Count: Integer);
@@ -133,17 +126,25 @@ end;
 
 procedure ProgressHide;
 begin
+    if NoFormsAllowed then
+        Exit;
+
+    if (@DSSPrime.DSSMessageCallback) <> NIL then
+        DSSPrime.DSSMessageCallback(DSSPrime, PChar('-1'), ord(DSSMessageType.ProgressPercent));
 end;
 
 procedure ShowAboutBox;
 begin
     WriteLnCB(
-        'OpenDSS (Electric Power Distribution System Simulator), DSS C-API library version' + CRLF +
+        'DSS C-API library version' + CRLF +
         VersionString + CRLF +
-        'Copyright (c) 2008-2019, Electric Power Research Institute, Inc.' + CRLF +
-        'Copyright (c) 2016-2017, Battelle Memorial Institute' + CRLF +
-        'Copyright (c) 2017-2021, Paulo Meira' + CRLF +
-        'All rights reserved.', 
+        'An alternative implementation of OpenDSS' + CRLF + 
+        'OpenDSS is EPRI''s Electric Power Distribution System Simulator' + CRLF +
+        'Copyright (c) 2008-2022, Electric Power Research Institute, Inc.' + CRLF +
+        'Copyright (c) 2016-2021, Battelle Memorial Institute' + CRLF +
+        'Copyright (c) 2017-2022, Paulo Meira, DSS Extensions contributors' + CRLF +
+        'All rights reserved.' + CRLF +
+        'Please check the repository commit history and specific files for detailed credits.', 
         DSSMessageType.Info
     );
 end;
@@ -228,7 +229,7 @@ begin
             DSSPrime.DSSMessageCallback(DSSPrime, PChar(pDSSClass.name), ord(DSSMessageType.Help));
             if bProperties = TRUE then
                 for j := 1 to pDSSClass.NumProperties do
-                    DSSPrime.DSSMessageCallback(DSSPrime, PChar('  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.PropertyHelp^[j]), ord(DSSMessageType.Help));
+                    DSSPrime.DSSMessageCallback(DSSPrime, PChar('  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.GetPropertyHelp(j)), ord(DSSMessageType.Help));
         end;
     end
     else
@@ -237,10 +238,10 @@ begin
         begin
             pDSSClass := HelpList.Items[i - 1];
             WriteLnCB(pDSSClass.name, DSSMessageType.Help);
-            
+
             if bProperties = TRUE then
                 for j := 1 to pDSSClass.NumProperties do
-                    WriteLnCB('  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.PropertyHelp^[j], DSSMessageType.Help);
+                    WriteLnCB('  ' + pDSSClass.PropertyName[j] + ': ' + pDSSClass.GetPropertyHelp(j), DSSMessageType.Help);
         end;
     end;
 
@@ -250,23 +251,23 @@ end;
 procedure ShowGeneralHelp;
 begin
     WriteLnCB(
-        'For specific help, enter:' + CRLF + 
-        '  "help command [cmd]" lists all executive commands, or' + CRLF + 
-        '                       if [cmd] provided, details on that command' + CRLF + 
-        '  "help option [opt]"  lists all simulator options, or' + CRLF + 
-        '                       if [opt] provided, details on that option' + CRLF + 
-        '  "help show [opt]"    lists the options to "show" various outputs, or' + CRLF + 
-        '                       if [opt] provided, details on that output' + CRLF + 
-        '  "help export [fmt]"  lists the options to "export" in various formats, or' + CRLF + 
-        '                       if [fmt] provided, details on that format' + CRLF + 
-        '  "help class [cls]"   lists the names of all available circuit model classes, or' + CRLF + 
-        '                       if [cls] provided, details on that class' + CRLF + 
-        'You may truncate any help topic name, which returns all matching entries',
+        _('For specific help, enter:') + CRLF + 
+        _('  "help command [cmd]" lists all executive commands, or') + CRLF + 
+        _('                       if [cmd] provided, details on that command') + CRLF + 
+        _('  "help option [opt]"  lists all simulator options, or') + CRLF + 
+        _('                       if [opt] provided, details on that option') + CRLF + 
+        _('  "help show [opt]"    lists the options to "show" various outputs, or') + CRLF + 
+        _('                       if [opt] provided, details on that output') + CRLF + 
+        _('  "help export [fmt]"  lists the options to "export" in various formats, or') + CRLF + 
+        _('                       if [fmt] provided, details on that format') + CRLF + 
+        _('  "help class [cls]"   lists the names of all available circuit model classes, or') + CRLF + 
+        _('                       if [cls] provided, details on that class') + CRLF + 
+        _('You may truncate any help topic name, which returns all matching entries'),
         DSSMessageType.Help
     );
 end;
 
-procedure ShowAnyHelp(const num: Integer; cmd: pStringArray; hlp: pStringArray; const opt: String);
+procedure ShowAnyHelp(const num: Integer; cmd: pStringArray; const prefix: String; const opt: String);
 var
     i: Integer;
     lst: TStringList;
@@ -297,11 +298,11 @@ begin
     begin
         for i := 1 to num do
         begin
-            if AnsiStartsStr(opt, LowerCase(cmd[i])) then
+            if AnsiStartsStr(opt, AnsiLowerCase(cmd[i])) then
             begin
-                WriteLnCB(UpperCase(cmd[i]), DSSMessageType.Help);
+                WriteLnCB(AnsiUpperCase(cmd[i]), DSSMessageType.Help);
                 WriteLnCB('======================', DSSMessageType.Help);
-                WriteLnCB(hlp[i], DSSMessageType.Help);
+                WriteLnCB(DSSHelp(prefix + '.' + cmd[i]), DSSMessageType.Help);
                 WriteLnCB(msg, DSSMessageType.Help);
             end;
         end;
@@ -318,57 +319,55 @@ begin
         pDSSClass := DSSClassList.First;
         while pDSSClass <> NIL do
         begin
-            if AnsiStartsStr(opt, LowerCase(pDSSClass.name)) then
+            if AnsiStartsStr(opt, AnsiLowerCase(pDSSClass.name)) then
             begin
-                WriteLnCB(UpperCase(pDSSClass.name), DSSMessageType.Help);
+                WriteLnCB(AnsiUpperCase(pDSSClass.name), DSSMessageType.Help);
                 WriteLnCB('======================', DSSMessageType.Help);
                 for i := 1 to pDSSClass.NumProperties do
-                    WriteLnCB('  ' + pDSSClass.PropertyName[i] + ': ' + pDSSClass.PropertyHelp^[i], DSSMessageType.Help);
+                    WriteLnCB('  ' + pDSSClass.PropertyName[i] + ': ' + pDSSClass.GetPropertyHelp(i), DSSMessageType.Help);
             end;
             pDSSClass := DSSClassList.Next;
         end;
     end
     else
     begin
-        WriteLnCB('== Power Delivery Elements ==', DSSMessageType.Help);
+        WriteLnCB(_('== Power Delivery Elements =='), DSSMessageType.Help);
         AddHelpForClasses(DSSClassList, PD_ELEMENT, FALSE);
-        WriteLnCB('== Power Conversion Elements ==', DSSMessageType.Help);
+        WriteLnCB(_('== Power Conversion Elements =='), DSSMessageType.Help);
         AddHelpForClasses(DSSClassList, PC_ELEMENT, FALSE);
-        WriteLnCB('== Control Elements ==', DSSMessageType.Help);
+        WriteLnCB(_('== Control Elements =='), DSSMessageType.Help);
         AddHelpForClasses(DSSClassList, CTRL_ELEMENT, FALSE);
-        WriteLnCB('== Metering Elements ==', DSSMessageType.Help);
+        WriteLnCB(_('== Metering Elements =='), DSSMessageType.Help);
         AddHelpForClasses(DSSClassList, METER_ELEMENT, FALSE);
-        WriteLnCB('== Supporting Elements ==', DSSMessageType.Help);
+        WriteLnCB(_('== Supporting Elements =='), DSSMessageType.Help);
         AddHelpForClasses(DSSClassList, 0, FALSE);
-        WriteLnCB('== Other Elements ==', DSSMessageType.Help);
+        WriteLnCB(_('== Other Elements =='), DSSMessageType.Help);
         AddHelpForClasses(DSSClassList, NON_PCPD_ELEM, FALSE);
     end;
 end;
 
-//{$DEFINE EXPORT_HELP}
-{$IFDEF EXPORT_HELP}
-function StringToMD(const s: String): String;
+function StringToHTML(const s: String): String; //TODO
 begin
     Result := s;
     Result := StringReplace(Result, CRLF, '<br>', [rfReplaceAll]);
-    Result := StringReplace(Result, '|', '\|', [rfReplaceAll]);
-    Result := StringReplace(Result, '*', '\*', [rfReplaceAll]);
-    Result := StringReplace(Result, '~', '\~', [rfReplaceAll]);
+    // Result := StringReplace(Result, '|', '\|', [rfReplaceAll]);
+    // Result := StringReplace(Result, '*', '\*', [rfReplaceAll]);
+    // Result := StringReplace(Result, '~', '\~', [rfReplaceAll]);
 end;
 
-procedure AddHelpForClassesMD(BaseClass: Word);
+procedure AddHelpForClassesMD(DSS: TDSSContext; BaseClass: Word);
 var
     HelpList: TList;
     pDSSClass: TDSSClass;
     i, j: Integer;
 begin
     HelpList := TList.Create();
-    pDSSClass := DSSClassList.First;
+    pDSSClass := DSS.DSSClassList.First;
     while pDSSClass <> NIL do
     begin
         if (pDSSClass.DSSClassType and BASECLASSMASK) = BaseClass then
             HelpList.Add(pDSSClass);
-        pDSSClass := DSSClassList.Next;
+        pDSSClass := DSS.DSSClassList.Next;
     end;
     HelpList.Sort(@CompareClassNames);
 
@@ -376,22 +375,26 @@ begin
     for i := 1 to HelpList.Count do
     begin
         pDSSClass := HelpList.Items[i - 1];
-        writeln('#### `', pDSSClass.name, '` properties');
+        writeln(Format(_('#### `%s` properties'), [pDSSClass.name]));
         writeln();
-        writeln('| Number | Name | Description |');
-        writeln('| - | - | - |');
-        
+
+        writeln('<table>');
+        writeln(Format('<tr><th>%s</th><th>%s</th><th>%s</th><th>Migrated?</th></tr>', [_('Number'), _('Name'), _('Description')]));
+
         for j := 1 to pDSSClass.NumProperties do
-            writeln('| ', IntToStr(j),  ' | ', pDSSClass.PropertyName[j], ' | ', StringToMD(pDSSClass.PropertyHelp^[j]), ' |');
+            writeln(Format(
+                    '<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>', 
+                [j, pDSSClass.PropertyName[j], StringToHTML(pDSSClass.GetPropertyHelp(j)), 'MIGRATED:' + StrYorN(pDSSClass.PropertyOffset[j] >= 0)]
+            ));
                 
-        writeln();
+        writeln('</table>');
         writeln();
     end;
     
     HelpList.Free;
 end;
 
-procedure ShowAnyHelpMD(const num: Integer; cmd: pStringArray; hlp: pStringArray; what: String);
+procedure ShowAnyHelpMD(const num: Integer; cmd: pStringArray; what: String);
 var
     i, j: Integer;
     lst: TStringList;
@@ -402,93 +405,94 @@ begin
 
     lst.Sort;
     
-    writeln('| ', what,  ' | Description |');
-    writeln('| - | - |');
+    writeln('<table>');
+    writeln(Format('<tr><th>%s</th><th>%s</th></tr>', [what,  _('Description')]));
     for i := 1 to num do
         for j := 1 to num do
             if cmd[j] = lst[i - 1] then
             begin
-                writeln('| ', cmd[j], ' | ',  StringToMD(hlp[j]), ' |');
+                writeln(Format('<tr><td>%s</td><td>%s</td></tr>', [cmd[j], StringToHTML(DSSHelp(what + '.' + cmd[j]))]));
                 break;
             end;
     
+    writeln('</table>');
     lst.Free;
     writeln();
 end;
 
-procedure ShowAllHelpMD();
+procedure ShowAllHelpMD(DSS: TDSSContext); // TODO: use plain HTML for everything instead?
 //var
 //    pDSSClass: TDSSClass;
 //    i: Integer;
 begin
-    writeln('# DSS Extensions: OpenDSS Commands and Properties');
+    writeln(_('# DSS Extensions: OpenDSS Commands and Properties'));
     writeln();
     writeln('---');
     writeln();
-    writeln('**This document was generated from:** `', VersionString, '`');
+    writeln(Format(_('**This document was generated from:** `%s`'), [VersionString]));
     writeln();
-    writeln('*Generated with the legacy models disabled (i.e. OpenDSS v9+ compatibility mode).*');
+    writeln(_('*Generated with the legacy models disabled (i.e. OpenDSS v9+ compatibility mode).*'));
     writeln();
     writeln('---');
     writeln();
-    writeln('## About this');
+    writeln(_('## About this'));
     writeln();
-    writeln('This is a document automatically generated from the commands, options and properties for the DSS language (script level) exposed in the DSS Extensions version of the OpenDSS engine. A separate document will be developed in the future to detail **API** functions and general usage recommendations for the projects under DSS Extensions.');
+    writeln(_('This is a document automatically generated from the commands, options and properties for the DSS language (script level) exposed in the DSS Extensions version of the OpenDSS engine. A separate document will be developed in the future to detail **API** functions and general usage recommendations for the projects under DSS Extensions.'));
     writeln();
-    writeln('Since the extensive majority of properties and elements are compatible, this document can be useful when using either the official OpenDSS implementation or the DSS Extensions version (DSS C-API engine), consumed through the projects DSS Python (`dss_python`), OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp (`dss_sharp`), and DSS MATLAB (`dss_matlab`).  If you are using the official OpenDSS, when in doubt check the official documentation and/or source code.');
+    writeln(_('Since the extensive majority of properties and elements are compatible, this document can be useful when using either the official OpenDSS implementation or the DSS Extensions version (DSS C-API engine), consumed through the projects DSS Python (`dss_python`), OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp (`dss_sharp`), and DSS MATLAB (`dss_matlab`).  If you are using the official OpenDSS, when in doubt check the official documentation and/or source code.'));
     writeln();
-    writeln('As a final note, keep in mind that not all commands are implemented in the DSS Extensions engine, interactive commands like plots are missing (on purpose).');
+    writeln(_('As a final note, keep in mind that not all commands are implemented in the DSS Extensions engine, interactive commands like plots are missing (on purpose).'));
     writeln();
     
     writeln('---');
-    writeln('## Commands');
+    writeln(_('## Commands'));
     writeln();
-    ShowAnyHelpMD(NumExecCommands, pStringArray(@ExecCommand), pStringArray(@CommandHelp), 'Command');
+
+    ShowAnyHelpMD(NumExecCommands, pStringArray(@ExecCommand), 'Command');
     
     writeln('---');
-    writeln('## Execution Options');
+    writeln(_('## Execution Options'));
     writeln();
-    ShowAnyHelpMD(NumExecOptions, pStringArray(@ExecOption), pStringArray(@OptionHelp), 'Option');
+    ShowAnyHelpMD(NumExecOptions, pStringArray(@ExecOption), 'Executive');
     
     writeln('---');
-    writeln('## `Show` options');
+    writeln(_('## `Show` options'));
     writeln();
-    ShowAnyHelpMD(NumShowOptions, pStringArray(@ShowOption), pStringArray(@ShowHelp), 'Option');
+    ShowAnyHelpMD(NumShowOptions, pStringArray(@ShowOption), 'ShowOption');
     
     writeln('---');
-    writeln('## `Export` options');
+    writeln(_('## `Export` options'));
     writeln();
-    ShowAnyHelpMD(NumExportOptions, pStringArray(@ExportOption), pStringArray(@ExportHelp), 'Option');
+    ShowAnyHelpMD(NumExportOptions, pStringArray(@ExportOption), 'ExportOption');
     
     writeln('---');
-    writeln('## Elements');
+    writeln(_('## Elements'));
     writeln();
     writeln('---');
-    writeln('### Power Delivery Elements');
+    writeln(_('### Power Delivery Elements'));
     writeln();
-    AddHelpForClassesMD(PD_ELEMENT);
+    AddHelpForClassesMD(DSS, PD_ELEMENT);
     writeln('---');
-    writeln('### Power Conversion Elements');
+    writeln(_('### Power Conversion Elements'));
     writeln();
-    AddHelpForClassesMD(PC_ELEMENT);
+    AddHelpForClassesMD(DSS, PC_ELEMENT);
     writeln('---');
-    writeln('###  Control Elements');
+    writeln(_('###  Control Elements'));
     writeln();
-    AddHelpForClassesMD(CTRL_ELEMENT);
+    AddHelpForClassesMD(DSS, CTRL_ELEMENT);
     writeln('---');
-    writeln('### Metering Elements');
+    writeln(_('### Metering Elements'));
     writeln();
-    AddHelpForClassesMD(METER_ELEMENT);
+    AddHelpForClassesMD(DSS, METER_ELEMENT);
     writeln('---');
-    writeln('### Supporting Elements');
+    writeln(_('### Supporting Elements'));
     writeln();
-    AddHelpForClassesMD(0);
+    AddHelpForClassesMD(DSS, 0);
     writeln('---');
-    writeln('### Other Elements');
+    writeln(_('### Other Elements'));
     writeln();
-    AddHelpForClassesMD(NON_PCPD_ELEM);
+    AddHelpForClassesMD(DSS, NON_PCPD_ELEM);
 end;
-{$ENDIF}
 
 procedure ShowHelpForm(dssContext: TObject);
 var
@@ -497,26 +501,24 @@ var
 begin
     DSS := TDSSContext(dssContext);
     DSS.Parser.NextParam;
-    Param := LowerCase(DSS.Parser.StrValue);
+    Param := AnsiLowerCase(DSS.Parser.StrValue);
     DSS.Parser.NextParam;
-    OptName := LowerCase(DSS.Parser.StrValue);
+    OptName := AnsiLowerCase(DSS.Parser.StrValue);
     
-{$IFDEF EXPORT_HELP}
     if ANSIStartsStr('markdown', param) then
-        ShowAllHelpMD(TODO)
+        ShowAllHelpMD(DSS)
     else
-{$ENDIF}
     if ANSIStartsStr('com', param) then
-        ShowAnyHelp(NumExecCommands, pStringArray(@ExecCommand), pStringArray(@CommandHelp), OptName)
+        ShowAnyHelp(NumExecCommands, pStringArray(@ExecCommand), OptName, 'Command')
     else
     if ANSIStartsStr('op', param) then
-        ShowAnyHelp(NumExecOptions, pStringArray(@ExecOption), pStringArray(@OptionHelp), OptName)
+        ShowAnyHelp(NumExecOptions, pStringArray(@ExecOption), OptName, 'Executive')
     else
     if ANSIStartsStr('sh', param) then
-        ShowAnyHelp(NumShowOptions, pStringArray(@ShowOption), pStringArray(@ShowHelp), OptName)
+        ShowAnyHelp(NumShowOptions, pStringArray(@ShowOption), OptName, 'ShowOption')
     else
     if ANSIStartsStr('e', param) then
-        ShowAnyHelp(NumExportOptions, pStringArray(@ExportOption), pStringArray(@ExportHelp), OptName)
+        ShowAnyHelp(NumExportOptions, pStringArray(@ExportOption), OptName, 'ExportOption')
     else
     if ANSIStartsStr('cl', param) then
         ShowClassHelp(DSS.DSSClassList, OptName)
@@ -538,11 +540,6 @@ end;
 
 procedure CloseDownForms;
 begin
-end;
-
-function MakeChannelSelection(NumFieldsToSkip: Integer; const Filename: String): Boolean;
-begin
-    Result := FALSE;
 end;
 
 end.

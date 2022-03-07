@@ -15,6 +15,7 @@
 #       endif
 #    else
 #        include <cstdint>
+#        include <cstddef>
 #    endif
 #else
 #    ifdef _MSC_VER
@@ -25,6 +26,7 @@
 #       endif
 #    else
 #        include <stdint.h>
+#        include <stddef.h>
 #    endif
 #endif
 
@@ -164,7 +166,14 @@ extern "C" {
         DSSMessageType_Progress = 3,
         DSSMessageType_ProgressCaption = 4,
         DSSMessageType_ProgressFormCaption = 5,
-        DSSMessageType_ProgressPercent = 6
+        DSSMessageType_ProgressPercent = 6,
+        DSSMessageType_FireOffEditor = 7
+    };
+
+    enum BatchOperation {
+        BatchOperation_Set = 0,
+        BatchOperation_Multiply = 1,
+        BatchOperation_Increment = 2
     };
 
     /* 
@@ -876,7 +885,7 @@ extern "C" {
     DSS_CAPI_DLL void Circuit_Get_SubstationLosses_GR(void);
 
     /*
-    Total power, watts delivered to the circuit
+    Total power, kW delivered to the circuit
     */
     DSS_CAPI_DLL void Circuit_Get_TotalPower(double** ResultPtr, int32_t* ResultCount);
     /*
@@ -3514,79 +3523,79 @@ extern "C" {
     /*
     Delivers the number of CPUs on the current PC
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_NumCPUs(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_NumCPUs(void);
 
     /*
     Delivers the number of Cores of the local PC
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_NumCores(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_NumCores(void);
 
     /*
     Gets the ID of the Active Actor
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ActiveActor(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_ActiveActor(void);
 
     /*
     Sets the Active Actor
     */
-    // DSS_CAPI_DLL void Parallel_Set_ActiveActor(int32_t Value);
+    DSS_CAPI_DLL void Parallel_Set_ActiveActor(int32_t Value);
 
-    // DSS_CAPI_DLL void Parallel_CreateActor(void);
+    DSS_CAPI_DLL void Parallel_CreateActor(void);
 
     /*
     Gets the CPU of the Active Actor
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ActorCPU(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_ActorCPU(void);
 
     /*
     Sets the CPU for the Active Actor
     */
-    // DSS_CAPI_DLL void Parallel_Set_ActorCPU(int32_t Value);
+    DSS_CAPI_DLL void Parallel_Set_ActorCPU(int32_t Value);
 
     /*
     Gets the number of Actors created
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_NumOfActors(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_NumOfActors(void);
 
-    // DSS_CAPI_DLL void Parallel_Wait(void);
+    DSS_CAPI_DLL void Parallel_Wait(void);
 
     /*
     Gets the progress of all existing actors in pct
     */
-    // DSS_CAPI_DLL void Parallel_Get_ActorProgress(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void Parallel_Get_ActorProgress(int32_t** ResultPtr, int32_t* ResultCount);
     /*
     Same as Parallel_Get_ActorProgress but using the global buffer interface for results
     */
-    // DSS_CAPI_DLL void Parallel_Get_ActorProgress_GR(void);
+    DSS_CAPI_DLL void Parallel_Get_ActorProgress_GR(void);
 
     /*
     Gets the status of each actor
     */
-    // DSS_CAPI_DLL void Parallel_Get_ActorStatus(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void Parallel_Get_ActorStatus(int32_t** ResultPtr, int32_t* ResultCount);
     /*
     Same as Parallel_Get_ActorStatus but using the global buffer interface for results
     */
-    // DSS_CAPI_DLL void Parallel_Get_ActorStatus_GR(void);
+    DSS_CAPI_DLL void Parallel_Get_ActorStatus_GR(void);
 
     /*
     Sets ON/OFF (1/0) Parallel features of the Engine
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ActiveParallel(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_ActiveParallel(void);
 
     /*
     Delivers if the Parallel features of the Engine are Active
     */
-    // DSS_CAPI_DLL void Parallel_Set_ActiveParallel(int32_t Value);
+    DSS_CAPI_DLL void Parallel_Set_ActiveParallel(int32_t Value);
 
     /*
     Reads the values of the ConcatenateReports option (1=enabled, 0=disabled)
     */
-    // DSS_CAPI_DLL int32_t Parallel_Get_ConcatenateReports(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_ConcatenateReports(void);
 
     /*
     Enable/Disable (1/0) the ConcatenateReports option for extracting monitors data
     */
-    // DSS_CAPI_DLL void Parallel_Set_ConcatenateReports(int32_t Value);
+    DSS_CAPI_DLL void Parallel_Set_ConcatenateReports(int32_t Value);
 
     /*
     String to be parsed. Loading this string resets the Parser to the beginning of the line. Then parse off the tokens in sequence.
@@ -3860,7 +3869,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllPctEmerg but using the global buffer interface for results
     */
-    DSS_CAPI_DLL void PDElements_Get_AllPctEmerg_GR(void);
+    DSS_CAPI_DLL void PDElements_Get_AllPctEmerg_GR(uint16_t AllNodes);
 
 
     /*
@@ -5395,7 +5404,7 @@ extern "C" {
     */
     DSS_CAPI_DLL void Solution_Set_MinIterations(int32_t Value);
 
-    // DSS_CAPI_DLL void Solution_SolveAll(void);
+    DSS_CAPI_DLL void Solution_SolveAll(void);
 
     DSS_CAPI_DLL void Solution_Get_IncMatrix(int32_t** ResultPtr, int32_t* ResultCount);
 
@@ -6679,6 +6688,139 @@ extern "C" {
     DSS_CAPI_DLL void YMatrix_Set_SolverOptions(uint64_t opts);
     DSS_CAPI_DLL uint64_t YMatrix_Get_SolverOptions(void);
     
+    DSS_CAPI_DLL void Text_CommandBlock(char *Value);
+    DSS_CAPI_DLL void Text_CommandArray(char** ValuePtr, int32_t ValueCount);
+
+    DSS_CAPI_DLL void ZIP_Open(char* FileName);
+    DSS_CAPI_DLL void ZIP_Redirect(char* FileInZip);
+    DSS_CAPI_DLL void ZIP_Close(void);
+
+    /*
+    Functions for the new API
+    */
+
+    /*
+    Extract the current properties as a JSON encoded string.
+    WARNING: this is unstable and subject to change.
+    */
+    DSS_CAPI_DLL char* DSS_ExtractSchema(void *ctx);
+
+    DSS_CAPI_DLL void DSS_Dispose_String(char *S);
+    DSS_CAPI_DLL void DSS_Dispose_PPointer(void*** p);
+
+    DSS_CAPI_DLL void* Obj_New(void* ctx, int32_t ClsIdx, char* Name, int16_t Activate, int16_t BeginEdit);
+    DSS_CAPI_DLL void* Obj_GetHandleByName(void* ctx, int32_t ClsIdx, char* Name);
+    DSS_CAPI_DLL void* Obj_GetHandleByIdx(void* ctx, int32_t ClsIdx, int32_t Idx);
+    DSS_CAPI_DLL int16_t Obj_PropertySideEffects(void *obj, int32_t Index, int32_t PreviousInt);
+    DSS_CAPI_DLL void Obj_BeginEdit(void *obj);
+    DSS_CAPI_DLL void Obj_EndEdit(void *obj, int32_t NumChanges);
+
+    /*
+    Returns the object name (direct access, no copy is done, no disposal required by the user; read only!)
+    */
+    DSS_CAPI_DLL char* Obj_GetName(void *obj);
+
+    /*
+    Returns the object's class name (direct access, no copy is done, no disposal required by the user; read only!)
+    */
+    DSS_CAPI_DLL char* Obj_GetClassName(void *obj);
+
+
+    DSS_CAPI_DLL int32_t Obj_GetIdx(void *obj);
+    DSS_CAPI_DLL char* Obj_GetClassIdx(void *obj);
+
+    /*
+    Activates an object. The object is set as the current
+    active DSSObject or CktElement, and in the list of its parent class.
+    If AllLists is true, other internal lists of OpenDSS are also
+    updated (implies slow/linear searches).
+    */
+    DSS_CAPI_DLL void Obj_Activate(void *obj, int16_t AllLists);
+
+    /*
+    Returns the pointer to the internal property fill sequence, and optionally
+    the highest value in CurrentCount (if not null).
+    */
+    DSS_CAPI_DLL int32_t* Obj_GetPropSeqPtr(void *obj, int32_t *CurrentCount);
+
+    DSS_CAPI_DLL double Obj_GetFloat64(void *obj, int32_t Index);
+    DSS_CAPI_DLL int32_t Obj_GetInt32(void *obj, int32_t Index);
+    DSS_CAPI_DLL void* Obj_GetObject(void *obj, int32_t Index);
+    
+    // Note: strings returned by these two must be disposed with DSS_Dispose_String
+    DSS_CAPI_DLL char* Obj_GetString(void *obj, int32_t Index);
+    DSS_CAPI_DLL char* Obj_GetAsString(void *obj, int32_t Index);
+
+    DSS_CAPI_DLL void Obj_GetFloat64Array(double** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
+    DSS_CAPI_DLL void Obj_GetInt32Array(int32_t** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
+    DSS_CAPI_DLL void Obj_GetStringArray(char*** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
+    DSS_CAPI_DLL void Obj_GetObjectArray(void** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
+
+    DSS_CAPI_DLL void Obj_SetAsString(void *obj, int32_t Index, char* Value);
+    DSS_CAPI_DLL void Obj_SetFloat64(void *obj, int32_t Index, double Value);
+    DSS_CAPI_DLL void Obj_SetInt32(void *obj, int32_t Index, int32_t Value);
+    DSS_CAPI_DLL void Obj_SetString(void *obj, int32_t Index, char* Value);
+    DSS_CAPI_DLL void Obj_SetObject(void *obj, int32_t Index, void* Value);
+    
+    DSS_CAPI_DLL void Obj_SetFloat64Array(void *obj, int32_t Index, double* Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Obj_SetInt32Array(void *obj, int32_t Index, int32_t* Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Obj_SetStringArray(void *obj, int32_t Index, char** Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Obj_SetObjectArray(void *obj, int32_t Index, void **Value, int32_t ValueCount);
+
+    DSS_CAPI_DLL void Batch_Dispose(void **batch);
+    DSS_CAPI_DLL void Batch_BeginEdit(void **batch, int32_t batchSize);
+    DSS_CAPI_DLL void Batch_EndEdit(void **batch, int32_t batchSize, int32_t numEdits);
+    DSS_CAPI_DLL void Batch_GetPropSeq(int32_t** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize);
+
+    DSS_CAPI_DLL void Batch_CreateFromNew(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsid, char** names, int32_t count, int16_t BeginEdit);
+    DSS_CAPI_DLL void Batch_CreateByClass(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsidx);
+    DSS_CAPI_DLL void Batch_CreateByRegExp(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsidx, char* re);
+    DSS_CAPI_DLL void Batch_CreateByIndex(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsidx, int32_t* Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Batch_CreateByInt32Property(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t ClsIdx, int32_t idx, int32_t value);
+
+    DSS_CAPI_DLL void Batch_GetFloat64(double** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetInt32(int32_t** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetString(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetAsString(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
+
+    DSS_CAPI_DLL void Batch_GetObject(void **batch, int32_t batchSize, int32_t Index, void** ResultPtr, int32_t* ResultCount);
+
+    // DSS_CAPI_DLL void Batch_SetAsString(void **batch, int32_t batchSize, int32_t Index, char* Value);
+    DSS_CAPI_DLL void Batch_Float64(void **batch, int32_t batchSize, int32_t Index, int32_t Operation, double Value);
+    DSS_CAPI_DLL void Batch_Int32(void **batch, int32_t batchSize, int32_t Index, int32_t Operation, int32_t Value);
+    DSS_CAPI_DLL void Batch_SetString(void **batch, int32_t batchSize, int32_t Index, char* Value);
+    DSS_CAPI_DLL void Batch_SetObject(void **batch, int32_t batchSize, int32_t Index, void* Value);
+
+    DSS_CAPI_DLL void Batch_SetFloat64Array(void **batch, int32_t batchSize, int32_t Index, double* Value);
+    DSS_CAPI_DLL void Batch_SetInt32Array(void **batch, int32_t batchSize, int32_t Index, int32_t* Value);
+    DSS_CAPI_DLL void Batch_SetStringArray(void **batch, int32_t batchSize, int32_t Index, char** Value);
+    DSS_CAPI_DLL void Batch_SetObjectArray(void **batch, int32_t batchSize, int32_t Index, void** Value);
+
+    DSS_CAPI_DLL void Batch_CreateFromNewS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname, char** names, int32_t count, int16_t BeginEdit);
+    DSS_CAPI_DLL void Batch_CreateByClassS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname);
+    DSS_CAPI_DLL void Batch_CreateByRegExpS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname, char* re);
+    DSS_CAPI_DLL void Batch_CreateByIndexS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname, int32_t* Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Batch_CreateByInt32PropertyS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname, char* name, int32_t value);
+
+    DSS_CAPI_DLL void Batch_GetFloat64S(double** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
+    DSS_CAPI_DLL void Batch_GetInt32S(int32_t** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
+    DSS_CAPI_DLL void Batch_GetStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
+    DSS_CAPI_DLL void Batch_GetAsStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
+
+    DSS_CAPI_DLL void Batch_GetObjectS(void **batch, int32_t batchSize, char* Name, void** ResultPtr, int32_t* ResultCount);
+
+    // DSS_CAPI_DLL void Batch_SetAsStringS(void **batch, int32_t batchSize, char* Name, char* Value);
+    DSS_CAPI_DLL void Batch_Float64S(void **batch, int32_t batchSize, char* Name, int32_t Operation, double Value);
+    DSS_CAPI_DLL void Batch_Int32S(void **batch, int32_t batchSize, char* Name, int32_t Operation, int32_t Value);
+    DSS_CAPI_DLL void Batch_SetStringS(void **batch, int32_t batchSize, char* Name, char* Value);
+    DSS_CAPI_DLL void Batch_SetObjectS(void **batch, int32_t batchSize, char* Name, void* Value);
+
+    DSS_CAPI_DLL void Batch_SetFloat64ArrayS(void **batch, int32_t batchSize, char* Name, double* Value);
+    DSS_CAPI_DLL void Batch_SetInt32ArrayS(void **batch, int32_t batchSize, char* Name, int32_t* Value);
+    DSS_CAPI_DLL void Batch_SetStringArrayS(void **batch, int32_t batchSize, char* Name, char** Value);
+    DSS_CAPI_DLL void Batch_SetObjectArrayS(void **batch, int32_t batchSize, char* Name, void** Value);
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

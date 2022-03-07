@@ -12,7 +12,7 @@ unit GeneratorVars;
 interface
 
 uses
-    UComplex;
+    UComplex, DSSUcomplex;
 
 type
     pTGeneratorVars = ^TGeneratorVars;

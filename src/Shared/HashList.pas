@@ -7,25 +7,17 @@ unit HashList;
   ----------------------------------------------------------
 }
 
-{
-  This Hash list module is designed to make searches on arrays of strings more
-  efficient.  The list actually consists of several short linear lists.  When a string
-  is added, it is hashed and placed at the end of one of the lists.
-
-  The list may by searched by string or by index.  When by string, the string
-  is hashed and the search is restricted to the resulting linear list.  When by
-  index, it simply goes to that index in the array of pointers that points to the
-  individual strings.
-
-  All strings are saved in lower case and tested with case sensitivity.  This
-  actually makes the search insensitive to case because everything is lower case.
-
-  Modified 4/18/98 to allocate on demand.  That way, you can create it for a certain
-  number of hash lists, without caring about how many actual there will be.
-
-}
-
-{$M+}
+//  This Hash list module is designed to make searches on arrays of strings more
+//  efficient.  The list actually consists of several short linear lists.  When a string
+//  is added, it is hashed and placed at the end of one of the lists.
+//
+//  The list may by searched by string or by index.  When by string, the string
+//  is hashed and the search is restricted to the resulting linear list.  When by
+//  index, it simply goes to that index in the array of pointers that points to the
+//  individual strings.
+//
+//  All strings are saved in lower case and tested with case sensitivity.  This
+//  actually makes the search insensitive to case because everything is lower case.
 
 interface
 
@@ -34,10 +26,6 @@ uses
     ArrayDef;
 
 type
-
-   //pStringArray = ^StringArray;
-  // StringArray = Array[1..100] of String;
-
     TSubList = record
         Nelem: Cardinal;
         NAllocated: Cardinal;
@@ -63,8 +51,6 @@ type
         procedure ResizeSubList(var SubList: TSubList);
         function Hash(const S: String): Cardinal;
         procedure ResizeStrPtr;
-    PROTECTED
-
     PUBLIC
         InitialAllocation: Cardinal;
         constructor Create(Nelements: Cardinal);
@@ -78,8 +64,6 @@ type
         procedure DumpToFile(const fname: String);
         procedure Clear;
         property Count: Cardinal READ NumElements;
-    PUBLISHED
-
     end;
 
 {$IFDEF DSS_CAPI_HASHLIST}
@@ -103,6 +87,7 @@ type
 implementation
 
 uses
+    BufStream,
     Classes,
     Utilities,
     Sysutils,
@@ -146,7 +131,6 @@ destructor THashList.Destroy;
 var
     i, j: Integer;
 begin
-
     for i := 1 to NumLists do
     begin
          {DeAllocated  Sublists}
@@ -196,7 +180,6 @@ begin
         ReallocStr(Str, Sizeof(Str^[1]) * OldAllocation, Sizeof(Str^[1]) * Nallocated);
         Reallocmem(Idx, Sizeof(Idx^[1]) * Nallocated);
     end;
-
 end;
 
 (*   New supposedly fast hash method      *)
@@ -244,7 +227,7 @@ var
     HashNum: Cardinal;
     SS: String;
 begin
-    SS := LowerCase(S);
+    SS := AnsiLowerCase(S);
     HashNum := Hash(SS);
 
     Inc(NumElements);
@@ -265,7 +248,6 @@ begin
         StringPtr^[NumElements] := SS;   // increments count to string
         Idx^[Nelem] := NumElements;
     end;
-
 end;
 
 
@@ -273,8 +255,7 @@ function THashList.Find(const S: String): Integer;
 var
     i: Integer;
 begin
-
-    LastSearchString := LowerCase(S);
+    LastSearchString := AnsiLowerCase(S);
     LastHash := Hash(LastSearchString);
     Result := 0;
     LastFind := 0;
@@ -291,7 +272,6 @@ begin
             end;
         end;
     end;
-
 end;
 
 function THashList.FindNext: Integer;
@@ -300,7 +280,6 @@ function THashList.FindNext: Integer;
 var
     i: Integer;
 begin
-
     Result := 0;  // Default return
     Inc(LastFind); // Start with next item in hash list
 
@@ -317,7 +296,6 @@ begin
                 end;
             end;
         end;
-
 end;
 
 
@@ -332,7 +310,7 @@ begin
     if Length(S) = 0 then
         Exit;
     
-    Test1 := LowerCase(S);
+    Test1 := AnsiLowerCase(S);
 
     for i := 1 to NumElements do
     begin
@@ -361,7 +339,7 @@ var
     i, j: Integer;
     sout: String;
 begin
-    F := TFileStream.Create(fname, fmCreate);
+    F := TBufferedFileStream.Create(fname, fmCreate);
     FSWriteln(F, Format('Number of Hash Lists = %d, Number of Elements = %d', [NumLists, NumElements]));
 
     FSWriteln(F);
@@ -395,7 +373,6 @@ begin
         FSWriteln(F, sout);
     end;
     FreeAndNil(F);
-
 end;
 
 procedure THashList.Clear;
@@ -430,12 +407,12 @@ begin
 end;
 function TAltHashList.Add(const S: String): Integer; inline;
 begin
-    inherited Add(LowerCase(s), Pointer(self.Count + 1));
+    inherited Add(AnsiLowerCase(s), Pointer(self.Count + 1));
     Result := self.Count;
 end;
 function TAltHashList.Find(const S: String): Integer; inline;
 begin
-    Result := Integer(inherited Find(LowerCase(s)));
+    Result := Integer(inherited Find(AnsiLowerCase(s)));
 end;
 function TAltHashList.NameOfIndex(i: Integer): String; inline;
 begin
@@ -465,7 +442,7 @@ begin
     if Length(S) = 0 then
         Exit;
     
-    Test1 := LowerCase(S);
+    Test1 := AnsiLowerCase(S);
 
     for i := 1 to Count do
     begin
