@@ -7,26 +7,16 @@ unit RegControl;
   ----------------------------------------------------------
 }
 
-{
-   Change Log
-   1-28-00 Created
-   4-29-00 fixed problem with NumPhases = # phases of controlled element
-   12/17/01 Added LDC logic
-   12/18/01 Added MaxTapChange property and logic
-   6/18/11 Updated Rev Power logic
-   12/4/2018  Added autotransformer control
-}
+//   12/4/2018  Added autotransformer control
 
-{
-  A RegControl is a control element that is connected to a terminal of another
-  circuit element that must be a transformer.
-
-  A RegControl is defined by a New command:
-
-  New RegControl.Name=myname Transformer = name Terminal=[1,2,...] Controlledbus=name etc...
-
-  Transformer to be controlled must already exist.
-}
+//  A RegControl is a control element that is connected to a terminal of another
+//  circuit element that must be a transformer.
+//
+//  A RegControl is defined by a New command:
+//
+//  New RegControl.Name=myname Transformer = name Terminal=[1,2,...] Controlledbus=name etc...
+//
+//  Transformer to be controlled must already exist.
 
 interface
 
@@ -37,85 +27,94 @@ uses
     ControlElem,
     DSSClass,
     Arraydef,
-    ucomplex,
+    UComplex, DSSUcomplex,
     Transformer,
     AutoTrans,
     utilities;
 
 type
+{$SCOPEDENUMS ON}
+    TRegControlProp = (
+        INVALID = 0,
+        transformer = 1,
+        winding = 2,
+        vreg = 3,
+        band = 4,
+        ptratio = 5,
+        CTprim = 6,
+        R = 7,
+        X = 8,
+        bus = 9,
+        delay = 10,
+        reversible = 11,
+        revvreg = 12,
+        revband = 13,
+        revR = 14,
+        revX = 15,
+        tapdelay = 16,
+        debugtrace = 17,
+        maxtapchange = 18,
+        inversetime = 19,
+        tapwinding = 20,
+        vlimit = 21,
+        PTphase = 22,
+        revThreshold = 23,
+        revDelay = 24,
+        revNeutral = 25,
+        EventLog = 26,
+        RemotePTRatio = 27,
+        TapNum = 28,
+        Reset = 29,
+        LDC_Z = 30,
+        rev_Z = 31,
+        Cogen = 32 
+    );
+{$SCOPEDENUMS OFF}
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TRegControl = class(TControlClass)
-    PRIVATE
-
     PROTECTED
-        procedure DefineProperties;
-        function MakeLike(const RegControlName: String): Integer; OVERRIDE;
+        Transf_Or_AutoTrans_ProxyClass: TProxyClass;
+
+        procedure DefineProperties; override;
     PUBLIC
         constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
-        function Edit: Integer; OVERRIDE;     // uses global parser
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
-
+        Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
     end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TRegControlObj = class(TControlElem)
-{$IFDEF DSS_CAPI}
     PUBLIC
-{$ELSE}
-    PROTECTED
-{$ENDIF}
-        procedure Set_Enabled(Value: Boolean); OVERRIDE;
-    
-    PRIVATE
+        LastChange: Integer;
 
-        Vreg,
-        Bandwidth,
-        PTRatio,
         RemotePTRatio,
-        CTRating,
-        R,
-        X,
         LDC_Z: Double;
 
-        {Reverse Power Variables}
-        revVreg,
-        revBandwidth,
+        // Reverse Power Variables
         RevPowerThreshold,   // W
         kWRevPowerThreshold,
         revDelay,
-        revR,
-        revX,
         revLDC_Z: Double;
 
-        IsReversible: Boolean;
         InReverseMode: Boolean;
         ReversePending: Boolean;
-        ReverseNeutral: Boolean;
-        CogenEnabled: Boolean;
+        ReverseNeutral: LongBool;
+        CogenEnabled: LongBool;
         InCogenMode: Boolean;
 
         RevHandle: Integer;
         RevBackHandle: Integer;
 
-        LDCActive: Boolean;
         UsingRegulatedBus: Boolean;
         RegulatedBus: String;
 
-        FPendingTapChange,   // amount of tap change pending
-        TapDelay: Double;   // delay between taps
+        FPendingTapChange: Double;   // amount of tap change pending
 
-        DebugTrace: Boolean;
+        DebugTrace: LongBool;
         Armed: Boolean;
         TraceFile: TFileStream;
 
-        TapLimitPerChange: Integer;
-        TapWinding: Integer;  // Added 7-19-07
-        FInversetime: Boolean;
-        Vlimit: Double;
-        VLimitActive: Boolean;
+        TapWinding: Integer;
 
         FPTphase: Integer;
         ControlledPhase: Integer;
@@ -124,14 +123,16 @@ type
 
         VBuffer, CBuffer: pComplexArray;
 
+        procedure Set_Enabled(Value: Boolean); OVERRIDE;
+
         function Get_Transformer: TTransfObj;
         function Get_Winding: Integer;
-        // CIM accessors
         function Get_MinTap: Double;
         function Get_MaxTap: Double;
         function Get_TapIncrement: Double;
         function Get_NumTaps: Integer;
         function Get_TapNum: Integer;
+        procedure Set_TapNum(const Value: Integer);
 
         procedure RegWriteTraceRecord(TapChangeMade: Double);
         procedure RegWriteDebugRecord(S: String);
@@ -139,64 +140,53 @@ type
         function AtLeastOneTap(const ProposedChange: Double; Increment: Double): Double;
         function ComputeTimeDelay(Vavg: Double): Double;
         function GetControlVoltage(VBuffer: pComplexArray; Nphs: Integer; PTRatio: Double): Complex;
-        procedure Set_TapNum(const Value: Integer);
-
     PUBLIC
+        TapLimitPerChange: Integer; // MaxTapChange
+
+        InverseTime: LongBool; // IsInverseTime
+        LDCActive: Boolean; // UseLineDrop
+        IsReversible: LongBool; // UseReverseDrop
+
+        TapDelay, // delay between taps // SubsequentDelay
+        Vlimit, // VoltageLimit
+        CTRating, // CT
+        PTRatio, // PT
+        Vreg, // TargetVoltage
+        revVreg, // RevTargetVoltage
+        Bandwidth, // BandVoltage
+        revBandwidth, // RevBandVoltage
+        R, // LineDropR
+        X, // LineDropX
+        revR, // RevLineDropR
+        revX: Double; // RevLineDropX
 
         constructor Create(ParClass: TDSSClass; const RegControlName: String);
         destructor Destroy; OVERRIDE;
-
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+        procedure MakeLike(OtherPtr: Pointer); override;
         procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;    // Always Zero for a RegControl
-
         procedure Sample; OVERRIDE;    // Sample control quantities and set action times in Control Queue
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset; OVERRIDE;  // Reset to initial defined state
-
-
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
-        function GetPropertyValue(Index: Integer): String; OVERRIDE;
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
-        procedure SaveWrite(F: TFileStream); OVERRIDE;
+        procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
+        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
         property Transformer: TTransfObj READ Get_Transformer;  // Pointer to controlled Transformer
         property TrWinding: Integer READ Get_Winding;  // Report Tapped winding
-
         property PendingTapChange: Double READ FPendingTapChange WRITE set_PendingTapChange;
-
-       // CIM XML accessors
-        property TargetVoltage: Double READ Vreg;
-        property BandVoltage: Double READ BandWidth;
-        property CT: Double READ CTRating;
-        property PT: Double READ PTRatio;
-        property LineDropR: Double READ R;
-        property LineDropX: Double READ X;
-        property RevLineDropR: Double READ revR;
-        property RevLineDropX: Double READ revX;
-        property RevTargetVoltage: Double READ revVreg;
-        property RevBandVoltage: Double READ revBandWidth;
-        property UseLineDrop: Boolean READ LDCActive;
-        property UseReverseDrop: Boolean READ IsReversible;
-        property UseLimit: Boolean READ VLimitActive;
-        property VoltageLimit: Double READ VLimit;
-        property InitialDelay: Double READ TimeDelay;
-        property SubsequentDelay: Double READ TapDelay;
+        function VLimitActive: Boolean;
+        // property InitialDelay: Double READ TimeDelay;
         property MinTap: Double READ Get_MinTap;
         property MaxTap: Double READ Get_MaxTap;
         property TapIncrement: Double READ Get_TapIncrement;
         property NumTaps: Integer READ Get_NumTaps;
-        property MaxTapChange: Integer READ TapLimitPerChange;
-        property IsInverseTime: Boolean READ FInverseTime;
         property TapNum: Integer READ Get_TapNum WRITE Set_TapNum;
     end;
 
-{--------------------------------------------------------------------------}
 implementation
 
 uses
-    ParserDel,
+    BufStream,
     DSSClassDefs,
     DSSGlobals,
     Circuit,
@@ -209,406 +199,245 @@ uses
     DSSObjectHelper,
     TypInfo;
 
+type
+    TObj = TRegControlObj;
+    TProp = TRegControlProp;
+
 const
-    AVGPHASES = -1;
+    NumPropsThisClass = Ord(High(TProp));
+
+    // AVGPHASES = -1;
     MAXPHASE = -2;
     MINPHASE = -3;
 
     ACTION_TAPCHANGE = 0;
     ACTION_REVERSE = 1;
-
-    NumPropsThisClass = 32;
-
 var
-    LastChange: Integer;
+    PropInfo: Pointer = NIL;    
+    PhaseEnum: TDSSEnum;
 
-{--------------------------------------------------------------------------}
-constructor TRegControl.Create(dssContext: TDSSContext);  // Creates superstructure for all RegControl objects
+constructor TRegControl.Create(dssContext: TDSSContext);
 begin
-    inherited Create(dssContext);
+    if PropInfo = NIL then
+    begin
+        PropInfo := TypeInfo(TProp);
+        PhaseEnum := TDSSEnum.Create('RegControl: Phase Selection', True, 2, 2, 
+            ['min', 'max'], [-3, -2]);
+        PhaseEnum.Hybrid := True;
+    end;
 
-    Class_name := 'RegControl';
-    DSSClassType := DSSClassType + REG_CONTROL;
+    Transf_Or_AutoTrans_ProxyClass := TProxyClass.Create(dssContext, ['Transformer', 'AutoTrans']);
 
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
-
-    LastChange := 0;
+    inherited Create(dssContext, REG_CONTROL, 'RegControl');
 end;
 
-{--------------------------------------------------------------------------}
 destructor TRegControl.Destroy;
-
 begin
+    Transf_Or_AutoTrans_ProxyClass.Free;
     inherited Destroy;
 end;
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TRegControl.DefineProperties;
+procedure SetTapNum(obj: TObj; Value: Integer);
 begin
+    obj.set_TapNum(Value);
+end;
 
+function GetTapNum(obj: TObj): Integer;
+begin
+    Result := obj.get_TapNum();
+end;
+
+procedure DoReset(Obj: TObj);
+begin
+    // force a reset
+    Obj.Reset;
+    //PropertyValue[29] := 'n'; // so it gets reported properly
+end;
+
+procedure TRegControl.DefineProperties;
+var 
+    obj: TObj = NIL; // NIL (0) on purpose
+begin
     Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
+    CountPropertiesAndAllocate();
+    PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    // enum properties
+    PropertyType[ord(TProp.PTphase)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.PTphase)] := ptruint(@obj.FPTPhase);
+    PropertyOffset2[ord(TProp.PTphase)] := PtrInt(PhaseEnum);
 
-     // Define Property names
+    // object reference
+    PropertyType[ord(TProp.transformer)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyOffset[ord(TProp.transformer)] := ptruint(@obj.FControlledElement);
+    PropertyOffset2[ord(TProp.transformer)] := ptruint(Transf_Or_AutoTrans_ProxyClass);
+    PropertyWriteFunction[ord(TProp.transformer)] := @SetControlledElement;
+    PropertyFlags[ord(TProp.transformer)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.CheckForVar];
 
-    PropertyName[1] := 'transformer';
-    PropertyName[2] := 'winding';
-    PropertyName[3] := 'vreg';
-    PropertyName[4] := 'band';
-    PropertyName[5] := 'ptratio';
-    PropertyName[6] := 'CTprim';
-    PropertyName[7] := 'R';
-    PropertyName[8] := 'X';
-    PropertyName[9] := 'bus';
-    PropertyName[10] := 'delay';
-    PropertyName[11] := 'reversible';
-    PropertyName[12] := 'revvreg';
-    PropertyName[13] := 'revband';
-    PropertyName[14] := 'revR';
-    PropertyName[15] := 'revX';
-    PropertyName[16] := 'tapdelay';
-    PropertyName[17] := 'debugtrace';
-    PropertyName[18] := 'maxtapchange';
-    PropertyName[19] := 'inversetime';
-    PropertyName[20] := 'tapwinding';
-    PropertyName[21] := 'vlimit';
-    PropertyName[22] := 'PTphase';
-    PropertyName[23] := 'revThreshold';
-    PropertyName[24] := 'revDelay';
-    PropertyName[25] := 'revNeutral';
-    PropertyName[26] := 'EventLog';
-    PropertyName[27] := 'RemotePTRatio';
-    PropertyName[28] := 'TapNum';
-    PropertyName[29] := 'Reset';
-    PropertyName[30] := 'LDC_Z';
-    PropertyName[31] := 'rev_Z';
-    PropertyName[32] := 'Cogen';
+    // double property, as Pascal property
+    PropertyType[ord(TProp.TapNum)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.TapNum)] := 1;
+    PropertyWriteFunction[ord(TProp.TapNum)] := @SetTapNum;
+    PropertyReadFunction[ord(TProp.TapNum)] := @GetTapNum;
+    PropertyFlags[ord(TProp.TapNum)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction];
 
-    PropertyHelp[1] := 'Name of Transformer or AutoTrans element to which the RegControl is connected. ' +
-        'Do not specify the full object name; "Transformer" or "AutoTrans" is assumed for ' +
-        'the object class.  Example:' + CRLF + CRLF +
-        'Transformer=Xfmr1';
-    PropertyHelp[2] := 'Number of the winding of the transformer element that the RegControl is monitoring. ' +
-        '1 or 2, typically.  Side Effect: Sets TAPWINDING property to the same winding.';
-    PropertyHelp[3] := 'Voltage regulator setting, in VOLTS, for the winding being controlled.  Multiplying this ' +
-        'value times the ptratio should yield the voltage across the WINDING of the controlled transformer.' +
-        ' Default is 120.0';
-    PropertyHelp[4] := 'Bandwidth in VOLTS for the controlled bus (see help for ptratio property).  Default is 3.0';
-    PropertyHelp[5] := 'Ratio of the PT that converts the controlled winding voltage to the regulator control voltage. ' +
-        'Default is 60.  If the winding is Wye, the line-to-neutral voltage is used.  Else, the line-to-line ' +
-        'voltage is used. SIDE EFFECT: Also sets RemotePTRatio property.';
-    PropertyHelp[6] := 'Rating, in Amperes, of the primary CT rating for which the line amps convert to control rated amps.' +
-        'The typical default secondary ampere rating is 0.2 Amps (check with manufacturer specs). ' +
-        'Current at which the LDC voltages match the R and X settings.';
-    PropertyHelp[7] := 'R setting on the line drop compensator in the regulator, expressed in VOLTS.';
-    PropertyHelp[8] := 'X setting on the line drop compensator in the regulator, expressed in VOLTS.';
-    PropertyHelp[9] := 'Name of a bus (busname.nodename) in the system to use as the controlled bus instead of the bus to which the ' +
-        'transformer winding is connected or the R and X line drop compensator settings.  Do not specify this ' +
-        'value if you wish to use the line drop compensator settings.  Default is null string. Assumes the base voltage for this ' +
-        'bus is the same as the transformer winding base specified above. ' +
-        'Note: This bus (1-phase) WILL BE CREATED by the regulator control upon SOLVE if not defined by some other device. ' +
-        'You can specify the node of the bus you wish to sample (defaults to 1). ' +
-        'If specified, the RegControl is redefined as a 1-phase device since only one voltage is used.';
-    PropertyHelp[10] := 'Time delay, in seconds, from when the voltage goes out of band to when the tap changing begins. ' +
-        'This is used to determine which regulator control will act first. Default is 15.  You may specify any ' +
-        'floating point number to achieve a model of whatever condition is necessary.';
-    PropertyHelp[11] := '{Yes |No*} Indicates whether or not the regulator can be switched to regulate in the reverse direction. Default is No.' +
-        'Typically applies only to line regulators and not to LTC on a substation transformer.';
-    PropertyHelp[12] := 'Voltage setting in volts for operation in the reverse direction.';
-    PropertyHelp[13] := 'Bandwidth for operating in the reverse direction.';
-    PropertyHelp[14] := 'R line drop compensator setting for reverse direction.';
-    PropertyHelp[15] := 'X line drop compensator setting for reverse direction.';
-    PropertyHelp[16] := 'Delay in sec between tap changes. Default is 2. This is how long it takes between changes ' +
-        'after the first change.';
-    PropertyHelp[17] := '{Yes | No* }  Default is no.  Turn this on to capture the progress of the regulator model ' +
-        'for each control iteration.  Creates a separate file for each RegControl named "REG_name.CSV".';
-    PropertyHelp[18] := 'Maximum allowable tap change per control iteration in STATIC control mode.  Default is 16. ' + CRLF + CRLF +
-        'Set this to 1 to better approximate actual control action. ' + CRLF + CRLF +
-        'Set this to 0 to fix the tap in the current position.';
-    PropertyHelp[19] := '{Yes | No* } Default is no.  The time delay is adjusted inversely proportional to the amount the voltage is outside the band down to 10%.';
-    PropertyHelp[20] := 'Winding containing the actual taps, if different than the WINDING property. Defaults to the same winding as specified by the WINDING property.';
-    PropertyHelp[21] := 'Voltage Limit for bus to which regulated winding is connected (e.g. first customer). Default is 0.0. ' +
-        'Set to a value greater then zero to activate this function.';
-    PropertyHelp[22] := 'For multi-phase transformers, the number of the phase being monitored or one of { MAX | MIN} for all phases. Default=1. ' +
-        'Must be less than or equal to the number of phases. Ignored for regulated bus.';
-    PropertyHelp[23] := 'kW reverse power threshold for reversing the direction of the regulator. Default is 100.0 kw.';
-    PropertyHelp[24] := 'Time Delay in seconds (s) for executing the reversing action once the threshold for reversing has been exceeded. Default is 60 s.';
-    PropertyHelp[25] := '{Yes | No*} Default is no. Set this to Yes if you want the regulator to go to neutral in the reverse direction or in cogen operation.';
-    PropertyHelp[26] := '{Yes/True* | No/False} Default is YES for regulator control. Log control actions to Eventlog.';
-    PropertyHelp[27] := 'When regulating a bus (the Bus= property is set), the PT ratio required to convert actual voltage at the remote bus to control voltage. ' +
-        'Is initialized to PTratio property. Set this property after setting PTratio.';
-    PropertyHelp[28] := 'An integer number indicating the tap position that the controlled transformer winding tap position is currently at, or is being set to.  If being set, and the value is outside the range of the transformer min or max tap,' +
-        ' then set to the min or max tap position as appropriate. Default is 0';
-    PropertyHelp[29] := '{Yes | No} If Yes, forces Reset of this RegControl.';
-    PropertyHelp[30] := 'Z value for Beckwith LDC_Z control option. Volts adjustment at rated control current.';
-    PropertyHelp[31] := 'Reverse Z value for Beckwith LDC_Z control option.';
-    PropertyHelp[32] := '{Yes|No*} Default is No. The Cogen feature is activated. Continues looking forward if power ' +
-        'reverses, but switches to reverse-mode LDC, vreg and band values.';
+    // boolean properties
+    PropertyType[ord(TProp.reversible)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.debugtrace)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.inversetime)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.revNeutral)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.EventLog)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.Cogen)] := TPropertyType.BooleanProperty;
+    PropertyOffset[ord(TProp.reversible)] := ptruint(@obj.IsReversible);
+    PropertyOffset[ord(TProp.debugtrace)] := ptruint(@obj.DebugTrace);
+    PropertyOffset[ord(TProp.inversetime)] := ptruint(@obj.Inversetime);
+    PropertyOffset[ord(TProp.revNeutral)] := ptruint(@obj.ReverseNeutral);
+    PropertyOffset[ord(TProp.EventLog)] := ptruint(@obj.ShowEventLog);
+    PropertyOffset[ord(TProp.Cogen)] := ptruint(@obj.CogenEnabled);
+
+    // integer properties
+    PropertyType[ord(TProp.winding)] := TPropertyType.IntegerProperty;
+    PropertyType[ord(TProp.tapwinding)] := TPropertyType.IntegerProperty;
+    PropertyType[ord(TProp.maxtapchange)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.winding)] := ptruint(@obj.ElementTerminal);
+    PropertyOffset[ord(TProp.tapwinding)] := ptruint(@obj.TapWinding);
+    PropertyOffset[ord(TProp.maxtapchange)] := ptruint(@obj.TapLimitPerChange);
+
+    // string properties
+    PropertyType[ord(TProp.bus)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.bus)] := ptruint(@obj.RegulatedBus);
+
+    // double properties (default type)
+    PropertyOffset[ord(TProp.vreg)] := ptruint(@obj.Vreg);
+    PropertyOffset[ord(TProp.band)] := ptruint(@obj.Bandwidth);
+    PropertyOffset[ord(TProp.ptratio)] := ptruint(@obj.PTRatio);
+    PropertyOffset[ord(TProp.ctprim)] := ptruint(@obj.CTRating);
+    PropertyOffset[ord(TProp.R)] := ptruint(@obj.R);
+    PropertyOffset[ord(TProp.X)] := ptruint(@obj.X);
+    PropertyOffset[ord(TProp.delay)] := ptruint(@obj.TimeDelay);
+    PropertyOffset[ord(TProp.revvreg)] := ptruint(@obj.revVreg);
+    PropertyOffset[ord(TProp.revband)] := ptruint(@obj.revBandwidth);
+    PropertyOffset[ord(TProp.revR)] := ptruint(@obj.revR);
+    PropertyOffset[ord(TProp.revX)] := ptruint(@obj.revX);
+    PropertyOffset[ord(TProp.tapdelay)] := ptruint(@obj.TapDelay);
+    PropertyOffset[ord(TProp.RemotePTRatio)] := ptruint(@obj.RemotePTRatio);
+    PropertyOffset[ord(TProp.LDC_Z)] := ptruint(@obj.LDC_Z);
+    PropertyOffset[ord(TProp.rev_Z)] := ptruint(@obj.revLDC_Z);
+    PropertyOffset[ord(TProp.revThreshold)] := ptruint(@obj.kWRevPowerThreshold);
+    PropertyOffset[ord(TProp.revDelay)] := ptruint(@obj.RevDelay);
+    PropertyOffset[ord(TProp.Vlimit)] := ptruint(@obj.Vlimit);
+
+    // boolean action
+    PropertyType[ord(TProp.Reset)] := TPropertyType.BooleanActionProperty;
+    PropertyOffset[ord(TProp.Reset)] := ptruint(@DoReset);
 
     ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
+    inherited DefineProperties;
 end;
 
-{--------------------------------------------------------------------------}
-function TRegControl.NewObject(const ObjName: String): Integer;
-begin
-    // Make a new RegControl and add it to RegControl class list
-    with ActiveCircuit do
-    begin
-        ActiveCktElement := TRegControlObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
-    end;
-end;
-
-{--------------------------------------------------------------------------}
-function TRegControl.Edit: Integer;
+function TRegControl.NewObject(const ObjName: String; Activate: Boolean): Pointer;
 var
-    ParamPointer: Integer;
-    ParamName: String;
-    Param: String;
-
-    function Max(a, b: Integer): Integer;
-    begin
-        if a >= b then
-            Result := a
-        else
-            Result := b;
-    end;
-
+    Obj: TObj;
 begin
+    Obj := TObj.Create(Self, ObjName);
+    if Activate then 
+        ActiveCircuit.ActiveCktElement := Obj;
+    Obj.ClassIndex := AddObjectToList(Obj, Activate);
+    Result := Obj;
+end;
 
-  // continue parsing WITH contents of Parser
-    DSS.ActiveRegControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := DSS.ActiveRegControlObj;
-
-    Result := 0;
-
-    with DSS.ActiveRegControlObj do
-    begin
-
-        ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
-        while Length(Param) > 0 do
+procedure TRegControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+begin
+    case Idx of
+        ord(TProp.Transformer):
         begin
-            if Length(ParamName) = 0 then
-                Inc(ParamPointer)
-            else
-                ParamPointer := CommandList.GetCommand(ParamName);
-
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
-            case ParamPointer of
-                0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 120);
-                1:
-                    ElementName := 'Transformer.' + lowercase(param);  // Initialize to Transformer
-                2:
-                    ElementTerminal := Parser.IntValue;
-                3:
-                    Vreg := Parser.DblValue;
-                4:
-                    Bandwidth := Parser.DblValue;
-                5:
-                    PTRatio := Parser.DblValue;
-                6:
-                    CTRating := Parser.DblValue;
-                7:
-                    R := Parser.DblValue;
-                8:
-                    X := Parser.DblValue;
-                9:
-                    RegulatedBus := Param;      // Buaname.node
-                10:
-                    TimeDelay := Parser.DblValue;
-                11:
-                    IsReversible := InterpretYesNo(Param);
-                12:
-                    revVreg := Parser.DblValue;
-                13:
-                    revBandwidth := Parser.DblValue;
-                14:
-                    revR := Parser.DblValue;
-                15:
-                    revX := Parser.DblValue;
-                16:
-                    TapDelay := Parser.DblValue;
-                17:
-                    DebugTrace := InterpretYesNo(Param);
-                18:
-                    TapLimitPerChange := max(0, Parser.IntValue);
-                19:
-                    FInversetime := InterpretYesNo(Param);
-                20:
-                    TapWinding := Parser.intValue;
-                21:
-                begin
-                    Vlimit := Parser.DblValue;
-                    if VLimit > 0.0 then
-                        VLimitActive := TRUE
-                    else
-                        VLimitActive := FALSE;
-                end;
-                22:
-                    if CompareTextShortest(param, 'max') = 0 then
-                        FPTPhase := MAXPHASE
-                    else
-                    if CompareTextShortest(param, 'min') = 0 then
-                        FPTPhase := MINPHASE
-                    else
-                        FPTPhase := max(1, Parser.IntValue);
-                23:
-                    kWRevPowerThreshold := Parser.DblValue;
-                24:
-                    RevDelay := Parser.DblValue;
-                25:
-                    ReverseNeutral := InterpretYesNo(Param);
-                26:
-                    ShowEventLog := InterpretYesNo(param);
-                27:
-                    RemotePTRatio := Parser.DblValue;
-                28:
-                    TapNum := Parser.IntValue;
-                29:
-                    if InterpretYesNo(Param) then
-                    begin  // force a reset
-                        Reset;
-                        PropertyValue[29] := 'n'; // so it gets reported properly
-                    end;
-                30:
-                    LDC_Z := Parser.DblValue;
-                31:
-                    revLDC_Z := Parser.DblValue;
-                32:
-                    CogenEnabled := InterpretYesNo(Param);
-
-            else
-                // Inherited parameters
-                ClassEdit(DSS.ActiveRegControlObj, ParamPointer - NumPropsthisClass)
-            end;
-
-            case ParamPointer of
-                2:
-                begin
-                    Tapwinding := ElementTerminal;  // Resets if property re-assigned
-                    PropertyValue[20] := Param;
-                end;
-                5:
-                    RemotePTRatio := PTRatio;  // re-initialise RemotePTRatio whenever PTRatio is set
-                17:
-                    if DebugTrace then
-                    begin
-                        FreeAndNil(TraceFile);
-                        TraceFile := TFileStream.Create(DSS.OutputDirectory + 'REG_' + Name + '.CSV', fmCreate);
-                        FSWriteln(TraceFile, 'Hour, Sec, ControlIteration, Iterations, LoadMultiplier, Present Tap, Pending Change, Actual Change, Increment, Min Tap, Max Tap');
-                        FSFlush(Tracefile);
-                    end
-                    else
-                    begin
-                        FreeAndNil(TraceFile);
-                    end;
-                23:
-                    RevPowerThreshold := kWRevPowerThreshold * 1000.0;
-            end;
-
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            MonitoredElement := ControlledElement;  // same for this controller            
+            PrpSequence[Idx] := -10; // make sure Transformer prop is first
         end;
-
-        RecalcElementData;
-    end;  {With}
-
-end;
-
-
-{--------------------------------------------------------------------------}
-function TRegControl.MakeLike(const RegControlName: String): Integer;
-var
-    OtherRegControl: TRegControlObj;
-    i: Integer;
-begin
-    Result := 0;
-   {See if we can find this RegControl name in the present collection}
-    OtherRegControl := Find(RegControlName);
-    if OtherRegControl <> NIL then
-        with DSS.ActiveRegControlObj do
+        ord(TProp.winding):
         begin
-
-            Nphases := OtherRegControl.Fnphases;
-            NConds := OtherRegControl.Fnconds; // Force Reallocation of terminal stuff
-
-            ElementName := OtherRegControl.ElementName;
-            ControlledElement := OtherRegControl.ControlledElement;  // Pointer to target circuit element
-            ElementTerminal := OtherRegControl.ElementTerminal;
-
-            Vreg := OtherRegControl.Vreg;
-            Bandwidth := OtherRegControl.Bandwidth;
-            PTRatio := OtherRegControl.PTRatio;
-            RemotePTRatio := OtherRegControl.RemotePTRatio;
-            CTRating := OtherRegControl.CTRating;
-            R := OtherRegControl.R;
-            X := OtherRegControl.X;
-            RegulatedBus := OtherRegControl.RegulatedBus;
-            TimeDelay := OtherRegControl.TimeDelay;
-            IsReversible := OtherRegControl.IsReversible;
-            revVreg := OtherRegControl.revVreg;
-            revBandwidth := OtherRegControl.revBandwidth;
-            revR := OtherRegControl.revR;
-            revX := OtherRegControl.revX;
-            TapDelay := OtherRegControl.TapDelay;
-            TapWinding := OtherRegControl.TapWinding;
-            FInversetime := OtherRegControl.FInversetime;
-
-            TapLimitPerChange := OtherRegControl.TapLimitPerChange;
-            kWRevPowerThreshold := OtherRegControl.kWRevPowerThreshold;
-            RevPowerThreshold := OtherRegControl.RevPowerThreshold;
-            RevDelay := OtherRegControl.RevDelay;
-            ReverseNeutral := OtherRegControl.ReverseNeutral;
-            ShowEventLog := OtherRegControl.ShowEventLog;
-    //    DebugTrace     := OtherRegControl.DebugTrace;  Always default to NO
-
-            FPTphase := OtherRegControl.FPTphase;
-            TapNum := OtherRegControl.TapNum;
-            CogenEnabled := OtherRegControl.CogenEnabled;
-            LDC_Z := OtherRegControl.LDC_Z;
-            RevLDC_Z := OtherRegControl.revLDC_Z;
-
-            for i := 1 to ParentClass.NumProperties do
-                PropertyValue[i] := OtherRegControl.PropertyValue[i];
-        end
-
-    else
-        DoSimpleMsg('Error in RegControl MakeLike: "' + RegControlName + '" Not Found.', 121);
-
+            Tapwinding := ElementTerminal;  // Resets if property re-assigned
+            // SetAsNextSeq(ord(TProp.tapwinding)); -- not really required
+        end;
+        ord(TProp.ptratio):
+            RemotePTRatio := PTRatio;  // re-initialise RemotePTRatio whenever PTRatio is set
+        ord(TProp.debugtrace):
+            if DebugTrace then
+            begin
+                FreeAndNil(TraceFile);
+                TraceFile := TBufferedFileStream.Create(DSS.OutputDirectory + 'REG_' + Name + '.csv', fmCreate);
+                FSWriteln(TraceFile, 'Hour, Sec, ControlIteration, Iterations, LoadMultiplier, Present Tap, Pending Change, Actual Change, Increment, Min Tap, Max Tap');
+                FSFlush(Tracefile);
+            end
+            else
+            begin
+                FreeAndNil(TraceFile);
+            end;
+        ord(TProp.maxtapchange):
+            TapLimitPerChange := max(0, TapLimitPerChange);
+        ord(TProp.revThreshold):
+            RevPowerThreshold := kWRevPowerThreshold * 1000.0;
+    end;
+    inherited PropertySideEffects(Idx, previousIntVal);
 end;
 
+procedure TRegControlObj.MakeLike(OtherPtr: Pointer);
+var
+    Other: TObj;
+begin
+    inherited MakeLike(OtherPtr);
+    Other := TObj(OtherPtr);
+    FNphases := Other.Fnphases;
+    NConds := Other.Fnconds; // Force Reallocation of terminal stuff
 
-{==========================================================================}
-{                    TRegControlObj                                           }
-{==========================================================================}
+    ControlledElement := Other.ControlledElement;  // Pointer to target circuit element
+    ElementTerminal := Other.ElementTerminal;
 
+    Vreg := Other.Vreg;
+    Bandwidth := Other.Bandwidth;
+    PTRatio := Other.PTRatio;
+    RemotePTRatio := Other.RemotePTRatio;
+    CTRating := Other.CTRating;
+    R := Other.R;
+    X := Other.X;
+    RegulatedBus := Other.RegulatedBus;
+    TimeDelay := Other.TimeDelay;
+    IsReversible := Other.IsReversible;
+    revVreg := Other.revVreg;
+    revBandwidth := Other.revBandwidth;
+    revR := Other.revR;
+    revX := Other.revX;
+    TapDelay := Other.TapDelay;
+    TapWinding := Other.TapWinding;
+    Inversetime := Other.Inversetime;
 
-{--------------------------------------------------------------------------}
+    TapLimitPerChange := Other.TapLimitPerChange;
+    kWRevPowerThreshold := Other.kWRevPowerThreshold;
+    RevPowerThreshold := Other.RevPowerThreshold;
+    RevDelay := Other.RevDelay;
+    ReverseNeutral := Other.ReverseNeutral;
+    ShowEventLog := Other.ShowEventLog;
+    // DebugTrace := Other.DebugTrace;  Always default to NO
+
+    FPTphase := Other.FPTphase;
+    TapNum := Other.TapNum;
+    CogenEnabled := Other.CogenEnabled;
+    LDC_Z := Other.LDC_Z;
+    RevLDC_Z := Other.revLDC_Z;
+end;
+
 constructor TRegControlObj.Create(ParClass: TDSSClass; const RegControlName: String);
-
 begin
     inherited Create(ParClass);
-    Name := LowerCase(RegControlName);
+    Name := AnsiLowerCase(RegControlName);
     DSSObjType := ParClass.DSSClassType;
     TraceFile := nil;
 
-    NPhases := 3;  // Directly set conds and phases
-    Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors
-                         // in base class
+    LastChange := 0;
 
+    FNPhases := 3;  // Directly set conds and phases
+    Fnconds := 3;
+    Nterms := 1;  // this forces allocation of terminals and conductors in base class
 
     Vreg := 120.0;
     Bandwidth := 3.0;
@@ -621,7 +450,6 @@ begin
     TimeDelay := 15.0;
 
     FPTphase := 1;
-
 
     LDCActive := FALSE;
     TapDelay := 2.0;
@@ -649,7 +477,6 @@ begin
     RevHandle := 0;
     RevBackHandle := 0;
 
-    ElementName := '';
     ControlledElement := NIL;
     ElementTerminal := 1;
     TapWinding := ElementTerminal;
@@ -659,20 +486,17 @@ begin
 
     DSSObjType := ParClass.DSSClassType; //REG_CONTROL;
 
-    InitPropertyValues(0);
-    FInversetime := FALSE;
+    Inversetime := FALSE;
     RegulatedBus := '';
     Vlimit := 0.0;
 
     ControlActionHandle := 0;
 
    //  RecalcElementData;
-
 end;
 
 destructor TRegControlObj.Destroy;
 begin
-    ElementName := '';
     if Assigned(VBuffer) then
         ReallocMem(VBuffer, 0);
     if Assigned(CBuffer) then
@@ -683,13 +507,9 @@ begin
     inherited Destroy;
 end;
 
-{--------------------------------------------------------------------------}
 procedure TRegControlObj.RecalcElementData;
-
 var
-    DevIndex: Integer;
-    TransName, NewElementName: String;
-
+    ename: String;
 begin
     if (R <> 0.0) or (X <> 0.0) or (LDC_Z > 0.0) then
         LDCActive := TRUE
@@ -700,100 +520,78 @@ begin
     else
         UsingRegulatedBus := TRUE;
 
-    Devindex := GetCktElementIndex(ElementName); // Global FUNCTION
-    if DevIndex = 0 then
-    begin // Try 'AutoTrans' instead of Transformer
-        TransName := StripClassName(ElementName);
-        NewElementName := 'autotrans.' + TransName;
-        Devindex := GetCktElementIndex(NewElementName);
-        if Devindex > 0 then
-            ElementName := NewElementName;
+    if ControlledElement = NIL then
+    begin
+        // element not found or not set
+        DoErrorMsg(
+            Format(_('RegControl: "%s"'), [Self.Name]),
+            _('Transformer Element is not set.'),
+            _('Element must be defined previously.'), 124);
+        Exit;
     end;
 
-    if DevIndex > 0 then
-    begin  // RegControled element must already exist
-        ControlledElement := ActiveCircuit.CktElements.Get(DevIndex);
-        Monitoredelement := ControlledElement;  // same for this controller
-
-        if UsingRegulatedBus then
+    if UsingRegulatedBus then
+    begin
+        FNphases := 1;     // Only need one phase
+        Nconds := 2;
+    end
+    else
+    begin
+        FNphases := ControlledElement.NPhases;
+        Nconds := FNphases;
+        if FPTphase > FNphases then
         begin
-            Nphases := 1;     // Only need one phase
-            Nconds := 2;
-        end
-        else
-        begin
-            Nphases := ControlledElement.NPhases;
-            Nconds := FNphases;
-            if FPTphase > FNphases then
-            begin
-                FPTphase := 1;
-                PropertyValue[22] := '1';
-            end;
+            FPTphase := 1;
+            SetAsNextSeq(ord(TProp.PTphase));
         end;
+    end;
 
-        if (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) or  // either should work
-            (Comparetext(ControlledElement.DSSClassName, 'autotrans') = 0) then
+    if (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) or  // either should work
+        (Comparetext(ControlledElement.DSSClassName, 'autotrans') = 0) then
+    begin
+        if ElementTerminal > ControlledElement.Nterms then
         begin
-            if ElementTerminal > ControlledElement.Nterms then
-            begin
-                DoErrorMsg('RegControl: "' + Name + '"', 'Winding no. "' + '" does not exist.',
-                    'Respecify Monitored Winding no.', 122);
-            end
-            else
-            begin
-                     // Sets name of i-th terminal's connected bus in RegControl's buslist
-                     // This value will be used to set the NodeRef array (see Sample function)
-                if UsingRegulatedBus then
-                    Setbus(1, RegulatedBus)   // hopefully this will actually exist
-                else
-                    Setbus(1, ControlledElement.GetBus(ElementTerminal));
-                ReAllocMem(VBuffer, SizeOF(Vbuffer^[1]) * ControlledElement.NPhases);  // buffer to hold regulator voltages
-                ReAllocMem(CBuffer, SizeOF(CBuffer^[1]) * ControlledElement.Yorder);
-            end;
+            DoErrorMsg(
+                Format(_('RegControl: "%s"'), [Name]),
+                Format(_('Winding no. "%d" does not exist.'), [ElementTerminal]),
+                _('Respecify Monitored Winding no.'), 122);
         end
         else
         begin
-            ControlledElement := NIL;   // we get here if element not found
-            DoErrorMsg('RegControl: "' + Self.Name + '"', 'Controlled Regulator Element "' + ElementName + '" Is not a transformer.',
-                ' Element must be defined previously.', 123);
+            // Sets name of i-th terminal's connected bus in RegControl's buslist
+            // This value will be used to set the NodeRef array (see Sample function)
+            if UsingRegulatedBus then
+                Setbus(1, RegulatedBus)   // hopefully this will actually exist
+            else
+                Setbus(1, ControlledElement.GetBus(ElementTerminal));
+            ReAllocMem(VBuffer, SizeOF(Vbuffer^[1]) * ControlledElement.NPhases);  // buffer to hold regulator voltages
+            ReAllocMem(CBuffer, SizeOF(CBuffer^[1]) * ControlledElement.Yorder);
         end;
     end
     else
     begin
-        ControlledElement := NIL;   // element not found
-        DoErrorMsg('RegControl: "' + Self.Name + '"', 'Transformer Element "' + ElementName + '" Not Found.',
-            ' Element must be defined previously.', 124);
+        ename := ControlledElement.Name;
+        ControlledElement := NIL;   
+        DoErrorMsg(
+            Format(_('RegControl: "%s"'), [Self.Name]),
+            Format(_('Controlled Regulator Element "%s" is not a transformer.'), [ename]),
+            _('Element must be defined previously.'), 123);
     end;
 end;
 
-{--------------------------------------------------------------------------}
-procedure TRegControlObj.CalcYPrim;
-begin
-  // leave YPrim as nil and it will be ignored ... zero current source
-  // Yprim is zeroed when created.  Leave it as is.
-  //  IF YPrim=nil THEN YPrim := TcMatrix.CreateMatrix(Yorder);
-end;
-
-
-{--------------------------------------------------------------------------}
 function TRegControlObj.GetControlVoltage(VBuffer: pComplexArray; Nphs: Integer; PTRatio: Double): Complex;
-
 var
     i: Integer;
     V: Double;
-
 begin
-
-
     case FPTphase of
-{
-         AVGPHASES: Begin
-                        Result := CZERO;
-                        FOR i := 1 to Nphs Do Result := Result + Cabs(VBuffer^[i]);
-                        Result := CdivReal(Result, (Nphs*PTRatio));
-                    End;
-
-}       MAXPHASE:
+//         AVGPHASES: Begin
+//                        Result := CZERO;
+//                        FOR i := 1 to Nphs Do Result := Result + Cabs(VBuffer^[i]);
+//                        Result := Result / (Nphs*PTRatio);
+//                    End;
+//
+        MAXPHASE:
         begin
             ControlledPhase := 1;
             V := Cabs(VBuffer^[ControlledPhase]);
@@ -803,7 +601,7 @@ begin
                     V := Cabs(VBuffer^[i]);
                     ControlledPhase := i;
                 end;
-            Result := CDivReal(VBuffer^[ControlledPhase], PTRatio);
+            Result := VBuffer^[ControlledPhase] / PTRatio;
         end;
         MINPHASE:
         begin
@@ -815,45 +613,18 @@ begin
                     V := Cabs(VBuffer^[i]);
                     ControlledPhase := i;
                 end;
-            Result := CDivReal(VBuffer^[ControlledPhase], PTRatio);
+            Result := VBuffer^[ControlledPhase] / PTRatio;
         end;
     else
     {Just use one phase because that's what most controls do.}
-        Result := CDivReal(VBuffer^[FPTPhase], PTRatio);
+        Result := VBuffer^[FPTPhase] / PTRatio;
         ControlledPhase := FPTPhase;
     end;
-
-
 end;
 
-procedure TRegControlObj.GetCurrents(Curr: pComplexArray);
+procedure TRegControlObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
 var
     i: Integer;
-begin
-
-    for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
-
-end;
-
-{--------------------------------------------------------------------}
-
-function TRegControlObj.GetPropertyValue(Index: Integer): String;
-begin
-    case Index of
-        28:
-            Result := Format('%d', [Tapnum]);
-    else
-        Result := inherited GetPropertyValue(index);
-    end;
-end;
-
-{--------------------------------------------------------------------------}
-procedure TRegControlObj.DumpProperties(F: TFileStream; Complete: Boolean);
-
-var
-    i: Integer;
-
 begin
     inherited DumpProperties(F, Complete);
 
@@ -863,26 +634,19 @@ begin
             FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
-     // Note: The PropertyValue access function calls GetPropertyValue routine.
-
     if Complete then
     begin
         FSWriteln(F, '! Bus =' + GetBus(1));
         FSWriteln(F);
     end;
-
 end;
 
-{--------------------------------------------------------------------------}
 function TRegControlObj.AtLeastOneTap(const ProposedChange: Double; Increment: Double): Double;
-
 // Called in STATIC mode
 // Changes 70% of the way but at least one tap, subject to maximum allowable tap change
 var
     NumTaps: Integer;
-
 begin
-
     NumTaps := Trunc(0.7 * Abs(ProposedChange) / Increment);
 
     if NumTaps = 0 then
@@ -901,45 +665,35 @@ begin
         Result := -NumTaps * Increment;
         LastChange := -NumTaps;
     end;
-
 end;
 
-
-{--------------------------------------------------------------------------}
-function OneInDirectionOf(var ProposedChange: Double; Increment: Double): Double;
-
+function OneInDirectionOf(Obj: TObj; var ProposedChange: Double; Increment: Double): Double;
 // Computes the amount of one tap change in the direction of the pending tapchange
 // Automatically decrements the proposed change by that amount
-
 begin
-    LastChange := 0;
+    Obj.LastChange := 0;
     if ProposedChange > 0.0 then
     begin
         Result := Increment;
-        LastChange := 1;
+        Obj.LastChange := 1;
         ProposedChange := ProposedChange - Increment;
     end
     else
     begin
         Result := -Increment;
-        LastChange := -1;
+        Obj.LastChange := -1;
         ProposedChange := ProposedChange + Increment;
     end;
 
     if Abs(ProposedChange) < 0.9 * Increment then
         ProposedChange := 0.0;
-
 end;
 
-{--------------------------------------------------------------------------}
 procedure TRegControlObj.DoPendingAction(const Code, ProxyHdl: Integer);
-
 // 2-23-00 Modified to change one tap at a time
 var
     TapChangeToMake: Double;
-
 begin
-
     case Code of
         ACTION_TAPCHANGE:
         begin
@@ -948,14 +702,11 @@ begin
                     RegWriteDebugRecord(Format('+++ %.6g s: Handling TapChange = %.8g', [Solution.DynaVars.t, PendingTapChange]));
 
             if PendingTapChange = 0.0 then  {Check to make sure control has not reset}
-
                 Armed := FALSE
-
             else
-                with   TTransfObj(ControlledElement) do
+                with TTransfObj(ControlledElement) do
                 begin
-
-                 // Transformer PresentTap property automatically limits tap
+                    // Transformer PresentTap property automatically limits tap
                     with ActiveCircuit, ActiveCircuit.Solution do
                     begin
                         case ControlMode of
@@ -973,7 +724,7 @@ begin
 
                             EVENTDRIVEN:
                             begin
-                                TapChangeToMake := OneInDirectionOf(FPendingTapChange, TapIncrement[TapWinding]);
+                                TapChangeToMake := OneInDirectionOf(Self, FPendingTapChange, TapIncrement[TapWinding]);
                                 if (DebugTrace) then
                                     RegWriteTraceRecord(TapChangeToMake);
                                 PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
@@ -985,7 +736,7 @@ begin
 
                             TIMEDRIVEN:
                             begin
-                                TapChangeToMake := OneInDirectionOf(FPendingTapChange, TapIncrement[TapWinding]);
+                                TapChangeToMake := OneInDirectionOf(Self, FPendingTapChange, TapIncrement[TapWinding]);
                                 if (DebugTrace) then
                                     RegWriteTraceRecord(TapChangeToMake);
                                 PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
@@ -1002,7 +753,7 @@ begin
 
                             MULTIRATE:
                             begin
-                                TapChangeToMake := OneInDirectionOf(FPendingTapChange, TapIncrement[TapWinding]);
+                                TapChangeToMake := OneInDirectionOf(Self, FPendingTapChange, TapIncrement[TapWinding]);
                                 if (DebugTrace) then
                                     RegWriteTraceRecord(TapChangeToMake);
                                 PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
@@ -1049,11 +800,8 @@ begin
 end;
 
 procedure TRegControlObj.Sample;
-
 {This is where it all happens ...}
-
 var
-
     BoostNeeded,
     Increment,
     Vactual,
@@ -1070,7 +818,6 @@ var
     i, ii: Integer;
     ControlledTransformer: TTransfObj;
     TransformerConnection: Integer;
-
 begin
     ControlledTransformer := TTransfObj(ControlledElement);
 
@@ -1095,7 +842,6 @@ begin
     
         if IsReversible or CogenEnabled then
         begin
-
             if LookingForward and (not InCogenMode) then   // If looking forward, check to see if we should reverse
             begin
                 FwdPower := -ControlledTransformer.Power[ElementTerminal].re;  // watts
@@ -1203,7 +949,7 @@ begin
                 1:
                 begin   // Delta
                     ii := ControlledTransformer.RotatePhases(i);      // Get next phase in sequence using Transformer Obj rotate
-                    VBuffer^[i] := CSub(Vterminal^[i], Vterminal^[ii]);
+                    VBuffer^[i] := Vterminal^[i] - Vterminal^[ii];
                 end
             end;
         end;
@@ -1221,7 +967,7 @@ begin
         if UsingRegulatedBus then
         begin
             ControlledTransformer.GetWindingVoltages(ElementTerminal, VBuffer);
-            Vlocalbus := Cabs(CDivReal(VBuffer^[1], PTRatio));
+            Vlocalbus := Cabs(VBuffer^[1] / PTRatio);
         end
         else
         begin
@@ -1236,14 +982,14 @@ begin
     begin
         ControlledElement.GetCurrents(Cbuffer);
         // Convert current to control current by CTRating
-        ILDC := CDivReal(CBuffer^[ControlledElement.Nconds * (ElementTerminal - 1) + ControlledPhase], CTRating);
+        ILDC := (CBuffer^[ControlledElement.Nconds * (ElementTerminal - 1) + ControlledPhase]) / CTRating;
         if LDC_Z = 0.0 then  // Standard R, X LDC
         begin
             if InReverseMode or InCogenMode then
-                VLDC := Cmul(Cmplx(revR, revX), ILDC)
+                VLDC := Cmplx(revR, revX) * ILDC
             else
-                VLDC := Cmul(Cmplx(R, X), ILDC);
-            Vcontrol := Cadd(Vcontrol, VLDC);   // Direction on ILDC is INTO terminal, so this is equivalent to Vterm - (R+jX)*ILDC
+                VLDC := Cmplx(R, X) *  ILDC;
+            Vcontrol := Vcontrol + VLDC;   // Direction on ILDC is INTO terminal, so this is equivalent to Vterm - (R+jX)*ILDC
         end
         else // Beckwith LDC_Z control mode
         begin
@@ -1337,14 +1083,11 @@ begin
                 ControlActionHandle := 0;
             end;
         end;
-
     end;
-
 end;
 
 function TRegControlObj.Get_Transformer: TTransfObj;
 begin
-
     Result := TTransfObj(ControlledElement);
 end;
 
@@ -1357,16 +1100,13 @@ function TRegControlObj.Get_TapNum: Integer;
 var
     ctrldTransformer: TTransfObj;
     ictrldWinding: Integer;
-
 begin
     if ControlledElement <> NIL then
     begin
-
         ctrldTransformer := Get_Transformer;
         ictrldWinding := TRWinding;
         with ctrldTransformer do
             Result := round((PresentTap[ictrldWinding] - (MaxTap[ictrldWinding] + MinTap[ictrldWinding]) / 2.0) / TapIncrement[ictrldWinding]);
-
     end
     else
         Result := 0;
@@ -1405,9 +1145,7 @@ begin
         On E: Exception do
         begin
         end;
-
     end;
-
 end;
 
 procedure TRegControlObj.RegWriteTraceRecord(TapChangeMade: Double);
@@ -1415,7 +1153,6 @@ var
     Separator: String;
     sout: String;
 begin
-
     try
         if (not DSS.InShowResults) then
         begin
@@ -1443,7 +1180,6 @@ begin
         On E: Exception do
         begin {Do Nothing}
         end;
-
     end;
 end;
 
@@ -1451,72 +1187,6 @@ procedure TRegControlObj.Reset;
 begin
     PendingTapChange := 0.0;
     ARMED := FALSE;
-end;
-
-procedure TRegcontrolObj.SaveWrite(F: TFileStream);
-{Override standard SaveWrite}
-{Regcontrol structure not conducive to standard means of saving}
-var
-    iprop: Integer;
-begin
-   {Write only properties that were explicitly set in the
-   final order they were actually set}
-
-   // Write Transformer name out first so that it is set for later operations
-    iProp := 1;
-    if Length(PropertyValue[iProp]) > 0 then
-        with ParentClass do
-            FSWrite(F, Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
-
-    iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
-    while iProp > 0 do
-        with ParentClass do
-        begin
-            if iProp <> 1 then   // Don't repeat Transformer property
-                if Length(PropertyValue[iProp]) > 0 then
-                    FSWrite(F, Format(' %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]], CheckForBlanks(PropertyValue[iProp])]));
-            iProp := GetNextPropertySet(iProp);
-        end;
-end;
-
-procedure TRegcontrolObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-
-    PropertyValue[1] := ''; //'element';
-    PropertyValue[2] := '1'; //'terminal';
-    PropertyValue[3] := '120';
-    PropertyValue[4] := '3';
-    PropertyValue[5] := '60';
-    PropertyValue[6] := '300';
-    PropertyValue[7] := '0';
-    PropertyValue[8] := '0';
-    PropertyValue[9] := '';
-    PropertyValue[10] := '15';
-    PropertyValue[11] := 'no';
-    PropertyValue[12] := '120';
-    PropertyValue[13] := '3';
-    PropertyValue[14] := '0';
-    PropertyValue[15] := '0';
-    PropertyValue[16] := '2';
-    PropertyValue[17] := 'no';
-    PropertyValue[18] := '16';
-    PropertyValue[19] := 'no';
-    PropertyValue[20] := '1';
-    PropertyValue[21] := '0.0';
-    PropertyValue[22] := '1';
-    PropertyValue[23] := '100';
-    PropertyValue[24] := '60';
-    PropertyValue[25] := 'No';
-    PropertyValue[26] := 'YES';
-    PropertyValue[27] := '60';
-    PropertyValue[28] := '0';
-    PropertyValue[29] := 'NO';
-    PropertyValue[30] := '0';
-    PropertyValue[31] := '0';
-    PropertyValue[32] := 'No';
-
-    inherited  InitPropertyValues(NumPropsThisClass);
-
 end;
 
 procedure TRegControlObj.set_PendingTapChange(const Value: Double);
@@ -1541,22 +1211,21 @@ begin
         with ctrldTransformer do
             PresentTap[ictrldWinding] := Value * TapIncrement[ictrldWinding] + ((MaxTap[ictrldWinding] + MinTap[ictrldWinding]) / 2.0);
 
-// Tap range checking is done in PresentTap
-// You can attempt to set the tap at an illegal value but it won't do anything
-
+        // Tap range checking is done in PresentTap
+        // You can attempt to set the tap at an illegal value but it won't do anything
     end;
 end;
 
 
-procedure TRegControlObj.MakePosSequence;
+procedure TRegControlObj.MakePosSequence();
 begin
     if ControlledElement <> NIL then
     begin
         Enabled := ControlledElement.Enabled;
         if UsingRegulatedBus then
-            Nphases := 1
+            FNphases := 1
         else
-            Nphases := ControlledElement.NPhases;
+            FNphases := ControlledElement.NPhases;
         Nconds := FNphases;
         if (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) or   // either should work
             (Comparetext(ControlledElement.DSSClassName, 'autotrans') = 0) then
@@ -1576,8 +1245,7 @@ end;
 
 function TRegControlObj.ComputeTimeDelay(Vavg: Double): Double;
 begin
-
-    if Finversetime then
+    if inversetime then
         Result := TimeDelay / Min(10.0, (2.0 * Abs(Vreg - Vavg) / Bandwidth))
     else
         Result := TimeDelay;
@@ -1590,7 +1258,11 @@ begin
     FEnabled := Value;
 end;
 
-initialization
+function TRegControlObj.VLimitActive: Boolean;
+begin
+    Result := VLimit > 0.0;
+end;
 
-
+finalization
+    PhaseEnum.Free;
 end.

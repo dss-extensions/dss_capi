@@ -4,7 +4,7 @@ unit cpucount;
 interface
 //returns number of cores: a computer with two hyperthreaded cores will report 4
 function GetLogicalCpuCount: Integer;
- 
+
 implementation
  
 {$IF defined(windows)}
@@ -51,7 +51,7 @@ end;
 const
   param: string = 'hw.logicalcpu';
 var
-  len: cint;
+  len: size_t;
   t: size_t;
 begin
   len := sizeof(t);

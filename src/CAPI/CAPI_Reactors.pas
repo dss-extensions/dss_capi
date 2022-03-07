@@ -74,10 +74,7 @@ uses
     SysUtils,
     DSSPointerList,
     Utilities,
-    ucomplex;
-
-type
-    ReactorProps = (bus1 = 1, bus2, phases, kvar, kv, conn, Rmatrix, Xmatrix, Parallel, R, X, Rp, Z1, Z2, Z0, Z, RCurve, LCurve, LmH);
+    UComplex, DSSUcomplex;
 
 //------------------------------------------------------------------------------
 function _activeObj(DSS: TDSSContext; out obj: TReactorObj): Boolean; inline;
@@ -92,90 +89,12 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active Reactor object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Reactor'], 8989);
         end;
         Exit;
     end;
     
     Result := True;
-end;
-//------------------------------------------------------------------------------
-procedure ReactorPropSideEffects(DSS: TDSSContext; prop: ReactorProps; reactor: TReactorObj);
-begin
-    with reactor do
-    begin
-    // Some specials ...
-        case prop of
-            ReactorProps.bus1:
-            begin
-                PropertyValue[2] := GetBus(2);   // this gets modified
-                PrpSequence^[2] := 0;       // Reset this for save function
-            end;
-            ReactorProps.bus2:
-                if CompareText(StripExtension(GetBus(1)), StripExtension(GetBus(2))) <> 0 then
-                begin
-                    IsShunt := FALSE;
-                    Bus2Defined := TRUE;
-                end;
-            ReactorProps.phases: //IF Fnphases <> Parser.IntValue THEN 
-            begin
-            // Nphases := Parser.IntValue ;
-                NConds := nphases;  // Force Reallocation of terminal info
-                Yorder := Fnterms * Fnconds;
-            end;
-            ReactorProps.kvar:
-                SpecType := 1;   // X specified by kvar, kV
-            ReactorProps.Rmatrix, ReactorProps.Xmatrix:
-                SpecType := 3;
-            ReactorProps.X:
-                SpecType := 2;   // X specified directly rather than computed from kvar
-            ReactorProps.Rp:
-                RpSpecified := TRUE;
-            ReactorProps.Z1:
-            begin
-                SpecType := 4;    // have to set Z1 to get this mode
-                if not Z2Specified then
-                    Z2 := Z1;
-                if not Z0Specified then
-                    Z0 := Z1;
-            end;
-            ReactorProps.Z2:
-                Z2Specified := TRUE;
-            ReactorProps.Z0:
-                Z0Specified := TRUE;
-            ReactorProps.Z:
-            begin
-                R := Z.re;
-                X := Z.im;
-                SpecType := 2;
-            end;
-            ReactorProps.RCurve:
-                RCurveObj := DSS.XYCurveClass.Find(RCurve);
-            ReactorProps.LCurve:
-                LCurveObj := DSS.XYCurveClass.Find(LCurve);
-            ReactorProps.LmH:
-            begin
-                SpecType := 2;
-                X := L * TwoPi * BaseFrequency;
-            end
-        else
-        end;
-
-    //YPrim invalidation on anything that changes impedance values
-        case prop of
-            ReactorProps.phases..ReactorProps.Z:
-                YprimInvalid := TRUE;
-            ReactorProps.RCurve:
-                if RCurveObj = NIL then
-                    DoSimpleMsg('Resistance-frequency curve XYCurve.' + RCurve + ' not Found.', 2301);
-            ReactorProps.LCurve:
-                if LCurveObj = NIL then
-                    DoSimpleMsg('Inductance-frequency curve XYCurve.' + LCurve + ' not Found.', 2301);
-            ReactorProps.LmH:
-                YprimInvalid := TRUE;
-        else
-        end;
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -230,7 +149,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Reactor "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Reactor "%s" not found in Active Circuit.', [Value], 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -269,7 +188,9 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pReactor.LCurve);
+
+    if pReactor.LCurveObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, pReactor.LCurveObj.Name);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_RCurve(): PAnsiChar; CDECL;
@@ -279,7 +200,9 @@ begin
     Result := NIL;
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pReactor.RCurve);
+    
+    if pReactor.RCurveObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, pReactor.RCurveObj.Name);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Parallel(): TAPIBoolean; CDECL;
@@ -385,26 +308,31 @@ end;
 procedure Reactors_Set_IsDelta(Value: TAPIBoolean); CDECL;
 var
     pReactor: TReactorObj;
+    prevVal: Integer;
 begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
 
+    prevVal := ord(pReactor.Connection);
     if Value then 
         pReactor.Connection := TReactorConnection.Delta
     else
         pReactor.Connection := TReactorConnection.Wye;
-        
-    ReactorPropSideEffects(DSSPrime, ReactorProps.conn, pReactor);
+
+    pReactor.PropertySideEffects(ord(TReactorProp.conn), prevVal);    
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Parallel(Value: TAPIBoolean); CDECL;
 var
     pReactor: TReactorObj;
+    prevVal: Integer;
 begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
+    
+    prevVal := Integer(pReactor.IsParallel);
     pReactor.IsParallel := Value;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.Parallel, pReactor);
+    pReactor.PropertySideEffects(ord(TReactorProp.Parallel), prevVal);
 end;
 //------------------------------------------------------------------------------
 procedure _ReactorSetbus1(pReactor: TReactorObj; const s: String);
@@ -441,7 +369,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     _ReactorSetbus1(pReactor, Value);
-    ReactorPropSideEffects(DSSPrime, ReactorProps.bus1, pReactor);
+    pReactor.PropertySideEffects(ord(TReactorProp.bus1));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Bus2(const Value: PAnsiChar); CDECL;
@@ -451,7 +379,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.SetBus(2, Value);
-    ReactorPropSideEffects(DSSPrime, ReactorProps.bus2, pReactor);
+    pReactor.PropertySideEffects(ord(TReactorProp.bus2));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_LCurve(const Value: PAnsiChar); CDECL;
@@ -460,8 +388,9 @@ var
 begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    pReactor.LCurve := Value;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.LCurve, pReactor);
+        
+    pReactor.LCurveObj := DSSPrime.XYCurveClass.Find(Value);
+    pReactor.PropertySideEffects(ord(TReactorProp.LCurve));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_RCurve(const Value: PAnsiChar); CDECL;
@@ -470,8 +399,9 @@ var
 begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    pReactor.RCurve := Value;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.RCurve, pReactor);
+
+    pReactor.RCurveObj := DSSPrime.XYCurveClass.Find(Value);
+    pReactor.PropertySideEffects(ord(TReactorProp.RCurve));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_kV(Value: Double); CDECL;
@@ -481,7 +411,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.kvrating := Value;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.kv, pReactor);
+    pReactor.PropertySideEffects(ord(TReactorProp.kv));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_kvar(Value: Double); CDECL;
@@ -491,7 +421,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.kvarRating := Value;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.kvar, pReactor);
+    pReactor.PropertySideEffects(ord(TReactorProp.kvar));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_LmH(Value: Double); CDECL;
@@ -501,19 +431,26 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.L := Value / 1000.0;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.LmH, pReactor);
+    pReactor.PropertySideEffects(ord(TReactorProp.LmH));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Phases(Value: Integer); CDECL;
 var
-    pReactor: TReactorObj;
+    elem: TReactorObj;
+    prevVal: Integer;
 begin
-    if not _activeObj(DSSPrime, pReactor) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    if Value = pReactor.NPhases then
+    if Value < 1 then
+    begin
+        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName], 6568);
         Exit;
-    pReactor.NPhases := Value;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.phases, pReactor);
+    end;
+    if Value = elem.NPhases then
+        Exit;
+    prevVal := elem.FNPhases;
+    elem.FNPhases := Value;
+    elem.PropertySideEffects(ord(TReactorProp.phases), prevVal);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_R(Value: Double); CDECL;
@@ -523,7 +460,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.R := Value;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.R, pReactor);
+    pReactor.PropertySideEffects(ord(TReactorProp.R));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_X(Value: Double); CDECL;
@@ -533,7 +470,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.X := Value;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.X, pReactor);
+    pReactor.PropertySideEffects(ord(TReactorProp.X));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rp(Value: Double); CDECL;
@@ -543,7 +480,7 @@ begin
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
     pReactor.Rp := Value;
-    ReactorPropSideEffects(DSSPrime, ReactorProps.Rp, pReactor);
+    pReactor.PropertySideEffects(ord(TReactorProp.Rp));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -557,15 +494,12 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, Format('The number of values provided (%d) does not match the expected (%d).', [ValueCount, Sqr(pReactor.Nphases)]), 5024);
+            DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the expected (%d).', [ValueCount, Sqr(pReactor.Nphases)], 5024);
         end;
         Exit;
     end;
-    with pReactor do
-    begin
-        Move(ValuePtr^, Rmatrix[1], ValueCount * SizeOf(Double));
-        ReactorPropSideEffects(DSSPrime, ReactorProps.Rmatrix, pReactor);
-    end;
+    Move(ValuePtr^, pReactor.Rmatrix[1], ValueCount * SizeOf(Double));
+    pReactor.PropertySideEffects(ord(TReactorProp.Rmatrix));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Xmatrix(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -578,15 +512,12 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSSPrime, Format('The number of values provided (%d) does not match the expected (%d).', [ValueCount, Sqr(pReactor.Nphases)]), 5024);
+            DoSimpleMsg(DSSPrime, 'The number of values provided (%d) does not match the expected (%d).', [ValueCount, Sqr(pReactor.Nphases)], 5024);
         end;
         Exit;
     end;
-    with pReactor do
-    begin
-        Move(ValuePtr^, Xmatrix[1], ValueCount * SizeOf(Double));
-        ReactorPropSideEffects(DSSPrime, ReactorProps.Xmatrix, pReactor);
-    end;
+    Move(ValuePtr^, pReactor.Xmatrix[1], ValueCount * SizeOf(Double));
+    pReactor.PropertySideEffects(ord(TReactorProp.Xmatrix));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
@@ -600,11 +531,8 @@ begin
     if pReactor.Rmatrix = NIL then
         Exit; //TODO: would an error here be useful?
 
-    with pReactor do
-    begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(Nphases));
-        Move(Rmatrix[1], ResultPtr^, ResultCount^ * SizeOf(Double));
-    end;
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(pReactor.Nphases));
+    Move(pReactor.Rmatrix[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
 procedure Reactors_Get_Rmatrix_GR(); CDECL;
@@ -625,11 +553,8 @@ begin
     if pReactor.Xmatrix = NIL then
         Exit;
         
-    with pReactor do
-    begin
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(Nphases));
-        Move(Xmatrix[1], ResultPtr^, ResultCount^ * SizeOf(Double));
-    end;
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(pReactor.Nphases));
+    Move(pReactor.Xmatrix[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
 procedure Reactors_Get_Xmatrix_GR(); CDECL;
@@ -647,12 +572,10 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    with pReactor do
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-        Result[0] := Z1.Re;
-        Result[1] := Z1.Im;
-    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    Result[0] := pReactor.Z1.Re;
+    Result[1] := pReactor.Z1.Im;
 end;
 
 procedure Reactors_Get_Z1_GR(); CDECL;
@@ -670,12 +593,10 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    with pReactor do
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-        Result[0] := Z2.Re;
-        Result[1] := Z2.Im;
-    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    Result[0] := pReactor.Z2.Re;
+    Result[1] := pReactor.Z2.Im;
 end;
 
 procedure Reactors_Get_Z2_GR(); CDECL;
@@ -693,12 +614,10 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    with pReactor do
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-        Result[0] := Z0.Re;
-        Result[1] := Z0.Im;
-    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    Result[0] := pReactor.Z0.Re;
+    Result[1] := pReactor.Z0.Im;
 end;
 
 procedure Reactors_Get_Z0_GR(); CDECL;
@@ -716,12 +635,10 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pReactor) then
         Exit;
-    with pReactor do
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-        Result[0] := R;
-        Result[1] := X;
-    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    Result[0] := pReactor.R;
+    Result[1] := pReactor.X;
 end;
 
 procedure Reactors_Get_Z_GR(); CDECL;
@@ -743,11 +660,8 @@ begin
     if (ValueCount <> 2) then
         Exit;
 
-    with pReactor do
-    begin
-        Z2 := Cmplx(Value[0], Value[1]);
-        ReactorPropSideEffects(DSSPrime, ReactorProps.Z2, pReactor);
-    end;
+    pReactor.Z2 := Cmplx(Value[0], Value[1]);
+    pReactor.PropertySideEffects(ord(TReactorProp.Z2));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Z1(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -762,11 +676,8 @@ begin
     if (ValueCount <> 2) then
         Exit;
 
-    with pReactor do
-    begin
-        Z1 := Cmplx(Value[0], Value[1]);
-        ReactorPropSideEffects(DSSPrime, ReactorProps.Z1, pReactor);
-    end;
+    pReactor.Z1 := Cmplx(Value[0], Value[1]);
+    pReactor.PropertySideEffects(ord(TReactorProp.Z1));        
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Z0(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -781,11 +692,8 @@ begin
     if (ValueCount <> 2) then
         Exit;
     
-    with pReactor do
-    begin
-        Z0 := Cmplx(Value[0], Value[1]);
-        ReactorPropSideEffects(DSSPrime, ReactorProps.Z0, pReactor);
-    end;
+    pReactor.Z0 := Cmplx(Value[0], Value[1]);
+    pReactor.PropertySideEffects(ord(TReactorProp.Z0));
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Z(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
@@ -800,11 +708,8 @@ begin
     if (ValueCount <> 2) then
         Exit;
 
-    with pReactor do
-    begin
-        Z := Cmplx(Value[0], Value[1]);
-        ReactorPropSideEffects(DSSPrime, ReactorProps.Z, pReactor);
-    end;
+    pReactor.Z := Cmplx(Value[0], Value[1]);
+    pReactor.PropertySideEffects(ord(TReactorProp.Z));
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_idx(): Integer; CDECL;
@@ -824,7 +729,7 @@ begin
     pReactor := DSSPrime.ActiveCircuit.Reactors.Get(Value);
     if pReactor = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid Reactor index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['Reactor', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pReactor;

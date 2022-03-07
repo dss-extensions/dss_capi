@@ -1,6 +1,5 @@
 unit StoreUserModel;
 
-{$M+}
 {
   ----------------------------------------------------------
   Copyright (c) 2009-2015, Electric Power Research Institute, Inc.
@@ -15,11 +14,10 @@ unit StoreUserModel;
 
 interface
 
-USES  StorageVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
+USES  StorageVars, Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
 
 TYPE
-
-  // Interface for Dynamics-only user-written model
+    // Interface for Dynamics-only user-written model
     TStoreDynaModel = Class (TObject)
       private
          FHandle : NativeUInt;  // Handle to DLL containing user model
@@ -28,7 +26,7 @@ TYPE
 
          FuncError : Boolean;
 
-         {These functions should only be called by the object itself}
+         // These functions should only be called by the object itself
          FNew:    Function( Var DynaData:TDynamicsRec; Var CallBacks:TDSSCallBacks): Integer;  Stdcall;// Make a new instance
          FDelete: Procedure(var x:Integer); Stdcall;  // deletes specified instance
          FSelect: Function (var x:Integer):Integer; Stdcall;    // Select active instance
@@ -47,7 +45,7 @@ TYPE
          FIntegrate:    Procedure; stdcall; // Integrates any state vars
          FUpdateModel:  Procedure; Stdcall; // Called when props of generator updated
 
-        {Monitoring functions}
+         // Monitoring functions
          FNumVars:     Function:Integer;Stdcall;
          FGetAllVars:  Procedure(Vars:pDoubleArray);StdCall;  // Get all vars
          FGetVariable: Function(var I:Integer):Double;StdCall;// Get a particular var
@@ -65,9 +63,6 @@ TYPE
 
          constructor Create(dssContext: TDSSContext);
          destructor  Destroy; override;
-
-      Published
-
     End;
 
 
@@ -125,14 +120,11 @@ TYPE
 
         constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
-
-      published
-
       end;
 
 implementation
 
-Uses Storage, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils,
+Uses Storage, DSSGlobals, dynlibs, Sysutils,
      DSSHelper;
 
 { TStoreUserModel }
@@ -141,7 +133,7 @@ function TStoreUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Point
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg(DSS, 'Storage User Model DLL Does Not Have Required Function: ' + FuncName, 1569);
+            DoSimpleMsg(DSS, 'Storage User Model DLL Does Not Have Required Function: %s', [FuncName], 1569);
             FuncError := True;
           End;
         Result := Addr;
@@ -153,7 +145,6 @@ begin
   FID := 0;
   Fhandle := 0;
   FName := '';
-
 end;
 
 destructor TStoreUserModel.Destroy;
@@ -165,7 +156,6 @@ begin
         FDelete(FID);       // Clean up all memory associated with this instance
         FreeLibrary(FHandle);
     End;
-
 end;
 
 function TStoreUserModel.Get_Exists: Boolean;
@@ -198,7 +188,6 @@ end;
 procedure TStoreUserModel.Set_Name(const Value:String);
 
 begin
-
     {If Model already points to something, then free it}
 
         IF FHandle <> 0 Then Begin
@@ -222,10 +211,9 @@ begin
         End;
 
         If FHandle = 0 Then
-              DoSimpleMsg(DSS, 'Storage User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
+              DoSimpleMsg(DSS, 'Storage User Model %s Not Loaded. DSS Directory = %s', [Value, DSSDirectory], 1570)
         Else
-        Begin
-
+        begin
             FName := Value;
 
             // Now set up all the procedure variables
@@ -267,7 +255,7 @@ function TStoreDynaModel.CheckFuncError(Addr: Pointer;
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg(DSS, 'Storage User Dynamic DLL Does Not Have Required Function: ' + FuncName, 1569);
+            DoSimpleMsg(DSS, 'Storage User Dynamic DLL Does Not Have Required Function: %s', [FuncName], 1569);
             FuncError := True;
           End;
         Result := Addr;
@@ -279,12 +267,10 @@ begin
   FID     := 0;
   Fhandle := 0;
   FName   := '';
-
 end;
 
 destructor TStoreDynaModel.Destroy;
 begin
-
 
     If FID <> 0 Then
     Begin
@@ -293,7 +279,6 @@ begin
     End;
 
    inherited;
-
 end;
 
 function TStoreDynaModel.Get_Exists: Boolean;
@@ -325,7 +310,6 @@ end;
 procedure TStoreDynaModel.Set_Name(const Value:String);
 
 begin
-
     {If Model already points to something, then free it}
 
         IF FHandle <> 0 Then Begin
@@ -349,10 +333,9 @@ begin
         End;
 
         If FHandle = 0 Then
-              DoSimpleMsg(DSS, 'Storage User-written Dynamics Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
+              DoSimpleMsg(DSS, 'Storage User-written Dynamics Model "%s" Not Loaded. DSS Directory = "%s"', [Value, DSSDirectory], 1570)
         Else
-        Begin
-
+        begin
             FName := Value;
 
             // Now set up all the procedure variables
@@ -382,6 +365,5 @@ begin
             End;;
         End;
 end;
-
 
 end.

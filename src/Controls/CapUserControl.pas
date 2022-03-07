@@ -8,23 +8,16 @@ unit CapUserControl;
 
     Interface to user-written CapControl DLL
 }
-
-
-{$M+}
 {
   ----------------------------------------------------------
   Copyright (c) 2012, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
-
-  3-31-12
-  Converted from GenUserModel.Pas
-
 }
 
 interface
 
-USES  CapControlVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
+USES  CapControlVars, Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -51,8 +44,6 @@ TYPE
          procedure Set_Edit(const Value: String);
          function  Get_Exists: Boolean;
 
-      protected
-
       public
         DSS: TDSSContext;
 
@@ -72,23 +63,20 @@ TYPE
         property  Name:String    read  Fname write Set_Name;
         property  Edit:String    write Set_Edit;
         property  Exists:Boolean read  Get_Exists;
-      published
-
       end;
 
 
 
 implementation
 
-Uses  DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils, DSSHelper;
+Uses DSSGlobals, dynlibs, Sysutils, DSSHelper;
 
-{ TCapUserControl }
 
 function TCapUserControl.CheckFuncError(Addr: Pointer;  FuncName: String): Pointer;
 begin
         If Addr=nil then
           Begin
-               DoSimpleMsg(DSS, 'CapControl User Model Does Not Have Required Function: ' + FuncName, 569);
+               DoSimpleMsg(DSS, 'CapControl User Model Does Not Have Required Function: "%s"', [FuncName], 569);
                FuncError := True;
           End;
         Result := Addr;
@@ -100,12 +88,10 @@ begin
     FID     := 0;
     Fhandle := 0;
     FName   := '';
-
 end;
 
 destructor TCapUserControl.Destroy;
 begin
-
  Try
   If FID <> 0 Then FDelete(FID);  // Clean up all memory associated with this instance
  Finally
@@ -114,7 +100,6 @@ begin
 
 
 inherited;
-
 end;
 
 procedure TCapUserControl.DoPending(const Code, ProxyHdl: integer);
@@ -145,9 +130,7 @@ procedure TCapUserControl.Sample;
 // Sample the cap control
 
 begin
-
      If FID <> 0 Then FSample;
-
 end;
 
 procedure TCapUserControl.Select;
@@ -164,7 +147,6 @@ end;
 procedure TCapUserControl.Set_Name(const Value:String);
 
 begin
-
     {If Model already points to something, then free it}
 
         IF FHandle <> 0 Then
@@ -189,7 +171,7 @@ begin
           End;
 
         If FHandle = 0 Then
-              DoSimpleMsg(DSS, 'CapControl User Model ' + Value + ' Load Library Failed. DSS Directory = '+DSSDirectory, 570)
+              DoSimpleMsg(DSS, 'CapControl User Model %s Load Library Failed. DSS Directory = "%s"', [Value, DSSDirectory], 570)
         Else
         Begin
             FName := Value;
@@ -206,7 +188,7 @@ begin
 
             If FuncError Then Begin
                  If not FreeLibrary(FHandle) then
-                 DoSimpleMsg(DSS, 'Error Freeing DLL: '+Fname, 10570);  // decrement the reference count
+                 DoSimpleMsg(DSS, 'Error Freeing DLL: "%s"', [Fname], 10570);  // decrement the reference count
                  FID     := 0;
                  FHandle := 0;
                  FName   := '';
@@ -222,7 +204,6 @@ end;
 procedure TCapUserControl.UpdateModel;
 begin
      If FID <> 0 Then FUpdateModel;
-
 end;
 
 end.

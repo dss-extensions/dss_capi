@@ -1,6 +1,5 @@
 unit DSSPointerList;
 
-{$M+}
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -26,8 +25,6 @@ type
         function Get_First: Pointer;
         function Get_Next: Pointer;
         function Get_Active: Pointer;
-        procedure Set_New(value: Pointer);
-
     PUBLIC
         constructor Create(Size: Integer);
         destructor Destroy; OVERRIDE;
@@ -37,43 +34,36 @@ type
         function Add(p: Pointer): Integer;  // Returns index of item
         function Get(i: Integer): Pointer; // Changes active item
         function At(i: Integer): Pointer; // Does not change the active item
-
         property First: Pointer READ Get_First;
         property Next: Pointer READ Get_Next;
         property Count: Integer READ NumInList;
-        property New: Pointer WRITE Set_New;
         property Active: Pointer READ Get_Active;
         property ActiveIndex: Integer READ ActiveItem;
 
-    PUBLISHED
-
+        property InternalPointer: pPointerArray read List;
     end;
-
 
 implementation
 
 constructor TDSSPointerList.Create(Size: Integer);
-//-------------------------------------------------------------------------
 begin
     inherited Create;
 
     MaxAllocated := Size;
     if MaxAllocated <= 0 then
         MaxAllocated := 10;    // Default Size & Increment
-    List := AllocMem(SizeOf(List^[1]) * MaxAllocated);
+    List := AllocMem(SizeOf(Pointer) * MaxAllocated);
     NumInList := 0;
     ActiveItem := 0;
     IncrementSize := MaxAllocated;  // Increment is equal to original allocation
 end;
 
-//-------------------------------------------------------------------------
 destructor TDSSPointerList.Destroy;
 begin
-    Freemem(List, Sizeof(List^[1]) * MaxAllocated);
+    Freemem(List, Sizeof(Pointer) * MaxAllocated);
     inherited Destroy;
 end;
 
-//-------------------------------------------------------------------------
 function TDSSPointerList.Add(p: Pointer): Integer;
 begin
     Inc(NumInList);
@@ -87,13 +77,6 @@ begin
     ActiveItem := Result;
 end;
 
-//-------------------------------------------------------------------------
-procedure TDSSPointerList.Set_New(value: Pointer);
-begin
-    Add(Value);
-end;
-
-//-------------------------------------------------------------------------
 function TDSSPointerList.Get_Active: Pointer;
 begin
     if (ActiveItem > 0) and (ActiveItem <= NumInList) then
@@ -102,7 +85,6 @@ begin
         Result := NIL;
 end;
 
-//-------------------------------------------------------------------------
 function TDSSPointerList.Get_First: Pointer;
 begin
     if NumInList > 0 then
@@ -117,7 +99,6 @@ begin
     end;
 end;
 
-//-------------------------------------------------------------------------
 function TDSSPointerList.Get_Next: Pointer;
 begin
     if NumInList > 0 then
@@ -138,7 +119,6 @@ begin
     end;
 end;
 
-//-------------------------------------------------------------------------
 function TDSSPointerList.Get(i: Integer): Pointer;
 begin
     if (i < 1) or (i > NumInList) then
@@ -150,7 +130,6 @@ begin
     end;
 end;
 
-//-------------------------------------------------------------------------
 function TDSSPointerList.At(i: Integer): Pointer;
 begin
     if (i < 1) or (i > NumInList) then
@@ -161,7 +140,6 @@ begin
     end;
 end;
 
-//-------------------------------------------------------------------------
 procedure TDSSPointerList.Clear;
 begin
     ActiveItem := 0;

@@ -11,7 +11,7 @@ interface
 uses
     Arraydef,
     Ucmatrix,
-    Ucomplex,
+    UComplex, DSSUcomplex,
     LineUnits,
     LineConstants;
 
@@ -103,13 +103,13 @@ begin
 *)
     for i := 1 to FNumConds do
     begin
-        if i <= FNumPhases then
+        if i <= FNPhases then
             Ri := FRadius^[i]
         else
             Ri := 0.5 * FDiaCable^[i];
         for j := i + 1 to FNumConds do
         begin
-            if j <= FNumPhases then
+            if j <= FNPhases then
                 Rj := FRadius^[j]
             else
                 Rj := 0.5 * FDiaCable^[j];

@@ -7,9 +7,7 @@ unit RPN;
   ----------------------------------------------------------
 }
 
-{RPN Calculator}
-
-{$M+}
+// RPN Calculator
 
 interface
 
@@ -61,8 +59,6 @@ type
 
         constructor Create;
         destructor Destroy; OVERRIDE;
-    PUBLISHED
-
     end;
 
 
@@ -71,10 +67,9 @@ implementation
 
 uses
     Math;
-
-{ TRPNCalc }
-var
-    DegToRad, RadToDeg: Double;
+const
+    DegToRad: Double = 3.14159265359 / 180.0;
+    RadToDeg: Double = 180.0 / 3.14159265359;
 
 procedure TRPNCalc.aCosdeg;
 begin
@@ -120,7 +115,6 @@ end;
 destructor TRPNCalc.Destroy;
 begin
     inherited;
-
 end;
 
 procedure TRPNCalc.Divide;
@@ -249,10 +243,5 @@ procedure TRPNCalc.Inv;  // invert  1/X
 begin
     FStack[1] := 1.0 / FStack[1];
 end;
-
-initialization
-
-    DegToRad := 3.14159265359 / 180.0;
-    RadToDeg := 1.0 / DegToRad;
 
 end.

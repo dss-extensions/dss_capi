@@ -1,6 +1,5 @@
 unit PVSystemUserModel;
 
-{$M+}
 {
   ----------------------------------------------------------
   Copyright (c) 2009-2015, Electric Power Research Institute, Inc.
@@ -10,7 +9,7 @@ unit PVSystemUserModel;
 
 interface
 
-USES  Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
+USES  Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -66,13 +65,11 @@ TYPE
 
         constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
-      published
-
       end;
 
 implementation
 
-Uses PVSystem, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils, 
+Uses PVSystem, DSSGlobals, dynlibs, Sysutils, 
      DSSHelper;
 
 { TPVsystemUserModel }
@@ -81,7 +78,7 @@ function TPVsystemUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Po
 begin
     If Addr=nil then
       Begin
-        DoSimpleMsg(DSS, 'PVSystem User Model Does Not Have Required Function: ' + FuncName, 1569);
+        DoSimpleMsg(DSS, 'PVSystem User Model Does Not Have Required Function: %s', [FuncName], 1569);
         FuncError := True;
       End;
     Result := Addr;
@@ -93,12 +90,10 @@ begin
     FID := 0;
     Fhandle := 0;
     FName := '';
-
 end;
 
 destructor TPVsystemUserModel.Destroy;
 begin
-
   If FID <> 0 Then
     Begin
         FDelete(FID);       // Clean up all memory associated with this instance
@@ -106,7 +101,6 @@ begin
     End;
 
   inherited;
-
 end;
 
 function TPVsystemUserModel.Get_Exists: Boolean;
@@ -139,7 +133,6 @@ end;
 procedure TPVsystemUserModel.Set_Name(const Value:String);
 
 begin
-
     {If Model already points to something, then free it}
 
         IF FHandle <> 0 Then Begin
@@ -163,10 +156,9 @@ begin
         End;
 
         If FHandle = 0 Then
-              DoSimpleMsg(DSS, 'PVSystem User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
+              DoSimpleMsg(DSS, 'PVSystem User Model "%s" Not Loaded. DSS Directory = %s', [Value, DSSDirectory], 1570)
         Else
-        Begin
-
+        begin
             FName := Value;
 
             // Now set up all the procedure variables
@@ -198,7 +190,5 @@ begin
             End;;
         End;
 end;
-
-
 
 end.

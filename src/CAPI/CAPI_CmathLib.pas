@@ -25,7 +25,7 @@ uses
     CAPI_Constants,
     DSSClass,
     DSSHelper,
-    Ucomplex;
+    UComplex, DSSUcomplex;
 
 procedure CmathLib_Get_cmplx(var ResultPtr: PDouble; ResultCount: PAPISize; RealPart, ImagPart: Double); CDECL;
 var
@@ -96,7 +96,7 @@ var
     cTemp: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    cTemp := cmul(cmplx(a1, b1), cmplx(a2, b2));
+    cTemp := cmplx(a1, b1) * cmplx(a2, b2);
     Result[0] := cTemp.re;
     Result[1] := cTemp.im;
 end;
@@ -114,7 +114,7 @@ var
     cTemp: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    cTemp := cdiv(cmplx(a1, b1), cmplx(a2, b2));
+    cTemp := cmplx(a1, b1) / cmplx(a2, b2);
     Result[0] := cTemp.re;
     Result[1] := cTemp.im;
 end;

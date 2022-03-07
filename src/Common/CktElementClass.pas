@@ -6,9 +6,6 @@ unit CktElementClass;
   All rights reserved.
   ----------------------------------------------------------
 }
-{ Created 5/17/01 RCD to balance inheritance tree for Circuit Elements}
-
-{$M+}
 
 interface
 
@@ -16,109 +13,115 @@ uses
     DSSClass;
 
 type
+{$SCOPEDENUMS ON}
+    TCktElementProp = (
+        INVALID = 0,
+        basefreq = 1, 
+        enabled = 2
+    );
+{$SCOPEDENUMS OFF}
+
     TCktElementClass = class(TDSSClass)
-    PRIVATE
-
     PROTECTED
-        procedure ClassEdit(const ActiveCktElemObj: Pointer; const ParamPointer: Integer);
-        procedure ClassMakeLike(const OtherObj: Pointer);
-
-        procedure CountProperties;  // Add no. of intrinsic properties
-        procedure DefineProperties;  // Add Properties of this class to propName
-
+        procedure CountPropertiesAndAllocate; override;
+        procedure DefineProperties; override;
     PUBLIC
-        NumCktElemClassProps: Integer;
-        constructor Create(dssContext: TDSSContext);
+        constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
-    PUBLISHED
-
+        function BeginEdit(ptr: Pointer; SetActive_: Boolean=True): Pointer; override;
+        function EndEdit(ptr: Pointer; const NumChanges: integer): Boolean; override;
     end;
 
 implementation
 
 uses
     CktElement,
-    ParserDel,
     Utilities,
     DSSGlobals,
     DSSHelper,
     DSSObjectHelper;
 
-{ TCktElementClass }
+type
+    TObj = TDSSCktElement;
+    TProp = TCktElementProp;
+const
+    NumPropsThisClass = Ord(High(TProp));
+var 
+    PropInfo: Pointer = NIL;
 
-procedure TCktElementClass.ClassEdit(const ActiveCktElemObj: Pointer;
-    const ParamPointer: Integer);
-
+procedure TCktElementClass.CountPropertiesAndAllocate;
 begin
-  // continue parsing with contents of Parser
-    if ParamPointer > 0 then
-        with TDSSCktElement(ActiveCktElemObj) do
-        begin
-
-            case ParamPointer of
-                1:
-                    BaseFrequency := Parser.Dblvalue;
-                2:
-                    Enabled := InterpretYesNo(Parser.StrValue);
-            else
-                inherited ClassEdit(ActiveCktElemObj, ParamPointer - NumCktElemClassProps)
-            end;
-        end;
-
+    NumProperties := NumProperties + NumPropsThisClass;
+    inherited CountPropertiesAndAllocate;
 end;
 
-procedure TCktElementClass.ClassMakeLike(const OtherObj: Pointer);
-var
-    OtherCktObj: TDSSCktElement;
+constructor TCktElementClass.Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
 begin
+    if PropInfo = NIL then
+        PropInfo := TypeInfo(TProp);
 
-    OtherCktObj := TDSSCktElement(OtherObj);
-
-    with TDSSCktElement(ActiveDSSObject) do
-    begin
-        BaseFrequency := OtherCktObj.BaseFrequency;
-        Enabled := TRUE;
-    end;
-
-end;
-
-procedure TCktElementClass.CountProperties;
-
-begin
-    NumProperties := NumProperties + NumCktElemClassProps;
-    inherited CountProperties;
-
-end;
-
-constructor TCktElementClass.Create(dssContext: TDSSContext);
-begin
-
-    inherited Create(dssContext);
-    NumCktElemClassProps := 2;
-
+    inherited Create(dssContext, DSSClsType, DSSClsName);
+    ClassParents.Add('CktElement');
 end;
 
 procedure TCktElementClass.DefineProperties;
-
-// Define the properties for the base power delivery element class
-
+var
+    obj: TObj = NIL; // NIL (0) on purpose
 begin
-    PropertyName^[ActiveProperty + 1] := 'basefreq';
-    PropertyName^[ActiveProperty + 2] := 'enabled';
+    PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'CktElement');
 
-    PropertyHelp^[ActiveProperty + 1] := 'Base Frequency for ratings.';
-    PropertyHelp^[ActiveProperty + 2] := '{Yes|No or True|False} Indicates whether this element is enabled.';
+    // Special boolean property
+    PropertyType[ActiveProperty + ord(TProp.enabled)] := TPropertyType.EnabledProperty;
+    PropertyOffset[ActiveProperty + ord(TProp.enabled)] := 1; // dummy value
 
-    ActiveProperty := ActiveProperty + NumCktElemClassProps;
+    // double properties (default type)
+    PropertyOffset[ActiveProperty + ord(TProp.basefreq)] := ptruint(@obj.BaseFrequency);
 
+    ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties;
+end;
 
+function TCktElementClass.BeginEdit(ptr: Pointer; SetActive_: Boolean): Pointer;
+var
+    Obj: TObj;
+begin
+    // This is the default action, some classes do a bit more
+    if ptr <> NIL then
+        Obj := TObj(ptr)
+    else
+        Obj := ElementList.Active;
+
+    if (Obj <> NIL) and (Flg.EditionActive in Obj.Flags) then
+    begin
+        DosimpleMsg('%s: Object already being edited!', [Obj.FullName], 37737);
+        Exit;
+    end;
+
+    if SetActive_ then
+    begin
+        //TODO: e.g. DSS.ActiveCapControlObj := Obj; -- if ever required for all elements
+        ActiveCircuit.ActiveCktElement := Obj;
+    end;
+
+    Include(Obj.Flags, Flg.EditionActive);
+    Result := Obj;
+end;
+
+function TCktElementClass.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
+var
+    Obj: TObj;
+begin
+    Obj := TObj(ptr);
+    Exclude(Obj.Flags, Flg.EditionActive);
+
+    // This is the default action, many classes do more.
+    TObj(ptr).RecalcElementData();
+    Result := True;
 end;
 
 destructor TCktElementClass.Destroy;
 begin
     inherited Destroy;
-
 end;
 
 end.

@@ -2,48 +2,16 @@ unit Solution;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
-}
-
-{ Change Log
- 8-14-99 Added progress display and abort on longer solution types
- 11-3-99 added calc voltage base
- 11-21-99 modified to  calc the voltage bases at the current load level set by the user.
- 12-1-99 Added code to estimate starting point for P-V Generators
- 12-2-99 Made more properties visible
- 12-6-99 Merged properties with Set Command and removed from here
- 12-15-99 Added global generatordispatchreference
- 1-8-00   Fixed bug in autoadd generators to work with new generator model
-          set vminpu=0 and vmaxpu=1000000
- 1-30-00 to 2-1-00 Implemented control action check in solution
- 2-19-00 Frequency changed reset to FALSE after being used (was causing all YPrims to be recomputed)
- 2-23-00 Modified so that reset of meters and monitors is done upon setting the solution mode property.
-         After that the user must reset else the monitors just accumulate.
- 3-20-00 Fixed bug with setting generator disp reference - made uniform for all types
- 6-11-00 Split into two modules + moved auto add stuff to AutoAdd
- 9-20-00 Added Dynamic Mode
- 10-25-00 Added Fundamental Freq and other stuff for Harmonics Solution
- 5-30-01  Added control iterations check, mostIterationsdone.
-          Fixed bug with controls off doing the solution too many times.
-
- 8-14-01 Reset IntervalHrs on Mode change
- 7-11-02 Added check for system Y change after computing currents
-
- 9-28-03 Redefined V to NodeV and changed from an array from 1..n to 0..n where
-         0-th element is alway ground(complex zero volts).
- 8-14-06 Revised power flow initialization; removed forward/backward sweep
-
- 9-14-16 Added SampleTheMeters Flag to allow sampling energy meters in Time and DutyCycle mode
-
 }
 
 interface
 
 uses
     Classes,
-    uCOMPLEX,
+    UComplex, DSSUcomplex,
     Arraydef,
     Command,
     Monitor,
@@ -53,10 +21,9 @@ uses
     EnergyMeter,
     Sparse_Math,
     VSource,
+    ISource,
     SysUtils,
-{$IFDEF DSS_CAPI_PM}
-    Parallel_Lib,
-{$ENDIF}
+    generics.collections,
 {$IFDEF MSWINDOWS}
     Windows,
 {$ELSE}
@@ -64,25 +31,44 @@ uses
     Unix,
 {$ENDIF}
     Strings,
+{$IFDEF DSS_CAPI_PM}
     SyncObjs,
     ExecHelper,
-    CktElement;
+{$ENDIF}
+    CktElement,
+    DSSPointerList;
 
 const
-
     NORMALSOLVE = 0;
     NEWTONSOLVE = 1;
-// Constants for the actor's messaging
-    SIMULATE = 0;
-    EXIT_ACTOR = 1;
 
-    ALL_ACTORS = 0; // Wait flag for all the actors
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
     AD_ACTORS = 1; // Wait flag to wait only for the A-Diakoptics actors
-
-
+{$ENDIF}
+    ALL_ACTORS = 0; // Wait flag for all the actors
 
 type
+{$SCOPEDENUMS ON}
+    TActorMessage = (
+        // Constants for the actor's messaging
+        SIMULATE = 0,
+        EXIT_ACTOR,
+        CALC_INJ_CURR,  // Uses the total solution to estiamte the injection currents
+        DO_CTRL_ACTIONS,  // Does the control actions distributedly
+        ZEROIVECTOR,  // Zeroes the actor's I vector
+        GETCURRINJ,  // Gets the current injections for the actor and uploades them in the local I vector
+        CHECKYBUS, // Rebuilds the YBus if needed at local level
+        CHECK_FAULT // Checks the fault status at local level
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        ,
+        INIT_ADIAKOPTICS, // Initializes the environment for the children actors
+        SOLVE_AD1, // solves for the actors with Power Injections -> E(0)
+        SOLVE_AD2, // Solves the sub-system and adds to the partial solution
+        GETCTRLMODE // Sync the local control mode with actor 1
+{$ENDIF}
 
+    );
+{$SCOPEDENUMS OFF}
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
 {$SCOPEDENUMS ON}
     TSolverOptions = (
@@ -104,68 +90,43 @@ type
     TNodeVarray = array[0..1000] of Complex;
     pNodeVarray = ^TNodeVarray;
 
-
-    TDSSSolution = class(TDSSClass)
-
-
-    PRIVATE
-//       CommandList:TCommandlist;
-    PROTECTED
-        procedure DefineProperties;
-    PUBLIC
-        constructor Create(dssContext: TDSSContext);
-        destructor Destroy; OVERRIDE;
-
-        function Edit: Integer; OVERRIDE;
-        function NewObject(const ObjName: String): Integer; OVERRIDE;
-
-    end;
-
 {$IFDEF DSS_CAPI_PM}
-    TInfoMessageCall = procedure(const info: String) of object;  // Creates the procedure for sending a message
-
-    TSolver = class(TThread)
-        constructor Create(dssContext: TDSSContext; Susp: Boolean; local_CPU: Integer; CallBack: TInfoMessageCall; AEvent: TEvent); OVERLOAD;
+   TSolver = class(TThread)
+        constructor Create(dssContext: TDSSContext; Susp: Boolean; local_CPU: Integer; AEvent: TEvent); OVERLOAD;
         procedure Execute; OVERRIDE;
         procedure Doterminate; OVERRIDE;
         destructor Destroy; OVERRIDE;
 
-//*******************************Private components*****************************
     PROTECTED
         DSS: TDSSContext;
 
-        FMessage,
-        Msg_Cmd: String;
+        FMessage: String;
         UINotifier,
-        FInfoProc: TInfoMessageCall;
-        MsgType: Integer;
-        UIEvent,
-        ActorMsg: TEvent;
-        AD_Init,          // used to know if the actors require a partial solution
-        ActorActive,
+        // ActorID,
+        StatusEvent,
+        MessageQueueEvent: TEvent;
+        ActorIsActive,
         Processing: Boolean;
+        
+        actorMessages: TQueue<TActorMessage>;  // A queue for messaging to actors, the aim is to reduce inconsistency
+        actorMessagesLock: TCriticalSection;
 
-{$IFDEF DSS_CAPI_PM}
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        AD_Init: Boolean;          // used to know if the actors require a partial solution
+
         procedure Start_Diakoptics();
+        procedure IndexBuses(); // Locates the actor buses within the bus array in Actor 1 (interconnected)
 {$ENDIF}
-        procedure Notify_Main;
-        function Get_Processing(): Boolean;
-        procedure Set_Processing(Nval: Boolean);
         function Get_CPU(): Integer;
         procedure Set_CPU(CPU: Integer);
-//*******************************Public components******************************
+
     PUBLIC
-        procedure Send_Message(Msg: Integer);
-        procedure CallCallBack;
-        property Event: TEvent READ UIEvent;
-
-        property Is_Busy: Boolean READ Get_Processing WRITE Set_Processing;
+        procedure Send_Message(Msg: TActorMessage);
         property CPU: Integer READ Get_CPU WRITE Set_CPU;
-
     end;
 {$ENDIF}
 
-    TSolutionObj = class(TDSSObject)
+    TSolutionObj = class(TObject)
     PRIVATE
         dV: pNodeVArray;   // Array of delta V for Newton iteration
         FFrequency: Double;
@@ -176,7 +137,6 @@ type
 
         procedure DoNewtonSolution;
         procedure DoNormalSolution;
-//       PROCEDURE GetMachineInjCurrents;
         procedure SumAllCurrents;
         procedure Set_Frequency(const Value: Double);
         procedure Set_Mode(const Value: TSolveMode);
@@ -184,9 +144,9 @@ type
         procedure Set_Total_Time(const Value: Double);
 
     PUBLIC
-
+        DSS: TDSSContext;
         Algorithm: Integer;      // NORMALSOLVE or NEWTONSOLVE
-        AuxCurrents: pComplexArray;  // For injections like AutoAdd
+        AuxCurrents: pComplexArray; // For injections like AutoAdd
         ControlActionsDone: Boolean;
         ControlIteration: Integer;
         ControlMode: Integer;     // EVENTDRIVEN, TIMEDRIVEN
@@ -204,9 +164,9 @@ type
         Harmonic: Double;
         HarmonicList: pDoubleArray;
         HarmonicListSize: Integer;
-        hYsystem: NativeUint;   {Handle for main (system) Y matrix}
-        hYseries: NativeUint;   {Handle for series Y matrix}
-        hY: NativeUint;         {either hYsystem or hYseries}
+        hYsystem: NativeUint;   // Handle for main (system) Y matrix
+        hYseries: NativeUint;   // Handle for series Y matrix
+        hY: NativeUint;         // either hYsystem or hYseries
         IntervalHrs: Double;   // Solution interval since last solution, hrs.
         IsDynamicModel: Boolean;
         IsHarmonicModel: Boolean;
@@ -234,21 +194,15 @@ type
         ProgressCount: Integer; // used in SolutionAlgs
         SolverOptions: Uint64;   // KLUSolveX options
 
-
-        {Voltage and Current Arrays}
+        // Voltage and Current Arrays
         NodeV: pNodeVArray;    // Main System Voltage Array   allows NodeV^[0]=0
         Currents: pNodeVArray;      // Main System Currents Array
-{$IFDEF DSS_CAPI_PM}
-       {A-Diakoptics variables}
-        Node_dV: pNodeVArray;     // Used to store the partial solution voltage
-        Ic_Local: pNodeVArray;     // Used to store the complementary curret
-{$ENDIF}
 
-//******************************************************************************
+// ******************************************************************************
         IncMat: Tsparse_matrix; // Incidence sparse matrix
         Laplacian: Tsparse_matrix; // Laplacian sparse matrix
 
-//****************************Timing variables**********************************
+// ****************************Timing variables**********************************
         SolveStartTime: Int64;
         SolveEndtime: Int64;
         GStartTime: Int64;
@@ -258,13 +212,13 @@ type
         Solve_Time_Elapsed: Double;
         Total_Solve_Time_Elapsed: Double;
         Step_Time_Elapsed: Double;
-//******************************************************************************
+// ******************************************************************************
 // ActiveCell of the Incidence Matrix:
 // [0] = row
 // [1] = col
 // [2] = value
         ActiveIncCell: array[0..2] of Integer;
-//******************************************************************************
+// ******************************************************************************
 // IncMatrix Row and column descriptors
 // Rows array (array of strings that tells what is the order of the PDElements)
 // Columns array (array of strigns with the names of the cols of the Inc matrix)'
@@ -276,21 +230,36 @@ type
         temp_counter: Integer;
         Active_Cols: array of Integer;
         Active_Cols_Idx: array of Integer;
-//******************************************************************************
-//********************Diakoptics solution mode variables************************
-{$IFDEF DSS_CAPI_PM}
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        // A-Diakoptics variables
+
+        ADiakoptics: Boolean;
+        ADiak_Init: Boolean;
+        ADiak_PCInj: Boolean;
+
+        Node_dV: pNodeVArray;     // Used to store the partial solution voltage
+        Ic_Local: pNodeVArray;     // Used to store the complementary curret
+// ******************************************************************************
+// ********************Diakoptics solution mode variables************************
         ADiakoptics_ready: Boolean;
         ADiakoptics_Actors: Integer;
         LockNodeV: TCriticalSection;
+        LocalBusIdx: array of Integer;
+        AD_IBus: TList<Integer>;       // Location of the Current injection bus
+        AD_ISrcIdx: TList<Integer>;       // Locator of the ISource bus in actor 1
+
+        function SolveAD(Initialize: Boolean): Integer;    // solve one of the A-Diakoptics stages locally
+        procedure SendCmd2Actors(Msg: Integer); // Sends a message to other actors different than 1
+        procedure UpdateISrc; // Updates the local ISources using the data available at Ic for actor 1
+        function VoltInActor1(NodeIdx: Integer): complex; // returns the voltage indicated in NodeIdx in the context of the actor 1
 {$ENDIF}
-//******************************************************************************
-        constructor Create(ParClass: TDSSClass; const solutionname: String);
+
+        constructor Create(dssContext: TDSSContext; const solutionname: String);
         destructor Destroy; OVERRIDE;
 
         function Converged: Boolean;
         procedure SetGeneratordQdV;
 
-        procedure ZeroAuxCurrents;
         function SolveZeroLoadSnapShot: Integer;
         procedure DoPFLOWsolution;
 
@@ -315,8 +284,7 @@ type
 
         function VDiff(i, j: Integer): Complex;  // Difference between two node voltages
 
-        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
-        procedure DumpProperties(F: TFileStream; Complete: Boolean); OVERRIDE;
+        procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False);
         procedure WriteConvergenceReport(const Fname: String);
         procedure Update_dblHour;
         procedure Increment_time;
@@ -331,8 +299,6 @@ type
         property Time_Step: Double READ Step_Time_Elapsed;     // Solve + sample
         property Total_Time: Double READ Total_Time_Elapsed WRITE Set_Total_Time;
 
- // Procedures that use to be private before 01-20-2016
-
         procedure AddInAuxCurrents(SolveType: Integer);
         function SolveSystem(V: pNodeVArray): Integer;
         procedure GetPCInjCurr;
@@ -340,30 +306,35 @@ type
         procedure ZeroInjCurr;
         procedure Upload2IncMatrix;
 
-        procedure Calc_Inc_Matrix;                // Calculates the incidence matrix for the Circuit
-        procedure Calc_Inc_Matrix_Org;            // Calculates the incidence matrix hierarchically organized for the Circuit
+        procedure Calc_Inc_Matrix; // Calculates the incidence matrix for the Circuit
+        procedure Calc_Inc_Matrix_Org; // Calculates the incidence matrix hierarchically organized for the Circuit
 
-        function get_IncMatrix_Row(Col: Integer): Integer;          // Gets the index of the Row connected to the specified Column
-        function get_IncMatrix_Col(Row: Integer): Integer;          // Gets the index of the Column connected to the specified Row
-        function CheckLocationIdx(Idx: Integer): Integer;           // Evaluates the area covered by the tearing point to see if there is a better one
+        function get_IncMatrix_Row(Col: Integer): Integer; // Gets the index of the Row connected to the specified Column
+        function get_IncMatrix_Col(Row: Integer): Integer; // Gets the index of the Column connected to the specified Row
+        function CheckLocationIdx(Idx: Integer): Integer; // Evaluates the area covered by the tearing point to see if there is a better one
+        function get_PDE_Bus1_Location(myPDE: String): Integer; // Gets the index of myPDE -> bus1 within the Inc matrix
 
-        procedure AddLines2IncMatrix;             // Adds the Lines to the Incidence matrix arrays
-        procedure AddXfmr2IncMatrix;              // Adds the Xfmrs to the Incidence matrix arrays
-        procedure AddSeriesCap2IncMatrix;         // Adds capacitors in series to the Incidence matrix arrays
-        procedure AddSeriesReac2IncMatrix;        // Adds Reactors in series to the Incidence matrix arrays
+        procedure AddLines2IncMatrix; // Adds the Lines to the Incidence matrix arrays
+        procedure AddXfmr2IncMatrix; // Adds the Xfmrs to the Incidence matrix arrays
+        procedure AddSeriesCap2IncMatrix; // Adds capacitors in series to the Incidence matrix arrays
+        procedure AddSeriesReac2IncMatrix; // Adds Reactors in series to the Incidence matrix arrays
 
     end;
-
-{==========================================================================}
 
 implementation
 
 uses
+    BufStream,
     SolutionAlgs,
     DSSClassDefs,
     DSSGlobals,
 {$IFDEF MSWINDOWS}
     SHELLAPI,
+{$ELSE}    
+    {$IFDEF DSS_CAPI_PM}
+    initc, 
+    cpucount, 
+    {$ENDIF}
 {$ENDIF}
     CmdForms,
     PDElement,
@@ -372,7 +343,6 @@ uses
     Executive,
     AutoAdd,
     YMatrix,
-    ParserDel,
     Generator,
     Load,
     CKtTree,
@@ -383,9 +353,8 @@ uses
     Circuit,
     Utilities,
     KLUSolve,
-    DSSPointerList,
     Line,
-{$IFDEF DSS_CAPI_PM}
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
     Diakoptics,
 {$ENDIF}
     DSSHelper;
@@ -393,68 +362,58 @@ uses
 const
     NumPropsThisClass = 1;
 
-// ===========================================================================================
-constructor TDSSSolution.Create(dssContext: TDSSContext);  // Collection of all solution objects
+{$IFDEF DSS_CAPI_PM}
+    {$if defined(WINDOWS)}
+function Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
+var
+    CPU_bit: integer;
+    Op_Result: Dword;
 begin
-    inherited Create(dssContext);
-    Class_Name := 'Solution';
-    DSSClassType := DSS_OBJECT + HIDDEN_ELEMENT;
+    if CPU >= 0 then
+        CPU_bit := 1 shl CPU
+    else
+        CPU_bit := -1;
 
-    ActiveElement := 0;
-
-    DefineProperties;
-
-    CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties));
-    CommandList.Abbrev := TRUE;
+    Op_Result := SetThreadAffinityMask(Hnd, CPU_bit);
+    if Op_Result = 0 then
+        raise Exception.Create(Format(_('Error setting thread affinity mask: %d'), [GetLastError]));
+    Result := Op_Result;
 end;
-
-// ===========================================================================================
-destructor TDSSSolution.Destroy;
-
+    {$ELSEIF defined(freebsd) or defined(darwin)}
+function Set_Thread_Affinity(Hnd: TThreadId; CPU: integer): Integer;
 begin
-    // ElementList and  CommandList freed in inherited destroy
-    inherited Destroy;
-
+    Result := 0;
 end;
+    {$ELSE}
 
-// ===========================================================================================
-procedure TDSSSolution.DefineProperties;
+function pthread_setaffinity_np(pid : PtrUint; cpusetsize: NativeUInt; cpuset: Pointer): NativeInt; cdecl; external;
+
+function Set_Thread_Affinity(Hnd: TThreadId; CPU: integer): Integer;
+const
+    cpu_SetSize = SizeOf(QWord); // 8 bytes, 64 cores max -- to match the limitations of the Windows version
+var
+    cpu_set : QWord;
+    Op_Result : longint;
 begin
-
-    Numproperties := NumPropsThisClass;
-    CountProperties;   // Get inherited property count
-    AllocatePropertyArrays;
-
-
-     // Define Property names
-    PropertyName[1] := '-------';
-
-
-     // define Property help values
-    PropertyHelp[1] := 'Use Set Command to set Solution properties.';
-
-
-    ActiveProperty := NumPropsThisClass;
-    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
+    if CPU >= 0 then
+        cpu_set := 1 shl CPU
+    else
+    begin
+        cpu_set := 0;
+        cpu_set := not cpu_set;
+    end;
+    Op_Result := pthread_setaffinity_np(Hnd, cpu_SetSize, @cpu_set);
+    if Op_Result <> 0 then raise Exception.Create('Error setting thread affinity mask');
+    Result := Op_Result;
 end;
+    {$ENDIF}
+{$ENDIF}
 
-
-// ===========================================================================================
-function TDSSSolution.NewObject(const ObjName: String): Integer;
+constructor TSolutionObj.Create(dssContext: TDSSContext; const SolutionName: String);
 begin
-    // Make a new Solution Object and add it to Solution class list
-    DSS.ActiveSolutionObj := TSolutionObj.Create(Self, ObjName);
-    // this one is different than the rest of the objects.
-    Result := AdDobjectToList(DSS.ActiveSolutionObj);
-end;
-
-// ===========================================================================================
-constructor TSolutionObj.Create(ParClass: TDSSClass; const SolutionName: String);
-// ===========================================================================================
-begin
-    inherited Create(ParClass);
-    Name := LowerCase(SolutionName);
+    inherited Create;
+    // Name := AnsiLowerCase(SolutionName);
+    DSS := dssContext;
 
     SolverOptions := 0;
 
@@ -491,7 +450,7 @@ begin
     SystemYChanged := TRUE;
     SeriesYInvalid := TRUE;
 
-    {Define default harmonic list}
+    // Define default harmonic list
     HarmonicListSize := 5;
     HarmonicList := AllocMem(SizeOf(harmonicList^[1]) * HarmonicListSize);
     HarmonicList^[1] := 1.0;
@@ -526,22 +485,27 @@ begin
     DefaultControlMode := ControlMode;
     Algorithm := NORMALSOLVE;
 
-    RandomType := GAUSSIAN;  // default to gaussian
+    RandomType := GAUSSIAN; // default to gaussian
     NumberOfTimes := 100;
     IntervalHrs := 1.0;
-
-    InitPropertyValues(0);
-
 {$IFDEF DSS_CAPI_PM}
-    ADiakoptics_Ready := FALSE;   // A-Diakoptics needs to be initialized
-    if not Assigned(DSS.ActorMA_Msg) then
-        DSS.ActorMA_Msg := TEvent.Create(NIL, TRUE, FALSE, '');
+    if not Assigned(DSS.ThreadStatusEvent) then
+        DSS.ThreadStatusEvent := TEvent.Create(NIL, TRUE, FALSE, '');
+{$ENDIF}
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+    ADiakoptics := False;
+    ADiak_Init := False;
+    ADiak_PCInj := False;
 
-    LockNodeV := SyncObjs.TCriticalSection.Create;
+    Node_dV := NIL;
+    Ic_Local := NIL;
+    AD_IBus := NIL;
+    AD_ISrcIdx := NIL;
+    ADiakoptics_Ready := FALSE; // A-Diakoptics needs to be initialized
+    LockNodeV := SyncObjs.TCriticalSection.Create9);
 {$ENDIF}
 end;
 
-// ===========================================================================================
 destructor TSolutionObj.Destroy;
 begin
     Reallocmem(AuxCurrents, 0);
@@ -557,63 +521,49 @@ begin
     if hYseries <> 0 then
         DeleteSparseSet(hYseries);
 
-//      SetLogFile ('c:\\temp\\KLU_Log.txt', 0);
-
     Reallocmem(HarmonicList, 0);
 {$IFDEF DSS_CAPI_PM}    
     // Sends a message to the working actor
     with DSS do 
     begin
-        ActorMA_Msg.SetEvent();
+        // ThreadStatusEvent.SetEvent();
         if ActorThread <> NIL then
         begin
-            ActorThread.Send_Message(EXIT_ACTOR);
+            SolutionAbort := True;
+            ActorThread.Send_Message(TActorMessage.EXIT_ACTOR);
             ActorThread.WaitFor();
             ActorThread.Free();
             ActorThread := nil;
         end;
-        ActorMA_Msg.Free;
-        ActorMA_Msg := NIL;
+        ThreadStatusEvent.Free;
+        ThreadStatusEvent := NIL;
     end;
+{$ENDIF}
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
     LockNodeV.Free;
 {$ENDIF}
 
     inherited Destroy;
 end;
 
-
-// ===========================================================================================
-function TDSSSolution.Edit: Integer;
-
-begin
-    Result := 0;
-
-    DSS.ActiveSolutionObj := DSS.ActiveCircuit.Solution;
-
-    with DSS.ActiveSolutionObj do
-    begin
-
-       // This is all we do here now...
-        Solve;
-
-    end;  {WITH}
-end;
-
-// ===========================================================================================
 procedure TSolutionObj.Solve;
-
+{$IFDEF DSS_CAPI_PM}
+var
+    PMParent: TDSSContext;
 begin
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
     DSS.ActiveCircuit.Issolved := FALSE;
     DSS.SolutionWasAttempted := TRUE;
 
     InitProgressForm; // initialize Progress Form;
 
-{Check of some special conditions that must be met before executing solutions}
-
+    // Check of some special conditions that must be met before executing solutions
     if DSS.ActiveCircuit.EmergMinVolts >= DSS.ActiveCircuit.NormalMinVolts then
     begin
-        DoSimpleMsg('Error: Emergency Min Voltage Must Be Less Than Normal Min Voltage!' +
-            CRLF + 'Solution Not Executed.', 480);
+        DoSimpleMsg(DSS, _('Error: Emergency Min Voltage Must Be Less Than Normal Min Voltage! Solution Not Executed.'), 480);
         Exit;
     end;
 
@@ -625,10 +575,9 @@ begin
         Exit;
     end;
     try
-{Main solution Algorithm dispatcher}
+        // Main solution Algorithm dispatcher
         with DSS.ActiveCircuit do
         begin
-
             case Year of
                 0:
                     DefaultGrowthFactor := 1.0;    // RCD 8-17-00
@@ -639,141 +588,131 @@ begin
 {$IFDEF DLL_ENGINE}
         Fire_InitControls;
 {$ENDIF}
-    {CheckFaultStatus;  ???? needed here??}
-     {$IFDEF MSWINDOWS}
-        QueryPerformanceCounter(GStartTime);
+        // CheckFaultStatus;  ???? needed here??
+
+{$IFDEF DSS_CAPI_PM}
+        // If we won't run in parallel and don't have a thread already,
+        // don't use a new thread
+        if (not PMParent.Parallel_enabled) and (DSS.ActorThread = NIL) then
+        begin
 {$ENDIF}
-{$IFNDEF DSS_CAPI_PM}
-        case Dynavars.SolutionMode of
-            TSolveMode.SNAPSHOT:
-                SolveSnap;
-            TSolveMode.YEARLYMODE:
-                SolveYearly;
-            TSolveMode.DAILYMODE:
-                SolveDaily;
-            TSolveMode.DUTYCYCLE:
-                SolveDuty;
-            TSolveMode.DYNAMICMODE:
-                SolveDynamic;
-            TSolveMode.MONTECARLO1:
-                SolveMonte1;
-            TSolveMode.MONTECARLO2:
-                SolveMonte2;
-            TSolveMode.MONTECARLO3:
-                SolveMonte3;
-            TSolveMode.PEAKDAY:
-                SolvePeakDay;
-            TSolveMode.LOADDURATION1:
-                SolveLD1;
-            TSolveMode.LOADDURATION2:
-                SolveLD2;
-            TSolveMode.DIRECT:
-                SolveDirect;
-            TSolveMode.MONTEFAULT:
-                SolveMonteFault;  // Monte Carlo Fault Cases
-            TSolveMode.FAULTSTUDY:
-                SolveFaultStudy;
-            TSolveMode.AUTOADDFLAG:
-                DSS.ActiveCircuit.AutoAddObj.Solve;
-            TSolveMode.HARMONICMODE:
-                SolveHarmonic;
-            TSolveMode.GENERALTIME:
-                SolveGeneralTime;
-            TSolveMode.HARMONICMODET:
-                SolveHarmonicT;  //Declares the Hsequential-time harmonics
-        else
-            DoSimpleMsg('Unknown solution mode.', 481);
+            {$IFDEF WINDOWS}
+            QueryPerformanceCounter(GStartTime);
+            {$ELSE}
+            GStartTime := GetTickCount64;
+            {$ENDIF}
+            case Dynavars.SolutionMode of
+                TSolveMode.SNAPSHOT:
+                    SolveSnap;
+                TSolveMode.YEARLYMODE:
+                    SolveYearly;
+                TSolveMode.DAILYMODE:
+                    SolveDaily;
+                TSolveMode.DUTYCYCLE:
+                    SolveDuty;
+                TSolveMode.DYNAMICMODE:
+                    SolveDynamic;
+                TSolveMode.MONTECARLO1:
+                    SolveMonte1;
+                TSolveMode.MONTECARLO2:
+                    SolveMonte2;
+                TSolveMode.MONTECARLO3:
+                    SolveMonte3;
+                TSolveMode.PEAKDAY:
+                    SolvePeakDay;
+                TSolveMode.LOADDURATION1:
+                    SolveLD1;
+                TSolveMode.LOADDURATION2:
+                    SolveLD2;
+                TSolveMode.DIRECT:
+                    SolveDirect;
+                TSolveMode.MONTEFAULT:
+                    SolveMonteFault;  // Monte Carlo Fault Cases
+                TSolveMode.FAULTSTUDY:
+                    SolveFaultStudy;
+                TSolveMode.AUTOADDFLAG:
+                    DSS.ActiveCircuit.AutoAddObj.Solve;
+                TSolveMode.HARMONICMODE:
+                    SolveHarmonic;
+                TSolveMode.GENERALTIME:
+                    SolveGeneralTime;
+                TSolveMode.HARMONICMODET:
+                    SolveHarmonicT;  //Declares the Hsequential-time harmonics
+            else
+                DoSimpleMsg(DSS, _('Unknown solution mode.'), 481);
+            end;
+            {$IFDEF WINDOWS}
+            QueryPerformanceCounter(GEndTime);
+            {$ELSE}
+            GEndTime := GetTickCount64;
+            {$ENDIF}
+            Total_Solve_Time_Elapsed := ((GEndTime - GStartTime) / CPU_Freq) * 1000000;
+            Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
+            Exit;
+{$IFDEF DSS_CAPI_PM}
         end;
-    {$IFDEF MSWINDOWS}
-        QueryPerformanceCounter(GEndTime);
-    {$ENDIF}
-         Total_Solve_Time_Elapsed := ((GEndTime - GStartTime) / CPU_Freq) * 1000000;
-         Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
-{$ELSE} // DSS_CAPI_PM
         // Creates the actor again in case of being terminated due to an error before
         if (DSS.ActorThread = NIL) or DSS.ActorThread.Terminated then
         begin
-            if DSS.ActorThread.Terminated then
+            if (DSS.ActorThread <> NIL) and DSS.ActorThread.Terminated then
                 DSS.ActorThread.Free;
 
-            New_Actor(DSS);
+            DSS.ActorThread := TSolver.Create(DSS, True, DSS.CPU, DSS.ThreadStatusEvent);
+            // DSS.ActorThread.Priority := tpTimeCritical;
+            DSS.ActorStatus := TActorStatus.Busy;
+            DSS.ActorThread.Start();
         end;
-        {CheckFaultStatus;  ???? needed here??}
+        // CheckFaultStatus;  ???? needed here??
 
         // Resets the event for receiving messages from the active actor
         // Updates the status of the Actor in the GUI
-        DSS.ActorStatus := TActorStatus.Busy;
-        DSS.ActorMA_Msg.ResetEvent;
-        {$IFNDEF FPC}
-        if not DSS.ADiakoptics then
-        begin
-            if not IsDLL then
-                ScriptEd.UpdateSummaryForm('1');
-        end
-        else
-        begin
-            if DSS.IsPrime then
-                if not IsDLL then
-                    ScriptEd.UpdateSummaryForm('1');
-        end;
-        {$ENDIF}
         
-        {$IFDEF MSWINDOWS}
-        QueryPerformanceCounter(GEndTime);
+        // DSS.ActorStatus := TActorStatus.Busy;
+        // DSS.ThreadStatusEvent.SetEvent();
+
+        {$IFDEF WINDOWS}
+        QueryPerformanceCounter(GStartTime);
+        {$ELSE}
+        GStartTime := GetTickCount64;
         {$ENDIF}
-        Total_Solve_Time_Elapsed := ((GEndTime - GStartTime) / CPU_Freq) * 1000000;
-        Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
 
         // Sends message to start the Simulation
-        DSS.ActorThread.Send_Message(SIMULATE);
+        DSS.ActorThread.Send_Message(TActorMessage.SIMULATE);
+
         // If the parallel mode is not active, Waits until the actor finishes
-        if not DSS.Parallel_enabled then
-        begin
+        if not DSS.GetPrime().Parallel_enabled then
             Wait4Actors(DSS, ALL_ACTORS);
-            {$IFNDEF FPC}
-            if not DSS.ADiakoptics then
-            begin
-                if not IsDLL then
-                    ScriptEd.UpdateSummaryForm('1');
-            end
-            else
-            begin
-                if DSS.IsPrime then
-                    if not IsDLL then
-                        ScriptEd.UpdateSummaryForm('1');
-            end;
-            {$ENDIF}
-        end;
 {$ENDIF} // DSS_CAPI_PM
-
-
     except
-
         On E: Exception do
         begin
-            DoSimpleMsg('Error Encountered in Solve: ' + E.Message, 482);
+            DoSimpleMsg(DSS, 'Error Encountered in Solve: %s', [E.Message], 482);
             DSS.SolutionAbort := TRUE;
         end;
 
     end;
-
 end;
 
-// ===========================================================================================
 function TSolutionObj.Converged: Boolean;
-
 var
     i: Integer;
     VMag: Double;
 begin
-
-// base convergence on voltage magnitude
+    // base convergence on voltage magnitude
     MaxError := 0.0;
     for i := 1 to DSS.ActiveCircuit.NumNodes do
     begin
-        VMag := Cabs(NodeV^[i]);
-
-        { If base specified, use it; otherwise go on present magnitude  }
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        if not ADiakoptics or (DSS.Parent = NIL) then
+{$ENDIF}
+            VMag := Cabs(NodeV^[i])
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        else
+            VMag := Cabs(VoltInActor1(i));
+{$ELSE}
+        ;
+{$ENDIF}
+        // If base specified, use it; otherwise go on present magnitude
         if NodeVbase^[i] > 0.0 then
             ErrorSaved^[i] := Abs(Vmag - VmagSaved^[i]) / NodeVbase^[i]
         else
@@ -790,24 +729,16 @@ begin
     else
         Result := FALSE;
 
-
     ConvergedFlag := Result;
 end;
 
-
-// ===========================================================================================
 procedure TSolutionObj.GetSourceInjCurrents;
-
 // Add in the contributions of all source type elements to the global solution vector InjCurr
-
 var
     pElem: TDSSCktElement;
-
 begin
-
     with DSS.ActiveCircuit do
     begin
-
         pElem := Sources.First;
         while pElem <> NIL do
         begin
@@ -817,14 +748,10 @@ begin
         end;
 
     end;
-
 end;
 
-// ===========================================================================================
 procedure TSolutionObj.SetGeneratorDispRef;
-
 // Set the global generator dispatch reference
-
 begin
     with DSS.ActiveCircuit do
         case Dynavars.SolutionMode of
@@ -866,39 +793,33 @@ begin
             TSolveMode.HARMONICMODET:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
         else
-            DoSimpleMsg('Unknown solution mode.', 483);
+            DoSimpleMsg(DSS, _('Unknown solution mode.'), 483);
         end;
 end;
-// ===========================================================================================
-procedure TSolutionObj.SetGeneratordQdV;
 
+procedure TSolutionObj.SetGeneratordQdV;
 var
     pGen: TGeneratorObj;
     Did_One: Boolean;
     GenDispSave: Double;
-
 begin
     Did_One := FALSE;
 
-     // Save the generator dispatch level and set on high enough to
-     // turn all generators on
+    // Save the generator dispatch level and set on high enough to
+    // turn all generators on
     GenDispSave := DSS.ActiveCircuit.GeneratorDispatchReference;
     DSS.ActiveCircuit.GeneratorDispatchReference := 1000.0;
 
     with DSS.ActiveCircuit do
     begin
-
         pGen := Generators.First;
         while pGen <> NIL do
         begin
-
             if pGen.Enabled then
             begin
-
               // for PV generator models only ...
                 if pGen.genModel = 3 then
                 begin
-
                     pGen.InitDQDVCalc;
 
                    // solve at base var setting
@@ -935,7 +856,7 @@ begin
 
     end;
 
-     // Restore generator dispatch reference
+    // Restore generator dispatch reference
     DSS.ActiveCircuit.GeneratorDispatchReference := GenDispSave;
     try
         if Did_One        // Reset Initial Solution
@@ -944,33 +865,27 @@ begin
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg('From SetGenerator DQDV, SolveZeroLoadSnapShot: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7071);
+            DoSimpleMsg(DSS, 'From SetGenerator DQDV, SolveZeroLoadSnapShot: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7071);
             raise ESolveError.Create('Aborting');
         end;
     end;
-
 end;
 
-// ===========================================================================================
 procedure TSolutionObj.DoNormalSolution;
-
-{ Normal fixed-point solution
-
-   Vn+1 = [Y]-1 Injcurr
-
-   Where Injcurr includes only PC elements  (loads, generators, etc.)
-   i.e., the shunt elements.
-
-   Injcurr are the current injected INTO the NODE
-        (need to reverse current direction for loads)
-}
-
+// Normal fixed-point solution
+//
+//   Vn+1 = [Y]-1 Injcurr
+//
+//   Where Injcurr includes only PC elements  (loads, generators, etc.)
+//   i.e., the shunt elements.
+//
+//   Injcurr are the current injected INTO the NODE
+//        (need to reverse current direction for loads)
 begin
-
 
     Iteration := 0;
 
- {**** Main iteration loop ****}
+    // **** Main iteration loop ****
     with DSS.ActiveCircuit do
         repeat
             Inc(Iteration);
@@ -978,55 +893,57 @@ begin
             if LogEvents then
                 LogThisEvent(DSS, 'Solution Iteration ' + IntToStr(Iteration));
 
-    { Get injcurrents for all PC devices  }
-            ZeroInjCurr;
-            GetSourceInjCurrents;  // sources
-            GetPCInjCurr;  // Get the injection currents from all the power conversion devices and feeders
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+            if (not ADiakoptics) or (DSS.Parent <> NIL) then // Normal simulation
+            begin // In A-Diakoptics, all other actors do normal solution
+{$ENDIF}
+                // Get injcurrents for all PC devices
+                ZeroInjCurr;
+                GetSourceInjCurrents;  // sources
+                GetPCInjCurr;  // Get the injection currents from all the power conversion devices and feeders
 
-       // The above call could change the primitive Y matrix, so have to check
-            if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
+                // The above call could change the primitive Y matrix, so have to check
+                if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
+                begin
+                    BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
+                end;
+                if UseAuxCurrents then
+                    AddInAuxCurrents(NORMALSOLVE);
+
+                // Solve for voltages -- Note: NodeV[0] = 0 + j0 always
+                if LogEvents then
+                    LogThisEvent(DSS, 'Solve Sparse Set DoNormalSolution ...');
+                SolveSystem(NodeV);
+                LoadsNeedUpdating := FALSE;
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+            end
+            else
             begin
-                BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
+                ADiak_PCInj := TRUE;
+                Solve_Diakoptics(DSS); // A-Diakoptics
             end;
-            if UseAuxCurrents then
-                AddInAuxCurrents(NORMALSOLVE);
-
-      // Solve for voltages                      {Note:NodeV[0] = 0 + j0 always}
-            if LogEvents then
-                LogThisEvent(DSS, 'Solve Sparse Set DoNormalSolution ...');
-            SolveSystem(NodeV);
-            LoadsNeedUpdating := FALSE;
-
+{$ENDIF}
         until (Converged and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
-
 end;
 
-
-// ===========================================================================================
 procedure TSolutionObj.DoNewtonSolution;
-
-{ Newton Iteration
-
-   Vn+1 =  Vn - [Y]-1 Termcurr
-
-   Where Termcurr includes currents from all elements and we are
-   attempting to get the  currents to sum to zero at all nodes.
-
-   Termcurr is the sum of all currents going INTO THE TERMINALS of
-   the elements.
-
-   For PD Elements, Termcurr = Yprim*V
-
-   For Loads, Termcurr = (Sload/V)*
-   For Generators, Termcurr = -(Sgen/V)*
-
-}
-
+// Newton Iteration
+//
+//   Vn+1 =  Vn - [Y]-1 Termcurr
+//
+//   Where Termcurr includes currents from all elements and we are
+//   attempting to get the  currents to sum to zero at all nodes.
+//
+//   Termcurr is the sum of all currents going INTO THE TERMINALS of
+//   the elements.
+//
+//   For PD Elements, Termcurr = Yprim*V
+//
+//   For Loads, Termcurr = (Sload/V)*
+//   For Generators, Termcurr = -(Sgen/V)*
 var
     i: Integer;
-
 begin
-
     with DSS.ActiveCircuit do
     begin
         ReAllocMem(dV, SizeOf(dV^[1]) * (NumNodes + 1)); // Make sure this is always big enough
@@ -1039,12 +956,12 @@ begin
             Inc(Iteration);
             Inc(SolutionCount);    // SumAllCurrents Uses ITerminal  So must force a recalc
 
-        // Get sum of currents at all nodes for all  devices
+            // Get sum of currents at all nodes for all  devices
             ZeroInjCurr;
             SumAllCurrents;
 
-           // Call to current calc could change YPrim for some devices
-            if SystemYChanged then
+            // Call to current calc could change YPrim for some devices
+            if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
             begin
                 BuildYMatrix(DSS, WHOLEMATRIX, FALSE);   // Does not realloc V, I
             end;
@@ -1052,12 +969,12 @@ begin
             if UseAuxCurrents then
                 AddInAuxCurrents(NEWTONSOLVE);
 
-        // Solve for change in voltages
+            // Solve for change in voltages
             SolveSystem(dV);
 
             LoadsNeedUpdating := FALSE;
 
-         // Compute new guess at voltages
+            // Compute new guess at voltages
             for i := 1 to NumNodes do     // 0 node is always 0
                 with NodeV^[i] do
                 begin
@@ -1069,13 +986,8 @@ begin
     end;
 end;
 
-
-// ===========================================================================================
 procedure TSolutionObj.DoPFLOWsolution;
-
-
 begin
-
     Inc(SolutionCount);    //Unique number for this solution
 
     if VoltageBaseChanged then
@@ -1083,16 +995,15 @@ begin
 
     if not SolutionInitialized then
     begin
-
         if DSS.ActiveCircuit.LogEvents then
             LogThisEvent(DSS, 'Initializing Solution');
         try
-        //SolveZeroLoadSnapShot;
+            //SolveZeroLoadSnapShot;
             SolveYDirect;  // 8-14-06 This should give a better answer than zero load snapshot
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg('From DoPFLOWsolution.SolveYDirect: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7072);
+                DoSimpleMsg(DSS, 'From DoPFLOWsolution.SolveYDirect: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7072);
                 raise ESolveError.Create('Aborting');
             end;
         end;
@@ -1104,15 +1015,14 @@ begin
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg('From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7073);
+                DoSimpleMsg(DSS, 'From DoPFLOWsolution.SetGeneratordQdV: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7073);
                 raise ESolveError.Create('Aborting');
             end;
         end;
 
-        { The above resets the active sparse set to hY }
+        // The above resets the active sparse set to hY
         SolutionInitialized := TRUE;
     end;
-
 
     case Algorithm of
         NORMALSOLVE:
@@ -1123,14 +1033,10 @@ begin
 
     DSS.ActiveCircuit.Issolved := ConvergedFlag;
     LastSolutionWasDirect := FALSE;
-
 end;
 
-// ===========================================================================================
 function TSolutionObj.SolveZeroLoadSnapShot: Integer;
-
 // Solve without load for initialization purposes;
-
 begin
     Result := 0;
 
@@ -1143,7 +1049,7 @@ begin
     ZeroInjCurr;   // Side Effect: Allocates InjCurr
     GetSourceInjCurrents;    // Vsource, Isource and VCCS only
 
-    {Make the series Y matrix the active matrix}
+    // Make the series Y matrix the active matrix
     if hYseries = 0 then
         raise EEsolv32Problem.Create('Series Y matrix not built yet in SolveZeroLoadSnapshot.');
     hY := hYseries;
@@ -1153,22 +1059,17 @@ begin
 
     SolveSystem(NodeV);  // also sets voltages in radial part of the circuit if radial solution
 
-    { Reset the main system Y as the solution matrix}
+    // Reset the main system Y as the solution matrix
     if (hYsystem > 0) and not DSS.SolutionAbort then
         hY := hYsystem;
 end;
 
-// ===========================================================================================
 procedure TSolutionObj.SetVoltageBases;
-
 // Set voltage bases using voltage at first node (phase) of a bus
-
 var
     i: Integer;
     bZoneCalc, bZoneLock: Boolean;
-
 begin
-
     try
     // don't allow the meter zones to auto-build in this load flow solution, because the
     // voltage bases are not available yet
@@ -1183,7 +1084,7 @@ begin
         with DSS.ActiveCircuit do
             for i := 1 to NumBuses do
                 with Buses^[i] do
-                    kVBase := NearestBasekV(DSS, Cabs(NodeV^[GetRef(1)]) * 0.001732) / SQRT3;  // l-n base kV
+                    kVBase := NearestBasekV(DSS, Cabs(NodeV^[RefNo[1]]) * 0.001732) / SQRT3;  // l-n base kV
 
         InitializeNodeVbase(DSS);      // for convergence test
 
@@ -1197,61 +1098,78 @@ begin
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg('From SetVoltageBases.SolveZeroLoadSnapShot: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7075);
+            DoSimpleMsg(DSS, 'From SetVoltageBases.SolveZeroLoadSnapShot: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7075);
             raise ESolveError.Create('Aborting');
         end;
     end;
-
 end;
 
 procedure TSolutionObj.SnapShotInit;
-
 begin
-
     SetGeneratorDispRef;
     ControlIteration := 0;
     ControlActionsDone := FALSE;
     MostIterationsDone := 0;
     LoadsNeedUpdating := TRUE;  // Force the loads to update at least once
-
 end;
 
 procedure TSolutionObj.CheckControls;
-
 begin
-    if ControlIteration < MaxControlIterations then
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+var
+    i: Integer;
+begin
+    if not ADiakoptics or (DSS.Parent <> NIL) then
     begin
-        if ConvergedFlag then
+{$ENDIF}
+        if ControlIteration < MaxControlIterations then
+        begin
+            if ConvergedFlag then
+            begin
+                if DSS.ActiveCircuit.LogEvents then
+                    LogThisEvent(DSS, 'Control Iteration ' + IntToStr(ControlIteration));
+                Sample_DoControlActions;
+                Check_Fault_Status;
+            end
+            else
+                ControlActionsDone := TRUE; // Stop solution process if failure to converge
+        end;
+
+        if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
+        begin
+            BuildYMatrix(DSS, WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
+        end;
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+    end
+    else
+    begin
+        if ControlIteration < MaxControlIterations then
         begin
             if DSS.ActiveCircuit.LogEvents then
                 LogThisEvent(DSS, 'Control Iteration ' + IntToStr(ControlIteration));
-            Sample_DoControlActions;
-            Check_Fault_Status;
-        end
-        else
-            ControlActionsDone := TRUE; // Stop solution process if failure to converge
-    end;
 
-    if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
-    begin
-        BuildYMatrix(DSS, WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
+            SendCmd2Actors(DO_CTRL_ACTIONS);
+            // Checks if there are pending ctrl actions at the actors
+            ControlActionsDone := TRUE;
+            for i := 2 to DSS.NumOfActors do
+                ControlActionsDone := ControlActionsDone and DSS.Children[i - 1].ActiveCircuit.Solution.ControlActionsDone;
+        end;
     end;
+{$ENDIF}
 end;
 
-// ===========================================================================================
 function TSolutionObj.SolveSnap: Integer;  // solve for now once
-
 var
     TotalIterations: Integer;
-
 begin
     SnapShotInit;
     TotalIterations := 0;
    {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(SolveStartTime);
-{$ENDIF}
+   {$ELSE}
+    SolveStartTime := GetTickCount64;
+   {$ENDIF}
     repeat
-
         Inc(ControlIteration);
 
         Result := SolveCircuit;  // Do circuit solution w/o checking controls
@@ -1271,67 +1189,84 @@ begin
 
     if not ControlActionsDone and (ControlIteration >= MaxControlIterations) then
     begin
-        DoSimpleMsg('Warning Max Control Iterations Exceeded. ' + CRLF + 'Tip: Show Eventlog to debug control settings.', 485);
+        DoSimpleMsg(DSS, _('Warning Max Control Iterations Exceeded.') + CRLF + _('Tip: Show Eventlog to debug control settings.'), 485);
         DSS.SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
     end;
 
     if DSS.ActiveCircuit.LogEvents then
         LogThisEvent(DSS, 'Solution Done');
 
-{$IFDEF DLL_ENGINE}
+    {$IFDEF DLL_ENGINE}
     Fire_StepControls;
-{$ENDIF}
-{$IFDEF MSWINDOWS}
+    {$ENDIF}
+
+    {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(SolveEndTime);
-{$ENDIF}
+    {$ELSE}
+    SolveEndTime := GetTickCount64;
+    {$ENDIF}
     Solve_Time_Elapsed := ((SolveEndtime - SolveStartTime) / CPU_Freq) * 1000000;
     Iteration := TotalIterations;  { so that it reports a more interesting number }
 
 end;
 
-// ===========================================================================================
 function TSolutionObj.SolveDirect: Integer;  // solve for now once, direct solution
-
 begin
     Result := 0;
 
     LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
-   {$IFDEF MSWINDOWS}
+    {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(SolveStartTime);
-{$ENDIF}
+    {$ELSE}
+    SolveStartTime := GetTickCount64;
+    {$ENDIF}
 
-    if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
+    Inc(SolutionCount); // Unique number for this solution
+
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+    if not ADiakoptics or (DSS.Parent <> NIL) then
     begin
-        BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
-    end;
+{$ENDIF}    
+        if SystemYChanged then
+        begin
+            BuildYMatrix(DSS, WHOLEMATRIX, TRUE); // Side Effect: Allocates V
+        end;
 
-    Inc(SolutionCount);   // Unique number for this solution
+        ZeroInjCurr;   // Side Effect: Allocates InjCurr
+        GetSourceInjCurrents;
 
-    ZeroInjCurr;   // Side Effect: Allocates InjCurr
-    GetSourceInjCurrents;
+        // Pick up PCELEMENT injections for Harmonics mode and Dynamics mode
+        // Ignore these injections for powerflow; Use only admittance in Y matrix
+        if IsDynamicModel or IsHarmonicModel then
+            GetPCInjCurr;
 
-   // Pick up PCELEMENT injections for Harmonics mode and Dynamics mode
-   // Ignore these injections for powerflow; Use only admittance in Y matrix
-    if IsDynamicModel or IsHarmonicModel then
-        GetPCInjCurr;
-
-    if SolveSystem(NodeV) = 1   // Solve with Zero injection current
-    then
+        if SolveSystem(NodeV) = 1   // Solve with Zero injection current
+        then
+        begin
+            DSS.ActiveCircuit.IsSolved := TRUE;
+            ConvergedFlag := TRUE;
+        end;
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+    end
+    else
     begin
+        ADiak_PCInj := FALSE;
+        Solve_Diakoptics(DSS); // A-Diakoptics
+
         DSS.ActiveCircuit.IsSolved := TRUE;
         ConvergedFlag := TRUE;
     end;
-
-   {$IFDEF MSWINDOWS}
-    QueryPerformanceCounter(SolveEndTime);
 {$ENDIF}
+    {$IFDEF MSWINDOWS}
+    QueryPerformanceCounter(SolveEndTime);
+    {$ELSE}
+    SolveEndTime := GetTickCount64;
+    {$ENDIF}
     Solve_Time_Elapsed := ((SolveEndtime - SolveStartTime) / CPU_Freq) * 1000000;
     Total_Time_Elapsed := Total_Time_Elapsed + Solve_Time_Elapsed;
     Iteration := 1;
     LastSolutionWasDirect := TRUE;
-
 end;
-
 
 function TSolutionObj.SolveCircuit: Integer;
 begin
@@ -1342,7 +1277,7 @@ begin
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg('From SolveSnap.SolveDirect: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7075);
+                DoSimpleMsg(DSS, 'From SolveSnap.SolveDirect: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7075);
                 raise ESolveError.Create('Aborting');
             end;
         end
@@ -1351,21 +1286,22 @@ begin
         try
             if SystemYChanged then
             begin
-                BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+                if not ADiakoptics or (DSS.Parent <> NIL) then
+{$ENDIF}
+                    BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
             end;
             DoPFLOWsolution;
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg('From SolveSnap.DoPflowSolution: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7074);
+                DoSimpleMsg(DSS, 'From SolveSnap.DoPflowSolution: %s', [CRLF + E.Message + CheckYMatrixforZeroes(DSS)], 7074);
                 raise ESolveError.Create('Aborting');
             end;
         end
     end;
-
 end;
 
-// ===========================================================================================
 procedure TSolutionObj.ZeroInjCurr;
 var
     I: Integer;
@@ -1373,14 +1309,14 @@ begin
     for i := 0 to DSS.ActiveCircuit.NumNodes do
         Currents^[i] := CZERO;
 end;
-// ===========================================================================================
+
 procedure TSolutionObj.Upload2IncMatrix;
 begin
   // Uploads the values to the incidence matrix
     IncMat.insert((ActiveIncCell[0] - 1), (ActiveIncCell[1] - 2), ActiveIncCell[2]);
     ActiveIncCell[2] := -1;
 end;
-// ===========================================================================================
+
 procedure TSolutionObj.AddLines2IncMatrix;
 var
     LineBus: String;
@@ -1424,7 +1360,7 @@ begin
         end;
     end;
 end;
-// ===========================================================================================
+
 procedure TSolutionObj.AddXfmr2IncMatrix;
 var
     LineBus: String;
@@ -1434,7 +1370,7 @@ var
     EndFlag: Boolean;
     lst: TDSSPointerList;
 begin
-// This routine adds the Transformers to the incidence matrix vectors
+    // This routine adds the Transformers to the incidence matrix vectors
     with DSS.ActiveCircuit do
     begin
         lst := DSS.ActiveCircuit.Transformers;
@@ -1447,13 +1383,13 @@ begin
                 inc(temp_counter);
                 setlength(Inc_Mat_Rows, temp_counter);
                 Inc_Mat_Rows[temp_counter - 1] := 'Transformer.' + elem.Name;
-                for TermIdx := 1 to elem.NumberOfWindings do
+                for TermIdx := 1 to elem.NumWindings do
                 begin
                     LineBus := elem.GetBus(TermIdx);
                     BusdotIdx := ansipos('.', LineBus);
                     if BusdotIdx <> 0 then
                         LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-            // Evaluates the position of the Bus in the array
+                    // Evaluates the position of the Bus in the array
                     ActiveIncCell[1] := 1;
                     EndFlag := TRUE;
                     while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
@@ -1470,7 +1406,7 @@ begin
         end;
     end;
 end;
-// ===========================================================================================
+
 procedure TSolutionObj.AddSeriesCap2IncMatrix;
 var
     CapBus: String;
@@ -1480,7 +1416,7 @@ var
     BusdotIdx: Integer;
     CapEndFlag: Boolean;
 begin
-// This rouitne adds the series capacitors to the incidence matrix vectors
+    // This routine adds the series capacitors to the incidence matrix vectors
     with DSS.ActiveCircuit do
     begin
         lst := ShuntCapacitors;
@@ -1501,7 +1437,7 @@ begin
                         BusdotIdx := ansipos('.', CapBus);
                         if BusdotIdx <> 0 then
                             CapBus := Copy(CapBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-            // Evaluates the position of the Bus in the array
+                        // Evaluates the position of the Bus in the array
                         ActiveIncCell[1] := 1;
                         CapEndFlag := TRUE;
                         while (ActiveIncCell[1] <= NumBuses) and (CapEndFlag) do
@@ -1519,7 +1455,7 @@ begin
         end;
     end;
 end;
-// ===========================================================================================
+
 procedure TSolutionObj.AddSeriesReac2IncMatrix;
 var
     RBus: String;
@@ -1529,7 +1465,7 @@ var
     BusdotIdx: Integer;
     EndFlag: Boolean;
 begin
-// This rouitne adds the series reactors to the incidence matrix vectors
+    // This routine adds the series reactors to the incidence matrix vectors
     with DSS.ActiveCircuit do
     begin
         DevClassIndex := DSS.ClassNames.Find('reactor');
@@ -1552,7 +1488,7 @@ begin
                     BusdotIdx := ansipos('.', RBus);
                     if BusdotIdx <> 0 then
                         RBus := Copy(RBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-          // Evaluates the position of the Bus in the array
+                    // Evaluates the position of the Bus in the array
                     ActiveIncCell[1] := 1;
                     EndFlag := TRUE;
                     while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
@@ -1569,12 +1505,12 @@ begin
         end;
     end;
 end;
-//*********Routine for extracting the Branch to Node incidence matrix***********
-//*     The order depends on the way the lines, xfmr, series cap and reactors  *
-//******************************************************************************
+
+// Routine for extracting the Branch to Node incidence matrix
+// The order depends on the way the lines, xfmr, series cap and reactors
 procedure TSolutionObj.Calc_Inc_Matrix;
 begin
-  // If the sparse matrix obj doesn't exists creates it, otherwise deletes the content
+    // If the sparse matrix obj doesn't exists creates it, otherwise deletes the content
     if IncMat = NIL then
         IncMat := Tsparse_matrix.Create
     else
@@ -1585,7 +1521,7 @@ begin
         begin
             temp_counter := 0;
             ActiveIncCell[0] := 1;           // Activates row 1 of the incidence matrix
-      // Now we proceed to evaluate the link branches
+            // Now we proceed to evaluate the link branches
             AddLines2IncMatrix;      // Includes the Lines
             AddXfmr2IncMatrix;       // Includes the Xfmrs
             AddSeriesCap2IncMatrix;  // Includes Series Cap
@@ -1594,10 +1530,31 @@ begin
         end;
 end;
 
-{*******************************************************************************
-* This function delivers the Row index connected to the Column at the input    *
-*                   Inside the B2N incidence Matrix                            *
-********************************************************************************}
+// This function returns the index of bus 1 with the Incidence
+// matrix for the given PDE
+function TSolutionObj.get_PDE_Bus1_Location(myPDE: String): Integer;
+var
+    i,
+    j: Integer;
+    myBUS: String;
+begin
+    with DSS.ActiveCircuit do
+    begin
+        SetElementActive(myPDE);
+        myBUS := ActiveCktElement.GetBus(2);
+        j := ansipos('.', myBus);
+        if j <> 0 then
+            myBUS := copy(myBUS, 0, j - 1);
+        for i := 0 to High(Inc_Mat_Cols) do
+            if Inc_Mat_Cols[i] = myBUS then
+                break;
+        Result := i;
+    end;
+
+end;
+
+// This function delivers the Row index connected to the Column at the input
+// Inside the B2N incidence Matrix
 function TSolutionObj.get_IncMatrix_Row(Col: Integer): Integer;
 var
     Tflag: Boolean;
@@ -1615,10 +1572,8 @@ begin
     end;
 end;
 
-{*******************************************************************************
-* This function delivers the Column index connected to the Row at the input    *
-*                   Inside the B2N incidence Matrix                            *
-********************************************************************************}
+// This function delivers the Column index connected to the Row at the input
+// Inside the B2N incidence Matrix
 function TSolutionObj.get_IncMatrix_Col(Row: Integer): Integer;
 var
     Tflag: Boolean;
@@ -1642,11 +1597,11 @@ begin
     end;
 end;
 
-//*********Routine for extracting the Branch to Node incidence matrix***********
-//*     Organized hierarchically. This routine also calculates the             *
-//*     Levels vector for defining the proximity of the bus to the circuit's   *
-//*     Backbone. To do it, this routine uses the CktTree class                *
-//******************************************************************************
+// Routine for extracting the Branch to Node incidence matrix
+//
+// Organized hierarchically. This routine also calculates the
+// Levels vector for defining the proximity of the bus to the circuit's
+// Backbone. To do it, this routine uses the CktTree class
 procedure TSolutionObj.Calc_Inc_Matrix_Org;
 
 var
@@ -1668,15 +1623,15 @@ var
     val,                                          // Local Shared variable
     nPDE: Integer;                           // PDElements index
 begin
+    ZeroLevel := 0;
     try
         if DSS.ActiveCircuit <> NIL then
         begin
-//      TreeNm := FileRoot + 'TopoTree_Cols.csv';   // For debuging
             topo := DSS.ActiveCircuit.GetTopology;
             nLevels := 0;
             nPDE := 0;
             setlength(Inc_Mat_Cols, 0);
-      //Init the spaser matrix
+            //Init the sparse matrix
             if IncMat = NIL then
                 IncMat := Tsparse_matrix.Create
             else
@@ -1689,8 +1644,8 @@ begin
                 while Assigned(PDElem) do
                 begin
                     nLevels := topo.Level;
-                    PDE_Name := PDElem.ParentClass.Name + '.' + PDElem.Name;
-//******************Gets the buses to which the PDE is connected****************
+                    PDE_Name := PDElem.FullName;
+                    // Gets the buses to which the PDE is connected
                     with DSS.ActiveCircuit do
                     begin
                         DSS.ActiveCircuit.SetElementActive(PDE_Name);
@@ -1743,10 +1698,8 @@ begin
                     PDElem := topo.GoForward;
                 end;
             end;
-{*******************************************************************************
-*   Now the levels array needs to be reprocessed to get the 0 level buses,     *
-*   they are on a continuous path from the feeder head to the feeder end       *
-********************************************************************************}
+            // Now the levels array needs to be reprocessed to get the 0 level buses,
+            // they are on a continuous path from the feeder head to the feeder end
             BusdotIdx := MaxIntValue(Inc_Mat_levels);
             for i := 0 to length(Inc_Mat_levels) do
                 if Inc_Mat_levels[i] = BusdotIdx then
@@ -1760,7 +1713,7 @@ begin
                 end;
                 Inc_Mat_levels[ZeroLevel] := 0;
             end;
-//**********Normalize the branches of the level between zero level buses********
+            // **********Normalize the branches of the level between zero level buses********
             BusdotIdx := 0;
             j := 0;
             ZeroLevel := 0;
@@ -1784,7 +1737,7 @@ begin
                     Temp_Array[High(Temp_Array)] := Inc_Mat_levels[i];
                 end;
             end;
-//************Verifies is something else was missing at the end*****************
+            // ************Verifies if something else was missing at the end*****************
             if (ZeroLevel < (length(Inc_Mat_levels) - 1)) then
             begin
                 BusdotIdx := 0;                                                // Counter for defining the level
@@ -1818,10 +1771,8 @@ begin
     end;
 end;
 
-{*******************************************************************************
-*   This routine evaluates if the current location is the best or if its       *
-*   Necessary to move back one PDE just to cover a wider area                  *
-********************************************************************************}
+// This routine evaluates if the current location is the best or if its
+// Necessary to move back one PDE just to cover a wider area
 function TSolutionObj.CheckLocationIdx(Idx: Integer): Integer;
 begin
     if Inc_Mat_Levels[Idx - 1] = 0 then
@@ -1829,15 +1780,12 @@ begin
     else
         Result := idx;
 end;
-// ===========================================================================================
+
 procedure TSolutionObj.GetPCInjCurr;
+// Get inj currents from all enabled PC devices 
 var
     pElem: TDSSCktElement;
-
-{ Get inj currents from all enabled PC devices }
-
 begin
-
     with DSS.ActiveCircuit do
     begin
         pElem := PCElements.First;
@@ -1849,37 +1797,28 @@ begin
             pElem := PCElements.Next;
         end;
     end;
-
 end;
 
-procedure TSolutionObj.DumpProperties(F: TFileStream; complete: Boolean);
-
+procedure TSolutionObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
 var
     i, j: Integer;
 
-   // for dumping the matrix in compressed columns
+    // for dumping the matrix in compressed columns
     p: Longword;
     hY: NativeUInt;
     nBus, nNZ: Longword;
     ColPtr, RowIdx: array of Longword;
     cVals: array of Complex;
 begin
-
     FSWriteln(F, '! OPTIONS');
 
-  // Inherited DumpProperties(F,Complete);
+    // Inherited DumpProperties(F,Complete);
 
     FSWriteln(F, '! NumNodes = ', IntToStr(DSS.ActiveCircuit.NumNodes));
 
-    {WITH ParentClass Do
-     FOR i := 1 to NumProperties Do
-     Begin
-        FSWriteln(F,'Set ',PropertyName^[i],'=',PropertyValue^[i]);
-     End;
-     }
-    FSWriteln(F, 'Set Mode=', GetSolutionModeID(DSS));
-    FSWriteln(F, 'Set ControlMode=', GetControlModeID(DSS));
-    FSWriteln(F, 'Set Random=', GetRandomModeID(DSS));
+    FSWriteln(F, 'Set Mode=', DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)));
+    FSWriteln(F, 'Set ControlMode=', DSS.ControlModeEnum.OrdinalToString(DSS.ActiveCircuit.Solution.Controlmode));
+    FSWriteln(F, 'Set Random=', DSS.RandomModeEnum.OrdinalToString(DSS.ActiveCircuit.Solution.RandomType));
     FSWriteln(F, 'Set hour=', IntToStr(DynaVars.intHour));
     FSWriteln(F, 'Set sec=', Format('%-g', [DynaVars.t]));
     FSWriteln(F, 'Set year=', IntToStr(Year));
@@ -1891,7 +1830,7 @@ begin
     FSWriteln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
     FSWriteln(F, 'Set maxiterations=', IntToStr(MaxIterations));
     FSWriteln(F, 'Set miniterations=', IntToStr(MinIterations));
-    FSWriteln(F, 'Set loadmodel=', GetLoadModel(DSS));
+    FSWriteln(F, 'Set loadmodel=', DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.solution.LoadModel));
 
     FSWriteln(F, 'Set loadmult=', Format('%-g', [DSS.ActiveCircuit.LoadMultiplier]));
     FSWriteln(F, 'Set Normvminpu=', Format('%-g', [DSS.ActiveCircuit.NormalMinVolts]));
@@ -1932,12 +1871,7 @@ begin
             inc(i);
         end;
     FSWriteln(F, ')');
-    case Algorithm of
-        NORMALSOLVE:
-            FSWriteln(F, 'Set algorithm=normal');
-        NEWTONSOLVE:
-            FSWriteln(F, 'Set algorithm=newton');
-    end;
+    FSWriteln(F, 'Set algorithm=' + DSS.SolveAlgEnum.OrdinalToString(Algorithm));
     FSWrite(F, 'Set Trapezoidal=');
     FSWriteln(F, StrYorN(DSS.ActiveCircuit.TrapezoidalIntegration));
     FSWriteln(F, 'Set genmult=', Format('%-g', [DSS.ActiveCircuit.GenMultiplier]));
@@ -1957,10 +1891,9 @@ begin
     if Complete then
         with DSS.ActiveCircuit do
         begin
-
             hY := Solution.hY;
 
-      // get the compressed columns out of KLU
+            // get the compressed columns out of KLU
             FactorSparseMatrix(hY); // no extra work if already done
             GetNNZ(hY, @nNZ);
             GetSize(hY, @nBus);
@@ -1974,7 +1907,7 @@ begin
             FSWriteln(F, '  Row  Col               G               B');
             FSWriteln(F);
 
-      // traverse the compressed column format
+            // traverse the compressed column format
             for j := 0 to nBus - 1 do
             begin /// the zero-based column
                 for p := ColPtr[j] to ColPtr[j + 1] - 1 do
@@ -1987,11 +1920,14 @@ begin
 end;
 
 function TSolutionObj.VDiff(i, j: Integer): Complex;
-
 begin
-    Result := Csub(NodeV^[i], NodeV^[j]);  // V1-V2
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+    if ADiakoptics and (DSS.Parent <> NIL) then
+        Result := VoltInActor1(i) - VoltInActor1(j)  // V1-V2
+    else
+{$ENDIF}    
+        Result := NodeV^[i] - NodeV^[j];  // V1-V2
 end;
-
 
 procedure TSolutionObj.WriteConvergenceReport(const Fname: String);
 var
@@ -2000,7 +1936,7 @@ var
     sout: String;
 begin
     try
-        F := TFileStream.Create(Fname, fmCreate);
+        F := TBufferedFileStream.Create(Fname, fmCreate);
 
         FSWriteln(F);
         FSWriteln(F, '-------------------');
@@ -2030,12 +1966,9 @@ begin
         FireOffEditor(DSS, Fname);
 
     end;
-
 end;
 
-// =========================================================================================== =
 procedure TSolutionObj.SumAllCurrents;
-
 var
     pelem: TDSSCktElement;
 
@@ -2051,7 +1984,6 @@ begin
     end;
 end;
 
-// =========================================================================================== =
 procedure TSolutionObj.DoControlActions;
 var
     XHour: Integer;
@@ -2087,15 +2019,11 @@ begin
             end;
         end;
     end;
-
 end;
 
-// =========================================================================================== =
 procedure TSolutionObj.SampleControlDevices;
-
 var
     ControlDevice: TControlElem;
-
 begin
     with DSS.ActiveCircuit do
     begin
@@ -2113,39 +2041,29 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg(Format('Error Sampling Control Device "%s.%s" %s  Error = %s', [ControlDevice.ParentClass.Name, ControlDevice.Name, CRLF, E.message]), 484);
+                DoSimpleMsg(DSS, 'Error Sampling Control Device "%s". Error = %s', [ControlDevice.FullName, E.message], 484);
                 raise EControlProblem.Create('Solution aborted.');
             end;
         end;
     end;
-
 end;
 
-// =========================================================================================== =
 procedure TSolutionObj.Sample_DoControlActions;
-
-
 begin
-
     if ControlMode = CONTROLSOFF then
         ControlActionsDone := TRUE
     else
     begin
-
         SampleControlDevices;
         DoControlActions;
 
-     {This variable lets control devices know the bus list has changed}
+        // This variable lets control devices know the bus list has changed
         DSS.ActiveCircuit.Control_BusNameRedefined := FALSE;  // Reset until next change
     end;
-
 end;
 
 procedure TSolutionObj.Set_Mode(const Value: TSolveMode);
-
-
 begin
-
     DynaVars.intHour := 0;
     DynaVars.t := 0.0;
     Update_dblHour;
@@ -2167,7 +2085,7 @@ begin
     SolutionInitialized := FALSE;   // reinitialize solution when mode set (except dynamics)
     PreserveNodeVoltages := FALSE;  // don't do this unless we have to
     SampleTheMeters := FALSE;
-   // Reset defaults for solution modes
+    // Reset defaults for solution modes
     case Dynavars.SolutionMode of
 
         TSolveMode.PEAKDAY,
@@ -2266,44 +2184,26 @@ begin
         end;
     end;
 
-   {Moved here 9-8-2007 so that mode is changed before reseting monitors, etc.}
-
-   // Reset Meters and Monitors
+    // Reset Meters and Monitors
     DSS.MonitorClass.ResetAll;
     DSS.EnergyMeterClass.ResetAll;
     DoResetFaults(DSS);
     DoResetControls(DSS);
-
 end;
 
 procedure TSolutionObj.AddInAuxCurrents(SolveType: Integer);
-
 begin
-    {FOR i := 1 to DSS.ActiveCircuit.NumNodes Do Caccum(Currents^[i], AuxCurrents^[i]);}
     // For Now, only AutoAdd Obj uses this
-
     if Dynavars.SolutionMode = TSolveMode.AUTOADDFLAG then
         DSS.ActiveCircuit.AutoAddObj.AddCurrents(SolveType);
-
-end;
-
-procedure TSolutionObj.ZeroAuxCurrents;
-var
-    i: Integer;
-begin
-    for i := 1 to DSS.ActiveCircuit.NumNodes do
-        AuxCurrents^[i] := CZERO;
 end;
 
 procedure TSolutionObj.Check_Fault_Status;
-
 var
     pFault: TFaultOBj;
-
 begin
     with DSS.ActiveCircuit do
     begin
-
         pFault := TFaultObj(Faults.First);
         while pFault <> NIL do
         begin
@@ -2311,42 +2211,13 @@ begin
             pFault := TFaultObj(Faults.Next);
         end;
 
-    end;  {End With}
+    end;
 end;
-
-
-{ This procedure is called for Solve Direct and any other solution method
-  that does not get the injection currents for PC elements normally. In Dynamics mode,
-  Generators are voltage sources ...
-
-Procedure TSolutionObj.GetMachineInjCurrents;
-
-Var
-  pElem:TDSSCktElement;
-
-begin
-     // do machines in Dynamics Mode
-     IF   IsDynamicModel THEN
-      With DSS.ActiveCircuit DO  Begin
-
-         pElem := Generators.First;
-         WHILE pElem<>nil Do Begin
-             IF pElem.Enabled THEN pElem.InjCurrents; // uses NodeRef to add current into InjCurr Array;
-             pElem := Generators.Next;
-         End;
-
-       End;
-
-end;
-}
 
 function TSolutionObj.OK_for_Dynamics(const Value: TSolveMode): Boolean;
-
 var
     ValueIsDynamic: Boolean;
-
 begin
-
     Result := TRUE;
 
     case Value of
@@ -2358,7 +2229,7 @@ begin
         ValueIsDynamic := FALSE;
     end;
 
-   {When we go in and out of Dynamics mode, we have to do some special things}
+    // When we go in and out of Dynamics mode, we have to do some special things
     if IsDynamicModel and not ValueIsDynamic then
         InvalidateAllPCELEMENTS(DSS);  // Force Recomp of YPrims when we leave Dynamics mode
 
@@ -2369,22 +2240,19 @@ begin
             CalcInitialMachineStates(DSS)   // set state variables for machines (loads and generators)
         else
         begin
-           {Raise Error Message if not solved}
-            DoSimpleMsg('Circuit must be solved in a non-dynamic mode before entering Dynamics or Fault study modes!' + CRLF +
-                'If you attempted to solve, then the solution has not yet converged.', 486);
+            // Raise Error Message if not solved
+            DoSimpleMsg(DSS, _('Circuit must be solved in a non-dynamic mode before entering Dynamics or Fault study modes!') + CRLF +
+                _('If you attempted to solve, then the solution has not yet converged.'), 486);
             if DSS.In_ReDirect then
                 DSS.Redirect_Abort := TRUE;  // Get outta here
             Result := FALSE;
         end;
     end;
-
 end;
 
 function TSolutionObj.OK_for_Harmonics(const Value: TSolveMode): Boolean;
-
- {When we go in and out of Harmonics mode, we have to do some special things}
+// When we go in and out of Harmonics mode, we have to do some special things
 begin
-
     Result := TRUE;
 
     if IsHarmonicModel and not ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
@@ -2408,14 +2276,12 @@ begin
         end
         else
         begin
-
-            DoSimpleMsg('Circuit must be solved in a fundamental frequency power flow or direct mode before entering Harmonics mode!', 487);
+            DoSimpleMsg(DSS, _('Circuit must be solved in a fundamental frequency power flow or direct mode before entering Harmonics mode!'), 487);
             if DSS.In_ReDirect then
                 DSS.Redirect_Abort := TRUE;  // Get outta here
             Result := FALSE;
         end;
     end;
-
 end;
 
 procedure TSolutionObj.Set_Frequency(const Value: Double);
@@ -2445,15 +2311,6 @@ begin
     end;
 end;
 
-procedure TSolutionObj.InitPropertyValues(ArrayOffset: Integer);
-begin
-
-    PropertyValue[1] := '';
-
-    inherited InitPropertyValues(NumPropsThisClass);
-
-end;
-
 procedure TSolutionObj.Set_Year(const Value: Integer);
 begin
     if DSS.DIFilesAreOpen then
@@ -2479,11 +2336,10 @@ var
     BusName: String;
     sout: String;
 begin
-
     try
 
         try
-            F := TFileStream.Create(DSS.OutputDirectory {CurrentDSSDir} + DSS.CircuitName_ + 'SavedVoltages.Txt', fmCreate);
+            F := TBufferedFileStream.Create(DSS.OutputDirectory {CurrentDSSDir} + DSS.CircuitName_ + 'SavedVoltages.txt', fmCreate);
 
             with DSS.ActiveCircuit do
                 for i := 1 to NumBuses do
@@ -2491,7 +2347,7 @@ begin
                     BusName := BusList.NameOfIndex(i);
                     for j := 1 to Buses^[i].NumNodesThisBus do
                     begin
-                        Volts := NodeV^[Buses^[i].GetRef(j)];
+                        Volts := NodeV^[Buses^[i].RefNo[j]];
                         WriteStr(sout, BusName, ', ', Buses^[i].GetNum(j): 0, Format(', %-.7g, %-.7g', [Cabs(Volts), CDang(Volts)]));
                         FSWriteln(F, sout);
                     end;
@@ -2500,7 +2356,7 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg('Error opening Saved Voltages File: ' + E.message, 488);
+                DoSimpleMsg(DSS, 'Error opening Saved Voltages File: %s', [E.message], 488);
                 Exit;
             end;
         end;
@@ -2508,50 +2364,52 @@ begin
 
     finally
         FreeAndNil(F);
-        DSS.GlobalResult := DSS.OutputDirectory {CurrentDSSDir} + DSS.CircuitName_ + 'SavedVoltages.Txt';
+        DSS.GlobalResult := DSS.OutputDirectory {CurrentDSSDir} + DSS.CircuitName_ + 'SavedVoltages.txt';
 
     end;
-
 end;
 
-{  *************  MAIN SOLVER CALL  ************************}
+// *************  MAIN SOLVER CALL  ************************
 
 function TSolutionObj.SolveSystem(V: pNodeVArray): Integer;
-
 var
-    RetCode: Integer;
-    iRes: Longword;
+    iRes: LongWord;
     dRes: Double;
-
 begin
+    Result := 0;
 
- {Note: NodeV[0] = 0 + j0 always.  Therefore, pass the address of the element 1 of the array.
- }
+    // Note: NodeV[0] = 0 + j0 always.  Therefore, pass the address of the element 1 of the array.
     try
-        RetCode := SolveSparseSet(hY, pComplexArray(@V^[1]), pComplexArray(@Currents^[1]));  // Solve for present InjCurr
-{$IFDEF DSS_CAPI}
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        if not ADiakoptics or (DSS.Parent = NIL) then
+{$ENDIF}
+            Result := SolveSparseSet(hY, pComplexArray(@V^[1]), pComplexArray(@Currents^[1])) // Solve for present InjCurr
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+        else
+            Result := SolveSparseSet(hY, pComplexArray(@V^[LocalBusIdx[0]]), pComplexArray(@Currents^[1]));  // Solve for present InjCurr in Actor 1 context
+{$ELSE}
+        ;
+{$ENDIF}
+
         if (DSS_CAPI_INFO_SPARSE_COND) then // Disabled by default with DSS C-API
         begin
-{$ENDIF}
-    // new information functions
+            // new information functions
             GetFlops(hY, @dRes);
             GetRGrowth(hY, @dRes);
             GetRCond(hY, @dRes);
-    // GetCondEst (hY, @dRes); // this can be expensive
-{$IFDEF DSS_CAPI}
+            // GetCondEst (hY, @dRes); // this can be expensive
+            GetSize(hY, @iRes);
+            GetNNZ(hY, @iRes);
+            GetSparseNNZ(hY, @iRes);
+            GetSingularCol(hY, @iRes);
         end;
-{$ENDIF}
-        GetSize(hY, @iRes);
-        GetNNZ(hY, @iRes);
-        GetSparseNNZ(hY, @iRes);
-        GetSingularCol(hY, @iRes);
     except
-        On E: Exception do
-            raise  EEsolv32Problem.Create('Error Solving System Y Matrix.  Sparse matrix solver reports numerical error: ' + E.Message);
+        On E: Exception do //Raise
+        begin
+            DoSimpleMsg(DSS, 'Error Solving System Y Matrix.  Sparse matrix solver reports numerical error: %s', [E.Message], 0);
+            DSS.SolutionAbort := TRUE;
+        end;
     end;
-
-    Result := RetCode;
-
 end;
 
 procedure TSolutionObj.Update_dblHour;
@@ -2561,19 +2419,17 @@ end;
 
 procedure TSolutionObj.UpdateLoopTime;
 begin
-
-// Update Loop time is called from end of time step cleanup
-// Timer is based on beginning of SolveSnap time
-
-   {$IFDEF MSWINDOWS}
+    // Update Loop time is called from end of time step cleanup
+    // Timer is based on beginning of SolveSnap time
+    {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(LoopEndTime);
-{$ENDIF}
+    {$ELSE}
+    LoopEndTime := GetTickCount64;
+    {$ENDIF}
     Step_Time_Elapsed := ((LoopEndtime - SolveStartTime) / CPU_Freq) * 1000000;
-
 end;
 
 procedure TSolutionObj.UpdateVBus;
-
 // Save present solution vector values to buses
 var
     i, j: Integer;
@@ -2583,7 +2439,7 @@ begin
             with Buses^[i] do
                 if Assigned(Vbus) then
                     for j := 1 to NumNodesThisBus do
-                        VBus^[j] := NodeV^[GetRef(j)];
+                        VBus^[j] := NodeV^[RefNo[j]];
 end;
 
 procedure TSolutionObj.RestoreNodeVfromVbus;
@@ -2595,260 +2451,159 @@ begin
             with Buses^[i] do
                 if Assigned(Vbus) then
                     for j := 1 to NumNodesThisBus do
-                        NodeV^[GetRef(j)] := VBus^[j];
-
+                        NodeV^[RefNo[j]] := VBus^[j];
 end;
 
 function TSolutionObj.SolveYDirect: Integer;
-
-{ Solves present Y matrix with no injection sources except voltage and current sources }
-
+// Solves present Y matrix with no injection sources except voltage and current sources 
 begin
-
     Result := 0;
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+    if not ADiakoptics or (DSS.Parent <> NIL) then
+    begin
+{$ENDIF}
+        ZeroInjCurr; // Side Effect: Allocates InjCurr
+        GetSourceInjCurrents;
+        if IsDynamicModel then
+            GetPCInjCurr; // Need this in dynamics mode to pick up additional injections
 
-    ZeroInjCurr;   // Side Effect: Allocates InjCurr
-    GetSourceInjCurrents;
-    if IsDynamicModel then
-        GetPCInjCurr;  // Need this in dynamics mode to pick up additional injections
-
-    SolveSystem(NodeV); // Solve with Zero injection current
-
+        SolveSystem(NodeV); // Solve with Zero injection current
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+    end
+    else
+    begin
+        ADiak_PCInj := False;
+        Solve_Diakoptics(DSS); // A-Diakoptics
+    end;
+{$ENDIF}    
 end;
-
 
 {$IFDEF DSS_CAPI_PM}
-//TODO: move DelFilesFromDir to Utilities, it's also used in Circuit
-{*******************************************************************************
-*           Routine created to empty a recently created folder                 *
-********************************************************************************}
-    {$IFDEF MSWINDOWS}
-procedure DelFilesFromDir(Directory, FileMask: String; DelSubDirs: Boolean);
-var
-    SourceLst: String;
-    FOS: TSHFileOpStruct;
-begin
-    FillChar(FOS, SizeOf(FOS), 0);
-    FOS.wFunc := FO_DELETE;
-    SourceLst := Directory + PathDelim + FileMask + #0;
-    FOS.pFrom := Pchar(SourceLst);
-    if not DelSubDirs then
-        FOS.fFlags := FOS.fFlags or FOF_FILESONLY;
-  // Remove the next line if you want a confirmation dialog box
-    FOS.fFlags := FOS.fFlags or FOF_NOCONFIRMATION;
-  // Add the next line for a "silent operation" (no progress box)
-    FOS.fFlags := FOS.fFlags or FOF_SILENT;
-    SHFileOperation(FOS);
-end;
-
-    {$ENDIF}
-    {$IFDEF UNIX}
-procedure DeltreeDir(Directory: String);
-var
-    Info: TSearchRec;
-begin
-    if FindFirst(Directory + PathDelim + '*', faAnyFile and faDirectory, Info) = 0 then
-    begin
-        repeat
-            with Info do
-            begin
-                if (name = '.') or (name = '..') then
-                    continue;
-                if (Attr and faDirectory) = faDirectory then
-                begin
-                    DeltreeDir(Directory + PathDelim + Name)
-                end
-                else
-                begin
-                    DeleteFile(Directory + PathDelim + Name);
-                end;
-            end;
-        until FindNext(info) <> 0;
-    end;
-    rmdir(Directory);
-end;
-
-procedure DelFilesFromDir(Directory, FileMask: String; DelSubDirs: Boolean);
-var
-    Info: TSearchRec;
-    flags: Longint;
-begin
-    if DelSubDirs then
-        flags := faAnyFile and faDirectory
-    else
-        flags := faAnyFile;
-
-    if FindFirst(Directory + PathDelim + FileMask, flags, Info) = 0 then
-    begin
-        repeat
-            with Info do
-            begin
-                if (name = '.') or (name = '..') then
-                    continue;
-                if (Attr and faDirectory) = faDirectory then
-                begin
-                    try
-                        DeltreeDir(Directory + PathDelim + Name)
-                    except
-                        Writeln('Could not remove directory ' + Directory + PathDelim + Name);
-                    end;
-                end
-                else
-                begin
-                    DeleteFile(Directory + PathDelim + Name);
-                end;
-            end;
-        until FindNext(info) <> 0;
-    end;
-end;
-
-    {$ENDIF}
-{*******************************************************************************
-*             Used to create the OpenDSS Solver thread                         *
-********************************************************************************
-}
-
-constructor TSolver.Create(dssContext: TDSSContext; Susp: Boolean; local_CPU: Integer; CallBack: TInfoMessageCall; AEvent: TEvent);
-
-var
-    Parallel: TParallel_Lib;
-    Thpriority: String;
+// Used to create the OpenDSS Solver thread
+constructor TSolver.Create(dssContext: TDSSContext; Susp: Boolean; local_CPU: Integer; AEvent: TEvent);
 begin
     DSS := dssContext;
 
-    UIEvent := AEvent;
-    FInfoProc := CallBack;
+    StatusEvent := AEvent;
     FreeOnTerminate := FALSE;
-    ActorMsg := TEvent.Create(NIL, TRUE, FALSE, '');
-    MsgType := -1;
-    ActorActive := TRUE;
+    // ActorID := ID;
+    MessageQueueEvent := TEvent.Create(NIL, TRUE, FALSE, '');
+    actorMessagesLock := SyncObjs.TCriticalSection.Create();
+    ActorIsActive := TRUE;
     Processing := FALSE;
+    actorMessages := TQueue<TActorMessage>.Create;
 
     inherited Create(Susp);
-  {$IFDEF MSWINDOWS}              // Only for windows
-//  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
-    Parallel.Set_Thread_affinity(handle, local_CPU);
-//  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
-  {$ELSE}
-//  Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
-    Parallel.Set_Thread_affinity(handle, local_CPU);
-  {$ENDIF}
-
+    if local_CPU >= 0 then
+        Set_Thread_affinity(handle, local_CPU);
+    // Parallel.Set_Thread_Priority(handle, THREAD_PRIORITY_TIME_CRITICAL);
 end;
 
-procedure TSolver.Send_Message(Msg: Integer);
+destructor TSolver.Destroy;
 begin
-    MsgType := Msg;
-    ActorMsg.SetEvent;
+    inherited destroy;
 end;
 
-procedure TSolver.Set_Processing(NVal: Boolean);
+// Send a message to the actor
+procedure TSolver.Send_Message(Msg: TActorMessage);
 begin
-    Processing := NVal;
+    try
+        actorMessagesLock.Acquire();
+        actorMessages.Enqueue(Msg);
+        DSS.ActorStatus := TActorStatus.Busy;
+        DSS.ThreadStatusEvent.SetEvent();
+        MessageQueueEvent.SetEvent();
+    finally
+        actorMessagesLock.Release();
+    end;
 end;
 
-function TSolver.Get_Processing(): Boolean;
-begin
-    Result := Processing;
-end;
-
+// Returns the CPU assigned to the actor
 function TSolver.Get_CPU(): Integer;
 begin
     Result := DSS.CPU;
 end;
 
+// Sets the CPU assigned to the actor
 procedure TSolver.Set_CPU(CPU: Integer);
-var
-    Parallel: TParallel_Lib;
 begin
     DSS.CPU := CPU;
-    Parallel.Set_Thread_affinity(handle, CPU);
+    Set_Thread_affinity(handle, CPU);
 //  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
 end;
 
-{*******************************************************************************
-*             executes the selected solution algorithm                         *
-********************************************************************************
-}
-
+// Executes the selected solution algorithm
 procedure TSolver.Execute;
 var
-{$IFNDEF FPC}
-    ScriptEd: TScriptEdit;
-{$ENDIF}
-    i,
-    j,
-    idx: Integer;
-    VSourceObj: TVsourceObj;
-    Volts: Polar;
-
+    MsgType: TActorMessage;
 begin
     with DSS.ActiveCircuit, Solution do
-    begin
-        while ActorActive do
+        while ActorIsActive do
         begin
-            ActorMsg.WaitFor(INFINITE);
-            ActorMsg.ResetEvent;
-            Processing := TRUE;
-            
-            // Evaluates the incoming message
-            case MsgType of             
-                SIMULATE: // Simulates the active ciruit on this actor
-                    try
-                        begin                   // Checks if this is the coordinator actor in A-Diakoptics mode
-                            if DSS.ADiakoptics and DSS.IsPrime and (not DSS.IsSolveAll) then
-                            begin
-                                Solve_Diakoptics(DSS)
-                            end
-                            else
-                            begin
-                                // Verifies if there is an A-Diakoptics simulation running to update the local Vsources
-                                if DSS.ADiakoptics and (not DSS.IsSolveAll) then
-                                    Start_Diakoptics();
+            MessageQueueEvent.WaitFor(INFINITE);
+            DSS.ActorStatus := TActorStatus.Busy;
+            StatusEvent.SetEvent();
+            while True do
+            begin
+                try
+                    actorMessagesLock.Acquire();
+                    if actorMessages.Count = 0  then
+                        break;
 
-                                // Normal solution routine
-                                case Dynavars.SolutionMode of
-                                    TSolveMode.SNAPSHOT:
-                                        SolveSnap;
-                                    TSolveMode.YEARLYMODE:
-                                        SolveYearly;
-                                    TSolveMode.DAILYMODE:
-                                        SolveDaily;
-                                    TSolveMode.DUTYCYCLE:
-                                        SolveDuty;
-                                    TSolveMode.DYNAMICMODE:
-                                        SolveDynamic;
-                                    TSolveMode.MONTECARLO1:
-                                        SolveMonte1;
-                                    TSolveMode.MONTECARLO2:
-                                        SolveMonte2;
-                                    TSolveMode.MONTECARLO3:
-                                        SolveMonte3;
-                                    TSolveMode.PEAKDAY:
-                                        SolvePeakDay;
-                                    TSolveMode.LOADDURATION1:
-                                        SolveLD1;
-                                    TSolveMode.LOADDURATION2:
-                                        SolveLD2;
-                                    TSolveMode.DIRECT:
-                                        SolveDirect;
-                                    TSolveMode.MONTEFAULT:
-                                        SolveMonteFault;  // Monte Carlo Fault Cases
-                                    TSolveMode.FAULTSTUDY:
-                                        SolveFaultStudy;
-                                    TSolveMode.AUTOADDFLAG:
-                                        AutoAddObj.Solve;
-                                    TSolveMode.HARMONICMODE:
-                                        SolveHarmonic;
-                                    TSolveMode.GENERALTIME:
-                                        SolveGeneralTime;
-                                    TSolveMode.HARMONICMODET:
-                                        SolveHarmonicT;  //Declares the Hsequential-time harmonics
-                                else
-                                    DoSimpleMsg('Unknown solution mode.', 481);
-                                end;
+                    //TODO: peak and check if last message is EXIT?
+                    MsgType := actorMessages.Dequeue();                    
+                finally
+                    actorMessagesLock.Release();
+                end;
+                MessageQueueEvent.ResetEvent();
+                
+                Processing := TRUE;
+                case MsgType of // Evaluates the incoming message
+                    TActorMessage.SIMULATE: // Simulates the circuit on this actor
+                        try
+                            // Normal solution routine
+                            case Dynavars.SolutionMode of
+                                TSolveMode.SNAPSHOT:
+                                    SolveSnap;
+                                TSolveMode.YEARLYMODE:
+                                    SolveYearly;
+                                TSolveMode.DAILYMODE:
+                                    SolveDaily;
+                                TSolveMode.DUTYCYCLE:
+                                    SolveDuty;
+                                TSolveMode.DYNAMICMODE:
+                                    SolveDynamic;
+                                TSolveMode.MONTECARLO1:
+                                    SolveMonte1;
+                                TSolveMode.MONTECARLO2:
+                                    SolveMonte2;
+                                TSolveMode.MONTECARLO3:
+                                    SolveMonte3;
+                                TSolveMode.PEAKDAY:
+                                    SolvePeakDay;
+                                TSolveMode.LOADDURATION1:
+                                    SolveLD1;
+                                TSolveMode.LOADDURATION2:
+                                    SolveLD2;
+                                TSolveMode.DIRECT:
+                                    SolveDirect;
+                                TSolveMode.MONTEFAULT:
+                                    SolveMonteFault; // Monte Carlo Fault Cases
+                                TSolveMode.FAULTSTUDY:
+                                    SolveFaultStudy;
+                                TSolveMode.AUTOADDFLAG:
+                                    AutoAddObj.Solve;
+                                TSolveMode.HARMONICMODE:
+                                    SolveHarmonic;
+                                TSolveMode.GENERALTIME:
+                                    SolveGeneralTime;
+                                TSolveMode.HARMONICMODET:
+                                    SolveHarmonicT; //Declares the Hsequential-time harmonics
+                            else
+                                DoSimpleMsg(DSS, _('Unknown solution mode.'), 481);
                             end;
-                            {$IFDEF MSWINDOWS}
+
+                            {$IFDEF WINDOWS}
                             QueryPerformanceCounter(GEndTime);
                             {$ELSE}
                             GEndTime := GetTickCount64;
@@ -2857,171 +2612,383 @@ begin
                             Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
                             Processing := FALSE;
                             FMessage := '1';
-                            DSS.ActorStatus := TActorStatus.Idle;
-
-                  // If this is an A-Diakoptics actor reports the results to the coordinator (Actor 1)
-                            if DSS.ADiakoptics and not DSS.IsPrime then
-                                Notify_Main();
-
-                  // Sends a message to Actor Object (UI) to notify that the actor has finised
-                            UIEvent.SetEvent;
-                  {$IFDEF MSWINDOWS}
-                            if not DSS.ADiakoptics then
+                            // Sends a message to Actor Object (UI) to notify that the actor has finised
+                            // UIEvent.SetEvent;
+                            // if DSS.GetPrime().Parallel_enabled then
+                            //     if not IsDLL then
+                            //         queue(CallCallBack); // Refreshes the GUI if running asynchronously
+                        except
+                            On E: Exception do
                             begin
-                                if DSS.Parallel_enabled then
-                                    if not IsDLL then
-                                        queue(CallCallBack); // Refreshes the GUI if running asynchronously
-                            end
-                            else
-                            begin
-                                if (DSS.Parallel_enabled and DSS.IsPrime) then
-                                    if not IsDLL then
-                                        queue(CallCallBack); // Refreshes the GUI if running asynchronously
+                                FMessage := '1';
+                                DSS.ActorStatus := TActorStatus.Idle;
+                                StatusEvent.SetEvent();
+                                DSS.SolutionAbort := TRUE;
+                                // if DSS.GetPrime().Parallel_enabled then
+                                // begin
+                                //     if not IsDLL then
+                                //         queue(CallCallBack); // Refreshes the GUI if running asynchronously
+                                // end
+                                // else
+                                    DoSimpleMsg(DSS, 'Error Encountered in Solve: %s', [E.Message], 482);
                             end;
-                  {$ENDIF}
                         end;
-                    except
-                        On E: Exception do
-                        begin
-                            FMessage := '1';
-                            DSS.ActorStatus := TActorStatus.Idle;
-                            DSS.SolutionAbort := TRUE;
-                            UIEvent.SetEvent;
-                            if not DSS.ADiakoptics then
-                            begin
-                                if DSS.Parallel_enabled then
-                                    if not IsDLL then
-                                        Queue(CallCallBack); // Refreshes the GUI if running asynchronously
-                            end
-                            else
-                            begin
-                                if (DSS.Parallel_enabled and DSS.IsPrime) then
-                                    if not IsDLL then
-                                        queue(CallCallBack); // Refreshes the GUI if running asynchronously
-                            end;
-                            if not DSS.Parallel_enabled then
-                                DoSimpleMsg('Error Encountered in Solve: ' + E.Message, 482);
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+                    TActorMessage.INIT_ADIAKOPTICS:
+                    begin
+                        if DSS.Parent <> NIL then
+                            Start_Diakoptics; // Initializes the actor for Diakoptics (if needed)
+                        IndexBuses;
+                    end;
+                    TActorMessage.SOLVE_AD1:
+                        SolveAD(True); // Solves the model if the actor has PIE
+                    TActorMessage.SOLVE_AD2:
+                        SolveAD(False); // Complements the solution
+                    TActorMessage.GETCTRLMODE:
+                    begin
+                        // Brings the control mode from actor 1
+                        ControlMode := DSS.Parent.ActiveCircuit.Solution.ControlMode;
+                        DefaultControlMode := ControlMode;
+                        MaxControlIterations := DSS.Parent.ActiveCircuit.Solution.MaxControlIterations;
+                    end;
+{$ENDIF}                        
+                    TActorMessage.ZEROIVECTOR:
+                        ZeroInjCurr;
+                    TActorMessage.GETCURRINJ:
+                        GetSourceInjCurrents;
+                    TActorMessage.CALC_INJ_CURR:
+                        GetPCInjCurr;
+                    TActorMessage.DO_CTRL_ACTIONS:
+                    begin
+                        ControlActionsDone := FALSE;
+                        Sample_DoControlActions;
+                        try
+                            actorMessagesLock.Acquire();
+                            actorMessages.enqueue(TActorMessage.CHECK_FAULT);
+                            actorMessages.enqueue(TActorMessage.CHECKYBUS);
+                        finally
+                            actorMessagesLock.Release();
                         end;
                     end;
-                EXIT_ACTOR:                // Terminates the thread
-                begin
-                    ActorActive := FALSE;
-                end
-            else                       // I don't know what the message is
-                DoSimpleMsg('Unknown Message.', 7010);
-            end;
-
-        end;
-    end;
-end;
-
-procedure TSolver.CallCallBack;
-begin
-    if Assigned(FInfoProc) then
-        FInfoProc(FMessage);
-end;
-
-// Initializes the variables of the A-Diakoptics worker
-procedure TSolver.Start_Diakoptics();
-var
-    row,
-    j,
-    i: Integer;
-    VSource: TVsourceObj;
-    Volts: Polar;
-    CNum: Complex;
-    PrimeCircuit: TDSSCircuit;
-begin
-    PrimeCircuit := DSS.GetPrime().ActiveCircuit;
-
-    with DSS.ActiveCircuit, Solution do
-    begin
-        j := PrimeCircuit.Ic.NZero - 1;    // Brings the number of Non-Zero elements from Ic
-        if j > 0 then
-        begin
-            // Clears the local Ic vector
-            for i := 1 to NumNodes do
-                Ic_Local[i] := cZERO;  // probably not necessary
-
-            // Brings the section of the vector needed for this actor
-            for i := 0 to j do
-            begin
-                if PrimeCircuit.Ic.CData[i].row >= VIndex then
-                begin
-                    row := PrimeCircuit.Ic.CData[i].row;
-                    Ic_Local[row - VIndex + 1] := PrimeCircuit.Ic.CData[i].Value;
+                    TActorMessage.CHECK_FAULT:
+                        Check_Fault_Status;
+                    TActorMessage.CHECKYBUS:
+                        if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (IncrCktElements.Count <> 0){$ENDIF} then
+                            BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
+                    TActorMessage.EXIT_ACTOR: // Terminates the thread
+                    begin
+                        ActorIsActive := FALSE;
+                        try
+                            actorMessagesLock.Acquire();
+                            actorMessages.Clear();
+                        finally
+                            actorMessagesLock.Release();
+                        end;
+                    end;
+                else 
+                    // I don't know what the message is
+                    DoSimpleMsg(DSS, _('Unknown Message.'), 7010);
                 end;
-            end;
 
-            // Solves to find the total solution
-            SolveSparseSet(hY, @Node_dV[1], @Ic_Local[1]);
-
-            // Sends the total voltage for this part to the coordinator
-            for i := 1 to NumNodes do
-            begin
-                CNum := csub(NodeV[i], Node_dV[i]);
-                PrimeCircuit.Solution.NodeV[i + VIndex] := CNum;
-            end;
-
-            // Sets the voltage at the feeder head
-            VSource := DSS.VSourceClass.ElementList.First;
-            for i := 1 to 3 do
-            begin
-                CNum := cadd(NodeV[i], Node_dV[i]);
-                Volts := ctopolardeg(CNum);
-                VSource.kVBase := Volts.mag / 1000;   // is in kV
-                VSource.Angle := Volts.ang;
-                VSource := DSS.VSourceClass.ElementList.Next;
-            end;
-        end;
-    end;
-end;
-
-procedure TSolver.Notify_Main;
-var
-    CNum: Complex;
-    i, j,
-    idx: Integer;
-    PrimeCircuit: TDSSCircuit;
-begin
-    PrimeCircuit := DSS.GetPrime().ActiveCircuit;
-
-    // Will do something
-    with DSS.ActiveCircuit, Solution do
-    begin
-        i := NumNodes;
-        for idx := 1 to i do
-        begin
-            // if it doesn't includes any power injection element (Isource, VSource)
-            // returns dV to correct the interconnection equation
-            if not DSS.IsPrime then
-                CNum := csub(NodeV^[idx], Node_dV^[idx])
-            else
-                CNum := NodeV^[idx];
-
-            PrimeCircuit.V_0.Insert((idx + VIndex - 1), 0, CNum);
-        end;
-    end;
-
+            end; // while actorMessages.Count > 0
+            DSS.ActorStatus := TActorStatus.Idle;
+            StatusEvent.SetEvent();
+        end; // while ActorIsActive
 end;
 
 procedure TSolver.DoTerminate;        // Is the end of the thread
 var
     ex: TObject;
 begin
-    ActorActive := FALSE;
+    ActorIsActive := FALSE;
     Processing := FALSE;
     DSS.ActorStatus := TActorStatus.Idle;
-    UIEvent.SetEvent;
-    ActorMsg.Free;
-//    FreeAndNil(UIEvent);
+    StatusEvent.SetEvent();
+    MessageQueueEvent.Free;
+    actorMessagesLock.Free;
+    actorMessages.Free;
     inherited;
 end;
 
-destructor TSolver.Destroy;
+{$ENDIF} //DSS_CAPI_PM
+{$IFDEF DSS_CAPI_ADIAKOPTICS}
+function TSolutionObj.SolveAD(Initialize: Boolean): Integer;  // solves a step for Adiakoptics locally
 begin
-    inherited destroy;
+    Result := 0;
+    if Initialize then
+    begin
+        ZeroInjCurr;
+        GetSourceInjCurrents;  // sources
+        if ADiak_PCInj then
+        begin
+            LoadsNeedUpdating := TRUE;  // Force the loads to update at least once
+            GetPCInjCurr  // Get the injection currents from all the power conversion devices and feeders
+        end
+        else
+        if IsDynamicModel or IsHarmonicModel then
+        begin
+            LoadsNeedUpdating := TRUE;  // Force the loads to update at least once
+            GetPCInjCurr; // for direct solve
+        end;
+        // The above call could change the primitive Y matrix, so have to check
+        if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.Count <> 0){$ENDIF} then
+            BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
+
+        if UseAuxCurrents then
+            AddInAuxCurrents(NORMALSOLVE);
+    end
+    else
+        UpdateISrc;
+
+    // Solve for voltages -- Note:NodeV[0] = 0 + j0 always
+    SolveSystem(DSS.Parent.ActiveCircuit.Solution.NodeV);
+    LoadsNeedUpdating := FALSE;
+    LastSolutionWasDirect := TRUE;
+    DSS.ActiveCircuit.IsSolved := TRUE;
 end;
 
-{$ENDIF} //DSS_CAPI_PM
+procedure TSolutionObj.SendCmd2Actors(Msg: Integer);
+var
+    i: Integer;
+    ChDSS: TDSSContext;
+begin
+    for i := 2 to DSS.NumOfActors do
+    begin
+        ChDSS := DSS.Children[i - 1];
+        ChDSS.ActorStatus := TActorStatus.Busy;
+        if ChDSS.ActorThread <> NIL then
+            ChDSS.ActorThread.Send_Message(Msg);
+    end;
+    Wait4Actors(DSS, AD_ACTORS);
+end;
+
+// Initializes the variables of the A-Diakoptics worker
+procedure TSolver.Start_Diakoptics();
+var
+    jj: Integer;
+    VSourceObj: TVsourceObj;
+    BusName: String;
+    myPDEList: ArrayOfString;
+begin
+    with DSS.ActiveCircuit, Solution do
+    begin
+        // Select the main voltage source
+        VSourceObj := DSS.VsourceClass.ElementList.First;
+        // Gets the name of the branch directly connected to the feeder head to remove it
+        // (applies to all actors but actor 2 - first chunk of the system)
+        BusName := VSourceObj.GetBus(1);
+        jj := ansipos('.', BusName);   // removes the dot
+        if (jj > 0) then
+            BusName := BusName.Substring(0, (jj - 1));
+        SetActiveBus(DSS, BusName);                            // Activates the Bus
+        myPDEList := getPDEatBus(BusList.NameOfIndex(ActiveBusIndex));
+        // Disables the link branch
+        DSS.DssExecutive.Command := myPDEList[0] + '.enabled=False'; //TODO: rewrite
+        // Now disables all the VSources added artificially
+        while VSourceObj <> NIL do
+        begin
+            BusName := AnsiLowerCase(VSourceObj.Name);
+            if (BusName = 'source') then
+                VSourceObj.Enabled := FALSE                   // Disables the artificial VSource phase 1
+            else
+            if (BusName = 'vph_2') then
+                VSourceObj.Enabled := FALSE                 // Disables the artificial VSource phase 2
+            else
+            if (BusName = 'vph_3') then
+                VSourceObj.Enabled := FALSE; // Disables the artificial VSource phase 3
+
+            VSourceObj := DSS.VsourceClass.ElementList.Next;
+        end;
+    end;
+end;
+
+// // Uploads the local voltage array in the masters
+// // using the index map obtained in previous steps
+// procedure TSolutionObj.UploadV2Master;
+// var
+//     idx,
+//     i: Integer;
+// begin
+//     with DSS.ActiveCircuit do
+//     begin
+//         for i := 1 to NumNodes do
+//         begin
+//             idx := LocalBusIdx[i - 1];
+//             DSS.Parent.ActiveCircuit.Solution.NodeV^[idx] := Solution.NodeV^[i];
+//         end;
+//     end;
+// end;
+
+// Returns the voltage at the node given at NodeIdx in
+// context of actor 1  (A-Diakoptics)
+function TSolutionObj.VoltInActor1(NodeIdx: Integer): Complex;
+begin
+    if NodeIdx <> 0 then
+        NodeIdx := NodeIdx + (LocalBusIdx[0] - 1);
+    // In the context of actor 1
+    Result := DSS.Parent.ActiveCircuit.Solution.NodeV^[NodeIdx];
+end;
+
+// Updates the local ISources using the data obtained
+// for Ic in actor 1
+procedure TSolutionObj.UpdateISrc;
+var
+    idx,
+    i: Integer;
+    Found: Boolean;
+    myCmplx: Complex;
+
+begin
+    Found := FALSE;
+    with DSS.ActiveCircuit, Solution do
+    begin
+        for i := 0 to (AD_IBus.Count - 1) do
+        begin
+            for idx := 0 to (DSS.Parent.ActiveCircuit.Ic.NZero - 1) do
+            begin
+                if DSS.Parent.ActiveCircuit.Ic.CData[idx].Row = AD_ISrcIdx.Items[i] then
+                begin
+                    Found := TRUE;
+                    break;
+                end;
+            end;
+            if Found then
+            begin
+                // Adds the present current with the adjustment
+                myCmplx := DSS.Parent.ActiveCircuit.Ic.CData[idx].Value * (-1.0);
+                Currents^[AD_IBus.Items[i]] := myCmplx + Currents^[AD_IBus.Items[i]];
+            end;  // Otherwise is just another ISource in the zone
+        end;
+    end;
+end;
+// Checks if the actor has power injection Obj
+// function TSolver.HasInjObj(): Boolean;
+// var
+//     ListSize,
+//     jj: Integer;
+//     VSourceObj: TVsourceObj;
+//     ISourceObj: TIsourceObj;
+// begin
+//     if ActorID = 2 then
+//         Result := TRUE
+//     else
+//     begin
+//         Result := FALSE;
+//         with DSS.ActiveCircuit, Solution do
+//         begin
+//             // Starts looking for VSource
+//             VSourceObj := DSS.VsourceClass.ElementList.First;
+//             while VSourceObj <> NIL do
+//             begin
+//                 if VSourceObj.enabled then
+//                 begin
+//                     Result := TRUE;
+//                     break;
+//                 end;
+//                 VSourceObj := DSS.VsourceClass.ElementList.Next;
+//             end;
+//             if not Result then
+//             begin
+//                 // Goes for ISources
+//                 ISourceObj := DSS.IsourceClass.ElementList.First;
+//                 while ISourceObj <> NIL do
+//                 begin
+//                     if ISourceObj.enabled then
+//                     begin
+//                         Result := TRUE;
+//                         break;
+//                     end;
+//                     ISourceObj := DSS.IsourceClass.ElementList.Next;
+//                 end;
+//             end;
+//         end;
+//     end;
+// end;
+
+// locates the local buses into actor 1's bus array
+procedure TSolver.IndexBuses();
+var
+    Found: Boolean;
+    k,
+    i,
+    j: Integer;
+    myBus: String;
+    LclBus,
+    SrcBus: array of String;
+begin
+    // First, get the list of buses in actor 1
+    setlength(SrcBus, 1);
+    if DSS.Parent.ActiveCircuit <> NIL then
+    begin
+        with DSS.Parent.ActiveCircuit do
+        begin
+            for i := 1 to NumNodes do
+            begin
+                with MapNodeToBus^[i] do
+                    SrcBus[high(SrcBus)] := Format('%s.%-d', [AnsiUpperCase(BusList.NameOfIndex(Busref)), NodeNum]);
+                setlength(SrcBus, (length(SrcBus) + 1));
+            end;
+        end;
+    end;
+    // rebuilds the Y matrix to relocate the local buses
+    BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
+    // Then, get the list of buses in my actor
+    setlength(LclBus, 1);
+    if DSS.ActiveCircuit <> NIL then
+    begin
+        with DSS.ActiveCircuit do
+        begin
+            for i := 1 to NumNodes do
+            begin
+                with MapNodeToBus^[i] do
+                    LclBus[high(LclBus)] := Format('%s.%-d', [AnsiUpperCase(BusList.NameOfIndex(Busref)), NodeNum]);
+                setlength(LclBus, (length(LclBus) + 1));
+            end;
+        end;
+    end;
+    // Initializes the bus index vector
+    with DSS.ActiveCircuit.solution do
+    begin
+        Setlength(LocalBusIdx, length(LclBus) - 1);
+        for i := 0 to High(LocalBusIdx) do
+        begin
+            for j := 0 to High(SrcBus) do
+                if LclBus[i] = SrcBus[j] then
+                    break;
+            LocalBusIdx[i] := j + 1;
+        end;
+
+        // Initializes the list for easy accessing the ADiakoptics Isources
+        if AD_IBus = NIL then
+            AD_IBus := TList<Integer>.Create
+        else
+            AD_IBus.Clear;
+        if AD_ISrcIdx = NIL then
+            AD_ISrcIdx := TList<Integer>.Create
+        else
+            AD_ISrcIdx.Clear;
+        // Locates the ISource used for the local ADiakoptics algorithm
+        for j := 0 to (DSS.Parent.ActiveCircuit.Contours.NZero - 1) do
+        begin
+            myBus := SrcBus[DSS.Parent.ActiveCircuit.Contours.CData[j].Row];
+            // checks if the bus in in this circuit
+            Found := FALSE;
+            for k := 0 to High(LclBus) do
+            begin
+                if LclBus[k] = myBus then
+                begin
+                    Found := TRUE;
+                    break;
+                end;
+            end;
+            if Found then     // If found, add it to the indexed list
+            begin
+                AD_IBus.Add(k + 1);
+                AD_ISrcIdx.Add(DSS.Parent.ActiveCircuit.Contours.CData[j].Row);
+            end;
+        end;
+
+    end;
+end;
+{$ENDIF}
 end.

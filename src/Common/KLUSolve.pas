@@ -1,6 +1,5 @@
 unit KLUSolve;
 
-{$MODE Delphi}
 {$MACRO ON}
 {$IFDEF MSWINDOWS}
     {$DEFINE KLUSOLVEX_CALL:=cdecl;external 'libklusolvex'}
@@ -11,7 +10,7 @@ unit KLUSolve;
 interface
 
 uses
-    uComplex;
+    UComplex, DSSUcomplex;
 
 {$IFDEF DSS_CAPI_MVMULT}
 procedure mvmult(N: integer; b, A, x: pComplexArray);KLUSOLVEX_CALL;

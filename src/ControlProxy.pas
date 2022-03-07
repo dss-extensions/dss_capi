@@ -6,13 +6,12 @@ interface
 
 uses 
     Classes,
-    DSSGlobals,
     ControlQueue,
     ControlElem,
     DSSClass,
     sysutils,
     Utilities,
-    Ucomplex;
+    UComplex, DSSUcomplex;
 
 type
     TControlProxyObj = class(TControlElem)
@@ -26,13 +25,13 @@ type
 
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
         procedure Reset; OVERRIDE;  // Reset to initial defined state
-        procedure GetCurrents(Curr: pComplexArray); Override;
         procedure RecalcElementData; Override;
     end;
 
 implementation
 
 uses 
+    DSSGlobals,
     DSSClassDefs;
 
 procedure TControlProxyObj.DoPendingAction(const Code, ProxyHdl: Integer);
@@ -48,16 +47,10 @@ begin
     ActionList.Add(Action);
 end;
 
-procedure TControlProxyObj.GetCurrents(Curr: pComplexArray);
-begin
-    raise Exception.Create('This procedure should not be called');
-end;
-
 procedure TControlProxyObj.RecalcElementData;
 begin
     raise Exception.Create('This procedure should not be called');
 end;
-
 
 procedure TControlProxyObj.ClearActionList;
 begin

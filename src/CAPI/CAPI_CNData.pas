@@ -8,12 +8,6 @@ uses
     CNData,
     CableData;
 
-type
-    CableDataProps = (EpsR = 1, InsLayer, DiaIns, DiaCable);
-    CNDataProps = (k = 1, DiaStrand, GmrStrand, Rstrand);
-
-procedure CableDataSetDefaults(prop: CableDataProps; conductor: TCableDataObj);
-
 // Common to all classes
 function CNData_Get_Count(): Integer; CDECL;
 function CNData_Get_First(): Integer; CDECL;
@@ -80,6 +74,10 @@ uses
     DSSClass,
     DSSHelper;
 
+const
+    ConductorPropOffset = ord(High(TCableDataProp)) + ord(High(TCNDataProp));
+    CableDataPropOffset = ord(High(TCNDataProp));
+
 //------------------------------------------------------------------------------  
 function _activeObj(DSS: TDSSContext; out obj: TCNDataObj): boolean; inline;
 begin
@@ -93,62 +91,12 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active CNData object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['CNData'], 8989);
         end;
         Exit;
     end;
     
     Result := True;
-end;
-//------------------------------------------------------------------------------  
-procedure CableDataSetDefaults(prop: CableDataProps; conductor: TCableDataObj);
-begin
-  {Set defaults}
-    with conductor do
-    begin
-      {Check for critical errors}
-        case prop of
-            CableDataProps.EpsR:
-                if (FEpsR < 1.0) then
-                    DoSimpleMsg('Error: Insulation permittivity must be greater than one for CableData ' + Name, 999);
-            CableDataProps.InsLayer:
-                if (FInsLayer <= 0.0) then
-                    DoSimpleMsg('Error: Insulation layer thickness must be positive for CableData ' + Name, 999);
-            CableDataProps.DiaIns:
-                if (FDiaIns <= 0.0) then
-                    DoSimpleMsg('Error: Diameter over insulation layer must be positive for CableData ' + Name, 999);
-            CableDataProps.DiaCable:
-                if (FDiaCable <= 0.0) then
-                    DoSimpleMsg('Error: Diameter over cable must be positive for CableData ' + Name, 999);
-        end;
-    end;
-end;
-//------------------------------------------------------------------------------  
-procedure CNDataSetDefaults(prop: CNDataProps; conductor: TCNDataObj);
-begin
-  {Set defaults}
-    with conductor do
-    begin
-    {Set defaults}
-        case prop of
-            CNDataProps.DiaStrand:
-                if FGmrStrand <= 0.0 then
-                    FGmrStrand := 0.7788 * 0.5 * FDiaStrand;
-        end;
-
-    {Check for critical errors}
-        case prop of
-            CNDataProps.k:
-                if (FkStrand < 2) then
-                    DoSimpleMsg('Error: Must have at least 2 concentric neutral strands for CNData ' + Name, 999);
-            CNDataProps.DiaStrand:
-                if (FDiaStrand <= 0.0) then
-                    DoSimpleMsg('Error: Neutral strand diameter must be positive for CNData ' + Name, 999);
-            CNDataProps.GmrStrand:
-                if (FGmrStrand <= 0.0) then
-                    DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData ' + Name, 999);
-        end;
-    end;
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Count(): Integer; CDECL;
@@ -177,13 +125,13 @@ end;
 //------------------------------------------------------------------------------
 function CNData_Get_Name(): PAnsiChar; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := NIL;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, pCNData.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;
@@ -194,7 +142,7 @@ begin
         Exit;
 
     if not DSSPrime.CNDataClass.SetActive(Value) then
-        DoSimpleMsg(DSSPrime, 'CNData "' + Value + '" Not Found in Active Circuit.', 51008);
+        DoSimpleMsg(DSSPrime, 'CNData "%s" not found in Active Circuit.', [Value], 51008);
 
      // Still same active object if not found
 end;
@@ -216,440 +164,400 @@ end;
 //------------------------------------------------------------------------------
 function CNData_Get_NormAmps(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.NormAmps;
+    Result := elem.NormAmps;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_NormAmps(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    pCNData.NormAmps := Value;
-    ConductorSetDefaults(ConductorProps.NormAmps, pCNData);
+    elem.NormAmps := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.NormAmps))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_EmergAmps(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.EmergAmps;
+    Result := elem.EmergAmps;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_EmergAmps(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    pCNData.EmergAmps := Value;
-    ConductorSetDefaults(ConductorProps.EmergAmps, pCNData);
+    elem.EmergAmps := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.EmergAmps))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Diameter(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FRadius * 2.0;
+    Result := elem.FRadius * 2.0;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_Diameter(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FRadius := Value / 2.0;
-        ConductorSetDefaults(ConductorProps.diam, pCNData);
-    end;
+    elem.FRadius := Value / 2.0;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.diam))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Radius(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FRadius;
+    Result := elem.FRadius;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_Radius(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FRadius := Value;
-        ConductorSetDefaults(ConductorProps.Radius, pCNData);
-    end;
+    elem.FRadius := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Radius))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_GMRac(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FGMR60;
+    Result := elem.FGMR60;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_GMRac(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FGMR60 := Value;
-        ConductorSetDefaults(ConductorProps.GMRac, pCNData);
-    end;
+    elem.FGMR60 := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRac))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Rac(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FR60;
+    Result := elem.FR60;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_Rac(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FR60 := Value;
-        ConductorSetDefaults(ConductorProps.Rac, pCNData);
-    end;
+    elem.FR60 := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rac))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Rdc(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FRDC;
+    Result := elem.FRDC;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_Rdc(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FRDC := Value;
-        ConductorSetDefaults(ConductorProps.Rdc, pCNData);
-    end;
+    elem.FRDC := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Rdc))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_GMRUnits(): Integer; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FGMRUnits;
+    Result := elem.FGMRUnits;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_GMRUnits(Value: Integer); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
+    prevVal: Integer;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FGMRUnits := Value;
-        ConductorSetDefaults(ConductorProps.GMRunits, pCNData);
-    end;
+    prevVal := elem.FGMRUnits;
+    elem.FGMRUnits := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.GMRunits), prevVal)
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_RadiusUnits(): Integer; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FRadiusUnits;
+    Result := elem.FRadiusUnits;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_RadiusUnits(Value: Integer); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
+    prevVal: Integer;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FRadiusUnits := Value;
-        ConductorSetDefaults(ConductorProps.radunits, pCNData);
-    end;
+    prevVal := elem.FRadiusUnits;
+    elem.FRadiusUnits := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.radunits), prevVal)
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_ResistanceUnits(): Integer; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FResistanceUnits;
+    Result := elem.FResistanceUnits;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_ResistanceUnits(Value: Integer); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
+    prevVal: Integer;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FResistanceUnits := Value;
-        ConductorSetDefaults(ConductorProps.Runits, pCNData);
-    end;
+    prevVal := elem.FResistanceUnits;
+    elem.FResistanceUnits := Value;
+    elem.PropertySideEffects(ConductorPropOffset + ord(TConductorDataProp.Runits), prevVal)
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_EpsR(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FEpsR;
+    Result := elem.FEpsR;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_EpsR(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FEpsR := Value;
-        CableDataSetDefaults(CableDataProps.EpsR, pCNData);
-    end;
+    elem.FEpsR := Value;
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.EpsR))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_InsLayer(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FInsLayer;
+    Result := elem.FInsLayer;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_InsLayer(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FInsLayer := Value;
-        CableDataSetDefaults(CableDataProps.InsLayer, pCNData);
-    end;
+    elem.FInsLayer := Value;
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.InsLayer))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_DiaIns(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FDiaIns;
+    Result := elem.FDiaIns;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_DiaIns(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    with pCNData do
-    begin
-        FDiaIns := Value;
-        CableDataSetDefaults(CableDataProps.DiaIns, pCNData);
-    end;
+    elem.FDiaIns := Value;
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaIns))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_DiaCable(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pCNData.FDiaCable;
+    Result := elem.FDiaCable;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_DiaCable(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    with pCNData do
-    begin
-        FDiaCable := Value;
-        CableDataSetDefaults(CableDataProps.DiaCable, pCNData);
-    end;
+    elem.FDiaCable := Value;
+    elem.PropertySideEffects(CableDataPropOffset + ord(TCableDataProp.DiaCable))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_k(): Integer; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pCNData.FkStrand;
+    Result := elem.FkStrand;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_k(Value: Integer); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
+    prevVal: Integer;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    with pCNData do
-    begin
-        FkStrand := Value;
-        CNDataSetDefaults(CNDataProps.k, pCNData);
-    end;
+    prevVal := elem.FkStrand;
+    elem.FkStrand := Value;
+    elem.PropertySideEffects(ord(TCNDataProp.k), prevVal)
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_DiaStrand(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FDiaStrand;
+    Result := elem.FDiaStrand;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_DiaStrand(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FDiaStrand := Value;
-        CNDataSetDefaults(CNDataProps.DiaStrand, pCNData);
-    end;
+    elem.FDiaStrand := Value;
+    elem.PropertySideEffects(ord(TCNDataProp.DiaStrand))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_GmrStrand(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := pCNData.FGmrStrand;
+    Result := elem.FGmrStrand;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_GmrStrand(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FGmrStrand := Value;
-        CNDataSetDefaults(CNDataProps.GmrStrand, pCNData);
-    end;
+    elem.FGmrStrand := Value;
+    elem.PropertySideEffects(ord(TCNDataProp.GmrStrand))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_RStrand(): Double; CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := pCNData.FRStrand;
+    Result := elem.FRStrand;
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_RStrand(Value: Double); CDECL;
 var
-    pCNData: TCNDataObj;
+    elem: TCNDataObj;
 begin
-    if not _activeObj(DSSPrime, pCNData) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    with pCNData do
-    begin
-        FRStrand := Value;
-        CNDataSetDefaults(CNDataProps.RStrand, pCNData);
-    end;
+    elem.FRStrand := Value;
+    elem.PropertySideEffects(ord(TCNDataProp.RStrand))
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_idx(): Integer; CDECL;
@@ -664,7 +572,7 @@ end;
 procedure CNData_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.CNDataClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg(DSSPrime, 'Invalid CNData index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['CNData', Value], 656565);
 end;
 //------------------------------------------------------------------------------
 end.

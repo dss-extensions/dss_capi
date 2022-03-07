@@ -60,10 +60,14 @@ uses
     DSSPointerList,
     Utilities,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    DSSObjectHelper;
+
+type
+    TObj = TCapControlObj;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSS: TDSSContext; out obj: TCapControlObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
@@ -75,7 +79,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active CapControl object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['CapControl'], 8989);
         end;
         Exit;
     end;
@@ -83,16 +87,34 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(DSS: TDSSContext; const parm: String; const val: String);
+procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: String); overload;
 var
-    cmd: String;
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     if not _activeObj(DSS, elem) then
         Exit;
     DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('capcontrol.%s.%s=%s', [elem.Name, parm, val]);
-    DSS.DSSExecutive.Command := cmd;
+    elem.ParsePropertyValue(idx, val);
+end;
+//------------------------------------------------------------------------------
+procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: Double); overload;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSS, elem) then
+        Exit;
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    elem.SetDouble(idx, val);
+end;
+//------------------------------------------------------------------------------
+procedure Set_Parameter(DSS: TDSSContext; const idx: Integer; const val: Integer); overload;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSS, elem) then
+        Exit;
+    DSS.SolutionAbort := FALSE;  // Reset for commands entered from outside
+    elem.SetInteger(idx, val);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -112,7 +134,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Capacitor(): PAnsiChar; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
@@ -122,7 +144,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_CTratio(): Double; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
@@ -132,7 +154,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_DeadTime(): Double; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
@@ -142,7 +164,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Delay(): Double; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
@@ -152,7 +174,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_DelayOff(): Double; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
@@ -178,7 +200,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Mode(): Integer; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := dssCapControlVoltage;
     if not _activeObj(DSSPrime, elem) then
@@ -202,17 +224,18 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_MonitoredObj(): PAnsiChar; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.ElementName);
+    if elem.MonitoredElement <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.MonitoredElement.FullName));
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_MonitoredTerm(): Integer; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -222,7 +245,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Name(): PAnsiChar; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
@@ -232,7 +255,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_OFFSetting(): Double; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
@@ -242,7 +265,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_ONSetting(): Double; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
@@ -252,7 +275,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_PTratio(): Double; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
@@ -262,7 +285,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_UseVoltOverride(): TAPIBoolean; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := FALSE;
     if not _activeObj(DSSPrime, elem) then
@@ -272,7 +295,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Vmax(): Double; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
@@ -282,7 +305,7 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Vmin(): Double; CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
@@ -292,32 +315,32 @@ end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Capacitor(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'Capacitor', value);
+    Set_Parameter(DSSPrime, ord(TCapControlProp.Capacitor), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_CTratio(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'CTratio', FloatToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.CTratio), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_DeadTime(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'DeadTime', FloatToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.DeadTime), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Delay(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'Delay', FloatToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.Delay), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_DelayOff(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'DelayOff', FloatToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.DelayOff), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Mode(Value: Integer); CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
@@ -337,12 +360,12 @@ end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'Element', value);
+    Set_Parameter(DSSPrime, ord(TCapControlProp.Element), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_MonitoredTerm(Value: Integer); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'Terminal', IntToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.Terminal), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Name(const Value: PAnsiChar); CDECL;
@@ -357,38 +380,38 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'CapControl "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'CapControl "%d" not found in Active Circuit.', [Value], 5003);
     end;
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_OFFSetting(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'OffSetting', FloatToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.OffSetting), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_ONSetting(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'OnSetting', FloatToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.OnSetting), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_PTratio(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'PTratio', FloatToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.PTratio), value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_UseVoltOverride(Value: TAPIBoolean); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'VoltOverride', StrYorN(Value = True))
+    Set_Parameter(DSSPrime, ord(TCapControlProp.VoltOverride), Integer(Value));
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Vmax(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'Vmax', FloatToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.Vmax), Value);
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Vmin(Value: Double); CDECL;
 begin
-    Set_Parameter(DSSPrime, 'Vmin', FloatToStr(value));
+    Set_Parameter(DSSPrime, ord(TCapControlProp.Vmin), Value);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Count(): Integer; CDECL;
@@ -400,7 +423,7 @@ end;
 //------------------------------------------------------------------------------
 procedure CapControls_Reset(); CDECL;
 var
-    elem: TCapControlObj;
+    elem: TObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
@@ -417,14 +440,14 @@ end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_idx(Value: Integer); CDECL;
 var
-    pCapControl: TCapControlObj;
+    pCapControl: TObj;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
     pCapControl := DSSPrime.ActiveCircuit.CapControls.Get(Value);
     if pCapControl = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid CapControl index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['CapControl', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pCapControl;

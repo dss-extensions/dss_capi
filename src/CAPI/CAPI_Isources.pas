@@ -49,7 +49,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active ISource object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['ISource'], 8989);
         end;
         Exit;
     end;
@@ -121,7 +121,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'ISource "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'ISource "%s" not found in Active Circuit.', [Value], 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -199,7 +199,7 @@ begin
     pISource := DSSPrime.ISourceClass.ElementList.Get(Value);
     if pISource = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid ISource index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['ISource', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pISource;

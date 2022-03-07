@@ -12,7 +12,7 @@ interface
 uses
     CktElement,
     Bus,
-    ucomplex,
+    UComplex, DSSUcomplex,
     DSSClass,
     Arraydef;
 
@@ -20,8 +20,6 @@ type
     TMeterElement = class(TDSSCktElement)
 
     PUBLIC
-
-        ElementName: String;
         MeteredElement: TDSSCktElement;  // Pointer to target circuit element
         MeteredTerminal: Integer;
         MeteredElementChanged: Boolean;
@@ -40,7 +38,6 @@ type
         procedure AllocateSensorArrays;
         procedure CalcAllocationFactors;
     end;
-
 
 implementation
 
@@ -89,7 +86,6 @@ begin
     inherited Create(ParClass);
     DSSObjType := METER_ELEMENT;
 
-    ElementName := '';
     MeteredElement := NIL;
     MeteredTerminal := 1;
     SensorCurrent := NIL;
@@ -97,7 +93,6 @@ begin
     PhsAllocationFactor := NIL;
     CalculatedCurrent := NIL;
     CalculatedVoltage := NIL;
-
 end;
 
 destructor TMeterElement.Destroy;
@@ -120,7 +115,7 @@ end;
 procedure TMeterElement.TakeSample;
 begin
   // virtual function - should be overridden
-    DoSimpleMsg('Programming Error:  Reached base Meterelement class for TakeSample.' + CRLF + 'Device: ' + Name, 723);
+    DoSimpleMsg('Programming Error: Reached base Meterelement class for TakeSample.' + CRLF + 'Device: ' + Name, 723);
 end;
 
 end.

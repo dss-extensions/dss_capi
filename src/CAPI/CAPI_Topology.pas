@@ -55,7 +55,7 @@ begin
     begin
         if (DSS_CAPI_EXT_ERRORS) then
         begin
-            DoSimpleMsg(DSS, 'Topology is not initialized for the active circuit.', 5097);
+            DoSimpleMsg(DSS, _('Topology is not initialized for the active circuit.'), 5097);
         end;
         Exit;
     end;
@@ -127,9 +127,9 @@ begin
 
     while assigned(elm) do
     begin
-        if elm.IsIsolated then
+        if Flg.IsIsolated in elm.Flags then
         begin
-            Result[k] := elm.QualifiedName;
+            Result[k] := elm.FullName;
             Inc(k);
             if k > 0 then
                 SetLength(Result, k + 1);
@@ -183,9 +183,9 @@ begin
             i := 1;
             while (i <= k) and (not found) do
             begin
-                if (Result[i - 1] = pdElem.QualifiedName) and (Result[i] = pdLoop.QualifiedName) then
+                if (Result[i - 1] = pdElem.FullName) and (Result[i] = pdLoop.FullName) then
                     found := TRUE;
-                if (Result[i - 1] = pdLoop.QualifiedName) and (Result[i] = pdElem.QualifiedName) then
+                if (Result[i - 1] = pdLoop.FullName) and (Result[i] = pdElem.FullName) then
                     found := TRUE;
                 i := i + 1;
             end;
@@ -193,8 +193,8 @@ begin
             begin
                 k := k + 2;
                 SetLength(Result, k + 1);
-                Result[k - 1] := pdElem.QualifiedName;
-                Result[k] := pdLoop.QualifiedName;
+                Result[k - 1] := pdElem.FullName;
+                Result[k] := pdLoop.FullName;
             end;
         end;
         PDElem := topo.GoForward;
@@ -248,7 +248,7 @@ begin
         Exit;
     elm := node.CktObject;
     if assigned(elm) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elm.QualifiedName);
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elm.FullName);
 end;
 //------------------------------------------------------------------------------
 function Topology_Get_First(): Integer; CDECL;
@@ -312,7 +312,7 @@ begin
     elm := DSSPrime.ActiveCircuit.PDElements.First;
     while assigned(elm) do
     begin
-        if elm.IsIsolated then
+        if Flg.IsIsolated in elm.Flags then
             Inc(Result);
         elm := DSSPrime.ActiveCircuit.PDElements.Next;
     end;
@@ -352,7 +352,7 @@ begin
         pdElem := topo.First;
         while Assigned(pdElem) do
         begin
-            if (CompareText(pdElem.QualifiedName, S) = 0) then
+            if (AnsiCompareText(pdElem.FullName, S) = 0) then
             begin
                 DSSPrime.ActiveCircuit.ActiveCktElement := pdElem;
                 Found := TRUE;
@@ -363,7 +363,7 @@ begin
     end;
     if not Found then
     begin
-        DoSimpleMsg(DSSPrime, 'Branch "' + S + '" Not Found in Active Circuit Topology.', 5003);
+        DoSimpleMsg(DSSPrime, 'Branch "%s" not found in Active Circuit Topology.', [S], 5003);
         if assigned(elem) then
             DSSPrime.ActiveCircuit.ActiveCktElement := elem;
     end;
@@ -384,9 +384,9 @@ begin
         elm := DSSPrime.ActiveCircuit.PCElements.First;
         while assigned(elm) do
         begin
-            if elm.IsIsolated then
+            if Flg.IsIsolated in elm.Flags then
             begin
-                Result[k] := elm.QualifiedName;
+                Result[k] := elm.FullName;
                 Inc(k);
                 if k > 0 then
                     SetLength(Result, (k) + 1);
@@ -462,7 +462,7 @@ begin
     elm := DSSPrime.ActiveCircuit.PCElements.First;
     while assigned(elm) do
     begin
-        if elm.IsIsolated then
+        if Flg.IsIsolated in elm.Flags then
             Inc(Result);
         elm := DSSPrime.ActiveCircuit.PCElements.Next;
     end;
@@ -507,7 +507,7 @@ begin
         B := pdElem.FirstBus;
         while Length(B) > 0 do
         begin
-            if (CompareText(B, S) = 0) then
+            if (AnsiCompareText(B, S) = 0) then
             begin
                 DSSPrime.ActiveCircuit.ActiveCktElement := pdElem;
                 Found := TRUE;
@@ -519,7 +519,7 @@ begin
     end;
     if not Found then
     begin
-        DoSimpleMsg(DSSPrime, 'Bus "' + S + '" Not Found in Active Circuit Topology.', 5003);
+        DoSimpleMsg(DSSPrime, 'Bus "%s" not found in Active Circuit Topology.', [S], 5003);
         if assigned(elem) then
             DSSPrime.ActiveCircuit.ActiveCktElement := elem;
     end;

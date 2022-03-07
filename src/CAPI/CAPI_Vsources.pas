@@ -53,7 +53,7 @@ begin
     begin
         if DSS_CAPI_EXT_ERRORS then
         begin
-            DoSimpleMsg(DSS, 'No active Vsource object found! Activate one and retry.', 8989);
+            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Vsource'], 8989);
         end;
         Exit;
     end;
@@ -122,7 +122,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(DSSPrime, 'Vsource "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Vsource "%s" not found in Active Circuit.', [Value], 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -218,7 +218,14 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.Nphases := Value;
+
+    if Value < 1 then
+    begin
+        DoSimpleMsg(DSSPrime, '%s: Number of phases must be a positive integer!', [elem.FullName], 6568);
+        Exit;
+    end;
+    elem.FNphases := Value;
+    //TODO: missing side-effects?
 end;
 //------------------------------------------------------------------------------
 function Vsources_Get_idx(): Integer; CDECL;
@@ -238,7 +245,7 @@ begin
     pVsource := DSSPrime.VsourceClass.ElementList.Get(Value);
     if pVsource = NIL then
     begin
-        DoSimpleMsg(DSSPrime, 'Invalid VSource index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['VSource', Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pVsource;
