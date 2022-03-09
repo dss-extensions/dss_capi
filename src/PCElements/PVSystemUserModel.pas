@@ -12,7 +12,6 @@ interface
 USES  Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
 
 TYPE
-
     TPVsystemUserModel  = class(TObject)
       private
          FHandle:   NativeUInt;  // Handle to DLL containing user model
@@ -21,7 +20,7 @@ TYPE
          FuncError: Boolean;
 
 
-         {These functions should only be called by the object itself}
+         // These functions should only be called by the object itself
          FNew:     Function(Var DynaData:TDynamicsRec; Var CallBacks:TDSSCallBacks): Integer;  Stdcall;// Make a new instance
          FDelete:  Procedure(var x:Integer); Stdcall;  // deletes specified instance
          FSelect:  Function (var x:Integer):Integer; Stdcall;    // Select active instance
@@ -43,11 +42,11 @@ TYPE
         FUpdateModel:  Procedure; Stdcall; // Called when props of generator updated
 
 
-        {Save and restore data}
+        // Save and restore data
         FSave:         Procedure; Stdcall;
         FRestore:      Procedure; Stdcall;
 
-        {Monitoring functions}
+        // Monitoring functions
         FNumVars:      Function:Integer;Stdcall;
         FGetAllVars:   Procedure(Vars:pDoubleArray);StdCall;  // Get all vars
         FGetVariable:  Function(var I:Integer):Double;StdCall;// Get a particular var
@@ -71,8 +70,6 @@ implementation
 
 Uses PVSystem, DSSGlobals, dynlibs, Sysutils, 
      DSSHelper;
-
-{ TPVsystemUserModel }
 
 function TPVsystemUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Pointer;
 begin

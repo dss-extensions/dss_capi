@@ -12,6 +12,7 @@
     - expose the OpenDSS v8/v9 PM features as possible
     - continue work on the plotting and extended reporting API
     - see also the GitHub milestone: https://github.com/dss-extensions/dss_capi/milestone/6
+    - remove `LegacyModels` (older/deprecated models for PVSystem, Storage and related classes)
 
 # Version 0.12
 
@@ -58,6 +59,7 @@ This version still maintains basic compatibility with the 0.10.x series of relea
 - New object and batch APIs
 - New experimental API for loading scripts/data from ZIP files
 - New convenience functions to bulk load commands from the API
+- User-models: headers updated, and removed support for user-models in `LegacyModels` mode. `LegacyModels` will be removed in v0.13.
 
 Due to the high number of IO changes, we recommend checking the performance before and after the upgrade to ensure your use case is not affected negatively. If issues are found, please do report.
 

@@ -15,13 +15,9 @@ unit GenUserModel;
 
 interface
 
-USES  GeneratorVars, Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
+USES  Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
 
 TYPE
-
-
-
-
     TGenUserModel  = class(TObject)
       private
          FHandle: NativeUInt;  // Handle to DLL containing user model
@@ -30,9 +26,8 @@ TYPE
          Fname: String;    // Name of the DLL file containing user model
          FuncError:Boolean;
 
-
          {These functions should only be called by the object itself}
-         FNew:    Function(Var GenVars:TGeneratorVars; Var DynaData:TDynamicsRec; Var CallBacks:TDSSCallBacks): Integer;  Stdcall;// Make a new instance
+         FNew:    Function(GenVars: Pointer; Var DynaData:TDynamicsRec; Var CallBacks:TDSSCallBacks): Integer;  Stdcall;// Make a new instance
          FDelete: Procedure(var x:Integer); Stdcall;  // deletes specified instance
          FSelect: Function (var x:Integer):Integer; Stdcall;    // Select active instance
 
@@ -53,7 +48,7 @@ TYPE
         FIntegrate:    Procedure; stdcall; // Integrates any state vars
         FUpdateModel:  Procedure; Stdcall; // Called when props of generator updated
 
-        FActiveGeneratorVars:pTGeneratorVars;
+        FActiveGeneratorVars: Pointer;
 
         {Save and restore data}
         FSave:    Procedure; Stdcall;
@@ -76,7 +71,7 @@ TYPE
         Procedure Select;
         Procedure Integrate;
         
-        constructor Create(dssContext: TDSSContext; ActiveGeneratorVars:pTGeneratorVars);
+        constructor Create(dssContext: TDSSContext; ActiveGeneratorVars: Pointer);
         destructor  Destroy; override;
       end;
 
@@ -99,7 +94,7 @@ begin
         Result := Addr;
 end;
 
-constructor TGenUserModel.Create(dssContext: TDSSContext; ActiveGeneratorVars:pTGeneratorVars);
+constructor TGenUserModel.Create(dssContext: TDSSContext; ActiveGeneratorVars: Pointer);
 begin
     DSS     := dssContext;
     FID     := 0;
@@ -147,8 +142,6 @@ begin
 end;
 
 procedure TGenUserModel.Set_Name(const Value:String);
-
-
 begin
     {If Model already points to something, then free it}
 
@@ -204,11 +197,9 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew(FActiveGeneratorVars^, DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew(FActiveGeneratorVars, DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;
-
-
 
 end.

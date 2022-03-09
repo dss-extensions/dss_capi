@@ -28,6 +28,13 @@
 #    endif
 #endif
 
+#ifndef dss_long_bool
+#ifdef DSS_CAPI_DLL
+#define dss_long_bool int32_t
+#else
+#define dss_long_bool bool
+#endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -139,8 +146,10 @@ struct TCapControlVars
         DeadTime,
         LastOpenTime;
 
+    dss_long_bool
+        Voverride;
+
     bool 
-        Voverride,
         VoverrideEvent,
         VoverrideBusSpecified;     // Added 8-11-11
 
@@ -169,28 +178,9 @@ struct TCapControlVars
         LastStepInService;  // Change this to force an update of cap states
 
     
-    // NOTE: VOverrideBusName and CapacitorName are UnicodeStrings
-    //
-    // Without the actual string data, the total bytes for the string struct 
-    // fields is 12 when the OpenDSS binary is built with Delphi. Since this
-    // pointer can be different when used with FPC (16 bytes instead of 12),
-    // this pointer needs to be processed different according to the compiler.
-    // 
-    // Delphi UnicodeString structure seems to be:
-    // uint16_t codePage;
-    // uint16_t bytesPerChar; // should always be 2
-    // uint32_t refCount;
-    // uint32_t length;
-    // char *data;
-    // 
-    // FPC UnicodeString structure seems to be:
-    // uint32_t codePage;
-    // uint32_t bytesPerChar; // should always be 2
-    // uint32_t refCount;
-    // uint32_t length;
-    // char *data;
-    
-    char* VOverrideBusName; // Actual string data encoded in UTF-16
+    // NOTE: VOverrideBusName and CapacitorName may be UnicodeStrings in Delphi.
+    // These pointers could be processed different according to the Pascal compiler.
+    char* VOverrideBusName; // Actual string data encoded in UTF-16 
     char* CapacitorName; // Actual string data encoded in UTF-16
     
     int32_t ControlActionHandle;
@@ -200,19 +190,43 @@ struct TCapControlVars
 
 struct TStorageVars
 {
-    double 
+    double
         kWrating,
         kWhRating,
         kWhStored,
         kWhReserve,
         ChargeEff,
         DisChargeEff,
-        kVArating,
         kVStorageBase,
-        kvarRequested,
         RThev,
-        XThev,
-        
+        XThev;
+
+    double
+        // Inverter Related Properties
+        kVArating,
+        kvarlimit,
+        kvarlimitneg;
+
+    dss_long_bool
+        P_Priority,
+        PF_Priority;
+    
+    double
+        pctkWrated,
+        EffFactor;
+
+    double
+        // Interaction with InvControl
+        Vreg,
+        Vavg,
+        VVOperation,
+        VWOperation,
+        DRCOperation,
+        VVDRCOperation,
+        WPOperation,
+        WVOperation;
+
+    double 
         // Dynamics variables
         Vthev_re,  // Thevenin equivalent voltage (complex) for dynamic model
         Vthev_im,
@@ -307,6 +321,8 @@ struct TDSSCallBacks
     DSS_MODEL_CALLBACK(void, GetPublicDataPtr)(void **PublicData, int32_t *PublicDataBytes);
     DSS_MODEL_CALLBACK(int32_t, GetActiveElementName)(char *FullName, uint32_t MaxNameLen);
     DSS_MODEL_CALLBACK(void*, GetActiveElementPtr)(void);  // Returns pointer to active circuit element
+    
+    //TODO: check FPC vs Delphi compatibility for const parameters in ControlQueuePush
     DSS_MODEL_CALLBACK(int32_t, ControlQueuePush)(const int32_t Hour, const double Sec, const int32_t Code, const int32_t ProxyHdl, void *Owner);
     DSS_MODEL_CALLBACK(void, GetResultStr)(char *S, uint32_t Maxlen);
 };

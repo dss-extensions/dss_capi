@@ -34,7 +34,7 @@ uses
     GrowthShape,
     Spectrum,
     Dynamics,
-    GeneratorVars;
+    Generator;
 
 type
 {$SCOPEDENUMS ON}    

@@ -32,7 +32,6 @@ uses
     UComplex, DSSUcomplex,
     Capacitor,
     utilities,
-    CapControlVars,
     CapUserControl;
 
 type
@@ -63,6 +62,59 @@ type
         Reset = 22
     );
 {$SCOPEDENUMS OFF}
+
+    ECapControlType = (
+        CURRENTCONTROL,
+        VOLTAGECONTROL,
+        KVARCONTROL,
+        TIMECONTROL,
+        PFCONTROL,
+        USERCONTROL
+    );
+
+    // Fixed record structure for Public CapControl variables
+    TCapControlVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}Packed{$ENDIF} Record
+        FCTPhase,
+        FPTPhase  :Integer;   // "ALL" is -1
+
+        ON_Value,
+        OFF_Value,
+        PFON_Value,
+        PFOFF_Value,
+        CTRatio,
+        PTRatio,
+        ONDelay,
+        OFFDelay,
+        DeadTime,
+        LastOpenTime: Double;
+
+        Voverride: LongBool;
+        VoverrideEvent: Boolean;
+        VoverrideBusSpecified: Boolean;     // Added 8-11-11
+
+        VOverrideBusIndex :Integer;
+
+        Vmax: Double;
+        Vmin: Double;
+        FPendingChange: EControlAction;
+        ShouldSwitch: Boolean;  // True: action is pending
+        Armed: Boolean;  // Control is armed for switching unless reset
+        PresentState: EControlAction;
+        InitialState: EControlAction;
+
+        SampleP: Complex;        // two 64-bit numbers, kW, kvar
+        SampleV: Double;
+        SampleCurr: Double;
+
+        NumCapSteps: Integer;
+        AvailableSteps: Integer;   // available steps in controlled capacitor
+        LastStepInService: Integer;   // Change this to force an update of cap states
+
+        VOverrideBusName: String;
+        CapacitorName: String;
+        ControlActionHandle: Integer;
+        CondOffset: Integer; // Offset for monitored terminal
+    end;
 
     TCapControl = class(TControlClass)
     PROTECTED

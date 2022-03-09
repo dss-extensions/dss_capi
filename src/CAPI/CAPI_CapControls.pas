@@ -55,7 +55,6 @@ uses
     Executive,
     ControlElem,
     CapControl,
-    CapControlVars,
     SysUtils,
     DSSPointerList,
     Utilities,
