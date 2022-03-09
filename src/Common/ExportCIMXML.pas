@@ -194,7 +194,6 @@ uses
     Fuse,
     Capacitor,
     CapControl,
-    CapControlvars,
     Reactor,
     ConductorData,
     LineUnits,

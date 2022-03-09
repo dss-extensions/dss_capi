@@ -36,7 +36,6 @@ uses
     PCElement,
     PVSystem2,
     Storage2,
-    Storage2Vars,
     Arraydef,
     UComplex, DSSUcomplex,
     utilities,

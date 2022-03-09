@@ -26,8 +26,6 @@ interface
 
 uses
     Classes,
-    StorageVars,
-    StoreUserModel,
     DSSClass,
     PCClass,
     PCElement,
@@ -103,6 +101,36 @@ const
     STORE_FOLLOW = 4;
 
 type
+    // Struct that was passed to user-written DLLs (disabled in v0.12 for legacy models)
+    TStorageVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
+
+        kWrating: Double;
+        kWhRating: Double;
+        kWhStored: Double;
+        kWhReserve: Double;
+        ChargeEff: Double;
+        DisChargeEff: Double;
+        kVArating: Double; // --> kVArating
+        kVStorageBase: Double;
+        kvarRequested: Double;
+        RThev: Double;
+        XThev: Double;
+        // Dynamics variables
+        Vthev: Complex;  {Thevenin equivalent voltage (complex) for dynamic model}
+        ZThev: Complex;
+        Vthevharm: Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
+        Thetaharm: Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
+        VthevMag: Double;    {Thevenin equivalent voltage for dynamic model}
+        Theta: Double;   {Power angle between voltage and current}
+        w_grid: Double;   {Grid frequency}
+        TotalLosses: Double;
+        IdlingLosses: Double;
+
+        // 32-bit integers
+        NumPhases,       {Number of phases}
+        NumConductors,   {Total Number of conductors (wye-connected will have 4)}
+        Conn: Integer;   // 0 = wye; 1 = Delta
+    end;
 
     TStorage = class(TPCClass)
     PROTECTED
@@ -172,9 +200,6 @@ type
         Reg_Price: Integer;
         ShapeFactor: Complex;
         TraceFile: TFileStream;
-        IsUserModel: Boolean;
-        UserModel: TStoreUserModel;   // User-Written Models
-        DynaModel: TStoreDynaModel;
 
         UserModelNameStr, UserModelEditStr: String;
         DynaModelNameStr, DynaModelEditStr: String;
@@ -200,8 +225,6 @@ type
         procedure DoConstantZStorageObj;
         procedure DoDynamicMode;
         procedure DoHarmonicMode;
-        procedure DoUserModel;
-        procedure DoDynaModel;
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
@@ -594,21 +617,9 @@ begin
             end;
 
         ord(TProp.UserModel):
-        begin
-            UserModel.Name := UserModelNameStr;
-            IsUserModel := UserModel.Exists;
-        end;
-        ord(TProp.UserData):
-            if UserModel.Exists then
-                UserModel.Edit := UserModelEditStr;
+            DoSimpleMsg('%s model designated to use user-written model, but user-written model are not available for legacy models anymore (removed in DSS C-API v0.12).', [FullName], 567);
         ord(TProp.DynaDLL):
-        begin
-            DynaModel.Name := DynaModelNameStr; 
-            IsUserModel := DynaModel.Exists;
-        end;
-        ord(TProp.DynaData):
-            if DynaModel.Exists then
-                DynaModel.Edit := DynaModelEditStr;
+            DoSimpleMsg('%s model designated to use user-written model, but user-written model are not available for legacy models anymore (removed in DSS C-API v0.12).', [FullName], 567);
 
         ord(TProp.kVA):
             kVANotSet := FALSE;
@@ -687,9 +698,6 @@ begin
 
     RandomMult := Other.RandomMult;
 
-    UserModel.Name := Other.UserModel.Name;  // Connect to user written models
-    DynaModel.Name := Other.DynaModel.Name;
-    IsUserModel := Other.IsUserModel;
     ForceBalanced := Other.ForceBalanced;
     CurrentLimited := Other.CurrentLimited;
 end;
@@ -787,9 +795,6 @@ begin
     PublicDataStruct := @StorageVars;
     PublicDataSize := SizeOf(TStorageVars);
 
-    IsUserModel := FALSE;
-    UserModel := TStoreUserModel.Create(DSS);
-    DynaModel := TStoreDynaModel.Create(DSS);
     UserModelNameStr := '';
     UserModelEditStr := '';
     DynaModelNameStr := '';
@@ -815,8 +820,6 @@ end;
 destructor TStorageObj.Destroy;
 begin
     YPrimOpenCond.Free;
-    UserModel.Free;
-    DynaModel.Free;
     FreeAndNil(TraceFile);
     inherited Destroy;
 end;
@@ -1074,13 +1077,6 @@ begin
     // Solution object will reset after circuit modifications
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
-
-    // Update any user-written models
-    if Usermodel.Exists then
-        UserModel.FUpdateModel;  // Checks for existence and Selects
-    if Dynamodel.Exists then
-        Dynamodel.FUpdateModel;  // Checks for existence and Selects
-
 end;
 
 procedure TStorageObj.CalcYPrimMatrix(Ymatrix: TcMatrix);
@@ -1499,29 +1495,6 @@ begin
     end;
 end;
 
-procedure TStorageObj.DoUserModel;
-// Compute total terminal Current from User-written model
-var
-    i: Integer;
-begin
-    CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-
-    if UserModel.Exists then    // Check automatically selects the usermodel If true
-    begin
-        UserModel.FCalc(Vterminal, Iterminal);
-        IterminalUpdated := TRUE;
-        with ActiveCircuit.Solution do
-        begin          // Negate currents from user model for power flow Storage element model
-            for i := 1 to FnConds do
-                InjCurrent^[i] -= Iterminal^[i];
-        end;
-    end
-    else
-    begin
-        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName], 567);
-    end;
-end;
-
 procedure TStorageObj.DoDynamicMode;
 // Compute Total Current and add into InjTemp
 
@@ -1542,92 +1515,57 @@ var
 begin
     // Test using DESS model
     // Compute Vterminal
-
-    if DynaModel.Exists then
-        DoDynaModel   // do user-written model
-
-    else
-    begin
-        CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-        ZeroITerminal;
-
-        // Simple Thevenin equivalent
-        // compute terminal current (Iterminal) and take out the Yprim contribution
-
-        with StorageVars do
-            case Fnphases of
-                1:
-                begin
-                    CalcVthev_Dyn;  // Update for latest phase angle
-                    ITerminal^[1] := (VTerminal^[1] - Vthev - VTerminal^[2]) / Zthev;
-                    if CurrentLimited then
-                        if Cabs(Iterminal^[1]) > MaxDynPhaseCurrent then   // Limit the current but keep phase angle
-                            ITerminal^[1] := ptocomplex(topolar(MaxDynPhaseCurrent, cang(Iterminal^[1])));
-                    ITerminal^[2] := -ITerminal^[1];
-                end;
-                3:
-                begin
-                    Phase2SymComp(Vterminal, pComplexArray(@V012));
-
-                    // Positive Sequence Contribution to Iterminal
-                    CalcVthev_Dyn;  // Update for latest phase angle
-
-                    // Positive Sequence Contribution to Iterminal
-                    I012[1] := (V012[1] - Vthev) / Zthev;
-
-                    if CurrentLimited and (Cabs(I012[1]) > MaxDynPhaseCurrent) then   // Limit the pos seq current but keep phase angle
-                        I012[1] := ptocomplex(topolar(MaxDynPhaseCurrent, cang(I012[1])));
-
-                    if ForceBalanced then
-                    begin
-                        I012[2] := CZERO;
-                    end
-                    else
-                        I012[2] := V012[2] / Zthev;  // for inverter
-
-                    I012[0] := CZERO;
-
-                    SymComp2Phase(ITerminal, pComplexArray(@I012));  // Convert back to phase components
-
-                end;
-            else
-                DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Storage Element. %s has %d phases.', [FullName, Fnphases], 5671);
-                DSS.SolutionAbort := TRUE;
-            end;
-
-        // Add it into inj current array
-        for i := 1 to FnConds do
-            InjCurrent^[i] -= Iterminal^[i];
-    end;
-end;
-
-procedure TStorageObj.DoDynaModel;
-var
-    DESSCurr: array[1..6] of Complex;  // Temporary biffer
-    i: Integer;
-begin
-    // do user written dynamics model
-
-    with ActiveCircuit.Solution do
-    begin  // Just pass node voltages to ground and let dynamic model take care of it
-        for i := 1 to FNconds do
-            VTerminal^[i] := NodeV^[NodeRef^[i]];
-        StorageVars.w_grid := TwoPi * Frequency;
-    end;
-
-    DynaModel.FCalc(Vterminal, pComplexArray(@DESSCurr));
-
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     ZeroITerminal;
 
-    for i := 1 to Fnphases do
-    begin
-        StickCurrInTerminalArray(ITerminal, -DESSCurr[i], i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
-        StickCurrInTerminalArray(InjCurrent, DESSCurr[i], i);  // Put into Terminal array taking into account connection
-    end;
-end;
+    // Simple Thevenin equivalent
+    // compute terminal current (Iterminal) and take out the Yprim contribution
 
+    with StorageVars do
+        case Fnphases of
+            1:
+            begin
+                CalcVthev_Dyn;  // Update for latest phase angle
+                ITerminal^[1] := (VTerminal^[1] - Vthev - VTerminal^[2]) / Zthev;
+                if CurrentLimited then
+                    if Cabs(Iterminal^[1]) > MaxDynPhaseCurrent then   // Limit the current but keep phase angle
+                        ITerminal^[1] := ptocomplex(topolar(MaxDynPhaseCurrent, cang(Iterminal^[1])));
+                ITerminal^[2] := -ITerminal^[1];
+            end;
+            3:
+            begin
+                Phase2SymComp(Vterminal, pComplexArray(@V012));
+
+                // Positive Sequence Contribution to Iterminal
+                CalcVthev_Dyn;  // Update for latest phase angle
+
+                // Positive Sequence Contribution to Iterminal
+                I012[1] := (V012[1] - Vthev) / Zthev;
+
+                if CurrentLimited and (Cabs(I012[1]) > MaxDynPhaseCurrent) then   // Limit the pos seq current but keep phase angle
+                    I012[1] := ptocomplex(topolar(MaxDynPhaseCurrent, cang(I012[1])));
+
+                if ForceBalanced then
+                begin
+                    I012[2] := CZERO;
+                end
+                else
+                    I012[2] := V012[2] / Zthev;  // for inverter
+
+                I012[0] := CZERO;
+
+                SymComp2Phase(ITerminal, pComplexArray(@I012));  // Convert back to phase components
+
+            end;
+        else
+            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Storage Element. %s has %d phases.', [FullName, Fnphases], 5671);
+            DSS.SolutionAbort := TRUE;
+        end;
+
+    // Add it into inj current array
+    for i := 1 to FnConds do
+        InjCurrent^[i] -= Iterminal^[i];
+end;
 procedure TStorageObj.DoHarmonicMode;
 // Compute Injection Current Only when in harmonics mode
 
@@ -1718,8 +1656,6 @@ begin
                     DoConstantPQStorageObj;
                 2:
                     DoConstantZStorageObj;
-                3:
-                    DoUserModel;
             else
                 DoConstantPQStorageObj;  // for now, until we implement the other models.
             end;
@@ -1849,11 +1785,6 @@ begin
     with StorageVars do
     begin
         kWhBeforeUpdate := kWhStored;   // keep this for reporting change in storage as a variable
-
-        // Assume User model will take care of updating storage in dynamics mode
-        if ActiveCircuit.solution.IsDynamicModel and IsUserModel then
-            Exit;
-
 
         with ActiveCircuit.Solution do
             case FState of
@@ -1991,65 +1922,49 @@ begin
         Yeq := Cinv(ZThev);  // used to init state vars
     end;
 
-
-    if DynaModel.Exists then   // Checks existence and selects
-    begin
-        ComputeIterminal;
-        ComputeVterminal;
-        with StorageVars do
+    // Compute nominal Positive sequence voltage behind equivalent filter impedance
+    if FState = STORE_DISCHARGING then
+        with ActiveCircuit.Solution do
         begin
-            NumPhases := Fnphases;
-            NumConductors := Fnconds;
-            w_grid := twopi * ActiveCircuit.Solution.Frequency;
-        end;
-        DynaModel.FInit(Vterminal, Iterminal);
-    end
-    else
-    begin
-        // Compute nominal Positive sequence voltage behind equivalent filter impedance
-        if FState = STORE_DISCHARGING then
-            with ActiveCircuit.Solution do
+            ComputeIterminal;
+
+            if FnPhases = 3 then
             begin
-                ComputeIterminal;
+                Phase2SymComp(ITerminal, pComplexArray(@I012));
+                // Voltage behind Xdp  (transient reactance), volts
+                // case Connection of
+                //     0:
+                //         Vneut := NodeV^[NodeRef^[Fnconds]]
+                // else
+                //     Vneut := CZERO;
+                // end;
 
-                if FnPhases = 3 then
+                for i := 1 to FNphases do
+                    Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
+
+                Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
+                with StorageVars do
                 begin
-                    Phase2SymComp(ITerminal, pComplexArray(@I012));
-                    // Voltage behind Xdp  (transient reactance), volts
-                    // case Connection of
-                    //     0:
-                    //         Vneut := NodeV^[NodeRef^[Fnconds]]
-                    // else
-                    //     Vneut := CZERO;
-                    // end;
-
-                    for i := 1 to FNphases do
-                        Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
-
-                    Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
-                    with StorageVars do
-                    begin
-                        Vthev := V012[1] - I012[1] * ZThev;    // Pos sequence
-                        VThevPolar := cToPolar(VThev);
-                        VThevMag := VThevPolar.mag;
-                        Theta := VThevPolar.ang;  // Initial phase angle
-                    end;
-                end
-                else
-                begin   // Single-phase Element
-                    for i := 1 to Fnconds do
-                        Vabc[i] := NodeV^[NodeRef^[i]];
-                    with StorageVars do
-                    begin
-                        Vthev := VDiff(NodeRef^[1], NodeRef^[2]) - ITerminal^[1] * ZThev;    // Pos sequence
-                        VThevPolar := cToPolar(VThev);
-                        VThevMag := VThevPolar.mag;
-                        Theta := VThevPolar.ang;  // Initial phase angle
-                    end;
-
+                    Vthev := V012[1] - I012[1] * ZThev;    // Pos sequence
+                    VThevPolar := cToPolar(VThev);
+                    VThevMag := VThevPolar.mag;
+                    Theta := VThevPolar.ang;  // Initial phase angle
                 end;
+            end
+            else
+            begin   // Single-phase Element
+                for i := 1 to Fnconds do
+                    Vabc[i] := NodeV^[NodeRef^[i]];
+                with StorageVars do
+                begin
+                    Vthev := VDiff(NodeRef^[1], NodeRef^[2]) - ITerminal^[1] * ZThev;    // Pos sequence
+                    VThevPolar := cToPolar(VThev);
+                    VThevMag := VThevPolar.mag;
+                    Theta := VThevPolar.ang;  // Initial phase angle
+                end;
+
             end;
-    end;
+        end;
 end;
 
 procedure TStorageObj.IntegrateStates;
@@ -2059,30 +1974,25 @@ begin
 
     ComputeIterminal;
 
-    if Dynamodel.Exists then   // Checks for existence and Selects
-
-        DynaModel.Integrate
-
-    else
-        with ActiveCircuit.Solution, StorageVars do
-        begin
-            with StorageVars do
-                if (Dynavars.IterationFlag = 0) then
-                begin // First iteration of new time step
-                end;
-
-            // Compute shaft dynamics
-            // TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases);
-            // Write Dynamics Trace Record
-            if DebugTrace then
-            begin
-                FSWrite(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
-                FSWrite(TraceFile, Format(' Flag=%d ', [Dynavars.Iterationflag]));
-                FSWriteln(TraceFile);
-                FSFlush(TraceFile);
+    with ActiveCircuit.Solution, StorageVars do
+    begin
+        with StorageVars do
+            if (Dynavars.IterationFlag = 0) then
+            begin // First iteration of new time step
             end;
 
+        // Compute shaft dynamics
+        // TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases);
+        // Write Dynamics Trace Record
+        if DebugTrace then
+        begin
+            FSWrite(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
+            FSWrite(TraceFile, Format(' Flag=%d ', [Dynavars.Iterationflag]));
+            FSWriteln(TraceFile);
+            FSFlush(TraceFile);
         end;
+
+    end;
 end;
 
 function TStorageObj.Get_Variable(i: Integer): Double;
@@ -2116,29 +2026,6 @@ begin
                 Result := kWIdlingLosses; // Present Idling Loss
             7:
                 Result := kWhStored - kWhBeforeUpdate;
-        else
-        begin
-            if UserModel.Exists then   // Checks for existence and Selects
-            begin
-                N := UserModel.FNumVars;
-                k := (i - NumStorageVariables);
-                if k <= N then
-                begin
-                    Result := UserModel.FGetVariable(k);
-                    Exit;
-                end;
-            end;
-            if DynaModel.Exists then  // Checks for existence and Selects
-            begin
-                N := DynaModel.FNumVars;
-                k := (i - NumStorageVariables);
-                if k <= N then
-                begin
-                    Result := DynaModel.FGetVariable(k);
-                    Exit;
-                end;
-            end;
-        end;
         end;
 end;
 
@@ -2161,29 +2048,6 @@ begin
             4:
                 pctkWin := Value;
             5..7: ; // Do Nothing; read only
-        else
-        begin
-            if UserModel.Exists then    // Checks for existence and Selects
-            begin
-                N := UserModel.FNumVars;
-                k := (i - NumStorageVariables);
-                if k <= N then
-                begin
-                    UserModel.FSetVariable(k, Value);
-                    Exit;
-                end;
-            end;
-            if DynaModel.Exists then     // Checks for existence and Selects
-            begin
-                N := DynaModel.FNumVars;
-                k := (i - NumStorageVariables);
-                if k <= N then
-                begin
-                    DynaModel.FSetVariable(k, Value);
-                    Exit;
-                end;
-            end;
-        end;
         end;
 end;
 
@@ -2193,28 +2057,11 @@ var
 begin
     for i := 1 to NumStorageVariables do
         States^[i] := Variable[i];
-
-    if UserModel.Exists then
-    begin    // Checks for existence and Selects
-        // N := UserModel.FNumVars;
-        UserModel.FGetAllVars(pDoubleArray(@States^[NumStorageVariables + 1]));
-    end;
-    if DynaModel.Exists then
-    begin    // Checks for existence and Selects
-        // N := UserModel.FNumVars;
-        DynaModel.FGetAllVars(pDoubleArray(@States^[NumStorageVariables + 1]));
-    end;
 end;
 
 function TStorageObj.NumVariables: Integer;
 begin
     Result := NumStorageVariables;
-
-     // Exists does a check and then does a Select
-    if UserModel.Exists then
-        Result := Result + UserModel.FNumVars;
-    if DynaModel.Exists then
-        Result := Result + DynaModel.FNumVars;
 end;
 
 function TStorageObj.VariableName(i: Integer): String;
@@ -2246,33 +2093,6 @@ begin
             Result := 'Idling';
         7:
             Result := 'kWh Chng';
-    else
-    begin
-        if UserModel.Exists then    // Checks for existence and Selects
-        begin
-            pName := PAnsiChar(@Buff);
-            n := UserModel.FNumVars;
-            i2 := i - NumStorageVariables;
-            if i2 <= n then
-            begin
-                UserModel.FGetVarName(i2, pName, BuffSize);
-                Result := String(pName);
-                Exit;
-            end;
-        end;
-        if DynaModel.Exists then   // Checks for existence and Selects
-        begin
-            pName := PAnsiChar(@Buff);
-            n := DynaModel.FNumVars;
-            i2 := i - NumStorageVariables; // Relative index
-            if i2 <= n then
-            begin
-                DynaModel.FGetVarName(i2, pName, BuffSize);
-                Result := String(pName);
-                Exit;
-            end;
-        end;
-    end;
     end;
 end;
 
@@ -2436,6 +2256,7 @@ begin
         Registers[Reg] := Value;
 end;
 
-finalization    DispatchModeEnum.Free;
+finalization
+    DispatchModeEnum.Free;
     StateEnum.Free;
 end.

@@ -17,11 +17,15 @@ unit CapUserControl;
 
 interface
 
-USES  CapControlVars, Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
+USES 
+     Dynamics, 
+     DSSCallBackRoutines, 
+     UComplex, 
+     DSSUcomplex, 
+     Arraydef, 
+     DSSClass;
 
 TYPE
-
-
     TCapUserControl  = class(TObject)
       private
          FHandle: NativeUInt;  // Handle to DLL containing user model
@@ -64,8 +68,6 @@ TYPE
         property  Edit:String    write Set_Edit;
         property  Exists:Boolean read  Get_Exists;
       end;
-
-
 
 implementation
 
@@ -125,10 +127,8 @@ begin
         Else Result := False;
 end;
 
-
 procedure TCapUserControl.Sample;
 // Sample the cap control
-
 begin
      If FID <> 0 Then FSample;
 end;
@@ -137,7 +137,6 @@ procedure TCapUserControl.Select;
 begin
         Fselect(FID);
 end;
-
 
 procedure TCapUserControl.Set_Edit(const Value: String);
 begin
@@ -198,8 +197,6 @@ begin
             End;;
         End;
 end;
-
-
 
 procedure TCapUserControl.UpdateModel;
 begin

@@ -25,7 +25,6 @@ interface
 
 uses
     Classes,
-    PVsystemUserModel,
     DSSClass,
     PCClass,
     PCElement,
@@ -190,8 +189,6 @@ type
         TShapeValue: Double;
 
         TraceFile: TFileStream;
-        UserModel: TPVsystemUserModel;   // User-Written Models
-
         UserModelNameStr, UserModelEditStr: String;
 
         varBase: Double; // Base vars per phase
@@ -228,7 +225,6 @@ type
         procedure DoConstantZPVsystemObj;
         procedure DoDynamicMode;
         procedure DoHarmonicMode;
-        procedure DoUserModel;
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
@@ -542,11 +538,7 @@ var
 begin
     case Idx of
         ord(TProp.UserModel):
-            UserModel.Name := UserModelNameStr;  // Connect to user written models
-        ord(TProp.UserData):
-            if UserModel.Exists then
-                UserModel.Edit := UserModelEditStr;  // Send edit string to user model
-
+            DoSimpleMsg('%s model designated to use user-written model, but user-written model are not available for legacy models anymore (removed in DSS C-API v0.12).', [FullName], 1287);
         ord(TProp.conn):
         begin
             SetNCondsForConnection(self);
@@ -688,7 +680,6 @@ begin
     RandomMult := Other.RandomMult;
     FVWMode := Other.FVWMode;
     FVWYAxis := Other.FVWYAxis;
-    UserModel.Name := Other.UserModel.Name;  // Connect to user written models
     UserModelNameStr := Other.UserModelNameStr;
     //UserModelEditStr := Other.UserModelEditStr; -- TODO: not copied?
 
@@ -792,7 +783,6 @@ begin
     PublicDataStruct := @PVSystemVars;
     PublicDataSize := SizeOf(TPVSystemVars);
 
-    UserModel := TPVsystemUserModel.Create(DSS);
     UserModelNameStr := '';
     UserModelEditStr := '';
 
@@ -814,7 +804,6 @@ end;
 destructor TPVsystemObj.Destroy;
 begin
     YPrimOpenCond.Free;
-    UserModel.Free;
     FreeAndNil(TraceFile);
    
     inherited Destroy;
@@ -919,10 +908,6 @@ begin
     // Solution object will reset after circuit modifications
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
-
-    // Update any user-written models
-    if Usermodel.Exists then
-        UserModel.FUpdateModel;
 end;
 
 procedure TPVsystemObj.SetNominalPVSystemOuput;
@@ -1497,29 +1482,6 @@ begin
     end;
 end;
 
-procedure TPVsystemObj.DoUserModel;
-// Compute total terminal Current from User-written model
-var
-    i: Integer;
-begin
-    CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-
-    if UserModel.Exists     // Check automatically selects the usermodel If true
-    then
-    begin
-        UserModel.FCalc(Vterminal, Iterminal);
-        IterminalUpdated := TRUE;
-        with ActiveCircuit.Solution do
-        begin          // Negate currents from user model for power flow PVSystem element model
-            for i := 1 to FnConds do
-                InjCurrent^[i] -= Iterminal^[i];
-        end;
-    end
-    else
-        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName], 567);
-end;
-
-
 procedure TPVsystemObj.DoDynamicMode;
 // Compute Total Current and add into InjTemp
 var
@@ -1557,15 +1519,10 @@ begin
     case VoltageModel of
 
         3:
-            if UserModel.Exists then       // auto selects model
-            begin   // We have total currents in Iterminal
-                UserModel.FCalc(Vterminal, Iterminal);  // returns terminal currents in Iterminal
-            end
-            else
-            begin
-                DoSimpleMsg('Dynamics model missing for %s ', [FullName], 5671);
-                DSS.SolutionAbort := TRUE;
-            end;
+        begin
+            DoSimpleMsg('Dynamics model missing for %s ', [FullName], 5671);
+            DSS.SolutionAbort := TRUE;
+        end;
     else  // All other models -- current-limited like Generator Model 7
 
         // This is a simple model that is basically a thevinen equivalent without inertia
@@ -1729,8 +1686,6 @@ begin
                     DoConstantPQPVsystemObj;
                 2:
                     DoConstantZPVsystemObj;
-                3:
-                    DoUserModel;
             else
                 DoConstantPQPVsystemObj;  // for now, until we implement the other models.
             end;
@@ -1967,17 +1922,7 @@ procedure TPVsystemObj.IntegrateStates;
 // dynamics mode integration routine
 begin
    // Compute Derivatives and Then integrate
-
     ComputeIterminal;
-
-    if Usermodel.Exists then   // Checks for existence and Selects
-
-        Usermodel.Integrate
-
-    else
-        with ActiveCircuit.Solution do
-        begin
-        end;
 end;
 
 
@@ -2002,19 +1947,6 @@ begin
                 Result := EffFactor;
             5:
                 Result := Vreg;
-        else
-        begin
-            if UserModel.Exists then
-            begin
-                N := UserModel.FNumVars;
-                k := (i - NumPVSystemVariables);
-                if k <= N then
-                begin
-                    Result := UserModel.FGetVariable(k);
-                    Exit;
-                end;
-            end;
-        end;
         end;
 end;
 
@@ -2106,19 +2038,6 @@ begin
             4: ; // Setting this has no effect Read only
             5:
                 Vreg := Value; // the InvControl or ExpControl will do this
-        else
-        begin
-            if UserModel.Exists then
-            begin
-                N := UserModel.FNumVars;
-                k := (i - NumPVSystemVariables);
-                if k <= N then
-                begin
-                    UserModel.FSetVariable(k, Value);
-                    Exit;
-                end;
-            end;
-        end;
         end;
 end;
 
@@ -2150,16 +2069,11 @@ var
 begin
     for i := 1 to NumPVSystemVariables do
         States^[i] := Variable[i];
-
-    if UserModel.Exists then
-        UserModel.FGetAllVars(pDoubleArray(@States^[NumPVSystemVariables + 1]));
 end;
 
 function TPVsystemObj.NumVariables: Integer;
 begin
     Result := NumPVSystemVariables;
-    if UserModel.Exists then
-        Result := Result + UserModel.FNumVars;
 end;
 
 function TPVsystemObj.VariableName(i: Integer): String;
@@ -2187,21 +2101,6 @@ begin
             Result := 'Efficiency';
         5:
             Result := 'Vreg';
-    else
-    begin
-        if UserModel.Exists then
-        begin
-            pName := PAnsiChar(@Buff);
-            n := UserModel.FNumVars;
-            i2 := i - NumPVSystemVariables;
-            if (i2 <= n) then
-            begin
-                UserModel.FGetVarName(i2, pName, BuffSize);
-                Result := String(pName);
-                Exit;
-            end;
-        end;
-    end;
     end;
 end;
 

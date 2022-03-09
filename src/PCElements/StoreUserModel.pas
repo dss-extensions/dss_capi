@@ -14,7 +14,7 @@ unit StoreUserModel;
 
 interface
 
-USES  StorageVars, Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
+USES  Dynamics, DSSCallBackRoutines, UComplex, DSSUcomplex, Arraydef, DSSClass;
 
 TYPE
     // Interface for Dynamics-only user-written model
@@ -86,8 +86,6 @@ TYPE
          Function  CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
          procedure Set_Edit(const Value: String);
          function  Get_Exists: Boolean;
-
-      protected
 
       public
         DSS: TDSSContext;
