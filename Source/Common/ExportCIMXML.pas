@@ -1846,8 +1846,15 @@ var
   found: Boolean;
   pElem: TDSSCktElement;
 begin
-  SetLength (Signals, pMonBuses.Count);
-  if pMonBuses.Count < 1 then exit;
+  if pMonBuses.Count < 1 then begin
+    SetLength (Signals, 0);
+    exit;
+  end;
+
+// create just one remote signal for the main bus, based on the first MonBus
+//  IEEE 1547 doesn't allow different main buses
+//  IEEE 1547 also specifies that the average (pos seq) of all applicable voltages be used
+  SetLength (Signals, 1); // pMonBuses.Count);
 
   for i := Low(Signals) to High(Signals) do begin
     bus := pMonBuses.Strings[i];
@@ -2354,7 +2361,6 @@ begin
     StartInstance (prf, 'RemoteInputSignal', Signals[i]);
     RemoteInputSignalEnum (prf, 'remoteBusVoltageAmplitude');
     UuidNode (prf, 'RemoteInputSignal.Terminal', GetTermUuid (Signals[i].pElem, Signals[i].trm));
-//    PhaseKindNode (prf, 'RemoteInputSignal', Signals[i].phase);
     EndInstance (prf, 'RemoteInputSignal');
   end;
 
