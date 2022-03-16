@@ -2190,6 +2190,7 @@ var
 begin
   pInvName.LocalName := pExp.Name;
   pInvName.UUID := pExp.UUID;
+  i := 0;
   while i < pExp.PVNameList.Count do begin
     pDERNames.Add('pvsystem.' + pExp.PVNameList.Strings[i]);
     inc(i);
