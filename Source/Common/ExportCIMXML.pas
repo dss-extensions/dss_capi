@@ -2830,7 +2830,10 @@ Begin
         DoubleNode (SshPrf, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
 //        if FD.Separate then EndInstance (SshPrf, 'PowerElectronicsConnection');
         DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedS', pPV.PVSystemVars.fkvarating * 1000.0);
-        DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
+        if pPV.nphases = 1 then
+          DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0 * sqrt(3.0))
+        else
+          DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
         UuidNode (GeoPrf, 'PowerSystemResource.Location', geoUUID);
         EndInstance (FunPrf, 'PowerElectronicsConnection');
         AttachSolarPhases (pPV, geoUUID);
@@ -2865,7 +2868,10 @@ Begin
         DoubleNode (SshPrf, 'PowerElectronicsConnection.p', pBat.Presentkw * 1000.0);
         DoubleNode (SshPrf, 'PowerElectronicsConnection.q', pBat.Presentkvar * 1000.0);
         DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedS', pBat.kvaRating * 1000.0);
-        DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0);
+        if pBat.nphases = 1 then
+          DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0 * sqrt(3.0))
+        else
+          DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
         UuidNode (GeoPrf, 'PowerSystemResource.Location', geoUUID);
         EndInstance (FunPrf, 'PowerElectronicsConnection');
         AttachStoragePhases (pBat, geoUUID);
