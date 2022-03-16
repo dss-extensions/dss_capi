@@ -110,6 +110,7 @@ INTERFACE
             Property    VregMax: Double read FVregMax;
             Property    QMaxLead: Double read FQMaxLead;
             Property    QMaxLag: Double read FQMaxLag;
+            Property    TResponse: Double read FTResponse;
    end;
 
   VAR
