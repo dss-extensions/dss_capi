@@ -172,7 +172,7 @@ Begin
      PropertyName[11] := 'DeltaQ_factor';
      PropertyName[12] := 'PreferQ';
      PropertyName[13] := 'Tresponse';
-     PropertyName[14] := 'DERNameList';
+     PropertyName[14] := 'DERList';
 
      PropertyHelp[1] := 'Array list of PVSystems to be controlled.'+CRLF+CRLF+
                         'If not specified, all PVSystems in the circuit are assumed to be controlled by this ExpControl.';
@@ -218,7 +218,7 @@ Begin
                          'IEEE1547-2018 default is 10s for Catagory A and 5s for Category B, ' +
                          'adjustable from 1s to 90s for both categories. However, the default is 0 for ' +
                          'backward compatibility of OpenDSS models.';
-     PropertyHelp[14] := 'Alternative to PVNameList for CIM export and import.' + CRLF + CRLF +
+     PropertyHelp[14] := 'Alternative to PVSystemList for CIM export and import.' + CRLF + CRLF +
                          'However, storage is not actually implemented yet. ' +
                          'Use fully qualified PVSystem names.';
 
@@ -262,6 +262,7 @@ Begin
         0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
         1: begin
              InterpretTStringListArray(Param, FPVSystemNameList);
+             FDERNameList.Clear;
              for i := 0 to (FPVSystemNameList.Count - 1) do
                FDERNameList.Add ('PVSystem.' + FPVSystemNameList[i]);
              FPVSystemPointerList.Clear; // clear this for resetting on first sample
@@ -281,6 +282,7 @@ Begin
        13: if Parser[ActorID].DblValue >= 0 then FTresponse := Parser[ActorID].DblValue;
        14: begin
              InterpretTStringListArray(Param, FDERNameList);
+             FPVSystemNameList.Clear;
              for i := 0 to (FDERNameList.Count - 1) do
                FPVSystemNameList.Add (StripClassName (FDERNameList[i]));
              FPVSystemPointerList.Clear; // clear this for resetting on first sample
