@@ -2190,6 +2190,7 @@ var
 begin
   pInvName.LocalName := pExp.Name;
   pInvName.UUID := pExp.UUID;
+  i := 0;
   while i < pExp.DERNameList.Count do begin
     pDERNames.Add(pExp.DERNameList.Strings[i]);
     inc(i);
