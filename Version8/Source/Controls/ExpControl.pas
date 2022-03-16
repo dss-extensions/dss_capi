@@ -40,6 +40,7 @@ INTERFACE
             FListSize:Integer;
             FPVSystemNameList:TStringList;
             FPVSystemPointerList:PointerList.TPointerList;
+            FDERNameList:TStringList;
 
             // working storage for each PV system under management
             FPriorVpu: Array of Double;
@@ -103,7 +104,7 @@ INTERFACE
 
             Property    PendingChange[DevIndex: Integer]:Integer Read Get_PendingChange Write Set_PendingChange;
 
-            Property    PVNameList: TStringList read FPVSystemNameList; // for CIM export, Storage control not implemented internally
+            Property    DERNameList: TStringList read FDERNameList; // for CIM export, Storage control not implemented internally
             Property    VregTau: Double read FVregTau;
             Property    QVSlope: Double read FSlope;
             Property    VregMin: Double read FVregMin;
@@ -125,7 +126,7 @@ USES
 
 CONST
 
-    NumPropsThisClass = 13;
+    NumPropsThisClass = 14;
 
     NONE = 0;
     CHANGEVARLEVEL = 1;
@@ -171,6 +172,7 @@ Begin
      PropertyName[11] := 'DeltaQ_factor';
      PropertyName[12] := 'PreferQ';
      PropertyName[13] := 'Tresponse';
+     PropertyName[14] := 'DERNameList';
 
      PropertyHelp[1] := 'Array list of PVSystems to be controlled.'+CRLF+CRLF+
                         'If not specified, all PVSystems in the circuit are assumed to be controlled by this ExpControl.';
@@ -216,6 +218,9 @@ Begin
                          'IEEE1547-2018 default is 10s for Catagory A and 5s for Category B, ' +
                          'adjustable from 1s to 90s for both categories. However, the default is 0 for ' +
                          'backward compatibility of OpenDSS models.';
+     PropertyHelp[14] := 'Alternative to PVNameList for CIM export and import.' + CRLF + CRLF +
+                         'However, storage is not actually implemented yet. ' +
+                         'Use fully qualified PVSystem names.';
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -235,11 +240,9 @@ End;
 {--------------------------------------------------------------------------}
 FUNCTION TExpControl.Edit(ActorID : Integer):Integer;
 VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
-
-
+  ParamPointer, i:Integer;
+  ParamName:String;
+  Param:String;
 Begin
   ActiveExpControlObj := ElementList.Active;
   ActiveCircuit[ActorID].ActiveCktElement := ActiveExpControlObj;
@@ -258,9 +261,11 @@ Begin
       CASE ParamPointer OF
         0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
         1: begin
-           InterpretTStringListArray(Param, FPVSystemNameList);
-           FPVSystemPointerList.Clear; // clear this for resetting on first sample
-           FListSize := FPVSystemNameList.count;
+             InterpretTStringListArray(Param, FPVSystemNameList);
+             for i := 0 to (FPVSystemNameList.Count - 1) do
+               FDERNameList.Add ('PVSystem.' + FPVSystemNameList[i]);
+             FPVSystemPointerList.Clear; // clear this for resetting on first sample
+             FListSize := FPVSystemNameList.count;
            end;
         2: If Parser[ActorID].DblValue >= 0 then FVregInit := Parser[ActorID].DblValue;
         3: If Parser[ActorID].DblValue > 0 then FSlope := Parser[ActorID].DblValue;
@@ -274,6 +279,13 @@ Begin
        11: FdeltaQ_factor := Parser[ActorID].DblValue;
        12: FPreferQ := InterpretYesNo(param);
        13: if Parser[ActorID].DblValue >= 0 then FTresponse := Parser[ActorID].DblValue;
+       14: begin
+             InterpretTStringListArray(Param, FDERNameList);
+             for i := 0 to (FDERNameList.Count - 1) do
+               FPVSystemNameList.Add (StripClassName (FDERNameList[i]));
+             FPVSystemPointerList.Clear; // clear this for resetting on first sample
+             FListSize := FPVSystemNameList.count;
+           end;
       ELSE
         // Inherited parameters
         ClassEdit( ActiveExpControlObj, ParamPointer - NumPropsthisClass)
@@ -355,6 +367,7 @@ Begin
      ShowEventLog       := FALSE;
 
      ControlledElement        := nil;
+     FDERNameList             := nil;
      FPVSystemNameList        := nil;
      FPVSystemPointerList     := nil;
      cBuffer                  := nil;
@@ -369,6 +382,7 @@ Begin
      FVoltageChangeTolerance  :=0.0001;  // per-unit
      FVarChangeTolerance      :=0.0001;  // per-unit
 
+     FDERNameList := TSTringList.Create;
      FPVSystemNameList := TSTringList.Create;
      FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
 
@@ -548,8 +562,10 @@ BEGIN
 
       // put FTargetQ through the low-pass open-loop filter
       if FOpenTau > 0.0 then begin
-        dt :=  ActiveCircuit[ActorID].Solution.Dynavars.h;
-        FTargetQ[i] := FLastStepQ[i] + (FTargetQ[i] - FLastStepQ[i]) * (1 - Exp (-dt / FOpenTau)); // TODO - precalculate?
+        if (ActiveCircuit[ActorID].Solution.ControlMode <> CTRLSTATIC) then begin
+          dt :=  ActiveCircuit[ActorID].Solution.Dynavars.h;
+          FTargetQ[i] := FLastStepQ[i] + (FTargetQ[i] - FLastStepQ[i]) * (1 - Exp (-dt / FOpenTau)); // TODO - precalculate?
+        end;
       end;
 
       // only move the non-bias component by deltaQ_factor in this control iteration
@@ -593,8 +609,17 @@ begin
       For j := 1 to PVSys.NPhases Do Vpresent := Vpresent + Cabs(cBuffer[j]);
       FPresentVpu[i] := (Vpresent / PVSys.NPhases) / (basekV * 1000.0);
       // if initializing with Vreg=0 in static mode, we want to FIND Vreg
-      if (ActiveCircuit[ActorID].Solution.ControlMode = CTRLSTATIC) and (FVregInit <= 0.0) then
+      if (ActiveCircuit[ActorID].Solution.ControlMode = CTRLSTATIC) and (FVregInit <= 0.0) then begin
         FVregs[i] := FPresentVpu[i];
+        if FVregs[i] < FVregMin then begin
+          FVregs[i] := FVregMin;
+          FVregInit := 0.01; // don't let it outside the band
+        end;
+        if FVregs[i] > FVregMax then begin
+          FVregs[i] := FVregMax;
+          FVregInit := 0.01; // don't let it outside the band
+        end;
+      end;
       // both errors are in per-unit
       Verr := Abs(FPresentVpu[i] - FPriorVpu[i]);
       Qerr := Abs(PVSys.Presentkvar - FTargetQ[i]) / PVSys.kVARating;
@@ -637,6 +662,7 @@ begin
   PropertyValue[11] := '0.7';   // DeltaQ_factor
   PropertyValue[12] := 'no';    // PreferQ
   PropertyValue[13] := '0';     // TResponse
+  PropertyValue[14] := '';      // DER Name List
   inherited  InitPropertyValues(NumPropsThisClass);
 end;
 
@@ -722,6 +748,7 @@ Begin
     11  : Result := Format('%.6g', [FdeltaQ_factor]);
     12  : if FPreferQ then Result := 'yes' else Result := 'no';
     13  : Result := Format('%.6g', [FTresponse]);
+    14  : Result := ReturnElementsList;
     // 10 skipped, EventLog always went to the default handler
   ELSE  // take the generic handler
     Result := Inherited GetPropertyValue(index);
