@@ -135,7 +135,8 @@ type
         AllPDEatBus,
         TotalPowers,
         GISCoords,
-        ClearAll
+        ClearAll,
+        COMHelp
 {$IFDEF DSS_CAPI_PM}
         ,
         NewActor,
@@ -349,6 +350,11 @@ begin
             ord(Cmd.ClearAll):
                 DSS.DSSExecutive.DoClearCmd;
 {$ENDIF}
+            ord(Cmd.COMHelp):
+            begin
+                DoSimpleMsg(DSS, _('COMHelp is not available on DSS Extensions. You can download "OpenDSS_COM.chm" at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/x64/OpenDSS_COM.chm?format=raw as well as other example and documentation files from the official OpenDSS distribution at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/ and subfolders. Please see https://dss-extensions.org/ for further links.'), 999);
+                DSS.CmdResult := 0;
+            end;
         else
             if DSS.ActiveCircuit = NIL then
             begin
