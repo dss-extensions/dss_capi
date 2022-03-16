@@ -321,9 +321,10 @@ end;
 
 function TConductorDataObj.GetNumProperties(ArrayOffset: Integer):Integer;
 begin
-     DoErrorMsg('Something is Wrong.  Got to base Conductor GetNumProperties for Object:'+CRLF+DSSClassName+'.'+Name,
-               'N/A',
-               'Should not be able to get here. Probable Programming Error.', 400);
+  Result := 0;
+  DoErrorMsg('Something is Wrong.  Got to base Conductor GetNumProperties for Object:'+CRLF+DSSClassName+'.'+Name,
+             'N/A',
+             'Should not be able to get here. Probable Programming Error.', 400);
 end;
 
 procedure TConductorDataObj.InitPropertyValues(ArrayOffset: Integer);
