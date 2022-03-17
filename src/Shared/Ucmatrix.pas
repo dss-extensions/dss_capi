@@ -41,7 +41,7 @@ type
         procedure AddElemsym(i, j: Integer; Value: Complex);
         function GetElement(i, j: Integer): Complex;
         function GetErrorCode: Integer;
-        procedure MVmult(b, x: pComplexArray); {inline;} {b = Ax}
+        procedure MVmult(b, x: pComplexArray); inline; {b = Ax}
         function GetValuesArrayPtr(var Order: Integer): pComplexArray;
         procedure ZeroRow(iRow: Integer);
         procedure ZeroCol(iCol: Integer);
@@ -143,7 +143,7 @@ begin
     end;
 end;
 
-procedure TcMatrix.MvMult(b, x: pComplexArray); {inline;}
+procedure TcMatrix.MvMult(b, x: pComplexArray); inline;
 {$IFDEF DSS_CAPI_MVMULT}
 begin
     KLUSolve.mvmult(Norder, b, values, x);
