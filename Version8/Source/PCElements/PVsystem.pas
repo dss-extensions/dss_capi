@@ -147,7 +147,7 @@ type
       FWVMode                 : Boolean; //boolean indicating if under watt-var mode from InvControl
       FWPMode                 : Boolean; //boolean indicating if under watt-pf mode from InvControl
       FDRCMode                : Boolean; //boolean indicating if under DRC mode from InvControl
-      FAVRMode                : Boolean;
+      FAVRMode                : Boolean; //boolean indicating whether under AVR mode from ExpControl (or InvControl, but that does not seem to be implemented yet)
       PROCEDURE CalcDailyMult(Hr:double);  // now incorporates DutyStart offset
       PROCEDURE CalcDutyMult(Hr:double);
       PROCEDURE CalcYearlyMult(Hr:double);  // now incorporates DutyStart offset
@@ -212,6 +212,7 @@ type
       function Get_acVmin:double;
       function Get_acVmax:double;
       function Get_Zero:double;
+      function Get_CIMDynamicMode:boolean;
     Protected
       PROCEDURE Set_ConductorClosed(Index:Integer; ActorID:integer; Value:Boolean); Override;
       PROCEDURE GetTerminalCurrents(Curr:pComplexArray; ActorID : Integer); Override ;
@@ -312,6 +313,7 @@ type
       Property pMaxOverPF:Double   Read Get_pMaxOverPF;
       Property pMaxCharge:Double   Read Get_Zero;
       Property apparentPowerChargeMax:Double Read Get_Zero;
+      Property UsingCIMDynamics:Boolean Read Get_CIMDynamicMode;
    End;
 var
   ActivePVSystemObj   : TPVsystemObj;
@@ -2305,6 +2307,11 @@ end;
 function TPVSystemObj.Get_Zero:double;
 begin
   Result := 0.0;
+end;
+
+function TPVSystemObj.Get_CIMDynamicMode:boolean;
+begin
+  Result := FVWMode or FVVMode or FWVMode or FAVRMode or FDRCMode; // FWPMode not in CIM Dynamics
 end;
 
 Procedure TPVsystemObj.kWOut_Calc;

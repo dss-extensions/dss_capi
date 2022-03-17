@@ -171,7 +171,7 @@ TYPE
         FDRCMode        :Boolean; //boolean indicating if under DRC mode from InvControl
         FWPMode         :Boolean; //boolean indicating if under watt-pf mode from InvControl
         FWVMode         :Boolean; //boolean indicating if under watt-var mode from InvControl
-
+        FAVRMode        :Boolean; //boolean indicating whether under AVR mode from ExpControl (or InvControl, but that does not seem to be implemented yet)
 
         PROCEDURE CalcDailyMult(Hr:double; ActorID : Integer);
         PROCEDURE CalcDutyMult(Hr:double; ActorID : Integer);
@@ -254,6 +254,9 @@ TYPE
         PROCEDURE Set_DRCmode(const Value: Boolean);
         FUNCTION  Get_DRCmode: Boolean;
 
+        PROCEDURE Set_AVRmode(const Value: Boolean);
+        FUNCTION  Get_AVRmode: Boolean;
+
         PROCEDURE Set_VWmode(const Value: Boolean);
         PROCEDURE kWOut_Calc;
 
@@ -278,6 +281,7 @@ TYPE
         function Get_acVmax:double;
         function Get_sMaxCharge:double;
         function Get_pMaxCharge:double;
+        function Get_CIMDynamicMode:boolean;
 
       Protected
         PROCEDURE Set_ConductorClosed(Index:Integer; ActorID:integer; Value:Boolean); Override;
@@ -385,9 +389,10 @@ TYPE
         Property Varmode            :Integer Read Get_Varmode                Write Set_Varmode;  // 0=constant PF; 1=kvar specified
         Property VWmode             :Boolean Read Get_VWmode                 Write Set_VWmode;
         Property VVmode             :Boolean Read Get_VVmode                 Write Set_VVmode;
-        Property WPmode             :Boolean Read Get_WPmode                  Write Set_WPmode;
-        Property WVmode             :Boolean Read Get_WVmode                  Write Set_WVmode;
+        Property WPmode             :Boolean Read Get_WPmode                 Write Set_WPmode;
+        Property WVmode             :Boolean Read Get_WVmode                 Write Set_WVmode;
         Property DRCmode            :Boolean Read Get_DRCmode                Write Set_DRCmode;
+        Property AVRmode            :Boolean Read Get_AVRmode                Write Set_AVRmode;
         Property InverterON         :Boolean Read Get_InverterON             Write Set_InverterON;
         Property CutOutkWAC         :Double  Read Get_CutOutkWAC;
         Property CutInkWAC          :Double  Read Get_CutInkWAC;
@@ -421,6 +426,8 @@ TYPE
         Property pMaxOverPF:Double   Read Get_pMaxOverPF;
         Property pMaxCharge:Double   Read Get_pMaxCharge;
         Property apparentPowerChargeMax:Double Read Get_sMaxCharge;
+        Property UsingCIMDynamics:boolean Read Get_CIMDynamicMode;
+
    End;
 
 VAR
@@ -1113,6 +1120,7 @@ Begin
          FDRCMode        := OtherStorageObj.FDRCMode;
          FWPMode         := OtherStorageObj.FWPMode;
          FWVMode         := OtherStorageObj.FWVMode;
+         FAVRMode        := OtherStorageObj.FAVRMode;
 
          UserModel.Name   := OtherStorageObj.UserModel.Name;  // Connect to user written models
          DynaModel.Name   := OtherStorageObj.DynaModel.Name;
@@ -1318,6 +1326,7 @@ Begin
      FDRCMode    := FALSE;
      FWPMode     := FALSE;
      FWVMode     := FALSE;
+     FAVRMode    := FALSE;
 
      InitPropertyValues(0);
      RecalcElementData(ActiveActor);
@@ -3705,6 +3714,13 @@ end;
 
 //----------------------------------------------------------------------------
 
+function TStorageObj.Get_AVRmode: Boolean;
+begin
+  If FAVRmode Then Result := TRUE else Result := FALSE;
+end;
+
+//----------------------------------------------------------------------------
+
 FUNCTION TStorageObj.Get_CutOutkWAC: Double;
 begin
       Result := FCutOutkWAC;
@@ -3787,6 +3803,11 @@ end;
 function TStorageObj.Get_pMaxCharge:double;
 begin
   Result := abs (Get_Pmin);
+end;
+
+function TStorageObj.Get_CIMDynamicMode:boolean;
+begin
+  Result := FVWMode or FVVMode or FWVMode or FAVRMode or FDRCMode; // FWPMode not in CIM Dynamics
 end;
 
 // ===========================================================================================
@@ -3878,6 +3899,13 @@ end;
 procedure TStorageObj.Set_DRCmode(const Value: Boolean);
 begin
       FDRCmode := Value;
+end;
+
+//----------------------------------------------------------------------------
+
+procedure TStorageObj.Set_AVRmode(const Value: Boolean);
+begin
+  FAVRmode := Value;
 end;
 
 //----------------------------------------------------------------------------

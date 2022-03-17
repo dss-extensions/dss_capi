@@ -907,6 +907,19 @@ begin
     [CIM_NS, str]));
 end;
 
+procedure ConverterControlEnum (prf: ProfileChoice; varMode: Integer; CIMdynamics:Boolean);
+var
+  str: String;
+begin
+  str := 'constantPowerFactor'; // VARMODEPF
+  if CIMDynamics = True then
+    str := 'dynamic'
+  else if varMode = VARMODEKVAR then
+    str := 'constantReactivePower';
+  FD.WriteCimLn (prf, Format ('  <cim:PowerElectronicsConnection.controlMode rdf:resource="%s#ConverterControlMode.%s"/>',
+    [CIM_NS, str]));
+end;
+
 procedure SynchMachTypeEnum (prf: ProfileChoice; val: String);
 begin
   FD.WriteCimLn (prf, Format ('  <cim:SynchronousMachine.type rdf:resource="%s#SynchronousMachineType.%s"/>',
@@ -2829,6 +2842,7 @@ Begin
 //        if FD.Separate then StartFreeInstance (SshPrf, 'PowerElectronicsConnection', pPV.UUID);
         DoubleNode (SshPrf, 'PowerElectronicsConnection.p', pPV.Presentkw * 1000.0);
         DoubleNode (SshPrf, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
+        ConverterControlEnum (SshPrf, pPV.VarMode, pPV.UsingCIMDynamics);
 //        if FD.Separate then EndInstance (SshPrf, 'PowerElectronicsConnection');
         DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedS', pPV.PVSystemVars.fkvarating * 1000.0);
         if pPV.nphases = 1 then
@@ -2868,6 +2882,7 @@ Begin
         DoubleNode (EpPrf, 'PowerElectronicsConnection.maxIFault', 1.0 / pBat.MinModelVoltagePU);
         DoubleNode (SshPrf, 'PowerElectronicsConnection.p', pBat.Presentkw * 1000.0);
         DoubleNode (SshPrf, 'PowerElectronicsConnection.q', pBat.Presentkvar * 1000.0);
+        ConverterControlEnum (SshPrf, pBat.VarMode, pBat.UsingCIMDynamics);
         DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedS', pBat.kvaRating * 1000.0);
         if pBat.nphases = 1 then
           DoubleNode (EpPrf, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0 * sqrt(3.0))
