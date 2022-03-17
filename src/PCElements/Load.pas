@@ -1342,11 +1342,9 @@ end;
 function exp(x: double): double; cdecl; external;
 function pow(x, y: double): double; cdecl; external;
 {$ELSE}
-function pow(x, y: double): double; inline;
-begin
-    Result := Math.Power(x, y);
-end;
+{$DEFINE pow:=Math.Power}
 {$ENDIF}
+
 procedure TLoadObj.DoZIPVModel;
 var
     i: Integer;
@@ -1354,7 +1352,7 @@ var
     CurrZ: Complex;
     CurrI: Complex;
     CurrP: Complex;
-    V: Complex;
+    V, Vaux: Complex;
     Vmag: Double;
     vx, evx, yv: Double;
 begin
@@ -1365,8 +1363,42 @@ begin
         Exit;
     end;
 
+{$IFDEF NO_ZIPV_MANUAL_OPT}
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     CalcVTerminalPhase; // get actual voltage across each phase of the load
+{$ELSE}
+    //->CalcYPrimContribution
+    ComputeVTerminal;
+
+    // Apply these voltages to Yprim
+    YPrim.MVMult(InjCurrent, Vterminal);
+    //<-CalcYPrimContribution
+    
+    //-> CalcVTerminalPhase
+    // Establish phase voltages and stick in Vtemp
+    case Connection of
+        TLoadConnection.Wye:
+        begin
+            Vaux := Vterminal[Fnconds];
+            for i := 1 to Fnphases do
+                Vterminal[i] -= Vaux;
+        end;
+        TLoadConnection.Delta:
+        begin
+            Vaux := Vterminal[1];
+            for i := 1 to Fnphases do
+            begin
+                if i >= Fnconds then
+                    Vterminal[i] -= Vaux
+                else
+                    Vterminal[i] -= Vterminal[i + 1]; // VDiff(NodeRef^[i], NodeRef^[j]);
+            end;
+        end;
+    end;
+    LoadSolutionCount := ActiveCircuit.Solution.SolutionCount;
+    //<- CalcVTerminalPhase
+{$ENDIF}
+
     ZeroITerminal;
 
     for i := 1 to Fnphases do
@@ -1428,11 +1460,17 @@ begin
             if ZIPV[7] > 0.0 then
             begin
                 vx := 500.0 * (Vmag / Vbase - ZIPV[7]);
-                evx := exp(2 * vx);
-                yv := 0.5 * (1 + (evx - 1) / (evx + 1));
-                Curr := Curr * yv;
+{$IFNDEF NO_ZIPV_MANUAL_OPT}
+                if vx < 20 then // if >= 20, yv is 1 for a float64
+                begin
+{$ENDIF}                
+                    evx := exp(2 * vx);
+                    yv := 0.5 * (1 + (evx - 1) / (evx + 1));
+                    Curr := Curr * yv;
+{$IFNDEF NO_ZIPV_MANUAL_OPT}
+                end;
+{$ENDIF}
             end;
-
         end;
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
