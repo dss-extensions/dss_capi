@@ -200,7 +200,7 @@ type
         procedure DoZIPVModel;
         procedure DoMotorTypeLoad;
         function GrowthFactor(Year: Integer): Double;
-        procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
+        procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer); inline;
         function InterpolateY95_YLow(const Vmag: Double): Complex; inline;
         function InterpolateY95I_YLow(const Vmag: Double): Complex; inline; // ***Added by Celso & Paulo
         function Get_Unserved: Boolean;
@@ -1174,7 +1174,7 @@ begin
     inherited CalcYPrim;
 end;
 
-procedure TLoadObj.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
+procedure TLoadObj.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer); inline;
 // Put the current into the proper location according to connection
 var
     j: Integer;

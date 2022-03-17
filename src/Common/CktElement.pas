@@ -34,8 +34,9 @@ type
         procedure Set_Freq(Value: Double);  // set freq and recompute YPrim.
 
         procedure Set_Nconds(Value: Int8);
+        function Get_ActiveTerminal(): Int8; inline;
         procedure Set_ActiveTerminal(value: Int8);
-        function Get_ConductorClosed(Index: Integer): Boolean;
+        function Get_ConductorClosed(Index: Integer): Boolean; inline;
         procedure Set_YprimInvalid(const Value: Boolean);
         function Get_FirstBus: String;
         function Get_NextBus: String;
@@ -133,7 +134,7 @@ type
         property MaxPower[idxTerm: Integer]: Complex READ Get_MaxPower;  // Total power in active terminal
         property MaxCurrent[idxTerm: Integer]: Double READ Get_MaxCurrent;  // Max current in active terminal
         property MaxVoltage[idxTerm: Integer]: Double READ Get_MaxVoltage;  // Max voltage in active terminal
-        property ActiveTerminalIdx: Int8 READ FActiveTerminal WRITE Set_ActiveTerminal;
+        property ActiveTerminalIdx: Int8 READ Get_ActiveTerminal WRITE Set_ActiveTerminal;
         property Closed[Index: Integer]: Boolean READ Get_ConductorClosed WRITE Set_ConductorClosed;
         procedure SumCurrents;
         
@@ -190,7 +191,7 @@ begin
     // Make list for a small number of controls with an increment of 1
     ControlElementList := TDSSPointerList.Create(1);
 
-    FActiveTerminal := 1;
+    FActiveTerminal := 0;
     // LastTerminalChecked := 0;
 
     // Indicates which solution Itemp is computed for
@@ -241,12 +242,17 @@ begin
         ActiveCircuit.Solution.SystemYChanged := TRUE;
 end;
 
+function TDSSCktElement.Get_ActiveTerminal(): Int8; inline;
+begin
+    Result := FActiveTerminal + 1;
+end;
+
 procedure TDSSCktElement.Set_ActiveTerminal(value: Int8);
 begin
     if (Value > 0) and (Value <= fNterms) then
     begin
-        FActiveTerminal := Value;
-        ActiveTerminal := @Terminals[Value - 1];
+        FActiveTerminal := Value - 1;
+        ActiveTerminal := @Terminals[FActiveTerminal];
     end;
 end;
 
@@ -255,7 +261,7 @@ begin
     FHandle := value;
 end;
 
-function TDSSCktElement.Get_ConductorClosed(Index: Integer): Boolean;
+function TDSSCktElement.Get_ConductorClosed(Index: Integer): Boolean; inline;
 // return state of selected conductor
 // if index=0 return true if all phases closed, else false
 var
@@ -266,7 +272,7 @@ begin
         Result := TRUE;
         for i := 1 to Fnphases do
         begin
-            if not Terminals[FActiveTerminal - 1].ConductorsClosed[i - 1] then
+            if not Terminals[FActiveTerminal].ConductorsClosed[i - 1] then
             begin
                 Result := FALSE;
                 Break;
@@ -275,7 +281,7 @@ begin
     end
     else
     if (Index > 0) and (Index <= Fnconds) then
-        Result := Terminals[FActiveTerminal - 1].ConductorsClosed[Index - 1]
+        Result := Terminals[FActiveTerminal].ConductorsClosed[Index - 1]
     else
         Result := FALSE;
 end;
@@ -286,8 +292,8 @@ var
 begin
     if (Index = 0) then
     begin  // Do all conductors
-        for i := 1 to Fnphases do
-            Terminals[FActiveTerminal - 1].ConductorsClosed[i - 1] := Value;
+        for i := 0 to Fnphases - 1 do
+            Terminals[FActiveTerminal].ConductorsClosed[i] := Value;
         // DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
         YPrimInvalid := TRUE; // this also sets the global SystemYChanged flag
     end
@@ -295,7 +301,7 @@ begin
     begin
         if (Index > 0) and (Index <= Fnconds) then
         begin
-            Terminals[FActiveTerminal - 1].ConductorsClosed[index - 1] := Value;
+            Terminals[FActiveTerminal].ConductorsClosed[index - 1] := Value;
             // DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;
             YPrimInvalid := TRUE;
         end;
@@ -1054,15 +1060,42 @@ procedure TDSSCktElement.ComputeVterminal;
 // Put terminal voltages in an array
 var
     i: Integer;
+    vterm: PDouble;
+    nref: PInteger;
+    nv0, nv: PDouble;
 begin
     with ActiveCircuit.solution do
+    begin
+        vterm := PDouble(VTerminal);
+        nref := PInteger(NodeRef);
+        nv0 := PDouble(NodeV);
         for i := 1 to Yorder do
-            VTerminal^[i] := NodeV^[NodeRef^[i]];
+        begin
+            nv := nv0 + 2 * nref^;
+            vterm^ := nv^;
+            (vterm + 1)^ := (nv + 1)^;
+            inc(vterm, 2);
+            inc(nref);
+            // VTerminal^[i] := NodeV^[NodeRef^[i]];
+        end;
+    end;
 end;
 
 procedure TDSSCktElement.ZeroITerminal; inline;
+var
+    i: Integer;
+    it: PDouble;
 begin
-    FillDWord(ITerminal^, Yorder * ((SizeOf(Double) * 2) div 4), 0);
+    // Somehow this is slower?! FillDWord(ITerminal^, Yorder * ((SizeOf(Double) * 2) div 4), 0);
+    it := PDouble(Iterminal);
+    for i := 1 to Yorder do
+    begin
+        it^ := 0;
+        (it + 1)^ := 0;
+        inc(it, 2);
+    end;
+    //for i := 1 to Yorder do
+    //    ITerminal[i] := CZERO;
 end;
 
 procedure TDSSCktElement.MakeLike(OtherObj: Pointer);
