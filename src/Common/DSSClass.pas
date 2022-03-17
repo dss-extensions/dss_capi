@@ -1591,6 +1591,16 @@ var
 begin
     if (MinChars <> 0) and (MinChars > Length(Value)) then
     begin
+        if Hybrid then
+        begin
+            Val(Value, Result, errCode);
+            if errCode <> 0 then
+                raise EParserProblem.Create(Format('Integer number conversion error for string: "%s"', [Value]));
+
+            Result := Max(1, Result);
+            Exit;
+        end;
+
         Result := DefaultValue;
         if DefaultValue = -9999999 then
             raise Exception.Create(Format('Could not match enum ("%s") value "%s"', [Name, Value]));
