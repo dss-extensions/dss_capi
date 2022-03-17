@@ -248,7 +248,7 @@ begin
         SolverOptions := opts;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         if hY <> 0 then
-            KLUSolve.SetOptions(hY, SolverOptions and $FFFFFFFF);
+            KLUSolve.SetOptions(hY, SolverOptions and $FFFFFF);
 {$ELSE}
     DoSimpleMsg(_('This version of DSS C-API was not compiled with extended solver options.'), 7074);
 {$ENDIF}
