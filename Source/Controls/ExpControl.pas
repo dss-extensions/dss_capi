@@ -688,29 +688,32 @@ begin
     SetLength(FVregs, FListSize+1);
     For i := 1 to FListSize Do Begin
       PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
-      If Assigned(PVSys) and PVSys.Enabled Then FPVSystemPointerList.New := PVSys;
+      If Assigned(PVSys) and PVSys.Enabled Then Begin
+        FPVSystemPointerList.New := PVSys;
+        PVSys.AVRmode := True;
+      End;
     End;
   End Else Begin
-     {Search through the entire circuit for enabled pvsysten objects and add them to the list}
-         For i := 1 to PVSysClass.ElementCount Do Begin
-            PVSys :=  PVSysClass.ElementList.Get(i);
-            If PVSys.Enabled Then FPVSystemPointerList.New := PVSys;
-            FPVSystemNameList.Add(PVSys.Name);
-         End;
-         FListSize := FPVSystemPointerList.ListSize;
-
-         SetLength(ControlledElement,FListSize+1);
-
-         SetLength(FPriorVpu, FListSize+1);
-         SetLength(FPresentVpu, FListSize+1);
-
-         SetLength(FPendingChange,FListSize+1);
-         SetLength(FLastIterQ,FListSize+1);
-         SetLength(FLastStepQ,FListSize+1);
-         SetLength(FTargetQ,FListSize+1);
-         SetLength(FWithinTol, FListSize+1);
-         SetLength(FVregs, FListSize+1);
-    End;  {Else}
+     {Search through the entire circuit for enabled pvsystem objects and add them to the list}
+    For i := 1 to PVSysClass.ElementCount Do Begin
+      PVSys :=  PVSysClass.ElementList.Get(i);
+      If PVSys.Enabled Then Begin
+        FPVSystemPointerList.New := PVSys;
+        PVSys.AVRmode := True;
+        FPVSystemNameList.Add(PVSys.Name);
+      End;
+    End;
+    FListSize := FPVSystemPointerList.ListSize;
+    SetLength(ControlledElement,FListSize+1);
+    SetLength(FPriorVpu, FListSize+1);
+    SetLength(FPresentVpu, FListSize+1);
+    SetLength(FPendingChange,FListSize+1);
+    SetLength(FLastIterQ,FListSize+1);
+    SetLength(FLastStepQ,FListSize+1);
+    SetLength(FTargetQ,FListSize+1);
+    SetLength(FWithinTol, FListSize+1);
+    SetLength(FVregs, FListSize+1);
+  End;  {Else}
 
   //Initialize arrays
   For i := 1 to FlistSize Do begin
