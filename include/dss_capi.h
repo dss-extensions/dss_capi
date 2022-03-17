@@ -176,6 +176,15 @@ extern "C" {
         BatchOperation_Increment = 2
     };
 
+    enum SolverOptions {
+        // The values themselves are subject to change in future versions,
+        // use this enum for easier upgrades
+        SolverOptions_ReuseNothing = 0,
+        SolverOptions_ReuseCompressedMatrix = 1, // Reuse only the prepared CSC matrix
+        SolverOptions_ReuseSymbolicFactorization = 2, // Reuse the symbolic factorization, implies ReuseCompressedMatrix
+        SolverOptions_ReuseNumericFactorization = 3, // Reuse the numeric factorization, implies ReuseSymbolicFactorization
+        SolverOptions_AlwaysResetYPrimInvalid = 0x10000000 // Bit flag, see CktElement.pas
+    };
     /* 
     Function types for plotting and writing/message callbacks. 
     Receives a string that contains the JSON-encoded parameters.
