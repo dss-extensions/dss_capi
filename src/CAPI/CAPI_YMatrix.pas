@@ -18,7 +18,7 @@ procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL;
 procedure YMatrix_AddInAuxCurrents(SType: Integer); CDECL;
 procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
-function YMatrix_SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
+function YMatrix_SolveSystem(NodeV: pNodeVarray): Integer; CDECL;
 
 procedure YMatrix_Set_SystemYChanged(arg: TAPIBoolean); CDECL;
 function YMatrix_Get_SystemYChanged(): TAPIBoolean; CDECL;
@@ -169,12 +169,12 @@ begin
     VVectorPtr := DSSPrime.ActiveCircuit.Solution.NodeV;
 end;
 
-function YMatrix_SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
+function YMatrix_SolveSystem(NodeV: pNodeVarray): Integer; CDECL;
 begin
     Result := 0;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    if (@NodeV <> NIL) then
+    if (NodeV <> NIL) then
         Result := DSSPrime.ActiveCircuit.Solution.SolveSystem(NodeV)
     else
         Result := DSSPrime.ActiveCircuit.Solution.SolveSystem(DSSPrime.ActiveCircuit.Solution.NodeV);
