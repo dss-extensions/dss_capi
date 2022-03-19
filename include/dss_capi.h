@@ -6130,7 +6130,7 @@ extern "C" {
     DSS_CAPI_DLL void YMatrix_AddInAuxCurrents(int32_t SType);
     DSS_CAPI_DLL void YMatrix_getIpointer(double **IvectorPtr);
     DSS_CAPI_DLL void YMatrix_getVpointer(double **VvectorPtr);
-    DSS_CAPI_DLL int32_t YMatrix_SolveSystem(double **NodeVPtr);
+    DSS_CAPI_DLL int32_t YMatrix_SolveSystem(double *NodeVPtr);
     DSS_CAPI_DLL void YMatrix_Set_SystemYChanged(uint16_t arg);
     DSS_CAPI_DLL uint16_t YMatrix_Get_SystemYChanged(void);
     DSS_CAPI_DLL void YMatrix_Set_UseAuxCurrents(uint16_t arg);

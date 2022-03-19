@@ -5976,7 +5976,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_YMatrix_AddInAuxCurrents(void* ctx, int32_t SType);
     DSS_CAPI_DLL void ctx_YMatrix_getIpointer(void* ctx, double **IvectorPtr);
     DSS_CAPI_DLL void ctx_YMatrix_getVpointer(void* ctx, double **VvectorPtr);
-    DSS_CAPI_DLL int32_t ctx_YMatrix_SolveSystem(void* ctx, double **NodeVPtr);
+    DSS_CAPI_DLL int32_t ctx_YMatrix_SolveSystem(void* ctx, double *NodeVPtr);
     DSS_CAPI_DLL void ctx_YMatrix_Set_SystemYChanged(void* ctx, uint16_t arg);
     DSS_CAPI_DLL uint16_t ctx_YMatrix_Get_SystemYChanged(void* ctx);
     DSS_CAPI_DLL void ctx_YMatrix_Set_UseAuxCurrents(void* ctx, uint16_t arg);
