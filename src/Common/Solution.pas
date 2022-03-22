@@ -724,7 +724,7 @@ begin
     end;
 
     
-    if (MaxError <= ConvergenceTolerance) and (not IsNaN(MaxError)) then
+    if (MaxError <= ConvergenceTolerance) and (not IsNaN(MaxError)) and (not IsInfinite(MaxError)) then
         Result := TRUE
     else
         Result := FALSE;
