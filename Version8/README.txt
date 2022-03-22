@@ -3,11 +3,12 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.4.0.6
+Version 9.4.1.1
 
 Changes this version
 ====================
 
+- The ActiveCktelement interface includes new properties to allow users get/set state variables by name or index in the active circuit element. 
 - Corrects a recent bug introduced while fixing pu values for VSource when working on Dynamics mode.
 - Fixes version sync between exe, COM and DLL versions.
 - Solves old bug located within the fmonitor variables (proposed by UCF). 
