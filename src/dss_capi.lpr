@@ -470,6 +470,8 @@ exports
     CktElement_Get_AllVariableValues,
     CktElement_Get_Variable,
     CktElement_Get_Variablei,
+    CktElement_Set_Variable,
+    CktElement_Set_Variablei,
     CktElement_Get_NodeOrder,
     CktElement_Get_HasOCPDevice,
     CktElement_Get_NumControls,
@@ -2043,34 +2045,34 @@ exports
     {$I '../build/generated/ctx_functions.inc'}
 {$ENDIF}
 
-//    // Re-export most KLUSolve functions
-//    , 
-//    NewSparseSet,
-//    GetFlops,
-//    ZeroSparseSet,
-//    FactorSparseMatrix,
-//    SolveSparseSet,
-//    DeleteSparseSet,
-//    AddMatrixElement,
-//    GetSize,
-//    GetNNZ,
-//    GetSparseNNZ,
-//    GetSingularCol,
-//    GetRCond,
-//    GetRGrowth,
-//    GetCondEst,
-//    GetMatrixElement,
-//    AddPrimitiveMatrix,
-//    GetCompressedMatrix,
-//    GetTripletMatrix,
-//    FindIslands
-//{$IFDEF DSS_CAPI_MVMULT}
-//    , mvmult
-//{$ENDIF}
-//{$IFDEF DSS_CAPI_INCREMENTAL_Y}
-//    , IncrementMatrixElement
-//    , ZeroiseMatrixElement
-//{$ENDIF}
+   // Re-export most KLUSolve functions
+   , 
+   NewSparseSet,
+   GetFlops,
+   ZeroSparseSet,
+   FactorSparseMatrix,
+   SolveSparseSet,
+   DeleteSparseSet,
+   AddMatrixElement,
+   GetSize,
+   GetNNZ,
+   GetSparseNNZ,
+   GetSingularCol,
+   GetRCond,
+   GetRGrowth,
+   GetCondEst,
+   GetMatrixElement,
+   AddPrimitiveMatrix,
+   GetCompressedMatrix,
+   GetTripletMatrix,
+   FindIslands
+{$IFDEF DSS_CAPI_MVMULT}
+   , mvmult
+{$ENDIF}
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+   , IncrementMatrixElement
+   , ZeroiseMatrixElement
+{$ENDIF}
     ;
 begin
 end.
