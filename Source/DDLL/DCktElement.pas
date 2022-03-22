@@ -12,14 +12,20 @@ implementation
 uses DSSClassDefs, DSSGlobals, UComplex, Sysutils,
      PDElement, PCElement, MathUtil, Variants, CktElement, Utilities;
 var
-  i, count, low :Integer;
-  ctrl: TDSSCktElement;
-  pPCElem:TPCElement;
-  pPDElem:TPDElement;
-  BData:  wordbool;
-  numcond,n,iV:Integer;
-  Volts, cResid:Complex;
-  cBuffer: pComplexArray;
+  ctrl          : TDSSCktElement;
+  pPCElem       : TPCElement;
+  pPDElem       : TPDElement;
+  BData         :  wordbool;
+  i,
+  count,
+  low,
+  numcond,
+  n,
+  iV,
+  VarIdx        : Integer;
+  Volts,
+  cResid        : Complex;
+  cBuffer       : pComplexArray;
   S:String;
 
 Procedure CalcSeqCurrents(pActiveElement:TDSSCktElement; i012:pComplexArray);
@@ -123,8 +129,9 @@ End;
 
 function CktElementI(mode:longint; arg:longint):longint;cdecl;
 var
-   pCktElement : TDSSCktElement;
-   iControl : integer;
+   pCktElement  : TDSSCktElement;
+   iControl     : integer;
+   pPCElem      : TPCElement;
 
 begin
     Result:=0;  // Default return value
@@ -271,6 +278,29 @@ begin
             else BData:=FALSE;
             If ActiveCircuit[ActiveActor] <> Nil Then
                 ActiveCircuit[ActiveActor].ActiveCktElement.Enabled := BData;
+        end;
+        14: begin                                   // CktElement.ActiveVariableIndex -Write
+          Result := -1; // Signifies an error; no variable found
+          IF ActiveCircuit[ActiveActor] <> Nil THEN
+           WITH ActiveCircuit[ActiveActor] DO
+           Begin
+             If ActiveCktElement<>Nil THEN
+             WITH ActiveCktElement DO
+             Begin
+
+                 If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
+                  Begin
+                      pPCElem := (ActiveCktElement as TPCElement);
+                      If (Arg>0) and (Arg <= pPCElem.NumVariables) Then
+                      Begin
+                        Result := 0;  // the variable seems to exist
+                        VarIdx := Arg;
+                      End;
+                  End;
+
+                 {Else zero-length array null string}
+             End
+           End;
         end
     else
         Result:=-1;
@@ -344,6 +374,39 @@ begin
                {Else zero-length array null string}
            End
          End;
+    end;
+    5: begin                                        // CktElement.SetActiveVariable
+      Result    :=  -1;
+      IF ActiveCircuit[ActiveActor] <> Nil THEN
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+         If ActiveCktElement <> Nil Then
+         WITH ActiveCktElement DO
+         Begin
+
+           If (VarIdx>0) and (VarIdx <= pPCElem.NumVariables) Then       //Checks that the active Idx is valid
+           Begin
+            Result                    := 0;        // No error, the variable exists and is set
+            pPCElem.Variable[VarIdx]  := Arg;
+           End
+
+         End;
+      End;
+    end;
+    6: begin                                        // CktElement.GetActiveVariable
+      Result    :=  -1;
+      IF ActiveCircuit[ActiveActor] <> Nil THEN
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+         If ActiveCktElement <> Nil Then
+         WITH ActiveCktElement DO
+         Begin
+
+           If (VarIdx>0) and (VarIdx <= pPCElem.NumVariables) Then       //Checks that the active Idx is valid
+            Result                    := pPCElem.Variable[VarIdx];        // No error, the variable exists and is returned
+
+         End;
+      End;
     end
     else
         Result:=-1;
@@ -401,9 +464,30 @@ begin
             Result := pAnsiChar(AnsiString(Format('%s.%s', [ctrl.ParentClass.Name, ctrl.Name])));
         End;
       end;
+  end;
+  6: begin                                          // CktElement.ActiveVariableName
+    Result := AnsiString('Error');  // Signifies an error; the variable doesn't exist
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+     WITH ActiveCircuit[ActiveActor] DO
+     Begin
+       If ActiveCktElement<>Nil THEN
+       WITH ActiveCktElement DO
+       Begin
+
+           If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
+            Begin
+                pPCElem := (ActiveCktElement as TPCElement);
+                VarIdx := pPCElem.LookupVariable(Arg);
+                If (VarIdx>0) and (VarIdx <= pPCElem.NumVariables) Then
+                  Result := AnsiString('OK');     // we are good, the variable seems
+            End;
+
+           {Else zero-length array null string}
+       End
+     End;
   end
   else
-        Result:=pAnsiChar(AnsiString('Error'));
+    Result:=pAnsiChar(AnsiString('Error'));
   end;
 end;
 //**************************Variant commands****************************************
