@@ -63,6 +63,8 @@ procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: 
 procedure CktElement_Get_AllVariableValues_GR(); CDECL;
 function CktElement_Get_Variable(const MyVarName: PAnsiChar; out Code: Integer): Double; CDECL;
 function CktElement_Get_Variablei(Idx: Integer; out Code: Integer): Double; CDECL;
+procedure CktElement_Set_Variable(const MyVarName: PAnsiChar; out Code: Integer; Value: Double); CDECL;
+procedure CktElement_Set_Variablei(Idx: Integer; out Code: Integer; Value: Double); CDECL;
 procedure CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_NodeOrder_GR(); CDECL;
 function CktElement_Get_HasOCPDevice(): TAPIBoolean; CDECL;
@@ -1213,6 +1215,54 @@ begin
                 Code := 0;  // Signify result is OK.
             end;
         end;
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Set_Variable(const MyVarName: PAnsiChar; out Code: Integer; Value: Double); CDECL; //TODO: Remove Code and use Error interface?
+var
+    pPCElem: TPCElement;
+    VarIndex: Integer;
+begin
+    Code := 1; // Signifies an error; no value set
+    
+    if InvalidCktElement(DSSPrime) then
+        Exit;
+    
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
+    begin
+        if (DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
+            Exit;
+        
+        pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
+        VarIndex := pPCElem.LookupVariable(MyVarName);
+        if (VarIndex > 0) and (VarIndex <= pPCElem.NumVariables) then
+        begin
+            pPCElem.Variable[VarIndex] := Value;
+            Code := 0;  // Signify result is OK.
+        end;
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Set_Variablei(Idx: Integer; out Code: Integer; Value: Double); CDECL;
+var
+    pPCElem: TPCElement;
+begin
+    Code := 1; // Signifies an error; no value set
+    
+    if InvalidCktElement(DSSPrime) then
+        Exit;
+    
+    with DSSPrime.ActiveCircuit.ActiveCktElement do
+    begin
+        if (DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
+            Exit;
+
+        pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
+        if (Idx > 0) and (Idx <= pPCElem.NumVariables) then
+        begin
+            pPCElem.Variable[Idx] := Value;
+            Code := 0;  // Signify result is OK.
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
