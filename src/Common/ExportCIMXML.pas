@@ -158,18 +158,18 @@ type
         ex: TCIMExporter;
 
         procedure FinishNameplate;
-        procedure SetStorageNameplate (pBat: TStorage2Obj);
-        procedure SetPhotovoltaicNameplate (pPV: TPVSystem2Obj);
-        procedure SetElementNameplate (pElem: TDSSCktElement);
-        procedure SetDefaults (bCatB: Boolean);
+        procedure SetStorageNameplate(pBat: TStorage2Obj);
+        procedure SetPhotovoltaicNameplate(pPV: TPVSystem2Obj);
+        procedure SetElementNameplate(pElem: TDSSCktElement);
+        procedure SetDefaults(bCatB: Boolean);
         procedure FindSignalTerminals;
-        function CheckSignalMatch (sig: TRemoteSignalObject; pElm:TDSSCktElement; seq: Integer) : Boolean;
+        function CheckSignalMatch(sig: TRemoteSignalObject; pElm:TDSSCktElement; seq: Integer) : Boolean;
     public
         constructor Create(exporter: TCIMExporter);
         destructor Destroy; override;
 
-        procedure PullFromInvControl (pInv: TInvControl2Obj);
-        procedure PullFromExpControl (pExp: TExpControlObj);
+        procedure PullFromInvControl(pInv: TInvControl2Obj);
+        procedure PullFromExpControl(pExp: TExpControlObj);
         procedure WriteCIM (prf: ProfileChoice);
     end;
 
@@ -267,7 +267,7 @@ type
         procedure MonitoredPhaseNode(prf: ProfileChoice; val: String);
         procedure OpLimitDirectionEnum(prf: ProfileChoice; val: String);
         procedure NormalOpCatEnum (prf: ProfileChoice; val: String);
-        procedure SupportedModesEnum (prf: ProfileChoice; val: String);
+        //procedure SupportedModesEnum (prf: ProfileChoice; val: String);
         procedure PowerFactorExcitationEnum (prf: ProfileChoice; val: String);
         procedure RemoteInputSignalEnum (prf: ProfileChoice; val: String);
         procedure StringNode(prf: ProfileChoice; Node: String; val: String);
@@ -303,6 +303,7 @@ type
         procedure WriteTapeData(pCab: TTSDataObj);
         procedure WriteConcData(pCab: TCNDataObj);
         procedure WriteWireData(pWire: TConductorDataObj);
+        procedure ConverterControlEnum(prf: ProfileChoice; varMode: Integer; CIMdynamics: Boolean);
 
         procedure FD_Destroy;
         procedure FD_Create(Combined: Boolean; FileName: String);
@@ -1171,12 +1172,12 @@ procedure TCIMExporterHelper.BatteryStateEnum(prf: ProfileChoice; val: Integer);
 var
     str: String;
 begin
-    str := 'Waiting';
+    str := 'waiting';
     if val = STORE_CHARGING then
-        str := 'Charging'
+        str := 'charging'
     else
     if val = STORE_DISCHARGING then
-        str := 'Discharging';
+        str := 'discharging';
     FD.WriteCimLn(prf, Format('  <cim:BatteryUnit.batteryState rdf:resource="%s#BatteryState.%s"/>',
         [CIM_NS, str]));
 end;
@@ -1266,15 +1267,15 @@ begin
         [CIM_NS, val]));
 end;
 
-procedure TCIMExporterHelper.SupportedModesEnum (prf: ProfileChoice; val: String);
-begin
-    FD.WriteCimLn (prf, Format ('  <cim:DERNameplateData.supportedModesKind rdf:resource="%s#SupportedModesKind.%s"/>',
-        [CIM_NS, val]));
-end;
+// procedure TCIMExporterHelper.SupportedModesEnum (prf: ProfileChoice; val: String);
+// begin
+//     FD.WriteCimLn (prf, Format ('  <cim:DERNameplateData.supportedModesKind rdf:resource="%s#SupportedModesKind.%s"/>',
+//         [CIM_NS, val]));
+// end;
 
 procedure TCIMExporterHelper.PowerFactorExcitationEnum (prf: ProfileChoice; val: String);
 begin
-    FD.WriteCimLn (prf, Format ('  <cim:ConstantPowerFactorSettings.constantPFexcitationKind rdf:resource="%s#ConstantPowerFactorSettingKind.%s"/>',
+    FD.WriteCimLn (prf, Format ('  <cim:ConstantPowerFactorSettings.constantPowerFactorExcitationKind rdf:resource="%s#ConstantPowerFactorSettingKind.%s"/>',
         [CIM_NS, val]));
 end;
 
@@ -2198,9 +2199,15 @@ var
     found: Boolean;
     pElem: TDSSCktElement;
 begin
-    SetLength(Signals, pMonBuses.Count);
     if pMonBuses.Count < 1 then
-        exit;
+    begin
+        SetLength(Signals, 0);
+        Exit;
+    end;
+    // create just one remote signal for the main bus, based on the first MonBus
+    //  IEEE 1547 doesn't allow different main buses
+    //  IEEE 1547 also specifies that the average (pos seq) of all applicable voltages be used
+    SetLength(Signals, 1);
 
     for i := Low(Signals) to High(Signals) do
     begin
@@ -2299,7 +2306,7 @@ var
     xy: TXYcurveObj;
     bCatB, bValid, bSet1, bSet2, bSet3, bSet4, bSet5, bSet6: Boolean;
     mode, combi, i: Integer;
-    v, p, q: Double;
+    v, p, q, qvslope: Double;
 begin
     pInvName.LocalName := pInv.Name;
     pInvName.UUID := pInv.UUID;
@@ -2402,7 +2409,7 @@ begin
         begin
             v := xy.XValue_pt[i];
             p := xy.YValue_pt[i];
-            if (v >= 1.05) and (v <= 1.10) then
+            if (v >= 1.00) and (v <= 1.10) then // TODO: per standard, v should be >= 1.05 but we loosen that criteria for testing
                 bValid := TRUE;
             if bValid then
             begin
@@ -2614,6 +2621,32 @@ begin
         VW_enabled := TRUE;
     end
     else
+    if mode = 3 then // approximating AVR with DRC
+    begin
+        PF_enabled := False;
+        VV_enabled := True;
+        VV_vRefAutoModeEnabled := True;
+        VV_vRefOlrt := pInv.FDRCRollAvgWindowLength;
+        qvslope := 0.5 * (pInv.FArGraLowV + pInv.FArGraHiV);
+
+        if qvslope > 12.5 then 
+            bCatB := True;  // for catA, maximum slope would be 12.5    
+
+        if bCatB then 
+            q := 0.44 
+        else 
+            q := 0.25;
+
+        VV_curveQ1:=q;
+        VV_curveQ2:=VV_curveQ1;
+        VV_curveQ3:=-VV_curveQ1;
+        VV_curveQ4:=VV_curveQ3;
+        VV_curveV1:=0.50;
+        VV_curveV2:=1.0 - VV_curveQ2 / QVSlope;
+        VV_curveV3:=1.0 - VV_curveQ3 / QVSlope;  // - because Q3 should be negative
+        VV_curveV4:=1.50;
+    end
+    else
     if mode = 5 then
     begin
         PF_enabled := FALSE;
@@ -2622,10 +2655,18 @@ begin
 end;
 
 procedure TIEEE1547Controller.PullFromExpControl(pExp: TExpControlObj);
+var
+    i: Integer;
 begin
     pInvName.LocalName := pExp.Name;
     pInvName.UUID := pExp.UUID;
-    pDERNames.Assign(pExp.FPVSystemNameList);
+
+    i := 0;
+    while i < pExp.DERNameList.Count do
+    begin
+        pDERNames.Add(pExp.DERNameList.Strings[i]);
+        inc(i);
+    end;
     pMonBuses.Clear;
 
     if pExp.QMaxLead > CatBQmin then // catB estimate
@@ -2633,16 +2674,19 @@ begin
     else
         SetDefaults(FALSE);
 
+    PF_enabled := False;
+    VV_enabled := True;
     VV_vRefAutoModeEnabled := TRUE;
     VV_vRefOlrt := pExp.VregTau;
+    VV_olrt := pExp.TResponse;
     VV_curveQ1 := pExp.QMaxLead;
     VV_curveQ2 := VV_curveQ1;
     VV_curveQ3 := -pExp.QMaxLag;
     VV_curveQ4 := VV_curveQ3;
-    VV_curveV1 := 0.90;
+    VV_curveV1 := 0.50;
     VV_curveV2 := 1.0 - VV_curveQ2 / pExp.QVSlope;
     VV_curveV3 := 1.0 - VV_curveQ3 / pExp.QVSlope;  // - because Q3 should be negative
-    VV_curveV4 := 1.10;
+    VV_curveV4 := 1.50;
 end;
 
 procedure TIEEE1547Controller.SetDefaults(bCatB: Boolean);
@@ -2799,6 +2843,9 @@ begin
         FindSignalTerminals;
         StartInstance(prf, 'DERIEEEType1', pInvName);
         BooleanNode(prf, 'DynamicsFunctionBlock.enabled', TRUE);
+        BooleanNode (prf, 'DERIEEEType1.phaseToGroundApplicable', True); // seems to be the only OpenDSS option
+        BooleanNode (prf, 'DERIEEEType1.phaseToNeutralApplicable', False);
+        BooleanNode (prf, 'DERIEEEType1.phaseToPhaseApplicable', False);
         with ex.ActiveCircuit do
         begin
             if pDERNames.Count < 1 then
@@ -2843,7 +2890,6 @@ begin
             StartInstance(prf, 'RemoteInputSignal', Signals[i]);
             RemoteInputSignalEnum(prf, 'remoteBusVoltageAmplitude');
             UuidNode(prf, 'RemoteInputSignal.Terminal', GetTermUuid(Signals[i].pElem, Signals[i].trm));
-            PhaseKindNode(prf, 'RemoteInputSignal', Signals[i].phase);
             EndInstance(prf, 'RemoteInputSignal');
         end;
 
@@ -2852,14 +2898,20 @@ begin
         StartInstance(prf, 'DERNameplateData', pPlateName);
         RefNode(prf, 'DERNameplateData.DERIEEEType1', pInvName);
         NormalOpCatEnum(prf, ND_normalOPcatKind);
+        BooleanNode(prf, 'DERNameplateData.supportsConstPFmode', True);
+        BooleanNode(prf, 'DERNameplateData.supportsConstQmode', True);
+        BooleanNode(prf, 'DERNameplateData.supportsQVmode', True);
         if ND_normalOPcatKind = 'catB' then
         begin
-            SupportedModesEnum(prf, 'pv');
-            SupportedModesEnum(prf, 'qp');
+            BooleanNode(prf, 'DERNameplateData.supportsPVmode', True);
+            BooleanNode(prf, 'DERNameplateData.supportsQPmode', True);
+        end 
+        else 
+        begin
+            BooleanNode(prf, 'DERNameplateData.supportsPVmode', False);
+            BooleanNode(prf, 'DERNameplateData.supportsQPmode', False);
         end;
-        SupportedModesEnum(prf, 'constPF');
-        SupportedModesEnum(prf, 'constQ');
-        SupportedModesEnum(prf, 'qv');
+        BooleanNode(prf, 'DERNameplateData.supportsPFmode', False); // no frequency response in GridAPPS-D
         DoubleNode(prf, 'DERNameplateData.acVmax', ND_acVmax);
         DoubleNode(prf, 'DERNameplateData.acVmin', ND_acVmin);
         EndInstance(prf, 'DERNameplateData');
@@ -3311,9 +3363,13 @@ begin
 //        if FD.Separate then StartFreeInstance (SshPrf, 'PowerElectronicsConnection', pPV.UUID);
                 DoubleNode(SshPrf, 'PowerElectronicsConnection.p', pPV.Presentkw * 1000.0);
                 DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
+                ConverterControlEnum(SshPrf, pPV.VarMode, pPV.UsingCIMDynamics);
 //        if FD.Separate then EndInstance (SshPrf, 'PowerElectronicsConnection');
                 DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedS', pPV.PVSystemVars.fkvarating * 1000.0);
-                DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
+                if pPV.nphases = 1 then
+                    DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0 * sqrt(3.0))
+                else
+                    DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
                 UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(FunPrf, 'PowerElectronicsConnection');
                 AttachSolarPhases(pPV, geoUUID);
@@ -3349,8 +3405,12 @@ begin
                 DoubleNode(EpPrf, 'PowerElectronicsConnection.maxIFault', 1.0 / pBat.MinModelVoltagePU);
                 DoubleNode(SshPrf, 'PowerElectronicsConnection.p', pBat.Presentkw * 1000.0);
                 DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pBat.Presentkvar * 1000.0);
+                ConverterControlEnum(SshPrf, pBat.VarMode, pBat.UsingCIMDynamics);
                 DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedS', pBat.kvarating * 1000.0);
-                DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0);
+                if pBat.nphases = 1 then
+                    DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0 * sqrt(3.0))
+                else
+                    DoubleNode(EpPrf, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0);
                 UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(FunPrf, 'PowerElectronicsConnection');
                 AttachStoragePhases(pBat, geoUUID);
@@ -3380,9 +3440,9 @@ begin
                     pInv := InvControls.Next;
                 end;
                 pExp := ExpControls.First;
-                while pInv <> NIL do
+                while pExp <> NIL do
                 begin
-                    if pInv.Enabled then
+                    if pExp.Enabled then
                     begin
                         pI1547.PullFromExpControl(pExp);
                         pI1547.WriteCIM(DynPrf);
@@ -4532,5 +4592,20 @@ begin
     // inherited Destroy;
 end;
 
+procedure TCIMEXporterHelper.ConverterControlEnum(prf: ProfileChoice; varMode: Integer; CIMdynamics: Boolean);
+var
+    str: String;
+begin
+    str := 'constantPowerFactor'; // VARMODEPF
+    if CIMDynamics then
+        str := 'dynamic'
+    else if varMode = VARMODEKVAR then
+        str := 'constantReactivePower';
+
+    FD.WriteCimLn (prf, Format(
+        '  <cim:PowerElectronicsConnection.controlMode rdf:resource="%s#ConverterControlMode.%s"/>',
+        [CIM_NS, str]
+    ));
+end;
 
 end.

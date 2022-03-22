@@ -263,12 +263,9 @@ type
       // DRC
         FDbVMin: Double;
         FDbVMax: Double;
-        FArGraLowV: Double;
-        FArGraHiV: Double;
         deltaVDynReac: array of Double;
         FDRCRollAvgWindowpu: array of Double;
         FDRCRollAvgWindow: array of TRollAvgWindow;
-        FDRCRollAvgWindowLength: Integer; //FDRCVAvgWindowLengthSec // rolling average window length in seconds
         priorDRCRollAvgWindow: array of Double;
 
 
@@ -326,6 +323,11 @@ type
         DERNameList: TStringList;
         MonBusesNameList: TStringList;
         LPFTau: Double; // Variable for LPF and RF options
+
+        // DRC
+        FDRCRollAvgWindowLength: Integer; //FDRCVAvgWindowLengthSec // rolling average window length in seconds
+        FArGraLowV: Double;
+        FArGraHiV: Double;
 
         Fvvc_curve: TXYcurveObj; // volt-var
         Fwattpf_curve: TXYcurveObj;

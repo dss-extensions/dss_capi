@@ -14,7 +14,7 @@ INTERFACE
 
   uses
     gqueue, Command,
-    ControlClass, ControlElem, CktElement, DSSClass, PVSystem, Arraydef, UComplex, DSSUcomplex,
+    ControlClass, ControlElem, CktElement, DSSClass, PVSystem2, Arraydef, UComplex, DSSUcomplex,
     utilities, Dynamics, DSSPointerList, Classes, StrUtils;
 
   type
@@ -33,7 +33,8 @@ INTERFACE
         EventLog = 10,
         DeltaQ_factor = 11,
         PreferQ = 12,
-        Tresponse = 13
+        Tresponse = 13,
+        DERList = 14
      );
 {$SCOPEDENUMS OFF}
 
@@ -51,7 +52,7 @@ INTERFACE
     TExpControlObj = class(TControlElem)
       private
             ControlActionHandle: Integer;
-            ControlledElement: Array of TPVSystemObj;    // list of pointers to controlled PVSystem elements
+            ControlledElement: Array of TPVSystem2Obj;    // list of pointers to controlled PVSystem elements
             MonitoredElement : TDSSCktElement;  // First PVSystem element for now
 
             // PVSystemList information
@@ -79,19 +80,20 @@ INTERFACE
             FVarChangeTolerance: Double;     // no user adjustment
             FPreferQ: LongBool;
             
-            FTresponse, FOpenTau: Double;
+            FOpenTau: Double;
 
             PROCEDURE Set_PendingChange(Value: Integer;DevIndex: Integer);
             FUNCTION  Get_PendingChange(DevIndex: Integer):Integer;
             PROCEDURE UpdateExpControl(i:integer);
     public
-            FPVSystemNameList:TStringList;
+            FPVSystemNameList, DERNameList: TStringList;
             QmaxLead: Double;
             QmaxLag: Double;
             VregMin: Double;
             VregMax: Double;
             VregTau: Double;
             QVSlope: Double; // originally FSlope
+            Tresponse: Double;
 
             constructor Create(ParClass:TDSSClass; const ExpControlName:String);
             destructor  Destroy; override;
@@ -127,6 +129,7 @@ USES
 type 
     TObj = TExpControlObj;
     TProp = TExpControlProp;
+    TPVSystemObj = TPVSystem2Obj;
 const
     NumPropsThisClass = Ord(High(TProp));
     NONE = 0;
@@ -158,6 +161,9 @@ Begin
     // string lists
     PropertyType[ord(TProp.PVSystemList)] := TPropertyType.StringListProperty;
     PropertyOffset[ord(TProp.PVSystemList)] := ptruint(@obj.FPVSystemNameList);
+
+    PropertyType[ord(TProp.DERList)] := TPropertyType.StringListProperty;
+    PropertyOffset[ord(TProp.DERList)] := ptruint(@obj.DERNameList);
 
     // boolean properties
     PropertyType[ord(TProp.EventLog)] := TPropertyType.BooleanProperty;
@@ -191,7 +197,7 @@ Begin
     PropertyOffset[ord(TProp.QmaxLag)] := ptruint(@obj.QmaxLag);
     PropertyFlags[ord(TProp.QmaxLag)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
-    PropertyOffset[ord(TProp.Tresponse)] := ptruint(@obj.FTresponse);
+    PropertyOffset[ord(TProp.Tresponse)] := ptruint(@obj.Tresponse);
     PropertyFlags[ord(TProp.Tresponse)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     ActiveProperty  := NumPropsThisClass;
@@ -210,12 +216,25 @@ begin
 end;
 
 procedure TExpControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+var
+    i: Integer;
 begin
     case Idx of 
         ord(TProp.PVSystemList):
         begin
-          FPVSystemPointerList.Clear; // clear this for resetting on first sample
-          FListSize := FPVSystemNameList.count;
+            FPVSystemPointerList.Clear; // clear this for resetting on first sample
+            FListSize := FPVSystemNameList.count;
+            DERNameList.Clear;
+            for i := 0 to FListSize - 1 do
+                DerNameList.Add('PVSystem.' + FPVSystemNameList[i]);
+        end;
+        ord(TProp.DERList):
+        begin
+            FPVSystemPointerList.Clear; // clear this for resetting on first sample
+            FListSize := DERNameList.count;
+            FPVSystemNameList.Clear;
+            for i := 0 to FListSize - 1 do
+                FPVSystemNameList.Add(StripClassName(DERNameList[i]));
         end;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);
@@ -284,8 +303,10 @@ Begin
      FVoltageChangeTolerance:=0.0001;  // per-unit
      FVarChangeTolerance:=0.0001;  // per-unit
 
-     FPVSystemNameList := TSTringList.Create;
+     FPVSystemNameList := TStringList.Create;
+     DERNameList := TStringList.Create;
      FPVSystemPointerList := TDSSPointerList.Create(20);  // Default size and increment
+     
 
      // user parameters for dynamic Vreg
      FVregInit := 1.0; // 0 means to find it during initialization
@@ -299,7 +320,7 @@ Begin
      QmaxLag := 0.44;
      FdeltaQ_factor := 0.7; // only on control iterations, not the final solution
      FPreferQ := FALSE;
-     FTresponse := 0.0;
+     Tresponse := 0.0;
      FOpenTau := 0.0;
 
      //generic for control
@@ -308,6 +329,9 @@ End;
 
 destructor TExpControlObj.Destroy;
 Begin
+     FreeAndNil(FPVSystemPointerList);
+     FreeAndNil(FPVSystemNameList);
+     FreeAndNil(DERNameList);
      Finalize(ControlledElement);
      Finalize(cBuffer);
      Finalize(FPriorVpu);
@@ -326,7 +350,7 @@ VAR
    i      :Integer;
    maxord :Integer;
 Begin
-    FOpenTau := FTresponse / 2.3026;
+    FOpenTau := Tresponse / 2.3026;
     IF FPVSystemPointerList.Count = 0 Then  MakePVSystemList;
 
     IF FPVSystemPointerList.Count > 0  Then begin
@@ -421,10 +445,12 @@ BEGIN
       end;
 
       // put FTargetQ through the low-pass open-loop filter
-      if FOpenTau > 0.0 then begin
-        dt :=  ActiveCircuit.Solution.Dynavars.h;
-        FTargetQ[i] := FLastStepQ[i] + (FTargetQ[i] - FLastStepQ[i]) * (1 - Exp (-dt / FOpenTau)); // TODO - precalculate?
-      end;
+      if FOpenTau > 0.0 then 
+        if (ActiveCircuit.Solution.ControlMode <> CTRLSTATIC) then
+        begin
+          dt :=  ActiveCircuit.Solution.Dynavars.h;
+          FTargetQ[i] := FLastStepQ[i] + (FTargetQ[i] - FLastStepQ[i]) * (1 - Exp (-dt / FOpenTau)); // TODO - precalculate?
+        end;
 
       // only move the non-bias component by deltaQ_factor in this control iteration
       DeltaQ := FTargetQ[i] - FLastIterQ[i];
@@ -467,7 +493,19 @@ begin
       FPresentVpu[i] := (Vpresent / PVSys.NPhases) / (basekV * 1000.0);
       // if initializing with Vreg=0 in static mode, we want to FIND Vreg
       if (ActiveCircuit.Solution.ControlMode = CTRLSTATIC) and (FVregInit <= 0.0) then
+      begin
         FVregs[i] := FPresentVpu[i];
+        if FVregs[i] < VregMin then
+        begin
+          FVregs[i] := VregMin;
+          FVregInit := 0.01; // don't let it outside the band
+        end;
+        if FVregs[i] > VregMax then
+        begin
+          FVregs[i] := VregMax;
+          FVregInit := 0.01; // don't let it outside the band
+        end;
+      end;
       // both errors are in per-unit
       Verr := Abs(FPresentVpu[i] - FPriorVpu[i]);
       Qerr := Abs(PVSys.Presentkvar - FTargetQ[i]) / PVSys.kVARating;
@@ -513,17 +551,29 @@ begin
     SetLength(FTargetQ,FListSize+1);
     SetLength(FWithinTol, FListSize+1);
     SetLength(FVregs, FListSize+1);
-    For i := 1 to FListSize Do Begin
+    For i := 1 to FListSize Do 
+    begin
       PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
-      If Assigned(PVSys) and PVSys.Enabled Then FPVSystemPointerList.Add(PVSys);
-    End;
-  End Else Begin
-     {Search through the entire circuit for enabled pvsysten objects and add them to the list}
-         For i := 1 to PVSysClass.ElementCount Do Begin
+      if Assigned(PVSys) and PVSys.Enabled then
+      begin
+        FPVSystemPointerList.Add(PVSys);
+        PVSys.AVRmode := True;
+      end;
+    end;
+  end 
+  else 
+  begin
+         // Search through the entire circuit for enabled pvsysten objects and add them to the list
+         For i := 1 to PVSysClass.ElementCount Do 
+         begin
             PVSys :=  PVSysClass.ElementList.Get(i);
-            If PVSys.Enabled Then FPVSystemPointerList.Add(PVSys);
+            If PVSys.Enabled Then
+            begin
+              FPVSystemPointerList.Add(PVSys);
+              PVSys.AVRmode := True;
+            end;
             FPVSystemNameList.Add(PVSys.Name);
-         End;
+         end;
          FListSize := FPVSystemPointerList.Count;
 
          SetLength(ControlledElement,FListSize+1);
@@ -540,9 +590,10 @@ begin
     End;  {Else}
 
   //Initialize arrays
-  For i := 1 to FlistSize Do begin
-//    PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
-//    Set_NTerms(PVSys.NTerms); // TODO - what is this for?
+  For i := 1 to FlistSize Do 
+  begin
+    // PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
+    // Set_NTerms(PVSys.NTerms); // TODO - what is this for?
     FPriorVpu[i] := 0.0;
     FPresentVpu[i] := 0.0;
     FLastIterQ[i] := -1.0;
@@ -551,7 +602,7 @@ begin
     FWithinTol[i] := False;
     FVregs[i] := FVregInit;
     FPendingChange[i] := NONE;
-  end; {For}
+  end;
   RecalcElementData;
   If FPVSystemPointerList.Count>0 Then Result := TRUE;
 end;

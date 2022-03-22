@@ -282,7 +282,7 @@ type
         FpctCutIn: Double;
         FpctCutOut: Double;
 
-        AVRMode: Boolean;
+        AVRMode: Boolean; //boolean indicating whether under AVR mode from ExpControl (or InvControl, but that does not seem to be implemented yet)
 
         Connection: Integer;  // 0 = line-neutral; 1=Delta
         DailyShapeObj: TLoadShapeObj;  // Daily PVSystem element irradianceShape for this load
@@ -343,6 +343,8 @@ type
         procedure InitHarmonics(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
+
+        function UsingCIMDynamics(): Boolean;
 
         property PresentIrradiance: Double READ Get_PresentIrradiance WRITE PVSystemVars.FIrradiance;
         property PresentkW: Double READ Get_PresentkW WRITE kWRequested;
@@ -2465,6 +2467,11 @@ procedure TPVsystem2Obj.SetDragHandRegister(Reg: Integer; const Value: Double);
 begin
     if (Value > Registers[reg]) then
         Registers[Reg] := Value;
+end;
+
+function TPVSystem2Obj.UsingCIMDynamics(): Boolean;
+begin
+    Result := VWMode or VVMode or WVMode or AVRMode or DRCMode; // FWPMode not in CIM Dynamics
 end;
 
 end.

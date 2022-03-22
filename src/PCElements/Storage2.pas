@@ -329,6 +329,8 @@ type
 
         StorageVars: TStorage2Vars;
 
+        AVRMode: Boolean; //boolean indicating whether under AVR mode from ExpControl (or InvControl, but that does not seem to be implemented yet)
+
         VBase: Double;  // Base volts suitable for computing currents
         Vmaxpu: Double;
         Vminpu: Double;
@@ -440,6 +442,7 @@ type
         property DCkW: Double READ Get_DCkW;
 
         property MinModelVoltagePU: Double READ VminPu;
+        function UsingCIMDynamics(): Boolean;
     end;
 
 implementation
@@ -892,6 +895,7 @@ begin
     DRCMode := Other.DRCMode;
     WPMode := Other.WPMode;
     WVMode := Other.WVMode;
+    AVRMode := Other.AVRMode;
 
     UserModel.Name := Other.UserModel.Name;
     DynaModel.Name := Other.DynaModel.Name;
@@ -1061,6 +1065,7 @@ begin
     DRCMode := FALSE;
     WPMode := FALSE;
     WVMode := FALSE;
+    AVRMode := FALSE;
 
     RecalcElementData();
 end;
@@ -3202,6 +3207,12 @@ begin
         Registers[Reg] := Value;
 end;
 
-finalization    StateEnum.Free;
+function TStorage2Obj.UsingCIMDynamics(): Boolean;
+begin
+    Result := VWMode or VVMode or WVMode or AVRMode or DRCMode; // FWPMode not in CIM Dynamics
+end;
+
+finalization
+    StateEnum.Free;
     DispatchModeEnum.Free;
 end.
