@@ -3763,11 +3763,13 @@ end;
 function TStorageObj.Get_QMaxInj:double;
 begin
   Result := StorageVars.Fkvarlimit;
+  if Result > StorageVars.FkVARating then Result := StorageVars.FkVArating;
 end;
 
 function TStorageObj.Get_QMaxAbs:double;
 begin
   Result := StorageVars.FkvarlimitNeg;
+  if Result > StorageVars.FkVARating then Result := StorageVars.FkVArating;
 end;
 
 function TStorageObj.Get_pMaxUnderPF:double;
