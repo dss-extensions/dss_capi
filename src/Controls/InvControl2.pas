@@ -2998,7 +2998,7 @@ begin
         FAvgpAVRVpuPrior[i] := 0.0;
     end; {for}
 
-    RecalcElementData();
+    // RecalcElementData(); -- MakeDERList is only called FROM RecalcElementData, no need to call it again.
     if FDERPointerList.Count > 0 then
         Result := TRUE;
 end;
