@@ -325,9 +325,9 @@ end;
 function SwtControls_Get_idx(): Integer; CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
-        Result := DSSPrime.ActiveCircuit.SwtControls.ActiveIndex
+        Result := 0
     else
-        Result := 0;
+        Result := DSSPrime.ActiveCircuit.SwtControls.ActiveIndex;
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_idx(Value: Integer); CDECL;

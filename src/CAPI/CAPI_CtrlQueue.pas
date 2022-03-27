@@ -53,7 +53,7 @@ end;
 function CtrlQueue_Get_ActionCode(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSSPrime) or (DSSPrime.ActiveAction = NIL) then
         Exit;
     Result := DSSPrime.ActiveAction^.ActionCode;
 end;
@@ -61,7 +61,7 @@ end;
 function CtrlQueue_Get_DeviceHandle(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit(DSSPrime) then
+    if InvalidCircuit(DSSPrime) or (DSSPrime.ActiveAction = NIL) then
         Exit;
     Result := DSSPrime.ActiveAction^.DeviceHandle;
 end;
