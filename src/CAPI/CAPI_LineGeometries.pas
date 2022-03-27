@@ -523,6 +523,7 @@ begin
     if not _activeObj(DSSPrime, pLineGeometry) then
     begin
         DefaultResult(ResultPtr, ResultCount);
+        Exit;
     end;
     
     with pLineGeometry do

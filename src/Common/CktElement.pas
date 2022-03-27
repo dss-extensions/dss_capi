@@ -559,7 +559,7 @@ var
     i: Integer;
 begin
     Result := 0.0;
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
     for i := 1 to Fnphases do
@@ -583,7 +583,7 @@ var
 begin
     Result := CZERO;
     ActiveTerminalIdx := idxTerm;
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
     ComputeIterminal;
@@ -612,7 +612,7 @@ var
 begin
     Result := CZERO;
 
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
     ComputeIterminal;
@@ -653,7 +653,7 @@ var
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
     Result := 0.0;
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
     ComputeIterminal;
@@ -702,7 +702,7 @@ var
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
     Result := CZERO;
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
     ComputeIterminal;
@@ -756,7 +756,7 @@ var
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
     Result := 0.0;
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
     ComputeIterminal;
@@ -780,7 +780,7 @@ procedure TDSSCktElement.GetPhasePower(PowerBuffer: pComplexArray);
 var
     i, n: Integer;
 begin
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
     begin
         FillByte(PowerBuffer^, Yorder * (SizeOf(Double) * 2), 0);
         Exit;
@@ -812,7 +812,7 @@ var
 begin
     Num_Phases := Fnphases;
 
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
     begin
         FillByte(LossBuffer^, Fnphases * (SizeOf(Double) * 2), 0);
         Exit;
@@ -978,7 +978,7 @@ procedure TDSSCktElement.SumCurrents;
 var
     i: Integer;
 begin
-    if not FEnabled then
+    if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
     ComputeIterminal;
