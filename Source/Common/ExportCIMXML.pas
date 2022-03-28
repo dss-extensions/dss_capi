@@ -3414,9 +3414,9 @@ Begin
         if UseLimit then begin // maxLimitVoltage only in OpenDSS
           DoubleNode (EpPrf, 'TapChangerControl.maxLimitVoltage', VoltageLimit);
         end else begin
-          DoubleNode (EpPrf, 'TapChangerControl.maxLimitVoltage', 1.05 * v1);
+          DoubleNode (EpPrf, 'TapChangerControl.maxLimitVoltage', MaxTap * v1);
         end;
-        DoubleNode (EpPrf, 'TapChangerControl.minLimitVoltage', 0.95 * v1);
+        DoubleNode (EpPrf, 'TapChangerControl.minLimitVoltage', MinTap * v1);
         UuidNode (GeoPrf, 'PowerSystemResource.Location',
           GetDevUuid (XfLoc, Transformer.Name, 1));
         EndInstance (FunPrf, 'TapChangerControl');
