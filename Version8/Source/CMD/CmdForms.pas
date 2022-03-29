@@ -95,8 +95,8 @@ Procedure ShowAboutBox;
 begin
 	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
 	writeln ('Version: ' + VersionString);
-	writeln ('Copyright (c) 2008-2021, Electric Power Research Institute, Inc.');
-	writeln ('Copyright (c) 2016-2021, Battelle Memorial Institute');
+	writeln ('Copyright (c) 2008-2022, Electric Power Research Institute, Inc.');
+	writeln ('Copyright (c) 2016-2022, Battelle Memorial Institute');
 	writeln ('All rights reserved.');
 End;
 
