@@ -270,7 +270,7 @@ begin
             ReAllocmem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);
             ReAllocmem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm);
             i := 0;
-            while ((F.Position + 1) <> F.Size) and (i < NumHarm) do
+            while ((F.Position + 1) < F.Size) and (i < NumHarm) do
             begin
                 Inc(i);
                 FSReadln(F, S);  // Use Auxparser, which allows for formats
