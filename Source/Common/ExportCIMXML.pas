@@ -1573,7 +1573,7 @@ end;
 Procedure WriteXfmrCode (pXfCd: TXfmrCodeObj);
 var
   pName: TNamedObject;
-  ratShort, ratEmerg, val, Zbase, pctIexc: double;
+  ratShort, ratEmerg, val, r, x, Zbase, TestKVA, pctIexc: double;
   i, j, seq: Integer;
 begin
   pName := TNamedObject.Create('dummy');
@@ -1643,20 +1643,20 @@ begin
         UuidNode (CatPrf, 'ShortCircuitTest.GroundedEnds', GetDevUuid (WdgInf, pXfCd.Name, j));
         IntegerNode (CatPrf, 'ShortCircuitTest.energisedEndStep', Winding^[i].NumTaps div 2);
         IntegerNode (CatPrf, 'ShortCircuitTest.groundedEndStep', Winding^[j].NumTaps div 2);
+        // TestKVA := min(Winding^[i].kVA, Winding^[j].kva);
+        TestKVA := Winding^[1].kva;
         Zbase := Winding^[i].kvll;
-        Zbase := 1000.0 * Zbase * Zbase / Winding^[1].kva;  // all DSS impedances are on winding 1 base
-        val := Xsc^[seq] * Zbase;
+        Zbase := 1000.0 * Zbase * Zbase / TestKVA;  // all DSS impedances are on winding 1 kva base
+        // windings are not overloaded during short-circuit tests, but in OpenDSS Sbase is on Winding 1 always
+        x := Xsc^[seq];
+        r := Winding^[i].Rpu + Winding^[j].Rpu;
+        val := sqrt(r*r + x*x) * Zbase;
         DoubleNode (CatPrf, 'ShortCircuitTest.leakageImpedance', val);
         DoubleNode (CatPrf, 'ShortCircuitTest.leakageImpedanceZero', val);
-        if seq = 1 then begin // put all the load loss on test from wdg1 to wdg2
-          val := 0.01 * pctLoadLoss * Winding^[1].kva; // losses are to be in kW
-          DoubleNode (CatPrf, 'ShortCircuitTest.loss', val);
-          DoubleNode (CatPrf, 'ShortCircuitTest.lossZero', val);
-				end else begin
-					DoubleNode (CatPrf, 'ShortCircuitTest.loss', 0.0);
-					DoubleNode (CatPrf, 'ShortCircuitTest.lossZero', 0.0);
-        end;
-        DoubleNode (CatPrf, 'TransformerTest.basePower', 1000.0 * Winding^[i].kva);
+        val := r * TestKVA;
+        DoubleNode (CatPrf, 'ShortCircuitTest.loss', val);
+        DoubleNode (CatPrf, 'ShortCircuitTest.lossZero', val);
+        DoubleNode (CatPrf, 'TransformerTest.basePower', 1000.0 * TestKVA);
         DoubleNode (CatPrf, 'TransformerTest.temperature', 50.0);
         EndInstance (CatPrf, 'ShortCircuitTest');
       end;
