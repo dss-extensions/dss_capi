@@ -900,7 +900,7 @@ begin
     str := 'charging'
   else if val = STORE_DISCHARGING then
     str := 'discharging';
-  FD.WriteCimLn (prf, Format ('  <cim:BatteryUnit.batteryState rdf:resource="%s#BatteryState.%s"/>',
+  FD.WriteCimLn (prf, Format ('  <cim:BatteryUnit.batteryState rdf:resource="%s#BatteryStateKind.%s"/>',
     [CIM_NS, str]));
 end;
 
