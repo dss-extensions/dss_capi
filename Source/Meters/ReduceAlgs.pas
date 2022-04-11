@@ -174,17 +174,17 @@ begin
         LineElement1 := BranchList.GoForward; // Always keep the first element in the Tree
          WHILE LineElement1 <> NIL Do
           Begin
-           if LineElement1.enabled then    // else skip
+          If LineElement1.enabled then    // else skip
 
             If Not LineElement1.HasControl then
-             If Not LineElement1.IsMonitored then   // Skip if controlled element or control is monitoring ,,,
+              If Not LineElement1.IsMonitored then   // Skip if controlled element or control is monitoring ,,,
 
              If LineElement1.Flag Then  // too short; Try to merge this element out
              Begin
                With BranchList Do
                Begin
      //   {****} WriteDLLDebugFile(Format('Processing Line.%s Bus1=%s Bus2=%s',[Uppercase(LineElement1.Name), LineElement1.GetBus(1), LineElement1.GetBus(2)]));
-                 If (PresentBranch.NumChildBranches=0) and (PresentBranch.NumShuntObjects=0) Then  LineElement1.Enabled := False     // just discard it
+                 If (PresentBranch.NumChildBranches=0) and (PresentBranch.NumShuntObjects=0) and (Not ActiveCircuit[ActiveActor].Buses^[PresentBranch.ToBusReference].Keep) Then  LineElement1.Enabled := False     // just discard it
                  Else
                   If (PresentBranch.NumChildBranches=0) {****OR (PresentBranch.NumChildBranches>1)**} then                    {Merge with Parent and move shunt elements to TO node on parent branch}
                      Begin
