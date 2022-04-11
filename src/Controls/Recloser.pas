@@ -541,6 +541,13 @@ begin
     else
         FPresentState := CTRL_OPEN;
 
+    if MonitoredElement = NIL then
+    begin
+        DoSimpleMsg('Required property MonitoredObj is not defined for "%s".', [FullName], 9894);
+        DSS.SolutionAbort := True;
+        Exit;
+    end;
+
     with MonitoredElement do
     begin
         if OperationCount > NumFast then
