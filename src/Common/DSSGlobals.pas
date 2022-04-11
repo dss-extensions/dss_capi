@@ -164,6 +164,7 @@ VAR
     DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True; //TODO: one per context?
     DSS_CAPI_LEGACY_MODELS: Boolean = False; //TODO: one per context?
     NoFormsAllowed: Boolean = True; //TODO: one per context?
+    DSS_CAPI_ALLOW_DOSCMD: Boolean = False; //TODO: one per context?
     
     SQRT2: Double;
     SQRT3: Double;
@@ -806,6 +807,9 @@ initialization
     // Default is False, enable at initialization when DSS_CAPI_LEGACY_MODELS = 1
     DSS_CAPI_LEGACY_MODELS := (SysUtils.GetEnvironmentVariable('DSS_CAPI_LEGACY_MODELS') = '1');
     DSS_CAPI_LEGACY_MODELS := DSS_CAPI_LEGACY_MODELS_PREV;
+    
+    // Default is False, enable at initialization when DSS_CAPI_ALLOW_DOSCMD = 1
+    DSS_CAPI_ALLOW_DOSCMD := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_DOSCMD') = '1');
 
     // For the 0.12.x branch, default is True, disable at initialization when DSS_CAPI_COM_DEFAULTS = 0
     DSS_CAPI_COM_DEFAULTS := (GetEnvironmentVariable('DSS_CAPI_COM_DEFAULTS') <> '0');;

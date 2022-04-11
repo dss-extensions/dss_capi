@@ -525,6 +525,8 @@ exports
     DSS_Set_AllowChangeDir, // API extension
     DSS_Get_COMErrorResults, // API extension
     DSS_Set_COMErrorResults, // API extension
+    DSS_Get_AllowDOScmd, // API extension
+    DSS_Set_AllowDOScmd, // API extension
     DSSElement_Get_AllPropertyNames,
     DSSElement_Get_Name,
     DSSElement_Get_NumProperties,

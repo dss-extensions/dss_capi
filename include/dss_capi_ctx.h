@@ -1438,6 +1438,19 @@ extern "C" {
     DSS_CAPI_DLL void ctx_DSS_Set_LegacyModels(void* ctx, uint16_t Value);
 
     /*
+    If enabled, the DOScmd command is allowed. Otherwise, an error is reported if the user tries to use it.
+    
+    Defaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS Extensions.
+    
+    This can also be set through the environment variable DSS_CAPI_LEGACY_MODELS. Setting it to 1 enables
+    the legacy components, using the old models from the start.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL uint16_t ctx_DSS_Get_AllowDOScmd(void* ctx);
+    DSS_CAPI_DLL void ctx_DSS_Set_AllowDOScmd(void* ctx, uint16_t Value);
+
+    /*
     If disabled, the engine will not change the active working directory during execution. E.g. a "compile"
     command will not "chdir" to the file path.
     
