@@ -322,7 +322,10 @@ begin
                     DoSimpleMsg(DSS, 'Directory "%s" not found.', [Param], 282);
             end;
             ord(Cmd.DOScmd):
-                DSS.DSSExecutive.DoADosCmd;
+                if DSS_CAPI_ALLOW_DOSCMD then
+                    DSS.DSSExecutive.DoADosCmd()
+                else
+                    DoSimpleMsg(DSS, _('DOScmd is disabled. Enable it via API or set the environment variable DSS_CAPI_ALLOW_DOSCMD=1 before starting the process.'), 283);
             ord(Cmd.CvrtLoadshapes):
                 DSS.DSSExecutive.DoCvrtLoadshapesCmd;
             ord(Cmd.vr):

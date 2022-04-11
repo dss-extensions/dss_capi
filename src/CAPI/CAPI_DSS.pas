@@ -40,8 +40,8 @@ function DSS_Get_AllowChangeDir(): TAPIBoolean; CDECL;
 procedure DSS_Set_AllowChangeDir(Value: TAPIBoolean); CDECL;
 procedure DSS_RegisterPlotCallback(cb: dss_callback_plot_t); CDECL;
 procedure DSS_RegisterMessageCallback(cb: dss_callback_message_t); CDECL;
-
-
+function DSS_Get_AllowDOScmd(): TAPIBoolean; CDECL;
+procedure DSS_Set_AllowDOScmd(Value: TAPIBoolean); CDECL;
 
 implementation
 
@@ -258,6 +258,16 @@ end;
 procedure DSS_Set_COMErrorResults(Value: TAPIBoolean); CDECL;
 begin
     DSS_CAPI_COM_DEFAULTS := Value;
+end;
+//------------------------------------------------------------------------------
+function DSS_Get_AllowDOScmd(): TAPIBoolean; CDECL;
+begin
+    Result := DSS_CAPI_ALLOW_DOSCMD;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_Set_AllowDOScmd(Value: TAPIBoolean); CDECL;
+begin
+    DSS_CAPI_ALLOW_DOSCMD := Value;
 end;
 //------------------------------------------------------------------------------
 end.
