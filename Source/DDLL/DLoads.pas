@@ -9,7 +9,16 @@ procedure DSSLoadsV(mode:longint; out arg:Variant); cdecl;
 
 implementation
 
-uses DSSGlobals, Executive, Load, Variants, SysUtils, math;
+uses DSSGlobals, DSSClassDefs, Executive, Load, Variants, SysUtils, math, CktElement;
+
+Function IsLoad(Const CktElem:TDSSCktElement): Boolean;
+  Begin
+    Result := ((CktElem.DssObjtype AND CLASSMASK) = LOAD_ELEMENT);
+    If Not Result THEN
+      DoSimpleMsg('Load Type Expected, but another found. Dss Class=' + CktElem.DSSClassName + CRLF +
+      'Element name='+ CktElem.Name, 5007) ;
+      // TODO what is the correct error number?
+  END;
 
 // Mode defines the property of the Loads Class
 // Arg defines the argument and complementary data in case the property will be edited
@@ -17,8 +26,12 @@ uses DSSGlobals, Executive, Load, Variants, SysUtils, math;
 function ActiveLoad: TLoadObj;
 begin
   Result := nil;
-  if ActiveCircuit[ActiveActor] <> Nil then Result := ActiveCircuit[ActiveActor].Loads.Active;
-end;
+  IF ActiveCircuit[ActiveActor] <> NIL THEN
+    If IsLoad(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
+      begin
+        Result := TLoadObj(ActiveCircuit[ActiveActor].ActiveCktElement)
+      end;
+End;
 
 procedure Set_Parameter(const parm: string; const val: string);
 var
@@ -93,29 +106,19 @@ begin
             Result := ActiveCircuit[ActiveActor].Loads.ListSize ;
       end;
     5: begin                                   // Loads.Class  Read
-         Result := 0;
-         pLoad := ActiveLoad;
-         if pLoad <> nil then Result := pLoad.LoadClass;
+         Result := ActiveLoad.LoadClass;
        end;
     6: begin                                   // Loads.Class  Write
          Set_Parameter ('Class', IntToStr (arg));
-         Result:=0;
        end;
     7: begin                                   // Loads.Model  Read
-         Result := 1;
-         pLoad := ActiveLoad;
-         if pLoad <> nil then
-          Result:= pLoad.FLoadModel;
+         Result:= ActiveLoad.FLoadModel;
        end;
     8: begin                                   // Loads.Model  Write
-           pLoad := ActiveLoad;
-           if pLoad <> nil then pLoad.FLoadModel := arg; // enums match the integer codes
-           Result:=0;
+           ActiveLoad.FLoadModel := arg; // enums match the integer codes
        end;
     9: begin                                   // Loads.NumCust  Read
-           Result := 0;
-           pLoad := ActiveLoad;
-           if pLoad <> nil then Result := pLoad.NumCustomers;
+           Result := ActiveLoad.NumCustomers;
        end;
    10: begin                                   // Loads.NumCust  Write
            Set_Parameter ('NumCust', IntToStr (arg));
@@ -123,12 +126,10 @@ begin
    11: begin                                   // Loads.Status  Read
            Result := 0;
            pLoad := ActiveLoad;
-           if pLoad <> nil then begin
            if pLoad.ExemptLoad then
              Result := 2
            else if pLoad.FixedLoad then
              Result := 1;
-           end;
        end;
    12: begin                                   // Loads.Status  Write
           case arg of
@@ -138,13 +139,10 @@ begin
           end;
        end;
    13: begin                                   // Loads.IsDelta  read
-           Result := 0;
-           pLoad := ActiveLoad;
-           if pLoad <> nil then if pLoad.Connection > 0 then Result := 1;
+           if ActiveLoad.Connection > 0 then Result := 1;
        end;
    14: begin                                   // Loads.IsDelta  Write
-           pLoad := ActiveLoad;
-           if pLoad <> nil then pLoad.Connection := Integer (arg);
+           ActiveLoad.Connection := Integer (arg);
        end
    else
       Result:=-1;               //The case is not identified or do not exists
@@ -160,256 +158,143 @@ begin
   Result:=0.0; // Default return value
   case mode of
     0: begin                                   // Loads.kW  read
-          Result := 0.0;
-          IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
-            WITH ActiveCircuit[ActiveActor].Loads Do Begin
-              IF ActiveIndex<>0 THEN Begin
-                 Result := TLoadObj(Active).kWBase;
-              End;
-            End;
-          End;
+        Result := ActiveLoad.kWBase;
        end;
     1: begin                                   // Loads.kW  Write
-          IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
-            WITH ActiveCircuit[ActiveActor].Loads Do Begin
-              IF ActiveIndex<>0 THEN Begin
-                 TLoadObj(Active).kWBase := arg;
-                 TLoadObj(Active).LoadSpecType := 0;
-                 TLoadObj(Active).RecalcElementData(ActiveActor) ; // sets kvar based on kW and pF
-              End;
-            End;
-          End;
-          Result:=0;
+          ActiveLoad.kWBase := arg;
+          ActiveLoad.LoadSpecType := 0;
+          ActiveLoad.RecalcElementData(ActiveActor); // sets kvar based on kW and pF
        end;
     2: begin                                   // Loads.kV  read
-          Result := 0.0;
-          IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
-             WITH ActiveCircuit[ActiveActor].Loads Do Begin
-               IF ActiveIndex<>0 THEN Begin
-                 Result := TLoadObj(Active).kVLoadBase;
-               End;
-             End;
-          End;
+        Result := ActiveLoad.kVLoadBase;
        end;
     3: begin                                   // Loads.kV  Write
-          IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
-             WITH ActiveCircuit[ActiveActor].Loads Do Begin
-               IF ActiveIndex<>0 THEN Begin
-                  TLoadObj(Active).kVLoadBase := arg;
-                  TLoadObj(Active).UpdateVoltageBases;  // side effects
-               End;
-             End;
-          End;
-          Result:=0;
+        ActiveLoad.kVLoadBase := arg;
+        ActiveLoad.UpdateVoltageBases;  // side effects
        end;
      4: begin                                   // Loads.kvar  read
-          Result := 0.0;
-          IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
-             WITH ActiveCircuit[ActiveActor].Loads Do Begin
-               IF ActiveIndex<>0 THEN Begin
-                 Result := TLoadObj(Active).kvarBase;
-               End;
-             End;
-          End;
+        Result := ActiveLoad.kvarBase;
        end;
     5: begin                                   // Loads.kvar  Write
-          IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
-             WITH ActiveCircuit[ActiveActor].Loads Do Begin
-               IF ActiveIndex<>0 THEN Begin
-                  TLoadObj(Active).kvarBase := arg;
-                  TLoadObj(Active).LoadSpecType := 1;
-                  TLoadObj(Active).RecalcElementData(ActiveActor) ;  // set power factor based on kW, kvar
-               End;
-             End;
-          End;
-          Result:=0;
+        ActiveLoad.kvarBase := arg;
+        ActiveLoad.LoadSpecType := 1;
+        ActiveLoad.RecalcElementData(ActiveActor) ;  // set power factor based on kW, kvar
        end;
     6: begin                                   // Loads.PF  read
-          Result := 0.0;
-          IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
-             WITH ActiveCircuit[ActiveActor].Loads Do Begin
-               IF ActiveIndex<>0 THEN Begin
-                 Result := TLoadObj(Active).PFNominal;
-               End;
-             End;
-          End;
+        Result := ActiveLoad.PFNominal;
        end;
     7: begin                                   // Loads.PF  Write
-          IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
-             WITH ActiveCircuit[ActiveActor].Loads Do Begin
-               IF ActiveIndex<>0 THEN Begin
-                  TLoadObj(Active).PFNominal := arg;
-                  TLoadObj(Active).LoadSpecType := 0;
-                  TLoadObj(Active).RecalcElementData(ActiveActor) ;  //  sets kvar based on kW and pF
-               End;
-             End;
-          End;
-          Result:=0;
+        ActiveLoad.PFNominal := arg;
+        ActiveLoad.LoadSpecType := 0;
+        ActiveLoad.RecalcElementData(ActiveActor) ;  //  sets kvar based on kW and pF
        end;
     8: begin                                   // Loads.PctMean  read
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.puMean * 100.0;
+          Result := ActiveLoad.puMean * 100.0;
        end;
     9: begin                                   // Loads.PctMean  Write
           Set_Parameter ('%mean', FloatToStr (arg));
-          Result:=0;
        end;
    10: begin                                   // Loads.PctStdDev  read
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.puStdDev * 100.0;
+          Result := ActiveLoad.puStdDev * 100.0;
        end;
    11: begin
           Set_Parameter ('%stddev', FloatToStr (arg));
-          Result:=0;
        end;
    12: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.AllocationFactor;
+          Result := ActiveLoad.AllocationFactor;
        end;
    13: begin
           Set_Parameter ('AllocationFactor', FloatToStr (arg));
-          Result:=0;
        end;
    14: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.CFactor;
+          Result := ActiveLoad.CFactor;
        end;
    15: begin
           Set_Parameter ('Cfactor', FloatToStr (arg));
-          Result:=0;
        end;
    16: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.CVRwatts;
+          Result := ActiveLoad.CVRwatts;
        end;
    17: begin
           Set_Parameter ('CVRwatts', FloatToStr (arg));
-          Result:=0;
        end;
    18: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.CVRvars;
+          Result := ActiveLoad.CVRvars;
        end;
    19: begin
           Set_Parameter ('CVRvars', FloatToStr (arg));
-          Result:=0;
        end;
    20: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.kVABase;
+          Result := ActiveLoad.kVABase;
        end;
    21: begin
           Set_Parameter ('kva', FloatToStr (arg));
-          Result:=0;
        end;
    22: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.kWh;
+          Result := ActiveLoad.kWh;
        end;
    23: begin
           Set_Parameter ('kwh', FloatToStr (arg));
-          Result:=0;
        end;
    24: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.kWhDays;
+          Result := ActiveLoad.kWhDays;
        end;
    25: begin
           Set_Parameter ('kwhdays', FloatToStr (arg));
-          Result:=0;
        end;
    26: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.Rneut;
+          Result := ActiveLoad.Rneut;
        end;
    27: begin
           Set_Parameter ('Rneut', FloatToStr (arg));
-          Result:=0;
        end;
    28: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.MaxPU;
+          Result := ActiveLoad.MaxPU;
        end;
    29: begin
           Set_Parameter ('VmaxPu', FloatToStr (arg));
-          Result:=0;
        end;
    30: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.MinEmerg;
+          Result := ActiveLoad.MinEmerg;
        end;
    31: begin
           Set_Parameter ('VminEmerg', FloatToStr (arg));
-          Result:=0;
        end;
    32: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.MinNormal;
+          Result := ActiveLoad.MinNormal;
        end;
    33: begin
           Set_Parameter ('VminNorm', FloatToStr (arg));
-          Result:=0;
        end;
    34: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.MinPU;
+          Result := ActiveLoad.MinPU;
        end;
    35: begin
           Set_Parameter ('VminPu', FloatToStr (arg));
        end;
    36: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.ConnectedkVA;
+          Result := ActiveLoad.ConnectedkVA;
        end;
    37: begin
           Set_Parameter ('XfKVA', FloatToStr (arg));
        end;
    38: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.Xneut;
+          Result := ActiveLoad.Xneut;
        end;
    39: begin
           Set_Parameter ('Xneut', FloatToStr (arg));
        end;
    40: begin
-          Result := -1.0; // signify  bad request
-          pLoad := ActiveLoad;
-          If pLoad <> nil Then
-          Begin
-              Result := pLoad.puSeriesRL * 100.0;
-          End;
+          Result := ActiveLoad.puSeriesRL * 100.0;
        end;
    41: begin
-           pLoad := ActiveLoad;
-           If pLoad <> nil Then
-           Begin
-                pLoad.puSeriesRL  := arg / 100.0;
-           End;
+           ActiveLoad.puSeriesRL  := arg / 100.0;
        end;
    42: begin
-          Result := 0.0;
-          pLoad := ActiveLoad;
-          if pLoad <> nil then Result := pLoad.RelWeighting;
+          Result := ActiveLoad.RelWeighting;
        end;
    43: begin
-          pLoad := ActiveLoad;
-          if pLoad <> nil then pLoad.RelWeighting := arg;
+          ActiveLoad.RelWeighting := arg;
        end
   else
       Result:=-1;               //The case is not identified or do not exists
@@ -419,7 +304,7 @@ end;
 //*********************Properties String Type***********************************
 function DSSLoadsS(mode:longint; arg:pAnsiChar):pAnsiChar; cdecl;
 Var
-   pLoad:TLoadObj;
+   pLoad:TDSSCktElement;
    ActiveSave :integer;
    S: String;
    Found :Boolean;
@@ -430,9 +315,9 @@ begin
        Result := pAnsiChar(AnsiString(''));
        If ActiveCircuit[ActiveActor] <> Nil Then
        Begin
-            pLoad := ActiveCircuit[ActiveActor].Loads.Active;
+            pLoad := ActiveCircuit[ActiveActor].ActiveCktElement;
             If pLoad <> Nil Then
-              Result := pAnsiChar(AnsiString(pLoad.Name))
+              Result := pAnsiChar(AnsiString(pLoad.Name))     // TODO PR getting any element name
             Else
                 Result := pAnsiChar(AnsiString(''));  // signify no name
        End;
@@ -468,8 +353,7 @@ begin
   end;
   2: begin                                     // Loads.CVRCurve - Read
       Result := pAnsiChar(AnsiString(''));
-      pLoad := ActiveLoad;
-      if pLoad <> nil then Result := pAnsiChar(AnsiString(pLoad.CVRshape));
+      Result := pAnsiChar(AnsiString(ActiveLoad.CVRshape));
   end;
   3: begin                                     // Loads.CVRCurve - Write
       Set_Parameter ('CVRcurve', widestring(arg));
@@ -477,8 +361,7 @@ begin
   end;
   4: begin                                     // Loads.Daily - Read
       Result := pAnsiChar(AnsiString(''));
-      pLoad := ActiveLoad;
-      if pLoad <> nil then Result := pAnsiChar(AnsiString(pLoad.DailyShape));
+      Result := pAnsiChar(AnsiString(ActiveLoad.DailyShape));
   end;
   5: begin                                     // Loads.Daily - Write
       Set_Parameter ('Daily', widestring(arg));
@@ -486,8 +369,7 @@ begin
   end;
   6: begin                                     // Loads.Duty - read
       Result := pAnsiChar(AnsiString(''));
-      pLoad := ActiveLoad;
-      if pLoad <> nil then Result := pAnsiChar(AnsiString(pLoad.DailyShape));
+      Result := pAnsiChar(AnsiString(ActiveLoad.DailyShape));
   end;
   7: begin                                     // Loads.Duty - Write
       Set_Parameter ('Duty', widestring(arg));
@@ -495,8 +377,7 @@ begin
   end;
   8: begin                                     // Loads.Spectrum - Read
       Result := pAnsiChar(AnsiString(''));
-      pLoad := ActiveLoad;
-      if pLoad <> nil then Result := pAnsiChar(AnsiString(pLoad.Spectrum));
+      Result := pAnsiChar(AnsiString(ActiveLoad.Spectrum));
   end;
   9: begin                                     // Loads.Spectrum - Write
       Set_Parameter ('Spectrum', widestring(arg));
@@ -504,8 +385,7 @@ begin
   end;
   10: begin                                    // Loads.Yearly - Read
       Result := pAnsiChar(AnsiString(''));
-      pLoad := ActiveLoad;
-      if pLoad <> nil then Result := pAnsiChar(AnsiString(pLoad.YearlyShape));
+      Result := pAnsiChar(AnsiString(ActiveLoad.YearlyShape));
   end;
   11: begin                                    // Loads.Yearly - Write
       Set_Parameter ('Yearly', widestring(arg));
@@ -513,8 +393,7 @@ begin
   end;
   12: begin                                    // Loads.Growth - read
       Result := pAnsiChar(AnsiString(''));
-      pLoad := ActiveLoad;
-      if pLoad <> nil then Result := pAnsiChar(AnsiString(pLoad.GrowthShape));
+      Result := pAnsiChar(AnsiString(ActiveLoad.GrowthShape));
   end;
   13: begin                                    // Loads.Growth - Write
       Set_Parameter ('Growth', Widestring(arg));
@@ -522,8 +401,7 @@ begin
   end;
   14: begin                                    // Loads.Sensor - read
       Result := pAnsiChar(AnsiString(''));
-      pLoad := ActiveLoad;
-      if pLoad <> nil then Result := pAnsiChar(AnsiString(pLoad.SensorObj.ElementName));
+      Result := pAnsiChar(AnsiString(ActiveLoad.SensorObj.ElementName));
   end
   else
       Result:=pAnsiChar(AnsiString('Error'));
