@@ -186,7 +186,8 @@ begin
                         begin
                             with BranchList do
                             begin
-                                if (PresentBranch.NumChildBranches = 0) and (PresentBranch.NumShuntObjects = 0) then
+                                if (PresentBranch.NumChildBranches = 0) and (PresentBranch.NumShuntObjects = 0) and 
+                                    (not DSS.ActiveCircuit.Buses[PresentBranch.ToBusReference].Keep) then
                                     LineElement1.Enabled := FALSE     // just discard it
                                 else
                                 if (PresentBranch.NumChildBranches = 0) then //Merge with Parent and move shunt elements to TO node on parent branch
@@ -276,6 +277,7 @@ begin
                                                             ShuntElement := PresentBranch.FirstShuntObject;
                                                             while ShuntElement <> NIL do
                                                             begin
+                                                                //TODO: remove parser usage
                                                                 DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
                                                                 ShuntElement.Edit(DSS.Parser);
                                                                 ShuntElement := PresentBranch.NextShuntObject;
