@@ -368,10 +368,15 @@ FUNCTION DoRedirect(IsCompile:Boolean):Integer;
 // If not Compile (is simple redirect), return to where we started
 
 VAR
-    Fin:TextFile;
-    ParamName,  InputLine, CurrDir, SaveDir : String;
-    LocalCompFileName  : String;
-    InBlockComment : Boolean;
+    Fin                 :TextFile;
+    ParamName,
+    InputLine,
+    CurrDir,
+    SaveDir             : String;
+    LocalCompFileName   : String;
+    InBlockComment      : Boolean;
+    idx,
+    NumOfTimes          : integer;
 
 Begin
     Result := 0;
@@ -444,8 +449,17 @@ Begin
                         end;
 
                       If Not InBlockComment Then   // process the command line
-                        If Not SolutionAbort Then ProcessCommand(InputLine)
-                                             Else Redirect_Abort := True;  // Abort file if solution was aborted
+                        If Not SolutionAbort Then
+                        Begin
+                          NumOfTimes  :=  1;
+                          if AllActors then NumOfTimes := NumOfActors;
+                          for idx := 1 to NumOfTimes do
+                          Begin
+                            if AllActors then ActiveActor := idx;
+                            ProcessCommand(InputLine)
+                          End;
+                        End
+                        Else Redirect_Abort := True;  // Abort file if solution was aborted
 
                       // in block comment ... look for */   and cancel block comment (whole line)
                       if InBlockComment then

@@ -106,12 +106,7 @@ begin
             Result := ActiveCircuit[ActiveActor].Loads.ListSize ;
       end;
     5: begin                                   // Loads.Class  Read
-        if ActiveCircuit[ActiveActor] <> Nil then
-          Begin
-            pload := ActiveCircuit[ActiveActor].Loads.Active;
-            if pload <> nil then
-              Result := pload.LoadClass;
-          End;
+          Result := ActiveLoad.LoadClass;
        end;
     6: begin                                   // Loads.Class  Write
          Set_Parameter ('Class', IntToStr (arg));
