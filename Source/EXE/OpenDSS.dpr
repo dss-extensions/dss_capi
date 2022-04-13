@@ -203,7 +203,8 @@ uses
   WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
   generator in '..\PCElements\generator.pas',
   GenUserModel in '..\PCElements\GenUserModel.pas',
-  GeneratorVars in '..\PCElements\GeneratorVars.pas';
+  GeneratorVars in '..\PCElements\GeneratorVars.pas',
+  DynamicExp in '..\General\DynamicExp.pas';
 
 {$R *.RES}
 
