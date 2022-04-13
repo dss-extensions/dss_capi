@@ -369,7 +369,7 @@ begin
     pCapacitor := DSSPrime.ActiveCircuit.ShuntCapacitors.Get(Value);
     if pCapacitor = NIL then
     begin
-            DoSimpleMsg(DSSPrime, 'Invalid Capacitor index: "%s".', [Value], 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Capacitor index: "%d".', [Value], 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pCapacitor;
