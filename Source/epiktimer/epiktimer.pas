@@ -555,23 +555,28 @@ var
   Y, D, M, hour, min, sec, ms, us: Word;
 {$IFNDEF Windows}
   t: timeval;
+  dt: TDateTime;
 {$ENDIF}
 begin
+  Result:='';
 {$IFDEF Windows}
   DecodeDatetime(Now, Y, D, M, Hour, min, Sec, ms);
   us:=0;
+  If FWantDays then
+    Result := Format('%4.4d/%2.2d/%2.2d-',[Y,M,D]);
+  Result := Result + Format('%2.2d:%2.2d:%2.2d',[hour,min,sec]);
 {$ELSE}
   // "Now" doesn't report milliseconds on Linux... appears to be broken.
   // I opted for this approach which also provides microsecond precision.
   fpgettimeofday(@t,nil);
-  EpochToLocal(t.tv_sec, Y, M, D, hour, min, sec);
   ms:=t.tv_usec div MilliPerSec;
   us:=t.tv_usec mod MilliPerSec;
+  dt:=UnixToDateTime (t.tv_sec, FALSE); // don't want UTC
+  if FWantDays then
+    Result:=FormatDateTime ('dd/mmm/yyyy hh:nn:ss', dt)
+  else
+    Result:=FormatDateTime ('hh:nn:ss', dt);
 {$ENDIF}
-  Result:='';
-  If FWantDays then
-    Result := Format('%4.4d/%2.2d/%2.2d-',[Y,M,D]);
-  Result := Result + Format('%2.2d:%2.2d:%2.2d',[hour,min,sec]);
   If FWantMS then
     Result := Result + Format('.%3.3d%3.3d',[ms,us])
 end;

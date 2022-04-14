@@ -630,16 +630,18 @@ BEGIN
      For i := 1 to NumDevices Do Begin
            TRY
               pCktElem := TDSSCktElement(CktElements.Get(i));
-//                ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
+              if Assigned(pCktElem) then begin
                 ElemName := pCktElem.DSSClassName + '.' + pCktElem.Name;
-                pCktElem.Free;
+                FreeAndNil(pCktElem);
+              end;
            EXCEPT
              ON E: Exception Do
                DoSimpleMsg('Exception Freeing Circuit Element:'  + ElemName + CRLF + E.Message, 423);
            END;
      End;
 
-     FOR i := 1 to NumBuses Do Buses^[i].Free;  // added 10-29-00
+     FOR i := 1 to NumBuses Do 
+       if Assigned (Buses^[i]) then FreeAndNil (Buses^[i]);
 
      Reallocmem(DeviceRef, 0);
      Reallocmem(Buses,     0);
@@ -649,64 +651,64 @@ BEGIN
      Reallocmem(Lossregs, 0);
      Reallocmem(LegalVoltageBases, 0);
 
-     DeviceList.Free;
-     BusList.Free;
-     AutoAddBusList.Free;
-     Solution.Free;
-     PDElements.Free;
-     PCElements.Free;
-     DSSControls.Free;
-     Sources.Free;
-     Faults.Free;
-     CktElements.Free;
-     MeterElements.Free;
-     Monitors.Free;
-     EnergyMeters.Free;
-     Sensors.Free;
-     Generators.Free;
-     WindGens.Free;
-     StorageElements.Free;
-     // Storage2Elements.Free;
-     PVSystems.Free;
-     // PVSystems2.Free;
-     Feeders.Free;
-     Substations.Free;
-     Transformers.Free;
-     CapControls.Free;
-     SwtControls.Free;
-     InvControls2.Free;
-     ExpControls.Free;
-     RegControls.Free;
-     Loads.Free;
-     Lines.Free;
-     ShuntCapacitors.Free;
-     Reactors.Free;
+     FreeAndNil (DeviceList);
+     FreeAndNil (BusList);
+     FreeAndNil (AutoAddBusList);
+     FreeAndNil (Solution);
+     FreeAndNil (PDElements);
+     FreeAndNil (PCElements);
+     FreeAndNil (DSSControls);
+     FreeAndNil (Sources);
+     FreeAndNil (Faults);
+     FreeAndNil (CktElements);
+     FreeAndNil (MeterElements);
+     FreeAndNil (Monitors);
+     FreeAndNil (EnergyMeters);
+     FreeAndNil (Sensors);
+     FreeAndNil (Generators);
+     FreeAndNil (WindGens);
+     FreeAndNil (StorageElements);
+     // FreeAndNil (Storage2Elements);
+     FreeAndNil (PVSystems);
+     // FreeAndNil (PVSystems2);
+     FreeAndNil (Feeders);
+     FreeAndNil (Substations);
+     FreeAndNil (Transformers);
+     FreeAndNil (CapControls);
+     FreeAndNil (SwtControls);
+     FreeAndNil (InvControls2);
+     FreeAndNil (ExpControls);
+     FreeAndNil (RegControls);
+     FreeAndNil (Loads);
+     FreeAndNil (Lines);
+     FreeAndNil (ShuntCapacitors);
+     FreeAndNil (Reactors);
      {by Dahei}
-     FMonitors.Free;
+     FreeAndNil (FMonitors);
      {}
-     Reclosers.Free;
-     Relays.Free;
-     Fuses.Free;
-     AutoTransformers.Free;
+     FreeAndNil (Reclosers);
+     FreeAndNil (Relays);
+     FreeAndNil (Fuses);
+     FreeAndNil (AutoTransformers);
 
-     ControlQueue.Free;
+     FreeAndNil (ControlQueue);
 
      ClearBusMarkers;
-     BusMarkerList.Free;
+     FreeAndNil (BusMarkerList);
 
-     AutoAddObj.Free;
+     FreeAndNil (AutoAddObj);
 
      FreeTopology;
 
 //  Release all ADiakoptics matrixes
 
-     Contours.Free;
-     ZLL.Free;
-     ZCC.Free;
-     ZCT.Free;
-     Y4.Free;
-     V_0.Free;
-     Ic.Free;
+     FreeAndNil (Contours);
+     FreeAndNil (ZLL);
+     FreeAndNil (ZCC);
+     FreeAndNil (ZCT);
+     FreeAndNil (Y4);
+     FreeAndNil (V_0);
+     FreeAndNil (Ic);
 
      Inherited Destroy;
 END;

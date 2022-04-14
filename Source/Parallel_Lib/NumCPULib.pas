@@ -983,17 +983,13 @@ end;
 
 class function TNumCPULib.ParseLastString(const AInputString: String): String;
 var
-  LSplitResult: TNumCPULibStringArray;
+  pos: SizeInt;
 begin
-  LSplitResult := SplitString(AInputString, ' ');
-  if (System.Length(LSplitResult) < 1) then
-  begin
-    Result := Trim(AInputString);
-  end
+  pos := Rpos (' ', AInputString);
+  if pos > 0 then
+    Result := Trim(Copy(AInputString, pos))
   else
-  begin
-    Result := Trim(LSplitResult[System.Length(LSplitResult) - 1]);
-  end;
+    Result := Trim(AInputString);
 end;
 
 class function TNumCPULib.ParseLastInt32(const AInputString: String;

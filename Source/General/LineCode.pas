@@ -146,6 +146,7 @@ END;
 Destructor TLineCode.Destroy;
 
 BEGIN
+    LineTypeList.Destroy;
     // ElementList and  CommandList freed in inherited destroy
     Inherited Destroy;
 END;

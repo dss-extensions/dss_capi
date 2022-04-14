@@ -592,6 +592,9 @@ Begin
       Reallocmem(pColIdx_Yii, 0);
       Reallocmem(pRowIdx_Yii, 0);
       Reallocmem(pcVals_Yii, 0);
+
+      Reallocmem(Node_dV, 0);
+      Reallocmem(Ic_Local, 0);
       {---------------------------}
 //      SetLogFile ('c:\\temp\\KLU_Log.txt', 0);
 

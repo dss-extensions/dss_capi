@@ -73,6 +73,7 @@ end;
 
 destructor TIniRegSave.Destroy;
 begin
+  FIniFile.Destroy;
   inherited;
 end;
 

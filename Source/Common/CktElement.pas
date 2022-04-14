@@ -237,13 +237,13 @@ Begin
     Reallocmem (NodeRef,0);
     Reallocmem (ComplexBuffer,0);
 
-    If assigned(ControlElementList) Then   ControlElementList.Free;
+    If assigned(ControlElementList) Then FreeAndNil (ControlElementList);
 
 
     {Dispose YPrims}
-    If Yprim_Series <> Nil then Yprim_Series.Free;
-    If Yprim_Shunt  <> Nil then Yprim_Shunt.Free;
-    If Yprim        <> Nil then Yprim.Free;
+    If Assigned (Yprim_Series) then FreeAndNil (Yprim_Series);
+    If Assigned (Yprim_Shunt) then FreeAndNil (Yprim_Shunt);
+    If Assigned (Yprim) then FreeAndNil (Yprim);
 
     Inherited Destroy;
 End;
