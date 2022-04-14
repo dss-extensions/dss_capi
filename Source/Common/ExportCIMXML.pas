@@ -919,7 +919,7 @@ begin
     str := 'dynamic'
   else if varMode = VARMODEKVAR then
     str := 'constantReactivePower';
-  FD.WriteCimLn (prf, Format ('  <cim:PowerElectronicsConnection.controlMode rdf:resource="%s#ConverterControlMode.%s"/>',
+  FD.WriteCimLn (prf, Format ('  <cim:PowerElectronicsConnection.controlMode rdf:resource="%s#ConverterControlModeKind.%s"/>',
     [CIM_NS, str]));
 end;
 
