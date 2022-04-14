@@ -6,7 +6,7 @@ program opendsscmd;
 {$ENDIF}
 
 { ----------------------------------------------------------
-  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -41,7 +41,7 @@ program opendsscmd;
 {
 	08/17/2016  Created from OpenDSS
  ----------------------------------------------------------
-  Copyright (c) 2016-2021 Battelle Memorial Institute
+  Copyright (c) 2016-2022 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 
