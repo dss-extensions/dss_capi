@@ -161,6 +161,7 @@ END;
 Destructor TLineGeometry.Destroy;
 
 BEGIN
+    LineTypeList.Destroy;
     // ElementList and  CommandList freed in inherited destroy
     Inherited Destroy;
 END;
@@ -795,14 +796,12 @@ begin
       TapeShield        : newLineData := TTSLineConstants.Create(FNConds);
     end;
 
-  if Assigned(newLineData) then
-  begin
-    if Assigned(FLineData) then
-    begin
+  if Assigned(newLineData) then begin
+    if Assigned(FLineData) then begin
       newLineData.Nphases   := FLineData.Nphases;
       newLineData.rhoearth  := FLineData.rhoearth;
-    end else
       FreeAndNil(FLineData);
+    end;
     FLineData := newLineData;
   end;
   FPhaseChoice^[ActiveCond] := newPhaseChoice;
@@ -816,31 +815,26 @@ begin
   FNconds := Value;
   If Assigned(FLineData) Then FreeAndNil(FLineData);
 
-
   {Allocations}
-    Reallocmem( FWireData, Sizeof(FWireData^[1]) *FNconds);
-    Reallocmem( FX,        Sizeof(FX^[1])        *FNconds);
-    Reallocmem( FY,        Sizeof(FY^[1])        *FNconds);
-    Reallocmem( FUnits,    Sizeof(Funits^[1])    *FNconds);
-    Reallocmem( FPhaseChoice,    Sizeof(FPhaseChoice^[1])    *FNconds);
+  Reallocmem( FWireData, Sizeof(FWireData^[1]) *FNconds);
+  Reallocmem( FX,        Sizeof(FX^[1])        *FNconds);
+  Reallocmem( FY,        Sizeof(FY^[1])        *FNconds);
+  Reallocmem( FUnits,    Sizeof(Funits^[1])    *FNconds);
+  Reallocmem( FPhaseChoice,    Sizeof(FPhaseChoice^[1])    *FNconds);
+  FCondName := AllocStringArray(FNconds);
+  {Initialize Allocations}
+  For i := 1 to FNconds Do FWireData^[i]  := Nil;
+  For i := 1 to FNconds Do FX^[i]         := 0.0;
+  For i := 1 to FNconds Do FY^[i]         := 0.0;
+  For i := 1 to FNconds Do FUnits^[i]     := -1;  // default to ft
+  For i := 1 to FNconds Do FPhaseChoice^[i] := Unknown;
+  FLastUnit := UNITS_FT;
 
   For i := 1 to FNconds Do
   Begin
     ActiveCond := i;
     ChangeLineConstantsType(Overhead);    // works on activecond
   End;
-
-  FCondName := AllocStringArray(FNconds);
-
-{Initialize Allocations}
-  For i := 1 to FNconds Do FWireData^[i]  := Nil;
-  For i := 1 to FNconds Do FX^[i]         := 0.0;
-  For i := 1 to FNconds Do FY^[i]         := 0.0;
-  For i := 1 to FNconds Do FUnits^[i]     := -1;  // default to ft
-  FLastUnit := UNITS_FT;
-
-
-
 
 end;
 

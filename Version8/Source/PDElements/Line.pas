@@ -190,7 +190,7 @@ End;
 Destructor TLine.Destroy;
 
 Begin
-
+    LineTypeList.Destroy;
     // ElementList and  CommandList freed in inherited destroy
     Inherited Destroy;
 End;
@@ -843,9 +843,9 @@ End;
 destructor TLineObj.Destroy;
 
 Begin
-    If Assigned(Z) Then Z.Free;
-    If Assigned(Zinv) Then Zinv.Free;
-    If Assigned(Yc) Then Yc.Free;
+    If Assigned(Z) Then FreeAndNil (Z);
+    If Assigned(Zinv) Then FreeAndNil (Zinv);
+    If Assigned(Yc) Then FreeAndNil (Yc);
     Reallocmem (FLineWireData, 0);
 
     Inherited destroy;
@@ -854,9 +854,9 @@ End;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TLineObj.ReallocZandYcMatrices;
 begin
-    IF Z<>nil    THEN Z.Free;
-    IF Zinv<>nil THEN Zinv.Free;
-    IF Yc<>nil   THEN Yc.Free;
+    If Assigned(Z) Then FreeAndNil (Z);
+    If Assigned(Zinv) Then FreeAndNil (Zinv);
+    If Assigned(Yc) Then FreeAndNil (Yc);
 
     // For a line, nphases = ncond, for now
     Z    := TCmatrix.CreateMatrix(Fnphases);

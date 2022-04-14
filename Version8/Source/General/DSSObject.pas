@@ -88,11 +88,12 @@ destructor TDSSObject.Destroy;
 Var i:Integer;
 
 BEGIN
-   For i := 1 to ParentClass.NumProperties DO FPropertyValue^[i] := '';
-   Reallocmem(FPropertyValue,0);
-   Reallocmem(PrpSequence,0);
-
-   Inherited Destroy;
+  if Assigned (FPropertyValue) then begin
+    For i := 1 to ParentClass.NumProperties DO FPropertyValue^[i] := '';
+    Reallocmem(FPropertyValue,0);
+  end;
+  Reallocmem(PrpSequence,0);
+  Inherited Destroy;
 END;
 
 

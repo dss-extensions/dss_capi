@@ -1285,9 +1285,6 @@ End;
 
 //*********************Gets the processor information***************************
 procedure Get_Processor_Info();
-var
-  idx         : integer;
-
 Begin
   NumNUMA          :=  1;
   CPU_Physical     :=  TNumCPULib.GetPhysicalCPUCount();
@@ -1407,16 +1404,14 @@ begin
   for Actor := 1 to NumOfActors do
   Begin
     With DSSExecutive[Actor] Do If RecorderOn Then Recorderon := FALSE;
-
     FreeAndNil (DSSExecutive[Actor]);  {Writes to Registry}
-    FreeAndNil (DSS_Registry);  {Close Registry}
-
     FreeAndNil (EventStrings[Actor]);
     FreeAndNil (SavedFileList[Actor]);
     FreeAndNil (ErrorStrings[Actor]);
     FreeAndNil (ActorHandle[Actor]);
     FreeAndNil (Auxparser[Actor]);
   End;
+  FreeAndNil (DSS_Registry);  {Close Registry}
 end;
 
 initialization
