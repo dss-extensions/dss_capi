@@ -111,7 +111,7 @@ implementation
 USES DSSGlobals, SysUtils, DSSObject, ParserDel, CktElement;
 
 {--------------------------------------------------------------}
-{ DSSClasses Implementation
+{ DSSClasses Implementation                                    }
 {--------------------------------------------------------------}
 Constructor TDSSClasses.Create;
 
@@ -135,7 +135,7 @@ Begin
 End;
 
 {--------------------------------------------------------------}
-{  DSSClass Implementation
+{  DSSClass Implementation                                     }
 {--------------------------------------------------------------}
 Constructor TDSSClass.Create;
 
