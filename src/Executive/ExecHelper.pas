@@ -512,7 +512,7 @@ Begin
 
                         if not InBlockComment then   // process the command line
                             if not DSS.SolutionAbort then 
-                                ProcessCommand(DSS, InputLine, LineNum)
+                                Set_Command(InputLine, LineNum)
                             else 
                                 DSS.Redirect_Abort := True;  // Abort file if solution was aborted
 
@@ -546,7 +546,7 @@ Begin
 
                         If Not InBlockComment Then   // process the command line
                             If Not DSS.SolutionAbort Then 
-                                ProcessCommand(DSS, InputLine, LineNum)
+                                Set_Command(InputLine, LineNum)
                             Else 
                                 DSS.Redirect_Abort := True;  // Abort file if solution was aborted
 
