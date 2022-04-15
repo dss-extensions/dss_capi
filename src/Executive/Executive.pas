@@ -69,7 +69,8 @@ USES BufStream, ExecCommands, ExecOptions,
      Utilities, Solution, DSSHelper,
      CmdForms,
      Zipper,
-     Contnrs;
+     Contnrs,
+     StrUtils;
 
 type
     TDSSUnZipper = class(TUnZipper)
@@ -428,6 +429,19 @@ begin
             efn := ExtractRelativePath(cwd, efn);
             Result := unzipper.GetFile(efn);
         end;
+
+        // Try switching backslashes<->slashes
+        if Result = NIL then
+        begin
+            efn := ReplaceStr(efn, '/', '\');
+            Result := unzipper.GetFile(efn);
+            if Result = NIL then
+            begin
+                efn := ReplaceStr(efn, '\', '/');
+                Result := unzipper.GetFile(efn);
+            end;
+        end;
+            
     except
         on E: Exception do
         begin
@@ -494,11 +508,12 @@ var
     u: TDSSUnZipper = NIL;
 begin
     try
-        // First check if we need to workaround the SetCurrentDir issues
-
         u := TDSSUnZipper(DSS.unzipper);
         u.Enabled := True;
         SetInZipPath('');
+
+        DSS.Redirect_Abort := False;
+        DSS.SolutionAbort := False;
 
         // Do the actual redirect to the file, while wrapping streams
         // and loading inputs from the UnZipper.
