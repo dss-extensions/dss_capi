@@ -47,17 +47,19 @@ TYPE
    end;
 
    TDynamicExpObj = class(TDSSObject)
-     private
-
-        FNumvars            : Integer;
-        FvarValues          : Array of double;
-        FvarInitValues      : Array of double;
-        FvarNames           : TStringList;
-        FvarIOType          : Array of integer;
+      private
+        FNumvars            : Integer;              // Number of state variables
+        FvarNames           : TStringList;          // List containing the state variable names
+        FVarConst,                                  // Array containing the numeric constants of the expression
+        FvarValues,                                 // Array containing the variable values of the expression
+        FvarInitValues      : Array of double;      // Array containing the initial values of the state variables
+        FCmd,                                       // Sequence of commands that implement the expression
+        FvarIOType          : Array of integer;     // Variable IO type
+        FActiveVar,                                 // Name of the active variable
+        FXpression          : String;               // Differential equiation in RPN format
 
       public
         BaseFrequency       : Double;
-        FActiveVar           : String;
 
         constructor Create(ParClass:TDSSClass; const LineCodeName:String);
         destructor Destroy; override;
@@ -66,8 +68,15 @@ TYPE
         FUNCTION  GetPropertyValue( Index : Integer ):String;Override;
         PROCEDURE InitPropertyValues( ArrayOffset  : Integer );Override;
         PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+        function  Get_Closer_Op(myExp : string; var myOp : string; var OpCode : Integer): Integer;
+        function  Get_Var_Idx(myVar : string): Integer;
+
 
    end;
+
+Const
+    myOps   : array [0..10] of string =
+    ('dt', '=', '+', '-', '*', '/', '(', ')', ';', '[', ']');
 
 VAR
    DynamicExpClass    : TDynamicExp;
@@ -75,7 +84,7 @@ VAR
 
 implementation
 
-  USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils, Ucomplex, Utilities, LineUnits;
+  USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils, Ucomplex, Utilities, LineUnits, math;
 
   Const      NumPropsThisClass = 6;
 
@@ -123,8 +132,8 @@ implementation
        PropertyHelp[3] := '([dbl]) Array of doubles indicating the intial values of state variables.';
        PropertyHelp[4] := '(String) Activates the state variable using the given name.';
        PropertyHelp[5] := '(dbl) Floating point number indicating the value of the active state variable.';
-       PropertyHelp[6] := 'It is the differential expression using OpenDSS syntax for example:' + CRLF +
-                          'dt(w) = 1/M*(P_m - D*w - P_e)';
+       PropertyHelp[6] := 'It is the differential expression using OpenDSS RPN syntax. The expression must be contained within brackets in case of having multiple equations, for example:' + CRLF + CRLF +
+                          'expression = "[w dt = 1 M / (P_m D*w - P_e -) *]"';
 
 
        ActiveProperty := NumPropsThisClass;
@@ -178,6 +187,7 @@ implementation
                  End;
               2: Begin
                   InterpretTStringListArray(Param, FVarNames);
+                  idx     :=  FVarNames.Count;
                   // ensuring they are lower case
                   for idx := 0 to (FVarNames.Count - 1) do FVarNames[idx]  :=  LowerCase(FVarNames[idx]);
                   if (FNumVars <>  FVarnames.Count) then
@@ -195,7 +205,7 @@ implementation
                   if not FVarNames.Find(FActiveVar, ActiveElement) then
                   Begin
                     // Being here means that the given name doesn't exist
-                    DoSimpleMsg('DynamicExp "' + FActiveVar + '" not found "', 50001);
+                    DoSimpleMsg('DynamicExp "' + FActiveVar + '" not found.', 50001);
                     FActiveVar    := '';
                   End;
                  End;
@@ -203,11 +213,11 @@ implementation
                   if ((ActiveElement < length(FVarValues)) and (ActiveElement >= 0)) then
                     FVarValues[ActiveElement]  :=  Parser[ActorID].DblValue
                   else
-                    DoSimpleMsg('There is not valid DynamicExp active"', 50002);
+                    DoSimpleMsg('There is not valid DynamicExp active.', 50002);
                  End;
               6: Begin
                   if (InterpretDiffEq( Parser[ActorID].StrValue )) then
-                    DoSimpleMsg('There are errors in the dynamic expression"', 50003);
+                    DoSimpleMsg('There are errors in the differential equation.', 50003);
                  End
 
            ELSE
@@ -273,7 +283,7 @@ implementation
          DynExpCodeObj := ElementList.Next;
       END;
 
-      DoSimpleMsg('DynamicExp: "' + Value + '" not Found.', 103);
+      DoSimpleMsg('DynamicExp: "' + Value + '" not Found.', 50004);
 
   END;
 
@@ -291,10 +301,13 @@ implementation
     FVarNames          :=  nil;
     FNumVars           :=  20;
     FActiveVar         :=  '';
+    FVarNames          :=  TStringList.create;
     FVarNames.Clear;
     setlength(FVarValues, 0);
     setlength(FVarInitValues, 0);
     setlength(FVarIOType, 0);
+    setlength(FCmd, 0);
+    setlength(FVarConst, 0);
 
     InitPropertyValues(0);
   END;
@@ -306,15 +319,165 @@ implementation
     setlength(FVarValues, 0);
     setlength(FVarInitValues, 0);
     setlength(FVarIOType, 0);
+    setlength(FVarConst, 0);
     Inherited destroy;
   END;
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  FUNCTION  TDynamicExpObj.InterpretDiffEq( Exp : String ):Boolean;
+  function  TDynamicExpObj.Get_Closer_Op(myExp : string; var myOp : string; var OpCode : Integer): Integer;
+  var
+    myPos,
+    idx       : Integer;
   Begin
+    Result    :=  10000;
+    for idx := 0 to High(myOps) do
+    Begin
+      myPos   :=  Pos(myOps[idx], myExp);
+      if (myPos < Result) and (myPos > 0) then
+      Begin
+        Result    :=  myPos;
+        myOp      :=  myOps[idx];
+        OpCode    :=  idx;
+      End;
+    End;
+  End;
 
-    Result  :=  false;
+  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  {returns the index of the variable if it exists in the state variable list,
+  otherwise, it returns 50001 if the string entered is a numeric constant (dbl)
+  or -1 if the string entered is neither a numeric constant or state varaible}
+  function  TDynamicExpObj.Get_Var_Idx(myVar : string): Integer;
+  var
+    dblval  : double;
+    idx     : Integer;
+  Begin
+    dblval  :=  0.0;
+    Result  :=  -1;   // error
+    for idx := 0 to High(FVarValues) do
+      if myVar = FVarNames[idx] then
+      Begin
+        Result  :=  idx;
+        break;
+      End;
+
+    if Result < 0 then
+    Begin
+      // so, it's not a state variable, maybe a constant
+      try
+        dblval  :=  strtofloat(myVar);
+        Result  :=  50001;  // returns this code to indicate that it is a constant
+      except
+        Result  :=  -1;  // it's not a number
+      end;
+    End;
+
+  End;
+
+  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  FUNCTION  TDynamicExpObj.InterpretDiffEq( Exp : String ):Boolean;
+  {Builds the list of commands required for operating the equation declared, this
+  automation is intended to acelerate the calculation in run time.
+  Notation:
+    Positive integers represent the index to a variable slot (dbl)
+    If the integer is a value >= 50000, it means that it is the index to a
+    numeric constant that can be located at FVarConst
+    If is a negative integer, represents one of the following operations:
+      2 = Add
+      3 = Subtraction
+      4 = Mult
+      5 = Div
+    If the negative integer is -50, it means the begining of a new equation}
+  var
+    Idx,
+    OpCode,
+    OpIdx     : integer;
+    ErrorSrc,
+    SubXp,
+    Op        : String;
+    myVars    : TStringList;
+  Begin
+    Result    :=  false;
+    ErrorSrc  :=  '';
+    myVars    :=  TStringList.Create;
+    myVars.Clear;
+    setlength(FCmd,0);
+    FXpression  :=  Lowercase(Exp);
+    while FXpression.Length > 0 do
+    Begin
+      OpIdx   :=  Get_Closer_Op(FXpression, Op, OpCode);
+
+      if OpIdx = 10000 then
+      Begin
+        FXpression  :=  ''   // we're done
+      end
+      else
+      Begin
+        SubXp       :=  FXpression.Substring(0, OpIdx - 1);
+        if Op.Length > 1 then OpIdx :=  OpIdx + Op.Length;
+        FXpression  :=  FXpression.Substring(OpIdx, FXpression.Length);
+        InterpretTStringListArray(SubXp, myVars);
+        case OpCode of
+          0:  Begin
+                setlength(FCmd,length(FCmd) + 2);
+                OpIdx :=  Get_Var_Idx(myVars[0]);     // the result is always placed at the begin
+                if OpIdx = 50001 then
+                Begin
+                  DoSimpleMsg('DynamicExp: the expression preceeding the "dt" operand has to be a state variable.', 50006);
+                  ErrorSrc  :=  'preceeding differential output';
+                End
+                else
+                Begin
+                  if OpIdx < 0 then ErrorSrc  :=  myVars[0]
+                  else
+                  Begin
+                    FCmd[High(FCmd) - 1]  :=  OpIdx;
+                    FCmd[High(FCmd)]      :=  -50;   // denotes the begining of an equation
+                  End;
+                End;
+              End;
+          1, 6, 7, 8, 9:
+              Begin
+              // Do nothing, it's just for notation reference at the user side
+              End;
+          2, 3, 4, 5, 10:   // it is one of the basic operations or end of the diff eq
+              Begin
+                for Idx := 0 to ( myVars.Count - 1 ) do
+                Begin
+                  setlength(FCmd,Length(FCmd) + 1);
+                  OpIdx                      :=  Get_Var_Idx(myVars[idx]);
+                  if OpIdx = 50001 then
+                  Begin
+                    setlength(FVarConst,Length(FVarConst) + 1);
+                    FVarConst[High(FVarConst)]  :=  strtofloat(myVars[idx]);
+                    FCmd[High(FCmd)]            :=  50000 + High(FVarConst);
+                  End
+                  else
+                  Begin
+                    if OpIdx < 0 then ErrorSrc          :=  '"' + myVars[0] + '"'
+                    else              FCmd[High(FCmd)]  :=  Get_Var_Idx(myVars[idx]);
+                  End;
+                End;
+                if OpCode <> 10 then
+                Begin
+                  setlength(FCmd,Length(FCmd) + 1);
+                  FCmd[High(FCmd)] :=  -1 * OpCode;    // assings the operator -> + - * /
+                end;
+              End;
+
+        end;
+      End;
+      if ErrorSrc <> '' then
+      Begin
+        DoSimpleMsg('DynamicExp: Variable ' + ErrorSrc + ' not Found.', 50005);
+        FXpression  :=  '';
+        Result      :=  true;
+      End;
+    End;
+
+    if not Result then  FXpression  :=  Exp;    // assings the expression again to keep a local copy
+
   End;
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
