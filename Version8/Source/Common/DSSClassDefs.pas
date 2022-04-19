@@ -74,6 +74,7 @@ CONST
     //  STORAGE2_ELEMENT  = 41 * 8;
     //  STORAGE2_CONTROL  = 42 * 8;
       WINDGEN_ELEMENT   = 43 * 8;
+
 VAR
    NumIntrinsicClasses,
    NumUserClasses     :Integer;
@@ -131,14 +132,10 @@ USES
      Feeder,
      XfmrCode,
      Storage,
-//     Storage2,
      StorageController,
-//     StorageController2,
      SwtControl,
      PVSystem,
-//     PVSystem2,
      InvControl,
-//     InvControl2,
      GICLine,
      GICTransformer,
      VSConverter,
@@ -149,6 +146,7 @@ USES
      IndMach012,
      GICsource,
      AutoTrans,
+     DynamicExp,
      //by Dahei
      Generic5OrderMach,
      // By Dahei
@@ -268,6 +266,9 @@ Begin
      FMonitorClass[ActiveActor]   := TDSSFMonitor.Create;  // Have to do this AFTER Generator
      DSSClasses.New               := FMonitorClass[ActiveActor];
      DSSClasses.New               := TGeneric5.Create;
+
+   //-------------------------------------------------------------------------------
+     DSSClasses.New               := TDynamicExp.Create;    //  dynamic expression obj - 04-19-2022
 
  { Create Classes for custom implementations }
      CreateMyDSSClasses;
