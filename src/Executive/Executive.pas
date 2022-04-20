@@ -12,6 +12,7 @@ USES
       Classes,
       DSSPointerList,
       Command,
+      Contnrs,
       DSSClass,
       CAPI_Utils,
       CAPI_Types;
@@ -58,6 +59,7 @@ TYPE
          procedure ZipClose();
          procedure ZipRedirect(FileInZip: String);
          procedure ZipExtract(var ResultPtr: PByte; ResultCount: PAPISize; FileInZip: String);
+         function ZipHashes(var Hashes: TFPHashList): Boolean;
          function InZip: Boolean;
          function CurrentZipFileName: String;
          procedure SetInZipPath(path: String);
@@ -72,7 +74,6 @@ USES BufStream, ExecCommands, ExecOptions,
      Utilities, Solution, DSSHelper,
      CmdForms,
      Zipper,
-     Contnrs,
      StrUtils;
 
 type
@@ -325,6 +326,20 @@ end;
 procedure TExecutive.Write_to_RecorderFile(const s: String);
 begin
    FSWriteln(Recorderfile, S);
+end;
+
+function TExecutive.ZipHashes(var Hashes: TFPHashList): Boolean;
+var
+    unzipper: TDSSUnZipper = NIL;
+begin
+    Result := False;
+    if DSS.unzipper = NIL then 
+        Exit;
+
+    unzipper := TDSSUnZipper(DSS.unzipper);
+    Hashes := unzipper.ziphash;
+    if Hashes <> NIL then
+        Result := True;
 end;
 
 constructor TDSSUnZipper.Create(fn: String);

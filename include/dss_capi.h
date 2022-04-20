@@ -6715,10 +6715,59 @@ extern "C" {
     DSS_CAPI_DLL void Text_CommandBlock(char *Value);
     DSS_CAPI_DLL void Text_CommandArray(char** ValuePtr, int32_t ValueCount);
 
+    /*
+    Opens and prepares a ZIP file to be used by the DSS text parser.
+    Currently, the ZIP format support is limited by what is provided in the Free Pascal distribution.
+    Besides that, the full filenames inside the ZIP must be shorter than 256 characters.
+    The limitations should be removed in a future revision.
+    
+    (API Extension)
+    */
     DSS_CAPI_DLL void ZIP_Open(char* FileName);
+
+    /*
+    Runs a "Redirect" command inside the current (open) ZIP file.
+    In the current implementation, all files required by the script must
+    be present inside the ZIP, using relative paths. The only exceptions are
+    memory-mapped files.
+
+    (API Extension)
+    */
     DSS_CAPI_DLL void ZIP_Redirect(char* FileInZip);
+
+    /*
+    Check if the given path name is present in the current ZIP file.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL int16_t ZIP_Contains(char* Name);
+    
+    /*
+    List of strings consisting of all names match the regular expression provided in regexp.
+    If no expression is provided, all names in the current open ZIP are returned.
+    
+    See https://regex.sorokin.engineer/en/latest/regular_expressions.html for information on 
+    the expression syntax and options.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void ZIP_List(char*** ResultPtr, int32_t* ResultCount, char* RegExp);
+
+    /*
+    Extracts the contents of the file "FileName" from the current (open) ZIP file.
+    Returns a byte-string.
+
+    (API Extension)
+    */
     DSS_CAPI_DLL void ZIP_Extract(int8_t** ResultPtr, int32_t* ResultCount, char* FileName);
+
     DSS_CAPI_DLL void ZIP_Extract_GR(char* FileName);
+
+    /*
+    Closes the current open ZIP file.
+    
+    (API Extension)
+    */    
     DSS_CAPI_DLL void ZIP_Close(void);
 
     /*

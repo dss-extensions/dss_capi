@@ -1961,6 +1961,8 @@ exports
     ZIP_Redirect,
     ZIP_Extract,
     ZIP_Extract_GR,
+    ZIP_Contains,
+    ZIP_List,
 
     DSS_RegisterPlotCallback,
     DSS_RegisterMessageCallback,
