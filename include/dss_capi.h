@@ -6717,6 +6717,8 @@ extern "C" {
 
     DSS_CAPI_DLL void ZIP_Open(char* FileName);
     DSS_CAPI_DLL void ZIP_Redirect(char* FileInZip);
+    DSS_CAPI_DLL void ZIP_Extract(int8_t** ResultPtr, int32_t* ResultCount, char* FileName);
+    DSS_CAPI_DLL void ZIP_Extract_GR(char* FileName);
     DSS_CAPI_DLL void ZIP_Close(void);
 
     /*

@@ -6563,6 +6563,8 @@ extern "C" {
 
     DSS_CAPI_DLL void ctx_ZIP_Open(void* ctx, char* FileName);
     DSS_CAPI_DLL void ctx_ZIP_Redirect(void* ctx, char* FileInZip);
+    DSS_CAPI_DLL void ctx_ZIP_Extract(void* ctx, int8_t** ResultPtr, int32_t* ResultCount, char* FileName);
+    DSS_CAPI_DLL void ctx_ZIP_Extract_GR(void* ctx, char* FileName);
     DSS_CAPI_DLL void ctx_ZIP_Close(void* ctx);
 
     /*

@@ -12,7 +12,9 @@ USES
       Classes,
       DSSPointerList,
       Command,
-      DSSClass;
+      DSSClass,
+      CAPI_Utils,
+      CAPI_Types;
 
 TYPE
      TExecutive = class(TObject)
@@ -54,7 +56,8 @@ TYPE
          // ZIP functions
          procedure ZipOpen(ZipFileName: String);
          procedure ZipClose();
-         function ZipRedirect(FileInZip: String): Boolean;
+         procedure ZipRedirect(FileInZip: String);
+         procedure ZipExtract(var ResultPtr: PByte; ResultCount: PAPISize; FileInZip: String);
          function InZip: Boolean;
          function CurrentZipFileName: String;
          procedure SetInZipPath(path: String);
@@ -503,7 +506,7 @@ begin
     FreeAndNil(DSS.unzipper);
 end;
 
-function TExecutive.ZipRedirect(FileInZip: String): Boolean;
+procedure TExecutive.ZipRedirect(FileInZip: String);
 var
     u: TDSSUnZipper = NIL;
 begin
@@ -533,6 +536,27 @@ begin
         
     DSS.LastErrorMessage := DSS.LastErrorMessage + CRLF + 
         Format(_('[ZIP file: "%s"]'), [CurrentZipFileName()]);
+end;
+
+procedure TExecutive.ZipExtract(var ResultPtr: PByte; ResultCount: PAPISize; FileInZip: String);
+var
+    Fstream: TStream = NIL;
+begin
+    try
+        Fstream := GetZipStream(FileInZip);
+        DSS_RecreateArray_PByte(ResultPtr, ResultCount, Fstream.Size);
+        Fstream.ReadBuffer(ResultPtr^, ResultCount[0]);
+        FreeAndNil(Fstream);
+    except
+        on E: Exception do
+        begin
+            DoSimpleMsg(DSS, 'File "%s" could not be extracted: %s', [FileInZip, E.Message], 2203);
+            DSS.LastErrorMessage := DSS.LastErrorMessage + CRLF + 
+                Format(_('[ZIP file: "%s"]'), [CurrentZipFileName()]);
+            FreeAndNil(Fstream);
+            Exit;
+        end;
+    end;
 end;
 
 end.
