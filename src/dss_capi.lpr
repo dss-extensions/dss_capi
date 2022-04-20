@@ -1959,6 +1959,8 @@ exports
     ZIP_Open,
     ZIP_Close,
     ZIP_Redirect,
+    ZIP_Extract,
+    ZIP_Extract_GR,
 
     DSS_RegisterPlotCallback,
     DSS_RegisterMessageCallback,
