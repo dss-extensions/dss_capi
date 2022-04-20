@@ -6561,10 +6561,59 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Text_CommandBlock(void* ctx, char *Value);
     DSS_CAPI_DLL void ctx_Text_CommandArray(void* ctx, char** ValuePtr, int32_t ValueCount);
 
+    /*
+    Opens and prepares a ZIP file to be used by the DSS text parser.
+    Currently, the ZIP format support is limited by what is provided in the Free Pascal distribution.
+    Besides that, the full filenames inside the ZIP must be shorter than 256 characters.
+    The limitations should be removed in a future revision.
+    
+    (API Extension)
+    */
     DSS_CAPI_DLL void ctx_ZIP_Open(void* ctx, char* FileName);
+
+    /*
+    Runs a "Redirect" command inside the current (open) ZIP file.
+    In the current implementation, all files required by the script must
+    be present inside the ZIP, using relative paths. The only exceptions are
+    memory-mapped files.
+
+    (API Extension)
+    */
     DSS_CAPI_DLL void ctx_ZIP_Redirect(void* ctx, char* FileInZip);
+
+    /*
+    Check if the given path name is present in the current ZIP file.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL int16_t ctx_ZIP_Contains(void* ctx, char* Name);
+    
+    /*
+    List of strings consisting of all names match the regular expression provided in regexp.
+    If no expression is provided, all names in the current open ZIP are returned.
+    
+    See https://regex.sorokin.engineer/en/latest/regular_expressions.html for information on 
+    the expression syntax and options.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void ctx_ZIP_List(void* ctx, char*** ResultPtr, int32_t* ResultCount, char* RegExp);
+
+    /*
+    Extracts the contents of the file "FileName" from the current (open) ZIP file.
+    Returns a byte-string.
+
+    (API Extension)
+    */
     DSS_CAPI_DLL void ctx_ZIP_Extract(void* ctx, int8_t** ResultPtr, int32_t* ResultCount, char* FileName);
+
     DSS_CAPI_DLL void ctx_ZIP_Extract_GR(void* ctx, char* FileName);
+
+    /*
+    Closes the current open ZIP file.
+    
+    (API Extension)
+    */    
     DSS_CAPI_DLL void ctx_ZIP_Close(void* ctx);
 
     /*
