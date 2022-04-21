@@ -4070,12 +4070,12 @@ extern "C" {
     DSS_CAPI_DLL void PVSystems_Set_Name(char* Value);
 
     /*
-    Get the present value of the Irradiance property in W/sq-m
+    Get the present value of the Irradiance property in kW/sq-m
     */
     DSS_CAPI_DLL double PVSystems_Get_Irradiance(void);
 
     /*
-    Set the present Irradiance value in W/sq-m
+    Set the present Irradiance value in kW/sq-m
     */
     DSS_CAPI_DLL void PVSystems_Set_Irradiance(double Value);
 
