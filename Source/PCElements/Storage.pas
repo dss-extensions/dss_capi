@@ -1434,7 +1434,7 @@ Begin
 
           propDISPMODE   : Result := ReturnDispMode(DispatchMode);
 
-          {propCONNECTION :;}
+          propCONNECTION : If Connection = 0 Then Result :=  'wye' else Result := 'delta';
           propKVAR       : Result := Format('%.6g', [kvar_out]);
           propPCTR       : Result := Format('%.6g', [pctR]);
           propPCTX       : Result := Format('%.6g', [pctX]);

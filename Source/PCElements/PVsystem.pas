@@ -1029,7 +1029,7 @@ FUNCTION TPVsystemObj.GetPropertyValue(Index: Integer): String;
         propTYEARLY    : Result := YearlyTShape;
         propTDAILY     : Result := DailyTShape;
         propTDUTY      : Result := DutyTShape;
-        {propCONNECTION :;}
+        propCONNECTION : If Connection = 0 Then Result := 'wye' else Result :=  'delta';
         propKVAR       : Result := Format('%.6g', [kvar_out]);
         propPCTR       : Result := Format('%.6g', [pctR]);
         propPCTX       : Result := Format('%.6g', [pctX]);
