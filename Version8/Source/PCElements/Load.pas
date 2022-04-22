@@ -2320,6 +2320,7 @@ begin
          7:  Result := Yearlyshape;
          8:  Result := Dailyshape;
          9:  Result := Dutyshape;
+         11: If Connection = 0 Then Result :=  'wye' else Result := 'delta';
          12: Result := Format('%-g',   [kvarbase]);
          22: Result := Format('%-g', [FkVAAllocationFactor]);
          23: Result := Format('%-g',   [kVABase]);
