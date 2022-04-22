@@ -268,7 +268,8 @@ Begin
      DSSClasses.New               := TGeneric5.Create;
 
    //-------------------------------------------------------------------------------
-     DSSClasses.New               := TDynamicExp.Create;    //  dynamic expression obj - 04-19-2022
+     TDynamicExpClass[ActiveActor]:= TDynamicExp.Create;    //  dynamic expression obj - 04-19-2022
+     DSSClasses.New               := TDynamicExpClass[ActiveActor];
 
  { Create Classes for custom implementations }
      CreateMyDSSClasses;
