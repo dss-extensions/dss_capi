@@ -22,7 +22,7 @@ unit DSSGlobals;
 interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList, PDELement,
-     UComplex, Arraydef, CktElement, Circuit, IniRegSave, 
+     UComplex, Arraydef, CktElement, Circuit, IniRegSave, DynamicExp,
      {$IFNDEF FPC}
       System.IOUtils,
       {$IFNDEF CONSOLE}
@@ -256,6 +256,7 @@ VAR
    SolutionClass      :Array of TDSSClass;
    EnergyMeterClass   :Array of TEnergyMeter;
    FMonitorClass      :Array of TDSSFMonitor;      // By dahei UCF
+   TDynamicExpClass   :Array of TDynamicExp;
    // FeederClass        :TFeeder;
    MonitorClass       :Array of TDSSMonitor;
    SensorClass        :Array of TSensor;
@@ -1468,6 +1469,7 @@ initialization
    SetLength(ActorStatus,CPU_Cores + 1);
    SetLength(ActorMA_Msg,CPU_Cores + 1);
    SetLength(ActiveVSource,CPU_Cores + 1);
+   SetLength(TDynamicExpClass,CPU_Cores + 1);
 
    setlength(FMonitorClass,CPU_Cores + 1);    // by Dahei UCF
    // Init pointer repositories for the EnergyMeter in multiple cores

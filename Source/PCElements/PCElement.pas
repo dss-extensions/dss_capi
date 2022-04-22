@@ -3,14 +3,15 @@ unit PCElement;
 {$M+}
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
 
 interface
 
-USES CktElement, ucomplex, DSSClass, Spectrum, Arraydef, Meterelement,Fmonitor;
+USES  CktElement, ucomplex, DSSClass, Spectrum, Arraydef, Meterelement,
+      Fmonitor, DynamicExp;
 
 TYPE
    TPCElement = class(TDSSCktElement)
@@ -24,22 +25,25 @@ TYPE
 
      public
 
-       
-       Spectrum:String;
-       SpectrumObj:TSpectrumObj;
+       DynamicEq,                         // Name of the local Dynamic equation (if any)
+       Spectrum       : String;
+       SpectrumObj    : TSpectrumObj;
 
        MeterObj,  {Upline Energymeter}
-       SensorObj  :TMeterElement; // Upline Sensor for this element
+       SensorObj      : TMeterElement;    // Upline Sensor for this element
        {by Dahei}
-       FMonObj : TFMonitorObj;
-       cluster_num : integer;
+       FMonObj        : TFMonitorObj;
+       cluster_num    : integer;
        NdNumInCluster : integer;
-       nVLeaders : integer;   // How many virtual leaders for this pcelement
-       FMonObj2 : TFMonitorObj;
-       cluster_num2 : integer;
-       NdNumInCluster2 : integer;
+       nVLeaders      : integer;          // How many virtual leaders for this pcelement
+       FMonObj2       : TFMonitorObj;
+       cluster_num2   : integer;
+       NdNumInCluster2: integer;
 
-       InjCurrent:pComplexArray;
+       InjCurrent     : pComplexArray;
+       DynamicEqObj   : TDynamicExpObj;   // Reference to the local Dynamic equation (if any)
+       DynamicEqVals  : array of double;
+       DynamicEqPair  : array of Integer;
 
 
 
@@ -86,11 +90,15 @@ USES
 Constructor TPCElement.Create(ParClass:TDSSClass);
 Begin
     Inherited Create(ParClass);
-    Spectrum := 'default';
-    SpectrumObj := NIL;  // have to allocate later because not guaranteed there will be one now.
-    SensorObj   := NIL;
-    MeterObj    := NIL;
-    InjCurrent  := NIL;
+    Spectrum    := 'default';
+    SpectrumObj :=  NIL;  // have to allocate later because not guaranteed there will be one now.
+    SensorObj   :=  NIL;
+    MeterObj    :=  NIL;
+    InjCurrent  :=  NIL;
+    DynamicEq   :=  '';
+    DynamicEqObj:=  NIL;
+    setlength(DynamicEqVals,0);
+    setlength(DynamicEqPair,0);
     FIterminalUpdated := FALSE;
     
     DSSObjType := PC_ELEMENT;
