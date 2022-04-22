@@ -90,7 +90,8 @@ unit generator;
 
 interface
 
-USES GeneratorVars, GenUserModel, DSSClass,  PCClass, PCElement, ucmatrix, ucomplex, LoadShape, GrowthShape, Spectrum, ArrayDef, Dynamics;
+USES  GeneratorVars, GenUserModel, DSSClass,  PCClass, PCElement, ucmatrix, ucomplex, LoadShape,
+      GrowthShape, Spectrum, ArrayDef, Dynamics, DynamicExp;
 
 Const  NumGenRegisters = 6;    // Number of energy meter registers
        NumGenVariables = 6;
@@ -295,6 +296,7 @@ TYPE
        PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
        Procedure DumpProperties(Var F:TextFile; Complete:Boolean);Override;
        FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+       FUNCTION CheckIfDynVar(myVar  : String; ActorID : Integer):Integer;
 
        Property PresentkW    :Double  Read Get_PresentkW   Write Set_PresentkW;
        Property Presentkvar  :Double  Read Get_Presentkvar Write Set_Presentkvar;
@@ -317,7 +319,7 @@ implementation
 
 USES  ParserDel, Circuit,  Sysutils, Command, Math, MathUtil, DSSClassDefs, DSSGlobals, Utilities;
 
-Const NumPropsThisClass = 44;
+Const NumPropsThisClass = 45;
   // Dispatch modes
       DEFAULT = 0;
       LOADMODE = 1;
@@ -479,6 +481,8 @@ Begin
                                    'It only applies if UseFuel = Yes/True');
       AddProperty('Refuel',  44, 'It is a boolean value (Yes/True, No/False) that can be used to manually refuel the generator when needed. ' +
                                  'It only applies if UseFuel = Yes/True');
+      AddProperty('DynamicEq',  45, 'The name of the dynamic equation (DinamicExp) that will be used for defining the dynamic behavior of the generator. ' +
+                                 'if not defined, the generator dynamics will follow the built-in dynamic equation.');
 
 
      ActiveProperty := NumPropsThisClass;
@@ -580,6 +584,7 @@ End;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Function TGenerator.Edit(ActorID : Integer):Integer;
 VAR
+   Varidx,
    i,
    ParamPointer:Integer;
    ParamName:String;
@@ -661,10 +666,14 @@ Begin
                 pctFuel   :=  100.0;
                 GenActive :=  True;
                End;
+           45: DynamicEq            :=  Param;
 
          ELSE
+           // first, checks if there is a dynamic eq assigned, then
+           // checks if the new property edit the state variables within
+           VarIdx   :=  CheckIfDynVar(ParamName, ActorID);
            // Inherited parameters
-             ClassEdit(ActiveGeneratorObj, ParamPointer - NumPropsThisClass)
+           if VarIdx < 0 then ClassEdit(ActiveGeneratorObj, ParamPointer - NumPropsThisClass)
          End;
 
          If ParamPointer > 0 Then
@@ -708,6 +717,11 @@ Begin
                    CloseFile(Tracefile);
                 End;
             26, 27: kVANotSet := FALSE;
+            45: Begin
+                  DynamicEqObj :=  TDynamicExpClass[ActorID].Find(DynamicEq);
+                  If Assigned(DynamicEqObj) then With DynamicEqObj Do
+                    setlength(DynamicEqVals, NumVars);
+                End;
          End;
 
          ParamName := Parser[ActorID].NextParam;
@@ -868,36 +882,36 @@ End;
 Constructor TGeneratorObj.Create(ParClass:TDSSClass; const SourceName:String);
 Begin
      Inherited create(ParClass);
-     Name := LowerCase(SourceName);
-     DSSObjType := ParClass.DSSClassType ; // + GEN_ELEMENT;  // In both PCelement and Genelement list
+     Name               := LowerCase(SourceName);
+     DSSObjType         := ParClass.DSSClassType ; // + GEN_ELEMENT;  // In both PCelement and Genelement list
 
-     Nphases      := 3;
-     Fnconds       := 4;  // defaults to wye
-     Yorder       := 0;  // To trigger an initial allocation
-     Nterms := 1;  // forces allocations
-     kWBase       := 1000.0;
-     kvarBase     := 60.0;
+     Nphases            := 3;
+     Fnconds            := 4;  // defaults to wye
+     Yorder             := 0;  // To trigger an initial allocation
+     Nterms             := 1;  // forces allocations
+     kWBase             := 1000.0;
+     kvarBase           := 60.0;
 
 
-     kvarMax      := kvarBase * 2.0;
-     kvarMin      :=-kvarmax;
-     PFNominal    := 0.88;
-  //   Rneut        := 0.0;
-  //   Xneut        := 0.0;
-     YearlyShape    := '';
-     YearlyShapeObj := nil;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
-     DailyDispShape := '';
-     DailyDispShapeObj := nil;  // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
-     DutyShape         := '';
-     DutyShapeObj      := nil;  // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
-     DutyStart         := 0.0;
-     Connection        := 0;    // Wye (star)
-     GenModel          := 1;  {Typical fixed kW negative load}
-     GenClass          := 1;
-     LastYear          := 0;
-     LastGrowthFactor  := 1.0;
+     kvarMax            := kvarBase * 2.0;
+     kvarMin            :=-kvarmax;
+     PFNominal          := 0.88;
+  //   Rneut            := 0.0;
+  //   Xneut            := 0.0;
+     YearlyShape        := '';
+     YearlyShapeObj     := nil;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
+     DailyDispShape     := '';
+     DailyDispShapeObj  := nil;  // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
+     DutyShape          := '';
+     DutyShapeObj       := nil;  // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
+     DutyStart          := 0.0;
+     Connection         := 0;    // Wye (star)
+     GenModel           := 1;  {Typical fixed kW negative load}
+     GenClass           := 1;
+     LastYear           := 0;
+     LastGrowthFactor   := 1.0;
 
-     DQDVSaved  := 0.0;  // Initialize this here.  Allows generators to be turned off and on
+     DQDVSaved          := 0.0;  // Initialize this here.  Allows generators to be turned off and on
 
 
      GeneratorSolutionCount     := -1;  // For keep track of the present solution in Injcurrent calcs
@@ -946,32 +960,32 @@ Begin
      PublicDataStruct := pointer(@Genvars);
      PublicDataSize   := SizeOf(TGeneratorVars);
 
-     UserModel  := TGenUserModel.Create(@Genvars) ;
-     ShaftModel := TGenUserModel.Create(@Genvars);
+     UserModel        := TGenUserModel.Create(@Genvars) ;
+     ShaftModel       := TGenUserModel.Create(@Genvars);
 
      DispatchValue    := 0.0;   // Follow curves
 
-     Reg_kWh        := 1;
-     Reg_kvarh      := 2;
-     Reg_MaxkW      := 3;
-     Reg_MaxkVA     := 4;
-     Reg_Hours      := 5;
-     Reg_Price      := 6;
+     Reg_kWh          := 1;
+     Reg_kvarh        := 2;
+     Reg_MaxkW        := 3;
+     Reg_MaxkVA       := 4;
+     Reg_Hours        := 5;
+     Reg_Price        := 6;
 
-     PVFactor       := 0.1;
-     DebugTrace     := FALSE;
-     FForcedON      := FALSE;
-     GenSwitchOpen  := FALSE;
-     ShapeIsActual  := FALSE;
-     ForceBalanced  := FALSE;
+     PVFactor         := 0.1;
+     DebugTrace       := FALSE;
+     FForcedON        := FALSE;
+     GenSwitchOpen    := FALSE;
+     ShapeIsActual    := FALSE;
+     ForceBalanced    := FALSE;
 
-     Spectrum := 'defaultgen';  // override base class
+     Spectrum         := 'defaultgen';  // override base class
 
-     UseFuel        :=  False;
-     GenActive      :=  True;
-     FuelkWh        :=  0.0;
-     pctFuel        :=  100.0;
-     pctReserve     :=  20.0;
+     UseFuel          :=  False;
+     GenActive        :=  True;
+     FuelkWh          :=  0.0;
+     pctFuel          :=  100.0;
+     pctReserve       :=  20.0;
 
      InitPropertyValues(0);
 
@@ -998,6 +1012,37 @@ Begin
        UNIfORM:   RandomMult := Random;  // number between 0 and 1.0
        LOGNORMAL: RandomMult := QuasiLognormal(YearlyShapeObj.Mean);
    End;
+End;
+
+//----------------------------------------------------------------------------
+{Evaluates if the value provided corresponds to a constant value or to an operand
+ for calculating the value using the simulation results}
+FUNCTION TGeneratorObj.CheckIfDynVar(myVar  : String; ActorID : Integer):Integer;
+var
+  myOp    : Integer;        // Operator found
+  myValue : String;         // Value entered by the user
+Begin
+
+   If Assigned(DynamicEqObj) then
+   Begin
+    Result  :=   DynamicEqObj.Get_Var_Idx(myVar);
+    if (Result >= 0) and (Result < 50000) then
+    Begin
+      myValue :=  Parser[ActorID].StrValue;
+      if (DynamicEqObj.Check_If_CalcValue(myValue, myOp)) then
+      Begin
+        // Adss the pair (var index + operand index)
+        setlength(DynamicEqPair,length(DynamicEqPair) + 2);
+        DynamicEqPair[High(DynamicEqPair) - 1]  :=  Result;
+        DynamicEqPair[High(DynamicEqPair)]      :=  myOp;
+      End
+      else // Otherwise, move the value to the values array
+         DynamicEqVals[Result]  :=  strtofloat(myValue);
+    End
+    else
+      Result := -1;
+   End;
+
 End;
 
 //----------------------------------------------------------------------------
@@ -2500,6 +2545,7 @@ begin
      PropertyValue[42]     := '100.0';
      PropertyValue[43]     := '20.0';
      PropertyValue[44]     := 'No';
+     PropertyValue[45]     := '';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
