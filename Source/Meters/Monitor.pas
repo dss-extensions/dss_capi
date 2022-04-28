@@ -676,8 +676,11 @@ Begin
 
                  Case (Mode and MODEMASK) of
                       3: Begin
-                             NumStateVars := TPCElement(MeteredElement).Numvariables;
-                             ReallocMem(StateBuffer, Sizeof(StateBuffer^[1])*NumStatevars);
+                          if TPCElement(MeteredElement).DynamicEqObj = nil then
+                            NumStateVars := TPCElement(MeteredElement).Numvariables
+                          else
+                            NumStateVars := TPCElement(MeteredElement).DynamicEqObj.NumVars * length(TPCElement(MeteredElement).DynamicEqVals[0]);
+                          ReallocMem(StateBuffer, Sizeof(StateBuffer^[1])*NumStatevars);
                          End;
                       4: Begin
                              ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1])*Nphases);
@@ -733,14 +736,22 @@ begin
     Nconds  := MeteredElement.Nconds;
     Case (Mode and MODEMASK) of
       3: Begin
+            if TPCElement(MeteredElement).DynamicEqObj = nil then
+            Begin
              NumStateVars := TPCElement(MeteredElement).Numvariables;
              ReallocMem(StateBuffer, Sizeof(StateBuffer^[1])*NumStatevars);
+            End
+            else
+            Begin
+             NumStateVars := TPCElement(MeteredElement).DynamicEqObj.NumVars * length(TPCElement(MeteredElement).DynamicEqVals[0]);
+             ReallocMem(StateBuffer, Sizeof(StateBuffer^[1])*NumStatevars);
+            End;
          End;
       4: Begin
-              ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1])*Nphases);
+            ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1])*Nphases);
          End;
       5: Begin
-             ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1])*NumSolutionVars);
+            ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1])*NumSolutionVars);
          End;
       Else
          ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
@@ -815,8 +826,11 @@ Begin
      3: Begin
               RecordSize := NumStateVars;   // Statevariabes
               For i := 1 to NumStateVars Do Begin
-                  NameofState := AnsiString(TpcElement(MeteredElement).VariableName(i) + ',');
-                  Add2header(pAnsiChar(NameofState));
+                if TpcElement(MeteredElement).DynamicEqObj = nil then
+                  NameofState := AnsiString(TpcElement(MeteredElement).VariableName(i) + ',')
+                else
+                  NameofState := AnsiString(TpcElement(MeteredElement).DynamicEqObj.Get_VarName(i - 1) + ',');
+                Add2header(pAnsiChar(NameofState));
               End;
         End;
      4: Begin
