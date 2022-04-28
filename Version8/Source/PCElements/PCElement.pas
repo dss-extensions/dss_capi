@@ -25,25 +25,27 @@ TYPE
 
      public
 
-       DynamicEq,                         // Name of the local Dynamic equation (if any)
+       DynamicEq,                                 // Name of the local Dynamic equation (if any)
        Spectrum       : String;
        SpectrumObj    : TSpectrumObj;
 
        MeterObj,  {Upline Energymeter}
-       SensorObj      : TMeterElement;    // Upline Sensor for this element
+       SensorObj      : TMeterElement;            // Upline Sensor for this element
        {by Dahei}
        FMonObj        : TFMonitorObj;
        cluster_num    : integer;
        NdNumInCluster : integer;
-       nVLeaders      : integer;          // How many virtual leaders for this pcelement
+       nVLeaders      : integer;                  // How many virtual leaders for this pcelement
        FMonObj2       : TFMonitorObj;
        cluster_num2   : integer;
        NdNumInCluster2: integer;
 
        InjCurrent     : pComplexArray;
-       DynamicEqObj   : TDynamicExpObj;   // Reference to the local Dynamic equation (if any)
-       DynamicEqVals  : array of double;
-       DynamicEqPair  : array of Integer;
+       DynamicEqObj   : TDynamicExpObj;           // Reference to the local Dynamic equation (if any)
+
+       DynamicEqVals  : array of DynSlot;         // Memory space for the variable values in time
+       DynOut,                                    // Memory space for referencing the output values
+       DynamicEqPair  : array of Integer;         // Memory space for assigning calculated values to vars
 
 
 
@@ -53,8 +55,8 @@ TYPE
        Procedure ZeroInjCurrent;
 
        PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-       Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present values of terminal
-       Procedure GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present values of terminal
+       Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer); Override;     // Get present values of terminal
+       Procedure GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override;  // Get present values of terminal
        Procedure ComputeIterminal(ActorID : Integer);Override;
        Function  InjCurrents(ActorID : Integer):Integer; Override;
        Procedure CalcYPrimContribution(Curr: pComplexArray; ActorID : Integer);
@@ -99,6 +101,7 @@ Begin
     DynamicEqObj:=  NIL;
     setlength(DynamicEqVals,0);
     setlength(DynamicEqPair,0);
+    setlength(DynOut,0);
     FIterminalUpdated := FALSE;
     
     DSSObjType := PC_ELEMENT;
