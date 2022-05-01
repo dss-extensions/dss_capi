@@ -81,6 +81,7 @@ uses
   DSSClassDefs in '..\Common\DSSClassDefs.pas',
   DSSGlobals in '..\Common\DSSGlobals.pas',
   DSSObject in '..\General\DSSObject.pas',
+  DynamicExp in '..\General\DynamicExp.pas',
   Dynamics in '..\Shared\Dynamics.pas',
   EnergyMeter in '..\Meters\EnergyMeter.pas',
   Equivalent in '..\PCElements\Equivalent.pas',
