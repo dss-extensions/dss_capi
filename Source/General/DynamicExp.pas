@@ -5,7 +5,7 @@ unit DynamicExp;
   All rights reserved.
   ----------------------------------------------------------
 }
-
+{$IFDEF FPC}{$MODE Delphi}{$ENDIF}
 interface
 
 {The dynamics experssion object implements differential equations
@@ -440,7 +440,11 @@ implementation
     myRow   : Integer;
   Begin
     mylen   :=  length(myProt);
+{$IFDEF FPC}
+    myRow   :=  myIdx div mylen;
+{$ELSE}
     myRow   :=  floor(double(myIdx) / double(mylen));
+{$ENDIF}
     myCol   :=  myIdx - ( myRow * mylen );
     diffstr :=  '';
     if myCol > 0 then
@@ -462,7 +466,11 @@ implementation
     myRow   : Integer;
   Begin
     mylen :=  length(MemSpace[0]);
-    myRow :=  floor(double(myIdx) / double(mylen));
+{$IFDEF FPC}
+    myRow   :=  myIdx div mylen;
+{$ELSE}
+    myRow   :=  floor(double(myIdx) / double(mylen));
+{$ENDIF}
     myCol :=  myIdx - ( myRow * mylen );
     Result:=  MemSpace[myRow][myCol];
   End;
