@@ -8,7 +8,7 @@
 Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v7/v8) através de uma interface C plana, que tenta reproduzir a maioria dos métodos COM. De fato, a maior parte do código foi inicialmente derivado dos arquivos da implementação COM. O DLL resultante pode ser usado diretamente ou através de módulos de interface, como o módulo `DSS Python`. DSS Python representa um módulo para linguagem Python que imita a mesma estrutura do módulo COM (como exposto via `win32com` ou `comtypes`), efetivamente nos permitindo alcançar compatilibilidade multi-plataforma a nível de Python. Também há suporte para outras linguagens diversas -- caso tenha interesse numa linguagem não suportada, abra um novo "issue".
 
 <p align="center">
-    <img alt="Visão geral dos repositórios relacionados" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap.png" width=600>
+    <img alt="Visão geral dos repositórios relacionados" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap_pt.png" width=600>
 </p>
 
 Caso procure integração com outras linguagens de programação:
@@ -18,7 +18,9 @@ Caso procure integração com outras linguagens de programação:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) para .NET/C#, no momento apenas Windows. Em breve também será possível usá-lo via COM.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) permite integração multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM, de fato contorna algumas dificuldades de COM.
 
-Versão 0.10.7, baseada no OpenDSS SVN r2963 (em torno do OpenDSS 9.1.3.4), com várias funcionalidades extras.
+Versão 0.12.0dev, baseada no OpenDSS revisão (SVN) 3363, com várias funcionalidades customizadas e extras.
+
+**Este branch pode estar em desenvolvimento. Para uma versão específica, consulte os tags do Git do repositório.**
 
 Apesar de o objetivo principal (compatibilidade com COM) ter sido alcançado, este é um sempre um trabalho em andamento.
 *Observe que, enquanto a interface clássica (v7 + aprimoramentos) é estável, a interface para o OpenDSS-PM (v8, baseada em atores e execução paralela) ainda é experimental.* A partir da versão 0.10, a interface v8 está bem mais estável que na versão 0.9.8 da DSS C-API. A partir da versão 0.10.5, o código da pasta `Version8` não é mais compilado -- uma nova versão unificada é esperada para uma futura versão.
@@ -61,7 +63,6 @@ Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions
 ## Funcionalidades faltantes e limitações
 
 - Ainda não implementados:
-    - `DSSEvents` de `DLL/ImplEvents.pas`: parece ser muito dependente de COM.
     - Gráficos em geral
     
 ## Funcionalides extras
@@ -247,6 +248,8 @@ int main(void)
 Atualmente, todos os testes e validação são baseados no [DSS Python](http://github.com/dss-extensions/dss_python/). Outros projetos como [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) e [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) contêm testes que foram importantes para encontrar e corrigir bugs.
 
 ## Planos
+
+(Ainda sendo atualizados para versão 0.12.x)
 
 Além de correções de problemas, a funcionalidade principal desta biblioteca está pronta. Alguns pontos que pretendemos trabalhar envolvem:
 - Expor os principais métodos e propriedades faltantes (não presentes nem mesmo na interface COM), assim como classes.

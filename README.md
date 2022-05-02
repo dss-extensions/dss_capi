@@ -18,9 +18,9 @@ If you are looking for the bindings to other languages:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, also mimics the COM classes, but Windows-only at the moment. Soon it will be possible to use it via COM too.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the COM classes.
 
-Version 0.10.7, based on OpenDSS revision 2963 (around version OpenDSS 9.1.3.4), with many extra/custom features.
+Version 0.12.0dev, based on OpenDSS revision 3363, with many extra/custom features.
 
-**This is the work-in-progress branch, which will become 0.12.0.**
+**This is the work-in-progress branch, which will become 0.12.0. For a specific version, check the Git tags.**
 
 While the main objective of COM compatibility has been reach, this is still a work-in-progress and is subject to changes. 
 *Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.* From version 0.10, the v8 interface is a lot more stable than in 0.9.8. Since version 0.10.5, the parallel-machine code from Version 8 is not built for binary releases anymore -- stay tuned for a future unified version.
@@ -42,7 +42,8 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/changelog.md) for a detailed list.
 
-- **2020-03-09 / version 0.10.7-1: Includes a fix for some reports which presented corrupted text in version 0.10.7.**
+- **2022-02-xx / version 0.12.0: Beta versions of 0.12.0 available. Final 0.12.0 expected in May 2022.**
+- 2021-03-09 / version 0.10.7-1: Includes a fix for some reports which presented corrupted text in version 0.10.7.
 - 2020-12-28 / version 0.10.7: Maintenance release based on on OpenDSS revision 2963. Includes fixes and new features from the official OpenDSS. [A new document describing the DSS properties](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/dss_properties.md) was added.
 - 2020-07-31 / version 0.10.6: New API extensions, and ported changes from the official OpenDSS codebase. Includes some bugfixes, a new extended validation error messages and new compatibility toggles.
 - 2020-03-03 / version 0.10.5: Maintenance release with several minor fixes. Includes changes ported from COM and the official OpenDSS codebase. Version 8 binary releases excluded.
@@ -61,8 +62,7 @@ See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/
 
 ## Missing features and limitations
 
-- Currently not implemented:
-    - `DSSEvents` from `DLL/ImplEvents.pas`: seems too dependent on COM.
+- Currently not fully implemented:
     - Plotting in general
     
 ## Extra features
@@ -140,6 +140,8 @@ Currently most testing/validation is based on [DSS Python](http://github.com/dss
 
 
 ## Roadmap
+
+(Still being updated for 0.12.x)
 
 Besides bug fixes, the main funcionality of this library is mostly done. Notable desirable features that may be implemented are:
 - Expose more classes and important methods/properties for all classes
