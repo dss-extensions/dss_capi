@@ -1746,7 +1746,6 @@ begin
                                                                                                                   
     if not FuncError then @helics_enter_initialize_mode := find_helics_function ('helicsFederateEnterInitializingMode');
     if not FuncError then @helics_enter_executing_mode := find_helics_function ('helicsFederateEnterExecutingMode');
-    //if not FuncError then @fncs_is_initialized := find_fncs_function ('fncs_is_initialized');
     if not FuncError then @helics_time_request := find_helics_function ('helicsFederateRequestTime');
     if not FuncError then @helics_fed_get_current_time := find_helics_function ('helicsFederateGetCurrentTime');
     if not FuncError then @helics_time_request_iter := find_helics_function ('helicsFederateRequestTimeIterative');
@@ -1766,27 +1765,9 @@ begin
     if not FuncError then @helics_endpoint_create_message := find_helics_function ('helicsEndpointCreateMessageObject');
     if not FuncError then @helics_message_get_source := find_helics_function ('helicsMessageGetSource'); 
     if not FuncError then @helics_message_get_string := find_helics_function ('helicsMessageGetString');
-    //if not FuncError then @fncs_die := find_fncs_function ('fncs_die');
     if not FuncError then @helics_finalize := find_helics_function ('helicsFederateFinalize');
-    //if not FuncError then @fncs_get_events_size := find_fncs_function ('fncs_get_events_size');
-    //if not FuncError then @fncs_get_events := find_fncs_function ('fncs_get_events');
-    //if not FuncError then @fncs_get_event_at := find_fncs_function ('fncs_get_event_at');
-    //if not FuncError then @fncs_agentGetEvents := find_fncs_function ('fncs_agentGetEvents');
-    //if not FuncError then @fncs_get_value := find_fncs_function ('fncs_get_value');
-    //if not FuncError then @fncs_get_values_size := find_fncs_function ('fncs_get_values_size');
-    //if not FuncError then @fncs_get_values := find_fncs_function ('fncs_get_values');
-    //if not FuncError then @fncs_get_value_at := find_fncs_function ('fncs_get_value_at');
-    //if not FuncError then @fncs_get_keys_size := find_fncs_function ('fncs_get_keys_size');
-    //if not FuncError then @fncs_get_keys := find_fncs_function ('fncs_get_keys');
-    //if not FuncError then @fncs_get_key_at := find_fncs_function ('fncs_get_key_at');
-    //if not FuncError then @fncs_get_name := find_fncs_function ('fncs_get_name');
-    //if not FuncError then @fncs_get_id := find_fncs_function ('fncs_get_id');
-    //if not FuncError then @fncs_get_simulator_count := find_fncs_function ('fncs_get_simulator_count');
     if not FuncError then @helics_get_version := find_helics_function ('helicsGetVersion');
     if not FuncError then @helics_close_library := find_helics_function ('helicsCloseLibrary');
-    //if not FuncError then @fncs_count_events := find_fncs_function ('fncs_count_events');
-    //if not FuncError then @fncs_count_values := find_fncs_function ('fncs_count_values');
-    //if not FuncError then @helics_input_get_key := find_helics_function ('helicsInputGetKey');
     if not FuncError then @helics_input_get_type := find_helics_function ('helicsInputGetType');
     if not FuncError then @helics_input_get_key := find_helics_function ('helicsSubscriptionGetKey');
     if not FuncError then @helics_publication_get_key := find_helics_function ('helicsPublicationGetKey');
