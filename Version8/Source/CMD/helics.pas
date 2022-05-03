@@ -1716,12 +1716,12 @@ begin
   ET.Clear;
   ET.Start;
 {$IFDEF Windows}
-  FLibHandle := SafeLoadLibrary ('helicsSharedLib.' + SharedSuffix);
+  FLibHandle := SafeLoadLibrary ('helics.' + SharedSuffix);
 {$ELSE} // Darwin and Unix
   if log_level < helicsLogDebug1 then
-     FLibHandle := SafeLoadLibrary ('libhelicsSharedLib.' + SharedSuffix)
+     FLibHandle := SafeLoadLibrary ('libhelics.' + SharedSuffix)
   else begin
-     FLibHandle := SafeLoadLibrary ('libhelicsSharedLibd.' + SharedSuffix);
+     FLibHandle := SafeLoadLibrary ('libhelicsd.' + SharedSuffix);
      if FLibHandle = DynLibs.NilHandle then FLibHandle := SafeLoadLibrary ('libhelicsSharedLib.' + SharedSuffix);
   end;
 {$ENDIF}
