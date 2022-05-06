@@ -480,7 +480,8 @@ begin
   end;
   14: begin                                    // Loads.Sensor - read
       Result := pAnsiChar(AnsiString(''));
-      Result := pAnsiChar(AnsiString(ActiveLoad.SensorObj.ElementName));
+      if ActiveLoad.SensorObj <> nil then
+          Result := pAnsiChar(AnsiString(ActiveLoad.SensorObj.ElementName));
   end
   else
       Result:=pAnsiChar(AnsiString('Error'));
