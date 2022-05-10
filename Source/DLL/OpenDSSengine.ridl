@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 3/22/2022 11:07:02 AM (- $Rev: 12980 $, 9270515).
+// File generated on 5/10/2022 1:10:05 PM (- $Rev: 12980 $, 10332968).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -456,6 +456,14 @@ library OpenDSSengine
     HRESULT _stdcall VoltagesMagAng([out, retval] VARIANT* Value);
     [propget, id(0x000000DD), helpstring("Returns the total powers (complex) at ALL terminals of the active circuit element.")]
     HRESULT _stdcall TotalPowers([out, retval] VARIANT* Value);
+    [propget, id(0x000000DE), helpstring("For PCElement, get the value of a variable by name. If Code>0 Then no variable by this name or not a PCelement.")]
+    HRESULT _stdcall VariableByName([in] BSTR MyVarName, [out] long* Code, [out, retval] double* Value);
+    [propput, id(0x000000DE), helpstring("Set the Value of a variable by name if a PCElement")]
+    HRESULT _stdcall VariableByName([in] BSTR MyVarName, [out] long* Code, [in] double Value);
+    [propget, id(0x000000DF), helpstring("For PCElement, get the value of a variable by Index. If Code>0 Then no variable by this name or not a PCelement.")]
+    HRESULT _stdcall VariableByIndex([in] long Idx, [out] long* Code, [out, retval] double* Value);
+    [propput, id(0x000000DF)]
+    HRESULT _stdcall VariableByIndex([in] long Idx, [out] long* Code, [in] double Value);
   };
 
   [
