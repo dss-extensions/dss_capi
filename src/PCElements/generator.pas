@@ -198,7 +198,6 @@ type
         DQDV: Double;
         DQDVSaved: Double;
         FirstSampleAfterReset: Boolean;
-        IsFixed: LongBool;   // if Fixed, always at base value
         GeneratorSolutionCount: Integer;
         GenFundamental: Double;  {Thevinen equivalent voltage mag and angle reference for Harmonic model}
         GenON: Boolean;           {Indicates whether generator is currently on}
@@ -281,6 +280,7 @@ type
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
     PUBLIC
+        IsFixed: LongBool;   // if Fixed, always at base value
         Connection: Integer;  {0 = line-neutral; 1=Delta}
         DailyDispShapeObj: TLoadShapeObj;  // Daily Generator Shape for this load
         DutyShapeObj: TLoadShapeObj;  // Shape for this generator

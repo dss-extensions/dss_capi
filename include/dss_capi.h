@@ -116,6 +116,11 @@ extern "C" {
         ActionCodes_TapDown = 7 // Move a regulator tap down
     };
 
+    enum GeneratorStatus {
+        GeneratorStatus_Variable = 0,
+        GeneratorStatus_Fixed = 1
+    };
+
     enum LoadStatus {
         LoadStatus_Variable = 0,
         LoadStatus_Fixed = 1,
@@ -2071,6 +2076,72 @@ extern "C" {
     Vminpu for Generator model
     */
     DSS_CAPI_DLL void Generators_Set_Vminpu(double Value);
+
+    /*
+    Name of the loadshape for a daily generation profile.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* Generators_Get_daily(void);
+    DSS_CAPI_DLL void Generators_Set_daily(char* Value);
+
+    /*
+    Name of the loadshape for a duty cycle simulation.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* Generators_Get_duty(void);
+    DSS_CAPI_DLL void Generators_Set_duty(char* Value);
+
+    /*
+    Name of yearly loadshape
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* Generators_Get_Yearly(void);
+    DSS_CAPI_DLL void Generators_Set_Yearly(char* Value);
+
+    /*
+    Response to dispatch multipliers: Fixed=1 (dispatch multipliers do not apply), Variable=0 (follows curves).
+
+    Related enumeration: GeneratorStatus
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL int32_t Generators_Get_Status(void);
+    DSS_CAPI_DLL void Generators_Set_Status(int32_t Value);
+
+    /*
+    Generator connection. True/1 if delta connection, False/0 if wye.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL uint16_t Generators_Get_IsDelta(void);
+    DSS_CAPI_DLL void Generators_Set_IsDelta(uint16_t Value);
+
+    /*
+    kVA rating of electrical machine. Applied to machine or inverter definition for Dynamics mode solutions.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL double Generators_Get_kva(void);
+    DSS_CAPI_DLL void Generators_Set_kva(double Value);
+
+    /*
+    An arbitrary integer number representing the class of Generator so that Generator values may be segregated by class.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL int32_t Generators_Get_Class_(void);
+    DSS_CAPI_DLL void Generators_Set_Class_(int32_t Value);
+
+    /*
+    Bus to which the Generator is connected. May include specific node specification.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* Generators_Get_Bus1(void);
+    DSS_CAPI_DLL void Generators_Set_Bus1(char* Value);
 
     /*
     Names of all GICSource Objects

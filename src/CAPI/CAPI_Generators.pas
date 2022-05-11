@@ -40,6 +40,24 @@ function Generators_Get_Vminpu(): Double; CDECL;
 procedure Generators_Set_Vmaxpu(Value: Double); CDECL;
 procedure Generators_Set_Vminpu(Value: Double); CDECL;
 
+// API Extensions
+function Generators_Get_Class_(): Integer; CDECL;
+function Generators_Get_daily(): PAnsiChar; CDECL;
+function Generators_Get_duty(): PAnsiChar; CDECL;
+function Generators_Get_Yearly(): PAnsiChar; CDECL;
+function Generators_Get_Status(): Integer; CDECL;
+function Generators_Get_IsDelta(): TAPIBoolean; CDECL;
+function Generators_Get_kva(): Double; CDECL;
+function Generators_Get_Bus1(): PAnsiChar; CDECL;
+procedure Generators_Set_Class_(Value: Integer); CDECL;
+procedure Generators_Set_daily(const Value: PAnsiChar); CDECL;
+procedure Generators_Set_duty(const Value: PAnsiChar); CDECL;
+procedure Generators_Set_Yearly(const Value: PAnsiChar); CDECL;
+procedure Generators_Set_Status(Value: Integer); CDECL;
+procedure Generators_Set_IsDelta(Value: TAPIBoolean); CDECL;
+procedure Generators_Set_kva(Value: Double); CDECL;
+procedure Generators_Set_Bus1(const Value: PAnsiChar); CDECL;
+
 implementation
 
 uses
@@ -50,8 +68,10 @@ uses
     CktElement,
     SysUtils,
     DSSClass,
-    DSSHelper;
-
+    DSSHelper,
+    DSSObjectHelper;
+type
+    TObj = TGeneratorObj;
 //------------------------------------------------------------------------------
 function _activeObj(DSS: TDSSContext; out obj: TGeneratorObj): Boolean; inline;
 begin
@@ -429,6 +449,177 @@ begin
         Exit;
 
     pGen.VMinPu := Value;
+end;
+//------------------------------------------------------------------------------
+
+function Generators_Get_Bus1(): PAnsiChar; CDECL;
+var
+    elem: TObj;
+begin
+    Result := NIL;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.GetBus(1));
+end;
+//------------------------------------------------------------------------------
+function Generators_Get_daily(): PAnsiChar; CDECL;
+var
+    elem: TObj;
+begin
+    Result := NIL;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+
+    if elem.DailyDispShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyDispShapeObj.Name);
+end;
+//------------------------------------------------------------------------------
+function Generators_Get_Class_(): Integer; CDECL;
+var
+    elem: TObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+
+    Result := elem.GenClass;
+end;
+//------------------------------------------------------------------------------
+function Generators_Get_duty(): PAnsiChar; CDECL;
+var
+    elem: TObj;
+begin
+    Result := NIL;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+
+    if elem.DutyShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name);
+end;
+//------------------------------------------------------------------------------
+function Generators_Get_IsDelta(): TAPIBoolean; CDECL;
+var
+    elem: TObj;
+begin
+    Result := FALSE;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := (elem.Connection = 1);
+end;
+//------------------------------------------------------------------------------
+function Generators_Get_kva(): Double; CDECL;
+var
+    elem: TObj;
+begin
+    Result := 0.0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    Result := elem.GenVars.kVArating;
+end;
+//------------------------------------------------------------------------------
+function Generators_Get_Status(): Integer; CDECL;
+var
+    elem: TObj;
+begin
+    Result := 0;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+
+    Result := Integer(elem.IsFixed);
+end;
+//------------------------------------------------------------------------------
+function Generators_Get_Yearly(): PAnsiChar; CDECL;
+var
+    elem: TObj;
+begin
+    Result := NIL;
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+
+    if elem.YearlyShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name);
+end;
+//------------------------------------------------------------------------------
+procedure Generators_Set_Bus1(const Value: PAnsiChar); CDECL;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.SetBus(1, Value);
+    elem.PropertySideEffects(ord(TGeneratorProp.bus1));
+end;
+//------------------------------------------------------------------------------
+procedure Generators_Set_Class_(Value: Integer); CDECL;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.SetInteger(ord(TGeneratorProp.cls), Value);
+end;
+//------------------------------------------------------------------------------
+procedure Generators_Set_daily(const Value: PAnsiChar); CDECL;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+
+    elem.DailyDispShapeObj := DSSPrime.LoadShapeClass.Find(Value);
+    elem.PropertySideEffects(ord(TGeneratorProp.daily));
+end;
+//------------------------------------------------------------------------------
+procedure Generators_Set_duty(const Value: PAnsiChar); CDECL;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+
+    elem.DutyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
+    elem.PropertySideEffects(ord(TGeneratorProp.duty));
+end;
+//------------------------------------------------------------------------------
+procedure Generators_Set_IsDelta(Value: TAPIBoolean); CDECL;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    if Value then
+        elem.Connection := 1
+    else
+        elem.Connection := 0;
+end;
+//------------------------------------------------------------------------------
+procedure Generators_Set_kva(Value: Double); CDECL;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.SetDouble(ord(TGeneratorProp.kva), Value);
+end;
+//------------------------------------------------------------------------------
+procedure Generators_Set_Status(Value: Integer); CDECL;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+
+    elem.IsFixed := Value <> 0;
+end;
+//------------------------------------------------------------------------------
+procedure Generators_Set_Yearly(const Value: PAnsiChar); CDECL;
+var
+    elem: TObj;
+begin
+    if not _activeObj(DSSPrime, elem) then
+        Exit;
+    elem.YearlyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
+    elem.PropertySideEffects(ord(TGeneratorProp.yearly));
 end;
 //------------------------------------------------------------------------------
 end.

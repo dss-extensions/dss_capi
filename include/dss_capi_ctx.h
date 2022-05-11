@@ -1919,6 +1919,70 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Generators_Set_Vminpu(void* ctx, double Value);
 
     /*
+    Name of the loadshape for a daily generation profile.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* ctx_Generators_Get_daily(void* ctx);
+    DSS_CAPI_DLL void ctx_Generators_Set_daily(void* ctx, char* Value);
+
+    /*
+    Name of the loadshape for a duty cycle simulation.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* ctx_Generators_Get_duty(void* ctx);
+    DSS_CAPI_DLL void ctx_Generators_Set_duty(void* ctx, char* Value);
+
+    /*
+    Name of yearly loadshape
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* ctx_Generators_Get_Yearly(void* ctx);
+    DSS_CAPI_DLL void ctx_Generators_Set_Yearly(void* ctx, char* Value);
+
+    /*
+    Response to dispatch multipliers: Fixed=1 (dispatch multipliers do not apply), Variable=0 (follows curves).
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL int32_t ctx_Generators_Get_Status(void* ctx);
+    DSS_CAPI_DLL void ctx_Generators_Set_Status(void* ctx, int32_t Value);
+
+    /*
+    Generator connection. True/1 if delta connection, False/0 if wye.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL uint16_t ctx_Generators_Get_IsDelta(void* ctx);
+    DSS_CAPI_DLL void ctx_Generators_Set_IsDelta(void* ctx, uint16_t Value);
+
+    /*
+    kVA rating of electrical machine. Applied to machine or inverter definition for Dynamics mode solutions.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL double ctx_Generators_Get_kva(void* ctx);
+    DSS_CAPI_DLL void ctx_Generators_Set_kva(void* ctx, double Value);
+
+    /*
+    An arbitrary integer number representing the class of Generator so that Generator values may be segregated by class.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL int32_t ctx_Generators_Get_Class_(void* ctx);
+    DSS_CAPI_DLL void ctx_Generators_Set_Class_(void* ctx, int32_t Value);
+
+    /*
+    Bus to which the Generator is connected. May include specific node specification.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* ctx_Generators_Get_Bus1(void* ctx);
+    DSS_CAPI_DLL void ctx_Generators_Set_Bus1(void* ctx, char* Value);
+
+    /*
     Names of all GICSource Objects
     */
     DSS_CAPI_DLL void ctx_GICSources_Get_AllNames(void* ctx, char*** ResultPtr, int32_t* ResultCount);

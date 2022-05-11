@@ -620,6 +620,22 @@ exports
     Generators_Get_Vminpu,
     Generators_Set_Vmaxpu,
     Generators_Set_Vminpu,
+    Generators_Get_Class_, // API Extension
+    Generators_Get_daily, // API Extension
+    Generators_Get_duty, // API Extension
+    Generators_Get_Yearly, // API Extension
+    Generators_Get_Status, // API Extension
+    Generators_Get_IsDelta, // API Extension
+    Generators_Get_kva, // API Extension
+    Generators_Get_Bus1, // API Extension
+    Generators_Set_Class_, // API Extension
+    Generators_Set_daily, // API Extension
+    Generators_Set_duty, // API Extension
+    Generators_Set_Yearly, // API Extension
+    Generators_Set_Status, // API Extension
+    Generators_Set_IsDelta, // API Extension
+    Generators_Set_kva, // API Extension
+    Generators_Set_Bus1, // API Extension
     GICSources_Get_AllNames,
     GICSources_Get_AllNames_GR,
     GICSources_Get_Count,
@@ -1632,7 +1648,7 @@ exports
     XYCurves_Get_AllNames_GR,
     XYCurves_Get_Xarray_GR,
     XYCurves_Get_Yarray_GR,
-    // Experimental API extensions
+    // API extensions
     CNData_Get_Count,
     CNData_Get_First,
     CNData_Get_Next,
