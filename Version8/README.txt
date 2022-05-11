@@ -3,11 +3,13 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.4.1.1
+Version 9.4.1.2
 
 Changes this version
 ====================
 
+- Adding alternative method for accessing PCE state variables through the ActiveCktElement interface.
+- First version of DynamicExp object released, still under test. 
 - The ActiveCktelement interface includes new properties to allow users get/set state variables by name or index in the active circuit element. 
 - Corrects a recent bug introduced while fixing pu values for VSource when working on Dynamics mode.
 - Fixes version sync between exe, COM and DLL versions.
