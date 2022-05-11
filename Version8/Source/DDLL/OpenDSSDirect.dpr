@@ -227,7 +227,8 @@ uses
   DReduceCkt in 'DReduceCkt.pas',
   WindGen in '..\PCElements\WindGen.pas',
   WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
-  WindGenVars in '..\PCElements\WindGenVars.pas';
+  WindGenVars in '..\PCElements\WindGenVars.pas',
+  DynamicExp in '..\General\DynamicExp.pas';
 
 //**************************end of the functions*************************************
 exports

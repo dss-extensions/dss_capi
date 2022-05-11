@@ -198,12 +198,11 @@ uses
   GenUserModel in '..\PCElements\GenUserModel.pas',
   GeneratorVars in '..\PCElements\GeneratorVars.pas',
   {$IFDEF FPC}
-   fncs in 'fncs.pas',
-   linenoise in 'linenoise.pas';
+  fncs in 'fncs.pas',
   {$ENDIF }
   epiktimer in '..\epiktimer\epiktimer.pas' {/  linenoise in 'linenoise.pas';},
-  CmdForms in 'CmdForms.pas';
-
+  CmdForms in 'CmdForms.pas',
+  DynamicExp in '..\General\DynamicExp.pas';
 
 {$R *.RES}
 

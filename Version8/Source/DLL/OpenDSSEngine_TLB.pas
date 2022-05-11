@@ -12,10 +12,10 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 98336 $
-// File generated on 6/2/2021 5:38:45 PM from Type Library described below.
+// File generated on 5/11/2022 12:15:58 PM from Type Library described below.
 
 // ************************************************************************  //
-// Type Lib: C:\Projects\OpenDSS\OpenDSS-Official\Version8\Source\DLL\OpenDSSengine (1)
+// Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
 // LIBID: {8BFDE413-245A-4514-B151-B16DCC243796}
 // LCID: 0
 // Helpfile:
@@ -512,6 +512,16 @@ type
     function Get_CurrentsMagAng: OleVariant; safecall;
     function Get_VoltagesMagAng: OleVariant; safecall;
     function Get_TotalPowers: OleVariant; safecall;
+    function Get_VariableByName(const MyVarName: WideString; out Code: Integer): Double; safecall;
+    procedure Set_VariableByName(const MyVarName: WideString; out Code: Integer; Value: Double); safecall;
+    function Get_VariableByIndex(Idx: Integer; out Code: Integer): Double; safecall;
+    procedure Set_VariableByIndex(Idx: Integer; out Code: Integer; Value: Double); safecall;
+    function Get_VariableName: WideString; safecall;
+    procedure Set_VariableName(const Value: WideString); safecall;
+    function Get_VariableValue: Double; safecall;
+    procedure Set_VariableValue(Value: Double); safecall;
+    function Get_VariableIdx: Integer; safecall;
+    procedure Set_VariableIdx(Value: Integer); safecall;
     property Name: WideString read Get_Name;
     property NumTerminals: Integer read Get_NumTerminals;
     property NumConductors: Integer read Get_NumConductors;
@@ -554,6 +564,11 @@ type
     property CurrentsMagAng: OleVariant read Get_CurrentsMagAng;
     property VoltagesMagAng: OleVariant read Get_VoltagesMagAng;
     property TotalPowers: OleVariant read Get_TotalPowers;
+    property VariableByName[const MyVarName: WideString; out Code: Integer]: Double read Get_VariableByName write Set_VariableByName;
+    property VariableByIndex[Idx: Integer; out Code: Integer]: Double read Get_VariableByIndex write Set_VariableByIndex;
+    property VariableName: WideString read Get_VariableName write Set_VariableName;
+    property VariableValue: Double read Get_VariableValue write Set_VariableValue;
+    property VariableIdx: Integer read Get_VariableIdx write Set_VariableIdx;
   end;
 
 // *********************************************************************//
@@ -608,6 +623,11 @@ type
     property CurrentsMagAng: OleVariant readonly dispid 219;
     property VoltagesMagAng: OleVariant readonly dispid 220;
     property TotalPowers: OleVariant readonly dispid 221;
+    property VariableByName[const MyVarName: WideString; out Code: Integer]: Double dispid 222;
+    property VariableByIndex[Idx: Integer; out Code: Integer]: Double dispid 223;
+    property VariableName: WideString dispid 224;
+    property VariableValue: Double dispid 225;
+    property VariableIdx: Integer dispid 226;
   end;
 
 // *********************************************************************//

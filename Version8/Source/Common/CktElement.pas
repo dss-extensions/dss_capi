@@ -1041,6 +1041,8 @@ Begin
     4 : Result := MaxCurrent[1, ActorID];             // IMag
     5 : Result := MaxCurrentAng[1, ActorID];          // IAng
     6 : Result := cabs(Power[1, actorID]);            // S
+    else
+      Result  := 0;
   end;
 
 End;

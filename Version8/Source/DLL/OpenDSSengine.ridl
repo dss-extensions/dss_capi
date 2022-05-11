@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 5/10/2022 1:10:05 PM (- $Rev: 12980 $, 10332968).
+// File generated on 5/11/2022 3:44:32 PM (- $Rev: 12980 $, 25091531).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -464,6 +464,18 @@ library OpenDSSengine
     HRESULT _stdcall VariableByIndex([in] long Idx, [out] long* Code, [out, retval] double* Value);
     [propput, id(0x000000DF)]
     HRESULT _stdcall VariableByIndex([in] long Idx, [out] long* Code, [in] double Value);
+    [propget, id(0x000000E0), helpstring("Gets the name of the active state variable if any, otherwise, returns and empty string")]
+    HRESULT _stdcall VariableName([out, retval] BSTR* Value);
+    [propput, id(0x000000E0), helpstring("Sets the name of the active state variable for using with the VariableValue property")]
+    HRESULT _stdcall VariableName([in] BSTR Value);
+    [propget, id(0x000000E1), helpstring("Gets the  present value for the active state variable. If there no active variable, returns a error message.")]
+    HRESULT _stdcall VariableValue([out, retval] double* Value);
+    [propput, id(0x000000E1), helpstring("Sets the given value to be the present value for the active state variable. If there no active variable, returns a error message.")]
+    HRESULT _stdcall VariableValue([in] double Value);
+    [propget, id(0x000000E2), helpstring("Gets the index of the active state variable if any, otherwise, returns -1")]
+    HRESULT _stdcall VariableIdx([out, retval] long* Value);
+    [propput, id(0x000000E2), helpstring("Activates a  state variable by index for using with the VariableValue property")]
+    HRESULT _stdcall VariableIdx([in] long Value);
   };
 
   [
