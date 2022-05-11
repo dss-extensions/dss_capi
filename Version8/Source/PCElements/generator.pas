@@ -488,7 +488,7 @@ Begin
                                  'This generator model requires 2 outputs from the dynamic equation: ' + CRLF + CRLF +
                                  '1. Shaft speed (velocity) relative to synchronous speed.' + CRLF +
                                  '2. Shaft, or power, angle (relative to synchronous reference frame).' + CRLF + CRLF +
-                                 'The output variables need to be defined in tha strict order.');
+                                 'The output variables need to be defined in the same order.');
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
