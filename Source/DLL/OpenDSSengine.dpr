@@ -236,7 +236,8 @@ uses
   WindGen in '..\PCElements\WindGen.pas',
   WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
   WindGenVars in '..\PCElements\WindGenVars.pas',
-  ImplStorages in 'ImplStorages.pas' {Storages: CoClass};
+  ImplStorages in 'ImplStorages.pas' {Storages: CoClass},
+  DynamicExp in '..\General\DynamicExp.pas';
 
 exports
   DllGetClassObject,
