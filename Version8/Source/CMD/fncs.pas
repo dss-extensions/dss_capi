@@ -136,6 +136,8 @@ type
     ETFncsLoad: Extended;
     ETFncsTimeRequest: Extended;
     ETFncsGetEvents: Extended;
+    ETLoopCommand: Extended; // OpenDSS command execution time from the main loop
+    ETReqCommand: Extended; // OpenDSS command execution time from helics_time_request
     log_level: TFNCSLogLevel;
     topicList: TList;
     fncsOutputStream: TStringStream;
@@ -170,6 +172,7 @@ uses
 
 var
   ET: TEpikTimer; // for profiling
+  ETLoopCmd, ETReqCmd: TimerData; // profiling OpenDSS command execution, other than HELICS time
   sep: string;    // for delimiting tokens in a FNCS topic key; this is always '.' for DSS
 
 constructor TFNCSTopic.Create (clsKey, objKey: String);
@@ -621,7 +624,11 @@ begin
               [value, time_granted, Hour, Sec]));
             system.flush (stdout);
           end;
+          ET.Clear(ETReqCmd);
+          ET.Start(ETReqCmd);
           DSSExecutive[ActiveActor].Command := value;
+          ETReqCommand := ETReqCommand + ET.Elapsed(ETReqCmd);
+          ET.Clear(ETReqCmd);
         end;
       end else if Pos ('#load', key) > 0 then begin
         value := fncs_next_value();
@@ -686,7 +693,11 @@ begin
                 [value, time_granted, ival, nvalues, i, ilast]));
               system.flush (stdout);
             end;
+            ET.Clear(ETLoopCmd);
+            ET.Start(ETLoopCmd);
             DSSExecutive[ActiveActor].Command := value;
+            ETLoopCommand := ETLoopCommand + ET.Elapsed(ETLoopCmd);
+            ET.Clear(ETLoopCmd);
             if log_level >= fncsLogDebug1 then begin
               writeln(Format('Finished with %s at %u, val %u of %u, evt %u of %u', 
                 [value, time_granted, ival, nvalues, i, ilast]));
@@ -709,6 +720,7 @@ begin
     in_fncs_loop := False;
     writeln(Format('FNCS Timing: LoadLib=%.6f, ReadConfig=%.6f, TimeRequests=%.6f, GetEvents=%.6f, Publish=%.6f', 
       [ETFncsLoad, ETFncsReadPub, ETFncsTimeRequest, ETFncsGetEvents, ETFncsPublish]));
+    writeln(Format('OpenDSS Command Timing: TimeRequest=%.6f, MainLoop=%.6f', [ETReqCommand, ETLoopCommand]));
     fncs_finalize;
   end;
 end;
@@ -746,6 +758,8 @@ begin
   ETFncsLoad := 0.0;
   ETFncsGetEvents := 0.0;
   ETFncsTimeRequest := 0.0;
+  ETLoopCommand := 0.0;
+  ETReqCommand := 0.0;
   existing_fncs_grant := 0;
   in_fncs_loop := False;
   log_level := fncsLogWarning;
