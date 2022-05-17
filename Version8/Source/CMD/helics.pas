@@ -220,6 +220,8 @@ type
     ETHelicsLoad: Extended;
     ETHelicsTimeRequest: Extended;
     ETHelicsGetEvents: Extended;
+    ETCommand: Extended; // OpenDSS command execution time from the main loop
+    ETReqCommand: Extended; // OpenDSS command execution time from helics_time_request
     log_level: THELICSLogLevel;
     pub_topic_list: TList;
     helicsOutputStream: TStringStream;
@@ -270,6 +272,7 @@ uses
 
 var
   ET: TEpikTimer; // for profiling
+  ETCmd, ETReqCmd: TimerData; // profiling OpenDSS command execution, other than HELICS time
   sep: string;    // for delimiting tokens in a HELICS topic key; this is always '.' for DSS
 
 constructor THELICSTopic.Create (clsKey, objKey: String);
@@ -1164,7 +1167,11 @@ begin
                                      [input_value, time_granted, i + 1, sub_count]));
               system.flush (stdout);
            end;
+           ET.Clear(ETReqCmd);
+           ET.Start(ETReqCmd);
            DSSExecutive[ActiveActor].Command := input_value;
+           ETReqCommand := ETReqCommand + ET.Elapsed(ETReqCmd);
+           ET.Clear(ETReqCmd);
            if log_level >= helicsLogDebug1 then begin
               writeln(Format('Finished with %s at %f, evt %u of %d',
                                        [input_value, time_granted, i + 1, sub_count]));
@@ -1240,7 +1247,11 @@ begin
                                              [input_value, time_granted, i + 1, sub_count]));
                       system.flush (stdout);
                    end;
+                   ET.Clear(ETReqCmd);
+                   ET.Start(ETReqCmd);
                    DSSExecutive[ActiveActor].Command := input_value;
+                   ETReqCommand := ETReqCommand + ET.Elapsed(ETReqCmd);
+                   ET.Clear(ETReqCmd);
                    if log_level >= helicsLogDebug1 then begin
                       writeln(Format('Finished with %s at %f, evt %u of %d',
                                                [input_value, time_granted, i + 1, sub_count]));
@@ -1512,7 +1523,11 @@ begin
                                        [input_value, time_granted, i + 1, sub_count]));
                 system.flush (stdout);
              end;
+             ET.Clear(ETCmd);
+             ET.Start(ETCmd);
              DSSExecutive[ActiveActor].Command := input_value;
+             ETCommand := ETCommand + ET.Elapsed(ETCmd);
+             ET.Clear(ETCmd);
              if log_level >= helicsLogDebug1 then begin
                 writeln(Format('Finished with %s at %f, evt %u of %d',
                                          [input_value, time_granted, i + 1, sub_count]));
@@ -1548,7 +1563,11 @@ begin
                                        [input_value, time_granted, i + 1, sub_count]));
                 system.flush (stdout);
              end;
+             ET.Clear(ETCmd);
+             ET.Start(ETCmd);
              DSSExecutive[ActiveActor].Command := input_value;
+             ETCommand := ETCommand + ET.Elapsed(ETCmd);
+             ET.Clear(ETCmd);
              if log_level >= helicsLogDebug1 then begin
                 writeln(Format('Finished with %s at %f, evt %u of %d',
                                          [input_value, time_granted, i + 1, sub_count]));
@@ -1600,7 +1619,11 @@ begin
                                        [input_value, time_granted, i + 1, sub_count]));
                 system.flush (stdout);
              end;
+             ET.Clear(ETCmd);
+             ET.Start(ETCmd);
              DSSExecutive[ActiveActor].Command := input_value;
+             ETCommand := ETCommand + ET.Elapsed(ETCmd);
+             ET.Clear(ETCmd);
              if log_level >= helicsLogDebug1 then begin
                 writeln(Format('Finished with %s at %f, evt %u of %d',
                                          [input_value, time_granted, i + 1, sub_count]));
@@ -1633,7 +1656,11 @@ begin
                                        [input_value, time_granted, i + 1, sub_count]));
                 system.flush (stdout);
              end;
+             ET.Clear(ETCmd);
+             ET.Start(ETCmd);
              DSSExecutive[ActiveActor].Command := input_value;
+             ETCommand := ETCommand + ET.Elapsed(ETCmd);
+             ET.Clear(ETCmd);
              if log_level >= helicsLogDebug1 then begin
                 writeln(Format('Finished with %s at %f, evt %u of %d',
                                          [input_value, time_granted, i + 1, sub_count]));
@@ -1658,6 +1685,7 @@ begin
     in_helics_loop := False;
     writeln(Format('HELICS Timing: LoadLib=%.6f, ReadConfig=%.6f, TimeRequests=%.6f, GetEvents=%.6f, Publish=%.6f',
       [ETHelicsLoad, ETHelicsReadPub, ETHelicsTimeRequest, ETHelicsGetEvents, ETHelicsPublish]));
+    writeln(Format('OpenDSS Command Timing: TimeRequest=%.6f, MainLoop=%.6f', [ETReqCommand, ETCommand]));
     helics_finalize(helicsFed, @helics_error);
     //helics_close_library;
   end;
@@ -1696,6 +1724,8 @@ begin
   ETHelicsLoad := 0.0;
   ETHelicsGetEvents := 0.0;
   ETHelicsTimeRequest := 0.0;
+  ETCommand := 0.0;
+  ETReqCommand := 0.0;
   existing_helics_grant := 0;
   in_helics_loop := False;
   log_level := helicsLogWarning;
