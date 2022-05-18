@@ -37,7 +37,7 @@ TYPE
        constructor Create;
        destructor Destroy; override;
 
-       Function Find(const ObjName: String): Pointer;
+       Function Find(const ObjName: String): Pointer; Override;
        Function Edit(ActorID : Integer):Integer; override;     // uses global parser
        Function Init(Handle:Integer; ActorID : Integer):Integer; override;
        Function NewObject(const ObjName:String):Integer; override;
