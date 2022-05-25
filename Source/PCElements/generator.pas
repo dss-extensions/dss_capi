@@ -298,6 +298,7 @@ TYPE
        FUNCTION  GetPropertyValue(Index:Integer):String;Override;
        FUNCTION CheckIfDynVar(myVar  : String; ActorID : Integer):Integer;
        PROCEDURE SetDynOutput(myVar  : String);
+       FUNCTION GetDynOutputStr(): string;
 
        Property PresentkW    :Double  Read Get_PresentkW   Write Set_PresentkW;
        Property Presentkvar  :Double  Read Get_Presentkvar Write Set_Presentkvar;
@@ -1092,6 +1093,23 @@ Begin
   else
       DoSimpleMsg('A DynamicExp object needs to be assigned to this element before this declaration: DynOut = [' + myVar + ']', 50007);
 End;
+
+//----------------------------------------------------------------------------
+{Returns the names of the variables to be used as outputs for the dynamic expression}
+FUNCTION TGeneratorObj.GetDynOutputStr(): string;
+var
+  idx   : Integer;
+Begin
+  Result  :=  '[';                   // Open array str
+  if DynamicEqObj <> nil then        // Making sure we have a dynamic eq linked
+  Begin
+    for idx := 0 to High(DynOut) do
+      Result  :=  Result + DynamicEqObj.Get_VarName(DynOut[idx]) + ',';
+  End;
+
+  Result  :=  Result + ']';         // Close array str
+End;
+
 
 //----------------------------------------------------------------------------
 Procedure TGeneratorObj.CalcDailyMult(Hr:Double);
@@ -3029,6 +3047,8 @@ begin
          42: Result := Format('%.6g', [pctFuel]);
          43: Result := Format('%.6g', [pctReserve]);
          44: Result :=  'No';
+         45: Result :=  DynamicEq;
+         46: Result :=  GetDynOutputStr();
       ELSE
          Result := Inherited GetPropertyValue(index);
       END;
