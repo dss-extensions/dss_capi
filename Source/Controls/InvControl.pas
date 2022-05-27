@@ -639,7 +639,7 @@ procedure TInvControl.DefineProperties;
                        'If the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
                        'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
 
-    PropertyHelp[22] := '{Yes/True* | No/False} Default is YES for InvControl. Log control actions to Eventlog.';
+    PropertyHelp[22] := '{Yes/True* | No/False} Default is NO for InvControl. Log control actions to Eventlog.';
 
     PropertyHelp[23] := 'Required for any mode that has VOLTVAR, DYNAMICREACCURR and WATTVAR. Defaults to VARAVAL.' +CRLF+CRLF+
                         'Defines the base reactive power for both the provided and absorbed reactive power, according to one of the following options: '
@@ -3070,7 +3070,7 @@ procedure TInvControlObj.InitPropertyValues(ArrayOffset: Integer);
     PropertyValue[19] := '0.0'; // LPF tau constant, in seconds
     PropertyValue[20] := '-1.0'; // Rise/fall Limit
     PropertyValue[21] := FloatToStr(FLAGDELTAP); // FdeltaPFactor
-    PropertyValue[22] := 'yes'; // show event log
+    PropertyValue[22] := 'NO'; // show event log
     PropertyValue[23] := 'VARAVAL'; // y-axis reference (and power precedence) for volt-var
     PropertyValue[24] := '0.01';
 
