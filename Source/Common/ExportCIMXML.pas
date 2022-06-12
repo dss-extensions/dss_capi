@@ -985,8 +985,8 @@ end;
 
 procedure TransformerControlEnum (prf: ProfileChoice; val: String);
 begin
-  FD.WriteCimLn (prf, Format ('  <cim:RatioTapChanger.tculControlMode rdf:resource="%s#TransformerControlMode.%s"/>',
-    [CIM_NS, val]));
+//  FD.WriteCimLn (prf, Format ('  <cim:RatioTapChanger.tculControlMode rdf:resource="%s#TransformerControlMode.%s"/>',
+//    [CIM_NS, val]));
 end;
 
 procedure MonitoredPhaseNode (prf: ProfileChoice; val: String);
@@ -3113,7 +3113,7 @@ Begin
         val := pAuto.noLoadLossPct / 100.0 / zbase;
         DoubleNode (EpPrf, 'TransformerCoreAdmittance.g', val);
         DoubleNode (EpPrf, 'TransformerCoreAdmittance.g0', val);
-        val := pAuto.imagPct / 100.0 / zbase;
+        val := -pAuto.imagPct / 100.0 / zbase; // inductive B < 0
         DoubleNode (EpPrf, 'TransformerCoreAdmittance.b', val);
         DoubleNode (EpPrf, 'TransformerCoreAdmittance.b0', val);
         RefNode (EpPrf, 'TransformerCoreAdmittance.TransformerEnd', WdgList[0]);
