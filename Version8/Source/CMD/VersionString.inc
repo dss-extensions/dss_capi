@@ -1,1 +1,1 @@
-const VersionString = '1.7.3';
+const VersionString = '1.7.4';
