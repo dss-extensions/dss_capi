@@ -51,6 +51,8 @@ function Obj_GetHandleByName(DSS: TDSSContext; ClsIdx: Integer; Name: PAnsiChar)
 function Obj_GetHandleByIdx(DSS: TDSSContext; ClsIdx: Integer; Idx: Integer): Pointer; CDECL;
 
 function Obj_GetName(Handle: Pointer): PAnsiChar; CDECL;
+function Obj_GetNumProperties(Handle: Pointer): Integer; CDECL;
+function Obj_GetCount(DSS: TDSSContext; ClsIdx: Integer): Integer; CDECL;
 function Obj_GetIdx(Handle: Pointer): Integer; CDECL;
 function Obj_GetClassName(Handle: Pointer): PAnsiChar; CDECL;
 function Obj_GetClassIdx(Handle: Pointer): Integer; CDECL;
@@ -273,6 +275,13 @@ begin
                 param2 := CreateJSON(enumIds.Find(aenum.Name));
             end
             else if PropertyType[i] = TPropertyType.DSSObjectReferenceProperty then
+            begin
+                if poffset2 = 0 then
+                    param2 := CreateJSON('CktElement')
+                else
+                    param2 := CreateJSON(TDSSClass(poffset2).Name);
+            end
+            else if PropertyType[i] = TPropertyType.DSSObjectReferenceArrayProperty then
             begin
                 if poffset2 = 0 then
                     param2 := CreateJSON('CktElement')
@@ -520,6 +529,23 @@ end;
 function Obj_GetName(Handle: Pointer): PAnsiChar; CDECL;
 begin
     Result := PChar(TDSSObject(Handle).Name);
+end;
+
+function Obj_GetNumProperties(Handle: Pointer): Integer; CDECL;
+begin
+    Result := TDSSObject(Handle).ParentClass.NumProperties;
+end;
+
+function Obj_GetCount(DSS: TDSSContext; ClsIdx: Integer): Integer; CDECL;
+var
+    Cls: TDSSClass;
+begin
+    Result := 0;
+    Cls := DSS.DSSClassList.At(ClsIdx);
+    if Cls = NIL then
+        Exit;
+
+    Result := Cls.ElementList.Count
 end;
 
 function Obj_GetIdx(Handle: Pointer): Integer; CDECL;

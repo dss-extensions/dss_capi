@@ -2016,6 +2016,8 @@ exports
     Obj_GetIdx,
     Obj_GetClassName,
     Obj_GetClassIdx,
+    Obj_GetNumProperties,
+    Obj_GetCount,
 
     Batch_CreateFromNew,
     Batch_CreateByRegExp,

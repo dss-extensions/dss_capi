@@ -1945,6 +1945,8 @@ extern "C" {
     /*
     Response to dispatch multipliers: Fixed=1 (dispatch multipliers do not apply), Variable=0 (follows curves).
 
+    Related enumeration: GeneratorStatus
+
     (API Extension)
     */
     DSS_CAPI_DLL int32_t ctx_Generators_Get_Status(void* ctx);

@@ -2860,6 +2860,8 @@ var
     stringPtr: PString;
     otherObjPtr: TDSSObjectPtr;
     Result: PPAnsiCharArray0;
+    ObjResultPtr: TDSSObjectPtr; 
+    ObjResultCount: Array[0..1] of TAPISize;
 begin
     if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
     begin
@@ -2961,7 +2963,44 @@ begin
                     inc(otherObjPtr);
                 end;
         end;
+        TPropertyType.DSSObjectReferenceArrayProperty:
+        begin
+            ObjResultPtr := NIL;
+            if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
+            begin
+                ObjResultCount[0] := 0;
+                ObjResultCount[1] := 0;
+                TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(ObjResultPtr), PAPISize(ObjResultCount));
+                count := ObjResultCount[0];
+                otherObjPtr := ObjResultPtr;
+            end
+            else
+            begin
+                // Number of items
+                count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+                // Start of array
+                otherObjPtr := TDSSObjectPtrPtr((PtrUint(obj) + PtrUint(PropertyOffset[Index])))^;
+            end;
+            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, count);
 
+            
+            for i := 1 to count do
+            begin
+                if otherObjPtr^ <> NIL then
+                begin
+                    if (PropertyOffset2[Index] = 0) or (TPropertyFlag.FullNameAsArray in PropertyFlags[Index]) then
+                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.FullName)
+                    else
+                        Result[i - 1] := DSS_CopyStringAsPChar(otherObjPtr^.Name)
+                end
+                else
+                    Result[i - 1] := NIL;
+                Inc(otherObjPtr);
+            end;
+
+            if ObjResultPtr <> NIL then
+                FreeMem(ObjResultPtr);
+        end;
         TPropertyType.MappedStringEnumArrayProperty:
         begin
             if not (TPropertyFlag.SizeIsFunction in PropertyFlags[Index]) then
@@ -3048,6 +3087,26 @@ begin
         Exit;
 
     case PropertyType[Index] of
+        TPropertyType.DSSObjectReferenceProperty:
+        begin
+            if not (TPropertyFlag.OnArray in PropertyFlags[Index]) then
+                Exit;
+
+            count := PInteger(PtrUint(obj) + PropertyStructArrayCountOffset)^;
+            if count <= 0 then
+            begin
+                ResultCount^ := count;
+                Exit;
+            end;
+
+            otherObjPtr := TDSSObjectPtr(PPByte(PtrUint(obj) + PropertyOffset[Index])^); // start of array
+            Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, count);
+            for i := 1 to count do
+            begin
+                Result[i - 1] := otherObjPtr^;
+                inc(otherObjPtr);
+            end;
+        end;
         TPropertyType.DSSObjectReferenceArrayProperty:
         begin
             if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
@@ -3059,21 +3118,11 @@ begin
             // Number of items
             count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
 
-            if count < 1 then
-            begin
-                DoSimpleMsg(
-                    Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
-                        [TDSSObject(obj).FullName, PropertyName[Index]]
-                    ), 402);
-                Exit;
-            end;
-
             // Start of array
             otherObjPtr := TDSSObjectPtrPtr((PtrUint(obj) + PtrUint(PropertyOffset[Index])))^;
 
             Result := DSS_RecreateArray_PPointer(ResultPtr, ResultCount, count);
 
-            // TODO: if cls = NIL,..
             for i := 1 to count do
             begin
                 Result[i - 1] := otherObjPtr^;

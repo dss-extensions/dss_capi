@@ -6855,11 +6855,13 @@ extern "C" {
     DSS_CAPI_DLL void DSS_Dispose_PPointer(void*** p);
 
     DSS_CAPI_DLL void* Obj_New(void* ctx, int32_t ClsIdx, char* Name, int16_t Activate, int16_t BeginEdit);
+    DSS_CAPI_DLL int32_t Obj_GetCount(void* ctx, int32_t ClsIdx);
     DSS_CAPI_DLL void* Obj_GetHandleByName(void* ctx, int32_t ClsIdx, char* Name);
     DSS_CAPI_DLL void* Obj_GetHandleByIdx(void* ctx, int32_t ClsIdx, int32_t Idx);
     DSS_CAPI_DLL int16_t Obj_PropertySideEffects(void *obj, int32_t Index, int32_t PreviousInt);
     DSS_CAPI_DLL void Obj_BeginEdit(void *obj);
     DSS_CAPI_DLL void Obj_EndEdit(void *obj, int32_t NumChanges);
+    DSS_CAPI_DLL int32_t Obj_GetNumProperties(void *obj);
 
     /*
     Returns the object name (direct access, no copy is done, no disposal required by the user; read only!)
@@ -6900,7 +6902,7 @@ extern "C" {
     DSS_CAPI_DLL void Obj_GetFloat64Array(double** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
     DSS_CAPI_DLL void Obj_GetInt32Array(int32_t** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
     DSS_CAPI_DLL void Obj_GetStringArray(char*** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
-    DSS_CAPI_DLL void Obj_GetObjectArray(void** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
+    DSS_CAPI_DLL void Obj_GetObjectArray(void*** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
 
     DSS_CAPI_DLL void Obj_SetAsString(void *obj, int32_t Index, char* Value);
     DSS_CAPI_DLL void Obj_SetFloat64(void *obj, int32_t Index, double Value);
@@ -6929,7 +6931,7 @@ extern "C" {
     DSS_CAPI_DLL void Batch_GetString(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
     DSS_CAPI_DLL void Batch_GetAsString(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
 
-    DSS_CAPI_DLL void Batch_GetObject(void **batch, int32_t batchSize, int32_t Index, void** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void Batch_GetObject(void** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
 
     // DSS_CAPI_DLL void Batch_SetAsString(void **batch, int32_t batchSize, int32_t Index, char* Value);
     DSS_CAPI_DLL void Batch_Float64(void **batch, int32_t batchSize, int32_t Index, int32_t Operation, double Value);
@@ -6953,7 +6955,7 @@ extern "C" {
     DSS_CAPI_DLL void Batch_GetStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
     DSS_CAPI_DLL void Batch_GetAsStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
 
-    DSS_CAPI_DLL void Batch_GetObjectS(void **batch, int32_t batchSize, char* Name, void** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void Batch_GetObjectS(void** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
 
     // DSS_CAPI_DLL void Batch_SetAsStringS(void **batch, int32_t batchSize, char* Name, char* Value);
     DSS_CAPI_DLL void Batch_Float64S(void **batch, int32_t batchSize, char* Name, int32_t Operation, double Value);
