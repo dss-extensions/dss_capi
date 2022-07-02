@@ -6886,10 +6886,12 @@ extern "C" {
     DSS_CAPI_DLL void Obj_Activate(void *obj, int16_t AllLists);
 
     /*
-    Returns the pointer to the internal property fill sequence, and optionally
-    the highest value in CurrentCount (if not null).
+    Returns the pointer to the internal property fill sequence.
+    
+    First value (index 0) is what was previously known as "CurrentCount".
+    Properties start at index 1.
     */
-    DSS_CAPI_DLL int32_t* Obj_GetPropSeqPtr(void *obj, int32_t *CurrentCount);
+    DSS_CAPI_DLL int32_t* Obj_GetPropSeqPtr(void *obj);
 
     DSS_CAPI_DLL double Obj_GetFloat64(void *obj, int32_t Index);
     DSS_CAPI_DLL int32_t Obj_GetInt32(void *obj, int32_t Index);
@@ -6931,7 +6933,7 @@ extern "C" {
     DSS_CAPI_DLL void Batch_GetString(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
     DSS_CAPI_DLL void Batch_GetAsString(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
 
-    DSS_CAPI_DLL void Batch_GetObject(void** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
+    DSS_CAPI_DLL void Batch_GetObject(void*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
 
     // DSS_CAPI_DLL void Batch_SetAsString(void **batch, int32_t batchSize, int32_t Index, char* Value);
     DSS_CAPI_DLL void Batch_Float64(void **batch, int32_t batchSize, int32_t Index, int32_t Operation, double Value);
@@ -6955,7 +6957,7 @@ extern "C" {
     DSS_CAPI_DLL void Batch_GetStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
     DSS_CAPI_DLL void Batch_GetAsStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
 
-    DSS_CAPI_DLL void Batch_GetObjectS(void** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
+    DSS_CAPI_DLL void Batch_GetObjectS(void*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
 
     // DSS_CAPI_DLL void Batch_SetAsStringS(void **batch, int32_t batchSize, char* Name, char* Value);
     DSS_CAPI_DLL void Batch_Float64S(void **batch, int32_t batchSize, char* Name, int32_t Operation, double Value);

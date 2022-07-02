@@ -1651,6 +1651,7 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.ParseObjPropertyValue(self, Index, Value, prevInt);
+    SetAsNextSeq(Index);
     PropertySideEffects(Index, prevInt);
     if singleEdit then
         EndEdit(1);
@@ -1665,6 +1666,7 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.SetObjDouble(self, Index, Value);
+    SetAsNextSeq(Index);
     PropertySideEffects(Index);
     if singleEdit then
         EndEdit(1);
@@ -1679,6 +1681,7 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.SetObjString(self, Index, Value);
+    SetAsNextSeq(Index);
     PropertySideEffects(Index);
     if singleEdit then
         EndEdit(1);
@@ -1694,6 +1697,7 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.SetObjInteger(self, Index, Value, @prevInt);
+    SetAsNextSeq(Index);
     PropertySideEffects(Index, prevInt);
     if singleEdit then
         EndEdit(1);
@@ -1708,6 +1712,7 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.SetObjObject(self, Index, Value);
+    SetAsNextSeq(Index);
     PropertySideEffects(Index);
     if singleEdit then
         EndEdit(1);
@@ -1727,6 +1732,7 @@ begin
         BeginEdit(True);
     Result := True; // TODO
     ParentClass.SetObjObjects(self, Index, Value, ValueCount);
+    SetAsNextSeq(Index);
     PropertySideEffects(Index);
     if singleEdit then
         EndEdit(1);
@@ -1746,6 +1752,7 @@ begin
         BeginEdit(True);
     Result := True;//TODO
     ParentClass.SetObjIntegers(self, Index, Value, ValueCount);
+    SetAsNextSeq(Index);
     PropertySideEffects(Index);
     if singleEdit then
         EndEdit(1);
@@ -1765,6 +1772,7 @@ begin
         BeginEdit(True);
     Result := True;//TODO
     ParentClass.SetObjDoubles(self, Index, Value, ValueCount);
+    SetAsNextSeq(Index);
     PropertySideEffects(Index);
     if singleEdit then
         EndEdit(1);
@@ -1786,6 +1794,8 @@ begin
         ValuePChar[i] := PChar(Value[i]);
 
     ParentClass.SetObjStrings(self, Index, @ValuePChar[0], Length(Value));
+    SetAsNextSeq(Index);
+    PropertySideEffects(Index);
     if singleEdit then
         EndEdit(1);
 end;
@@ -1799,6 +1809,7 @@ begin
         BeginEdit(True);
     Result := True;//TODO
     ParentClass.SetObjStrings(self, Index, Value, ValueCount);
+    SetAsNextSeq(Index);
     PropertySideEffects(Index);
     if singleEdit then
         EndEdit(1);

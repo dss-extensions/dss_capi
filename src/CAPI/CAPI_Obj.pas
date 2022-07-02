@@ -60,7 +60,7 @@ function Obj_PropertySideEffects(Handle: Pointer; Index: Integer; PreviousInt: I
 procedure Obj_BeginEdit(Handle: Pointer); CDECL;
 procedure Obj_EndEdit(Handle: Pointer; NumChanges: Integer); CDECL;
 procedure Obj_Activate(Handle: Pointer; AllLists: TAPIBoolean); CDECL;
-function Obj_GetPropSeqPtr(Handle: Pointer; CurrentCount: PInteger): PInteger; CDECL;
+function Obj_GetPropSeqPtr(Handle: Pointer): PInteger; CDECL;
 
 function Obj_GetFloat64(obj: TDSSObject; Index: Integer): Double; CDECL;
 function Obj_GetInt32(obj: TDSSObject; Index: Integer): Integer; CDECL;
@@ -516,14 +516,12 @@ begin
     end;
 end;
 
-function Obj_GetPropSeqPtr(Handle: Pointer; CurrentCount: PInteger): PInteger; CDECL;
+function Obj_GetPropSeqPtr(Handle: Pointer): PInteger; CDECL;
 var
     obj: TDSSObject;
 begin
     obj := TDSSObject(Handle);
     Result := PInteger(obj.PrpSequence);
-    if CurrentCount <> NIL then
-        CurrentCount^ := obj.PropSeqCount;
 end;
 
 function Obj_GetName(Handle: Pointer): PAnsiChar; CDECL;
@@ -732,7 +730,7 @@ begin
         Exit;
     end;
     cls := batch^.ParentClass;
-    N := cls.NumProperties;
+    N := cls.NumProperties + 1;
     DSS_RecreateArray_PInteger(ResultPtr, ResultCount, batchSize * N);
     presult := ResultPtr;
     for i := 1 to batchSize do

@@ -14,7 +14,8 @@ uses
     ParserDel,
     Arraydef,
     DSSClass,
-    NamedObject;
+    NamedObject,
+    CAPI_Types;
 
 type
     TDSSObjectPtr = ^TDSSObject;
@@ -26,8 +27,7 @@ type
     PUBLIC
         DSS: TDSSContext;
 
-        PropSeqCount: Integer;
-        PrpSequence: pIntegerArray;
+        PrpSequence: pIntegerArray0;
 
         function GetNextPropertySet(idx: Integer): Integer;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); virtual;
@@ -52,7 +52,7 @@ type
         function Edit(Parser: TDSSParser): Integer;  // Allow Calls to edit from object itself
         procedure MakeLike(OtherPtr: Pointer); virtual;
 
-        procedure SetAsNextSeq(Index: Integer);
+        procedure SetAsNextSeq(Index: Integer); inline;
 
         function GetPropertyValue(Index: Integer): String; VIRTUAL;  // Use dssclass.propertyindex to get index by name
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); VIRTUAL;
@@ -88,10 +88,9 @@ begin
     DSS := ParClass.DSS;
 
     DSSObjType := 0;
-    PropSeqCount := 0;
     ParentClass := ParClass;
     // init'd to zero when allocated
-    PrpSequence := Allocmem(SizeOf(PrpSequence^[1]) * ParentClass.NumProperties);
+    PrpSequence := Allocmem(SizeOf(Integer) * (ParentClass.NumProperties + 1));
 
     Flags := [];
 end;
@@ -136,8 +135,7 @@ var
     other: TDSSObject;
 begin
     other := TDSSObject(OtherPtr);
-    PropSeqCount := other.PropSeqCount;
-    Move(other.PrpSequence[1], PrpSequence[1], SizeOf(PrpSequence[1]) * ParentClass.NumProperties);
+    Move(other.PrpSequence[0], PrpSequence[0], SizeOf(Integer) * (ParentClass.NumProperties + 1));
 end;
 
 function TDSSObject.GetPropertyValue(Index: Integer): String;
@@ -198,11 +196,11 @@ begin
     LocalName := Value;
 end;
 
-procedure TDSSObject.SetAsNextSeq(Index: Integer);
+procedure TDSSObject.SetAsNextSeq(Index: Integer); inline;
 begin
     // Keep track of the order in which this property was accessed for Save Command
-    Inc(PropSeqCount);
-    PrpSequence^[Index] := PropSeqCount;
+    Inc(PrpSequence[0]);
+    PrpSequence[Index] := PrpSequence[0];
 end;
 
 procedure TDSSObject.PropertySideEffects(Idx: Integer; previousIntVal: Integer);

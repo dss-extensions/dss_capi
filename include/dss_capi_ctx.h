@@ -6711,8 +6711,10 @@ extern "C" {
     */
 
     /*
-    Returns the pointer to the internal property fill sequence, and optionally
-    the highest value in CurrentCount (if not null).
+    Returns the pointer to the internal property fill sequence.
+    
+    First value (index 0) is what was previously known as "CurrentCount".
+    Properties start at index 1.
     */
 
     
