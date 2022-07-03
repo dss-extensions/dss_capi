@@ -155,13 +155,12 @@ type
 
 const
     NumExecOptions = ord(High(TExecOption));
-var
-    ExecOption: array[1..NumExecOptions] of String;
 
 function DoGetCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
 function DoSetCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; SolveOption: Integer): Integer;
 function DoSetCmd_NoCircuit({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Boolean;  // Set Commands that do not require a circuit
 function DoGetCmd_NoCircuit({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Boolean;  // Get Commands that do not require a circuit
+procedure DefineOptions(var ExecOption: ArrayOfString);
 
 implementation
 
@@ -189,13 +188,14 @@ uses
 type
     Opt = TExecOption;
 
-procedure DefineOptions;
+procedure DefineOptions(var ExecOption: ArrayOfString);
 var
     info: Pointer;
     i: Integer;
     name: String;
 begin
     info := TypeInfo(TExecOption);
+    SetLength(ExecOption, NumExecOptions);
     for i := 1 to NumExecOptions do
     begin
         name := ReplaceStr(GetEnumName(info, i), 'pct', '%');
@@ -206,7 +206,7 @@ begin
         else if name = 'obj' then
             name := 'object';
 
-        ExecOption[i] := name;
+        ExecOption[i - 1] := name;
     end;
 end;
 
@@ -1102,21 +1102,5 @@ begin
         AppendGlobalResult(DSS, _('***Error***'));
     end;
 end;
-
-procedure DisposeStrings;
-var
-    i: Integer;
-begin
-    for i := 1 to NumExecOptions do
-    begin
-        ExecOption[i] := '';
-    end;
-end;
-
-initialization
-    DefineOptions;
-
-finalization
-    DisposeStrings;
 
 end.

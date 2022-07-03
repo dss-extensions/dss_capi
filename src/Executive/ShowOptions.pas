@@ -58,9 +58,7 @@ const
     NumShowOptions = Ord(High(TShowOption));
 
 function DoShowCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
-var
-    ShowOption: array[1..NumShowOptions] of String;
-    ShowCommands: TCommandList;
+procedure DefineOptions(var ShowOption: ArrayOfString);
 
 implementation
 
@@ -76,14 +74,15 @@ uses
     DSSHelper,
     TypInfo;
 
-procedure DefineOptions;
+procedure DefineOptions(var ShowOption: ArrayOfString);
 var
     info: Pointer;
     i: Integer;
 begin
     info := TypeInfo(TShowOption);
+    SetLength(ShowOption, NumShowOptions);
     for i := 1 to NumShowOptions do
-        ShowOption[i] := GetEnumName(info, i);
+        ShowOption[i - 1] := GetEnumName(info, i);
 end;
 
 function DoShowCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
@@ -113,7 +112,7 @@ begin
 
     DSS.Parser.NextParam;
     Param := AnsiLowerCase(DSS.Parser.StrValue);
-    ParamPointer := ShowCommands.Getcommand(Param);
+    ParamPointer := DSS.DSSExecutive.ShowCommands.Getcommand(Param);
 
     if ParamPointer = 0 then
     begin
@@ -409,25 +408,5 @@ begin
 
     DSS.InShowResults := FALSE;
 end;
-
-procedure DisposeStrings;
-var
-    i: Integer;
-
-begin
-    for i := 1 to NumShowOptions do
-    begin
-        ShowOption[i] := '';
-    end;
-end;
-
-initialization
-    DefineOptions;
-    ShowCommands := TCommandList.Create(ShowOption, True);
-
-finalization
-
-    DisposeStrings;
-    ShowCommands.Free;
 
 end.

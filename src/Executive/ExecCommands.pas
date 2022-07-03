@@ -155,13 +155,10 @@ type
 
 const
     NumExecCommands = ord(High(TExecCommand));
-var
-    ExecCommand: array[1..NumExecCommands] of String;
 
 procedure ProcessCommand({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; const CmdLine: String; LineNum: Integer = -1);
 
-procedure DefineCommands;
-procedure DisposeStrings;
+procedure DefineCommands(var ExecCommand: ArrayOfString);
 
 implementation
 
@@ -195,20 +192,21 @@ uses
 type
     Cmd = TExecCommand;
 
-procedure DefineCommands;
+procedure DefineCommands(var ExecCommand: ArrayOfString);
 var
     info: Pointer;
     i: Integer;
 begin
     info := TypeInfo(Cmd);
+    SetLength(ExecCommand, NumExecCommands);
     for i := 1 to NumExecCommands do
-        ExecCommand[i] := GetEnumName(info, i);
+        ExecCommand[i - 1] := GetEnumName(info, i);
     // Replace the ones that don't fit as Pascal identifiers
-    ExecCommand[ord(Cmd.vr)] := 'var';
-    ExecCommand[ord(Cmd.tilde)] := '~';
-    ExecCommand[ord(Cmd.doubleslash)] := '//';
-    ExecCommand[ord(Cmd.questionmark)] := '?';
-    ExecCommand[ord(Cmd.SetOpt)] := 'Set';
+    ExecCommand[ord(Cmd.vr) - 1] := 'var';
+    ExecCommand[ord(Cmd.tilde) - 1] := '~';
+    ExecCommand[ord(Cmd.doubleslash) - 1] := '//';
+    ExecCommand[ord(Cmd.questionmark) - 1] := '?';
+    ExecCommand[ord(Cmd.SetOpt) - 1] := 'Set';
 end;
 
 procedure ProcessCommand({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext; const CmdLine: String; LineNum: Integer);
@@ -682,16 +680,6 @@ begin
 {$IFNDEF DSS_CAPI_PM}
     DSS.ParserVars.Add('@result', DSS.GlobalResult)
 {$ENDIF}
-end;
-
-procedure DisposeStrings;
-var
-    i: Integer;
-begin
-    for i := 1 to NumExecCommands do
-    begin
-        ExecCommand[i] := '';
-    end;
 end;
 
 end.

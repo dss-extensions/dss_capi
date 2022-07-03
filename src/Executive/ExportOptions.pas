@@ -88,10 +88,7 @@ const
     NumExportOptions = ord(High(TExportOption));
 
 function DoExportCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
-
-var
-    ExportOption: array[1..NumExportOptions] of String;
-    ExportCommands: TCommandList;
+procedure DefineOptions(var ExportOption: ArrayOfString);
 
 implementation
 
@@ -115,14 +112,15 @@ begin
     result := StringToUuid(val);
 end;
 
-procedure DefineOptions;
+procedure DefineOptions(var ExportOption: ArrayOfString);
 var
     info: Pointer;
     i: Integer;
 begin
     info := TypeInfo(TExportOption);
+    SetLength(ExportOption, NumExportOptions);
     for i := 1 to NumExportOptions do
-        ExportOption[i] := GetEnumName(info, i);
+        ExportOption[i - 1] := GetEnumName(info, i);
 end;
 
 function DoExportCmd({$IFDEF DSS_CAPI_PM}MainDSS{$ELSE}DSS{$ENDIF}: TDSSContext): Integer;
@@ -158,7 +156,7 @@ begin
     Parm2 := '';
     ParamName := DSS.Parser.NextParam;
     Parm1 := AnsiLowerCase(DSS.Parser.StrValue);
-    ParamPointer := ExportCommands.Getcommand(Parm1);
+    ParamPointer := DSS.DSSExecutive.ExportCommands.Getcommand(Parm1);
 
    {Check commands requiring a solution and abort if no solution or circuit}
     case ParamPointer of
@@ -653,24 +651,4 @@ begin
     end;
 end;
 
-
-procedure DisposeStrings;
-var
-    i: Integer;
-
-begin
-    for i := 1 to NumExportOptions do
-    begin
-        ExportOption[i] := '';
-    end;
-end;
-
-initialization
-    DefineOptions;
-    ExportCommands := TCommandList.Create(ExportOption, True);
-
-finalization
-
-    DisposeStrings;
-    ExportCommands.Free;
 end.

@@ -11,6 +11,7 @@ interface
 
 uses
     Command,
+    ArrayDef,
     DSSClass;
 
 type
@@ -46,17 +47,13 @@ const
     NumPlotOptions = ord(High(TPlotOption));
 
 function DoPlotCmd(DSS: TDSSContext): Integer;
-
-var
-    PlotOption: array[1..NumPlotOptions] of String;
-    PlotCommands: TCommandList;
+procedure DefineOptions(var PlotOption: ArrayOfString);
 
 implementation
 
 uses
     Classes,
     fpjson,
-    ArrayDef,
     DSSGlobals,
     SysUtils,
     ParserDel,
@@ -150,13 +147,14 @@ begin
     ProfileScale := PROFILEPUKM;
 end;
 
-procedure DefineOptions;
+procedure DefineOptions(var PlotOption: ArrayOfString);
 var
     info: Pointer;
     i: Integer;
     name: String;
 begin
     info := TypeInfo(Opt);
+    SetLength(PlotOption, NumPlotOptions);
     for i := 1 to NumPlotOptions do
     begin
         name := ReplaceStr(GetEnumName(info, i), '__', '');
@@ -165,7 +163,7 @@ begin
         else if name = 'obj' then
             name := 'object';
 
-        PlotOption[i] := name;
+        PlotOption[i - 1] := name;
     end;
 end;
 
@@ -224,7 +222,7 @@ begin
         if (Length(ParamName) = 0) then
             Inc(ParamPointer)
         else
-            ParamPointer := PlotCommands.Getcommand(ParamName);
+            ParamPointer := DSS.DSSExecutive.PlotCommands.Getcommand(ParamName);
 
         // Check options requiring a solution and abort if no solution or circuit
         case ParamPointer of
@@ -524,21 +522,4 @@ begin
     end;
 end;
 
-
-procedure DisposeStrings;
-var
-    i: Integer;
-begin
-    for i := 1 to NumPlotOptions do
-        PlotOption[i] := '';
-end;
-
-
-initialization
-    DefineOptions;
-    PlotCommands := TCommandList.Create(PlotOption, True);
-
-finalization
-    DisposeStrings;
-    PlotCommands.Free;
 end.

@@ -805,6 +805,7 @@ begin
     DSSClassList := NIL;
     Circuits := NIL;
     DSSObjs := NIL;
+    CurrentDSSDir_internal := '';
 
 {$IFDEF DSS_CAPI_PM}
     ActorStatus := TActorStatus.Idle;
@@ -967,7 +968,7 @@ begin
         Exit;
     end;
 
-    If dir[Length(dir)] <> PathDelim Then 
+    If (Length(dir) <> 0) and (dir[Length(dir)] <> PathDelim) Then 
         CurrentDSSDir_internal := dir + PathDelim
     else
         CurrentDSSDir_internal := dir;

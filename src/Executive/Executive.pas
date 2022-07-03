@@ -31,9 +31,18 @@ TYPE
          
          procedure Set_RecorderOn(const Value: Boolean);
      public
+         ExecCommand: ArrayOfString;
+         ExecOption: ArrayOfString;
+         PlotOption: ArrayOfString;
+         ShowOption: ArrayOfString;
+         ExportOption: ArrayOfString;
+
          DSS: TDSSContext;
          CommandList: TCommandList;
          OptionList: TCommandList;
+         PlotCommands: TCommandList;
+         ShowCommands: TCommandList;
+         ExportCommands: TCommandList;
 
          constructor Create(dssContext: TDSSContext);
          destructor  Destroy; override;
@@ -69,7 +78,7 @@ TYPE
 
 implementation
 
-USES BufStream, ExecCommands, ExecOptions,
+USES BufStream, ExecCommands, ExecOptions, PlotOptions, ShowOptions, ExportOptions,
      ExecHelper, DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
      Utilities, Solution, DSSHelper,
      CmdForms,
@@ -105,13 +114,19 @@ Constructor TExecutive.Create(dssContext: TDSSContext);
 Begin
      Inherited Create;
 
+     ExecOptions.DefineOptions(ExecOption);
+     PlotOptions.DefineOptions(PlotOption);
+     ShowOptions.DefineOptions(ShowOption);
+     ExecCommands.DefineCommands(ExecCommand);
+     ExportOptions.DefineOptions(ExportOption);
+
      DSS := dssContext;
       
-     // Exec Commands
      CommandList := TCommandList.Create(ExecCommand);
-
-     // Exec options
      OptionList := TCommandList.Create(ExecOption);
+     PlotCommands := TCommandList.Create(PlotOption, True);
+     ShowCommands := TCommandList.Create(ShowOption, True);
+     ExportCommands := TCommandList.Create(ExportOption, True);
 
      // Instantiate All DSS Classe Definitions, Intrinsic and User-defined
      CreateDSSClasses(DSS);     // in DSSGlobals
@@ -138,6 +153,9 @@ begin
 
     Clear(False);
     
+    ExportCommands.Free;
+    Showcommands.Free;
+    PlotCommands.Free;
     CommandList.Free;
     OptionList.Free;
     DSS.Circuits.Free;

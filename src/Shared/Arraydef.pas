@@ -55,7 +55,6 @@ type
     PDoubleArray0 = CAPI_Types.PDoubleArray0;
     PSingleArray0 = CAPI_Types.PSingleArray0;
 
-    ArrayOfString = Array of String;
 
 function AllocStringArray(Size: Integer): pStringArray;
 procedure FreeStringArray(var pS: pStringArray; Size: Integer);

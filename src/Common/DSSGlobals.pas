@@ -816,8 +816,6 @@ initialization
     // For the 0.12.x branch, default is True, disable at initialization when DSS_CAPI_ALLOW_CHANGE_DIR = 0
     DSS_CAPI_ALLOW_CHANGE_DIR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_CHANGE_DIR') <> '0');
 
-    ExecCommands.DefineCommands;
-
 try
    DSSPrime := TDSSContext.Create(nil, True);
 except 
@@ -833,6 +831,4 @@ finalization
         DSSPrime.Free;
         DSSPrime := nil;
     end;
-
-    ExecCommands.DisposeStrings;
 end.

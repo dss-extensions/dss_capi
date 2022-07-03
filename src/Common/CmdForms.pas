@@ -448,22 +448,22 @@ begin
     writeln(_('## Commands'));
     writeln();
 
-    ShowAnyHelpMD(NumExecCommands, pStringArray(@ExecCommand), 'Command');
+    ShowAnyHelpMD(NumExecCommands, pStringArray(@DSS.DSSExecutive.ExecCommand), 'Command');
     
     writeln('---');
     writeln(_('## Execution Options'));
     writeln();
-    ShowAnyHelpMD(NumExecOptions, pStringArray(@ExecOption), 'Executive');
+    ShowAnyHelpMD(NumExecOptions, pStringArray(@DSS.DSSExecutive.ExecOption), 'Executive');
     
     writeln('---');
     writeln(_('## `Show` options'));
     writeln();
-    ShowAnyHelpMD(NumShowOptions, pStringArray(@ShowOption), 'ShowOption');
+    ShowAnyHelpMD(NumShowOptions, pStringArray(@DSS.DSSExecutive.ShowOption), 'ShowOption');
     
     writeln('---');
     writeln(_('## `Export` options'));
     writeln();
-    ShowAnyHelpMD(NumExportOptions, pStringArray(@ExportOption), 'ExportOption');
+    ShowAnyHelpMD(NumExportOptions, pStringArray(@DSS.DSSExecutive.ExportOption), 'ExportOption');
     
     writeln('---');
     writeln(_('## Elements'));
@@ -509,16 +509,16 @@ begin
         ShowAllHelpMD(DSS)
     else
     if ANSIStartsStr('com', param) then
-        ShowAnyHelp(NumExecCommands, pStringArray(@ExecCommand), OptName, 'Command')
+        ShowAnyHelp(NumExecCommands, pStringArray(@DSS.DSSExecutive.ExecCommand), OptName, 'Command')
     else
     if ANSIStartsStr('op', param) then
-        ShowAnyHelp(NumExecOptions, pStringArray(@ExecOption), OptName, 'Executive')
+        ShowAnyHelp(NumExecOptions, pStringArray(@DSS.DSSExecutive.ExecOption), OptName, 'Executive')
     else
     if ANSIStartsStr('sh', param) then
-        ShowAnyHelp(NumShowOptions, pStringArray(@ShowOption), OptName, 'ShowOption')
+        ShowAnyHelp(NumShowOptions, pStringArray(@DSS.DSSExecutive.ShowOption), OptName, 'ShowOption')
     else
     if ANSIStartsStr('e', param) then
-        ShowAnyHelp(NumExportOptions, pStringArray(@ExportOption), OptName, 'ExportOption')
+        ShowAnyHelp(NumExportOptions, pStringArray(@DSS.DSSExecutive.ExportOption), OptName, 'ExportOption')
     else
     if ANSIStartsStr('cl', param) then
         ShowClassHelp(DSS.DSSClassList, OptName)

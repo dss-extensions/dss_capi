@@ -1064,19 +1064,21 @@ begin
 
     // dump Executive commands
     FSWriteln(F, '[execcommands]');
-    for i := 1 to NumExecCommands do
-    begin
-        WriteStr(sout, i: 0, ', "', Execcommand[i], '", "', ReplaceCRLF(DSSHelp('Command.' + ExecCommand[i])), '"');
-        FSWriteln(F, sout);
-    end;
+    with DSS.DSSExecutive do
+        for i := 1 to NumExecCommands do
+        begin
+            WriteStr(sout, i: 0, ', "', Execcommand[i], '", "', ReplaceCRLF(DSSHelp('Command.' + ExecCommand[i])), '"');
+            FSWriteln(F, sout);
+        end;
 
     // Dump Executive Options
     FSWriteln(F, '[execoptions]');
-    for i := 1 to NumExecOptions do
-    begin
-        WriteStr(sout, i: 0, ', "', ExecOption[i], '", "', ReplaceCRLF(DSSHelp('Executive.' + ExecOption[i])), '"');
-        FSWriteln(F, sout);
-    end;
+    with DSS.DSSExecutive do
+        for i := 1 to NumExecOptions do
+        begin
+            WriteStr(sout, i: 0, ', "', ExecOption[i], '", "', ReplaceCRLF(DSSHelp('Executive.' + ExecOption[i])), '"');
+            FSWriteln(F, sout);
+        end;
 
    // Dump All present DSSClasses
    pClass := DSS.DSSClassList.First;
