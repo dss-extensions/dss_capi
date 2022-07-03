@@ -775,6 +775,7 @@ begin
         end;
     end;
 
+    ResultCount^ := Count;
     if not BeginEdit then
         Exit;
 
@@ -1151,6 +1152,7 @@ begin
                     doublePtr := (PDouble(PtrUint(batch^) + propOffset));
                     prev := doubleptr^;
                     doublePtr^ := doublePtr^ * Value;
+                    batch^.SetAsNextSeq(Index);
                     batch^.PropertySideEffects(Index, Round(prev));
                     inc(batch);
                 end;
@@ -1160,6 +1162,7 @@ begin
                     doublePtr := (PDouble(PtrUint(batch^) + propOffset));
                     prev := doubleptr^;
                     doublePtr^ := doublePtr^ + Value;
+                    batch^.SetAsNextSeq(Index);
                     batch^.PropertySideEffects(Index, Round(prev));
                     inc(batch);
                 end;
@@ -1169,6 +1172,7 @@ begin
                 doublePtr := (PDouble(PtrUint(batch^) + propOffset));
                 prev := doubleptr^;
                 doublePtr^ := Value;
+                batch^.SetAsNextSeq(Index);
                 batch^.PropertySideEffects(Index, Round(prev));
                 inc(batch);
             end;
