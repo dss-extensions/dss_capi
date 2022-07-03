@@ -53,7 +53,8 @@ uses
     sysUtils,
     Executive,
     CmdForms,
-    DSSHelper;
+    DSSHelper,
+    Classes;
 
 procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 begin
@@ -112,6 +113,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Start(code: Integer): TAPIBoolean; CDECL;
 begin
+    DSS_InitThreads();
     Result := TRUE;
 end;
 //------------------------------------------------------------------------------

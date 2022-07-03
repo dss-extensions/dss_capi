@@ -115,13 +115,15 @@ procedure DefaultResult(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Value:
 
 function DSS_BeginPascalThread(func: Pointer; paramptr: Pointer): PtrUInt; CDECL;
 procedure DSS_WaitPascalThread(handle: PtrUInt); CDECL;
+procedure DSS_InitThreads; CDECL; // this won't go to the header, but let's use CDECL anyway...
 
 implementation
 
 Uses 
     DSSObject, 
     DSSGlobals, 
-    CktElement, 
+    CktElement,
+    Classes,
     DSSHelper;
 
 type
@@ -132,6 +134,35 @@ type
         Func: TCDECLThreadFunc;
         Data: Pointer;
     end;
+
+{$IFDEF DSS_CAPI_CONTEXT}
+    TDummyThread = class(TThread)
+        procedure Execute; override;
+    end;
+
+procedure TDummyThread.Execute;
+begin
+end;
+
+procedure DSS_InitThreads; CDECL;
+begin
+    {$IFDEF UNIX}
+    {$IFDEF DSS_CAPI_CONTEXT}
+    // As recommended in FPC's wiki, make sure the thread
+    // engine is always initialized. With this, even if the
+    // user doesn't run a solution in the DSSPrime context,
+    // we should be fine in most situations.
+    if not IsMultiThread then
+        with TDummyThread.Create(True) do
+        begin
+            // Start;
+            // WaitFor;
+            Free;
+        end;
+    {$ENDIF}
+    {$ENDIF}
+end;
+{$ENDIF}
 
 // The Pascal thread calls the cdecl function
 function C2P_Translator(FuncData: pointer) : ptrint;
