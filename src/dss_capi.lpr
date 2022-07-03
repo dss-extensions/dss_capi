@@ -277,7 +277,8 @@ exports
     DSS_GR_CountPtr_PInteger,
     DSS_GR_CountPtr_PByte,
     DSS_Get_PAnsiChar,
-
+    DSS_BeginPascalThread,
+    DSS_WaitPascalThread,
 
     ActiveClass_Get_AllNames,
     ActiveClass_Get_First,
@@ -2098,5 +2099,30 @@ exports
    , ZeroiseMatrixElement
 {$ENDIF}
     ;
+
+{$IFDEF DSS_CAPI_CONTEXT}
+type
+
+DummyThread = class(TThread)
+    procedure Execute; override;
+end;
+
+procedure DummyThread.Execute;
+begin
+end;
+
+begin
+    // As recommended in FPC's wiki, make sure the thread
+    // engine is always initialized. With this, even if the
+    // user doesn't run a solution in the DSSPrime context,
+    // we should be fine in most situations.
+    with DummyThread.Create(False) do
+    begin
+        WaitFor;
+        Free;
+    end;
+end.
+{$ELSE}
 begin
 end.
+{$ENDIF}

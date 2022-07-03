@@ -6733,6 +6733,24 @@ extern "C" {
 
 
 
+    /*
+    Use this if you experience issues with your languages normal threads.
+    
+    `func` is the address of the function that will be run in the thread.
+    `paramptr` is a pointer to the data to pass as a parameter when calling
+    `func`.
+
+    NOTE: this function will be removed in a future version if DSS C-API is
+          reimplemented in another language.
+    */
+
+    /*
+    to finish.
+
+    NOTE: this function will be removed in a future version if DSS C-API is
+          reimplemented in another language.
+    */
+
 
 
 #ifdef __cplusplus

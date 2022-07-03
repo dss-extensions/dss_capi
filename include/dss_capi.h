@@ -6970,6 +6970,28 @@ extern "C" {
     DSS_CAPI_DLL void Batch_SetStringArrayS(void **batch, int32_t batchSize, char* Name, char** Value);
     DSS_CAPI_DLL void Batch_SetObjectArrayS(void **batch, int32_t batchSize, char* Name, void** Value);
 
+    /*
+    `DSS_BeginPascalThread` can be used to start a new thread from the Pascal side.
+    Use this if you experience issues with your languages normal threads.
+    
+    `func` is the address of the function that will be run in the thread.
+    `paramptr` is a pointer to the data to pass as a parameter when calling
+    `func`.
+
+    NOTE: this function will be removed in a future version if DSS C-API is
+          reimplemented in another language.
+    */
+    DSS_CAPI_DLL void *DSS_BeginPascalThread(void *func, void *paramptr);
+
+    /*
+    Use this function to wait for a thread started by `DSS_BeginPascalThread`
+    to finish.
+
+    NOTE: this function will be removed in a future version if DSS C-API is
+          reimplemented in another language.
+    */
+    DSS_CAPI_DLL void DSS_WaitPascalThread(void *handle);
+
 
 #ifdef __cplusplus
 } // extern "C"

@@ -58,7 +58,7 @@ usefns = [
 ]
 
 def skip(fun):
-    prefixes = [' DSS_Dispose_', ' DSS_Get_PAnsiChar(', ' Obj_', 'Batch_', ' DSS_ExtractSchema']
+    prefixes = [' DSS_Dispose_', ' DSS_Get_PAnsiChar(', ' Obj_', 'Batch_', ' DSS_ExtractSchema', 'DSS_WaitPascalThread', 'DSS_BeginPascalThread']
     for p in prefixes:
         if p in fun:
             return True

@@ -113,6 +113,9 @@ procedure DefaultResult(var ResultPtr: PDouble; ResultCount: PAPISize; Value: Do
 procedure DefaultResult(var ResultPtr: PSingle; ResultCount: PAPISize; Value: Single = 0); overload; inline;
 procedure DefaultResult(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Value: String = 'NONE'); overload; inline;
 
+function DSS_BeginPascalThread(func: Pointer; paramptr: Pointer): PtrUInt; CDECL;
+procedure DSS_WaitPascalThread(handle: PtrUInt); CDECL;
+
 implementation
 
 Uses 
@@ -120,6 +123,24 @@ Uses
     DSSGlobals, 
     CktElement, 
     DSSHelper;
+
+type
+    TCDECLThreadFunc = function (user_data: Pointer): Pointer; CDECL;
+    PCDECLThreadFuncData = ^TCDECLThreadFuncData;
+
+    TCDECLThreadFuncData = record
+        Func: TCDECLThreadFunc;
+        Data: Pointer;
+    end;
+
+// The Pascal thread calls the cdecl function
+function C2P_Translator(FuncData: pointer) : ptrint;
+var
+  ThreadData: TCdeclThreadFuncData;
+begin
+  ThreadData := PCdeclThreadFuncData(FuncData)^;
+  Result := ptrint(ThreadData.Func(ThreadData.Data));
+end;
 
 //------------------------------------------------------------------------------
 procedure DefaultResult(var ResultPtr: PByte; ResultCount: PAPISize; Value: Byte = 0); overload; inline;
@@ -644,4 +665,27 @@ begin
     until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
+function C2P_Translator(FuncData: pointer): PtrUInt;
+var
+    ThreadData: TCDECLThreadFuncData;
+begin
+    ThreadData := PCDECLThreadFuncData(FuncData)^;
+    Result := PtrUInt(ThreadData.Func(ThreadData.Data));
+end;
+
+function DSS_BeginPascalThread(func: Pointer; paramptr: Pointer): PtrUInt; CDECL;
+var
+    ThreadData: PCDECLThreadFuncData;
+begin
+    New(ThreadData);
+    ThreadData^.Func := TCDECLThreadFunc(func);
+    ThreadData^.Data := paramptr;
+    Result := BeginThread(@C2P_Translator, ThreadData);
+end;
+
+procedure DSS_WaitPascalThread(handle: PtrUInt); CDECL;
+begin
+    WaitForThreadTerminate(TThreadID(handle), MAXLONGINT);
+end;
+
 end.
