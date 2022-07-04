@@ -242,7 +242,7 @@ extern "C" {
     DSS_CAPI_DLL void DSS_RegisterPlotCallback(dss_callback_plot_t cb);
     DSS_CAPI_DLL void DSS_RegisterMessageCallback(dss_callback_message_t cb);
 
-    DSS_CAPI_DLL void DSS_NewCircuit(char* Value);
+    DSS_CAPI_DLL void DSS_NewCircuit(const char* Value);
 
     /*
     Array of strings consisting of all element names in the active class.
@@ -268,7 +268,7 @@ extern "C" {
     */
     DSS_CAPI_DLL char* ActiveClass_Get_Name(void);
 
-    DSS_CAPI_DLL void ActiveClass_Set_Name(char* Value);
+    DSS_CAPI_DLL void ActiveClass_Set_Name(const char* Value);
 
     /*
     Number of elements in this class. Same as Count property.
@@ -615,7 +615,7 @@ extern "C" {
     /*
     Sets the active Capacitor by Name.
     */
-    DSS_CAPI_DLL void Capacitors_Set_Name(char* Value);
+    DSS_CAPI_DLL void Capacitors_Set_Name(const char* Value);
 
     /*
     Number of steps (default 1) for distributing and switching the total bank kVAR.
@@ -748,7 +748,7 @@ extern "C" {
     /*
     Name of the Capacitor that is controlled.
     */
-    DSS_CAPI_DLL void CapControls_Set_Capacitor(char* Value);
+    DSS_CAPI_DLL void CapControls_Set_Capacitor(const char* Value);
 
     /*
     Transducer ratio from pirmary current to control current.
@@ -775,7 +775,7 @@ extern "C" {
     /*
     Full name of the element that PT and CT are connected to.
     */
-    DSS_CAPI_DLL void CapControls_Set_MonitoredObj(char* Value);
+    DSS_CAPI_DLL void CapControls_Set_MonitoredObj(const char* Value);
 
     /*
     Terminal number on the element that PT and CT are connected to.
@@ -785,7 +785,7 @@ extern "C" {
     /*
     Sets a CapControl active by name.
     */
-    DSS_CAPI_DLL void CapControls_Set_Name(char* Value);
+    DSS_CAPI_DLL void CapControls_Set_Name(const char* Value);
 
     /*
     Threshold to switch off a step. See Mode for units.
@@ -907,9 +907,9 @@ extern "C" {
     */
     DSS_CAPI_DLL void Circuit_Get_TotalPower_GR(void);
 
-    DSS_CAPI_DLL void Circuit_Disable(char* Name);
+    DSS_CAPI_DLL void Circuit_Disable(const char* Name);
 
-    DSS_CAPI_DLL void Circuit_Enable(char* Name);
+    DSS_CAPI_DLL void Circuit_Enable(const char* Name);
 
     DSS_CAPI_DLL int32_t Circuit_FirstPCElement(void);
 
@@ -941,7 +941,7 @@ extern "C" {
 
     DSS_CAPI_DLL void Circuit_SaveSample(void);
 
-    DSS_CAPI_DLL int32_t Circuit_SetActiveElement(char* FullName);
+    DSS_CAPI_DLL int32_t Circuit_SetActiveElement(const char* FullName);
 
     DSS_CAPI_DLL double Circuit_Capacity(double Start, double Increment);
 
@@ -954,7 +954,7 @@ extern "C" {
     */
     DSS_CAPI_DLL void Circuit_Get_AllBusVmagPu_GR(void);
 
-    DSS_CAPI_DLL int32_t Circuit_SetActiveBus(char* BusName);
+    DSS_CAPI_DLL int32_t Circuit_SetActiveBus(const char* BusName);
 
     DSS_CAPI_DLL int32_t Circuit_SetActiveBusi(int32_t BusIndex);
 
@@ -1030,7 +1030,7 @@ extern "C" {
     */
     DSS_CAPI_DLL void Circuit_Get_AllNodeNamesByPhase_GR(int32_t Phase);
 
-    DSS_CAPI_DLL int32_t Circuit_SetActiveClass(char* ClassName);
+    DSS_CAPI_DLL int32_t Circuit_SetActiveClass(const char* ClassName);
 
     DSS_CAPI_DLL int32_t Circuit_FirstElement(void);
 
@@ -1071,7 +1071,7 @@ extern "C" {
     Same as Circuit_Get_YNodeVarray but using the global buffer interface for results
     */
     DSS_CAPI_DLL void Circuit_Get_YNodeVarray_GR(void);
-    DSS_CAPI_DLL void Circuit_SetCktElementName(char* Value);
+    DSS_CAPI_DLL void Circuit_SetCktElementName(const char* Value);
     DSS_CAPI_DLL void Circuit_SetCktElementIndex(int32_t Value);
 
     /*
@@ -1266,7 +1266,7 @@ extern "C" {
     /*
     Display name of the object (not necessarily unique)
     */
-    DSS_CAPI_DLL void CktElement_Set_DisplayName(char* Value);
+    DSS_CAPI_DLL void CktElement_Set_DisplayName(const char* Value);
 
     /*
     Full name of the i-th controller attached to this element. Ex: str = Controller(2).  See NumControls to determine valid index range
@@ -1327,14 +1327,14 @@ extern "C" {
     /*
     For PCElement, set/get the value of a variable by name. If Code>0 Then no variable by this name or not a PCelement.
     */
-    DSS_CAPI_DLL double CktElement_Get_Variable(char* MyVarName, int32_t *Code);
-    DSS_CAPI_DLL double CktElement_Set_Variable(char* MyVarName, int32_t *Code, double Value);
+    DSS_CAPI_DLL double CktElement_Get_Variable(const char* MyVarName, int32_t *Code);
+    DSS_CAPI_DLL void CktElement_Set_Variable(const char* MyVarName, int32_t *Code, double Value);
 
     /*
     For PCElement, set/get the value of a variable by integer index.
     */
     DSS_CAPI_DLL double CktElement_Get_Variablei(int32_t Idx, int32_t *Code);
-    DSS_CAPI_DLL double CktElement_Set_Variablei(int32_t Idx, int32_t *Code, double Value);
+    DSS_CAPI_DLL void CktElement_Set_Variablei(int32_t Idx, int32_t *Code, double Value);
 
     /*
     Array of integer containing the node numbers (representing phases, for example) for each conductor of each terminal.
@@ -1559,7 +1559,7 @@ extern "C" {
     /*
     DSS Data File Path.  Default path for reports, etc. from DSS
     */
-    DSS_CAPI_DLL void DSS_Set_DataPath(char* Value);
+    DSS_CAPI_DLL void DSS_Set_DataPath(const char* Value);
 
     DSS_CAPI_DLL void DSS_Reset(void);
 
@@ -1568,7 +1568,7 @@ extern "C" {
     */
     DSS_CAPI_DLL char* DSS_Get_DefaultEditor(void);
 
-    DSS_CAPI_DLL int32_t DSS_SetActiveClass(char* ClassName);
+    DSS_CAPI_DLL int32_t DSS_SetActiveClass(const char* ClassName);
     DSS_CAPI_DLL uint16_t DSS_Get_AllowForms(void);
     DSS_CAPI_DLL void DSS_Set_AllowForms(uint16_t Value);
 
@@ -1681,7 +1681,7 @@ extern "C" {
     /*
     Caption to appear on the bottom of the DSS Progress form.
     */
-    DSS_CAPI_DLL void DSSProgress_Set_Caption(char* Value);
+    DSS_CAPI_DLL void DSSProgress_Set_Caption(const char* Value);
 
     /*
     Percent progress to indicate [0..100]
@@ -1702,8 +1702,8 @@ extern "C" {
 
     DSS_CAPI_DLL char* DSSProperty_Get_Val(void);
 
-    DSS_CAPI_DLL void DSSProperty_Set_Val(char* Value);
-    DSS_CAPI_DLL void DSSProperty_Set_Name(char* Value);
+    DSS_CAPI_DLL void DSSProperty_Set_Val(const char* Value);
+    DSS_CAPI_DLL void DSSProperty_Set_Name(const char* Value);
     DSS_CAPI_DLL void DSSProperty_Set_Index(int32_t Value);
 
     /*
@@ -1788,7 +1788,7 @@ extern "C" {
     /*
     Set the active Fuse element by name.
     */
-    DSS_CAPI_DLL void Fuses_Set_Name(char* Value);
+    DSS_CAPI_DLL void Fuses_Set_Name(const char* Value);
 
     /*
     Full name of the circuit element to which the fuse is connected.
@@ -1808,7 +1808,7 @@ extern "C" {
     /*
     Full name of the circuit element to which the fuse is connected.
     */
-    DSS_CAPI_DLL void Fuses_Set_MonitoredObj(char* Value);
+    DSS_CAPI_DLL void Fuses_Set_MonitoredObj(const char* Value);
 
     /*
     Number of the terminal to which the fuse is connected
@@ -1818,7 +1818,7 @@ extern "C" {
     /*
     Full name of the circuit element switch that the fuse controls. Defaults to MonitoredObj.
     */
-    DSS_CAPI_DLL void Fuses_Set_SwitchedObj(char* Value);
+    DSS_CAPI_DLL void Fuses_Set_SwitchedObj(const char* Value);
 
     /*
     Number of the terminal containing the switch controlled by the fuse.
@@ -1838,7 +1838,7 @@ extern "C" {
     /*
     Name of the TCCcurve object that determines fuse blowing.
     */
-    DSS_CAPI_DLL void Fuses_Set_TCCcurve(char* Value);
+    DSS_CAPI_DLL void Fuses_Set_TCCcurve(const char* Value);
 
     /*
     Multiplier or actual amps for the TCCcurve object. Defaults to 1.0.  Multipliy current values of TCC curve by this to get actual amps.
@@ -1970,7 +1970,7 @@ extern "C" {
     /*
     Sets a generator active by name.
     */
-    DSS_CAPI_DLL void Generators_Set_Name(char* Value);
+    DSS_CAPI_DLL void Generators_Set_Name(const char* Value);
 
     /*
     Voltage base for the active generator, kV
@@ -2083,7 +2083,7 @@ extern "C" {
     (API Extension)
     */
     DSS_CAPI_DLL char* Generators_Get_daily(void);
-    DSS_CAPI_DLL void Generators_Set_daily(char* Value);
+    DSS_CAPI_DLL void Generators_Set_daily(const char* Value);
 
     /*
     Name of the loadshape for a duty cycle simulation.
@@ -2091,7 +2091,7 @@ extern "C" {
     (API Extension)
     */
     DSS_CAPI_DLL char* Generators_Get_duty(void);
-    DSS_CAPI_DLL void Generators_Set_duty(char* Value);
+    DSS_CAPI_DLL void Generators_Set_duty(const char* Value);
 
     /*
     Name of yearly loadshape
@@ -2099,7 +2099,7 @@ extern "C" {
     (API Extension)
     */
     DSS_CAPI_DLL char* Generators_Get_Yearly(void);
-    DSS_CAPI_DLL void Generators_Set_Yearly(char* Value);
+    DSS_CAPI_DLL void Generators_Set_Yearly(const char* Value);
 
     /*
     Response to dispatch multipliers: Fixed=1 (dispatch multipliers do not apply), Variable=0 (follows curves).
@@ -2141,7 +2141,7 @@ extern "C" {
     (API Extension)
     */
     DSS_CAPI_DLL char* Generators_Get_Bus1(void);
-    DSS_CAPI_DLL void Generators_Set_Bus1(char* Value);
+    DSS_CAPI_DLL void Generators_Set_Bus1(const char* Value);
 
     /*
     Names of all GICSource Objects
@@ -2175,7 +2175,7 @@ extern "C" {
     /*
     Specify the name of the GICSource element to set it active.
     */
-    DSS_CAPI_DLL void GICSources_Set_Name(char* Value);
+    DSS_CAPI_DLL void GICSources_Set_Name(const char* Value);
 
     /*
     Number of Phases, this GICSource element.
@@ -2299,7 +2299,7 @@ extern "C" {
     /*
     Set Active ISOURCE by name
     */
-    DSS_CAPI_DLL void ISources_Set_Name(char* Value);
+    DSS_CAPI_DLL void ISources_Set_Name(const char* Value);
 
     /*
     Get the magnitude of the ISOURCE in amps
@@ -2345,7 +2345,7 @@ extern "C" {
     */
     DSS_CAPI_DLL char* LineCodes_Get_Name(void);
 
-    DSS_CAPI_DLL void LineCodes_Set_Name(char* Value);
+    DSS_CAPI_DLL void LineCodes_Set_Name(const char* Value);
 
     /*
     Flag denoting whether impedance data were entered in symmetrical components
@@ -2523,17 +2523,17 @@ extern "C" {
     */
     DSS_CAPI_DLL double Lines_Get_X1(void);
 
-    DSS_CAPI_DLL int32_t Lines_New(char* Name);
+    DSS_CAPI_DLL int32_t Lines_New(const char* Name);
 
     /*
     Name of bus for terminal 1.
     */
-    DSS_CAPI_DLL void Lines_Set_Bus1(char* Value);
+    DSS_CAPI_DLL void Lines_Set_Bus1(const char* Value);
 
     /*
     Name of bus for terminal 2.
     */
-    DSS_CAPI_DLL void Lines_Set_Bus2(char* Value);
+    DSS_CAPI_DLL void Lines_Set_Bus2(const char* Value);
 
     /*
     Length of line section in units compatible with the LineCode definition.
@@ -2543,12 +2543,12 @@ extern "C" {
     /*
     Name of LineCode object that defines the impedances.
     */
-    DSS_CAPI_DLL void Lines_Set_LineCode(char* Value);
+    DSS_CAPI_DLL void Lines_Set_LineCode(const char* Value);
 
     /*
     Specify the name of the Line element to set it active.
     */
-    DSS_CAPI_DLL void Lines_Set_Name(char* Value);
+    DSS_CAPI_DLL void Lines_Set_Name(const char* Value);
 
     /*
     Number of Phases, this Line element.
@@ -2663,7 +2663,7 @@ extern "C" {
     /*
     Line geometry code
     */
-    DSS_CAPI_DLL void Lines_Set_Geometry(char* Value);
+    DSS_CAPI_DLL void Lines_Set_Geometry(const char* Value);
 
     /*
     Earth return resistance value used to compute line impedances at power frequency
@@ -2737,7 +2737,7 @@ extern "C" {
     /*
     Line spacing code
     */
-    DSS_CAPI_DLL void Lines_Set_Spacing(char* Value);
+    DSS_CAPI_DLL void Lines_Set_Spacing(const char* Value);
 
     DSS_CAPI_DLL int32_t Lines_Get_Units(void);
 
@@ -2785,7 +2785,7 @@ extern "C" {
     /*
     Set active load by name.
     */
-    DSS_CAPI_DLL void Loads_Set_Name(char* Value);
+    DSS_CAPI_DLL void Loads_Set_Name(const char* Value);
 
     /*
     Set kV rating for active Load. For 2 or more phases set Line-Line kV. Else actual kV across terminals.
@@ -2970,17 +2970,17 @@ extern "C" {
 
     DSS_CAPI_DLL void Loads_Set_Class_(int32_t Value);
 
-    DSS_CAPI_DLL void Loads_Set_CVRcurve(char* Value);
+    DSS_CAPI_DLL void Loads_Set_CVRcurve(const char* Value);
 
     DSS_CAPI_DLL void Loads_Set_CVRvars(double Value);
 
     DSS_CAPI_DLL void Loads_Set_CVRwatts(double Value);
 
-    DSS_CAPI_DLL void Loads_Set_daily(char* Value);
+    DSS_CAPI_DLL void Loads_Set_daily(const char* Value);
 
-    DSS_CAPI_DLL void Loads_Set_duty(char* Value);
+    DSS_CAPI_DLL void Loads_Set_duty(const char* Value);
 
-    DSS_CAPI_DLL void Loads_Set_Growth(char* Value);
+    DSS_CAPI_DLL void Loads_Set_Growth(const char* Value);
 
     DSS_CAPI_DLL void Loads_Set_IsDelta(uint16_t Value);
 
@@ -3000,7 +3000,7 @@ extern "C" {
 
     DSS_CAPI_DLL void Loads_Set_Rneut(double Value);
 
-    DSS_CAPI_DLL void Loads_Set_Spectrum(char* Value);
+    DSS_CAPI_DLL void Loads_Set_Spectrum(const char* Value);
 
     DSS_CAPI_DLL void Loads_Set_Status(int32_t Value);
 
@@ -3016,7 +3016,7 @@ extern "C" {
 
     DSS_CAPI_DLL void Loads_Set_Xneut(double Value);
 
-    DSS_CAPI_DLL void Loads_Set_Yearly(char* Value);
+    DSS_CAPI_DLL void Loads_Set_Yearly(const char* Value);
 
     /*
     Array of 7 doubles with values for ZIPV property of the LOAD object
@@ -3059,7 +3059,7 @@ extern "C" {
     /*
     Set the active Loadshape by name
     */
-    DSS_CAPI_DLL void LoadShapes_Set_Name(char* Value);
+    DSS_CAPI_DLL void LoadShapes_Set_Name(const char* Value);
 
     /*
     Number of Loadshape objects currently defined in Loadshape collection
@@ -3170,7 +3170,7 @@ extern "C" {
     DSS_CAPI_DLL void LoadShapes_Set_MinInterval(double Value);
 
 
-    DSS_CAPI_DLL int32_t LoadShapes_New(char* Name);
+    DSS_CAPI_DLL int32_t LoadShapes_New(const char* Name);
 
     DSS_CAPI_DLL double LoadShapes_Get_PBase(void);
 
@@ -3249,7 +3249,7 @@ extern "C" {
     /*
     Set a meter to be active by name.
     */
-    DSS_CAPI_DLL void Meters_Set_Name(char* Value);
+    DSS_CAPI_DLL void Meters_Set_Name(const char* Value);
 
     /*
     Totals of all registers of all meters
@@ -3315,7 +3315,7 @@ extern "C" {
     /*
     Set Name of metered element
     */
-    DSS_CAPI_DLL void Meters_Set_MeteredElement(char* Value);
+    DSS_CAPI_DLL void Meters_Set_MeteredElement(const char* Value);
 
     /*
     set Number of Metered Terminal
@@ -3515,7 +3515,7 @@ extern "C" {
     /*
     Sets the active Monitor object by name
     */
-    DSS_CAPI_DLL void Monitors_Set_Name(char* Value);
+    DSS_CAPI_DLL void Monitors_Set_Name(const char* Value);
 
     /*
     Byte Array containing monitor stream values. Make sure a "save" is done first (standard solution modes do this automatically)
@@ -3603,7 +3603,7 @@ extern "C" {
     /*
     Full object name of element being monitored.
     */
-    DSS_CAPI_DLL void Monitors_Set_Element(char* Value);
+    DSS_CAPI_DLL void Monitors_Set_Element(const char* Value);
 
     /*
     Terminal number of element being monitored
@@ -3700,7 +3700,7 @@ extern "C" {
     /*
     String to be parsed. Loading this string resets the Parser to the beginning of the line. Then parse off the tokens in sequence.
     */
-    DSS_CAPI_DLL void Parser_Set_CmdString(char* Value);
+    DSS_CAPI_DLL void Parser_Set_CmdString(const char* Value);
 
     /*
     Get next token and return tag name (before = sign) if any. See AutoIncrement.
@@ -3740,7 +3740,7 @@ extern "C" {
     /*
     Set the characters used for White space in the command string.  Default is blank and Tab.
     */
-    DSS_CAPI_DLL void Parser_Set_WhiteSpace(char* Value);
+    DSS_CAPI_DLL void Parser_Set_WhiteSpace(const char* Value);
 
     /*
     Get String containing the the characters for Quoting in OpenDSS scripts. Matching pairs defined in EndQuote. Default is "'([{.
@@ -3755,12 +3755,12 @@ extern "C" {
     /*
     Set String containing the the characters for Quoting in OpenDSS scripts. Matching pairs defined in EndQuote. Default is "'([{.
     */
-    DSS_CAPI_DLL void Parser_Set_BeginQuote(char* Value);
+    DSS_CAPI_DLL void Parser_Set_BeginQuote(const char* Value);
 
     /*
     String containing characters, in order, that match the beginning quote characters in BeginQuote. Default is "')]}
     */
-    DSS_CAPI_DLL void Parser_Set_EndQuote(char* Value);
+    DSS_CAPI_DLL void Parser_Set_EndQuote(const char* Value);
 
     /*
     String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitesspace to separate tokens.
@@ -3770,7 +3770,7 @@ extern "C" {
     /*
     String defining hard delimiters used to separate token on the command string. Default is , and =. The = separates token name from token value. These override whitesspace to separate tokens.
     */
-    DSS_CAPI_DLL void Parser_Set_Delimiters(char* Value);
+    DSS_CAPI_DLL void Parser_Set_Delimiters(const char* Value);
 
     DSS_CAPI_DLL void Parser_ResetDelimiters(void);
 
@@ -3840,7 +3840,7 @@ extern "C" {
     */
     DSS_CAPI_DLL char* PDElements_Get_Name(void);
 
-    DSS_CAPI_DLL void PDElements_Set_Name(char* Value);
+    DSS_CAPI_DLL void PDElements_Set_Name(const char* Value);
 
     /*
     accummulated failure rate for this branch on downline
@@ -4138,7 +4138,7 @@ extern "C" {
     /*
     Set the name of the active PVSystem
     */
-    DSS_CAPI_DLL void PVSystems_Set_Name(char* Value);
+    DSS_CAPI_DLL void PVSystems_Set_Name(const char* Value);
 
     /*
     Get the present value of the Irradiance property in kW/sq-m
@@ -4191,7 +4191,7 @@ extern "C" {
     mode, the PVSystem element uses this loadshape to trigger State changes.
     */
     DSS_CAPI_DLL char* PVSystems_Get_daily(void);
-    DSS_CAPI_DLL void PVSystems_Set_daily(char* Value);
+    DSS_CAPI_DLL void PVSystems_Set_daily(const char* Value);
 
     /*
     Name of the load shape to use for duty cycle dispatch simulations such as
@@ -4199,7 +4199,7 @@ extern "C" {
     object. Typically would have time intervals of 1-5 seconds.
     */
     DSS_CAPI_DLL char* PVSystems_Get_duty(void);
-    DSS_CAPI_DLL void PVSystems_Set_duty(char* Value);
+    DSS_CAPI_DLL void PVSystems_Set_duty(const char* Value);
 
     /*
     Dispatch shape to use for yearly simulations. Must be previously defined
@@ -4208,7 +4208,7 @@ extern "C" {
     mode, the PVSystem element uses this loadshape to trigger State changes.
     */
     DSS_CAPI_DLL char* PVSystems_Get_yearly(void);
-    DSS_CAPI_DLL void PVSystems_Set_yearly(char* Value);
+    DSS_CAPI_DLL void PVSystems_Set_yearly(const char* Value);
 
     /*
     Temperature shape to use for daily simulations. Must be previously defined
@@ -4217,7 +4217,7 @@ extern "C" {
     with the Pmpp vs T curve.
     */
     DSS_CAPI_DLL char* PVSystems_Get_Tdaily(void);
-    DSS_CAPI_DLL void PVSystems_Set_Tdaily(char* Value);
+    DSS_CAPI_DLL void PVSystems_Set_Tdaily(const char* Value);
 
     /*
     Temperature shape to use for duty cycle dispatch simulations such as for
@@ -4229,7 +4229,7 @@ extern "C" {
     Units must agree with the Pmpp vs T curve.
     */
     DSS_CAPI_DLL char* PVSystems_Get_Tduty(void);
-    DSS_CAPI_DLL void PVSystems_Set_Tduty(char* Value);
+    DSS_CAPI_DLL void PVSystems_Set_Tduty(const char* Value);
 
     /*
     Temperature shape to use for yearly simulations. Must be previously defined
@@ -4239,7 +4239,7 @@ extern "C" {
     agree with the Pmpp vs T curve.
     */
     DSS_CAPI_DLL char* PVSystems_Get_Tyearly(void);
-    DSS_CAPI_DLL void PVSystems_Set_Tyearly(char* Value);
+    DSS_CAPI_DLL void PVSystems_Set_Tyearly(const char* Value);
     
     /*
     Gets/sets the rated max power of the PV array for 1.0 kW/sq-m irradiance and a user-selected array temperature of the active PVSystem.
@@ -4288,7 +4288,7 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t Reclosers_Get_Next(void);
 
-    DSS_CAPI_DLL void Reclosers_Set_Name(char* Value);
+    DSS_CAPI_DLL void Reclosers_Set_Name(const char* Value);
 
     /*
     Terminal number of Monitored object for the Recloser
@@ -4302,7 +4302,7 @@ extern "C" {
     */
     DSS_CAPI_DLL char* Reclosers_Get_SwitchedObj(void);
 
-    DSS_CAPI_DLL void Reclosers_Set_SwitchedObj(char* Value);
+    DSS_CAPI_DLL void Reclosers_Set_SwitchedObj(const char* Value);
 
     /*
     Full name of object this Recloser is monitoring.
@@ -4317,7 +4317,7 @@ extern "C" {
     /*
     Set monitored object by full name.
     */
-    DSS_CAPI_DLL void Reclosers_Set_MonitoredObj(char* Value);
+    DSS_CAPI_DLL void Reclosers_Set_MonitoredObj(const char* Value);
 
     DSS_CAPI_DLL void Reclosers_Set_SwitchedTerm(int32_t Value);
 
@@ -4601,12 +4601,12 @@ extern "C" {
     /*
     Name of a remote regulated bus, in lieu of LDC settings
     */
-    DSS_CAPI_DLL void RegControls_Set_MonitoredBus(char* Value);
+    DSS_CAPI_DLL void RegControls_Set_MonitoredBus(const char* Value);
 
     /*
     Sets a RegControl active by name
     */
-    DSS_CAPI_DLL void RegControls_Set_Name(char* Value);
+    DSS_CAPI_DLL void RegControls_Set_Name(const char* Value);
 
     /*
     PT ratio for voltage control settings
@@ -4646,7 +4646,7 @@ extern "C" {
     /*
     Name of the transformer this regulator controls
     */
-    DSS_CAPI_DLL void RegControls_Set_Transformer(char* Value);
+    DSS_CAPI_DLL void RegControls_Set_Transformer(const char* Value);
 
     /*
     First house voltage limit on PT secondary base.  Setting to 0 disables this function.
@@ -4702,14 +4702,14 @@ extern "C" {
     /*
     Set Relay active by name
     */
-    DSS_CAPI_DLL void Relays_Set_Name(char* Value);
+    DSS_CAPI_DLL void Relays_Set_Name(const char* Value);
 
     /*
     Full name of object this Relay is monitoring.
     */
     DSS_CAPI_DLL char* Relays_Get_MonitoredObj(void);
 
-    DSS_CAPI_DLL void Relays_Set_MonitoredObj(char* Value);
+    DSS_CAPI_DLL void Relays_Set_MonitoredObj(const char* Value);
 
     /*
     Number of terminal of monitored element that this Relay is monitoring.
@@ -4723,7 +4723,7 @@ extern "C" {
 
     DSS_CAPI_DLL void Relays_Set_MonitoredTerm(int32_t Value);
 
-    DSS_CAPI_DLL void Relays_Set_SwitchedObj(char* Value);
+    DSS_CAPI_DLL void Relays_Set_SwitchedObj(const char* Value);
 
     DSS_CAPI_DLL int32_t Relays_Get_SwitchedTerm(void);
 
@@ -4890,14 +4890,14 @@ extern "C" {
 
     DSS_CAPI_DLL void Sensors_Set_kWS(double* ValuePtr, int32_t ValueCount);
 
-    DSS_CAPI_DLL void Sensors_Set_MeteredElement(char* Value);
+    DSS_CAPI_DLL void Sensors_Set_MeteredElement(const char* Value);
 
     DSS_CAPI_DLL void Sensors_Set_MeteredTerminal(int32_t Value);
 
     /*
     Set the active Sensor by name.
     */
-    DSS_CAPI_DLL void Sensors_Set_Name(char* Value);
+    DSS_CAPI_DLL void Sensors_Set_Name(const char* Value);
 
     DSS_CAPI_DLL void Sensors_Set_PctError(double Value);
 
@@ -4978,7 +4978,7 @@ extern "C" {
     /*
     List of Buses or (File=xxxx) syntax for the AutoAdd solution mode.
     */
-    DSS_CAPI_DLL void Settings_Set_AutoBusList(char* Value);
+    DSS_CAPI_DLL void Settings_Set_AutoBusList(const char* Value);
 
     /*
     Per Unit maximum voltage for Emergency conditions.
@@ -5100,7 +5100,7 @@ extern "C" {
     /*
     Name of LoadShape object that serves as the source of price signal data for yearly simulations, etc.
     */
-    DSS_CAPI_DLL void Settings_Set_PriceCurve(char* Value);
+    DSS_CAPI_DLL void Settings_Set_PriceCurve(const char* Value);
 
     /*
     Price Signal for the Circuit
@@ -5270,7 +5270,7 @@ extern "C" {
     /*
     Load-Duration Curve name for LD modes
     */
-    DSS_CAPI_DLL void Solution_Set_LDCurve(char* Value);
+    DSS_CAPI_DLL void Solution_Set_LDCurve(const char* Value);
 
     /*
     Percent default  annual load growth rate
@@ -5356,12 +5356,12 @@ extern "C" {
     /*
     Default daily load shape (defaults to "Default")
     */
-    DSS_CAPI_DLL void Solution_Set_DefaultDaily(char* Value);
+    DSS_CAPI_DLL void Solution_Set_DefaultDaily(const char* Value);
 
     /*
     Default Yearly load shape (defaults to "Default")
     */
-    DSS_CAPI_DLL void Solution_Set_DefaultYearly(char* Value);
+    DSS_CAPI_DLL void Solution_Set_DefaultYearly(const char* Value);
 
     /*
     Array of strings containing the Event Log
@@ -5613,12 +5613,12 @@ extern "C" {
     /*
     Sets a SwtControl active by Name.
     */
-    DSS_CAPI_DLL void SwtControls_Set_Name(char* Value);
+    DSS_CAPI_DLL void SwtControls_Set_Name(const char* Value);
 
     /*
     Full name of the switched element.
     */
-    DSS_CAPI_DLL void SwtControls_Set_SwitchedObj(char* Value);
+    DSS_CAPI_DLL void SwtControls_Set_SwitchedObj(const char* Value);
 
     /*
     Terminal number where the switch is located on the SwitchedObj
@@ -5654,7 +5654,7 @@ extern "C" {
     /*
     Input command string for the DSS.
     */
-    DSS_CAPI_DLL void Text_Set_Command(char* Value);
+    DSS_CAPI_DLL void Text_Set_Command(const char* Value);
 
     /*
     Result string for the last command.
@@ -5729,7 +5729,7 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t Topology_Get_ParallelBranch(void);
 
-    DSS_CAPI_DLL void Topology_Set_BranchName(char* Value);
+    DSS_CAPI_DLL void Topology_Set_BranchName(const char* Value);
 
     /*
     Array of all isolated load names.
@@ -5765,7 +5765,7 @@ extern "C" {
     /*
     Set the active branch to one containing this bus, return index or 0 if not found
     */
-    DSS_CAPI_DLL void Topology_Set_BusName(char* Value);
+    DSS_CAPI_DLL void Topology_Set_BusName(const char* Value);
 
     /*
     Array of strings with all Transformer names in the active circuit.
@@ -5899,7 +5899,7 @@ extern "C" {
     /*
     Sets a Transformer active by Name.
     */
-    DSS_CAPI_DLL void Transformers_Set_Name(char* Value);
+    DSS_CAPI_DLL void Transformers_Set_Name(const char* Value);
 
     /*
     Active Winding number of tap steps betwein MinTap and MaxTap.
@@ -5934,7 +5934,7 @@ extern "C" {
     /*
     Name of an XfrmCode that supplies electircal parameters for this Transformer.
     */
-    DSS_CAPI_DLL void Transformers_Set_XfmrCode(char* Value);
+    DSS_CAPI_DLL void Transformers_Set_XfmrCode(const char* Value);
 
     /*
     Percent reactance between windings 1 and 2, on winding 1 kVA base. Use for 2-winding or 3-winding transformers.
@@ -6045,7 +6045,7 @@ extern "C" {
     /*
     Set Active VSOURCE by Name
     */
-    DSS_CAPI_DLL void Vsources_Set_Name(char* Value);
+    DSS_CAPI_DLL void Vsources_Set_Name(const char* Value);
 
     /*
     Source Voltage in kV
@@ -6130,7 +6130,7 @@ extern "C" {
     /*
     Get Name of active XYCurve Object
     */
-    DSS_CAPI_DLL void XYCurves_Set_Name(char* Value);
+    DSS_CAPI_DLL void XYCurves_Set_Name(const char* Value);
 
     /*
     Get/Set Number of points in X-Y curve
@@ -6252,25 +6252,25 @@ extern "C" {
     Edit String for RemoveBranches functions
     */
     DSS_CAPI_DLL char *ReduceCkt_Get_EditString(void);
-    DSS_CAPI_DLL void ReduceCkt_Set_EditString(char *Value);
+    DSS_CAPI_DLL void ReduceCkt_Set_EditString(const char* Value);
 
     /*
     Start element for Remove Branch function
     */
     DSS_CAPI_DLL char *ReduceCkt_Get_StartPDElement(void);
-    DSS_CAPI_DLL void ReduceCkt_Set_StartPDElement(char *Value);
+    DSS_CAPI_DLL void ReduceCkt_Set_StartPDElement(const char* Value);
 
     /*
     Name of Energymeter to use for reduction
     */
     DSS_CAPI_DLL char *ReduceCkt_Get_EnergyMeter(void);
-    DSS_CAPI_DLL void ReduceCkt_Set_EnergyMeter(char *Value);
+    DSS_CAPI_DLL void ReduceCkt_Set_EnergyMeter(const char* Value);
 
     /*
     Save present (reduced) circuit
     Filename is listed in the Text Result interface
     */
-    DSS_CAPI_DLL void ReduceCkt_SaveCircuit(char *CktName);
+    DSS_CAPI_DLL void ReduceCkt_SaveCircuit(const char* CktName);
 
     /*
     Do Default Reduction algorithm
@@ -6331,7 +6331,7 @@ extern "C" {
     /*
     Sets a Storage active by name.
     */
-    DSS_CAPI_DLL void Storages_Set_Name(char* Value);
+    DSS_CAPI_DLL void Storages_Set_Name(const char* Value);
 
     /*
     Array of Names of all Storage energy meter registers
@@ -6376,7 +6376,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t CNData_Get_First(void);
     DSS_CAPI_DLL int32_t CNData_Get_Next(void);
     DSS_CAPI_DLL char *CNData_Get_Name(void);
-    DSS_CAPI_DLL void CNData_Set_Name(char *Value);
+    DSS_CAPI_DLL void CNData_Set_Name(const char* Value);
     DSS_CAPI_DLL void CNData_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_DLL void CNData_Get_AllNames_GR(void);
     DSS_CAPI_DLL double CNData_Get_Rdc(void);
@@ -6420,7 +6420,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t LineGeometries_Get_First(void);
     DSS_CAPI_DLL int32_t LineGeometries_Get_Next(void);
     DSS_CAPI_DLL char* LineGeometries_Get_Name(void);
-    DSS_CAPI_DLL void LineGeometries_Set_Name(char* Value);
+    DSS_CAPI_DLL void LineGeometries_Set_Name(const char* Value);
     DSS_CAPI_DLL int32_t LineGeometries_Get_Nconds(void);
     DSS_CAPI_DLL void LineGeometries_Set_Nconds(int32_t Value);
     DSS_CAPI_DLL int32_t LineGeometries_Get_Phases(void);
@@ -6459,7 +6459,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t LineSpacings_Get_First(void);
     DSS_CAPI_DLL int32_t LineSpacings_Get_Next(void);
     DSS_CAPI_DLL char* LineSpacings_Get_Name(void);
-    DSS_CAPI_DLL void LineSpacings_Set_Name(char* Value);
+    DSS_CAPI_DLL void LineSpacings_Set_Name(const char* Value);
     DSS_CAPI_DLL int32_t LineSpacings_Get_Nconds(void);
     DSS_CAPI_DLL void LineSpacings_Set_Nconds(int32_t Value);
     DSS_CAPI_DLL int32_t LineSpacings_Get_Phases(void);
@@ -6481,7 +6481,7 @@ extern "C" {
     DSS_CAPI_DLL void Reactors_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_DLL void Reactors_Get_AllNames_GR(void);
     DSS_CAPI_DLL char* Reactors_Get_Name(void);
-    DSS_CAPI_DLL void Reactors_Set_Name(char *Value);
+    DSS_CAPI_DLL void Reactors_Set_Name(const char* Value);
     DSS_CAPI_DLL int32_t Reactors_Get_First(void);
     DSS_CAPI_DLL int32_t Reactors_Get_Next(void);
     DSS_CAPI_DLL int32_t Reactors_Get_Count(void);
@@ -6499,8 +6499,8 @@ extern "C" {
     DSS_CAPI_DLL void Reactors_Set_LmH(double Value);
     DSS_CAPI_DLL char* Reactors_Get_Bus1(void);
     DSS_CAPI_DLL char* Reactors_Get_Bus2(void);
-    DSS_CAPI_DLL void Reactors_Set_Bus1(char* Value);
-    DSS_CAPI_DLL void Reactors_Set_Bus2(char* Value);
+    DSS_CAPI_DLL void Reactors_Set_Bus1(const char* Value);
+    DSS_CAPI_DLL void Reactors_Set_Bus2(const char* Value);
     DSS_CAPI_DLL double Reactors_Get_R(void);
     DSS_CAPI_DLL void Reactors_Set_R(double Value);
     DSS_CAPI_DLL double Reactors_Get_X(void);
@@ -6508,9 +6508,9 @@ extern "C" {
     DSS_CAPI_DLL double Reactors_Get_Rp(void);
     DSS_CAPI_DLL void Reactors_Set_Rp(double Value);
     DSS_CAPI_DLL char* Reactors_Get_RCurve(void);
-    DSS_CAPI_DLL void Reactors_Set_RCurve(char* Value);
+    DSS_CAPI_DLL void Reactors_Set_RCurve(const char* Value);
     DSS_CAPI_DLL char* Reactors_Get_LCurve(void);
-    DSS_CAPI_DLL void Reactors_Set_LCurve(char* Value);
+    DSS_CAPI_DLL void Reactors_Set_LCurve(const char* Value);
     DSS_CAPI_DLL void Reactors_Get_Rmatrix(double** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_DLL void Reactors_Get_Rmatrix_GR(void);
     DSS_CAPI_DLL void Reactors_Set_Rmatrix(double* ValuePtr, int32_t ValueCount);
@@ -6535,7 +6535,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t TSData_Get_First(void);
     DSS_CAPI_DLL int32_t TSData_Get_Next(void);
     DSS_CAPI_DLL char *TSData_Get_Name(void);
-    DSS_CAPI_DLL void TSData_Set_Name(char *Value);
+    DSS_CAPI_DLL void TSData_Set_Name(const char* Value);
     DSS_CAPI_DLL void TSData_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_DLL void TSData_Get_AllNames_GR(void);
     DSS_CAPI_DLL double TSData_Get_Rdc(void);
@@ -6577,7 +6577,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t WireData_Get_First(void);
     DSS_CAPI_DLL int32_t WireData_Get_Next(void);
     DSS_CAPI_DLL char* WireData_Get_Name(void);
-    DSS_CAPI_DLL void WireData_Set_Name(char* Value);
+    DSS_CAPI_DLL void WireData_Set_Name(const char* Value);
     DSS_CAPI_DLL void WireData_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_DLL void WireData_Get_AllNames_GR(void);
     DSS_CAPI_DLL double WireData_Get_Rdc(void);
@@ -6796,7 +6796,7 @@ extern "C" {
     DSS_CAPI_DLL void YMatrix_Set_SolverOptions(uint64_t opts);
     DSS_CAPI_DLL uint64_t YMatrix_Get_SolverOptions(void);
     
-    DSS_CAPI_DLL void Text_CommandBlock(char *Value);
+    DSS_CAPI_DLL void Text_CommandBlock(const char* Value);
     DSS_CAPI_DLL void Text_CommandArray(char** ValuePtr, int32_t ValueCount);
 
     /*
@@ -6807,7 +6807,7 @@ extern "C" {
     
     (API Extension)
     */
-    DSS_CAPI_DLL void ZIP_Open(char* FileName);
+    DSS_CAPI_DLL void ZIP_Open(const char* FileName);
 
     /*
     Runs a "Redirect" command inside the current (open) ZIP file.
@@ -6817,14 +6817,14 @@ extern "C" {
 
     (API Extension)
     */
-    DSS_CAPI_DLL void ZIP_Redirect(char* FileInZip);
+    DSS_CAPI_DLL void ZIP_Redirect(const char* FileInZip);
 
     /*
     Check if the given path name is present in the current ZIP file.
     
     (API Extension)
     */
-    DSS_CAPI_DLL int16_t ZIP_Contains(char* Name);
+    DSS_CAPI_DLL uint16_t ZIP_Contains(const char* Name);
     
     /*
     List of strings consisting of all names match the regular expression provided in regexp.
@@ -6835,7 +6835,7 @@ extern "C" {
 
     (API Extension)
     */
-    DSS_CAPI_DLL void ZIP_List(char*** ResultPtr, int32_t* ResultCount, char* RegExp);
+    DSS_CAPI_DLL void ZIP_List(char*** ResultPtr, int32_t *ResultCount, const char* RegExp);
 
     /*
     Extracts the contents of the file "FileName" from the current (open) ZIP file.
@@ -6843,9 +6843,9 @@ extern "C" {
 
     (API Extension)
     */
-    DSS_CAPI_DLL void ZIP_Extract(int8_t** ResultPtr, int32_t* ResultCount, char* FileName);
+    DSS_CAPI_DLL void ZIP_Extract(int8_t** ResultPtr, int32_t* ResultCount, const char* FileName);
 
-    DSS_CAPI_DLL void ZIP_Extract_GR(char* FileName);
+    DSS_CAPI_DLL void ZIP_Extract_GR(const char* FileName);
 
     /*
     Closes the current open ZIP file.
@@ -6864,14 +6864,14 @@ extern "C" {
     */
     DSS_CAPI_DLL char* DSS_ExtractSchema(void *ctx);
 
-    DSS_CAPI_DLL void DSS_Dispose_String(char *S);
+    DSS_CAPI_DLL void DSS_Dispose_String(char* S);
     DSS_CAPI_DLL void DSS_Dispose_PPointer(void*** p);
 
-    DSS_CAPI_DLL void* Obj_New(void* ctx, int32_t ClsIdx, char* Name, int16_t Activate, int16_t BeginEdit);
+    DSS_CAPI_DLL void* Obj_New(void* ctx, int32_t ClsIdx, const char* Name, uint16_t Activate, uint16_t BeginEdit);
     DSS_CAPI_DLL int32_t Obj_GetCount(void* ctx, int32_t ClsIdx);
-    DSS_CAPI_DLL void* Obj_GetHandleByName(void* ctx, int32_t ClsIdx, char* Name);
+    DSS_CAPI_DLL void* Obj_GetHandleByName(void* ctx, int32_t ClsIdx, const char* Name);
     DSS_CAPI_DLL void* Obj_GetHandleByIdx(void* ctx, int32_t ClsIdx, int32_t Idx);
-    DSS_CAPI_DLL int16_t Obj_PropertySideEffects(void *obj, int32_t Index, int32_t PreviousInt);
+    DSS_CAPI_DLL uint16_t Obj_PropertySideEffects(void *obj, int32_t Index, int32_t PreviousInt);
     DSS_CAPI_DLL void Obj_BeginEdit(void *obj);
     DSS_CAPI_DLL void Obj_EndEdit(void *obj, int32_t NumChanges);
     DSS_CAPI_DLL int32_t Obj_GetNumProperties(void *obj);
@@ -6896,7 +6896,7 @@ extern "C" {
     If AllLists is true, other internal lists of OpenDSS are also
     updated (implies slow/linear searches).
     */
-    DSS_CAPI_DLL void Obj_Activate(void *obj, int16_t AllLists);
+    DSS_CAPI_DLL void Obj_Activate(void *obj, uint16_t AllLists);
 
     /*
     Returns the pointer to the internal property fill sequence.
@@ -6919,15 +6919,15 @@ extern "C" {
     DSS_CAPI_DLL void Obj_GetStringArray(char*** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
     DSS_CAPI_DLL void Obj_GetObjectArray(void*** ResultPtr, int32_t* ResultCount, void *obj, int32_t Index);
 
-    DSS_CAPI_DLL void Obj_SetAsString(void *obj, int32_t Index, char* Value);
+    DSS_CAPI_DLL void Obj_SetAsString(void *obj, int32_t Index, const char* Value);
     DSS_CAPI_DLL void Obj_SetFloat64(void *obj, int32_t Index, double Value);
     DSS_CAPI_DLL void Obj_SetInt32(void *obj, int32_t Index, int32_t Value);
-    DSS_CAPI_DLL void Obj_SetString(void *obj, int32_t Index, char* Value);
+    DSS_CAPI_DLL void Obj_SetString(void *obj, int32_t Index, const char* Value);
     DSS_CAPI_DLL void Obj_SetObject(void *obj, int32_t Index, void* Value);
     
     DSS_CAPI_DLL void Obj_SetFloat64Array(void *obj, int32_t Index, double* Value, int32_t ValueCount);
     DSS_CAPI_DLL void Obj_SetInt32Array(void *obj, int32_t Index, int32_t* Value, int32_t ValueCount);
-    DSS_CAPI_DLL void Obj_SetStringArray(void *obj, int32_t Index, char** Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Obj_SetStringArray(void *obj, int32_t Index, const char** Value, int32_t ValueCount);
     DSS_CAPI_DLL void Obj_SetObjectArray(void *obj, int32_t Index, void **Value, int32_t ValueCount);
 
     DSS_CAPI_DLL void Batch_Dispose(void **batch);
@@ -6935,9 +6935,9 @@ extern "C" {
     DSS_CAPI_DLL void Batch_EndEdit(void **batch, int32_t batchSize, int32_t numEdits);
     DSS_CAPI_DLL void Batch_GetPropSeq(int32_t** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize);
 
-    DSS_CAPI_DLL void Batch_CreateFromNew(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsid, char** names, int32_t count, int16_t BeginEdit);
+    DSS_CAPI_DLL void Batch_CreateFromNew(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsid, const char** names, int32_t count, uint16_t BeginEdit);
     DSS_CAPI_DLL void Batch_CreateByClass(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsidx);
-    DSS_CAPI_DLL void Batch_CreateByRegExp(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsidx, char* re);
+    DSS_CAPI_DLL void Batch_CreateByRegExp(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsidx, const char* re);
     DSS_CAPI_DLL void Batch_CreateByIndex(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t clsidx, int32_t* Value, int32_t ValueCount);
     DSS_CAPI_DLL void Batch_CreateByInt32Property(void* ctx, void*** ResultPtr, int32_t* ResultCount, int32_t ClsIdx, int32_t idx, int32_t value);
 
@@ -6948,40 +6948,40 @@ extern "C" {
 
     DSS_CAPI_DLL void Batch_GetObject(void*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, int32_t Index);
 
-    // DSS_CAPI_DLL void Batch_SetAsString(void **batch, int32_t batchSize, int32_t Index, char* Value);
+    // DSS_CAPI_DLL void Batch_SetAsString(void **batch, int32_t batchSize, int32_t Index, const char* Value);
     DSS_CAPI_DLL void Batch_Float64(void **batch, int32_t batchSize, int32_t Index, int32_t Operation, double Value);
     DSS_CAPI_DLL void Batch_Int32(void **batch, int32_t batchSize, int32_t Index, int32_t Operation, int32_t Value);
-    DSS_CAPI_DLL void Batch_SetString(void **batch, int32_t batchSize, int32_t Index, char* Value);
-    DSS_CAPI_DLL void Batch_SetObject(void **batch, int32_t batchSize, int32_t Index, void* Value);
+    DSS_CAPI_DLL void Batch_SetString(void **batch, int32_t batchSize, int32_t Index, const char* Value);
+    DSS_CAPI_DLL void Batch_SetObject(void **batch, int32_t batchSize, int32_t Index, const void *Value);
 
     DSS_CAPI_DLL void Batch_SetFloat64Array(void **batch, int32_t batchSize, int32_t Index, double* Value);
     DSS_CAPI_DLL void Batch_SetInt32Array(void **batch, int32_t batchSize, int32_t Index, int32_t* Value);
-    DSS_CAPI_DLL void Batch_SetStringArray(void **batch, int32_t batchSize, int32_t Index, char** Value);
-    DSS_CAPI_DLL void Batch_SetObjectArray(void **batch, int32_t batchSize, int32_t Index, void** Value);
+    DSS_CAPI_DLL void Batch_SetStringArray(void **batch, int32_t batchSize, int32_t Index, const char** Value);
+    DSS_CAPI_DLL void Batch_SetObjectArray(void **batch, int32_t batchSize, int32_t Index, const void** Value);
 
-    DSS_CAPI_DLL void Batch_CreateFromNewS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname, char** names, int32_t count, int16_t BeginEdit);
-    DSS_CAPI_DLL void Batch_CreateByClassS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname);
-    DSS_CAPI_DLL void Batch_CreateByRegExpS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname, char* re);
-    DSS_CAPI_DLL void Batch_CreateByIndexS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname, int32_t* Value, int32_t ValueCount);
-    DSS_CAPI_DLL void Batch_CreateByInt32PropertyS(void* ctx, void*** ResultPtr, int32_t* ResultCount, char* clsname, char* name, int32_t value);
+    DSS_CAPI_DLL void Batch_CreateFromNewS(void* ctx, void*** ResultPtr, int32_t* ResultCount, const char* clsname, const char** names, int32_t count, uint16_t BeginEdit);
+    DSS_CAPI_DLL void Batch_CreateByClassS(void* ctx, void*** ResultPtr, int32_t* ResultCount, const char* clsname);
+    DSS_CAPI_DLL void Batch_CreateByRegExpS(void* ctx, void*** ResultPtr, int32_t* ResultCount, const char* clsname, const char* re);
+    DSS_CAPI_DLL void Batch_CreateByIndexS(void* ctx, void*** ResultPtr, int32_t* ResultCount, const char* clsname, int32_t* Value, int32_t ValueCount);
+    DSS_CAPI_DLL void Batch_CreateByInt32PropertyS(void* ctx, void*** ResultPtr, int32_t* ResultCount, const char* clsname, const char* Name, int32_t value);
 
-    DSS_CAPI_DLL void Batch_GetFloat64S(double** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
-    DSS_CAPI_DLL void Batch_GetInt32S(int32_t** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
-    DSS_CAPI_DLL void Batch_GetStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
-    DSS_CAPI_DLL void Batch_GetAsStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
+    DSS_CAPI_DLL void Batch_GetFloat64S(double** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, const char* Name);
+    DSS_CAPI_DLL void Batch_GetInt32S(int32_t** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, const char* Name);
+    DSS_CAPI_DLL void Batch_GetStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, const char* Name);
+    DSS_CAPI_DLL void Batch_GetAsStringS(char*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, const char* Name);
 
-    DSS_CAPI_DLL void Batch_GetObjectS(void*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, char* Name);
+    DSS_CAPI_DLL void Batch_GetObjectS(void*** ResultPtr, int32_t* ResultCount, void **batch, int32_t batchSize, const char* Name);
 
-    // DSS_CAPI_DLL void Batch_SetAsStringS(void **batch, int32_t batchSize, char* Name, char* Value);
-    DSS_CAPI_DLL void Batch_Float64S(void **batch, int32_t batchSize, char* Name, int32_t Operation, double Value);
-    DSS_CAPI_DLL void Batch_Int32S(void **batch, int32_t batchSize, char* Name, int32_t Operation, int32_t Value);
-    DSS_CAPI_DLL void Batch_SetStringS(void **batch, int32_t batchSize, char* Name, char* Value);
-    DSS_CAPI_DLL void Batch_SetObjectS(void **batch, int32_t batchSize, char* Name, void* Value);
+    // DSS_CAPI_DLL void Batch_SetAsStringS(void **batch, int32_t batchSize, const char* Name, const char* Value);
+    DSS_CAPI_DLL void Batch_Float64S(void **batch, int32_t batchSize, const char* Name, int32_t Operation, double Value);
+    DSS_CAPI_DLL void Batch_Int32S(void **batch, int32_t batchSize, const char* Name, int32_t Operation, int32_t Value);
+    DSS_CAPI_DLL void Batch_SetStringS(void **batch, int32_t batchSize, const char* Name, const char* Value);
+    DSS_CAPI_DLL void Batch_SetObjectS(void **batch, int32_t batchSize, const char* Name, const void* Value);
 
-    DSS_CAPI_DLL void Batch_SetFloat64ArrayS(void **batch, int32_t batchSize, char* Name, double* Value);
-    DSS_CAPI_DLL void Batch_SetInt32ArrayS(void **batch, int32_t batchSize, char* Name, int32_t* Value);
-    DSS_CAPI_DLL void Batch_SetStringArrayS(void **batch, int32_t batchSize, char* Name, char** Value);
-    DSS_CAPI_DLL void Batch_SetObjectArrayS(void **batch, int32_t batchSize, char* Name, void** Value);
+    DSS_CAPI_DLL void Batch_SetFloat64ArrayS(void **batch, int32_t batchSize, const char* Name, double* Value);
+    DSS_CAPI_DLL void Batch_SetInt32ArrayS(void **batch, int32_t batchSize, const char* Name, int32_t* Value);
+    DSS_CAPI_DLL void Batch_SetStringArrayS(void **batch, int32_t batchSize, const char* Name, const char** Value);
+    DSS_CAPI_DLL void Batch_SetObjectArrayS(void **batch, int32_t batchSize, const char* Name, const void** Value);
 
     /*
     `DSS_BeginPascalThread` can be used to start a new thread from the Pascal side.
