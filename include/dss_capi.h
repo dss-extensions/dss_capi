@@ -5117,6 +5117,19 @@ extern "C" {
     DSS_CAPI_DLL void Settings_Set_LoadsTerminalCheck(uint16_t Value);
 
     /*
+    Controls whether `First`/`Next` iteration includes or skips disabled circuit elements.
+    The default behavior from OpenDSS is to skip those. The user can still activate the element by name or index.
+    
+    The default value for IterateDisabled is 0, keeping the original behavior.
+    Set it to 1 (or `True`) to include disabled elements.
+    Other numeric values are reserved for other potential behaviors.
+    
+    (API Extension)
+    */
+    DSS_CAPI_DLL int32_t Settings_Get_IterateDisabled(void);
+    DSS_CAPI_DLL void Settings_Set_IterateDisabled(int32_t Value);
+
+    /*
     Set the Frequency for next solution
     */
     DSS_CAPI_DLL double Solution_Get_Frequency(void);
