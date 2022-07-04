@@ -711,7 +711,7 @@ begin
     New(ThreadData);
     ThreadData^.Func := TCDECLThreadFunc(func);
     ThreadData^.Data := paramptr;
-    Result := BeginThread(@C2P_Translator, ThreadData);
+    Result := PtrUInt(BeginThread(@C2P_Translator, ThreadData));
 end;
 
 procedure DSS_WaitPascalThread(handle: PtrUInt); CDECL;
