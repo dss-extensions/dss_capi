@@ -34,7 +34,8 @@ interface
 uses
     CAPI_Utils,
     CAPI_Types,
-    DSSObject;
+    DSSObject,
+    fpjson;
 
 //TODO: decise if we want to expose the metadata (property index, name and type) now or later
 
@@ -71,6 +72,7 @@ procedure Obj_GetFloat64Array(var ResultPtr: PDouble; ResultCount: PAPISize; obj
 procedure Obj_GetInt32Array(var ResultPtr: PInteger; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
 procedure Obj_GetStringArray(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
 procedure Obj_GetObjectArray(var ResultPtr: PPointer; ResultCount: PAPISize; obj: TDSSObject; Index: Integer); CDECL;
+function Obj_ToJSON(obj: TDSSObject; joptions: Integer): PAnsiChar; CDECL;
 
 procedure Obj_SetAsString(obj: TDSSObject; Index: Integer; Value: PAnsiChar); CDECL;
 procedure Obj_SetFloat64(obj: TDSSObject; Index: Integer; Value: Double); CDECL;
@@ -83,6 +85,9 @@ procedure Obj_SetInt32Array(obj: TDSSObject; Index: Integer; Value: PInteger; Va
 procedure Obj_SetStringArray(obj: TDSSObject; Index: Integer; Value: PPAnsiChar; ValueCount: Integer); CDECL;
 procedure Obj_SetObjectArray(obj: TDSSObject; Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer); CDECL;
 
+// internal functions
+function Obj_ToJSON_(obj: TDSSObject; joptions: Integer): String;
+function Obj_ToJSONData(obj: TDSSObject; joptions: Integer): TJSONData;
 
 // Batch: creation and state setup
 procedure Batch_CreateFromNew(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Names: PPAnsiChar; Count: Integer; BeginEdit: TAPIBoolean); CDECL;
@@ -96,6 +101,8 @@ procedure Batch_CreateByClass(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; Re
 procedure Batch_CreateByRegExp(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; clsIdx: Integer; re: PAnsiChar); CDECL;
 procedure Batch_CreateByIndex(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Value: PInteger; ValueCount: Integer); CDECL;
 procedure Batch_CreateByInt32Property(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; propidx: Integer; value: Integer); CDECL;
+
+function Batch_ToJSON(batch: TDSSObjectPtr; batchSize: Integer; joptions: Integer): PAnsiChar; CDECL;
 
 procedure Batch_GetFloat64(var ResultPtr: PDouble; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
 procedure Batch_GetInt32(var ResultPtr: PInteger; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer; Index: Integer); CDECL;
@@ -143,7 +150,6 @@ procedure Batch_SetObjectArrayS(batch: TDSSObjectPtr; batchSize: Integer; Name: 
 implementation
 
 uses
-    fpjson,
     HashList,    
     CAPI_metadata,
     StrUtils,
@@ -661,6 +667,76 @@ begin
     obj.GetObjects(Index, ResultPtr, ResultCount);
 end;
 
+function Obj_ToJSONData(obj: TDSSObject; joptions: Integer): TJSONData;
+var 
+    iprop: Integer;
+    jvalue: TJSONData = NIL;
+    cls: TDSSClass;
+begin
+    Result := NIL;
+    if obj = NIL then
+        Exit;
+
+    cls := obj.ParentClass;
+    with obj, cls do
+    begin
+        Result := TJSONObject.Create(['DSSClass', cls.Name, 'name', obj.Name]);
+        with Result as TJSONObject do
+        begin
+            if (joptions and Integer(DSSJSONOptions.Full)) = 0 then
+            begin
+                // Return only filled properties
+                iProp := GetNextPropertySet(-9999999);
+                while iProp > 0 do
+                begin
+                    if GetObjPropertyJSONValue(Pointer(obj), iProp, joptions, jvalue) then
+                        Add(PropertyName[iProp], jvalue);
+
+                    iProp := GetNextPropertySet(iProp);
+                end;
+            end
+            else
+            begin
+                // Return all properties
+                for iprop := 1 to NumProperties do
+                begin
+                    if ((Integer(DSSJSONOptions.SkipRedundant) and joptions) <> 0) and (TPropertyFlag.Redundant in PropertyFlags[iprop]) then
+                        continue;
+
+                    if GetObjPropertyJSONValue(Pointer(obj), iProp, joptions, jvalue) then
+                        Add(PropertyName[iProp], jvalue);
+                end;
+            end;
+        end;
+    end;
+end;
+
+function Obj_ToJSON_(obj: TDSSObject; joptions: Integer): String;
+var 
+    json: TJSONData = NIL;
+begin
+    Result := '';
+    if obj = NIL then
+        Exit;
+
+    try
+        json := Obj_ToJSONData(obj, joptions);
+        if json <> NIL then
+        begin
+            if (Integer(DSSJSONOptions.Pretty) and joptions) <> 0 then
+                Result := json.FormatJSON([], 2)
+            else
+                Result := json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0);
+        end;
+    finally
+        FreeAndNil(json);
+    end;
+end;
+
+function Obj_ToJSON(obj: TDSSObject; joptions: Integer): PAnsiChar; CDECL;
+begin
+    Result := DSS_CopyStringAsPChar(Obj_ToJSON_(obj, joptions))
+end;
 
 //------------------------------------------------------------------------------
 
@@ -932,6 +1008,44 @@ begin
             inc(ResultCount[0]);
         end;
         inc(objlist);
+    end;
+end;
+
+function Batch_ToJSON(batch: TDSSObjectPtr; batchSize: Integer; joptions: Integer): PAnsiChar; CDECL;
+var
+    json: TJSONArray = NIL;
+    i: Integer;
+begin
+    Result := NIL;
+    try
+        json := TJSONArray.Create([]);
+        if ((joptions and Integer(DSSJSONOptions.ExcludeDisabled)) = 0) or not (batch^ is TDSSCktElement) then
+        begin
+            for i := 1 to batchSize do
+            begin
+                json.Add(Obj_ToJSONData(batch^, joptions));
+                inc(batch);
+            end;
+        end
+        else
+        begin
+            for i := 1 to batchSize do
+            begin
+                if TDSSCktElement(batch^).Enabled then
+                    json.Add(Obj_ToJSONData(batch^, joptions));
+
+                inc(batch);
+            end;
+        end;
+        if json <> NIL then
+        begin
+            if (Integer(DSSJSONOptions.Pretty) and joptions) <> 0 then
+                Result := DSS_CopyStringAsPChar(json.FormatJSON([], 2))
+            else
+                Result := DSS_CopyStringAsPChar(json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
+        end;
+    finally
+        FreeAndNil(json);
     end;
 end;
 

@@ -10,6 +10,7 @@ procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount
 procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
 function DSSElement_Get_Name(): PAnsiChar; CDECL;
 function DSSElement_Get_NumProperties(): Integer; CDECL;
+function DSSElement_ToJSON(Options: Integer): PAnsiChar; CDECL;
 
 implementation
 
@@ -18,7 +19,8 @@ uses
     DSSGlobals,
     Sysutils,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    CAPI_Obj;
 
 procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
@@ -66,6 +68,15 @@ begin
         
     with DSSPrime.ActiveDSSObject do
         Result := ParentClass.NumProperties;
+end;
+//------------------------------------------------------------------------------
+function DSSElement_ToJSON(Options: Integer): PAnsiChar; CDECL;
+begin
+    Result := NIL;
+    if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSObject = NIL) then
+        Exit;
+
+    Result := DSS_GetAsPAnsiChar(DSSPrime, Obj_ToJSON_(DSSPrime.ActiveDSSObject, options));
 end;
 //------------------------------------------------------------------------------
 end.

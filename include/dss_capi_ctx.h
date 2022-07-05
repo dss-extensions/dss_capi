@@ -132,6 +132,18 @@ extern "C" {
     DSS_CAPI_DLL char* ctx_ActiveClass_Get_ActiveClassParent(void* ctx);
 
     /*
+    Returns the data (as a list) of all elements from the active class as a JSON-encoded string.
+
+    The `options` parameter contains bit-flags to toggle specific features.
+    See `Obj_ToJSON` for more. 
+    
+    Additionally, the `ExcludeDisabled` flag can be used to excluded disabled elements from the output.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* ctx_ActiveClass_ToJSON(void* ctx, int32_t options);
+
+    /*
     Name of Bus
     */
     DSS_CAPI_DLL char* ctx_Bus_Get_Name(void* ctx);
@@ -1504,6 +1516,16 @@ extern "C" {
     Number of Properties for the active DSS object.
     */
     DSS_CAPI_DLL int32_t ctx_DSSElement_Get_NumProperties(void* ctx);
+
+    /*
+    Returns the properties of the active DSS object as a JSON-encoded string.
+
+    The `options` parameter contains bit-flags to toggle specific features.
+    See `Obj_ToJSON` for more.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL char* ctx_DSSElement_ToJSON(void* ctx, int32_t options);
 
     DSS_CAPI_DLL void ctx_DSSimComs_BusVoltagepu(void* ctx, double** ResultPtr, int32_t* ResultCount, size_t Index);
     /*
@@ -6702,16 +6724,59 @@ extern "C" {
     /*
     Extract the current properties as a JSON encoded string.
     WARNING: this is unstable and subject to change.
+
+    (API Extension)
     */
 
 
+    
+    /*
+    Returns an element's data as a JSON-encoded string.
+
+    The `options` parameter contains bit-flags to toggle specific features.
+
+    By default, only the properties explicitly set. The properties are returned in the order they are set in the input.
+    As a reminder, OpenDSS is sensitive to the order of the properties.
+
+    The `options` bit-flags are available in the `DSSJSONFlags` enum.
+    Values used by this function are:
+
+    - `Full`: if set, all properties are returned, ordered by property index instead.
+    - `SkipRedundant`: if used with `Full`, all properties except redundant and unused ones are returned.
+    - `EnumAsInt`: enumerated properties are returned as integer values instead of strings.
+    - `FullNames`: any element reference will use the full name (`{class name}.{element name}`) even if not required.
+    - `Pretty`: more whitespace is used in the output for a "prettier" format.
+
+    **NOT IMPLEMENTED YET**:
+    - `State`: include run-time state information
+    - `Debug`: include debug information
+
+    Other bit-flags are reserved for future uses. Please use `DSSJSONFlags` enum to avoid potential conflicts.
+
+    (API Extension)
+    */
+
+    /*
+    Returns the data (as a list) of the elements in a batch as a JSON-encoded string.
+
+    The `options` parameter contains bit-flags to toggle specific features.
+    See `Obj_ToJSON` for more. 
+    
+    Additionally, the `ExcludeDisabled` flag can be used to excluded disabled elements from the output.
+
+    (API Extension)
+    */
 
     /*
     Returns the object name (direct access, no copy is done, no disposal required by the user; read only!)
+
+    (API Extension)
     */
 
     /*
     Returns the object's class name (direct access, no copy is done, no disposal required by the user; read only!)
+
+    (API Extension)
     */
 
 
@@ -6721,6 +6786,8 @@ extern "C" {
     active DSSObject or CktElement, and in the list of its parent class.
     If AllLists is true, other internal lists of OpenDSS are also
     updated (implies slow/linear searches).
+
+    (API Extension)
     */
 
     /*
@@ -6728,6 +6795,8 @@ extern "C" {
     
     First value (index 0) is what was previously known as "CurrentCount".
     Properties start at index 1.
+
+    (API Extension)
     */
 
     
@@ -6755,6 +6824,8 @@ extern "C" {
 
     NOTE: this function will be removed in a future version if DSS C-API is
           reimplemented in another language.
+
+    (API Extension)
     */
 
     /*
@@ -6762,6 +6833,8 @@ extern "C" {
 
     NOTE: this function will be removed in a future version if DSS C-API is
           reimplemented in another language.
+
+    (API Extension)
     */
 
 

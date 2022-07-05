@@ -289,6 +289,7 @@ exports
     ActiveClass_Get_ActiveClassName,
     ActiveClass_Get_Count,
     ActiveClass_Get_ActiveClassParent,
+    ActiveClass_ToJSON, // API Extension
     
     Bus_Get_Name,
     Bus_Get_NumNodes,
@@ -531,6 +532,7 @@ exports
     DSSElement_Get_AllPropertyNames,
     DSSElement_Get_Name,
     DSSElement_Get_NumProperties,
+    DSSElement_ToJSON, // API Extension
     DSSimComs_BusVoltagepu,
     DSSimComs_BusVoltage,
     { DSSMain_Get_ActiveCircuit, }
@@ -1233,6 +1235,8 @@ exports
     Settings_Set_PriceSignal,
     Settings_Get_LoadsTerminalCheck, // API extension
     Settings_Set_LoadsTerminalCheck, // API extension
+    Settings_Get_IterateDisabled, // API extension
+    Settings_Set_IterateDisabled, // API extension
     Solution_Get_Frequency,
     Solution_Get_Hour,
     Solution_Get_Iterations,
@@ -2019,6 +2023,7 @@ exports
     Obj_GetClassIdx,
     Obj_GetNumProperties,
     Obj_GetCount,
+    Obj_ToJSON,
 
     Batch_CreateFromNew,
     Batch_CreateByRegExp,
@@ -2043,6 +2048,7 @@ exports
     Batch_SetInt32Array,
     Batch_SetStringArray,
     Batch_SetObjectArray,
+    Batch_ToJSON,
 
     Batch_CreateFromNewS,
     Batch_CreateByRegExpS,

@@ -17,6 +17,9 @@ function ActiveClass_Get_ActiveClassName(): PAnsiChar; CDECL;
 function ActiveClass_Get_Count(): Integer; CDECL;
 function ActiveClass_Get_ActiveClassParent(): PAnsiChar; CDECL;
 
+// API extensions
+function ActiveClass_ToJSON(joptions: Integer): PAnsiChar; CDECL;
+
 implementation
 
 uses
@@ -29,7 +32,11 @@ uses
     DSSClass,
     DSSHelper,
     MeterClass, 
-    ControlClass;
+    ControlClass,
+    CAPI_Obj,
+    DSSObjectHelper,
+    fpjson,
+    sysutils;
 
 procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 var
@@ -150,6 +157,53 @@ begin
         Result := DSS_GetAsPAnsiChar(DSSPrime, 'TPCClass')
     else 
         Result := DSS_GetAsPAnsiChar(DSSPrime, 'Generic Object');
+end;
+//------------------------------------------------------------------------------
+function ActiveClass_ToJSON(joptions: Integer): PAnsiChar; CDECL;
+var
+    json: TJSONArray = NIL;
+    cls: TDSSClass = NIL;
+    objlist: TDSSObjectPtr = NIL;
+    i: Integer;
+begin
+    Result := NIL;
+    if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveDSSClass = NIL) then
+        Exit;
+
+    try
+        json := TJSONArray.Create([]);
+        cls := DSSPrime.ActiveDSSClass;
+        objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);    
+        if cls.ElementList.Count <> 0 then
+        begin
+            if ((joptions and Integer(DSSJSONOptions.ExcludeDisabled)) = 0) or not (objlist^ is TDSSCktElement) then
+            begin
+                for i := 1 to cls.ElementList.Count do 
+                begin
+                    json.Add(Obj_ToJSONData(objlist^, joptions));
+                    inc(objlist);
+                end;
+            end
+            else
+            begin
+                for i := 1 to cls.ElementList.Count do 
+                begin
+                    if TDSSCktElement(objlist^).Enabled then
+                        json.Add(Obj_ToJSONData(objlist^, joptions));
+                    inc(objlist);
+                end;
+            end;
+        end;
+        if json <> NIL then
+        begin
+            if (Integer(DSSJSONOptions.Pretty) and joptions) <> 0 then
+                Result := DSS_GetAsPAnsiChar(DSSPrime, json.FormatJSON([], 2))
+            else
+                Result := DSS_GetAsPAnsiChar(DSSPrime, json.FormatJSON([foSingleLineArray, foSingleLineObject, foskipWhiteSpace], 0));
+        end;
+    finally
+        FreeAndNil(json);
+    end;
 end;
 //------------------------------------------------------------------------------
 end.
