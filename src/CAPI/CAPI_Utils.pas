@@ -115,7 +115,9 @@ procedure DefaultResult(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Value:
 
 function DSS_BeginPascalThread(func: Pointer; paramptr: Pointer): PtrUInt; CDECL;
 procedure DSS_WaitPascalThread(handle: PtrUInt); CDECL;
-procedure DSS_InitThreads; CDECL; // this won't go to the header, but let's use CDECL anyway...
+
+// internal function
+procedure DSS_InitThreads;
 
 implementation
 
@@ -144,21 +146,27 @@ procedure TDummyThread.Execute;
 begin
 end;
 
-procedure DSS_InitThreads; CDECL;
+procedure DSS_InitThreads;
+const
+    AlreadyCalled: Boolean = False; // "writeable constant" :D
 begin
     {$IFDEF UNIX}
     {$IFDEF DSS_CAPI_CONTEXT}
+    if AlreadyCalled then // We don't need to run this multiple times
+        Exit;
+
     // As recommended in FPC's wiki, make sure the thread
     // engine is always initialized. With this, even if the
     // user doesn't run a solution in the DSSPrime context,
     // we should be fine in most situations.
-    if not IsMultiThread then
+    if (not AlreadyCalled) and (not IsMultiThread) then
         with TDummyThread.Create(True) do
         begin
             // Start;
             // WaitFor;
             Free;
         end;
+        AlreadyCalled := True;
     {$ENDIF}
     {$ENDIF}
 end;
