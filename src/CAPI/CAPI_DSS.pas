@@ -113,8 +113,12 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Start(code: Integer): TAPIBoolean; CDECL;
 begin
-    DSS_InitThreads();
     Result := TRUE;
+    try
+        DSS_InitThreads();
+    except
+        Result := FALSE;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;

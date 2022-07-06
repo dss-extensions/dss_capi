@@ -1544,6 +1544,15 @@ extern "C" {
     */
     DSS_CAPI_DLL char* DSS_Get_Version(void);
 
+    /*
+    Runs potential initialization of internal structures of the DSS engine.
+    
+    For DSS Extensions, users are required to call this function at least
+    once per process, especially in multi-threaded applications.
+
+    Returns 0/false on failure. A failure might indicate an incompatibility between
+    the Pascal threading system and the host process.
+    */
     DSS_CAPI_DLL uint16_t DSS_Start(int32_t code);
 
     /*
