@@ -412,7 +412,7 @@ type
 
         procedure AllocateLoad;
         procedure ReduceZone;  // Reduce Zone by eliminating buses and merging lines
-        procedure SaveZone(const dirname: String);
+        procedure SaveZone();
         procedure GetPCEatZone(const allowEmpty: Boolean = False);
 
         procedure CalcReliabilityIndices(AssumeRestoration: Boolean);
@@ -2621,15 +2621,16 @@ begin
         SAIFIkW := SAIFIkW / dblkW; // Normalize to total kW
 end;
 
-procedure TEnergyMeterObj.SaveZone(const dirname: String);
+procedure TEnergyMeterObj.SaveZone();
 var
     cktElem, shuntElement: TDSSCktElement;
     LoadElement: TLoadObj;
     pControlElem: TDSSCktElement;
     FBranches, FShunts, FLoads, FGens, FCaps, FXfmrs: TFileStream;
     NBranches, NShunts, Nloads, NGens, NCaps, NXfmrs: Integer;
+    dirname: String;
 begin
-    // We are in the directory indicated by dirname
+    // We are in the directory indicated by DSS.CurrentDSSDir
 
     // Run down the zone and write each element into a file
 
@@ -2826,29 +2827,31 @@ begin
     FreeAndNil(FGens);
     FreeAndNil(FCaps);
 
-    // If any records were written to the file, record their relative names
+    // If any records were written to the file, record their names (will be post-processed)
+    dirname := DSS.CurrentDSSDir; // PathDelim already included here
+
     if NBranches > 0 then
-        DSS.SavedFileList.Add(dirname + PathDelim + 'Branches.dss')
+        DSS.SavedFileList.Add(dirname + 'Branches.dss')
     else
         DeleteFile('Branches.dss');
     if NXfmrs > 0 then
-        DSS.SavedFileList.Add(dirname + PathDelim + 'Transformers.dss')
+        DSS.SavedFileList.Add(dirname + 'Transformers.dss')
     else
         DeleteFile('Transformers.dss');
     if NShunts > 0 then
-        DSS.SavedFileList.Add(dirname + PathDelim + 'Shunts.dss')
+        DSS.SavedFileList.Add(dirname + 'Shunts.dss')
     else
         DeleteFile('Shunts.dss');
     if NLoads > 0 then
-        DSS.SavedFileList.Add(dirname + PathDelim + 'Loads.dss')
+        DSS.SavedFileList.Add(dirname + 'Loads.dss')
     else
         DeleteFile('Loads.dss');
     if NGens > 0 then
-        DSS.SavedFileList.Add(dirname + PathDelim + 'Generators.dss')
+        DSS.SavedFileList.Add(dirname + 'Generators.dss')
     else
         DeleteFile('Generators.dss');
     if NCaps > 0 then
-        DSS.SavedFileList.Add(dirname + PathDelim + 'Capacitors.dss')
+        DSS.SavedFileList.Add(dirname + 'Capacitors.dss')
     else
         DeleteFile('Capacitors.dss');
 end;

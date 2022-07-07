@@ -2415,9 +2415,12 @@ begin
     Success := FALSE;
     if Length(Dir) = 0 then
     begin
-        dir := Name;
+        Dir := Name;
+        if DSS_CAPI_ALLOW_CHANGE_DIR then
+            CurrDir := Dir
+        else
+            CurrDir := SaveDir + Dir;
 
-        CurrDir := Dir;
         for i := 0 to 999 do  // Find a unique dir name
         begin
             if not DirectoryExists(CurrDir) then
@@ -2434,6 +2437,35 @@ begin
     end
     else
     begin
+        if not DSS_CAPI_ALLOW_CHANGE_DIR then
+        begin
+            // There doesn't seem to exist a function for "is absolute path" in FPC,
+            // so let's do some simple checks instead
+{$ifdef WINDOWS}
+            if ((Length(Dir) >= 3) and (AnsiUpperCase(Dir[1]) >= 'A') and (AnsiUpperCase(Dir[1]) <= 'Z') and (Dir[2] = ':')) or // "X:"?
+                ((Length(Dir) >= 2) and (Dir[1] = '\') and (Dir[2] = '\')) // \\networkdrive?
+            then
+            begin
+                // At least looks like a full path, nothing to do
+            end
+            else if ((Length(Dir) >= 2) and ((Dir[1] = '\') or (Dir[1] = '/'))) then // root path
+            begin
+                // Looks like a root path, so add the current drive
+                Dir := ExtractFileDrive(SaveDir) + ':' + Dir;
+            end
+{$else}
+            if ((Length(Dir) >= 2) and (Dir[1] = '/')) then // root path
+            begin
+                // Looks like a root path, nothing to do
+            end
+{$endif}
+            else
+            begin
+                // Probably a relative path
+                Dir := SaveDir + Dir;
+            end;
+        end;
+
         if not DirectoryExists(Dir) then
         begin
             CurrDir := dir;
@@ -2624,14 +2656,14 @@ begin
     for i := 1 to EnergyMeters.Count do
     begin
         Meter := EnergyMeters.Get(i); // Recast pointer
-        CurrDir := Meter.Name;
+        CurrDir := SaveDir + Meter.Name;
         if not Meter.Enabled then // Only active meters
             continue;
 
         if DirectoryExists(CurrDir) then
         begin
             DSS.SetCurrentDSSDir(CurrDir);
-            Meter.SaveZone(CurrDir);
+            Meter.SaveZone();
             DSS.SetCurrentDSSDir(SaveDir);
         end
         else
@@ -2639,7 +2671,7 @@ begin
             if CreateDir(CurrDir) then
             begin
                 DSS.SetCurrentDSSDir(CurrDir);
-                Meter.SaveZone(CurrDir);
+                Meter.SaveZone();
                 DSS.SetCurrentDSSDir(SaveDir);
             end
             else
