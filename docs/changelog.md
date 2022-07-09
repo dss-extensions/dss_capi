@@ -9,7 +9,7 @@
     - extend the API to allow 32-bit floats
 
 - **Planned**:
-    - expose the OpenDSS v8/v9 PM features as possible
+    - expose remaining PM features (diakoptics)
     - continue work on the plotting and extended reporting API
     - see also the GitHub milestone: https://github.com/dss-extensions/dss_capi/milestone/6
     - remove `LegacyModels` (older/deprecated models for PVSystem, Storage and related classes)
@@ -17,6 +17,8 @@
 # Version 0.12
 
 **not released**
+
+**Includes porting of most official OpenDSS features up to revision 3464.**
 
 Since version 0.11 accumulated too many changes for too long (nearly 2 years), making it hard to keep two parallel but increasingly distinct codebases, version 0.12 is a stepping stone to the next big version (planned as 0.13) that will contain all of the 0.11 changes. As such, only some of the 0.11 features are included. The previous 0.10.8 changes are also included here.
 
@@ -30,6 +32,7 @@ This version still maintains basic compatibility with the 0.10.x series of relea
 - Experimental callbacks for plotting and message output. Expect initial support in Python soon.
 - Introduce `AllowChangeDir` mechanism: defaults to enabled state for backwards compatibility. When disabled, the engine will not change the current working directory in any situation. This is exposed through a new pair of functions
 `DSS_Set_AllowChangeDir` and `DSS_Get_AllowChangeDir`, besides the environment variable `DSS_CAPI_ALLOW_CHANGE_DIR`.
+- New setting to toggle `DOScmd` command. Can be controlled through the environment variable `DSS_CAPI_ALLOW_DOSCMD` or functions `DSS_Get_AllowDOScmd`/`DSS_Set_AllowDOScmd`.
 - Use `OutputDirectory` more. `OutputDirectory` is set to the current `DataPath` if `DataPath` is writable. If not, it's set to a general location (`%LOCALAPPDATA%/dss-extensions` and `/tmp/dss-extensions` since this release). This should make life easier for a user running files from a read-only location. Note that this is only an issue when running a `compile` command. If the user only uses `redirect` commands, the `DataPath` and `OutputDirectory` are left empty, meaning the files are written to the current working directory (CWD), which the user can control through the programming language driving DSS C-API. Note that the official OpenDSS COM behavior is different, since it loads the `DataPath` saved in the registry and modifies the CWD accordingly when OpenDSS is initialized.
 - File IO rewritten to drop deprecated Pascal functions and features. This removes some limitations related to long paths due to the legacy implementation being limited to 255 chars.
 - Reworked `TPowerTerminal` to achieve better memory layout. This makes simulations running `LoadsTerminalCheck=false` and `LoadsTerminalCheck=true` closer in performance, yet disabling the check is still faster.
@@ -56,10 +59,12 @@ This version still maintains basic compatibility with the 0.10.x series of relea
 - Monitor headers: From the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS Extensions, we took the opportunity to rewrite the related code, simplifying it. As such, the implementation in DSS Extensions deviates from the official one. Extra blank chars are not included, and fields should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough.
 - Error messages: most messages are now more specific and, if running a DSS script from files, include the file names and line numbers.
 - Spectrum: To reduce overhead during object edits, now required to exist before the object that uses it. This is consistent with most of the other types in OpenDSS.
-- New object and batch APIs
+- New object and batch APIs for direct manipulation of DSS objects and batches of objects
 - New experimental API for loading scripts/data from ZIP files
 - New convenience functions to bulk load commands from the API
 - User-models: headers updated, and removed support for user-models in `LegacyModels` mode. `LegacyModels` will be removed in v0.13.
+- New functions to export the DSS properties of objects as JSON-encoded strings
+- The C headers for our library were updated to include the `const` modifier for various of the parameters. A few function declarations were fixed.
 
 Due to the high number of IO changes, we recommend checking the performance before and after the upgrade to ensure your use case is not affected negatively. If issues are found, please do report.
 
