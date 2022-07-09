@@ -51,7 +51,10 @@ begin
         DSSPrime.ActiveEnergyMeterObj := DSSPrime.EnergyMeterClass.ElementList.Active;
         
     if not Assigned(DSSPrime.ActiveEnergyMeterObj) then 
+    begin
+        DoSimpleMsg(DSS, _('An energy meter is required to use this feature. Please check https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Doc/Circuit%20Reduction%20for%20Version8.docx for examples.'), 1889);
         Exit;
+    end;
     
     if not Assigned(DSSPrime.ActiveEnergyMeterObj.BranchList) then
         DSSPrime.ActiveEnergyMeterObj.MakeMeterZoneLists();
@@ -182,7 +185,7 @@ end;
 procedure ReduceCkt_DoSwitches(); CDECL;
 begin
     if not CommonReduceCktChecks(DSSPrime) then Exit;
-    DoRemoveAll_1ph_Laterals(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
+    DoReduceSwitches(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 end.

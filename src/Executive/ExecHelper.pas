@@ -1303,6 +1303,13 @@ Begin
     // Mark Capacitor and Reactor buses as Keep so we don't lose them
     MarkCapandReactorBuses;
 
+    if (DSS.ActiveCircuit.EnergyMeters.Count = 0) then
+    begin
+        Result := 1890;
+        DoSimpleMsg(DSS, _('An energy meter is required to use this feature. Please check https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Doc/Circuit%20Reduction%20for%20Version8.docx for examples.'), 1890);
+        Exit;
+    end;
+
     IF Length(Param) = 0  Then Param := 'A';
     CASE Param[1] of
      'A': Begin
