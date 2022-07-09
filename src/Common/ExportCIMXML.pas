@@ -2,7 +2,7 @@ unit ExportCIMXML;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2009-2021, Electric Power Research Institute, Inc.
+  Copyright (c) 2009-2022, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -363,7 +363,7 @@ begin
         roots[prf] := Root;
         ids[prf] := Obj.UUID;
     end;
-    WriteCimLn(prf, Format('<cim:%s rdf:ID="%s">', [Root, Obj.CIM_ID]));
+    WriteCimLn(prf, Format('<cim:%s rdf:about="urn:uuid:%s">', [Root, Obj.CIM_ID]));
     WriteCimLn(prf, Format('  <cim:IdentifiedObject.mRID>%s</cim:IdentifiedObject.mRID>', [Obj.CIM_ID]));
     WriteCimLn(prf, Format('  <cim:IdentifiedObject.name>%s</cim:IdentifiedObject.name>', [Obj.localName]));
 end;
@@ -375,7 +375,7 @@ begin
         roots[prf] := Root;
         ids[prf] := uuid;
     end;
-    WriteCimLn(prf, Format('<cim:%s rdf:ID="%s">', [Root, UUIDToCIMString(uuid)]));
+    WriteCimLn(prf, Format('<cim:%s rdf:about="urn:uuid:%s">', [Root, UUIDToCIMString(uuid)]));
 end;
 
 procedure TCIMExporter.EndInstance(prf: ProfileChoice; Root: String);
@@ -801,14 +801,24 @@ begin
 end;
 
 procedure TCIMExporterHelper.FreeBankList;
+var 
+    i: integer;
 begin
     BankHash.Free;
+    for i := 0 to High(BankList) do 
+        if Assigned(BankList[i]) then 
+            FreeAndNil(BankList[i]);
     BankList := NIL;
 end;
 
 procedure TCIMExporterHelper.FreeOpLimitList;
+var 
+    i: integer;
 begin
     OpLimitHash.Free;
+    for i := 0 to High(OpLimitList) do
+        if Assigned(OpLimitList[i]) then
+            FreeAndNil(OpLimitList[i]);
     OpLimitList := NIL;
 end;
 
@@ -1117,32 +1127,32 @@ end;
 
 procedure TCIMExporterHelper.RefNode(prf: ProfileChoice; Node: String; Obj: TNamedObject);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:%s rdf:resource="#%s"/>', [Node, Obj.CIM_ID]));
+    FD.WriteCimLn(prf, Format('  <cim:%s rdf:resource="urn:uuid:%s"/>', [Node, Obj.CIM_ID]));
 end;
 
 procedure TCIMExporterHelper.UuidNode(prf: ProfileChoice; Node: String; ID: TUuid);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:%s rdf:resource="#%s"/>', [Node, UUIDToCIMString(ID)]));
+    FD.WriteCimLn(prf, Format('  <cim:%s rdf:resource="urn:uuid:%s"/>', [Node, UUIDToCIMString(ID)]));
 end;
 
 procedure TCIMExporterHelper.LineCodeRefNode(prf: ProfileChoice; List: TLineCode; Obj: TLineCodeObj);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:ACLineSegment.PerLengthImpedance rdf:resource="#%s"/>', [Obj.CIM_ID]));
+    FD.WriteCimLn(prf, Format('  <cim:ACLineSegment.PerLengthImpedance rdf:resource="urn:uuid:%s"/>', [Obj.CIM_ID]));
 end;
 
 procedure TCIMExporterHelper.LineSpacingRefNode(prf: ProfileChoice; Obj: TDSSObject);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:ACLineSegment.WireSpacingInfo rdf:resource="#%s"/>', [Obj.CIM_ID]));
+    FD.WriteCimLn(prf, Format('  <cim:ACLineSegment.WireSpacingInfo rdf:resource="urn:uuid:%s"/>', [Obj.CIM_ID]));
 end;
 
 procedure TCIMExporterHelper.PhaseWireRefNode(prf: ProfileChoice; Obj: TConductorDataObj);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:ACLineSegmentPhase.WireInfo rdf:resource="#%s"/>', [Obj.CIM_ID]));
+    FD.WriteCimLn(prf, Format('  <cim:ACLineSegmentPhase.WireInfo rdf:resource="urn:uuid:%s"/>', [Obj.CIM_ID]));
 end;
 
 procedure TCIMExporterHelper.CircuitNode(prf: ProfileChoice; Obj: TNamedObject);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:Equipment.EquipmentContainer rdf:resource="#%s"/>', [Obj.CIM_ID]));
+    FD.WriteCimLn(prf, Format('  <cim:Equipment.EquipmentContainer rdf:resource="urn:uuid:%s"/>', [Obj.CIM_ID]));
 end;
 
 function TCIMExporterHelper.FirstPhaseString(pElem: TDSSCktElement; bus: Integer): String;
@@ -1238,8 +1248,8 @@ end;
 
 procedure TCIMExporterHelper.TransformerControlEnum(prf: ProfileChoice; val: String);
 begin
-    FD.WriteCimLn(prf, Format('  <cim:RatioTapChanger.tculControlMode rdf:resource="%s#TransformerControlMode.%s"/>',
-        [CIM_NS, val]));
+//    FD.WriteCimLn(prf, Format('  <cim:RatioTapChanger.tculControlMode rdf:resource="%s#TransformerControlMode.%s"/>',
+//        [CIM_NS, val]));
 end;
 
 procedure TCIMExporterHelper.MonitoredPhaseNode(prf: ProfileChoice; val: String);
@@ -1427,6 +1437,7 @@ begin
             GetDevUuid(LineLoc, pLine.Name, 1));
         EndInstance(FunPrf, 'ACLineSegmentPhase');
     end;
+    pPhase.Destroy;
 end;
 
 procedure TCIMExporterHelper.AttachSwitchPhases(pLine: TLineObj);
@@ -1468,6 +1479,7 @@ begin
         UuidNode(GeoPrf, 'PowerSystemResource.Location', GetDevUuid(LineLoc, pLine.Name, 1));
         EndInstance(FunPrf, 'SwitchPhase');
     end;
+    pPhase.Destroy;
 end;
 
 procedure TCIMExporterHelper.AttachCapPhases(pCap: TCapacitorObj; geoUUID: TUuid; sections: double);
@@ -1503,6 +1515,7 @@ begin
         UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
         EndInstance(FunPrf, 'LinearShuntCompensatorPhase');
     end;
+    pPhase.Destroy;
 end;
 
 procedure TCIMExporterHelper.AttachSecondaryPhases(pLoad: TLoadObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
@@ -1548,11 +1561,13 @@ begin
         begin
             AttachSecondaryPhases(pLoad, geoUUID, pPhase, p, q, 's1');
             AttachSecondaryPhases(pLoad, geoUUID, pPhase, p, q, 's2');
+            pPhase.Destroy;
             exit;
         end
         else
         begin
             AttachSecondaryPhases(pLoad, geoUUID, pPhase, p, q, s);
+            pPhase.Destroy;
             exit;
         end;
     end;
@@ -1570,6 +1585,7 @@ begin
         UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
         EndInstance(FunPrf, 'EnergyConsumerPhase');
     end;
+    pPhase.Destroy;
 end;
 
 procedure TCIMExporterHelper.AttachSecondaryGenPhases(pGen: TGeneratorObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
@@ -1609,11 +1625,13 @@ begin
         begin
             AttachSecondaryGenPhases(pGen, geoUUID, pPhase, p, q, 's1');
             AttachSecondaryGenPhases(pGen, geoUUID, pPhase, p, q, 's2');
+            pPhase.Destroy;
             exit;
         end
         else
         begin
             AttachSecondaryGenPhases(pGen, geoUUID, pPhase, p, q, s);
+            pPhase.Destroy;
             exit;
         end;
     end;
@@ -1631,6 +1649,7 @@ begin
         UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
         EndInstance(FunPrf, 'SynchronousMachinePhase');
     end;
+    pPhase.Destroy;
 end;
 
 procedure TCIMExporterHelper.AttachSecondarySolarPhases(pPV: TPVSystem2Obj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
@@ -1670,11 +1689,13 @@ begin
         begin
             AttachSecondarySolarPhases(pPV, geoUUID, pPhase, p, q, 's1');
             AttachSecondarySolarPhases(pPV, geoUUID, pPhase, p, q, 's2');
+            pPhase.Destroy;
             exit;
         end
         else
         begin
             AttachSecondarySolarPhases(pPV, geoUUID, pPhase, p, q, s);
+            pPhase.Destroy;
             exit;
         end;
     end;
@@ -1692,6 +1713,7 @@ begin
         UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
         EndInstance(FunPrf, 'PowerElectronicsConnectionPhase');
     end;
+    pPhase.Destroy;
 end;
 
 procedure TCIMExporterHelper.AttachSecondaryStoragePhases(pBat: TStorage2Obj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
@@ -1731,11 +1753,13 @@ begin
         begin
             AttachSecondaryStoragePhases(pBat, geoUUID, pPhase, p, q, 's1');
             AttachSecondaryStoragePhases(pBat, geoUUID, pPhase, p, q, 's2');
+            pPhase.Destroy;
             exit;
         end
         else
         begin
             AttachSecondaryStoragePhases(pBat, geoUUID, pPhase, p, q, s);
+            pPhase.Destroy;
             exit;
         end;
     end;
@@ -1753,13 +1777,14 @@ begin
         UuidNode(GeoPrf, 'PowerSystemResource.Location', geoUUID);
         EndInstance(FunPrf, 'PowerElectronicsConnectionPhase');
     end;
+    pPhase.Destroy;
 end;
 
 procedure TCIMExporterHelper.WriteLoadModel(Name: String; ID: TUuid;
     zP: Double; iP: Double; pP: Double; zQ: Double; iQ: Double; pQ: Double;
     eP: Double; eQ: Double);
 begin
-    FD.WriteCimln(FunPrf, Format('<cim:LoadResponseCharacteristic rdf:ID="%s">', [UUIDToCIMString(ID)]));
+    FD.WriteCimln(FunPrf, Format('<cim:LoadResponseCharacteristic rdf:about="urn:uuid:"%s">', [UUIDToCIMString(ID)]));
     StringNode(FunPrf, 'IdentifiedObject.mRID', UUIDToCIMString(ID));
     StringNode(FunPrf, 'IdentifiedObject.name', Name);
     if (eP > 0.0) or (eQ > 0.0) then
@@ -1851,7 +1876,7 @@ begin
             StringNode(FunPrf, 'IdentifiedObject.name', TermName);
             UuidNode(FunPrf, 'Terminal.ConductingEquipment', RefUuid);
             IntegerNode(FunPrf, 'ACDCTerminal.sequenceNumber', j);
-            FD.WriteCimLn(TopoPrf, Format('  <cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
+            FD.WriteCimLn(TopoPrf, Format('  <cim:Terminal.ConnectivityNode rdf:resource="urn:uuid:%s"/>',
                 [ActiveCircuit.Buses[ref].CIM_ID]));
             if (j = 1) and (norm > 0.0) then
             begin
@@ -2968,7 +2993,7 @@ begin
     FSWriteln(F, '<rdf:RDF xmlns:cim="' + CIM_NS + '#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">');
     FSWriteln(F, '<!--');
     FSWriteln(F, '-->');
-    FSWriteLn(F, Format('<cim:IEC61970CIMVersion rdf:ID="%s">', [UUIDToCIMString(GetDevUuid(CIMVer, 'IEC', 1))]));
+    FSWriteLn(F, Format('<cim:IEC61970CIMVersion rdf:about="urn:uuid:%s">', [UUIDToCIMString(GetDevUuid(CIMVer, 'IEC', 1))]));
     FSWriteLn(F, Format('  <cim:IEC61970CIMVersion.version>%s</cim:IEC61970CIMVersion.version>', ['IEC61970CIM100']));
     FSWriteLn(F, Format('  <cim:IEC61970CIMVersion.date>%s</cim:IEC61970CIMVersion.date>', ['2019-04-01']));
     FSWriteLn(F, '</cim:IEC61970CIMVersion>');
@@ -3252,7 +3277,7 @@ begin
                 StringNode(TopoPrf, 'IdentifiedObject.name', Buses^[i].localName);
                 UuidNode(TopoPrf, 'ConnectivityNode.TopologicalNode', geoUUID);
                 UuidNode(TopoPrf, 'ConnectivityNode.OperationalLimitSet', GetOpLimVUuid(sqrt(3.0) * ActiveCircuit.Buses^[i].kVBase));
-                FD.WriteCimLn(TopoPrf, Format('  <cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#%s"/>',
+                FD.WriteCimLn(TopoPrf, Format('  <cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="urn:uuid:%s"/>',
                     [ActiveCircuit.CIM_ID]));
                 EndInstance(TopoPrf, 'ConnectivityNode');
             end;
@@ -3639,7 +3664,7 @@ begin
                     val := pAuto.pctNoLoadLoss / 100.0 / zbase;
                     DoubleNode(EpPrf, 'TransformerCoreAdmittance.g', val);
                     DoubleNode(EpPrf, 'TransformerCoreAdmittance.g0', val);
-                    val := pAuto.pctImag / 100.0 / zbase;
+                    val := -pAuto.pctImag / 100.0 / zbase; // inductive B < 0
                     DoubleNode(EpPrf, 'TransformerCoreAdmittance.b', val);
                     DoubleNode(EpPrf, 'TransformerCoreAdmittance.b0', val);
                     RefNode(EpPrf, 'TransformerCoreAdmittance.TransformerEnd', WdgList[0]);
@@ -3650,7 +3675,7 @@ begin
                         for k := i + 1 to NumWindings do
                         begin
                             val := BaseKVLL[i];
-                            zbase := 1000.0 * val * val / WdgKva[i];
+                            zbase := 1000.0 * val * val / WdgKVA[1]; // always based on Winding 1 kVA
                             StartInstance(EpPrf, 'TransformerMeshImpedance', MeshList[seq - 1]);
                             val := zbase * (WdgResistance[i] + WdgResistance[k]);
                             DoubleNode(EpPrf, 'TransformerMeshImpedance.r', val);
@@ -3705,7 +3730,7 @@ begin
                         StartInstance(FunPrf, 'Terminal', pName2);
                         RefNode(FunPrf, 'Terminal.ConductingEquipment', pBank);
                         IntegerNode(FunPrf, 'ACDCTerminal.sequenceNumber', i);
-                        FD.WriteCimLn(TopoPrf, Format('  <cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
+                        FD.WriteCimLn(TopoPrf, Format('  <cim:Terminal.ConnectivityNode rdf:resource="urn:uuid:%s"/>',
                             [ActiveCircuit.Buses[j].CIM_ID]));
                         if i = 1 then
                         begin   // write the current limit on HV winding, assuming that's winding 1
@@ -3744,6 +3769,7 @@ begin
                     sBank := 'CIMXfmrCode_' + pXf.Name;
                     clsXfCd.NewObject(sBank);
                     pXfCd := clsXfCd.Find(sBank);
+                    DSS.DSSObjs.Add(pXfCd); // this is how ExecHelper.pas keeps track of "General Objects" for cleanup
                     pXfCd.UUID := GetDevUuid(TankInfo, pXfCd.Name, 1);
                     pXfCd.PullFromTransformer(pXf);
                     pXf.XfmrCodeObj := pXfCd;
@@ -3872,7 +3898,7 @@ begin
                             for k := i + 1 to NumWindings do
                             begin
                                 val := BaseKVLL[i];
-                                zbase := 1000.0 * val * val / WdgKva[i];
+                                zbase := 1000.0 * val * val / WdgKva[1]; // always based on Winding 1 kVA
                                 StartInstance(EpPrf, 'TransformerMeshImpedance', MeshList[seq - 1]);
                                 val := zbase * (WdgResistance[i] + WdgResistance[k]);
                                 DoubleNode(EpPrf, 'TransformerMeshImpedance.r', val);
@@ -3954,7 +3980,7 @@ begin
                         StartInstance(FunPrf, 'Terminal', pName2);
                         RefNode(FunPrf, 'Terminal.ConductingEquipment', pBank);
                         IntegerNode(FunPrf, 'ACDCTerminal.sequenceNumber', i);
-                        FD.WriteCimLn(TopoPrf, Format('  <cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
+                        FD.WriteCimLn(TopoPrf, Format('  <cim:Terminal.ConnectivityNode rdf:resource="urn:uuid:%s"/>',
                             [ActiveCircuit.Buses[j].CIM_ID]));
                         if i = 1 then
                         begin   // write the current limit on HV winding, assuming that's winding 1
@@ -3994,9 +4020,27 @@ begin
             EndInstance(FunPrf, 'PowerTransformer');
         end;
 
-        WdgList := NIL;
-        CoreList := NIL;
-        MeshList := NIL;
+        if Assigned(WdgList) then 
+        begin
+            for i := Low(WdgList) to High(WdgList) do 
+                if Assigned(WdgList[i]) then 
+                    FreeAndNil(WdgList[i]);
+            WdgList := nil;
+        end;
+        if Assigned(CoreList) then 
+        begin
+            for i := Low(CoreList) to High(CoreList) do 
+                if Assigned (CoreList[i]) then 
+                    FreeAndNil(CoreList[i]);
+            CoreList := nil;
+        end;
+        if Assigned (MeshList) then 
+        begin
+            for i := Low(MeshList) to High(MeshList) do
+                if Assigned(MeshList[i]) then
+                    FreeAndNil(MeshList[i]);
+            MeshList := nil;
+        end;
 
         // voltage regulators
         pReg := ActiveCircuit.RegControls.First;
@@ -4469,16 +4513,28 @@ begin
             EndInstance(FunPrf, 'CurrentLimit');
         end;
 
-        pName1.Free;
-        pName2.Free;
-
+        FreeAndNil(pName1);
+        FreeAndNil(pName2);
+        FreeAndNil(pCRS);
+        FreeAndNil(pRegion);
+        FreeAndNil(pSubRegion);
+        FreeAndNil(pLocation);
+        FreeAndNil(pSubstation);
+        FreeAndNil(pSwing);
+        FreeAndNil(pIsland);
+        FreeAndNil(pNormLimit);
+        FreeAndNil(pEmergLimit);
+        FreeAndNil(pRangeALoLimit);
+        FreeAndNil(pRangeAHiLimit);
+        FreeAndNil(pRangeBLoLimit);
+        FreeAndNil(pRangeBHiLimit);
 //    FreeUuidList;  // this is deferred for UUID export
         FreeBankList;
         FreeOpLimitList;
 
         DSS.GlobalResult := FileNm;
     finally
-        FD.Free;
+        FD.Free();
     end;
 end;
 
@@ -4548,7 +4604,7 @@ begin
         str := 'constantReactivePower';
 
     FD.WriteCimLn (prf, Format(
-        '  <cim:PowerElectronicsConnection.controlMode rdf:resource="%s#ConverterControlMode.%s"/>',
+        '  <cim:PowerElectronicsConnection.controlMode rdf:resource="%s#ConverterControlModeKind.%s"/>',
         [CIM_NS, str]
     ));
 end;

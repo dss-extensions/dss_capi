@@ -2,7 +2,7 @@ unit NamedObject;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2009-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2009-2022, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -67,7 +67,7 @@ var
     s: String;
 begin
     s := GUIDToString(UUID);
-    Result := '_' + MidStr(s, 2, Length(s) - 2);
+    Result := MidStr(s, 2, Length(s) - 2);
 end;
 
 constructor TNamedObject.Create(ClassName_: String);
