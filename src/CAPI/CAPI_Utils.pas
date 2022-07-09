@@ -147,6 +147,7 @@ begin
 end;
 
 procedure DSS_InitThreads;
+{$J+}
 const
     AlreadyCalled: Boolean = False; // "writeable constant" :D
 begin
@@ -171,7 +172,7 @@ begin
     {$ENDIF}
 end;
 {$ENDIF}
-
+{$J-}
 // The Pascal thread calls the cdecl function
 function C2P_Translator(FuncData: pointer) : ptrint;
 var

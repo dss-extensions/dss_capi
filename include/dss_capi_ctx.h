@@ -1380,7 +1380,7 @@ extern "C" {
     For DSS Extensions, users are required to call this function at least
     once per process, especially in multi-threaded applications.
 
-    Returns 0 on failure. A failure might indicate an incompatibility between
+    Returns 0/false on failure. A failure might indicate an incompatibility between
     the Pascal threading system and the host process.
     */
     DSS_CAPI_DLL uint16_t ctx_DSS_Start(void* ctx, int32_t code);
