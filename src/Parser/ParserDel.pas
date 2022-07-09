@@ -114,94 +114,94 @@ const
     VariableDelimiter = '@';  // first character of a variable
 
 
-function ProcessRPNCommand(const TokenBuffer: String; RPN: TRPNCalc): Integer;
+procedure ProcessRPNCommand(const TokenBuffer: String; RPN: TRPNCalc);
 var
     S: String;
     Number: Double;
+    ErrorCode: Integer = 0;
 begin
-    Result := 0;  // Error Code on conversion error
-    
     // First Try to make a valid number. If that fails, check for RPN command
 
-    Val(TokenBuffer, Number, Result);
-    if Result = 0 then
-        RPN.X := Number  // Enters number in X register
-    else
-    begin   // Check for RPN command.
-        Result := 0; // reset error return
-        S := AnsiLowerCase(TokenBuffer);
-        with RPN do
-            if CompareStr(S, '+') = 0 then
-                Add
-            else
-            if CompareStr(S, '-') = 0 then
-                Subtract
-            else
-            if CompareStr(S, '*') = 0 then
-                multiply
-            else
-            if CompareStr(S, '/') = 0 then
-                Divide
-            else
-            if CompareStr(S, 'sqrt') = 0 then
-                Sqrt
-            else
-            if CompareStr(S, 'sqr') = 0 then
-                Square
-            else
-            if CompareStr(S, '^') = 0 then
-                YToTheXPower
-            else
-            if CompareStr(S, 'sin') = 0 then
-                SinDeg
-            else
-            if CompareStr(S, 'cos') = 0 then
-                CosDeg
-            else
-            if CompareStr(S, 'tan') = 0 then
-                TanDeg
-            else
-            if CompareStr(S, 'asin') = 0 then
-                aSinDeg
-            else
-            if CompareStr(S, 'acos') = 0 then
-                aCosDeg
-            else
-            if CompareStr(S, 'atan') = 0 then
-                aTanDeg
-            else
-            if CompareStr(S, 'atan2') = 0 then
-                aTan2Deg
-            else
-            if CompareStr(S, 'swap') = 0 then
-                SwapXY
-            else
-            if CompareStr(S, 'rollup') = 0 then
-                RollUp
-            else
-            if CompareStr(S, 'rolldn') = 0 then
-                RollDn
-            else
-            if CompareStr(S, 'ln') = 0 then
-                Natlog
-            else
-            if CompareStr(S, 'pi') = 0 then
-                EnterPi
-            else
-            if CompareStr(S, 'log10') = 0 then
-                TenLog
-            else
-            if CompareStr(S, 'exp') = 0 then
-                etothex
-            else
-            if CompareStr(S, 'inv') = 0 then
-                inv
-            else
-            begin
-                raise EParserProblem.Create('Invalid inline math entry: "' + TokenBuffer + '"');
-                Result := 1;  // error
-            end;
+    Val(TokenBuffer, Number, ErrorCode);
+    if ErrorCode = 0 then
+    begin
+        RPN.X := Number;  // Enters number in X register
+        Exit;
     end;
+
+    // Check for RPN command.
+    S := AnsiLowerCase(TokenBuffer);
+    with RPN do
+        if CompareStr(S, '+') = 0 then
+            Add
+        else
+        if CompareStr(S, '-') = 0 then
+            Subtract
+        else
+        if CompareStr(S, '*') = 0 then
+            multiply
+        else
+        if CompareStr(S, '/') = 0 then
+            Divide
+        else
+        if CompareStr(S, 'sqrt') = 0 then
+            Sqrt
+        else
+        if CompareStr(S, 'sqr') = 0 then
+            Square
+        else
+        if CompareStr(S, '^') = 0 then
+            YToTheXPower
+        else
+        if CompareStr(S, 'sin') = 0 then
+            SinDeg
+        else
+        if CompareStr(S, 'cos') = 0 then
+            CosDeg
+        else
+        if CompareStr(S, 'tan') = 0 then
+            TanDeg
+        else
+        if CompareStr(S, 'asin') = 0 then
+            aSinDeg
+        else
+        if CompareStr(S, 'acos') = 0 then
+            aCosDeg
+        else
+        if CompareStr(S, 'atan') = 0 then
+            aTanDeg
+        else
+        if CompareStr(S, 'atan2') = 0 then
+            aTan2Deg
+        else
+        if CompareStr(S, 'swap') = 0 then
+            SwapXY
+        else
+        if CompareStr(S, 'rollup') = 0 then
+            RollUp
+        else
+        if CompareStr(S, 'rolldn') = 0 then
+            RollDn
+        else
+        if CompareStr(S, 'ln') = 0 then
+            Natlog
+        else
+        if CompareStr(S, 'pi') = 0 then
+            EnterPi
+        else
+        if CompareStr(S, 'log10') = 0 then
+            TenLog
+        else
+        if CompareStr(S, 'exp') = 0 then
+            etothex
+        else
+        if CompareStr(S, 'inv') = 0 then
+            inv
+        else
+        begin
+            raise EParserProblem.Create('Invalid inline math entry: "' + TokenBuffer + '"');
+            // Result := 1;  // error -- REMOVED: never reached
+        end;
 end;
 
 function StriptoDotPos(Dotpos: Integer; var S: String): String;
@@ -761,10 +761,7 @@ begin
 
     while Length(TokenBuffer) > 0 do
     begin
-        Code := ProcessRPNCommand(TokenBuffer, RPNCalculator);
-        if Code > 0 then
-            Break;  // Stop on any floating point error
-
+        ProcessRPNCommand(TokenBuffer, RPNCalculator);
         TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
         CheckForVar(TokenBuffer);
     end;
