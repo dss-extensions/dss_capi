@@ -923,6 +923,8 @@ begin
     FPendingChange := NIL;
     cBuffer := NIL;
     CondOffset := NIL;
+
+    ShowEventLog := FALSE; // match SVN r3458
 end;
 
 destructor TInvControl2Obj.Destroy;

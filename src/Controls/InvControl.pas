@@ -619,6 +619,8 @@ begin
      //generic for control
     FPendingChange := NIL;
     FFlagROCOnly := NIL;
+
+    ShowEventLog := FALSE; // match SVN r3458
 end;
 
 destructor TInvControlObj.Destroy;
