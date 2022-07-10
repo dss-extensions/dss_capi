@@ -125,7 +125,7 @@ type
 
         procedure ReallocZandYcMatrices;
 
-        procedure DoLongLine(Frequency: Double; var R1_h: Double; var X1_h: Double; var C1_h: Double; var G1_h: Double);  // Long Line Correction for 1=phase
+        procedure DoLongLine(Frequency: Double);  // Long Line Correction for 1=phase
         procedure ConvertZinvToPosSeqR;  // for GIC analysis, primarily
 
         // procedure GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex); OVERRIDE;
@@ -835,35 +835,30 @@ begin
     Yc := TCMatrix.CreateMatrix(Fnphases);
 end;
 
-procedure TLineObj.DoLongLine(Frequency: Double; var R1_h: Double; var X1_h: Double; var C1_h: Double; var G1_h: Double);
-// Do long line correction for len and desired frequency
-// Updated the procedure to correct for any frequency. Moved usage to CalcYPrim.
+procedure TLineObj.DoLongLine(Frequency: Double);
+// do long line correction for len and frequwnen
 var
-    Zs, Zm, Ys, Ym, Zc: Complex;
-    GammaL, ExpP, ExpM, SinhGL, CoshGL: Complex;
+    Zs, Zm, Ys, Ym: Complex;
+    GammaL, ExpP, ExpM, Exp2P, Exp2M, SinhGL, Tanh2GL: Complex;
 begin
-    G1_h := EPSILON; // Adding a tiny conductance to avoid skipping correction on lines with C1=0
-    Zs := cmplx(R1 * Len, X1 * Len * Frequency / BaseFrequency);  // Use X1 for the desired frequency
-
-    Ys := cmplx(G1_h, TwoPi * Frequency * C1 * Len);
-        // Apply the long-line correction to obtain Zm and Ym
-        // Rearrange things to express as in Arrillaga's book. no difference to original DoLongLine.
+    // nominal PI parameters per unit length but Len variable is used here
+    Zs := cmplx(R1, X1);
+    Ys := cmplx(0.0, TwoPi * Frequency * C1);
+    // apply the long-line correction to obtain Zm and Ym
     GammaL := Csqrt(Zs * Ys);
-    Zc := Csqrt(Zs / Ys);
+    GammaL := GammaL * Len;
     ExpP := cmplx(cos(GammaL.im), sin(GammaL.im)) * exp(GammaL.re);
+    Exp2P := cmplx(cos(0.5 * GammaL.im), sin(0.5 * GammaL.im)) * exp(0.5 * GammaL.re);
     ExpM := Cinv(ExpP);
-
+    Exp2M := Cinv(Exp2P);
     SinhGL := (ExpP - ExpM) * 0.5;
-    CoshGL := (ExpP + ExpM) * 0.5;
-    Zm := Zc * SinhGL;
-    Ym := (Cinv(Zc) * ((CoshGL - cmplx(1.0, 0.0)) / SinhGL)) * 2.0;
-
-        // Update values for tested frequency and adjusted for long-line
-        // do not replace original X1, R1, C1. We use these locally where the procedure is called.
-    R1_h := Zm.re / Len;
-    X1_h := Zm.im / Len;  // X1_h output is already accounting for new frequency
-    C1_h := Ym.im / Len / TwoPi / Frequency;
-    G1_h := Ym.re
+    Tanh2GL := (Exp2P - Exp2M) / (Exp2P + Exp2M);
+    Zm := (Zs * Len * SinhGL) / GammaL;
+    Ym := (Ys * Len * Tanh2GL) / (GammaL * 0.5);
+    // rely on this function being called only once, unless R1, X1, or C1 changes
+    R1 := Zm.re / Len;
+    X1 := Zm.im / Len;
+    C1 := Ym.im / Len / TwoPi / Frequency;
 end;
 
 procedure TLineObj.RecalcElementData;
@@ -885,8 +880,12 @@ begin
     // Handle special case for 1-phase line and/or pos seq model
     if (FnPhases = 1) or ActiveCircuit.PositiveSequence then
     begin
-        // Long line correction has been moved to CalcYPrim as it must be performed frequency-wise (not only for base freq).
-        // Zero sequence the same as positive sequence
+        // long-line equivalent PI, but only for CktModel=Positive
+        if ActiveCircuit.PositiveSequence and (C1 > 0) then
+        begin
+            DoLongLine(BaseFrequency);  // computes R1, X1, C1  per unit length
+        end;
+        // zero sequence the same as positive sequence
         R0 := R1;
         X0 := X1;
         C0 := C1;
@@ -985,84 +984,20 @@ begin
             FYprimFreq := ActiveCircuit.Solution.Frequency;
             FreqMultiplier := FYprimFreq / BaseFrequency;
 
-            // If positive sequence, long-line correction can be taken into account here
-            // It needs to be recalculated for every frequency
-            if ((FnPhases = 1) or ActiveCircuit.PositiveSequence) then
-            begin
-                // These values are specific for the harmonic being tested (adjust for frequency)
-                R1_h := R1;
-                X1_h := X1 * FYprimFreq / BaseFrequency; // Adjust for frequency here
-                C1_h := C1;
-                G1_h := 0.0;  // DoLongLine uses a tiny conductance to avoid skipping case where C1=0
-                // long-line equivalent PI, but only for CktModel=Positive
-                if ActiveCircuit.PositiveSequence then // A.Ovalle: To avoid errors in higher freqs, we shouldn't skip cases with C1=0. Critical to match IEEE 14bus harmonics benchmark.
-                begin
-                    // do long-line correction for tested frequency
-                    // use R1_h, X1_h, C1_h, G1_h to correct Y prim
-                    DoLongLine(FYprimFreq, R1_h, X1_h, C1_h, G1_h);
-                end;
-                  // zero sequence the same as positive sequence
-                R0_h := R1_h;
-                X0_h := X1_h;
-                C0_h := C1_h;
-                G0_h := G1_h;
-                Ztemp := cmplx(R1_h, X1_h) * 2.0;
-                Zs := (Ztemp + Cmplx(R0_h, X0_h)) * ONE_THIRD;
-                Zm := (cmplx(R0_h, X0_h) - Cmplx(R1_h, X1_h)) * ONE_THIRD;
+            // Put in Series RL
+            ZValues := Z.GetValuesArrayPtr(Norder);
+            ZinvValues := Zinv.GetValuesArrayPtr(Norder);
 
-                Yc1 := TwoPi * FYprimFreq * C1_h;
-                Yc0 := TwoPi * FYprimFreq * C0_h;
-
-                Ys := (Cmplx(G1_h, Yc1) * 2.0 + Cmplx(G0_h, Yc0)) * ONE_THIRD;
-                Ym := (cmplx(G0_h, Yc0) - Cmplx(G1_h, Yc1)) * ONE_THIRD;
-
-                for i := 1 to Fnphases do
-                begin
-                    Z.SetElement(i, i, Zs);
-                    Yc.SetElement(i, i, Ys);
-                    for j := 1 to i - 1 do
-                    begin
-                        Z.SetElemsym(i, j, Zm);
-                        Yc.SetElemsym(i, j, Ym);
-                    end;
-                end;
-
-                // Put in Series RL
-                ZValues := Z.GetValuesArrayPtr(Norder);
-                ZinvValues := Zinv.GetValuesArrayPtr(Norder);
-                // Correct the impedances for length and frequency
-                // Rg increases with frequency
-                // Xg modified by ln of sqrt(1/f)
-                if Xg <> 0.0 then
-                    Xgmod := 0.5 * KXg * ln(FreqMultiplier)
-                else
-                    Xgmod := 0.0;
-
-                for i := 1 to Norder * Norder do
-                     // Apply freq multiplier only to Xgmod as we have already accounted for freq adjustment above
-                    ZinvValues^[i] := Cmplx((ZValues^[i].re + Rg * (FreqMultiplier - 1.0)) * LengthMultiplier, (ZValues^[i].im - Xgmod * FreqMultiplier) * LengthMultiplier);
-
-            end
+            // Correct the impedances for length and frequency
+            // Rg increases with frequency
+            // Xg modified by ln of sqrt(1/f)
+            if Xg <> 0.0 then
+                Xgmod := 0.5 * KXg * ln(FreqMultiplier)
             else
-            begin
-                // Original piece of code is kept here
-                
-                // Put in Series RL 
-                ZValues := Z.GetValuesArrayPtr(Norder);
-                ZinvValues := Zinv.GetValuesArrayPtr(Norder);
-                 // Correct the impedances for length and frequency
-                 // Rg increases with frequency
-                 // Xg modified by ln of sqrt(1/f)
-                if Xg <> 0.0 then
-                    Xgmod := 0.5 * KXg * ln(FreqMultiplier)
-                else
-                    Xgmod := 0.0;
+                Xgmod := 0.0;
 
-                for i := 1 to Norder * Norder do
-                    ZinvValues^[i] := Cmplx((ZValues^[i].re + Rg * (FreqMultiplier - 1.0)) * LengthMultiplier, (ZValues^[i].im - Xgmod) * LengthMultiplier * FreqMultiplier);
-
-            end;
-            
+            for i := 1 to Norder * Norder do
+                ZinvValues^[i] := Cmplx((ZValues^[i].re + Rg * (FreqMultiplier - 1.0)) * LengthMultiplier, (ZValues^[i].im - Xgmod) * LengthMultiplier * FreqMultiplier);
             Zinv.Invert;  // Invert Z in-place to get values to put in Yprim
         end;
 
@@ -1137,15 +1072,7 @@ begin
                     for i := 1 to Fnphases do
                     begin
                         Inc(k);    // Assume matrix in col order (1,1  2,1  3,1 ...)
-                        if ((FnPhases = 1) or ActiveCircuit.PositiveSequence) then
-                        begin
-                            // If we enter here, frequency adjustment has already been applied above during Z and Yc recalculation (and also affected by long-line correction)
-                            Value := Cmplx(YValues^[k].re / 2.0, YValues^[k].im * LengthMultiplier / 2.0);
-                        end
-                        else
-                        begin
-                            Value := Cmplx(0.0, YValues^[k].im * LengthMultiplier * FreqMultiplier / 2.0);
-                        end;
+                        Value := Cmplx(0.0, YValues^[k].im * LengthMultiplier * FreqMultiplier / 2.0);
                         AddElement(i, j, Value);
                         AddElement(i + Fnphases, j + Fnphases, Value);
                     end;
