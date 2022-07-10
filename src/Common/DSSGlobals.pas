@@ -155,6 +155,7 @@ VAR
     DSS_CAPI_LEGACY_MODELS_PREV: Boolean = False;
     DSS_CAPI_ALLOW_CHANGE_DIR: Boolean = True;
     DSS_CAPI_COM_DEFAULTS: Boolean = True;
+    DSS_CAPI_MATRIX_SIZE: Boolean = False;
     GlobalDefaultBaseFreq: Double = 60.0;
     CPU_Freq           : int64;   // Used to store the CPU performance counter frequency (not the actual CPU frequency)
     CPU_Cores          : integer;

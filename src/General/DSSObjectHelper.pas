@@ -101,6 +101,7 @@ type
 implementation
 
 uses
+    DSSGlobals,
     DSSHelper,
     CktElement,
     Utilities,
@@ -912,7 +913,7 @@ var
     integerPtr: PInteger;
     darray: PDoubleArray;
     mat: TCMatrix;
-    ValueCount: Array[0..1] of Integer;
+    ValueCount: Array[0..3] of TAPISize;
 begin
     Result := True;
     if (Index > 0) and (Index <= NumProperties) and 
@@ -1027,6 +1028,11 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
+                    if DSS_CAPI_MATRIX_SIZE then
+                    begin
+                        ValueCount[2] := 0;
+                        ValueCount[3] := 0;
+                    end;
                     doublePtr := NIL;
                     TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, @ValueCount[0]);
                     val := GetDSSArray_Real_JSON(
@@ -1240,6 +1246,11 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
+                    if DSS_CAPI_MATRIX_SIZE then
+                    begin
+                        ValueCount[2] := 0;
+                        ValueCount[3] := 0;
+                    end;
                     otherObjPtr0 := NIL;
                     TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(otherObjPtr0), @ValueCount[0]);
                     otherObjPtr := otherObjPtr0;
@@ -1299,7 +1310,7 @@ var
     integerPtr: PInteger;
     darray: PDoubleArray;
     mat: TCMatrix;
-    ValueCount: Array[0..1] of Integer;
+    ValueCount: Array[0..3] of Integer;
 begin
     if (Index > 0) and (Index <= NumProperties) and 
        (PropertyOffset[Index] <> -1) then
@@ -1366,6 +1377,11 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
+                    if DSS_CAPI_MATRIX_SIZE then
+                    begin
+                        ValueCount[2] := 0;
+                        ValueCount[3] := 0;
+                    end;
                     doublePtr := NIL;
                     TDoublesPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, doublePtr, @ValueCount[0]);
                     PropStr := GetDSSArray_Real(
@@ -1577,6 +1593,11 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
+                    if DSS_CAPI_MATRIX_SIZE then
+                    begin
+                        ValueCount[2] := 0;
+                        ValueCount[3] := 0;
+                    end;
                     otherObjPtr0 := NIL;
                     TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(otherObjPtr0), @ValueCount[0]);
                     otherObjPtr := otherObjPtr0;
@@ -3319,7 +3340,7 @@ var
     otherObjPtr: TDSSObjectPtr;
     Result: PPAnsiCharArray0;
     ObjResultPtr: TDSSObjectPtr; 
-    ObjResultCount: Array[0..1] of TAPISize;
+    ObjResultCount: Array[0..3] of TAPISize;
 begin
     if not ((Index > 0) and (Index <= NumProperties) and (PropertyOffset[Index] <> -1)) then
     begin
@@ -3428,6 +3449,11 @@ begin
             begin
                 ObjResultCount[0] := 0;
                 ObjResultCount[1] := 0;
+                if DSS_CAPI_MATRIX_SIZE then
+                begin
+                    ObjResultCount[2] := 0;
+                    ObjResultCount[3] := 0;
+                end;
                 TObjRefsPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj, PPointer(ObjResultPtr), PAPISize(ObjResultCount));
                 count := ObjResultCount[0];
                 otherObjPtr := ObjResultPtr;

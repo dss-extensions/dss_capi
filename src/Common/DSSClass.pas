@@ -495,10 +495,10 @@ type
         GR_DataPtr_PInteger: PInteger;
         GR_DataPtr_PByte: PByte;
 
-        GR_Counts_PPAnsiChar: Array[0..1] of TAPISize;
-        GR_Counts_PDouble: Array[0..1] of TAPISize;
-        GR_Counts_PInteger: Array[0..1] of TAPISize;
-        GR_Counts_PByte: Array[0..1] of TAPISize;
+        GR_Counts_PPAnsiChar: Array[0..3] of TAPISize;
+        GR_Counts_PDouble: Array[0..3] of TAPISize;
+        GR_Counts_PInteger: Array[0..3] of TAPISize;
+        GR_Counts_PByte: Array[0..3] of TAPISize;
 
         // Original global state
         ClassNames: TClassNamesHashListType;

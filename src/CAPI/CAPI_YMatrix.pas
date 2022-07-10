@@ -52,7 +52,7 @@ procedure YMatrix_GetCompressedYMatrix(factor: TAPIBoolean; var nBus, nNz: Longw
 var
     Yhandle: NativeUInt;
     NumNZ, NumBuses: Longword;
-    tmpCnt: array[0..1] of TAPISize;
+    tmpCnt: array[0..3] of TAPISize;
 begin
     if MissingSolution(DSSPrime) then
         Exit;

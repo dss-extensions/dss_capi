@@ -618,6 +618,8 @@ end;
 
 //------------------------------------------------------------------------------
 procedure ctx_DSS_DisposeGRData(DSS: TDSSContext); CDECL;
+var
+    i: Integer;
 begin
     with DSS do
     begin
@@ -626,15 +628,13 @@ begin
         DSS_Dispose_PInteger(GR_DataPtr_PInteger);
         DSS_Dispose_PPAnsiChar(GR_DataPtr_PPAnsiChar, GR_Counts_PPAnsiChar[1]);
 
-        GR_Counts_PPAnsiChar[0] := 0;
-        GR_Counts_PDouble[0] := 0;
-        GR_Counts_PInteger[0] := 0;
-        GR_Counts_PByte[0] := 0;
-
-        GR_Counts_PPAnsiChar[1] := 0;
-        GR_Counts_PDouble[1] := 0;
-        GR_Counts_PInteger[1] := 0;
-        GR_Counts_PByte[1] := 0;
+        for i := 0 to 3 do
+        begin
+            GR_Counts_PPAnsiChar[i] := 0;
+            GR_Counts_PDouble[i] := 0;
+            GR_Counts_PInteger[i] := 0;
+            GR_Counts_PByte[i] := 0;
+        end;
     end;
 end;
 //------------------------------------------------------------------------------
