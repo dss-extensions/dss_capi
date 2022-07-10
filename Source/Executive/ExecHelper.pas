@@ -3650,6 +3650,10 @@ begin
   Result := 0;
   ParamName := Parser[ActiveActor].NextParam;
   Param := Parser[ActiveActor].StrValue;
+  if not FileExists(Param) then begin
+    DoSimpleMsg ('UUIDs file: ' + Param + ' does not exist', 242);
+    exit;
+  end;
   Try
     AssignFile(F, Param);
     Reset(F);
