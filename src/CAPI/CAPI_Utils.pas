@@ -116,6 +116,9 @@ procedure DefaultResult(var ResultPtr: PPAnsiChar; ResultCount: PAPISize; Value:
 function DSS_BeginPascalThread(func: Pointer; paramptr: Pointer): PtrUInt; CDECL;
 procedure DSS_WaitPascalThread(handle: PtrUInt); CDECL;
 
+procedure DSS_SetMessagesMO(Value: PChar); CDECL;
+procedure DSS_SetPropertiesMO(Value: PChar); CDECL;
+
 // internal function
 procedure DSS_InitThreads;
 
@@ -126,7 +129,8 @@ Uses
     DSSGlobals, 
     CktElement,
     Classes,
-    DSSHelper;
+    DSSHelper,
+    gettext;
 
 type
     TCDECLThreadFunc = function (user_data: Pointer): Pointer; CDECL;
@@ -726,6 +730,30 @@ end;
 procedure DSS_WaitPascalThread(handle: PtrUInt); CDECL;
 begin
     WaitForThreadTerminate(TThreadID(handle), MAXLONGINT);
+end;
+
+procedure DSS_SetMessagesMO(Value: PChar); CDECL;
+begin
+    if DSSMessages <> NIL then
+        FreeAndNIL(DSSMessages);
+
+    try
+        DSSMessages := TMOFile.Create(Value);
+    except
+        DSSMessages := NIL;
+    end;
+end;
+
+procedure DSS_SetPropertiesMO(Value: PChar); CDECL;
+begin
+    if DSSPropertyHelp <> NIL then
+        FreeAndNIL(DSSPropertyHelp);
+
+    try
+        DSSPropertyHelp := TMOFile.Create(Value);
+    except
+        DSSPropertyHelp := NIL;
+    end;
 end;
 
 end.

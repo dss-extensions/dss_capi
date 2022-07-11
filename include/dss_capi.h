@@ -7100,6 +7100,30 @@ extern "C" {
     */
     DSS_CAPI_DLL void DSS_WaitPascalThread(void *handle);
 
+    /*
+    Loads the gettext MO file from the path indicated by Value, to be used for
+    general OpenDSS messages.
+    On failure, messages are left as their default English versions as given
+    in the main source-code in DSS C-API.
+    No error is otherwise presented.
+
+    This function is not intended for the typical user.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void DSS_SetMessagesMO(const char* Value);
+    
+    /*
+    Loads the gettext MO file from the path indicated by Value, to be used for
+    help of DSS properties.
+    On failure, the property help strings are left as "NO HELP OR DESCRIPTION AVAILABLE."
+    No error is otherwise presented.
+
+    This function is not intended for the typical user.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void DSS_SetPropertiesMO(const char* Value);
 
 #ifdef __cplusplus
 } // extern "C"

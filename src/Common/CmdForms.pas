@@ -267,7 +267,7 @@ begin
     );
 end;
 
-procedure ShowAnyHelp(const num: Integer; cmd: pStringArray; const prefix: String; const opt: String);
+procedure ShowAnyHelp(cmd: ArrayOfString; const opt: String; const prefix: String);
 var
     i: Integer;
     lst: TStringList;
@@ -275,11 +275,12 @@ var
 begin
     if Length(opt) < 1 then
     begin
+        Writeln('if Length(opt) < 1 then');
         lst := TStringList.Create;
-        for i := 1 to num do
+        for i := 0 to High(cmd) do
             lst.Add(PadRight(cmd[i], colwidth));
         lst.Sort;
-        for i := 1 to num do
+        for i := 1 to Length(cmd) do
             if ((i mod numcols) = 0) then
             begin
                 msg := msg + lst[i - 1];
@@ -293,18 +294,17 @@ begin
                 WriteLnCB(msg, DSSMessageType.Help);
 
         lst.Free;
-    end
-    else
+        Exit;
+    end;
+
+    for i := 0 to High(cmd) do
     begin
-        for i := 1 to num do
+        if AnsiStartsStr(opt, AnsiLowerCase(cmd[i])) then
         begin
-            if AnsiStartsStr(opt, AnsiLowerCase(cmd[i])) then
-            begin
-                WriteLnCB(AnsiUpperCase(cmd[i]), DSSMessageType.Help);
-                WriteLnCB('======================', DSSMessageType.Help);
-                WriteLnCB(DSSHelp(prefix + '.' + cmd[i]), DSSMessageType.Help);
-                WriteLnCB(msg, DSSMessageType.Help);
-            end;
+            WriteLnCB(AnsiUpperCase(cmd[i]), DSSMessageType.Help);
+            WriteLnCB('======================', DSSMessageType.Help);
+            WriteLnCB(DSSHelp(prefix + '.' + cmd[i]), DSSMessageType.Help);
+            WriteLnCB(msg, DSSMessageType.Help);
         end;
     end;
 end;
@@ -328,22 +328,21 @@ begin
             end;
             pDSSClass := DSSClassList.Next;
         end;
-    end
-    else
-    begin
-        WriteLnCB(_('== Power Delivery Elements =='), DSSMessageType.Help);
-        AddHelpForClasses(DSSClassList, PD_ELEMENT, FALSE);
-        WriteLnCB(_('== Power Conversion Elements =='), DSSMessageType.Help);
-        AddHelpForClasses(DSSClassList, PC_ELEMENT, FALSE);
-        WriteLnCB(_('== Control Elements =='), DSSMessageType.Help);
-        AddHelpForClasses(DSSClassList, CTRL_ELEMENT, FALSE);
-        WriteLnCB(_('== Metering Elements =='), DSSMessageType.Help);
-        AddHelpForClasses(DSSClassList, METER_ELEMENT, FALSE);
-        WriteLnCB(_('== Supporting Elements =='), DSSMessageType.Help);
-        AddHelpForClasses(DSSClassList, 0, FALSE);
-        WriteLnCB(_('== Other Elements =='), DSSMessageType.Help);
-        AddHelpForClasses(DSSClassList, NON_PCPD_ELEM, FALSE);
+        Exit;
     end;
+
+    WriteLnCB(_('== Power Delivery Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSSClassList, PD_ELEMENT, FALSE);
+    WriteLnCB(_('== Power Conversion Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSSClassList, PC_ELEMENT, FALSE);
+    WriteLnCB(_('== Control Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSSClassList, CTRL_ELEMENT, FALSE);
+    WriteLnCB(_('== Metering Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSSClassList, METER_ELEMENT, FALSE);
+    WriteLnCB(_('== Supporting Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSSClassList, 0, FALSE);
+    WriteLnCB(_('== Other Elements =='), DSSMessageType.Help);
+    AddHelpForClasses(DSSClassList, NON_PCPD_ELEM, FALSE);
 end;
 
 function StringToHTML(const s: String): String; //TODO
@@ -375,122 +374,119 @@ begin
     for i := 1 to HelpList.Count do
     begin
         pDSSClass := HelpList.Items[i - 1];
-        writeln(Format(_('#### `%s` properties'), [pDSSClass.name]));
-        writeln();
+        WriteLnCB(Format(_('#### `%s` properties'), [pDSSClass.name]), DSSMessageType.Help);
+        WriteLnCB('', DSSMessageType.Help);
 
-        writeln('<table>');
-        writeln(Format('<tr><th>%s</th><th>%s</th><th>%s</th><th>Migrated?</th></tr>', [_('Number'), _('Name'), _('Description')]));
+        WriteLnCB('<table>', DSSMessageType.Help);
+        WriteLnCB(Format('<tr><th>%s</th><th>%s</th><th>%s</th><th>Migrated?</th></tr>', [_('Number'), _('Name'), _('Description')]), DSSMessageType.Help);
 
         for j := 1 to pDSSClass.NumProperties do
-            writeln(Format(
+            WriteLnCB(Format(
                     '<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>', 
                 [j, pDSSClass.PropertyName[j], StringToHTML(pDSSClass.GetPropertyHelp(j)), 'MIGRATED:' + StrYorN(pDSSClass.PropertyOffset[j] >= 0)]
-            ));
+            ), DSSMessageType.Help);
                 
-        writeln('</table>');
-        writeln();
+        WriteLnCB('</table>', DSSMessageType.Help);
+        WriteLnCB('', DSSMessageType.Help);
     end;
     
     HelpList.Free;
 end;
 
-procedure ShowAnyHelpMD(const num: Integer; cmd: pStringArray; what: String);
+procedure ShowAnyHelpMD(cmd: ArrayOfString; what: String);
 var
     i, j: Integer;
     lst: TStringList;
 begin
     lst := TStringList.Create;
-    for i := 1 to num do
+    for i := 0 to High(cmd) do
         lst.Add(cmd[i]);
 
     lst.Sort;
     
-    writeln('<table>');
-    writeln(Format('<tr><th>%s</th><th>%s</th></tr>', [what,  _('Description')]));
-    for i := 1 to num do
-        for j := 1 to num do
-            if cmd[j] = lst[i - 1] then
+    WriteLnCB('<table>', DSSMessageType.Help);
+    WriteLnCB(Format('<tr><th>%s</th><th>%s</th></tr>', [what,  _('Description')]), DSSMessageType.Help);
+    for i := 0 to High(cmd) do
+        for j := 0 to High(cmd) do
+            if cmd[j] = lst[i] then
             begin
-                writeln(Format('<tr><td>%s</td><td>%s</td></tr>', [cmd[j], StringToHTML(DSSHelp(what + '.' + cmd[j]))]));
+                WriteLnCB(Format('<tr><td>%s</td><td>%s</td></tr>', [cmd[j], StringToHTML(DSSHelp(what + '.' + cmd[j]))]), DSSMessageType.Help);
                 break;
             end;
     
-    writeln('</table>');
+    WriteLnCB('</table>', DSSMessageType.Help);
     lst.Free;
-    writeln();
+    WriteLnCB('', DSSMessageType.Help);
 end;
 
 procedure ShowAllHelpMD(DSS: TDSSContext); // TODO: use plain HTML for everything instead?
-//var
-//    pDSSClass: TDSSClass;
-//    i: Integer;
 begin
-    writeln(_('# DSS Extensions: OpenDSS Commands and Properties'));
-    writeln();
-    writeln('---');
-    writeln();
-    writeln(Format(_('**This document was generated from:** `%s`'), [VersionString]));
-    writeln();
-    writeln(_('*Generated with the legacy models disabled (i.e. OpenDSS v9+ compatibility mode).*'));
-    writeln();
-    writeln('---');
-    writeln();
-    writeln(_('## About this'));
-    writeln();
-    writeln(_('This is a document automatically generated from the commands, options and properties for the DSS language (script level) exposed in the DSS Extensions version of the OpenDSS engine. A separate document will be developed in the future to detail **API** functions and general usage recommendations for the projects under DSS Extensions.'));
-    writeln();
-    writeln(_('Since the extensive majority of properties and elements are compatible, this document can be useful when using either the official OpenDSS implementation or the DSS Extensions version (DSS C-API engine), consumed through the projects DSS Python (`dss_python`), OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp (`dss_sharp`), and DSS MATLAB (`dss_matlab`).  If you are using the official OpenDSS, when in doubt check the official documentation and/or source code.'));
-    writeln();
-    writeln(_('As a final note, keep in mind that not all commands are implemented in the DSS Extensions engine, interactive commands like plots are missing (on purpose).'));
-    writeln();
+    WriteLnCB(_('# DSS Extensions: OpenDSS Commands and Properties'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    WriteLnCB(Format(_('**This document was generated from:** `%s`'), [VersionString]), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    WriteLnCB(_('*Generated with the legacy models disabled (i.e. OpenDSS v9+ compatibility mode).*'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    WriteLnCB(_('## About this'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    WriteLnCB(_('This is a document automatically generated from the commands, options and properties for the DSS language (script level) exposed in the DSS Extensions version of the OpenDSS engine. A separate document will be developed in the future to detail **API** functions and general usage recommendations for the projects under DSS Extensions.'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    WriteLnCB(_('Since the extensive majority of properties and elements are compatible, this document can be useful when using either the official OpenDSS implementation or the DSS Extensions version (DSS C-API engine), consumed through the projects DSS Python (`dss_python`), OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp (`dss_sharp`), and DSS MATLAB (`dss_matlab`).  If you are using the official OpenDSS, when in doubt check the official documentation and/or source code.'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    WriteLnCB(_('As a final note, keep in mind that not all commands are implemented in the DSS Extensions engine, interactive commands like plots are missing (on purpose).'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
     
-    writeln('---');
-    writeln(_('## Commands'));
-    writeln();
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('## Commands'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
 
-    ShowAnyHelpMD(NumExecCommands, pStringArray(@DSS.DSSExecutive.ExecCommand), 'Command');
+    ShowAnyHelpMD(DSS.DSSExecutive.ExecCommand, 'Command');
     
-    writeln('---');
-    writeln(_('## Execution Options'));
-    writeln();
-    ShowAnyHelpMD(NumExecOptions, pStringArray(@DSS.DSSExecutive.ExecOption), 'Executive');
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('## Execution Options'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    ShowAnyHelpMD( DSS.DSSExecutive.ExecOption, 'Executive');
     
-    writeln('---');
-    writeln(_('## `Show` options'));
-    writeln();
-    ShowAnyHelpMD(NumShowOptions, pStringArray(@DSS.DSSExecutive.ShowOption), 'ShowOption');
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('## `Show` options'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    ShowAnyHelpMD(DSS.DSSExecutive.ShowOption, 'ShowOption');
     
-    writeln('---');
-    writeln(_('## `Export` options'));
-    writeln();
-    ShowAnyHelpMD(NumExportOptions, pStringArray(@DSS.DSSExecutive.ExportOption), 'ExportOption');
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('## `Export` options'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    ShowAnyHelpMD(DSS.DSSExecutive.ExportOption, 'ExportOption');
     
-    writeln('---');
-    writeln(_('## Elements'));
-    writeln();
-    writeln('---');
-    writeln(_('### Power Delivery Elements'));
-    writeln();
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('## Elements'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('### Power Delivery Elements'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
     AddHelpForClassesMD(DSS, PD_ELEMENT);
-    writeln('---');
-    writeln(_('### Power Conversion Elements'));
-    writeln();
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('### Power Conversion Elements'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
     AddHelpForClassesMD(DSS, PC_ELEMENT);
-    writeln('---');
-    writeln(_('###  Control Elements'));
-    writeln();
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('###  Control Elements'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
     AddHelpForClassesMD(DSS, CTRL_ELEMENT);
-    writeln('---');
-    writeln(_('### Metering Elements'));
-    writeln();
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('### Metering Elements'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
     AddHelpForClassesMD(DSS, METER_ELEMENT);
-    writeln('---');
-    writeln(_('### Supporting Elements'));
-    writeln();
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('### Supporting Elements'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
     AddHelpForClassesMD(DSS, 0);
-    writeln('---');
-    writeln(_('### Other Elements'));
-    writeln();
+    WriteLnCB('---', DSSMessageType.Help);
+    WriteLnCB(_('### Other Elements'), DSSMessageType.Help);
+    WriteLnCB('', DSSMessageType.Help);
     AddHelpForClassesMD(DSS, NON_PCPD_ELEM);
 end;
 
@@ -509,16 +505,16 @@ begin
         ShowAllHelpMD(DSS)
     else
     if ANSIStartsStr('com', param) then
-        ShowAnyHelp(NumExecCommands, pStringArray(@DSS.DSSExecutive.ExecCommand), OptName, 'Command')
+        ShowAnyHelp(DSS.DSSExecutive.ExecCommand, OptName, 'Command')
     else
     if ANSIStartsStr('op', param) then
-        ShowAnyHelp(NumExecOptions, pStringArray(@DSS.DSSExecutive.ExecOption), OptName, 'Executive')
+        ShowAnyHelp(DSS.DSSExecutive.ExecOption, OptName, 'Executive')
     else
     if ANSIStartsStr('sh', param) then
-        ShowAnyHelp(NumShowOptions, pStringArray(@DSS.DSSExecutive.ShowOption), OptName, 'ShowOption')
+        ShowAnyHelp(DSS.DSSExecutive.ShowOption, OptName, 'ShowOption')
     else
     if ANSIStartsStr('e', param) then
-        ShowAnyHelp(NumExportOptions, pStringArray(@DSS.DSSExecutive.ExportOption), OptName, 'ExportOption')
+        ShowAnyHelp(DSS.DSSExecutive.ExportOption, OptName, 'ExportOption')
     else
     if ANSIStartsStr('cl', param) then
         ShowClassHelp(DSS.DSSClassList, OptName)

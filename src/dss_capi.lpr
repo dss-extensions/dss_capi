@@ -279,6 +279,8 @@ exports
     DSS_Get_PAnsiChar,
     DSS_BeginPascalThread,
     DSS_WaitPascalThread,
+    DSS_SetMessagesMO,
+    DSS_SetPropertiesMO,
 
     ActiveClass_Get_AllNames,
     ActiveClass_Get_First,
