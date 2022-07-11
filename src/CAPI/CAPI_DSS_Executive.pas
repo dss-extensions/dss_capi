@@ -28,7 +28,10 @@ uses
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_Command(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.DSSExecutive.ExecCommand[i - 1]);
+    if (i >= 1) and (i <= NumExecCommands) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.DSSExecutive.ExecCommand[i - 1])
+    else
+        Result := NIL;
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_NumCommands(): Integer; CDECL;
@@ -43,23 +46,37 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_Option(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.DSSExecutive.ExecOption[i - 1]);
+    if (i >= 1) and (i <= NumExecOptions) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.DSSExecutive.ExecOption[i - 1])
+    else
+        Result := NIL;
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_CommandHelp(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Command.' + DSSPrime.DSSExecutive.ExecCommand[i - 1]));
+    if (i >= 1) and (i <= NumExecCommands) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Command.' + DSSPrime.DSSExecutive.ExecCommand[i - 1]))
+    else
+        Result := NIL;
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_OptionHelp(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Executive.' + DSSPrime.DSSExecutive.ExecOption[i - 1]));
+    if (i >= 1) and (i <= NumExecOptions) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Executive.' + DSSPrime.DSSExecutive.ExecOption[i - 1]))
+    else
+        Result := NIL;
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_OptionValue(i: Integer): PAnsiChar; CDECL;
 begin
-    DSSPrime.DSSExecutive.Command := 'get ' + DSSPrime.DSSExecutive.ExecOption[i - 1];
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.GlobalResult);
+    if (i >= 1) and (i <= NumExecOptions) then
+    begin
+        DSSPrime.DSSExecutive.Command := 'get ' + DSSPrime.DSSExecutive.ExecOption[i - 1];
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.GlobalResult);
+    end
+    else
+        Result := NIL;
 end;
 //------------------------------------------------------------------------------
 end.
