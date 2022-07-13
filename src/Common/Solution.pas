@@ -2537,6 +2537,11 @@ procedure TSolver.Execute;
 var
     MsgType: TActorMessage;
 begin
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    // FPU is not correctly initialized on macOS aarch64
+    // See https://gitlab.com/freepascal.org/fpc/source/-/issues/38230 (Exception in system functions on Apple M1)
+    SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,exOverflow, exUnderflow, exPrecision]);
+{$ENDIF}{$ENDIF}
     with DSS.ActiveCircuit, Solution do
         while ActorIsActive do
         begin

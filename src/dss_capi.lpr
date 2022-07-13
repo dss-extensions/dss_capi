@@ -79,7 +79,8 @@ uses
 {$ENDIF}
 {$IFNDEF DARWIN}
     LazUTF8,
-{$ENDIF}    
+{$ENDIF}
+    Math,
     SysUtils,
     Classes,
     CustApp,
@@ -2108,6 +2109,10 @@ exports
 {$ENDIF}
     ;
 
-
 begin
+{$IFDEF DARWIN}{$IFDEF CPUAARCH64}
+    // FPU is not correctly initialized on macOS aarch64
+    // See https://gitlab.com/freepascal.org/fpc/source/-/issues/38230 (Exception in system functions on Apple M1)
+    SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,exOverflow, exUnderflow, exPrecision]);
+{$ENDIF}{$ENDIF}
 end.
