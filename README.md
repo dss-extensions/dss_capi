@@ -18,12 +18,11 @@ If you are looking for the bindings to other languages:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, also mimics the COM classes, but Windows-only at the moment. Soon it will be possible to use it via COM too.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the COM classes.
 
-Version 0.12.0dev, based on OpenDSS revision 3363, with many extra/custom features.
+Version 0.12.0 is based on OpenDSS revision 3460, with many extra/custom features.
 
 **This is the work-in-progress branch, which will become 0.12.0. For a specific version, check the Git tags.**
 
 While the main objective of COM compatibility has been reach, this is still a work-in-progress and is subject to changes. 
-*Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.* From version 0.10, the v8 interface is a lot more stable than in 0.9.8. Since version 0.10.5, the parallel-machine code from Version 8 is not built for binary releases anymore -- stay tuned for a future unified version.
 
 Instead of using extra numeric parameters as in the official DDLL interface, each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
@@ -36,13 +35,13 @@ Besides low-level details such as memory management, most of the COM documentati
 
 **Starting in version 0.9.8, we disabled the `opendsscmd.ini` creation. You can set the default base frequency using the environment variable DSS_BASE_FREQUENCY, or just set it in the DSS scripts (recommended). This also means that the initial datapath is set to the current working directory.**
 
-Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to build DSS C-API. After the 0.10.x series of releases, all Pascal code is contained in the `src/` folder. The `src/CAPI/` folder contains the main API code, which sits besides the general OpenDSS code. Although there have been extensive changes to the official OpenDSS code, the upstream/official code is kept in the branch named `opendss-official-svn` and is periodically merged -- see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document. 
+Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to build DSS C-API. After the 0.10.x series of releases, all Pascal code is contained in the `src/` folder. The `src/CAPI/` folder contains the main API code, which sits besides the general OpenDSS code. Although there have been extensive changes to the official OpenDSS code, the upstream/official code is kept in the branch named `opendss-official-svn` and is periodically ported -- see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document. 
 
 ## Recent changes
 
-See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/changelog.md) for a detailed list.
+See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.12.x/docs/changelog.md) for a detailed list.
 
-- **2022-02-xx / version 0.12.0: Beta versions of 0.12.0 available. Final 0.12.0 expected in May 2022.**
+- **2022-07-13 / version 0.12.0: Extensive updates, includes ports of the PM functions, a new/rewritten property system, new API extensions, better performance, and other features.**
 - 2021-03-09 / version 0.10.7-1: Includes a fix for some reports which presented corrupted text in version 0.10.7.
 - 2020-12-28 / version 0.10.7: Maintenance release based on on OpenDSS revision 2963. Includes fixes and new features from the official OpenDSS. [A new document describing the DSS properties](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/dss_properties.md) was added.
 - 2020-07-31 / version 0.10.6: New API extensions, and ported changes from the official OpenDSS codebase. Includes some bugfixes, a new extended validation error messages and new compatibility toggles.
@@ -63,11 +62,16 @@ See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/
 ## Missing features and limitations
 
 - Currently not fully implemented:
-    - Plotting in general
+    - Plotting in general: function callbacks for plotting were added in v0.12. For some examples, see DSS Python.
+    - Diakoptics and `AggregateProfiles`: see [#46](https://github.com/dss-extensions/dss_capi/issues/46). Planned.
+
+Closed-source features are not ported. New components or features without examples or tests are usually avoided until maturity is reached in the official OpenDSS.
     
 ## Extra features
 
 Besides most of the COM methods, some of the unique DDLL methods are also exposed in adapted forms, namely the methods from `DYMatrix.pas`, especially `GetCompressedYMatrix` (check the source files for more information). Also check the [list of known differences](https://github.com/dss-extensions/dss_capi/blob/master/docs/known_differences.md) for extra methods and options.
+
+There are a growing number of API extensions. Some are pending documentation and examples.
 
 ## Download
 
@@ -91,7 +95,7 @@ To build the DLL yourself:
 
 ### On Windows
 
-If you just need the DLL, you can download it from the releases page. Pre-release development versions can be downloaded from the build artifacts from the GitHub Actions workflow.
+If you just need the DLL, you can download it from the releases page. Pre-release development versions can be downloaded from the build artifacts from the GitHub Actions workflow (you ).
 
 Otherwise:
 
@@ -126,6 +130,8 @@ After taking care of KLUSolve and placing a copy of it in the same folder, overa
     bash build/build_macos_x64.sh
 ```
 
+Similar steps are required for the ARM64 version.
+
 ## Usage and examples
 
 To understand the main concepts of DSS C-API and how it handles memory, see [the usage document](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md).
@@ -134,6 +140,8 @@ Two minimal samples (without DSS scripts, please bring your own) are available i
 
 The source code from DSS Python, OpenDSSDirect.py and OpenDSSDirect.jl are more complete and advanced examples of usage.
 
+More general documentation will be available in the future at https://github.com/dss-extensions/dss-extensions and https://dss-extensions.org
+
 ## Testing
 
 Currently most testing/validation is based on [DSS Python](http://github.com/dss-extensions/dss_python/). Other projects like [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) and [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) also provide important tests that help us find and fix potential bugs.
@@ -141,16 +149,10 @@ Currently most testing/validation is based on [DSS Python](http://github.com/dss
 
 ## Roadmap
 
-(Still being updated for 0.12.x)
-
 Besides bug fixes, the main funcionality of this library is mostly done. Notable desirable features that may be implemented are:
-- Expose more classes and important methods/properties for all classes
-- More and better documentation. We already integrated the help strings from the IDL/COM definition files in the header files.
-- Automate validation of the Linux binaries (compare the outputs to the Windows version). Currently this is a manual process.
-- C++ wrappers: Expose the API to C++ using namespaces for organization, overload methods, etc. We expect this as soon as the API gets stable.
-
-Other features that may include more invasive changes in the code base will probably be developed in another repository.
-
+- More and better documentation. We already integrated the help strings from the IDL/COM definition files in the header files. The work for this will be done at https://github.com/dss-extensions/dss-extensions since it's shared across all projects.
+- Automate validation of the Linux binaries (compare the outputs to the Windows version). Currently this is a manual process but there are on-going efforts to finalize automation.
+- C++ wrappers: Expose the API to C++ using namespaces for organization, overloaded methods, etc. We expect this as soon as the API gets stable. An initial set of headers will be out in July 2022.
 
 ## Questions?
 
@@ -160,8 +162,11 @@ Please allow me a few days to respond.
 
 ## Credits / Acknowledgment
 
-This project is derived from EPRI's OpenDSS and the same style of license is used. See `LICENSE` and `OPENDSS_LICENSE`, also check each subfolder for more details.
+This project was derived from EPRI's OpenDSS and the same style of license is used. See `LICENSE` and `OPENDSS_LICENSE`, also check each subfolder for more details.
 
 Note that, since OpenDSS depends on KLU via KLUSolve, the KLU licensing conditions (LGPL or GPL, depending on how you build KLU) apply to the resulting binaries; from the DSS-Extension KLUSolve repository, check the files `klusolve/COPYING`, `klusolve/lgpl_2_1.txt`, the SuiteSparse documentation and the Eigen3 documentation.
 
+Also note that even though we don't add copyright notices to each of the files, most of files from the OpenDSS original codebase were modified to create the version presented today in this repository. Please refer to the Git commit history for more information.
+
 Thanks to colleagues at the University of Campinas, Brazil, for providing feedback and helping me test this project, as well as everyone that reported issues and helped the development.
+

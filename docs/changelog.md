@@ -14,11 +14,17 @@
     - see also the GitHub milestone: https://github.com/dss-extensions/dss_capi/milestone/6
     - remove `LegacyModels` (older/deprecated models for PVSystem, Storage and related classes)
 
-# Version 0.12
 
-**not released**
+# Version 0.12.1
 
-**Includes porting of most official OpenDSS features up to revision 3464.**
+- **Planned**:
+    - matrix shapes in the count pointers
+    - complements to the Obj and Batch APIs
+    - i18n complements
+
+# Version 0.12.0
+
+**Includes porting of most official OpenDSS features up to revision 3460.** Check the OpenDSS SVN commits for details.
 
 Since version 0.11 accumulated too many changes for too long (nearly 2 years), making it hard to keep two parallel but increasingly distinct codebases, version 0.12 is a stepping stone to the next big version (planned as 0.13) that will contain all of the 0.11 changes. As such, only some of the 0.11 features are included. The previous 0.10.8 changes are also included here.
 
@@ -26,10 +32,11 @@ This version still maintains basic compatibility with the 0.10.x series of relea
 
 - The binary releases now use Free Pascal 3.2.2.
 - The library name was changed from `dss_capi_v7` to `dss_capi`. The codebase was cleaned up and reorganized.
-- The code was finally unified, merging remaining features from OpenDSS v8+ (with few exceptions). The DSS PM commands and functions will be enabled only in v0.13. To achieve this, most of the global variables from the OpenDSS engine were encapsulated in a new class, a DSS Context class. Multi-threaded features will be based on DSSContexts, both the original OpenDSS PM features and new extensions.
-- Experimental ARM64/AARCH64 support added. ARM32 building scripts were also added.
+- The code was finally unified, merging remaining features from OpenDSS v8+ (with few exceptions). Most of the DSS PM commands and functions were enabled. To achieve this, most of the global variables from the OpenDSS engine were encapsulated in a new class, a DSS Context class. Multi-threaded features are based on DSSContexts, both the original OpenDSS PM features and new extensions.
+- Using DSS Contexts, user threads are now possible.
+- Initial ARM64/AARCH64 support added. ARM32 building scripts were also added. Support includes Apple M1 support, including parallel/multi-threading features.
 - Finally use KLUSolveX (our KLUSolve fork, rewritten and extended), enabling incremental Y updates for transformers and capacitor banks. **Documentation including usage notes and limitations still not written.** This was planned for version v0.13, but momved back to v0.12 to enable ARM32 (armv7l) support and better results in ARM64 (aarch64).
-- Experimental callbacks for plotting and message output. Expect initial support in Python soon.
+- Experimental callbacks for plotting and message output. Expect initial support in Python soon after DSS C-API v0.12 is released.
 - Introduce `AllowChangeDir` mechanism: defaults to enabled state for backwards compatibility. When disabled, the engine will not change the current working directory in any situation. This is exposed through a new pair of functions
 `DSS_Set_AllowChangeDir` and `DSS_Get_AllowChangeDir`, besides the environment variable `DSS_CAPI_ALLOW_CHANGE_DIR`.
 - New setting to toggle `DOScmd` command. Can be controlled through the environment variable `DSS_CAPI_ALLOW_DOSCMD` or functions `DSS_Get_AllowDOScmd`/`DSS_Set_AllowDOScmd`.
@@ -65,8 +72,11 @@ This version still maintains basic compatibility with the 0.10.x series of relea
 - User-models: headers updated, and removed support for user-models in `LegacyModels` mode. `LegacyModels` will be removed in v0.13.
 - New functions to export the DSS properties of objects as JSON-encoded strings
 - The C headers for our library were updated to include the `const` modifier for various of the parameters. A few function declarations were fixed.
+- Initial batch of i18n changes.
 
 Due to the high number of IO changes, we recommend checking the performance before and after the upgrade to ensure your use case is not affected negatively. If issues are found, please do report.
+
+**The changelog for version 0.12.0 will be updated if we notice missing items.**
 
 # Version 0.11
 
