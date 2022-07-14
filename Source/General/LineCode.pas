@@ -146,9 +146,10 @@ END;
 Destructor TLineCode.Destroy;
 
 BEGIN
-    LineTypeList.Destroy;
-    // ElementList and  CommandList freed in inherited destroy
-    Inherited Destroy;
+  if ActiveActor = 1 then  // this to avoid conflicts when destroying shared vars with multiple actors
+    LineTypeList.Free;
+  // ElementList and  CommandList freed in inherited destroy
+  Inherited Destroy;
 END;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Procedure TLineCode.DefineProperties;

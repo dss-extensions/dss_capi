@@ -161,9 +161,10 @@ END;
 Destructor TLineGeometry.Destroy;
 
 BEGIN
+  if ActiveActor = 1 then     // this to avoid conflicts when destroying shared vars with multiple actors
     LineTypeList.Destroy;
-    // ElementList and  CommandList freed in inherited destroy
-    Inherited Destroy;
+  // ElementList and  CommandList freed in inherited destroy
+  Inherited Destroy;
 END;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Procedure TLineGeometry.DefineProperties;
