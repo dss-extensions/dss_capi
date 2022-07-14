@@ -13,19 +13,19 @@ Type
 { Define arrays with dummy dimension of 100 so we can hard code
   constants for accessing small order elements;  Otherwise, always
   allocate arrays of these types before using}
-    pSmallIntArray  = ^SmallIntArray;
     SmallIntArray   = Array[1..100] of SmallInt;
+    pSmallIntArray  = ^SmallIntArray;
     pIntegerArray   = ^LongIntArray;
-    pLongIntArray   = ^LongIntArray;
     LongIntArray    = Array[1..100] of LongInt;
-    pDoubleArray    = ^DoubleArray;
+    pLongIntArray   = ^LongIntArray;
     DoubleArray     = Array[1..100] of Double;
-    pSingleArray    = ^SingleArray;
+    pDoubleArray    = ^DoubleArray;
     SingleArray     = Array[1..100] of Single;
-    pPointerArray   = ^PointerArray;
+    pSingleArray    = ^SingleArray;
     PointerArray    = Array[1..100] of Pointer;
-    pStringArray    = ^StringArray;
+    pPointerArray   = ^PointerArray;
     StringArray     = Array[1..100] of String;
+    pStringArray    = ^StringArray;
     DynStringArray  = Array of string;
     pDynStringArray = ^DynStringArray;
 

@@ -119,23 +119,33 @@ Destructor THashList.Destroy;
 VAR
     i,j:Integer;
 Begin
+    if Assigned(ListPtr) then
+    Begin
 
-     FOR i := 1 to NumLists DO BEGIN
-         {DeAllocated  Sublists}
-         WITH ListPtr^[i] DO BEGIN
-           For j := 1 to Nallocated DO Str^[j] := ''; // decrement ref count on string
-           Freemem(Str, SizeOf(Str^[1]) * Nallocated);
-           Freemem(Idx, SizeOf(Idx^[1]) * Nallocated);
-         END;
-     END;
+      FOR i := 1 to NumLists DO BEGIN
 
-     Freemem(ListPtr, Sizeof(Listptr^[1]) * NumLists);
+        {DeAllocated  Sublists}
+        WITH ListPtr^[i] DO BEGIN
+          if Assigned(Str) then
+          Begin
+            For j := 1 to Nallocated DO Str^[j] := ''; // decrement ref count on string
+            ReallocMem(Str, 0);
+            ReallocMem(Idx, 0);
+          End;
+        END;
 
-     FOR i := 1 to NumElementsAllocated Do StringPtr^[i] := ''; // get rid of string storage
+      END;
+      ReallocMem(ListPtr, 0);
 
-     Freemem(StringPtr, Sizeof(StringPtr^[1]) * NumElementsAllocated);
+    End;
 
-     Inherited Destroy;
+    if Assigned(StringPtr) then
+    Begin
+      FOR i := 1 to NumElementsAllocated Do StringPtr^[i] := ''; // get rid of string storage
+      ReallocMem(StringPtr, 0);
+    End;
+
+    Inherited Destroy;
 End;
 
 Procedure ReallocStr(Var S:pStringArray; oldSize, NewSize:Integer);
