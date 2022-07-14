@@ -331,7 +331,7 @@ BEGIN
         Begin
           DSSClass_idx  :=  DSSClassList[ActiveActor].Get(i);
           TraceName :=  DSSClass_idx.Name;
-          FreeAndNil (TDSSClass(DSSClass_idx));
+          FreeAndNil(TDSSClass(DSSClass_idx));
         End;
         TraceName                  :=  '(DSS Class List)';
         FreeAndNil(DSSClassList[ActiveActor]);
