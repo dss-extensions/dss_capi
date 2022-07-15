@@ -416,7 +416,12 @@ begin
 end;
 function TAltHashList.NameOfIndex(i: Integer): String; inline;
 begin
-    Result := inherited NameOfIndex(i - 1);
+    // We need to validate since some code relies on invalid indices
+    // Should be handled better in the rest of the code in the future
+    if (i > 0) and (i <= Count) then
+        Result := inherited NameOfIndex(i - 1)
+    else
+        Result := '';
 end;
 procedure TAltHashList.DumpToFile(const fname: String);
 var

@@ -525,7 +525,7 @@ begin
                 DSS.DSSExecutive.RecorderOn := InterpretYesNo(Param);
             68:
                 DSS.EnergyMeterClass.Do_OverloadReport := InterpretYesNo(Param);
-            69:
+            ord(Opt.Voltexceptionreport):
                 DSS.EnergyMeterClass.Do_VoltageExceptionReport := InterpretYesNo(Param);
             70:
                 DSS.DSSExecutive.DoSetCFactors(DSS.Parser.DblValue);
@@ -880,7 +880,7 @@ begin
                     AppendGlobalResult(DSS, DSS.DSSExecutive.RecorderON);
                 68:
                     AppendGlobalResult(DSS, DSS.EnergyMeterClass.Do_OverloadReport);
-                69:
+                ord(Opt.Voltexceptionreport):
                     AppendGlobalResult(DSS, DSS.EnergyMeterClass.Do_VoltageExceptionReport);
                 70:
                     AppendGlobalResult(DSS, 'Get function not applicable.');
