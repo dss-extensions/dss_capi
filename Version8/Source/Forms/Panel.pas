@@ -288,6 +288,7 @@ type
     LinkstoHelpFiles1 : TMenuItem;
     Timer1            : TTimer;
     COMHelp1: TMenuItem;
+    Checkforupdates1: TMenuItem;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DSSHelp1Click(Sender: TObject);
@@ -473,6 +474,7 @@ type
     procedure LinkstoHelpFiles1Click(Sender: TObject);
     procedure Timerdone(Sender: TObject);
     procedure COMHelp1Click(Sender: TObject);
+    procedure Checkforupdates1Click(Sender: TObject);
   private
     { Private declarations }
     PlotOptionString  :String;
@@ -1813,6 +1815,18 @@ end;
 procedure TControlPanel.Capacity1Click(Sender: TObject);
 begin
    ActiveScriptForm.ExecuteDSSCommand('Export Capacity');
+end;
+
+procedure TControlPanel.Checkforupdates1Click(Sender: TObject);
+var
+  myResult  : String;
+begin
+  myResult  :=  Check_DSS_WebVersion(False);
+  {$IFNDEF CONSOLE}
+    ShowMessage(myResult);
+  {$ELSE}
+    DSSMessageDlg(myResult, TRUE);
+  {$ENDIF}
 end;
 
 procedure TControlPanel.TakeSample1Click(Sender: TObject);
