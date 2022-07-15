@@ -60,6 +60,7 @@ INTERFACE
         Procedure ResizeSubList(Var SubList:TSubList);
         Function Hash(Const S:String):Cardinal;
         Procedure ResizeStrPtr;
+        Function CheckIfValid():Boolean;
       protected
 
       public
@@ -75,6 +76,7 @@ INTERFACE
         Procedure  DumpToFile(const fname:string);
         Procedure  Clear;
         Property   ListSize:Cardinal read NumElements;
+        Property   IsValidPtr:Boolean read CheckIfValid;
       published
 
    END;
@@ -175,6 +177,13 @@ BEGIN
     END;
 
 END;
+
+Function THashList.CheckIfValid():Boolean;
+// Used to verify if the object is valid or has been cleared by someone else
+// Practical when destroying common Lists while working in parallel
+Begin
+  result :=  Assigned(ListPtr)
+End;
 
 (*   This one was for AnsiStrings and just moved up to 8 bytes into an integer
 Function THashList.Hash(Const S:String):Integer;

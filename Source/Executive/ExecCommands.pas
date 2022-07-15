@@ -12,7 +12,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 130;
+     NumExecCommands = 131;
 
 Var
 
@@ -183,6 +183,7 @@ Begin
      ExecCommand[128] := 'GIS';
      ExecCommand[129] := 'GISCoords';
      ExecCommand[130] := 'HELICSPublish';
+     ExecCommand[131] := 'Check4Updates';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -563,6 +564,7 @@ Begin
                           'Example: GISCoords [file=]xxxx.csv' + CRLF + CRLF +
                           'Note: For using only if OpenDSS-GIS is locally installed.';
      CommandHelp[130] :=  'Read HELICS publication topics from a JSON file';
+     CommandHelp[131] :=  'Returns a message indicating if there is a new version of OpenDSS avaialble for download. Requires internet connection.';
 
 End;
 
@@ -882,9 +884,10 @@ Begin
               GlobalResult  :=  ActiveCircuit[Activeactor].ReportPDEatBus(Parser[ActiveActor].StrValue);
             end;
       126:  CmdResult     :=  DopowersCmd(1);
-      128:  Globalresult  :=  DoGISCmd;
+      128:  GlobalResult  :=  DoGISCmd;
       129:  CmdResult     :=  DoBusCoordsCmd(FALSE, 1);   // GIS coordinates
       130:  DoHELICSPubCmd;
+      131:  GlobalResult  :=  Check_DSS_WebVersion(False);
 
      ELSE
        // Ignore excess parameters
