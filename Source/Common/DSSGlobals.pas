@@ -419,6 +419,8 @@ procedure Delay(TickTime : Integer);
 procedure GetDefaultPorts();
 procedure Show_COM_Help();
 
+Function Check_DSS_WebVersion(myDialog: boolean):String;
+
 
 
 
@@ -1224,7 +1226,7 @@ begin
 end;
 
 //******Verifies the OpenDSS version using the reference at Sourceforge*********
-procedure Check_DSS_WebVersion();
+Function Check_DSS_WebVersion(myDialog: boolean):String;
 {$IFDEF FPC}
 begin
   DSSMessageDlg ('Check_DSS_Webversion() not implemented on FPC; needs Indy', False);
@@ -1259,17 +1261,27 @@ Begin
   myVersion :=  VersionString.Substring(8);
   myIdx     :=  pos(' ',myVersion);
   myVersion :=  myVersion.Substring(0,myIdx - 1);
+
   if myText <> myVersion then
   Begin
     myPath    :=  'There is a new version of OpenDSS available for download' + CRLF +
                 'The new version can be located at:' + CRLF + CRLF +
                 'https://sourceforge.net/projects/electricdss/';
-  {$IFNDEF CONSOLE}
-    ShowMessage(myPath);
-  {$ELSE}
-    DSSMessageDlg(myPath, TRUE);
-  {$ENDIF}
-  End;
+
+    if myDialog then
+    Begin
+      {$IFNDEF CONSOLE}
+        ShowMessage(myPath);
+      {$ELSE}
+        DSSMessageDlg(myPath, TRUE);
+      {$ENDIF}
+    End;
+
+  End
+  else
+    myPath    := 'OpenDSS is up-to-date';
+
+  Result  := myPath;
 
 {$ENDIF}
 End;
@@ -1452,11 +1464,8 @@ initialization
    setlength(TSDataClass,CPU_Cores + 1);
    setlength(LineSpacingClass,CPU_Cores + 1);
    setlength(StorageClass,CPU_Cores + 1);
-//   setlength(Storage2Class,CPU_Cores + 1);
    setlength(PVSystemClass,CPU_Cores + 1);
-//   setlength(PVSystem2Class,CPU_Cores + 1);
    setlength(InvControlClass,CPU_Cores + 1);
-//   setlength(InvControl2Class,CPU_Cores + 1);
    setlength(ExpControlClass,CPU_Cores + 1);
    setlength(EventStrings,CPU_Cores + 1);
    setlength(SavedFileList,CPU_Cores + 1);
@@ -1663,7 +1672,7 @@ initialization
   DSS_GIS_installed := CheckOpenDSSViewer('OpenDSS_GIS');     // OpenDSS GIS (flag for detected installation)
   if Not IsDLL then
   Begin
-    Check_DSS_WebVersion;
+    Check_DSS_WebVersion(True);
   end;
 {$ENDIF}
 
