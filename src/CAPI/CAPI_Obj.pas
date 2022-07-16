@@ -309,6 +309,8 @@ begin
                 'params', TJSONArray.Create([PropertyOffset[i], param2, PropertyOffset3[i]]),
                 'flags', flagsToArray(PropertyFlags[i])
             ]);
+            if DSSPropertyHelp <> NIL then
+                prop.Add('description', GetPropertyHelp(i));
             if TPropertyFlag.Redundant in PropertyFlags[i] then
                 prop.Add('redundantWith', PropertyRedundantWith[i]);
 
