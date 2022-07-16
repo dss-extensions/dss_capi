@@ -41,6 +41,7 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.12.x/docs/changelog.md) for a detailed list.
 
+- 2022-07-16 / version 0.12.1: Incremental release to fix address a bug found just after 0.12.0 was released.
 - **2022-07-13 / version 0.12.0: Extensive updates, includes ports of the PM functions, a new/rewritten property system, new API extensions, better performance, and other features.**
 - 2021-03-09 / version 0.10.7-1: Includes a fix for some reports which presented corrupted text in version 0.10.7.
 - 2020-12-28 / version 0.10.7: Maintenance release based on on OpenDSS revision 2963. Includes fixes and new features from the official OpenDSS. [A new document describing the DSS properties](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/dss_properties.md) was added.

@@ -42,6 +42,7 @@ A partir de 2019-03-05, este repositório contém todo o código fonte em lingua
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
+- 2022-07-16 / version 0.12.1: Versão incremental, corrigindo um bug encontrado logo após o lançamento da versão 0.12.0.
 - **2022-07-13 / version 0.12.0: Grande atualização, inclui funções do mecanismo paralelo, um novo sistema de propriedades, novas extensões de API, melhor desempenho, além de outras novidades.**
 - 2020-12-28 / versão 0.10.7: Versão de manutenção, baseado no OpenDSS r2963. Inclui correções importantes e algumas novas funções do OpenDSS oficial.
 - 2020-07-31 / versão 0.10.6: Novas extensões para a API e alterações do OpenDSS oficial portadas. Inclui algumas correções de bugs, um novo mecanismo de mensagens de erro de validação, além de novos flags de compatibilidade.
