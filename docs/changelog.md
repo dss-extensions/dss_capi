@@ -15,12 +15,20 @@
     - remove `LegacyModels` (older/deprecated models for PVSystem, Storage and related classes)
 
 
-# Version 0.12.1
+# Version 0.12.2
 
 - **Planned**:
     - matrix shapes in the count pointers
     - complements to the Obj and Batch APIs
     - i18n complements
+
+# Version 0.12.1
+
+Incremental release to address a bug found right after 0.12.0 was released.
+
+- Fix handling of `Voltexceptionreport` option
+- `DSS_ExtractSchema`: include property descriptions, if loaded.
+- Examples: add a simple OpenMP example in C using DSSContexts 
 
 # Version 0.12.0
 
