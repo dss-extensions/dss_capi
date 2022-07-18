@@ -1760,7 +1760,7 @@ extern "C" {
     /*
     Reset fuse to normal state.
     */
-    DSS_CAPI_DLL void ctx_Fuses_Reset(void* ctx, int32_t Value);
+    DSS_CAPI_DLL void ctx_Fuses_Reset(void* ctx);
     
     /*
     Array of strings ('open' or 'closed') indicating the state of each phase of the fuse.
@@ -5384,6 +5384,9 @@ extern "C" {
     */
     DSS_CAPI_DLL void ctx_Solution_Set_MinIterations(void* ctx, int32_t Value);
 
+    /*
+    Solves the circuits for all the Actors created
+    */
     DSS_CAPI_DLL void ctx_Solution_SolveAll(void* ctx);
 
     DSS_CAPI_DLL void ctx_Solution_Get_IncMatrix(void* ctx, int32_t** ResultPtr, int32_t* ResultCount);
