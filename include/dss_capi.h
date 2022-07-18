@@ -1633,8 +1633,8 @@ extern "C" {
     
     Defaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS Extensions.
     
-    This can also be set through the environment variable DSS_CAPI_LEGACY_MODELS. Setting it to 1 enables
-    the legacy components, using the old models from the start.
+    This can also be set through the environment variable DSS_CAPI_ALLOW_DOSCMD. Setting it to 1 enables
+    the command.
     
     (API Extension)
     */
@@ -6733,6 +6733,8 @@ extern "C" {
     /*
     Array of total losses (complex) in a selection of elements.
     Use the element indices (starting at 1) as parameter.
+
+    (API Extension)
     */
     DSS_CAPI_DLL void Circuit_Get_ElementLosses(double** ResultPtr, int32_t* ResultCount, int32_t *ElementsPtr, int32_t ElementsCount);
     /*
