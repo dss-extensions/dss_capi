@@ -3,11 +3,12 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.4.1.2
+Version 9.4.2.1
 
 Changes this version
 ====================
 
+- Solves an issue found in the LineTypeList container. It was generating an unexpected issue when clearing memory during parallel processing operations. It was also creating redundant constants between Line, LineCode and LineGeometry classes.
 - Adding alternative method for accessing PCE state variables through the ActiveCktElement interface.
 - First version of DynamicExp object released, still under test. 
 - The ActiveCktelement interface includes new properties to allow users get/set state variables by name or index in the active circuit element. 
