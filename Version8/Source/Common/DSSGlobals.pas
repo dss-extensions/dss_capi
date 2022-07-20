@@ -82,6 +82,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      IdThreadComponent,
 {$ENDIF}
      NumCPULib,
+     Command,
      ISource;
 
 
@@ -375,6 +376,8 @@ VAR
 
 
 
+//************************ Line related Global defs***************************
+  LineTypeList            : TCommandList;
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
@@ -1667,6 +1670,10 @@ initialization
    IsMultithread    :=  True;
    //WriteDLLDebugFile('DSSGlobals');
 
+   LineTypeList := TCommandList.Create(
+   ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT', 'SWT_REC', 'SWT_DISC', 'SWT_BRK', 'SWT_ELBOW' ]);
+   LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
+
 {$IFNDEF FPC}
   DSS_Viz_installed := CheckOpenDSSViewer('OpenDSS_Viewer');  // OpenDSS Viewer (flag for detected installation)
   DSS_GIS_installed := CheckOpenDSSViewer('OpenDSS_GIS');     // OpenDSS GIS (flag for detected installation)
@@ -1685,6 +1692,7 @@ Finalization
 
 //  ClearAllCircuits; // this is also done later, when Executive destroyed from LocalFinalization
   LocalFinalization;
+  LineTypeList.Destroy;
 End.
 
 
