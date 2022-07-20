@@ -114,7 +114,6 @@ TYPE
 VAR
    LineCodeClass    : TLineCode;
    ActiveLineCodeObj: TLineCodeObj;
-   LineTypeList     : TCommandList;
 
 implementation
 
@@ -135,10 +134,6 @@ BEGIN
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
 
-     LineTypeList := TCommandList.Create(
-     ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT', 'SWT_REC', 'SWT1_DISC', 'SWT_BRK', 'SWT_ELBOW' ]);
-     LineTypeList.Abbrev := TRUE;  // Allow abbreviations for line type code
-
      LineCodeClass := Self;
 END;
 
@@ -146,8 +141,6 @@ END;
 Destructor TLineCode.Destroy;
 
 BEGIN
-  if LineTypeList.IsValidPtr then  // this to avoid conflicts when destroying shared vars with multiple actors
-    LineTypeList.Free;
   // ElementList and  CommandList freed in inherited destroy
   Inherited Destroy;
 END;
