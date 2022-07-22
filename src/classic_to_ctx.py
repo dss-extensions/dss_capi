@@ -191,22 +191,25 @@ with open('include/dss_capi_ctx.h', 'w') as fo:
 #include "./dss_capi.h"
 
 #ifdef __cplusplus
+#ifdef DSS_CAPI_NAMESPACE
+namespace dss { namespace capi {
+#endif
 extern "C" {
 #endif
 
-    /*
+    /*!
     Create a new DSS engine context. 
     */
     DSS_CAPI_DLL void* ctx_New(void);
 
-    /*
+    /*!
     Dispose an existing DSS engine context. 
     
     Pass a pointer to the variable, which will be zeroed on success.
     */
     DSS_CAPI_DLL void ctx_Dispose(void *ctx);
 
-    /*
+    /*!
     Returns the prime (default) instance of the DSS engine.
     
     This engine is created by default. This instance is used 
@@ -214,7 +217,7 @@ extern "C" {
     */
     DSS_CAPI_DLL void* ctx_Get_Prime(void);
 
-    /*
+    /*!
     Replaces the existing prime DSS engine context, returning
     the previous instance pointer. 
     Returns NULL if the given context is already set as prime.
@@ -230,6 +233,9 @@ extern "C" {
     fo.write('''
 #ifdef __cplusplus
 } // extern "C"
+#ifdef DSS_CAPI_NAMESPACE
+} } // namespace dss::capi
+#endif
 #endif
 #endif
 ''')
