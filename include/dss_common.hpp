@@ -1,8 +1,9 @@
-/*
+/*!
+
 dss_common.hpp: a C++ layer for DSS Extensions/C-API, common structs
 Copyright (c) 2020-2022 Paulo Meira
 
-Version: 0.4.3-2022-06
+Version: 0.5.0 (2022-07)
 
 **POTENTIAL BREAKING CHANGES UNTIL VERSION 1.0**
 
