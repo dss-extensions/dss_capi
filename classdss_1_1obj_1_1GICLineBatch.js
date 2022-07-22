@@ -1,0 +1,27 @@
+var classdss_1_1obj_1_1GICLineBatch =
+[
+    [ "GICLineBatch", "classdss_1_1obj_1_1GICLineBatch.html#ae3e0c120cd01334f8084066fcacc9168", null ],
+    [ "GICLineBatch", "classdss_1_1obj_1_1GICLineBatch.html#ab6f30bea6508ffa92f1cc6e8da138f4b", null ],
+    [ "GICLineBatch", "classdss_1_1obj_1_1GICLineBatch.html#ae625b3bb4872eb1ad015800e20f807fa", null ],
+    [ "Angle", "classdss_1_1obj_1_1GICLineBatch.html#a9ecbf8316734f92c2e991b34c7a1fbc6", null ],
+    [ "basefreq", "classdss_1_1obj_1_1GICLineBatch.html#aac37d471de1884e38b758cff7e8a40db", null ],
+    [ "bus1", "classdss_1_1obj_1_1GICLineBatch.html#ab9dd848057be9d77832ed019a9bab557", null ],
+    [ "bus2", "classdss_1_1obj_1_1GICLineBatch.html#a0f78e14dca06ad8ad4f751189b3b2a85", null ],
+    [ "C", "classdss_1_1obj_1_1GICLineBatch.html#a6d325eccf35f45d5d9d06d34c4dd650a", null ],
+    [ "EE", "classdss_1_1obj_1_1GICLineBatch.html#a5804d4d59acd71819af56c926efb1b73", null ],
+    [ "EN", "classdss_1_1obj_1_1GICLineBatch.html#a5c616c7a0cd3f06258bab030cbf5cedd", null ],
+    [ "enabled", "classdss_1_1obj_1_1GICLineBatch.html#a0e2311b61bf54eb6e58dead4eb4f6429", null ],
+    [ "frequency", "classdss_1_1obj_1_1GICLineBatch.html#a71adf1926a2d830f864a73dda7c42dbe", null ],
+    [ "Lat1", "classdss_1_1obj_1_1GICLineBatch.html#a1a0ea3c544ba9e12667e53f0ce862d2d", null ],
+    [ "Lat2", "classdss_1_1obj_1_1GICLineBatch.html#a53268dd269f0c61be75b62ac728b7005", null ],
+    [ "like", "classdss_1_1obj_1_1GICLineBatch.html#a97ef62858bc25a19fe80d1a4c6cda5a6", null ],
+    [ "like", "classdss_1_1obj_1_1GICLineBatch.html#aeb7e6e1829a7ee8b4d4d8227ea59f6fb", null ],
+    [ "Lon1", "classdss_1_1obj_1_1GICLineBatch.html#a5fbc74cd9f9ed612a9099f1ad04e25c0", null ],
+    [ "Lon2", "classdss_1_1obj_1_1GICLineBatch.html#a9226020aca34faf1e5c1eca8cebcd3e7", null ],
+    [ "phases", "classdss_1_1obj_1_1GICLineBatch.html#a9f1eb83751715b52f6f2db75d76c2e5e", null ],
+    [ "R", "classdss_1_1obj_1_1GICLineBatch.html#af1a271cc31d6c9ee7cffd34604c9204e", null ],
+    [ "spectrum", "classdss_1_1obj_1_1GICLineBatch.html#a95c17a666b30d0d42173897fbdcc0b96", null ],
+    [ "spectrum_obj", "classdss_1_1obj_1_1GICLineBatch.html#aa83e3c1ef024de5d7b79c1e73aa4b3a6", null ],
+    [ "Volts", "classdss_1_1obj_1_1GICLineBatch.html#a99682c7936adfba70936eba8651c30bd", null ],
+    [ "X", "classdss_1_1obj_1_1GICLineBatch.html#aea8dd6793b68c90db9c3d17f9c16cd9a", null ]
+];

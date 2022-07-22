@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['obj_5factivate_0',['Obj_Activate',['../dss__capi_8h.html#a75fad7628251121aa7fe28455d4bc7ce',1,'dss_capi.h']]],
+  ['obj_5fgetclassname_1',['Obj_GetClassName',['../dss__capi_8h.html#af7dbe67c6c3a6a55bbbe23336c5cd60b',1,'dss_capi.h']]],
+  ['obj_5fgetname_2',['Obj_GetName',['../dss__capi_8h.html#ae6e627f77afcea5e772d69e89d12e095',1,'dss_capi.h']]],
+  ['obj_5fgetpropseqptr_3',['Obj_GetPropSeqPtr',['../dss__capi_8h.html#af3e08bf75eadc0c5c2b44eb57db8f4dd',1,'dss_capi.h']]],
+  ['obj_5ftojson_4',['Obj_ToJSON',['../dss__capi_8h.html#a0c22b426baf808c8e2662a1df37ebf47',1,'dss_capi.h']]],
+  ['ocpdevicetype_5',['OCPDeviceType',['../classdss_1_1classic_1_1IMeters.html#a821b33663ca338d76ad210dd00bbfe3f',1,'dss::classic::IMeters']]],
+  ['ocpdevindex_6',['OCPDevIndex',['../classdss_1_1classic_1_1ICktElement.html#a4a0139a185a75222f91495e4d8212037',1,'dss::classic::ICktElement']]],
+  ['ocpdevtype_7',['OCPDevType',['../classdss_1_1classic_1_1ICktElement.html#a7e5e05d86b643e5109c629ee3ed7565c',1,'dss::classic::ICktElement']]],
+  ['offsetting_8',['OFFSetting',['../classdss_1_1classic_1_1ICapControls.html#adc51a47b9f3bc5700fc8581b86829d66',1,'dss::classic::ICapControls']]],
+  ['offsetting_9',['OFFsetting',['../classdss_1_1obj_1_1CapControl.html#aef7e7af77fce1f14c54b8bc68c258cf1',1,'dss::obj::CapControl::OFFsetting()'],['../classdss_1_1obj_1_1CapControlBatch.html#a706f9a51f26773b45de484394cdddb30',1,'dss::obj::CapControlBatch::OFFsetting()']]],
+  ['onsetting_10',['ONSetting',['../classdss_1_1classic_1_1ICapControls.html#a9cf92519615e47be33f25965b571246b',1,'dss::classic::ICapControls']]],
+  ['onsetting_11',['ONsetting',['../classdss_1_1obj_1_1CapControl.html#a1998da15948fddb05e433f6651e1668c',1,'dss::obj::CapControl::ONsetting()'],['../classdss_1_1obj_1_1CapControlBatch.html#a653d1b0f95b683d75fcd0cbdba89944b',1,'dss::obj::CapControlBatch::ONsetting()']]],
+  ['ontime_12',['ONtime',['../classdss_1_1obj_1_1Fault.html#a8a6d6033e80b7860ebee70d024ec9d58',1,'dss::obj::Fault::ONtime()'],['../classdss_1_1obj_1_1FaultBatch.html#ad9e6a99b3e5a8cc66dc7e931693c5c85',1,'dss::obj::FaultBatch::ONtime()']]],
+  ['open_13',['Open',['../classdss_1_1classic_1_1IZIP.html#a9291a3de6ab2b2bd83953467ef45b76e',1,'dss::classic::IZIP::Open()'],['../classdss_1_1classic_1_1IFuses.html#a57c3839404455a593a36c37e5cc2c248',1,'dss::classic::IFuses::Open()'],['../classdss_1_1classic_1_1IRelays.html#ad7dfe1221571b9262b843f0ff0b04a0d',1,'dss::classic::IRelays::Open()']]],
+  ['open_14',['open',['../classdss_1_1obj_1_1SwtControl.html#aebed4129b3dcd71e0c0b8344e2dcab56a7cef8a734855777c2a9d0caf42666e69',1,'dss::obj::SwtControl::open()'],['../classdss_1_1obj_1_1SwtControl.html#a2d9e84822f57237bb4467509aadd9a67a7cef8a734855777c2a9d0caf42666e69',1,'dss::obj::SwtControl::open()'],['../classdss_1_1obj_1_1Fuse.html#ac4efc81817084ecefe732e25a2001711a7cef8a734855777c2a9d0caf42666e69',1,'dss::obj::Fuse::open()']]],
+  ['open_15',['Open',['../classdss_1_1classic_1_1IZIP.html#aa4b46b5128068c9da498122068f7bf2b',1,'dss::classic::IZIP']]],
+  ['open_16',['open',['../classdss_1_1obj_1_1Relay.html#a06edd327a9346c55e6864c59b31fa102a7cef8a734855777c2a9d0caf42666e69',1,'dss::obj::Relay::open()'],['../classdss_1_1obj_1_1Relay.html#a391d56a53bd0b25e9796df00ca74fee0a7cef8a734855777c2a9d0caf42666e69',1,'dss::obj::Relay::open()'],['../classdss_1_1obj_1_1Recloser.html#aaa1e057c0a21cec4536bba587691312ba7cef8a734855777c2a9d0caf42666e69',1,'dss::obj::Recloser::open()'],['../classdss_1_1obj_1_1Recloser.html#a0a4650bcf4af611ab58e9f2176116943a7cef8a734855777c2a9d0caf42666e69',1,'dss::obj::Recloser::open()'],['../classdss_1_1obj_1_1Fuse.html#afef00be802992bed7fded837b395ea25a7cef8a734855777c2a9d0caf42666e69',1,'dss::obj::Fuse::open()']]],
+  ['option_17',['Option',['../classdss_1_1classic_1_1IDSS__Executive.html#aea766650493485cdd0690d397a6cfc34',1,'dss::classic::IDSS_Executive']]],
+  ['option_18',['option',['../classdss_1_1obj_1_1EnergyMeterBatch.html#a70366628fc6c13a078cced45039ff6a0',1,'dss::obj::EnergyMeterBatch::option()'],['../classdss_1_1obj_1_1EnergyMeter.html#ae04217a90710c6d2f42b972f1bdbe4ce',1,'dss::obj::EnergyMeter::option()']]],
+  ['optionhelp_19',['OptionHelp',['../classdss_1_1classic_1_1IDSS__Executive.html#a0f0f38f6be8ac69cd30e609fd8f087d8',1,'dss::classic::IDSS_Executive']]],
+  ['optionvalue_20',['OptionValue',['../classdss_1_1classic_1_1IDSS__Executive.html#a3348164968d8a51df943243af553a5a8',1,'dss::classic::IDSS_Executive']]],
+  ['overtrip_21',['overtrip',['../classdss_1_1obj_1_1Relay.html#aa231f57271f0e1c9205a268809f889c3',1,'dss::obj::Relay::overtrip()'],['../classdss_1_1obj_1_1RelayBatch.html#a05736324b92eb9635f6984ed70b1cb21',1,'dss::obj::RelayBatch::overtrip()']]],
+  ['overvoltcurve_22',['Overvoltcurve',['../classdss_1_1obj_1_1Relay.html#ac062b6dbd19205357819ca5364a64487',1,'dss::obj::Relay::Overvoltcurve()'],['../classdss_1_1obj_1_1RelayBatch.html#aaa9d5c96c9076f2df52edbcd1b446487',1,'dss::obj::RelayBatch::Overvoltcurve()']]],
+  ['overvoltcurve_5fobj_23',['Overvoltcurve_obj',['../classdss_1_1obj_1_1Relay.html#ac947d2da8b129295f24e2244b4d0e855',1,'dss::obj::Relay::Overvoltcurve_obj()'],['../classdss_1_1obj_1_1RelayBatch.html#a1240ab7366f333fbbacd6475cd0a9cbf',1,'dss::obj::RelayBatch::Overvoltcurve_obj()']]]
+];

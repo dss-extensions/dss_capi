@@ -1,0 +1,28 @@
+var classdss_1_1obj_1_1IsourceBatch =
+[
+    [ "IsourceBatch", "classdss_1_1obj_1_1IsourceBatch.html#a875d7276e80cf73dcd82589e362053a2", null ],
+    [ "IsourceBatch", "classdss_1_1obj_1_1IsourceBatch.html#a3c99d67e9266cf7dc7eed5dd075f3fd0", null ],
+    [ "IsourceBatch", "classdss_1_1obj_1_1IsourceBatch.html#ab9d4dc859412de1fd17a066a3325d63e", null ],
+    [ "amps", "classdss_1_1obj_1_1IsourceBatch.html#a73562aa5b6a7684218302efae743a566", null ],
+    [ "angle", "classdss_1_1obj_1_1IsourceBatch.html#a525ab4d051123b8bbe8acf1f23d8ebc4", null ],
+    [ "basefreq", "classdss_1_1obj_1_1IsourceBatch.html#a6f908e621e17806db83e08e2caa9d9d4", null ],
+    [ "bus1", "classdss_1_1obj_1_1IsourceBatch.html#ababd67a14f6bb73cda8aad8e4342b7ff", null ],
+    [ "Bus2", "classdss_1_1obj_1_1IsourceBatch.html#a3fef4ddccb0f272cc51bae05cfdfbc85", null ],
+    [ "Daily", "classdss_1_1obj_1_1IsourceBatch.html#aa9052d93242af1ea6f4fbfdcd1d9c769", null ],
+    [ "Daily_obj", "classdss_1_1obj_1_1IsourceBatch.html#a85aa131f6b6e98f5e8e0ab835294f47e", null ],
+    [ "Duty", "classdss_1_1obj_1_1IsourceBatch.html#a92310ee34bf1b58dfe69d8592df65157", null ],
+    [ "Duty_obj", "classdss_1_1obj_1_1IsourceBatch.html#a392dde19aad04be3fb1830edb3732664", null ],
+    [ "enabled", "classdss_1_1obj_1_1IsourceBatch.html#a4838e02abd6fa4e440c0416281c6a70c", null ],
+    [ "frequency", "classdss_1_1obj_1_1IsourceBatch.html#a34752c0fe634d55aeb46361abefab6d0", null ],
+    [ "like", "classdss_1_1obj_1_1IsourceBatch.html#a3b677a778543bb1d7f176981434c0ce3", null ],
+    [ "like", "classdss_1_1obj_1_1IsourceBatch.html#af123f230e8d4af2b56c4627aefb6893b", null ],
+    [ "phases", "classdss_1_1obj_1_1IsourceBatch.html#aa428b21a51f5b48080adc23a111c66ca", null ],
+    [ "scantype", "classdss_1_1obj_1_1IsourceBatch.html#a85d9155228ef32c07d44ae427a621514", null ],
+    [ "scantype_str", "classdss_1_1obj_1_1IsourceBatch.html#a9f318acd40a20d37abb22dc95339fd07", null ],
+    [ "sequence", "classdss_1_1obj_1_1IsourceBatch.html#ad114882a3904e0bc08c8a55cc4459846", null ],
+    [ "sequence_str", "classdss_1_1obj_1_1IsourceBatch.html#aab6a911ed554d0f1d0e8044e2761a61d", null ],
+    [ "spectrum", "classdss_1_1obj_1_1IsourceBatch.html#ae3047e625c51775adcabc1c70cac9f50", null ],
+    [ "spectrum_obj", "classdss_1_1obj_1_1IsourceBatch.html#a6567167676dfcb5015feff52f5022b75", null ],
+    [ "Yearly", "classdss_1_1obj_1_1IsourceBatch.html#a0703771c346be50258a839cda9ce9f03", null ],
+    [ "Yearly_obj", "classdss_1_1obj_1_1IsourceBatch.html#afd8cefddd02c6fd7f77612d326511f63", null ]
+];

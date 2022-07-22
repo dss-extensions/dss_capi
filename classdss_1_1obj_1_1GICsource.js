@@ -1,0 +1,26 @@
+var classdss_1_1obj_1_1GICsource =
+[
+    [ "Properties", "structdss_1_1obj_1_1GICsource_1_1Properties.html", null ],
+    [ "GICsource", "classdss_1_1obj_1_1GICsource.html#ad3595bb3becc4ac6235614d89bc3a8a3", null ],
+    [ "GICsource", "classdss_1_1obj_1_1GICsource.html#a72358a7f9fd7143ddede0911a8c151d0", null ],
+    [ "GICsource", "classdss_1_1obj_1_1GICsource.html#a6e7d8f7d5d83975c86b1465cd0e989db", null ],
+    [ "angle", "classdss_1_1obj_1_1GICsource.html#a6c3faac080f7c5ed5645a0feabe2f5b4", null ],
+    [ "basefreq", "classdss_1_1obj_1_1GICsource.html#af660d3fa8286c74258458965ab606ad0", null ],
+    [ "begin_edit", "classdss_1_1obj_1_1GICsource.html#ac9e5946cdda49227f06c251a08f2212e", null ],
+    [ "EE", "classdss_1_1obj_1_1GICsource.html#a740c62ea4e05a306a79535e689210929", null ],
+    [ "EN", "classdss_1_1obj_1_1GICsource.html#a0a3ac47dee45b28c4108a403b50a70c2", null ],
+    [ "enabled", "classdss_1_1obj_1_1GICsource.html#aec312f836d642f82181d980c2a7fe049", null ],
+    [ "end_edit", "classdss_1_1obj_1_1GICsource.html#a7e1e8b6a4cab0a217bd67759bad09214", null ],
+    [ "frequency", "classdss_1_1obj_1_1GICsource.html#af69b6dbc66e5a1c332c87c0bb1bf23c2", null ],
+    [ "Lat1", "classdss_1_1obj_1_1GICsource.html#a53dc160ccd7718081590c058fb9ccb29", null ],
+    [ "Lat2", "classdss_1_1obj_1_1GICsource.html#a3153fe38ab81e49b22078a53066ab3a6", null ],
+    [ "like", "classdss_1_1obj_1_1GICsource.html#a29ff964819363f4c60f8a76ec7f831c6", null ],
+    [ "like", "classdss_1_1obj_1_1GICsource.html#a1ff7557bee671df14332ed1ce1058664", null ],
+    [ "Lon1", "classdss_1_1obj_1_1GICsource.html#ab7097b0dfc25e56c1b55da86378b9423", null ],
+    [ "Lon2", "classdss_1_1obj_1_1GICsource.html#a83d15fdf342ea30ad75ce4ce4c365a47", null ],
+    [ "name", "classdss_1_1obj_1_1GICsource.html#a4e64c86723b14f16914bde0c0c52efe6", null ],
+    [ "phases", "classdss_1_1obj_1_1GICsource.html#a8de2b4b5ea52984db8f7f46423cc3141", null ],
+    [ "spectrum", "classdss_1_1obj_1_1GICsource.html#aedf3e195c1388aa02bf45775f3ff79fa", null ],
+    [ "spectrum_obj", "classdss_1_1obj_1_1GICsource.html#a3fb80b1087d81123a184d8bcd0fbf69d", null ],
+    [ "Volts", "classdss_1_1obj_1_1GICsource.html#a49290060a320a0ef6f6c0c8d873a099b", null ]
+];

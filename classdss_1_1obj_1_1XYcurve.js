@@ -1,0 +1,25 @@
+var classdss_1_1obj_1_1XYcurve =
+[
+    [ "Properties", "structdss_1_1obj_1_1XYcurve_1_1Properties.html", null ],
+    [ "XYcurve", "classdss_1_1obj_1_1XYcurve.html#a187365938304fd6df2c47107317cf7e8", null ],
+    [ "XYcurve", "classdss_1_1obj_1_1XYcurve.html#a055eafa3f4f9d1a3cb8d91318666a539", null ],
+    [ "XYcurve", "classdss_1_1obj_1_1XYcurve.html#aee9c66cfdd5c38d2ba1ff8be65edd7f6", null ],
+    [ "begin_edit", "classdss_1_1obj_1_1XYcurve.html#a9a73032a6eeccb275cbf128779e0b6ce", null ],
+    [ "csvfile", "classdss_1_1obj_1_1XYcurve.html#a8d970295efa8914931a103f9afa36000", null ],
+    [ "dblfile", "classdss_1_1obj_1_1XYcurve.html#a813aa8594ac5b581669e24b11c355293", null ],
+    [ "end_edit", "classdss_1_1obj_1_1XYcurve.html#a6f36ec8d2868e737a41752399420b63f", null ],
+    [ "like", "classdss_1_1obj_1_1XYcurve.html#aa99e3693294f1ad29b4c29dca93ec97e", null ],
+    [ "like", "classdss_1_1obj_1_1XYcurve.html#a43dec3ba94c1a852964096d1d895a93d", null ],
+    [ "name", "classdss_1_1obj_1_1XYcurve.html#a3b4e405d5f8c93a754c9ae6a40e222d0", null ],
+    [ "npts", "classdss_1_1obj_1_1XYcurve.html#a47e1d9a590e4de69fcb011f95b13f4c0", null ],
+    [ "Points", "classdss_1_1obj_1_1XYcurve.html#a93de56df38d573049ed3581f9150862e", null ],
+    [ "sngfile", "classdss_1_1obj_1_1XYcurve.html#ac7ef543ce3e6a15c9234832f49903f58", null ],
+    [ "x", "classdss_1_1obj_1_1XYcurve.html#a5cceaf154ae07c1c7fb0ea36397f41a7", null ],
+    [ "Xarray", "classdss_1_1obj_1_1XYcurve.html#a4bdc57f3123c1450eae48517982cc0c8", null ],
+    [ "Xscale", "classdss_1_1obj_1_1XYcurve.html#ab52ae3cb7262a895d470bc715ca0b3c4", null ],
+    [ "Xshift", "classdss_1_1obj_1_1XYcurve.html#a65a7ee65822463139cfdda5d958383e4", null ],
+    [ "y", "classdss_1_1obj_1_1XYcurve.html#a56e13ba5a11caaa9ee0d556f9ccd9d69", null ],
+    [ "Yarray", "classdss_1_1obj_1_1XYcurve.html#aa834dc30c69f91616b872b9e6506f987", null ],
+    [ "Yscale", "classdss_1_1obj_1_1XYcurve.html#aac7604b2a393a193badb626ebad9165e", null ],
+    [ "Yshift", "classdss_1_1obj_1_1XYcurve.html#a2597596ea2accbe3cd7e96a50fa45c09", null ]
+];

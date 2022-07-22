@@ -1,0 +1,28 @@
+var classdss_1_1obj_1_1VCCSBatch =
+[
+    [ "VCCSBatch", "classdss_1_1obj_1_1VCCSBatch.html#a8ab3713042d1ae312a514712e057918b", null ],
+    [ "VCCSBatch", "classdss_1_1obj_1_1VCCSBatch.html#a867a64cdd0749097421aa85e796beac0", null ],
+    [ "VCCSBatch", "classdss_1_1obj_1_1VCCSBatch.html#af5cf229f785bc82a48bb74c085aae9ce", null ],
+    [ "basefreq", "classdss_1_1obj_1_1VCCSBatch.html#a84fd35bfdb9caec657ef5e2c714f2585", null ],
+    [ "bp1", "classdss_1_1obj_1_1VCCSBatch.html#a4dc56d405d1e85dae37dedf3eda2edce", null ],
+    [ "bp1_obj", "classdss_1_1obj_1_1VCCSBatch.html#aa3a32e0a5919b3b9b932d78497229211", null ],
+    [ "bp2", "classdss_1_1obj_1_1VCCSBatch.html#a022f414ccac08cc436d5d91d44e2b924", null ],
+    [ "bp2_obj", "classdss_1_1obj_1_1VCCSBatch.html#a047136d1dba79537181c67c4fe9dcca2", null ],
+    [ "bus1", "classdss_1_1obj_1_1VCCSBatch.html#a2243c855d35f23628cde5452e67d8eb1", null ],
+    [ "enabled", "classdss_1_1obj_1_1VCCSBatch.html#a0e5ce5ef64aa82bd900574692703449e", null ],
+    [ "filter", "classdss_1_1obj_1_1VCCSBatch.html#ac929219b9eb7330fb272007e95df0e18", null ],
+    [ "filter_obj", "classdss_1_1obj_1_1VCCSBatch.html#a98ece770db4290d4a166ba9939dde58c", null ],
+    [ "fsample", "classdss_1_1obj_1_1VCCSBatch.html#ad28005aa5586d05cf8c0fa19c66bf107", null ],
+    [ "imaxpu", "classdss_1_1obj_1_1VCCSBatch.html#a0aaa98e5f7416d9d864c0ee0c89bffc2", null ],
+    [ "irmstau", "classdss_1_1obj_1_1VCCSBatch.html#ab9e692a77d85ff53c09797d30c40d050", null ],
+    [ "like", "classdss_1_1obj_1_1VCCSBatch.html#a3a2fbcdf31af8c9960be8177faca1af1", null ],
+    [ "like", "classdss_1_1obj_1_1VCCSBatch.html#a4a23f3f329ef774e935a0e92ee545077", null ],
+    [ "phases", "classdss_1_1obj_1_1VCCSBatch.html#a2c3e3a71100ee9897de30e8dba245e8c", null ],
+    [ "ppct", "classdss_1_1obj_1_1VCCSBatch.html#a3ceb511a3f08e8be2b14001a468da558", null ],
+    [ "prated", "classdss_1_1obj_1_1VCCSBatch.html#a704a304fd894109e18bc40dbcf68a945", null ],
+    [ "rmsmode", "classdss_1_1obj_1_1VCCSBatch.html#a0c264bcbac552e3aded6c98b67a2e611", null ],
+    [ "spectrum", "classdss_1_1obj_1_1VCCSBatch.html#aecfaf0134dd04d33b8eddb43f141346e", null ],
+    [ "spectrum_obj", "classdss_1_1obj_1_1VCCSBatch.html#a2e1375178b15e9b5c35c5aaecb9f3118", null ],
+    [ "vrated", "classdss_1_1obj_1_1VCCSBatch.html#a2854121d26aeaff4c365c2481fbb6923", null ],
+    [ "vrmstau", "classdss_1_1obj_1_1VCCSBatch.html#a2dc82bd6ab0406b344629d29dba44b61", null ]
+];
