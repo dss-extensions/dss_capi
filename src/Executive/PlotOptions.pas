@@ -180,7 +180,7 @@ end;
 function DoPlotCmd(DSS: TDSSContext): Integer;
 // Parse plot options and feed the callback function, if any
 var
-    ParamName, Param: String;
+    ParamName, Param, ParamOriginal: String;
     ParamPointer, i: Integer;
     DblBuffer: array[0..50] of Double;
     NumChannels: Integer;
@@ -215,7 +215,8 @@ begin
     // Get next parameter on command line
     ParamPointer := 0;
     ParamName := AnsiUpperCase(Parser.NextParam);
-    Param := AnsiUpperCase(Parser.StrValue);
+    ParamOriginal := Parser.StrValue;
+    Param := AnsiUpperCase(ParamOriginal);
     while Length(Param) > 0 do
     begin
         // Interpret Parameter
@@ -385,7 +386,7 @@ begin
                     if Parser.IntValue > 0 then
                         MaxLineThickness := Parser.IntValue;
                 17:
-                    InterpretTStringListArray(DSS, Param, DaisyBusList); // read in Bus list
+                    InterpretTStringListArray(DSS, ParamOriginal, DaisyBusList); // read in Bus list
                 18:
                 begin
                     MinScale := Parser.DblValue;
@@ -432,7 +433,8 @@ begin
 
 
         ParamName := AnsiUpperCase(Parser.NextParam);
-        Param := AnsiUpperCase(Parser.StrValue);
+        ParamOriginal := Parser.StrValue;
+        Param := AnsiUpperCase(ParamOriginal);
     end;
 
     if not ActiveCircuit.Issolved then
@@ -442,7 +444,7 @@ begin
     try
         jsonDaisyBusList := TJSONArray.Create();
         for i := 1 to DaisyBusList.Count do
-            jsonDaisyBusList.Add(DaisyBusList[i]);
+            jsonDaisyBusList.Add(DaisyBusList[i - 1]);
 
         jsonChannels := TJSONArray.Create();
         for i := 0 to High(Channels) do
