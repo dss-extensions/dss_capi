@@ -12,7 +12,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 134;
+        NumExecOptions = 135;
 
 VAR
          ExecOption,
@@ -176,6 +176,7 @@ Begin
      ExecOption[132] := 'GISColor';
      ExecOption[133] := 'GISThickness';
      ExecOption[134] := 'UseMyLinkBranches';
+     ExecOption[135] := 'LineTypes';
 
      {Deprecated
       ExecOption[130] := 'MarkPVSystems2';
@@ -471,6 +472,7 @@ Begin
      OptionHelp[134] := '{YES/TRUE | NO/FALSE*} Set/get the boolean flag for indicating to the tearing algorithm the source of the link branches for tearing the model into sub-circuits.' +
                         ' If FALSE, OpenDSS will use METIS for estimating the link branches to be used based on the number of sub-circuits given by the user through the command "set Num_SubCircuits".' +
                         'Otherwise, OpenDSS will use the list of link branches given by the user with the command "set LinkBranches".';
+     OptionHelp[135] := '(Read only) Returns the list of line types available in the code for reference. These line types apply to lines, line codes, and line geometry objects.';
 
     // OptionHelp[132] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark Storage2 locations with a symbol. See StoreMarkerCode and StoreMarkerSize. ';
    //  OptionHelp[130] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark PVSystem locations with a symbol. See PVMarkerCode and PVMarkerSize. ';
@@ -1070,6 +1072,7 @@ Begin
           129: AppendGlobalResult(Format('%d' ,[NumNUMA]));
           130: if DSS_GIS_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           134: if UseUserLinks then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          135: GlobalResult :=  GetLineTypes();
          ELSE
            // Ignore excess parameters
          End;
@@ -1130,6 +1133,7 @@ Begin
           116: if ConcatenateReports then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           117: if DSS_Viz_enable then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           118: if DSS_Viz_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          135: GlobalResult :=  GetLineTypes();
          ELSE
             Begin
                 DoSimpleMsg('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.', 301);
