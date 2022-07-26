@@ -424,6 +424,8 @@ procedure Show_COM_Help();
 
 Function Check_DSS_WebVersion(myDialog: boolean):String;
 
+Function GetLineTypes(): String;
+
 
 
 
@@ -1410,6 +1412,26 @@ Begin
     DSSPrgPort    :=  20010;
     DSSGISPort    :=  20011;
   end;
+
+End;
+
+Function GetLineTypes(): String;
+// Returns a string containing the line types
+// the string format is the standard DSS array format (comma separated)
+var
+  idx       : integer;
+  separator : string;
+begin
+
+  Result      :=  '[';
+  separator   :=  '';
+  for idx := 1 to LineTypeList.NumCommands do
+  Begin
+    Result    := Result + separator + LineTypeList.Get(idx);
+    separator :=  ',';
+  End;
+
+  Result  :=  Result + ']';
 
 End;
 
