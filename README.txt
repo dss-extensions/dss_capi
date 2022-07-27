@@ -3,11 +3,12 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.4.2.1*
+Version 9.4.2.2
 
 Changes this version
 ====================
 
+- Solved issue introduced with long-line correction changes of rev 3464. Single-phase lines without symmetrical component definition were being affected by change.
 - Adding command for getting the line type list as string for reference.
 - Includes new command for checking if there is a new version of OpenDSS available for download. The same command was implemented in the GUI's menu -> Help options.
 - Solves an issue found in the LineTypeList container. It was generating an unexpected issue when clearing memory during parallel processing operations. It was also creating redundant constants between Line, LineCode and LineGeometry classes.
