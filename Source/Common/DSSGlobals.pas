@@ -1235,6 +1235,7 @@ Function Check_DSS_WebVersion(myDialog: boolean):String;
 {$IFDEF FPC}
 begin
   DSSMessageDlg ('Check_DSS_Webversion() not implemented on FPC; needs Indy', False);
+  Result := '';
 {$ELSE}
 var
   myVersion,
