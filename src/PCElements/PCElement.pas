@@ -47,12 +47,10 @@ type
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
         procedure set_ITerminalUpdated(const Value: Boolean);
 
-      // Sweep solution removed  PROCEDURE BackwardSweep;Override;
-
-      // For Harmonics Mode
+        // For Harmonics Mode
         procedure InitHarmonics; VIRTUAL;
 
-       // For Dynamics Mode and Control Devices
+        // For Dynamics Mode and Control Devices
         procedure InitStateVars; VIRTUAL;
         procedure IntegrateStates; VIRTUAL;
         function NumVariables: Integer; VIRTUAL;

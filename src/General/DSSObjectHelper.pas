@@ -208,6 +208,16 @@ begin
 
     ptype := PropertyType[Index];
     case ptype of
+        TPropertyType.DeprecatedAndRemoved:
+        begin
+            DoSimpleMsg(
+                '%s.%s: %s', 
+                [TDSSObject(obj).FullName, PropertyName[Index], _(PropertyDeprecatedMessage[Index])],
+                2020030);
+
+            Result := False;
+            Exit;
+        end;
         TPropertyType.StringSilentROFunctionProperty:
         //TPropertyType.DoubleArraySilentROFunctionProperty:
         begin

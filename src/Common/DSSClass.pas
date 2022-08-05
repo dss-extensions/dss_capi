@@ -1,11 +1,10 @@
 
 unit DSSClass;
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2018-2022, Paulo Meira, DSS Extensions contributors
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -91,7 +90,8 @@ type
         FullNameAsArray, // special case for LineGeometry, when reading wire as an array of strings through the Obj_* API
         Redundant,
         Util, // things like X and Y from XYcurve that don't have value as data
-        Unused
+        Unused,
+        Deprecated
     );
 
     TPropertyFlags = set of TPropertyFlag;
@@ -165,8 +165,9 @@ type
         StringOnStructArrayProperty,
 
         BusOnStructArrayProperty,
-        BusesOnStructArrayProperty // AutoTrans, Transformer
+        BusesOnStructArrayProperty, // AutoTrans, Transformer
 
+        DeprecatedAndRemoved
         // OtherProperty
     );
 {$SCOPEDENUMS OFF}
@@ -277,7 +278,8 @@ type
         PropertyOffset: pPtrIntArray; // For most simple properties
         PropertyOffset2: pPtrIntArray; // For separate complex quantities, double-on-array, ...
         PropertyOffset3: pPtrIntArray; // For setters in e.g. object refs
-        
+        PropertyDeprecatedMessage: Array of String; // For deprecated properties
+
         PropertyStructArrayIndexOffset, PropertyStructArrayIndexOffset2,
         PropertyStructArrayOffset, 
         PropertyStructArrayStep, 
@@ -1301,6 +1303,7 @@ begin
     PropertyOffset := Allocmem(SizeOf(PtrInt) * NumProperties);
     PropertyOffset2 := Allocmem(SizeOf(PtrInt) * NumProperties);
     PropertyOffset3 := Allocmem(SizeOf(PtrInt) * NumProperties);
+    SetLength(PropertyDeprecatedMessage, NumProperties + 1);
     PropertyReadFunction := Allocmem(SizeOf(Pointer) * NumProperties);
     PropertyWriteFunction := Allocmem(SizeOf(Pointer) * NumProperties);
 

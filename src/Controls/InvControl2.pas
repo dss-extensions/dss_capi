@@ -1,27 +1,10 @@
 unit InvControl2;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015,  Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
-//
-//  A InvControl is a control element that is connected to a terminal of another
-//  circuit element and sends kW and/or kvar signals to a set of PVSystem objects it controls
-//
-//  A InvControl is defined by a New command:
-//
-//  New InvControl.Name=myname PVSystemList = (pvsystem1  pvsystem2 ...)
-//
-//Notes:
-//  WGS (11/26/2012): Using dynamic arrays for many private variables in this unit.
-//  Although dynamic arrays begin at 0 (by definition in Delphi),
-//  this unit is using 1 to numberelements in all for loops - the 0th
-//  element is un-used (except for Strings) in this unit.
-//  All dynamic arrays are set to length numberelements+1 in the appropriate dimension.
-//
-//  Updated 9/24/2015 to allow for simultaneous modes and additional functionality
+// ----------------------------------------------------------
+// Copyright (c) 2018-2022, Paulo Meira, DSS Extensions contributors
+// Copyright (c) 2008-2020,  Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -50,40 +33,40 @@ type
     TInvControl2Prop = (
         INVALID = 0,
 
-        DERList = 1,
-        Mode = 2,
-        CombiMode = 3,
-        vvc_curve1 = 4,
-        hysteresis_offset = 5,
-        voltage_curvex_ref = 6,
-        avgwindowlen = 7,
+        DERList,
+        Mode,
+        CombiMode,
+        vvc_curve1,
+        hysteresis_offset,
+        voltage_curvex_ref,
+        avgwindowlen,
 
-        voltwatt_curve = 8,
+        voltwatt_curve,
 
-        DbVMin = 9,
-        DbVMax = 10,
-        ArGraLowV = 11,
-        ArGraHiV = 12,
-        DynReacavgwindowlen = 13,
-        deltaQ_Factor = 14, 
-        VoltageChangeTolerance = 15,
-        VarChangeTolerance = 16,
-        VoltwattYAxis = 17,
-        RateofChangeMode = 18,
-        LPFTau = 19, // weird double: in the original version, value was not set
-        RiseFallLimit = 20, // weird double: in the original version, value was not set
-        deltaP_Factor = 21,
-        EventLog = 22,
-        RefReactivePower = 23,
-        ActivePChangeTolerance = 24,
-        monVoltageCalc = 25,
-        monBus = 26,
-        MonBusesVbase = 27,
-        voltwattCH_curve = 28,
-        wattpf_curve = 29,
-        wattvar_curve = 30,
-        // VV_RefReactivePower = 31, // was deprecated, removed
-        PVSystemList, // was 32
+        DbVMin,
+        DbVMax,
+        ArGraLowV,
+        ArGraHiV,
+        DynReacavgwindowlen,
+        deltaQ_Factor, 
+        VoltageChangeTolerance,
+        VarChangeTolerance,
+        VoltwattYAxis,
+        RateofChangeMode,
+        LPFTau, // weird double: in the original version, value was not set
+        RiseFallLimit, // weird double: in the original version, value was not set
+        deltaP_Factor,
+        EventLog,
+        RefReactivePower,
+        ActivePChangeTolerance,
+        monVoltageCalc,
+        monBus,
+        MonBusesVbase,
+        voltwattCH_curve,
+        wattpf_curve,
+        wattvar_curve,
+        VV_RefReactivePower, // was deprecated, reintroduced for v0.12.2; TODO: TO BE REMOVED AGAIN LATER
+        PVSystemList, // was 32 -- TODO: TO BE MARKED AS REMOVED
         Vsetpoint // was 33
     );
 {$SCOPEDENUMS OFF}
@@ -488,6 +471,11 @@ begin
     PropertyOffset[ord(TProp.RefReactivePower)] := ptruint(@obj.FReacPower_ref);
     PropertyOffset2[ord(TProp.RefReactivePower)] := PtrInt(RefQEnum);
 
+    PropertyOffset[ord(TProp.VV_RefReactivePower)] := 0;
+    PropertyType[ord(TProp.VV_RefReactivePower)] := TPropertyType.DeprecatedAndRemoved; //TODO: fully remove
+    PropertyDeprecatedMessage[ord(TProp.VV_RefReactivePower)] := '"VV_RefReactivePower" was deprecated in 2020. Use "RefReactivePower" instead.';
+    PropertyFlags[ord(TProp.VV_RefReactivePower)] := [TPropertyFlag.Deprecated];
+
     PropertyType[ord(TProp.monVoltageCalc)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.monVoltageCalc)] := ptruint(@obj.FMonBusesPhase);
     PropertyOffset2[ord(TProp.monVoltageCalc)] := PtrInt(DSS.MonPhaseEnum);
@@ -503,8 +491,9 @@ begin
     PropertyOffset[ord(TProp.DERList)] := ptruint(@obj.DERNameList);
     PropertyOffset[ord(TProp.monBus)] := ptruint(@obj.MonBusesNameList);
     PropertyOffset[ord(TProp.PVSystemList)] := ptruint(@obj.DERNameList);
-    PropertyFlags[ord(TProp.PVSystemList)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.PVSystemList)] := [TPropertyFlag.Redundant, TPropertyFlag.Deprecated]; // TODO: mark as removed
     PropertyRedundantWith[ord(TProp.PVSystemList)] := ord(TProp.DERList);
+    PropertyDeprecatedMessage[ord(TProp.PVSystemList)] := '"PVSystemList" was deprecated in 2020. Use "DERList" instead.';
 
     // array of doubles
     PropertyType[ord(TProp.MonBusesVbase)] := TPropertyType.DoubleVArrayProperty;
@@ -3992,7 +3981,8 @@ begin
                 UpdateInvControl(i);
 end;
 
-finalization    ModeEnum.Free;
+finalization
+    ModeEnum.Free;
     CombiModeEnum.Free;
     VoltageCurveXRefEnum.Free;
     VoltWattYAxisEnum.Free;

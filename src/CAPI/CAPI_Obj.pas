@@ -212,6 +212,7 @@ begin
     if TPropertyFlag.ConditionalValue in flags then Result.Add('ConditionalValue');
     if TPropertyFlag.FullNameAsArray in flags then Result.Add('FullNameAsArray');
     if TPropertyFlag.Util in flags then Result.Add('Util');
+    if TPropertyFlag.Deprecated in flags then Result.Add('Deprecated');
 end;
 
 function prepareEnum(e: TDSSEnum; enumIds: TClassNamesHashListType): TJSONObject;
@@ -313,6 +314,8 @@ begin
                 prop.Add('description', GetPropertyHelp(i));
             if TPropertyFlag.Redundant in PropertyFlags[i] then
                 prop.Add('redundantWith', PropertyRedundantWith[i]);
+            if (PropertyType[i] = TPropertyType.DeprecatedAndRemoved) or (TPropertyFlag.Deprecated in PropertyFlags[i]) then
+                prop.Add('deprecationMessage', PropertyDeprecatedMessage[i]);
 
             props.Add(prop);
         end;

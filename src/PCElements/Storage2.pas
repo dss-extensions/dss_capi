@@ -61,38 +61,38 @@ type
 {$SCOPEDENUMS ON}
     TStorage2Prop = (
         INVALID = 0,
-        phases = 1,
-        bus1 = 2,
-        kv = 3, // propKV
-        conn = 4, // propCONNECTION
-        kW = 5, // propKW
-        kvar = 6, // propKVAR
-        pf = 7, // propPF
-        kVA = 8, // propKVA
-        pctCutin = 9, // propCutin
-        pctCutout = 10, // propCutout
-        EffCurve = 11, // propInvEffCurve
-        VarFollowInverter = 12, // propVarFollowInverter
-        kvarMax = 13, // propkvarLimit
-        kvarMaxAbs = 14, // propkvarLimitneg
-        WattPriority = 15, // propPpriority
-        PFPriority = 16, // propPFPriority
-        pctPminNoVars = 17, // propPminNoVars
-        pctPminkvarMax = 18, // propPminkvarLimit
-        kWrated = 19, // propKWRATED
-        pctkWrated = 20, // proppctkWrated
-        kWhrated = 21, // propKWHRATED
-        kWhstored = 22, // propKWHSTORED
-        pctstored = 23, // propPCTSTORED
-        pctreserve = 24, // propPCTRESERVE
-        State = 25, // propSTATE
-        pctDischarge = 26, // propPCTKWOUT
-        pctCharge = 27, // propPCTKWIN
-        pctEffCharge = 28, // propCHARGEEFF
-        pctEffDischarge = 29, // propDISCHARGEEFF
-        pctIdlingkW = 30, // propIDLEKW
+        phases,
+        bus1,
+        kv, // propKV
+        conn, // propCONNECTION
+        kW, // propKW
+        kvar, // propKVAR
+        pf, // propPF
+        kVA, // propKVA
+        pctCutin, // propCutin
+        pctCutout, // propCutout
+        EffCurve, // propInvEffCurve
+        VarFollowInverter, // propVarFollowInverter
+        kvarMax, // propkvarLimit
+        kvarMaxAbs, // propkvarLimitneg
+        WattPriority, // propPpriority
+        PFPriority, // propPFPriority
+        pctPminNoVars, // propPminNoVars
+        pctPminkvarMax, // propPminkvarLimit
+        kWrated, // propKWRATED
+        pctkWrated, // proppctkWrated
+        kWhrated, // propKWHRATED
+        kWhstored, // propKWHSTORED
+        pctstored, // propPCTSTORED
+        pctreserve, // propPCTRESERVE
+        State, // propSTATE
+        pctDischarge, // propPCTKWOUT
+        pctCharge, // propPCTKWIN
+        pctEffCharge, // propCHARGEEFF
+        pctEffDischarge, // propDISCHARGEEFF
+        pctIdlingkW, // propIDLEKW
         
-        // pctIdlingkvar = 31, // propIDLEKVAR --- was deprecated, removed
+        pctIdlingkvar, //= 31, // propIDLEKVAR was deprecated, reintroduced for v0.12.2; TODO: TO BE REMOVED AGAIN LATER
         
         pctR, // propPCTR
         pctX, // propPCTX
@@ -113,7 +113,7 @@ type
         DynaData, // propDynaData
         UserModel, // propUSERMODEL
         UserData, // propUSERDATA
-        debugtrace = 50 // propDEBUGTRACE
+        debugtrace // propDEBUGTRACE
     );
 {$SCOPEDENUMS OFF}
 
@@ -154,19 +154,19 @@ type
 
 
         // Dynamics variables
-        Vthev: Complex;  {Thevenin equivalent voltage (complex) for dynamic model}
+        Vthev: Complex;  // Thevenin equivalent voltage (complex) for dynamic model
         ZThev: Complex;
-        Vthevharm: Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
-        Thetaharm: Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
-        VthevMag: Double;    {Thevenin equivalent voltage for dynamic model}
-        Theta: Double;   {Power angle between voltage and current}
-        w_grid: Double;   {Grid frequency}
+        Vthevharm: Double; // Thevenin equivalent voltage mag and angle reference for Harmonic model
+        Thetaharm: Double; // Thevenin equivalent voltage mag and angle reference for Harmonic model
+        VthevMag: Double; // Thevenin equivalent voltage for dynamic model
+        Theta: Double; // Power angle between voltage and current
+        w_grid: Double; // Grid frequency
         TotalLosses: Double;
         IdlingLosses: Double;
 
-                {32-bit integers}
-        NumPhases,       {Number of phases}
-        NumConductors,   {Total Number of conductors (wye-connected will have 4)}
+        // 32-bit integers
+        NumPhases, // Number of phases
+        NumConductors, // Total Number of conductors (wye-connected will have 4)
         Conn: Integer;   // 0 = wye; 1 = Delta
     end;
 
@@ -604,6 +604,9 @@ begin
     PropertyOffset[ord(TProp.kvarMaxAbs)] := ptruint(@obj.StorageVars.Fkvarlimitneg);
     PropertyFlags[ord(TProp.kvarMax)] := [TPropertyFlag.Transform_Abs];
     PropertyFlags[ord(TProp.kvarMaxAbs)] := [TPropertyFlag.Transform_Abs];
+
+    PropertyType[ord(TProp.pctIdlingkvar)] := TPropertyType.DeprecatedAndRemoved; //TODO: fully remove
+    PropertyDeprecatedMessage[ord(TProp.pctIdlingkvar)] := '"%Idlingkvar" was deprecated in 2020. It does nothing since then; please update your scripts.';
 
     // double properties (default type)
     PropertyOffset[ord(TProp.pctR)] := ptruint(@obj.pctR);
