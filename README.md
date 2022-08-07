@@ -3,9 +3,13 @@
 
 *Para uma versão em português deste arquivo, veja [README.pt-BR.md](https://github.com/dss-extensions/dss_capi/blob/master/README.pt-BR.md).*
 
-# DSS C-API: An unofficial C API for EPRI's OpenDSS
+# DSS C-API: unofficial library with a C API for a custom implementation of EPRI's OpenDSS
 
-This library exposes the OpenDSS/OpenDSS-PM (OpenDSS Version 7 and Version 8, respectively) engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. There is also support for some other programming languages — if you need support for a language not listed below, please open a new issue and we will evaluate that language.
+Please see [FAQ](https://github.com/dss-extensions/dss-extensions#faq) for a couple of notes.
+
+This library exposes the OpenDSS/OpenDSS-PM v9+ engine in a plain C interface that tries to reproduce most of the COM methods, plus many extensions. In fact, most of the code was initially derived from the COM implementation files. The resulting DLL can be using directly by advanced users or, for example, through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level.
+
+Through the other projects under DSS Extensions, DSS C-API enables projects to use the OpenDSS in multiple platforms (Windows, Linux, macOS) across multiple architectures (Intel x86, x86-64, ARM32, and ARM64, including Apple's M1 and M2). Most of the features added to this based libraty is shared across all other projects. If you need support for a language not listed below, please open a new issue (either here or in https://github.com/dss-extensions/dss-extensions/issues) and we will evaluate that language.
 
 <p align="center">
     <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap.png" width=600>
@@ -14,15 +18,16 @@ This library exposes the OpenDSS/OpenDSS-PM (OpenDSS Version 7 and Version 8, re
 If you are looking for the bindings to other languages:
 
 - [DSS Python](http://github.com/dss-extensions/dss_python/) is a multi-platform Python module (Windows, Linux, MacOS) very compatible with the original COM DLL. See also [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) if you don't need COM compatibility, or just would like to check its extra functionalities (you can mix DSS Python and OpenDSSDirect.py).
-- [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) is a Julia module, created by Tom Short (@tshort), recently migrated with the help of Dheepak Krishnamurthy (@kdheepak) to DSS C-API instead of the DDLL.
-- [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, also mimics the COM classes, but Windows-only at the moment. Soon it will be possible to use it via COM too.
-- [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the COM classes.
+- [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) is a Julia module, created by Tom Short (@tshort), migrated with the help of Dheepak Krishnamurthy (@kdheepak) to DSS C-API instead of the DDLL in Feb 2019.
+- [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, [packaged on NuGet](https://www.nuget.org/packages/dss_sharp/), also mimics the COM classes (drop-in replacement for `OpenDSSengine.DLL`). The current version is now multi-platform too! Soon it will be possible to use it via COM too.
+- [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the API of the official OpenDSS COM classes.
+- [dss.hpp](https://dss-extensions.org/dss_capi/): header-only library for C++, also hosped in this repository (`include/` directory). Allows using DSS C-API more comfortably from C++, abstract memory management and low-level details such as API conventions of the DSS C-API library. Currently uses Eigen and fmt.
 
-Version 0.12.0 is based on OpenDSS revision 3460, with many extra/custom features.
+Version 0.12.x is based on OpenDSS revision 3460, with many extra/custom features.
 
-**This is the work-in-progress branch, which will become 0.12.0. For a specific version, check the Git tags.**
+**For the source-code of a specific version, check the Git tags.**
 
-While the main objective of COM compatibility has been reach, this is still a work-in-progress and is subject to changes. 
+While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targetting version 0.13, which will become v1.0 when we consider it ready.
 
 Instead of using extra numeric parameters as in the official DDLL interface, each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
