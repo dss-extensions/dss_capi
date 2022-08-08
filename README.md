@@ -1,5 +1,5 @@
 [![GitHub Actions: Builds](https://github.com/dss-extensions/dss_capi/actions/workflows/builds.yml/badge.svg)](https://github.com/dss-extensions/dss_capi/actions/workflows/builds.yml)
-[![GitHub downloads](https://img.shields.io/github/downloads/dss-extensions/dss_capi/total?logo=GitHub&cacheSeconds=86400)](https://github.com/dss-extensions/dss_capi/releases)
+[![GitHub downloads](https://img.shields.io/github/downloads/dss-extensions/dss_capi/total?logo=GitHub&cacheSeconds=86400)](https://github.com/dss-extensions/dss_capi/releases) <img alt="Supports Linux" src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black"> <img alt="Supports macOS" src="https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white"> <img alt="Supports Microsoft Windows" src="https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white">
 
 *Para uma versão em português deste arquivo, veja [README.pt-BR.md](https://github.com/dss-extensions/dss_capi/blob/master/README.pt-BR.md).*
 
@@ -19,9 +19,9 @@ If you are looking for the bindings to other languages:
 
 - [DSS Python](http://github.com/dss-extensions/dss_python/) is a multi-platform Python module (Windows, Linux, MacOS) very compatible with the original COM DLL. See also [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) if you don't need COM compatibility, or just would like to check its extra functionalities (you can mix DSS Python and OpenDSSDirect.py).
 - [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) is a Julia module, created by Tom Short (@tshort), migrated with the help of Dheepak Krishnamurthy (@kdheepak) to DSS C-API instead of the DDLL in Feb 2019.
-- [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, [packaged on NuGet](https://www.nuget.org/packages/dss_sharp/), also mimics the COM classes (drop-in replacement for `OpenDSSengine.DLL`). The current version is now multi-platform too! Soon it will be possible to use it via COM too.
-- [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the API of the official OpenDSS COM classes.
-- [dss.hpp](https://dss-extensions.org/dss_capi/): header-only library for C++, also hosped in this repository (`include/` directory). Allows using DSS C-API more comfortably from C++, abstract memory management and low-level details such as API conventions of the DSS C-API library. Currently uses Eigen and fmt.
+- [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, [packaged on NuGet](https://www.nuget.org/packages/dss_sharp/), also mimics the COM classes (drop-in replacement for `OpenDSSengine.DLL`). The current version is now multi-platform too! Soon it will be possible to use it via COM.
+- [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible with the API of the official OpenDSS COM classes.
+- [dss.hpp](https://dss-extensions.org/dss_capi/): header-only library for C++, also hosped in this repository (`include/` directory). Allows using DSS C-API more comfortably from C++, abstract away memory management and low-level details such as API conventions of the DSS C-API library. Currently uses Eigen and fmt.
 
 Version 0.12.x is based on OpenDSS revision 3460, with many extra/custom features.
 
@@ -174,5 +174,5 @@ Note that, since OpenDSS depends on KLU via KLUSolve, the KLU licensing conditio
 
 Also note that even though we don't add copyright notices to each of the files, most of files from the OpenDSS original codebase were modified to create the version presented today in this repository. Please refer to the Git commit history for more information.
 
-Thanks to colleagues at the University of Campinas, Brazil, for providing feedback and helping me test this project, as well as everyone that reported issues and helped the development.
+Thanks to colleagues at the University of Campinas, Brazil, for providing feedback and helping me test this project, especially during its inception in 2016-2017, as well as everyone that reported issues and helped the development since the public release in 2018.
 
