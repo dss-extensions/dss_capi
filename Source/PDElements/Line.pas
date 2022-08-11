@@ -1342,8 +1342,8 @@ begin
            19: If GeometrySpecified then Result:= GeometryCode else Result:= '';
            20: Result := LineUnitsStr(LengthUnits);
            23: Result := GetEarthModel(FEarthModel);
-           26: If SymComponentsModel Then Result := Format('%.7g', [twopi * Basefrequency * C1 * 1.0e6]) else Result := '----';
-           27: If SymComponentsModel Then Result := Format('%.7g', [twopi * Basefrequency * C0 * 1.0e6]) else Result := '----';
+           26: If SymComponentsModel Then Result := Format('%.7g', [twopi * Basefrequency * C1 * 1.0e6/FUnitsConvert]) else Result := '----';
+           27: If SymComponentsModel Then Result := Format('%.7g', [twopi * Basefrequency * C0 * 1.0e6/FUnitsConvert]) else Result := '----';
            28  : Result := inttostr(NumAmpRatings);
            29  : Begin
                    TempStr   :=  '[';
