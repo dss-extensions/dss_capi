@@ -1293,6 +1293,7 @@ begin
         CASE Index of
             1: Result := GetBus(1);
             2: Result := GetBus(2);
+            3: If FLineCodeSpecified Then Result := CondCode else Result:= '';
             4: Result := Format('%-.7g', [Len]);
             5: Result := Format('%d', [FNphases]);
             6: If SymComponentsModel Then Result := Format('%-.7g', [R1/FUnitsConvert]) else Result := '----';
@@ -1338,6 +1339,7 @@ begin
            16: Result := Format('%-g', [Rg]);
            17: Result := Format('%-g', [Xg]);
            18: Result := Format('%-g', [Rho]);
+           19: If GeometrySpecified then Result:= GeometryCode else Result:= '';
            20: Result := LineUnitsStr(LengthUnits);
            23: Result := GetEarthModel(FEarthModel);
            26: If SymComponentsModel Then Result := Format('%.7g', [twopi * Basefrequency * C1 * 1.0e6]) else Result := '----';
