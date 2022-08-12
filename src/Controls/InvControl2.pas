@@ -648,6 +648,8 @@ begin
             // PVSystems, so the list is updated
             for CharPos := 0 to (DERNameList.Count - 1) do
                 DERNameList[CharPos] := 'PVSystem.' + DERNameList[CharPos];
+
+            PropertySideEffects(ord(TProp.DERList), previousIntVal);
         end;
         ord(TProp.vvc_curve1):
             ValidateXYCurve(DSS, Fvvc_curve, VOLTVAR);
