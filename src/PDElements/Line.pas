@@ -939,7 +939,7 @@ var
 
     i, j, k, Norder: Integer;
 
-    // Andres Ovalle: Added a few for long-line correction frequency-wise
+    //  Added a few definitions for long-line correction frequency-wise
     Zs, Zm, Ys, Ym, Ztemp: Complex;
     Yc1, Yc0, R1_h, X1_h, C1_h, G1_h, R0_h, X0_h, C0_h, G0_h: Double;
 begin
@@ -989,7 +989,7 @@ begin
 
             // If positive sequence, long-line correction can be taken into account here
             // It needs to be recalculated for every frequency
-            if ((FnPhases = 1) or ActiveCircuit.PositiveSequence) then
+            if ((FnPhases = 1) or ActiveCircuit.PositiveSequence) and SymComponentsModel then // Should only enter here if sequence components model
             begin
                 // These values are specific for the harmonic being tested (adjust for frequency)
                 R1_h := R1;
@@ -997,7 +997,7 @@ begin
                 C1_h := C1;
                 G1_h := 0.0;  // DoLongLine uses a tiny conductance to avoid skipping case where C1=0
                 // long-line equivalent PI, but only for CktModel=Positive
-                if ActiveCircuit.PositiveSequence then // A.Ovalle: To avoid errors in higher freqs, we shouldn't skip cases with C1=0. Critical to match IEEE 14bus harmonics benchmark.
+                if ActiveCircuit.PositiveSequence then // To avoid errors in higher freqs, we shouldn't skip cases with C1=0. Critical to match IEEE 14bus harmonics benchmark.
                 begin
                     // do long-line correction for tested frequency
                     // use R1_h, X1_h, C1_h, G1_h to correct Y prim
@@ -1139,7 +1139,7 @@ begin
                     for i := 1 to Fnphases do
                     begin
                         Inc(k);    // Assume matrix in col order (1,1  2,1  3,1 ...)
-                        if ((FnPhases = 1) or ActiveCircuit.PositiveSequence) then
+                        if ((FnPhases = 1) or ActiveCircuit.PositiveSequence) and SymComponentsModel then // Should only enter here if sequence components model
                         begin
                             // If we enter here, frequency adjustment has already been applied above during Z and Yc recalculation (and also affected by long-line correction)
                             Value := Cmplx(YValues^[k].re / 2.0, YValues^[k].im * LengthMultiplier / 2.0);
