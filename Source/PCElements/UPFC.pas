@@ -14,7 +14,7 @@ unit UPFC;
 {$HINTS OFF}
 interface
 
-USES DSSClass, PCClass,PCElement, ucmatrix, ucomplex, Spectrum, Arraydef, Loadshape, XYCurve;
+USES DSSClass, PCClass,PCElement, ucmatrix, ucomplex, Spectrum, Arraydef, Loadshape, XYCurve, CktElement;
 
 
 
@@ -55,6 +55,8 @@ TYPE
         VRef2   : Double;   // Value for deadband's upper limit, it is calculated if tolerance is specified
         VRefD   : Double;   // Dynamic reference for control modes 4 and 5
         KVARLim : Double;   // kvar limit, defines the maximum amount of kvars that the UPFC can absorb
+        MonElm  : String;   // Name of the monitored element to perform PF compensation
+        myElm   : TDSSCktElement; // ref to the monitored element
 
 
         // some state vars for reporting
@@ -130,7 +132,7 @@ USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Utilities, Sysutil
 
 Const
     propLossCurve= 11;
-    NumPropsThisClass = 16;
+    NumPropsThisClass = 17;
     NumUPFCVariables = 14;
 
 
@@ -186,6 +188,7 @@ Begin
      PropertyName[14]:= 'CLimit';
      PropertyName[15]:= 'refkv2';
      PropertyName[16]:= 'kvarLimit';
+     PropertyName[17]:= 'Element';
 
      // define Property help values
      PropertyHelp[1] := 'Name of bus to which the input terminal (1) is connected.'+CRLF+'bus1=busname.1.3'+CRLF+'bus1=busname.1.2.3';                        ;
@@ -214,6 +217,8 @@ Begin
      PropertyHelp[15]:= 'Base Voltage expected at the output of the UPFC for control modes 4 and 5.'+ CRLF+CRLF +
                         'This reference must be lower than refkv, see control modes 4 and 5 for details';
      PropertyHelp[16]:= 'Maximum amount of reactive power (kvar) that can be absorved by the UPFC (Default = 5)';
+     PropertyHelp[17]:= 'The name of the PD element monitored when operating with reactive power compensation. Normally, it should be the ' +
+                        'PD element immediately upstream the UPFC. The element must be defined including the class, e.g. Line.myline.';
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
@@ -241,6 +246,7 @@ End;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Function TUPFC.Edit(ActorID : Integer):Integer;
 VAR
+   Devindex,
    ParamPointer : Integer;
    ParamName,
    Param        : String;
@@ -287,7 +293,12 @@ Begin
             14: CLimit  := Parser[ActorID].DblValue;
             15: VRef2   := Parser[ActorID].DblValue;
             16: kvarLim := Parser[ActorID].DblValue;
-
+            17: Begin
+                  MonElm := lowercase(param);
+                  Devindex := GetCktElementIndex(MonElm); // Global function
+                 IF   DevIndex>0  THEN MyElm := ActiveCircuit[ActiveActor].CktElements.Get(DevIndex)
+                 ELSE DoSimpleMsg('Monitored Element for UPFC operation does not exist:"'+MonElm+'"', 9002);
+                End
          ELSE
             ClassEdit(ActiveUPFCObj, ParamPointer - NumPropsThisClass)
          End;
@@ -928,6 +939,8 @@ End;
 function TUPFCObj.CheckStatus(ActorID : Integer): Boolean;
 VAR
    i    : Integer;
+   mypf,
+   S,
    Error,
    TError,
    VinMag,
@@ -935,6 +948,7 @@ VAR
    RefL     : Double;
    Vpolar   : polar;
    VTemp,
+   MonPower,
    CurrOut  : complex;
 Begin
   Result  :=  False;
@@ -957,7 +971,14 @@ Begin
           if Error > Tol1 then Result := True;
 
         end;
-    2:  CurrOut         :=  cmplx(0,0); //UPFC as a phase angle regulator
+    2:  Begin
+          CurrOut         :=  cmplx(0,0); //UPFC as a phase angle regulator
+          MonPower        :=  MyElm.Power[1,ActorID];
+          S               :=  sqrt(MonPower.re*MonPower.re + MonPower.im*MonPower.im);
+          mypf            :=  MonPower.re/S;
+          mypf            :=  abs(pf - mypf);    // calculates the difference to the target
+          Result          :=  (mypf/pf) > Tol1;
+        End;
     3:  Begin              //UPFC in Dual mode Voltage and Phase angle regulator
           Vpolar        :=ctopolar(Vbout);
           Error         :=abs(1-abs(Vpolar.mag/(VRef*1000)));
