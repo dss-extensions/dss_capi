@@ -104,6 +104,7 @@ uses
     DSSGlobals,
     DSSHelper,
     CktElement,
+    PDElement,
     Utilities,
     SysUtils,
     UComplex, DSSUcomplex,
@@ -730,6 +731,14 @@ begin
                         Format('%s.%s: CktElement "%s" not found.',
                             [TDSSObject(obj).FullName, PropertyName[Index], Value]
                         ), 402);
+                    //TODO: stop?
+                end
+                else if (TPropertyFlag.PDElement in flags) and not (otherObj is TPDElement) then
+                begin
+                    DoSimpleMsg(
+                        Format('%s.%s: "%s" is not a PDElement.',
+                            [TDSSObject(obj).FullName, PropertyName[Index], otherObj.FullName]
+                        ), 405);
                     //TODO: stop?
                 end;
             end;

@@ -284,14 +284,24 @@ begin
             else if PropertyType[i] = TPropertyType.DSSObjectReferenceProperty then
             begin
                 if poffset2 = 0 then
-                    param2 := CreateJSON('CktElement')
+                begin
+                    if TPropertyFlag.PDElement in PropertyFlags[i] then 
+                        param2 := CreateJSON('PDElement')
+                    else
+                        param2 := CreateJSON('CktElement')
+                end
                 else
                     param2 := CreateJSON(TDSSClass(poffset2).Name);
             end
             else if PropertyType[i] = TPropertyType.DSSObjectReferenceArrayProperty then
             begin
                 if poffset2 = 0 then
-                    param2 := CreateJSON('CktElement')
+                begin
+                    if TPropertyFlag.PDElement in PropertyFlags[i] then 
+                        param2 := CreateJSON('PDElement')
+                    else
+                        param2 := CreateJSON('CktElement')
+                end
                 else
                     param2 := CreateJSON(TDSSClass(poffset2).Name);
             end

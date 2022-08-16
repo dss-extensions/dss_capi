@@ -1,12 +1,8 @@
 unit UPFC;
-
-{
-  ----------------------------------------------------------
-  Copyright (c) 2021,  Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
-
+// ----------------------------------------------------------
+// Copyright (c) 2021,  Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 uses
@@ -19,28 +15,30 @@ uses
     Spectrum,
     Arraydef,
     Loadshape,
-    XYCurve;
+    XYCurve,
+    CktElement;
 
 type
 {$SCOPEDENUMS ON}
     TUPFCProp = (
         INVALID = 0,
-        bus1 = 1,
-        bus2 = 2,
-        refkv = 3,
-        pf = 4,
-        frequency = 5,
-        phases = 6,
-        Xs = 7,
-        Tol1 = 8,
-        Mode = 9,
-        VpqMax = 10,
-        LossCurve = 11,
-        VHLimit = 12,
-        VLLimit = 13,
-        CLimit = 14,
-        refkv2 = 15,
-        kvarLimit = 16
+        bus1,
+        bus2,
+        refkV,
+        PF,
+        Frequency,
+        Phases,
+        Xs,
+        Tol1,
+        Mode,
+        VpqMax,
+        LossCurve,
+        VHLimit,
+        VLLimit,
+        CLimit,
+        refkV2,
+        kvarLimit,
+        Element
     );
 {$SCOPEDENUMS OFF}
     TUPFC = class(TPCClass)
@@ -74,7 +72,7 @@ type
         VRef2: Double;   // Value for deadband's upper limit, it is calculated if tolerance is specified
         VRefD: Double;   // Dynamic reference for control modes 4 and 5
         KVARLim: Double;   // kvar limit, defines the maximum amount of kvars that the UPFC can absorb
-
+        MonElm: TDSSCktElement; // monitored element to perform PF compensation
 
         // some state vars for reporting
         Losses: Double;
@@ -190,6 +188,11 @@ begin
     PropertyOffset[ord(TProp.LossCurve)] := ptruint(@obj.UPFCLossCurveObj);
     PropertyOffset2[ord(TProp.LossCurve)] := ptruint(DSS.XYCurveClass);
 
+    PropertyType[ord(TProp.Element)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyOffset[ord(TProp.Element)] := ptruint(@obj.MonElm);
+    PropertyOffset2[ord(TProp.Element)] := 0; // CktElement
+    PropertyFlags[ord(TProp.Element)] := [TPropertyFlag.PDElement];
+
     // integer properties
     PropertyType[ord(TProp.Mode)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.Mode)] := ptruint(@obj.ModeUPFC);
@@ -289,6 +292,7 @@ begin
     CLimit := Other.CLimit;
     VRef2 := Other.VRef2;
     kvarLim := Other.kvarLim;
+    monElm := Other.monElm;
 end;
 
 constructor TUPFCObj.Create(ParClass: TDSSClass; const SourceName: String);
@@ -323,6 +327,7 @@ begin
     Sr1 := NIL;
     VRef2 := 0.0;
     kvarLim := 5;
+    monElm := NIL;
 
     QIdeal := 0.0;
 
@@ -852,9 +857,11 @@ var
     Error,
     VinMag,
     RefH,
-    RefL: Double;
+    RefL,
+    MonPF: Double;
     Vpolar: polar;
-    // CurrOut: Complex;
+    MonPower, 
+    CurrOut: Complex;
 begin
     Result := FALSE;
   
@@ -881,8 +888,17 @@ begin
                 Result := True;
         end;
         2:  
-            // CurrOut := cmplx(0,0); //UPFC as a phase angle regulator
-            ;
+        begin
+            if MonElm = NIL then
+            begin
+                Result := False;
+                Exit;
+            end;
+            MonPower := MonElm.Power[1];
+            MonPF := MonPower.re / sqrt(MonPower.re * MonPower.re + MonPower.im * MonPower.im);
+            // calculate the difference to the target, check if whitin tolerance
+            Result :=  (abs(pf - MonPF) / pf) > Tol1; 
+        end;
         3:
         begin //UPFC in Dual mode Voltage and Phase angle regulator
             Vpolar := ctopolar(Vbout);

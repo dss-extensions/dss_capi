@@ -91,6 +91,7 @@ type
         Redundant,
         Util, // things like X and Y from XYcurve that don't have value as data
         Unused,
+        PDElement, // if obj reference, must be a PDElement
         Deprecated
     );
 
