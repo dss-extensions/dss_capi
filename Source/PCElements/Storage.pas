@@ -24,7 +24,7 @@ unit Storage;
   amount of stored energy.
 
   The Storage element can also produce or absorb vars within the kVA rating of the inverter.
-  That is, a StorageController2 object requests kvar and the Storage element provides them if
+  That is, a StorageController object requests kvar and the Storage element provides them if
   it has any capacity left. The Storage element can produce/absorb kvar while idling.
 }
 
@@ -700,17 +700,17 @@ Begin
                                  'In FOLLOW mode the kW output of the Storage element follows the active loadshape multiplier ' +
                                  'until Storage is either exhausted or full. ' +
                                  'The element discharges for positive values and charges for negative values.  The loadshape is based on rated kW. ' + CRLF + CRLF +
-                                 'In EXTERNAL mode, Storage element state is controlled by an external Storagecontroller2. '+
+                                 'In EXTERNAL mode, Storage element state is controlled by an external Storagecontroller. '+
                                  'This mode is automatically set if this Storage element is included in the element list of a StorageController element. ' + CRLF + CRLF +
                                  'For the other two dispatch modes, the Storage element state is controlled by either the global default Loadlevel value or the price level. ');
      AddProperty('DischargeTrigger', propDISPOUTTRIG,
                                  'Dispatch trigger value for discharging the Storage. '+CRLF+
-                                 'If = 0.0 the Storage element state is changed by the State command or by a StorageController2 object. ' +CRLF+
+                                 'If = 0.0 the Storage element state is changed by the State command or by a StorageController object. ' +CRLF+
                                  'If <> 0  the Storage element state is set to DISCHARGING when this trigger level is EXCEEDED by either the specified ' +
                                  'Loadshape curve value or the price signal or global Loadlevel value, depending on dispatch mode. See State property.');
      AddProperty('ChargeTrigger', propDISPINTRIG,
                                  'Dispatch trigger value for charging the Storage. '+CRLF + CRLF +
-                                 'If = 0.0 the Storage element state is changed by the State command or StorageController2 object.  ' +CRLF + CRLF +
+                                 'If = 0.0 the Storage element state is changed by the State command or StorageController object.  ' +CRLF + CRLF +
                                  'If <> 0  the Storage element state is set to CHARGING when this trigger level is GREATER than either the specified ' +
                                  'Loadshape curve value or the price signal or global Loadlevel value, depending on dispatch mode. See State property.');
      AddProperty('TimeChargeTrig', propCHARGETIME,
