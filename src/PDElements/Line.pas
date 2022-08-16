@@ -243,9 +243,11 @@ begin
     end;
 end;
 
-function GetB1B0Scale(obj: TLineObj): Double; //TODO: why no FUnitsConvert here?
+function GetB1B0Scale(obj: TLineObj; getter: Boolean): Double;
 begin
     Result := 1 / (TwoPi * obj.BaseFrequency) * 1.0e-6;
+    if getter then
+        Result := Result * obj.FUnitsConvert
 end;
 
 procedure SetWires(Obj: TObj; Value: TDSSObjectPtr; ValueCount: Integer); forward;
