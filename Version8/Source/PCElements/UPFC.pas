@@ -414,6 +414,7 @@ Begin
      Sr1 := Nil;
      VRef2    := 0.0;
      kvarLim  := 5;
+     myElm    := nil;
 
      QIdeal := 0.0;
 
@@ -973,11 +974,16 @@ Begin
         end;
     2:  Begin
           CurrOut         :=  cmplx(0,0); //UPFC as a phase angle regulator
-          MonPower        :=  MyElm.Power[1,ActorID];
-          S               :=  sqrt(MonPower.re*MonPower.re + MonPower.im*MonPower.im);
-          mypf            :=  MonPower.re/S;
-          mypf            :=  abs(pf - mypf);    // calculates the difference to the target
-          Result          :=  (mypf/pf) > Tol1;
+          if myElm <> nil then
+          Begin
+            MonPower        :=  MyElm.Power[1,ActorID];
+            S               :=  sqrt(MonPower.re*MonPower.re + MonPower.im*MonPower.im);
+            mypf            :=  MonPower.re/S;
+            mypf            :=  abs(pf - mypf);    // calculates the difference to the target
+            Result          :=  (mypf/pf) > Tol1;
+          End
+          else
+            Result          :=  False;
         End;
     3:  Begin              //UPFC in Dual mode Voltage and Phase angle regulator
           Vpolar        :=ctopolar(Vbout);
