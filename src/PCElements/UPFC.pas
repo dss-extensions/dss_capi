@@ -862,6 +862,19 @@ var
     Vpolar: polar;
     MonPower, 
     CurrOut: Complex;
+
+    function checkPF(): Boolean;
+    begin
+        if MonElm = NIL then
+        begin
+            Result := False;
+            Exit;
+        end;
+        MonPower := MonElm.Power[1];
+        MonPF := MonPower.re / sqrt(MonPower.re * MonPower.re + MonPower.im * MonPower.im);
+        // calculate the difference to the target, check if whitin tolerance
+        Result :=  (abs(pf - MonPF) / pf) > Tol1; 
+    end;
 begin
     Result := FALSE;
   
@@ -887,24 +900,16 @@ begin
             if Error > Tol1 then 
                 Result := True;
         end;
-        2:  
-        begin
-            if MonElm = NIL then
-            begin
-                Result := False;
-                Exit;
-            end;
-            MonPower := MonElm.Power[1];
-            MonPF := MonPower.re / sqrt(MonPower.re * MonPower.re + MonPower.im * MonPower.im);
-            // calculate the difference to the target, check if whitin tolerance
-            Result :=  (abs(pf - MonPF) / pf) > Tol1; 
-        end;
+        2: 
+            Result := checkPF();
         3:
         begin //UPFC in Dual mode Voltage and Phase angle regulator
             Vpolar := ctopolar(Vbout);
             Error := abs(1 - abs(Vpolar.mag / (VRef * 1000)));
             if Error > Tol1 then 
-                Result := TRUE;
+                Result := TRUE
+            else
+                Result := checkPF();
         end;
         4:
         begin // Double reference control mode (only voltage control)
@@ -925,7 +930,9 @@ begin
                 Vpolar := ctopolar(Vbout);
                 Error := abs(1 - abs(Vpolar.mag / (VRefD*1000)));
                 if Error > Tol1 then  
-                    Result  :=  True;
+                    Result := True
+                else
+                    Result := checkPF();
             end
         end;
         5:  
@@ -939,9 +946,9 @@ begin
             begin
                 // Sets the New reference by considering the value at the input of the device
                 if (Vpolar.mag > RefH) then 
-                    VRefD:=VRef
+                    VRefD := VRef
                 else if (Vpolar.mag < RefL) then
-                    VRefD:=VRef2;
+                    VRefD := VRef2;
 
                 // Starts standard control (the same as Dual control mode)
                 Vpolar := ctopolar(Vbout);
