@@ -1227,7 +1227,7 @@ begin
 
     with pBus do
     begin
-        if NumNodesThisBus <> 3 then
+        if (NumNodesThisBus <> 3) or (Zsc = NIL) then
         begin
             DefaultResult(ResultPtr, ResultCount);
             Exit;
