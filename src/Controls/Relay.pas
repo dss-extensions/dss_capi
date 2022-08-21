@@ -100,7 +100,8 @@ type
         DOC_DelayInner = 46,
         DOC_PhaseCurveInner = 47,
         DOC_PhaseTripInner = 48,
-        DOC_TDPhaseInner = 49
+        DOC_TDPhaseInner = 49,
+        DOC_P1Blocking
     );
 {$SCOPEDENUMS OFF}
 
@@ -178,14 +179,15 @@ type
         td21_dI: pComplexArray; // incremental currents
 
         // Directional Overcurrent Relay
-        DOC_TiltAngleLow,  // Tilt angle for lower current magnitude
-        DOC_TiltAngleHigh,  // Tilt angle for higher current magnitude
-        DOC_TripSetLow,  // Trip setting for lower current magnitude
-        DOC_TripSetHigh,  // Trip setting for higher current magnitude
+        DOC_TiltAngleLow,  // Tilt angle for low-current trip line
+        DOC_TiltAngleHigh,  // Tilt angle for high-current trip line
+        DOC_TripSetLow,  // Trip setting for low-current trip line
+        DOC_TripSetHigh,  // Trip setting for high-current trip line
         DOC_TripSetMag,  // Current magnitude trip setting (define a circle for the relay characteristics)
-        DOC_DelayInner,  // Delay for trip in inner zone of the DOC characteristic
-        DOC_PhaseTripInner, // Multiplier for TCC Curve for tripping in inner zone of the DOC characteristic
+        DOC_DelayInner,  // Delay for trip in inner region of the DOC characteristic
+        DOC_PhaseTripInner, // Multiplier for TCC Curve for tripping in inner region of the DOC characteristic
         DOC_TDPhaseInner: Double;  // Time Dial for DOC_PhaseTripInner
+        DOC_P1Blocking: LongBool; // Block trip if there is no net balanced reverse active power
         DOC_PhaseCurveInner: TTCC_CurveObj;  // TCC Curve for tripping in inner zone of the DOC characteristic
 
         // Generic Relay
@@ -224,6 +226,7 @@ type
         procedure DistanceLogic;
         procedure TD21Logic;
         procedure DirectionalOvercurrentLogic;
+        function GetControlPower(): Complex;
     PUBLIC
         MonitoredElementTerminal: Integer;
         FPresentState,
@@ -382,9 +385,11 @@ begin
     PropertyType[ord(TProp.EventLog)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.DebugTrace)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.DistReverse)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.DOC_P1Blocking)] := TPropertyType.BooleanProperty;
     PropertyOffset[ord(TProp.EventLog)] := ptruint(@obj.ShowEventLog);
     PropertyOffset[ord(TProp.DebugTrace)] := ptruint(@obj.DebugTrace);
     PropertyOffset[ord(TProp.DistReverse)] := ptruint(@obj.Dist_Reverse);
+    PropertyOffset[ord(TProp.DOC_P1Blocking)] := ptruint(@obj.DOC_P1Blocking);
 
     // string properties (with lower case transformation)
     PropertyType[ord(TProp.Variable)] := TPropertyType.StringProperty;
@@ -602,6 +607,7 @@ begin
     DOC_PhaseCurveInner := Other.DOC_PhaseCurveInner;
     DOC_TDPhaseInner := Other.DOC_TDPhaseInner;
     DOC_PhaseTripInner := Other.DOC_PhaseTripInner;
+    DOC_P1Blocking := Other.DOC_P1Blocking;
 end;
 
 constructor TRelayObj.Create(ParClass: TDSSClass; const RelayName: String);
@@ -684,6 +690,7 @@ begin
     DOC_PhaseCurveInner := NIL;
     DOC_PhaseTripInner := 1.0;
     DOC_TDPhaseInner := 1.0;
+    DOC_P1Blocking := TRUE;
 
     Operationcount := 1;
     LockedOut := FALSE;
@@ -1652,16 +1659,80 @@ begin
     end; // With MonitoredElement
 end;
 
+function TRelayObj.GetControlPower(): Complex;
+// Get power to control based on active power
+var
+    i, k :Integer;
+    S: Complex;
+    Vph, V012: Complex3;
+    Iph, I012: Complex3;
+begin
+    if MonitoredElement.NPhases < 3 then
+    begin
+        // just take the total power (works also for 1ph elements with 2 conductors)
+        Result := MonitoredElement.Power[MonitoredElementTerminal];
+        Exit;
+    end;
+
+    MonitoredElement.GetCurrents(cBuffer);
+    MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
+
+    for i := 1 to 3 do
+    begin
+        k := (MonitoredElementTerminal - 1) * MonitoredElement.NConds + i;
+        Iph[i] := cBuffer[k];
+        Vph[i] := cvBuffer[i];
+    end;
+
+    Phase2SymComp(@Iph, @I012);
+    Phase2SymComp(@Vph, @V012);
+
+    Result := (V012[2] * cong(I012[2])) * 0.003;  // Convert to kilo
+end;
+
 procedure TRelayObj.DirectionalOvercurrentLogic();
 var
     i: Integer;
     TripTime, TimeTest: Double;
     Cmag, Cangle: Double;
+    ControlPower: Complex;
 begin
     with MonitoredElement do
     begin
         if FPresentState = CTRL_CLOSE then
         begin
+            // Identify net balanced power flow.
+            if DOC_P1Blocking then
+            begin
+                ControlPower := GetControlPower();
+                if ControlPower.re >= 0.0 then // Forward Power
+                begin
+                    if ArmedForOpen then
+                    begin
+                        with ActiveCircuit do // If net balanced active power is forward, disarm trip and set for reset
+                        begin
+                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, self);
+                            ArmedForOpen := FALSE;
+                            ArmedForClose := FALSE;
+                            if DebugTrace then
+                                AppendToEventLog(
+                                    'Relay.'+ self.Name, 
+                                    Format('DOC - Reset on Forward Net Balanced Active Power: %.2f kW', [ControlPower.re])
+                                );
+                        end
+                    end
+                    else
+                    begin
+                        if DebugTrace then
+                            AppendToEventLog(
+                                'Relay.'+ self.Name, 
+                                Format('DOC - Forward Net Balanced Active Power: %.2f kW. DOC Element blocked.', [ControlPower.re])
+                            );
+                    end;
+                    Exit; // Do not evaluate trip if power is forward.
+                end;
+            end;
+
             TripTime := -1.0;
 
             MonitoredElement.GetCurrents(cBuffer);
