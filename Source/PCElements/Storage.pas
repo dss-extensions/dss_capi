@@ -2094,8 +2094,7 @@ Begin
 
 
            CASE Fstate of
-               STORE_CHARGING:    Y := YeqDischarge;
-               STORE_IDLING:      Y := cmplx(0.0,0.0);
+               STORE_CHARGING, STORE_IDLING:    Y := YeqDischarge;
                STORE_DISCHARGING: Y := cnegate(YeqDischarge);
            END;
 
