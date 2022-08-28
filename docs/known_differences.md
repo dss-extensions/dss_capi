@@ -59,3 +59,5 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
     - The Diakoptics features are currently disabled. The implementation will be slightly different here since we use a complete different multi-circuit organization.
 
 - Monitor headers: In the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS Extensions, we took the opportunity to rewrite the related code. As such, the implementation in DSS Extensions deviate from the official one. Extra spaces are not included and should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough.
+
+👉 Besides the omissions and caveats listed here, our general policy on commits/features from official OpenDSS is to port them in a matter of hours/days, if possible. If we find that a SVN commit/feature in the official OpenDSS introduces issues/bugs, we may postpone porting and/or report the issues in the official OpenDSS forum. Our releases are not coordinated with the official version.
