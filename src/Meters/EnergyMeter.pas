@@ -1143,11 +1143,11 @@ begin
         // MeteredElement must be a PDElement
         if not (MeteredElement is TPDElement) then
         begin
-            MeteredElement := NIL;   // element not found
             DoErrorMsg(
                 Format(_('EnergyMeter: "%s"'), [Self.Name]), 
                 Format(_('Circuit Element "%s" is not a Power Delivery (PD) element.'), [MeteredElement.Name]),
                 _('Element must be a PD element.'), 525);
+            MeteredElement := NIL;   // element not found
             Exit;
         end;
 
