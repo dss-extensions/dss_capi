@@ -1551,6 +1551,7 @@ begin
                 ELSE
                  Begin
                     DoSimpleMsg(DSS, 'Warning: Duplicate new element definition: "%s.%s". Element being redefined.', [DSS.ActiveDSSClass.Name, Name], 266);
+                    Exit;
                  End;
              End;
 
