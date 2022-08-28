@@ -90,11 +90,6 @@ uses
 type
     TObj = TPDElement;    
 
-procedure accumsum(var a: Double; b: Double); inline;
-begin
-    a := a + b;
-end;
-
 procedure TPDElement.AccumFltRate;
 var
     FromBus: TDSSBus;
@@ -108,20 +103,18 @@ begin
             ToTerminal := 2;
 
         // Get fault Rate for TO bus and add it to this section failure rate
-        ToBus := Buses^[Terminals[ToTerminal - 1].BusRef];
+        ToBus := Buses[Terminals[ToTerminal - 1].BusRef];
         AccumulatedBrFltRate := ToBus.BusFltRate + BranchFltRate;
-        FromBus := Buses^[Terminals[FromTerminal - 1].BusRef];
+        FromBus := Buses[Terminals[FromTerminal - 1].BusRef];
         FromBus.BusTotalNumCustomers := FromBus.BusTotalNumCustomers + BranchTotalCustomers;
 
         AccumulatedMilesDownStream := ToBus.BusTotalMiles + MilesThisLine;
-        accumsum(FromBus.BusTotalMiles, AccumulatedMilesDownStream);
+        FromBus.BusTotalMiles += AccumulatedMilesDownStream;
 
         // Compute accumulated to FROM Bus; if a fault interrupter, assume it isolates all downline faults
         if not (Flg.HasOcpDevice in Flags) then
-        begin
             // accumlate it to FROM bus
-            accumsum(FromBus.BusFltRate, AccumulatedBrFltRate);
-        end;
+            FromBus.BusFltRate += AccumulatedBrFltRate;
     end;
 end;
 
@@ -138,11 +131,9 @@ procedure TPDElement.CalcCustInterrupts;
 var
     FromBus: TDSSBus;
 begin
-    FromBus := ActiveCircuit.Buses^[Terminals[FromTerminal - 1].BusRef];
+    FromBus := ActiveCircuit.Buses[Terminals[FromTerminal - 1].BusRef];
     with  FromBus do
-    begin
-        accumsum(BusCustInterrupts, Bus_Num_Interrupt * BranchTotalCustomers);
-    end;
+        BusCustInterrupts += Bus_Num_Interrupt * BranchTotalCustomers;
 end;
 
 procedure TPDElement.CalcNum_Int(var SectionCount: Integer; AssumeRestoration: Boolean);
@@ -158,8 +149,8 @@ begin
             ToTerminal := 1
         else
             ToTerminal := 2;
-        ToBus := Buses^[Terminals[ToTerminal - 1].BusRef];
-        FromBus := Buses^[Terminals[FromTerminal - 1].BusRef];
+        ToBus := Buses[Terminals[ToTerminal - 1].BusRef];
+        FromBus := Buses[Terminals[FromTerminal - 1].BusRef];
 
         // If no interrupting device then the downline bus will have the same num of interruptions
         ToBus.Bus_Num_Interrupt := FromBus.Bus_Num_Interrupt;
@@ -176,7 +167,7 @@ begin
                 // Branches with OCP devics
                 ToBus.Bus_Num_Interrupt := AccumulatedBrFltRate
             else
-                accumsum(ToBus.Bus_Num_Interrupt, AccumulatedBrFltRate);
+                ToBus.Bus_Num_Interrupt += AccumulatedBrFltRate;
 
             // If there is an OCP device on this PDElement, this is the
             // beginning of a new section.
@@ -225,13 +216,13 @@ begin
         begin
             with ActiveCircuit.Solution do
                 for i := 1 to Yorder do
-                    Vterminal^[i] := NodeV^[NodeRef^[i]];
+                    Vterminal[i] := NodeV[NodeRef[i]];
 
             YPrim.MVMult(Curr, Vterminal);
         end
         else
             for i := 1 to Yorder do
-                Curr^[i] := cZero;
+                Curr[i] := cZero;
 
     except
         On E: Exception do
@@ -301,8 +292,8 @@ var
     FromBus: TDSSBus;
 
 begin
-    FromBus := ActiveCircuit.Buses^[Terminals[FromTerminal - 1].BusRef];
-    with  FromBus do
+    FromBus := ActiveCircuit.Buses[Terminals[FromTerminal - 1].BusRef];
+    with FromBus do
     begin
         BusCustInterrupts := 0.0;
         BusFltRate := 0.0;
