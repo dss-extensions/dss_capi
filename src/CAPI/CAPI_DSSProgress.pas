@@ -16,6 +16,7 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
+    DSSClass,
     CmdForms;
 
 procedure DSSProgress_Close(); CDECL;

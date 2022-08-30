@@ -283,12 +283,14 @@ end;
 function DSS_GetAsPAnsiChar(DSS: TDSSContext; s: Ansistring): PAnsiChar;
 begin
     // keep a reference to the string to make sure the memory is not deallocated
+    if DSS = NIL then DSS := DSSPrime;
     DSS.tempBuffer := s;
     result := PAnsiChar(DSS.tempBuffer);
 end;
 //------------------------------------------------------------------------------
 procedure ctx_DSS_ResetStringBuffer(DSS: TDSSContext); CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     DSS.tempBuffer := '';
 end;
 //------------------------------------------------------------------------------
@@ -530,6 +532,7 @@ procedure ctx_DSS_GetGRPointers(
     var CountPtr_PByte: PAPISize
 ); CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     with DSS do
     begin
         if (@DataPtr_PPAnsiChar <> nil) then DataPtr_PPAnsiChar := @GR_DataPtr_PPAnsiChar;
@@ -572,26 +575,32 @@ end;
 
 function ctx_DSS_GR_DataPtr_PDouble(DSS: TDSSContext): PDouble; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := DSS.GR_DataPtr_PDouble;
 end;
 function ctx_DSS_GR_DataPtr_PInteger(DSS: TDSSContext): PInteger; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := DSS.GR_DataPtr_PInteger;
 end;
 function ctx_DSS_GR_DataPtr_PByte(DSS: TDSSContext): PByte; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := DSS.GR_DataPtr_PByte;
 end;
 function ctx_DSS_GR_CountPtr_PDouble(DSS: TDSSContext): PAPISize; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := @DSS.GR_Counts_PDouble[0];
 end;
 function ctx_DSS_GR_CountPtr_PInteger(DSS: TDSSContext): PAPISize; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := @DSS.GR_Counts_PInteger[0];
 end;
 function ctx_DSS_GR_CountPtr_PByte(DSS: TDSSContext): PAPISize; CDECL;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := @DSS.GR_Counts_PByte[0];
 end;
 
@@ -625,6 +634,7 @@ procedure ctx_DSS_DisposeGRData(DSS: TDSSContext); CDECL;
 var
     i: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     with DSS do
     begin
         DSS_Dispose_PByte(GR_DataPtr_PByte);

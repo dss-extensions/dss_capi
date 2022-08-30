@@ -352,6 +352,7 @@ var
     enumIds: TClassNamesHashListType;
     i: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Result := NIL;
     classes := TJSONArray.Create();
     enums := TJSONArray.Create();
@@ -381,6 +382,7 @@ var
     Cls: TDSSClass;
 begin
     Result := NIL;
+    if DSS = NIL then DSS := DSSPrime;
     Cls := DSS.DSSClassList.At(ClsIdx);
     if Cls = NIL then
         Exit;
@@ -397,6 +399,7 @@ var
     Cls: TDSSClass;
 begin
     Result := NIL;
+    if DSS = NIL then DSS := DSSPrime;
     Cls := DSS.DSSClassList.At(ClsIdx);
     if Cls = NIL then
         Exit;
@@ -409,6 +412,7 @@ var
     Cls: TDSSClass;
 begin
     Result := NIL;
+    if DSS = NIL then DSS := DSSPrime;
     Cls := DSS.DSSClassList.At(ClsIdx);
     if Cls = NIL then
         Exit;
@@ -560,6 +564,7 @@ var
     Cls: TDSSClass;
 begin
     Result := 0;
+    if DSS = NIL then DSS := DSSPrime;
     Cls := DSS.DSSClassList.At(ClsIdx);
     if Cls = NIL then
         Exit;
@@ -840,6 +845,7 @@ var
     i: Integer;
     prefix: String;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     Cls := DSS.DSSClassList.At(ClsIdx);
     if Cls = NIL then
         Exit;
@@ -886,6 +892,7 @@ var
     outptr: TDSSObjectPtr;
     i: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     cls := DSS.DSSClassList.At(clsIdx);
     if cls = NIL then
         Exit;
@@ -920,6 +927,7 @@ var
     outptr: TDSSObjectPtr;
     i: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     cls := DSS.DSSClassList.At(clsIdx);
     if cls = NIL then
         Exit;
@@ -942,6 +950,7 @@ var
     outptr: TDSSObjectPtr;
     i: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     cls := DSS.DSSClassList.At(clsIdx);
     if cls = NIL then
         Exit;
@@ -969,6 +978,7 @@ var
     i: Integer;
     flags: TPropertyFlags;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     cls := DSS.DSSClassList.At(clsIdx);
     if cls = NIL then
     begin
@@ -1640,6 +1650,7 @@ procedure Batch_CreateFromNewS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; R
 var
     clsIdx: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     clsIdx := DSS.ClassNames.Find(clsname);
     if clsIdx = 0 then
         Exit;
@@ -1650,6 +1661,7 @@ procedure Batch_CreateByClassS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; R
 var
     clsIdx: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     clsIdx := DSS.ClassNames.Find(clsname);
     if clsIdx = 0 then
         Exit;
@@ -1660,6 +1672,7 @@ procedure Batch_CreateByRegExpS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; 
 var
     clsIdx: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     clsIdx := DSS.ClassNames.Find(clsname);
     if clsIdx = 0 then
         Exit;
@@ -1670,6 +1683,7 @@ procedure Batch_CreateByIndexS(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; R
 var
     clsIdx: Integer;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     clsIdx := DSS.ClassNames.Find(clsname);
     if clsIdx = 0 then
     begin
@@ -1686,6 +1700,7 @@ var
     cls: TDSSClass;
     spropname: String;
 begin
+    if DSS = NIL then DSS := DSSPrime;
     clsIdx := DSS.ClassNames.Find(clsname);
     //WriteLn('clsIdx = ', clsIdx);
     if clsIdx = 0 then
