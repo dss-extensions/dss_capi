@@ -289,6 +289,8 @@ type
     Timer1            : TTimer;
     COMHelp1: TMenuItem;
     Checkforupdates1: TMenuItem;
+    Closealltabsbutthisone1: TMenuItem;
+    Closealltabs1: TMenuItem;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DSSHelp1Click(Sender: TObject);
@@ -475,6 +477,8 @@ type
     procedure Timerdone(Sender: TObject);
     procedure COMHelp1Click(Sender: TObject);
     procedure Checkforupdates1Click(Sender: TObject);
+    procedure Closealltabsbutthisone1Click(Sender: TObject);
+    procedure Closealltabs1Click(Sender: TObject);
   private
     { Private declarations }
     PlotOptionString  :String;
@@ -675,6 +679,51 @@ end;
 procedure TControlPanel.Clear1Click(Sender: TObject);
 begin
   ActiveScriptForm.ExecuteDSSCommand('clear');
+end;
+
+procedure TControlPanel.Closealltabs1Click(Sender: TObject);
+var
+  PageCount,
+  page        : Integer;
+
+begin
+  if ActiveScriptForm.CheckEditorClose = true then
+  begin
+    // removes all tabs
+    PageCount :=  EditPages.PageCount - 1;
+    for page := 0 to PageCount - 1 do // There must be at least one open (Main)
+    Begin
+      ScriptWindowList.Remove( TScriptEdit( EditPages.Pages[PageCount].Tag ) );
+      EditPages.Pages[PageCount].Free;
+      dec(PageCount);
+    End;
+  end;
+
+end;
+
+procedure TControlPanel.Closealltabsbutthisone1Click(Sender: TObject);
+var
+  PageCount,
+  page      : Integer;
+  myTag     : NativeInt;
+
+begin
+  if ActiveScriptForm.CheckEditorClose = true then
+  begin
+    myTag :=  EditPages.ActivePage.Tag;  // Saves the index for the current tab
+    // removes all but the active tab
+    PageCount :=  EditPages.PageCount - 1;
+    for page := 0 to PageCount - 1 do // There must be at least one open (Main)
+    Begin
+      if EditPages.Pages[PageCount].Tag <> myTag then
+      Begin
+        ScriptWindowList.Remove( TScriptEdit( EditPages.Pages[PageCount].Tag ) );
+        EditPages.Pages[PageCount].Free;
+      End;
+      dec(PageCount);
+    End;
+    ActiveScriptForm := TScriptEdit(myTag);
+  end;
 end;
 
 procedure TControlPanel.COMHelp1Click(Sender: TObject);

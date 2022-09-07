@@ -219,6 +219,7 @@ VAR
    In_Redirect        :Boolean;
    DIFilesAreOpen     :array of Boolean;
    AutoShowExport     :Boolean;
+   EventLogDefault    :Boolean;
    SolutionWasAttempted : Array of Boolean;
 
    GlobalHelpString   :String;
@@ -1581,6 +1582,7 @@ initialization
    DSSDirectory           :=  ExtractFilePath(DSSFileName);
    ADiakoptics            :=  False;  // Disabled by default
    ADiak_Init             :=  False;
+   EventLogDefault        :=  False;  // Disabled by default
 
    GetDefaultPorts();                 // Gets the default ports to get connected to other add-ons
    {$IFNDEF CONSOLE}
