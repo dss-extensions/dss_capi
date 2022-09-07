@@ -1229,7 +1229,7 @@ begin
      PropertyValue[33] := '68.0';
      PropertyValue[34] := '0.7';
      PropertyValue[35] := '0.7';
-     PropertyValue[36] := 'Yes';
+     if ShowEventLog then PropertyValue[36] :='YES' else PropertyValue[36] := 'NO';
      PropertyValue[37] := 'No';
      PropertyValue[39] := 'closed';
      PropertyValue[40] := 'closed';
