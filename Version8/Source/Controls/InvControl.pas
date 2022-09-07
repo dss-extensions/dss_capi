@@ -3070,7 +3070,7 @@ procedure TInvControlObj.InitPropertyValues(ArrayOffset: Integer);
     PropertyValue[19] := '0.0'; // LPF tau constant, in seconds
     PropertyValue[20] := '-1.0'; // Rise/fall Limit
     PropertyValue[21] := FloatToStr(FLAGDELTAP); // FdeltaPFactor
-    PropertyValue[22] := 'NO'; // show event log
+    if ShowEventLog then PropertyValue[22] :='YES' else PropertyValue[22] := 'NO';
     PropertyValue[23] := 'VARAVAL'; // y-axis reference (and power precedence) for volt-var
     PropertyValue[24] := '0.01';
 
