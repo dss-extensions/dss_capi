@@ -8,6 +8,8 @@ Version 9.5.1.1
 Changes this version
 ====================
 
+- Adds functionality for closing all but one or all tabs when using the standalone editor.
+- Adds option EventlogDefault to the global context for setting the default for enabling/disabling the eventlog in control objects. 
 - Adds "Element" property to UPFC for triggering the reactive power compensation mode. Not needed in the past, but given the new control mode it requires it. 
 - Adds DOC_P1Blocking property to relays. This enables/disables a positive sequence power blocking element according to IEEE Std C57.12.44-2014.
 - Solved issue introduced with long-line correction changes of rev 3464. Single-phase lines without symmetrical component definition were being affected by change.
