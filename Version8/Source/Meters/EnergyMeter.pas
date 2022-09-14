@@ -233,7 +233,6 @@ Type
        VoltageFileIsOpen          : Boolean;
 
 
-
        constructor Create;
        destructor Destroy;     override;
 
@@ -347,6 +346,7 @@ Type
         SAIDI                 : Double;
         CAIDI                 : Double;
         CustInterrupts        : Double;
+        AssumeRestoration     : Boolean;
 
         // Source reliability
         Source_NumInterruptions : Double; // Annual interruptions for upline circuit
@@ -379,7 +379,7 @@ Type
         Procedure SaveZone(const dirname:String);
         procedure GetPCEatZone;
 
-        Procedure CalcReliabilityIndices(AssumeRestoration:Boolean; ActorID : Integer);
+        Procedure CalcReliabilityIndices(AssumeRestoration_input:Boolean; ActorID : Integer);
 
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
@@ -436,7 +436,6 @@ Begin
 
      OverLoadFileIsOpen               :=  FALSE;
      VoltageFileIsOpen                :=  FALSE;
-
 
 
      Do_OverloadReport                :=  FALSE;
@@ -946,6 +945,7 @@ Begin
      SAIDI   := 0.0;
      CAIDI   := 0.0;
      CustInterrupts := 0.0;
+     AssumeRestoration :=  FALSE;
      Source_NumInterruptions  := 0.0; // Annual interruptions for upline circuit
      Source_IntDuration       := 0.0; // Aver interruption duration of upline circuit
 
@@ -1687,7 +1687,10 @@ begin
                  Checked := TRUE;
                  Inc(BranchTotalCustomers, BranchNumCustomers);
                  If ParentPDElement <> Nil Then
-                    Inc(ParentPDElement.BranchTotalCustomers, BranchTotalCustomers);
+                    if HasOCPDevice and AssumeRestoration and HasAutoOCPDevice then
+                        Inc(ParentPDElement.BranchTotalCustomers, 0)
+                    else
+                        Inc(ParentPDElement.BranchTotalCustomers, BranchTotalCustomers);
             End;
      End;  {For i}
 
@@ -2438,7 +2441,7 @@ end;
 
 {--------------------------- CalcReliabilityIndices ----------------------------}
 
-procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration:Boolean; ActorID : Integer);
+procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration_input:Boolean; ActorID : Integer);
 Var
   PD_Elem  : TPDElement;
   pSection : TFeederSection;
@@ -2454,6 +2457,10 @@ begin
     DoSimpleMsg('Energymeter.' + Name + ' Zone not defined properly.', 52901);
     Exit;
   End;
+
+  // Update the number or customers
+  AssumeRestoration := AssumeRestoration_input;
+  TotalUpDownstreamCustomers;
 
   // Zero reliability accumulators
   For idx := SequenceList.ListSize downto 1 Do
