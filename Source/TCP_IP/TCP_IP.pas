@@ -178,6 +178,7 @@ var
   i , k :Integer;
   hr : Single;
   s  : Single;
+  pStr : pAnsiChar;
 
 begin
 
@@ -212,7 +213,9 @@ begin
     If pMon.SampleCount >0 Then Begin
       SetLength(time^, 1, pMon.SampleCount) ;
       ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-      AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+      with pMon do
+        pStr := @StrBuffer[0];
+      AuxParser[ActiveActor].CmdString := pStr;
       AuxParser[ActiveActor].AutoIncrement := TRUE;
       FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
       AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -565,6 +568,7 @@ var
   i , k, index :Integer;
   hr : Single;
   s  : Single;
+  pStr : pAnsiChar;
 
 begin
   if(MySocket.Socket.Connected=False) then
@@ -601,7 +605,9 @@ begin
     If pMon.SampleCount >0 Then Begin
       SetLength(time, 1, pMon.SampleCount) ;
       ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-      AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+      with pMon do
+        pStr := @StrBuffer[0];
+      AuxParser[ActiveActor].CmdString := pStr;
       AuxParser[ActiveActor].AutoIncrement := TRUE;
       FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
       AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -636,8 +642,11 @@ begin
   begin
     WITH ActiveCircuit[ActiveActor] DO
     Begin
+      pMon := ActiveCircuit[ActiveActor].Monitors.Active;
       ReadMonitorHeader(Header, TRUE);
-      If Header.RecordSize > 0 Then
+      with pMon do
+        pStr := @StrBuffer[0];
+      If length(pStr) > 0 Then
       Begin
          ListSize := Header.RecordSize;
          SetLength(headers, ListSize);
@@ -646,7 +655,7 @@ begin
          AuxParser[ActiveActor].Delimiters := ',';
          SaveWhiteSpace := AuxParser[ActiveActor].Whitespace;
          AuxParser[ActiveActor].Whitespace := '';
-         AuxParser[ActiveActor].CmdString := String(Header.StrBuffer);
+         AuxParser[ActiveActor].CmdString := String(pStr);
          AuxParser[ActiveActor].AutoIncrement := TRUE;
          AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
          AuxParser[ActiveActor].StrValue;
@@ -670,7 +679,7 @@ begin
       for index:= Low(headers) to High(headers) do
       begin
         ReadMonitorHeader(Header, FALSE);  // FALSE = leave at beginning of data
-        AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+        AuxParser[ActiveActor].CmdString := string(pMon.StrBuffer);
         AuxParser[ActiveActor].AutoIncrement := TRUE;
         FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
         AuxParser[ActiveActor].AutoIncrement := FALSE;
@@ -1100,7 +1109,7 @@ begin
      SetObjectClass('Monitor');
      for k:=Low(load_names) to High(load_names) do
      Begin
-        if SetElementActive('moitor.v_'+load_names[k])<>0 then        
+        if SetElementActive('monitor.v_'+load_names[k])<>0 then
         //IF ActiveDSSClass[ActiveActor].SetActive('V_'+load_names[k]) THEN
         begin  // IF object already exists.
           DssExecutive[ActiveActor].Command := 'edit monitor.V_'+load_names[k]+
@@ -1201,7 +1210,7 @@ begin
             begin
               // FALSE = leave at beginning of data
               ReadMonitorHeader(Header, FALSE);
-              AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+              AuxParser[ActiveActor].CmdString := string(pMon.StrBuffer);
               AuxParser[ActiveActor].AutoIncrement := TRUE;
               FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
               AuxParser[ActiveActor].AutoIncrement := FALSE;
