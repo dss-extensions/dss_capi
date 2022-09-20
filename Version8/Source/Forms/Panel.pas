@@ -291,6 +291,7 @@ type
     Checkforupdates1: TMenuItem;
     Closealltabsbutthisone1: TMenuItem;
     Closealltabs1: TMenuItem;
+    DirectDLL1: TMenuItem;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DSSHelp1Click(Sender: TObject);
@@ -479,6 +480,7 @@ type
     procedure Checkforupdates1Click(Sender: TObject);
     procedure Closealltabsbutthisone1Click(Sender: TObject);
     procedure Closealltabs1Click(Sender: TObject);
+    procedure LaunchDirectDLlHelp(Sender: TObject);
   private
     { Private declarations }
     PlotOptionString  :String;
@@ -916,6 +918,11 @@ end;
 procedure TControlPanel.LastFile1Click(Sender: TObject);
 begin
   FireOffEditor(LastFileCompiled);
+end;
+
+procedure TControlPanel.LaunchDirectDLlHelp(Sender: TObject);
+begin
+    ActiveScriptForm.ExecuteDSSCommand('DDLLHelp');
 end;
 
 procedure TControlPanel.File2Click(Sender: TObject);

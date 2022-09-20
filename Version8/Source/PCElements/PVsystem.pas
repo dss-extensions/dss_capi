@@ -1,7 +1,7 @@
 unit PVSystem;
 {
   ----------------------------------------------------------
-  Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2011-2022, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -19,6 +19,8 @@ unit PVSystem;
   The PVsystem element is essentially a generator that consists of a PV panel and an inverter.
   The PVsystem element can also produce or absorb vars within the kVA rating of the inverter.
   // WGS: Updated 9/24/2015 to allow for simultaneous modes and additional functionality in the InvControl.
+
+  09/11/2022 Compatibility with dynamics simulation added
 }
 //  The PVSystem element is assumed balanced over the no. of phases defined
 
@@ -27,31 +29,31 @@ uses  PVsystemUserModel, DSSClass,  PCClass, PCElement, ucmatrix, ucomplex,
       LoadShape, TempShape, XYCurve, Spectrum, ArrayDef, Dynamics;
 
 const  NumPVSystemRegisters = 6;    // Number of energy meter registers
-       NumPVSystemVariables = 13;    // No state variables that need integrating.
+       NumPVSystemVariables = 21;   // Includes dynamics state variables - added on 09/15/2022.
        VARMODEPF   = 0;
        VARMODEKVAR = 1;
 type
   {Struct to pass basic data to user-written DLLs}
   TPVSystemVars = Packed Record
-    FkVArating            :Double;
-    kVPVSystemBase       :Double;
-    RThev                 :Double;
-    XThev                 :Double;
-    Vthevharm             :Double;  {Thevinen equivalent voltage mag  for Harmonic model}
-    VthevmagDyn           :Double;  {Thevinen equivalent voltage mag  reference for Dynamics model}
-    Thetaharm             :Double;  {Thevinen equivalent  angle reference for Harmonic model}
-    ThetaDyn              :Double;  {Thevinen equivalent  angle reference for Dynamics model}
-    InitialVAngle         :Double;  {initial terminal voltage angle when entering dynamics mode}
-    EffFactor             :Double;
-    TempFactor            :Double;
-    PanelkW               :Double; //computed
-    FTemperature          :Double;
-    FPmpp                 :Double;
-    FpuPmpp               :Double;
-    FIrradiance           :Double;
-    MaxDynPhaseCurrent    :Double;
-    Fkvarlimit            :Double; //maximum kvar output of the PVSystem (unsigned)
-    Fkvarlimitneg         :Double;
+    FkVArating            : Double;
+    kVPVSystemBase        : Double;
+    RThev                 : Double;
+    XThev                 : Double;
+    Vthevharm             : Double;  {Thevinen equivalent voltage mag  for Harmonic model}
+    VthevmagDyn           : Double;  {Thevinen equivalent voltage mag  reference for Dynamics model}
+    Thetaharm             : Double;  {Thevinen equivalent  angle reference for Harmonic model}
+    ThetaDyn              : Double;  {Thevinen equivalent  angle reference for Dynamics model}
+    InitialVAngle         : Double;  {initial terminal voltage angle when entering dynamics mode}
+    EffFactor             : Double;
+    TempFactor            : Double;
+    PanelkW               : Double; //computed
+    FTemperature          : Double;
+    FPmpp                 : Double;
+    FpuPmpp               : Double;
+    FIrradiance           : Double;
+    MaxDynPhaseCurrent    : Double;
+    Fkvarlimit            : Double; //maximum kvar output of the PVSystem (unsigned)
+    Fkvarlimitneg         : Double;
     // Variables set from InvControl. They are results of monitor in mode 3
     Vreg                  : Double; // will be set from InvControl or ExpControl
     Vavg                  : Double;
@@ -68,6 +70,17 @@ type
     Conn                  : Integer;   // 0 = wye; 1 = Delta
     P_Priority            : Boolean;  // default False // added 10/30/2018
     PF_Priority           : Boolean;  // default False // added 1/29/2019
+    // Dynamic variables - introduced on 09/15/2022
+    Vgrid,                                      // Grid voltage at the point of connection per phase
+    dit,                                        // Current's first derivative per phase
+    it,                                         // Current's integration per phase
+    itHistory,                                  // Shift register for it
+    m                     : array of Double;    // Average duty cycle per phase
+    RatedVDC,                                   // Rated DC voltage at the inverter's input
+    LS,                                         // Series inductance, careful, it cannot be 0 in dyn mode
+    VDC                   : Double;             // DC voltage injected to the inverter
+
+
    End;
   TPVSystem = CLASS(TPCClass)
     private
@@ -367,7 +380,8 @@ const
   propPminNoVars              = 38;
   propPminkvarLimit           = 39;
   propkvarLimitneg            = 40;
-  NumPropsThisClass           = 40; // Make this agree with the last property constant
+  propkVDC                    = 41;
+  NumPropsThisClass           = 41; // Make this agree with the last property constant
 var
   cBuffer             : Array[1..24] of Complex;  // Temp buffer for calcs  24-phase PVSystem element?
   CDOUBLEONE          : Complex;
@@ -547,6 +561,9 @@ PROCEDURE TPVsystem.DefineProperties;
     AddProperty('kvarMaxAbs', propkvarLimitneg,
                            'Indicates the maximum reactive power ABSORPTION (un-signed numerical variable in kvar) for the inverter (as an un-signed value). Defaults to kVA rating of the inverter.');
 
+    AddProperty('kVDC', propkVDC,
+                           'Indicates the rated voltage (kV) at the input of the inverter at the peak of PV energy production. The value is normally greater or equal to the kV base of the PV system. It is used for dynamics simulation ONLY.');
+
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
     // Override default help string
@@ -704,6 +721,7 @@ FUNCTION TPVsystem.Edit(ActorID : Integer):Integer;
                                       PVSystemVars.Fkvarlimitneg := Abs(Parser[ActorID].DblValue);
                                       kvarLimitNegSet           := True;
                                     End;
+                propkVDC          : PVSystemVars.RatedVDC          := Parser[ActorID].DblValue * 1000;
 
                 ELSE
                   // Inherited parameters
@@ -913,26 +931,27 @@ Constructor TPVsystemObj.Create(ParClass:TDSSClass; const SourceName:String);
     ForceBalanced                 := FALSE;
     CurrentLimited                := FALSE;
     With PVSystemVars Do
-      Begin
-        FTemperature              := 25.0;
-        FIrradiance               := 1.0;  // kW/sq-m
-        FkVArating                := 500.0;
-        FPmpp                     := 500.0;
-        FpuPmpp                   := 1.0;    // full on
-        Vreg                      := 9999;
-        Vavg                      := 9999;
-        VVOperation               := 9999;
-        VWOperation               := 9999;
-        DRCOperation              := 9999;
-        VVDRCOperation            := 9999;
-        WPOperation               := 9999;
-        WVOperation               := 9999;
-        //         kW_out_desired  :=9999;
-        Fkvarlimit                := FkVArating;
-        Fkvarlimitneg             := FkVArating;
-        P_Priority                := FALSE;    // This is a change from older versions
-        PF_Priority               := FALSE;
-      End;
+    Begin
+      FTemperature              := 25.0;
+      FIrradiance               := 1.0;  // kW/sq-m
+      FkVArating                := 500.0;
+      FPmpp                     := 500.0;
+      FpuPmpp                   := 1.0;    // full on
+      Vreg                      := 9999;
+      Vavg                      := 9999;
+      VVOperation               := 9999;
+      VWOperation               := 9999;
+      DRCOperation              := 9999;
+      VVDRCOperation            := 9999;
+      WPOperation               := 9999;
+      WVOperation               := 9999;
+      //         kW_out_desired  :=9999;
+      Fkvarlimit                := FkVArating;
+      Fkvarlimitneg             := FkVArating;
+      P_Priority                := FALSE;    // This is a change from older versions
+      PF_Priority               := FALSE;
+      RatedVDC                  := 8000;
+    End;
     FpctCutIn                     := 20.0;
     FpctCutOut                    := 20.0;
     FpctPminNoVars                := -1.0;
@@ -2074,99 +2093,94 @@ PROCEDURE TPVsystemObj.InitHarmonics(ActorID : Integer);
 PROCEDURE TPVsystemObj.InitStateVars(ActorID : Integer);
 // for going into dynamics mode
   VAR
-//    VNeut,
-    Edp             : Complex;
-    V12             : Complex;
-    i, j            : Integer;
-    V012,
-    I012            : Array[0..2] of Complex;
-    Vabc            : Array[1..3] of Complex;
+
+    i,
+    j            : Integer;
+
   Begin
     YprimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
     With PVSystemVars do
-      Begin
-        NumPhases     := Fnphases;     // set Publicdata vars
-        NumConductors := Fnconds;
-        Conn          := Connection;
-        Zthev :=  Cmplx(RThev, XThev) ;
-        YEQ := Cinv(Zthev);      // used for current calcs  Always L-N
-        ComputeIterminal(ActorID);
-        With ActiveCircuit[ActorID].Solution Do
-          CASE Fnphases of
-            1 :   Begin
-                    if not ADiakoptics or (ActorID = 1) then
-                      V12 := CSub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[2]])
-                    else
-                      V12 := CSub(VoltInActor1(NodeRef^[1]), VoltInActor1(NodeRef^[2]));
+    Begin
+      ComputePanelPower();
+      VDC   :=  ( PanelkW/FPmpp ) * RatedVDC; // Calculates the present VDC generated by the panels
+      NumPhases     := Fnphases;     // set Publicdata vars
+      NumConductors := Fnconds;
+      Conn          := Connection;
+      // Sets the length of State vars to cover the num of phases
+      setlength(dit,NumPhases);   // Includes the current and past values
+      setlength(it,NumPhases);
+      setlength(itHistory,NumPhases);
+      setlength(Vgrid,NumPhases);
+      setlength(m,NumPhases);
 
-                    InitialVAngle := Cang(V12);
-                    Edp      := Csub(V12  , Cmul(ITerminal^[1], Zthev));
-                    VthevmagDyn := Cabs(Edp);
-                    ThetaDyn    := Cang(Edp); // initial thev equivalent phase angle
-                  End;
-            3 :   Begin
-                    // Calculate Edp based on Pos Seq only
-                    Phase2SymComp(ITerminal, @I012);
-                    // Voltage behind Xdp  (transient reactance), volts
-                    For i := 1 to FNphases Do
-                    Begin
-                      if not ADiakoptics or (ActorID = 1) then
-                        Vabc[i] := NodeV^[NodeRef^[i]]   // Wye Voltage
-                      else
-                        Vabc[i] := VoltInActor1(NodeRef^[i]);   // Wye Voltage
-                    End;
-                    Phase2SymComp(@Vabc, @V012);
-                    InitialVAngle := Cang(V012[1]);
-                    Edp      := Csub( V012[1] , Cmul(I012[1], Zthev));    // Pos sequence
-                    VthevmagDyn := Cabs(Edp);
-                    ThetaDyn    := Cang(Edp); // initial thev equivalent phase angle
-                  End;
-            ELSE
-              DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. PVSystem.'+name+' has %d phases.', [Fnphases]), 5673);
-              SolutionAbort := TRUE;
-          END;
-        LastThevAngle := ThetaDyn;
+      Zthev :=  Cmplx(RThev, XThev) ;
+      YEQ := Cinv(Zthev);      // used for current calcs  Always L-N
+      ComputeIterminal(ActorID);
+      With ActiveCircuit[ActorID].Solution Do
+      Begin
+        LS            :=  XThev/ (2 * PI * DefaultBaseFreq);
+        For i := 0 to (FNphases - 1) Do
+        Begin
+            dit[i]  :=  0;
+            it[i]   :=  ctopolar(ITerminal^[i + 1]).mag;
+          if not ADiakoptics or (ActorID = 1) then                       // No AD or env controller
+            m[i]    :=  ctopolar(NodeV^[NodeRef^[i + 1]]).mag / VDC          // Duty factor in terms of actual voltage
+          else
+            m[i]    :=  ctopolar(VoltInActor1(NodeRef^[i + 1])).mag / VDC;   // Duty factor in terms of actual voltage
+        End;
+
       End;
+    End;
   End;
 // ===========================================================================================
 PROCEDURE TPVsystemObj.IntegrateStates(ActorID : Integer);
 // dynamics mode integration routine
-// VAR
-//    TracePower:Complex;
+ VAR
+    i     : Integer;
   Begin
     // Compute Derivatives and Then integrate
     ComputeIterminal(ActorID);
     If Usermodel.Exists  Then Usermodel.Integrate   // Checks for existence and Selects
     Else
-      With ActiveCircuit[ActorID].Solution {, StorageVars} Do
+    Begin
+      if DynamicEqObj = nil then                    // Uses the default dynamic model included
+      Begin
+
+        With ActiveCircuit[ActorID].Solution, PVSystemVars Do
         Begin
-(*
-      With StorageVars Do
-      If (Dynavars.IterationFlag = 0) Then Begin {First iteration of new time step}
-//****          ThetaHistory := Theta + 0.5*h*dTheta;
-//****          SpeedHistory := Speed + 0.5*h*dSpeed;
-      End;
-      // Compute shaft dynamics
-      TracePower := TerminalPowerIn(Vterminal,Iterminal,FnPhases) ;
-//****      dSpeed := (Pshaft + TracePower.re - D*Speed) / Mmass;
-//      dSpeed := (Torque + TerminalPowerIn(Vtemp,Itemp,FnPhases).re/Speed) / (Mmass);
-//****      dTheta  := Speed ;
-     // Trapezoidal method
-      With StorageVars  Do Begin
-//****       Speed := SpeedHistory + 0.5*h*dSpeed;
-//****       Theta := ThetaHistory + 0.5*h*dTheta;
-      End;
-   // Write Dynamics Trace Record
-        IF DebugTrace Then
+          With DynaVars Do
+            If (IterationFlag = 0) Then
+            Begin {First iteration of new time step}
+              for i := 0 to (NumPhases - 1) do
+                itHistory[i] := it[i] + 0.5*h*dit[i];
+            End;
+
+          // Compute the actual VDC at the inverter input
+          ComputePanelPower();
+          VDC   :=  ( PanelkW/FPmpp ) * RatedVDC;
+
+          // Compute inv dynamics
+          for i := 0 to (NumPhases - 1) do
           Begin
-             Append(TraceFile);
-             Write(TraceFile,Format('t=%-.5g ', [Dynavars.t]));
-             Write(TraceFile,Format(' Flag=%d ',[Dynavars.Iterationflag]));
-             Writeln(TraceFile);
-             CloseFile(TraceFile);
-         End;
-*)
+            Vgrid[i]:=  ctopolar(NodeV^[NodeRef^[i + 1]]).mag;        // Voltage at the Inv terminals
+            m[i]    :=  Vgrid[i] / VDC;                               // duty cycle at time h
+
+            dit[i]  := ( (m[i] * VDC) - (RThev * it[i]) - Vgrid[i] ) / LS;
+          End;
+
+          // Trapezoidal method
+          With DynaVars Do
+          Begin
+            for i := 0 to (NumPhases - 1) do
+              it[i] := itHistory[i] + 0.5*h*dit[i];
+          End;
+
         End;
+
+      End;
+
+    End;
+
   End;
 
 // ===========================================================Get_Variable================================
