@@ -204,7 +204,8 @@ uses
   generator in '..\PCElements\generator.pas',
   GenUserModel in '..\PCElements\GenUserModel.pas',
   GeneratorVars in '..\PCElements\GeneratorVars.pas',
-  DynamicExp in '..\General\DynamicExp.pas';
+  DynamicExp in '..\General\DynamicExp.pas',
+  InvDynamics in '..\Shared\InvDynamics.pas';
 
 {$R *.RES}
 
