@@ -1766,6 +1766,7 @@ PROCEDURE TPVsystemObj.DoUserModel;
 PROCEDURE TPVsystemObj.DoDynamicMode;
 {Compute Total Current and add into InjTemp}
   Var
+    PolarN        : Polar;
     i             : Integer;
     V012,
     I012          : Array[0..2] of Complex;
@@ -1792,7 +1793,7 @@ PROCEDURE TPVsystemObj.DoDynamicMode;
     CalcYPrimContribution(InjCurrent, ActorID);  // Init InjCurrent Array  and computes VTerminal
     {Inj = -Itotal (in) - Yprim*Vtemp}
     CASE VoltageModel of
-      3 :       If UserModel.Exists Then       // auto selects model
+      3 :       If UserModel.Exists Then       // auto selects model (User model)
                   Begin   {We have total currents in Iterminal}
                     UserModel.FCalc(Vterminal, Iterminal);  // returns terminal currents in Iterminal
                   End
@@ -1801,56 +1802,23 @@ PROCEDURE TPVsystemObj.DoDynamicMode;
                     DoSimpleMsg(Format('Dynamics model missing for PVSystem.%s ',[Name]), 5671);
                     SolutionAbort := TRUE;
                   End;
-    ELSE  {All other models -- current-limited like Generator Model 7}
-      {
-        This is a simple model that is basically a thevinen equivalent without inertia
-      }
-      CASE Fnphases of  {No user model, use default Thevinen equivalent for standard Generator model}
-        1 :     With PVSystemVars Do
-                  Begin
-                    // 1-phase generators have 2 conductors
-                    // Assume inverter stays in phase with terminal voltage
-                    CalcVthev_Dyn(CSub(VTerminal^[1], VTerminal^[2]));  // see internal proc above
+    ELSE  {All other models }
+      {This model has no limitation in the nmber of phases and is ideally unbalanced (no dq-dv, but is implementable as well)}
+      // First, get the phase angles for the currents
+      for i := 1 to FNphases do
+      Begin
+        with myDynVars do
+        Begin
+          PolarN  :=  topolar( it[i -1], ctopolar(InjCurrent^[i]).ang);
+          Iterminal^[i] :=  ptocomplex(PolarN);
+        End;
+      End;
 
-                    ITerminal^[1] := CDiv(CSub(Csub(VTerminal^[1], Vthev), VTerminal^[2]), Zthev);
-                    If CurrentLimited Then
-                    If Cabs(Iterminal^[1]) > MaxDynPhaseCurrent Then   // Limit the current but keep phase angle
-                          ITerminal^[1] := ptocomplex(topolar(MaxDynPhaseCurrent, cang(Iterminal^[1])));
-                    ITerminal^[2] := Cnegate(ITerminal^[1]);
-                  End;
-        3 :     With PVSystemVars Do
-                  Begin
-                    Phase2SymComp(Vterminal, @V012);  // convert Vabc to V012
-                    //Begin  // simple inverter model     //HERE
-                    // Positive Sequence Contribution to Iterminal
-                    // Assume inverter stays in phase with pos seq voltage
-                    CalcVthev_Dyn(V012[1]);
-                    // Positive Sequence Contribution to Iterminal
-                    I012[1] := CDiv(Csub(V012[1], Vthev), Zthev);
-                    If CurrentLimited and (Cabs(I012[1]) > MaxDynPhaseCurrent) Then   // Limit the pos seq current but keep phase angle
-                      I012[1] := ptocomplex(topolar(MaxDynPhaseCurrent, cang(I012[1])));
-                    If ForceBalanced Then
-                      Begin
-                        I012[2] := CZERO;
-                      End
-                    Else
-                      I012[2] := Cdiv(V012[2], Zthev);  // for inverter
-                    //End;          //HERE
-                    {Adjust for generator connection}
-                    If (Connection=1) or ForceBalanced Then I012[0] := CZERO
-                    Else I012[0] := Cdiv(V012[0], Zthev);
-                    SymComp2Phase(ITerminal, @I012);  // Convert back to phase components
-                    // Neutral current
-                    If Connection=0 Then ITerminal^[FnConds] := Cnegate(CmulReal(I012[0], 3.0));
-                  End;
-        Else
-          DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
-          SolutionAbort := TRUE;
-      END;
     END;
     set_ITerminalUpdated(TRUE, ActorID);
     {Add it into inj current array}
-    FOR i := 1 to FnConds Do Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
+    FOR i := 1 to FnConds Do Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));  // Needs to be reformulated
+    //FOR i := 1 to FnConds Do InjCurrent^[i] := Iterminal^[i];
   End;
 // ====================================================================DoHarmonicMode=======================
 PROCEDURE TPVsystemObj.DoHarmonicMode(ActorID : Integer);
@@ -2154,28 +2122,30 @@ PROCEDURE TPVsystemObj.InitStateVars(ActorID : Integer);
       setlength(Vgrid,NumPhases);
       setlength(m,NumPhases);
 
-      MaxVS       :=  ( 1 + ( SMThreshold / 100 ) ) * PresentkV;
-      MinVS       :=  ( SMThreshold / 100 ) * PresentkV;
+      MaxVS       :=  ( 1 + ( SMThreshold / 100 ) ) * PresentkV * 1000;
+      MinVS       :=  ( SMThreshold / 100 ) * PresentkV * 1000;
       SafeMode    :=  False;
 
       if XThev = 0 then
       Begin
-        pctX  :=  50;         // forces the value to 10% in dynamics mode if not given
-        XThev :=  pctX * 0.01 * ( SQR(PresentkV)/FkVArating ) * 1000.0;
+        pctX        :=  50;         // forces the value to 10% in dynamics mode if not given
+        XThev       :=  pctX * 0.01 * ( SQR(PresentkV)/FkVArating ) * 1000.0;
       End;
-      Zthev :=  Cmplx(RThev, XThev) ;
-      YEQ := Cinv(Zthev);      // used for current calcs  Always L-N
+      Zthev       :=  Cmplx(RThev, XThev) ;
+      RS          :=  Zthev.re;
+      YEQ         := Cinv(Zthev);      // used for current calcs  Always L-N
       ComputeIterminal(ActorID);
       With ActiveCircuit[ActorID].Solution Do
       Begin
-        LS            :=  XThev/ (2 * PI * DefaultBaseFreq);
-        For i := 0 to (FNphases - 1) Do
+        LS            :=  ZThev.im/ (2 * PI * DefaultBaseFreq);
+        For i := 0 to (NPhases - 1) Do
         Begin
-            dit[i]  :=  0;
-            it[i]   :=  0;
-            Vgrid[i]:=  ctopolar(NodeV^[NodeRef^[i + 1]]).mag;
-            m[i]    :=  ( ( Rthev * it[i] ) + Vgrid[i] ) / RatedVDC;   // Duty factor in terms of actual voltage
-            if m[i] > 1 then m[i] :=  1;
+          dit[i]  :=  0;
+          it[i]   :=  0; //ctopolar(Iterminal[i + 1]).mag * 0;
+          Vgrid[i]:=  ctopolar(NodeV^[NodeRef^[i + 1]]).mag;
+          m[i]    :=  ( ( RS * it[i] ) + Vgrid[i] ) / RatedVDC;   // Duty factor in terms of actual voltage
+
+          if m[i] > 1 then m[i] :=  1;
 
         End;
 
@@ -2186,11 +2156,7 @@ PROCEDURE TPVsystemObj.InitStateVars(ActorID : Integer);
 PROCEDURE TPVsystemObj.IntegrateStates(ActorID : Integer);
 // dynamics mode integration routine
  VAR
-    myDCycle,
-    iDelta,
-    iErrorPct,
-    iError  : Double;
-    i       : Integer;
+    i         : Integer;
   Begin
     // Compute Derivatives and Then integrate
     ComputeIterminal(ActorID);
@@ -2199,75 +2165,33 @@ PROCEDURE TPVsystemObj.IntegrateStates(ActorID : Integer);
     Begin
       if DynamicEqObj = nil then                    // Uses the default dynamic model included
       Begin
-
         With ActiveCircuit[ActorID].Solution, PVSystemVars, myDynVars Do
         Begin
           // Compute the actual target (Amps)
           ComputePanelPower();
           ISP   :=  ( PanelkW/PresentkV );
-
-          With DynaVars Do
+            With DynaVars Do
             If (IterationFlag = 0) Then
             Begin {First iteration of new time step}
-              for i := 0 to (NumPhases - 1) do
-                itHistory[i] := it[i] + 0.5*h*dit[i];
+              for i := 0 to (NumPhases - 1) do itHistory[i] := it[i] + 0.5*h*dit[i];
             End;
 
           // Compute inv dynamics
           for i := 0 to (NumPhases - 1) do
           Begin
-            Vgrid[i]:=  ctopolar(NodeV^[NodeRef^[i + 1]]).mag;        // Voltage at the Inv terminals
-            if Vgrid[i] < (0.2 * PresentkV * 1000) then
-              ISP  :=  0.01;  // turn off the inverter
-
-            if (DynaVars.IterationFlag <> 0) then
-            Begin                                                     // duty cycle at time h
-              iError    :=  ( ISP - it[i] );                          // Only recalculated on the second iter
-              iErrorPct :=  iError/ISP;
-              if Abs(iErrorPct) > CtrlTol  then
-              Begin
-                  iDelta    :=  PICtrl.SolvePI( IError );
-                  myDCycle  :=  m[i] + iDelta;
-                  if Vgrid[i] > MinVS then
-                  Begin
-                    if SafeMode then
-                    Begin
-                     //Coming back from safe operation, need to boost duty cycle
-                     m[i]     :=  ( ( Rthev * it[i] ) + Vgrid[i] ) / RatedVDC;
-                     SafeMode :=  False;
-                    End
-                    else
-                      if ( myDCycle <= 1 ) and ( myDCycle > 0 ) then
-                        m[i]    :=  myDCycle;
-                  End
-                  else
-                  Begin
-                      m[i]      := 0;
-                      SafeMode  :=  True;
-                  End;
-              End;
-            End;
-
-            dit[i]  := ( (m[i] * RatedVDC) - (RThev * it[i]) - Vgrid[i] ) / LS;
+            Vgrid[i]:=  ctopolar(NodeV^[NodeRef^[i + 1]]).mag;      // Voltage at the Inv terminals
+            if Vgrid[i] < MinVS then ISP  :=  0.01;                 // turn off the inverter
+            SolveDynamicStep( i, ActorID, @PICtrl );                // Solves dynamic step for inverter
           End;
 
           // Trapezoidal method
           With DynaVars Do
           Begin
-            for i := 0 to (NumPhases - 1) do
-            Begin
-              it[i] := itHistory[i] + 0.5*h*dit[i];
-              //if it[i] > iMaxPPhase then it[i] :=  iMaxPPhase;
-            End;
-
+            for i := 0 to (NumPhases - 1) do it[i] := itHistory[i] + 0.5*h*dit[i];
           End;
-
         End;
-
       End;
-
     End;
-
   End;
 
 // ===========================================================Get_Variable================================
@@ -2294,26 +2218,20 @@ FUNCTION TPVsystemObj.Get_Variable(i: Integer): Double;
         11:Result := WPOperation;
         12:Result := WVOperation;
         13:Result := PanelkW * EffFactor;
-        14:Result := Vgrid[0];
-        15:Result := dit[0];
-        16:Result := it[0];
-        17:Result := ithistory[0];
-        18:Result := RatedVDC;
-        19:Result := m[0];
-        20:Result := ISP;
-        21:Result := LS;
         ELSE
         Begin
+          with myDynVars do       // Dynamic state variables read
+              Result  :=  Get_InvDynValue( i - 14 );
           If UserModel.Exists Then
-            Begin
-              N := UserModel.FNumVars;
-              k := (i-NumPVSystemVariables);
-              If k <= N Then
-                Begin
-                  Result := UserModel.FGetVariable(k);
-                  Exit;
-                End;
-            End;
+          Begin
+            N := UserModel.FNumVars;
+            k := (i-NumPVSystemVariables);
+            If k <= N Then
+              Begin
+                Result := UserModel.FGetVariable(k);
+                Exit;
+              End;
+          End
         End;
       END;
   End;
@@ -2465,26 +2383,20 @@ PROCEDURE TPVsystemObj.Set_Variable(i: Integer;  Value: Double);
       11:WPOperation := Value;
       12:WVOperation := Value;
       13: ; //ReadOnly //kW_out_desired := Value;
-      14: ; // Read only
-      15: dit[0]        := Value;
-      16: it[0]         := Value;
-      17: itHistory[0]  := Value;
-      18: ; // read only
-      19: m[0]          := Value;
-      20: ISP           := Value;
-      21: LS            := Value;
       ELSE
       Begin
+        with myDynVars do           // Dynamic state variables write
+          Set_InvDynValue( i - 14, Value );
         If UserModel.Exists Then
+        Begin
+          N := UserModel.FNumVars;
+          k := (i-NumPVSystemVariables) ;
+          If  k<= N Then
           Begin
-            N := UserModel.FNumVars;
-            k := (i-NumPVSystemVariables) ;
-            If  k<= N Then
-              Begin
-                UserModel.FSetVariable( k, Value );
-                Exit;
-              End;
+            UserModel.FSetVariable( k, Value );
+            Exit;
           End;
+        End;
       End;
 
     END;
@@ -2563,30 +2475,24 @@ FUNCTION TPVsystemObj.VariableName(i: Integer):String;
       10: Result := 'VV_DRC';
       11: Result := 'watt-pf';
       12: Result := 'watt-var';
-      13: Result := 'kW_out_desired';
-      14: Result := 'Grid voltage';
-      15: Result := 'di/dt';
-      16: Result := 'it';
-      17: Result := 'it History';
-      18: Result := 'Rated VDC';
-      19: Result := 'Avg duty cycle';
-      20: Result := 'Target (Amps)';
-      21: Result := 'Series L'
+      13: Result := 'kW_out_desired'
       ELSE
+      Begin
+        with myDynVars do   // Adds dynamic state variables names
+          Result  :=  Get_InvDynName( i - 14 );
+        If UserModel.Exists Then
         Begin
-          If UserModel.Exists Then
+          pName := @Buff;
+          n := UserModel.FNumVars;
+          i2 := i-NumPVSystemVariables;
+          If (i2 <= n) Then
             Begin
-              pName := @Buff;
-              n := UserModel.FNumVars;
-              i2 := i-NumPVSystemVariables;
-              If (i2 <= n) Then
-                Begin
-                  UserModel.FGetVarName(i2, pName, BuffSize);
-                  Result := String(pName);
-                  Exit;
-                End;
+              UserModel.FGetVarName(i2, pName, BuffSize);
+              Result := String(pName);
+              Exit;
             End;
         End;
+      End;
     END;
   End;
 // ===========================================================================================
