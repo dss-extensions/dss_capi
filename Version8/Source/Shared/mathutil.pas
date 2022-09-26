@@ -46,6 +46,8 @@ type
       destructor  Destroy; override;
    End;
 
+  PPICtrl = ^TPICtrl;
+
 implementation
 
 uses
