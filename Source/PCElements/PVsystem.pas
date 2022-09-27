@@ -29,7 +29,7 @@ uses  PVsystemUserModel, DSSClass,  PCClass, PCElement, ucmatrix, ucomplex,
       LoadShape, TempShape, XYCurve, Spectrum, ArrayDef, Dynamics, MathUtil, InvDynamics;
 
 const  NumPVSystemRegisters = 6;    // Number of energy meter registers
-       NumPVSystemVariables = 21;   // Includes dynamics state variables - added on 09/15/2022.
+       NumPVSystemVariables = 22;   // Includes dynamics state variables - added on 09/15/2022.
        VARMODEPF   = 0;
        VARMODEKVAR = 1;
 type
@@ -1236,10 +1236,9 @@ PROCEDURE TPVsystemObj.SetNominalPVSystemOuput(ActorID : Integer);
            (*
               MONTECARLO1,
               MONTEFAULT,
-              FAULTSTUDY;*)
-              DYNAMICMODE : Begin   // Implemented 09/22/2022
-
-                            End   ;
+              FAULTSTUDY;
+              DYNAMICMODE : Begin 
+                            End   ;*)
 
               GENERALTIME : Begin
                              // This mode allows use of one class of load shape
@@ -1770,7 +1769,9 @@ PROCEDURE TPVsystemObj.DoDynamicMode;
     i             : Integer;
     V012,
     I012          : Array[0..2] of Complex;
+    NeutAmps,
     Vthev         : Complex;
+    iActual,                // To determine the output values for current based on the inverter features
     Theta         : Double; // phase angle of thevinen source
     {-------------- Internal Proc -----------------------}
     Procedure CalcVthev_Dyn(const V:Complex);
@@ -1805,20 +1806,28 @@ PROCEDURE TPVsystemObj.DoDynamicMode;
     ELSE  {All other models }
       {This model has no limitation in the nmber of phases and is ideally unbalanced (no dq-dv, but is implementable as well)}
       // First, get the phase angles for the currents
+      NeutAmps    :=  cmplx( 0, 0 );
       for i := 1 to FNphases do
       Begin
         with myDynVars do
         Begin
-          PolarN  :=  topolar( it[i -1], ctopolar(InjCurrent^[i]).ang);
+          // determine if the PV panel is ON
+          if it[ i - 1 ] <= iMaxPPhase then
+            iActual       :=  it[i -1]
+          else
+            iActual       :=  iMaxPPhase;
+          //--------------------------------------------------------
+          if iActual < MinAmps then iActual :=  0;                // To mach with the %CutOut property
+          PolarN        :=  topolar( iActual, Vgrid[i].ang );     // Output Current estimated for active power
           Iterminal^[i] :=  ptocomplex(PolarN);
+          NeutAmps      :=  csub( NeutAmps, Iterminal^[i] );
         End;
       End;
-
+      if FnConds > FNphases then Iterminal^[FnConds] :=  NeutAmps;
     END;
     set_ITerminalUpdated(TRUE, ActorID);
     {Add it into inj current array}
-    FOR i := 1 to FnConds Do Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));  // Needs to be reformulated
-    //FOR i := 1 to FnConds Do InjCurrent^[i] := Iterminal^[i];
+    FOR i := 1 to FnConds Do Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
   End;
 // ====================================================================DoHarmonicMode=======================
 PROCEDURE TPVsystemObj.DoHarmonicMode(ActorID : Integer);
@@ -2116,7 +2125,7 @@ PROCEDURE TPVsystemObj.InitStateVars(ActorID : Integer);
       NumConductors := Fnconds;
       Conn          := Connection;
       // Sets the length of State vars to cover the num of phases
-      setlength(dit,NumPhases);   // Includes the current and past values
+      setlength(dit,NumPhases);     // Includes the current and past values
       setlength(it,NumPhases);
       setlength(itHistory,NumPhases);
       setlength(Vgrid,NumPhases);
@@ -2124,8 +2133,9 @@ PROCEDURE TPVsystemObj.InitStateVars(ActorID : Integer);
 
       MaxVS       :=  ( 1 + ( SMThreshold / 100 ) ) * PresentkV * 1000;
       MinVS       :=  ( SMThreshold / 100 ) * PresentkV * 1000;
+      MinAmps     :=  ( FpctCutOut / 100 ) *  ( ( FkVArating / PresentkV ) / NumPhases );
       SafeMode    :=  False;
-
+      iMaxPPhase  :=  ( FkVArating / PresentkV ) / NumPhases;
       if XThev = 0 then
       Begin
         pctX        :=  50;         // forces the value to 10% in dynamics mode if not given
@@ -2134,21 +2144,20 @@ PROCEDURE TPVsystemObj.InitStateVars(ActorID : Integer);
       Zthev       :=  Cmplx(RThev, XThev) ;
       RS          :=  Zthev.re;
       YEQ         := Cinv(Zthev);      // used for current calcs  Always L-N
-      ComputeIterminal(ActorID);
+//      ComputeIterminal(ActorID);     // Not needed at this point
       With ActiveCircuit[ActorID].Solution Do
       Begin
         LS            :=  ZThev.im/ (2 * PI * DefaultBaseFreq);
         For i := 0 to (NPhases - 1) Do
         Begin
           dit[i]  :=  0;
-          it[i]   :=  0; //ctopolar(Iterminal[i + 1]).mag * 0;
-          Vgrid[i]:=  ctopolar(NodeV^[NodeRef^[i + 1]]).mag;
-          m[i]    :=  ( ( RS * it[i] ) + Vgrid[i] ) / RatedVDC;   // Duty factor in terms of actual voltage
+          it[i]   :=  0;
+          Vgrid[i]:=  ctopolar( NodeV^[NodeRef^[i + 1]] );
+          m[i]    :=  ( ( RS * it[i] ) + Vgrid[i].mag ) / RatedVDC;   // Duty factor in terms of actual voltage
 
           if m[i] > 1 then m[i] :=  1;
 
         End;
-
       End;
     End;
   End;
@@ -2167,20 +2176,29 @@ PROCEDURE TPVsystemObj.IntegrateStates(ActorID : Integer);
       Begin
         With ActiveCircuit[ActorID].Solution, PVSystemVars, myDynVars Do
         Begin
-          // Compute the actual target (Amps)
+          // Compute actual power output for the PVPanel
+          case ActiveCircuit[ActiveActor].ActiveLoadShapeClass of
+              USEDAILY:  Begin CalcDailyMult(DynaVars.dblHour);  CalcDailyTemperature(DynaVars.dblHour);  End;
+              USEYEARLY: Begin CalcYearlyMult(DynaVars.dblHour); CalcYearlyTemperature(DynaVars.dblHour); End;
+              USEDUTY:   Begin CalcDutyMult(DynaVars.dblHour);   CalcDutyTemperature(DynaVars.dblHour);   End;
+          else
+              ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
+          end;
           ComputePanelPower();
-          ISP   :=  ( PanelkW/PresentkV );
-            With DynaVars Do
-            If (IterationFlag = 0) Then
-            Begin {First iteration of new time step}
-              for i := 0 to (NumPhases - 1) do itHistory[i] := it[i] + 0.5*h*dit[i];
-            End;
+
+          With DynaVars Do
+          If (IterationFlag = 0) Then
+          Begin {First iteration of new time step}
+            for i := 0 to (NumPhases - 1) do itHistory[i] := it[i] + 0.5*h*dit[i];
+          End;
 
           // Compute inv dynamics
           for i := 0 to (NumPhases - 1) do
           Begin
-            Vgrid[i]:=  ctopolar(NodeV^[NodeRef^[i + 1]]).mag;      // Voltage at the Inv terminals
-            if Vgrid[i] < MinVS then ISP  :=  0.01;                 // turn off the inverter
+            Vgrid[i]    :=  ctopolar(NodeV^[NodeRef^[i + 1]]);       // Voltage at the Inv terminals
+            // Compute the actual target (Amps)
+            ISP   :=  ( ( PanelkW * 1000 ) / Vgrid[i].mag ) / NumPhases;
+            if Vgrid[i].mag < MinVS then ISP  :=  0.01;                 // turn off the inverter
             SolveDynamicStep( i, ActorID, @PICtrl );                // Solves dynamic step for inverter
           End;
 

@@ -7,7 +7,7 @@ uses PCElement, Circuit, UComplex, mathutil;
 type
   {Structure for hosting data and solving for each inverter based element}
   TInvDynamicVars = Packed Record
-    Vgrid,                                      // Grid voltage at the point of connection per phase
+    Vgrid                 : array of Polar;     // Grid voltage at the point of connection per phase
     dit,                                        // Current's first derivative per phase
     it,                                         // Current's integration per phase
     itHistory,                                  // Shift register for it
@@ -21,6 +21,7 @@ type
     RS,                                         // Series resistance (filter)
     MaxVS,                                      // Max Voltage at the inverter terminal to safely operate the inverter
     MinVS,                                      // Min Voltage at the inverter terminal to safely operate the inverter
+    MinAmps,                                    // Min amps required for exporting energy
     ISP                   : Double;             // Current setpoint according to the actual DER kW
     SafeMode              : Boolean;            // To indicate weather the Inverter has entered into safe mode
 
@@ -32,7 +33,7 @@ type
   End;
 
   var
-  NumInvDynVars           : Integer = 8;
+  NumInvDynVars           : Integer = 9;
 
 implementation
 
@@ -42,7 +43,7 @@ uses DSSGlobals;
   function TInvDynamicVars.Get_InvDynValue(myindex : Integer): Double;
   Begin
     case myindex of
-      0 :  Result :=  Vgrid[0];
+      0 :  Result :=  Vgrid[0].mag;
       1 :  Result :=  dit[0];
       2 :  Result :=  it[0];
       3 :  Result :=  ithistory[0];
@@ -50,6 +51,7 @@ uses DSSGlobals;
       5 :  Result :=  m[0];
       6 :  Result :=  ISP;
       7 :  Result :=  LS;
+      8 :  Result :=  iMaxPPhase;
     else
       Result :=  0;
     end;
@@ -68,6 +70,7 @@ uses DSSGlobals;
       5 :  m[0]         :=  myValue;
       6 :  ; // Read only
       7 :  LS           :=  myValue;
+      8 :  iMAxPPhase   :=  myValue;
     else
       // Do nothing
     end;
@@ -86,6 +89,7 @@ uses DSSGlobals;
         5 : Result := 'Avg duty cycle';
         6 : Result := 'Target (Amps)';
         7 : Result := 'Series L';
+        8 : Result := 'Max. Amps (phase)';
     else
       Result :=  'Unknown variable';
     end;
@@ -111,12 +115,12 @@ uses DSSGlobals;
         Begin
             iDelta    :=  PICtrl^.SolvePI( IError );
             myDCycle  :=  m[i] + iDelta;
-            if Vgrid[i] > MinVS then
+            if Vgrid[i].mag > MinVS then
             Begin
               if SafeMode then
               Begin
                //Coming back from safe operation, need to boost duty cycle
-               m[i]     :=  ( ( RS * it[i] ) + Vgrid[i] ) / RatedVDC;
+               m[i]     :=  ( ( RS * it[i] ) + Vgrid[i].mag ) / RatedVDC;
                SafeMode :=  False;
               End
               else
@@ -129,7 +133,7 @@ uses DSSGlobals;
             End;
         End;
       End;
-      dit[i]  := ( (m[i] * RatedVDC) - (RS * it[i]) - Vgrid[i] ) / LS;  // Solves derivative
+      dit[i]  := ( (m[i] * RatedVDC) - (RS * it[i]) - Vgrid[i].mag ) / LS;  // Solves derivative
     End;
   End;
 
