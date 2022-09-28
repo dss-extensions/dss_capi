@@ -331,7 +331,7 @@ TYPE
         StorageClass        : Integer;
         VoltageModel        : Integer;   // Variation with voltage
         PFNominal           : Double;
-        PICtrl              : TPICtrl;
+        PICtrl              : Array of TPICtrl;
 
         Registers,  Derivatives         :Array[1..NumStorageRegisters] of Double;
 
@@ -985,7 +985,7 @@ Begin
                                     kvarLimitNegSet           := True;
                                   End;
                 propkVDC        : myDynVars.RatedVDC          := Parser[ActorID].DblValue * 1000;
-                propkp          : myDynVars.kP                := Parser[ActorID].DblValue;
+                propkp          : myDynVars.kP                := Parser[ActorID].DblValue / 1000;
                 propCtrlTol     : myDynVars.CtrlTol           := Parser[ActorID].DblValue / 100.0;
                 propSMT         : myDynVars.SMThreshold       := Parser[ActorID].DblValue;
 
@@ -1267,7 +1267,7 @@ Begin
      ForceBalanced        := FALSE;
      CurrentLimited       := FALSE;
 
-     With StorageVars Do Begin
+     With StorageVars, myDynVars Do Begin
         kWRating          := 25.0;
         FkVArating        := kWRating;
         kWhRating         := 50;
@@ -1291,8 +1291,13 @@ Begin
         WPOperation       := 9999;
         WVOperation       := 9999;
 
+        RatedVDC          := 8000;
+        SMThreshold       := 80;
+        SafeMode          := False;
+        kP                := 0.00001;
+
      End;
-     PICtrl             :=  nil;
+     setlength(PICtrl, 0);
 
      FDCkW              := 25.0;
 
@@ -1356,6 +1361,8 @@ Begin
      FWPMode     := FALSE;
      FWVMode     := FALSE;
      FAVRMode    := FALSE;
+
+
 
      InitPropertyValues(0);
      RecalcElementData(ActiveActor);
@@ -2518,6 +2525,7 @@ Var
     NeutAmps  : Complex;
     V012,
     I012      : Array[0..2] of Complex;
+    AngCmp,                               // Required in this context to force the idling losses
     iActual   : Double;
 
 
@@ -2550,9 +2558,12 @@ Begin
           iActual       :=  it[i -1]
         else
           iActual       :=  iMaxPPhase;
+        AngCmp        :=  PI;
         //--------------------------------------------------------
-        if iActual < MinAmps then iActual :=  0;                // To mach with the %CutOut property
-        PolarN        :=  topolar( iActual, Vgrid[i].ang );     // Output Current estimated for active power
+        if iActual < MinAmps then iActual :=  0;                  // To mach with the %CutOut property
+        if FState <> STORE_DISCHARGING then AngCmp :=  0;        // To mimic the idling losses
+
+        PolarN        :=  topolar( iActual, Vgrid[i - 1].ang + AngCmp );     // Output Current estimated for active power
         Iterminal^[i] :=  ptocomplex(PolarN);
         NeutAmps      :=  csub( NeutAmps, Iterminal^[i] );
       End;
@@ -3186,11 +3197,17 @@ Begin
 
   YprimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
 
-  if PICtrl = nil then PICtrl  :=  TPICtrl.Create;
-
-  PICtrl.Kp   :=  myDynVars.kP;
-  PICtrl.kNum :=  0.9502;
-  PICtrl.kDen :=  0.04979;
+  if ( Length(PICtrl) = 0 ) or ( Length(PICtrl) < Fnphases ) then
+  Begin
+    setlength(PICtrl, Fnphases);
+    for i := 0 to ( Fnphases - 1 ) do
+    Begin
+      PICtrl[i]      :=  TPICtrl.Create;
+      PICtrl[i].Kp   :=  myDynVars.kP;
+      PICtrl[i].kNum :=  0.9502;
+      PICtrl[i].kDen :=  0.04979;
+    End;
+  End;
 
   With StorageVars do Begin
     ZThev :=  Cmplx(RThev, XThev);
@@ -3228,23 +3245,25 @@ Begin
         setlength(itHistory,NumPhases);
         setlength(Vgrid,NumPhases);
         setlength(m,NumPhases);
-
-        MaxVS       :=  ( 1 + ( SMThreshold / 100 ) ) * PresentkV * 1000;
-        MinVS       :=  ( SMThreshold / 100 ) * PresentkV * 1000;
-        MinAmps     :=  ( FpctCutOut / 100 ) *  ( ( FkVArating / PresentkV ) / NumPhases );
+        if NumPhases > 1 then
+          BasekV  :=  PresentkV / sqrt(3)
+        else
+          BasekV  :=  PresentkV;
+        MaxVS       :=  ( 1 + ( SMThreshold / 100 ) ) * BasekV * 1000;
+        MinVS       :=  ( SMThreshold / 100 ) * BasekV * 1000;
+        MinAmps     :=  ( FpctCutOut / 100 ) *  ( ( FkVArating / BasekV ) / NumPhases );
         SafeMode    :=  False;
-        iMaxPPhase  :=  ( FkVArating / PresentkV ) / NumPhases;
+        iMaxPPhase  :=  ( FkVArating / BasekV ) / NumPhases;
 
         if ZThev.im = 0 then
         Begin
           pctX        :=  50;         // forces the value to 10% in dynamics mode if not given
-          XThev       :=  pctX * 0.01 * ( SQR(PresentkV)/FkVArating ) * 1000.0;
+          XThev       :=  pctX * 0.01 * ( SQR(BasekV)/FkVArating ) * 1000.0;
         End;
-        ZThev :=  Cmplx(RThev, XThev);
-        Yeq := Cinv(ZThev);  // used to init state vars
+        ZThev       :=  Cmplx(RThev, XThev);
+        Yeq         := Cinv(ZThev);  // used to init state vars
         RS          :=  Zthev.re;
-        ComputeIterminal(ActorID);  // Gest the actual current value
-        ISP := ctopolar(Iterminal[1]).mag;
+
         With ActiveCircuit[ActorID].Solution Do
         Begin
           LS            :=  ZThev.im/ (2 * PI * DefaultBaseFreq);
@@ -3271,6 +3290,7 @@ PROCEDURE TStorageObj.IntegrateStates(ActorID : Integer);
 
 VAR
   i         : Integer;
+  OFFVal    : Double;
   TracePower: Complex;
 
 Begin
@@ -3287,7 +3307,6 @@ Begin
 
       With StorageVars Do
       Begin
-        Vgrid[i]    :=  ctopolar(NodeV^[NodeRef^[i + 1]]);       // Voltage at the Inv terminals
         IF FState = STORE_DISCHARGING Then
         Begin
           With DynaVars Do
@@ -3295,16 +3314,20 @@ Begin
           Begin {First iteration of new time step}
             for i := 0 to (NumPhases - 1) do itHistory[i] := it[i] + 0.5*h*dit[i];
           End;
-
+          ComputePresentkW();
           // Compute inv dynamics
           for i := 0 to (NumPhases - 1) do
           Begin
+            Vgrid[i]    :=  ctopolar(NodeV^[NodeRef^[i + 1]]);       // Voltage at the Inv terminals
             if Vgrid[i].mag < MinVS then
             Begin
               ISP     :=  0.01;                 // turn off the inverter
               FState  :=  STORE_IDLING;
-            End;
-            SolveDynamicStep( i, ActorID, @PICtrl );                // Solves dynamic step for inverter
+            End
+            else
+              ISP := ( ( kW_out * 1000 ) / Vgrid[i].mag ) / NumPhases;
+
+            SolveDynamicStep( i, ActorID, @PICtrl[i] );                // Solves dynamic step for inverter
           End;
 
           // Trapezoidal method
@@ -3314,7 +3337,16 @@ Begin
           End;
         End
         else
-          for i := 0 to (NumPhases - 1) do it[i] := -1 * PIdling / Vgrid[i].mag;   // To match with idling losses
+        Begin
+
+          for i := 0 to (NumPhases - 1) do
+          Begin
+            if Vgrid[i].mag >= MinVS then OFFVal  :=  PIdling / Vgrid[i].mag   // To match with idling losses
+            else OFFVal :=  0;
+            it[i] := OFFVal;   // To match with idling losses
+          End;
+
+        End;
 
 
         // Write Dynamics Trace Record
