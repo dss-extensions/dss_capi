@@ -228,7 +228,8 @@ uses
   WindGen in '..\PCElements\WindGen.pas',
   WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
   WindGenVars in '..\PCElements\WindGenVars.pas',
-  DynamicExp in '..\General\DynamicExp.pas';
+  DynamicExp in '..\General\DynamicExp.pas',
+  InvDynamics in '..\Shared\InvDynamics.pas';
 
 //**************************end of the functions*************************************
 exports
