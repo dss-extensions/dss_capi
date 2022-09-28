@@ -19,6 +19,7 @@ type
     RatedVDC,                                   // Rated DC voltage at the inverter's input
     LS,                                         // Series inductance, careful, it cannot be 0 in dyn mode
     RS,                                         // Series resistance (filter)
+    BasekV,                                     // BAse kV depending on the number of phases
     MaxVS,                                      // Max Voltage at the inverter terminal to safely operate the inverter
     MinVS,                                      // Min Voltage at the inverter terminal to safely operate the inverter
     MinAmps,                                    // Min amps required for exporting energy
