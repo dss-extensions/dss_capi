@@ -48,7 +48,7 @@ CONST
       FUSE_CONTROL     = 16 * 8;
       REACTOR_ELEMENT  = 17 * 8;
       FEEDER_ELEMENT   = 18 * 8;
-      GEN_CONTROL      = 19 * 8;
+      GEN_CONTROL      = 19 * 8;   // old GenDispatcher model
       SENSOR_ELEMENT   = 20 * 8;
       STORAGE_ELEMENT  = 21 * 8;
       STORAGE_CONTROL  = 22 * 8;
@@ -74,6 +74,7 @@ CONST
     //  STORAGE2_ELEMENT  = 41 * 8;
     //  STORAGE2_CONTROL  = 42 * 8;
       WINDGEN_ELEMENT   = 43 * 8;
+      GEN_CONTROLLER    = 44 * 8;
 
 VAR
    NumIntrinsicClasses,
@@ -124,6 +125,7 @@ USES
      WindGen,
      RegControl,
      CapControl,
+     GenController,
      GenDispatcher,
      Relay,
      Recloser,
@@ -215,6 +217,7 @@ Begin
      DSSClasses.New               := TGenerator.Create;
      DSSClasses.New               := TWindGen.Create;
      DSSClasses.New               := TGenDispatcher.Create;
+     DSSClasses.New               := TGenController.Create;
      StorageClass[ActiveActor]    := TStorage.Create;
      DSSClasses.New               := StorageClass[ActiveActor];
 //     Storage2Class[ActiveActor]   := TStorage2.Create;

@@ -205,7 +205,8 @@ uses
   GenUserModel in '..\PCElements\GenUserModel.pas',
   GeneratorVars in '..\PCElements\GeneratorVars.pas',
   DynamicExp in '..\General\DynamicExp.pas',
-  InvDynamics in '..\Shared\InvDynamics.pas';
+  InvDynamics in '..\Shared\InvDynamics.pas',
+  GenController in '..\Controls\GenController.pas';
 
 {$R *.RES}
 
