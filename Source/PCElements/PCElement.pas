@@ -75,6 +75,10 @@ TYPE
 
        Function VariableName(i:Integer):String;Virtual;
        Function LookupVariable(const s:string):Integer;
+
+       FUNCTION CheckIfDynVar(myVar  : String; ActorID : Integer):Integer;
+       PROCEDURE SetDynOutput(myVar  : String);
+       FUNCTION GetDynOutputStr(): string;
        
        Property Variable[i:Integer]:Double read Get_Variable write Set_Variable;
 
@@ -86,7 +90,7 @@ TYPE
 implementation
 
 USES
-    DSSClassDefs, DSSGlobals, Sysutils;
+    DSSClassDefs, DSSGlobals, Sysutils, Classes, Utilities;
 
 
 Constructor TPCElement.Create(ParClass:TDSSClass);
@@ -129,6 +133,91 @@ Procedure TPCElement.GetInjCurrents(Curr: pComplexArray; ActorID : Integer);
 Begin
     DoErrorMsg('PCElement.InjCurrents',('Improper call to GetInjCurrents for Element: ' + Name + '.'),
         'Called PCELEMENT class virtual function instead of actual.', 640)
+End;
+
+//----------------------------------------------------------------------------
+{Evaluates if the value provided corresponds to a constant value or to an operand
+ for calculating the value using the simulation results}
+FUNCTION TPCElement.CheckIfDynVar(myVar  : String; ActorID : Integer):Integer;
+var
+  myOp    : Integer;        // Operator found
+  myValue : String;         // Value entered by the user
+Begin
+
+  Result := -1;
+  If Assigned(DynamicEqObj) then
+  Begin
+
+    Result  :=   DynamicEqObj.Get_Var_Idx(myVar);
+    if (Result >= 0) and (Result < 50000) then
+    Begin
+      myValue :=  Parser[ActorID].StrValue;
+      if (DynamicEqObj.Check_If_CalcValue(myValue, myOp)) then
+      Begin
+        // Adss the pair (var index + operand index)
+        setlength(DynamicEqPair,length(DynamicEqPair) + 2);
+        DynamicEqPair[High(DynamicEqPair) - 1]  :=  Result;
+        DynamicEqPair[High(DynamicEqPair)]      :=  myOp;
+      End
+      else // Otherwise, move the value to the values array
+         DynamicEqVals[Result][0]  :=  Parser[ActorID].DblValue;
+    End
+    else
+      Result := -1;     // in case is a constant
+
+  End;
+
+End;
+
+//----------------------------------------------------------------------------
+{Returns the names of the variables to be used as outputs for the dynamic expression}
+FUNCTION TPCElement.GetDynOutputStr(): string;
+var
+  idx   : Integer;
+Begin
+  Result  :=  '[';                   // Open array str
+  if DynamicEqObj <> nil then        // Making sure we have a dynamic eq linked
+  Begin
+    for idx := 0 to High(DynOut) do
+      Result  :=  Result + DynamicEqObj.Get_VarName(DynOut[idx]) + ',';
+  End;
+
+  Result  :=  Result + ']';         // Close array str
+End;
+
+//----------------------------------------------------------------------------
+{Obtains the indexes of the given variables to use them as reference for setting
+the dynamic output for the generator}
+PROCEDURE TPCElement.SetDynOutput(myVar  : String);
+var
+  VarIdx,
+  idx         : Integer;
+  myStrArray  : TStringList;
+Begin
+  if DynamicEqObj <> nil then        // Making sure we have a dynamic eq linked
+  Begin
+    // First, set the length for the index array, 2 variables in this case
+    setlength(DynOut,2);
+    myStrArray  :=  TStringList.Create;
+    InterpretTStringListArray(myVar, myStrArray);
+    // ensuring they are lower case
+    for idx := 0 to 1 do
+    Begin
+
+      myStrArray[idx]  :=  LowerCase(myStrArray[idx]);
+      VarIdx           :=  DynamicEqObj.Get_Out_Idx(myStrArray[idx]);
+      if ( VarIdx < 0 ) then
+        // Being here means that the given name doesn't exist or is a constant
+        DoSimpleMsg('DynamicExp variable "' + myStrArray[idx] + '" not found or not defined as an output.', 50008)
+      else
+        DynOut[idx] :=  VarIdx;
+
+    End;
+
+    myStrArray.Free;
+  End
+  else
+      DoSimpleMsg('A DynamicExp object needs to be assigned to this element before this declaration: DynOut = [' + myVar + ']', 50007);
 End;
 
 //= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =

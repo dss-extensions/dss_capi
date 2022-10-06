@@ -285,6 +285,7 @@ type
       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
       PROCEDURE DumpProperties(VAR F:TextFile; Complete:Boolean);Override;
       FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+
       {Porperties}
       Property PresentIrradiance    : Double   Read Get_PresentIrradiance       Write Set_PresentIrradiance  ;
       Property PresentkW    : Double           Read Get_PresentkW               Write Set_PresentkW;
@@ -326,7 +327,7 @@ type
 var
   ActivePVSystemObj   : TPVsystemObj;
 implementation
-uses  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities;
+uses  ParserDel, Circuit,  Sysutils, Command, Math, DSSClassDefs, DSSGlobals, Utilities, Classes;
 const
 // ===========================================================================================
 {
@@ -380,7 +381,9 @@ const
   propCtrlTol                 = 43;
   propSMT                     = 44;
   propSM                      = 45;
-  NumPropsThisClass           = 45; // Make this agree with the last property constant
+  propDynEq                   = 46;
+  propDynOut                  = 47;
+  NumPropsThisClass           = 47; // Make this agree with the last property constant
 var
   cBuffer             : Array[1..24] of Complex;  // Temp buffer for calcs  24-phase PVSystem element?
   CDOUBLEONE          : Complex;
@@ -570,10 +573,18 @@ PROCEDURE TPVsystem.DefineProperties;
                            'It is the tolerance (%) for the closed loop controller of the inverter. For dynamics or when the inverter is operating in grid forming mode.');
 
     AddProperty('SafeVoltage', propSMT,
-                           'Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate. If this threshold is violated, the Inverter will enter into safe mode (OFF). For dynamic simulation. By default is 80%');
+                           'Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate. If this threshold is violated, the Inverter will enter safe mode (OFF). For dynamic simulation. By default is 80%');
 
     AddProperty('SafeMode', propSM,
-                           '(Read only) Indicates wheather the inverter entered (Yes) or not (No) into Safe Mode.');
+                           '(Read only) Indicates whether the inverter entered (Yes) or not (No) into Safe Mode.');
+    AddProperty('DynamicEq', propDynEq,
+                           'The name of the dynamic equation (DinamicExp) that will be used for defining the dynamic behavior of the generator. ' +
+                                 'if not defined, the generator dynamics will follow the built-in dynamic equation.');
+    AddProperty('DynOut', propDynOut,
+                            'The name of the variables within the Dynamic equation that will be used to govern the PVSystem dynamics.' +
+                                 'This PVsystem model requires 1 output from the dynamic equation: ' + CRLF + CRLF +
+                                 '1. Current.' + CRLF +
+                                 'The output variables need to be defined in the same order.');
 
 
     ActiveProperty := NumPropsThisClass;
@@ -740,6 +751,8 @@ FUNCTION TPVsystem.Edit(ActorID : Integer):Integer;
                 propkp            : myDynVars.kP                := Parser[ActorID].DblValue / 1000;
                 propCtrlTol       : myDynVars.CtrlTol           := Parser[ActorID].DblValue / 100.0;
                 propSMT           : myDynVars.SMThreshold       := Parser[ActorID].DblValue;
+                propDynEq         : DynamicEq                   := Param;
+                propDynOut        : SetDynOutput(Param);
 
                 ELSE
                   // Inherited parameters
@@ -748,14 +761,14 @@ FUNCTION TPVsystem.Edit(ActorID : Integer):Integer;
               CASE iCase OF
                 1                 : SetNcondsForConnection;  // Force Reallocation of terminal info
                 {Set loadshape objects;  returns nil If not valid}
-                propYEARLY        : YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
-                propDAILY         : DailyShapeObj  := LoadShapeClass[ActorID].Find(DailyShape);
-                propDUTY          : DutyShapeObj   := LoadShapeClass[ActorID].Find(DutyShape);
-                propTYEARLY       : YearlyTShapeObj := TShapeClass[ActorID].Find(YearlyTShape);
-                propTDAILY        : DailyTShapeObj  := TShapeClass[ActorID].Find(DailyTShape);
-                propTDUTY         : DutyTShapeObj   := TShapeClass[ActorID].Find(DutyTShape);
-                propInvEffCurve   : InverterCurveObj   := XYCurveClass[ActorID].Find(InverterCurve);
-                propP_T_Curve     : Power_TempCurveObj := XYCurveClass[ActorID].Find(Power_TempCurve);
+                propYEARLY        : YearlyShapeObj      := LoadShapeClass[ActorID].Find(YearlyShape);
+                propDAILY         : DailyShapeObj       := LoadShapeClass[ActorID].Find(DailyShape);
+                propDUTY          : DutyShapeObj        := LoadShapeClass[ActorID].Find(DutyShape);
+                propTYEARLY       : YearlyTShapeObj     := TShapeClass[ActorID].Find(YearlyTShape);
+                propTDAILY        : DailyTShapeObj      := TShapeClass[ActorID].Find(DailyTShape);
+                propTDUTY         : DutyTShapeObj       := TShapeClass[ActorID].Find(DutyTShape);
+                propInvEffCurve   : InverterCurveObj    := XYCurveClass[ActorID].Find(InverterCurve);
+                propP_T_Curve     : Power_TempCurveObj  := XYCurveClass[ActorID].Find(Power_TempCurve);
                 propDEBUGTRACE    : IF DebugTrace THEN
                                       Begin   // Init trace file
                                         AssignFile(TraceFile, GetOutputDirectory + 'STOR_'+Name+'.CSV');
@@ -768,6 +781,11 @@ FUNCTION TPVsystem.Edit(ActorID : Integer):Integer;
                                         Writeln(TraceFile);
                                         CloseFile(Tracefile);
                                       End;
+                propDynEq         : Begin
+                                      DynamicEqObj :=  TDynamicExpClass[ActorID].Find(DynamicEq);
+                                      If Assigned(DynamicEqObj) then With DynamicEqObj Do
+                                        setlength(DynamicEqVals, NumVars);
+                                    End;
               END;
             End;
           ParamName := Parser[ActorID].NextParam;
@@ -1102,11 +1120,13 @@ FUNCTION TPVsystemObj.GetPropertyValue(Index: Integer): String;
         propkvarLimit     : Result := Format('%.6g', [Fkvarlimit]);
         propkvarLimitneg  : Result := Format('%.6g', [Fkvarlimitneg]);
         propDutyStart     : Result := Format('%.6g', [DutyStart]);
-        propkVDC          : Result := Format('%.6g', [RatedVDC]);
-        propkp            : Result := Format('%.10g',[kP]);
-        propCtrlTol       : Result := Format('%.6g', [CtrlTol]);
+        propkVDC          : Result := Format('%.6g', [RatedVDC / 1000]);
+        propkp            : Result := Format('%.10g',[kP * 1000]);
+        propCtrlTol       : Result := Format('%.6g', [CtrlTol * 100]);
         propSMT           : Result := Format('%.6g', [SMThreshold]);
         propSM            : if SafeMode then Result :=  'Yes' else Result := 'No';
+        propDynEq         : Result := DynamicEq;
+        propDynOut        : GetDynOutputStr();
         {propDEBUGTRACE = 33;}
         ELSE  // take the generic handler
           Result := Inherited GetPropertyValue(index);
@@ -1167,6 +1187,8 @@ PROCEDURE TPVsystemObj.CalcYearlyMult(Hr:Double);
       End
     ELSE CalcDailyMult(Hr);  // Defaults to Daily curve
   End;
+
+
 PROCEDURE TPVsystemObj.CalcYearlyTemperature(Hr: double);
   Begin
     If YearlyTShapeObj<>Nil Then

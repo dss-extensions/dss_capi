@@ -752,10 +752,10 @@ Begin
                            'It is the tolerance (%) for the closed loop controller of the inverter. For dynamics or when the inverter is operating in grid forming mode.');
 
     AddProperty('SafeVoltage', propSMT,
-                           'Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate. If this threshold is violated, the Inverter will enter into safe mode (OFF). For dynamic simulation. By default is 80%');
+                           'Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate. If this threshold is violated, the Inverter will enter safe mode (OFF). For dynamic simulation. By default is 80%');
 
     AddProperty('SafeMode', propSM,
-                           '(Read only) Indicates wheather the inverter entered (Yes) or not (No) into Safe Mode.');
+                           '(Read only) Indicates whether the inverter entered (Yes) or not (No) into Safe Mode.');
 
 
      ActiveProperty := NumPropsThisClass;
@@ -1521,9 +1521,9 @@ Begin
           propLimited       : If CurrentLimited Then Result:='Yes' Else Result := 'No';
           propkvarLimit     : Result := Format('%.6g', [Fkvarlimit]);
           propkvarLimitneg  : Result := Format('%.6g', [Fkvarlimitneg]);
-          propkVDC          : Result := Format('%.6g', [RatedVDC]);
-          propkp            : Result := Format('%.10g',[kP]);
-          propCtrlTol       : Result := Format('%.6g', [CtrlTol]);
+          propkVDC          : Result := Format('%.6g', [RatedVDC / 1000]);
+          propkp            : Result := Format('%.10g',[kP * 1000]);
+          propCtrlTol       : Result := Format('%.6g', [CtrlTol * 100]);
           propSMT           : Result := Format('%.6g', [SMThreshold]);
           propSM            : if SafeMode then Result :=  'Yes' else Result := 'No';
 
