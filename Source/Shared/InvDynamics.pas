@@ -44,12 +44,12 @@ uses DSSGlobals;
   function TInvDynamicVars.Get_InvDynValue(myindex : Integer): Double;
   Begin
     case myindex of
-      0 :  Result :=  Vgrid[0].mag;
-      1 :  Result :=  dit[0];
-      2 :  Result :=  it[0];
-      3 :  Result :=  ithistory[0];
+      0 :  if length(Vgrid) > 0       then Result :=  Vgrid[0].mag  else Result :=  0;
+      1 :  if length(dit) > 0         then Result :=  dit[0]        else Result :=  0;
+      2 :  if length(it) > 0          then Result :=  it[0]         else Result :=  0;
+      3 :  if length(ithistory) > 0   then Result :=  ithistory[0]  else Result :=  0;
       4 :  Result :=  RatedVDC;
-      5 :  Result :=  m[0];
+      5 :  if length(m) > 0           then Result :=  m[0]          else Result :=  0;
       6 :  Result :=  ISP;
       7 :  Result :=  LS;
       8 :  Result :=  iMaxPPhase;
