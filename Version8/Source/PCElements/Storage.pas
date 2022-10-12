@@ -350,7 +350,7 @@ TYPE
         FUNCTION  VariableName(i:Integer):String ;Override;
 
         FUNCTION  Get_InverterON:Boolean; Override;
-        PROCEDURE Set_InverterON(const Value: Boolean);
+        PROCEDURE Set_InverterON(const Value: Boolean); Override;
         FUNCTION  Get_VarFollowInverter:Boolean;
         PROCEDURE Set_VarFollowInverter(const Value: Boolean);
 
