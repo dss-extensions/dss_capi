@@ -79,7 +79,25 @@ TYPE
        FUNCTION CheckIfDynVar(myVar  : String; ActorID : Integer):Integer;
        PROCEDURE SetDynOutput(myVar  : String);
        FUNCTION GetDynOutputStr(): string;
-       
+       // Functions for inverter based PCE
+       FUNCTION Get_InverterON:Boolean; Virtual;
+       function Get_Varmode: Integer; Virtual;
+       function Get_VWmode: Boolean; Virtual;
+       function Get_VVmode: Boolean; Virtual;
+       function Get_WPmode: Boolean; Virtual;
+       function Get_WVmode: Boolean; Virtual;
+       function Get_DRCmode: Boolean; Virtual;
+       function Get_AVRmode: Boolean; Virtual;
+
+       PROCEDURE Set_InverterON(const Value: Boolean); Virtual;
+       procedure Set_Varmode(const Value: Integer); Virtual;
+       procedure Set_VWmode(const Value: Boolean); Virtual;
+       procedure Set_VVmode(const Value: Boolean); Virtual;
+       procedure Set_WPmode(const Value: Boolean); Virtual;
+       procedure Set_WVmode(const Value: Boolean); Virtual;
+       procedure Set_DRCmode(const Value: Boolean); Virtual;
+       procedure Set_AVRmode(const Value: Boolean); Virtual;
+
        Property Variable[i:Integer]:Double read Get_Variable write Set_Variable;
 
 //       Property ITerminalUpdated:Boolean read FITerminalUpdated write set_ITerminalUpdated;
@@ -387,6 +405,86 @@ begin
   {Do Nothing}
 end;
 
+function  TPCElement.Get_InverterON:Boolean;
+  begin
+    Result := False;
+  end;
+// ============================================================Get_Varmode===============================
+function TPCElement.Get_Varmode: Integer;
+  begin
+    Result := 0;
+  end;
+// ============================================================Get_VWmode===============================
+function TPCElement.Get_VWmode: Boolean;
+  begin
+    Result := False;
+  end;
+// ============================================================Get_VVmode===============================
+function TPCElement.Get_VVmode: Boolean;
+  begin
+    Result :=False;
+  end;
+// ============================================================Get_WPmode===============================
+function TPCElement.Get_WPmode: Boolean;
+  begin
+    Result := False;
+  end;
+// ============================================================Get_WVmode===============================
+function TPCElement.Get_WVmode: Boolean;
+  begin
+    Result := False;                                                                //  engaged from InvControl (not ExpControl)
+  end;
+// ============================================================Get_DRCmode===============================
+function TPCElement.Get_DRCmode: Boolean;
+  begin
+    Result := False;                                                               //  engaged from InvControl (not ExpControl)
+  end;
+
+// ============================================================Get_AVRmode===============================
+function TPCElement.Get_AVRmode: Boolean;
+  begin
+    Result := False;                                                               //  engaged from InvControl (not ExpControl)
+  end;
+
+PROCEDURE TPCElement.Set_InverterON(const Value: Boolean);
+  Begin
+    // Do nothing if reaches this instance
+  End;
+
+PROCEDURE TPCElement.Set_Varmode(const Value: Integer);
+  Begin
+    // Do nothing if reaches this instance
+  End;
+
+PROCEDURE TPCElement.Set_VWmode(const Value: Boolean);
+  Begin
+    // Do nothing if reaches this instance
+  End;
+
+PROCEDURE TPCElement.Set_VVmode(const Value: Boolean);
+  Begin
+    // Do nothing if reaches this instance
+  End;
+
+PROCEDURE TPCElement.Set_WPmode(const Value: Boolean);
+  Begin
+    // Do nothing if reaches this instance
+  End;
+
+PROCEDURE TPCElement.Set_WVmode(const Value: Boolean);
+  Begin
+    // Do nothing if reaches this instance
+  End;
+
+PROCEDURE TPCElement.Set_DRCmode(const Value: Boolean);
+  Begin
+    // Do nothing if reaches this instance
+  End;
+
+  PROCEDURE TPCElement.Set_AVRmode(const Value: Boolean);
+  Begin
+    // Do nothing if reaches this instance
+  End;
 
 
 procedure TPCElement.ComputeIterminal(ActorID : Integer);
