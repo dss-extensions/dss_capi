@@ -633,6 +633,7 @@ begin
       If Assigned(PVSys) and PVSys.Enabled Then Begin
         FPVSystemPointerList.New := PVSys;
         PVSys.AVRmode := True;
+        PVSys.Set_Variable(5, FVRegInit);
       End;
     End;
   End Else Begin
