@@ -99,7 +99,8 @@ TYPE
 
    TNodeVarray = Array[0..1000] of Complex;
    pNodeVarray = ^TNodeVarray;
-   ///////////////////////////////////
+
+//********  Code additions by dahei (UCF) ***********************
      {define LD_FM_Arry-by dahei}
      TLDs_sys_fms = packed Record
      //properties for Nodes
@@ -118,7 +119,7 @@ TYPE
            volt_lw_lmt : double;  //p.u.
            Pinjec_lwst : double; // net P injection on this node
       End;
-   //////////////////////////////////////
+//****************************************************************
 
    TDSSSolution = CLASS(TDSSClass)
 
@@ -160,13 +161,13 @@ TYPE
 
       procedure Start_Diakoptics();
       procedure Notify_Main;
-      function Get_Processing(): Boolean;
+      function  Get_Processing(): Boolean;
       procedure Set_Processing(Nval : Boolean);
-      function Get_CPU(): Integer;
+      function  Get_CPU(): Integer;
       procedure Set_CPU(CPU : Integer);
-      procedure IndexBuses();           // Locates the actor buses within the bus array in Actor 1 (interconnected)
-      function HasInjObj(): Boolean;    // returns true if the actor has natural injection objects
-      procedure ZeroLocalV();           // Sets the local voltage vector (solution) equal to zero
+      procedure IndexBuses();            // Locates the actor buses within the bus array in Actor 1 (interconnected)
+      function  HasInjObj(): Boolean;    // returns true if the actor has natural injection objects
+      procedure ZeroLocalV();            // Sets the local voltage vector (solution) equal to zero
 
 //*******************************Public components******************************
     Public
@@ -184,11 +185,13 @@ TYPE
 
        dV                         : pNodeVArray;   // Array of delta V for Newton iteration
        FFrequency                 : Double;
-       // //by Dahei
-       nNZ_yii                    : LongWord;       //how many lines in Yii
-       pColIdx_Yii, pRowIdx_Yii   : pLongIntArray;//array of LongWord;  //cols and rows
-       pcVals_Yii                 : pComplexArray;   //vals of yii
-       // =========
+
+//*******  Variables for Code additions by dahei (UCF) ******
+       // by Dahei  ===================================================
+           nNZ_yii                    : LongWord;       //how many lines in Yii
+           pColIdx_Yii, pRowIdx_Yii   : pLongIntArray;  //array of LongWord;  //cols and rows
+           pcVals_Yii                 : pComplexArray;  //vals of yii
+       // ======================================================================
 
        FUNCTION Converged(ActorID : Integer):Boolean;
        FUNCTION OK_for_Dynamics(const Value:Integer):Boolean;
@@ -268,15 +271,18 @@ TYPE
 //******************************************************************************
        IncMat,                                // Incidence sparse matrix
        Laplacian            : Tsparse_matrix; // Laplacian sparse matrix
-       {by Dahei for FMonitor}
-              {------------------}
-       NodeYii                : pNodeVArray;         // Main System Y = G + jB, Bii for all nodes
 
-       NodeYiiEmpty           : Boolean;
-       {Leaders of all FMonitors}
-       clstr_num_hghst, clstr_num_lwst: integer;
-       LD_FM                  : array [0..3] of TLDs_sys_fms;
-       bCurtl                 : boolean;
+       //********  Code additions by dahei (UCF) ******
+           {by Dahei for FMonitor}
+           NodeYii                : pNodeVArray;         // Main System Y = G + jB, Bii for all nodes
+
+           NodeYiiEmpty           : Boolean;
+           {Leaders of all FMonitors}
+           clstr_num_hghst, clstr_num_lwst: integer;
+           LD_FM                  : array [0..3] of TLDs_sys_fms;
+           bCurtl                 : boolean;
+       {================================================================}
+
 //****************************Timing variables**********************************
        SolveStartTime         : int64;
        SolveEndtime           : int64;
@@ -288,6 +294,7 @@ TYPE
        Total_Solve_Time_Elapsed  : double;
        Step_Time_Elapsed      : double;
 //******************************************************************************
+
 // ActiveCell of the Incidence Matrix:
 // [0] = row
 // [1] = col
@@ -302,8 +309,8 @@ TYPE
       Inc_Mat_Rows            :  Array of String;
       Inc_Mat_Cols            :  Array of String;
       Inc_Mat_levels          :  Array of Integer;
-      temp_counter            : Integer;
-      Active_Cols             : Array of Integer;
+      temp_counter            :  Integer;
+      Active_Cols             :  Array of Integer;
       Active_Cols_Idx         :  Array of Integer;
 //******************************************************************************
 //********************Diakoptics solution mode variables************************
@@ -341,10 +348,12 @@ TYPE
        PROCEDURE RestoreNodeVfromVbus;  // opposite   of updatebus
 
        FUNCTION  VDiff(i, j, ActorID :Integer):Complex;  // Difference between two node voltages
-       {by Dahei}
+
+       //================================== {additions by Dahei} =======================
        PROCEDURE Get_Yiibus; // updates voltages for each bus    from NodeV
-       FUNCTION Get_Yij(node_ref_i, node_ref_j : integer) : Complex; // get Gij + j Bij
-       {}
+       FUNCTION  Get_Yij(node_ref_i, node_ref_j : integer) : Complex; // get Gij + j Bij
+       {======================================================================}
+
        PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
        PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean); Override;
        PROCEDURE WriteConvergenceReport(const Fname:String);
@@ -495,8 +504,8 @@ Begin
 
 //    i := SetLogFile ('c:\\temp\\KLU_Log.txt', 1);
 
-    FYear    := 0;
-    DynaVars.intHour     := 0;
+    FYear             := 0;
+    DynaVars.intHour  := 0;
     DynaVars.t        := 0.0;
     DynaVars.dblHour  := 0.0;
     DynaVars.tstart   := 0.0;
@@ -504,14 +513,15 @@ Begin
     //duration := 0.0;
     DynaVars.h        := 0.001;  // default for dynasolve
 
-    LoadsNeedUpdating := TRUE;
+    LoadsNeedUpdating  := TRUE;
     VoltageBaseChanged := TRUE;  // Forces Building of convergence check arrays
 
-    MaxIterations    := 15;
-    MinIterations    := 2;
+    // Initial values of solution flags
+    MaxIterations         := 15;
+    MinIterations         := 2;
     MaxControlIterations  := 10;
-    ConvergenceTolerance := 0.0001;
-    ConvergedFlag := FALSE;
+    ConvergenceTolerance  := 0.0001;
+    ConvergedFlag         := FALSE;
 
     SampleTheMeters := FALSE;  // Flag to tell solution algorithm to sample the Energymeters
 
@@ -519,8 +529,7 @@ Begin
     IsHarmonicModel  := FALSE;
 
     Frequency := DefaultBaseFreq;
-    {Fundamental := 60.0; Moved to Circuit and used as default base frequency}
-    Harmonic := 1.0;
+    Harmonic  := 1.0;
 
     FrequencyChanged := TRUE;  // Force Building of YPrim matrices
     DoAllHarmonics   := TRUE;
@@ -531,7 +540,7 @@ Begin
 
     {Define default harmonic list}
     HarmonicListSize := 5;
-    HarmonicList := AllocMem(SizeOf(harmonicList^[1])*HarmonicListSize);
+    HarmonicList     := AllocMem(SizeOf(harmonicList^[1])*HarmonicListSize);
     HarmonicList^[1] := 1.0;
     HarmonicList^[2] := 5.0;
     HarmonicList^[3] := 7.0;
@@ -539,8 +548,8 @@ Begin
     HarmonicList^[5] := 13.0;
 
     SolutionInitialized := FALSE;
-    LoadModel        := POWERFLOW;
-    DefaultLoadModel := LoadModel;
+    LoadModel           := POWERFLOW;
+    DefaultLoadModel    := LoadModel;
     LastSolutionWasDirect := False;
 
     hYseries := 0;
@@ -587,15 +596,18 @@ Begin
 
       If hYsystem <> 0 THEN DeleteSparseSet(hYsystem);
       If hYseries <> 0 THEN DeleteSparseSet(hYseries);
-      {by Dahei: }
-      Reallocmem(NodeYii, 0);  // for bii
-      Reallocmem(pColIdx_Yii, 0);
-      Reallocmem(pRowIdx_Yii, 0);
-      Reallocmem(pcVals_Yii, 0);
 
-      Reallocmem(Node_dV, 0);
-      Reallocmem(Ic_Local, 0);
-      {---------------------------}
+      //==============================
+      //********  Code additions by dahei (UCF) ******
+          Reallocmem(NodeYii, 0);  // for bii
+          Reallocmem(pColIdx_Yii, 0);
+          Reallocmem(pRowIdx_Yii, 0);
+          Reallocmem(pcVals_Yii, 0);
+
+          Reallocmem(Node_dV, 0);
+          Reallocmem(Ic_Local, 0);
+      //===================================================
+
 //      SetLogFile ('c:\\temp\\KLU_Log.txt', 0);
 
       Reallocmem(HarmonicList,0);
@@ -637,6 +649,7 @@ PROCEDURE TSolutionObj.Solve(ActorID : Integer);
 var
   ScriptEd    : TScriptEdit;
 {$ENDIF} {$ENDIF}
+
 Begin
      ActiveCircuit[ActorID].Issolved := False;
      SolutionWasAttempted[ActorID]   := TRUE;
@@ -875,7 +888,7 @@ Begin
               If pGen.genModel = 3 Then Begin
               
                    pGen.InitDQDVCalc;
-
+           (*
                    // solve at base var setting
                    Iteration := 0;
                    Repeat
@@ -898,7 +911,7 @@ Begin
                        pGen.InjCurrents(ActorID);   // get generator currents with nominal vars
                        SolveSystem(NodeV, ActorID);
                    Until Converged(ActorID) or (Iteration >= Maxiterations);
-
+             *)
                    pGen.CalcdQdV(ActorID); // bssed on remembered Q and V and present values of same
                    pGen.ResetStartPoint;
 
@@ -976,6 +989,7 @@ Begin
         begin
           BuildYMatrix(WHOLEMATRIX, FALSE, ActorID);  // Does not realloc V, I
         end;
+
         {by Dahei}IF NodeYiiEmpty THEN Get_Yiibus;
 
         IF UseAuxCurrents THEN AddInAuxCurrents(NORMALSOLVE, ActorID);
@@ -1043,6 +1057,7 @@ Begin
            begin
               BuildYMatrix(WHOLEMATRIX, FALSE, ActorID);   // Does not realloc V, I
            end;
+
           {by Dahei}IF NodeYiiEmpty THEN Get_Yiibus;  //
 
            IF UseAuxCurrents THEN AddInAuxCurrents(NEWTONSOLVE, ActorID);
@@ -1221,6 +1236,7 @@ Begin
     begin
       BuildYMatrix(WHOLEMATRIX, FALSE, ActorID); // Rebuild Y matrix, but V stays same
     end;
+
     {by Dahei}IF NodeYiiEmpty THEN Get_Yiibus;
 
   End
@@ -1266,7 +1282,9 @@ Begin
     begin
       BuildYMatrix(WHOLEMATRIX, FALSE, ActorID);  // Does not realloc V, I
     end;
-    {by Dahei}IF NodeYiiEmpty THEN Get_Yiibus;
+
+    {Addition by Dahei}IF NodeYiiEmpty THEN Get_Yiibus;
+
     IF UseAuxCurrents THEN AddInAuxCurrents(NORMALSOLVE, ActorID);
 
 
@@ -1357,7 +1375,8 @@ Begin
     begin
         BuildYMatrix(WHOLEMATRIX, TRUE, ActorID);   // Side Effect: Allocates V
     end;
-    {by Dahei}IF NodeYiiEmpty THEN Get_Yiibus;  //
+
+    {addition by Dahei}IF NodeYiiEmpty THEN Get_Yiibus;  //
 
     ZeroInjCurr(ActorID);   // Side Effect: Allocates InjCurr
     GetSourceInjCurrents(ActorID);
@@ -1416,7 +1435,9 @@ begin
                 if not ADiakoptics or (ActorID <> 1) then
                   BuildYMatrix(WHOLEMATRIX, TRUE, ActorID);   // Side Effect: Allocates V
               end;
-              {by Dahei: Get Y matrix for solution}
+
+               {-------------------------------------}
+              {Addition by Dahei: Get Y matrix for solution}
               IF NodeYiiEmpty  THEN Get_Yiibus;   //IF SystemYChanged
               {-------------------------------------}
 
@@ -2358,7 +2379,7 @@ begin
    
    // Reset Meters and Monitors
    MonitorClass[ActiveActor].ResetAll(ActiveActor);
-   {by Dahei}FMonitorClass[ActiveActor].ResetAll(ActiveActor);
+     {Addition by Dahei}FMonitorClass[ActiveActor].ResetAll(ActiveActor);
    EnergyMeterClass[ActiveActor].ResetAll(ActiveActor);
    DoResetFaults;
    DoResetControls;
@@ -3225,7 +3246,9 @@ var
                 begin
                   BuildYMatrix(WHOLEMATRIX, FALSE, ActorID);  // Does not realloc V, I
                 end;
-                {by Dahei}IF NodeYiiEmpty THEN Get_Yiibus;
+
+                {addition by Dahei}IF NodeYiiEmpty THEN Get_Yiibus;
+
               End;
             GETCTRLMODE:
               Begin
