@@ -237,12 +237,13 @@ TYPE
           MapNodeToBus:pTNodeBusArray;
 
           // Flags
-          Issolved          :Boolean;
-          DuplicatesAllowed :Boolean;
-          ZonesLocked       :Boolean;
-          MeterZonesComputed:Boolean;
-          PositiveSequence  :Boolean;  // Model is to be interpreted as Pos seq
-          NeglectLoadY      :Boolean;
+          Issolved            :Boolean;
+          DuplicatesAllowed   :Boolean;
+          ZonesLocked         :Boolean;
+          MeterZonesComputed  :Boolean;
+          PositiveSequence    :Boolean;  // Model is to be interpreted as Pos seq
+          NeglectLoadY        :Boolean;
+          LongLineCorrection  :Boolean;  // Apply long line correction where feasible (single phase lines, positive sequence models, 3-phase lines with Symmetrical Components Model)
 
           // Voltage limits
           NormalMinVolts,
@@ -520,11 +521,12 @@ BEGIN
      PriceCurveObj := nil;
 
      // Flags
-     DuplicatesAllowed   := False;
-     ZonesLocked         := False;   // Meter zones recomputed after each change
-     MeterZonesComputed  := False;
-     PositiveSequence    := False;
-     NeglectLoadY        := False;
+     DuplicatesAllowed     := False;
+     ZonesLocked           := False;   // Meter zones recomputed after each change
+     MeterZonesComputed    := False;
+     PositiveSequence      := False;
+     NeglectLoadY          := False;
+     LongLineCorrection    := False;
 
      NormalMinVolts := 0.95;
      NormalMaxVolts := 1.05;
@@ -2750,6 +2752,7 @@ begin
       Writeln(F);
       If PositiveSequence Then Writeln(F, 'Set Cktmodel=Positive');
       If DuplicatesAllowed Then Writeln(F, 'set allowdup=yes');
+      If LongLineCorrection Then Writeln(F, 'Set LongLineCorrection=True');
       Writeln(F);
 
       // Write Redirect for all populated DSS Classes  Except Solution Class
