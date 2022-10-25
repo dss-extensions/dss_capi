@@ -75,7 +75,7 @@ TYPE
 
         Procedure ReallocZandYcMatrices;
 
-        PROCEDURE DoLongLine(Frequency:Double; var R1_h:Double; var X1_h:Double; var C1_h:Double; var G1_h:Double);  // Long Line Correction for 1=phase
+        PROCEDURE DoLongLine(Frequency:Double; R:Double; X:Double; C:Double; var R_h:Double; var X_h:Double; var C_h:Double; var G_h:Double);  // Long Line Correction for 1=phase
         PROCEDURE ConvertZinvToPosSeqR;  // for GIC analysis, primarily
 
       Protected
@@ -861,7 +861,7 @@ begin
 end;
 
 
-PROCEDURE TLineObj.DoLongLine(Frequency:Double; var R1_h:Double; var X1_h:Double; var C1_h:Double; var G1_h:Double);
+PROCEDURE TLineObj.DoLongLine(Frequency:Double; R:Double; X:Double; C:Double; var R_h:Double; var X_h:Double; var C_h:Double; var G_h:Double);
 // Do long line correction for len and desired frequency
 // Updated the procedure to correct for any frequency. Moved usage to CalcYPrim.
 
@@ -871,10 +871,10 @@ Var
 
 Begin
 
-        G1_h := EPSILON; // Adding a tiny conductance to avoid skipping correction on lines with C1=0
-        Zs := cmplx (R1 * Len, X1 * Len * Frequency / BaseFrequency);  // Use X1 for the desired frequency
+        G_h := EPSILON; // Adding a tiny conductance to avoid skipping correction on lines with C1=0
+        Zs := cmplx (R * Len, X * Len * Frequency / BaseFrequency);  // Use X1 for the desired frequency
 
-        Ys := cmplx (G1_h, TwoPi * Frequency * C1 * Len);
+        Ys := cmplx (G_h, TwoPi * Frequency * C * Len);
         // Apply the long-line correction to obtain Zm and Ym
         // Rearrange things to express as in Arrillaga's book. no difference to original DoLongLine.
         GammaL  := Csqrt (Cmul(Zs, Ys));
@@ -889,10 +889,10 @@ Begin
 
         // Update values for tested frequency and adjusted for long-line
         // do not replace original X1, R1, C1. We use these locally where the procedure is called.
-        R1_h := Zm.re / Len;
-        X1_h := Zm.im / Len;  // X1_h output is already accounting for new frequency
-        C1_h := Ym.im / Len / TwoPi / Frequency;
-        G1_h := Ym.re
+        R_h := Zm.re / Len;
+        X_h := Zm.im / Len;  // X1_h output is already accounting for new frequency
+        C_h := Ym.im / Len / TwoPi / Frequency;
+        G_h := Ym.re
 End;
 
 PROCEDURE TLineObj.RecalcElementData(ActorID : Integer);
@@ -1028,26 +1028,40 @@ Begin
 
                // If positive sequence, long-line correction can be taken into account here
                // It needs to be recalculated for every frequency
-               If ((((FnPhases =1) or ActiveCircuit[ActorID].PositiveSequence)) and SymComponentsModel) Then  // Should only enter here if sequence components model
+               If SymComponentsModel and ActiveCircuit[ActorID].LongLineCorrection Then  // Should only enter here if sequence components model
                Begin
                	  // These values are specific for the harmonic being tested (adjust for frequency)
                   R1_h := R1;
                   X1_h := X1 * FYprimFreq / BaseFrequency; // Adjust for frequency here
                   C1_h := C1;
                   G1_h := 0.0;  // DoLongLine uses a tiny conductance to avoid skipping case where C1=0
-                  // long-line equivalent PI, but only for CktModel=Positive
-                  if ActiveCircuit[ActorID].PositiveSequence then // To avoid errors in higher freqs, we shouldn't skip cases with C1=0. Critical to match IEEE 14bus harmonics benchmark.
+                  // Do the same for zero sequence
+                  R0_h := R0;
+                  X0_h := X0 * FYprimFreq / BaseFrequency; // Adjust for frequency here
+                  C0_h := C0;
+                  G0_h := 0.0;  // DoLongLine uses a tiny conductance to avoid skipping case where C0=0
+
+                  // long-line equivalent PI
+                  // To avoid errors in higher freqs, we shouldn't skip cases with C1=0. Critical to match IEEE 14bus harmonics benchmark.
+                  // Do long-line correction for tested frequency for +seq mode
+                  // Use R1_h, X1_h, C1_h, G1_h to correct Y prim
+                  DoLongLine(FYprimFreq, R1, X1, C1, R1_h, X1_h, C1_h, G1_h);
+
+                  if ((FnPhases > 1) and not ActiveCircuit[ActorID].PositiveSequence) then
                   begin
-                      // do long-line correction for tested frequency
-                      // use R1_h, X1_h, C1_h, G1_h to correct Y prim
-                      DoLongLine(FYprimFreq, R1_h, X1_h, C1_h, G1_h);
+                      // apply long line correction to 0seq mode as well
+                      DoLongLine(FYprimFreq, R0, X0, C0, R0_h, X0_h, C0_h, G0_h);
+                  end
+                  else
+                  begin
+                      // zero sequence the same as positive sequence
+                      R0_h := R1_h;
+                      X0_h := X1_h;
+                      C0_h := C1_h;
+                      G0_h := G1_h;
                   end;
-                  // zero sequence the same as positive sequence
-                  R0_h := R1_h;
-                  X0_h := X1_h;
-                  C0_h := C1_h;
-                  G0_h := G1_h;
-                  Ztemp := CmulReal(cmplx(R1_h,X1_h),2.0);
+
+                  Ztemp := CmulReal(cmplx(R1_h,X1_h), 2.0);
                   Zs  := CmulReal(CAdd(Ztemp, Cmplx(R0_h, X0_h)), ONE_THIRD);
                   Zm  := CmulReal(Csub(cmplx(R0_h, X0_h), Cmplx(R1_h, X1_h)), ONE_THIRD);
 
@@ -1171,7 +1185,7 @@ Begin
              FOR i := 1 to Fnphases DO
                Begin
                     Inc(k);    // Assume matrix in col order (1,1  2,1  3,1 ...)
-                    If ((((FnPhases =1) or ActiveCircuit[ActorID].PositiveSequence)) and SymComponentsModel) Then // Should only enter here if sequence components model
+                    If SymComponentsModel and ActiveCircuit[ActorID].LongLineCorrection Then // Should only enter here if sequence components model
                     Begin
                       // If we enter here, frequency adjustment has already been applied above during Z and Yc recalculation (and also affected by long-line correction)
                       Value := Cmplx(YValues^[k].re/2.0, YValues^[k].im*LengthMultiplier / 2.0);

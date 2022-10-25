@@ -12,7 +12,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 136;
+        NumExecOptions = 137;
 
 VAR
          ExecOption,
@@ -28,7 +28,7 @@ FUNCTION DoGetCmd_NoCircuit:Boolean;  // Get Commands that do not require a circ
 implementation
 
 Uses DSSClassDefs, DSSGlobals, ParserDel, Math,     Executive,  ExecHelper,
-     LoadShape,    Utilities,  Sysutils,
+     LoadShape,    Utilities,  Sysutils, Line,
      {$IFNDEF FPC}
      {$IFNDEF CONSOLE}
      ScriptEdit,
@@ -178,6 +178,7 @@ Begin
      ExecOption[134] := 'UseMyLinkBranches';
      ExecOption[135] := 'LineTypes';
      ExecOption[136] := 'EventLogDefault';
+     ExecOption[137] := 'LongLineCorrection';
 
      {Deprecated
       ExecOption[130] := 'MarkPVSystems2';
@@ -475,6 +476,7 @@ Begin
                         'Otherwise, OpenDSS will use the list of link branches given by the user with the command "set LinkBranches".';
      OptionHelp[135] := '(Read only) Returns the list of line types available in the code for reference. These line types apply to lines, line codes, and line geometry objects.';
      OptionHelp[136] := '{YES/TRUE | NO/FALSE*} Sets/gets the default for the eventlog. After changing this flags the model needs to be recompiled to take effect.';
+     OptionHelp[137] := '{YES/TRUE | NO/FALSE*} Defines whether the long-line correctlion is applied or not. Long-line correction only affects lines modelled with sequence components.';
 
 End;
 //----------------------------------------------------------------------------
@@ -585,6 +587,7 @@ VAR
    Param            : String;
    TestLoadShapeObj : TLoadShapeObj;
    myList           : TStringList;
+   LineObj          : TLineObj;
 
 
 Begin
@@ -863,12 +866,27 @@ Begin
           136:  begin
                   EventLogDefault  :=  InterpretYesNo(Param);
                 end;
+          137:  begin
+                  ActiveCircuit[ActiveActor].LongLineCorrection  :=  InterpretYesNo(Param);
+                end;
          ELSE
            // Ignore excess parameters
          End;
 
          CASE ParamPointer OF
               3,4: ActiveCircuit[ActiveActor].Solution.Update_dblHour;
+              137: Begin
+                     WITH ActiveCircuit[ActiveActor] Do
+                     Begin
+                        LineObj := Lines.First;
+
+                        WHILE LineObj <> NIL Do
+                         Begin
+                            If LineObj.Enabled And LineOBj.SymComponentsModel Then LineObj.YprimInvalid[ActiveActor] := True;
+                            LineObj := Lines.Next;
+                         End;
+                     End;
+                   End;
          END;
 
          ParamName := Parser[ActiveActor].NextParam;
@@ -1079,6 +1097,7 @@ Begin
           134: if UseUserLinks then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           135: GlobalResult :=  GetLineTypes();
           136: if EventLogDefault then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          137: if ActiveCircuit[ActiveActor].LongLineCorrection then AppendGlobalResult('Yes') else AppendGlobalResult('No');
          ELSE
            // Ignore excess parameters
          End;
