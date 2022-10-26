@@ -373,7 +373,7 @@ TYPE
  // Procedures that use to be private before 01-20-2016
 
        PROCEDURE AddInAuxCurrents(SolveType:Integer; ActorID : Integer);
-       Function SolveSystem(V:pNodeVArray; ActorID : Integer):Integer;
+       Function  SolveSystem(V:pNodeVArray; ActorID : Integer):Integer;
        PROCEDURE GetPCInjCurr(ActorID : Integer);
        PROCEDURE GetSourceInjCurrents(ActorID : Integer);
        PROCEDURE ZeroInjCurr(ActorID : Integer);
@@ -394,7 +394,7 @@ TYPE
        Procedure SendCmd2Actors(Msg : Integer);                     // Sends a message to other actors different than 1
        procedure UploadV2Master(ActorID : Integer);                 // Uploads the local solution into the master's (actor 1) voltage array
        procedure UpdateISrc(ActorID : Integer);                     // Updates the local ISources using the dat available at Ic for actor 1
-       function VoltInActor1(NodeIdx  : Integer): complex;          // returns the voltage indicated in NodeIdx in the context of the actor 1
+       function  VoltInActor1(NodeIdx  : Integer): complex;          // returns the voltage indicated in NodeIdx in the context of the actor 1
 
    End;
 {==========================================================================}
