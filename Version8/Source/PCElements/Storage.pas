@@ -2,7 +2,7 @@ unit Storage;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2009-2016, Electric Power Research Institute, Inc.
+  Copyright (c) 2009-2022, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -26,6 +26,9 @@ unit Storage;
   The Storage element can also produce or absorb vars within the kVA rating of the inverter.
   That is, a StorageController object requests kvar and the Storage element provides them if
   it has any capacity left. The Storage element can produce/absorb kvar while idling.
+
+  09/11/2022 Compatibility with dynamics simulation added
+  10/28/2022 Grid forming inverter capabilities added
 }
 
 //  The Storage element is assumed balanced over the no. of phases defined
@@ -353,6 +356,7 @@ TYPE
         PROCEDURE Set_InverterON(const Value: Boolean); Override;
         FUNCTION  Get_VarFollowInverter:Boolean;
         PROCEDURE Set_VarFollowInverter(const Value: Boolean);
+        procedure DoGFM_Mode(ActorID : Integer);
 
         PROCEDURE Set_Maxkvar(const Value: Double);
         PROCEDURE Set_Maxkvarneg(const Value: Double);
@@ -375,6 +379,9 @@ TYPE
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
         PROCEDURE DumpProperties(VAR F:TextFile; Complete:Boolean);Override;
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+        Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer);Override;
+        Function CheckOLInverter(ActorID : Integer): Boolean;
+        Procedure Set_FstateChanged(const Value : Boolean);
 
         Property kW                 :Double  Read Get_kW                     Write Set_kW;
         Property kWDesired          :Double  Read Get_kWDesired;
@@ -405,6 +412,7 @@ TYPE
         Property kvarLimitneg       :Double  Read StorageVars.Fkvarlimitneg  Write Set_Maxkvarneg;
 
         Property StorageState       :Integer Read FState                     Write Set_StorageState;
+        Property StateChanged       :Boolean Read FstateChanged              Write Set_FstateChanged;
         Property PctkWOut           :Double  Read FpctkWOut                  Write Set_pctkWOut;
         Property PctkWIn            :Double  Read FpctkWIn                   Write Set_pctkWIn;
 
@@ -511,7 +519,8 @@ Const
   propSM                 = 56;
   propDynEq              = 57;
   propDynOut             = 58;
-  NumPropsThisClass = 58; // Make this agree with the last property constant
+  propGFM                = 59;
+  NumPropsThisClass = 59; // Make this agree with the last property constant
 
 VAR
 
@@ -747,10 +756,10 @@ Begin
                            'Indicates the rated voltage (kV) at the input of the inverter at the peak of PV energy production. The value is normally greater or equal to the kV base of the PV system. It is used for dynamics simulation ONLY.');
 
     AddProperty('Kp', propkp,
-                           'It is the proportional gain for the PI controller within the inverter. Use it to modify the controller response in dynamics simulation mode or when operating as grid forming inverter.');
+                           'It is the proportional gain for the PI controller within the inverter. Use it to modify the controller response in dynamics simulation mode.');
 
     AddProperty('PITol', propCtrlTol,
-                           'It is the tolerance (%) for the closed loop controller of the inverter. For dynamics or when the inverter is operating in grid forming mode.');
+                           'It is the tolerance (%) for the closed loop controller of the inverter. For dynamics simulation mode.');
 
     AddProperty('SafeVoltage', propSMT,
                            'Indicates the voltage level (%) respect to the base voltage level for which the Inverter will operate. If this threshold is violated, the Inverter will enter safe mode (OFF). For dynamic simulation. By default is 80%');
@@ -765,7 +774,10 @@ Begin
                                  'This PVsystem model requires 1 output from the dynamic equation: ' + CRLF + CRLF +
                                  '1. Current.' + CRLF +
                                  'The output variables need to be defined in the same order.');
-
+    AddProperty('ControlMode', propGFM,
+                            'Defines the control mode for the inverter. It can be one of {GFM | GFL*}. By default it is GFL (Grid Following Inverter).' +
+                                 ' Use GFM (Grid Forming Inverter) for energizing islanded microgrids, but, if the device is conencted to the grid, it is highly recommended to use GFL.' + CRLF + CRLF +
+                                 'GFM control mode disables any control action set by the InvControl device.');
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -1006,6 +1018,19 @@ Begin
                 propSMT         : myDynVars.SMThreshold       := Parser[ActorID].DblValue;
                 propDynEq       : DynamicEq                   := Param;
                 propDynOut      : SetDynOutput(Param);
+                propGFM         : Begin
+                                  if lowercase(Parser[ActorID].StrValue) = 'gfm' then
+                                  Begin
+                                      GFM_mode  :=  True;
+                                      if length( myDynVars.Vgrid ) < NPhases then
+                                        setlength( myDynVars.Vgrid, NPhases );  // Used to store the voltage per phase
+                                    End
+                                    else
+                                      GFM_mode  :=  False;
+                                    YprimInvalid[ActorID] :=  True;
+                                  End
+
+
              ELSE
                // Inherited parameters
                  ClassEdit(ActiveStorageObj, ParamPointer - NumPropsThisClass)
@@ -1057,6 +1082,7 @@ Begin
                                       If Assigned(DynamicEqObj) then With DynamicEqObj Do
                                         setlength(DynamicEqVals, NumVars);
                                     End;
+
 //                propPFPriority: For i := 1 to ControlElementList.ListSize Do
 //                Begin
 //
@@ -1474,6 +1500,7 @@ Begin
      PropertyValue[propCtrlTol]               := '5';
      PropertyValue[propSMT]                   := '80';
      PropertyValue[propSM]                    := 'NO';
+     PropertyValue[propGFM]                   := 'GFL';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -1549,6 +1576,7 @@ Begin
           propSM            : if SafeMode then Result :=  'Yes' else Result := 'No';
           propDynEq         : Result := DynamicEq;
           propDynOut        : GetDynOutputStr();
+          propGFM           : if GFM_Mode then Result :=  'GFM' else Result :=  'GFL';
       ELSE  // take the generic handler
            Result := Inherited GetPropertyValue(index);
       END;
@@ -2119,9 +2147,11 @@ end;
 PROCEDURE TStorageObj.CalcYPrimMatrix(Ymatrix:TcMatrix;ActorID : Integer);
 
 VAR
-       Y , Yij  :Complex;
-       i, j     :Integer;
-       FreqMultiplier :Double;
+  Y,
+  Yij             : Complex;
+  i,
+  j               : Integer;
+  FreqMultiplier  : Double;
 
 Begin
 
@@ -2161,15 +2191,29 @@ Begin
 
 
            CASE Fstate of
-               STORE_CHARGING, STORE_IDLING:    Y := YeqDischarge;
-               STORE_DISCHARGING: Y := cnegate(YeqDischarge);
+             STORE_CHARGING, STORE_IDLING:    Y := YeqDischarge;
+             STORE_DISCHARGING:               Begin
+                                                if not GFM_mode then
+                                                  Y := cnegate(YeqDischarge)
+                                                else
+                                                Begin
+                                                  with myDynVars, StorageVars do
+                                                  Begin
+                                                    BasekV      :=  PresentkV;
+                                                    Discharging :=  StorageState = STORE_DISCHARGING;
+                                                    ISP         :=  FkVArating;
+                                                    CalcGFMYprim(ActorID, NPhases, @YMatrix);
+                                                  End;
+                                                End;
+                                              End;
            END;
 
        //---DEBUG--- WriteDLLDebugFile(Format('t=%.8g, Change To State=%s, Y=%.8g +j %.8g',[ActiveCircuit[ActiveActor].Solution.dblHour, StateToStr, Y.re, Y.im]));
 
        // ****** Need to modify the base admittance for real harmonics calcs
        Y.im           := Y.im / FreqMultiplier;
-
+       if not GFM_mode then
+       Begin
          CASE Connection OF
 
            0: With YMatrix Do
@@ -2198,6 +2242,7 @@ Begin
               End;
 
          END;
+       End;
      End;  {ELSE IF Solution.mode}
 
 End;
@@ -2544,6 +2589,7 @@ PROCEDURE TStorageObj.DoDynamicMode;
 Var
     i         : Integer;
     PolarN    : Polar;
+    Curr,
     NeutAmps  : Complex;
     V012,
     I012      : Array[0..2] of Complex;
@@ -2575,20 +2621,29 @@ Begin
     Begin
       with myDynVars do
       Begin
+        AngCmp  :=  0;
         // determine if the PV panel is ON
         if it[ i - 1 ] <= iMaxPPhase then
           iActual       :=  it[i -1]
         else
           iActual       :=  iMaxPPhase;
-        AngCmp        :=  PI;
+        if not GFM_Mode then AngCmp        :=  PI;
         //--------------------------------------------------------
-        if iActual < MinAmps then iActual :=  0;                  // To mach with the %CutOut property
-        if FState <> STORE_DISCHARGING then AngCmp :=  0;        // To mimic the idling losses
+        if iActual < MinAmps then iActual :=  0;                 // To mach with the %CutOut property
+        if FState <> STORE_DISCHARGING then
+        Begin
+          iActual :=  ( PIdling / Vgrid[i - 1].mag ) / NPhases;
+
+          if GFM_Mode then GFM_Mode  :=  False;
+        End;
 
         PolarN        :=  topolar( iActual, Vgrid[i - 1].ang + AngCmp );     // Output Current estimated for active power
-        Iterminal^[i] :=  ptocomplex(PolarN);
-        NeutAmps      :=  csub( NeutAmps, Iterminal^[i] );
+        Curr          :=  ptocomplex(PolarN);
+        NeutAmps      :=  csub( NeutAmps, Curr );
+        Iterminal^[i] :=  Curr;
       End;
+      set_ITerminalUpdated(TRUE, ActorID);
+
     End;
     if FnConds > FNphases then Iterminal^[FnConds] :=  NeutAmps;
 
@@ -2597,6 +2652,34 @@ Begin
 
   End;
 
+
+End;
+
+// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+// Implements the grid forming inverter control routine for the storage device
+procedure TStorageObj.DoGFM_Mode(ActorID : Integer);
+Var
+  j,
+  i           : Integer;
+  myW,
+  myError     : Double;
+
+Begin
+
+  myDynVars.BasekV          :=  VBase;
+  myDynVars.Discharging     :=  StorageState = STORE_DISCHARGING;
+
+  with ActiveCircuit[ActorID].Solution, myDynVars do
+  Begin
+    {Initialization just in case}
+    if length( myDynVars.Vgrid ) < NPhases then setlength(myDynVars.Vgrid, NPhases);
+
+    for i := 1 to NPhases do Vgrid[i - 1]      :=  ctopolar( NodeV^[ NodeRef^[ i ] ] );
+    myDynVars.CalcGFMVoltage( ActorID, NPhases, Vterminal );
+    YPrim.MVMult( InjCurrent, Vterminal );
+
+    set_ITerminalUpdated(FALSE, ActorID);
+  End;
 End;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
@@ -2725,23 +2808,28 @@ PROCEDURE TStorageObj.CalcStorageModelContribution(ActorID : Integer);
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 
 Begin
-     set_ITerminalUpdated(FALSE, ActorID);
-     WITH  ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution DO
-     Begin
-          IF      IsDynamicModel THEN  DoDynamicMode(ActorID)
-          ELSE IF IsHarmonicModel and (Frequency <> Fundamental) THEN  DoHarmonicMode(ActorID)
-          ELSE
-            Begin
-               //  compute currents and put into InjTemp array;
-                 CASE VoltageModel OF
-                      1: DoConstantPQStorageObj(ActorID);
-                      2: DoConstantZStorageObj(ActorID);
-                      3: DoUserModel(ActorID);
-                 ELSE
-                      DoConstantPQStorageObj(ActorID);  // for now, until we implement the other models.
-                 End;
-            End; {ELSE}
-     END; {WITH}
+
+  set_ITerminalUpdated(FALSE, ActorID);
+  WITH  ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution DO
+  Begin
+    IF      IsDynamicModel THEN  DoDynamicMode(ActorID)
+    ELSE IF IsHarmonicModel and (Frequency <> Fundamental) THEN  DoHarmonicMode(ActorID)
+    ELSE
+    Begin
+       //  compute currents and put into InjTemp array;
+       if GFM_Mode then DoGFM_Mode(ActorID)
+       else
+       Begin
+         CASE VoltageModel OF
+              1: DoConstantPQStorageObj(ActorID);
+              2: DoConstantZStorageObj(ActorID);
+              3: DoUserModel(ActorID);
+         ELSE
+              DoConstantPQStorageObj(ActorID);  // for now, until we implement the other models.
+         End;
+       End;
+    End; {ELSE}
+  END; {WITH}
 
    {When this is Done, ITerminal is up to date}
 
@@ -2791,6 +2879,74 @@ Begin
          Result := Inherited InjCurrents(ActorID);
       End;
 End;
+// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+// Required for operation in GFM mode
+// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+Procedure TStorageObj.GetCurrents(Curr: pComplexArray; ActorID : Integer);
+var
+  i : Integer;
+Begin
+  if GFM_Mode then
+  Begin
+    TRY
+      WITH    ActiveCircuit[ActorID].Solution Do
+      Begin
+       //FOR i := 1 TO (Nterms * NConds) DO Vtemp^[i] := V^[NodeRef^[i]];
+       // This is safer    12/7/99
+       FOR     i := 1 TO Yorder DO
+       Begin
+        if not ADiakoptics or (ActorID = 1) then
+           Vterminal^[i] := NodeV^[NodeRef^[i]]
+        else
+           Vterminal^[i] := VoltInActor1(NodeRef^[i]);
+       End;
+
+       YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
+
+       GetInjCurrents(ComplexBuffer, ActorID);  // Get present value of inj currents
+      // Add Together  with yprim currents
+       FOR i := 1 TO Yorder DO Curr^[i] := Csub(Curr^[i], ComplexBuffer^[i]);
+
+      End;  {With}
+    EXCEPT
+      On E: Exception Do
+        DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
+          'Inadequate storage allotted for circuit element.', 327);
+    END;
+
+  End
+  else
+    inherited GetCurrents(Curr, ActorID);
+
+End;
+// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+// Returns True if any of the inverter phases is overloaded
+// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+Function TStorageObj.CheckOLInverter(ActorID : Integer): Boolean;
+var
+  myCurr    : complex;
+  MaxAmps,
+  PhaseAmps : Double;
+  i         : Integer;
+Begin
+  // Check if reaching saturation point in GFM
+  Result  :=  False;
+  if GFM_Mode then
+  Begin
+    MaxAmps    :=  ( ( StorageVars.FkVArating * 1000 ) / NPhases ) / VBase;
+    GetCurrents(Iterminal, ActorID);
+    for i := 1 to NPhases do
+    Begin
+      myCurr    :=  Iterminal^[i];
+      PhaseAmps :=  cabs( myCurr);
+      if PhaseAmps > MaxAmps then
+      Begin
+        Result  :=  True;
+        break;
+      End;
+    End;
+  End;
+End;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 PROCEDURE TStorageObj.GetInjCurrents(Curr:pComplexArray; ActorID : Integer);
@@ -2804,18 +2960,18 @@ VAR
 
 Begin
 
-   CalcInjCurrentArray(ActorID);  // Difference between currents in YPrim and total current
+  CalcInjCurrentArray(ActorID);  // Difference between currents in YPrim and total current
 
-   TRY
-   // Copy into buffer array
-     FOR i := 1 TO Yorder Do Curr^[i] := InjCurrent^[i];
+  TRY
+  // Copy into buffer array
+   FOR i := 1 TO Yorder Do Curr^[i] := InjCurrent^[i];
 
-   EXCEPT
-     ON E: Exception Do
-        DoErrorMsg('Storage Object: "' + Name + '" in GetInjCurrents FUNCTION.',
-                    E.Message,
-                   'Current buffer not big enough.', 568);
-   End;
+  EXCEPT
+   ON E: Exception Do
+      DoErrorMsg('Storage Object: "' + Name + '" in GetInjCurrents FUNCTION.',
+                  E.Message,
+                 'Current buffer not big enough.', 568);
+  End;
 
 End;
 
@@ -2897,6 +3053,11 @@ End;
 //----------------------------------------------------------------------------
 
 PROCEDURE TStorageObj.UpdateStorage(ActorID : Integer);
+var
+  UpdateSt    : Boolean;
+  i           : Integer;
+  myVolt,
+  myCurr      : Array of Complex;
 {Update Storage levels}
 Begin
 
@@ -2912,13 +3073,39 @@ Begin
       Case FState of
 
           STORE_DISCHARGING: Begin
-
-                                 kWhStored := kWhStored - (DCkW + kWIdlingLosses) / DischargeEff * IntervalHrs;
-                                 If kWhStored < kWhReserve Then Begin
-                                     kWhStored := kWhReserve;
-                                     Fstate := STORE_IDLING;  // It's empty Turn it off
-                                     FstateChanged := TRUE;
+                                 UpdateSt   :=  True;
+                                 if GFM_Mode then
+                                 Begin
+                                  // If in GFM mode, check if we are actually delivering power
+                                   ComputeIterminal(ActorID);
+                                   setlength(myVolt, NPhases + 1);
+                                   setlength(myCurr, NPhases + 1);
+                                   UpdateSt   :=  False;                              // Start assuming we are not delivering power
+                                   for i := 1 to NPhases do
+                                   Begin
+                                     myCurr[i]  := Iterminal^[i];
+                                     myVolt[i]  := ActiveCircuit[ActorID].Solution.NodeV^[NodeRef^[i]];
+                                     CalckPowers(@myVolt[i], @myVolt[i], @myCurr[i], 1);
+                                     UpdateSt   :=  ( myVolt[i].re < 0 ) or UpdateSt; // If at least 1 phase is delivering, update
+                                   End;
+                                   if kW_out < 0 then UpdateSt :=  False;
                                  End;
+                                 if UpdateSt then
+                                   kWhStored := kWhStored - ( DCkW + kWIdlingLosses ) / DischargeEff * IntervalHrs
+                                 else
+                                 Begin
+                                   // We are obsrobing power, let's recharge if needed
+                                   kWhStored := kWhStored + ( DCkW + kWIdlingLosses ) / DischargeEff * IntervalHrs;
+                                   if kWhStored > kWhRating then kWhStored  :=  kWhRating;
+                                  End;
+                                // check if we have enough energy to deliver
+                                 If kWhStored < kWhReserve Then
+                                 Begin
+                                     kWhStored      :=  kWhReserve;
+                                     Fstate         :=  STORE_IDLING;  // It's empty Turn it off
+                                     FstateChanged  :=  TRUE;
+                                     GFM_Mode       :=  False;
+                                 End ;
                              End;
 
           STORE_CHARGING:    Begin
@@ -4147,6 +4334,11 @@ Begin
      If SavedState <> Fstate Then FStateChanged := TRUE;
 
      //---DEBUG--- WriteDLLDebugFile(Format('t=%.8g, ---State Set To %s', [ActiveCircuit[ActiveActor].Solution.dblHour, StateToStr ]));
+End;
+//----------------------------------------------------------------------------
+Procedure TStorageObj.Set_FstateChanged(const Value : Boolean);
+Begin
+  FstateChanged :=  Value;
 End;
 //----------------------------------------------------------------------------
 

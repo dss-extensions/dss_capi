@@ -374,7 +374,7 @@ TYPE
 
        PROCEDURE AddInAuxCurrents(SolveType:Integer; ActorID : Integer);
        Function  SolveSystem(V:pNodeVArray; ActorID : Integer):Integer;
-       PROCEDURE GetPCInjCurr(ActorID : Integer);
+       PROCEDURE GetPCInjCurr(ActorID : Integer; GFMOnly  : Boolean = False);
        PROCEDURE GetSourceInjCurrents(ActorID : Integer);
        PROCEDURE ZeroInjCurr(ActorID : Integer);
        PROCEDURE Upload2IncMatrix;
@@ -825,6 +825,9 @@ Begin
        IF pElem.Enabled THEN pElem.InjCurrents(ActorID); // uses NodeRef to add current into InjCurr Array;
        pElem := Sources.Next;
      End;
+
+     // Adds GFM PCE as well
+     GetPCInjCurr( ActorID, True );
 
   End;
 
@@ -1979,23 +1982,24 @@ End;
 
 
 // ===========================================================================================
-PROCEDURE TSolutionObj.GetPCInjCurr(ActorID : Integer);
-  VAR
-     pElem:TDSSCktElement;
-
+PROCEDURE TSolutionObj.GetPCInjCurr(ActorID : Integer; GFMOnly  : Boolean = False);
+VAR
+   pElem  : TDSSCktElement;
+   valid  : Boolean;
 { Get inj currents from all enabled PC devices }
-
 Begin
 
-  WITH ActiveCircuit[ActorID]
-  Do Begin
-     pElem := PCElements.First;
-     WHILE pElem <> nil
-     Do Begin
-       WITH pElem Do IF Enabled  THEN InjCurrents(ActorID); // uses NodeRef to add current into InjCurr Array;
-       pElem := PCElements.Next;
-     End;
-   End;
+  WITH ActiveCircuit[ActorID] Do
+  Begin
+    pElem := PCElements.First;
+    WHILE pElem <> nil Do
+    Begin
+      valid   :=  not ( GFMOnly xor pElem.GFM_Mode );
+
+      WITH pElem Do IF ( Enabled and valid ) THEN InjCurrents(ActorID); // uses NodeRef to add current into InjCurr Array;
+      pElem := PCElements.Next;
+    End;
+  End;
 
 End;
 

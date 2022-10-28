@@ -1248,7 +1248,6 @@ Begin
 
      0,1:       // Voltage, current. Powers
        Begin
-
             // MeteredElement.GetCurrents(CurrentBuffer);
             // To save some time, call ComputeITerminal
             MeteredElement.ComputeIterminal(ActorID);   // only does calc if needed

@@ -203,7 +203,8 @@ uses
   epiktimer in '..\epiktimer\epiktimer.pas' {/  linenoise in 'linenoise.pas';},
   CmdForms in 'CmdForms.pas',
   DynamicExp in '..\General\DynamicExp.pas',
-  InvDynamics in '..\Shared\InvDynamics.pas';
+  InvDynamics in '..\Shared\InvDynamics.pas',
+  GenController in '..\Controls\GenController.pas';
 
 {$R *.RES}
 

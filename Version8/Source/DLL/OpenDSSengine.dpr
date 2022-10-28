@@ -238,7 +238,8 @@ uses
   WindGenVars in '..\PCElements\WindGenVars.pas',
   ImplStorages in 'ImplStorages.pas' {Storages: CoClass},
   DynamicExp in '..\General\DynamicExp.pas',
-  InvDynamics in '..\Shared\InvDynamics.pas';
+  InvDynamics in '..\Shared\InvDynamics.pas',
+  GenController in '..\Controls\GenController.pas';
 
 exports
   DllGetClassObject,
