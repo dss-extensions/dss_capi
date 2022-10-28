@@ -31,7 +31,7 @@ uses
 
   {$IFDEF FPC}gqueue{$else}System.Generics.Collections{$ENDIF},
   Command, ControlClass, ControlElem, CktElement, DSSClass, bus, PCElement,PVSystem, Storage, StorageVars, Arraydef, ucomplex,
-  utilities, XYcurve, Dynamics, PointerList, Classes, StrUtils, MathUtil;
+  utilities, XYcurve, Dynamics, PointerList, Classes, StrUtils, MathUtil, InvDynamics;
 
 type
 
@@ -429,11 +429,17 @@ const
     WATTPF    = 4;
     WATTVAR   = 5;
     AVR       = 6;
-    GFM       = 7;      // Grid forming inverter mode
+    GFM       = 7;
 
     // Modes in string type
     myCtrlModes   : array [0..6] of string =
     ('voltvar', 'voltwatt', 'dynamicreaccurr', 'wattpf', 'wattvar', 'avr', 'gfm');
+
+    myDERTypes    : array [0..1] of string =
+    ('PVSystem', 'Storage');
+
+    PVSys     = 0;
+    EStorage  = 1;
 
     // Combi Modes
     NONE_COMBMODE = 0;
@@ -520,7 +526,7 @@ procedure TInvControl.DefineProperties;
                        CRLF+CRLF+'In dynamic reactive current mode. This mode attempts to increasingly counter deviations by CONTROLLING vars, depending on the monitored voltages, present active power output, and the capabilities of the of the PVSystem/Storage.'+
                        CRLF+CRLF+'In watt-pf mode. This mode attempts to CONTROL the vars, according to a watt-pf curve, depending on the present active power output, and the capabilities of the PVSystem/Storage. '+
                        CRLF+CRLF+'In watt-var mode. This mode attempts to CONTROL the vars, according to a watt-var curve, depending on the present active power output, and the capabilities of the PVSystem/Storage. ' +
-                       CRLF+CRLF+'In GFM (Grid Forming Inverter) mode, the inverter based resource will be used for stablishing the voltage level of the microgrid/grid they are connected to. In any other control mode, DER will behave as Grid FoLlowing inverter (GFL).';
+                       CRLF+CRLF+'In GFM mode this control will trigger the GFM control routine for the DERs within the DERList. The GFM actiosn will only take place if the pointed DERs are in GFM mode. The controller parameters are locally setup at the DER. ';
 
     PropertyHelp[3] := 'Combination of smart inverter functions in which the InvControl will control the PC elements in DERList, according to the options below: '+CRLF+CRLF+
                       'Must be a combination of the following: {VV_VW | VV_DRC}. Default is to not set this property, in which case the single control mode in Mode is active.  ' +
@@ -646,14 +652,13 @@ procedure TInvControl.DefineProperties;
                         'Limit in power in pu per second used by the RISEFALL option of the RateofChangeMode property.' +
                         'The base value for this ramp is defined in the RefReactivePower property and/or in VoltwattYAxis.';
 
-    PropertyHelp[21] := 'Required for the VOLTWATT modes.  Defaults to -1.0. '+CRLF+CRLF+
+    PropertyHelp[21] := 'Required for the VOLTWATT mode.  Defaults to -1.0. '+CRLF+CRLF+
                        'Defining -1.0, OpenDSS takes care internally of delta_P itself. It tries to improve convergence as well as speed up process'+CRLF+CRLF+
                        'Defining between 0.05 and 1.0, it sets the maximum change (in unit of the y-axis) from the prior active power output level to the desired active power output level during each control iteration. '+CRLF+CRLF+CRLF+
                        'If numerical instability is noticed in solutions such as active power changing substantially from one control iteration to the next and/or voltages oscillating between two values with some separation, '+
                        'this is an indication of numerical instability (use the EventLog to diagnose). '+CRLF+CRLF+
                        'If the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
-                       'of control iterations needed to achieve the control criteria, and move to the power flow solution.' + CRLF +
-                       'When operating the controller using expoenential control model (see CtrlModel), this parameter represents the sampling time gain of the controller, which is used for accelrating the controller response in terms of control iterations required.';;
+                       'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
 
     PropertyHelp[22] := '{Yes/True* | No/False} Default is NO for InvControl. Log control actions to Eventlog.';
 
@@ -1261,8 +1266,8 @@ procedure TInvControlObj.RecalcElementData(ActorID : Integer);
           // for all modes other than VW and WATTPF, PF priority is not allowed
           if ((Mode <> VOLTWATT) and (Mode <> WATTPF)) Then
           Begin
-              if ControlledElement.DSSClassName = 'PVSystem'     then TPVSystemObj(ControlledElement).PVSystemVars.PF_Priority := FALSE
-              else if ControlledElement.DSSClassName = 'Storage' then  TStorageObj(ControlledElement).StorageVars.PF_Priority := FALSE;
+              if ControlledElement.DSSClassName = myDERTypes[PVSys]     then TPVSystemObj(ControlledElement).PVSystemVars.PF_Priority := FALSE
+              else if ControlledElement.DSSClassName = myDERTypes[EStorage] then  TStorageObj(ControlledElement).StorageVars.PF_Priority := FALSE;
           End;
 
           //FdeltaQFactor[i]                := FdeltaQ_factor;
@@ -1350,746 +1355,727 @@ procedure TInvControlObj.DumpProperties(Var F:TextFile; Complete:Boolean);
 
 procedure TInvControlObj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID : Integer);
 
-  VAR
-    k                                           : Integer;
-    DERelem                                     : TPCElement;
+VAR
+  DER_OL                                      : Boolean;
+  i,
+  k                                           : Integer;
+  DERelem                                     : TPCElement;
 
+begin
+
+  for k := 1 to FDERPointerList.ListSize do
   begin
+    with CtrlVars[k] do
+    Begin
+      DERelem := ControlledElement;
 
-    for k := 1 to FDERPointerList.ListSize do
-    begin
-      with CtrlVars[k] do
-      Begin
-        DERelem := ControlledElement;
+      // Calculates QHeadRoom
+      Calc_QHeadRoom(k, ActorID);
+      if QHeadRoom <> 0.0 then FPriorvarspu  := FPriorvars/QHeadRoom;
 
-        // Calculates QHeadRoom
-        Calc_QHeadRoom(k, ActorID);
-        if QHeadRoom <> 0.0 then FPriorvarspu  := FPriorvars/QHeadRoom;
+      // Calculates PBase
+      Calc_PBase(k, ActorID);
+      FPriorWattspu  := FPriorWatts/PBase;
 
-        // Calculates PBase
-        Calc_PBase(k, ActorID);
-        FPriorWattspu  := FPriorWatts/PBase;
+      // Calculates kW_out_desiredpu. Used for VW and VV_VW
+      kW_out_desiredpu := kW_out_desired / PBase;
 
-        // Calculates kW_out_desiredpu. Used for VW and VV_VW
-        kW_out_desiredpu := kW_out_desired / PBase;
+      // -------------------Smart Inverter Functions------------------------//
+      {Smart Inverter volt-var function}
+      if(ControlMode = VOLTVAR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
+      begin
+        // Set var mode to VARMODEKVAR to indicate we might change kvar
+        DERelem.Set_VWmode( FALSE );
+        DERelem.Set_Varmode( VARMODEKVAR );
+        DERelem.Set_VVmode( TRUE );
+         //--------------------------------------------- Main process ---------------------------------------------//
 
-        // -------------------Smart Inverter Functions------------------------//
-        {Smart Inverter volt-var function}
-        if(ControlMode = VOLTVAR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
+        // Calculates QDesireVVpu[k]
+        CalcQVVcurve_desiredpu(k, ActorID);
+
+        // LPF or RF activated
+        if (RateofChangeMode = LPF) then
           begin
-            // Set var mode to VARMODEKVAR to indicate we might change kvar
-            DERelem.Set_VWmode( FALSE );
-            DERelem.Set_Varmode( VARMODEKVAR );
-            DERelem.Set_VVmode( TRUE );
-             //--------------------------------------------- Main process ---------------------------------------------//
-
-            // Calculates QDesireVVpu[k]
-            CalcQVVcurve_desiredpu(k, ActorID);
-
-            // LPF or RF activated
-            if (RateofChangeMode = LPF) then
-              begin
-                CalcLPF(k, 'VARS', QDesireVVpu, ActorID);
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireOptionpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
-              end
-            else if (RateofChangeMode = RISEFALL) then
-              begin
-                CalcRF(k, 'VARS', QDesireVVpu, ActorID);
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireOptionpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
-              end
-            else
-              begin
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireVVpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireVVpu), abs(QDesireLimitedpu)) * sign(QDesireVVpu);
-              end;
-
-            // Calculates QDesiredVV through the convergence algorithm
-            CalcVoltVar_vars(k, ActorID);
-
-            //--------------------------------------------- end Main process ---------------------------------------------//
-
-            // Sets PVSystem/Storage's kvar_out
-            if DERelem.DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredVV
-            else TStorageObj(DERelem).kvarRequested := QDesiredVV;
-
-            // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if DERelem.DSSClassName = 'PVSystem' then
-              begin
-                TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
-
-                if QDesiredVV >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
-              end
-            else
-              begin
-                TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
-
-                if QDesiredVV >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
-              end;
-
-            // Values used in convergence
-            QoutputVVpu := Qoutputpu;
-            FAvgpVpuPrior := FPresentVpu;
-
-            // Values used in CalcQVVcurve_desiredpu
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                QOld   := TPVSystemObj(DERelem).Presentkvar;
-                QOldVV := TPVSystemObj(DERelem).Presentkvar;
-
-              if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
-                                                    Format('VOLTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVV, TPVSystemObj(DERelem).Presentkvar]),ActorID);
-              end
-            else
-              begin
-                QOld   := TStorageObj(DERelem).Presentkvar;
-                QOldVV := TStorageObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
-                                                    Format('VOLTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVV, TStorageObj(DERelem).Presentkvar]),ActorID);
-
-              end;
-          end
-
-        {Smart Inverter active voltage regulation function}
-        else if(ControlMode = AVR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
-          begin
-            // Set var mode to VARMODEKVAR to indicate we might change kvar
-            DERelem.Set_VWmode( FALSE );
-            DERelem.Set_Varmode( VARMODEKVAR );
-            DERelem.Set_AVRmode( TRUE );
-            //--------------------------------------------- Main process ---------------------------------------------//
-
-            if ActiveCircuit[ActorID].Solution.ControlIteration = 1 then
-              begin
-                FAvgpVpuPrior := FPresentVpu;
-                FAvgpAVRVpuPrior := FPresentVpu;
-
-                 // Sets PVSystem/Storage's kvar_out
-                if ControlledElement.DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QHeadRoom / 2
-                else TStorageObj(DERelem).kvarRequested := QHeadRoom / 2;
-              end
-
-            else if ActiveCircuit[ActorID].Solution.ControlIteration = 2 then
-              begin
-                // Sets PVSystem/Storage's kvar_out
-                if ControlledElement.DSSClassName = 'PVSystem' then
-                  DQDV := abs(TPVSystemObj(DERelem).Presentkvar / QHeadRoom / (FPresentVpu - FAvgpVpuPrior))
-                else
-                  DQDV := abs(TStorageObj(DERelem).kvarRequested / QHeadRoom / (FPresentVpu - FAvgpVpuPrior));
-              end
-
-            else
-              begin
-                // Calculates QDesireAVRpu
-                CalcQAVR_desiredpu(k, ActorID);
-
-
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireAVRpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireAVRpu), abs(QDesireLimitedpu)) * sign(QDesireAVRpu);
-
-                if abs(QDesireEndpu - QDesireLimitedpu) < 0.05  then
-                  Fv_setpointLimited := FPresentVpu
-                else
-                  Fv_setpointLimited := Fv_setpoint;
-
-                // Calculates QDesiredVV through the convergence algorithm
-                CalcAVR_vars(k, ActorID);
-
-                //--------------------------------------------- end Main process ---------------------------------------------//
-
-                // Sets PVSystem/Storage's kvar_out
-                if ControlledElement.DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredAVR
-                else TStorageObj(DERelem).kvarRequested := QDesiredAVR;
-
-                // Uptates PresentkW and Presentkvar considering watt and var priorities
-                if ControlledElement.DSSClassName = 'PVSystem' then
-                  begin
-                    TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
-
-                    if QDesiredAVR >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
-                    else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
-                  end
-                else
-                  begin
-                    TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
-
-                    if QDesiredAVR >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
-                    else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
-                  end;
-
-              // Values used in convergence
-              QoutputAVRpu := Qoutputpu;
-              FAvgpVpuPrior := FPresentVpu;
-
-              // Values used in CalcQVVcurve_desiredpu
-              if ControlledElement.DSSClassName = 'PVSystem' then
-                begin
-                  QOld   := TPVSystemObj(DERelem).Presentkvar;
-                  QOldAVR := TPVSystemObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
-                                                      Format('VOLTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                             [QDesiredAVR, TPVSystemObj(DERelem).Presentkvar]),ActorID);
-                end
-              else
-                begin
-                  QOld   := TStorageObj(DERelem).Presentkvar;
-                  QOldAVR := TStorageObj(DERelem).Presentkvar;
-
-                  if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
-                                                      Format('VOLTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                                                             [QDesiredAVR, TStorageObj(DERelem).Presentkvar]),ActorID);
-
-                end;
-              end;
-          end
-
-        {Smart Inverter watt-pf function}
-        else if(ControlMode = WATTPF) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
-          begin
-            // Set var mode to VARMODEKVAR to indicate we might change kvar
-
-            DERelem.Set_VWmode( FALSE );
-            DERelem.Set_Varmode( VARMODEKVAR );
-            DERelem.Set_WPmode( TRUE );
-
-            //--------------------------------------------- Main process ---------------------------------------------//
-
-            // Calculates QDesireWPpu
-            CalcQWPcurve_desiredpu(k, ActorID);
-
+            CalcLPF(k, 'VARS', QDesireVVpu, ActorID);
             // Checks kVA (watt priority) and kvarlimit limits
-            Check_Qlimits(k, QDesireWPpu, ActorID);
-            QDesireEndpu := Min(abs(QDesireWPpu), abs(QDesireLimitedpu)) * sign(QDesireWPpu);
-
-            // Calculates QDesiredWP through the convergence algorithm
-            CalcWATTPF_vars(k, ActorID);
-
-            //--------------------------------------------- end Main process ---------------------------------------------//
-            // Sets PVSystem/Storage's pf_wp_nominal
-            if ControlledElement.DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).pf_wp_nominal := pf_wp_nominal
-            else TStorageObj(DERelem).kvarRequested := QDesiredWP;
-
-            // Sets PVSystem/Storage's kvar_out
-            if ControlledElement.DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredWP
-            else TStorageObj(DERelem).kvarRequested := QDesiredWP;
-
-            // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
-
-                if QDesiredWP >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
-              end
-            else
-              begin
-                TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
-
-                if QDesiredWP >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
-              end;
-
-            // Values used in convergence
-            QoutputVVpu := Qoutputpu;
-            FAvgpVpuPrior := FPresentVpu;
-
-            // Values used in CalcQVVcurve_desiredpu
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                QOld   := TPVSystemObj(DERelem).Presentkvar;
-                QOldVV := TPVSystemObj(DERelem).Presentkvar;
-
-              if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
-                                                    Format('WATTPF mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredWP, TPVSystemObj(DERelem).Presentkvar]),ActorID);
-              end
-            else
-              begin
-                QOld   := TStorageObj(DERelem).Presentkvar;
-                QOldVV := TStorageObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
-                                                    Format('WATTPF mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredWP, TStorageObj(DERelem).Presentkvar]),ActorID);
-
-              end;
+            Check_Qlimits(k, QDesireOptionpu, ActorID);
+            QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
           end
-
-        {Smart Inverter watt-var function}
-        else if(ControlMode = WATTVAR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
+        else if (RateofChangeMode = RISEFALL) then
           begin
-            // Set var mode to VARMODEKVAR to indicate we might change kvar
-
-            DERelem.Set_VWmode( FALSE );
-            DERelem.Set_Varmode( VARMODEKVAR );
-            DERelem.Set_WVmode( TRUE );
-
-
-            //--------------------------------------------- Main process ---------------------------------------------//
-
-            // Calculates QDesireWVpu
-            CalcQWVcurve_desiredpu(k, ActorID);
-
+            CalcRF(k, 'VARS', QDesireVVpu, ActorID);
             // Checks kVA (watt priority) and kvarlimit limits
-            Check_Qlimits_WV(k, QDesireWVpu, ActorID);
-            QDesireEndpu := Min(abs(QDesireWVpu), abs(QDesireLimitedpu)) * sign(QDesireWVpu);
-
-            // It checks kVA or Q limits and makes sure the final P and Q stay in the watt-var curve (PauloRadatz - 2/16/2021)
-            Calc_PQ_WV(k, ActorID);
-
-            //--------------------------------------------- end Main process ---------------------------------------------//
-
-            // Sets PVSystem/Storage's kvar_out
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                TPVSystemObj(DERelem).Presentkvar := QDesiredWV;
-                TPVSystemObj(DERelem).PresentkW := PLimitEndpu * Min(FkVARating, FDCkWRated);
-              end
-            else TStorageObj(DERelem).kvarRequested := QDesiredWV;
-
-            // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
-
-                if QDesiredWV >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
-              end
-            else
-              begin
-                TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
-
-                if QDesiredWV >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
-              end;
-
-            // Values used in convergence
-            QoutputVVpu := Qoutputpu;
-            FAvgpVpuPrior := FPresentVpu;
-
-            // Values used in CalcQVVcurve_desiredpu
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                QOld   := TPVSystemObj(DERelem).Presentkvar;
-                QOldVV := TPVSystemObj(DERelem).Presentkvar;
-
-              if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
-                                                    Format('WATTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredWV, TPVSystemObj(DERelem).Presentkvar]),ActorID);
-              end
-            else
-              begin
-                QOld   := TStorageObj(DERelem).Presentkvar;
-                QOldVV := TStorageObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
-                                                    Format('WATTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredWV, TStorageObj(DERelem).Presentkvar]),ActorID);
-
-              end;
+            Check_Qlimits(k, QDesireOptionpu, ActorID);
+            QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
           end
-
-        {Smart Inverter DRC function}
-        else if(ControlMode = DRC) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
+        else
           begin
-
-            // Set var mode to VARMODEKVAR to indicate we might change kvar
-            DERelem.Set_VWmode( FALSE );
-            DERelem.Set_Varmode( VARMODEKVAR );
-            DERelem.Set_DRCmode( TRUE );
-
-            //--------------------------------------------- Main process ---------------------------------------------//
-
-            // Calculates QDesireDRCpu
-            CalcQDRC_desiredpu(k, ActorID);
-
-            // LPF or RF activated
-            if (RateofChangeMode = LPF) then
-              begin
-                CalcLPF(k, 'VARS', QDesireDRCpu, ActorID);
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireOptionpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
-              end
-            else if (RateofChangeMode = RISEFALL) then
-              begin
-                CalcRF(k, 'VARS', QDesireDRCpu, ActorID);
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireOptionpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
-              end
-            else
-              begin
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireDRCpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireDRCpu), abs(QDesireLimitedpu)) * sign(QDesireDRCpu);
-              end;
-
-            // Calculates QDesiredDRC
-            CalcDRC_vars(k, ActorID);
-
-            //--------------------------------------------- end main process ---------------------------------------------//
-
-            // Sets DER kvar_out
-            if ControlledElement.DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredDRC
-            else TStorageObj(DERelem).kvarRequested := QDesiredDRC;
-
-            // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
-
-                if QDesiredDRC >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
-              end
-            else
-              begin
-                TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
-
-                if QDesiredDRC >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
-              end;
-
-            // Values used in convergence
-            QoutputDRCpu := Qoutputpu;
-            FAvgpDRCVpuPrior := FPresentDRCVpu;
-
-            // Values used in CalcDRC_vars
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                QOld    := TPVSystemObj(DERelem).Presentkvar;
-                QOldDRC := TPVSystemObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
-                                                    Format('DRC mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredDRC, TPVSystemObj(DERelem).Presentkvar]),ActorID);
-              end
-            else
-              begin
-                QOld    := TStorageObj(DERelem).Presentkvar;
-                QOldDRC := TStorageObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
-                                                    Format('DRC mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredDRC, TStorageObj(DERelem).Presentkvar]),ActorID);
-
-              end;
-          end
-
-        {Smart Inverter VV_DRC function}
-        else if(ControlMode = NONE_MODE) and (CombiControlMode = VV_DRC) and (PendingChange[k]=CHANGEDRCVVARLEVEL) then
-          begin
-
-            // Set var mode to VARMODEKVAR to indicate we might change kvar
-            DERelem.Set_VWmode( FALSE );
-            DERelem.Set_Varmode( VARMODEKVAR );
-            DERelem.Set_VVmode( TRUE );
-            DERelem.Set_DRCmode( TRUE );
-
-            //--------------------------------------------- Main process ---------------------------------------------//
-
-            // Calculates QDesireVVpu and  QDesireDRCpu
-            CalcQVVcurve_desiredpu(k, ActorID);
-            CalcQDRC_desiredpu(k, ActorID);
-
-            // LPF or RF activated
-            if (RateofChangeMode = LPF) then
-              begin
-                CalcLPF(k, 'VARS', QDesireVVpu + QDesireDRCpu, ActorID);
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireOptionpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
-              end
-            else if (RateofChangeMode = RISEFALL) then
-              begin
-                CalcRF(k, 'VARS', QDesireVVpu + QDesireDRCpu, ActorID);
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireOptionpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
-              end
-            else
-              begin
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireVVpu + QDesireDRCpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireVVpu + QDesireDRCpu), abs(QDesireLimitedpu)) * sign(QDesireVVpu + QDesireDRCpu);
-              end;
-
-            // Calculates QDesiredVVDRC
-            CalcVVDRC_vars(k,ActorID);
-
-            //--------------------------------------------- end main process ---------------------------------------------//
-
-            // Sets DER kvar_out
-            if ControlledElement.DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredVVDRC
-            else TStorageObj(DERelem).kvarRequested := QDesiredVVDRC;
-
-            // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
-
-                if QDesiredVVDRC >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
-              end
-            else
-              begin
-                TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
-
-                if QDesiredVVDRC >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
-              end;
-
-            // Values used in convergence
-            QoutputVVDRCpu := Qoutputpu;
-            FAvgpVpuPrior := FPresentVpu;
-            FAvgpDRCVpuPrior := FPresentDRCVpu;
-
-            // Values used in CalcQVVcurve_desiredpu and CalcVVDRC_vars
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                QOld      := TPVSystemObj(DERelem).Presentkvar;
-                QOldVVDRC := TPVSystemObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
-                                                    Format('**VV_DRC mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVVDRC, TPVSystemObj(DERelem).Presentkvar]),ActorID);
-              end
-            else
-              begin
-                QOld      := TStorageObj(DERelem).Presentkvar;
-                QOldVVDRC := TStorageObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
-                                                    Format('**VV_DRC mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVVDRC, TStorageObj(DERelem).Presentkvar]),ActorID);
-              end;
-          end
-
-        {Smart Inverter volt-watt function}
-        else if(ControlMode = VOLTWATT) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEWATTLEVEL) then
-          begin
-
-            DERelem.Set_VWmode( TRUE );
-            //--------------------------------------------- Main process ---------------------------------------------//
-
-            // Calculates QVWcurve_limitpu
-            CalcPVWcurve_limitpu(k, ActorID);
-
-            // LPF or RF activated
-            if (RateofChangeMode = LPF) then
-              begin
-                CalcLPF(k, 'WATTS', PLimitVWpu, ActorID);
-                // Checks kVA (var priority) and pctPmpp limits
-                Check_Plimits(k, PLimitOptionpu, ActorID);
-                PLimitEndpu := Min(PLimitLimitedpu, PLimitOptionpu);
-              end
-            else if (RateofChangeMode = RISEFALL) then
-              begin
-                CalcRF(k, 'WATTS', PLimitVWpu, ActorID);
-                // Checks kVA (var priority) and pctPmpp limits
-                Check_Plimits(k, PLimitOptionpu, ActorID);
-                PLimitEndpu := Min(PLimitLimitedpu, PLimitOptionpu);
-              end
-            else
-              begin
-                // Checks kVA (var priority) and pctPmpp limits
-                Check_Plimits(k, PLimitVWpu, ActorID);
-                PLimitEndpu := Min(abs(PLimitLimitedpu), abs(PLimitVWpu)) * sign(PLimitVWpu);
-              end;
-
-            // Calculates PLimitVW through the convergence algorithm
-            CalcVoltWatt_watts(k, ActorID);
-
-            //--------------------------------------------- end main process ---------------------------------------------//
-
-            // Sets DER kW_out
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                TPVSystemObj(DERelem).PresentkW := PLimitVW;
-
-                // Uptates PresentkW and Presentkvar considering watt and var priorities
-                TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
-
-              end
-            else
-              begin
-                TStorageObj(DERelem).kWRequested := PLimitVW;
-
-                // Uptates PresentkW and Presentkvar considering watt and var priorities
-                TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
-              end;
-
-
-            // Values used in convergence
-            FAvgpVpuPrior := FPresentVpu;
-            POldVWpu := PLimitVW / PBase;
-
-            // Flag has to do set to 0 when kW_out is lower than Ptemp (max power allowed from volt-watt function)
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                if ((abs(PLimitVW) > 0.0) and (abs(TPVSystemObj(DERelem).presentkW - PLimitVW) / PLimitVW > 0.0001)) then FVWOperation := 0; // 0.01% is the value chosen at the moment
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+TPVSystemObj(DERelem).QualifiedName,
-                                                    Format('**VOLTWATT mode set PVSystem kw output limit to **, kw= %.5g. Actual output is kw= %.5g.',
-                                                           [PLimitVW, TPVSystemObj(DERelem).presentkW]),ActorID);
-              end
-            else
-              begin
-                if abs(abs(TStorageObj(DERelem).presentkW) - PLimitVW) / PLimitVW > 0.0001 then FVWOperation := 0; // 0.01% is the value chosen at the moment
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+  TStorageObj(DERelem).QualifiedName,
-                                                    Format('**VOLTWATT mode set Storage kw output limit to ** kw= %.5g. Actual output is kw= %.5g.',
-                                                           [PLimitVW, TStorageObj(DERelem).presentkW]),ActorID);
-
-              end;
-          end
-
-        else if(ControlMode = NONE_MODE) and (CombiControlMode = VV_VW) and (PendingChange[k]=CHANGEWATTVARLEVEL) then
-          begin
-
-            DERelem.Set_VWmode( TRUE );
-            DERelem.Set_Varmode( VARMODEKVAR );
-            DERelem.Set_VVmode( TRUE );
-            //--------------------------------------------- Main process ---------------------------------------------//
-
-            // Calculates QDesireVVpu and QVWcurve_limitpu
-            CalcPVWcurve_limitpu(k, ActorID);
-            CalcQVVcurve_desiredpu(k, ActorID);
-
-            // LPF or RF activated
-            if (RateofChangeMode = LPF) then
-              begin
-                CalcLPF(k, 'VARS', QDesireVVpu, ActorID);
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireOptionpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
-
-                CalcLPF(k, 'WATTS', PLimitVWpu, ActorID);
-                // Checks kVA (var priority) and pctPmpp limits
-                Check_Plimits(k, PLimitOptionpu, ActorID);
-                PLimitEndpu := Min(PLimitLimitedpu, PLimitOptionpu);
-              end
-            else if (RateofChangeMode = RISEFALL) then
-              begin
-                CalcRF(k, 'VARS', QDesireVVpu, ActorID);
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireOptionpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
-
-                CalcRF(k, 'WATTS', PLimitVWpu, ActorID);
-                // Checks kVA (var priority) and pctPmpp limits
-                Check_Plimits(k, PLimitOptionpu, ActorID);
-                PLimitEndpu := Min(PLimitLimitedpu, PLimitOptionpu);
-              end
-            else
-              begin
-                // Checks kVA (watt priority) and kvarlimit limits
-                Check_Qlimits(k, QDesireVVpu, ActorID);
-                QDesireEndpu := Min(abs(QDesireVVpu), abs(QDesireLimitedpu)) * sign(QDesireVVpu);
-
-                // Checks kVA (var priority) and pctPmpp limits
-                Check_Plimits(k, PLimitVWpu, ActorID);
-                PLimitEndpu := Min(abs(PLimitLimitedpu), abs(PLimitVWpu)) * sign(PLimitVWpu);
-              end;
-
-            // Calculates PLimitVW and QDesiredVV through the convergence algorithm
-            CalcVoltWatt_watts(k, ActorID);
-            CalcVoltVar_vars(k, ActorID);
-
-            //--------------------------------------------- end main process ---------------------------------------------//
-
-            // Sets DER kvar_out and kW_out
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                TPVSystemObj(DERelem).Presentkvar := QDesiredVV;
-                TPVSystemObj(DERelem).presentkW   := PLimitVW;
-              end
-            else
-              begin
-                TStorageObj(DERelem).kvarRequested := QDesiredVV;
-                TStorageObj(DERelem).kWRequested   := PLimitVW;
-              end;
-
-            // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
-
-                if QDesiredVV >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
-              end
-            else
-              begin
-                TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
-
-                if QDesiredVV >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
-                else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
-              end;
-
-            // Values used in convergence
-            QoutputVVpu := Qoutputpu;
-            FAvgpVpuPrior := FPresentVpu;
-            POldVWpu := PLimitVW / PBase;
-
-            // Values used in CalcQVVcurve_desiredpu
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                QOld   := TPVSystemObj(DERelem).Presentkvar;
-                QOldVV := TPVSystemObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
-                                                    Format('**VV_VW mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVV, TPVSystemObj(DERelem).presentkvar]), ActorID);
-              end
-            else
-              begin
-                QOld   := TStorageObj(DERelem).Presentkvar;
-                QOldVV := TStorageObj(DERelem).Presentkvar;
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TStorageObj(DERelem).QualifiedName,
-                                                    Format('**VV_VW mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVV, TStorageObj(DERelem).presentkvar]), ActorID);
-              end;
-
-            // Flag has to do set to 0 when kW_out is lower than Ptemp (max power allowed from volt-watt function)
-            if ControlledElement.DSSClassName = 'PVSystem' then
-              begin
-                if abs(TPVSystemObj(DERelem).presentkW - PLimitVW) / PLimitVW > 0.0001 then FVWOperation := 0; // 0.01% is the value chosen at the moment
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+TPVSystemObj(DERelem).QualifiedName,
-                                                    Format('**VV_VW mode set PVSystem kw output limit to **, kw= %.5g. Actual output is kw= %.5g.',
-                                                           [PLimitVW, TPVSystemObj(DERelem).presentkW]),ActorID);
-              end
-            else
-              begin
-                if abs(abs(TStorageObj(DERelem).presentkW) - PLimitVW) / PLimitVW > 0.0001 then FVWOperation := 0; // 0.01% is the value chosen at the moment
-
-                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+  TStorageObj(DERelem).QualifiedName,
-                                    Format('**VV_VW mode set Storage kw output limit to** kw= %.5g. Actual output is kw= %.5g.',
-                                           [PLimitVW, TStorageObj(DERelem).presentkW]),ActorID);
-              end;
-
+            // Checks kVA (watt priority) and kvarlimit limits
+            Check_Qlimits(k, QDesireVVpu, ActorID);
+            QDesireEndpu := Min(abs(QDesireVVpu), abs(QDesireLimitedpu)) * sign(QDesireVVpu);
           end;
 
-        ActiveCircuit[ActorID].Solution.LoadsNeedUpdating := TRUE;
-        Set_PendingChange(NONE,k);
-        DERelem := Nil;
+        // Calculates QDesiredVV through the convergence algorithm
+        CalcVoltVar_vars(k, ActorID);
 
+        //--------------------------------------------- end Main process ---------------------------------------------//
+
+        // Sets PVSystem/Storage's kvar_out
+        if DERelem.DSSClassName = myDERTypes[PVSys] then TPVSystemObj(DERelem).Presentkvar := QDesiredVV
+        else TStorageObj(DERelem).kvarRequested := QDesiredVV;
+
+        // Uptates PresentkW and Presentkvar considering watt and var priorities
+        if DERelem.DSSClassName = myDERTypes[PVSys] then
+          begin
+            TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
+
+            if QDesiredVV >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
+            else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
+          end
+        else
+          begin
+            TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
+
+            if QDesiredVV >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
+            else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
+          end;
+
+        // Values used in convergence
+        QoutputVVpu := Qoutputpu;
+        FAvgpVpuPrior := FPresentVpu;
+
+        // Values used in CalcQVVcurve_desiredpu
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+          begin
+            QOld   := TPVSystemObj(DERelem).Presentkvar;
+            QOldVV := TPVSystemObj(DERelem).Presentkvar;
+
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                                Format('VOLTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                       [QDesiredVV, TPVSystemObj(DERelem).Presentkvar]),ActorID);
+          end
+        else
+          begin
+            QOld   := TStorageObj(DERelem).Presentkvar;
+            QOldVV := TStorageObj(DERelem).Presentkvar;
+
+            if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                                Format('VOLTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
+                                                       [QDesiredVV, TStorageObj(DERelem).Presentkvar]),ActorID);
+
+          end;
+      end
+//---------------------------------------------------------------------------------------------------------------------------------------//
+      {Smart Inverter active voltage regulation function}
+      else if(ControlMode = AVR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
+      begin
+        // Set var mode to VARMODEKVAR to indicate we might change kvar
+        DERelem.Set_VWmode( FALSE );
+        DERelem.Set_Varmode( VARMODEKVAR );
+        DERelem.Set_AVRmode( TRUE );
+        //--------------------------------------------- Main process ---------------------------------------------//
+
+        if ActiveCircuit[ActorID].Solution.ControlIteration = 1 then
+          begin
+            FAvgpVpuPrior := FPresentVpu;
+            FAvgpAVRVpuPrior := FPresentVpu;
+
+             // Sets PVSystem/Storage's kvar_out
+            if ControlledElement.DSSClassName = myDERTypes[PVSys] then TPVSystemObj(DERelem).Presentkvar := QHeadRoom / 2
+            else TStorageObj(DERelem).kvarRequested := QHeadRoom / 2;
+          end
+
+        else if ActiveCircuit[ActorID].Solution.ControlIteration = 2 then
+          begin
+            // Sets PVSystem/Storage's kvar_out
+            if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+              DQDV := abs(TPVSystemObj(DERelem).Presentkvar / QHeadRoom / (FPresentVpu - FAvgpVpuPrior))
+            else
+              DQDV := abs(TStorageObj(DERelem).kvarRequested / QHeadRoom / (FPresentVpu - FAvgpVpuPrior));
+          end
+
+        else
+          begin
+            // Calculates QDesireAVRpu
+            CalcQAVR_desiredpu(k, ActorID);
+
+
+            // Checks kVA (watt priority) and kvarlimit limits
+            Check_Qlimits(k, QDesireAVRpu, ActorID);
+            QDesireEndpu := Min(abs(QDesireAVRpu), abs(QDesireLimitedpu)) * sign(QDesireAVRpu);
+
+            if abs(QDesireEndpu - QDesireLimitedpu) < 0.05  then
+              Fv_setpointLimited := FPresentVpu
+            else
+              Fv_setpointLimited := Fv_setpoint;
+
+            // Calculates QDesiredVV through the convergence algorithm
+            CalcAVR_vars(k, ActorID);
+
+            //--------------------------------------------- end Main process ---------------------------------------------//
+
+            // Sets PVSystem/Storage's kvar_out
+            if ControlledElement.DSSClassName = myDERTypes[PVSys] then TPVSystemObj(DERelem).Presentkvar := QDesiredAVR
+            else TStorageObj(DERelem).kvarRequested := QDesiredAVR;
+
+            // Uptates PresentkW and Presentkvar considering watt and var priorities
+            if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+              begin
+                TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
+
+                if QDesiredAVR >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
+                else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
+              end
+            else
+              begin
+                TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
+
+                if QDesiredAVR >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
+                else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
+              end;
+
+          // Values used in convergence
+          QoutputAVRpu := Qoutputpu;
+          FAvgpVpuPrior := FPresentVpu;
+
+          // Values used in CalcQVVcurve_desiredpu
+          if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+            begin
+              QOld   := TPVSystemObj(DERelem).Presentkvar;
+              QOldAVR := TPVSystemObj(DERelem).Presentkvar;
+
+            if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                                  Format('VOLTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                         [QDesiredAVR, TPVSystemObj(DERelem).Presentkvar]),ActorID);
+            end
+          else
+            begin
+              QOld   := TStorageObj(DERelem).Presentkvar;
+              QOldAVR := TStorageObj(DERelem).Presentkvar;
+
+              if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                                  Format('VOLTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
+                                                         [QDesiredAVR, TStorageObj(DERelem).Presentkvar]),ActorID);
+
+            end;
+          end;
+      end
+//---------------------------------------------------------------------------------------------------------------------------------------//
+      {Smart Inverter watt-pf function}
+      else if(ControlMode = WATTPF) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
+      begin
+        // Set var mode to VARMODEKVAR to indicate we might change kvar
+
+        DERelem.Set_VWmode( FALSE );
+        DERelem.Set_Varmode( VARMODEKVAR );
+        DERelem.Set_WPmode( TRUE );
+
+        //--------------------------------------------- Main process ---------------------------------------------//
+
+        // Calculates QDesireWPpu
+        CalcQWPcurve_desiredpu(k, ActorID);
+
+        // Checks kVA (watt priority) and kvarlimit limits
+        Check_Qlimits(k, QDesireWPpu, ActorID);
+        QDesireEndpu := Min(abs(QDesireWPpu), abs(QDesireLimitedpu)) * sign(QDesireWPpu);
+
+        // Calculates QDesiredWP through the convergence algorithm
+        CalcWATTPF_vars(k, ActorID);
+
+        //--------------------------------------------- end Main process ---------------------------------------------//
+        // Sets PVSystem/Storage's pf_wp_nominal
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then TPVSystemObj(DERelem).pf_wp_nominal := pf_wp_nominal
+        else TStorageObj(DERelem).kvarRequested := QDesiredWP;
+
+        // Sets PVSystem/Storage's kvar_out
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then TPVSystemObj(DERelem).Presentkvar := QDesiredWP
+        else TStorageObj(DERelem).kvarRequested := QDesiredWP;
+
+        // Uptates PresentkW and Presentkvar considering watt and var priorities
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
+
+          if QDesiredWP >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
+        end
+        else
+        begin
+          TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
+
+          if QDesiredWP >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
+        end;
+
+        // Values used in convergence
+        QoutputVVpu := Qoutputpu;
+        FAvgpVpuPrior := FPresentVpu;
+
+        // Values used in CalcQVVcurve_desiredpu
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          QOld   := TPVSystemObj(DERelem).Presentkvar;
+          QOldVV := TPVSystemObj(DERelem).Presentkvar;
+
+        if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                              Format('WATTPF mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredWP, TPVSystemObj(DERelem).Presentkvar]),ActorID);
+        end
+        else
+        begin
+          QOld   := TStorageObj(DERelem).Presentkvar;
+          QOldVV := TStorageObj(DERelem).Presentkvar;
+
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                              Format('WATTPF mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredWP, TStorageObj(DERelem).Presentkvar]),ActorID);
+
+        end;
+      end
+//---------------------------------------------------------------------------------------------------------------------------------------//
+      {Smart Inverter watt-var function}
+      else if(ControlMode = WATTVAR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
+      begin
+        // Set var mode to VARMODEKVAR to indicate we might change kvar
+        DERelem.Set_VWmode( FALSE );
+        DERelem.Set_Varmode( VARMODEKVAR );
+        DERelem.Set_WVmode( TRUE );
+        //--------------------------------------------- Main process ---------------------------------------------//
+        // Calculates QDesireWVpu
+        CalcQWVcurve_desiredpu(k, ActorID);
+
+        // Checks kVA (watt priority) and kvarlimit limits
+        Check_Qlimits_WV(k, QDesireWVpu, ActorID);
+        QDesireEndpu := Min(abs(QDesireWVpu), abs(QDesireLimitedpu)) * sign(QDesireWVpu);
+
+        // It checks kVA or Q limits and makes sure the final P and Q stay in the watt-var curve (PauloRadatz - 2/16/2021)
+        Calc_PQ_WV(k, ActorID);
+
+        //--------------------------------------------- end Main process ---------------------------------------------//
+
+        // Sets PVSystem/Storage's kvar_out
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          TPVSystemObj(DERelem).Presentkvar := QDesiredWV;
+          TPVSystemObj(DERelem).PresentkW := PLimitEndpu * Min(FkVARating, FDCkWRated);
+        end
+        else TStorageObj(DERelem).kvarRequested := QDesiredWV;
+
+        // Uptates PresentkW and Presentkvar considering watt and var priorities
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
+
+          if QDesiredWV >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
+        end
+        else
+        begin
+          TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
+
+          if QDesiredWV >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
+        end;
+
+        // Values used in convergence
+        QoutputVVpu := Qoutputpu;
+        FAvgpVpuPrior := FPresentVpu;
+
+        // Values used in CalcQVVcurve_desiredpu
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          QOld   := TPVSystemObj(DERelem).Presentkvar;
+          QOldVV := TPVSystemObj(DERelem).Presentkvar;
+
+        if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                              Format('WATTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredWV, TPVSystemObj(DERelem).Presentkvar]),ActorID);
+        end
+        else
+        begin
+          QOld   := TStorageObj(DERelem).Presentkvar;
+          QOldVV := TStorageObj(DERelem).Presentkvar;
+
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                              Format('WATTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredWV, TStorageObj(DERelem).Presentkvar]),ActorID);
+
+        end;
+      end
+
+      {Smart Inverter DRC function}
+      else if(ControlMode = DRC) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
+      begin
+
+        // Set var mode to VARMODEKVAR to indicate we might change kvar
+        DERelem.Set_VWmode( FALSE );
+        DERelem.Set_Varmode( VARMODEKVAR );
+        DERelem.Set_DRCmode( TRUE );
+
+        //--------------------------------------------- Main process ---------------------------------------------//
+
+        // Calculates QDesireDRCpu
+        CalcQDRC_desiredpu(k, ActorID);
+
+        // LPF or RF activated
+        if (RateofChangeMode = LPF) then
+        begin
+          CalcLPF(k, 'VARS', QDesireDRCpu, ActorID);
+          // Checks kVA (watt priority) and kvarlimit limits
+          Check_Qlimits(k, QDesireOptionpu, ActorID);
+          QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
+        end
+        else if (RateofChangeMode = RISEFALL) then
+        begin
+          CalcRF(k, 'VARS', QDesireDRCpu, ActorID);
+          // Checks kVA (watt priority) and kvarlimit limits
+          Check_Qlimits(k, QDesireOptionpu, ActorID);
+          QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
+        end
+        else
+        begin
+          // Checks kVA (watt priority) and kvarlimit limits
+          Check_Qlimits(k, QDesireDRCpu, ActorID);
+          QDesireEndpu := Min(abs(QDesireDRCpu), abs(QDesireLimitedpu)) * sign(QDesireDRCpu);
+        end;
+
+        // Calculates QDesiredDRC
+        CalcDRC_vars(k, ActorID);
+
+        //--------------------------------------------- end main process ---------------------------------------------//
+
+        // Sets DER kvar_out
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then TPVSystemObj(DERelem).Presentkvar := QDesiredDRC
+        else TStorageObj(DERelem).kvarRequested := QDesiredDRC;
+
+        // Uptates PresentkW and Presentkvar considering watt and var priorities
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
+
+          if QDesiredDRC >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
+        end
+        else
+        begin
+          TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
+
+          if QDesiredDRC >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
+        end;
+
+        // Values used in convergence
+        QoutputDRCpu := Qoutputpu;
+        FAvgpDRCVpuPrior := FPresentDRCVpu;
+
+        // Values used in CalcDRC_vars
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          QOld    := TPVSystemObj(DERelem).Presentkvar;
+          QOldDRC := TPVSystemObj(DERelem).Presentkvar;
+
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                              Format('DRC mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredDRC, TPVSystemObj(DERelem).Presentkvar]),ActorID);
+        end
+        else
+        begin
+          QOld    := TStorageObj(DERelem).Presentkvar;
+          QOldDRC := TStorageObj(DERelem).Presentkvar;
+
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                              Format('DRC mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredDRC, TStorageObj(DERelem).Presentkvar]),ActorID);
+
+        end;
+      end
+//---------------------------------------------------------------------------------------------------------------------------------------//
+      {Smart Inverter VV_DRC function}
+      else if(ControlMode = NONE_MODE) and (CombiControlMode = VV_DRC) and (PendingChange[k]=CHANGEDRCVVARLEVEL) then
+      begin
+        // Set var mode to VARMODEKVAR to indicate we might change kvar
+        DERelem.Set_VWmode( FALSE );
+        DERelem.Set_Varmode( VARMODEKVAR );
+        DERelem.Set_VVmode( TRUE );
+        DERelem.Set_DRCmode( TRUE );
+        //--------------------------------------------- Main process ---------------------------------------------//
+        // Calculates QDesireVVpu and  QDesireDRCpu
+        CalcQVVcurve_desiredpu(k, ActorID);
+        CalcQDRC_desiredpu(k, ActorID);
+        // LPF or RF activated
+        if (RateofChangeMode = LPF) then
+        begin
+          CalcLPF(k, 'VARS', QDesireVVpu + QDesireDRCpu, ActorID);
+          // Checks kVA (watt priority) and kvarlimit limits
+          Check_Qlimits(k, QDesireOptionpu, ActorID);
+          QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
+        end
+        else if (RateofChangeMode = RISEFALL) then
+        begin
+          CalcRF(k, 'VARS', QDesireVVpu + QDesireDRCpu, ActorID);
+          // Checks kVA (watt priority) and kvarlimit limits
+          Check_Qlimits(k, QDesireOptionpu, ActorID);
+          QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
+        end
+        else
+        begin
+          // Checks kVA (watt priority) and kvarlimit limits
+          Check_Qlimits(k, QDesireVVpu + QDesireDRCpu, ActorID);
+          QDesireEndpu := Min(abs(QDesireVVpu + QDesireDRCpu), abs(QDesireLimitedpu)) * sign(QDesireVVpu + QDesireDRCpu);
+        end;
+        // Calculates QDesiredVVDRC
+        CalcVVDRC_vars(k,ActorID);
+        //--------------------------------------------- end main process ---------------------------------------------//
+        // Sets DER kvar_out
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then TPVSystemObj(DERelem).Presentkvar := QDesiredVVDRC
+        else TStorageObj(DERelem).kvarRequested := QDesiredVVDRC;
+        // Uptates PresentkW and Presentkvar considering watt and var priorities
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
+
+          if QDesiredVVDRC >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
+        end
+        else
+        begin
+          TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
+
+          if QDesiredVVDRC >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
+        end;
+        // Values used in convergence
+        QoutputVVDRCpu := Qoutputpu;
+        FAvgpVpuPrior := FPresentVpu;
+        FAvgpDRCVpuPrior := FPresentDRCVpu;
+        // Values used in CalcQVVcurve_desiredpu and CalcVVDRC_vars
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          QOld      := TPVSystemObj(DERelem).Presentkvar;
+          QOldVVDRC := TPVSystemObj(DERelem).Presentkvar;
+
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                              Format('**VV_DRC mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredVVDRC, TPVSystemObj(DERelem).Presentkvar]),ActorID);
+        end
+        else
+        begin
+          QOld      := TStorageObj(DERelem).Presentkvar;
+          QOldVVDRC := TStorageObj(DERelem).Presentkvar;
+
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                              Format('**VV_DRC mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredVVDRC, TStorageObj(DERelem).Presentkvar]),ActorID);
+        end;
+      end
+//---------------------------------------------------------------------------------------------------------------------------------------//
+      {Smart Inverter volt-watt function}
+      else if(ControlMode = VOLTWATT) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEWATTLEVEL) then
+      begin
+         DERelem.Set_VWmode( TRUE );
+        //--------------------------------------------- Main process ---------------------------------------------//
+        // Calculates QVWcurve_limitpu
+        CalcPVWcurve_limitpu(k, ActorID);
+        // LPF or RF activated
+        if (RateofChangeMode = LPF) then
+        begin
+          CalcLPF(k, 'WATTS', PLimitVWpu, ActorID);
+          // Checks kVA (var priority) and pctPmpp limits
+          Check_Plimits(k, PLimitOptionpu, ActorID);
+          PLimitEndpu := Min(PLimitLimitedpu, PLimitOptionpu);
+        end
+        else if (RateofChangeMode = RISEFALL) then
+        begin
+          CalcRF(k, 'WATTS', PLimitVWpu, ActorID);
+          // Checks kVA (var priority) and pctPmpp limits
+          Check_Plimits(k, PLimitOptionpu, ActorID);
+          PLimitEndpu := Min(PLimitLimitedpu, PLimitOptionpu);
+        end
+        else
+        begin
+          // Checks kVA (var priority) and pctPmpp limits
+          Check_Plimits(k, PLimitVWpu, ActorID);
+          PLimitEndpu := Min(abs(PLimitLimitedpu), abs(PLimitVWpu)) * sign(PLimitVWpu);
+        end;
+        // Calculates PLimitVW through the convergence algorithm
+        CalcVoltWatt_watts(k, ActorID);
+        //--------------------------------------------- end main process ---------------------------------------------//
+        // Sets DER kW_out
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          TPVSystemObj(DERelem).PresentkW := PLimitVW;
+          // Uptates PresentkW and Presentkvar considering watt and var priorities
+          TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
+        end
+        else
+        begin
+          TStorageObj(DERelem).kWRequested := PLimitVW;
+          // Uptates PresentkW and Presentkvar considering watt and var priorities
+          TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
+        end;
+        // Values used in convergence
+        FAvgpVpuPrior := FPresentVpu;
+        POldVWpu := PLimitVW / PBase;
+        // Flag has to do set to 0 when kW_out is lower than Ptemp (max power allowed from volt-watt function)
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          if ((abs(PLimitVW) > 0.0) and (abs(TPVSystemObj(DERelem).presentkW - PLimitVW) / PLimitVW > 0.0001)) then FVWOperation := 0; // 0.01% is the value chosen at the moment
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+TPVSystemObj(DERelem).QualifiedName,
+                                              Format('**VOLTWATT mode set PVSystem kw output limit to **, kw= %.5g. Actual output is kw= %.5g.',
+                                                     [PLimitVW, TPVSystemObj(DERelem).presentkW]),ActorID);
+        end
+        else
+        begin
+          if abs(abs(TStorageObj(DERelem).presentkW) - PLimitVW) / PLimitVW > 0.0001 then FVWOperation := 0; // 0.01% is the value chosen at the moment
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+  TStorageObj(DERelem).QualifiedName,
+                                              Format('**VOLTWATT mode set Storage kw output limit to ** kw= %.5g. Actual output is kw= %.5g.',
+                                                     [PLimitVW, TStorageObj(DERelem).presentkW]),ActorID);
+        end;
+      end
+//---------------------------------------------------------------------------------------------------------------------------------------//
+      else if(ControlMode = NONE_MODE) and (CombiControlMode = VV_VW) and (PendingChange[k]=CHANGEWATTVARLEVEL) then
+      begin
+        DERelem.Set_VWmode( TRUE );
+        DERelem.Set_Varmode( VARMODEKVAR );
+        DERelem.Set_VVmode( TRUE );
+        //--------------------------------------------- Main process ---------------------------------------------//
+        // Calculates QDesireVVpu and QVWcurve_limitpu
+        CalcPVWcurve_limitpu(k, ActorID);
+        CalcQVVcurve_desiredpu(k, ActorID);
+        // LPF or RF activated
+        if (RateofChangeMode = LPF) then
+        begin
+          CalcLPF(k, 'VARS', QDesireVVpu, ActorID);
+          // Checks kVA (watt priority) and kvarlimit limits
+          Check_Qlimits(k, QDesireOptionpu, ActorID);
+          QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
+          CalcLPF(k, 'WATTS', PLimitVWpu, ActorID);
+          // Checks kVA (var priority) and pctPmpp limits
+          Check_Plimits(k, PLimitOptionpu, ActorID);
+          PLimitEndpu := Min(PLimitLimitedpu, PLimitOptionpu);
+        end
+        else if (RateofChangeMode = RISEFALL) then
+        begin
+          CalcRF(k, 'VARS', QDesireVVpu, ActorID);
+          // Checks kVA (watt priority) and kvarlimit limits
+          Check_Qlimits(k, QDesireOptionpu, ActorID);
+          QDesireEndpu := Min(abs(QDesireLimitedpu), abs(QDesireOptionpu)) * sign(QDesireOptionpu);
+          CalcRF(k, 'WATTS', PLimitVWpu, ActorID);
+          // Checks kVA (var priority) and pctPmpp limits
+          Check_Plimits(k, PLimitOptionpu, ActorID);
+          PLimitEndpu := Min(PLimitLimitedpu, PLimitOptionpu);
+        end
+        else
+        begin
+          // Checks kVA (watt priority) and kvarlimit limits
+          Check_Qlimits(k, QDesireVVpu, ActorID);
+          QDesireEndpu := Min(abs(QDesireVVpu), abs(QDesireLimitedpu)) * sign(QDesireVVpu);
+          // Checks kVA (var priority) and pctPmpp limits
+          Check_Plimits(k, PLimitVWpu, ActorID);
+          PLimitEndpu := Min(abs(PLimitLimitedpu), abs(PLimitVWpu)) * sign(PLimitVWpu);
+        end;
+        // Calculates PLimitVW and QDesiredVV through the convergence algorithm
+        CalcVoltWatt_watts(k, ActorID);
+        CalcVoltVar_vars(k, ActorID);
+        //--------------------------------------------- end main process ---------------------------------------------//
+        // Sets DER kvar_out and kW_out
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          TPVSystemObj(DERelem).Presentkvar := QDesiredVV;
+          TPVSystemObj(DERelem).presentkW   := PLimitVW;
+        end
+        else
+        begin
+          TStorageObj(DERelem).kvarRequested := QDesiredVV;
+          TStorageObj(DERelem).kWRequested   := PLimitVW;
+        end;
+        // Uptates PresentkW and Presentkvar considering watt and var priorities
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          TPVSystemObj(DERelem).SetNominalPVSystemOuput(ActorID);
+          if QDesiredVV >= 0.0 then Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg;
+        end
+        else
+        begin
+          TStorageObj(DERelem).SetNominalStorageOutput(ActorID);
+          if QDesiredVV >= 0.0 then Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroom
+          else Qoutputpu := TStorageObj(DERelem).Presentkvar / QHeadroomNeg;
+        end;
+        // Values used in convergence
+        QoutputVVpu := Qoutputpu;
+        FAvgpVpuPrior := FPresentVpu;
+        POldVWpu := PLimitVW / PBase;
+        // Values used in CalcQVVcurve_desiredpu
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          QOld   := TPVSystemObj(DERelem).Presentkvar;
+          QOldVV := TPVSystemObj(DERelem).Presentkvar;
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                              Format('**VV_VW mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredVV, TPVSystemObj(DERelem).presentkvar]), ActorID);
+        end
+        else
+        begin
+          QOld   := TStorageObj(DERelem).Presentkvar;
+          QOldVV := TStorageObj(DERelem).Presentkvar;
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TStorageObj(DERelem).QualifiedName,
+                                              Format('**VV_VW mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                     [QDesiredVV, TStorageObj(DERelem).presentkvar]), ActorID);
+        end;
+        // Flag has to do set to 0 when kW_out is lower than Ptemp (max power allowed from volt-watt function)
+        if ControlledElement.DSSClassName = myDERTypes[PVSys] then
+        begin
+          if abs(TPVSystemObj(DERelem).presentkW - PLimitVW) / PLimitVW > 0.0001 then FVWOperation := 0; // 0.01% is the value chosen at the moment
+
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+TPVSystemObj(DERelem).QualifiedName,
+                                              Format('**VV_VW mode set PVSystem kw output limit to **, kw= %.5g. Actual output is kw= %.5g.',
+                                                     [PLimitVW, TPVSystemObj(DERelem).presentkW]),ActorID);
+        end
+        else
+        begin
+          if abs(abs(TStorageObj(DERelem).presentkW) - PLimitVW) / PLimitVW > 0.0001 then FVWOperation := 0; // 0.01% is the value chosen at the moment
+
+          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+  TStorageObj(DERelem).QualifiedName,
+                              Format('**VV_VW mode set Storage kw output limit to** kw= %.5g. Actual output is kw= %.5g.',
+                                     [PLimitVW, TStorageObj(DERelem).presentkW]),ActorID);
+        end;
+      end
+//---------------------------------------------------------------------------------------------------------------------------------------//
+//    Grid forming inverter
+      else if(ControlMode = GFM) then
+      begin
+        DER_OL                                      :=  False;
+        if ControlledElement.GFM_Mode then
+        Begin
+          if ( ControlledElement.DSSClassName = myDERTypes[EStorage] ) then
+          Begin
+            if TStorageObj(ControlledElement).CheckOLInverter(ActorID) then
+            Begin
+              DER_OL                                      :=  True;
+              TStorageObj(ControlledElement).StorageState :=  0;  // It's burning, Turn it off
+              TStorageObj(ControlledElement).StateChanged :=  TRUE;
+            End;
+          End
+          else
+            DER_OL                                     := TPVSystemObj(ControlledElement).CheckOLInverter(ActorID);
+
+          if DER_OL then
+          Begin
+            ControlledElement.GFM_Mode                  := False;
+            ControlledElement.YprimInvalid[ActorID]     := TRUE;
+          End;
+        End;
       end;
-    end;
 
+      ActiveCircuit[ActorID].Solution.LoadsNeedUpdating := TRUE;
+      Set_PendingChange(NONE,k);
+      DERelem := Nil;
+
+    end;
+  end;
 end;
+
 
 procedure TInvControlObj.GetmonVoltage(ActorID : Integer; var Vpresent: Double; i: Integer; BasekV: Double);
   Var
@@ -2256,11 +2242,16 @@ procedure TInvControlObj.UpdateDERParameters(i: Integer);
 procedure TInvControlObj.Sample(ActorID : Integer);
 
 VAR
-  i                           :Integer;
-  basekV                      :Double;
-  Vpresent                    :Double;
-  PVSys                       :TPVSystemObj;
-  Storage                     :TStorageObj;
+
+  Valid                       : Boolean;
+  idx,
+  i                           : Integer;
+  myTol,
+  myError,
+  basekV,
+  Vpresent                    : Double;
+  PVSys                       : TPVSystemObj;
+  Storage                     : TStorageObj;
 
 begin
   PVSys:=nil;Storage:=nil;
@@ -2738,6 +2729,30 @@ begin
 
                             end;
                       end;
+
+          GFM:        Begin
+                        with ActiveCircuit[ActorID].Solution do
+                        Begin
+                          if ControlledElement.GFM_Mode then
+                          Begin
+                            // Check of it's in GFM mode
+                            if ControlledELement.DSSClassName = myDERTypes[EStorage] then                              // storage case
+                            Begin
+                              if ( TStorageObj(ControlledElement).StorageState = 1 ) then                       // Check if it's in discharging mode
+                                Valid   :=  TStorageObj(ControlledElement).CheckOLInverter(ActorID)             // Checks if Inv OL
+                            End
+                            else                                                                                // PVSystem case
+                              Valid   :=  TPVSystemObj(ControlledElement).CheckOLInverter(ActorID);             // Checks if Inv OL
+
+                            if Valid then
+                            Begin
+                              with  ActiveCircuit[ActorID].Solution.DynaVars do
+                                ControlActionHandle := ActiveCircuit[ActorID].ControlQueue.Push
+                                (intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
+                            End;
+                          End;
+                        End;
+                      End
           else
             {do nothing}
           end;
