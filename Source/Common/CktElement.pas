@@ -110,6 +110,8 @@ TYPE
                              // Accessing app has to know the structure
                              // Inited to Nil.  If Nil, accessing app should ignore
 
+      GFM_Mode         : Boolean; // To indicate if the PCE (normally IBR) is working in Grod forming inverter mode
+
       constructor Create(ParClass:TDSSClass);
       destructor Destroy; override;
 
@@ -211,8 +213,9 @@ Begin
      IsMonitored    := FALSE;
      IsPartofFeeder := False;
      IsIsolated     := FALSE;
+     GFM_Mode       := FALSE;
 
-     Drawn             := False;
+     Drawn          := False;
 
      // Make list for a small number of controls with an increment of 1
      ControlElementList := PointerList.TPointerList.Create(1);

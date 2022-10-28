@@ -229,7 +229,8 @@ uses
   WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
   WindGenVars in '..\PCElements\WindGenVars.pas',
   DynamicExp in '..\General\DynamicExp.pas',
-  InvDynamics in '..\Shared\InvDynamics.pas';
+  InvDynamics in '..\Shared\InvDynamics.pas',
+  GenController in '..\Controls\GenController.pas';
 
 //**************************end of the functions*************************************
 exports
