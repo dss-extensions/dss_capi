@@ -671,7 +671,8 @@ FUNCTION TPVsystem.Edit(ActorID : Integer):Integer;
   VAR
     VarIdx,
     i, iCase, ParamPointer    : Integer;
-    ParamName                 : String;
+    TmpStr,
+    ParamName,
     Param                     : String;
   Begin
   // continue parsing with contents of Parser
@@ -773,12 +774,14 @@ FUNCTION TPVsystem.Edit(ActorID : Integer):Integer;
                 propGFM           : Begin
                                       if lowercase(Parser[ActorID].StrValue) = 'gfm' then
                                       Begin
-                                        GFM_mode  :=  True;
+                                        GFM_mode            :=  True;               // Enables GFM mode for this IBR
                                         if length( myDynVars.Vgrid ) < NPhases then
                                           setlength( myDynVars.Vgrid, NPhases );  // Used to store the voltage per phase
                                       End
                                       else
+                                      Begin
                                         GFM_mode  :=  False;
+                                      End;
                                       YprimInvalid[ActorID] :=  True;
                                     End
 
@@ -996,28 +999,28 @@ Constructor TPVsystemObj.Create(ParClass:TDSSClass; const SourceName:String);
     CurrentLimited                := FALSE;
     With PVSystemVars, myDynVars Do
     Begin
-      FTemperature              := 25.0;
-      FIrradiance               := 1.0;  // kW/sq-m
-      FkVArating                := 500.0;
-      FPmpp                     := 500.0;
-      FpuPmpp                   := 1.0;    // full on
-      Vreg                      := 9999;
-      Vavg                      := 9999;
-      VVOperation               := 9999;
-      VWOperation               := 9999;
-      DRCOperation              := 9999;
-      VVDRCOperation            := 9999;
-      WPOperation               := 9999;
-      WVOperation               := 9999;
+      FTemperature              :=  25.0;
+      FIrradiance               :=  1.0;  // kW/sq-m
+      FkVArating                :=  500.0;
+      FPmpp                     :=  500.0;
+      FpuPmpp                   :=  1.0;    // full on
+      Vreg                      :=  9999;
+      Vavg                      :=  9999;
+      VVOperation               :=  9999;
+      VWOperation               :=  9999;
+      DRCOperation              :=  9999;
+      VVDRCOperation            :=  9999;
+      WPOperation               :=  9999;
+      WVOperation               :=  9999;
       //         kW_out_desired  :=9999;
-      Fkvarlimit                := FkVArating;
-      Fkvarlimitneg             := FkVArating;
-      P_Priority                := FALSE;    // This is a change from older versions
-      PF_Priority               := FALSE;
-      RatedVDC                  := 8000;
-      SMThreshold               := 80;
-      SafeMode                  := False;
-      kP                        := 0.00001;
+      Fkvarlimit                :=  FkVArating;
+      Fkvarlimitneg             :=  FkVArating;
+      P_Priority                :=  FALSE;    // This is a change from older versions
+      PF_Priority               :=  FALSE;
+      RatedVDC                  :=  8000;
+      SMThreshold               :=  80;
+      SafeMode                  :=  False;
+      kP                        :=  0.00001;
     End;
     FpctCutIn                     := 20.0;
     FpctCutOut                    := 20.0;
@@ -1028,7 +1031,7 @@ Constructor TPVsystemObj.Create(ParClass:TDSSClass; const SourceName:String);
     kW_out                        := 500.0;
     kvar_out                      := 0.0;
     PFnominal                     := 1.0;
-    pctR                          := 50.0;;
+    pctR                          := 50.0;
     pctX                          := 0.0;
     PublicDataStruct              := @PVSystemVars;
     PublicDataSize                := SizeOf(TPVSystemVars);
@@ -1191,7 +1194,7 @@ PROCEDURE TPVsystemObj.CalcDailyTemperature(Hr: double);
       Begin
         TShapeValue := DailyTShapeObj.GetTemperature(Hr);
       End
-    ELSE TShapeValue := PVSystemVars.FTemperature;;  // Default to no  variation
+    ELSE TShapeValue := PVSystemVars.FTemperature;  // Default to no  variation
   end;
 PROCEDURE TPVsystemObj.CalcDutyMult(Hr:Double);
   Begin

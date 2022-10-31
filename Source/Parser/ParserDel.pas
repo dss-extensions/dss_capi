@@ -681,7 +681,7 @@ Begin
                ConvertError := TRUE;
                Raise EParserProblem.Create('Integer number conversion error for string: "'+TokenBuffer+'"');
              End
-             Else Result := Round(Temp);;
+             Else Result := Round(Temp);
          End;
      End;
 End;

@@ -130,7 +130,7 @@ Begin
                       'Do "Show Monitor MyMonitor" to see channel definitions.';
       PlotHelp[14] := 'Array of base values for each channel for monitor plot. Useful for creating per unit plots. Default is 1.0 for each channel.  Set Base= property after defining channels.'+CRLF+CRLF+
                       'Plot Type=Monitor Object=MyMonitor Channels=[1, 3, 5] Bases=[2400 2400 2400]'+CRLF+CRLF+
-                      'Do "Show Monitor MyMonitor" to see channel range and definitions.';;
+                      'Do "Show Monitor MyMonitor" to see channel range and definitions.';
       PlotHelp[15] := '{Yes | No*} Displays a marker at each transformer declared to be a substation. ' +
                       'At least one bus coordinate must be defined for the transformer. '+
                       'See MarkTransformer and TransMarkerCode options.';
