@@ -1531,7 +1531,7 @@ Begin
                For i := 1 to NumNodesThisBus Do
                Begin
                   IF MaxCurr < Cabs(BusCurrent^[i])
-                  THEN MaxCurr := Cabs(BusCurrent^[i]);;
+                  THEN MaxCurr := Cabs(BusCurrent^[i]);
                End;
                Write(F, Separator, maxCurr:10:0);
 

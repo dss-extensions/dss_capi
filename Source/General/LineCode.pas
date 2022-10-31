@@ -857,7 +857,7 @@ begin
 
    End Else Begin
        DoSimpleMsg('Cannot perform Kron Reduction on a 1-phase LineCode: LineCode.'+Name, 103);
-   End;;
+   End;
 
 end;
 

@@ -219,7 +219,7 @@ begin
             end
             Else Begin
                 FID := FNew( CallBackRoutines);  // Create new instance of user model
-            End;;
+            End;
         End;
 end;
 

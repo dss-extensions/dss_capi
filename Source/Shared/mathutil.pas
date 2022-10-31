@@ -449,7 +449,7 @@ Begin
       Result := A.im/A.re;
       If Abs(Result)>9999.0 Then Result := 9999.0;
     End
-    Else Result := 9999.0;;
+    Else Result := 9999.0;
 
 
 End;
