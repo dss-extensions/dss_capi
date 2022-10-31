@@ -234,36 +234,38 @@ uses DSSGlobals;
   Begin
     Z    := TCmatrix.CreateMatrix(YMatrix^.Order);
 
-    X1    := ( Sqr(BasekV) / ISP ) / Sqrt(1.0 + 0.0625);
+    X1    := ( Sqr( BasekV ) / ISP ) / Sqrt(1.0 + 0.0625);
     R1    := X1 /4; // Uses defaults
     R2    := R1;     // default Z2 = Z1
     X2    := X1;
     Isc1  := ( ISP * 1000.0 / ( sqrt(3) * BasekV ) ) / NPhases;
   //  Compute R0, X0
     a     :=  10;
-    b     :=  (4.0*(R1 + X1 * 3));
-    c     :=  (4.0 * (R1*R1 + X1*X1)- SQR( ( sqrt(3) * BasekV * 1000.0 ) / Isc1));
+    b     :=  ( 4.0*( R1 + X1 * 3 ) );
+    c     :=  ( 4.0 * ( R1*R1 + X1*X1 )- SQR( ( sqrt(3) * BasekV * 1000.0 ) / Isc1));
     R0    := QuadSolver( a, b, c );
     X0    := R0 * 3;
     // for Z matrix
-    Xs    := (2.0 * X1 + X0) / 3.0;
-    Rs    := (2.0 * R1 + R0) / 3.0;
-    Rm    := (R0 - R1) / 3.0;
-    Xm    := (X0 - X1) / 3.0;
-    Zs    :=  cmplx(Rs, Xs);
-    Zm    :=  cmplx(Rm, Xm);
+    Xs    := ( 2.0 * X1 + X0 ) / 3.0;
+    Rs    := ( 2.0 * R1 + R0 ) / 3.0;
+    Rm    := ( R0 - R1 ) / 3.0;
+    Xm    := ( X0 - X1 ) / 3.0;
+    Zs    :=  cmplx( Rs, Xs );
+    Zm    :=  cmplx( Rm, Xm );
 
     FOR i := 1 to NPhases DO Begin
-       Z.SetElement(i, i, Zs);
+       Z.SetElement( i, i, Zs );
        FOR j := 1 to i-1 DO Begin
-           Z.SetElemsym(i, j, Zm);
+           Z.SetElemsym( i, j, Zm );
        End;
     End;
 
     Z.Invert();
     YMatrix^.CopyFrom(Z);
   End;
-
+//---------------------------------------------------------------------------------------
+//|   Calculates the voltage magnitudes and angles for facilitating GFM control mode    |
+//---------------------------------------------------------------------------------------
   Procedure TInvDynamicVars.CalcGFMVoltage(ActorID, NPhases : Integer; x : pComplexArray);
   var
     refAngle  : Double;
@@ -271,7 +273,7 @@ uses DSSGlobals;
   Begin
     refAngle  :=  0;
     FOR i := 1 to NPhases Do
-      x^[i] :=  pdegtocomplex(BasekV, ( 360.0 + refAngle - ( ( i-1 ) * 360.0 ) / NPhases ) );
+      x^[i] :=  pdegtocomplex( BasekV, ( 360.0 + refAngle - ( ( i - 1 ) * 360.0 ) / NPhases ) );
   End;
 
 end.

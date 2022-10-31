@@ -1035,7 +1035,7 @@ function TInvControl.MakeLike(const InvControlName:String):Integer;
 
             FVBase                      :=  OtherInvControl.CtrlVars[i].FVBase;
             FVarFollowInverter          :=  OtherInvControl.CtrlVars[i].FVarFollowInverter;
-            FInverterON                 :=  OtherInvControl.CtrlVars[i].FInverterON;;
+            FInverterON                 :=  OtherInvControl.CtrlVars[i].FInverterON;
             FpresentkW                  :=  OtherInvControl.CtrlVars[i].FpresentkW;
             FkVARating                  :=  OtherInvControl.CtrlVars[i].FkVARating;
             Fpresentkvar                :=  OtherInvControl.CtrlVars[i].Fpresentkvar;
@@ -2441,7 +2441,7 @@ begin
                               (intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
                             if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement.QualifiedName,
                                                                   Format('**Ready to change VV_VW output due to volt-watt trigger**, Vavgpu= %.5g, VPriorpu=%.5g',
-                                                                         [FPresentVpu,FAvgpVpuPrior]),ActorID);;
+                                                                         [FPresentVpu,FAvgpVpuPrior]),ActorID);
                           end;
 
                           //Trigger from volt-var mode

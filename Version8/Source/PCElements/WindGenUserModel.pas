@@ -215,7 +215,7 @@ begin
             end
             Else Begin
                 FID := FNew(FActiveWindGenVars^, ActiveCircuit[ActiveActor].Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
-            End;;
+            End;
         End;
 end;
 
