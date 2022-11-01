@@ -43,6 +43,8 @@ Procedure ShowEventLog(FileNm:String);
 
 implementation
 
+{$DEFINE  NOXRDEBUG} {XRDEBUG, NOXRDEBUG}
+
 Uses uComplex,  Arraydef,  sysutils, Circuit, DSSClass, DSSClassDefs, DSSGlobals,
      uCMatrix,  solution,  CktElement, Utilities, Bus, MathUtil,
      PDElement, PCElement, Generator, Transformer, EnergyMeter, Load, RegControl,
@@ -1584,6 +1586,10 @@ Var
    CurrMag :Double;
    S       :String;
 
+   Zbus    :Complex;
+   Vpolar  :Polar;
+   Ipolar  :Polar;
+
 Begin
 
   {$IFDEF FPC}initialize(Vfault);{$ENDIF}
@@ -1608,14 +1614,38 @@ Begin
            FOR iBus := 1 to NumBuses DO
            {Bus Norton Equivalent Current, Isc has been previously computed}
            With Buses^[iBus] Do Begin
-               Write(F,Pad(EncloseQuotes(UpperCase(BusList.Get(iBus)))+',',MaxBusNameLength+2));
+{$IFDEF XRDEBUG}
+               Write(F,Pad(EncloseQuotes('Voltage:')+',',MaxBusNameLength+2));
+               For i := 1 to NumNodesThisBus Do Begin
+                 VPolar := Ctopolardeg(VBus^[i]);
+                 If i>1 Then Write(F,', ');
+                 Write(F, Vpolar.mag:10:0,'/_', Vpolar.ang:5:0);
+               End;
+               Writeln(F);
+               Write(F,Pad(EncloseQuotes('Current:')+',',MaxBusNameLength+2));
+               For i := 1 to NumNodesThisBus Do Begin
+                 IPolar := Ctopolardeg(BusCurrent^[i]);
+                 If i>1 Then Write(F,', ');
+                 Write(F, Ipolar.mag:10:0, '/_', Ipolar.ang:5:0);
+               End;
+               Writeln(F);
+               Write(F,Pad(EncloseQuotes('R + jX:')+',',MaxBusNameLength+2));
+               For i := 1 to NumNodesThisBus Do Begin
+                 Zbus := Cdiv(VBus^[i],BusCurrent^[i]);
+                 If i>1 Then Write(F,', ');
+                 Write(F, Zbus.re:7:4,'+j', Zbus.im:8:4);
+               End;
+               Writeln(F);
+{$ENDIF}
+
                For i := 1 to NumNodesThisBus Do Begin
                  CurrMag := Cabs(BusCurrent^[i]);
                  If i>1 Then Write(F,', ');
                  Write(F, CurrMag:10:0);
-                 If Currmag > 0.0 Then
-                     Write(F,', ',GetXR(Cdiv(VBus^[i],BusCurrent^[i])):5:1)
-                 Else
+                 If Currmag > 0.0 Then Begin
+                     Zbus := Cdiv(VBus^[i],BusCurrent^[i]);
+                     Write(F,', ', GetXR(ZBus):5:1)
+                 End Else
                     Write(F, ',   N/A');
                End;
                Writeln(F);
