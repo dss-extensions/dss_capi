@@ -120,6 +120,7 @@ TYPE
         PROCEDURE RegWriteTraceRecord(TapChangeMade:Double; ActorID : Integer);
         PROCEDURE RegWriteDebugRecord(S:String);
         procedure set_PendingTapChange(const Value: Double);
+        FUNCTION GetDirectionModeString: String;
         FUNCTION  AtLeastOneTap(Const ProposedChange:Double; Increment:Double;ActorID:integer):Double;
         Function  ComputeTimeDelay(Vavg:Double):Double;
         Function  GetControlVoltage(VBuffer:pComplexArray; Nphs:Integer; PTRatio:Double ):Complex;
@@ -151,6 +152,8 @@ TYPE
        Property TrWinding:Integer Read Get_Winding;  // Report Tapped winding
 
        Property PendingTapChange: Double  Read FPendingTapChange Write set_PendingTapChange;
+       Property ActiveDirectionMode      				     : String            read GetDirectionModeString;
+       Property CogenModeIsActive      				       : Boolean           read InCogenMode;
 
        // CIM XML accessors
        Property TargetVoltage: Double Read Vreg;
@@ -1429,6 +1432,13 @@ begin
            Result := TimeDelay / Min(10.0, (2.0*Abs(Vreg-Vavg)/Bandwidth))
      Else
            Result :=  TimeDelay;
+end;
+
+function TRegControlObj.GetDirectionModeString: String;
+begin
+
+  if not InReverseMode Then Result:= 'Forward' else Result:='Reverse';
+
 end;
 
 INITIALIZATION
