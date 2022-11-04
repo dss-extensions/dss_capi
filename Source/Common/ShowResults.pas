@@ -1577,7 +1577,7 @@ End;
 Procedure ShowFaultStudy(FileNm:String);
 
 Var
-   i, iBus, iphs:Integer;
+   i, iBus, iphs, iphs2:Integer;
    YFault, ZFault  :Tcmatrix;
    Vfault  :pComplexArray;  {Big temp array}
    F       :Textfile ;
@@ -1604,7 +1604,7 @@ Begin
      With ActiveCircuit[ActiveActor] Do Begin
        With Solution Do Begin
 
-     {All Phase Faults}
+          {All Phase Faults}
            Writeln(F, 'FAULT STUDY REPORT');
            Writeln(F);
            Writeln(F,'ALL-Node Fault Currents');
@@ -1661,7 +1661,7 @@ Begin
            Writeln(F, Pad('Bus',MaxBusNameLength), '   Node  Amps         Node 1     Node 2     Node 3    ...');
            Writeln(F);
 
-   { Solve for Fault Injection Currents}
+           { Solve for Fault Injection Currents}
            FOR iBus := 1 to NumBuses DO
            {Bus Norton Equivalent Current, Isc has been previously computed}
            With Buses^[iBus] Do Begin
@@ -1705,26 +1705,37 @@ Begin
 
              GFault := Cmplx(10000.0, 0.0);
 
-             For iphs := 1 to NumNodesThisBus-1 Do Begin
-                   YFault.CopyFrom(Ysc);
-                   YFault.AddElement(iphs,   iphs,   GFault);
-                   YFault.AddElement(iphs+1, iphs+1, GFault);
-                   YFault.AddElemSym(iphs,   iphs+1, Cnegate(GFault));
+             For iphs := 1 to NumNodesThisBus Do Begin
+               For iphs2 :=1 to NumNodesThisBus do Begin
 
-                   { Solve for Injection Currents}
-                   YFault.Invert;
-                   YFault.MvMult(VFault,BusCurrent);  {Gets voltage appearing at fault}
+                if iphs >= iphs2 then continue;
 
-                   Write(F,Pad(EncloseQuotes(UpperCase(BusList.Get(iBus))),MaxBusNameLength+2), GetNum(Iphs):4, GetNum(Iphs+1):4, Cabs(Cmul(Csub(VFault^[iphs],VFault^[iphs+1]),GFault)):12:0,'   ');
-                   For i := 1 to NumNodesThisBus Do Begin
-                       Vphs :=  Cabs(VFault^[i]);
-                       If kvbase > 0.0 then Begin
-                          Vphs := 0.001 * Vphs / kVBase;
-                          Write(F,' ', Vphs:10:3);
-                       end
-                       Else Write(F,' ', Vphs:10:1);
-                   End;
-                   Writeln(F);
+                 YFault.CopyFrom(Ysc);
+
+                 YFault.AddElement(iphs,   iphs,   GFault);
+                 YFault.AddElement(iphs2,  iphs2, GFault);
+                 YFault.AddElemSym(iphs,   iphs2, Cnegate(GFault));
+
+                 { Solve for Injection Currents}
+                 YFault.Invert;
+                 YFault.MvMult(VFault,BusCurrent);  {Gets voltage appearing at fault}
+
+                 Write(F,Pad(EncloseQuotes(UpperCase(BusList.Get(iBus))),MaxBusNameLength+2), GetNum(Iphs):4, GetNum(iphs2):4, Cabs(Cmul(Csub(VFault^[iphs],VFault^[iphs2]),GFault)):12:0,'   ');
+
+                 For i := 1 to NumNodesThisBus Do Begin
+                     Vphs :=  Cabs(VFault^[i]);
+                     If kvbase > 0.0 then Begin
+                        Vphs := 0.001 * Vphs / kVBase;
+                        Write(F,' ', Vphs:10:3);
+                     end
+                     Else Write(F,' ', Vphs:10:1);
+                 End;
+                 Writeln(F);
+
+               End;
+
+
+
 
              End; {For iphase}
              {Now, Stuff it in the Css Array where it belongs}
@@ -2082,7 +2093,7 @@ Begin
          Writeln(F);
          Writeln(F,'CONTROLLED TRANSFORMER TAP SETTINGS');
          Writeln(F);
-         Writeln(F, 'Name            Tap      Min       Max     Step  Position');
+         Writeln(F, 'Name    RegControl        Tap      Min       Max     Step      Position      Winding      Direction       CogenMode');
          Writeln(F);
 
          WITH ActiveCircuit[ActiveActor] Do
@@ -2094,7 +2105,9 @@ Begin
                   Begin
                        iWind := pReg.TrWinding;
                        Write(F, Pad(Name, 12), ' ');
-                       Writeln(F, Format('%8.5f %8.5f %8.5f %8.5f     %d' , [PresentTap[iWind,ActiveActor], MinTap[iWind], MaxTap[iWind], TapIncrement[iWind], TapPosition(pREg.Transformer, iWind)]));
+                       Write(F, Pad(pReg.Name, 12), ' ');
+                       Writeln(F, Format('%8.5f %8.5f %8.5f %8.5f     %d      %d      %s      %s' , [PresentTap[iWind,ActiveActor], MinTap[iWind], MaxTap[iWind], TapIncrement[iWind],
+                                                                                           TapPosition(pREg.Transformer, iWind), iWind, pReg.ActiveDirectionMode, BoolToStr(pReg.CogenModeIsActive, TRUE)]));
                   End;
                  pReg := RegControls.Next;
              End;
