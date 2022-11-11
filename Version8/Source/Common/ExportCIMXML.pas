@@ -2810,10 +2810,10 @@ Begin
      if pGen.Enabled  then   begin
         StartInstance (FunPrf, 'SynchronousMachine', pGen);
         CircuitNode (FunPrf, ActiveCircuit[ActiveActor]);
-        DoubleNode (SshPrf, 'SynchronousMachine.p', pGen.Presentkw * 1000.0);
-        DoubleNode (SshPrf, 'SynchronousMachine.q', pGen.Presentkvar * 1000.0);
-        DoubleNode (EpPrf, 'SynchronousMachine.ratedS', pGen.GenVars.kvarating * 1000.0);
-        DoubleNode (EpPrf, 'SynchronousMachine.ratedU', pGen.Presentkv * 1000.0);
+        DoubleNode (SshPrf, 'RotatingMachine.p', pGen.Presentkw * 1000.0);
+        DoubleNode (SshPrf, 'RotatingMachine.q', pGen.Presentkvar * 1000.0);
+        DoubleNode (EpPrf, 'RotatingMachine.ratedS', pGen.GenVars.kvarating * 1000.0);
+        DoubleNode (EpPrf, 'RotatingMachine.ratedU', pGen.Presentkv * 1000.0);
 //        SynchMachTypeEnum (F, 'generator');
 //        SynchMachModeEnum (F, 'generator');
         geoUUID := GetDevUuid (MachLoc, pGen.LocalName, 1);
