@@ -292,6 +292,10 @@ type
     Closealltabsbutthisone1: TMenuItem;
     Closealltabs1: TMenuItem;
     DirectDLL1: TMenuItem;
+    Saveas1: TMenuItem;
+    WindowColorTheme1: TMenuItem;
+    Standard1: TMenuItem;
+    Dark1: TMenuItem;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DSSHelp1Click(Sender: TObject);
@@ -481,6 +485,9 @@ type
     procedure Closealltabsbutthisone1Click(Sender: TObject);
     procedure Closealltabs1Click(Sender: TObject);
     procedure LaunchDirectDLlHelp(Sender: TObject);
+    procedure SaveAsTabClick(Sender: TObject);
+    procedure SetStandardColorSch(Sender: TObject);
+    procedure SetDarkSolorsch(Sender: TObject);
   private
     { Private declarations }
     PlotOptionString  :String;
@@ -513,7 +520,7 @@ uses Executive, DSSClassDefs, DSSGlobals,
   DlgPlotOptions,  DSSPlot, FrmCSVchannelSelect,
   DlgComboBox,dlgNumber, ExecOptions, ExecCommands, ExecHelper, Dynamics, DSSClass, ListForm,
   Lineunits, Monitor, FrmDoDSSCommand, Frm_RPNcalc, DSSForms, showOptions, ShellAPI,
-  IniRegSave, System.UITypes, System.Types, Solution, ControlQueue;
+  IniRegSave, System.UITypes, System.Types, Solution, ControlQueue, VCL.Themes;
 
 {$R *.DFM}
 
@@ -1304,6 +1311,13 @@ begin
        With PlotOptionsForm Do
        ActiveScriptForm.ExecuteDSSCommand('plot daisy '+ QtyCombo.text+PlotOptionString+ ' C1='+EditColor1.Text);
 
+end;
+
+procedure TControlPanel.SetDarkSolorsch(Sender: TObject);
+begin
+  TStyleManager.TrySetStyle('Carbon', False);
+  With ActiveScriptForm Do
+    Editor.Font.Color     :=  clWhite;
 end;
 
 procedure TControlPanel.All1Click(Sender: TObject);
@@ -2227,6 +2241,24 @@ begin
         MonitorClass[ActiveActor].SaveAll(ActiveActor);
 end;
 
+procedure TControlPanel.SaveAsTabClick(Sender: TObject);
+begin
+    If ActiveScriptForm.isMainWindow Then
+        DoSimpleMsg('Cannot save the Main Window.'+CRLF+'Make a new script window, copy contents, and then save.', 215)
+    Else
+    With SaveDialog1 Do Begin
+        DefaultExt := 'dss';
+        Filter := 'DSS files (*.dss)|*.dss|Text files (*.txt)|*.TXT|All files (*.*)|*.*';
+        FileName := ActiveScriptForm.caption;
+        Title := 'Save Active Script Window to File';
+        Options := [ofOverwritePrompt];
+        If Execute Then Begin
+           ActiveScriptForm.Caption := FileName;
+           ActiveScriptForm.SaveEditorContents;
+        End; {Execute}
+   End;  {WITH}
+end;
+
 procedure TControlPanel.CircuitPlot1Click(Sender: TObject);
 begin
        If ActiveCircuit[ActiveActor]<>nil Then
@@ -2793,6 +2825,13 @@ end;
 procedure TControlPanel.SeqZ1Click(Sender: TObject);
 begin
     ActiveScriptForm.ExecuteDSSCommand('Export seqz');
+end;
+
+procedure TControlPanel.SetStandardColorSch(Sender: TObject);
+begin
+    TStyleManager.TrySetStyle('Windows10', False);
+    With ActiveScriptForm Do
+      Editor.Font.Color     :=  clBlack;
 end;
 
 procedure TControlPanel.Sort1Click(Sender: TObject);

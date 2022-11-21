@@ -206,12 +206,15 @@ uses
   GeneratorVars in '..\PCElements\GeneratorVars.pas',
   DynamicExp in '..\General\DynamicExp.pas',
   InvDynamics in '..\Shared\InvDynamics.pas',
-  GenController in '..\Controls\GenController.pas';
+  GenController in '..\Controls\GenController.pas',
+  Vcl.Themes,
+  Vcl.Styles;
 
 {$R *.RES}
 
 begin
   Application.Initialize;
+  TStyleManager.TrySetStyle('Windows10');
   Application.Title := 'OpenDSS: Distribution System Simulator';
 
   {Have to Start DSSExecutive before Creating the Control Panel}

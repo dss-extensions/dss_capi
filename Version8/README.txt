@@ -3,11 +3,13 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.5.1.1
+Version 9.6.1.1
 
 Changes this version
 ====================
-
+- Adds grid forming inverter capabilities to Inverter-base resources (Storage and PVSystem) for microgrid studies in QSTS.
+- Adds dynamics simulation capabilities to Inverter-based Resources (Storage and PVSystem), including Black start operation. Includes DynamicExp compatibility. Examples and documentation included.
+- Adds LL faults between all pair of nodes of a bus to FaultStudy reports. Adding RegControl name, Transformer Winding number, DirectionMode and Cogen flag to Taps reports.
 - Adds functionality for closing all but one or all tabs when using the standalone editor.
 - Adds option EventlogDefault to the global context for setting the default for enabling/disabling the eventlog in control objects. 
 - Adds "Element" property to UPFC for triggering the reactive power compensation mode. Not needed in the past, but given the new control mode it requires it. 
