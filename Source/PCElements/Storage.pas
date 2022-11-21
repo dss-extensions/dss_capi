@@ -3585,11 +3585,12 @@ Begin
               if DynamicEqObj <> nil then dit[i]:=  DynamicEqVals[DynOut[0]][1];
               it[i] := itHistory[i] + 0.5*h*dit[i];
             End;
+            if GFM_mode then FixPhaseAngle(ActorID, i);
           End
           else
           Begin
-            if Vgrid[i].mag >= MinVS then OFFVal  :=  PIdling / Vgrid[i].mag   // To match with idling losses
-            else OFFVal :=  0;
+            if Vgrid[i].mag >= MinVS then OFFVal  :=  PIdling / Vgrid[i].mag;   // To match with idling losses
+            //else OFFVal :=  0;
             it[i] := OFFVal;   // To match with idling losses
           End;
         End;
