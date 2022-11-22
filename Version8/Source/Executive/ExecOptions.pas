@@ -12,7 +12,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 137;
+        NumExecOptions = 138;
 
 VAR
          ExecOption,
@@ -179,6 +179,7 @@ Begin
      ExecOption[135] := 'LineTypes';
      ExecOption[136] := 'EventLogDefault';
      ExecOption[137] := 'LongLineCorrection';
+     ExecOption[138] := 'AutoDisplayShowReport';
 
      {Deprecated
       ExecOption[130] := 'MarkPVSystems2';
@@ -477,6 +478,7 @@ Begin
      OptionHelp[135] := '(Read only) Returns the list of line types available in the code for reference. These line types apply to lines, line codes, and line geometry objects.';
      OptionHelp[136] := '{YES/TRUE | NO/FALSE*} Sets/gets the default for the eventlog. After changing this flags the model needs to be recompiled to take effect.';
      OptionHelp[137] := '{YES/TRUE | NO/FALSE*} Defines whether the long-line correctlion is applied or not. Long-line correction only affects lines modelled with sequence components.';
+     OptionHelp[138] := '{YES/TRUE | NO/FALSE} Default = TRUE. If YES/TRUE will automatically show the results of a Show Command after it is written.';
 
 End;
 //----------------------------------------------------------------------------
@@ -869,6 +871,7 @@ Begin
           137:  begin
                   ActiveCircuit[ActiveActor].LongLineCorrection  :=  InterpretYesNo(Param);
                 end;
+          138: AutoDisplayShowReport := InterpretYesNo(Param);
          ELSE
            // Ignore excess parameters
          End;
@@ -1098,6 +1101,7 @@ Begin
           135: GlobalResult :=  GetLineTypes();
           136: if EventLogDefault then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           137: if ActiveCircuit[ActiveActor].LongLineCorrection then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          138: If AutoDisplayShowReport Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
          ELSE
            // Ignore excess parameters
          End;
