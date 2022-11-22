@@ -219,6 +219,7 @@ VAR
    In_Redirect        :Boolean;
    DIFilesAreOpen     :array of Boolean;
    AutoShowExport     :Boolean;
+   AutoDisplayShowReport     :Boolean;
    EventLogDefault    :Boolean;
    SolutionWasAttempted : Array of Boolean;
 
@@ -1627,6 +1628,7 @@ initialization
    MaxAllocationIterations := 2;
    SolutionAbort         := FALSE;
    AutoShowExport        := FALSE;
+   AutoDisplayShowReport        := TRUE;
    SolutionWasAttempted[ActiveActor]  := FALSE;
 
    DefaultBaseFreq       := 60.0;
