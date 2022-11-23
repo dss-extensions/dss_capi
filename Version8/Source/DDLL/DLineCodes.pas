@@ -8,7 +8,7 @@ uses
 function LineCodesI(mode: longint; arg: longint): longint; cdecl;
 function LineCodesF(mode: longint; arg: double): double; cdecl;
 function LineCodesS(mode: longint; arg: pAnsiChar): pAnsiChar; cdecl;
-procedure LineCodesV(mode: longint; out arg:variant);cdecl;
+procedure LineCodesV(mode: longint; var arg:variant);cdecl;
 
 implementation
 
@@ -275,7 +275,7 @@ end;
 
 //*****************************Variants interface***************************************
 
-procedure LineCodesV(mode: longint; out arg:variant);cdecl;
+procedure LineCodesV(mode: longint; var arg:variant);cdecl;
 Var
    pLineCode:TLineCodeObj;
    i,j, k:Integer;
