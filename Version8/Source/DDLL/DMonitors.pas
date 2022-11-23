@@ -4,7 +4,7 @@ interface
 
 function MonitorsI(mode:longint; arg: longint):longint; cdecl;
 function MonitorsS(mode:longint; arg: pAnsiChar):pAnsiChar; cdecl;
-procedure MonitorsV(mode:longint; var arg: Variant); cdecl;
+procedure MonitorsV(mode:longint; out arg: Variant; arg2: longint); cdecl;
 
 implementation
 
@@ -307,7 +307,7 @@ begin
 end;
 
 //****************************Variant type properties***************************
-procedure MonitorsV(mode:longint; var arg: Variant); cdecl;
+procedure MonitorsV(mode:longint; out arg: Variant; arg2: longint); cdecl;
 
 Var
   MonitorElem     : TMonitorObj;
@@ -478,7 +478,7 @@ begin
      If ActiveCircuit[ActiveActor] <> Nil Then Begin
         pMon := ActiveCircuit[ActiveActor].Monitors.Active;
         If pMon.SampleCount >0 Then Begin
-               index:=integer(arg);
+               index:=integer(arg2);
                arg := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
                ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
                TempStr                            :=  '';
