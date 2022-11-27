@@ -51,7 +51,7 @@ Type
     OpLimBHi, OpLimBLo, MachLoc, PVPanels, Battery, SrcLoc, TankInfo,
     TapCtrl, PUZ, WirePos, NormAmps, EmergAmps,
     I1547NameplateData, I1547NameplateDataApplied, I1547Signal, I1547VoltVar,
-    I1547WattVar, I1547ConstPF, I1547VoltWatt, I1547ConstQ);
+    I1547WattVar, I1547ConstPF, I1547VoltWatt, I1547ConstQ, ECProfile);
 
   ProfileChoice = (FunPrf, EpPrf, GeoPrf, TopoPrf, CatPrf, SshPrf, DynPrf);
 
@@ -83,6 +83,28 @@ Type
     EmergAmps: double;
     constructor Create(norm, emerg: double);
     destructor Destroy; override;
+  end;
+
+  ECPChoice = (LoadEcp, PvEcp, GenEcp, BatEcp);
+  TECPObject = class(TNamedObject)
+  public
+    connType: ECPChoice;
+    connections: array of TUuid;
+    nconn: Integer;
+
+    daily: String;
+    duty: String;
+    yearly: String;
+    spectrum: String;
+    cvr: String;
+    growth: String;
+    Tdaily: String;
+    Tduty: String;
+    Tyearly: String;
+
+    constructor Create(choice: ECPChoice);
+    destructor Destroy; override;
+    procedure AddConnection(pObj: TNamedObject);
   end;
 
   TFileDealer = class(TObject)
@@ -166,6 +188,8 @@ Var
   UuidKeyList: array of String;
   BankHash: THashList;
   BankList: array of TBankObject;
+  ECPHash: THashList;
+  ECPList: array of TECPObject;
   OpLimitHash: THashList;
   OpLimitList: array of TOpLimitObject;
   FD: TFileDealer;
@@ -174,6 +198,31 @@ Const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
   CIM_NS = 'http://iec.ch/TC57/CIM100';
   CatBQmin = 0.43; // for IEEE 1547 Category B estimate
+
+constructor TECPObject.Create(choice: ECPChoice);
+begin
+  Inherited Create('ECProfile');
+  connType := choice;
+  nconn := 0;
+  SetLength (connections, 10);
+end;
+
+destructor TECPObject.Destroy;
+begin
+  connections := nil;
+  nconn := 0;
+  Inherited Destroy;
+end;
+
+procedure TECPObject.AddConnection(pObj: TNamedObject);
+var
+  ref, size: Integer;
+begin
+  size := High(connections) + 1;
+  if nconn > size then SetLength (connections, 2 * size);
+  connections[nconn] := pObj.UUID;
+  inc(nconn);
+end;
 
 procedure StartCIMFile (var F: TextFile; FileNm:String; prf: ProfileChoice);forward;
 
@@ -581,6 +630,12 @@ begin
   SetLength (BankList, size);
 end;
 
+procedure StartECPList (size: Integer);
+begin
+  ECPHash := THashList.Create(size);
+  SetLength (ECPList, size);
+end;
+
 procedure StartOpLimitList (size: Integer);
 begin
   OpLimitHash := THashList.Create(size);
@@ -601,6 +656,15 @@ begin
   BankHash.Free;
   for i:=0 to High(BankList) do if Assigned (BankList[i]) then FreeAndNil (BankList[i]);
   BankList := nil;
+end;
+
+procedure FreeECPList;
+var
+  i: integer;
+begin
+  ECPHash.Free;
+  for i:=0 to High(ECPList) do if Assigned (ECPList[i]) then FreeAndNil (ECPList[i]);
+  ECPList := nil;
 end;
 
 procedure FreeOpLimitList;
@@ -629,6 +693,25 @@ begin
   Result := nil;
   ref := BankHash.Find (sBank);
   if ref > 0 then Result:=BankList[ref-1];
+end;
+
+procedure AddECP (pECP: TECPObject);
+var
+  ref, size: Integer;
+begin
+  ref := ECPHash.Add(pECP.localName);
+  size := High(ECPList) + 1;
+  if ref > size then SetLength (ECPList, 2 * size);
+  ECPList[ref-1] := pECP;
+end;
+
+function GetECP (key: String): TECPObject;
+var
+  ref : Integer;
+begin
+  Result := nil;
+  ref := ECPHash.Find (key);
+  if ref > 0 then Result:=ECPList[ref-1];
 end;
 
 procedure AddOpLimit (pLimit: TOpLimitObject);
@@ -755,9 +838,103 @@ begin
     I1547ConstPF: key := 'IPF=';
     I1547VoltWatt: key := 'IVWatt=';
     I1547ConstQ: key := 'IQ=';
+    ECProfile: key := 'ECP=';
   end;
   key:=key + Name + '=' + IntToStr (Seq);
   Result := GetHashedUuid (key);
+end;
+
+procedure AddLoadECP (pLoad: TLoadObj);
+var
+  key: String;
+  pECP: TECPObject;
+begin
+  if ((pLoad.DailyShape <> '') or (pLoad.DutyShape <> '') or (pLoad.GrowthShape <> '') or (pLoad.YearlyShape <> '') or (pLoad.CVRShape <> '') or (pLoad.Spectrum <> 'defaultload')) then begin
+    key := Format ('Load:%s:%s:%s:%s:%s:%s', [pLoad.DailyShape, pLoad.DutyShape, pLoad.GrowthShape, pLoad.YearlyShape, pLoad.CVRshape, pLoad.Spectrum]);
+    pECP := GetECP (key);
+    if pECP = nil then begin
+      pECP := TECPObject.Create(LoadECP);
+      pECP.localName := key;
+      pECP.UUID := GetDevUuid (ECProfile, key, 0);
+      pECP.daily := pLoad.DailyShape;
+      pECP.duty := pLoad.DutyShape;
+      pECP.growth := pLoad.GrowthShape;
+      pECP.cvr := pLoad.CVRshape;
+      pECP.yearly := pLoad.YearlyShape;
+      if pLoad.Spectrum <> 'defaultload' then pECP.spectrum := pLoad.Spectrum;
+      AddECP (pECP);
+    end;
+    pECP.AddConnection(pLoad);
+  end;
+end;
+
+procedure AddSolarECP (pPV: TPVSystemObj);
+var
+  key: String;
+  pECP: TECPObject;
+begin
+  if ((pPV.DailyShape <> '') or (pPV.DutyShape <> '') or (pPV.YearlyShape <> '') or (pPV.DailyTShape <> '') or (pPV.DutyTShape <> '') or (pPV.YearlyTShape <> '') or (pPV.Spectrum <> '')) then begin
+    key := Format ('PV:%s:%s:%s:%s:%s:%s:%s', [pPV.DailyShape, pPV.DutyShape, pPV.YearlyShape, pPV.DailyTShape, pPV.DutyTShape, pPV.YearlyTShape, pPV.Spectrum]);
+    pECP := GetECP (key);
+    if pECP = nil then begin
+      pECP := TECPObject.Create(PvECP);
+      pECP.localName := key;
+      pECP.UUID := GetDevUuid (ECProfile, key, 0);
+      pECP.daily := pPV.DailyShape;
+      pECP.duty := pPV.DutyShape;
+      pECP.yearly := pPV.YearlyShape;
+      pECP.Tdaily := pPV.DailyTShape;
+      pECP.Tduty := pPV.DutyTShape;
+      pECP.Tyearly := pPV.YearlyTShape;
+      pECP.spectrum := pPV.Spectrum;
+      AddECP (pECP);
+    end;
+    pECP.AddConnection(pPV);
+  end;
+end;
+
+procedure AddStorageECP (pBat: TStorageObj);
+var
+  key: String;
+  pECP: TECPObject;
+begin
+  if ((pBat.DailyShape <> '') or (pBat.DutyShape <> '') or (pBat.YearlyShape <> '') or (pBat.Spectrum <> '')) then begin
+    key := Format ('Bat:%s:%s:%s:%s', [pBat.DailyShape, pBat.DutyShape, pBat.YearlyShape, pBat.Spectrum]);
+    pECP := GetECP (key);
+    if pECP = nil then begin
+      pECP := TECPObject.Create(BatECP);
+      pECP.localName := key;
+      pECP.UUID := GetDevUuid (ECProfile, key, 0);
+      pECP.daily := pBat.DailyShape;
+      pECP.duty := pBat.DutyShape;
+      pECP.yearly := pBat.YearlyShape;
+      pECP.spectrum := pBat.Spectrum;
+      AddECP (pECP);
+    end;
+    pECP.AddConnection(pBat);
+  end;
+end;
+
+procedure AddGeneratorECP (pGen: TGeneratorObj);
+var
+  key: String;
+  pECP: TECPObject;
+begin
+  if ((pGen.DailyDispShape <> '') or (pGen.DutyShape <> '') or (pGen.YearlyShape <> '') or (pGen.Spectrum <> 'defaultgen')) then begin
+    key := Format ('Gen:%s:%s:%s:%s', [pGen.DailyDispShape, pGen.DutyShape, pGen.YearlyShape, pGen.Spectrum]);
+    pECP := GetECP (key);
+    if pECP = nil then begin
+      pECP := TECPObject.Create(GenECP);
+      pECP.localName := key;
+      pECP.UUID := GetDevUuid (ECProfile, key, 0);
+      pECP.daily := pGen.DailyDispShape;
+      pECP.duty := pGen.DutyShape;
+      pECP.yearly := pGen.YearlyShape;
+      if pGen.Spectrum <> 'defaultgen' then pECP.spectrum := pGen.Spectrum;
+      AddECP (pECP);
+    end;
+    pECP.AddConnection(pGen);
+  end;
 end;
 
 procedure DefaultCircuitUUIDs (var fdrID: TUuid; var subID: TUuid; var rgnID: TUuid; var subGeoID: TUuid);
@@ -2546,11 +2723,12 @@ Var
   sBank  : String;
   bTanks : boolean;
 
-   pLoad  : TLoadObj;
+  pLoad  : TLoadObj;
   pVsrc  : TVsourceObj;
   pGen   : TGeneratorObj;
   pPV    : TPVSystemObj;
   pBat   : TStorageObj;
+  pECP   : TECPObject;
 
   pCap  : TCapacitorObj;
   pCapC : TCapControlObj;
@@ -2608,6 +2786,7 @@ Begin
     StartUuidList (i1 + i2);
     end;
     StartBankList (ActiveCircuit[ActiveActor].Transformers.ListSize + ActiveCircuit[ActiveActor].AutoTransformers.ListSize);
+    StartECPList (ActiveCircuit[ActiveActor].Loads.ListSize + ActiveCircuit[ActiveActor].Generators.ListSize + ActiveCircuit[ActiveActor].StorageElements.ListSize + ActiveCircuit[ActiveActor].PVSystems.ListSize);
     StartOpLimitList (ActiveCircuit[ActiveActor].Lines.ListSize + ActiveCircuit[ActiveActor].Transformers.ListSize + ActiveCircuit[ActiveActor].AutoTransformers.ListSize + 1);
 
     {$IFDEF FPC}
@@ -2821,6 +3000,7 @@ Begin
         EndInstance (FunPrf, 'SynchronousMachine');
         AttachGeneratorPhases (pGen, geoUUID);
         WriteTerminals (pGen, geoUUID, crsUUID);
+        AddGeneratorECP (pGen);
      end;
      pGen := ActiveCircuit[ActiveActor].Generators.Next;
     end;
@@ -2861,6 +3041,7 @@ Begin
         pPV.LocalName := pName1.LocalName;
         WritePositions (pPV, geoUUID, crsUUID);
         pPV.LocalName := s;
+        AddSolarECP (pPV);
       end;
       pPV := ActiveCircuit[ActiveActor].PVSystems.Next;
     end;
@@ -2902,6 +3083,7 @@ Begin
         pBat.LocalName := pName1.LocalName;
         WritePositions (pBat, geoUUID, crsUUID);
         pBat.LocalName := s;
+        AddStorageECP (pBat);
       end;
       pBat := ActiveCircuit[ActiveActor].StorageElements.Next;
     end;
@@ -3660,6 +3842,7 @@ Begin
           EndInstance (FunPrf, 'EnergyConsumer');
           AttachLoadPhases (pLoad, geoUUID);
           WriteTerminals (pLoad, geoUUID, crsUUID);
+          AddLoadECP (pLoad);
         end;
         pLoad := ActiveCircuit[ActiveActor].Loads.Next;
     end;
@@ -3801,6 +3984,23 @@ Begin
       pSpac := clsSpac.ElementList.Next;
     end;
 
+    for i := Low(ECPList) to High(ECPList) do begin
+      pECP := ECPList[i];
+      if pECP = nil then break;      
+      StartInstance (SshPrf, 'EnergyConnectionProfile', pECP);
+      if pECP.daily <> '' then StringNode (SshPrf, 'EnergyConnectionProfile.dssDaily', pECP.daily);
+      if pECP.duty <> '' then StringNode (SshPrf, 'EnergyConnectionProfile.dssDuty', pECP.duty);
+      if pECP.yearly <> '' then StringNode (SshPrf, 'EnergyConnectionProfile.dssYearly', pECP.yearly);
+      if pECP.growth <> '' then StringNode (SshPrf, 'EnergyConnectionProfile.dssLoadGrowth', pECP.growth);
+      if pECP.spectrum <> '' then StringNode (SshPrf, 'EnergyConnectionProfile.dssSpectrum', pECP.spectrum);
+      if pECP.cvr <> '' then StringNode (SshPrf, 'EnergyConnectionProfile.dssLoadCvrCurve', pECP.cvr);
+      if pECP.Tdaily <> '' then StringNode (SshPrf, 'EnergyConnectionProfile.dssPVTDaily', pECP.Tdaily);
+      if pECP.Tduty <> '' then StringNode (SshPrf, 'EnergyConnectionProfile.dssPVTDuty', pECP.Tduty);
+      if pECP.Tyearly <> '' then StringNode (SshPrf, 'EnergyConnectionProfile.dssPVTYearly', pECP.Tyearly);
+      for j := 0 to (pECP.nconn-1) do UUIDNode (SshPrf, 'EnergyConnectionProfile.EnergyConnections', pECP.connections[j]);
+      EndInstance (SshPrf, 'EnergyConnectionProfile');
+    end;
+
     // export the operational current limits that were created on-the-fly
     for i:=Low(OpLimitList) to High(OpLimitList) do begin
       pILimit := OpLimitList[i];
@@ -3841,6 +4041,7 @@ Begin
 
 //    FreeUuidList;  // this is deferred for UUID export
     FreeBankList;
+    FreeECPList;
     FreeOpLimitList;
 
     GlobalResult := FileNm;
