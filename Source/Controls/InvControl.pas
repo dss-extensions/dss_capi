@@ -2052,18 +2052,23 @@ begin
           Begin
             if TStorageObj(ControlledElement).CheckOLInverter(ActorID) then
             Begin
-              DER_OL                                      :=  True;
-              TStorageObj(ControlledElement).StorageState :=  0;  // It's burning, Turn it off
-              TStorageObj(ControlledElement).StateChanged :=  TRUE;
+              DER_OL                                              :=  True;
+              TStorageObj(ControlledElement).StorageState         :=  0;  // It's burning, Turn it off
+              TStorageObj(ControlledElement).myDynVars.ResetIBR   :=  True;
+              TStorageObj(ControlledElement).StateChanged         :=  TRUE;
             End;
           End
           else
-            DER_OL                                     := TPVSystemObj(ControlledElement).CheckOLInverter(ActorID);
+          Begin
+            DER_OL       := TPVSystemObj(ControlledElement).CheckOLInverter(ActorID);
+            if DER_OL then  TPVSystemObj(ControlledElement).myDynVars.ResetIBR  :=  True;
+
+          End;
 
           if DER_OL then
           Begin
-            ControlledElement.GFM_Mode                  := False;
-            ControlledElement.YprimInvalid[ActorID]     := TRUE;
+            ControlledElement.GFM_Mode                          := False;
+            ControlledElement.YprimInvalid[ActorID]             := TRUE;
           End;
         End;
       end;

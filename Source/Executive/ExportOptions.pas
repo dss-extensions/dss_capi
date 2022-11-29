@@ -1,7 +1,7 @@
 unit ExportOptions;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
