@@ -11,6 +11,9 @@ type
     dit,                                        // Current's first derivative per phase
     it,                                         // Current's integration per phase
     itHistory,                                  // Shift register for it
+    VDelta,                                     // for black start operation (GFM)
+    ISPDelta,                                   // for moving the current target per phase in black start operation (GFM)
+    AngDelta,                                   // For correcting the phase angle
     m                     : array of Double;    // Average duty cycle per phase
     iMaxPPhase,
     kP,                                         // PI controller gain
@@ -20,14 +23,18 @@ type
     LS,                                         // Series inductance, careful, it cannot be 0 in dyn mode
     RS,                                         // Series resistance (filter)
     BasekV,                                     // BAse kV depending on the number of phases
+    BaseV,                                      // For GFM mode, avoid messing with things
     MaxVS,                                      // Max Voltage at the inverter terminal to safely operate the inverter
     MinVS,                                      // Min Voltage at the inverter terminal to safely operate the inverter
     MinAmps,                                    // Min amps required for exporting energy
+    mKVARating,                                 // For GFM impedance calculation and avoid messing with other calcs
+    RatedkVLL,                                  // As defined when decalred the element, for GFM impedance calculation and avoid messing with other calcs
     ISP                   : Double;             // Current setpoint according to the actual DER kW
     Discharging,                                // To verify if the storage device is discharging
+    ResetIBR,                                   // flag for forcing the IBR to turn OFF
     SafeMode              : Boolean;            // To indicate weather the Inverter has entered into safe mode
 
-    function Get_InvDynValue(myindex : Integer): Double;
+    function Get_InvDynValue(myindex, NumPhases : Integer): Double;
     function Get_InvDynName(myindex : Integer): String;
     Procedure Set_InvDynValue(myindex : Integer; myValue : Double);
     Procedure SolveDynamicStep(i, ActorID : Integer; PICtrl : PPICtrl);
@@ -46,13 +53,13 @@ implementation
 uses DSSGlobals;
 
   // Returns the value of the given state variable using the index lo localize it
-  function TInvDynamicVars.Get_InvDynValue(myindex : Integer): Double;
+  function TInvDynamicVars.Get_InvDynValue(myindex, NumPhases : Integer): Double;
   Begin
     case myindex of
-      0 :  if length(Vgrid) > 0       then Result :=  Vgrid[0].mag  else Result :=  0;
-      1 :  if length(dit) > 0         then Result :=  dit[0]        else Result :=  0;
-      2 :  if length(it) > 0          then Result :=  it[0]         else Result :=  0;
-      3 :  if length(ithistory) > 0   then Result :=  ithistory[0]  else Result :=  0;
+      0 :  if length(Vgrid) > 0       then Result :=  Vgrid[NumPhases - 1].mag  else Result :=  0;
+      1 :  if length(dit) > 0         then Result :=  dit[NumPhases - 1]        else Result :=  0;
+      2 :  if length(it) > 0          then Result :=  it[NumPhases - 1]         else Result :=  0;
+      3 :  if length(ithistory) > 0   then Result :=  ithistory[NumPhases - 1]  else Result :=  0;
       4 :  Result :=  RatedVDC;
       5 :  if length(m) > 0           then Result :=  m[0]          else Result :=  0;
       6 :  Result :=  ISP;
@@ -137,7 +144,7 @@ uses DSSGlobals;
         Begin
             iDelta    :=  PICtrl^.SolvePI( IError );
             myDCycle  :=  m[i] + iDelta;
-            if Vgrid[i].mag > MinVS then
+            if ( ( Vgrid[i].mag > MinVS ) or ( MinVS = 0 ) ) and not ResetIBR then
             Begin
               if SafeMode then
               Begin
@@ -163,14 +170,12 @@ uses DSSGlobals;
 //---------------------------------------------------------------------------------------
   Procedure TInvDynamicVars.FixPhaseAngle(ActorID, idx : Integer);
   Var
-    j,
-    i           : Integer;
     myError     : Double;
 
   Begin
     // Corrects the phase angle
-    myError           :=  ( ( (i - 1) * TwoPi / -3 ) - Vgrid[idx].ang );
-    Vgrid[idx].ang    :=   Vgrid[idx].ang + myError;
+    AngDelta[idx]     :=   AngDelta[idx] + ( ( ( idx * TwoPi ) / -3 ) - Vgrid[idx].ang );
+    Vgrid[idx].ang    :=   AngDelta[idx];
   End;
 
 //---------------------------------------------------------------------------------------
@@ -201,15 +206,15 @@ uses DSSGlobals;
   Begin
     Z    := TCmatrix.CreateMatrix(YMatrix^.Order);
 
-    X1    := ( Sqr( BasekV ) / ISP ) / Sqrt(1.0 + 0.0625);
+    X1    := ( Sqr( RatedkVLL ) / mKVARating ) / Sqrt(1.0 + 0.0625);
     R1    := X1 /4; // Uses defaults
     R2    := R1;     // default Z2 = Z1
     X2    := X1;
-    Isc1  := ( ISP * 1000.0 / ( sqrt(3) * BasekV ) ) / NPhases;
+    Isc1  := ( mKVARating * 1000.0 / ( sqrt(3) * RatedkVLL ) ) / NPhases;
   //  Compute R0, X0
     a     :=  10;
     b     :=  ( 4.0*( R1 + X1 * 3 ) );
-    c     :=  ( 4.0 * ( R1*R1 + X1*X1 )- SQR( ( sqrt(3) * BasekV * 1000.0 ) / Isc1));
+    c     :=  ( 4.0 * ( R1*R1 + X1*X1 )- SQR( ( sqrt(3) * RatedkVLL * 1000.0 ) / Isc1));
     R0    := QuadSolver( a, b, c );
     X0    := R0 * 3;
     // for Z matrix
@@ -240,7 +245,7 @@ uses DSSGlobals;
   Begin
     refAngle  :=  0;
     FOR i := 1 to NPhases Do
-      x^[i] :=  pdegtocomplex( BasekV, ( 360.0 + refAngle - ( ( i - 1 ) * 360.0 ) / NPhases ) );
+      x^[i] :=  pdegtocomplex( BaseV, ( 360.0 + refAngle - ( ( i - 1 ) * 360.0 ) / NPhases ) );
   End;
 
 end.
