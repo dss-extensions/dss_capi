@@ -2194,8 +2194,7 @@ Begin
        STORE_CHARGING, STORE_IDLING:    Y := YeqDischarge;
        STORE_DISCHARGING:               Begin
                                           if not GFM_mode then
-                                            if IsDynamicModel then Y := cmplx(0,0)
-                                            else                   Y := cnegate(YeqDischarge)
+                                            Y := cnegate(YeqDischarge)
                                           else
                                           Begin
                                             with myDynVars, StorageVars do
@@ -3462,14 +3461,7 @@ Begin
         Conn          := Connection;
 
         // Sets the length of State vars to cover the num of phases
-        setlength(dit,NumPhases);     // Includes the current and past values
-        setlength(it,NumPhases);
-        setlength(itHistory,NumPhases);
-        setlength(Vgrid,NumPhases);
-        setlength(m,NumPhases);
-        setlength(VDelta,NumPhases);
-        setlength(ISPDelta,NumPhases);
-        setlength(AngDelta,NumPhases);
+        InitDynArrays(NumPhases);
 
         if NumPhases > 1 then
           BasekV  :=  PresentkV / sqrt(3)
@@ -3500,7 +3492,7 @@ Begin
             Vgrid[i]:=  ctopolar( NodeV^[NodeRef^[i + 1]] );
             dit[i]  :=  0;
             it[i]   :=  0;
-            m[i]    :=  ( ( RS * it[i] ) + Vgrid[i].mag ) / RatedVDC;   // Duty factor in terms of actual voltage
+            m[i]    :=  ( ( RS * it[i] ) + Vgrid[i].mag ) / RatedVDC;                     // Duty factor in terms of actual voltage
 
             if m[i] > 1 then m[i] :=  1;
             ISPDelta[i] :=  0;
@@ -3564,10 +3556,12 @@ Begin
                 End
                 else
                   ISP := ( ( kW_out * 1000 ) / Vgrid[i].mag ) / NumPhases;
+                if ISP > IMaxPPhase then  ISP :=  IMaxPPhase;
               End
               else
               Begin
-                VDelta[i]   :=  ( BasekV - ( Vgrid[i].mag / 1000 ) ) / BasekV;
+                if ResetIBR then  VDelta[i]   :=  ( 0.001 - ( Vgrid[i].mag / 1000 ) ) / BasekV
+                else              VDelta[i]   :=  ( BasekV - ( Vgrid[i].mag / 1000 ) ) / BasekV;
                 if abs(VDelta[i]) > CtrlTol then
                 BEgin
                   ISPDelta[i] :=  ISPDelta[i] + ( IMaxPhase * VDelta[i] ) * kP * 100;
