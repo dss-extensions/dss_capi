@@ -2045,30 +2045,40 @@ begin
 //    Grid forming inverter
       else if(ControlMode = GFM) then
       begin
-        DER_OL                                      :=  False;
-        if ControlledElement.GFM_Mode then
+        With  ActiveCircuit[ActiveActor].solution  Do
         Begin
-          if ( ControlledElement.DSSClassName = myDERTypes[EStorage] ) then
+          DER_OL                                      :=  False;
+          if ControlledElement.GFM_Mode then
           Begin
-            if TStorageObj(ControlledElement).CheckOLInverter(ActorID) then
+            if ( ControlledElement.DSSClassName = myDERTypes[EStorage] ) then
             Begin
-              DER_OL                                              :=  True;
-              TStorageObj(ControlledElement).StorageState         :=  0;  // It's burning, Turn it off
-              TStorageObj(ControlledElement).myDynVars.ResetIBR   :=  True;
-              TStorageObj(ControlledElement).StateChanged         :=  TRUE;
+              if TStorageObj(ControlledElement).CheckOLInverter(ActorID) then
+              Begin
+
+                  if not IsDynamicModel then
+                  Begin
+                    DER_OL                                              :=  True;
+                    TStorageObj(ControlledElement).StorageState         :=  0;  // It's burning, Turn it off
+                    TStorageObj(ControlledElement).StateChanged         :=  TRUE;
+                  End
+                  Else
+                    TStorageObj(ControlledElement).myDynVars.ResetIBR   :=  True; // The dynamic alg will take it to safety
+              End;
+            End
+            else
+            Begin
+            if not IsDynamicModel then
+              DER_OL       := TPVSystemObj(ControlledElement).CheckOLInverter(ActorID)
+            else
+              if TPVSystemObj(ControlledElement).CheckOLInverter(ActorID) then
+                TPVSystemObj(ControlledElement).myDynVars.ResetIBR  :=  True;
             End;
-          End
-          else
-          Begin
-            DER_OL       := TPVSystemObj(ControlledElement).CheckOLInverter(ActorID);
-            if DER_OL then  TPVSystemObj(ControlledElement).myDynVars.ResetIBR  :=  True;
 
-          End;
-
-          if DER_OL then
-          Begin
-            ControlledElement.GFM_Mode                          := False;
-            ControlledElement.YprimInvalid[ActorID]             := TRUE;
+            if DER_OL then
+            Begin
+              ControlledElement.GFM_Mode                          := False;
+              ControlledElement.YprimInvalid[ActorID]             := TRUE;
+            End;
           End;
         End;
       end;
@@ -2744,10 +2754,14 @@ begin
                             if ControlledELement.DSSClassName = myDERTypes[EStorage] then                              // storage case
                             Begin
                               if ( TStorageObj(ControlledElement).StorageState = 1 ) then                       // Check if it's in discharging mode
-                                Valid   :=  TStorageObj(ControlledElement).CheckOLInverter(ActorID)             // Checks if Inv OL
+                                Valid   :=  TStorageObj(ControlledElement).CheckOLInverter(ActorID);            // Checks if Inv OL
+                                Valid   :=  Valid and not TStorageObj(ControlledElement).myDynVars.ResetIBR     // Check if we are not resetting
                             End
-                            else                                                                                // PVSystem case
+                            else
+                            Begin                                                                               // PVSystem case
                               Valid   :=  TPVSystemObj(ControlledElement).CheckOLInverter(ActorID);             // Checks if Inv OL
+                              Valid   :=  Valid and not TPVSystemObj(ControlledElement).myDynVars.ResetIBR     // Check if we are not resetting
+                            End;
 
                             if Valid then
                             Begin
