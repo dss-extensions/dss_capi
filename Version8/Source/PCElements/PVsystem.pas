@@ -1479,8 +1479,7 @@ Begin
       if not GFM_Mode then
       Begin
         {YEQ is always expected as the equivalent line-neutral admittance}
-        if IsDynamicModel then Y := cmplx(0,0)
-        else                   Y := cnegate(YEQ);   // negate for generation    YEQ is L-N quantity
+        Y := cnegate(YEQ);   // negate for generation    YEQ is L-N quantity
         // ****** Need to modify the base admittance for real harmonics calcs
         Y.im           := Y.im / FreqMultiplier;
         CASE Connection OF
@@ -2327,14 +2326,7 @@ PROCEDURE TPVsystemObj.InitStateVars(ActorID : Integer);
       NumConductors := Fnconds;
       Conn          := Connection;
       // Sets the length of State vars to cover the num of phases
-      setlength(dit,NumPhases);     // Includes the current and past values
-      setlength(it,NumPhases);
-      setlength(itHistory,NumPhases);
-      setlength(Vgrid,NumPhases);
-      setlength(m,NumPhases);
-      setlength(VDelta,NumPhases);
-      setlength(ISPDelta,NumPhases);
-      setlength(AngDelta,NumPhases);
+      InitDynArrays(NumPhases);
 
       if NumPhases > 1 then
         BasekV  :=  PresentkV / sqrt(3)
@@ -2412,8 +2404,6 @@ PROCEDURE TPVsystemObj.IntegrateStates(ActorID : Integer);
         IMaxPPhase :=  ( PanelkW / BasekV ) / NumPhases;
         for i := 0 to (NumPhases - 1) do                                              // multiphase approach
         Begin
-          if not ResetIBR then
-          Begin
             With DynaVars Do
             If (IterationFlag = 0) Then
             Begin {First iteration of new time step}
@@ -2425,11 +2415,13 @@ PROCEDURE TPVsystemObj.IntegrateStates(ActorID : Integer);
             if not GFM_Mode then
             Begin
               ISP   :=  ( ( PanelkW * 1000 ) / Vgrid[i].mag ) / NumPhases;
+              if ISP > IMaxPPhase then  ISP :=  IMaxPPhase;
               if ( Vgrid[i].mag < MinVS ) then ISP  :=  0.01;                                 // turn off the inverter
             End
             else
             Begin
-              VDelta[i]   :=  ( BasekV - ( Vgrid[i].mag / 1000 ) ) / BasekV;
+              if ResetIBR then  VDelta[i]   :=  ( 0.001 - ( Vgrid[i].mag / 1000 ) ) / BasekV
+              else              VDelta[i]   :=  ( BasekV - ( Vgrid[i].mag / 1000 ) ) / BasekV;
               if abs(VDelta[i]) > CtrlTol then
               BEgin
                 ISPDelta[i] :=  ISPDelta[i] + ( IMaxPPhase * VDelta[i] ) * kP * 100;
@@ -2473,8 +2465,6 @@ PROCEDURE TPVsystemObj.IntegrateStates(ActorID : Integer);
               if DynamicEqObj <> nil then dit[i]:=  DynamicEqVals[DynOut[0]][1];
               it[i] := itHistory[i] + 0.5*h*dit[i];
             End;
-          End
-          Else it[i] :=  0;                                                              // Device reset
 
         End;
       End;

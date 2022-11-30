@@ -33,6 +33,7 @@ type
     Discharging,                                // To verify if the storage device is discharging
     ResetIBR,                                   // flag for forcing the IBR to turn OFF
     SafeMode              : Boolean;            // To indicate weather the Inverter has entered into safe mode
+    SfModePhase           : Array of Boolean;   // To identify when to restart the phase
 
     function Get_InvDynValue(myindex, NumPhases : Integer): Double;
     function Get_InvDynName(myindex : Integer): String;
@@ -42,6 +43,7 @@ type
     Procedure FixPhaseAngle(ActorID, idx : Integer);
     Procedure CalcGFMYprim(ActorID, NPhases : Integer; YMatrix  : pTcMatrix);
     Procedure CalcGFMVoltage(ActorID, NPhases : Integer; x : pComplexArray);
+    Procedure InitDynArrays(NPhases : Integer);
 
   End;
 
@@ -121,7 +123,10 @@ uses DSSGlobals;
     with ActiveCircuit[ActorID].Solution do
     Begin
       SolveModulation(i, ActorID, PICtrl);
-      dit[i]  := ( (m[i] * RatedVDC) - (RS * it[i]) - Vgrid[i].mag ) / LS;  // Solves derivative
+      if SafeMode then
+        dit[i]    := 0
+      else
+        dit[i]  := ( (m[i] * RatedVDC) - (RS * it[i]) - Vgrid[i].mag ) / LS;  // Solves derivative
     End;
   End;
 
@@ -142,24 +147,28 @@ uses DSSGlobals;
         iErrorPct :=  iError/ISP;
         if Abs(iErrorPct) > CtrlTol  then
         Begin
-            iDelta    :=  PICtrl^.SolvePI( IError );
-            myDCycle  :=  m[i] + iDelta;
-            if ( ( Vgrid[i].mag > MinVS ) or ( MinVS = 0 ) ) and not ResetIBR then
+          iDelta    :=  PICtrl^.SolvePI( IError );
+          myDCycle  :=  m[i] + iDelta;
+          if ( Vgrid[i].mag > MinVS ) or ( MinVS = 0 ) then
+          Begin
+            if SafeMode or SfModePhase[i] then
             Begin
-              if SafeMode then
-              Begin
-               //Coming back from safe operation, need to boost duty cycle
-               m[i]     :=  ( ( RS * it[i] ) + Vgrid[i].mag ) / RatedVDC;
-               SafeMode :=  False;
-              End
-              else
-                if ( myDCycle <= 1 ) and ( myDCycle > 0 ) then m[i]    :=  myDCycle;
+             //Coming back from safe operation, need to boost duty cycle
+             m[i]           :=  ( ( RS * it[i] ) + Vgrid[i].mag ) / RatedVDC;
+             SafeMode       :=  False;
+             SfModePhase[i] :=  False;
             End
             else
-            Begin
-                m[i]      := 0;
-                SafeMode  :=  True;
-            End;
+              if ( myDCycle <= 1 ) and ( myDCycle > 0 ) then m[i]    :=  myDCycle;
+          End
+          else
+          Begin
+              m[i]          := 0;
+              it[i]         := 0;
+              itHistory[i]  :=0;
+              SafeMode      :=  True;
+              SfModePhase[i]:=  True;
+          End;
         End;
       End;
 
@@ -247,5 +256,27 @@ uses DSSGlobals;
     FOR i := 1 to NPhases Do
       x^[i] :=  pdegtocomplex( BaseV, ( 360.0 + refAngle - ( ( i - 1 ) * 360.0 ) / NPhases ) );
   End;
+//---------------------------------------------------------------------------------------
+//|  Initializes all the local vectors using the number of phases given by the caller    |
+//---------------------------------------------------------------------------------------
+  Procedure TInvDynamicVars.InitDynArrays(NPhases : Integer);
+  var
+    i : Integer;
+  Begin
+    setlength(dit,NPhases);     // Includes the current and past values
+    setlength(it,NPhases);
+    setlength(itHistory,NPhases);
+    setlength(Vgrid,NPhases);
+    setlength(m,NPhases);
+    setlength(VDelta,NPhases);
+    setlength(ISPDelta,NPhases);
+    setlength(AngDelta,NPhases);
+    setlength(SfModePhase,NPhases);
+
+    for i := 0 to ( NPhases -1 ) do  SfModePhase[i] :=  False;
+    SafeMode  :=  False;
+
+  End;
+
 
 end.
