@@ -112,7 +112,7 @@ Begin
      ExecOption[68] := 'Overloadreport';
      ExecOption[69] := 'Voltexceptionreport';
      ExecOption[70] := 'Cfactors';
-     ExecOption[71] := 'Showexport';
+     ExecOption[71] := 'ShowExport';
      ExecOption[72] := 'Numallociterations';
      ExecOption[73] := 'DefaultBaseFrequency';
      ExecOption[74] := 'Markswitches';
