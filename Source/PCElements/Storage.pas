@@ -2191,7 +2191,8 @@ Begin
 
      {Yeq is always expected as the equivalent line-neutral admittance}
       CASE Fstate of
-       STORE_CHARGING, STORE_IDLING:    Y := YeqDischarge;
+       STORE_CHARGING:    Y := YeqDischarge;
+       STORE_IDLING:      Y := cZERO;
        STORE_DISCHARGING:               Begin
                                           if not GFM_mode then
                                             Y := cnegate(YeqDischarge)
