@@ -7,7 +7,7 @@ Version 9.6.1.1
 
 Changes this version
 ====================
-- New flag added to avoid displaying reports automatically when generated (SilentReports).
+- New flag added to avoid displaying reports automatically when generated (ShowReports).
 - New color themes added to the GUI. Go to Set -> Color Themes and check if you like it (Just added 2 as an experiment).
 - Adds grid forming inverter capabilities to Inverter-base resources (Storage and PVSystem) for microgrid studies in QSTS.
 - Adds dynamics simulation capabilities to Inverter-based Resources (Storage and PVSystem), including Black start operation. Includes DynamicExp compatibility. Examples and documentation included.
