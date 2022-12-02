@@ -3715,6 +3715,8 @@ Begin
           CircuitNode (FunPrf, ActiveCircuit[ActiveActor]);
           VbaseNode (FunPrf, pLine);
           if LineCodeSpecified then begin
+            if (UserLengthUnits = UNITS_NONE) then
+              v1 := To_Meters (LineCodeUnits);
             DoubleNode (FunPrf, 'Conductor.length', Len * v1);
             LineCodeRefNode (EpPrf, clsLnCd, pLine.CondCode);
           end else if GeometrySpecified then begin
