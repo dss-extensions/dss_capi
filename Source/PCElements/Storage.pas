@@ -4107,12 +4107,12 @@ end;
 // for CIM export
 function TStorageObj.Get_Pmin:double;
 begin
-  Result := -StorageVars.kwRating * pctKwIn / 100.0;
+  Result := -StorageVars.kwRating * pctKwRated;
 end;
 
 function TStorageObj.Get_Pmax:double;
 begin
-  Result := StorageVars.kwRating * pctKwOut / 100.0;
+  Result := StorageVars.kwRating * pctKwRated;
 end;
 
 function TStorageObj.Get_QMaxInj:double;
