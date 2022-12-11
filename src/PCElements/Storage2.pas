@@ -1679,9 +1679,10 @@ begin
         begin  //  Regular power flow Storage element model
             // Yeq is always expected as the equivalent line-neutral admittance
             case Fstate of
-                STORE_CHARGING,
-                STORE_IDLING:
+                STORE_CHARGING:
                     Y := YeqDischarge;
+                STORE_IDLING:
+                    Y := cmplx(0.0, 0.0);
                 STORE_DISCHARGING:
                     Y := -YeqDischarge;
             end;
