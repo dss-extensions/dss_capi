@@ -1,8 +1,8 @@
-# Debugging
+# Debugging the engine
 
 For debugging the Pascal side of the DSS Extensions, you need to load the debug version of DSS C-API. Starting on DSS C-API version 0.10.6, this debug version is included side-by-side with the optimized version. You can, of course, build it yourself if you prefer. Most users have no interest in Pascal, hence the decision to include the debug binary in some of the projects. As a reminder, **the debug version is slower since the optimizations are disabled**. Remember to toggle back the usage of the release/normal version after you are done debugging.
 
-If you are using DSS_Python or OpenDSSDirect.py, set the environment variable `DSS_EXTENSIONS_DEBUG=1` before starting Python and loading the module. This will instruct the modules to load the debug version. The other interface projects will be updated in the future the same or similar mechanism where possible. With that version loaded, you typically can use a debugger of your preference. Some examples are listed in this document.
+If you are using DSS_Python, OpenDSSDirect.py or DSS_MATLAB, set the environment variable `DSS_EXTENSIONS_DEBUG=1` before starting Python/MATLAB and loading the module. This will instruct the modules to load the debug version. With that version loaded, you typically can use a debugger of your preference. Some examples are listed in this document.
 
 To be able to browse the code, clone the main repository on the tag corresponding to the release you are using, for example:
 
@@ -15,6 +15,20 @@ To confirm the tag, you can use the low-level function `DSS_Get_Version()`, or `
 Recommended reading for more information: 
 - https://wiki.freepascal.org/Debugger_Setup
 - https://wiki.lazarus.freepascal.org/GDB_Debugger_Tips
+
+For projects that don't support `DSS_EXTENSIONS_DEBUG=1`, if may be easier to rename the library/DLL and restart the host process.
+
+### OpenDSSDirect.jl
+
+For OpenDSSDirect.jl, although just setting `DSS_EXTENSIONS_DEBUG=1` used to work, for current and future versions you may need to recompile the Julia package. On Linux, you can do this with:
+
+```bash
+DSS_EXTENSIONS_DEBUG=1 julia -e 'using OpenDSSDirect; Base.compilecache(Base.PkgId(OpenDSSDirect))'
+```
+
+After that, the string returned from `Basic.Version()` should contain `"DEBUG"`. 
+
+When you are done debugging, remember to recompile without `DSS_EXTENSIONS_DEBUG=1`. You could also use a separate environment for debugging.
 
 ## Debugging on Linux / macOS
 
