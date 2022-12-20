@@ -635,7 +635,10 @@ Begin
                     DefaultLoadModel := InterpretLoadModel(Param); // for reverting to last on specified
                     LoadModel := DefaultLoadModel;
                End;
-           20: ActiveCircuit[ActiveActor].LoadMultiplier   := Parser[ActiveActor].DblValue;  // Set using LoadMultiplier property
+           20: Begin
+                ActiveCircuit[ActiveActor].LoadMultiplier   := Parser[ActiveActor].DblValue;  // Set using LoadMultiplier property
+                ActiveCircuit[ActiveActor].Solution.SystemYChanged := true;
+               End;
            21: ActiveCircuit[ActiveActor].NormalMinVolts := Parser[ActiveActor].DblValue;
            22: ActiveCircuit[ActiveActor].NormalMaxVolts := Parser[ActiveActor].DblValue;
            23: ActiveCircuit[ActiveActor].EmergMinVolts  := Parser[ActiveActor].DblValue;
