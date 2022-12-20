@@ -713,7 +713,7 @@ procedure TInvControl.DefineProperties;
     PropertyHelp[32] := 'Deprecated, use DERList instead.';
     PropertyHelp[33] := 'Required for Active Voltage Regulation (AVR).';
     PropertyHelp[34] := 'Integer defining the method for moving across the control curve. It can be one of the following: ' + CRLF + CRLF +
-                        '0 = Lienar mode (default)' + CRLF +
+                        '0 = Linear mode (default)' + CRLF +
                         '1 = Exponential' + CRLF + CRLF +
                         'Use this property for better tunning your controller and improve the controller response in terms of control iterations needed to reach the target.' + CRLF +
                         'This property alters the meaning of deltaQ_factor and deltaP_factor properties accroding to its value (Check help). The method can also be combined with the controller tolerance for improving performance.';
