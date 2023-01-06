@@ -2334,7 +2334,7 @@ PROCEDURE TPVsystemObj.InitStateVars(ActorID : Integer);
         BasekV  :=  PresentkV;
 
       BaseZt      :=  0.01 * ( SQR( PresentkV ) / FkVArating ) * 1000;
-      MaxVS       :=  ( 1 + ( SMThreshold / 100 ) ) * BasekV * 1000;
+      MaxVS       :=  ( 2 - ( SMThreshold / 100 ) ) * BasekV * 1000;
       MinVS       :=  ( SMThreshold / 100 ) * BasekV * 1000;
       MinAmps     :=  ( FpctCutOut / 100 ) *  ( ( FkVArating / BasekV ) / NumPhases );
       ResetIBR    :=  False;
