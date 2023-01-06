@@ -899,7 +899,7 @@ End;
 FUNCTION TStorage.Edit(ActorID : Integer):Integer;
 
 VAR
-  VarIdx,
+  VarIdx, j,
   i, iCase,
   ParamPointer : Integer;
   TmpStr,
@@ -1025,8 +1025,6 @@ Begin
                                   Begin
                                       GFM_mode            :=  True;               // Enables GFM mode for this IBR
                                       myDynVars.ResetIBR  :=  False;
-                                      if length( myDynVars.Vgrid ) < NPhases then
-                                        setlength( myDynVars.Vgrid, NPhases );    // Used to store the voltage per phase
                                     End
                                     else
                                       GFM_mode  :=  False;
@@ -3469,9 +3467,8 @@ Begin
         else
           BasekV  :=  PresentkV;
 
-        ResetIBR    :=  False;
         BaseZt      :=  0.01 * ( SQR( PresentkV ) / FkVArating ) * 1000;
-        MaxVS       :=  ( 1 + ( SMThreshold / 100 ) ) * BasekV * 1000;
+        MaxVS       :=  ( 2 - ( SMThreshold / 100 ) ) * BasekV * 1000;
         MinVS       :=  ( SMThreshold / 100 ) * BasekV * 1000;
         MinAmps     :=  ( FpctCutOut / 100 ) *  ( ( FkVArating / BasekV ) / NumPhases );
         ResetIBR    :=  False;
@@ -3530,104 +3527,102 @@ Begin
        DynaModel.Integrate
   Else
   Begin
-    if FState = STORE_DISCHARGING then
+    With ActiveCircuit[ActorID].Solution, StorageVars, myDynVars Do
     Begin
-      With ActiveCircuit[ActorID].Solution, StorageVars, myDynVars Do
+      With StorageVars Do
       Begin
-        With StorageVars Do
+        ComputePresentkW();
+        IMaxPhase :=  ( kW_out / BasekV ) / NumPhases;
+        for i := 0 to (NumPhases - 1) do
         Begin
-          ComputePresentkW();
-          IMaxPhase :=  ( kW_out / BasekV ) / NumPhases;
-          for i := 0 to (NumPhases - 1) do
+          IF FState = STORE_DISCHARGING Then
           Begin
-            IF FState = STORE_DISCHARGING Then
+            With DynaVars Do
+            If (IterationFlag = 0) Then
+            Begin {First iteration of new time step}
+              itHistory[i] := it[i] + 0.5*h*dit[i];
+            End;
+            Vgrid[i]    :=  ctopolar(NodeV^[NodeRef^[i + 1]]);       // Voltage at the Inv terminals
+            if not GFM_Mode then
             Begin
-              With DynaVars Do
-              If (IterationFlag = 0) Then
-              Begin {First iteration of new time step}
-                itHistory[i] := it[i] + 0.5*h*dit[i];
-              End;
-              Vgrid[i]    :=  ctopolar(NodeV^[NodeRef^[i + 1]]);       // Voltage at the Inv terminals
-              if not GFM_Mode then
+              if ( Vgrid[i].mag < MinVS ) or ( Vgrid[i].mag > MaxVS ) then
               Begin
-                if Vgrid[i].mag < MinVS then
-                Begin
-                  ISP     :=  0.01;                 // turn off the inverter
-                  FState  :=  STORE_IDLING;
-                End
-                else
-                  ISP := ( ( kW_out * 1000 ) / Vgrid[i].mag ) / NumPhases;
-                if ISP > IMaxPPhase then  ISP :=  IMaxPPhase;
+                ISP     :=  0.01;                 // turn off the inverter
+                FState  :=  STORE_IDLING;
+                if ( Vgrid[i].mag > MaxVS ) then Vgrid[i].mag := MaxVs;
+                  
               End
               else
-              Begin
-                if ResetIBR then  VDelta[i]   :=  ( 0.001 - ( Vgrid[i].mag / 1000 ) ) / BasekV
-                else              VDelta[i]   :=  ( BasekV - ( Vgrid[i].mag / 1000 ) ) / BasekV;
-                if abs(VDelta[i]) > CtrlTol then
-                BEgin
-                  ISPDelta[i] :=  ISPDelta[i] + ( IMaxPhase * VDelta[i] ) * kP * 100;
-                  if ISPDelta[i] > IMaxPhase then ISPDelta[i] :=  IMaxPhase
-                  else  if ISPDelta[i] < 0   then ISPDelta[i] :=  0.01;
-                End;
-                ISP         :=  ISPDelta[i];
-                FixPhaseAngle(ActorID, i);
-              End;
-              if DynamicEqObj <> nil then                                                 // Loads values into dynamic expression if any
-              Begin
-                NumData   :=  ( length(DynamicEqPair) div 2 )  - 1 ;
-                DynamicEqVals[DynOut[0]][0] :=  it[i];                                    // brings back the current values/phase
-                DynamicEqVals[DynOut[0]][1] :=  dit[i];
-
-                for j := 0 to NumData do
-                Begin
-                  if not DynamicEqObj.IsInitVal(DynamicEqPair[( j * 2 ) + 1]) then        // it's not intialization
-                  Begin
-                    case DynamicEqPair[( j * 2 ) + 1] of
-                      2:  DynamicEqVals[DynamicEqPair[ j * 2 ]][0] := Vgrid[i].mag;       // volt per phase
-                      4:  ;                                                               // Nothing for this object (current)
-                      10: DynamicEqVals[DynamicEqPair[ j * 2 ]][0] := RatedVDC;
-                      11: Begin
-                            SolveModulation( i, ActorID, @PICtrl[i] );
-                            DynamicEqVals[DynamicEqPair[ j * 2 ]][0] := m[i]
-                          End
-                    else
-                      DynamicEqVals[DynamicEqPair[ j * 2 ]][0] := PCEValue[1, DynamicEqPair[( j * 2 ) + 1], ActorID];
-                    end;
-                  End;
-                End;
-                DynamicEqObj.SolveEq(DynamicEqVals);                                      // solves the differential equation using the given dynamic expression
-              End
-              else
-                SolveDynamicStep( i, ActorID, @PICtrl[i] );                // Solves dynamic step for inverter
-
-              // Trapezoidal method
-              With DynaVars Do
-              Begin
-                if DynamicEqObj <> nil then dit[i]:=  DynamicEqVals[DynOut[0]][1];
-                it[i] := itHistory[i] + 0.5*h*dit[i];
-              End;
+                ISP := ( ( kW_out * 1000 ) / Vgrid[i].mag ) / NumPhases;
+              if ISP > IMaxPPhase then  ISP :=  IMaxPPhase;
             End
             else
             Begin
-              if ( Vgrid[i].mag >= MinVS ) or ResetIBR then OFFVal  :=  PIdling / Vgrid[i].mag;   // To match with idling losses
-              //else OFFVal :=  0;
-              it[i] := OFFVal;   // To match with idling losses
+              if ResetIBR then  VDelta[i]   :=  ( 0.001 - ( Vgrid[i].mag / 1000 ) ) / BasekV
+              else              VDelta[i]   :=  ( BasekV - ( Vgrid[i].mag / 1000 ) ) / BasekV;
+              if abs(VDelta[i]) > CtrlTol then
+              BEgin
+                ISPDelta[i] :=  ISPDelta[i] + ( IMaxPhase * VDelta[i] ) * kP * 100;
+                if ISPDelta[i] > IMaxPhase then ISPDelta[i] :=  IMaxPhase
+                else  if ISPDelta[i] < 0   then ISPDelta[i] :=  0.01;
+              End;
+              ISP         :=  ISPDelta[i];
+              FixPhaseAngle(ActorID, i);
             End;
-          End;
-          // Write Dynamics Trace Record
-          IF DebugTrace Then
+            if DynamicEqObj <> nil then                                                 // Loads values into dynamic expression if any
+            Begin
+              NumData   :=  ( length(DynamicEqPair) div 2 )  - 1 ;
+              DynamicEqVals[DynOut[0]][0] :=  it[i];                                    // brings back the current values/phase
+              DynamicEqVals[DynOut[0]][1] :=  dit[i];
+
+              for j := 0 to NumData do
+              Begin
+                if not DynamicEqObj.IsInitVal(DynamicEqPair[( j * 2 ) + 1]) then        // it's not intialization
+                Begin
+                  case DynamicEqPair[( j * 2 ) + 1] of
+                    2:  DynamicEqVals[DynamicEqPair[ j * 2 ]][0] := Vgrid[i].mag;       // volt per phase
+                    4:  ;                                                               // Nothing for this object (current)
+                    10: DynamicEqVals[DynamicEqPair[ j * 2 ]][0] := RatedVDC;
+                    11: Begin
+                          SolveModulation( i, ActorID, @PICtrl[i] );
+                          DynamicEqVals[DynamicEqPair[ j * 2 ]][0] := m[i]
+                        End
+                  else
+                    DynamicEqVals[DynamicEqPair[ j * 2 ]][0] := PCEValue[1, DynamicEqPair[( j * 2 ) + 1], ActorID];
+                  end;
+                End;
+              End;
+              DynamicEqObj.SolveEq(DynamicEqVals);                                      // solves the differential equation using the given dynamic expression
+            End
+            else
+              SolveDynamicStep( i, ActorID, @PICtrl[i] );                // Solves dynamic step for inverter
+
+            // Trapezoidal method
+            With DynaVars Do
+            Begin
+              if DynamicEqObj <> nil then dit[i]:=  DynamicEqVals[DynOut[0]][1];
+              it[i] := itHistory[i] + 0.5*h*dit[i];
+            End;
+          End
+          else
           Begin
-             Append(TraceFile);
-             Write(TraceFile,Format('t=%-.5g ', [Dynavars.t]));
-             Write(TraceFile,Format(' Flag=%d ',[Dynavars.Iterationflag]));
-             Writeln(TraceFile);
-             CloseFile(TraceFile);
+            if ( Vgrid[i].mag >= MinVS ) or ResetIBR then OFFVal  :=  PIdling / Vgrid[i].mag;   // To match with idling losses
+            //else OFFVal :=  0;
+            it[i] := OFFVal;   // To match with idling losses
           End;
         End;
-
+        // Write Dynamics Trace Record
+        IF DebugTrace Then
+        Begin
+           Append(TraceFile);
+           Write(TraceFile,Format('t=%-.5g ', [Dynavars.t]));
+           Write(TraceFile,Format(' Flag=%d ',[Dynavars.Iterationflag]));
+           Writeln(TraceFile);
+           CloseFile(TraceFile);
+        End;
       End;
-    End;
 
+    End;
   End;
 End;
 
