@@ -273,7 +273,14 @@ uses DSSGlobals;
     setlength(AngDelta,NPhases);
     setlength(SfModePhase,NPhases);
 
-    for i := 0 to ( NPhases -1 ) do  SfModePhase[i] :=  False;
+    for i := 0 to ( NPhases -1 ) do
+    Begin
+      SfModePhase[i]  :=  False;
+      it[i]           := 0;
+      itHistory[i]    := 0;
+      dit[i]          := 0;
+      m[i]            := 0;
+    End;
     SafeMode  :=  False;
 
   End;
