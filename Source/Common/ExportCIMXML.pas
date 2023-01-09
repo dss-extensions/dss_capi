@@ -3165,15 +3165,6 @@ Begin
           DoubleNode (EpPrf, 'ShuntCompensator.nomU', 1000.0 * NomKV);
           DoubleNode (EpPrf, 'LinearShuntCompensator.bPerSection', val);
           DoubleNode (EpPrf, 'LinearShuntCompensator.gPerSection', 0.0);
-
-					val := 0.0;
-					pCapC := ActiveCircuit[ActiveActor].CapControls.First;
-					while (pCapC <> nil) do begin
-						if pCapC.This_Capacitor = pCap then val := pCapC.OnDelayVal;
-						pCapC := ActiveCircuit[ActiveActor].CapControls.Next;
-					end;
-					DoubleNode (EpPrf, 'ShuntCompensator.aVRDelay', val);
-
 					if Connection = 0 then begin
             ShuntConnectionKindNode (FunPrf, 'ShuntCompensator', 'Y');
             BooleanNode (FunPrf, 'ShuntCompensator.grounded', True);  // TODO - check bus 2
@@ -3186,6 +3177,15 @@ Begin
           DoubleNode (EpPrf, 'LinearShuntCompensator.g0PerSection', 0.0);
           IntegerNode (EpPrf, 'ShuntCompensator.normalSections', NumSteps);
           IntegerNode (EpPrf, 'ShuntCompensator.maximumSections', NumSteps);
+
+					val := 0.0;
+					pCapC := ActiveCircuit[ActiveActor].CapControls.First;
+					while (pCapC <> nil) do begin
+						if pCapC.This_Capacitor = pCap then val := pCapC.OnDelayVal;
+						pCapC := ActiveCircuit[ActiveActor].CapControls.Next;
+					end;
+					DoubleNode (EpPrf, 'ShuntCompensator.aVRDelay', val);
+
           val := 0;
           for i := 1 to NumSteps do if States[i,ActiveActor] > 0 then val := val + 1.0;
           DoubleNode (SshPrf, 'ShuntCompensator.sections', val);
