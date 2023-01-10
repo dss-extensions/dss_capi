@@ -1879,6 +1879,7 @@ begin
     DoubleNode (CatPrf, 'CableInfo.diameterOverInsulation', v1 * pCab.DiaIns);
     DoubleNode (CatPrf, 'CableInfo.diameterOverJacket', v1 * pCab.DiaCable);
 		DoubleNode (CatPrf, 'CableInfo.nominalTemperature', 90.0);  // we don't really know this
+    DoubleNode (CatPrf, 'CableInfo.relativePermittivity', pCab.EpsR);
   end;
 end;
 
