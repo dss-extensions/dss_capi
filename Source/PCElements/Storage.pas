@@ -754,7 +754,7 @@ Begin
                                 'for each iteration.  Creates a separate file for each Storage element named "Storage_name.CSV".' );
 
     AddProperty('kVDC', propkVDC,
-                           'Indicates the rated voltage (kV) at the input of the inverter at the peak of PV energy production. The value is normally greater or equal to the kV base of the PV system. It is used for dynamics simulation ONLY.');
+                           'Indicates the rated voltage (kV) at the input of the inverter while the storage is discharging. The value is normally greater or equal to the kV base of the Storage device. It is used for dynamics simulation ONLY.');
 
     AddProperty('Kp', propkp,
                            'It is the proportional gain for the PI controller within the inverter. Use it to modify the controller response in dynamics simulation mode.');

@@ -1122,8 +1122,8 @@ Begin
 
 
    CASE Algorithm of
-      NORMALSOLVE : DoNormalSolution(ActorID);
       NEWTONSOLVE : DoNewtonSolution(ActorID);
+      else          DoNormalSolution(ActorID);
    End;
 
    ActiveCircuit[ActorID].Issolved := ConvergedFlag;

@@ -2390,7 +2390,7 @@ PROCEDURE TPVsystemObj.IntegrateStates(ActorID : Integer);
       // Compute actual power output for the PVPanel
       With ActiveCircuit[ActorID].Solution Do
       Begin
-        case ActiveCircuit[ActiveActor].ActiveLoadShapeClass of
+        case ActiveCircuit[ActorID].ActiveLoadShapeClass of
             USEDAILY:  Begin CalcDailyMult(DynaVars.dblHour);  CalcDailyTemperature(DynaVars.dblHour);  End;
             USEYEARLY: Begin CalcYearlyMult(DynaVars.dblHour); CalcYearlyTemperature(DynaVars.dblHour); End;
             USEDUTY:   Begin CalcDutyMult(DynaVars.dblHour);   CalcDutyTemperature(DynaVars.dblHour);   End;
