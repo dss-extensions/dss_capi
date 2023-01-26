@@ -214,7 +214,6 @@ uses
 
 begin
   Application.Initialize;
-  TStyleManager.TrySetStyle('Windows10');
   Application.Title := 'OpenDSS: Distribution System Simulator';
 
   {Have to Start DSSExecutive before Creating the Control Panel}
