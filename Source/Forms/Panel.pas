@@ -2829,7 +2829,7 @@ end;
 
 procedure TControlPanel.SetStandardColorSch(Sender: TObject);
 begin
-    TStyleManager.TrySetStyle('Windows10', False);
+    TStyleManager.TrySetStyle('Windows', False);
     With ActiveScriptForm Do
       Editor.Font.Color     :=  clBlack;
 end;
