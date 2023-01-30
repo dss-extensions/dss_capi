@@ -203,7 +203,7 @@ begin
   Result := FALSE;
   elem := ActiveRegControl;
   if elem <> nil then
-    if elem.UseReverseDrop then Result := TRUE;
+    if elem.UseReverseSettings then Result := TRUE;
 end;
 
 function TRegControls.Get_MaxTapChange: Integer;
