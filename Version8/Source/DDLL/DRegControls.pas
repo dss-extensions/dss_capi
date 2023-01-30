@@ -88,7 +88,7 @@ begin
       Result := 0;
       elem := ActiveRegControl;
       if elem <> nil then
-        if elem.UseReverseDrop then Result := 1;
+        if elem.UseReverseSettings then Result := 1;
   end;
   7: begin  // RegControls.IsReversible write
       if arg = 1 then
