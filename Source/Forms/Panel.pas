@@ -289,13 +289,15 @@ type
     Timer1            : TTimer;
     COMHelp1: TMenuItem;
     Checkforupdates1: TMenuItem;
-    Closealltabsbutthisone1: TMenuItem;
-    Closealltabs1: TMenuItem;
     DirectDLL1: TMenuItem;
-    Saveas1: TMenuItem;
     WindowColorTheme1: TMenuItem;
     Standard1: TMenuItem;
     Dark1: TMenuItem;
+    his1: TMenuItem;
+    Alltabsbutthisone1: TMenuItem;
+    Alltabsbutthisone2: TMenuItem;
+    hiswindow1: TMenuItem;
+    hiswindow2: TMenuItem;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DSSHelp1Click(Sender: TObject);
@@ -472,8 +474,6 @@ type
     procedure ScriptFontClick(Sender: TObject);
     procedure ApplyFont(Sender: TObject; Wnd: HWND);
     procedure ScriptDoClick(Sender: TObject);
-    procedure ScriptSaveClick(Sender: TObject);
-    procedure ScriptCloseClick(Sender: TObject);
     procedure ScriptDirClick(Sender: TObject);
     procedure ScriptOpenClick(Sender: TObject);
     procedure ScriptEditClick(Sender: TObject);
@@ -482,12 +482,14 @@ type
     procedure Timerdone(Sender: TObject);
     procedure COMHelp1Click(Sender: TObject);
     procedure Checkforupdates1Click(Sender: TObject);
-    procedure Closealltabsbutthisone1Click(Sender: TObject);
-    procedure Closealltabs1Click(Sender: TObject);
     procedure LaunchDirectDLlHelp(Sender: TObject);
-    procedure SaveAsTabClick(Sender: TObject);
     procedure SetStandardColorSch(Sender: TObject);
     procedure SetDarkSolorsch(Sender: TObject);
+    procedure his1Click(Sender: TObject);
+    procedure Alltabsbutthisone1Click(Sender: TObject);
+    procedure Alltabsbutthisone2Click(Sender: TObject);
+    procedure hiswindow1Click(Sender: TObject);
+    procedure hiswindow2Click(Sender: TObject);
   private
     { Private declarations }
     PlotOptionString  :String;
@@ -690,51 +692,6 @@ begin
   ActiveScriptForm.ExecuteDSSCommand('clear');
 end;
 
-procedure TControlPanel.Closealltabs1Click(Sender: TObject);
-var
-  PageCount,
-  page        : Integer;
-
-begin
-  if ActiveScriptForm.CheckEditorClose = true then
-  begin
-    // removes all tabs
-    PageCount :=  EditPages.PageCount - 1;
-    for page := 0 to PageCount - 1 do // There must be at least one open (Main)
-    Begin
-      ScriptWindowList.Remove( TScriptEdit( EditPages.Pages[PageCount].Tag ) );
-      EditPages.Pages[PageCount].Free;
-      dec(PageCount);
-    End;
-  end;
-
-end;
-
-procedure TControlPanel.Closealltabsbutthisone1Click(Sender: TObject);
-var
-  PageCount,
-  page      : Integer;
-  myTag     : NativeInt;
-
-begin
-  if ActiveScriptForm.CheckEditorClose = true then
-  begin
-    myTag :=  EditPages.ActivePage.Tag;  // Saves the index for the current tab
-    // removes all but the active tab
-    PageCount :=  EditPages.PageCount - 1;
-    for page := 0 to PageCount - 1 do // There must be at least one open (Main)
-    Begin
-      if EditPages.Pages[PageCount].Tag <> myTag then
-      Begin
-        ScriptWindowList.Remove( TScriptEdit( EditPages.Pages[PageCount].Tag ) );
-        EditPages.Pages[PageCount].Free;
-      End;
-      dec(PageCount);
-    End;
-    ActiveScriptForm := TScriptEdit(myTag);
-  end;
-end;
-
 procedure TControlPanel.COMHelp1Click(Sender: TObject);
 begin
   ActiveScriptForm.ExecuteDSSCommand('COMHelp');
@@ -819,15 +776,6 @@ end;
 procedure TControlPanel.ScriptDirClick(Sender: TObject);
 begin
   ActiveScriptForm.ChangeToThisDir;
-end;
-
-procedure TControlPanel.ScriptCloseClick(Sender: TObject);
-begin
-  if ActiveScriptForm.CheckEditorClose = true then begin
-    EditPages.Pages[EditPages.ActivePageIndex].Free;
-    ScriptWindowList.Remove(ActiveScriptForm);
-    ActiveScriptForm := TScriptEdit(EditPages.ActivePage.Tag);
-  end;
 end;
 
 procedure TControlPanel.ScriptDoClick(Sender: TObject);
@@ -915,11 +863,6 @@ begin
     End;
   end;
   UpdateCaptions;
-end;
-
-procedure TControlPanel.ScriptSaveClick(Sender: TObject);
-begin
-  ActiveScriptForm.SaveSelection;
 end;
 
 procedure TControlPanel.LastFile1Click(Sender: TObject);
@@ -1494,6 +1437,50 @@ begin
 
 end;
 
+procedure TControlPanel.Alltabsbutthisone1Click(Sender: TObject);
+var
+  PageCount,
+  page      : Integer;
+  myTag     : NativeInt;
+
+begin
+  if ActiveScriptForm.CheckEditorClose = true then
+  begin
+    myTag :=  EditPages.ActivePage.Tag;  // Saves the index for the current tab
+    // removes all but the active tab
+    PageCount :=  EditPages.PageCount - 1;
+    for page := 0 to PageCount - 1 do // There must be at least one open (Main)
+    Begin
+      if EditPages.Pages[PageCount].Tag <> myTag then
+      Begin
+        ScriptWindowList.Remove( TScriptEdit( EditPages.Pages[PageCount].Tag ) );
+        EditPages.Pages[PageCount].Free;
+      End;
+      dec(PageCount);
+    End;
+    ActiveScriptForm := TScriptEdit(myTag);
+  end;
+end;
+
+procedure TControlPanel.Alltabsbutthisone2Click(Sender: TObject);
+var
+  PageCount,
+  page        : Integer;
+
+begin
+  if ActiveScriptForm.CheckEditorClose = true then
+  begin
+    // removes all tabs
+    PageCount :=  EditPages.PageCount - 1;
+    for page := 0 to PageCount - 1 do // There must be at least one open (Main)
+    Begin
+      ScriptWindowList.Remove( TScriptEdit( EditPages.Pages[PageCount].Tag ) );
+      EditPages.Pages[PageCount].Free;
+      dec(PageCount);
+    End;
+  end;
+end;
+
 procedure TControlPanel.Taps1Click(Sender: TObject);
 begin
       If ActiveCircuit[ActiveActor] <> Nil Then
@@ -1560,6 +1547,38 @@ begin
            End;
            Free;
         End;
+end;
+
+procedure TControlPanel.his1Click(Sender: TObject);
+begin
+  if ActiveScriptForm.CheckEditorClose = true then begin
+    EditPages.Pages[EditPages.ActivePageIndex].Free;
+    ScriptWindowList.Remove(ActiveScriptForm);
+    ActiveScriptForm := TScriptEdit(EditPages.ActivePage.Tag);
+  end;
+end;
+
+procedure TControlPanel.hiswindow1Click(Sender: TObject);
+begin
+ActiveScriptForm.SaveSelection;
+end;
+
+procedure TControlPanel.hiswindow2Click(Sender: TObject);
+begin
+    If ActiveScriptForm.isMainWindow Then
+        DoSimpleMsg('Cannot save the Main Window.'+CRLF+'Make a new script window, copy contents, and then save.', 215)
+    Else
+    With SaveDialog1 Do Begin
+        DefaultExt := 'dss';
+        Filter := 'DSS files (*.dss)|*.dss|Text files (*.txt)|*.TXT|All files (*.*)|*.*';
+        FileName := ActiveScriptForm.caption;
+        Title := 'Save Active Script Window to File';
+        Options := [ofOverwritePrompt];
+        If Execute Then Begin
+           ActiveScriptForm.Caption := FileName;
+           ActiveScriptForm.SaveEditorContents;
+        End; {Execute}
+   End;  {WITH}
 end;
 
 procedure TControlPanel.Year1Click(Sender: TObject);
@@ -2239,24 +2258,6 @@ end;
 procedure TControlPanel.SaveAllMonitors1Click(Sender: TObject);
 begin
         MonitorClass[ActiveActor].SaveAll(ActiveActor);
-end;
-
-procedure TControlPanel.SaveAsTabClick(Sender: TObject);
-begin
-    If ActiveScriptForm.isMainWindow Then
-        DoSimpleMsg('Cannot save the Main Window.'+CRLF+'Make a new script window, copy contents, and then save.', 215)
-    Else
-    With SaveDialog1 Do Begin
-        DefaultExt := 'dss';
-        Filter := 'DSS files (*.dss)|*.dss|Text files (*.txt)|*.TXT|All files (*.*)|*.*';
-        FileName := ActiveScriptForm.caption;
-        Title := 'Save Active Script Window to File';
-        Options := [ofOverwritePrompt];
-        If Execute Then Begin
-           ActiveScriptForm.Caption := FileName;
-           ActiveScriptForm.SaveEditorContents;
-        End; {Execute}
-   End;  {WITH}
 end;
 
 procedure TControlPanel.CircuitPlot1Click(Sender: TObject);
