@@ -3,43 +3,53 @@ unit StdMessage;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls;
+    Winapi.Windows,
+    Winapi.Messages,
+    System.SysUtils,
+    System.Variants,
+    System.Classes,
+    Vcl.Graphics,
+    Vcl.Controls,
+    Vcl.Forms,
+    Vcl.Dialogs,
+    Vcl.StdCtrls,
+    Vcl.ComCtrls;
 
 type
-  TmyStdMsg = class(TForm)
-    OKButton: TButton;
-    myMessage: TRichEdit;
-    procedure FormCreate(Sender: TObject);
-    procedure ShowForm(Sender: TObject);
-  private
+    TmyStdMsg = class(TForm)
+        OKButton: TButton;
+        myMessage: TRichEdit;
+        procedure FormCreate(Sender: TObject);
+        procedure ShowForm(Sender: TObject);
+    PRIVATE
     { Private declarations }
-  public
+    PUBLIC
     { Public declarations }
-    myMsg     : string;
-  end;
+        myMsg: String;
+    end;
 
 var
-  myStdMsg   : TmyStdMsg;
+    myStdMsg: TmyStdMsg;
 
 implementation
 
-uses DssGlobals;
+uses
+    DssGlobals;
 
 {$R *.dfm}
 
 
 procedure TmyStdMsg.FormCreate(Sender: TObject);
 begin
-  Left:=(Screen.Width-Width)  div 2;
-  Top:=(Screen.Height-Height) div 2;
-  myMessage.Lines.Clear();
+    Left := (Screen.Width - Width) div 2;
+    Top := (Screen.Height - Height) div 2;
+    myMessage.Lines.Clear();
 end;
 
 procedure TmyStdMsg.ShowForm(Sender: TObject);
 begin
-  myMessage.Lines.Add(myMsg);
-  myMessage.SelStart := 0;
+    myMessage.Lines.Add(myMsg);
+    myMessage.SelStart := 0;
 end;
 
 end.

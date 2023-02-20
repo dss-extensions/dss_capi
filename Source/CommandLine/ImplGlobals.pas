@@ -3,16 +3,16 @@ unit ImplGlobals;
 interface
 
 // fire COM events using these functions from DSS code
-Procedure Fire_InitControls;
-Procedure Fire_StepControls;
+procedure Fire_InitControls;
+procedure Fire_StepControls;
 
 implementation
 
-Procedure Fire_InitControls;
+procedure Fire_InitControls;
 begin
 end;
 
-Procedure Fire_StepControls;
+procedure Fire_StepControls;
 begin
 end;
 

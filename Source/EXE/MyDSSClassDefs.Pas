@@ -1,4 +1,5 @@
 unit MyDSSClassDefs;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -13,27 +14,25 @@ unit MyDSSClassDefs;
 interface
 
 
-CONST
+const
 
-     MYCLASS_ELEMENT_CONST     = 99 * 8;  // make unique constants for your classes
+    MYCLASS_ELEMENT_CONST = 99 * 8;  // make unique constants for your classes
                                           // SEE DSSClassDefs.pas
      {Assign (typically by adding) this constant to DSSClassType when objects of
       your custom class are instantiated. See Tline.Create in Line.Pas, for example}
 
-Procedure CreateMyDSSClasses;  // Called in DSSClassDefs
+procedure CreateMyDSSClasses;  // Called in DSSClassDefs
 
 implementation
 
-Uses
-  DSSClass
+uses
+    DSSClass
   {Add Special Uses clauses here:  }
-  {,MyDSSClass}
-  ;
+  {,MyDSSClass};
 
+procedure CreateMyDSSClasses;
 
-Procedure CreateMyDSSClasses;
-
-Begin
+begin
      {Put your custom class instantiations here}
 
      { Example:
@@ -41,7 +40,7 @@ Begin
 
      }
 
-End;
+end;
 
 initialization
 

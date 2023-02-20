@@ -1,4 +1,5 @@
 unit ReduceAlgs;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -13,11 +14,13 @@ unit ReduceAlgs;
 
 interface
 
-Uses CktTree, PDElement;
+uses
+    CktTree,
+    PDElement;
 
-  procedure DoReduceDefault(Var BranchList:TCktTree);
-  procedure DoReduceShortLines( Var BranchList:TCktTree );
-  procedure DoReduceDangling(var BranchList:TCktTree);
+procedure DoReduceDefault(var BranchList: TCktTree);
+procedure DoReduceShortLines(var BranchList: TCktTree);
+procedure DoReduceDangling(var BranchList: TCktTree);
   {{procedure DoReduceTapEnds(var BranchList:TCktTree);}
   procedure DoBreakLoops(var BranchList:TCktTree);
   procedure DoMergeParallelLines(var BranchList:TCktTree);

@@ -1,4 +1,5 @@
 unit TOPExport;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008, Electric Power Research Institute, Inc.
@@ -11,128 +12,131 @@ unit TOPExport;
 
 interface
 
-Uses Classes, ArrayDef;
+uses
+    Classes,
+    ArrayDef;
 
-TYPE
-    time_t = LongInt;
-    ToutfileHdr = Packed Record
-       Size:WORD;
-       Signature:Array[0..15] of CHAR;
-       VersionMajor,
-       VersionMinor:WORD;
-       FBase,
-       VBase:DOUBLE;
-       tStart,
-       tFinish:time_t;
-       StartTime,
-       StopT,
-       DeltaT        :DOUBLE;
-       Nsteps        :LongWord;
-       NVoltages,
-       NCurrents,
-       VoltNameSize,
-       CurrNameSize   :WORD;
-       IdxVoltNames,
-       IdxCurrentNames,
-       IdxBaseData,
-       IdxData     :LongInt;
-       Title1,
-       Title2,
-       Title3,
-       Title4,
-       Title5  :Array[0..79] of CHAR;  // Fixed length 80-byte string  space
-    End;
+type
+    time_t = Longint;
 
-    TOutFile32 = Class(Tobject)
-             Header:ToutfileHdr;
-             Fname:String;  {Default is RLCWOUT.STO'}
-             Fout:File;
+    ToutfileHdr = packed record
+        Size: Word;
+        Signature: array[0..15] of Char;
+        VersionMajor,
+        VersionMinor: Word;
+        FBase,
+        VBase: Double;
+        tStart,
+        tFinish: time_t;
+        StartTime,
+        StopT,
+        DeltaT: Double;
+        Nsteps: Longword;
+        NVoltages,
+        NCurrents,
+        VoltNameSize,
+        CurrNameSize: Word;
+        IdxVoltNames,
+        IdxCurrentNames,
+        IdxBaseData,
+        IdxData: Longint;
+        Title1,
+        Title2,
+        Title3,
+        Title4,
+        Title5: array[0..79] of Char;  // Fixed length 80-byte string  space
+    end;
 
-    Private
+    TOutFile32 = class(Tobject)
+        Header: ToutfileHdr;
+        Fname: String;  {Default is RLCWOUT.STO'}
+        Fout: file;
 
-    Public
+    PRIVATE
+
+    PUBLIC
           {constructor Create(Owner: TObject);}
-          Procedure Open;
-          Procedure Close;
-          Procedure WriteHeader(const t_start, t_stop,h:Double; const NV, NI,NameSize:Integer; const Title:String);
-          Procedure WriteNames(var Vnames, Cnames:TStringList);
-          Procedure WriteData(Const t:Double; Const V, Curr:pDoubleArray);
-          Procedure OpenR;  {Open for Read Only}
-          Procedure ReadHeader; {Opposite of WriteHeader}
-          Procedure GetVoltage( T, V:pDoubleArray; Idx, MaxPts:Integer); {Read a single node voltage from disk}
-          Procedure SendToTop;
+        procedure Open;
+        procedure Close;
+        procedure WriteHeader(const t_start, t_stop, h: Double; const NV, NI, NameSize: Integer; const Title: String);
+        procedure WriteNames(var Vnames, Cnames: TStringList);
+        procedure WriteData(const t: Double; const V, Curr: pDoubleArray);
+        procedure OpenR;  {Open for Read Only}
+        procedure ReadHeader; {Opposite of WriteHeader}
+        procedure GetVoltage(T, V: pDoubleArray; Idx, MaxPts: Integer); {Read a single node voltage from disk}
+        procedure SendToTop;
 
-          Property FileName:String Read Fname Write Fname;
+        property FileName: String READ Fname WRITE Fname;
 
-    End;
+    end;
 
-VAR
-   TOPTransferFile :TOutFile32;
-   TOP_Object      :Variant;  // For Top Automation
+var
+    TOPTransferFile: TOutFile32;
+    TOP_Object: Variant;  // For Top Automation
 
 implementation
 
-Uses SysUtils, DSSGlobals;
+uses
+    SysUtils,
+    DSSGlobals;
 
-Procedure StartTop;
+procedure StartTop;
 
-Begin
-   
-End;
+begin
 
-Procedure TOutFile32.SendToTop;
-Begin
+end;
 
-End;
+procedure TOutFile32.SendToTop;
+begin
 
-
-
-Procedure TOutFile32.Open;
-BEGIN
-END;
+end;
 
 
-Procedure TOutFile32.Close;
-BEGIN
-END;
+procedure TOutFile32.Open;
+begin
+end;
 
-Procedure TOutFile32.WriteHeader(const t_start, t_stop, h:Double; const NV, NI,NameSize:Integer; const Title:String);
 
-BEGIN
+procedure TOutFile32.Close;
+begin
+end;
 
-END;
+procedure TOutFile32.WriteHeader(const t_start, t_stop, h: Double; const NV, NI, NameSize: Integer; const Title: String);
 
-Procedure TOutFile32.WriteNames(var Vnames, Cnames:TStringList);
+begin
 
-BEGIN
+end;
 
-END;
+procedure TOutFile32.WriteNames(var Vnames, Cnames: TStringList);
 
-Procedure TOutFile32.WriteData(Const t:Double; Const V, Curr:pDoubleArray);
+begin
 
-BEGIN
+end;
 
-END;
+procedure TOutFile32.WriteData(const t: Double; const V, Curr: pDoubleArray);
 
-Procedure TOutFile32.OpenR;  {Open for Read Only}
+begin
 
-BEGIN
-END;
+end;
 
-Procedure TOutFile32.ReadHeader; {Opposite of WriteHeader}
+procedure TOutFile32.OpenR;  {Open for Read Only}
 
-BEGIN
-   
-END;
+begin
+end;
 
-Procedure TOutFile32.GetVoltage( T, V:pDoubleArray; Idx, MaxPts:Integer); {Read a voltage from disk}
+procedure TOutFile32.ReadHeader; {Opposite of WriteHeader}
+
+begin
+
+end;
+
+procedure TOutFile32.GetVoltage(T, V: pDoubleArray; Idx, MaxPts: Integer); {Read a voltage from disk}
 
 {Gets a specified voltage from an STO file for plotting.  Idx specifies the index into the voltage array}
-BEGIN
+begin
 
-END;
+end;
 
-Initialization
+initialization
 
 end.
-

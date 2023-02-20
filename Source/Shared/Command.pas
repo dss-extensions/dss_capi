@@ -1,4 +1,5 @@
 unit Command;
+
  {
   ----------------------------------------------------------
   Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
@@ -11,86 +12,90 @@ unit Command;
 
 interface
 
-Uses Hashlist;
+uses
+    Hashlist;
 
-TYPE
-   TCommandList = class(TObject)
-      private
-         CommandList:THashList;
-         AbbrevAllowed:Boolean;
-    function Get_NumCommands: Integer;
-      protected
+type
+    TCommandList = class(TObject)
+    PRIVATE
+        CommandList: THashList;
+        AbbrevAllowed: Boolean;
+        function Get_NumCommands: Integer;
+    PROTECTED
 
-      public
-        constructor Create(Commands:Array of string);
-        destructor Destroy; override;
-        Procedure AddCommand(const cmd:String);
-        Function Getcommand(Const Cmd:String):Integer;
-        Function CheckifValid():Boolean;
-        Function Get(i:Integer):String;
-        Property Abbrev:Boolean  read AbbrevAllowed write AbbrevAllowed;
-        Property NumCommands:Integer Read Get_NumCommands;
-        Property IsValidPtr:Boolean read CheckifValid;
-      published
+    PUBLIC
+        constructor Create(Commands: array of String);
+        destructor Destroy; OVERRIDE;
+        procedure AddCommand(const cmd: String);
+        function Getcommand(const Cmd: String): Integer;
+        function CheckifValid(): Boolean;
+        function Get(i: Integer): String;
+        property Abbrev: Boolean READ AbbrevAllowed WRITE AbbrevAllowed;
+        property NumCommands: Integer READ Get_NumCommands;
+        property IsValidPtr: Boolean READ CheckifValid;
+    PUBLISHED
 
-   end;
+    end;
 
 
 implementation
 
-constructor TCommandList.Create(Commands:Array of string);
-VAR  i:Integer;
-BEGIN
-     Inherited Create;
-     CommandList := THashList.Create(High(Commands) + 1);
-     For i := 0 to High(Commands) DO BEGIN
+constructor TCommandList.Create(Commands: array of String);
+var
+    i: Integer;
+begin
+    inherited Create;
+    CommandList := THashList.Create(High(Commands) + 1);
+    for i := 0 to High(Commands) do
+    begin
       // Fill the HashList
-         CommandList.Add(Commands[i]);
-     END;
-     
-     AbbrevAllowed := True;
-END;
+        CommandList.Add(Commands[i]);
+    end;
+
+    AbbrevAllowed := TRUE;
+end;
 
 destructor TCommandList.Destroy;
 
-BEGIN
-     CommandList.Free;
-     Inherited Destroy;
-END;
+begin
+    CommandList.Free;
+    inherited Destroy;
+end;
 
-Procedure TCommandList.AddCommand(const cmd:String);
-BEGIN
-     CommandList.Add(Cmd);
-END;
+procedure TCommandList.AddCommand(const cmd: String);
+begin
+    CommandList.Add(Cmd);
+end;
 
-Function TCommandList.Getcommand(Const Cmd:String):Integer;
+function TCommandList.Getcommand(const Cmd: String): Integer;
 
-BEGIN
+begin
 
-     Result := CommandList.Find(Cmd);
+    Result := CommandList.Find(Cmd);
 {If no match found on whole command, check for abbrev}
 {This routine will generally be faster if one enters the whole command}
-     If Result=0 THEN
-       IF AbbrevAllowed THEN Result := CommandList.FindAbbrev(Cmd);
+    if Result = 0 then
+        if AbbrevAllowed then
+            Result := CommandList.FindAbbrev(Cmd);
 
-END;
+end;
 
 
 function TCommandList.Get(i: Integer): String;
 begin
-     Result := CommandList.Get(i);
+    Result := CommandList.Get(i);
 end;
 
 function TCommandList.Get_NumCommands: Integer;
 begin
-     Result := CommandList.ListSize;
+    Result := CommandList.ListSize;
 end;
 
-Function TCommandList.CheckifValid():Boolean;
+function TCommandList.CheckifValid(): Boolean;
 // Used to verify if the object is valid or has been cleared by someone else
 // Practical when destroying common Lists while working in parallel
-Begin
-  Result  :=  CommandList.IsValidPtr;
-End;
+begin
+    Result := CommandList.IsValidPtr;
+end;
 
 end.

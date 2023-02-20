@@ -1,4 +1,5 @@
 unit UPFCControl;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
@@ -17,374 +18,399 @@ unit UPFCControl;
 }
 
 {$HINTS OFF}
-INTERFACE
+interface
 
-USES
-     Command, ControlClass, ControlElem, CktElement, DSSClass, Arraydef, ucomplex,
-     utilities, PointerList, Classes;
+uses
+    Command,
+    ControlClass,
+    ControlElem,
+    CktElement,
+    DSSClass,
+    Arraydef,
+    ucomplex,
+    utilities,
+    PointerList,
+    Classes;
 
-TYPE
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TUPFCControl = class(TControlClass)
-     private
-
-     protected
-        PROCEDURE DefineProperties;
-        FUNCTION MakeLike(const UPFCControlName:String):Integer;Override;
-     public
-       constructor Create;
-       destructor Destroy; override;
-
-       FUNCTION Edit(ActorID : Integer):Integer; override;     // uses global parser
-       FUNCTION NewObject(const ObjName:String):Integer; override;
-
-   end;
+type
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-  TUPFCControlObj = class(TControlElem)
-    private
+    TUPFCControl = class(TControlClass)
+    PRIVATE
 
-      FUPFCNameList         : TStringList;
-      FUPFCList             : PointerList.TPointerList;
-      FListSize             : Integer;
-      FWeights              : pDoubleArray;
-      TotalWeight           : Double;
+    PROTECTED
+        procedure DefineProperties;
+        function MakeLike(const UPFCControlName: String): Integer; OVERRIDE;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-    public
-      constructor Create(ParClass:TDSSClass; const UPFCControlName:String);
-      destructor Destroy; override;
+        function Edit(ActorID: Integer): Integer; OVERRIDE;     // uses global parser
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
 
-      PROCEDURE MakePosSequence(ActorID : Integer); Override;  // Make a positive Sequence Model
-      PROCEDURE RecalcElementData(ActorID : Integer); Override;
-      PROCEDURE CalcYPrim(ActorID : Integer); Override;    // Always Zero for a UPFCControl
-      PROCEDURE Sample(ActorID : Integer);  Override;    // Sample control quantities and set action times in Control Queue
-      PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Override;   // Do the action that is pending from last sample
-      PROCEDURE Reset(ActorID : Integer); Override;  // Reset to initial defined state
-      PROCEDURE GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present value of terminal Curr
-      PROCEDURE GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override;   // Returns Injextion currents
-      PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-      PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+    end;
 
-      FUNCTION MakeUPFCList:Boolean;
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+    TUPFCControlObj = class(TControlElem)
+    PRIVATE
+
+        FUPFCNameList: TStringList;
+        FUPFCList: PointerList.TPointerList;
+        FListSize: Integer;
+        FWeights: pDoubleArray;
+        TotalWeight: Double;
+
+    PUBLIC
+        constructor Create(ParClass: TDSSClass; const UPFCControlName: String);
+        destructor Destroy; OVERRIDE;
+
+        procedure MakePosSequence(ActorID: Integer); OVERRIDE;  // Make a positive Sequence Model
+        procedure RecalcElementData(ActorID: Integer); OVERRIDE;
+        procedure CalcYPrim(ActorID: Integer); OVERRIDE;    // Always Zero for a UPFCControl
+        procedure Sample(ActorID: Integer); OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure DoPendingAction(const Code, ProxyHdl: Integer; ActorID: Integer); OVERRIDE;   // Do the action that is pending from last sample
+        procedure Reset(ActorID: Integer); OVERRIDE;  // Reset to initial defined state
+        procedure GetCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE; // Get present value of terminal Curr
+        procedure GetInjCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE;   // Returns Injextion currents
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+
+        function MakeUPFCList: Boolean;
 
       // Public properties
-      Property UPFCList     :PointerList.TPointerList   Read FUPFCList write FUPFCList;
-      Property UPFCListSize : Integer                   Read FListSize write FListSize;
+        property UPFCList: PointerList.TPointerList READ FUPFCList WRITE FUPFCList;
+        property UPFCListSize: Integer READ FListSize WRITE FListSize;
 
-  end;
+    end;
 
 
-VAR
-    ActiveUPFCControlObj:TUPFCControlObj;
+var
+    ActiveUPFCControlObj: TUPFCControlObj;
 
 {--------------------------------------------------------------------------}
-IMPLEMENTATION
+implementation
 
-USES
+uses
+    ParserDel,
+    DSSClassDefs,
+    DSSGlobals,
+    Circuit,
+    UPFC,
+    Sysutils,
+    uCmatrix,
+    MathUtil,
+    Math;
 
-    ParserDel, DSSClassDefs, DSSGlobals, Circuit,  UPFC, Sysutils, uCmatrix, MathUtil, Math;
-
-CONST
+const
 
     NumPropsThisClass = 1;
 
 
 {--------------------------------------------------------------------------}
 constructor TUPFCControl.Create;  // Creates superstructure for all UPFCControl objects
-Begin
-     Inherited Create;
+begin
+    inherited Create;
 
-     Class_name   := 'UPFCControl';
-     DSSClassType := DSSClassType + UPFC_CONTROL;
+    Class_name := 'UPFCControl';
+    DSSClassType := DSSClassType + UPFC_CONTROL;
 
-     DefineProperties;
+    DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev := TRUE;
-End;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
+end;
 
 {--------------------------------------------------------------------------}
 destructor TUPFCControl.Destroy;
 
-Begin
-     Inherited Destroy;
-End;
+begin
+    inherited Destroy;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROCEDURE TUPFCControl.DefineProperties;
-Begin
+procedure TUPFCControl.DefineProperties;
+begin
 
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
 
 
      // Define Property names
 
-     PropertyName[1] := 'UPFCList';
+    PropertyName[1] := 'UPFCList';
 
 
-     PropertyHelp[1] := 'The list of all the UPFC devices to be controlled by this controller, '+
-                        'If left empty, this control will apply for all UPFCs in the model.';
+    PropertyHelp[1] := 'The list of all the UPFC devices to be controlled by this controller, ' +
+        'If left empty, this control will apply for all UPFCs in the model.';
 
-     ActiveProperty  := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
-End;
+end;
 
 {--------------------------------------------------------------------------}
-FUNCTION TUPFCControl.NewObject(const ObjName:String):Integer;
-Begin
+function TUPFCControl.NewObject(const ObjName: String): Integer;
+begin
     // Make a new UPFCControl and add it to UPFCControl class list
-    WITH ActiveCircuit[ActiveActor] Do
-    Begin
-      ActiveCktElement := TUPFCControlObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
-    End;
-End;
+    with ActiveCircuit[ActiveActor] do
+    begin
+        ActiveCktElement := TUPFCControlObj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
+    end;
+end;
 
 {--------------------------------------------------------------------------}
-FUNCTION TUPFCControl.Edit(ActorID : Integer):Integer;
-VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
-   i:Integer;
+function TUPFCControl.Edit(ActorID: Integer): Integer;
+var
+    ParamPointer: Integer;
+    ParamName: String;
+    Param: String;
+    i: Integer;
 
-Begin
+begin
 
   // continue parsing WITH contents of Parser
-  ActiveUPFCControlObj := ElementList.Active;
-  ActiveCircuit[ActorID].ActiveCktElement := ActiveUPFCControlObj;
+    ActiveUPFCControlObj := ElementList.Active;
+    ActiveCircuit[ActorID].ActiveCktElement := ActiveUPFCControlObj;
 
-  Result := 0;
+    Result := 0;
 
-  WITH ActiveUPFCControlObj Do Begin
+    with ActiveUPFCControlObj do
+    begin
 
-     ParamPointer := 0;
-     ParamName := Parser[ActorID].NextParam;
-     Param := Parser[ActorID].StrValue;
-     WHILE Length(Param)>0 Do Begin
-         IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
+        ParamPointer := 0;
+        ParamName := Parser[ActorID].NextParam;
+        Param := Parser[ActorID].StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
-         If (ParamPointer>0) and (ParamPointer<=NumProperties)
-         THEN PropertyValue[ParamPointer]:= Param;
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
 
-         CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
-            1: InterpretTStringListArray(Param, FUPFCNameList);
-         ELSE
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 364);
+                1:
+                    InterpretTStringListArray(Param, FUPFCNameList);
+            else
            // Inherited parameters
-           ClassEdit( ActiveUPFCControlObj, ParamPointer - NumPropsthisClass)
-         End;
+                ClassEdit(ActiveUPFCControlObj, ParamPointer - NumPropsthisClass)
+            end;
 
-     END;
+        end;
 
-         ParamName := Parser[ActorID].NextParam;
-         Param := Parser[ActorID].StrValue;
-  End;
+        ParamName := Parser[ActorID].NextParam;
+        Param := Parser[ActorID].StrValue;
+    end;
 
   //RecalcElementData(ActorID);
 
-End;
-
+end;
 
 
 {--------------------------------------------------------------------------}
-FUNCTION TUPFCControl.MakeLike(const UPFCControlName:String):Integer;
-VAR
-   OtherUPFCControl:TUPFCControlObj;
-   i:Integer;
-Begin
-   Result := 0;
+function TUPFCControl.MakeLike(const UPFCControlName: String): Integer;
+var
+    OtherUPFCControl: TUPFCControlObj;
+    i: Integer;
+begin
+    Result := 0;
    {See if we can find this UPFCControl name in the present collection}
-   OtherUPFCControl := Find(UPFCControlName);
-   IF OtherUPFCControl<>Nil THEN
-   WITH ActiveUPFCControlObj Do Begin
+    OtherUPFCControl := Find(UPFCControlName);
+    if OtherUPFCControl <> NIL then
+        with ActiveUPFCControlObj do
+        begin
 
-        NPhases := OtherUPFCControl.Fnphases;
-        NConds  := OtherUPFCControl.Fnconds; // Force Reallocation of terminal stuff
+            NPhases := OtherUPFCControl.Fnphases;
+            NConds := OtherUPFCControl.Fnconds; // Force Reallocation of terminal stuff
 
-        ElementName       := OtherUPFCControl.ElementName;
-        ControlledElement := OtherUPFCControl.ControlledElement;  // Pointer to target circuit element
-        MonitoredElement  := OtherUPFCControl.MonitoredElement;  // Pointer to target circuit element
+            ElementName := OtherUPFCControl.ElementName;
+            ControlledElement := OtherUPFCControl.ControlledElement;  // Pointer to target circuit element
+            MonitoredElement := OtherUPFCControl.MonitoredElement;  // Pointer to target circuit element
 
-        ElementTerminal   := OtherUPFCControl.ElementTerminal;
-
-
-        For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherUPFCControl.PropertyValue[i];
-
-   End
-   ELSE  DoSimpleMsg('Error in UPFCControl MakeLike: "' + UPFCControlName + '" Not Found.', 370);
-
-End;
+            ElementTerminal := OtherUPFCControl.ElementTerminal;
 
 
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherUPFCControl.PropertyValue[i];
+
+        end
+    else
+        DoSimpleMsg('Error in UPFCControl MakeLike: "' + UPFCControlName + '" Not Found.', 370);
+
+end;
 
 
 {==========================================================================}
 {                    TUPFCControlObj                                           }
 {==========================================================================}
 {--------------------------------------------------------------------------}
-constructor TUPFCControlObj.Create(ParClass:TDSSClass; const UPFCControlName:String);
+constructor TUPFCControlObj.Create(ParClass: TDSSClass; const UPFCControlName: String);
 
-Begin
-  Inherited Create(ParClass);
+begin
+    inherited Create(ParClass);
 
-  Name                := LowerCase(UPFCControlName);
-  DSSObjType          := ParClass.DSSClassType;
+    Name := LowerCase(UPFCControlName);
+    DSSObjType := ParClass.DSSClassType;
 
-  FUPFCNameList       := TSTringList.Create;
-  FUPFCList           := PointerList.TPointerList.Create(20);  // Default size and increment
-  TotalWeight         := 1.0;
-  FWeights            := Nil;
-  FListSize           := 0;
+    FUPFCNameList := TSTringList.Create;
+    FUPFCList := PointerList.TPointerList.Create(20);  // Default size and increment
+    TotalWeight := 1.0;
+    FWeights := NIL;
+    FListSize := 0;
 
    //  RecalcElementData;
 
-End;
+end;
 
 destructor TUPFCControlObj.Destroy;
-Begin
-     ElementName := '';
-     Inherited Destroy;
-End;
-
-{--------------------------------------------------------------------------}
-PROCEDURE TUPFCControlObj.RecalcElementData(ActorID : Integer);
-
-VAR
-   DevIndex :Integer;
-
-Begin
-{Check for existence of monitored element}
-
-  Devindex := GetCktElementIndex(ElementName); // Global function
-  IF   DevIndex>0  THEN
-  Begin
-    MonitoredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
-    IF ElementTerminal > MonitoredElement.Nterms THEN
-    Begin
-      DoErrorMsg('UPFCControl: "' + Name + '"',
-                     'Terminal no. "' +'" does not exist.',
-                     'Re-specify terminal no.', 371);
-    End
-    ELSE
-    Begin
-     // Sets name of i-th terminal's connected bus in UPFCControl's buslist
-      Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-    End;
-  End
-  ELSE
-    DoSimpleMsg('Monitored Element in UPFCControl.'+Name+ ' does not exist:"'+ElementName+'"', 372);
-End;
-
-{--------------------------------------------------------------------------}
-procedure TUPFCControlObj.MakePosSequence(ActorID : Integer);
 begin
-  if MonitoredElement <> Nil then
-  begin
-    Nphases := ControlledElement.NPhases;
-    Nconds := FNphases;
-    Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-  end;
-  inherited;
+    ElementName := '';
+    inherited Destroy;
 end;
 
 {--------------------------------------------------------------------------}
-PROCEDURE TUPFCControlObj.CalcYPrim(ActorID : Integer);
-Begin
+procedure TUPFCControlObj.RecalcElementData(ActorID: Integer);
+
+var
+    DevIndex: Integer;
+
+begin
+{Check for existence of monitored element}
+
+    Devindex := GetCktElementIndex(ElementName); // Global function
+    if DevIndex > 0 then
+    begin
+        MonitoredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+        if ElementTerminal > MonitoredElement.Nterms then
+        begin
+            DoErrorMsg('UPFCControl: "' + Name + '"',
+                'Terminal no. "' + '" does not exist.',
+                'Re-specify terminal no.', 371);
+        end
+        else
+        begin
+     // Sets name of i-th terminal's connected bus in UPFCControl's buslist
+            Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        end;
+    end
+    else
+        DoSimpleMsg('Monitored Element in UPFCControl.' + Name + ' does not exist:"' + ElementName + '"', 372);
+end;
+
+{--------------------------------------------------------------------------}
+procedure TUPFCControlObj.MakePosSequence(ActorID: Integer);
+begin
+    if MonitoredElement <> NIL then
+    begin
+        Nphases := ControlledElement.NPhases;
+        Nconds := FNphases;
+        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+    end;
+    inherited;
+end;
+
+{--------------------------------------------------------------------------}
+procedure TUPFCControlObj.CalcYPrim(ActorID: Integer);
+begin
   // leave YPrims as nil and they will be ignored
   // Yprim is zeroed when created.  Leave it as is.
   //  IF YPrim=nil THEN YPrim := TcMatrix.CreateMatrix(Yorder);
-End;
-
-{--------------------------------------------------------------------------}
-PROCEDURE TUPFCControlObj.GetCurrents(Curr: pComplexArray; ActorID : Integer);
-VAR
-   i:Integer;
-Begin
-
-  For i := 1 to Fnconds Do Curr^[i] := CZERO;
-
-End;
-
-PROCEDURE TUPFCControlObj.GetInjCurrents(Curr: pComplexArray; ActorID : Integer);
-Var i:Integer;
-Begin
-     FOR i := 1 to Fnconds Do Curr^[i] := CZERO;
-End;
-
-{--------------------------------------------------------------------------}
-PROCEDURE TUPFCControlObj.DumpProperties(Var F:TextFile; Complete:Boolean);
-
-VAR
-   i:Integer;
-
-Begin
-  Inherited DumpProperties(F,Complete);
-
-  WITH ParentClass Do
-    For i := 1 to NumProperties Do
-    Begin
-      Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
-    End;
-
-    If Complete THEN
-    Begin
-      Writeln(F);
-    End;
-
-End;
-
-{--------------------------------------------------------------------------}
-PROCEDURE TUPFCControlObj.DoPendingAction;
-VAR
-  Update      : Boolean;
-  i           : Integer;
-  MyClass     : TDSSClass;
-  myUPFC      : TUPFCObj;
-
-begin
-  If FListSize>0 Then
-  Begin
-    For i := 1 to FListSize Do
-    Begin
-      myUPFC  :=  FUPFCList.Get(i);
-      myUPFC.UploadCurrents(ActorID);
-    End;
-  End;
 end;
 
 {--------------------------------------------------------------------------}
-PROCEDURE TUPFCControlObj.Sample(ActorID : Integer);
-VAR
-  Update      : Boolean;
-  i           : Integer;
-  MyClass     : TDSSClass;
-  myUPFC      : TUPFCObj;
+procedure TUPFCControlObj.GetCurrents(Curr: pComplexArray; ActorID: Integer);
+var
+    i: Integer;
+begin
+
+    for i := 1 to Fnconds do
+        Curr^[i] := CZERO;
+
+end;
+
+procedure TUPFCControlObj.GetInjCurrents(Curr: pComplexArray; ActorID: Integer);
+var
+    i: Integer;
+begin
+    for i := 1 to Fnconds do
+        Curr^[i] := CZERO;
+end;
+
+{--------------------------------------------------------------------------}
+procedure TUPFCControlObj.DumpProperties(var F: TextFile; Complete: Boolean);
+
+var
+    i: Integer;
+
+begin
+    inherited DumpProperties(F, Complete);
+
+    with ParentClass do
+        for i := 1 to NumProperties do
+        begin
+            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+        end;
+
+    if Complete then
+    begin
+        Writeln(F);
+    end;
+
+end;
+
+{--------------------------------------------------------------------------}
+procedure TUPFCControlObj.DoPendingAction;
+var
+    Update: Boolean;
+    i: Integer;
+    MyClass: TDSSClass;
+    myUPFC: TUPFCObj;
+
+begin
+    if FListSize > 0 then
+    begin
+        for i := 1 to FListSize do
+        begin
+            myUPFC := FUPFCList.Get(i);
+            myUPFC.UploadCurrents(ActorID);
+        end;
+    end;
+end;
+
+{--------------------------------------------------------------------------}
+procedure TUPFCControlObj.Sample(ActorID: Integer);
+var
+    Update: Boolean;
+    i: Integer;
+    MyClass: TDSSClass;
+    myUPFC: TUPFCObj;
 
 begin
   // If list is not define, go make one from all generators in circuit
-  IF FUPFCList.ListSize=0 Then  MakeUPFCList;
-  Update  :=  False;
-  If FListSize>0 Then
-  Begin
-    For i := 1 to FListSize Do
-    Begin
-      myUPFC  :=  FUPFCList.Get(i);
-      Update  :=  Update or myUPFC.CheckStatus(ActorID);
-    End;
+    if FUPFCList.ListSize = 0 then
+        MakeUPFCList;
+    Update := FALSE;
+    if FListSize > 0 then
+    begin
+        for i := 1 to FListSize do
+        begin
+            myUPFC := FUPFCList.Get(i);
+            Update := Update or myUPFC.CheckStatus(ActorID);
+        end;
    {Checks if at least one UPFC needs to be updated}
-    if Update then
-    Begin
-      With ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-        ControlQueue.Push(DynaVars.intHour, DynaVars.t, 0, 0, Self, ActorID);
+        if Update then
+        begin
+            with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+                ControlQueue.Push(DynaVars.intHour, DynaVars.t, 0, 0, Self, ActorID);
 
-    End;
-  End;
+        end;
+    end;
 
 end;
 
@@ -392,64 +418,68 @@ end;
 procedure TUPFCControlObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-     PropertyValue[1]  := '[]';   //'UPFC List';
+    PropertyValue[1] := '[]';   //'UPFC List';
 
 
-  inherited  InitPropertyValues(NumPropsThisClass);
+    inherited  InitPropertyValues(NumPropsThisClass);
 
 end;
 
-Function TUPFCControlObj.MakeUPFCList:Boolean;
+function TUPFCControlObj.MakeUPFCList: Boolean;
 
-VAR
-  MyClass  : TDSSClass;
-  UPFC      : TUPFCObj;
-  i         : Integer;
+var
+    MyClass: TDSSClass;
+    UPFC: TUPFCObj;
+    i: Integer;
 
 begin
 
-  Result := FALSE;
+    Result := FALSE;
   // Clears everything
-  FUPFCNameList.Clear;
-  FUPFCList.Clear;
-  MyClass := GetDSSClassPtr('upfc');
+    FUPFCNameList.Clear;
+    FUPFCList.Clear;
+    MyClass := GetDSSClassPtr('upfc');
 
-  If FListSize>0 Then Begin    // Name list is defined - Use it
+    if FListSize > 0 then
+    begin    // Name list is defined - Use it
 
-    For i := 1 to FListSize Do Begin
-      UPFC := MyClass.Find(FUPFCNameList.Strings[i-1]);
-      If Assigned(UPFC) and UPFC.Enabled Then FUPFCList.New := UPFC;
-    End;
+        for i := 1 to FListSize do
+        begin
+            UPFC := MyClass.Find(FUPFCNameList.Strings[i - 1]);
+            if Assigned(UPFC) and UPFC.Enabled then
+                FUPFCList.New := UPFC;
+        end;
 
-  End
-  Else  // No list given
-  Begin
+    end
+    else  // No list given
+    begin
    {Search through the entire circuit for enabled generators and add them to the list}
 
-    For i := 1 to MyClass.ElementCount Do
-    Begin
-      UPFC  :=  MyClass.ElementList.Get(i);
+        for i := 1 to MyClass.ElementCount do
+        begin
+            UPFC := MyClass.ElementList.Get(i);
       // Checks if it's enabled
-      if UPFC.Enabled then
-        FUPFCList.New :=  UPFC;
-    End;
+            if UPFC.Enabled then
+                FUPFCList.New := UPFC;
+        end;
 
     {Allocate uniform weights}
-    FListSize := FUPFCList.ListSize;
-    Reallocmem(FWeights, Sizeof(FWeights^[1])*FListSize);
-    For i := 1 to FListSize Do FWeights^[i] := 1.0;
+        FListSize := FUPFCList.ListSize;
+        Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
+        for i := 1 to FListSize do
+            FWeights^[i] := 1.0;
 
-  End;
+    end;
 
   // Add up total weights
-  TotalWeight := 0.0;
-  For i := 1 to FListSize Do
-    TotalWeight := TotalWeight + FWeights^[i];
+    TotalWeight := 0.0;
+    for i := 1 to FListSize do
+        TotalWeight := TotalWeight + FWeights^[i];
 
-  If FUPFCList.ListSize>0 Then Result := TRUE;
+    if FUPFCList.ListSize > 0 then
+        Result := TRUE;
 
 end;
-
 
 
 procedure TUPFCControlObj.Reset;
@@ -459,10 +489,7 @@ begin
 end;
 
 
-
-INITIALIZATION
-
-
+initialization
 
 
 end.

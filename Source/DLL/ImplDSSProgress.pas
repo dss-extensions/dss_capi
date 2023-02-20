@@ -1,4 +1,5 @@
 unit ImplDSSProgress;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -9,61 +10,68 @@ unit ImplDSSProgress;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSEngine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSEngine_TLB,
+    StdVcl;
 
 type
-  TDSSProgress = class(TAutoObject, IDSSProgress)
-  protected
-    procedure Close; safecall;
-    procedure Set_Caption(const Value: WideString); safecall;
-    procedure Set_PctProgress(Value: Integer); safecall;
-    procedure Show; safecall;
+    TDSSProgress = class(TAutoObject, IDSSProgress)
+    PROTECTED
+        procedure Close; SAFECALL;
+        procedure Set_Caption(const Value: Widestring); SAFECALL;
+        procedure Set_PctProgress(Value: Integer); SAFECALL;
+        procedure Show; SAFECALL;
     { Protected declarations }
-  end;
+    end;
 
 implementation
 
-uses ComServ, DSSForms, {Progressform,} DSSGlobals;
+uses
+    ComServ,
+    DSSForms, {Progressform,} DSSGlobals;
 
 procedure TDSSProgress.Close;
 begin
-   If NoFormsAllowed Then Exit;
-   ProgressHide(ActiveActor);
+    if NoFormsAllowed then
+        Exit;
+    ProgressHide(ActiveActor);
 end;
 
-procedure TDSSProgress.Set_Caption(const Value: WideString);
+procedure TDSSProgress.Set_Caption(const Value: Widestring);
 begin
-   If NoFormsAllowed Then Exit;
-   InitProgressForm(ActiveActor);
-   ProgressCaption ( Value, ActiveActor);
+    if NoFormsAllowed then
+        Exit;
+    InitProgressForm(ActiveActor);
+    ProgressCaption(Value, ActiveActor);
 end;
 
 procedure TDSSProgress.Set_PctProgress(Value: Integer);
 begin
-   If NoFormsAllowed Then Exit;
-   InitProgressForm(ActiveActor);
+    if NoFormsAllowed then
+        Exit;
+    InitProgressForm(ActiveActor);
 //   ShowPctProgress ( Value, ActiveActor);
 end;
 
 procedure TDSSProgress.Show;
 begin
-   If NoFormsAllowed Then Exit;
-        InitProgressForm(ActiveActor);
-        ProgressFormCaption( ' ', ActiveActor);
+    if NoFormsAllowed then
+        Exit;
+    InitProgressForm(ActiveActor);
+    ProgressFormCaption(' ', ActiveActor);
 //        ShowPctProgress(0, ActiveActor);
 
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TDSSProgress, Class_DSSProgress,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TDSSProgress, Class_DSSProgress,
+        ciInternal, tmApartment);
 
     // Progress Form Creation moved to DSSGlobals
 
 
-
-Finalization
-
+finalization
 
 
 end.

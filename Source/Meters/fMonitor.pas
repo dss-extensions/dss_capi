@@ -17,265 +17,290 @@ unit fMonitor;
 
 interface
 
-USES
-     Command, MeterClass, Meterelement, DSSClass, Arraydef, ucomplex,
-     utilities, Classes, PointerList,
-     VLNodeVars,LD_fm_infos;
-TYPE
-    TFMonitorStrBuffer = Array[1..256] of AnsiChar;
+uses
+    Command,
+    MeterClass,
+    Meterelement,
+    DSSClass,
+    Arraydef,
+    ucomplex,
+    utilities,
+    Classes,
+    PointerList,
+    VLNodeVars,
+    LD_fm_infos;
+
+type
+    TFMonitorStrBuffer = array[1..256] of Ansichar;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
    {This has to be named TDSSMonitor because Delphi has a TMonitor Class and the compiler will get confused}
-   TDSSFMonitor = class(TMeterClass)
-     private
+    TDSSFMonitor = class(TMeterClass)
+    PRIVATE
 
-     protected
-        Procedure DefineProperties;
-        Function  MakeLike(const MonitorName:String):Integer;  Override;
-     public
+    PROTECTED
+        procedure DefineProperties;
+        function MakeLike(const MonitorName: String): Integer; OVERRIDE;
+    PUBLIC
 
 
-       constructor Create;
-       destructor  Destroy; override;
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-       Function Edit(ActorID : Integer):Integer;                 override;     // uses global parser
-       Function Init(Handle:Integer;ActorID : Integer):Integer; override;
-       Function NewObject(const ObjName:String):Integer;  override;
+        function Edit(ActorID: Integer): Integer; OVERRIDE;     // uses global parser
+        function Init(Handle: Integer; ActorID: Integer): Integer; OVERRIDE;
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
 
-       Procedure ResetAll(ActorID : Integer);   Override;
-       Procedure SampleAll(ActorID : Integer);  Override;  // Force all monitors to take a sample
+        procedure ResetAll(ActorID: Integer); OVERRIDE;
+        procedure SampleAll(ActorID: Integer); OVERRIDE;  // Force all monitors to take a sample
        //Procedure SampleAllMode5;  // Sample just Mode 5 monitors
-       Procedure SaveAll(ActorID : Integer);    Override;   // Force all monitors to save their buffers to disk
+        procedure SaveAll(ActorID: Integer); OVERRIDE;   // Force all monitors to save their buffers to disk
        {update FM leader information}
-       Procedure  update_sys_ld_info(ActorID : Integer); //all FMs
-       Procedure  Calc_P_freq(ActorID: Integer);// calculte frequency for each cluster
+        procedure update_sys_ld_info(ActorID: Integer); //all FMs
+        procedure Calc_P_freq(ActorID: Integer);// calculte frequency for each cluster
        //attack and defense
-       Procedure  update_atks(ActorID: Integer);
-       Procedure  update_defense_layer(ActorID: Integer);
+        procedure update_atks(ActorID: Integer);
+        procedure update_defense_layer(ActorID: Integer);
 
-   end;
+    end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TFMonitorObj = class(TMeterElement)
-     private
+    TFMonitorObj = class(TMeterElement)
+    PRIVATE
        //pTVLeaderVars : TPointerList;   //save all nodes information
        //VL_node : TVLnodeVars;//  leader node of this cluster
-       nodes : integer; //nodes of this cluster  \\default nodes := 33;
-       pCommMatrix : pSmallIntArray;// communication matrix of this cluster
-       P_trans_ref : double; // Power Ref on metered elemet, if mode =1 real power of this cluster will be used
-       p_mode : integer;
-       tempCplx : complex;
+        nodes: Integer; //nodes of this cluster  \\default nodes := 33;
+        pCommMatrix: pSmallIntArray;// communication matrix of this cluster
+        P_trans_ref: Double; // Power Ref on metered elemet, if mode =1 real power of this cluster will be used
+        p_mode: Integer;
+        tempCplx: complex;
 
-       BufferSize      :Integer;
-       Hour            :Integer;
-       Sec             :Double;    // last time entered in the buffer
-       MonBuffer       :pSingleArray;
-       Bufptr          :Integer;  // point to present (last) element in buffer must be incremented to add
+        BufferSize: Integer;
+        Hour: Integer;
+        Sec: Double;    // last time entered in the buffer
+        MonBuffer: pSingleArray;
+        Bufptr: Integer;  // point to present (last) element in buffer must be incremented to add
 
-       CurrentBuffer   :pComplexArray;
-       VoltageBuffer   :pComplexArray;
+        CurrentBuffer: pComplexArray;
+        VoltageBuffer: pComplexArray;
 
-       NumStateVars    :Integer;
-       StateBuffer     :pDoubleArray;
+        NumStateVars: Integer;
+        StateBuffer: pDoubleArray;
 
-       FlickerBuffer   :pComplexArray; // store phase voltages in polar form
+        FlickerBuffer: pComplexArray; // store phase voltages in polar form
                                        // then convert to re=flicker level, update every time step
                                        //             and im=Pst, update every 10 minutes
-       SolutionBuffer  :pDoubleArray;
+        SolutionBuffer: pDoubleArray;
 
-       IncludeResidual :Boolean;
-       VIpolar         :Boolean;
-       Ppolar          :Boolean;
+        IncludeResidual: Boolean;
+        VIpolar: Boolean;
+        Ppolar: Boolean;
 
-       FileSignature   :Integer;
-       FileVersion     :Integer;
+        FileSignature: Integer;
+        FileVersion: Integer;
 
-       BaseFrequency   :Double;
+        BaseFrequency: Double;
        {-------------}
-       F_Value_one   : double;//test;
+        F_Value_one: Double;//test;
        //Voltages
-       F_Value_one_V    : pDoubleArray; //Measured voltage by each FMonitor(p.u.)
-       F_Value_one_S  : pComplexArray; //Measured apparent power for each phase by each Fmonitor
-       Fvalue_P : Double;  //This variable is used to store total measure three-phase active power of any Fmonitor
-       Fvalue_Q : Double;  //This variable is used to store total measure three-phase reactive power of any Fmonitor
+        F_Value_one_V: pDoubleArray; //Measured voltage by each FMonitor(p.u.)
+        F_Value_one_S: pComplexArray; //Measured apparent power for each phase by each Fmonitor
+        Fvalue_P: Double;  //This variable is used to store total measure three-phase active power of any Fmonitor
+        Fvalue_Q: Double;  //This variable is used to store total measure three-phase reactive power of any Fmonitor
 
-       F_P_one, F_Q_one :double;//measured power
-       P_ref_one :double; //the ref Power for this point
+        F_P_one, F_Q_one: Double;//measured power
+        P_ref_one: Double; //the ref Power for this point
 
-       Node_num : Integer;  // Node number within the cluster
-       V_Sensor : Integer;  // Voltage sensor enable variable
-       P_Sensor : Integer;   // Power sensor enable variable
-       Cluster_num : integer;  // the group number for this
-       Total_Clusters : Integer; //Total Number of the Groups in a circuit
+        Node_num: Integer;  // Node number within the cluster
+        V_Sensor: Integer;  // Voltage sensor enable variable
+        P_Sensor: Integer;   // Power sensor enable variable
+        Cluster_num: Integer;  // the group number for this
+        Total_Clusters: Integer; //Total Number of the Groups in a circuit
 
        //communication time
-       T_intvl_smpl : double; //Sampling interval.
-       MaxLocalMem : integer; //Max number of local memory, no large than 99
-       Smpl_stps : integer; // T_Comm/ ActiveCircuit.Solution.Dynavars.h.
-       pCommDelayMatrix : pDoubleArray;  //
-       pCommDelaySteps : pSmallIntArray;// Communication delay step matrix of this cluster
+        T_intvl_smpl: Double; //Sampling interval.
+        MaxLocalMem: Integer; //Max number of local memory, no large than 99
+        Smpl_stps: Integer; // T_Comm/ ActiveCircuit.Solution.Dynavars.h.
+        pCommDelayMatrix: pDoubleArray;  //
+        pCommDelaySteps: pSmallIntArray;// Communication delay step matrix of this cluster
 
        // define properties for equivalent generator for simulate frequency
        //eg_defed : boolean; //moved to public
-       kVA_fm, M_fm, D_fm, Tau_fm, Ki_fm,
-       Pm_fm,
-       init_time,               //default 0.5s to flat the initial condition
-       k_dltP,                  // determine the input of PV: u_i = k_dltP * \Delta P + omg_fm
+        kVA_fm, M_fm, D_fm, Tau_fm, Ki_fm,
+        Pm_fm,
+        init_time,               //default 0.5s to flat the initial condition
+        k_dltP,                  // determine the input of PV: u_i = k_dltP * \Delta P + omg_fm
        //delay to uppper level
-       up_dly : double;         //in seconds
-       nup_dlys,                //nup_dlys := up_dly / t_intvl_smpl;
-       virtual_Ld_Nd : integer; // denotes which node talks to upper level
+        up_dly: Double;         //in seconds
+        nup_dlys,                //nup_dlys := up_dly / t_intvl_smpl;
+        virtual_Ld_Nd: Integer; // denotes which node talks to upper level
                                 // default by 1;
 
        // attack and defense
-       d_atk_inited,
-       z_dfs_inited       : boolean;        // for attack initialization if attack is dynamic
-       atk_node_num       : integer;        //default no. 1;
-       atk_time,                            //when the attack starts to work, default by 0.5s.
-       beta_dfs,                            //defense index
-       D_beta,                              //parameter for Kc (gradient control)
-       D_p,                                 //attack on gradient control: 1: no attack; -1: make the gradient control work to the oppesite
-       dlt_z0             : double;
-       pCommHide          : pSmallIntArray; // communication matrix of this cluster
-       pCommNode_Hide     : pSmallIntArray; // communication matrix of this cluster
+        d_atk_inited,
+        z_dfs_inited: Boolean;        // for attack initialization if attack is dynamic
+        atk_node_num: Integer;        //default no. 1;
+        atk_time,                            //when the attack starts to work, default by 0.5s.
+        beta_dfs,                            //defense index
+        D_beta,                              //parameter for Kc (gradient control)
+        D_p,                                 //attack on gradient control: 1: no attack; -1: make the gradient control work to the oppesite
+        dlt_z0: Double;
+        pCommHide: pSmallIntArray; // communication matrix of this cluster
+        pCommNode_Hide: pSmallIntArray; // communication matrix of this cluster
 
        //
-       Bus_code,
-       NodeNum,
-       Node_Ref           : Integer;
+        Bus_code,
+        NodeNum,
+        Node_Ref: Integer;
        {------------}
-       BufferFile      :String;  // Name of file for catching buffer overflow
+        BufferFile: String;  // Name of file for catching buffer overflow
 
-       IsFileOpen,
-       ValidMonitor,
-       IsProcessed        :Boolean;
+        IsFileOpen,
+        ValidMonitor,
+        IsProcessed: Boolean;
 
        //Procedure AddDblsToBuffer(Dbl:pDoubleArray; Ndoubles:Integer);
        //Procedure AddDblToBuffer(const Dbl:Double);
 
        //Procedure DoFlickerCalculations;  // call from CloseMonitorStream
-       Procedure Set_nodes_for_fm(intNodes : integer);//initiate the structure of this FMon
-       Procedure Set_CommVector( strParam: string);
-       Procedure Set_CommVector_Hide( strParam: string);
-       Procedure Set_CommVector_NodeHide( strParam: string);
+        procedure Set_nodes_for_fm(intNodes: Integer);//initiate the structure of this FMon
+        procedure Set_CommVector(strParam: String);
+        procedure Set_CommVector_Hide(strParam: String);
+        procedure Set_CommVector_NodeHide(strParam: String);
        //
-       Procedure Set_volt_lmt_clstr( strParam: string);
+        procedure Set_volt_lmt_clstr(strParam: String);
 
-       Procedure Set_CommDelayVector( strParam: string);
-       Procedure ResetDelaySteps(iNodeNum: integer);
+        procedure Set_CommDelayVector(strParam: String);
+        procedure ResetDelaySteps(iNodeNum: Integer);
 
        //attack and defense
-       Procedure  update_attack(ActorID: integer); // update d_i
-       Procedure  update_defense(ActorID: integer);// update z_i
-       Function   organise_dfs_node(j : integer):double;// update z_i
+        procedure update_attack(ActorID: Integer); // update d_i
+        procedure update_defense(ActorID: Integer);// update z_i
+        function organise_dfs_node(j: Integer): Double;// update z_i
 
        //Function  fm_defense(i : integer): double;    // calculate K_i z
-       Procedure  Set_atk_dfs(strParam : string);
+        procedure Set_atk_dfs(strParam: String);
 
-       Procedure Set_EquivalentGenerator(strParam : string) ;
+        procedure Set_EquivalentGenerator(strParam: String);
        //
-       Procedure Set_ElemTable_line( strParam: string);
-       Procedure Init_nodeFM(iNodeNum : integer; ActorID: integer);
+        procedure Set_ElemTable_line(strParam: String);
+        procedure Init_nodeFM(iNodeNum: Integer; ActorID: Integer);
        //Procedure push_voltage;
-       Procedure  Get_PDElem_terminal_voltage(nd_num_in_cluster: integer ;devName: string; Tern_num: integer; ActorID: integer); //
-       procedure  Calc_Alpha_for_PDNode(NodeNum :Integer);
-       Procedure  update_all_nodes_info(ActorID: integer);
-       Function   AvgPmax : double;
-       Function   AvgQmax : double;
-       Procedure  Get_PQ_DI(i_NodeNum : integer; ActorID : Integer);
-       Function  Calc_Grdt_for_Alpha(NodeNuminClstr, phase_num,ActorID:Integer):Double;
-       Function  Calc_Grdt_for_Alpha_vivj(NodeNuminClstr, phase_num,ActorID : Integer):Double;
-       function  Getgradient(j, phase_num : integer; Bii,Volt_Trhd:double):double ;
+        procedure Get_PDElem_terminal_voltage(nd_num_in_cluster: Integer; devName: String; Tern_num: Integer; ActorID: Integer); //
+        procedure Calc_Alpha_for_PDNode(NodeNum: Integer);
+        procedure update_all_nodes_info(ActorID: Integer);
+        function AvgPmax: Double;
+        function AvgQmax: Double;
+        procedure Get_PQ_DI(i_NodeNum: Integer; ActorID: Integer);
+        function Calc_Grdt_for_Alpha(NodeNuminClstr, phase_num, ActorID: Integer): Double;
+        function Calc_Grdt_for_Alpha_vivj(NodeNuminClstr, phase_num, ActorID: Integer): Double;
+        function Getgradient(j, phase_num: Integer; Bii, Volt_Trhd: Double): Double;
 
-       Function  Calc_GP_AlphaP(phase_num, ActorID:Integer):Double;
-       Function  Get_power_trans(ActorID : Integer) :Double;
+        function Calc_GP_AlphaP(phase_num, ActorID: Integer): Double;
+        function Get_power_trans(ActorID: Integer): Double;
 
-       function Coef_Phi(x : double): double;  // a coeffient
-      public
-       pNodeFMs : pNodeArray;
+        function Coef_Phi(x: Double): Double;  // a coeffient
+    PUBLIC
+        pNodeFMs: pNodeArray;
 
-       Mode          :Integer;
+        Mode: Integer;
        //MonitorStream :TMemoryStream;
-       SampleCount   :Integer;  // This is the number of samples taken
+        SampleCount: Integer;  // This is the number of samples taken
        {-- overview information about this cluster--}
-       ld_fm_info : array [0..3] of TLD_fm_infos;
+        ld_fm_info: array [0..3] of TLD_fm_infos;
        // define properties for equivalent generator for simulate frequency
-       eg_defed : boolean; //moved to public
-       dlt_fm, omg_fm : double;
-       comp_omg : double; //
+        eg_defed: Boolean; //moved to public
+        dlt_fm, omg_fm: Double;
+        comp_omg: Double; //
 
        // define properties for attack and defense
-       atk : boolean; //default = false
-       dfs : boolean; //default = false
+        atk: Boolean; //default = false
+        dfs: Boolean; //default = false
 
-       constructor Create(ParClass:TDSSClass; const MonitorName:String);
-       destructor Destroy; override;
+        constructor Create(ParClass: TDSSClass; const MonitorName: String);
+        destructor Destroy; OVERRIDE;
 
-       PROCEDURE MakePosSequence(ActorID : Integer);    Override;  // Make a positive Sequence Model, reset nphases
-       Procedure RecalcElementData(ActorID : Integer);  Override;
-       Procedure CalcYPrim(ActorID : Integer);          Override;    // Always Zero for a monitor
+        procedure MakePosSequence(ActorID: Integer); OVERRIDE;  // Make a positive Sequence Model, reset nphases
+        procedure RecalcElementData(ActorID: Integer); OVERRIDE;
+        procedure CalcYPrim(ActorID: Integer); OVERRIDE;    // Always Zero for a monitor
        //Procedure TakeSample(ActorID : Integer);         Override; // Go add a sample to the buffer
        {}
        //Procedure GetFvalue;
        //Function PhaseDetect(Bus_name:string):Integer;
        {}
-       Procedure ResetIt(ActorID : Integer);
-       Procedure Save;     // Saves present buffer to file
+        procedure ResetIt(ActorID: Integer);
+        procedure Save;     // Saves present buffer to file
        //Procedure PostProcess(ActorID : Integer); // calculates Pst or other post-processing
        //
 
-       Function Calc_sum_dij_Alphaj(NodeNumofDG, phase_num,ActorID:Integer):Double;
+        function Calc_sum_dij_Alphaj(NodeNumofDG, phase_num, ActorID: Integer): Double;
        //unified voltage (1-V_dg)^2
-       Function Calc_Alpha_M2(NodeNumofDG, phase_num:Integer;  dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer):Double;
+        function Calc_Alpha_M2(NodeNumofDG, phase_num: Integer; dbNodeRef: Integer; Bii, beta, Volt_Trhd: Double; ActorID: Integer): Double;
        //minimize loss
-       Function Calc_Alpha_L(NodeNumofDG, phase_num:Integer;  dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer):Double;
-       Function Calc_Alpha_L_vivj(NodeNumofDG, phase_num:Integer;  dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer):Double;
-       Function Calc_Alpha_LnM2(NodeNumofDG, phase_num:Integer;  dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer):Double;
+        function Calc_Alpha_L(NodeNumofDG, phase_num: Integer; dbNodeRef: Integer; Bii, beta, Volt_Trhd: Double; ActorID: Integer): Double;
+        function Calc_Alpha_L_vivj(NodeNumofDG, phase_num: Integer; dbNodeRef: Integer; Bii, beta, Volt_Trhd: Double; ActorID: Integer): Double;
+        function Calc_Alpha_LnM2(NodeNumofDG, phase_num: Integer; dbNodeRef: Integer; Bii, beta, Volt_Trhd: Double; ActorID: Integer): Double;
 
-       Function Calc_AlphaP(NodeNuminClstr, phase_num, ActorID:Integer):Double;
-       Function Get_P_mode( ActorID : Integer):integer;
+        function Calc_AlphaP(NodeNuminClstr, phase_num, ActorID: Integer): Double;
+        function Get_P_mode(ActorID: Integer): Integer;
 
        //Zero seq.
-       Function Calc_fm_ul_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer): double;
-       Function Calc_fm_us_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer): double;
+        function Calc_fm_ul_0(NodeNumofDG, phase_num: Integer; dbNodeRef: Integer; Bii, beta, Volt_Trhd: Double; ActorID: Integer): Double;
+        function Calc_fm_us_0(NodeNumofDG, phase_num: Integer; dbNodeRef: Integer; Bii, beta, Volt_Trhd: Double; ActorID: Integer): Double;
 
        //
-       Procedure Agnt_smpl(NodeNumofDG, phase_num,ActorID:Integer); // sample data of this node at each  t_intvl_smpl
-       Procedure Init_delay_array(NodeNumofDG, ActorID:Integer);
+        procedure Agnt_smpl(NodeNumofDG, phase_num, ActorID: Integer); // sample data of this node at each  t_intvl_smpl
+        procedure Init_delay_array(NodeNumofDG, ActorID: Integer);
        {For real power control-dynamic simu}
-       Function Calc_ul_P(NodeNuminClstr, phase_num:Integer):Double;
-       Function Calc_Gradient_ct_P(NodeNuminClstr, phase_num, ActorID:Integer):Double;  // curtailment
+        function Calc_ul_P(NodeNuminClstr, phase_num: Integer): Double;
+        function Calc_Gradient_ct_P(NodeNuminClstr, phase_num, ActorID: Integer): Double;  // curtailment
        {--}
-       Procedure  update_node_info_each_time_step( ActorID: integer); //all nodes in the cluster
+        procedure update_node_info_each_time_step(ActorID: Integer); //all nodes in the cluster
        //Procedure  update_ld_info( ActorID: integer); //all nodes in the cluster
-       Procedure  update_ld_dly( ActorID: integer); // all nodes in this cluster with delay
-       Procedure  Calc_P_freq_fm( ActorID: Integer);// calculte frequency for each cluster
+        procedure update_ld_dly(ActorID: Integer); // all nodes in this cluster with delay
+        procedure Calc_P_freq_fm(ActorID: Integer);// calculte frequency for each cluster
 
 
-       Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer);                Override; // Get present value of terminal Curr
-       Procedure GetInjCurrents(Curr: pComplexArray; ActorID : Integer);             Override;   // Returns Injextion currents
-       PROCEDURE InitPropertyValues(ArrayOffset:Integer);         Override;
-       Procedure DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-       function  Get_FileName(ActorID : Integer): String;
+        procedure GetCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE; // Get present value of terminal Curr
+        procedure GetInjCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE;   // Returns Injextion currents
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        function Get_FileName(ActorID: Integer): String;
 
       // Property CSVFileName:String Read Get_FileName;
-   end;
+    end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-VAR
-    ActiveFMonitorObj:TFMonitorObj;
+var
+    ActiveFMonitorObj: TFMonitorObj;
 
 {--------------------------------------------------------------------------}
 implementation
 
-USES
+uses
+    ParserDel,
+    DSSClassDefs,
+    DSSGlobals,
+    Circuit,
+    CktTree,
+    CktElement,
+    Transformer,
+    PCElement,
+    PDElement,
+    Sysutils,
+    ucmatrix,
+    showresults,
+    mathUtil,
+    TOPExport,
+    Dynamics,
+    PstCalc,
+    {}  Terminal,
+    Generic5OrderMach,
+    strutils,
+    Capacitor,
+    Load;
 
-    ParserDel, DSSClassDefs, DSSGlobals, Circuit, CktTree, CktElement,Transformer, PCElement, PDElement,
-    Sysutils, ucmatrix, showresults, mathUtil , TOPExport, Dynamics, PstCalc,
-    {}  Terminal,   Generic5OrderMach,   strutils,
-    Capacitor,Load;
-
-CONST
+const
     SEQUENCEMASK = 17;
     MAGNITUDEMASK = 32;
     POSSEQONLYMASK = 64;
@@ -284,411 +309,442 @@ CONST
     NumPropsThisClass = 28;//22;//21;//20;//17; //12;// 9; //8;//7;//add P_ref_one
     NumSolutionVars = 12;
 
-VAR
-    StrBuffer:TFMonitorStrBuffer;
+var
+    StrBuffer: TFMonitorStrBuffer;
 
 {--------------------------------------------------------------------------}
 constructor TDSSFMonitor.Create;  // Creates superstructure for all Monitor objects
 
-Begin
-     Inherited Create;
+begin
+    inherited Create;
 
-     Class_name   := 'FMonitor';
-     DSSClassType := DSSClassType + FMON_ELEMENT;
+    Class_name := 'FMonitor';
+    DSSClassType := DSSClassType + FMON_ELEMENT;
 
-     DefineProperties;
+    DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev := TRUE;
-End;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
+end;
 
 {--------------------------------------------------------------------------}
 destructor TDSSFMonitor.Destroy;
 
-Begin
-     Inherited Destroy;
-End;
+begin
+    inherited Destroy;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TDSSFMonitor.DefineProperties;
-Begin
+procedure TDSSFMonitor.DefineProperties;
+begin
 
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
 
      // Define Property names
 
-     PropertyName[1] := 'element';
-     PropertyName[2] := 'terminal';
-     PropertyName[3] := 'mode';
-     PropertyName[4] := 'action';  // buffer=clear|save
-     PropertyName[5] := 'residual';  // buffer=clear|save
-     PropertyName[6] := 'VIPolar';  // V I in mag and angle rather then re and im
-     PropertyName[7] := 'PPolar';  // Power in power PF rather then power and vars
-     PropertyName[8] := 'P_trans_ref';
-     PropertyName[9] := 'V_Sensor';
-     PropertyName[10] := 'P_Sensor';
-     PropertyName[11] := 'Node_num';
-     PropertyName[12] := 'Cluster_num';
-     PropertyName[13] := 'Total_Clusters';
-     PropertyName[14] := 'Nodes';
-     PropertyName[15] := 'CommVector';
-     PropertyName[16] := 'ElemTableLine';
-     PropertyName[17] := 'P_Mode';  //real power control mode
-     PropertyName[18] := 'CommDelayVector';
-     PropertyName[19] := 'T_intvl_smpl';  //real power control mode
-     PropertyName[20] := 'MaxLocalMem';
-     PropertyName[21] := 'Volt_limits_pu';// set limits for this cluster {0,1.05, 0.95}
-     PropertyName[22] := 'b_Curt_Ctrl';// set P curtailment on/off
-     PropertyName[23] := 'up_dly';// delay time to communicate to upper level
-     PropertyName[24] := 'virtual_ld_node';// delay time to communicate to upper level
-     PropertyName[25] := 'EGen';//equivalent generator: Egen = {kVA, M, D, Tau, K_i}
-     PropertyName[26] := 'attack_defense'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
-     PropertyName[27] := 'Comm_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
-     PropertyName[28] := 'Comm_node_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+    PropertyName[1] := 'element';
+    PropertyName[2] := 'terminal';
+    PropertyName[3] := 'mode';
+    PropertyName[4] := 'action';  // buffer=clear|save
+    PropertyName[5] := 'residual';  // buffer=clear|save
+    PropertyName[6] := 'VIPolar';  // V I in mag and angle rather then re and im
+    PropertyName[7] := 'PPolar';  // Power in power PF rather then power and vars
+    PropertyName[8] := 'P_trans_ref';
+    PropertyName[9] := 'V_Sensor';
+    PropertyName[10] := 'P_Sensor';
+    PropertyName[11] := 'Node_num';
+    PropertyName[12] := 'Cluster_num';
+    PropertyName[13] := 'Total_Clusters';
+    PropertyName[14] := 'Nodes';
+    PropertyName[15] := 'CommVector';
+    PropertyName[16] := 'ElemTableLine';
+    PropertyName[17] := 'P_Mode';  //real power control mode
+    PropertyName[18] := 'CommDelayVector';
+    PropertyName[19] := 'T_intvl_smpl';  //real power control mode
+    PropertyName[20] := 'MaxLocalMem';
+    PropertyName[21] := 'Volt_limits_pu';// set limits for this cluster {0,1.05, 0.95}
+    PropertyName[22] := 'b_Curt_Ctrl';// set P curtailment on/off
+    PropertyName[23] := 'up_dly';// delay time to communicate to upper level
+    PropertyName[24] := 'virtual_ld_node';// delay time to communicate to upper level
+    PropertyName[25] := 'EGen';//equivalent generator: Egen = {kVA, M, D, Tau, K_i}
+    PropertyName[26] := 'attack_defense'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+    PropertyName[27] := 'Comm_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+    PropertyName[28] := 'Comm_node_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
 
-     PropertyHelp[1] := 'Name (Full Object name) of element to which the monitor is connected.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
-                    '1 or 2, typically. For monitoring states, attach monitor to terminal 1.';
-     PropertyHelp[3] := 'Bitmask integer designating the values the monitor is to capture: '+CRLF+
-                    '0 = Voltages and currents' + CRLF+
-                    '1 = Powers'+CRLF+
-                    '2 = Tap Position (Transformers only)'+CRLF+
-                    '3 = State Variables (PCElements only)' +CRLF+
-                    '4 = Flicker level and severity index (Pst) for voltages. No adders apply.' +CRLF+
-                    '    Flicker level at simulation time step, Pst at 10-minute time step.' +CRLF+
-                    '5 = Solution variables (Iterations, etc).' +CRLF+CRLF+
-                    'Normally, these would be actual phasor quantities from solution.' + CRLF+
-                    '6 = Capacitor Switching (Capacitors only)'+CRLF+
-                    'Combine with adders below to achieve other results for terminal quantities:' + CRLF+
-                    '+16 = Sequence quantities' + CRLF+
-                    '+32 = Magnitude only' + CRLF+
-                    '+64 = Positive sequence only or avg of all phases' + CRLF+
-                     CRLF +
-                    'Mix adder to obtain desired results. For example:' + CRLF+
-                    'Mode=112 will save positive sequence voltage and current magnitudes only' + CRLF+
-                    'Mode=48 will save all sequence voltages and currents, but magnitude only.';
-     PropertyHelp[4] := '{Clear | Save | Take | Process}' + CRLF +
-                        '(C)lears or (S)aves current buffer.' + CRLF +
-                        '(T)ake action takes a sample.'+ CRLF +
-                        '(P)rocesses the data taken so far (e.g. Pst for mode 4).' + CRLF + CRLF +
-                        'Note that monitors are automatically reset (cleared) when the Set Mode= command is issued. '+
-                        'Otherwise, the user must explicitly reset all monitors (reset monitors command) or individual ' +
-                        'monitors with the Clear action.';
-     PropertyHelp[5] := '{Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all phases) for voltage and current. ' +
-                        'Does not apply to sequence quantity modes or power modes.';
-     PropertyHelp[6] := '{Yes/True | No/False} Default = YES. Report voltage and current in polar form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.';
-     PropertyHelp[7] := '{Yes/True | No/False} Default = YES. Report power in Apparent power, S, in polar form (Mag/Angle).(default)  Otherwise, is P and Q';
-     PropertyHelp[8] := 'P_trans_ref: P ref value for metered element(unit kW)';
-     PropertyHelp[9] := 'V_Sensor'+ CRLF+
-                         'Enable voltage sensor';
-     PropertyHelp[10] := 'P_Sensor'+ CRLF+
-                         'Enable power sensor';
-     PropertyHelp[11] := 'Node_num' + CRLF+
-                          'Assign a node number within a cluster';
-     PropertyHelp[12] := 'Cluster_num';
-     PropertyHelp[13] := 'Total_Clusters.' + CRLF+
-                          'Define the total number of groups in a circuit' + CRLF+
-                          'Just use for the first defined FMonitor';
-     PropertyHelp[14] := 'Nodes connected to this FMonitor. Example:(Nodes=33)';
-     PropertyHelp[15] := 'CommVector of this FMonitor. ' + CRLF+
-                          'The first entry of this vector is the number of '+ CRLF+
-                          'Example:(CommVector={2,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})'+ CRLF+
-                          'The example show node #2 can communicate to node #1,#2,#3';
-     PropertyHelp[16] := 'ElemTableLine of the each node within this cluster. ' + CRLF+
-                         'The first entry of this vector is the number of node within cluster '+ CRLF+
-                         'The second entry of this vector is element name '+ CRLF+
-                         'The third entry of this vector is terminal number '+ CRLF+
-                         'The fourth entry of this vector is voltage sensor '+ CRLF+
-                         'Example:(ElemTable={2,Line.1,1,1})'+ CRLF+
-                         'The example show node #2 Element';
-     PropertyHelp[17] :=  '0 = real Power controlled by each p_ref on each DG' + CRLF+
-                          '1 = real Power on MeteredElem controlled by DGs according to P_trans_ref'+CRLF+
-                          '2 = Not defined'+CRLF+
-                          '3 = Not defined'  ;
+    PropertyHelp[1] := 'Name (Full Object name) of element to which the monitor is connected.';
+    PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. ' +
+        '1 or 2, typically. For monitoring states, attach monitor to terminal 1.';
+    PropertyHelp[3] := 'Bitmask integer designating the values the monitor is to capture: ' + CRLF +
+        '0 = Voltages and currents' + CRLF +
+        '1 = Powers' + CRLF +
+        '2 = Tap Position (Transformers only)' + CRLF +
+        '3 = State Variables (PCElements only)' + CRLF +
+        '4 = Flicker level and severity index (Pst) for voltages. No adders apply.' + CRLF +
+        '    Flicker level at simulation time step, Pst at 10-minute time step.' + CRLF +
+        '5 = Solution variables (Iterations, etc).' + CRLF + CRLF +
+        'Normally, these would be actual phasor quantities from solution.' + CRLF +
+        '6 = Capacitor Switching (Capacitors only)' + CRLF +
+        'Combine with adders below to achieve other results for terminal quantities:' + CRLF +
+        '+16 = Sequence quantities' + CRLF +
+        '+32 = Magnitude only' + CRLF +
+        '+64 = Positive sequence only or avg of all phases' + CRLF +
+        CRLF +
+        'Mix adder to obtain desired results. For example:' + CRLF +
+        'Mode=112 will save positive sequence voltage and current magnitudes only' + CRLF +
+        'Mode=48 will save all sequence voltages and currents, but magnitude only.';
+    PropertyHelp[4] := '{Clear | Save | Take | Process}' + CRLF +
+        '(C)lears or (S)aves current buffer.' + CRLF +
+        '(T)ake action takes a sample.' + CRLF +
+        '(P)rocesses the data taken so far (e.g. Pst for mode 4).' + CRLF + CRLF +
+        'Note that monitors are automatically reset (cleared) when the Set Mode= command is issued. ' +
+        'Otherwise, the user must explicitly reset all monitors (reset monitors command) or individual ' +
+        'monitors with the Clear action.';
+    PropertyHelp[5] := '{Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all phases) for voltage and current. ' +
+        'Does not apply to sequence quantity modes or power modes.';
+    PropertyHelp[6] := '{Yes/True | No/False} Default = YES. Report voltage and current in polar form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.';
+    PropertyHelp[7] := '{Yes/True | No/False} Default = YES. Report power in Apparent power, S, in polar form (Mag/Angle).(default)  Otherwise, is P and Q';
+    PropertyHelp[8] := 'P_trans_ref: P ref value for metered element(unit kW)';
+    PropertyHelp[9] := 'V_Sensor' + CRLF +
+        'Enable voltage sensor';
+    PropertyHelp[10] := 'P_Sensor' + CRLF +
+        'Enable power sensor';
+    PropertyHelp[11] := 'Node_num' + CRLF +
+        'Assign a node number within a cluster';
+    PropertyHelp[12] := 'Cluster_num';
+    PropertyHelp[13] := 'Total_Clusters.' + CRLF +
+        'Define the total number of groups in a circuit' + CRLF +
+        'Just use for the first defined FMonitor';
+    PropertyHelp[14] := 'Nodes connected to this FMonitor. Example:(Nodes=33)';
+    PropertyHelp[15] := 'CommVector of this FMonitor. ' + CRLF +
+        'The first entry of this vector is the number of ' + CRLF +
+        'Example:(CommVector={2,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})' + CRLF +
+        'The example show node #2 can communicate to node #1,#2,#3';
+    PropertyHelp[16] := 'ElemTableLine of the each node within this cluster. ' + CRLF +
+        'The first entry of this vector is the number of node within cluster ' + CRLF +
+        'The second entry of this vector is element name ' + CRLF +
+        'The third entry of this vector is terminal number ' + CRLF +
+        'The fourth entry of this vector is voltage sensor ' + CRLF +
+        'Example:(ElemTable={2,Line.1,1,1})' + CRLF +
+        'The example show node #2 Element';
+    PropertyHelp[17] := '0 = real Power controlled by each p_ref on each DG' + CRLF +
+        '1 = real Power on MeteredElem controlled by DGs according to P_trans_ref' + CRLF +
+        '2 = Not defined' + CRLF +
+        '3 = Not defined';
 
-     PropertyHelp[18] :=  'CommDelayVector of this FMonitor. ' + CRLF+
-                          'The first entry of this vector is the number of the node.'+ CRLF+
-                          'Example:(CommVector={2,t1,0,t2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})'+ CRLF+
-                          'The example show node #2 can communicate to node #1 and #3 with time delay t1 and t2 seperately';
-     PropertyHelp[19] :=  'T_intvl_smpl: '+ CRLF+
-                          'The imformation of each agent will be sampled at each T_comm time. Unit is second.'
-                          + CRLF+'T_intvl_smpl is also the minimal communication time between neighbor nodes.'
-                          + CRLF+'If T_intvl_smpl=0.0, no delay for the communication is enabled in the simulation.';
-     PropertyHelp[20] := 'MaxLocalMem: the max number of local memory siza. No larger than 99';
-     PropertyHelp[21] := 'Volt_limits_pu: exmaple "Volt_limits_pu={a0,a1, a2}"'
-                          + CRLF+'a0: the phase number, 0 means pos. seq; a1: upper voltage limit of this cluster, usually 1.05;'
-                          + CRLF+'a2: upper voltage limit of this cluster, usually 0.95';// set limits for this cluster {0,1.05, 0.95}
-     PropertyHelp[22] := 'b_Curt_Ctrl:set P curtailment on/off;'// set P curtailment on/off
-                          + CRLF+ 'b_Curt_Ctrl=True: P curtailment will be implemented according to the system voltage (default);'
-                          + CRLF+ 'b_Curt_Ctrl=False: P curtailment will not be implemented.';
-     PropertyHelp[23] := 'up_dly: delay time to upper level. For example: "up_dly := 0.05"'
-                         + CRLF+ 'It can be used to simulate the time delay between clusters';
-     PropertyName[24] := 'virtual_ld_node: which node talks to upper level. virtual_ld_node=1';
-     PropertyHelp[25] := ' EGen = {kVA_fm, M_fm, D_fm, Tau_fm, Ki_fm,init_time}'
-                          + CRLF+'where equations are:'
-                          + CRLF+'(1):delta''''=omega'
-                          + CRLF+'(1):M_fm * omega''''=puPm - puPe - D_fm*omega'
-                          + CRLF+'(1):Tau_fm*Pm ''''=Ki_fm * omega '
-                          + CRLF+'puPm = Pm / kVA_fm, puPe = Pe/ kVAM_fm;'
-                          + CRLF+'everything is zero within init_time(default value is 0.5s);'
-                          + CRLF+'k_dltP is the coordinator for PV control input: u_i = k_dltP * pu_DltP + omg_fm.';
-     PropertyHelp[26] := 'Define attack and defense:  attack_defense = {atk , dfs , atk_time , atk_node_num  , d_atk0  , beta_dfs, D_beta, D_p }.'
-                          + CRLF+'attack_defense has to be defined after ''''nodes''.'
-                          + CRLF+'Example: attack_defense = { true , false , 0.5 , 1 , 0.1 , 5, 1 , 1}.'
-                          + CRLF+'Example: (1) under attack); (2) defense is off; (3) attack starts at 0.5s; (4) attack is on node 1;'
-                          + CRLF+'(5) initial value of attack: d_0 = 0.1; (6) beta = 5;'
-                          + CRLF+'(7) D_bata is used as a multiplier on \phi;'
-                          + CRLF+'(8) D_p is used as the attack on gradient contol: D_p = 1, which is normal; D_p=-1, gradient control work on the oppesite.';
-     PropertyHelp[27] := 'Comm_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
-     PropertyHelp[28] := 'Comm_node_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+    PropertyHelp[18] := 'CommDelayVector of this FMonitor. ' + CRLF +
+        'The first entry of this vector is the number of the node.' + CRLF +
+        'Example:(CommVector={2,t1,0,t2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})' + CRLF +
+        'The example show node #2 can communicate to node #1 and #3 with time delay t1 and t2 seperately';
+    PropertyHelp[19] := 'T_intvl_smpl: ' + CRLF +
+        'The imformation of each agent will be sampled at each T_comm time. Unit is second.' + CRLF + 'T_intvl_smpl is also the minimal communication time between neighbor nodes.' + CRLF + 'If T_intvl_smpl=0.0, no delay for the communication is enabled in the simulation.';
+    PropertyHelp[20] := 'MaxLocalMem: the max number of local memory siza. No larger than 99';
+    PropertyHelp[21] := 'Volt_limits_pu: exmaple "Volt_limits_pu={a0,a1, a2}"' + CRLF + 'a0: the phase number, 0 means pos. seq; a1: upper voltage limit of this cluster, usually 1.05;' + CRLF + 'a2: upper voltage limit of this cluster, usually 0.95';// set limits for this cluster {0,1.05, 0.95}
+    PropertyHelp[22] := 'b_Curt_Ctrl:set P curtailment on/off;'// set P curtailment on/off
+        + CRLF + 'b_Curt_Ctrl=True: P curtailment will be implemented according to the system voltage (default);' + CRLF + 'b_Curt_Ctrl=False: P curtailment will not be implemented.';
+    PropertyHelp[23] := 'up_dly: delay time to upper level. For example: "up_dly := 0.05"' + CRLF + 'It can be used to simulate the time delay between clusters';
+    PropertyName[24] := 'virtual_ld_node: which node talks to upper level. virtual_ld_node=1';
+    PropertyHelp[25] := ' EGen = {kVA_fm, M_fm, D_fm, Tau_fm, Ki_fm,init_time}' + CRLF + 'where equations are:' + CRLF + '(1):delta''''=omega' + CRLF + '(1):M_fm * omega''''=puPm - puPe - D_fm*omega' + CRLF + '(1):Tau_fm*Pm ''''=Ki_fm * omega ' + CRLF + 'puPm = Pm / kVA_fm, puPe = Pe/ kVAM_fm;' + CRLF + 'everything is zero within init_time(default value is 0.5s);' + CRLF + 'k_dltP is the coordinator for PV control input: u_i = k_dltP * pu_DltP + omg_fm.';
+    PropertyHelp[26] := 'Define attack and defense:  attack_defense = {atk , dfs , atk_time , atk_node_num  , d_atk0  , beta_dfs, D_beta, D_p }.' + CRLF + 'attack_defense has to be defined after ''''nodes''.' + CRLF + 'Example: attack_defense = { true , false , 0.5 , 1 , 0.1 , 5, 1 , 1}.' + CRLF + 'Example: (1) under attack); (2) defense is off; (3) attack starts at 0.5s; (4) attack is on node 1;' + CRLF + '(5) initial value of attack: d_0 = 0.1; (6) beta = 5;' + CRLF + '(7) D_bata is used as a multiplier on \phi;' + CRLF + '(8) D_p is used as the attack on gradient contol: D_p = 1, which is normal; D_p=-1, gradient control work on the oppesite.';
+    PropertyHelp[27] := 'Comm_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+    PropertyHelp[28] := 'Comm_node_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
 
-     ActiveProperty := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
-End;
+end;
 
 {--------------------------------------------------------------------------}
-Function TDSSFMonitor.NewObject(const ObjName:String):Integer;
-Begin
+function TDSSFMonitor.NewObject(const ObjName: String): Integer;
+begin
     // Make a new Monitor and add it to Monitor class list
-    With ActiveCircuit[ActiveActor] Do
-    Begin
-      ActiveCktElement := TFMonitorObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
-    End;
-End;
+    with ActiveCircuit[ActiveActor] do
+    begin
+        ActiveCktElement := TFMonitorObj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
+    end;
+end;
+
 {--------------------------------------------------------------------------}
-Function TDSSFMonitor.Edit(ActorID : Integer):Integer;
-VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
-   recalc: integer;
-   i : integer;
-Begin
+function TDSSFMonitor.Edit(ActorID: Integer): Integer;
+var
+    ParamPointer: Integer;
+    ParamName: String;
+    Param: String;
+    recalc: Integer;
+    i: Integer;
+begin
 
   // continue parsing with contents of Parser
   // continue parsing with contents of Parser
-  ActiveFMonitorObj := ElementList.Active;
-  ActiveCircuit[ActorID].ActiveCktElement := ActiveFMonitorObj;
+    ActiveFMonitorObj := ElementList.Active;
+    ActiveCircuit[ActorID].ActiveCktElement := ActiveFMonitorObj;
 
-  Result := 0;
-  recalc:=0;
+    Result := 0;
+    recalc := 0;
 
-  WITH ActiveFMonitorObj DO Begin
+    with ActiveFMonitorObj do
+    begin
 
-     ParamPointer := 0;
-     ParamName := Parser[ActorID].NextParam;
-     Param := Parser[ActorID].StrValue;
-     WHILE Length(Param)>0 DO Begin
-         IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
+        ParamPointer := 0;
+        ParamName := Parser[ActorID].NextParam;
+        Param := Parser[ActorID].StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
-         If (ParamPointer>0) and (ParamPointer<=NumProperties) Then PropertyValue[ParamPointer]:= Param;
-         inc (recalc);
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
+            inc(recalc);
 
-         CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 661);
-            1: Begin
-                 ElementName := ConstructElemName(lowercase(param));   // subtitute @var values if any
-                 PropertyValue[1] := ElementName;
-               End;
-            2: MeteredTerminal := Parser[ActorID].IntValue;
-            3: Mode := Parser[ActorID].IntValue;
-            4: Begin
-                  param := lowercase(param);
-                  Case param[1] of
-                    's':Save;
-                    'c','r':ResetIt(ActorID);
-                    't': TakeSample(ActorID);
-                    //'p': begin PostProcess(ActorID); dec(recalc) end
-                  End;
-               End;  // buffer
-            5: IncludeResidual := InterpretYesNo(Param);
-            6: VIpolar := InterpretYesNo(Param);
-            7: Ppolar := InterpretYesNo(Param);
-            8: p_trans_ref := 1000 * Parser[ActorID].dblValue;//kW for ref, unit of p_trans_ref is 'W'
-            9: V_Sensor := Parser[ActorID].IntValue;//Voltage Sensor: Binary
-            10: P_Sensor := Parser[ActorID].IntValue;//Power sensor : Binary
-            //11: Node_num := Parser[ActorID].IntValue;//Node number : integer
-            12: Cluster_num := Parser[ActorID].IntValue;//group number: integer
-            13: Total_Clusters := Parser[ActorID].IntValue;//Total number of the groups: integer
-            14: Set_nodes_for_fm(Parser[ActorID].IntValue);//Nodes. Innitiate the structure
-            15: Set_CommVector(Param);//
-            16: Set_ElemTable_line(Param);//
-            17: p_mode :=   Parser[ActorID].IntValue;
-            18: Set_CommDelayVector(Param);//
-            19: begin
-                  T_intvl_smpl :=  Parser[ActorID].dblValue; //
-                  for i := 1 to nodes do
-                          ResetDelaySteps(i);
-                end ;
-            20: MaxLocalMem := Parser[ActorID].IntValue;
-            21: Set_volt_lmt_clstr(Param);
-            22: ld_fm_info[0].b_curt_ctrl := InterpretYesNo(Param); //curtailment
-            23: begin
-                up_dly := Parser[ActorID].dblValue;
-                if t_intvl_smpl<>0.0 then
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 661);
+                1:
                 begin
-                    if frac (up_dly /t_intvl_smpl)<>0.0 then
-                            nUp_dlys := trunc(up_dly /t_intvl_smpl)
-                            else  nUp_dlys := trunc(up_dly /t_intvl_smpl)+1;
-                end
-                    else nUp_dlys :=0;
-            end;
-            24: virtual_Ld_Nd := Parser[ActorID].IntValue;
-            25:Set_EquivalentGenerator(Param);
-            26:Set_atk_dfs(Param);
-            27:Set_CommVector_Hide(Param);//
-            28:Set_CommVector_NodeHide(Param);//
-         ELSE
+                    ElementName := ConstructElemName(lowercase(param));   // subtitute @var values if any
+                    PropertyValue[1] := ElementName;
+                end;
+                2:
+                    MeteredTerminal := Parser[ActorID].IntValue;
+                3:
+                    Mode := Parser[ActorID].IntValue;
+                4:
+                begin
+                    param := lowercase(param);
+                    case param[1] of
+                        's':
+                            Save;
+                        'c', 'r':
+                            ResetIt(ActorID);
+                        't':
+                            TakeSample(ActorID);
+                    //'p': begin PostProcess(ActorID); dec(recalc) end
+                    end;
+                end;  // buffer
+                5:
+                    IncludeResidual := InterpretYesNo(Param);
+                6:
+                    VIpolar := InterpretYesNo(Param);
+                7:
+                    Ppolar := InterpretYesNo(Param);
+                8:
+                    p_trans_ref := 1000 * Parser[ActorID].dblValue;//kW for ref, unit of p_trans_ref is 'W'
+                9:
+                    V_Sensor := Parser[ActorID].IntValue;//Voltage Sensor: Binary
+                10:
+                    P_Sensor := Parser[ActorID].IntValue;//Power sensor : Binary
+            //11: Node_num := Parser[ActorID].IntValue;//Node number : integer
+                12:
+                    Cluster_num := Parser[ActorID].IntValue;//group number: integer
+                13:
+                    Total_Clusters := Parser[ActorID].IntValue;//Total number of the groups: integer
+                14:
+                    Set_nodes_for_fm(Parser[ActorID].IntValue);//Nodes. Innitiate the structure
+                15:
+                    Set_CommVector(Param);//
+                16:
+                    Set_ElemTable_line(Param);//
+                17:
+                    p_mode := Parser[ActorID].IntValue;
+                18:
+                    Set_CommDelayVector(Param);//
+                19:
+                begin
+                    T_intvl_smpl := Parser[ActorID].dblValue; //
+                    for i := 1 to nodes do
+                        ResetDelaySteps(i);
+                end;
+                20:
+                    MaxLocalMem := Parser[ActorID].IntValue;
+                21:
+                    Set_volt_lmt_clstr(Param);
+                22:
+                    ld_fm_info[0].b_curt_ctrl := InterpretYesNo(Param); //curtailment
+                23:
+                begin
+                    up_dly := Parser[ActorID].dblValue;
+                    if t_intvl_smpl <> 0.0 then
+                    begin
+                        if frac(up_dly / t_intvl_smpl) <> 0.0 then
+                            nUp_dlys := trunc(up_dly / t_intvl_smpl)
+                        else
+                            nUp_dlys := trunc(up_dly / t_intvl_smpl) + 1;
+                    end
+                    else
+                        nUp_dlys := 0;
+                end;
+                24:
+                    virtual_Ld_Nd := Parser[ActorID].IntValue;
+                25:
+                    Set_EquivalentGenerator(Param);
+                26:
+                    Set_atk_dfs(Param);
+                27:
+                    Set_CommVector_Hide(Param);//
+                28:
+                    Set_CommVector_NodeHide(Param);//
+            else
            // Inherited parameters
-           ClassEdit( ActiveFMonitorObj, ParamPointer - NumPropsthisClass)
-         End;
+                ClassEdit(ActiveFMonitorObj, ParamPointer - NumPropsthisClass)
+            end;
 
-         ParamName := Parser[ActorID].NextParam;
-         Param := Parser[ActorID].StrValue;
-     End;
+            ParamName := Parser[ActorID].NextParam;
+            Param := Parser[ActorID].StrValue;
+        end;
 
-     if recalc > 0 then RecalcElementData(ActorID);
-  End;
+        if recalc > 0 then
+            RecalcElementData(ActorID);
+    end;
 
-End;
-
-{--------------------------------------------------------------------------}
-Procedure TDSSFMonitor.ResetAll(ActorID : Integer);  // Force all monitors in the circuit to reset
-
-VAR
-   Mon:TFMonitorObj;
-
-Begin
-      Mon := ActiveCircuit[ActorID].FMonitors.First;
-      WHILE Mon<>Nil DO
-      Begin
-          If Mon.enabled Then Mon.ResetIt(ActorID);
-          Mon := ActiveCircuit[ActorID].FMonitors.Next;
-      End;
-
-End;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TDSSFMonitor.SampleAll(ActorID : Integer);  // Force all monitors in the circuit to take a sample
+procedure TDSSFMonitor.ResetAll(ActorID: Integer);  // Force all monitors in the circuit to reset
 
-VAR
-   Mon:TFMonitorObj;
+var
+    Mon: TFMonitorObj;
+
+begin
+    Mon := ActiveCircuit[ActorID].FMonitors.First;
+    while Mon <> NIL do
+    begin
+        if Mon.enabled then
+            Mon.ResetIt(ActorID);
+        Mon := ActiveCircuit[ActorID].FMonitors.Next;
+    end;
+
+end;
+
+{--------------------------------------------------------------------------}
+procedure TDSSFMonitor.SampleAll(ActorID: Integer);  // Force all monitors in the circuit to take a sample
+
+var
+    Mon: TFMonitorObj;
 // sample all monitors except mode 5 monitors
-Begin
-      Mon := ActiveCircuit[ActorID].FMonitors.First;
-      WHILE Mon<>Nil DO  Begin
-          If Mon.enabled Then
-             If Mon.Mode <> 5 then Mon.TakeSample(ActorID);
-          Mon := ActiveCircuit[ActorID].FMonitors.Next;
-      End;
+begin
+    Mon := ActiveCircuit[ActorID].FMonitors.First;
+    while Mon <> NIL do
+    begin
+        if Mon.enabled then
+            if Mon.Mode <> 5 then
+                Mon.TakeSample(ActorID);
+        Mon := ActiveCircuit[ActorID].FMonitors.Next;
+    end;
       //ProcessFvalue;
-End;
+end;
 //This function is used to measure total net power of a cluster
-Procedure  TDSSFMonitor.update_sys_ld_info(ActorID:integer); //all FMs
-VAR
-   FMon:TFMonitorObj;
-   vtemp, dv_lwst : double;
-Begin
-     ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hghst := -999999;
-     ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lwst  := 9999999;
-     FMon := ActiveCircuit[ActorID].FMonitors.First;
-      WHILE FMon<>Nil DO  Begin
+procedure TDSSFMonitor.update_sys_ld_info(ActorID: Integer); //all FMs
+var
+    FMon: TFMonitorObj;
+    vtemp, dv_lwst: Double;
+begin
+    ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hghst := -999999;
+    ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lwst := 9999999;
+    FMon := ActiveCircuit[ActorID].FMonitors.First;
+    while FMon <> NIL do
+    begin
           //update all agents information:
               //synchronous: voltage to agents
               //asynchronous: aphga, ahphaP, highest/lowest voltage
-          If FMon.enabled Then
-          begin
-              FMon.update_node_info_each_time_step(ActorID); //update old z_dfs, vl_alpha_dgn
-              FMon.update_ld_dly(ActorID); //with delay
-          end;
+        if FMon.enabled then
+        begin
+            FMon.update_node_info_each_time_step(ActorID); //update old z_dfs, vl_alpha_dgn
+            FMon.update_ld_dly(ActorID); //with delay
+        end;
           //
           {Update cluster info to center}
-          if ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hghst < FMon.ld_fm_info[0].volt_hghst then
-          begin
-               ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hghst  := FMon.ld_fm_info[0].volt_hghst;
-               ActiveCircuit[ActorID].Solution.LD_FM[0].ndnum_hghst := FMon.ld_fm_info[0].ndnum_hghst;
-               ActiveCircuit[ActorID].Solution.LD_FM[0].clstr_num_hghst := FMon.Cluster_num;
-               ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hgh_lmt := fmon.ld_fm_info[0].volt_hgh_lmt;
-               ActiveCircuit[ActorID].Solution.LD_FM[0].b_ctrl_hghst := FMon.ld_fm_info[0].b_ctrl_hghst;
-          end;
-          if ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lwst > FMon.ld_fm_info[0].volt_lwst then
-          begin
-               ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lwst  := FMon.ld_fm_info[0].volt_lwst;
-               ActiveCircuit[ActorID].Solution.LD_FM[0].ndnum_lwst := FMon.ld_fm_info[0].ndnum_lwst;
-               ActiveCircuit[ActorID].Solution.LD_FM[0].clstr_num_lwst := FMon.Cluster_num;
-               ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lw_lmt := fmon.ld_fm_info[0].volt_lw_lmt;
-               ActiveCircuit[ActorID].Solution.LD_FM[0].b_ctrl_lwst := FMon.ld_fm_info[0].b_ctrl_lwst;
-          end;
+        if ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hghst < FMon.ld_fm_info[0].volt_hghst then
+        begin
+            ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hghst := FMon.ld_fm_info[0].volt_hghst;
+            ActiveCircuit[ActorID].Solution.LD_FM[0].ndnum_hghst := FMon.ld_fm_info[0].ndnum_hghst;
+            ActiveCircuit[ActorID].Solution.LD_FM[0].clstr_num_hghst := FMon.Cluster_num;
+            ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hgh_lmt := fmon.ld_fm_info[0].volt_hgh_lmt;
+            ActiveCircuit[ActorID].Solution.LD_FM[0].b_ctrl_hghst := FMon.ld_fm_info[0].b_ctrl_hghst;
+        end;
+        if ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lwst > FMon.ld_fm_info[0].volt_lwst then
+        begin
+            ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lwst := FMon.ld_fm_info[0].volt_lwst;
+            ActiveCircuit[ActorID].Solution.LD_FM[0].ndnum_lwst := FMon.ld_fm_info[0].ndnum_lwst;
+            ActiveCircuit[ActorID].Solution.LD_FM[0].clstr_num_lwst := FMon.Cluster_num;
+            ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lw_lmt := fmon.ld_fm_info[0].volt_lw_lmt;
+            ActiveCircuit[ActorID].Solution.LD_FM[0].b_ctrl_lwst := FMon.ld_fm_info[0].b_ctrl_lwst;
+        end;
 
           {---- curtailment ----- bCurtl := t/f for overall system ------}
           //curtailment is needed or not
-            if FMon.ld_fm_info[0].volt_hghst > 1.0 then
-               FMon.ld_fm_info[0].b_ctrl_hghst := true     //need curtailment
-               else FMon.ld_fm_info[0].b_ctrl_hghst := false;
+        if FMon.ld_fm_info[0].volt_hghst > 1.0 then
+            FMon.ld_fm_info[0].b_ctrl_hghst := TRUE     //need curtailment
+        else
+            FMon.ld_fm_info[0].b_ctrl_hghst := FALSE;
           {---- each cluster may have their own ---}
-          FMon := ActiveCircuit[ActorID].FMonitors.Next;
-      End;
+        FMon := ActiveCircuit[ActorID].FMonitors.Next;
+    end;
       //curtailment is needed or not
-          vtemp := ( activecircuit[ActorID].Solution.LD_FM[0].volt_hghst - activecircuit[ActorID].Solution.LD_FM[0].volt_lwst );//p.u.
-          dv_lwst := activecircuit[ActorID].Solution.LD_FM[0].volt_lwst - ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lw_lmt;//0.95; // must greater than 0.0
-         if  (dv_lwst<0.0) then
-          begin
-            activecircuit[ActorID].Solution.bCurtl := true;  //curtailment
-          end
-          else
-          begin
-              activecircuit[ActorID].Solution.bCurtl := false;//dont need curtailment
-          end;
+    vtemp := (activecircuit[ActorID].Solution.LD_FM[0].volt_hghst - activecircuit[ActorID].Solution.LD_FM[0].volt_lwst);//p.u.
+    dv_lwst := activecircuit[ActorID].Solution.LD_FM[0].volt_lwst - ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lw_lmt;//0.95; // must greater than 0.0
+    if (dv_lwst < 0.0) then
+    begin
+        activecircuit[ActorID].Solution.bCurtl := TRUE;  //curtailment
+    end
+    else
+    begin
+        activecircuit[ActorID].Solution.bCurtl := FALSE;//dont need curtailment
+    end;
 
-End;
-Procedure  TDSSFMonitor.Calc_P_freq(ActorID: Integer);// calculte frequency for each cluster
-VAR
-   FMon:TFMonitorObj;
-Begin
+end;
+
+procedure TDSSFMonitor.Calc_P_freq(ActorID: Integer);// calculte frequency for each cluster
+var
+    FMon: TFMonitorObj;
+begin
      //ActiveCircuit[ActorID].Solution.LD_FM[0].freq  := 0; //saved for system frequency
      //ActiveCircuit[ActorID].Solution.LD_FM[0].delta := 0; //saved for angle of the inertia center of a cluster
-     FMon := ActiveCircuit[ActorID].FMonitors.First;
-      WHILE FMon<>Nil DO  Begin
-          If FMon.enabled Then
-              if FMon.eg_defed = true then
-                  FMon.Calc_P_freq_fm(ActorID); //w
-          FMon := ActiveCircuit[ActorID].FMonitors.Next;
+    FMon := ActiveCircuit[ActorID].FMonitors.First;
+    while FMon <> NIL do
+    begin
+        if FMon.enabled then
+            if FMon.eg_defed = TRUE then
+                FMon.Calc_P_freq_fm(ActorID); //w
+        FMon := ActiveCircuit[ActorID].FMonitors.Next;
           //
-      end;
+    end;
 
-End;
-Procedure  TDSSFMonitor.update_atks(ActorID: Integer);
-VAR
-   FMon:TFMonitorObj;
-Begin
-     FMon := ActiveCircuit[ActorID].FMonitors.First;
-      WHILE FMon<>Nil DO  Begin
-          If FMon.enabled and (FMon.atk = true) then
-                  FMon.update_attack(ActorID); //w
-          FMon := ActiveCircuit[ActorID].FMonitors.Next;
+end;
+
+procedure TDSSFMonitor.update_atks(ActorID: Integer);
+var
+    FMon: TFMonitorObj;
+begin
+    FMon := ActiveCircuit[ActorID].FMonitors.First;
+    while FMon <> NIL do
+    begin
+        if FMon.enabled and (FMon.atk = TRUE) then
+            FMon.update_attack(ActorID); //w
+        FMon := ActiveCircuit[ActorID].FMonitors.Next;
           //
-      end;
+    end;
 
-End;
+end;
 
-Procedure  TDSSFMonitor.update_defense_layer(ActorID: Integer);
-VAR
-   FMon:TFMonitorObj;
-Begin
-     FMon := ActiveCircuit[ActorID].FMonitors.First;
-      WHILE FMon<>Nil DO  Begin
-          If FMon.enabled and (FMon.dfs = true)  then
-                  FMon.update_defense(ActorID); //w
-          FMon := ActiveCircuit[ActorID].FMonitors.Next;
+procedure TDSSFMonitor.update_defense_layer(ActorID: Integer);
+var
+    FMon: TFMonitorObj;
+begin
+    FMon := ActiveCircuit[ActorID].FMonitors.First;
+    while FMon <> NIL do
+    begin
+        if FMon.enabled and (FMon.dfs = TRUE) then
+            FMon.update_defense(ActorID); //w
+        FMon := ActiveCircuit[ActorID].FMonitors.Next;
           //
-      end;
+    end;
 
-End;
+end;
 
 {--------------------------------------------------------------------------}
 {
@@ -704,71 +760,79 @@ Begin
 End;
 }
 {--------------------------------------------------------------------------}
-Procedure TDSSFMonitor.SaveAll;     // Force all monitors in the circuit to save their buffers to disk
+procedure TDSSFMonitor.SaveAll;     // Force all monitors in the circuit to save their buffers to disk
 
-VAR
-   Mon:TFMonitorObj;
+var
+    Mon: TFMonitorObj;
 
-Begin
-   Mon := ActiveCircuit[ActorID].FMonitors.First;
-   WHILE Mon<>Nil DO Begin
-       If Mon.Enabled Then Mon.Save;
-       Mon := ActiveCircuit[ActorID].FMonitors.Next;
-   End;
-End;
+begin
+    Mon := ActiveCircuit[ActorID].FMonitors.First;
+    while Mon <> NIL do
+    begin
+        if Mon.Enabled then
+            Mon.Save;
+        Mon := ActiveCircuit[ActorID].FMonitors.Next;
+    end;
+end;
 
 {--------------------------------------------------------------------------}
-Function TDSSFMonitor.MakeLike(const MonitorName:String):Integer;
-VAR
-   OtherMonitor:TFMonitorObj;
-   i:Integer;
-Begin
-   Result := 0;
+function TDSSFMonitor.MakeLike(const MonitorName: String): Integer;
+var
+    OtherMonitor: TFMonitorObj;
+    i: Integer;
+begin
+    Result := 0;
    {See if we can find this Monitor name in the present collection}
-   OtherMonitor := Find(MonitorName);
-   IF OtherMonitor<>Nil THEN
-   WITH ActiveFMonitorObj DO Begin
+    OtherMonitor := Find(MonitorName);
+    if OtherMonitor <> NIL then
+        with ActiveFMonitorObj do
+        begin
 
-       NPhases := OtherMonitor.Fnphases;
-       NConds  := OtherMonitor.Fnconds; // Force Reallocation of terminal stuff
+            NPhases := OtherMonitor.Fnphases;
+            NConds := OtherMonitor.Fnconds; // Force Reallocation of terminal stuff
 
-       Buffersize := OtherMonitor.Buffersize;
-       ElementName:= OtherMonitor.ElementName;
-       MeteredElement:= OtherMonitor.MeteredElement;  // Pointer to target circuit element
-       MeteredTerminal:= OtherMonitor.MeteredTerminal;
-       Mode := OtherMonitor.Mode;
-       IncludeResidual := OtherMonitor.IncludeResidual;
+            Buffersize := OtherMonitor.Buffersize;
+            ElementName := OtherMonitor.ElementName;
+            MeteredElement := OtherMonitor.MeteredElement;  // Pointer to target circuit element
+            MeteredTerminal := OtherMonitor.MeteredTerminal;
+            Mode := OtherMonitor.Mode;
+            IncludeResidual := OtherMonitor.IncludeResidual;
 
-       For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherMonitor.PropertyValue[i];
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherMonitor.PropertyValue[i];
 
-       BaseFrequency:= OtherMonitor.BaseFrequency;
+            BaseFrequency := OtherMonitor.BaseFrequency;
 
-   End
-   ELSE  DoSimpleMsg('Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
+        end
+    else
+        DoSimpleMsg('Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
 
-End;
+end;
 
 {--------------------------------------------------------------------------}
-Function TDSSFMonitor.Init(Handle:Integer;ActorID : Integer):Integer;
-VAR
-   Mon:TFMonitorObj;
+function TDSSFMonitor.Init(Handle: Integer; ActorID: Integer): Integer;
+var
+    Mon: TFMonitorObj;
 
-Begin
-      Result := 0;
+begin
+    Result := 0;
 
-      IF Handle>0  THEN Begin
-         Mon := ElementList.Get(Handle);
-         Mon.ResetIt(ActorID);
-      End
-      ELSE Begin  // Do 'em all
+    if Handle > 0 then
+    begin
+        Mon := ElementList.Get(Handle);
+        Mon.ResetIt(ActorID);
+    end
+    else
+    begin  // Do 'em all
         Mon := ElementList.First;
-        WHILE Mon<>Nil DO Begin
+        while Mon <> NIL do
+        begin
             Mon.ResetIt(ActorID);
             Mon := ElementList.Next;
-        End;
-      End;
+        end;
+    end;
 
-End;
+end;
 
 
 {==========================================================================}
@@ -776,634 +840,730 @@ End;
 {==========================================================================}
 
 
-
 {--------------------------------------------------------------------------}
-constructor TFMonitorObj.Create(ParClass:TDSSClass; const MonitorName:String);
+constructor TFMonitorObj.Create(ParClass: TDSSClass; const MonitorName: String);
 var
- i : integer;
-Begin
-     Inherited Create(ParClass);
-     Name := LowerCase(MonitorName);
+    i: Integer;
+begin
+    inherited Create(ParClass);
+    Name := LowerCase(MonitorName);
 
-     Nphases := 3;  // Directly set conds and phases
-     Fnconds := 3;
-     Nterms  := 1;  // this forces allocation of terminals and conductors
+    Nphases := 3;  // Directly set conds and phases
+    Fnconds := 3;
+    Nterms := 1;  // this forces allocation of terminals and conductors
                          // in base class
 
-     pNodeFMs := nil;
+    pNodeFMs := NIL;
      //pNodeFMs := AllocMem(Sizeof(pNodeFMs^[1] )* 1);
 
      {Current Buffer has to be big enough to hold all terminals}
-     CurrentBuffer := Nil;
-     VoltageBuffer := Nil;
-     StateBuffer   := Nil;
-     FlickerBuffer := Nil;
-     SolutionBuffer:= Nil;
+    CurrentBuffer := NIL;
+    VoltageBuffer := NIL;
+    StateBuffer := NIL;
+    FlickerBuffer := NIL;
+    SolutionBuffer := NIL;
 
-     Basefrequency := 60.0;
-     Hour          := 0;
-     Sec           := 0.0;
+    Basefrequency := 60.0;
+    Hour := 0;
+    Sec := 0.0;
 
-     Mode := 0;  // Standard Mode: V & I, complex values
+    Mode := 0;  // Standard Mode: V & I, complex values
 
-     BufferSize := 1024;       // Makes a 4K buffer
-     MonBuffer  := AllocMem(Sizeof(MonBuffer^[1]) * BufferSize);
-     BufPtr     := 0;
+    BufferSize := 1024;       // Makes a 4K buffer
+    MonBuffer := AllocMem(Sizeof(MonBuffer^[1]) * BufferSize);
+    BufPtr := 0;
 
-     ElementName    := TDSSCktElement(ActiveCircuit[ActiveActor].CktElements.Get(1)).Name; // Default to first circuit element (source)
-     MeteredElement := nil;
-     Bufferfile     := '';
+    ElementName := TDSSCktElement(ActiveCircuit[ActiveActor].CktElements.Get(1)).Name; // Default to first circuit element (source)
+    MeteredElement := NIL;
+    Bufferfile := '';
 
      //MonitorStream := TMemoryStream.Create; // Create memory stream
 
-     IsFileOpen      := FALSE;
-     MeteredTerminal := 1;
-     IncludeResidual := FALSE;
-     VIPolar         := TRUE;
-     Ppolar          := TRUE;
-     FileSignature   := 43756;
-     FileVersion     := 1;
-     SampleCount     := 0;
-     IsProcessed     := FALSE;
+    IsFileOpen := FALSE;
+    MeteredTerminal := 1;
+    IncludeResidual := FALSE;
+    VIPolar := TRUE;
+    Ppolar := TRUE;
+    FileSignature := 43756;
+    FileVersion := 1;
+    SampleCount := 0;
+    IsProcessed := FALSE;
 
-     DSSObjType := ParClass.DSSClassType; //MON_ELEMENT;
+    DSSObjType := ParClass.DSSClassType; //MON_ELEMENT;
 
-     InitPropertyValues(0);
-     Nodes := 33;//default Nodes in one cluster
+    InitPropertyValues(0);
+    Nodes := 33;//default Nodes in one cluster
 
-     ReAllocMem(pCommMatrix,  Nodes *Nodes * sizeof(pCommMatrix^[1]));
+    ReAllocMem(pCommMatrix, Nodes * Nodes * sizeof(pCommMatrix^[1]));
      {}
-      ReAllocMem(f_Value_one_V, 999 * sizeof(f_Value_one_V^[1]));
-      ReAllocMem(F_Value_one_S, 999 * sizeof(F_Value_one_S^[1]));
+    ReAllocMem(f_Value_one_V, 999 * sizeof(f_Value_one_V^[1]));
+    ReAllocMem(F_Value_one_S, 999 * sizeof(F_Value_one_S^[1]));
      {}
-      T_intvl_smpl := 0;
-      MaxLocalMem := 10;
-      ReAllocMem(pCommDelayMatrix,  Nodes *Nodes * sizeof(pCommDelayMatrix^[1]));
-      ReAllocMem(pCommDelaySteps,  Nodes *Nodes * sizeof(pCommDelaySteps^[1]));
-      ReAllocMem(pCommHide,  Nodes *Nodes * sizeof(pCommHide^[1]));
-      ReAllocMem(pCommNode_Hide,  Nodes *Nodes * sizeof(pCommNode_Hide^[1]));
+    T_intvl_smpl := 0;
+    MaxLocalMem := 10;
+    ReAllocMem(pCommDelayMatrix, Nodes * Nodes * sizeof(pCommDelayMatrix^[1]));
+    ReAllocMem(pCommDelaySteps, Nodes * Nodes * sizeof(pCommDelaySteps^[1]));
+    ReAllocMem(pCommHide, Nodes * Nodes * sizeof(pCommHide^[1]));
+    ReAllocMem(pCommNode_Hide, Nodes * Nodes * sizeof(pCommNode_Hide^[1]));
 
      {leader information}
-     for i := 0 to 3 do
-     begin
+    for i := 0 to 3 do
+    begin
 
-      ld_fm_info[i].ndnum_hghst := 0;
-      ld_fm_info[i].b_ctrl_hghst := false;        //small number that can never be true
-      ld_fm_info[i].volt_hghst := -1.0;
-      ld_fm_info[i].volt_hgh_lmt := 1.05;
-      ld_fm_info[i].Pinjec_hghst := 0.0;
-      ld_fm_info[i].ndnum_lwst := 0;
-      ld_fm_info[i].b_ctrl_lwst := false;
-      ld_fm_info[i].volt_lw_lmt := 0.95;
-      ld_fm_info[i].volt_lwst := 9999999999.0;   //large nunber can never be true
-      ld_fm_info[i].Pinjec_lwst := 0.0;
-      ld_fm_info[i].volt_avg := 0.0;
-      ld_fm_info[i].total_pg := 0.0;
-      ld_fm_info[i].total_pl := 0.0;
-      ld_fm_info[i].b_Curt_Ctrl := false;
-     end;
-     virtual_Ld_Nd := 1;
-     nUp_dlys := 0;
+        ld_fm_info[i].ndnum_hghst := 0;
+        ld_fm_info[i].b_ctrl_hghst := FALSE;        //small number that can never be true
+        ld_fm_info[i].volt_hghst := -1.0;
+        ld_fm_info[i].volt_hgh_lmt := 1.05;
+        ld_fm_info[i].Pinjec_hghst := 0.0;
+        ld_fm_info[i].ndnum_lwst := 0;
+        ld_fm_info[i].b_ctrl_lwst := FALSE;
+        ld_fm_info[i].volt_lw_lmt := 0.95;
+        ld_fm_info[i].volt_lwst := 9999999999.0;   //large nunber can never be true
+        ld_fm_info[i].Pinjec_lwst := 0.0;
+        ld_fm_info[i].volt_avg := 0.0;
+        ld_fm_info[i].total_pg := 0.0;
+        ld_fm_info[i].total_pl := 0.0;
+        ld_fm_info[i].b_Curt_Ctrl := FALSE;
+    end;
+    virtual_Ld_Nd := 1;
+    nUp_dlys := 0;
      //bCurtl_Clstr := false;
      {end of leader initialization}
      //virtual generator for frequency
-     eg_defed := false;
-     kVA_fm := 0.0; M_fm := 0.0; D_fm := 0.0; Tau_fm := 0.0; Ki_fm := 0.0;
-     dlt_fm := 0.0; omg_fm := 0.0;
-     Pm_fm := 0.0;
-     init_time := 0.5;
-     comp_omg := 0.0;
+    eg_defed := FALSE;
+    kVA_fm := 0.0;
+    M_fm := 0.0;
+    D_fm := 0.0;
+    Tau_fm := 0.0;
+    Ki_fm := 0.0;
+    dlt_fm := 0.0;
+    omg_fm := 0.0;
+    Pm_fm := 0.0;
+    init_time := 0.5;
+    comp_omg := 0.0;
      // when the attack time starts
-     atk := false;
-     atk_time := 0.5;
-     atk_node_num := 1;
-     d_atk_inited := false;
-     z_dfs_inited := false;
-     D_beta := 1;
-     D_p := 1;
-     dlt_z0 := 0.0;
-End;
+    atk := FALSE;
+    atk_time := 0.5;
+    atk_node_num := 1;
+    d_atk_inited := FALSE;
+    z_dfs_inited := FALSE;
+    D_beta := 1;
+    D_p := 1;
+    dlt_z0 := 0.0;
+end;
 
 destructor TFMonitorObj.Destroy;
-Begin
-     //MonitorStream.Free;
-     ElementName := '';
-     Bufferfile := '';
-     ReAllocMem(MonBuffer,0);
-     ReAllocMem(StateBuffer,0);
-     ReAllocMem(CurrentBuffer,0);
-     ReAllocMem(VoltageBuffer,0);
-     ReAllocMem(FlickerBuffer,0);
-     ReAllocMem(SolutionBuffer,0);
-     {}
-     if Assigned(f_Value_one_V) then ReallocMem(f_Value_one_V, 0);
-     if Assigned(F_Value_one_S) then ReallocMem(F_Value_one_S, 0);
-     {}
-     ReAllocMem(pNodeFMs,0);
-     ReAllocMem(pCommMatrix,0);
-     ReAllocMem(pCommDelayMatrix, 0);
-     ReAllocMem(pCommDelaySteps, 0);
-     //
-     ReAllocMem(pCommHide,0);
-     ReAllocMem(pCommNode_Hide,0);
-     Inherited Destroy;
-End;
-
-
-{--------------------------------------------------------------------------}
-Procedure ConvertBlanks(Var s:String);
-VAR
-    BlankPos:Integer;
-
-Begin
-     { Convert spaces to Underscores }
-     BlankPos := Pos(' ', S);
-     WHILE BlankPos>0 DO Begin
-         S[BlankPos] := '_';
-         BlankPos := Pos(' ', S);
-     End;
-End;
-
-{--------------------------------------------------------------------------}
-Procedure TFMonitorObj.RecalcElementData(ActorID : Integer);
-
-VAR
-   DevIndex :Integer;
-   i : integer;
-Begin
-         ValidMonitor := FALSE;
-         Devindex := GetCktElementIndex(ElementName);                   // Global function
-         IF DevIndex>0 THEN Begin                                       // Monitored element must already exist
-             MeteredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
-             Case (Mode and MODEMASK) of
-                2: Begin                                                // Must be transformer
-                          If (MeteredElement.DSSObjType And CLASSMASK) <> XFMR_ELEMENT Then Begin
-                            DoSimpleMsg(MeteredElement.Name + ' is not a transformer!', 663);
-                            Exit;
-                          End;
-                   End;
-                3: Begin                                                // Must be PCElement
-                          If (MeteredElement.DSSObjType And BASECLASSMASK) <> PC_ELEMENT Then Begin
-                            DoSimpleMsg(MeteredElement.Name + ' must be a power conversion element (Load or Generator)!', 664);
-                            Exit;
-                          End;
-                   End;
-                6: begin                                                // Checking Caps Tap
-                          If (MeteredElement.DSSObjType And CLASSMASK) <> CAP_ELEMENT Then Begin
-                            DoSimpleMsg(MeteredElement.Name + ' is not a capacitor!', 2016001);
-                            Exit;
-                          End;
-                   end;
-
-
-
-             End;
-
-             IF MeteredTerminal>MeteredElement.Nterms THEN Begin
-                 DoErrorMsg('FMonitor: "' + Name + '"',
-                                 'Terminal no. "' +'" does not exist.',
-                                 'Respecify terminal no.', 665);
-             End
-             ELSE Begin
-                 Nphases := MeteredElement.NPhases;
-                 Nconds  := MeteredElement.NConds;
-
-               // Sets name of i-th terminal's connected bus in monitor's buslist
-               // This value will be used to set the NodeRef array (see TakeSample)
-                 Setbus(1, MeteredElement.GetBus(MeteredTerminal));
-
-
-                 Case (Mode and MODEMASK) of
-                      3: Begin
-                             NumStateVars := TPCElement(MeteredElement).Numvariables;
-                             ReallocMem(StateBuffer, Sizeof(StateBuffer^[1])*NumStatevars);
-                         End;
-                      4: Begin
-                             ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1])*Nphases);
-                         End;
-                      5: Begin
-                             ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1])*NumSolutionVars);
-                         End;
-                 Else
-                     ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
-                     ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.NConds);
-                 End;
-
-                 //ClearMonitorStream;
-
-                 ValidMonitor := TRUE;
-
-             End;
-
-         End
-         ELSE Begin
-            MeteredElement := nil;   // element not found
-            DoErrorMsg('Monitor: "' + Self.Name + '"', 'Circuit Element "'+ ElementName + '" Not Found.',
-                            ' Element must be defined previously.', 666);
-         End;
-         {}
-         {}
-End;
-
-procedure TFMonitorObj.MakePosSequence;
 begin
-  if MeteredElement <> Nil then begin
-    Setbus(1, MeteredElement.GetBus(MeteredTerminal));
-    Nphases := MeteredElement.NPhases;
-    Nconds  := MeteredElement.Nconds;
-    Case (Mode and MODEMASK) of
-      3: Begin
-             NumStateVars := TPCElement(MeteredElement).Numvariables;
-             ReallocMem(StateBuffer, Sizeof(StateBuffer^[1])*NumStatevars);
-         End;
-      4: Begin
-              ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1])*Nphases);
-         End;
-      5: Begin
-             ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1])*NumSolutionVars);
-         End;
-      Else
-         ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
-         ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.NConds);
-      End;
-    //ClearMonitorStream;
-    ValidMonitor := TRUE;
-  end;
-  Inherited;
+     //MonitorStream.Free;
+    ElementName := '';
+    Bufferfile := '';
+    ReAllocMem(MonBuffer, 0);
+    ReAllocMem(StateBuffer, 0);
+    ReAllocMem(CurrentBuffer, 0);
+    ReAllocMem(VoltageBuffer, 0);
+    ReAllocMem(FlickerBuffer, 0);
+    ReAllocMem(SolutionBuffer, 0);
+     {}
+    if Assigned(f_Value_one_V) then
+        ReallocMem(f_Value_one_V, 0);
+    if Assigned(F_Value_one_S) then
+        ReallocMem(F_Value_one_S, 0);
+     {}
+    ReAllocMem(pNodeFMs, 0);
+    ReAllocMem(pCommMatrix, 0);
+    ReAllocMem(pCommDelayMatrix, 0);
+    ReAllocMem(pCommDelaySteps, 0);
+     //
+    ReAllocMem(pCommHide, 0);
+    ReAllocMem(pCommNode_Hide, 0);
+    inherited Destroy;
 end;
 
 
 {--------------------------------------------------------------------------}
-Procedure TFMonitorObj.CalcYPrim;
-Begin
+procedure ConvertBlanks(var s: String);
+var
+    BlankPos: Integer;
+
+begin
+     { Convert spaces to Underscores }
+    BlankPos := Pos(' ', S);
+    while BlankPos > 0 do
+    begin
+        S[BlankPos] := '_';
+        BlankPos := Pos(' ', S);
+    end;
+end;
+
+{--------------------------------------------------------------------------}
+procedure TFMonitorObj.RecalcElementData(ActorID: Integer);
+
+var
+    DevIndex: Integer;
+    i: Integer;
+begin
+    ValidMonitor := FALSE;
+    Devindex := GetCktElementIndex(ElementName);                   // Global function
+    if DevIndex > 0 then
+    begin                                       // Monitored element must already exist
+        MeteredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+        case (Mode and MODEMASK) of
+            2:
+            begin                                                // Must be transformer
+                if (MeteredElement.DSSObjType and CLASSMASK) <> XFMR_ELEMENT then
+                begin
+                    DoSimpleMsg(MeteredElement.Name + ' is not a transformer!', 663);
+                    Exit;
+                end;
+            end;
+            3:
+            begin                                                // Must be PCElement
+                if (MeteredElement.DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
+                begin
+                    DoSimpleMsg(MeteredElement.Name + ' must be a power conversion element (Load or Generator)!', 664);
+                    Exit;
+                end;
+            end;
+            6:
+            begin                                                // Checking Caps Tap
+                if (MeteredElement.DSSObjType and CLASSMASK) <> CAP_ELEMENT then
+                begin
+                    DoSimpleMsg(MeteredElement.Name + ' is not a capacitor!', 2016001);
+                    Exit;
+                end;
+            end;
+
+
+        end;
+
+        if MeteredTerminal > MeteredElement.Nterms then
+        begin
+            DoErrorMsg('FMonitor: "' + Name + '"',
+                'Terminal no. "' + '" does not exist.',
+                'Respecify terminal no.', 665);
+        end
+        else
+        begin
+            Nphases := MeteredElement.NPhases;
+            Nconds := MeteredElement.NConds;
+
+               // Sets name of i-th terminal's connected bus in monitor's buslist
+               // This value will be used to set the NodeRef array (see TakeSample)
+            Setbus(1, MeteredElement.GetBus(MeteredTerminal));
+
+
+            case (Mode and MODEMASK) of
+                3:
+                begin
+                    NumStateVars := TPCElement(MeteredElement).Numvariables;
+                    ReallocMem(StateBuffer, Sizeof(StateBuffer^[1]) * NumStatevars);
+                end;
+                4:
+                begin
+                    ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1]) * Nphases);
+                end;
+                5:
+                begin
+                    ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1]) * NumSolutionVars);
+                end;
+            else
+                ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1]) * MeteredElement.Yorder);
+                ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1]) * MeteredElement.NConds);
+            end;
+
+                 //ClearMonitorStream;
+
+            ValidMonitor := TRUE;
+
+        end;
+
+    end
+    else
+    begin
+        MeteredElement := NIL;   // element not found
+        DoErrorMsg('Monitor: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" Not Found.',
+            ' Element must be defined previously.', 666);
+    end;
+         {}
+         {}
+end;
+
+procedure TFMonitorObj.MakePosSequence;
+begin
+    if MeteredElement <> NIL then
+    begin
+        Setbus(1, MeteredElement.GetBus(MeteredTerminal));
+        Nphases := MeteredElement.NPhases;
+        Nconds := MeteredElement.Nconds;
+        case (Mode and MODEMASK) of
+            3:
+            begin
+                NumStateVars := TPCElement(MeteredElement).Numvariables;
+                ReallocMem(StateBuffer, Sizeof(StateBuffer^[1]) * NumStatevars);
+            end;
+            4:
+            begin
+                ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1]) * Nphases);
+            end;
+            5:
+            begin
+                ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1]) * NumSolutionVars);
+            end;
+        else
+            ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1]) * MeteredElement.Yorder);
+            ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1]) * MeteredElement.NConds);
+        end;
+    //ClearMonitorStream;
+        ValidMonitor := TRUE;
+    end;
+    inherited;
+end;
+
+
+{--------------------------------------------------------------------------}
+procedure TFMonitorObj.CalcYPrim;
+begin
 
   {A Monitor is a zero current source; Yprim is always zero.}
   // leave YPrims as nil and they will be ignored
   // Yprim is zeroed when created.  Leave it as is.
-End;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TFMonitorObj.Save;
+procedure TFMonitorObj.Save;
 
 // Saves present buffer to monitor file, resets bufferptrs and continues
 
-Begin
+begin
 
      //If NOT IsFileOpen THEN OpenMonitorStream; // Position to end of stream
 
      {Write present monitor buffer to monitorstream}
      //MonitorStream.Write(MonBuffer^, SizeOF(MonBuffer^[1]) * BufPtr);
 
-     BufPtr := 0; // reset Buffer for next
-
-End;
-{--------------------------------------------------------------------------}
- Procedure TFMonitorObj.Set_nodes_for_fm(intNodes : integer);
-var
-  i,j: Integer;
-begin
-  //
-      Nodes := intNodes;//initalize the size according to nodes
-      if pNodeFMs<>nil then ReAllocMem(pNodeFMs,0);
-      if pCommMatrix<>nil then ReAllocMem(pCommMatrix,0);
-      if pCommDelayMatrix<>nil then ReAllocMem(pCommDelayMatrix,0);
-      if pCommDelaySteps<>nil then ReAllocMem(pCommDelaySteps,0);
-      if pCommHide<>nil then ReAllocMem(pCommHide,0);
-      if pCommNode_Hide<>nil then ReAllocMem(pCommNode_Hide,0);
-       //
-      pNodeFMs := AllocMem( Sizeof(pNodeFMs^[1] )* intNodes);
-      ReAllocMem(pCommMatrix, intNodes *intNodes * sizeof(pCommMatrix^[1]));
-      ReAllocMem(pCommHide, intNodes *intNodes * sizeof(pCommHide^[1]));
-      ReAllocMem(pCommNode_Hide, intNodes *intNodes * sizeof(pCommNode_Hide^[1]));
-
-      ReAllocMem(pCommDelayMatrix, intNodes *intNodes * sizeof(pCommDelayMatrix^[1]));
-      ReAllocMem(pCommDelaySteps, intNodes *intNodes * sizeof(pCommDelaySteps^[1]));
-      for i:=1 to nodes do
-         for j := 1 to nodes do
-               pCommDelayMatrix^[nodes*(i-1)+j] := 0.0;
+    BufPtr := 0; // reset Buffer for next
 
 end;
+
 {--------------------------------------------------------------------------}
-Procedure TFMonitorObj.Set_volt_lmt_clstr( strParam: string);
+procedure TFMonitorObj.Set_nodes_for_fm(intNodes: Integer);
 var
-    i:Integer;
-    Datahgh, datalw:double;
-    iPhasenum : integer;
+    i, j: Integer;
+begin
+  //
+    Nodes := intNodes;//initalize the size according to nodes
+    if pNodeFMs <> NIL then
+        ReAllocMem(pNodeFMs, 0);
+    if pCommMatrix <> NIL then
+        ReAllocMem(pCommMatrix, 0);
+    if pCommDelayMatrix <> NIL then
+        ReAllocMem(pCommDelayMatrix, 0);
+    if pCommDelaySteps <> NIL then
+        ReAllocMem(pCommDelaySteps, 0);
+    if pCommHide <> NIL then
+        ReAllocMem(pCommHide, 0);
+    if pCommNode_Hide <> NIL then
+        ReAllocMem(pCommNode_Hide, 0);
+       //
+    pNodeFMs := AllocMem(Sizeof(pNodeFMs^[1]) * intNodes);
+    ReAllocMem(pCommMatrix, intNodes * intNodes * sizeof(pCommMatrix^[1]));
+    ReAllocMem(pCommHide, intNodes * intNodes * sizeof(pCommHide^[1]));
+    ReAllocMem(pCommNode_Hide, intNodes * intNodes * sizeof(pCommNode_Hide^[1]));
+
+    ReAllocMem(pCommDelayMatrix, intNodes * intNodes * sizeof(pCommDelayMatrix^[1]));
+    ReAllocMem(pCommDelaySteps, intNodes * intNodes * sizeof(pCommDelaySteps^[1]));
+    for i := 1 to nodes do
+        for j := 1 to nodes do
+            pCommDelayMatrix^[nodes * (i - 1) + j] := 0.0;
+
+end;
+
+{--------------------------------------------------------------------------}
+procedure TFMonitorObj.Set_volt_lmt_clstr(strParam: String);
+var
+    i: Integer;
+    Datahgh, datalw: Double;
+    iPhasenum: Integer;
 begin
     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
     AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
     iPhasenum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
     AuxParser[ActiveActor].NextParam; // high limit
-    Datahgh :=  AuxParser[ActiveActor].DblValue;
+    Datahgh := AuxParser[ActiveActor].DblValue;
     AuxParser[ActiveActor].NextParam; // low limit
-    Datalw :=  AuxParser[ActiveActor].DblValue;
+    Datalw := AuxParser[ActiveActor].DblValue;
 
     case iPhaseNum of
-    0: begin
-           ld_fm_info[0].volt_hgh_lmt := Datahgh;
-           ld_fm_info[0].volt_lw_lmt := Datalw;
-      end;
-    1: ;
-    2: ;
-    3: ;
+        0:
+        begin
+            ld_fm_info[0].volt_hgh_lmt := Datahgh;
+            ld_fm_info[0].volt_lw_lmt := Datalw;
+        end;
+        1: ;
+        2: ;
+        3: ;
     end;
 end;
-Procedure TFMonitorObj.Set_CommVector( strParam: string);
-VAR
+
+procedure TFMonitorObj.Set_CommVector(strParam: String);
+var
     TempStr,
-    DataStr       :String;
-    i,j,
+    DataStr: String;
+    i, j,
     iMin,                      // the min if Nodes or the length of the vector
-    iNodeNum      : integer;
-Begin
+    iNodeNum: Integer;
+begin
 
     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
     //iMin := min(Nodes, )
     {Loop for no more than the expected number of windings;  Ignore omitted values}
 
-            AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
-            iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
-            FOR i := 2 to Nodes+1 Do  Begin
-                 AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
-                 DataStr := AuxParser[ActiveActor].StrValue;
-                 IF Length(DataStr) > 0 THEN
-                 begin
-                    pCommMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;
-                    pCommHide^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;       //default
-                    pCommNode_Hide^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;  //default
-                 end;
-            End;
+    AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
+    iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
+    for i := 2 to Nodes + 1 do
+    begin
+        AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+        DataStr := AuxParser[ActiveActor].StrValue;
+        if Length(DataStr) > 0 then
+        begin
+            pCommMatrix^[(iNodeNum - 1) * Nodes + i - 1] := AuxParser[ActiveActor].intValue;
+            pCommHide^[(iNodeNum - 1) * Nodes + i - 1] := AuxParser[ActiveActor].intValue;       //default
+            pCommNode_Hide^[(iNodeNum - 1) * Nodes + i - 1] := AuxParser[ActiveActor].intValue;  //default
+        end;
+    end;
 
 // Updates the value of the property for future queries
 // Added y Davis 02072019
-    TempStr     :=  '';
+    TempStr := '';
     for j := 1 to Nodes do
-    Begin
-      iNodeNum    :=  j;
-      TempStr :=  TempStr + inttostr(iNodeNum) + ',';
-      for i := 2 to (Nodes + 1) do
-        TempStr :=  TempStr + inttostr(pCommMatrix^[(iNodeNum-1)*Nodes+ i-1]) + ',';
+    begin
+        iNodeNum := j;
+        TempStr := TempStr + inttostr(iNodeNum) + ',';
+        for i := 2 to (Nodes + 1) do
+            TempStr := TempStr + inttostr(pCommMatrix^[(iNodeNum - 1) * Nodes + i - 1]) + ',';
 
-      TempStr :=  TempStr + '|';
-    End;
-    ActiveDSSObject[ActiveActor].PropertyValue[15]  :=  TempStr;
+        TempStr := TempStr + '|';
+    end;
+    ActiveDSSObject[ActiveActor].PropertyValue[15] := TempStr;
 
 
 end;
-Procedure TFMonitorObj.Set_CommVector_hide( strParam: string);
-VAR
-    DataStr:String;
-    i:Integer;
-    iMin : integer; // the min if Nodes or the length of the vector
-    iNodeNum : integer;
-Begin
+
+procedure TFMonitorObj.Set_CommVector_hide(strParam: String);
+var
+    DataStr: String;
+    i: Integer;
+    iMin: Integer; // the min if Nodes or the length of the vector
+    iNodeNum: Integer;
+begin
 
     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
     //iMin := min(Nodes, )
     {Loop for no more than the expected number of windings;  Ignore omitted values}
 
-            AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
-            iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
-          FOR i := 2 to Nodes+1 Do  Begin
-               AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
-               DataStr := AuxParser[ActiveActor].StrValue;
-               IF Length(DataStr) > 0 THEN pCommHide^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;
-          End;
+    AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
+    iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
+    for i := 2 to Nodes + 1 do
+    begin
+        AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+        DataStr := AuxParser[ActiveActor].StrValue;
+        if Length(DataStr) > 0 then
+            pCommHide^[(iNodeNum - 1) * Nodes + i - 1] := AuxParser[ActiveActor].intValue;
+    end;
 
 end;
-Procedure TFMonitorObj.Set_CommVector_Nodehide( strParam: string);
-VAR
-    DataStr:String;
-    i:Integer;
-    iMin : integer; // the min if Nodes or the length of the vector
-    iNodeNum : integer;
-Begin
+
+procedure TFMonitorObj.Set_CommVector_Nodehide(strParam: String);
+var
+    DataStr: String;
+    i: Integer;
+    iMin: Integer; // the min if Nodes or the length of the vector
+    iNodeNum: Integer;
+begin
 
     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
     //iMin := min(Nodes, )
     {Loop for no more than the expected number of windings;  Ignore omitted values}
 
-            AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
-            iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
-          FOR i := 2 to Nodes+1 Do  Begin
-               AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
-               DataStr := AuxParser[ActiveActor].StrValue;
-               IF Length(DataStr) > 0 THEN pCommNode_Hide^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;
-          End;
+    AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
+    iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
+    for i := 2 to Nodes + 1 do
+    begin
+        AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+        DataStr := AuxParser[ActiveActor].StrValue;
+        if Length(DataStr) > 0 then
+            pCommNode_Hide^[(iNodeNum - 1) * Nodes + i - 1] := AuxParser[ActiveActor].intValue;
+    end;
 
 end;
-Procedure TFMonitorObj.Set_CommDelayVector( strParam: string);
-VAR
+
+procedure TFMonitorObj.Set_CommDelayVector(strParam: String);
+var
     TEmpStr,
-    DataStr       :String;
+    DataStr: String;
     i, j,
-    iNodeNum      : integer;
-Begin
+    iNodeNum: Integer;
+begin
 
     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
     //iMin := min(Nodes, )
     {Loop for no more than the expected number of windings;  Ignore omitted values}
 
-            AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
-            iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
-          FOR i := 2 to (Nodes + 1) Do  Begin
-               AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
-               DataStr := AuxParser[ActiveActor].StrValue;
-               IF Length(DataStr) > 0 THEN pCommDelayMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].DblValue;
-          End;
+    AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
+    iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
+    for i := 2 to (Nodes + 1) do
+    begin
+        AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+        DataStr := AuxParser[ActiveActor].StrValue;
+        if Length(DataStr) > 0 then
+            pCommDelayMatrix^[(iNodeNum - 1) * Nodes + i - 1] := AuxParser[ActiveActor].DblValue;
+    end;
 
     ResetDelaySteps(iNodeNum);  //Use pCommDelayMatrix^ to calculate pCommDelaySteps^
 
 // Updates the value of the property for future queries
 // Added y Davis 02072019
-    TempStr     :=  '';
+    TempStr := '';
     for j := 1 to Nodes do
-    Begin
-      iNodeNum    :=  j;
-      TempStr :=  TempStr + inttostr(iNodeNum) + ',';
-      for i := 2 to (Nodes + 1) do
-        TempStr :=  TempStr + floattostr(pCommDelayMatrix^[(iNodeNum-1)*Nodes+ i-1]) + ',';
+    begin
+        iNodeNum := j;
+        TempStr := TempStr + inttostr(iNodeNum) + ',';
+        for i := 2 to (Nodes + 1) do
+            TempStr := TempStr + floattostr(pCommDelayMatrix^[(iNodeNum - 1) * Nodes + i - 1]) + ',';
 
-      TempStr :=  TempStr + '|';
-    End;
-    ActiveDSSObject[ActiveActor].PropertyValue[18]  :=  TempStr;
+        TempStr := TempStr + '|';
+    end;
+    ActiveDSSObject[ActiveActor].PropertyValue[18] := TempStr;
 end;
 
-Procedure TFMonitorObj.Set_EquivalentGenerator(strParam : string) ;
-VAR
-    DataStr:String;
-    i:Integer;
-    iNodeNum : integer;
+procedure TFMonitorObj.Set_EquivalentGenerator(strParam: String);
+var
+    DataStr: String;
+    i: Integer;
+    iNodeNum: Integer;
 begin
-     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
-     AuxParser[ActiveActor].NextParam; // the first entry is kVA
-     kVA_fm := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; //
-     M_fm := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; //
-     D_fm := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; //
-     Tau_fm := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; //
-     Ki_fm := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; // init_time
-     init_time := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; // k_dltP is the coordinator
-     k_dltP := AuxParser[ActiveActor].DblValue;
-     if kVA_fm*M_fm*D_fm*Tau_fm*Ki_fm <>0.0 then
-        eg_defed := true; //eg_defed := false by default
+    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
+    AuxParser[ActiveActor].NextParam; // the first entry is kVA
+    kVA_fm := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; //
+    M_fm := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; //
+    D_fm := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; //
+    Tau_fm := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; //
+    Ki_fm := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; // init_time
+    init_time := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; // k_dltP is the coordinator
+    k_dltP := AuxParser[ActiveActor].DblValue;
+    if kVA_fm * M_fm * D_fm * Tau_fm * Ki_fm <> 0.0 then
+        eg_defed := TRUE; //eg_defed := false by default
 
 end;
-Procedure  TFMonitorObj.Set_atk_dfs(strParam : string);
-VAR
-    DataStr:String;
-    i:Integer;
-    iNodeNum : integer;
+
+procedure TFMonitorObj.Set_atk_dfs(strParam: String);
+var
+    DataStr: String;
+    i: Integer;
+    iNodeNum: Integer;
 begin
-     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
-     AuxParser[ActiveActor].NextParam; //       atk
-     DataStr:= AuxParser[ActiveActor].StrValue;
-     atk := InterpretYesNo(dataStr);
-     AuxParser[ActiveActor].NextParam; //       dfs
-     DataStr:= AuxParser[ActiveActor].StrValue;
-     dfs := InterpretYesNo(dataStr);
-     AuxParser[ActiveActor].NextParam; //       atk_time
-     atk_time := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; //       atk_node_num
-     atk_node_num := AuxParser[ActiveActor].intValue;
-     AuxParser[ActiveActor].NextParam; //       d_atk0
-     pNodeFMs^[atk_node_num].d_atk0 := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; //       beta_dfs
-     beta_dfs := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; //       D_beta
-     D_beta := AuxParser[ActiveActor].DblValue;
-     AuxParser[ActiveActor].NextParam; //       direction of gradient control
-     D_p := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
+    AuxParser[ActiveActor].NextParam; //       atk
+    DataStr := AuxParser[ActiveActor].StrValue;
+    atk := InterpretYesNo(dataStr);
+    AuxParser[ActiveActor].NextParam; //       dfs
+    DataStr := AuxParser[ActiveActor].StrValue;
+    dfs := InterpretYesNo(dataStr);
+    AuxParser[ActiveActor].NextParam; //       atk_time
+    atk_time := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; //       atk_node_num
+    atk_node_num := AuxParser[ActiveActor].intValue;
+    AuxParser[ActiveActor].NextParam; //       d_atk0
+    pNodeFMs^[atk_node_num].d_atk0 := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; //       beta_dfs
+    beta_dfs := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; //       D_beta
+    D_beta := AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; //       direction of gradient control
+    D_p := AuxParser[ActiveActor].DblValue;
 
 end;
+
 {--------------------------------------------------------------------------}
-Procedure TFMonitorObj.Set_ElemTable_line( strParam: string);
-VAR
+procedure TFMonitorObj.Set_ElemTable_line(strParam: String);
+var
     TempStr,
-    DataStr   :String;
-    i         :Integer;
-    iNodeNum  : integer;
-Begin
-    AuxParser[ActiveActor].CmdString        := strParam;  // Load up Parser
+    DataStr: String;
+    i: Integer;
+    iNodeNum: Integer;
+begin
+    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
     AuxParser[ActiveActor].NextParam; // the first entry is the number of the iNode
-    iNodeNum                                := AuxParser[ActiveActor].IntValue; //node number defined in the cluster
+    iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in the cluster
     AuxParser[ActiveActor].NextParam; // the first entry is the number of the iNode
-    pNodeFMs^[iNodeNum].vl_strBusName       := AuxParser[ActiveActor].strValue; //node number defined in the cluster
+    pNodeFMs^[iNodeNum].vl_strBusName := AuxParser[ActiveActor].strValue; //node number defined in the cluster
     AuxParser[ActiveActor].NextParam;
-    pNodeFMs^[iNodeNum].vl_strMeasuredName  := AuxParser[ActiveActor].StrValue; //Element name load into data str
+    pNodeFMs^[iNodeNum].vl_strMeasuredName := AuxParser[ActiveActor].StrValue; //Element name load into data str
                //
                //pNodeFMs^[iNodeNum].vl_strName_dg := pNodeFMs^[iNodeNum].vl_strMeasuredName;
                //
     AuxParser[ActiveActor].NextParam;
     pNodeFMs^[iNodeNum].vl_terminalNum := AuxParser[ActiveActor].IntValue;  //Terminal number load into data str
     AuxParser[ActiveActor].NextParam;
-    pNodeFMs^[iNodeNum].vl_V_ref_dg := 1000*AuxParser[ActiveActor].dblValue;
+    pNodeFMs^[iNodeNum].vl_V_ref_dg := 1000 * AuxParser[ActiveActor].dblValue;
     AuxParser[ActiveActor].NextParam;
     pNodeFMs^[iNodeNum].vl_kc_ul_dg := AuxParser[ActiveActor].dblValue;
                //2.402
     Init_nodeFM(iNodeNum, ActiveActor);
 // Updates the value of the property for future queries
 // Added y Davis 02072019
-    TempStr     :=  '';
+    TempStr := '';
     for i := 1 to iNodeNum do
-    Begin
-      TempStr :=  TempStr + inttostr(i)                 + ',' +
-                  pNodeFMs^[i].vl_strBusName            + ',' +
-                  pNodeFMs^[i].vl_strMeasuredName       + ',' +
-                  inttostr(pNodeFMs^[i].vl_terminalNum) + ',' +
-                  floattostr(pNodeFMs^[i].vl_V_ref_dg)  + ',' +
-                  floattostr(pNodeFMs^[iNodeNum].vl_kc_ul_dg) + '|';
-    End;
-    ActiveDSSObject[ActiveActor].PropertyValue[16]  :=  TempStr;
+    begin
+        TempStr := TempStr + inttostr(i) + ',' +
+            pNodeFMs^[i].vl_strBusName + ',' +
+            pNodeFMs^[i].vl_strMeasuredName + ',' +
+            inttostr(pNodeFMs^[i].vl_terminalNum) + ',' +
+            floattostr(pNodeFMs^[i].vl_V_ref_dg) + ',' +
+            floattostr(pNodeFMs^[iNodeNum].vl_kc_ul_dg) + '|';
+    end;
+    ActiveDSSObject[ActiveActor].PropertyValue[16] := TempStr;
 end;
-Procedure TFMonitorObj.Get_PQ_DI(i_NodeNum : integer; ActorID : Integer);
+
+procedure TFMonitorObj.Get_PQ_DI(i_NodeNum: Integer; ActorID: Integer);
 var
-    Devindex,i, j, num: integer;
-    pElement  :TDSSCktElement   ;
+    Devindex, i, j, num: Integer;
+    pElement: TDSSCktElement;
     pLoad: TLoadObj;
-    cBuffer:pComplexArray;
+    cBuffer: pComplexArray;
 begin
-    {$IFDEF FPC}initialize(cBuffer);{$ENDIF}
+    {$IFDEF FPC}
+    initialize(cBuffer);
+{$ENDIF}
 
     with  pNodeFMs^[i_NodeNum] do
-    beGIn
+    begin
         case ldType of
             0:// one 3 phase or 2 phase load
             begin
-                 pElement :=  ActiveCircuit[ActorID].PCElements.Get(ldidx);
-                 num := pElement.NPhases;
-                 cBuffer := Allocmem(sizeof(cBuffer^[1])*num);
-                 pElement.GetPhasePower(cBuffer,ActorID);// power
+                pElement := ActiveCircuit[ActorID].PCElements.Get(ldidx);
+                num := pElement.NPhases;
+                cBuffer := Allocmem(sizeof(cBuffer^[1]) * num);
+                pElement.GetPhasePower(cBuffer, ActorID);// power
 
-                 for j := 1 to num do
-                 begin
-                      i := pElement.Terminals^[1].TermNodeRef^[j];
-                      case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
-                            1: begin vl_P_Di1 := cBuffer^[1].re; vl_Q_Di1 := cBuffer^[1].im;  end;
-                            2: begin vl_P_Di1 := cBuffer^[2].re; vl_Q_Di1 := cBuffer^[2].im;  end;
-                            3: begin vl_P_Di1 := cBuffer^[3].re; vl_Q_Di1 := cBuffer^[3].im;  end;
-                      end;
-                 end;
+                for j := 1 to num do
+                begin
+                    i := pElement.Terminals^[1].TermNodeRef^[j];
+                    case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
+                        1:
+                        begin
+                            vl_P_Di1 := cBuffer^[1].re;
+                            vl_Q_Di1 := cBuffer^[1].im;
+                        end;
+                        2:
+                        begin
+                            vl_P_Di1 := cBuffer^[2].re;
+                            vl_Q_Di1 := cBuffer^[2].im;
+                        end;
+                        3:
+                        begin
+                            vl_P_Di1 := cBuffer^[3].re;
+                            vl_Q_Di1 := cBuffer^[3].im;
+                        end;
+                    end;
+                end;
             end;
-            1,2,3:
+            1, 2, 3:
             begin
-                 pElement := nil;
-                 if ldidx1>0 then
-                 begin
-                     pElement :=  ActiveCircuit[ActorID].PCElements.Get(ldidx1);
-                     num := pElement.NPhases;
-                     cBuffer := Allocmem(sizeof(cBuffer^[1])*num);
-                     pElement.GetPhasePower(cBuffer,ActorID);// power
+                pElement := NIL;
+                if ldidx1 > 0 then
+                begin
+                    pElement := ActiveCircuit[ActorID].PCElements.Get(ldidx1);
+                    num := pElement.NPhases;
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * num);
+                    pElement.GetPhasePower(cBuffer, ActorID);// power
 
-                     for j := 1 to num do
-                     begin
-                          i := pElement.Terminals^[1].TermNodeRef^[j];
-                          case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
-                                1: begin vl_P_Di1 := cBuffer^[1].re; vl_Q_Di1 := cBuffer^[1].im;  end;
-                                2: begin vl_P_Di1 := cBuffer^[1].re; vl_Q_Di1 := cBuffer^[1].im;  end;
-                                3: begin vl_P_Di1 := cBuffer^[1].re; vl_Q_Di1 := cBuffer^[1].im;  end;
-                          end;
-                     end;
-                 end;
-                 if ldidx2>0 then
-                 begin
-                     pElement :=  ActiveCircuit[ActorID].PCElements.Get(ldidx2);
-                     num := pElement.NPhases;
-                     cBuffer := Allocmem(sizeof(cBuffer^[1])*num);
-                     pElement.GetPhasePower(cBuffer,ActorID);// power
+                    for j := 1 to num do
+                    begin
+                        i := pElement.Terminals^[1].TermNodeRef^[j];
+                        case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
+                            1:
+                            begin
+                                vl_P_Di1 := cBuffer^[1].re;
+                                vl_Q_Di1 := cBuffer^[1].im;
+                            end;
+                            2:
+                            begin
+                                vl_P_Di1 := cBuffer^[1].re;
+                                vl_Q_Di1 := cBuffer^[1].im;
+                            end;
+                            3:
+                            begin
+                                vl_P_Di1 := cBuffer^[1].re;
+                                vl_Q_Di1 := cBuffer^[1].im;
+                            end;
+                        end;
+                    end;
+                end;
+                if ldidx2 > 0 then
+                begin
+                    pElement := ActiveCircuit[ActorID].PCElements.Get(ldidx2);
+                    num := pElement.NPhases;
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * num);
+                    pElement.GetPhasePower(cBuffer, ActorID);// power
 
-                     for j := 1 to num do
-                     begin
-                          i := pElement.Terminals^[1].TermNodeRef^[j];
-                          case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
-                                1: begin vl_P_Di2 := cBuffer^[1].re; vl_Q_Di2 := cBuffer^[1].im;  end;
-                                2: begin vl_P_Di2 := cBuffer^[1].re; vl_Q_Di2 := cBuffer^[1].im;  end;
-                                3: begin vl_P_Di2 := cBuffer^[1].re; vl_Q_Di2 := cBuffer^[1].im;  end;
-                          end;
-                     end;
-                 end;
-                 if ldidx3>0 then
-                 begin
-                     pElement :=  ActiveCircuit[ActorID].PCElements.Get(ldidx3);
-                     num := pElement.NPhases;
-                     cBuffer := Allocmem(sizeof(cBuffer^[1])*num);
-                     pElement.GetPhasePower(cBuffer,ActorID);// power
+                    for j := 1 to num do
+                    begin
+                        i := pElement.Terminals^[1].TermNodeRef^[j];
+                        case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
+                            1:
+                            begin
+                                vl_P_Di2 := cBuffer^[1].re;
+                                vl_Q_Di2 := cBuffer^[1].im;
+                            end;
+                            2:
+                            begin
+                                vl_P_Di2 := cBuffer^[1].re;
+                                vl_Q_Di2 := cBuffer^[1].im;
+                            end;
+                            3:
+                            begin
+                                vl_P_Di2 := cBuffer^[1].re;
+                                vl_Q_Di2 := cBuffer^[1].im;
+                            end;
+                        end;
+                    end;
+                end;
+                if ldidx3 > 0 then
+                begin
+                    pElement := ActiveCircuit[ActorID].PCElements.Get(ldidx3);
+                    num := pElement.NPhases;
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * num);
+                    pElement.GetPhasePower(cBuffer, ActorID);// power
 
-                     for j := 1 to num do
-                     begin
-                          i := pElement.Terminals^[1].TermNodeRef^[j];
-                          case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
-                                1: begin vl_P_Di3 := cBuffer^[1].re; vl_Q_Di3 := cBuffer^[1].im;  end;
-                                2: begin vl_P_Di3 := cBuffer^[1].re; vl_Q_Di3 := cBuffer^[2].im;  end;
-                                3: begin vl_P_Di3 := cBuffer^[1].re; vl_Q_Di3 := cBuffer^[3].im;  end;
-                          end;
-                     end;
-                 end;
+                    for j := 1 to num do
+                    begin
+                        i := pElement.Terminals^[1].TermNodeRef^[j];
+                        case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
+                            1:
+                            begin
+                                vl_P_Di3 := cBuffer^[1].re;
+                                vl_Q_Di3 := cBuffer^[1].im;
+                            end;
+                            2:
+                            begin
+                                vl_P_Di3 := cBuffer^[1].re;
+                                vl_Q_Di3 := cBuffer^[2].im;
+                            end;
+                            3:
+                            begin
+                                vl_P_Di3 := cBuffer^[1].re;
+                                vl_Q_Di3 := cBuffer^[3].im;
+                            end;
+                        end;
+                    end;
+                end;
             end
 //            2:
 //            begin
@@ -1413,139 +1573,156 @@ begin
 //            begin
 //
 //            end
-            else
+        else
         end;
     end;
 end;
 
-Procedure TFMonitorObj.Init_nodeFM(iNodeNum : integer; ActorID: integer);
+procedure TFMonitorObj.Init_nodeFM(iNodeNum: Integer; ActorID: Integer);
 var
-    strTemp : string;
-    Devindex, i, j: integer;
-    PCindex_ld :integer;
-    pElem  :TDSSCktElement;
+    strTemp: String;
+    Devindex, i, j: Integer;
+    PCindex_ld: Integer;
+    pElem: TDSSCktElement;
 
-    pDG : TGeneric5Obj;
-    pLd : TLoadObj;
+    pDG: TGeneric5Obj;
+    pLd: TLoadObj;
     //pPDElem : TPDElement;
-    lstPC :TAdjArray;
-    num : integer;
-    ctmp : complex;
-    cBuffer:pComplexArray;
+    lstPC: TAdjArray;
+    num: Integer;
+    ctmp: complex;
+    cBuffer: pComplexArray;
 begin
-    pElem:=nil;
+    pElem := NIL;
     //init all info of this node
     with  pNodeFMs^[iNodeNum] do
-    beGIn
+    begin
     //1
-        strTemp := lowercase( vl_strBusName);
+        strTemp := lowercase(vl_strBusName);
         Bus_Idx := ActiveCircuit[ActorID].BusList.Find(strTemp);
 
         Devindex := GetCktElementIndex(vl_strMeasuredName);                   // Global function
-        IF DevIndex>0 THEN Begin                                       // Monitored element must already exist
-             pElem := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+        if DevIndex > 0 then
+        begin                                       // Monitored element must already exist
+            pElem := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
         end;
         vl_ndphases := pElem.NPhases;
-        vl_basevolt := ActiveCircuit[ActorID].Buses[bus_idx].kVBase*1000;
+        vl_basevolt := ActiveCircuit[ActorID].Buses[bus_idx].kVBase * 1000;
         vl_phase_num_dg := -1; //-1 -- no dg under this nodes;0 --3 phases by default
 
-        for j := 1 to 3 do vl_nodeType_phase[j] := 2;// by default not dg
+        for j := 1 to 3 do
+            vl_nodeType_phase[j] := 2;// by default not dg
 
-        WITH ActiveCircuit[ActorID]
-        Do Begin
-             pElem := PCElements.First;
-             PCindex_ld := PCElements.activeindex;
-             WHILE pElem <> nil
-             Do Begin
-               IF pElem.Enabled  THEN
-               begin
-                    if pElem.ActiveTerminal.BusRef =  Bus_Idx then
+        with ActiveCircuit[ActorID] do
+        begin
+            pElem := PCElements.First;
+            PCindex_ld := PCElements.activeindex;
+            while pElem <> NIL do
+            begin
+                if pElem.Enabled then
+                begin
+                    if pElem.ActiveTerminal.BusRef = Bus_Idx then
                     begin
-                      if ContainsText(lowercase(pElem.DSSClassName),'generic5') then
-                       begin
+                        if ContainsText(lowercase(pElem.DSSClassName), 'generic5') then
+                        begin
 
                                   //vl_nodeType should be define per phase
-                                    vl_ndphases_dg := pElem.NPhases; //1 or 3
+                            vl_ndphases_dg := pElem.NPhases; //1 or 3
                                                                      // under 1 bus, there can be either 3 phase DG or 1 phase dg
                                                                      //set Cluster defination for DG
                                                                      // one 3phase dg
                                                                      // 1,2 or 3  1-phase dgs under each phase
-                                    pDG := TGeneric5Obj(pElem);
-                                    num :=  trunc(pDG.Get_Variable(30)); //ctrl_mode
-                                   case num of
-                                    1:  vl_nodeType_phase[1] := 1;
-                                    2:  vl_nodeType_phase[2] := 1;
-                                    3:  vl_nodeType_phase[3] := 1;
-                                   else  for j := 1 to 3 do vl_nodeType_phase[j] := 1; // //ctrl_mode = 4 or 0
-                                   end;
+                            pDG := TGeneric5Obj(pElem);
+                            num := trunc(pDG.Get_Variable(30)); //ctrl_mode
+                            case num of
+                                1:
+                                    vl_nodeType_phase[1] := 1;
+                                2:
+                                    vl_nodeType_phase[2] := 1;
+                                3:
+                                    vl_nodeType_phase[3] := 1;
+                            else
+                                for j := 1 to 3 do
+                                    vl_nodeType_phase[j] := 1; // //ctrl_mode = 4 or 0
+                            end;
                                    //pDG
-                                   if (pDG.FMonObj = nil) then // first cluster
-                                   begin
+                            if (pDG.FMonObj = NIL) then // first cluster
+                            begin
 
-                                       pDG.Set_Variable(28,cluster_num); //28:  TPCElement(self).cluster_num :=  trunc(Value);
+                                pDG.Set_Variable(28, cluster_num); //28:  TPCElement(self).cluster_num :=  trunc(Value);
                                                                          //if cluster_num >= 1 then      // assign the virtue leader to this DG
-                                       pDG.FMonObj := self;    //FMonObj := ActiveCircuit.Fmonitors.Get(cluster_num); cluster_num can not be used for 'Get'
-                                       pDG.Set_Variable(29,iNodeNum); //29:  TPCElement(self).NdNumInCluster := trunc(Value) ;
-                                       pDG.Set_Variable(30,1);         //TPCElement(self).nVLeaders := trunc(Value) ;
-                                   end else
-                                   begin    // the second virtual leader // which means if the 2nd one will always be the one being overwritten
+                                pDG.FMonObj := self;    //FMonObj := ActiveCircuit.Fmonitors.Get(cluster_num); cluster_num can not be used for 'Get'
+                                pDG.Set_Variable(29, iNodeNum); //29:  TPCElement(self).NdNumInCluster := trunc(Value) ;
+                                pDG.Set_Variable(30, 1);         //TPCElement(self).nVLeaders := trunc(Value) ;
+                            end
+                            else
+                            begin    // the second virtual leader // which means if the 2nd one will always be the one being overwritten
 
-                                       if (cluster_num <> Round(pDG.get_Variable(28))) then
-                                       begin
-                                            pDG.Set_Variable(31,cluster_num); //28:  TPCElement(self).cluster_num2 :=  trunc(Value);
+                                if (cluster_num <> Round(pDG.get_Variable(28))) then
+                                begin
+                                    pDG.Set_Variable(31, cluster_num); //28:  TPCElement(self).cluster_num2 :=  trunc(Value);
                                                                          //if cluster_num >= 1 then      // assign the virtue leader to this DG
-                                            pDG.FMonObj2 := self;             //FMonObj := ActiveCircuit.Fmonitors.Get(cluster_num); cluster_num can not be used for 'Get'
-                                            pDG.Set_Variable(32,iNodeNum);    //29:  TPCElement(self).NdNumInCluster2 := trunc(Value) ;
-                                            pDG.Set_Variable(30,2);           //  TPCElement(self).nVLeaders := trunc(Value) ;
-                                       end else
-                                       begin
+                                    pDG.FMonObj2 := self;             //FMonObj := ActiveCircuit.Fmonitors.Get(cluster_num); cluster_num can not be used for 'Get'
+                                    pDG.Set_Variable(32, iNodeNum);    //29:  TPCElement(self).NdNumInCluster2 := trunc(Value) ;
+                                    pDG.Set_Variable(30, 2);           //  TPCElement(self).nVLeaders := trunc(Value) ;
+                                end
+                                else
+                                begin
                                             //
-                                       end;
-                                   end;
-                                   vl_phase_num_dg := 0; //3 phases by default
-                                   if vl_ndphases_dg=1 then
-                                      vl_phase_num_dg := trunc(pDG.Get_Variable(30));  //if vl_nodeType=1, and vl_ndphases=1,phase_num =1,2,3 0- this node has 3 phases
+                                end;
+                            end;
+                            vl_phase_num_dg := 0; //3 phases by default
+                            if vl_ndphases_dg = 1 then
+                                vl_phase_num_dg := trunc(pDG.Get_Variable(30));  //if vl_nodeType=1, and vl_ndphases=1,phase_num =1,2,3 0- this node has 3 phases
                                                                          // 30, ctrl_mode, is the phase number of this Generic5
 
-                       end;
+                        end;
 
-                       ldType := -1;
-                       ldIdx :=  -1;
-                       ldIdx1 :=  -1;
-                       ldIdx2 :=  -1;
-                       ldIdx3 :=  -1;
+                        ldType := -1;
+                        ldIdx := -1;
+                        ldIdx1 := -1;
+                        ldIdx2 := -1;
+                        ldIdx3 := -1;
 
-                       if ContainsText(lowercase(pElem.DSSClassName),'load') then
-                       begin
+                        if ContainsText(lowercase(pElem.DSSClassName), 'load') then
+                        begin
 
                             num := pElem.NPhases;
                             pLd := TLoadObj(pElem);
                             //Devindex :=
                             if num = 3 then
                             begin
-                                  ldIdx :=  PCindex_ld ;
-                                  ldType := 0;
-                            end else if num=2 then
+                                ldIdx := PCindex_ld;
+                                ldType := 0;
+                            end
+                            else
+                            if num = 2 then
 
                             begin
-                                  ldIdx :=  PCindex_ld ;
-                                  ldType := 0;
+                                ldIdx := PCindex_ld;
+                                ldType := 0;
 
-                            end else if num=1 then
+                            end
+                            else
+                            if num = 1 then
 
                             begin
-                                 i := pElem.Terminals^[1].TermNodeRef^[1];
-                                       case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
-                                             1: ldIdx1 :=  PCindex_ld ;
-                                             2: ldIdx2 :=  PCindex_ld ;
-                                             3: ldIdx3 :=  PCindex_ld ;
-                                       end;
-                                 if ldType<1 then
-                                       ldType := 1
-                                 else if ldType>=1 then
+                                i := pElem.Terminals^[1].TermNodeRef^[1];
+                                case activecircuit[ActorID].MapNodeToBus^[i].NodeNum of
+                                    1:
+                                        ldIdx1 := PCindex_ld;
+                                    2:
+                                        ldIdx2 := PCindex_ld;
+                                    3:
+                                        ldIdx3 := PCindex_ld;
+                                end;
+                                if ldType < 1 then
+                                    ldType := 1
+                                else
+                                if ldType >= 1 then
                                     ldType := ldType + 1;
-                                 if ldType>=3 then
-                                      ldType := 3 ;
+                                if ldType >= 3 then
+                                    ldType := 3;
                             end;
                             //
 
@@ -1562,13 +1739,13 @@ begin
 //                                     end;
 //
 //                            Reallocmem(cBuffer,0);
-                         end;
+                        end;
                     end;
-              End;
-              pElem := PCElements.Next;
-              PCindex_ld := PCElements.activeindex;
-            End;
-      end;
+                end;
+                pElem := PCElements.Next;
+                PCindex_ld := PCElements.activeindex;
+            end;
+        end;
         //lstPC := ActiveCircuit.GetBusAdjacentPCLists;
         //activecircuit.MapNodeToBus
         //num := lstPC.NumShuntObjects;
@@ -1612,28 +1789,43 @@ begin
         end;
         }
         ///
-        vl_V_ref1_dg:= vl_V_ref_dg;//:=1000*2.4; 1000*2.4; V_ref2:=1000*2.4; V_ref3 :=1000*2.4;// norminal value with respect to p.u. 1  //must be set by initialization
-        vl_V_ref2_dg:= vl_V_ref_dg;
-        vl_V_ref3_dg:= vl_V_ref_dg;
+        vl_V_ref1_dg := vl_V_ref_dg;//:=1000*2.4; 1000*2.4; V_ref2:=1000*2.4; V_ref3 :=1000*2.4;// norminal value with respect to p.u. 1  //must be set by initialization
+        vl_V_ref2_dg := vl_V_ref_dg;
+        vl_V_ref3_dg := vl_V_ref_dg;
         //kcq := 1.0; // the step size gain of agent i //has to be defined befor used
 
         ///  other properties if needed
         //ndphases : integer; //how many phases of this device on this node; not those of node
-        vl_CC_switch_dg :=false; // cooperate control switch. true, cooperate control is on
-        vl_PF_flag_dg :=0 ;//1, real power control is on
-        vl_QV_flag_dg :=0;//1, volt/var control is on
+        vl_CC_switch_dg := FALSE; // cooperate control switch. true, cooperate control is on
+        vl_PF_flag_dg := 0;//1, real power control is on
+        vl_QV_flag_dg := 0;//1, volt/var control is on
         vl_volt_thrd_dg := 0.03;
-        vl_Alpha_dg:=0;
-        vl_Alpha1_dg:=0;vl_Alpha2_dg:=0;vl_Alpha3_dg:=0;
-        vl_Gradient_dg:=0;vl_Gradient1_dg:=0;vl_Gradient2_dg:=0;vl_Gradient3_dg:=0;
-        vl_AlphaP_dg:=0;
-        vl_Alpha_dgn:=0;
-        vl_AlphaP1_dg:=0;vl_AlphaP2_dg:=0;vl_AlphaP3_dg:=0;
-        vl_GradientP_dg:=0;vl_GradientP1_dg:=0;vl_GradientP2_dg:=0;vl_GradientP3_dg:=0;
-        vl_Pmax_dg:=0; vl_Qmax_dg:=0;
-        vl_Pmax_phase_dg:=0; vl_Qmax_phase_dg :=0;
-        vl_V_base_dg:=1000*2.4;
-        vl_V:=1000*2.4;vl_V1:=1000*2.4;vl_V2:=1000*2.4;vl_V3:=1000*2.4;
+        vl_Alpha_dg := 0;
+        vl_Alpha1_dg := 0;
+        vl_Alpha2_dg := 0;
+        vl_Alpha3_dg := 0;
+        vl_Gradient_dg := 0;
+        vl_Gradient1_dg := 0;
+        vl_Gradient2_dg := 0;
+        vl_Gradient3_dg := 0;
+        vl_AlphaP_dg := 0;
+        vl_Alpha_dgn := 0;
+        vl_AlphaP1_dg := 0;
+        vl_AlphaP2_dg := 0;
+        vl_AlphaP3_dg := 0;
+        vl_GradientP_dg := 0;
+        vl_GradientP1_dg := 0;
+        vl_GradientP2_dg := 0;
+        vl_GradientP3_dg := 0;
+        vl_Pmax_dg := 0;
+        vl_Qmax_dg := 0;
+        vl_Pmax_phase_dg := 0;
+        vl_Qmax_phase_dg := 0;
+        vl_V_base_dg := 1000 * 2.4;
+        vl_V := 1000 * 2.4;
+        vl_V1 := 1000 * 2.4;
+        vl_V2 := 1000 * 2.4;
+        vl_V3 := 1000 * 2.4;
         vl_Q_Di := 0.0;
         vl_Q_Di1 := 0.0;
         vl_Q_Di2 := 0.0;
@@ -1651,70 +1843,82 @@ begin
         d_atk0 := 0.0;
     end;
 end;
-Procedure  TFMonitorObj.Get_PDElem_terminal_voltage(nd_num_in_cluster: integer ;devName: string; Tern_num: integer ; ActorID: integer);
+
+procedure TFMonitorObj.Get_PDElem_terminal_voltage(nd_num_in_cluster: Integer; devName: String; Tern_num: Integer; ActorID: Integer);
 var
-    tempTerminal : TPowerTerminal;
-    i ,Devindex, j: integer;
-    tempElement  :TDSSCktElement ;
+    tempTerminal: TPowerTerminal;
+    i, Devindex, j: Integer;
+    tempElement: TDSSCktElement;
     //VAR
    //pElem:TDSSCktElement;
-    phase_num:Integer ;
-    vabs : double;
+    phase_num: Integer;
+    vabs: Double;
     //V012 :TSymCompArray5;
-    V012 : Array[0..2] of Complex;
-    VaVbVc :Array[1..3] of Complex;
+    V012: array[0..2] of Complex;
+    VaVbVc: array[1..3] of Complex;
 begin
-  tempElement:=nil;
-        Devindex := GetCktElementIndex(devName);                   // Global function
-         IF DevIndex>0 THEN Begin                                       // Monitored element must already exist
-             tempElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
-         end;
+    tempElement := NIL;
+    Devindex := GetCktElementIndex(devName);                   // Global function
+    if DevIndex > 0 then
+    begin                                       // Monitored element must already exist
+        tempElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+    end;
               //
-         tempTerminal := tempElement.Terminals^[Tern_num];
-         for j:=1 to tempElement.NPhases do// how many phases of this element
-         begin
-              i := tempTerminal.TermNodeRef^[j];  // global node number
-              phase_num := ActiveCircuit[ActorID].MapNodeToBus^[i].NodeNum;
-              if not ADiakoptics or (ActorID = 1) then vabs := cabs (activecircuit[ActorID].Solution.NodeV^[i])
-              else vabs := cabs (activecircuit[ActorID].Solution.VoltInActor1(i));
-              if phase_num=1 then // phase A
-              begin
-                   pnodefms^[nd_num_in_cluster].vl_V1 := vabs ;
-                   if not ADiakoptics or (ActorID = 1) then pnodefms^[nd_num_in_cluster].vl_V_1c :=   activecircuit[ActorID].Solution.NodeV^[i]
-                   else pnodefms^[nd_num_in_cluster].vl_V_1c :=   activecircuit[ActorID].Solution.VoltInActor1(i);
-              end
-              else if phase_num=2 then    //phase B
-              begin
-                    pnodefms^[nd_num_in_cluster].vl_V2 := vabs;
-                    if not ADiakoptics or (ActorID = 1) then pnodefms^[nd_num_in_cluster].vl_V_2c :=   activecircuit[ActorID].Solution.NodeV^[i]
-                    else pnodefms^[nd_num_in_cluster].vl_V_2c :=   activecircuit[ActorID].Solution.VoltInActor1(i);
-              end
-              else if phase_num=3 then    //phase c
-              begin
-                    pnodefms^[nd_num_in_cluster].vl_V3 := vabs;
-                    if not ADiakoptics or (ActorID = 1) then pnodefms^[nd_num_in_cluster].vl_V_3c :=   activecircuit[ActorID].Solution.NodeV^[i]
-                    else pnodefms^[nd_num_in_cluster].vl_V_3c :=   activecircuit[ActorID].Solution.VoltInActor1(i);
-              end;
-         end;
-         if tempElement.NPhases=3  then
-         begin
-            VaVbVc[1] := pnodefms^[nd_num_in_cluster].vl_V_1c;//phase A
-            VaVbVc[2] := pnodefms^[nd_num_in_cluster].vl_V_2c;
-            VaVbVc[3] := pnodefms^[nd_num_in_cluster].vl_V_3c;
-            Phase2SymComp(@VaVbVc, @V012);  // Convert abc voltages to 012
-            pnodefms^[nd_num_in_cluster].vl_V := cabs(V012[1]);  //pos. seq. Voltage
-         end;
+    tempTerminal := tempElement.Terminals^[Tern_num];
+    for j := 1 to tempElement.NPhases do// how many phases of this element
+    begin
+        i := tempTerminal.TermNodeRef^[j];  // global node number
+        phase_num := ActiveCircuit[ActorID].MapNodeToBus^[i].NodeNum;
+        if not ADiakoptics or (ActorID = 1) then
+            vabs := cabs(activecircuit[ActorID].Solution.NodeV^[i])
+        else
+            vabs := cabs(activecircuit[ActorID].Solution.VoltInActor1(i));
+        if phase_num = 1 then // phase A
+        begin
+            pnodefms^[nd_num_in_cluster].vl_V1 := vabs;
+            if not ADiakoptics or (ActorID = 1) then
+                pnodefms^[nd_num_in_cluster].vl_V_1c := activecircuit[ActorID].Solution.NodeV^[i]
+            else
+                pnodefms^[nd_num_in_cluster].vl_V_1c := activecircuit[ActorID].Solution.VoltInActor1(i);
+        end
+        else
+        if phase_num = 2 then    //phase B
+        begin
+            pnodefms^[nd_num_in_cluster].vl_V2 := vabs;
+            if not ADiakoptics or (ActorID = 1) then
+                pnodefms^[nd_num_in_cluster].vl_V_2c := activecircuit[ActorID].Solution.NodeV^[i]
+            else
+                pnodefms^[nd_num_in_cluster].vl_V_2c := activecircuit[ActorID].Solution.VoltInActor1(i);
+        end
+        else
+        if phase_num = 3 then    //phase c
+        begin
+            pnodefms^[nd_num_in_cluster].vl_V3 := vabs;
+            if not ADiakoptics or (ActorID = 1) then
+                pnodefms^[nd_num_in_cluster].vl_V_3c := activecircuit[ActorID].Solution.NodeV^[i]
+            else
+                pnodefms^[nd_num_in_cluster].vl_V_3c := activecircuit[ActorID].Solution.VoltInActor1(i);
+        end;
+    end;
+    if tempElement.NPhases = 3 then
+    begin
+        VaVbVc[1] := pnodefms^[nd_num_in_cluster].vl_V_1c;//phase A
+        VaVbVc[2] := pnodefms^[nd_num_in_cluster].vl_V_2c;
+        VaVbVc[3] := pnodefms^[nd_num_in_cluster].vl_V_3c;
+        Phase2SymComp(@VaVbVc, @V012);  // Convert abc voltages to 012
+        pnodefms^[nd_num_in_cluster].vl_V := cabs(V012[1]);  //pos. seq. Voltage
+    end;
 
 end;
 
-Procedure  TFMonitorObj.update_all_nodes_info(ActorID: integer); //PD nodes
+procedure TFMonitorObj.update_all_nodes_info(ActorID: Integer); //PD nodes
 var
-  i : integer;
+    i: Integer;
 begin
-     for i := 1 to nodes do
-     begin
-          with pnodeFMs^[i] do
-          begin
+    for i := 1 to nodes do
+    begin
+        with pnodeFMs^[i] do
+        begin
               //if vl_nodeType = 1 then // generic dg
               //begin
                    // do nothing; because the info is updated from the other end (sent by DGs)
@@ -1722,63 +1926,64 @@ begin
               //else if vl_nodeType = 2 then // PD elements: lines, xformers, etc..
               //begin
                    //Update_PD_Node_Info(i,vl_strMeasuredName,vl_terminalNum);
-                   Get_PDElem_terminal_voltage(i,vl_strMeasuredName,vl_terminalNum,ActorID ) ;
+            Get_PDElem_terminal_voltage(i, vl_strMeasuredName, vl_terminalNum, ActorID);
                    //Calc_Alpha_for_PDNode(i ); // calc all alpha, alpha1, alpha2, alph3 of all pdelement nodes
               //end;
-          end;
-      end;
+        end;
+    end;
 
 end;
+
 {--------------------------------------------------------------------------}
-Procedure TFMonitorObj.ResetDelaySteps(iNodeNum: integer);
-Var
-    j,tmp : integer;
+procedure TFMonitorObj.ResetDelaySteps(iNodeNum: Integer);
+var
+    j, tmp: Integer;
 begin
           //calc delay array
-              for j := 1 to nodes do
-              begin
-                  if (T_intvl_smpl=0.0) or (pCommDelayMatrix^[(iNodeNum-1)*nodes+j]=0.0) then
-                      pCommDelaySteps^[(iNodeNum-1)*nodes+j] := 0
-                  else
-                  begin
-                      tmp := trunc(pCommDelayMatrix^[(iNodeNum-1)*nodes+j] /T_intvl_smpl);
-                      if frac(pCommDelayMatrix^[(iNodeNum-1)*nodes+j] /T_intvl_smpl)=0.0 then
-                          pCommDelaySteps^[(iNodeNum-1)*nodes+j] := tmp
-                      else
-                          pCommDelaySteps^[(iNodeNum-1)*nodes+j] := tmp + 1;
+    for j := 1 to nodes do
+    begin
+        if (T_intvl_smpl = 0.0) or (pCommDelayMatrix^[(iNodeNum - 1) * nodes + j] = 0.0) then
+            pCommDelaySteps^[(iNodeNum - 1) * nodes + j] := 0
+        else
+        begin
+            tmp := trunc(pCommDelayMatrix^[(iNodeNum - 1) * nodes + j] / T_intvl_smpl);
+            if frac(pCommDelayMatrix^[(iNodeNum - 1) * nodes + j] / T_intvl_smpl) = 0.0 then
+                pCommDelaySteps^[(iNodeNum - 1) * nodes + j] := tmp
+            else
+                pCommDelaySteps^[(iNodeNum - 1) * nodes + j] := tmp + 1;
                       //How many delays for communication
-                  end;
-              end
+        end;
+    end
 end;
 
-Procedure TFMonitorObj.ResetIt(ActorID: integer);
-Var
-    iTmp : integer;
-Begin
-     BufPtr := 0;
+procedure TFMonitorObj.ResetIt(ActorID: Integer);
+var
+    iTmp: Integer;
+begin
+    BufPtr := 0;
      //ClearMonitorStream;
-     if ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE then
-     begin
+    if ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE then
+    begin
           //calc Delay_stps for sampling
-          if T_intvl_smpl = 0.0 then
-              Smpl_stps := 0  //No delay.
-          else
-          begin
-              iTmp := Trunc(T_intvl_smpl / ActiveCircuit[ActorID].Solution.Dynavars.h);
-              if frac(T_intvl_smpl / ActiveCircuit[ActorID].Solution.Dynavars.h)=0.0 then
-                     Smpl_stps := iTmp
-                else
-                     Smpl_stps := iTmp +1 ;// uper
-          end;
-          for iTmp := 1 to Nodes do
-          begin
-                pnodeFMs^[iTmp].vl_smplCnt := 0;
-                pNodeFMs^[iTmp].vl_crnt_smp_time := ActiveCircuit[ActorID].Solution.DynaVars.intHour*3600+ActiveCircuit[ActorID].Solution.DynaVars.t ;
-                Init_delay_array(iTmp, ActorID); // in DYNAMICMODE, init alpha array
-          end;
+        if T_intvl_smpl = 0.0 then
+            Smpl_stps := 0  //No delay.
+        else
+        begin
+            iTmp := Trunc(T_intvl_smpl / ActiveCircuit[ActorID].Solution.Dynavars.h);
+            if frac(T_intvl_smpl / ActiveCircuit[ActorID].Solution.Dynavars.h) = 0.0 then
+                Smpl_stps := iTmp
+            else
+                Smpl_stps := iTmp + 1;// uper
+        end;
+        for iTmp := 1 to Nodes do
+        begin
+            pnodeFMs^[iTmp].vl_smplCnt := 0;
+            pNodeFMs^[iTmp].vl_crnt_smp_time := ActiveCircuit[ActorID].Solution.DynaVars.intHour * 3600 + ActiveCircuit[ActorID].Solution.DynaVars.t;
+            Init_delay_array(iTmp, ActorID); // in DYNAMICMODE, init alpha array
+        end;
 
-     end;
-End;
+    end;
+end;
 
 {--------------------------------------------------------------------------}
 {
@@ -3582,7 +3787,7 @@ begin
                 tmp := tmp + beta_dfs * dfs_hide;
             end;
             //Tolerance of alpha_i alpha_j
-            if abs(tmp)<= 	Volt_Trhd * 0.01 then
+            if abs(tmp)<=     Volt_Trhd * 0.01 then
                  //Result := 0.0
             else
                  Result := tmp * pNodeFMs^[NodeNumofDG].vl_kc_ul_dg;
