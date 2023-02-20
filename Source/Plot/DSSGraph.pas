@@ -1,4 +1,5 @@
 unit DSSGraph;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -15,71 +16,72 @@ unit DSSGraph;
 
 interface
 
-Uses
+uses
     ArrayDef,
     Graphics,
     Sysutils;
 
-TYPE
-     GridStyleType = (gsNone, gsPoints, gsVertLines, gsHorizLines, gsLines, gsHorizDotLines, gsVertDotLines, gsDotLines);
-     EDSSGraphProblem = class(Exception);
-     TDSSGraphProperties = Packed Record
-           Xmin      :Double;
-           Xmax      :Double;
-           Ymin      :Double;
-           YMax      :Double;
-           ChartColor :TColor;
-           WindColor  :TColor;
-           Isometric  :Boolean;
-           GridStyle  :GridStyleType;
-     End;
+type
+    GridStyleType = (gsNone, gsPoints, gsVertLines, gsHorizLines, gsLines, gsHorizDotLines, gsVertDotLines, gsDotLines);
+    EDSSGraphProblem = class(Exception);
+
+    TDSSGraphProperties = packed record
+        Xmin: Double;
+        Xmax: Double;
+        Ymin: Double;
+        YMax: Double;
+        ChartColor: TColor;
+        WindColor: TColor;
+        Isometric: Boolean;
+        GridStyle: GridStyleType;
+    end;
 
 
 //    Procedure DSSGraphInit(ptrCallBackStruct:pDSSCallBacks); StdCall;  external 'DSSGraph.dll' name 'Init';  // Call this once
-     Function  MakeNewGraph(Const Filename:String):Integer;      // Call this to make a new graph
+function MakeNewGraph(const Filename: String): Integer;      // Call this to make a new graph
 
-     Procedure AddNewLine(X1, Y1, X2, Y2: Double; Color:TColor;  Thickness:Byte; Style: TPenStyle; Dots: Boolean; Const LineName:String;
-                       MarkCenter:Boolean; CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth :Integer);
-     Procedure AddNewCurve(Xarray, Yarray: pDoubleArray; NumPoints:Integer; Color:TColor;  Thickness:Byte; Style: TPenStyle;
-                       Curvemarkers: Boolean; CurveMarker:Integer; Const CurveName:String);
-     Procedure AddNewText(X1,Y1:Double; Color:TColor; Size:Integer; S:String);
-     Procedure AddNewCircle(Xc, Yc, Radius:double; LineColor, FColor:TColor);
-     Procedure AddNewMarker(X, Y:Double; Color:TColor; Symbol, Size:Byte);
+procedure AddNewLine(X1, Y1, X2, Y2: Double; Color: TColor; Thickness: Byte; Style: TPenStyle; Dots: Boolean; const LineName: String;
+    MarkCenter: Boolean; CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth: Integer);
+procedure AddNewCurve(Xarray, Yarray: pDoubleArray; NumPoints: Integer; Color: TColor; Thickness: Byte; Style: TPenStyle;
+    Curvemarkers: Boolean; CurveMarker: Integer; const CurveName: String);
+procedure AddNewText(X1, Y1: Double; Color: TColor; Size: Integer; S: String);
+procedure AddNewCircle(Xc, Yc, Radius: Double; LineColor, FColor: TColor);
+procedure AddNewMarker(X, Y: Double; Color: TColor; Symbol, Size: Byte);
 
    {Routines to manage DSSGraph Properties. }
    {Invoke a Get_Properties to populate the Props struct first then change values}
-     Procedure Set_Properties(Var Props:TDSSGraphProperties);
-     Procedure Get_Properties(Var Props:TDSSGraphProperties);
-     Procedure Set_XaxisLabel(s:String);
-     Procedure Set_YaxisLabel(s:String);
-     Procedure Set_Caption   (s:String);
-     Procedure Set_ChartCaption(s:String);
+procedure Set_Properties(var Props: TDSSGraphProperties);
+procedure Get_Properties(var Props: TDSSGraphProperties);
+procedure Set_XaxisLabel(s: String);
+procedure Set_YaxisLabel(s: String);
+procedure Set_Caption(s: String);
+procedure Set_ChartCaption(s: String);
 
-     Procedure Set_LineWidth(Width:Integer);
-     Procedure Set_AutoRange(PctRim:Double);
-     Procedure Set_KeepAspectRatio(Value:Boolean);
-     Procedure Set_DataColor(clr:TColor);
-     Procedure Set_TextAlignment(Option:Integer);
-     Procedure Set_KeyClass(Value:Integer);
-     Procedure Set_Range(LoX, HiX, LoY, HiY:Double);
-     Procedure Set_FontStyle(Fs:TFontStyle);
-     Procedure Set_NoScales;
-     Procedure Set_LeftJustifyTransparent(LabelIdx:Integer);
-     Procedure MoveTo(X, Y:double);
-     Procedure DrawTo(X, Y:double);
-     Procedure Rectangle(x1, y1, x2, y2: double);
-     Procedure EnableClickonDiagram;
-     Procedure ShowGraph;
-     Function  AddTextLabel (X, Y: double; TextColor:  TColor; Txt: String; Template: integer):  integer;
-     Procedure LockInTextLabel(idx:Integer);
-     Procedure BoldTextLabel(idx:Integer);
-     procedure MarkAt (x,y: double; Marker, Size:Byte);
-     procedure CenteredText15 (x,y: double; size: integer; txt:  String);
+procedure Set_LineWidth(Width: Integer);
+procedure Set_AutoRange(PctRim: Double);
+procedure Set_KeepAspectRatio(Value: Boolean);
+procedure Set_DataColor(clr: TColor);
+procedure Set_TextAlignment(Option: Integer);
+procedure Set_KeyClass(Value: Integer);
+procedure Set_Range(LoX, HiX, LoY, HiY: Double);
+procedure Set_FontStyle(Fs: TFontStyle);
+procedure Set_NoScales;
+procedure Set_LeftJustifyTransparent(LabelIdx: Integer);
+procedure MoveTo(X, Y: Double);
+procedure DrawTo(X, Y: Double);
+procedure Rectangle(x1, y1, x2, y2: Double);
+procedure EnableClickonDiagram;
+procedure ShowGraph;
+function AddTextLabel(X, Y: Double; TextColor: TColor; Txt: String; Template: Integer): Integer;
+procedure LockInTextLabel(idx: Integer);
+procedure BoldTextLabel(idx: Integer);
+procedure MarkAt(x, y: Double; Marker, Size: Byte);
+procedure CenteredText15(x, y: Double; size: Integer; txt: String);
 
 
 implementation
 
-Uses
+uses
     Windows,
     DSSGlobals,
     Utilities,
@@ -88,70 +90,73 @@ Uses
     PDElement,
     ParserDel;
 
-VAR
-   ActiveDSSGraphFile :TextFile;
-   ActiveSolutionFileHdl :Integer;
-   ActiveFileName,
-   ActiveSolutionFileName     :String;
-   ActiveGraphProps   :TDSSGraphProperties;
-   TextLabelCount     :Integer;
+var
+    ActiveDSSGraphFile: TextFile;
+    ActiveSolutionFileHdl: Integer;
+    ActiveFileName,
+    ActiveSolutionFileName: String;
+    ActiveGraphProps: TDSSGraphProperties;
+    TextLabelCount: Integer;
 
 procedure Checkminmax(const x, y: Double);
 begin
-   With ActiveGraphProps do Begin
-      XMin := Min(X, Xmin);
-      Xmax := Max(X, Xmax);
-      YMin := Min(Y, Ymin);
-      Ymax := Max(Y, Ymax);
-   End;
+    with ActiveGraphProps do
+    begin
+        XMin := Min(X, Xmin);
+        Xmax := Max(X, Xmax);
+        YMin := Min(Y, Ymin);
+        Ymax := Max(Y, Ymax);
+    end;
 end;
 
-Function  MakeNewGraph(Const Filename:String):Integer;      // Call this to make a new graph file
-Begin
+function MakeNewGraph(const Filename: String): Integer;      // Call this to make a new graph file
+begin
 
     Result := 0;
     ActiveFileName := '';
-    TRY
-       AssignFile(ActiveDSSGraphFile, FileName);
-       Rewrite(ActiveDSSGraphFile);
-    EXCEPT
-        On E:Exception Do Begin
-            DoSimpleMsg('Error opening DSSView file: '+Filename+', '+E.message, 45001);
+    try
+        AssignFile(ActiveDSSGraphFile, FileName);
+        Rewrite(ActiveDSSGraphFile);
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error opening DSSView file: ' + Filename + ', ' + E.message, 45001);
             Exit;
-        End;
-    END;
+        end;
+    end;
 
     ActiveFileName := FileName;
-    ActiveSolutionFileName := ChangeFileExt(ActiveFileName,'.dbl');
+    ActiveSolutionFileName := ChangeFileExt(ActiveFileName, '.dbl');
 
-    TRY
-       ActiveSolutionFileHdl := Sysutils.FileCreate(ActiveSolutionFileName);
-       If ActiveSolutionFileHdl < 0 Then
-       Begin
-          DoSimpleMsg('Error occured opening DSSView binary Solution file: '+Filename, 45001);
-          CloseFile(ActiveDSSGraphFile);
-          Exit;
-       End;
-
-    EXCEPT
-        On E:Exception Do Begin
-            DoSimpleMsg('Error opening DSSView Solution file: '+Filename+', '+E.message, 45001);
+    try
+        ActiveSolutionFileHdl := Sysutils.FileCreate(ActiveSolutionFileName);
+        if ActiveSolutionFileHdl < 0 then
+        begin
+            DoSimpleMsg('Error occured opening DSSView binary Solution file: ' + Filename, 45001);
+            CloseFile(ActiveDSSGraphFile);
             Exit;
-        End;
-    END;
+        end;
+
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error opening DSSView Solution file: ' + Filename + ', ' + E.message, 45001);
+            Exit;
+        end;
+    end;
 
 
-    With  ActiveGraphProps Do
-    Begin
-           Xmin := 1.0e50;
-           Xmax := -1.0e50;
-           Ymin := 1.0e50;
-           YMax := -1.0e50;
-           ChartColor := clWhite;
-           WindColor  := clWhite;
-           Isometric  := FALSE;
-           GridStyle  := gsLines;
-    End;
+    with  ActiveGraphProps do
+    begin
+        Xmin := 1.0e50;
+        Xmax := -1.0e50;
+        Ymin := 1.0e50;
+        YMax := -1.0e50;
+        ChartColor := clWhite;
+        WindColor := clWhite;
+        Isometric := FALSE;
+        GridStyle := gsLines;
+    end;
 
     TextLabelCount := 0;
 
@@ -160,300 +165,306 @@ Begin
     Result := 1;
 
 
-End;
+end;
 
-Function WriteActiveCktElementVIToFile:Int64;
-Var Count:Cardinal;
-    CountWritten :Cardinal;
-Begin
+function WriteActiveCktElementVIToFile: Int64;
+var
+    Count: Cardinal;
+    CountWritten: Cardinal;
+begin
   // get present file position
-     Result := sysutils.FileSeek(ActiveSolutionFileHdl, int64(0), 1);
+    Result := sysutils.FileSeek(ActiveSolutionFileHdl, Int64(0), 1);
 
-     With ActiveCircuit[ActiveActor] Do
-     Begin
-         ActiveCktElement.ComputeVterminal(ActiveActor);
-         ActiveCktElement.ComputeIterminal(ActiveActor);
-         Count := ActiveCktElement.Yorder * 2 * Sizeof(double);
-         CountWritten := Sysutils.FileWrite(ActiveSolutionFileHdl, ActiveCktElement.Vterminal^, Count);
-         If CountWritten = Count Then
-         CountWritten := Sysutils.FileWrite(ActiveSolutionFileHdl, ActiveCktElement.Iterminal^, Count);
-     End;
+    with ActiveCircuit[ActiveActor] do
+    begin
+        ActiveCktElement.ComputeVterminal(ActiveActor);
+        ActiveCktElement.ComputeIterminal(ActiveActor);
+        Count := ActiveCktElement.Yorder * 2 * Sizeof(Double);
+        CountWritten := Sysutils.FileWrite(ActiveSolutionFileHdl, ActiveCktElement.Vterminal^, Count);
+        if CountWritten = Count then
+            CountWritten := Sysutils.FileWrite(ActiveSolutionFileHdl, ActiveCktElement.Iterminal^, Count);
+    end;
 
-     If CountWritten <> Count Then
-     Begin
-         Sysutils.FileClose(ActiveSolutionFileHdl);
-         CloseFile(ActiveDSSGraphFile);
-         Raise EDSSGraphProblem.Create('Aborting. Problem writing solution file: '+ ActiveSolutionFileName);
-     End;
+    if CountWritten <> Count then
+    begin
+        Sysutils.FileClose(ActiveSolutionFileHdl);
+        CloseFile(ActiveDSSGraphFile);
+        raise EDSSGraphProblem.Create('Aborting. Problem writing solution file: ' + ActiveSolutionFileName);
+    end;
 
-End;
+end;
 
-Procedure AddNewLine(X1, Y1, X2, Y2: Double; Color:TColor;  Thickness:Byte; Style: TPenStyle; Dots: Boolean; Const LineName:String;
-                 MarkCenter:Boolean; CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth :Integer);
-Var
-   Offset :Int64;
-   Bus1, Bus2 : String;
-   Bus1Idx :Integer;
-   DataCount :Integer;
-   kV_Base :Double;
-   Dist   :Double;
-   pDElem :TPDElement;
-   NumCust, TotalCust:Integer;
+procedure AddNewLine(X1, Y1, X2, Y2: Double; Color: TColor; Thickness: Byte; Style: TPenStyle; Dots: Boolean; const LineName: String;
+    MarkCenter: Boolean; CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth: Integer);
+var
+    Offset: Int64;
+    Bus1, Bus2: String;
+    Bus1Idx: Integer;
+    DataCount: Integer;
+    kV_Base: Double;
+    Dist: Double;
+    pDElem: TPDElement;
+    NumCust, TotalCust: Integer;
 
-Begin
-     Offset := WriteActiveCktElementVIToFile;
+begin
+    Offset := WriteActiveCktElementVIToFile;
 
-     With ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].ActiveCktElement Do
-     Begin
+    with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].ActiveCktElement do
+    begin
         Bus1Idx := Terminals^[1].BusRef;
-        kV_Base := Buses^[Bus1Idx].kVBase ;
-        Dist    := Buses^[Bus1Idx].DistFromMeter;
+        kV_Base := Buses^[Bus1Idx].kVBase;
+        Dist := Buses^[Bus1Idx].DistFromMeter;
         Bus1 := GetBus(1);
         Bus2 := GetBus(2);
         DataCount := Yorder;
-     End;
+    end;
 
-     If ActiveCircuit[ActiveActor].ActiveCktElement is TPDElement
-     Then Begin
-        pDElem    := ActiveCircuit[ActiveActor].ActiveCktElement as TPDElement;
-        NumCust   := pDElem.BranchNumCustomers;
+    if ActiveCircuit[ActiveActor].ActiveCktElement is TPDElement then
+    begin
+        pDElem := ActiveCircuit[ActiveActor].ActiveCktElement as TPDElement;
+        NumCust := pDElem.BranchNumCustomers;
         TotalCust := pDElem.BranchTotalCustomers;
-     End
-     Else Begin
-        NumCust   := 0;
+    end
+    else
+    begin
+        NumCust := 0;
         TotalCust := 0;
-     End;
+    end;
 
 
-     Writeln(ActiveDSSGraphFile, Format('Line, "%s", "%s", "%s", %d, %d,  %d, %d, %.8g, %.8g, %.8g, %.8g, %.8g, %.8g, %d, %d, %d, %d, %d, %d, %d, %d',
-            [LineName, Bus1, Bus2, Offset, DataCount, NumCust, TotalCust, kV_Base, Dist,
-              X1, Y1, X2, Y2,
-             Color, Thickness, Ord(Style), Ord(Dots), Ord(MarkCenter), CentermarkerCode, NodeMarkerCode, NodeMarkerWidth]));
-     CheckMinMax(X1, Y1);
-     CheckMinMax(X2, Y2);
-End;
+    Writeln(ActiveDSSGraphFile, Format('Line, "%s", "%s", "%s", %d, %d,  %d, %d, %.8g, %.8g, %.8g, %.8g, %.8g, %.8g, %d, %d, %d, %d, %d, %d, %d, %d',
+        [LineName, Bus1, Bus2, Offset, DataCount, NumCust, TotalCust, kV_Base, Dist,
+        X1, Y1, X2, Y2,
+        Color, Thickness, Ord(Style), Ord(Dots), Ord(MarkCenter), CentermarkerCode, NodeMarkerCode, NodeMarkerWidth]));
+    CheckMinMax(X1, Y1);
+    CheckMinMax(X2, Y2);
+end;
 
-Procedure AddNewCurve(Xarray, Yarray: pDoubleArray; NumPoints:Integer; Color:TColor;  Thickness:Byte; Style: TPenStyle;
-                 Curvemarkers: Boolean; CurveMarker:Integer; Const CurveName:String);
-Var i:Integer;
+procedure AddNewCurve(Xarray, Yarray: pDoubleArray; NumPoints: Integer; Color: TColor; Thickness: Byte; Style: TPenStyle;
+    Curvemarkers: Boolean; CurveMarker: Integer; const CurveName: String);
+var
+    i: Integer;
 
-Begin
-     Write(ActiveDSSGraphFile, Format('Curve, %d, %d, %d, %d, %d, %d, "%s"',
-                               [NumPoints, Color, Thickness, ord(Style), ord(CurveMarkers), CurveMarker, CurveName ]));
-     For i := 1 to NumPoints Do Write(ActiveDSSGraphFile, Format(', %.8g',[Xarray^[i]]));
-     For i := 1 to NumPoints Do Write(ActiveDSSGraphFile, Format(', %.8g',[Yarray^[i]]));
-     Writeln(ActiveDSSGraphFile);
+begin
+    Write(ActiveDSSGraphFile, Format('Curve, %d, %d, %d, %d, %d, %d, "%s"',
+        [NumPoints, Color, Thickness, ord(Style), ord(CurveMarkers), CurveMarker, CurveName]));
+    for i := 1 to NumPoints do
+        Write(ActiveDSSGraphFile, Format(', %.8g', [Xarray^[i]]));
+    for i := 1 to NumPoints do
+        Write(ActiveDSSGraphFile, Format(', %.8g', [Yarray^[i]]));
+    Writeln(ActiveDSSGraphFile);
 
      {???? Check min and max of curve}
-End;
+end;
 
-Procedure AddNewText(X1, Y1:Double; Color:TColor; Size:Integer; S:String);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Text, %.8g, %.8g, %d, %d, "%s"',[X1, Y1, Color, Size, S]));
-     CheckMinMax(X1, Y1);
-End;
+procedure AddNewText(X1, Y1: Double; Color: TColor; Size: Integer; S: String);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Text, %.8g, %.8g, %d, %d, "%s"', [X1, Y1, Color, Size, S]));
+    CheckMinMax(X1, Y1);
+end;
 
-Procedure AddNewCircle(Xc, Yc, Radius:double; LineColor, FColor:TColor);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Circle, %.8g, %.8g, %.8g, %d, %d',
-                                       [Xc, Yc, Radius, LineColor, FColor]));
-     CheckMinMax(Xc, Yc);
-End;
+procedure AddNewCircle(Xc, Yc, Radius: Double; LineColor, FColor: TColor);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Circle, %.8g, %.8g, %.8g, %d, %d',
+        [Xc, Yc, Radius, LineColor, FColor]));
+    CheckMinMax(Xc, Yc);
+end;
 
-Procedure AddNewMarker(X, Y:Double; Color:TColor; Symbol, Size:Byte);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Marker, %.8g, %.8g,  %d, %d, %d',[X, Y, color, Symbol, Size]));
-     CheckMinMax(X, Y);
-End;
+procedure AddNewMarker(X, Y: Double; Color: TColor; Symbol, Size: Byte);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Marker, %.8g, %.8g,  %d, %d, %d', [X, Y, color, Symbol, Size]));
+    CheckMinMax(X, Y);
+end;
 
 {Routines to manage DSSGraph Properties. }
 {Invoke a Get_Properties to populate the Props struct first then change values}
-Procedure Set_Properties(Var Props:TDSSGraphProperties);
-Begin
-     ActiveGraphProps := Props;
-     With ActiveGraphProps Do
-     Writeln(ActiveDSSGraphFile, Format('SetProp, %.8g, %8g, %.8g, %.8g, %d, %d, %d, %d',
-                                 [Xmin, Xmax, Ymin, YMax, ChartColor, WindColor, Ord(Isometric), Ord(GridStyle)]));
-End;
-
-Procedure Get_Properties(Var Props:TDSSGraphProperties);
-Begin
-      Props := ActiveGraphProps;
-End;
-
-Procedure Set_XaxisLabel(s:String);
-Begin
-    Writeln(ActiveDSSGraphFile, Format('Xlabel, "%s"',[s]));
-End;
-
-Procedure Set_YaxisLabel(s:String);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Ylabel, "%s"',[s]));
-End;
-
-Procedure Set_Caption   (s:String);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Caption, "%s"',[s]));
-End;
-
-Procedure Set_ChartCaption(s:String);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('ChartCaption, "%s"',[s]));
-End;
-
-Procedure Set_LineWidth(Width:Integer);
-Begin
-    Writeln(ActiveDSSGraphFile, Format('Width, %d',[Width]));
-End;
-
-Procedure Set_AutoRange(PctRim:Double);
-Begin
-      Writeln(ActiveDSSGraphFile, Format('PctRim, %.8g',[PctRim]));
-End;
-
-Procedure Set_KeepAspectRatio(Value:Boolean);
-Begin
-
-     Writeln(ActiveDSSGraphFile, Format('KeepAspect, %d',[Ord(Value)]));
-End;
-
-Procedure Set_DataColor(clr:TColor);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('DataColor, %d',[clr]));
-End;
-
-Procedure Set_TextAlignment(Option:Integer);
-Begin
-    Writeln(ActiveDSSGraphFile, Format('TxtAlign, %d',[Option]));
-End;
-
-Procedure Set_KeyClass(Value:Integer);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('KeyClass, %d',[Value]));
-End;
-
-Procedure Set_Range(LoX, HiX, LoY, HiY:Double);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Range, %.8g, %.8g, %.8g, %.8g',[LoX, HiX, LoY, HiY]));
-End;
-
-Procedure Set_FontStyle(Fs:TFontStyle);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('FStyle, %d',[Ord(Fs)]));
-End;
-
-Procedure Set_NoScales;
-Begin
-     Writeln(ActiveDSSGraphFile, 'NoScales,');
-End;
-
-Procedure Set_LeftJustifyTransparent(LabelIdx:Integer);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('LJust, %d',[LabelIdx]));
-End;
-
-
-Procedure MoveTo(X, Y:double);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Move, %.8g, %.8g',[X,Y]));
-End;
-
-Procedure DrawTo(X, Y:double);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Draw, %.8g, %.8g',[X,Y]));
-End;
-
-Procedure Rectangle(x1, y1, x2, y2: double);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Rect, %.8g, %.8g, %.8g, %.8g',[x1, y1, x2, y2]));
-End;
-
-Procedure EnableClickonDiagram;
-Begin
-       Writeln(ActiveDSSGraphFile, 'ClickOn');
-End;
-
-function IsOpen(const txt:TextFile):Boolean;
-const
-  fmTextOpenRead = 55217;
-  fmTextOpenWrite = 55218;
+procedure Set_Properties(var Props: TDSSGraphProperties);
 begin
-  Result := (TTextRec(txt).Mode = fmTextOpenRead) or (TTextRec(txt).Mode = fmTextOpenWrite)
+    ActiveGraphProps := Props;
+    with ActiveGraphProps do
+        Writeln(ActiveDSSGraphFile, Format('SetProp, %.8g, %8g, %.8g, %.8g, %d, %d, %d, %d',
+            [Xmin, Xmax, Ymin, YMax, ChartColor, WindColor, Ord(Isometric), Ord(GridStyle)]));
 end;
 
-Procedure ShowGraph;
-Var
-    retval  :integer;
-    DSSViewFile :String;
-Begin
+procedure Get_Properties(var Props: TDSSGraphProperties);
+begin
+    Props := ActiveGraphProps;
+end;
 
-       If  IsOpen(ActiveDSSGraphFile) Then
-       Begin
+procedure Set_XaxisLabel(s: String);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Xlabel, "%s"', [s]));
+end;
 
-         CloseFile(ActiveDSSGraphFile);
-         Sysutils.FileClose(ActiveSolutionFileHdl);
+procedure Set_YaxisLabel(s: String);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Ylabel, "%s"', [s]));
+end;
 
-          TRY
-             If FileExists(ActiveFileName) Then
-             Begin
-                 DSSViewFile := EncloseQuotes(DSSDirectory + 'DSSView.exe');
-                 retval := ShellExecute (0, 'open',
-                                        PChar(DSSViewFile),
-                                        PChar(EncloseQuotes(ActiveFileName)),
-                                         Nil, SW_SHOW);
+procedure Set_Caption(s: String);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Caption, "%s"', [s]));
+end;
 
-                 ParserVars.Add( '@LastPlotFile', ActiveFileName);
+procedure Set_ChartCaption(s: String);
+begin
+    Writeln(ActiveDSSGraphFile, Format('ChartCaption, "%s"', [s]));
+end;
 
-                 Case Retval of
-                     0: DoSimpleMsg('System out of memory. ', 45700);
-                     ERROR_BAD_FORMAT: DoSimpleMsg('Graphics output file "'+ ActiveFileName + '" is Invalid.', 45701);
-                     ERROR_FILE_NOT_FOUND: DoSimpleMsg(DSSViewfile + ' File  Not Found.'
-                                                       +CRLF+'It should be in the same directory as the OpenDSS program', 45702);
-                     ERROR_PATH_NOT_FOUND: DoSimpleMsg('Path for DSSView program "'+DSSViewFile+'" Not Found.', 45703);
-                 End;
-             End;
-          EXCEPT
-              On E: Exception DO
+procedure Set_LineWidth(Width: Integer);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Width, %d', [Width]));
+end;
+
+procedure Set_AutoRange(PctRim: Double);
+begin
+    Writeln(ActiveDSSGraphFile, Format('PctRim, %.8g', [PctRim]));
+end;
+
+procedure Set_KeepAspectRatio(Value: Boolean);
+begin
+
+    Writeln(ActiveDSSGraphFile, Format('KeepAspect, %d', [Ord(Value)]));
+end;
+
+procedure Set_DataColor(clr: TColor);
+begin
+    Writeln(ActiveDSSGraphFile, Format('DataColor, %d', [clr]));
+end;
+
+procedure Set_TextAlignment(Option: Integer);
+begin
+    Writeln(ActiveDSSGraphFile, Format('TxtAlign, %d', [Option]));
+end;
+
+procedure Set_KeyClass(Value: Integer);
+begin
+    Writeln(ActiveDSSGraphFile, Format('KeyClass, %d', [Value]));
+end;
+
+procedure Set_Range(LoX, HiX, LoY, HiY: Double);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Range, %.8g, %.8g, %.8g, %.8g', [LoX, HiX, LoY, HiY]));
+end;
+
+procedure Set_FontStyle(Fs: TFontStyle);
+begin
+    Writeln(ActiveDSSGraphFile, Format('FStyle, %d', [Ord(Fs)]));
+end;
+
+procedure Set_NoScales;
+begin
+    Writeln(ActiveDSSGraphFile, 'NoScales,');
+end;
+
+procedure Set_LeftJustifyTransparent(LabelIdx: Integer);
+begin
+    Writeln(ActiveDSSGraphFile, Format('LJust, %d', [LabelIdx]));
+end;
+
+
+procedure MoveTo(X, Y: Double);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Move, %.8g, %.8g', [X, Y]));
+end;
+
+procedure DrawTo(X, Y: Double);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Draw, %.8g, %.8g', [X, Y]));
+end;
+
+procedure Rectangle(x1, y1, x2, y2: Double);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Rect, %.8g, %.8g, %.8g, %.8g', [x1, y1, x2, y2]));
+end;
+
+procedure EnableClickonDiagram;
+begin
+    Writeln(ActiveDSSGraphFile, 'ClickOn');
+end;
+
+function IsOpen(const txt: TextFile): Boolean;
+const
+    fmTextOpenRead = 55217;
+    fmTextOpenWrite = 55218;
+begin
+    Result := (TTextRec(txt).Mode = fmTextOpenRead) or (TTextRec(txt).Mode = fmTextOpenWrite)
+end;
+
+procedure ShowGraph;
+var
+    retval: Integer;
+    DSSViewFile: String;
+begin
+
+    if IsOpen(ActiveDSSGraphFile) then
+    begin
+
+        CloseFile(ActiveDSSGraphFile);
+        Sysutils.FileClose(ActiveSolutionFileHdl);
+
+        try
+            if FileExists(ActiveFileName) then
+            begin
+                DSSViewFile := EncloseQuotes(DSSDirectory + 'DSSView.exe');
+                retval := ShellExecute(0, 'open',
+                    Pchar(DSSViewFile),
+                    Pchar(EncloseQuotes(ActiveFileName)),
+                    NIL, SW_SHOW);
+
+                ParserVars.Add('@LastPlotFile', ActiveFileName);
+
+                case Retval of
+                    0:
+                        DoSimpleMsg('System out of memory. ', 45700);
+                    ERROR_BAD_FORMAT:
+                        DoSimpleMsg('Graphics output file "' + ActiveFileName + '" is Invalid.', 45701);
+                    ERROR_FILE_NOT_FOUND:
+                        DoSimpleMsg(DSSViewfile + ' File  Not Found.' + CRLF + 'It should be in the same directory as the OpenDSS program', 45702);
+                    ERROR_PATH_NOT_FOUND:
+                        DoSimpleMsg('Path for DSSView program "' + DSSViewFile + '" Not Found.', 45703);
+                end;
+            end;
+        except
+            On E: Exception do
                 DoErrorMsg('ShowGraph.', E.Message,
-                           'Is DSSView.EXE correctly installed???', 45704);
-          END;
+                    'Is DSSView.EXE correctly installed???', 45704);
+        end;
 
-          GlobalResult := ActiveFileName;
-       End;
+        GlobalResult := ActiveFileName;
+    end;
 
-End;
+end;
 
-Function  AddTextLabel (X, Y: double; TextColor:  TColor; Txt: String; Template: integer):  integer;
-Begin
-      Writeln(ActiveDSSGraphFile, Format('Label, %.8g, %.8g, %d, "%s", %d', [X, Y, Textcolor, Txt, Template ]));
-      Inc(TextLabelCount);
-      Result := TextLabelCount;
-      CheckMinMax(X, Y);
-End;
+function AddTextLabel(X, Y: Double; TextColor: TColor; Txt: String; Template: Integer): Integer;
+begin
+    Writeln(ActiveDSSGraphFile, Format('Label, %.8g, %.8g, %d, "%s", %d', [X, Y, Textcolor, Txt, Template]));
+    Inc(TextLabelCount);
+    Result := TextLabelCount;
+    CheckMinMax(X, Y);
+end;
 
-Procedure LockInTextLabel(idx:Integer);
-Begin
-      Writeln(ActiveDSSGraphFile, Format('LockInLabel, %d', [idx]));
-End;
+procedure LockInTextLabel(idx: Integer);
+begin
+    Writeln(ActiveDSSGraphFile, Format('LockInLabel, %d', [idx]));
+end;
 
-Procedure BoldTextLabel(idx:Integer);
-Begin
+procedure BoldTextLabel(idx: Integer);
+begin
     Writeln(ActiveDSSGraphFile, Format('BoldLabel, %d', [idx]));
-End;
+end;
 
-procedure MarkAt (x,y: double; Marker, Size:Byte);
-Begin
+procedure MarkAt(x, y: Double; Marker, Size: Byte);
+begin
     Writeln(ActiveDSSGraphFile, Format('MarkAt,  %.8g, %.8g, %d, %d', [x, y, Marker, Size]));
     CheckMinMax(X, Y);
-End;
+end;
 
-procedure CenteredText15 (x,y: double; size: integer; txt:  String);
-Begin
-     Writeln(ActiveDSSGraphFile, Format('Center,  %.8g, %.8g, %d, "%s"', [x, y, Size, txt]));
-     CheckMinMax(X, Y);
-End;
-
+procedure CenteredText15(x, y: Double; size: Integer; txt: String);
+begin
+    Writeln(ActiveDSSGraphFile, Format('Center,  %.8g, %.8g, %d, "%s"', [x, y, Size, txt]));
+    CheckMinMax(X, Y);
+end;
 
 
 end.
-

@@ -1,4 +1,5 @@
 unit Feeder;
+
  {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -29,104 +30,118 @@ unit Feeder;
 
 interface
 
-USES DSSClass, PCClass,PCElement, ucmatrix, ucomplex, PointerLIst, CktElement, CktTree;
+uses
+    DSSClass,
+    PCClass,
+    PCElement,
+    ucmatrix,
+    ucomplex,
+    PointerLIst,
+    CktElement,
+    CktTree;
 
-
-
-
-TYPE
+type
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TFeeder = CLASS(TPCClass)
-     private
-     Protected
-       Procedure DefineProperties;
-       Function MakeLike(Const OtherFeederName:STring):Integer;Override;
-     public
-       constructor Create;
-       destructor Destroy; override;
+    TFeeder = class(TPCClass)
+    PRIVATE
+    PROTECTED
+        procedure DefineProperties;
+        function MakeLike(const OtherFeederName: String): Integer; OVERRIDE;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-       Function Edit(ActorID : Integer):Integer; override;
-       Function Init(Handle:Integer; ActorID : Integer):Integer; override;
-       Function NewObject(const ObjName:String):Integer; override;
-   End;
+        function Edit(ActorID: Integer): Integer; OVERRIDE;
+        function Init(Handle: Integer; ActorID: Integer): Integer; OVERRIDE;
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
+    end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TFeederObj = class(TPCElement)
-     private
-          SequenceList,
-          ShuntList:TPointerList;
+    TFeederObj = class(TPCElement)
+    PRIVATE
+        SequenceList,
+        ShuntList: TPointerList;
 
-          RootElement:TDSSCktElement;
-          FromTerminalOffset:Integer;
+        RootElement: TDSSCktElement;
+        FromTerminalOffset: Integer;
 
-      public
+    PUBLIC
 
-         IsSynched:Boolean;
+        IsSynched: Boolean;
 
-        PROCEDURE InitializeFeeder(const BranchList:TCktTree; ActorID : Integer);
-        Procedure SetCktElementFeederFlags(Value:Boolean);
+        procedure InitializeFeeder(const BranchList: TCktTree; ActorID: Integer);
+        procedure SetCktElementFeederFlags(Value: Boolean);
 
-        constructor Create(ParClass:TDSSClass; const MeterName:String);
-        destructor  Destroy; override;
+        constructor Create(ParClass: TDSSClass; const MeterName: String);
+        destructor Destroy; OVERRIDE;
 
-        Procedure RecalcElementData(ActorID : Integer); Override;
-        Procedure CalcYPrim(ActorID : Integer); Override;
+        procedure RecalcElementData(ActorID: Integer); OVERRIDE;
+        procedure CalcYPrim(ActorID: Integer); OVERRIDE;
 
-        PROCEDURE MakePosSequence(ActorID : Integer);Override;  // Make a positive Sequence Model  - N/A
+        procedure MakePosSequence(ActorID: Integer); OVERRIDE;  // Make a positive Sequence Model  - N/A
 
-        Function  InjCurrents(ActorID : Integer): Integer; Override;
-        Procedure GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override;
-        Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer);Override;
+        function InjCurrents(ActorID: Integer): Integer; OVERRIDE;
+        procedure GetInjCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE;
+        procedure GetCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE;
 
-        PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-        Procedure DumpProperties(Var F:TextFile; Complete:Boolean); Override;
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
 
-   End;
+    end;
 
-VAR
-    ActiveFeederObj:TFeederObj;
+var
+    ActiveFeederObj: TFeederObj;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
 
-USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Utilities, Sysutils, Command, Energymeter,
-      PDElement;
+uses
+    ParserDel,
+    Circuit,
+    DSSClassDefs,
+    DSSGlobals,
+    Utilities,
+    Sysutils,
+    Command,
+    Energymeter,
+    PDElement;
 
-Var  NumPropsThisClass:Integer;
+var
+    NumPropsThisClass: Integer;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TFeeder.Create;  // Creates superstructure for all Line objects
-Begin
-     Inherited Create;
-     Class_Name := 'Feeder';
-     DSSClassType := FEEDER_ELEMENT; {+ PC_ELEMENT; } // add to PCElement list
+begin
+    inherited Create;
+    Class_Name := 'Feeder';
+    DSSClassType := FEEDER_ELEMENT; {+ PC_ELEMENT; } // add to PCElement list
 
-     ActiveElement := 0;
+    ActiveElement := 0;
 
-     DefineProperties;
+    DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev := TRUE;
-End;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Destructor TFeeder.Destroy;
+destructor TFeeder.Destroy;
 
-Begin
+begin
     // ElementList and  CommandList freed in inherited destroy
-    Inherited Destroy;
+    inherited Destroy;
 
-End;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TFeeder.DefineProperties;
-Begin
-     NumPropsThisClass := 0;
+procedure TFeeder.DefineProperties;
+begin
+    NumPropsThisClass := 0;
 
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
 
 // Can't Think of any properties we want the user to be able to set
 
@@ -137,269 +152,291 @@ Begin
 //     PropertyHelp[1] := 'Name of bus to which source is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3';
 
 
-     ActiveProperty := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-End;
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TFeeder.NewObject(const ObjName:String):Integer;
+function TFeeder.NewObject(const ObjName: String): Integer;
 
 // Called from EnergyMeter
 
-Var
-   obj:TFeederObj;
+var
+    obj: TFeederObj;
 
-Begin
+begin
     //Make a new Feeder object
     // First see if this one already exists. If so, just reinitialize
     Obj := Find(ObjName);
-    With ActiveCircuit[ActiveActor] Do
-    If Obj <> Nil Then Begin
-       ActiveCktElement := Obj;
-       Result := 0;
-    End
-    Else    Begin
-      ActiveCktElement := TFeederObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
-      ActiveCircuit[ActiveActor].AddCktElement(Result);
+    with ActiveCircuit[ActiveActor] do
+        if Obj <> NIL then
+        begin
+            ActiveCktElement := Obj;
+            Result := 0;
+        end
+        else
+        begin
+            ActiveCktElement := TFeederObj.Create(Self, ObjName);
+            Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
+            ActiveCircuit[ActiveActor].AddCktElement(Result);
       // done here because feeder objects are instantiated from energy meters
-    End;
-End;
+        end;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TFeeder.Edit(ActorID : Integer):Integer;
-VAR
-   ParamPointer :Integer;
-   ParamName,
-   Param        :String;
+function TFeeder.Edit(ActorID: Integer): Integer;
+var
+    ParamPointer: Integer;
+    ParamName,
+    Param: String;
 
-Begin
+begin
   // continue parsing with contents of Parser
-  ActiveFeederObj            := ElementList.Active;
-  ActiveCircuit[ActorID].ActiveCktElement := ActiveFeederObj;
+    ActiveFeederObj := ElementList.Active;
+    ActiveCircuit[ActorID].ActiveCktElement := ActiveFeederObj;
 
-  Result := 0;
+    Result := 0;
 
-  WITH ActiveFeederObj DO Begin
+    with ActiveFeederObj do
+    begin
 
-     ParamPointer := 0;
-     ParamName := Parser[ActorID].NextParam;
-     Param     := Parser[ActorID].StrValue;
-     WHILE Length(Param) > 0 DO Begin
-         IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
+        ParamPointer := 0;
+        ParamName := Parser[ActorID].NextParam;
+        Param := Parser[ActorID].StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
-         If (ParamPointer > 0) and (ParamPointer <= NumProperties) Then PropertyValue[ParamPointer] := Param;
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
 
-         CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 630);
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 630);
 
-         ELSE
-            ClassEdit(ActiveFeederObj, ParamPointer - NumPropsThisClass)
-         End;
+            else
+                ClassEdit(ActiveFeederObj, ParamPointer - NumPropsThisClass)
+            end;
 
-         ParamName := Parser[ActorID].NextParam;
-         Param     := Parser[ActorID].StrValue;
-     End;
+            ParamName := Parser[ActorID].NextParam;
+            Param := Parser[ActorID].StrValue;
+        end;
 
-     RecalcElementData(ActorID);
-     YprimInvalid[ActorID] := True;
-  End;
+        RecalcElementData(ActorID);
+        YprimInvalid[ActorID] := TRUE;
+    end;
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-Function TFeeder.MakeLike(Const OtherFeederName:String):Integer;
-VAR
-   OtherFeeder :TFeederObj;
-   i :Integer;
+function TFeeder.MakeLike(const OtherFeederName: String): Integer;
+var
+    OtherFeeder: TFeederObj;
+    i: Integer;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
    {See if we can find this name in the present collection}
-   OtherFeeder := Find(OtherFeederName);
-   IF   OtherFeeder <> Nil THEN
-   WITH ActiveFeederObj DO Begin
+    OtherFeeder := Find(OtherFeederName);
+    if OtherFeeder <> NIL then
+        with ActiveFeederObj do
+        begin
 
-       IF Fnphases <> OtherFeeder.Fnphases THEN Begin
-           Nphases := OtherFeeder.Fnphases;
-           NConds  := Fnphases;  // Forces reallocation of terminal stuff
+            if Fnphases <> OtherFeeder.Fnphases then
+            begin
+                Nphases := OtherFeeder.Fnphases;
+                NConds := Fnphases;  // Forces reallocation of terminal stuff
 
-           Yorder := Fnconds * Fnterms;
-           YprimInvalid[ActiveActor] := True;
-       End;
+                Yorder := Fnconds * Fnterms;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
 
 // Put properties to copy here
 
-       ClassMakeLike(OtherFeeder); // set spectrum,  base frequency
+            ClassMakeLike(OtherFeeder); // set spectrum,  base frequency
 
-       For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherFeeder.PropertyValue[i];
-       Result := 1;
-   End
-   ELSE  DoSimpleMsg('Error in Feeder MakeLike: "' + OtherFeederName + '" Not Found.', 631);
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherFeeder.PropertyValue[i];
+            Result := 1;
+        end
+    else
+        DoSimpleMsg('Error in Feeder MakeLike: "' + OtherFeederName + '" Not Found.', 631);
 
-End;
-
-//----------------------------------------------------------------------------
-Function TFeeder.Init(Handle:Integer; ActorID : Integer):Integer;
-
-Begin
-   DoSimpleMsg('Need to implement TFeeder.Init', -1);
-   Result := 0;
-End;
+end;
 
 //----------------------------------------------------------------------------
-Constructor TFeederObj.Create(ParClass:TDSSClass; const MeterName:String);
+function TFeeder.Init(Handle: Integer; ActorID: Integer): Integer;
+
+begin
+    DoSimpleMsg('Need to implement TFeeder.Init', -1);
+    Result := 0;
+end;
+
+//----------------------------------------------------------------------------
+constructor TFeederObj.Create(ParClass: TDSSClass; const MeterName: String);
 
 
-Begin
-     Inherited create(ParClass);
+begin
+    inherited create(ParClass);
 
-     Name := LowerCase(MeterName);
-     DSSObjType := ParClass.DSSClassType; // This will be a current source (PCElement)
+    Name := LowerCase(MeterName);
+    DSSObjType := ParClass.DSSClassType; // This will be a current source (PCElement)
 
-     SequenceList := TPointerList.Create(50);
-     ShuntList := TPointerList.Create(50);
+    SequenceList := TPointerList.Create(50);
+    ShuntList := TPointerList.Create(50);
 
-     IsSynched := FALSE;
+    IsSynched := FALSE;
 
      // Bus names and Nphases, etc are set up from EnergyMeter
 
      // Ready to rock 'n roll
 
-     RecalcElementData(ActiveActor);
-     InitPropertyValues(0);
+    RecalcElementData(ActiveActor);
+    InitPropertyValues(0);
 
-End;
+end;
 
 
 //----------------------------------------------------------------------------
-Destructor TFeederObj.Destroy;
-Begin
+destructor TFeederObj.Destroy;
+begin
     SequenceList.Free;
     ShuntList.Free;
-    Inherited Destroy;
-End;
+    inherited Destroy;
+end;
 
-PROCEDURE TFeederObj.InitializeFeeder(const BranchList:TCktTree; ActorID : Integer);
-Var i, bref:Integer;
-    pElement, pShunt:TDSSCktElement;
+procedure TFeederObj.InitializeFeeder(const BranchList: TCktTree; ActorID: Integer);
+var
+    i, bref: Integer;
+    pElement, pShunt: TDSSCktElement;
 
-Begin
-     SequenceList.Clear;  // Get rid of any previous definitions
-     ShuntList.Clear;
+begin
+    SequenceList.Clear;  // Get rid of any previous definitions
+    ShuntList.Clear;
 
-     IsSynched := FALSE;
+    IsSynched := FALSE;
    // Now set up Feeder terminals and BusRef to match the from node of the first branch
-     If BranchList <> Nil Then Begin
-       RootElement := BranchList.First;
+    if BranchList <> NIL then
+    begin
+        RootElement := BranchList.First;
 
-       Nphases := RootElement.NPhases; // Take care of allocating Terminal stuff
-       Fnconds := RootElement.NConds;
-       Nterms  := 1;
-       Yorder := Fnterms * Fnconds;
+        Nphases := RootElement.NPhases; // Take care of allocating Terminal stuff
+        Fnconds := RootElement.NConds;
+        Nterms := 1;
+        Yorder := Fnterms * Fnconds;
 
-       Terminals^[1].BusRef := BranchList.PresentBranch.FromBusReference;
-       SetBus(1, RootElement.GetBus(BranchList.Presentbranch.FromTerminal));  // set bus name same as first element
-       FromTerminalOffset := (BranchList.Presentbranch.FromTerminal-1)*FNconds ;
-       SetNodeRef(1, @RootElement.Noderef^[1+FromTerminalOffset]);
+        Terminals^[1].BusRef := BranchList.PresentBranch.FromBusReference;
+        SetBus(1, RootElement.GetBus(BranchList.Presentbranch.FromTerminal));  // set bus name same as first element
+        FromTerminalOffset := (BranchList.Presentbranch.FromTerminal - 1) * FNconds;
+        SetNodeRef(1, @RootElement.Noderef^[1 + FromTerminalOffset]);
 
        // Build The Sequence List  and ShuntList
-       pElement := RootElement;
-       While pElement <> Nil Do Begin
-           SequenceList.Add(pElement);
-           
+        pElement := RootElement;
+        while pElement <> NIL do
+        begin
+            SequenceList.Add(pElement);
+
            // Mark all the To buses for this branch as radial buses
-           BranchList.PresentBranch.ResetToBusList;  // reset pointer to first to bus
-           For i := 1 to pElement.NTerms-1 Do Begin
-             bref := BranchList.PresentBranch.ToBusReference; // each call pops off a new one
-             If bref > 0 Then  ActiveCircuit[ActorID].Buses^[bref].IsRadialBus := TRUE;
-           End;
+            BranchList.PresentBranch.ResetToBusList;  // reset pointer to first to bus
+            for i := 1 to pElement.NTerms - 1 do
+            begin
+                bref := BranchList.PresentBranch.ToBusReference; // each call pops off a new one
+                if bref > 0 then
+                    ActiveCircuit[ActorID].Buses^[bref].IsRadialBus := TRUE;
+            end;
 
-           pShunt := BranchList.PresentBranch.FirstShuntObject;
-           While pShunt<>Nil Do Begin
-               ShuntList.Add(pShunt);
-               pShunt := BranchList.PresentBranch.NextShuntObject;
-           End;
-           pElement := BranchList.GoForward;
-       End;
+            pShunt := BranchList.PresentBranch.FirstShuntObject;
+            while pShunt <> NIL do
+            begin
+                ShuntList.Add(pShunt);
+                pShunt := BranchList.PresentBranch.NextShuntObject;
+            end;
+            pElement := BranchList.GoForward;
+        end;
 
-       IsSynched := TRUE;
+        IsSynched := TRUE;
 
-       SetCktElementFeederFlags(TRUE);
+        SetCktElementFeederFlags(TRUE);
 
-     End;  {If BranchList <> Nil}
-End;
+    end;  {If BranchList <> Nil}
+end;
 
 //----------------------------------------------------------------------------
-Procedure TFeederObj.RecalcElementData(ActorID : Integer);
+procedure TFeederObj.RecalcElementData(ActorID: Integer);
 
 
-Begin
+begin
 
      {Nothing to Do?? - Maybe remake bus lists}
 
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-Procedure TFeederObj.CalcYPrim(ActorID : Integer);
+procedure TFeederObj.CalcYPrim(ActorID: Integer);
 
 
-Begin
+begin
 
 // For now, YPrim is null
 
  // Build only YPrim Series
-     IF YprimInvalid[ActorID] THEN Begin
-       IF YPrim_Series <> nil Then YPrim_Series.Free;
-       YPrim_Series := TcMatrix.CreateMatrix(Yorder);
-       IF YPrim <> nil Then YPrim.Free;
-       YPrim := TcMatrix.CreateMatrix(Yorder);
-     End
-     ELSE Begin
-          YPrim_Series.Clear;
-          YPrim.Clear;
-     End;
+    if YprimInvalid[ActorID] then
+    begin
+        if YPrim_Series <> NIL then
+            YPrim_Series.Free;
+        YPrim_Series := TcMatrix.CreateMatrix(Yorder);
+        if YPrim <> NIL then
+            YPrim.Free;
+        YPrim := TcMatrix.CreateMatrix(Yorder);
+    end
+    else
+    begin
+        YPrim_Series.Clear;
+        YPrim.Clear;
+    end;
 
 
      {Yprim = 0  for Ideal Current Source;  just leave it zeroed}
 
      {Now Account for Open Conductors}
      {For any conductor that is open, zero out row and column}
-     Inherited CalcYPrim(ActorID);
+    inherited CalcYPrim(ActorID);
 
-     YprimInvalid[ActorID] := False;
+    YprimInvalid[ActorID] := FALSE;
 
-End;
+end;
 
 
-Function TFeederObj.InjCurrents(ActorID : Integer):Integer;
+function TFeederObj.InjCurrents(ActorID: Integer): Integer;
 
 {Sum Currents directly into solution array}
 
 { This is where we do the backward Sweep - computing the currents from the present voltages}
 
-Begin
+begin
 
 
   // old implementation deleted.
 
-   Result := 0;
+    Result := 0;
 
-End;
+end;
 
-Procedure TFeederObj.GetCurrents(Curr: pComplexArray; ActorID : Integer);
+procedure TFeederObj.GetCurrents(Curr: pComplexArray; ActorID: Integer);
 
 {Total currents into a feeder which are equal to the currents into the first element}
 {Return the currents in the From terminal of the first element in the sequence list}
 
-VAR
-   i:Integer;
+var
+    i: Integer;
 //   cBuffer:pComplexArray;
 //   pElem :TCktElement;
 
-Begin
+begin
    // If the feeder exists and we switch away from radial solution we don' want
    // to report a current
    // Do this only if doing a radial solution
@@ -423,35 +460,35 @@ Begin
   End Else
   *)
 
-  FOR i := 1 TO Yorder DO Curr^[i] := CZERO; // no contribution if not radial solution
+    for i := 1 to Yorder do
+        Curr^[i] := CZERO; // no contribution if not radial solution
 
 
-End;
+end;
 
 
-
-
-Procedure TFeederObj.GetInjCurrents(Curr:pComplexArray; ActorID : Integer);
+procedure TFeederObj.GetInjCurrents(Curr: pComplexArray; ActorID: Integer);
 
 {Fill Up an array of injection currents}
 
 {Only thing this is used for is for GetCurrents.  Ignore for Feeder}
 
 
-Begin
+begin
 
-     WITH ActiveCircuit[ActorID].solution DO  Begin
+    with ActiveCircuit[ActorID].solution do
+    begin
 
          {**** Do Nothing!}
 
-     End;
-End;
+    end;
+end;
 
-Procedure TFeederObj.DumpProperties(Var F:TextFile; Complete:Boolean);
+procedure TFeederObj.DumpProperties(var F: TextFile; Complete: Boolean);
 
 
-Begin
-    Inherited DumpProperties(F,Complete);
+begin
+    inherited DumpProperties(F, Complete);
 
   {Do Not dump any properties for a Feeder unless Debug}
   (*  With ParentClass Do
@@ -461,13 +498,14 @@ Begin
      End;
   *)
 
-    If Complete Then Begin
+    if Complete then
+    begin
     {Dump sequence lists, etc here...}
-      Writeln(F);
-      Writeln(F);
-    End;
+        Writeln(F);
+        Writeln(F);
+    end;
 
-End;
+end;
 
 procedure TFeederObj.InitPropertyValues(ArrayOffset: Integer);
 begin
@@ -479,7 +517,7 @@ begin
 
 end;
 
-procedure TFeederObj.MakePosSequence(ActorID : Integer);
+procedure TFeederObj.MakePosSequence(ActorID: Integer);
 begin
  { Do Nothing
   If Fnphases>1 Then
@@ -493,18 +531,21 @@ end;
 
 procedure TFeederObj.SetCktElementFeederFlags(Value: Boolean);
 
-Var  i:integer;
+var
+    i: Integer;
 
-Begin
-    For i := 1 to ShuntList.ListSize Do Begin
-      TDSSCktElement(ShuntList.Get(i)).IsPartofFeeder := Value;
-    End;
+begin
+    for i := 1 to ShuntList.ListSize do
+    begin
+        TDSSCktElement(ShuntList.Get(i)).IsPartofFeeder := Value;
+    end;
 
-    For i := 1 to SequenceList.ListSize Do Begin
-      TDSSCktElement(SequenceList.Get(i)).IsPartofFeeder := Value;
-    End;
+    for i := 1 to SequenceList.ListSize do
+    begin
+        TDSSCktElement(SequenceList.Get(i)).IsPartofFeeder := Value;
+    end;
 
-End;
+end;
 
 
 end.

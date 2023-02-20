@@ -1,4 +1,5 @@
 unit DSSForms;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -7,397 +8,443 @@ unit DSSForms;
 }
 
 interface
+
 {$IFNDEF CMD}
-Uses
-  Panel, Classes;
+uses
+    Panel,
+    Classes;
 
-VAR
+var
 
-   ControlPanelCreated     :Boolean;  // signify whether this is the DLL or EXE
-   ControlPanel: TControlPanel;
+    ControlPanelCreated: Boolean;  // signify whether this is the DLL or EXE
+    ControlPanel: TControlPanel;
 
-   RebuildHelpForm:Boolean;
+    RebuildHelpForm: Boolean;
 
 
-   PROCEDURE CreateControlPanel;
-   PROCEDURE ExitControlPanel;
-   PROCEDURE InitProgressForm(Actor_ID : integer);
-   Procedure ProgressCaption(const S:String; Actor_ID : integer);
-   Procedure ProgressFormCaption(const S:String; Actor_ID : integer);
-   Procedure ProgressHide(Actor_ID : integer);
-   PROCEDURE ShowControlPanel;
-   PROCEDURE ShowHelpForm ;
-   PROCEDURE ShowAboutBox;
-   PROCEDURE ShowPropEditForm;
-   PROCEDURE ShowPctProgress(Count:Integer; Actor_ID : integer);
-   Procedure ShowMessageForm(S:TStrings);
-   FUNCTION  DSSMessageDlg(const Msg:String;err:boolean):Integer;
-   PROCEDURE DSSInfoMessageDlg(const Msg:String);
+procedure CreateControlPanel;
+procedure ExitControlPanel;
+procedure InitProgressForm(Actor_ID: Integer);
+procedure ProgressCaption(const S: String; Actor_ID: Integer);
+procedure ProgressFormCaption(const S: String; Actor_ID: Integer);
+procedure ProgressHide(Actor_ID: Integer);
+procedure ShowControlPanel;
+procedure ShowHelpForm;
+procedure ShowAboutBox;
+procedure ShowPropEditForm;
+procedure ShowPctProgress(Count: Integer; Actor_ID: Integer);
+procedure ShowMessageForm(S: TStrings);
+function DSSMessageDlg(const Msg: String; err: Boolean): Integer;
+procedure DSSInfoMessageDlg(const Msg: String);
 
-   FUNCTION  GetDSSExeFile: String;
-   PROCEDURE CloseDownForms;
-   Procedure ShowTreeView(Const Fname:String);
-   FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
-   FUNCTION  GetDSSProgress(SourcePath : String): Boolean;
+function GetDSSExeFile: String;
+procedure CloseDownForms;
+procedure ShowTreeView(const Fname: String);
+function MakeChannelSelection(NumFieldsToSkip: Integer; const Filename: String): Boolean;
+function GetDSSProgress(SourcePath: String): Boolean;
 
 {$ENDIF}
 implementation
+
 {$IFNDEF CMD}
-Uses      ExecCommands, ExecOptions,
-          Windows, Forms, Controls, Dialogs, DSSGlobals,Executive, DSSClass,ParserDel,
-          ProgressForm,
-          Helpform,
-          PropEdit,
-          About,
-          Diakoptics,
+uses
+    ExecCommands,
+    ExecOptions,
+    Windows,
+    Forms,
+    Controls,
+    Dialogs,
+    DSSGlobals,
+    Executive,
+    DSSClass,
+    ParserDel,
+    ProgressForm,
+    Helpform,
+    PropEdit,
+    About,
+    Diakoptics,
 //          MessageForm,
-          ComCtrls,
-          TViewer, myInfoMsg,
-          Sysutils, FrmCSVchannelSelect, System.UITypes,ScriptEdit, StrUtils, StdMessage;
+    ComCtrls,
+    TViewer,
+    myInfoMsg,
+    Sysutils,
+    FrmCSVchannelSelect,
+    System.UITypes,
+    ScriptEdit,
+    StrUtils,
+    StdMessage;
 
+procedure InitProgressForm(Actor_ID: Integer);
 
-Procedure InitProgressForm(Actor_ID : integer);
-
-Begin
+begin
     // Start up progressform if not already started.
-     If (not NoFormsAllowed) and (ActorProgress[Actor_ID]=Nil) Then
-         ActorProgress[Actor_ID] := TProgress.Create(Nil);
-End;
-
-PROCEDURE ShowPctProgress(Count:Integer; Actor_ID : integer);
-// To be reviewed by Davis
-Begin
-     If NoFormsAllowed Then Exit;      // added RCD 12-5-2010
-//     ActorProgress[Actor_ID].PctProgress := Count;
-//     Application.ProcessMessages;
-End;
-
-Procedure ProgressCaption(const S:String; Actor_ID : integer);
-
-Begin
-     If NoFormsAllowed Then Exit;
-     ActorProgress[Actor_ID].Caption := S;
-     ActorProgress[Actor_ID].Show;
-End;
-
-Procedure ProgressFormCaption(const S:String; Actor_ID : integer);
-
-Begin
-     If NoFormsAllowed Then Exit;
-     ActorProgress[Actor_ID].FormCaption.Caption := S;
-     ActorProgress[Actor_ID].Show;
-End;
-
-Procedure ProgressHide(Actor_ID : integer);
-Begin
-     If Not NoFormsAllowed and (ActorProgress[Actor_ID] <> Nil ) Then
-     begin
-        ActorProgress[Actor_ID].Free;
-        ActorProgress[Actor_ID] :=  nil;
-     end;
-End;
-
-Procedure ShowAboutBox;
-
-Begin
- If NoFormsAllowed Then Exit;
- With TAboutBox.Create(nil) Do
- Try
-     ShowModal;
-     GlobalResult := VersionString;
- Finally
-      Free;
- End;
-
-End;
-
-
-Procedure ShowTreeView(Const Fname:String);
-Begin
-  If NoFormsAllowed Then Exit;
-
-  If Not Assigned(TViewForm) Then  TViewForm := TTViewForm.Create(nil);
-
-  TViewForm.Left:=0;
-  TViewForm.Top := 0;
-  TViewForm.TreeView1.Items.Clear;
-  TViewForm.ShowFile(Fname);
-  TViewForm.Show;
-  TViewForm.SetFocus;
+    if (not NoFormsAllowed) and (ActorProgress[Actor_ID] = NIL) then
+        ActorProgress[Actor_ID] := TProgress.Create(NIL);
 end;
 
-FUNCTION GetDSSExeFile: String;
+procedure ShowPctProgress(Count: Integer; Actor_ID: Integer);
+// To be reviewed by Davis
+begin
+    if NoFormsAllowed then
+        Exit;      // added RCD 12-5-2010
+//     ActorProgress[Actor_ID].PctProgress := Count;
+//     Application.ProcessMessages;
+end;
 
-Var
-   TheFileName:Array[0..MAX_PATH] of char;
+procedure ProgressCaption(const S: String; Actor_ID: Integer);
 
-Begin
+begin
+    if NoFormsAllowed then
+        Exit;
+    ActorProgress[Actor_ID].Caption := S;
+    ActorProgress[Actor_ID].Show;
+end;
+
+procedure ProgressFormCaption(const S: String; Actor_ID: Integer);
+
+begin
+    if NoFormsAllowed then
+        Exit;
+    ActorProgress[Actor_ID].FormCaption.Caption := S;
+    ActorProgress[Actor_ID].Show;
+end;
+
+procedure ProgressHide(Actor_ID: Integer);
+begin
+    if not NoFormsAllowed and (ActorProgress[Actor_ID] <> NIL) then
+    begin
+        ActorProgress[Actor_ID].Free;
+        ActorProgress[Actor_ID] := NIL;
+    end;
+end;
+
+procedure ShowAboutBox;
+
+begin
+    if NoFormsAllowed then
+        Exit;
+    with TAboutBox.Create(NIL) do
+        try
+            ShowModal;
+            GlobalResult := VersionString;
+        finally
+            Free;
+        end;
+
+end;
+
+
+procedure ShowTreeView(const Fname: String);
+begin
+    if NoFormsAllowed then
+        Exit;
+
+    if not Assigned(TViewForm) then
+        TViewForm := TTViewForm.Create(NIL);
+
+    TViewForm.Left := 0;
+    TViewForm.Top := 0;
+    TViewForm.TreeView1.Items.Clear;
+    TViewForm.ShowFile(Fname);
+    TViewForm.Show;
+    TViewForm.SetFocus;
+end;
+
+function GetDSSExeFile: String;
+
+var
+    TheFileName: array[0..MAX_PATH] of Char;
+
+begin
 
     FillChar(TheFileName, SizeOF(TheFileName), #0);  // Fill it with nulls
     GetModuleFileName(HInstance, TheFileName, SizeOF(TheFileName));
     Result := TheFileName;
 
-    If IsLibrary then IsDLL := TRUE;
-End;
+    if IsLibrary then
+        IsDLL := TRUE;
+end;
 
-FUNCTION  GetDSSProgress(SourcePath : String): Boolean;
+function GetDSSProgress(SourcePath: String): Boolean;
 var
-  RefPos  : Integer;
-  newPath : String;
-Begin
+    RefPos: Integer;
+    newPath: String;
+begin
 
-  newPath :=  AnsiReverseString(SourcePath);   // reverses the string
-  RefPos  :=  pos('\',AnsiLowerCase(newPath)); // detects the file name
-  newPath :=  AnsiReverseString(newPath);      // reverse again
-  newPath :=  newPath.Substring(0,length(newPath) - RefPos);  // Leaves only the folder name
+    newPath := AnsiReverseString(SourcePath);   // reverses the string
+    RefPos := pos('\', AnsiLowerCase(newPath)); // detects the file name
+    newPath := AnsiReverseString(newPath);      // reverse again
+    newPath := newPath.Substring(0, length(newPath) - RefPos);  // Leaves only the folder name
 
-  if fileexists(newPath + '\DSSProgress.exe') then
-  Begin
-    Result          :=  True;            // The progress app is installed
-    DSSProgressPath :=  newPath + '\DSSProgress.exe';
-  End
-  else
-  Begin
-    Result          :=  False;           // No way, is not installed
-    DSSProgressPath :=  '';
-  End;
-End;
+    if fileexists(newPath + '\DSSProgress.exe') then
+    begin
+        Result := TRUE;            // The progress app is installed
+        DSSProgressPath := newPath + '\DSSProgress.exe';
+    end
+    else
+    begin
+        Result := FALSE;           // No way, is not installed
+        DSSProgressPath := '';
+    end;
+end;
 
 
-FUNCTION DSSMessageDlg(const Msg:String;err:boolean):Integer;
+function DSSMessageDlg(const Msg: String; err: Boolean): Integer;
 
-Var
-      ScriptEd  : TScriptEdit;
-      Str       : String;
+var
+    ScriptEd: TScriptEdit;
+    Str: String;
 
-       Function IntResult(R:Integer):Integer;
-       Begin
-           If R = mrAbort then IntResult := -1
-           Else IntResult := 0;
-       End;
-Begin
-     If Length(msg) > 1024 Then
-        Str     :=  'Message too long; See Result Form.'
-     Else
-        Str     :=  msg;
+    function IntResult(R: Integer): Integer;
+    begin
+        if R = mrAbort then
+            IntResult := -1
+        else
+            IntResult := 0;
+    end;
+
+begin
+    if Length(msg) > 1024 then
+        Str := 'Message too long; See Result Form.'
+    else
+        Str := msg;
 
 //     If Err Then Result := MessageDlg(Str, mtError , [mbOK], 0)
 //     Else Result := IntResult(MessageDlg(Str, mtInformation , [mbAbort, mbIgnore], 0));
-     If Err Then
-     Begin
-        with TmyStdMsg.Create(nil) do
-        try
-          myMsg  :=  msg;
-          ShowModal;
-        finally
-          Free;
-        end;
+    if Err then
+    begin
+        with TmyStdMsg.Create(NIL) do
+            try
+                myMsg := msg;
+                ShowModal;
+            finally
+                Free;
+            end;
         Result := 1;
-     End
-     else
-     Begin
-        with TmyInfoMessage.Create(nil) do
-        try
-          myMsg   :=  msg;
-          ShowModal;
-          Result  :=  myResult;
-        finally
-          Free;
-        end;
+    end
+    else
+    begin
+        with TmyInfoMessage.Create(NIL) do
+            try
+                myMsg := msg;
+                ShowModal;
+                Result := myResult;
+            finally
+                Free;
+            end;
 
-     End;
+    end;
 
-     SolutionAbort  :=  True;
-End;
+    SolutionAbort := TRUE;
+end;
 
 
-Procedure DSSInfoMessageDlg(const Msg:String);
-Var
-      ScriptEd : TScriptEdit;
-      Str:String;
-Begin
+procedure DSSInfoMessageDlg(const Msg: String);
+var
+    ScriptEd: TScriptEdit;
+    Str: String;
+begin
 
 //    If length(msg)<=1024 Then
 //     Str :=  Msg
 //    else
 //      Str :=  'Message too long; See Result Form.';
 
-   with TmyStdMsg.Create(nil) do
-   try
-     myMsg  :=  Msg;
-     ShowModal;
-   finally
-     Free;
-   end;
+    with TmyStdMsg.Create(NIL) do
+        try
+            myMsg := Msg;
+            ShowModal;
+        finally
+            Free;
+        end;
 
 //     If length(msg)<=1024 Then MessageDlg(Msg, mtInformation , [mbOK], 0)
 //     Else MessageDlg('Message too long; See Result Form.', mtInformation , [mbOK], 0);
 
-     SolutionAbort  :=  True;
-End;
+    SolutionAbort := TRUE;
+end;
 
 
+procedure CreateControlPanel;
 
+begin
+    if NoFormsAllowed or isDLL then
+        Exit;
+    ControlPanel := TControlPanel.Create(NIL);
+    ControlPanelCreated := TRUE;
+    ControlPanel.InitializeForm;
+end;
 
-PROCEDURE CreateControlPanel;
+procedure ExitControlPanel;
 
-Begin
-     If NoFormsAllowed or isDLL then Exit;
-     ControlPanel := TControlPanel.Create(Nil);
-     ControlPanelCreated := True;
-     ControlPanel.InitializeForm;
-End;
+begin
+    if NoFormsAllowed or IsDLL then
+        Exit;
+    ControlPanel.Exit1Click(NIL);
+end;
 
-PROCEDURE ExitControlPanel;
+procedure ShowControlPanel;
 
-Begin
-     If NoFormsAllowed or IsDLL then Exit;
-     ControlPanel.Exit1Click(nil);
-End;
-
-PROCEDURE ShowControlPanel;
-
-Begin
-    If NoFormsAllowed or IsDLL then Exit;
-    If Not ControlPanelCreated Then CreateControlPanel;
+begin
+    if NoFormsAllowed or IsDLL then
+        Exit;
+    if not ControlPanelCreated then
+        CreateControlPanel;
     ControlPanel.Show;
-End;
+end;
 
-PROCEDURE ShowHelpForm;
+procedure ShowHelpForm;
 
-VAR
-   Param,ParamName:String;
+var
+    Param, ParamName: String;
 
 
-Begin
-     ParamName := Parser[ActiveActor].NextParam;
-     Param := Parser[ActiveActor].StrValue;
+begin
+    ParamName := Parser[ActiveActor].NextParam;
+    Param := Parser[ActiveActor].StrValue;
 
-     If NoFormsAllowed Then Exit;
+    if NoFormsAllowed then
+        Exit;
 
      // build tree view WITH nodelist containing data pointing to help strings
      // so that when you click on a node, the help string will come up.
 
-     IF HelpFormObj <> Nil THEN   // It's already created.  Let's not do another
-     Begin
-          If RebuildHelpForm then HelpFormObj.BuildTreeViewList;
-          RebuildHelpForm := FALSE;
-          HelpFormObj.Show;
-          Exit;
-     End;
+    if HelpFormObj <> NIL then   // It's already created.  Let's not do another
+    begin
+        if RebuildHelpForm then
+            HelpFormObj.BuildTreeViewList;
+        RebuildHelpForm := FALSE;
+        HelpFormObj.Show;
+        Exit;
+    end;
 
-     IF Length(param)=0 THEN
-     Begin
+    if Length(param) = 0 then
+    begin
          // Executive help
-         HelpFormObj := THelpForm1.Create(Nil);
-         HelpFormObj.BuildTreeViewList;
-         HelpFormObj.Show;
-     End;
-End;
+        HelpFormObj := THelpForm1.Create(NIL);
+        HelpFormObj.BuildTreeViewList;
+        HelpFormObj.Show;
+    end;
+end;
 
-Procedure ShowMessageForm(S:TStrings);
+procedure ShowMessageForm(S: TStrings);
 
-Begin
-          If NoFormsAllowed Then Exit;
+begin
+    if NoFormsAllowed then
+        Exit;
 //          If Not Assigned (MessageForm1) Then MessageForm1 := TMessageForm1.Create(Nil);
 //          MessageForm1.Editor.Clear;
 //          MessageForm1.Editor.Lines := S;
 //          MessageForm1.WindowState := wsNormal;
 //          MessageForm1.Show;
-  ControlPanel.ResultsEdit.Clear;
-  ControlPanel.ResultsEdit.Lines := s;
-End;
+    ControlPanel.ResultsEdit.Clear;
+    ControlPanel.ResultsEdit.Lines := s;
+end;
 
-Procedure ShowPropEditForm;
+procedure ShowPropEditForm;
 
-Begin
-        If NoFormsAllowed Then Exit;
+begin
+    if NoFormsAllowed then
+        Exit;
        // Create Edit form on the fly
-         PropEditForm := TPropEditForm.Create(NIL);
-         PropEditForm.ShowModal;
-         PropEditForm.Free;
-         PropEditForm := Nil;
-End;
+    PropEditForm := TPropEditForm.Create(NIL);
+    PropEditForm.ShowModal;
+    PropEditForm.Free;
+    PropEditForm := NIL;
+end;
 
-Procedure CloseDownForms;
+procedure CloseDownForms;
 var
-  I : integer;
-Begin
-        for I := 1 to CPU_Cores do
+    I: Integer;
+begin
+    for I := 1 to CPU_Cores do
+    begin
+        if ActorProgress[I] <> NIL then
         begin
-           If ActorProgress[I] <> Nil Then Begin
-              ActorProgress[I].Free;
-              ActorProgress[I] := Nil;
-           End;
+            ActorProgress[I].Free;
+            ActorProgress[I] := NIL;
         end;
+    end;
 
-         If HelpFormObj<> Nil Then Begin
-             HelpFormObj.Free;
-             HelpFormObj := Nil;
-         End;
-         If ControlPanelCreated Then Begin
-             ControlPanel.Free;
-             ControlPanelCreated := False;
-         End;
-End;
+    if HelpFormObj <> NIL then
+    begin
+        HelpFormObj.Free;
+        HelpFormObj := NIL;
+    end;
+    if ControlPanelCreated then
+    begin
+        ControlPanel.Free;
+        ControlPanelCreated := FALSE;
+    end;
+end;
 
 //----------------------------------------------------------------------------
-Function MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
-Var
-    F:TextFile;
-    S:string;
-    iCounter :Integer;
-    i   :Integer;
-    SaveWhiteSpaceChars:string;
+function MakeChannelSelection(NumFieldsToSkip: Integer; const Filename: String): Boolean;
+var
+    F: TextFile;
+    S: String;
+    iCounter: Integer;
+    i: Integer;
+    SaveWhiteSpaceChars: String;
 
-Begin
-   AssignFile(F, FileName);
-   Reset(F);
-   Readln(F, S);  // Read first line in file
-   CloseFile(F);
+begin
+    AssignFile(F, FileName);
+    Reset(F);
+    Readln(F, S);  // Read first line in file
+    CloseFile(F);
 
-   SaveWhiteSpaceChars := AuxParser[ActiveActor].Whitespace;
-   AuxParser[ActiveActor].Whitespace := #9;
-   AuxParser[ActiveActor].CmdString := S;  // Load up Parser
+    SaveWhiteSpaceChars := AuxParser[ActiveActor].Whitespace;
+    AuxParser[ActiveActor].Whitespace := #9;
+    AuxParser[ActiveActor].CmdString := S;  // Load up Parser
    // Skip specified number of columns in CSV file
-   For i:= 1 to NumFieldsToSkip Do Auxparser[ActiveActor].NextParam;
-   With ChannelSelectForm.ListBox1 Do Begin
-     Clear;
-     iCounter := 0;
-     Repeat
-       Auxparser[ActiveActor].NextParam;
-       S := Auxparser[ActiveActor].StrValue;
-       If Length(S)>0 Then Begin
-           iCounter := iCounter + 1;
-           AddItem(Format('%d. %s',[iCounter, S]), nil);
-       End;
-     Until Length(S)=0;
-   End;
-   If ChannelSelectForm.ShowModal = mrOK Then Result := TRUE Else Result := FALSE;
-   AuxParser[ActiveActor].Whitespace := SaveWhiteSpaceChars ;
-End;
-
+    for i := 1 to NumFieldsToSkip do
+        Auxparser[ActiveActor].NextParam;
+    with ChannelSelectForm.ListBox1 do
+    begin
+        Clear;
+        iCounter := 0;
+        repeat
+            Auxparser[ActiveActor].NextParam;
+            S := Auxparser[ActiveActor].StrValue;
+            if Length(S) > 0 then
+            begin
+                iCounter := iCounter + 1;
+                AddItem(Format('%d. %s', [iCounter, S]), NIL);
+            end;
+        until Length(S) = 0;
+    end;
+    if ChannelSelectForm.ShowModal = mrOK then
+        Result := TRUE
+    else
+        Result := FALSE;
+    AuxParser[ActiveActor].Whitespace := SaveWhiteSpaceChars;
+end;
 
 
 initialization
 
-  HelpFormObj := NIL;
-  Progress := Nil;   // Created in Solution and ImplDSSProgress
-  ControlPanelCreated := FALSE;
-  PropEditForm := NIL;
-  RebuildHelpForm := True;
-  IsMultiThread := True;
+    HelpFormObj := NIL;
+    Progress := NIL;   // Created in Solution and ImplDSSProgress
+    ControlPanelCreated := FALSE;
+    PropEditForm := NIL;
+    RebuildHelpForm := TRUE;
+    IsMultiThread := TRUE;
 
 finalization
 
-  If PropEditForm <> NIL Then PropEditForm.Free;
-  If HelpFormObj <> NIL THEN HelpFormObj.Free;
-  If IsDLL Then
-  Begin
-    If Assigned(Progress) Then Progress.Free;
-    If (ControlPanelCreated) THEN ControlPanel.Free;
-    If Assigned(TViewForm) Then TViewForm.Free;
+    if PropEditForm <> NIL then
+        PropEditForm.Free;
+    if HelpFormObj <> NIL then
+        HelpFormObj.Free;
+    if IsDLL then
+    begin
+        if Assigned(Progress) then
+            Progress.Free;
+        if (ControlPanelCreated) then
+            ControlPanel.Free;
+        if Assigned(TViewForm) then
+            TViewForm.Free;
 //    If Assigned(MessageForm1) Then MessageForm1.Free;
-  End;
+    end;
 {$ENDIF}
 end.

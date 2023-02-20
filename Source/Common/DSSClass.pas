@@ -1,5 +1,6 @@
 
 unit DSSClass;
+
 {
     ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -13,93 +14,96 @@ unit DSSClass;
 
 interface
 
-USES
-    PointerList, Command,  Arraydef, Hashlist;
+uses
+    PointerList,
+    Command,
+    Arraydef,
+    Hashlist;
 
-TYPE
+type
 
    // Collection of all DSS Classes
-   TDSSClasses = class(Tobject)
-   private
-     PROCEDURE Set_New(Value:Pointer);
+    TDSSClasses = class(Tobject)
+    PRIVATE
+        procedure Set_New(Value: Pointer);
 
-   public
-     constructor Create;
-     destructor Destroy; override;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-     Property New :pointer Write Set_New;
+        property New: pointer WRITE Set_New;
 
-   End;
+    end;
 
    // Base for all collection classes
-   TDSSClass = class(TObject)
-     private
-         
-          Procedure Set_Active(value:Integer);
-          function Get_ElementCount: Integer;
-          function Get_First: Integer;
-          function Get_Next: Integer;
+    TDSSClass = class(TObject)
+    PRIVATE
 
-          Procedure ResynchElementNameList;
+        procedure Set_Active(value: Integer);
+        function Get_ElementCount: Integer;
+        function Get_First: Integer;
+        function Get_Next: Integer;
 
-     Protected
-         Class_Name:String;
-         ActiveElement:Integer;   // index of present ActiveElement
-         CommandList:TCommandlist;
-         ActiveProperty:Integer;
-         ElementNameList:THashList;
+        procedure ResynchElementNameList;
 
-
-         Function AddObjectToList(Obj:Pointer):Integer;  // Used by NewObject
-         Function Get_FirstPropertyName:String;
-         Function Get_NextPropertyName:String;
-         Function MakeLike(Const ObjName:String):Integer; Virtual;
-
-         Procedure CountProperties;  // Add no. of intrinsic properties
-         Procedure AllocatePropertyArrays;
-         Procedure DefineProperties;  // Add Properties of this class to propName
-         Function ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer):Integer;
-
-     public
-         NumProperties:Integer;
-         PropertyName,
-         PropertyHelp:pStringArray;
-         PropertyIdxMap,
-         RevPropertyIdxMap:pIntegerArray;    // maps property to internal command number
-
-         DSSClassType:Integer;
+    PROTECTED
+        Class_Name: String;
+        ActiveElement: Integer;   // index of present ActiveElement
+        CommandList: TCommandlist;
+        ActiveProperty: Integer;
+        ElementNameList: THashList;
 
 
-         ElementList:TPointerList;
-         ElementNamesOutOfSynch:Boolean;     // When device gets renamed
+        function AddObjectToList(Obj: Pointer): Integer;  // Used by NewObject
+        function Get_FirstPropertyName: String;
+        function Get_NextPropertyName: String;
+        function MakeLike(const ObjName: String): Integer; VIRTUAL;
 
-         Saved:Boolean;
+        procedure CountProperties;  // Add no. of intrinsic properties
+        procedure AllocatePropertyArrays;
+        procedure DefineProperties;  // Add Properties of this class to propName
+        function ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer): Integer;
 
-         constructor Create;
-         destructor Destroy; override;
+    PUBLIC
+        NumProperties: Integer;
+        PropertyName,
+        PropertyHelp: pStringArray;
+        PropertyIdxMap,
+        RevPropertyIdxMap: pIntegerArray;    // maps property to internal command number
+
+        DSSClassType: Integer;
+
+
+        ElementList: TPointerList;
+        ElementNamesOutOfSynch: Boolean;     // When device gets renamed
+
+        Saved: Boolean;
+
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
          {Helper routine for building Property strings}
-         Procedure AddProperty(const PropName:String; CmdMapIndex:Integer; const HelpString:String);
-         Procedure ReallocateElementNameList;
-         
-         Function Edit(ActorID : Integer):Integer;Virtual;      // uses global parser
-         Function Init(Handle:Integer; ActorID : Integer):Integer; Virtual;
-         Function NewObject(const ObjName:String):Integer; Virtual;
+        procedure AddProperty(const PropName: String; CmdMapIndex: Integer; const HelpString: String);
+        procedure ReallocateElementNameList;
 
-         Function SetActive(const ObjName:String):Boolean; Virtual;
-         Function GetActiveObj:Pointer; // Get address of active obj of this class
-         Function Find(const ObjName:String):Pointer; Virtual;  // Find an obj of this class by name
+        function Edit(ActorID: Integer): Integer; VIRTUAL;      // uses global parser
+        function Init(Handle: Integer; ActorID: Integer): Integer; VIRTUAL;
+        function NewObject(const ObjName: String): Integer; VIRTUAL;
 
-         Function PropertyIndex(Const Prop:String):Integer;
-         Property FirstPropertyName:String read Get_FirstPropertyName;
-         Property NextPropertyName:String read Get_NextPropertyName;
+        function SetActive(const ObjName: String): Boolean; VIRTUAL;
+        function GetActiveObj: Pointer; // Get address of active obj of this class
+        function Find(const ObjName: String): Pointer; VIRTUAL;  // Find an obj of this class by name
 
-         Property Active:Integer read ActiveElement write Set_Active;
-         Property ElementCount:Integer read Get_ElementCount;
-         Property First:Integer read Get_First;
-         Property Next:Integer read Get_Next;
-         Property Name:String read Class_Name;
-   END;
+        function PropertyIndex(const Prop: String): Integer;
+        property FirstPropertyName: String READ Get_FirstPropertyName;
+        property NextPropertyName: String READ Get_NextPropertyName;
+
+        property Active: Integer READ ActiveElement WRITE Set_Active;
+        property ElementCount: Integer READ Get_ElementCount;
+        property First: Integer READ Get_First;
+        property Next: Integer READ Get_Next;
+        property Name: String READ Class_Name;
+    end;
 
 //VAR
 //   DSSClasses         : TDSSClasses;
@@ -108,7 +112,12 @@ TYPE
 implementation
 
 
-USES DSSGlobals, SysUtils, DSSObject, ParserDel, CktElement;
+uses
+    DSSGlobals,
+    SysUtils,
+    DSSObject,
+    ParserDel,
+    CktElement;
 
 {--------------------------------------------------------------}
 { DSSClasses Implementation

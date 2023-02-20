@@ -1,4 +1,5 @@
 unit DlgComboBox;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -7,29 +8,37 @@ unit DlgComboBox;
 }
 interface
 
-uses Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls, 
-  Buttons, ExtCtrls;
+uses
+    Windows,
+    SysUtils,
+    Classes,
+    Graphics,
+    Forms,
+    Controls,
+    StdCtrls,
+    Buttons,
+    ExtCtrls;
 
 type
-  TOptionComboForm = class(TForm)
-    OKBtn: TButton;
-    CancelBtn: TButton;
-    Bevel1: TBevel;
-    ComboBox1: TComboBox;
-    Edit1: TEdit;
-    ValueLabel: TLabel;
-    ComboLabel: TLabel;
-    procedure OKBtnClick(Sender: TObject);
-    procedure CancelBtnClick(Sender: TObject);
-  private
+    TOptionComboForm = class(TForm)
+        OKBtn: TButton;
+        CancelBtn: TButton;
+        Bevel1: TBevel;
+        ComboBox1: TComboBox;
+        Edit1: TEdit;
+        ValueLabel: TLabel;
+        ComboLabel: TLabel;
+        procedure OKBtnClick(Sender: TObject);
+        procedure CancelBtnClick(Sender: TObject);
+    PRIVATE
     { Private declarations }
-  public
+    PUBLIC
     { Public declarations }
-    OKPressed:Boolean;
-  end;
+        OKPressed: Boolean;
+    end;
 
 var
-  OptionComboForm: TOptionComboForm;
+    OptionComboForm: TOptionComboForm;
 
 implementation
 
@@ -37,12 +46,12 @@ implementation
 
 procedure TOptionComboForm.OKBtnClick(Sender: TObject);
 begin
-        OKPressed := TRUE;
+    OKPressed := TRUE;
 end;
 
 procedure TOptionComboForm.CancelBtnClick(Sender: TObject);
 begin
-        OKPressed := False;
+    OKPressed := FALSE;
 end;
 
 end.

@@ -1,4 +1,5 @@
 unit LineSpacing;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -8,267 +9,300 @@ unit LineSpacing;
 
 interface
 
-USES
-   Sysutils, Arraydef, Command, DSSClass, DSSObject;
+uses
+    Sysutils,
+    Arraydef,
+    Command,
+    DSSClass,
+    DSSObject;
 
+type
+    SpcParmChoice = (X, H);
 
-TYPE
-   SpcParmChoice = (X, H);
+    TLineSpacing = class(TDSSClass)
+    PRIVATE
 
-   TLineSpacing = class(TDSSClass)
-     private
+        function Get_Code: String;  // Returns active line code string
+        procedure Set_Code(const Value: String);  // sets the  active LineSpacing
+        procedure InterpretArray(const S: String; which: SpcParmChoice);
 
-       Function Get_Code:String;  // Returns active line code string
-       Procedure Set_Code(const Value:String);  // sets the  active LineSpacing
-       Procedure InterpretArray(const S:String; which:SpcParmChoice);
+    PROTECTED
+        procedure DefineProperties;
+        function MakeLike(const LineName: String): Integer; OVERRIDE;
+    PUBLIC
 
-     Protected
-       Procedure DefineProperties;
-       Function MakeLike(Const LineName:String):Integer;  Override;
-     public
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-       constructor Create;
-       destructor Destroy; override;
-
-       Function Edit(ActorID : Integer):Integer; override;     // uses global parser
-       Function Init(Handle:Integer; ActorID : Integer):Integer; override;
-       Function NewObject(const ObjName:String):Integer; override;
+        function Edit(ActorID: Integer): Integer; OVERRIDE;     // uses global parser
+        function Init(Handle: Integer; ActorID: Integer): Integer; OVERRIDE;
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
 
 
        // Set this property to point ActiveLineSpacingObj to the right value
-       Property Code:String Read Get_Code  Write Set_Code;
+        property Code: String READ Get_Code WRITE Set_Code;
 
-   end;
+    end;
 
 
-   TLineSpacingObj = class(TDSSObject)
-     private
-        FNConds      :Integer;
-        FNPhases     :Integer;
-        FX           :pDoubleArray;
-        FY           :pDoubleArray;
-        FUnits       :Integer;
-        DataChanged  :Boolean;
+    TLineSpacingObj = class(TDSSObject)
+    PRIVATE
+        FNConds: Integer;
+        FNPhases: Integer;
+        FX: pDoubleArray;
+        FY: pDoubleArray;
+        FUnits: Integer;
+        DataChanged: Boolean;
 
         procedure set_Nwires(const Value: Integer);
 
         // CIM Accessors
-        function Get_FX (i: integer) : Double;
-        function Get_FY (i: integer) : Double;
+        function Get_FX(i: Integer): Double;
+        function Get_FY(i: Integer): Double;
 
-      public
+    PUBLIC
 
-        constructor Create(ParClass:TDSSClass; const LineSpacingName:String);
-        destructor Destroy; override;
+        constructor Create(ParClass: TDSSClass; const LineSpacingName: String);
+        destructor Destroy; OVERRIDE;
 
-        FUNCTION  GetPropertyValue(Index:Integer):String; Override;
-        PROCEDURE InitPropertyValues(ArrayOffset:Integer); Override;
-        PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean); Override;
+        function GetPropertyValue(Index: Integer): String; OVERRIDE;
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
 
         // CIM XML accessors
-        Property Xcoord[i:Integer]: Double Read Get_FX;
-        Property Ycoord[i:Integer]: Double Read Get_FY;
-        Property NWires: Integer Read FNConds Write set_Nwires;
-        Property NPhases: Integer Read FNPhases;
-        Property Units: Integer Read FUnits;
-   end;
+        property Xcoord[i: Integer]: Double READ Get_FX;
+        property Ycoord[i: Integer]: Double READ Get_FY;
+        property NWires: Integer READ FNConds WRITE set_Nwires;
+        property NPhases: Integer READ FNPhases;
+        property Units: Integer READ FUnits;
+    end;
 
-VAR
-   ActiveLineSpacingObj:TLineSpacingObj;
+var
+    ActiveLineSpacingObj: TLineSpacingObj;
 
 implementation
 
-USES  ParserDel,  DSSClassDefs,  DSSGlobals, Ucomplex, Utilities,  LineUNits;
+uses
+    ParserDel,
+    DSSClassDefs,
+    DSSGlobals,
+    Ucomplex,
+    Utilities,
+    LineUNits;
 
-Const      NumPropsThisClass = 5;
+const
+    NumPropsThisClass = 5;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLineSpacing.Create;  // Creates superstructure for all Line objects
-BEGIN
-     Inherited Create;
-     Class_Name    := 'LineSpacing';
-     DSSClassType  := DSS_OBJECT;
-     ActiveElement := 0;
-
-     DefineProperties;
-
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev := TRUE;
-END;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Destructor TLineSpacing.Destroy;
-
-BEGIN
-    // ElementList and  CommandList freed in inherited destroy
-    Inherited Destroy;
-END;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TLineSpacing.DefineProperties;
-Begin
-
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;
-
-
-     PropertyName[1]  := 'nconds';
-     PropertyName[2]  := 'nphases';
-     PropertyName[3]  := 'x';
-     PropertyName[4]  := 'h';
-     PropertyName[5]  := 'units';
-
-
-     PropertyHelp[1] := 'Number of wires in this geometry. Default is 3. Triggers memory allocations. Define first!';
-     PropertyHelp[2] := 'Number of retained phase conductors. If less than the number of wires, list the retained phase coordinates first.';
-     PropertyHelp[3] := 'Array of wire X coordinates.';
-     PropertyHelp[4] := 'Array of wire Heights.';
-     PropertyHelp[5] := 'Units for x and h: {mi|kft|km|m|Ft|in|cm } Initial default is "ft", but defaults to last unit defined';
-
-     ActiveProperty := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-
-End;
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TLineSpacing.NewObject(const ObjName:String):Integer;
-BEGIN
-   // create a new object of this class and add to list
-   With ActiveCircuit[ActiveActor] Do
-   Begin
-    ActiveDSSObject[ActiveActor] := TLineSpacingObj.Create(Self, ObjName);
-    Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
-   End;
-END;
-
-Procedure TLineSpacing.InterpretArray(const S:String; which:SpcParmChoice);
-var
-  Str:String;
-  i:Integer;
 begin
-  AuxParser[ActiveActor].CmdString := S;
-  with ActiveLineSpacingObj do begin
-    for i := 1 to NWires do begin
-      AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
-      Str := AuxParser[ActiveActor].StrValue;
-      if Length(Str) > 0 then
-        case which of
-          X:  FX^[i] := AuxParser[ActiveActor].Dblvalue;
-          H:  FY^[i] := AuxParser[ActiveActor].Dblvalue;
-        end;
-    end;
-  end;
+    inherited Create;
+    Class_Name := 'LineSpacing';
+    DSSClassType := DSS_OBJECT;
+    ActiveElement := 0;
+
+    DefineProperties;
+
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TLineSpacing.Edit(ActorID : Integer):Integer;
-VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
+destructor TLineSpacing.Destroy;
 
-BEGIN
-  Result := 0;
+begin
+    // ElementList and  CommandList freed in inherited destroy
+    inherited Destroy;
+end;
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+procedure TLineSpacing.DefineProperties;
+begin
+
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
+
+
+    PropertyName[1] := 'nconds';
+    PropertyName[2] := 'nphases';
+    PropertyName[3] := 'x';
+    PropertyName[4] := 'h';
+    PropertyName[5] := 'units';
+
+
+    PropertyHelp[1] := 'Number of wires in this geometry. Default is 3. Triggers memory allocations. Define first!';
+    PropertyHelp[2] := 'Number of retained phase conductors. If less than the number of wires, list the retained phase coordinates first.';
+    PropertyHelp[3] := 'Array of wire X coordinates.';
+    PropertyHelp[4] := 'Array of wire Heights.';
+    PropertyHelp[5] := 'Units for x and h: {mi|kft|km|m|Ft|in|cm } Initial default is "ft", but defaults to last unit defined';
+
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+
+end;
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+function TLineSpacing.NewObject(const ObjName: String): Integer;
+begin
+   // create a new object of this class and add to list
+    with ActiveCircuit[ActiveActor] do
+    begin
+        ActiveDSSObject[ActiveActor] := TLineSpacingObj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
+    end;
+end;
+
+procedure TLineSpacing.InterpretArray(const S: String; which: SpcParmChoice);
+var
+    Str: String;
+    i: Integer;
+begin
+    AuxParser[ActiveActor].CmdString := S;
+    with ActiveLineSpacingObj do
+    begin
+        for i := 1 to NWires do
+        begin
+            AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+            Str := AuxParser[ActiveActor].StrValue;
+            if Length(Str) > 0 then
+                case which of
+                    X:
+                        FX^[i] := AuxParser[ActiveActor].Dblvalue;
+                    H:
+                        FY^[i] := AuxParser[ActiveActor].Dblvalue;
+                end;
+        end;
+    end;
+end;
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+function TLineSpacing.Edit(ActorID: Integer): Integer;
+var
+    ParamPointer: Integer;
+    ParamName: String;
+    Param: String;
+
+begin
+    Result := 0;
   // continue parsing with contents of Parser
-  ActiveLineSpacingObj := ElementList.Active;
-  ActiveDSSObject[ActorID] := ActiveLineSpacingObj;
+    ActiveLineSpacingObj := ElementList.Active;
+    ActiveDSSObject[ActorID] := ActiveLineSpacingObj;
 
-  WITH ActiveLineSpacingObj DO BEGIN
+    with ActiveLineSpacingObj do
+    begin
 
-     ParamPointer := 0;
-     ParamName := Parser[ActorID].NextParam;
-     Param := Parser[ActorID].StrValue;
-     WHILE Length(Param)>0 DO BEGIN
-         IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
+        ParamPointer := 0;
+        ParamName := Parser[ActorID].NextParam;
+        Param := Parser[ActorID].StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
-         If (ParamPointer > 0 ) and (ParamPointer <= NumProperties) Then PropertyValue[ParamPointer]:= Param;
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
 
-         CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 10101);
-            1: NWires        := Parser[ActorID].IntValue;  // Use property value to force reallocations
-            2: FNPhases := Parser[ActorID].IntValue;
-            3: InterpretArray (Param, X);
-            4: InterpretArray (Param, H);
-            5: FUnits := GetUnitsCode(Param);
-         ELSE
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 10101);
+                1:
+                    NWires := Parser[ActorID].IntValue;  // Use property value to force reallocations
+                2:
+                    FNPhases := Parser[ActorID].IntValue;
+                3:
+                    InterpretArray(Param, X);
+                4:
+                    InterpretArray(Param, H);
+                5:
+                    FUnits := GetUnitsCode(Param);
+            else
            // Inherited parameters
-           ClassEdit(ActiveLineSpacingObj, Parampointer - NumPropsThisClass)
-         END;
+                ClassEdit(ActiveLineSpacingObj, Parampointer - NumPropsThisClass)
+            end;
 
-         Case ParamPointer of
-            1..5: DataChanged := TRUE;
-         END;
+            case ParamPointer of
+                1..5:
+                    DataChanged := TRUE;
+            end;
 
-         ParamName := Parser[ActorID].NextParam;
-         Param := Parser[ActorID].StrValue;
-     END;
+            ParamName := Parser[ActorID].NextParam;
+            Param := Parser[ActorID].StrValue;
+        end;
 
-  END;
+    end;
 
-END;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TLineSpacing.MakeLike(Const LineName:String):Integer;
-VAR
-   OtherLineSpacing:TLineSpacingObj;
-   i:Integer;
-BEGIN
-   Result := 0;
+function TLineSpacing.MakeLike(const LineName: String): Integer;
+var
+    OtherLineSpacing: TLineSpacingObj;
+    i: Integer;
+begin
+    Result := 0;
    {See if we can find this line code in the present collection}
-   OtherLineSpacing := Find(LineName);
-   IF OtherLineSpacing<>Nil THEN
-   WITH ActiveLineSpacingObj DO BEGIN
+    OtherLineSpacing := Find(LineName);
+    if OtherLineSpacing <> NIL then
+        with ActiveLineSpacingObj do
+        begin
 
-       NWires := OtherLineSpacing.NWires;   // allocates
-       FNPhases := OtherLineSpacing.NPhases;
-       For i := 1 to FNConds Do FX^[i] := OtherLineSpacing.FX^[i];
-       For i := 1 to FNConds Do FY^[i] := OtherLineSpacing.FY^[i];
-       FUnits := OtherLineSpacing.FUnits;
-       DataChanged := TRUE;
-       For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherLineSpacing.PropertyValue[i];
-       Result := 1;
-   END
-   ELSE  DoSimpleMsg('Error in LineSpacing MakeLike: "' + LineName + '" Not Found.', 102);
+            NWires := OtherLineSpacing.NWires;   // allocates
+            FNPhases := OtherLineSpacing.NPhases;
+            for i := 1 to FNConds do
+                FX^[i] := OtherLineSpacing.FX^[i];
+            for i := 1 to FNConds do
+                FY^[i] := OtherLineSpacing.FY^[i];
+            FUnits := OtherLineSpacing.FUnits;
+            DataChanged := TRUE;
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherLineSpacing.PropertyValue[i];
+            Result := 1;
+        end
+    else
+        DoSimpleMsg('Error in LineSpacing MakeLike: "' + LineName + '" Not Found.', 102);
 
 
-END;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TLineSpacing.Init(Handle:Integer; ActorID : Integer):Integer;
+function TLineSpacing.Init(Handle: Integer; ActorID: Integer): Integer;
 
-BEGIN
-   DoSimpleMsg('Need to implement TLineSpacing.Init', -1);
-   Result := 0;
-END;
+begin
+    DoSimpleMsg('Need to implement TLineSpacing.Init', -1);
+    Result := 0;
+end;
 
-Function TLineSpacing.Get_Code:String;  // Returns active line code string
+function TLineSpacing.Get_Code: String;  // Returns active line code string
 
-BEGIN
+begin
 
-  Result := TLineSpacingObj(ElementList.Active).Name;
+    Result := TLineSpacingObj(ElementList.Active).Name;
 
-END;
+end;
 
-Procedure TLineSpacing.Set_Code(const Value:String);  // sets the  active LineSpacing
-VAR
-  LineSpacingObj:TLineSpacingObj;
-BEGIN
+procedure TLineSpacing.Set_Code(const Value: String);  // sets the  active LineSpacing
+var
+    LineSpacingObj: TLineSpacingObj;
+begin
 
-    ActiveLineSpacingObj := Nil;
-    LineSpacingObj       := ElementList.First;
-    WHILE LineSpacingObj<>Nil DO BEGIN
+    ActiveLineSpacingObj := NIL;
+    LineSpacingObj := ElementList.First;
+    while LineSpacingObj <> NIL do
+    begin
 
-       IF CompareText(LineSpacingObj.Name, Value)=0 THEN BEGIN
-          ActiveLineSpacingObj := LineSpacingObj;
-          Exit;
-       END;
+        if CompareText(LineSpacingObj.Name, Value) = 0 then
+        begin
+            ActiveLineSpacingObj := LineSpacingObj;
+            Exit;
+        end;
 
-       LineSpacingObj := ElementList.Next;
-    END;
+        LineSpacingObj := ElementList.Next;
+    end;
 
     DoSimpleMsg('LineSpacing: "' + Value + '" not Found.', 103);
 
-END;
+end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -276,62 +310,64 @@ END;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+constructor TLineSpacingObj.Create(ParClass: TDSSClass; const LineSpacingName: String);
 
-constructor TLineSpacingObj.Create(ParClass:TDSSClass; const LineSpacingName:String);
+begin
+    inherited Create(ParClass);
+    Name := LowerCase(LineSpacingName);
+    DSSObjType := ParClass.DSSClassType;
 
-BEGIN
-     Inherited Create(ParClass);
-     Name := LowerCase(LineSpacingName);
-     DSSObjType := ParClass.DSSClassType;
+    DataChanged := TRUE;
+    FX := NIL;
+    FY := NIL;
+    Funits := UNITS_FT;
+    NWires := 3;  // Allocates terminals
+    FNPhases := 3;
 
-     DataChanged := TRUE;
-     FX          := nil;
-     FY          := nil;
-     Funits      := UNITS_FT;
-     NWires      := 3;  // Allocates terminals
-     FNPhases     := 3;
-
-     InitPropertyValues(0);
-END;
+    InitPropertyValues(0);
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLineSpacingObj.Destroy;
-BEGIN
+begin
 
     Reallocmem(FY, 0);
     Reallocmem(FX, 0);
 
-    Inherited destroy;
-
-END;
-
-
-PROCEDURE TLineSpacingObj.DumpProperties(var F: TextFile; Complete: Boolean);
-
-Var
-   i :Integer;
-
-Begin
-    Inherited DumpProperties(F, Complete);
-
-    WITH ParentClass Do
-    Begin
-       For i := 1 to 5 Do  Begin
-         Writeln(F,'~ ',PropertyName^[i],'=',GetPropertyValue(i));
-       End;
-    End;
+    inherited destroy;
 
 end;
 
-function ArrayString(pF:pDoubleArray; N:Integer): String;
+
+procedure TLineSpacingObj.DumpProperties(var F: TextFile; Complete: Boolean);
+
 var
-  i: Integer;
-  r: String;
+    i: Integer;
+
 begin
-  r := '[';
-  if N > 0 then r := r + Format('%-g',[pF^[1]]);
-  for i:= 2 to N do r := r + Format(',%-g',[pF^[i]]);
-  Result := r + ']';
+    inherited DumpProperties(F, Complete);
+
+    with ParentClass do
+    begin
+        for i := 1 to 5 do
+        begin
+            Writeln(F, '~ ', PropertyName^[i], '=', GetPropertyValue(i));
+        end;
+    end;
+
+end;
+
+function ArrayString(pF: pDoubleArray; N: Integer): String;
+var
+    i: Integer;
+    r: String;
+begin
+    r := '[';
+    if N > 0 then
+        r := r + Format('%-g', [pF^[1]]);
+    for i := 2 to N do
+        r := r + Format(',%-g', [pF^[i]]);
+    Result := r + ']';
 end;
 
 function TLineSpacingObj.GetPropertyValue(Index: Integer): String;
@@ -340,35 +376,44 @@ function TLineSpacingObj.GetPropertyValue(Index: Integer): String;
 
 begin
 
-  CASE Index OF
-      3: Result := ArrayString (FX, FNConds);
-      4: Result := ArrayString (FY, FNConds);
-      5: Result :=  LineUnitsStr(FUnits);
-   ELSE
+    case Index of
+        3:
+            Result := ArrayString(FX, FNConds);
+        4:
+            Result := ArrayString(FY, FNConds);
+        5:
+            Result := LineUnitsStr(FUnits);
+    else
      // Inherited parameters
-     Result     := Inherited GetPropertyValue(Index);
-   END;
+        Result := inherited GetPropertyValue(Index);
+    end;
 
 end;
 
-function TLineSpacingObj.Get_FX(i:Integer) : Double;
+function TLineSpacingObj.Get_FX(i: Integer): Double;
 begin
-  If i <= FNConds Then Result := FX^[i] Else Result := 0.0;
+    if i <= FNConds then
+        Result := FX^[i]
+    else
+        Result := 0.0;
 end;
 
-function TLineSpacingObj.Get_FY(i:Integer) : Double;
+function TLineSpacingObj.Get_FY(i: Integer): Double;
 begin
-  If i <= FNConds Then Result := FY^[i] Else Result := 0.0;
+    if i <= FNConds then
+        Result := FY^[i]
+    else
+        Result := 0.0;
 end;
 
 procedure TLineSpacingObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-     PropertyValue[1] :=  '3';
-     PropertyValue[2] :=  '3';
-     PropertyValue[3] :=  '0';
-     PropertyValue[4] :=  '32';
-     PropertyValue[5] :=  'ft';
+    PropertyValue[1] := '3';
+    PropertyValue[2] := '3';
+    PropertyValue[3] := '0';
+    PropertyValue[4] := '32';
+    PropertyValue[5] := 'ft';
 
     inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -376,10 +421,10 @@ end;
 
 procedure TLineSpacingObj.set_NWires(const Value: Integer);
 begin
-  FNconds := Value;
-  FX        := Allocmem(Sizeof(FX^[1])        *FNconds);
-  FY        := Allocmem(Sizeof(FY^[1])        *FNconds);
-  FUnits    := UNITS_FT;
+    FNconds := Value;
+    FX := Allocmem(Sizeof(FX^[1]) * FNconds);
+    FY := Allocmem(Sizeof(FY^[1]) * FNconds);
+    FUnits := UNITS_FT;
 end;
 
 end.

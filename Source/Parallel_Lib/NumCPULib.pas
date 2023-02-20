@@ -182,45 +182,45 @@ interface
 
 uses
 {$IFDEF NUMCPULIB_MSWINDOWS}
-  Windows,
+    Windows,
 {$ENDIF} // ENDIF NUMCPULIB_MSWINDOWS
   // ================================================================//
 {$IFDEF NUMCPULIB_HAS_SYSCONF}
 {$IFDEF FPC}
-  unixtype,
+    unixtype,
 {$ELSE}
-  Posix.Unistd,
+    Posix.Unistd,
 {$ENDIF}   // ENDIF FPC
 {$ENDIF}  // ENDIF NUMCPULIB_HAS_SYSCONF
   // ================================================================//
 {$IFDEF NUMCPULIB_HAS_SYSCTL}
 {$IFDEF FPC}
-  sysctl,
+    sysctl,
 {$ELSE}
-  Posix.SysTypes,
-  Posix.SysSysctl,
+    Posix.SysTypes,
+    Posix.SysSysctl,
 {$ENDIF}   // ENDIF FPC
 {$ENDIF} // ENDIF NUMCPULIB_HAS_SYSCTL
   // ================================================================//
 {$IFDEF NUMCPULIB_APPLE}
 {$IFDEF NUMCPULIB_MACOS}
 {$IFDEF FPC}
-  CocoaAll,
+    CocoaAll,
 {$ELSE}
-  Macapi.AppKit,
+    Macapi.AppKit,
 {$ENDIF} // ENDIF FPC
 {$ENDIF} // ENDIF NUMCPULIB_MACOS
 {$ENDIF}   // ENDIF NUMCPULIB_APPLE
   // ================================================================//
 {$IFDEF NUMCPULIB_WILL_PARSE_DATA}
 {$IFDEF NUMCPULIB_SOLARIS}
-  Process,
+    Process,
 {$ENDIF} // ENDIF NUMCPULIB_SOLARIS
-  Classes,
-  StrUtils,
+    Classes,
+    StrUtils,
 {$ENDIF} // ENDIF NUMCPULIB_WILL_PARSE_DATA
   // ================================================================//
-  SysUtils;
+    SysUtils;
 
 type
   /// <summary>
@@ -239,297 +239,296 @@ type
   /// the number of CPUs should be used as a rough guide only.
   /// </para>
   /// </summary>
-  TNumCPULib = class sealed(TObject)
+    TNumCPULib = class sealed(TObject)
 
-  strict private
+    STRICT PRIVATE
 
     // ================================================================//
 {$IFDEF NUMCPULIB_HAS_SYSCONF}
-    class function GetAppropriateSysConfNumber(): Int32; static;
+        class function GetAppropriateSysConfNumber(): Int32; STATIC;
 {$ENDIF}
     // ================================================================//
 {$IFDEF NUMCPULIB_HAS_SYSCTL}
-  type
-    TMib = array [0 .. 1] of Int32;
+    type
+        TMib = array [0 .. 1] of Int32;
 {$IFDEF NUMCPULIB_APPLE}
-    class function GetCPUCountUsingSysCtlByName(const AName: String)
-      : UInt32; static;
+        class function GetCPUCountUsingSysCtlByName(const AName: String): Uint32; STATIC;
 {$ENDIF}
-    class function SysCtlInternal(AMib: TMib; out AOut: UInt32): Boolean; static;
-    class function GetLogicalCPUCountUsingSysCtl(): UInt32; static;
+        class function SysCtlInternal(AMib: TMib; out AOut: Uint32): Boolean; STATIC;
+        class function GetLogicalCPUCountUsingSysCtl(): Uint32; STATIC;
 {$ENDIF}
     // ================================================================//
 {$IFDEF NUMCPULIB_MSWINDOWS}
 
-  const
-    KERNEL32 = 'kernel32.dll';
+    const
+        KERNEL32 = 'kernel32.dll';
 
 {$IFNDEF HAS_GET_LOGICAL_PROCESSOR_INFORMATION_INBUILT}
 
-  type
+    type
 
-    TLogicalProcessorRelationship = (RelationProcessorCore = 0,
-      RelationNumaNode = 1, RelationCache = 2, RelationProcessorPackage = 3,
-      RelationGroup = 4, RelationAll = $FFFF);
-    TProcessorCacheType = (CacheUnified, CacheInstruction, CacheData,
-      CacheTrace);
+        TLogicalProcessorRelationship = (RelationProcessorCore = 0,
+            RelationNumaNode = 1, RelationCache = 2, RelationProcessorPackage = 3,
+            RelationGroup = 4, RelationAll = $FFFF);
+        TProcessorCacheType = (CacheUnified, CacheInstruction, CacheData,
+            CacheTrace);
 
-    TCacheDescriptor = record
-      Level: Byte;
-      Associativity: Byte;
-      LineSize: Word;
-      Size: DWORD;
-      pcType: TProcessorCacheType;
-    end;
+        TCacheDescriptor = record
+            Level: Byte;
+            Associativity: Byte;
+            LineSize: Word;
+            Size: DWORD;
+            pcType: TProcessorCacheType;
+        end;
 
-    PSystemLogicalProcessorInformation = ^TSystemLogicalProcessorInformation;
+        PSystemLogicalProcessorInformation = ^TSystemLogicalProcessorInformation;
 
-    TSystemLogicalProcessorInformation = record
-      ProcessorMask: ULONG_PTR;
-      Relationship: TLogicalProcessorRelationship;
-      case Int32 of
-        0:
-          (Flags: Byte);
-        1:
-          (NodeNumber: DWORD);
-        2:
-          (Cache: TCacheDescriptor);
-        3:
-          (Reserved: array [0 .. 1] of ULONGLONG);
-    end;
+        TSystemLogicalProcessorInformation = record
+            ProcessorMask: ULONG_PTR;
+            Relationship: TLogicalProcessorRelationship;
+            case Int32 of
+                0: (Flags: Byte);
+                1: (NodeNumber: DWORD);
+                2: (Cache: TCacheDescriptor);
+                3: (Reserved: array [0 .. 1] of ULONGLONG);
+        end;
 
-    KAffinity = NativeUInt;
+        KAffinity = Nativeuint;
 
-    TGroupAffinity = record
-      Mask: KAffinity;
-      Group: Word;
-      Reserved: array [0 .. 2] of Word;
-    end;
+        TGroupAffinity = record
+            Mask: KAffinity;
+            Group: Word;
+            Reserved: array [0 .. 2] of Word;
+        end;
 
-    TProcessorRelationship = record
-      Flags: Byte;
-      Reserved: array [0 .. 20] of Byte;
-      GroupCount: Word;
-      GroupMask: array [0 .. 0] of TGroupAffinity;
-    end;
+        TProcessorRelationship = record
+            Flags: Byte;
+            Reserved: array [0 .. 20] of Byte;
+            GroupCount: Word;
+            GroupMask: array [0 .. 0] of TGroupAffinity;
+        end;
 
-    TNumaNodeRelationship = record
-      NodeNumber: DWORD;
-      Reserved: array [0 .. 19] of Byte;
-      GroupMask: TGroupAffinity;
-    end;
+        TNumaNodeRelationship = record
+            NodeNumber: DWORD;
+            Reserved: array [0 .. 19] of Byte;
+            GroupMask: TGroupAffinity;
+        end;
 
-    TCacheRelationship = record
-      Level: Byte;
-      Associativity: Byte;
-      LineSize: Word;
-      CacheSize: DWORD;
-      _Type: TProcessorCacheType;
-      Reserved: array [0 .. 19] of Byte;
-      GroupMask: TGroupAffinity;
-    end;
+        TCacheRelationship = record
+            Level: Byte;
+            Associativity: Byte;
+            LineSize: Word;
+            CacheSize: DWORD;
+            _Type: TProcessorCacheType;
+            Reserved: array [0 .. 19] of Byte;
+            GroupMask: TGroupAffinity;
+        end;
 
-    TProcessorGroupInfo = record
-      MaximumProcessorCount: Byte;
-      ActiveProcessorCount: Byte;
-      Reserved: array [0 .. 37] of Byte;
-      ActiveProcessorMask: KAffinity;
-    end;
+        TProcessorGroupInfo = record
+            MaximumProcessorCount: Byte;
+            ActiveProcessorCount: Byte;
+            Reserved: array [0 .. 37] of Byte;
+            ActiveProcessorMask: KAffinity;
+        end;
 
-    TGroupRelationship = record
-      MaximumGroupCount: Word;
-      ActiveGroupCount: Word;
-      Reserved: array [0 .. 19] of Byte;
-      GroupInfo: array [0 .. 0] of TProcessorGroupInfo;
-    end;
+        TGroupRelationship = record
+            MaximumGroupCount: Word;
+            ActiveGroupCount: Word;
+            Reserved: array [0 .. 19] of Byte;
+            GroupInfo: array [0 .. 0] of TProcessorGroupInfo;
+        end;
 
-    PSystemLogicalProcessorInformationEx = ^
-      TSystemLogicalProcessorInformationEx;
+        PSystemLogicalProcessorInformationEx = ^
+        TSystemLogicalProcessorInformationEx;
 
-    TSystemLogicalProcessorInformationEx = record
-      Relationship: TLogicalProcessorRelationship;
-      Size: DWORD;
-      case Int32 of
-        0:
-          (Processor: TProcessorRelationship);
-        1:
-          (NumaNode: TNumaNodeRelationship);
-        2:
-          (Cache: TCacheRelationship);
-        3:
-          (Group: TGroupRelationship);
-    end;
+        TSystemLogicalProcessorInformationEx = record
+            Relationship: TLogicalProcessorRelationship;
+            Size: DWORD;
+            case Int32 of
+                0: (Processor: TProcessorRelationship);
+                1: (NumaNode: TNumaNodeRelationship);
+                2: (Cache: TCacheRelationship);
+                3: (Group: TGroupRelationship);
+        end;
 
 {$ENDIF}
 
     // ================================================================//
 
-  type
-    TGetLogicalProcessorInformation = function(Buffer:
-{$IFNDEF HAS_GET_LOGICAL_PROCESSOR_INFORMATION_INBUILT}TNumCPULib.{$ENDIF}PSystemLogicalProcessorInformation; var ReturnLength: DWORD): BOOL; stdcall;
+    type
+        TGetLogicalProcessorInformation =
+        function(Buffer:
+{$IFNDEF HAS_GET_LOGICAL_PROCESSOR_INFORMATION_INBUILT}
+            TNumCPULib.
+{$ENDIF}
+            PSystemLogicalProcessorInformation; var ReturnLength: DWORD): BOOL; STDCALL;
 
-    TGetLogicalProcessorInformationEx = function(RelationshipType
-      : TLogicalProcessorRelationship; Buffer:
-{$IFNDEF HAS_GET_LOGICAL_PROCESSOR_INFORMATION_INBUILT}TNumCPULib.{$ENDIF}PSystemLogicalProcessorInformationEx; var ReturnLength: DWORD): BOOL; stdcall;
+        TGetLogicalProcessorInformationEx =
+        function(RelationshipType: TLogicalProcessorRelationship; Buffer:
+{$IFNDEF HAS_GET_LOGICAL_PROCESSOR_INFORMATION_INBUILT}
+            TNumCPULib.
+{$ENDIF}
+            PSystemLogicalProcessorInformationEx; var ReturnLength: DWORD): BOOL; STDCALL;
 
-  class var
+    class var
 
-    FIsGetLogicalProcessorInformationAvailable,
-      FIsGetLogicalProcessorInformationAvailableEx: Boolean;
-    FGetLogicalProcessorInformation: TGetLogicalProcessorInformation;
-    FGetLogicalProcessorInformationEx: TGetLogicalProcessorInformationEx;
+        FIsGetLogicalProcessorInformationAvailable,
+        FIsGetLogicalProcessorInformationAvailableEx: Boolean;
+        FGetLogicalProcessorInformation: TGetLogicalProcessorInformation;
+        FGetLogicalProcessorInformationEx: TGetLogicalProcessorInformationEx;
 
-
-    // ================================================================//
-
-  type
-    TProcessorInformation = record
-      LogicalProcessorCount: UInt32;
-      ProcessorCoreCount: UInt32;
-    end;
-
-  type
-    TProcessorInformationEx = record
-      LogicalProcessorCount: UInt32;
-      ProcessorCoreCount: UInt32;
-    end;
 
     // ================================================================//
-  class function GetProcedureAddress(ModuleHandle: THandle;
-    const AProcedureName: String; var AFunctionFound: Boolean): Pointer; static;
-  class function IsGetLogicalProcessorInformationAvailable(): Boolean; static;
-  class function IsGetLogicalProcessorInformationExAvailable(): Boolean; static;
-  class function CountSetBits(ABitMask: NativeUInt): UInt32; static;
-  class function GetProcessorInfo(): TProcessorInformation; static;
-  class function GetProcessorInfoEx(): TProcessorInformationEx; static;
 
-  class function GetLogicalCPUCountWindows(): UInt32; static;
-  class function GetPhysicalCPUCountWindows(): UInt32; static;
+    type
+        TProcessorInformation = record
+            LogicalProcessorCount: Uint32;
+            ProcessorCoreCount: Uint32;
+        end;
+
+    type
+        TProcessorInformationEx = record
+            LogicalProcessorCount: Uint32;
+            ProcessorCoreCount: Uint32;
+        end;
+
+    // ================================================================//
+        class function GetProcedureAddress(ModuleHandle: THandle;
+            const AProcedureName: String; var AFunctionFound: Boolean): Pointer; STATIC;
+        class function IsGetLogicalProcessorInformationAvailable(): Boolean; STATIC;
+        class function IsGetLogicalProcessorInformationExAvailable(): Boolean; STATIC;
+        class function CountSetBits(ABitMask: Nativeuint): Uint32; STATIC;
+        class function GetProcessorInfo(): TProcessorInformation; STATIC;
+        class function GetProcessorInfoEx(): TProcessorInformationEx; STATIC;
+
+        class function GetLogicalCPUCountWindows(): Uint32; STATIC;
+        class function GetPhysicalCPUCountWindows(): Uint32; STATIC;
 {$ENDIF}
   // ================================================================//
 {$IFDEF NUMCPULIB_APPLE}
-  class function GetLogicalCPUCountApple(): UInt32; static;
-  class function GetPhysicalCPUCountApple(): UInt32; static;
+        class function GetLogicalCPUCountApple(): Uint32; STATIC;
+        class function GetPhysicalCPUCountApple(): Uint32; STATIC;
 {$ENDIF}
   // ================================================================//
 {$IFDEF NUMCPULIB_WILL_PARSE_DATA}
 
-  type
-    TNumCPULibStringArray = array of String;
+    type
+        TNumCPULibStringArray = array of String;
 
-  class function SplitString(const AInputString: String; ADelimiter: Char)
-    : TNumCPULibStringArray; static;
+        class function SplitString(const AInputString: String; ADelimiter: Char): TNumCPULibStringArray; STATIC;
 
-  class function ParseLastString(const AInputString: String): String; static;
-  class function ParseLastInt32(const AInputString: String; ADefault: Int32)
-    : Int32; static;
+        class function ParseLastString(const AInputString: String): String; STATIC;
+        class function ParseLastInt32(const AInputString: String; ADefault: Int32): Int32; STATIC;
 
-  class function BeginsWith(const AInputString, ASubString: string;
-    AIgnoreCase: Boolean; AOffset: Int32 = 1): Boolean; static;
+        class function BeginsWith(const AInputString, ASubString: String;
+            AIgnoreCase: Boolean; AOffset: Int32 = 1): Boolean; STATIC;
 {$ENDIF}
   // ================================================================//
 {$IFDEF NUMCPULIB_LINUX}
 
-  type
-    TLogicalProcessor = record
-    private
-    var
-      ProcessorNumber, PhysicalProcessorNumber, PhysicalPackageNumber: UInt32;
-    public
-      class function Create(AProcessorNumber, APhysicalProcessorNumber,
-        APhysicalPackageNumber: UInt32): TLogicalProcessor; static;
-    end;
+    type
+        TLogicalProcessor = record
+        PRIVATE
+        var
+            ProcessorNumber, PhysicalProcessorNumber, PhysicalPackageNumber: Uint32;
+        PUBLIC
+            class function Create(AProcessorNumber, APhysicalProcessorNumber,
+                APhysicalPackageNumber: Uint32): TLogicalProcessor; STATIC;
+        end;
 
-  class procedure ReadFileContents(const AFilePath: String;
-    var AOutputParameters: TStringList); static;
-  class function GetLogicalCPUCountLinux(): UInt32; static;
-  class function GetPhysicalCPUCountLinux(): UInt32; static;
+        class procedure ReadFileContents(const AFilePath: String;
+            var AOutputParameters: TStringList); STATIC;
+        class function GetLogicalCPUCountLinux(): Uint32; STATIC;
+        class function GetPhysicalCPUCountLinux(): Uint32; STATIC;
 {$ENDIF}
   // ================================================================//
 {$IFDEF NUMCPULIB_SOLARIS}
-  class procedure ExecuteAndParseProcessOutput(const ACallingProcess: String;
-    AInputParameters: TStringList; var AOutputParameters: TStringList);
-  class function GetLogicalCPUCountSolaris(): UInt32; static;
-  class function GetPhysicalCPUCountSolaris(): UInt32; static;
+        class procedure ExecuteAndParseProcessOutput(const ACallingProcess: String;
+            AInputParameters: TStringList; var AOutputParameters: TStringList);
+        class function GetLogicalCPUCountSolaris(): Uint32; STATIC;
+        class function GetPhysicalCPUCountSolaris(): Uint32; STATIC;
 {$ENDIF}
   // ================================================================//
 {$IFDEF NUMCPULIB_GENERIC_BSD}
    {$IF DEFINED(NETBSD) OR DEFINED(OPENBSD)}
       {$IF DEFINED(NETBSD)}
-      const
+    const
         HW_NCPUONLINE = 16; // defined in NetBSD >= 7.0
       {$ELSEIF DEFINED(OPENBSD)}
-      const
+    const
         HW_NCPUONLINE = 25; // defined in OpenBSD >= 6.4
       {$IFEND}
    {$IFEND}
-  class function GetLogicalCPUCountGenericBSD(): UInt32; static;
+        class function GetLogicalCPUCountGenericBSD(): Uint32; STATIC;
 {$ENDIF}
   // ================================================================//
 {$IFDEF NUMCPULIB_HAIKU}
-  class function GetLogicalCPUCountHaiku(): UInt32; static;
+        class function GetLogicalCPUCountHaiku(): Uint32; STATIC;
 {$ENDIF}
   // ================================================================//
 
-  class procedure Boot(); static;
-  class constructor NumCPULib();
+        class procedure Boot(); STATIC;
+        class constructor NumCPULib();
 
-  public
+    PUBLIC
 
     /// <summary>
     /// This function will get the number of logical cores. Sometimes this is
     /// different from the number of physical cores.
     /// </summary>
-    class function GetLogicalCPUCount(): UInt32; static;
+        class function GetLogicalCPUCount(): Uint32; STATIC;
 
     /// <summary>
     /// This function will get the number of physical cores.
     /// </summary>
-    class function GetPhysicalCPUCount(): UInt32; static;
-  end;
+        class function GetPhysicalCPUCount(): Uint32; STATIC;
+    end;
 
 {$IFDEF NUMCPULIB_HAS_SYSCONF}
 {$IFDEF FPC}
-  function sysconf(i: cint): clong; cdecl; external 'c' name 'sysconf';
+function sysconf(i: cint): clong; CDECL; EXTERNAL 'c' NAME 'sysconf';
 {$ENDIF}
 {$ENDIF}
 
 {$IFDEF NUMCPULIB_HAIKU}
-  const
-   B_FILE_NAME_LENGTH = 256;
-   B_OS_NAME_LENGTH = 32;
-  type
-   status_t = LongInt;
-   bigtime_t = Int64;
-   PSystemInfo = ^system_info;
-   system_info = record
-     boot_time: bigtime_t; // time of boot (usecs since 1/1/1970)
-     cpu_count: UInt32; // number of cpus
-     max_pages: UInt64;	// total # of accessible pages
-     used_pages: UInt64; // # of accessible pages in use
-     cached_pages: UInt64;
-     block_cache_pages:	UInt64;
-     ignored_pages: UInt64; // # of ignored/inaccessible pages
-     needed_memory: UInt64;
-     free_memory: UInt64;
-     max_swap_pages: UInt64;
-     free_swap_pages: UInt64;
-     page_faults: UInt32; // # of page faults
-     max_sems: UInt32;
-     used_sems: UInt32;
-     max_ports: UInt32;
-     used_ports: UInt32;
-     max_threads: UInt32;
-     used_threads: UInt32;
-     max_teams: UInt32;
-     used_teams: UInt32;
-     kernel_name: array[0 .. B_FILE_NAME_LENGTH - 1] of Byte;
-     kernel_build_date: array[0 .. B_OS_NAME_LENGTH - 1] of Byte;
-     kernel_build_time: array[0 .. B_OS_NAME_LENGTH - 1] of Byte;
-     kernel_version: Int64;
-     abi: UInt32; // the system API
-   end;
-  function get_system_info(info: PSystemInfo): status_t; cdecl; external 'root' name 'get_system_info';
+const
+    B_FILE_NAME_LENGTH = 256;
+    B_OS_NAME_LENGTH = 32;
+
+type
+    status_t = Longint;
+    bigtime_t = Int64;
+    PSystemInfo = ^system_info;
+
+    system_info = record
+        boot_time: bigtime_t; // time of boot (usecs since 1/1/1970)
+        cpu_count: Uint32; // number of cpus
+        max_pages: Uint64;    // total # of accessible pages
+        used_pages: Uint64; // # of accessible pages in use
+        cached_pages: Uint64;
+        block_cache_pages: Uint64;
+        ignored_pages: Uint64; // # of ignored/inaccessible pages
+        needed_memory: Uint64;
+        free_memory: Uint64;
+        max_swap_pages: Uint64;
+        free_swap_pages: Uint64;
+        page_faults: Uint32; // # of page faults
+        max_sems: Uint32;
+        used_sems: Uint32;
+        max_ports: Uint32;
+        used_ports: Uint32;
+        max_threads: Uint32;
+        used_threads: Uint32;
+        max_teams: Uint32;
+        used_teams: Uint32;
+        kernel_name: array[0 .. B_FILE_NAME_LENGTH - 1] of Byte;
+        kernel_build_date: array[0 .. B_OS_NAME_LENGTH - 1] of Byte;
+        kernel_build_time: array[0 .. B_OS_NAME_LENGTH - 1] of Byte;
+        kernel_version: Int64;
+        abi: Uint32; // the system API
+    end;
+
+function get_system_info(info: PSystemInfo): status_t; CDECL; EXTERNAL 'root' NAME 'get_system_info';
 {$ENDIF}
 
 
@@ -540,16 +539,16 @@ implementation
 class procedure TNumCPULib.Boot();
 begin
 {$IFDEF NUMCPULIB_MSWINDOWS}
-  FIsGetLogicalProcessorInformationAvailable :=
-    IsGetLogicalProcessorInformationAvailable();
-  FIsGetLogicalProcessorInformationAvailableEx :=
-    IsGetLogicalProcessorInformationExAvailable();
+    FIsGetLogicalProcessorInformationAvailable :=
+        IsGetLogicalProcessorInformationAvailable();
+    FIsGetLogicalProcessorInformationAvailableEx :=
+        IsGetLogicalProcessorInformationExAvailable();
 {$ENDIF}
 end;
 
 class constructor TNumCPULib.NumCPULib;
 begin
-  TNumCPULib.Boot();
+    TNumCPULib.Boot();
 end;
 
 // ================================================================//
@@ -564,17 +563,17 @@ begin
 {$IFDEF NUMCPULIB_LINUX}
 {$IFDEF NUMCPULIB_ARMCPU}
 {$IFDEF NUMCPULIB_ANDROID}
-  Result := 96; // _SC_NPROCESSORS_CONF
+    Result := 96; // _SC_NPROCESSORS_CONF
 {$ELSE}
   // Devices like RPI
-  Result := 83; // _SC_NPROCESSORS_CONF
+    Result := 83; // _SC_NPROCESSORS_CONF
 {$ENDIF}
 {$ELSE}
   // for non ARM Linux like CPU's
 {$IFDEF NUMCPULIB_ANDROID}
-  Result := 97; // _SC_NPROCESSORS_ONLN
+    Result := 97; // _SC_NPROCESSORS_ONLN
 {$ELSE}
-  Result := 84; // _SC_NPROCESSORS_ONLN
+    Result := 84; // _SC_NPROCESSORS_ONLN
 {$ENDIF}  // ENDIF NUMCPULIB_ANDROID
 
 {$ENDIF}  // ENDIF NUMCPULIB_ARMCPU
@@ -583,773 +582,784 @@ begin
   // NUMCPULIB_GENERIC_BSD
 {$IFDEF NUMCPULIB_GENERIC_BSD}
 {$IF DEFINED(FREEBSD) OR DEFINED(DRAGONFLY)}
-  Result := 58; // _SC_NPROCESSORS_ONLN
+    Result := 58; // _SC_NPROCESSORS_ONLN
 {$IFEND}
 {$IFDEF OPENBSD}
-  Result := 503; // _SC_NPROCESSORS_ONLN
+    Result := 503; // _SC_NPROCESSORS_ONLN
 {$ENDIF}
 {$IFDEF NETBSD}
-  Result := 1002; // _SC_NPROCESSORS_ONLN
+    Result := 1002; // _SC_NPROCESSORS_ONLN
 {$ENDIF}
 {$ENDIF} // ENDIF NUMCPULIB_GENERIC_BSD
   // ****************************************************************//
   // NUMCPULIB_SOLARIS
 {$IFDEF NUMCPULIB_SOLARIS}
 {$IFDEF NUMCPULIB_ARMCPU}
-  Result := 14; // _SC_NPROCESSORS_CONF
+    Result := 14; // _SC_NPROCESSORS_CONF
 {$ELSE}
-  Result := 15; // _SC_NPROCESSORS_ONLN
+    Result := 15; // _SC_NPROCESSORS_ONLN
 {$ENDIF}
 {$ENDIF}  // ENDIF NUMCPULIB_SOLARIS
   // ****************************************************************//
   // NUMCPULIB_APPLE
 {$IFDEF NUMCPULIB_APPLE}
 {$IFDEF NUMCPULIB_ARMCPU}
-  Result := 57; // _SC_NPROCESSORS_CONF
+    Result := 57; // _SC_NPROCESSORS_CONF
 {$ELSE}
-  Result := 58; // _SC_NPROCESSORS_ONLN
+    Result := 58; // _SC_NPROCESSORS_ONLN
 {$ENDIF}
 {$ENDIF}  // ENDIF NUMCPULIB_APPLE
 end;
+
 {$ENDIF}
 // ================================================================//
 {$IFDEF NUMCPULIB_HAS_SYSCTL}
 {$IFDEF NUMCPULIB_APPLE}
 
 class function TNumCPULib.GetCPUCountUsingSysCtlByName
-  (const AName: String): UInt32;
+    (const AName: String): Uint32;
 var
-  LLen: size_t;
+    LLen: size_t;
 begin
-  LLen := System.SizeOf(Result);
+    LLen := System.SizeOf(Result);
 {$IFDEF FPC}
-  fpsysctlbyname(PChar(AName), @Result, @LLen, nil, 0);
+    fpsysctlbyname(Pchar(AName), @Result, @LLen, NIL, 0);
 {$ELSE}
-  SysCtlByName(PAnsiChar(AName), @Result, @LLen, nil, 0);
+    SysCtlByName(Pansichar(AName), @Result, @LLen, NIL, 0);
 {$ENDIF}
 end;
+
 {$ENDIF}
 
-class function TNumCPULib.SysCtlInternal(AMib: TMib; out AOut: UInt32): Boolean;
+class function TNumCPULib.SysCtlInternal(AMib: TMib; out AOut: Uint32): Boolean;
 var
-  LSizeOut: size_t;
-  LRet: Int32;
+    LSizeOut: size_t;
+    LRet: Int32;
 begin
-  LSizeOut := System.SizeOf(AOut);
+    LSizeOut := System.SizeOf(AOut);
 {$IFDEF FPC}
 {$IF DEFINED(VER3_0_0) OR DEFINED(VER3_0_2)}
-  LRet := fpsysctl(PChar(@AMib), System.Length(AMib), @AOut, @LSizeOut, nil, 0);
+    LRet := fpsysctl(Pchar(@AMib), System.Length(AMib), @AOut, @LSizeOut, NIL, 0);
 {$ELSE}
-  LRet := fpsysctl(@AMib, System.Length(AMib), @AOut, @LSizeOut, nil, 0);
+    LRet := fpsysctl(@AMib, System.Length(AMib), @AOut, @LSizeOut, NIL, 0);
 {$IFEND}
 {$ELSE}
-  LRet := sysctl(@AMib, System.Length(AMib), @AOut, @LSizeOut, nil, 0);
+    LRet := sysctl(@AMib, System.Length(AMib), @AOut, @LSizeOut, NIL, 0);
 {$ENDIF}
-  Result := not(LRet < 0);
+    Result := not (LRet < 0);
 end;
 
-class function TNumCPULib.GetLogicalCPUCountUsingSysCtl(): UInt32;
+class function TNumCPULib.GetLogicalCPUCountUsingSysCtl(): Uint32;
 var
-  LMib: TMib;
+    LMib: TMib;
 begin
-  LMib[0] := CTL_HW;
+    LMib[0] := CTL_HW;
 {$IF DEFINED(NETBSD) OR DEFINED(OPENBSD)}
   // Try hw.ncpuonline first because hw.ncpu would report a number twice as
   // high as the actual CPUs running on OpenBSD >= 6.4 with hyperthreading
   // disabled (hw.smt=0).
-  LMib[1] := HW_NCPUONLINE;
-  if SysCtlInternal(LMib, Result) then
-  begin
-   Exit;
-  end;
+    LMib[1] := HW_NCPUONLINE;
+    if SysCtlInternal(LMib, Result) then
+    begin
+        Exit;
+    end;
 
-  LMib[1] := HW_NCPU;
-  if SysCtlInternal(LMib, Result) then
-  begin
-   Exit;
-  end;
+    LMib[1] := HW_NCPU;
+    if SysCtlInternal(LMib, Result) then
+    begin
+        Exit;
+    end;
 {$ELSE}
-  LMib[1] := HW_NCPU;
-  SysCtlInternal(LMib, Result);
+    LMib[1] := HW_NCPU;
+    SysCtlInternal(LMib, Result);
 {$IFEND}
 end;
+
 {$ENDIF}
 // ================================================================//
 {$IFDEF NUMCPULIB_MSWINDOWS}
 
-class function TNumCPULib.CountSetBits(ABitMask: NativeUInt): UInt32;
+class function TNumCPULib.CountSetBits(ABitMask: Nativeuint): Uint32;
 var
-  LShift, LIdx: UInt32;
-  LBitTest: NativeUInt;
+    LShift, LIdx: Uint32;
+    LBitTest: Nativeuint;
 begin
-  LShift := (System.SizeOf(NativeUInt) * 8) - 1;
-  Result := 0;
-  LBitTest := NativeUInt(1) shl LShift;
-  LIdx := 0;
-  while LIdx <= LShift do
-  begin
-    if (ABitMask and LBitTest) <> 0 then
+    LShift := (System.SizeOf(Nativeuint) * 8) - 1;
+    Result := 0;
+    LBitTest := Nativeuint(1) shl LShift;
+    LIdx := 0;
+    while LIdx <= LShift do
     begin
-      System.Inc(Result);
+        if (ABitMask and LBitTest) <> 0 then
+        begin
+            System.Inc(Result);
+        end;
+        LBitTest := LBitTest shr 1;
+        System.Inc(LIdx);
     end;
-    LBitTest := LBitTest shr 1;
-    System.Inc(LIdx);
-  end;
 end;
 
 class function TNumCPULib.GetProcessorInfo(): TProcessorInformation;
 var
-  LReturnLength: DWORD;
-  LProcInfo, LCurrentInfo: PSystemLogicalProcessorInformation;
+    LReturnLength: DWORD;
+    LProcInfo, LCurrentInfo: PSystemLogicalProcessorInformation;
 begin
-  LReturnLength := 0;
-  Result := Default (TProcessorInformation);
+    LReturnLength := 0;
+    Result := Default(TProcessorInformation);
 
-  FGetLogicalProcessorInformation(nil, LReturnLength);
-  if GetLastError <> ERROR_INSUFFICIENT_BUFFER then
-  begin
-    RaiseLastOSError;
-  end
-  else
-  begin
-    System.GetMem(LProcInfo, LReturnLength);
-    try
-      if not FGetLogicalProcessorInformation(LProcInfo, LReturnLength) then
-      begin
+    FGetLogicalProcessorInformation(NIL, LReturnLength);
+    if GetLastError <> ERROR_INSUFFICIENT_BUFFER then
+    begin
         RaiseLastOSError;
-      end
-      else
-      begin
-        LCurrentInfo := LProcInfo;
-        while (NativeUInt(LCurrentInfo) - NativeUInt(LProcInfo)) <
-          LReturnLength do
-        begin
-          case LCurrentInfo.Relationship of
-            RelationProcessorCore:
-              begin
-                System.Inc(Result.ProcessorCoreCount);
-                Result.LogicalProcessorCount := Result.LogicalProcessorCount +
-                  CountSetBits(LCurrentInfo.ProcessorMask);
-              end;
-          end;
-          LCurrentInfo := PSystemLogicalProcessorInformation
-            (NativeUInt(LCurrentInfo) +
-            System.SizeOf(TSystemLogicalProcessorInformation));
+    end
+    else
+    begin
+        System.GetMem(LProcInfo, LReturnLength);
+        try
+            if not FGetLogicalProcessorInformation(LProcInfo, LReturnLength) then
+            begin
+                RaiseLastOSError;
+            end
+            else
+            begin
+                LCurrentInfo := LProcInfo;
+                while (Nativeuint(LCurrentInfo) - Nativeuint(LProcInfo)) <
+                    LReturnLength do
+                begin
+                    case LCurrentInfo.Relationship of
+                        RelationProcessorCore:
+                        begin
+                            System.Inc(Result.ProcessorCoreCount);
+                            Result.LogicalProcessorCount := Result.LogicalProcessorCount +
+                                CountSetBits(LCurrentInfo.ProcessorMask);
+                        end;
+                    end;
+                    LCurrentInfo := PSystemLogicalProcessorInformation
+                        (Nativeuint(LCurrentInfo) +
+                        System.SizeOf(TSystemLogicalProcessorInformation));
+                end;
+            end;
+        finally
+            System.FreeMem(LProcInfo);
         end;
-      end;
-    finally
-      System.FreeMem(LProcInfo);
     end;
-  end;
 end;
 
 class function TNumCPULib.GetProcessorInfoEx: TProcessorInformationEx;
 var
-  LReturnLength: DWORD;
-  LProcInfo, LCurrentInfo: PSystemLogicalProcessorInformationEx;
-  LIdx: Int32;
+    LReturnLength: DWORD;
+    LProcInfo, LCurrentInfo: PSystemLogicalProcessorInformationEx;
+    LIdx: Int32;
 begin
-  LReturnLength := 0;
-  Result := Default (TProcessorInformationEx);
+    LReturnLength := 0;
+    Result := Default(TProcessorInformationEx);
 
-  FGetLogicalProcessorInformationEx(RelationAll, nil, LReturnLength);
-  if GetLastError <> ERROR_INSUFFICIENT_BUFFER then
-  begin
-    RaiseLastOSError;
-  end
-  else
-  begin
-    System.GetMem(LProcInfo, LReturnLength);
-    try
-      if not FGetLogicalProcessorInformationEx(RelationAll, LProcInfo,
-        LReturnLength) then
-      begin
+    FGetLogicalProcessorInformationEx(RelationAll, NIL, LReturnLength);
+    if GetLastError <> ERROR_INSUFFICIENT_BUFFER then
+    begin
         RaiseLastOSError;
-      end
-      else
-      begin
-        LCurrentInfo := LProcInfo;
-        while (NativeUInt(LCurrentInfo) - NativeUInt(LProcInfo)) <
-          LReturnLength do
-        begin
-          case LCurrentInfo.Relationship of
-            RelationProcessorCore:
-              begin
-                System.Inc(Result.ProcessorCoreCount);
-                for LIdx := 0 to System.Pred
-                  (LCurrentInfo.Processor.GroupCount) do
+    end
+    else
+    begin
+        System.GetMem(LProcInfo, LReturnLength);
+        try
+            if not FGetLogicalProcessorInformationEx(RelationAll, LProcInfo,
+                LReturnLength) then
+            begin
+                RaiseLastOSError;
+            end
+            else
+            begin
+                LCurrentInfo := LProcInfo;
+                while (Nativeuint(LCurrentInfo) - Nativeuint(LProcInfo)) <
+                    LReturnLength do
                 begin
-                  Result.LogicalProcessorCount := Result.LogicalProcessorCount +
-                    CountSetBits(LCurrentInfo.Processor.GroupMask[LIdx].Mask);
+                    case LCurrentInfo.Relationship of
+                        RelationProcessorCore:
+                        begin
+                            System.Inc(Result.ProcessorCoreCount);
+                            for LIdx := 0 to System.Pred
+                                (LCurrentInfo.Processor.GroupCount) do
+                            begin
+                                Result.LogicalProcessorCount := Result.LogicalProcessorCount +
+                                    CountSetBits(LCurrentInfo.Processor.GroupMask[LIdx].Mask);
+                            end;
+                        end;
+                    end;
+                    LCurrentInfo := PSystemLogicalProcessorInformationEx
+                        (Nativeuint(LCurrentInfo) + LCurrentInfo.Size);
                 end;
-              end;
-          end;
-          LCurrentInfo := PSystemLogicalProcessorInformationEx
-            (NativeUInt(LCurrentInfo) + LCurrentInfo.Size);
+            end;
+        finally
+            System.FreeMem(LProcInfo);
         end;
-      end;
-    finally
-      System.FreeMem(LProcInfo);
     end;
-  end;
 end;
 
-class function TNumCPULib.GetLogicalCPUCountWindows(): UInt32;
+class function TNumCPULib.GetLogicalCPUCountWindows(): Uint32;
 var
-  LIdx: Int32;
-  LProcessAffinityMask, LSystemAffinityMask: DWORD_PTR;
-  LMask: DWORD;
-  LSystemInfo: SYSTEM_INFO;
-  LProcInfo: TProcessorInformation;
-  LProcInfoEx: TProcessorInformationEx;
+    LIdx: Int32;
+    LProcessAffinityMask, LSystemAffinityMask: DWORD_PTR;
+    LMask: DWORD;
+    LSystemInfo: SYSTEM_INFO;
+    LProcInfo: TProcessorInformation;
+    LProcInfoEx: TProcessorInformationEx;
 begin
-  if IsGetLogicalProcessorInformationExAvailable then
-  begin
-    LProcInfoEx := GetProcessorInfoEx;
-    Result := LProcInfoEx.LogicalProcessorCount;
-    Exit;
-  end;
-  if IsGetLogicalProcessorInformationAvailable then
-  begin
-    LProcInfo := GetProcessorInfo;
-    Result := LProcInfo.LogicalProcessorCount;
-    Exit;
-  end;
+    if IsGetLogicalProcessorInformationExAvailable then
+    begin
+        LProcInfoEx := GetProcessorInfoEx;
+        Result := LProcInfoEx.LogicalProcessorCount;
+        Exit;
+    end;
+    if IsGetLogicalProcessorInformationAvailable then
+    begin
+        LProcInfo := GetProcessorInfo;
+        Result := LProcInfo.LogicalProcessorCount;
+        Exit;
+    end;
   // fallback if non of the above are available
   // returns total number of processors available to system including logical hyperthreaded processors
-  LProcessAffinityMask := 0;
-  LSystemAffinityMask := 0;
-  if GetProcessAffinityMask(GetCurrentProcess, LProcessAffinityMask,
-    LSystemAffinityMask) then
-  begin
-    Result := 0;
-    for LIdx := 0 to 31 do
+    LProcessAffinityMask := 0;
+    LSystemAffinityMask := 0;
+    if GetProcessAffinityMask(GetCurrentProcess, LProcessAffinityMask,
+        LSystemAffinityMask) then
     begin
-      LMask := DWORD(1) shl LIdx;
-      if (LProcessAffinityMask and LMask) <> 0 then
-      begin
-        System.Inc(Result);
-      end;
-    end;
-  end
-  else
-  begin
+        Result := 0;
+        for LIdx := 0 to 31 do
+        begin
+            LMask := DWORD(1) shl LIdx;
+            if (LProcessAffinityMask and LMask) <> 0 then
+            begin
+                System.Inc(Result);
+            end;
+        end;
+    end
+    else
+    begin
     // can't get the affinity mask so we just report the total number of processors
-    LSystemInfo := Default (SYSTEM_INFO);
-    GetSystemInfo(LSystemInfo);
-    Result := LSystemInfo.dwNumberOfProcessors;
-  end;
+        LSystemInfo := Default(SYSTEM_INFO);
+        GetSystemInfo(LSystemInfo);
+        Result := LSystemInfo.dwNumberOfProcessors;
+    end;
 end;
 
-class function TNumCPULib.GetPhysicalCPUCountWindows(): UInt32;
+class function TNumCPULib.GetPhysicalCPUCountWindows(): Uint32;
 var
-  LProcInfo: TProcessorInformation;
-  LProcInfoEx: TProcessorInformationEx;
+    LProcInfo: TProcessorInformation;
+    LProcInfoEx: TProcessorInformationEx;
 begin
-  Result := 0;
-  if IsGetLogicalProcessorInformationExAvailable then
-  begin
-    LProcInfoEx := GetProcessorInfoEx;
-    Result := LProcInfoEx.ProcessorCoreCount;
-    Exit;
-  end;
-  if IsGetLogicalProcessorInformationAvailable then
-  begin
-    LProcInfo := GetProcessorInfo;
-    Result := LProcInfo.ProcessorCoreCount;
-    Exit;
-  end;
+    Result := 0;
+    if IsGetLogicalProcessorInformationExAvailable then
+    begin
+        LProcInfoEx := GetProcessorInfoEx;
+        Result := LProcInfoEx.ProcessorCoreCount;
+        Exit;
+    end;
+    if IsGetLogicalProcessorInformationAvailable then
+    begin
+        LProcInfo := GetProcessorInfo;
+        Result := LProcInfo.ProcessorCoreCount;
+        Exit;
+    end;
 end;
 
 class function TNumCPULib.GetProcedureAddress(ModuleHandle: THandle;
-  const AProcedureName: String; var AFunctionFound: Boolean): Pointer;
+    const AProcedureName: String; var AFunctionFound: Boolean): Pointer;
 begin
-  Result := GetProcAddress(ModuleHandle, PChar(AProcedureName));
-  if Result = Nil then
-  begin
-    AFunctionFound := False;
-  end;
+    Result := GetProcAddress(ModuleHandle, Pchar(AProcedureName));
+    if Result = NIL then
+    begin
+        AFunctionFound := FALSE;
+    end;
 end;
 
 class function TNumCPULib.IsGetLogicalProcessorInformationAvailable(): Boolean;
 var
-  ModuleHandle: THandle;
+    ModuleHandle: THandle;
 begin
-  Result := False;
-  ModuleHandle := SafeLoadLibrary(KERNEL32, SEM_FAILCRITICALERRORS);
-  if ModuleHandle <> 0 then
-  begin
-    Result := True;
-    FGetLogicalProcessorInformation := GetProcedureAddress(ModuleHandle,
-      'GetLogicalProcessorInformation', Result);
-  end;
+    Result := FALSE;
+    ModuleHandle := SafeLoadLibrary(KERNEL32, SEM_FAILCRITICALERRORS);
+    if ModuleHandle <> 0 then
+    begin
+        Result := TRUE;
+        FGetLogicalProcessorInformation := GetProcedureAddress(ModuleHandle,
+            'GetLogicalProcessorInformation', Result);
+    end;
 end;
 
 class function TNumCPULib.IsGetLogicalProcessorInformationExAvailable: Boolean;
 var
-  ModuleHandle: THandle;
+    ModuleHandle: THandle;
 begin
-  Result := False;
-  ModuleHandle := SafeLoadLibrary(KERNEL32, SEM_FAILCRITICALERRORS);
-  if ModuleHandle <> 0 then
-  begin
-    Result := True;
-    FGetLogicalProcessorInformationEx := GetProcedureAddress(ModuleHandle,
-      'GetLogicalProcessorInformationEx', Result);
-  end;
+    Result := FALSE;
+    ModuleHandle := SafeLoadLibrary(KERNEL32, SEM_FAILCRITICALERRORS);
+    if ModuleHandle <> 0 then
+    begin
+        Result := TRUE;
+        FGetLogicalProcessorInformationEx := GetProcedureAddress(ModuleHandle,
+            'GetLogicalProcessorInformationEx', Result);
+    end;
 end;
 
 {$ENDIF}
 // ================================================================//
 {$IFDEF NUMCPULIB_APPLE}
 
-class function TNumCPULib.GetLogicalCPUCountApple(): UInt32;
+class function TNumCPULib.GetLogicalCPUCountApple(): Uint32;
 var
-  LTempRes: Int32;
+    LTempRes: Int32;
 begin
 {$IF DEFINED(NUMCPULIB_MACOS)}
   // >= (Mac OS X 10.4+)
-  if NSAppKitVersionNumber >= 824 then // NSAppKitVersionNumber10_4
-  begin
-    LTempRes := sysconf(GetAppropriateSysConfNumber());
-  end
-  else
-  begin
+    if NSAppKitVersionNumber >= 824 then // NSAppKitVersionNumber10_4
+    begin
+        LTempRes := sysconf(GetAppropriateSysConfNumber());
+    end
+    else
+    begin
     // fallback for when sysconf API is not available
-    LTempRes := Int32(GetLogicalCPUCountUsingSysCtl());
-  end;
+        LTempRes := Int32(GetLogicalCPUCountUsingSysCtl());
+    end;
 {$ELSE}
-  LTempRes := sysconf(GetAppropriateSysConfNumber());
+    LTempRes := sysconf(GetAppropriateSysConfNumber());
 {$IFEND}
   // final fallback if all above fails
-  if LTempRes < 1 then
-  begin
-    Result := GetCPUCountUsingSysCtlByName('hw.logicalcpu');
-  end
-  else
-  begin
-    Result := UInt32(LTempRes);
-  end;
+    if LTempRes < 1 then
+    begin
+        Result := GetCPUCountUsingSysCtlByName('hw.logicalcpu');
+    end
+    else
+    begin
+        Result := Uint32(LTempRes);
+    end;
 end;
 
-class function TNumCPULib.GetPhysicalCPUCountApple(): UInt32;
+class function TNumCPULib.GetPhysicalCPUCountApple(): Uint32;
 begin
-  Result := GetCPUCountUsingSysCtlByName('hw.physicalcpu');
+    Result := GetCPUCountUsingSysCtlByName('hw.physicalcpu');
 end;
+
 {$ENDIF}
 // ================================================================//
 
 {$IFDEF NUMCPULIB_WILL_PARSE_DATA}
 
 class function TNumCPULib.SplitString(const AInputString: String;
-  ADelimiter: Char): TNumCPULibStringArray;
+    ADelimiter: Char): TNumCPULibStringArray;
 var
-  LPosStart, LPosDel, LSplitPoints, LIdx, LLowIndex, LHighIndex, LLength: Int32;
+    LPosStart, LPosDel, LSplitPoints, LIdx, LLowIndex, LHighIndex, LLength: Int32;
 begin
-  Result := Nil;
-  if AInputString <> '' then
-  begin
-    { Determine the length of the resulting array }
-    LLowIndex := 1;
-    LHighIndex := System.Length(AInputString);
-    LSplitPoints := 0;
-    for LIdx := LLowIndex to LHighIndex do
+    Result := NIL;
+    if AInputString <> '' then
     begin
-      if (ADelimiter = AInputString[LIdx]) then
-      begin
-        System.Inc(LSplitPoints);
-      end;
-    end;
+    { Determine the length of the resulting array }
+        LLowIndex := 1;
+        LHighIndex := System.Length(AInputString);
+        LSplitPoints := 0;
+        for LIdx := LLowIndex to LHighIndex do
+        begin
+            if (ADelimiter = AInputString[LIdx]) then
+            begin
+                System.Inc(LSplitPoints);
+            end;
+        end;
 
-    System.SetLength(Result, LSplitPoints + 1);
+        System.SetLength(Result, LSplitPoints + 1);
 
     { Split the string and fill the resulting array }
 
-    LIdx := 0;
-    LLength := System.Length(ADelimiter);
-    LPosStart := 1;
-    LPosDel := System.Pos(ADelimiter, AInputString);
-    while LPosDel > 0 do
-    begin
-      Result[LIdx] := System.Copy(AInputString, LPosStart, LPosDel - LPosStart);
-      LPosStart := LPosDel + LLength;
-      LPosDel := PosEx(ADelimiter, AInputString, LPosStart);
-      System.Inc(LIdx);
+        LIdx := 0;
+        LLength := System.Length(ADelimiter);
+        LPosStart := 1;
+        LPosDel := System.Pos(ADelimiter, AInputString);
+        while LPosDel > 0 do
+        begin
+            Result[LIdx] := System.Copy(AInputString, LPosStart, LPosDel - LPosStart);
+            LPosStart := LPosDel + LLength;
+            LPosDel := PosEx(ADelimiter, AInputString, LPosStart);
+            System.Inc(LIdx);
+        end;
+        Result[LIdx] := System.Copy(AInputString, LPosStart,
+            System.Length(AInputString));
     end;
-    Result[LIdx] := System.Copy(AInputString, LPosStart,
-      System.Length(AInputString));
-  end;
 end;
 
 class function TNumCPULib.ParseLastString(const AInputString: String): String;
 var
-  LSplitResult: TNumCPULibStringArray;
+    LSplitResult: TNumCPULibStringArray;
 begin
-  LSplitResult := SplitString(AInputString, ' ');
-  if (System.Length(LSplitResult) < 1) then
-  begin
-    Result := Trim(AInputString);
-  end
-  else
-  begin
-    Result := Trim(LSplitResult[System.Length(LSplitResult) - 1]);
-  end;
-end;
-
-class function TNumCPULib.ParseLastInt32(const AInputString: String;
-  ADefault: Int32): Int32;
-var
-  LLocalString: String;
-begin
-  LLocalString := ParseLastString(AInputString);
-  if BeginsWith(LowerCase(LLocalString), '0x', False) then
-  begin
-    Result := StrToIntDef(StringReplace(LLocalString, '0x', '$',
-      [rfReplaceAll, rfIgnoreCase]), ADefault);
-  end
-  else
-  begin
-    Result := StrToIntDef(LLocalString, ADefault);
-  end;
-end;
-
-class function TNumCPULib.BeginsWith(const AInputString, ASubString: String;
-  AIgnoreCase: Boolean; AOffset: Int32): Boolean;
-var
-  LIdx: Int32;
-  LPtrInputString, LPtrSubString: PChar;
-begin
-  LIdx := System.Length(ASubString);
-  Result := LIdx > 0;
-  LPtrInputString := PChar(AInputString);
-  System.Inc(LPtrInputString, AOffset - 1);
-  LPtrSubString := PChar(ASubString);
-  if Result then
-  begin
-    if AIgnoreCase then
+    LSplitResult := SplitString(AInputString, ' ');
+    if (System.Length(LSplitResult) < 1) then
     begin
-      Result := StrLiComp(LPtrSubString, LPtrInputString, LIdx) = 0
+        Result := Trim(AInputString);
     end
     else
     begin
-      Result := StrLComp(LPtrSubString, LPtrInputString, LIdx) = 0
+        Result := Trim(LSplitResult[System.Length(LSplitResult) - 1]);
     end;
-  end;
 end;
+
+class function TNumCPULib.ParseLastInt32(const AInputString: String;
+    ADefault: Int32): Int32;
+var
+    LLocalString: String;
+begin
+    LLocalString := ParseLastString(AInputString);
+    if BeginsWith(LowerCase(LLocalString), '0x', FALSE) then
+    begin
+        Result := StrToIntDef(StringReplace(LLocalString, '0x', '$',
+            [rfReplaceAll, rfIgnoreCase]), ADefault);
+    end
+    else
+    begin
+        Result := StrToIntDef(LLocalString, ADefault);
+    end;
+end;
+
+class function TNumCPULib.BeginsWith(const AInputString, ASubString: String;
+    AIgnoreCase: Boolean; AOffset: Int32): Boolean;
+var
+    LIdx: Int32;
+    LPtrInputString, LPtrSubString: Pchar;
+begin
+    LIdx := System.Length(ASubString);
+    Result := LIdx > 0;
+    LPtrInputString := Pchar(AInputString);
+    System.Inc(LPtrInputString, AOffset - 1);
+    LPtrSubString := Pchar(ASubString);
+    if Result then
+    begin
+        if AIgnoreCase then
+        begin
+            Result := StrLiComp(LPtrSubString, LPtrInputString, LIdx) = 0
+        end
+        else
+        begin
+            Result := StrLComp(LPtrSubString, LPtrInputString, LIdx) = 0
+        end;
+    end;
+end;
+
 {$ENDIF}
 // ================================================================//
 
 {$IFDEF NUMCPULIB_LINUX}
 
 class function TNumCPULib.TLogicalProcessor.Create(AProcessorNumber,
-  APhysicalProcessorNumber, APhysicalPackageNumber: UInt32): TLogicalProcessor;
+    APhysicalProcessorNumber, APhysicalPackageNumber: Uint32): TLogicalProcessor;
 begin
-  Result := Default (TLogicalProcessor);
-  Result.ProcessorNumber := AProcessorNumber;
-  Result.PhysicalProcessorNumber := APhysicalProcessorNumber;
-  Result.PhysicalPackageNumber := APhysicalPackageNumber;
+    Result := Default(TLogicalProcessor);
+    Result.ProcessorNumber := AProcessorNumber;
+    Result.PhysicalProcessorNumber := APhysicalProcessorNumber;
+    Result.PhysicalPackageNumber := APhysicalPackageNumber;
 end;
 
 class procedure TNumCPULib.ReadFileContents(const AFilePath: String;
-  var AOutputParameters: TStringList);
+    var AOutputParameters: TStringList);
 const
-  BUF_SIZE = 2048; // Buffer size for reading the output in chunks
+    BUF_SIZE = 2048; // Buffer size for reading the output in chunks
 var
-  LOutputStream: TStream;
-  LFileStream: TFileStream;
-  LBytesRead: LongInt;
-  LBuffer: array [0 .. BUF_SIZE - 1] of Byte;
+    LOutputStream: TStream;
+    LFileStream: TFileStream;
+    LBytesRead: Longint;
+    LBuffer: array [0 .. BUF_SIZE - 1] of Byte;
 begin
-  if SysUtils.FileExists(AFilePath) then
-  begin
-    LFileStream := TFileStream.Create(AFilePath, fmOpenRead);
-    try
-      LOutputStream := TMemoryStream.Create;
-      try
+    if SysUtils.FileExists(AFilePath) then
+    begin
+        LFileStream := TFileStream.Create(AFilePath, fmOpenRead);
+        try
+            LOutputStream := TMemoryStream.Create;
+            try
         // All data from file is read in a loop until no more data is available
-        repeat
+                repeat
           // Get the new data from the file to a maximum of the LBuffer size that was allocated.
           // Note that all read(...) calls will block except for the last one, which returns 0 (zero).
-          LBytesRead := LFileStream.Read(LBuffer, BUF_SIZE);
+                    LBytesRead := LFileStream.Read(LBuffer, BUF_SIZE);
 
           // Add the bytes that were read to the stream for later usage
-          LOutputStream.Write(LBuffer, LBytesRead)
+                    LOutputStream.Write(LBuffer, LBytesRead)
 
-        until LBytesRead = 0; // Stop if no more data is available
+                until LBytesRead = 0; // Stop if no more data is available
 
         // Required to make sure all data is copied from the start
-        LOutputStream.Position := 0;
-        AOutputParameters.LoadFromStream(LOutputStream);
-      finally
-        LOutputStream.Free;
-      end;
-    finally
-      LFileStream.Free;
+                LOutputStream.Position := 0;
+                AOutputParameters.LoadFromStream(LOutputStream);
+            finally
+                LOutputStream.Free;
+            end;
+        finally
+            LFileStream.Free;
+        end;
     end;
-  end;
 end;
 
-class function TNumCPULib.GetLogicalCPUCountLinux(): UInt32;
+class function TNumCPULib.GetLogicalCPUCountLinux(): Uint32;
 begin
-  Result := UInt32(sysconf(GetAppropriateSysConfNumber()));
+    Result := Uint32(sysconf(GetAppropriateSysConfNumber()));
 end;
 
-class function TNumCPULib.GetPhysicalCPUCountLinux(): UInt32;
+class function TNumCPULib.GetPhysicalCPUCountLinux(): Uint32;
 var
-  LProcCpuInfos, LPhysicalProcessorsDetails: TStringList;
-  LIdx, LJIdx, LLogicalProcessorsIdx: Int32;
-  LCurrentProcessor, LCurrentCore, LCurrentPackage: UInt32;
-  LFirst: Boolean;
-  LLogicalProcessors: array of TLogicalProcessor;
-  LogicalProcessor: TLogicalProcessor;
-  LLineProcCpuInfo: String;
+    LProcCpuInfos, LPhysicalProcessorsDetails: TStringList;
+    LIdx, LJIdx, LLogicalProcessorsIdx: Int32;
+    LCurrentProcessor, LCurrentCore, LCurrentPackage: Uint32;
+    LFirst: Boolean;
+    LLogicalProcessors: array of TLogicalProcessor;
+    LogicalProcessor: TLogicalProcessor;
+    LLineProcCpuInfo: String;
 begin
-  LProcCpuInfos := TStringList.Create();
-  LCurrentProcessor := 0;
-  LCurrentCore := 0;
-  LCurrentPackage := 0;
-  LFirst := True;
-  try
-    ReadFileContents('/proc/cpuinfo', LProcCpuInfos);
-    System.SetLength(LLogicalProcessors, LProcCpuInfos.Count);
+    LProcCpuInfos := TStringList.Create();
+    LCurrentProcessor := 0;
+    LCurrentCore := 0;
+    LCurrentPackage := 0;
+    LFirst := TRUE;
+    try
+        ReadFileContents('/proc/cpuinfo', LProcCpuInfos);
+        System.SetLength(LLogicalProcessors, LProcCpuInfos.Count);
     // allocate enough space
-    LLogicalProcessorsIdx := 0;
-    for LIdx := 0 to System.Pred(LProcCpuInfos.Count) do
-    begin
-      // Count logical processors
-      LLineProcCpuInfo := LProcCpuInfos[LIdx];
-      if (BeginsWith(LLineProcCpuInfo, 'processor', False)) then
-      begin
-        if (not LFirst) then
+        LLogicalProcessorsIdx := 0;
+        for LIdx := 0 to System.Pred(LProcCpuInfos.Count) do
         begin
-          LLogicalProcessors[LLogicalProcessorsIdx] :=
+      // Count logical processors
+            LLineProcCpuInfo := LProcCpuInfos[LIdx];
+            if (BeginsWith(LLineProcCpuInfo, 'processor', FALSE)) then
+            begin
+                if (not LFirst) then
+                begin
+                    LLogicalProcessors[LLogicalProcessorsIdx] :=
+                        TLogicalProcessor.Create(LCurrentProcessor, LCurrentCore,
+                        LCurrentPackage);
+                    System.Inc(LLogicalProcessorsIdx);
+                end
+                else
+                begin
+                    LFirst := FALSE;
+                end;
+                LCurrentProcessor := Uint32(ParseLastInt32(LLineProcCpuInfo, 0));
+            end
+            else
+            if (BeginsWith(LLineProcCpuInfo, 'core id', FALSE) or
+                BeginsWith(LLineProcCpuInfo, 'cpu number', FALSE)) then
+            begin
+        // Count unique combinations of core id and physical id.
+                LCurrentCore := Uint32(ParseLastInt32(LLineProcCpuInfo, 0));
+            end
+            else
+            if (BeginsWith(LLineProcCpuInfo, 'physical id', FALSE)) then
+            begin
+                LCurrentPackage := Uint32(ParseLastInt32(LLineProcCpuInfo, 0));
+            end;
+        end;
+
+        LLogicalProcessors[LLogicalProcessorsIdx] :=
             TLogicalProcessor.Create(LCurrentProcessor, LCurrentCore,
             LCurrentPackage);
-          System.Inc(LLogicalProcessorsIdx);
-        end
-        else
-        begin
-          LFirst := False;
-        end;
-        LCurrentProcessor := UInt32(ParseLastInt32(LLineProcCpuInfo, 0));
-      end
-      else if (BeginsWith(LLineProcCpuInfo, 'core id', False) or
-        BeginsWith(LLineProcCpuInfo, 'cpu number', False)) then
-      begin
-        // Count unique combinations of core id and physical id.
-        LCurrentCore := UInt32(ParseLastInt32(LLineProcCpuInfo, 0));
-      end
-      else if (BeginsWith(LLineProcCpuInfo, 'physical id', False)) then
-      begin
-        LCurrentPackage := UInt32(ParseLastInt32(LLineProcCpuInfo, 0));
-      end;
-    end;
-
-    LLogicalProcessors[LLogicalProcessorsIdx] :=
-      TLogicalProcessor.Create(LCurrentProcessor, LCurrentCore,
-      LCurrentPackage);
-    System.Inc(LLogicalProcessorsIdx);
+        System.Inc(LLogicalProcessorsIdx);
     // reduce to used size
-    System.SetLength(LLogicalProcessors, LLogicalProcessorsIdx);
-    LPhysicalProcessorsDetails := TStringList.Create();
-    LPhysicalProcessorsDetails.Sorted := True;
-    LPhysicalProcessorsDetails.Duplicates := dupIgnore;
-    try
-      for LJIdx := 0 to System.Pred(System.Length(LLogicalProcessors)) do
-      begin
-        LogicalProcessor := LLogicalProcessors[LJIdx];
-        LPhysicalProcessorsDetails.Add
-          (Format('%u:%u', [LogicalProcessor.PhysicalProcessorNumber,
-          LogicalProcessor.PhysicalPackageNumber]));
-      end;
+        System.SetLength(LLogicalProcessors, LLogicalProcessorsIdx);
+        LPhysicalProcessorsDetails := TStringList.Create();
+        LPhysicalProcessorsDetails.Sorted := TRUE;
+        LPhysicalProcessorsDetails.Duplicates := dupIgnore;
+        try
+            for LJIdx := 0 to System.Pred(System.Length(LLogicalProcessors)) do
+            begin
+                LogicalProcessor := LLogicalProcessors[LJIdx];
+                LPhysicalProcessorsDetails.Add
+                (Format('%u:%u', [LogicalProcessor.PhysicalProcessorNumber,
+                    LogicalProcessor.PhysicalPackageNumber]));
+            end;
       // LogicalProcessorCount := System.Length(LLogicalProcessors);
-      Result := UInt32(LPhysicalProcessorsDetails.Count);
+            Result := Uint32(LPhysicalProcessorsDetails.Count);
+        finally
+            LPhysicalProcessorsDetails.Free;
+        end;
     finally
-      LPhysicalProcessorsDetails.Free;
+        LProcCpuInfos.Free;
     end;
-  finally
-    LProcCpuInfos.Free;
-  end;
 end;
+
 {$ENDIF}
 // ================================================================//
 {$IFDEF NUMCPULIB_SOLARIS}
 
-class procedure TNumCPULib.ExecuteAndParseProcessOutput(const ACallingProcess
-  : String; AInputParameters: TStringList; var AOutputParameters: TStringList);
+class procedure TNumCPULib.ExecuteAndParseProcessOutput(const ACallingProcess: String; AInputParameters: TStringList; var AOutputParameters: TStringList);
 const
-  BUF_SIZE = 2048; // Buffer size for reading the output in chunks
+    BUF_SIZE = 2048; // Buffer size for reading the output in chunks
 var
-  LProcess: TProcess;
-  LOutputStream: TStream;
-  LBytesRead: LongInt;
-  LBuffer: array [0 .. BUF_SIZE - 1] of Byte;
+    LProcess: TProcess;
+    LOutputStream: TStream;
+    LBytesRead: Longint;
+    LBuffer: array [0 .. BUF_SIZE - 1] of Byte;
 begin
-  LProcess := TProcess.Create(nil);
-
-  try
-    LProcess.Executable := ACallingProcess;
-    LProcess.Parameters.AddStrings(AInputParameters);
-
-    LProcess.Options := LProcess.Options + [poWaitOnExit, poUsePipes];
-
-    LProcess.Execute;
-
-    // Create a stream object to store the generated output in.
-    LOutputStream := TMemoryStream.Create;
+    LProcess := TProcess.Create(NIL);
 
     try
+        LProcess.Executable := ACallingProcess;
+        LProcess.Parameters.AddStrings(AInputParameters);
+
+        LProcess.Options := LProcess.Options + [poWaitOnExit, poUsePipes];
+
+        LProcess.Execute;
+
+    // Create a stream object to store the generated output in.
+        LOutputStream := TMemoryStream.Create;
+
+        try
       // All generated output from LProcess is read in a loop until no more data is available
-      repeat
+            repeat
         // Get the new data from the process to a maximum of the LBuffer size that was allocated.
         // Note that all read(...) calls will block except for the last one, which returns 0 (zero).
-        LBytesRead := LProcess.Output.Read(LBuffer, BUF_SIZE);
+                LBytesRead := LProcess.Output.Read(LBuffer, BUF_SIZE);
 
         // Add the bytes that were read to the stream for later usage
-        LOutputStream.Write(LBuffer, LBytesRead)
+                LOutputStream.Write(LBuffer, LBytesRead)
 
-      until LBytesRead = 0; // Stop if no more data is available
+            until LBytesRead = 0; // Stop if no more data is available
 
       // Required to make sure all data is copied from the start
-      LOutputStream.Position := 0;
-      AOutputParameters.LoadFromStream(LOutputStream);
+            LOutputStream.Position := 0;
+            AOutputParameters.LoadFromStream(LOutputStream);
+        finally
+            LOutputStream.Free;
+        end;
     finally
-      LOutputStream.Free;
+        LProcess.Free;
     end;
-  finally
-    LProcess.Free;
-  end;
 end;
 
-class function TNumCPULib.GetLogicalCPUCountSolaris(): UInt32;
+class function TNumCPULib.GetLogicalCPUCountSolaris(): Uint32;
 begin
-  Result := UInt32(sysconf(GetAppropriateSysConfNumber()));
+    Result := Uint32(sysconf(GetAppropriateSysConfNumber()));
 end;
 
-class function TNumCPULib.GetPhysicalCPUCountSolaris(): UInt32;
+class function TNumCPULib.GetPhysicalCPUCountSolaris(): Uint32;
 var
-  LInputParameters, LOuputParameters, LCoreChipIDs: TStringList;
-  LLineOutputInfo: String;
-  LIdx: Int32;
-  LChipId, LCoreId: UInt32;
+    LInputParameters, LOuputParameters, LCoreChipIDs: TStringList;
+    LLineOutputInfo: String;
+    LIdx: Int32;
+    LChipId, LCoreId: Uint32;
 begin
-  Result := 0;
+    Result := 0;
 
-  LCoreChipIDs := TStringList.Create();
-  LInputParameters := TStringList.Create();
-  LOuputParameters := TStringList.Create();
-  LCoreChipIDs.Sorted := True;
-  LCoreChipIDs.Duplicates := dupIgnore;
-  LOuputParameters.Sorted := True;
-  LOuputParameters.Duplicates := dupIgnore;
-  try
-    LInputParameters.Add('-m');
-    LInputParameters.Add('cpu_info');
+    LCoreChipIDs := TStringList.Create();
+    LInputParameters := TStringList.Create();
+    LOuputParameters := TStringList.Create();
+    LCoreChipIDs.Sorted := TRUE;
+    LCoreChipIDs.Duplicates := dupIgnore;
+    LOuputParameters.Sorted := TRUE;
+    LOuputParameters.Duplicates := dupIgnore;
+    try
+        LInputParameters.Add('-m');
+        LInputParameters.Add('cpu_info');
 
-    ExecuteAndParseProcessOutput('/usr/bin/kstat', LInputParameters,
-      LOuputParameters);
+        ExecuteAndParseProcessOutput('/usr/bin/kstat', LInputParameters,
+            LOuputParameters);
 
-    for LIdx := 0 to System.Pred(LOuputParameters.Count) do
-    begin
-      LLineOutputInfo := LOuputParameters[LIdx];
-      if BeginsWith(LLineOutputInfo, 'chip_id', False) then
-      begin
-        LChipId := UInt32(ParseLastInt32(LLineOutputInfo, 0));
-      end
-      else if (BeginsWith(LLineOutputInfo, 'core_id', False)) then
-      begin
-        LCoreId := UInt32(ParseLastInt32(LLineOutputInfo, 0));
-      end;
+        for LIdx := 0 to System.Pred(LOuputParameters.Count) do
+        begin
+            LLineOutputInfo := LOuputParameters[LIdx];
+            if BeginsWith(LLineOutputInfo, 'chip_id', FALSE) then
+            begin
+                LChipId := Uint32(ParseLastInt32(LLineOutputInfo, 0));
+            end
+            else
+            if (BeginsWith(LLineOutputInfo, 'core_id', FALSE)) then
+            begin
+                LCoreId := Uint32(ParseLastInt32(LLineOutputInfo, 0));
+            end;
 
-      LCoreChipIDs.Add(Format('%u:%u', [LCoreId, LChipId]));
-    end;
+            LCoreChipIDs.Add(Format('%u:%u', [LCoreId, LChipId]));
+        end;
 
-    Result := UInt32(LCoreChipIDs.Count);
+        Result := Uint32(LCoreChipIDs.Count);
 
     // fallback if above method fails, note: the method below only works only for Solaris 10 and above
-    if Result < 1 then
-    begin
-      LInputParameters.Clear;
-      LOuputParameters.Clear;
+        if Result < 1 then
+        begin
+            LInputParameters.Clear;
+            LOuputParameters.Clear;
 
-      LInputParameters.Add('-p');
-      ExecuteAndParseProcessOutput('psrinfo', LInputParameters,
-        LOuputParameters);
+            LInputParameters.Add('-p');
+            ExecuteAndParseProcessOutput('psrinfo', LInputParameters,
+                LOuputParameters);
 
-      Result := UInt32(ParseLastInt32(LOuputParameters.Text, 0));
+            Result := Uint32(ParseLastInt32(LOuputParameters.Text, 0));
+        end;
+
+    finally
+        LCoreChipIDs.Free;
+        LInputParameters.Free;
+        LOuputParameters.Free;
     end;
-
-  finally
-    LCoreChipIDs.Free;
-    LInputParameters.Free;
-    LOuputParameters.Free;
-  end;
 end;
+
 {$ENDIF}
 // ================================================================//
 {$IFDEF NUMCPULIB_GENERIC_BSD}
 
-class function TNumCPULib.GetLogicalCPUCountGenericBSD(): UInt32;
+class function TNumCPULib.GetLogicalCPUCountGenericBSD(): Uint32;
 var
-  LTempRes: Int32;
+    LTempRes: Int32;
 begin
-  LTempRes := sysconf(GetAppropriateSysConfNumber());
-  if LTempRes < 1 then
-  begin
-    Result := GetLogicalCPUCountUsingSysCtl();
-  end
-  else
-  begin
-    Result := UInt32(LTempRes);
-  end;
+    LTempRes := sysconf(GetAppropriateSysConfNumber());
+    if LTempRes < 1 then
+    begin
+        Result := GetLogicalCPUCountUsingSysCtl();
+    end
+    else
+    begin
+        Result := Uint32(LTempRes);
+    end;
 end;
+
 {$ENDIF}
 // ================================================================//
 {$IFDEF NUMCPULIB_HAIKU}
 
-class function TNumCPULib.GetLogicalCPUCountHaiku(): UInt32;
+class function TNumCPULib.GetLogicalCPUCountHaiku(): Uint32;
 var
-  LSystemInfo: system_info;
+    LSystemInfo: system_info;
 begin
-  LSystemInfo := Default(system_info);
-  get_system_info(@LSystemInfo);
-  Result := LSystemInfo.cpu_count;
+    LSystemInfo := Default(system_info);
+    get_system_info(@LSystemInfo);
+    Result := LSystemInfo.cpu_count;
 end;
+
 {$ENDIF}
 
-class function TNumCPULib.GetLogicalCPUCount(): UInt32;
+class function TNumCPULib.GetLogicalCPUCount(): Uint32;
 begin
 {$IF DEFINED(NUMCPULIB_MSWINDOWS)}
-  Result := GetLogicalCPUCountWindows();
+    Result := GetLogicalCPUCountWindows();
 {$ELSEIF DEFINED(NUMCPULIB_APPLE)}
-  Result := GetLogicalCPUCountApple();
+    Result := GetLogicalCPUCountApple();
 {$ELSEIF DEFINED(NUMCPULIB_LINUX)}
-  Result := GetLogicalCPUCountLinux();
+    Result := GetLogicalCPUCountLinux();
 {$ELSEIF DEFINED(NUMCPULIB_SOLARIS)}
-  Result := GetLogicalCPUCountSolaris();
+    Result := GetLogicalCPUCountSolaris();
 {$ELSEIF DEFINED(NUMCPULIB_GENERIC_BSD)}
-  Result := GetLogicalCPUCountGenericBSD();
+    Result := GetLogicalCPUCountGenericBSD();
 {$ELSEIF DEFINED(NUMCPULIB_HAIKU)}
-  Result := GetLogicalCPUCountHaiku();
+    Result := GetLogicalCPUCountHaiku();
 {$ELSE}
   // fallback for other Unsupported Oses
-  Result := 1;
+    Result := 1;
 {$IFEND}
 end;
 
-class function TNumCPULib.GetPhysicalCPUCount(): UInt32;
+class function TNumCPULib.GetPhysicalCPUCount(): Uint32;
 begin
 {$IF DEFINED(NUMCPULIB_MSWINDOWS)}
-  Result := GetPhysicalCPUCountWindows();
+    Result := GetPhysicalCPUCountWindows();
 {$ELSEIF DEFINED(NUMCPULIB_APPLE)}
-  Result := GetPhysicalCPUCountApple();
+    Result := GetPhysicalCPUCountApple();
 {$ELSEIF DEFINED(NUMCPULIB_LINUX)}
-  Result := GetPhysicalCPUCountLinux();
+    Result := GetPhysicalCPUCountLinux();
 {$ELSEIF DEFINED(NUMCPULIB_SOLARIS)}
-  Result := GetPhysicalCPUCountSolaris();
+    Result := GetPhysicalCPUCountSolaris();
 {$ELSE}
   // fallback for other Unsupported Oses
-  Result := 1;
+    Result := 1;
 {$IFEND}
 end;
 

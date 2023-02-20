@@ -1,4 +1,5 @@
 unit RPN;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -12,71 +13,72 @@ unit RPN;
 
 interface
 
-Const
-      MaxStackSize = 10;
+const
+    MaxStackSize = 10;
 
-Type
+type
 
-  TRPNCalc = class(TObject)
-  private
-    FStack: Array[1..MaxStackSize] of Double;
-    function Get_X: Double;
-    function Get_Y: Double;
-    function Get_Z: Double;
-    procedure Set_X(const Value: Double);
-    procedure Set_Y(const Value: Double);
-    procedure Set_Z(const Value: Double);
+    TRPNCalc = class(TObject)
+    PRIVATE
+        FStack: array[1..MaxStackSize] of Double;
+        function Get_X: Double;
+        function Get_Y: Double;
+        function Get_Z: Double;
+        procedure Set_X(const Value: Double);
+        procedure Set_Y(const Value: Double);
+        procedure Set_Z(const Value: Double);
 
-  protected
+    PROTECTED
 
-  public
-    Procedure Multiply;
-    Procedure Divide;
-    Procedure Sqrt;
-    Procedure Square;
-    Procedure Add;
-    Procedure Subtract;
-    Procedure YToTheXPower;
-    Procedure Sindeg;
-    Procedure Cosdeg;
-    Procedure Tandeg;
-    Procedure aSindeg;
-    Procedure aCosdeg;
-    Procedure aTandeg;
-    Procedure aTan2deg;
-    Procedure NatLog;
-    Procedure TenLog;
-    Procedure etothex;
-    Procedure EnterPi;
-    Procedure Inv;
+    PUBLIC
+        procedure Multiply;
+        procedure Divide;
+        procedure Sqrt;
+        procedure Square;
+        procedure Add;
+        procedure Subtract;
+        procedure YToTheXPower;
+        procedure Sindeg;
+        procedure Cosdeg;
+        procedure Tandeg;
+        procedure aSindeg;
+        procedure aCosdeg;
+        procedure aTandeg;
+        procedure aTan2deg;
+        procedure NatLog;
+        procedure TenLog;
+        procedure etothex;
+        procedure EnterPi;
+        procedure Inv;
 
-    Procedure SwapXY;
-    Procedure RollUp;
-    Procedure RollDn;
+        procedure SwapXY;
+        procedure RollUp;
+        procedure RollDn;
 
-    Property X:Double Read Get_X Write Set_X;
-    Property Y:Double Read Get_Y Write Set_Y;
-    Property Z:Double Read Get_Z Write Set_Z;
+        property X: Double READ Get_X WRITE Set_X;
+        property Y: Double READ Get_Y WRITE Set_Y;
+        property Z: Double READ Get_Z WRITE Set_Z;
 
-    constructor Create;
-    destructor Destroy; override;
-  published
+        constructor Create;
+        destructor Destroy; OVERRIDE;
+    PUBLISHED
 
-  end;
+    end;
 
 
 implementation
 
 
-Uses Math;
+uses
+    Math;
 
 { TRPNCalc }
-Var
-   DegToRad, RadToDeg:Double;
+var
+    DegToRad, RadToDeg: Double;
 
 procedure TRPNCalc.aCosdeg;
 begin
-     FStack[1] := RadToDeg * ArcCos(Fstack[1]);
+    FStack[1] := RadToDeg * ArcCos(Fstack[1]);
 end;
 
 procedure TRPNCalc.Add;
@@ -92,30 +94,32 @@ end;
 
 procedure TRPNCalc.aTanDeg;
 begin
-   FStack[1] := RadToDeg * ArcTan(Fstack[1]);
+    FStack[1] := RadToDeg * ArcTan(Fstack[1]);
 end;
 
 procedure TRPNCalc.aTan2Deg;
 begin
-   FStack[2] := RadToDeg * ArcTan2(FStack[2], Fstack[1]);
-   Rolldn;
+    FStack[2] := RadToDeg * ArcTan2(FStack[2], Fstack[1]);
+    Rolldn;
 end;
 
 procedure TRPNCalc.CosDeg;
 begin
-     FStack[1] := System.Cos(DegToRad * Fstack[1]);
+    FStack[1] := System.Cos(DegToRad * Fstack[1]);
 end;
 
 constructor TRPNCalc.Create;
 
-Var i:integer;
+var
+    i: Integer;
 begin
-    For i := 1 to MaxStackSize Do Fstack[i] := 0.0;
+    for i := 1 to MaxStackSize do
+        Fstack[i] := 0.0;
 end;
 
 destructor TRPNCalc.Destroy;
 begin
-  inherited;
+    inherited;
 
 end;
 
@@ -147,15 +151,19 @@ begin
 end;
 
 procedure TRPNCalc.RollDn;
-Var i:Integer;
+var
+    i: Integer;
 begin
-    For i := 2 to MaxStackSize   Do  FStack[i-1] := FStack[i];
+    for i := 2 to MaxStackSize do
+        FStack[i - 1] := FStack[i];
 end;
 
 procedure TRPNCalc.RollUp;
-Var i:Integer;
+var
+    i: Integer;
 begin
-    For i := MaxStackSize  downto 2 Do  FStack[i] := FStack[i-1];
+    for i := MaxStackSize downto 2 do
+        FStack[i] := FStack[i - 1];
 end;
 
 procedure TRPNCalc.Set_X(const Value: Double);
@@ -176,28 +184,29 @@ end;
 
 procedure TRPNCalc.SinDeg;
 begin
-   FStack[1] := System.Sin(DegToRad * Fstack[1]);
+    FStack[1] := System.Sin(DegToRad * Fstack[1]);
 end;
 
 procedure TRPNCalc.Sqrt;
 begin
-   FStack[1] := System.Sqrt(Fstack[1]);
+    FStack[1] := System.Sqrt(Fstack[1]);
 end;
 
 procedure TRPNCalc.Square;
 begin
-     FStack[1] :=SQR(FStack[1]);
+    FStack[1] := SQR(FStack[1]);
 end;
 
 procedure TRPNCalc.Subtract;
 begin
-   FStack[2] := FStack[2] - FStack[1];
-   Rolldn;
+    FStack[2] := FStack[2] - FStack[1];
+    Rolldn;
 end;
 
 procedure TRPNCalc.SwapXY;
 
-Var Temp:Double;
+var
+    Temp: Double;
 begin
     Temp := FStack[1];
     FStack[1] := FStack[2];
@@ -206,13 +215,13 @@ end;
 
 procedure TRPNCalc.TanDeg;
 begin
-    FStack[1] :=Math.Tan(DegToRad * FStack[1]);
+    FStack[1] := Math.Tan(DegToRad * FStack[1]);
 end;
 
 procedure TRPNCalc.YToTheXPower;
 begin
-   FStack[2] := Power(FStack[2], FStack[1]);
-   Rolldn;
+    FStack[2] := Power(FStack[2], FStack[1]);
+    Rolldn;
 end;
 
 procedure TRPNCalc.EnterPi;
@@ -238,12 +247,12 @@ end;
 
 procedure TRPNCalc.Inv;  // invert  1/X
 begin
-    FStack[1] := 1.0/FStack[1];
+    FStack[1] := 1.0 / FStack[1];
 end;
 
 initialization
 
-   DegToRad := 3.14159265359/180.0;
-   RadToDeg := 1.0/DegToRad;
+    DegToRad := 3.14159265359 / 180.0;
+    RadToDeg := 1.0 / DegToRad;
 
 end.

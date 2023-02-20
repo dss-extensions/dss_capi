@@ -1,4 +1,5 @@
 unit Executive;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -42,42 +43,41 @@ unit Executive;
 
 interface
 
-USES
-      PointerList, Command;
+uses
+    PointerList,
+    Command;
+
+type
+    TExecutive = class(TObject)
+    PRIVATE
+        FRecorderOn: Boolean;
+        FRecorderFile: String;
+
+        function Get_LastError: String;
+        function Get_ErrorResult: Integer;
 
 
+        function Get_Command: String;
+        procedure Set_Command(const Value: String);
+        procedure Set_RecorderOn(const Value: Boolean);
 
-TYPE
-     TExecutive = class(TObject)
-     private
-         FRecorderOn: Boolean;
-         FRecorderFile:String;
+    PUBLIC
 
-         FUNCTION Get_LastError:String;
-         FUNCTION Get_ErrorResult:Integer;
+        RecorderFile: TextFile;
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
+        procedure CreateDefaultDSSItems;
+        procedure Write_to_RecorderFile(const s: String);
 
-         function Get_Command: String;
-         procedure Set_Command(const Value: String);
-    procedure Set_RecorderOn(const Value: Boolean);
+        procedure Clear;
+        procedure ClearAll;
+        property Command: String READ Get_Command WRITE Set_Command;
+        property Error: Integer READ Get_ErrorResult;
+        property LastError: String READ Get_LastError;
+        property RecorderOn: Boolean READ FRecorderOn WRITE Set_RecorderOn;
 
-     public
-
-         RecorderFile: TextFile;
-         constructor Create;
-         destructor  Destroy; override;
-
-         PROCEDURE CreateDefaultDSSItems;
-         Procedure Write_to_RecorderFile(const s:string);
-
-         Procedure Clear;
-         Procedure ClearAll;
-         Property Command:String   read Get_Command write Set_Command;
-         Property Error:Integer    read Get_ErrorResult;
-         Property LastError:String read Get_LastError;
-         Property RecorderOn:Boolean Read FRecorderOn write Set_RecorderOn;
-
-     end;
+    end;
 
 //VAR
 
@@ -87,125 +87,127 @@ TYPE
 implementation
 
 
-USES ExecCommands, ExecOptions,
-     {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
-     Utilities, Solution, DSSClass, IniRegSave,
+uses
+    ExecCommands,
+    ExecOptions,
+     {ExecHelper,} DSSClassDefs,
+    DSSGlobals,
+    ParserDel,
+    SysUtils,
+    Utilities,
+    Solution,
+    DSSClass,
+    IniRegSave,
 {$IFNDEF FPC}
-     DSSForms,
+    DSSForms,
 {$ELSE}
-     CmdForms,
+    CmdForms,
 {$ENDIF}
-     KLUSolve;
+    KLUSolve;
 
 
 //----------------------------------------------------------------------------
-Constructor TExecutive.Create;
-Begin
-     Inherited Create;
+constructor TExecutive.Create;
+begin
+    inherited Create;
 
 
      // Exec Commands
-     CommandList := TCommandList.Create(ExecCommand);
+    CommandList := TCommandList.Create(ExecCommand);
 
      // Exec options
-     OptionList := TCommandList.Create(ExecOption);
+    OptionList := TCommandList.Create(ExecOption);
      {Instantiate All DSS Classe Definitions, Intrinsic and User-defined}
-     CreateDSSClasses;     // in DSSGlobals
-     Circuits := TPointerList.Create(2);   // default buffer for 2 active circuits
+    CreateDSSClasses;     // in DSSGlobals
+    Circuits := TPointerList.Create(2);   // default buffer for 2 active circuits
 //     ActiveCircuit[ActiveActor] := nil;
 //     Parser := TParser.Create;  // Create global parser object (in DSS globals)
-     LastCmdLine := '';
-     RedirFile := '';
-     FRecorderOn := FALSE;
-     FrecorderFile := '';
+    LastCmdLine := '';
+    RedirFile := '';
+    FRecorderOn := FALSE;
+    FrecorderFile := '';
 
      {Get some global Variables from Registry}
-     ReadDSS_Registry;
+    ReadDSS_Registry;
 
      {Override Locale defaults so that CSV files get written properly}
-     FormatSettings.DecimalSeparator  := '.';
-     FormatSettings.ThousandSeparator := ',';
+    FormatSettings.DecimalSeparator := '.';
+    FormatSettings.ThousandSeparator := ',';
 
-End;
+end;
 
 
 //----------------------------------------------------------------------------
-Destructor TExecutive.Destroy;
+destructor TExecutive.Destroy;
 var
-  I : Integer;
+    I: Integer;
 
-Begin
+begin
 
     {Write some global Variables to Registry}
-     WriteDSS_Registry;
+    WriteDSS_Registry;
 
-     ClearAllCircuits;
+    ClearAllCircuits;
 
-     CommandList.Free;
-     OptionList.Free;
-     Circuits.Free;
-     DisposeDSSClasses(True);
-     Parser[ActiveActor].Free;
+    CommandList.Free;
+    OptionList.Free;
+    Circuits.Free;
+    DisposeDSSClasses(TRUE);
+    Parser[ActiveActor].Free;
 
-     Inherited Destroy;
-End;
-
-
-
-
-
-
-
+    inherited Destroy;
+end;
 
 
 //----------------------------------------------------------------------------
-FUNCTION TExecutive.Get_LastError:String;
+function TExecutive.Get_LastError: String;
 
-Begin
-     Result := LastErrorMessage;
-End;
-
-//----------------------------------------------------------------------------
-FUNCTION TExecutive.Get_ErrorResult:Integer;
-Begin
-     Result := ErrorNumber;
-End;
-
+begin
+    Result := LastErrorMessage;
+end;
 
 //----------------------------------------------------------------------------
-PROCEDURE TExecutive.CreateDefaultDSSItems;
+function TExecutive.Get_ErrorResult: Integer;
+begin
+    Result := ErrorNumber;
+end;
+
+
+//----------------------------------------------------------------------------
+procedure TExecutive.CreateDefaultDSSItems;
 
 {Create default loadshapes, growthshapes, and other general DSS objects
  used by all circuits.
 }
-Begin
+begin
 
 { this load shape used for generator dispatching, etc.   Loads may refer to it, also.}
-   Command := 'new loadshape.default npts=24 1.0 mult=(.677 .6256 .6087 .5833 .58028 .6025 .657 .7477 .832 .88 .94 .989 .985 .98 .9898 .999 1 .958 .936 .913 .876 .876 .828 .756)';
-   IF CmdResult = 0 THEN Begin
-   Command := 'new growthshape.default 2 year="1 20" mult=(1.025 1.025)';  // 20 years at 2.5%
-   Command := 'new spectrum.default 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 33 20 14 11 9 7) Angle=(0 0 0 0 0 0 0)';
-   Command := 'new spectrum.defaultload 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 1.5 20 14 1 9 7) Angle=(0 180 180 180 180 180 180)';
-   Command := 'new spectrum.defaultgen 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 5 3 1.5 1 .7 .5) Angle=(0 0 0 0 0 0 0)';
-   Command := 'new spectrum.defaultvsource 1  Harmonic=(1 )  %mag=(100 ) Angle=(0 ) ';
-   Command := 'new spectrum.linear 1  Harmonic=(1 )  %mag=(100 ) Angle=(0 ) ';
-   Command := 'new spectrum.pwm6 13  Harmonic=(1 3 5 7 9 11 13 15 17 19 21 23 25) %mag=(100 4.4 76.5 62.7 2.9 24.8 12.7 0.5 7.1 8.4 0.9 4.4 3.3) Angle=(-103 -5 28 -180 -33 -59 79 36 -253 -124 3 -30 86)';
-   Command := 'new spectrum.dc6 10  Harmonic=(1 3 5 7 9 11 13 15 17 19)  %mag=(100 1.2 33.6 1.6 0.4 8.7  1.2  0.3  4.5 1.3) Angle=(-75 28 156 29 -91 49 54 148 -57 -46)';
-   Command := 'New TCC_Curve.A 5 c_array=(1, 2.5, 4.5, 8.0, 14.)  t_array=(0.15 0.07 .05 .045 .045) ';
-   Command := 'New TCC_Curve.D 5 c_array=(1, 2.5, 4.5, 8.0, 14.)  t_array=(6 0.7 .2 .06 .02)';
-   Command := 'New TCC_Curve.TLink 7 c_array=(2 2.1 3 4 6 22 50)  t_array=(300 100 10.1 4.0 1.4 0.1  0.02)';
-   Command := 'New TCC_Curve.KLink 6 c_array=(2 2.2 3 4 6 30)    t_array=(300 20 4 1.3 0.41 0.02)';
-   Command := 'New "TCC_Curve.uv1547" npts=2 C_array=(0.5, 0.9, ) T_array=(0.166, 2, )';
-   Command := 'New "TCC_Curve.ov1547" npts=2 C_array=(1.1, 1.2, ) T_array=(2, 0.166, )';
-   Command := 'New "TCC_Curve.mod_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(27.1053, 9.9029, 6.439, 3.8032, 2.4322, 1.9458, 1.6883, 1.5255, 1.4117, 1.3267, 1.2604, 1.2068, 0.9481, 0.7468, 0.6478, )';
-   Command := 'New "TCC_Curve.very_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(93.872, 28.9113, 16.179, 7.0277, 2.9423, 1.7983, 1.3081, 1.0513, 0.8995, 0.8023, 0.7361, 0.6891, 0.5401, 0.4988, 0.493, )';
-   Command := 'New "TCC_Curve.ext_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(134.4074, 40.9913, 22.6817, 9.5217, 3.6467, 2.0017, 1.2967, 0.9274, 0.7092, 0.5693, 0.4742, 0.4065, 0.1924, 0.133, 0.1245, )';
-   Command := 'New "TCC_Curve.definite" npts=3 C_array=(1, 1.001, 100, ) T_array=(300, 1, 1, )';
+    Command := 'new loadshape.default npts=24 1.0 mult=(.677 .6256 .6087 .5833 .58028 .6025 .657 .7477 .832 .88 .94 .989 .985 .98 .9898 .999 1 .958 .936 .913 .876 .876 .828 .756)';
+    if CmdResult = 0 then
+    begin
+        Command := 'new growthshape.default 2 year="1 20" mult=(1.025 1.025)';  // 20 years at 2.5%
+        Command := 'new spectrum.default 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 33 20 14 11 9 7) Angle=(0 0 0 0 0 0 0)';
+        Command := 'new spectrum.defaultload 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 1.5 20 14 1 9 7) Angle=(0 180 180 180 180 180 180)';
+        Command := 'new spectrum.defaultgen 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 5 3 1.5 1 .7 .5) Angle=(0 0 0 0 0 0 0)';
+        Command := 'new spectrum.defaultvsource 1  Harmonic=(1 )  %mag=(100 ) Angle=(0 ) ';
+        Command := 'new spectrum.linear 1  Harmonic=(1 )  %mag=(100 ) Angle=(0 ) ';
+        Command := 'new spectrum.pwm6 13  Harmonic=(1 3 5 7 9 11 13 15 17 19 21 23 25) %mag=(100 4.4 76.5 62.7 2.9 24.8 12.7 0.5 7.1 8.4 0.9 4.4 3.3) Angle=(-103 -5 28 -180 -33 -59 79 36 -253 -124 3 -30 86)';
+        Command := 'new spectrum.dc6 10  Harmonic=(1 3 5 7 9 11 13 15 17 19)  %mag=(100 1.2 33.6 1.6 0.4 8.7  1.2  0.3  4.5 1.3) Angle=(-75 28 156 29 -91 49 54 148 -57 -46)';
+        Command := 'New TCC_Curve.A 5 c_array=(1, 2.5, 4.5, 8.0, 14.)  t_array=(0.15 0.07 .05 .045 .045) ';
+        Command := 'New TCC_Curve.D 5 c_array=(1, 2.5, 4.5, 8.0, 14.)  t_array=(6 0.7 .2 .06 .02)';
+        Command := 'New TCC_Curve.TLink 7 c_array=(2 2.1 3 4 6 22 50)  t_array=(300 100 10.1 4.0 1.4 0.1  0.02)';
+        Command := 'New TCC_Curve.KLink 6 c_array=(2 2.2 3 4 6 30)    t_array=(300 20 4 1.3 0.41 0.02)';
+        Command := 'New "TCC_Curve.uv1547" npts=2 C_array=(0.5, 0.9, ) T_array=(0.166, 2, )';
+        Command := 'New "TCC_Curve.ov1547" npts=2 C_array=(1.1, 1.2, ) T_array=(2, 0.166, )';
+        Command := 'New "TCC_Curve.mod_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(27.1053, 9.9029, 6.439, 3.8032, 2.4322, 1.9458, 1.6883, 1.5255, 1.4117, 1.3267, 1.2604, 1.2068, 0.9481, 0.7468, 0.6478, )';
+        Command := 'New "TCC_Curve.very_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(93.872, 28.9113, 16.179, 7.0277, 2.9423, 1.7983, 1.3081, 1.0513, 0.8995, 0.8023, 0.7361, 0.6891, 0.5401, 0.4988, 0.493, )';
+        Command := 'New "TCC_Curve.ext_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(134.4074, 40.9913, 22.6817, 9.5217, 3.6467, 2.0017, 1.2967, 0.9274, 0.7092, 0.5693, 0.4742, 0.4065, 0.1924, 0.133, 0.1245, )';
+        Command := 'New "TCC_Curve.definite" npts=3 C_array=(1, 1.001, 100, ) T_array=(300, 1, 1, )';
 
-   End;
+    end;
 
 
-End;
+end;
 
 
 function TExecutive.Get_Command: String;
@@ -216,105 +218,113 @@ end;
 
 procedure TExecutive.Set_Command(const Value: String);
 var
-  idx   : Integer;
+    idx: Integer;
 begin
-  if AllActors then    // Applies the same command to all the actors
-  Begin
-    for idx := 1 to NumOfActors do
-    Begin
-      if AllActors then ActiveActor :=  idx;
-      ProcessCommand(Value);
-    End;
-  End
-  else                 // Applies the command to the active actor
-    ProcessCommand(Value);
+    if AllActors then    // Applies the same command to all the actors
+    begin
+        for idx := 1 to NumOfActors do
+        begin
+            if AllActors then
+                ActiveActor := idx;
+            ProcessCommand(Value);
+        end;
+    end
+    else                 // Applies the command to the active actor
+        ProcessCommand(Value);
 end;
 
 procedure TExecutive.Clear;
 var
-  I : integer;
+    I: Integer;
 begin
-       IF   (ActiveCircuit[ActiveActor] <> nil)  THEN
-       Begin
+    if (ActiveCircuit[ActiveActor] <> NIL) then
+    begin
           {First get rid of all existing stuff}
-          Circuits.Free;
-          Circuits := TPointerList.Create(2);         // Make a new list of circuits
-          DisposeDSSClasses(False);
+        Circuits.Free;
+        Circuits := TPointerList.Create(2);         // Make a new list of circuits
+        DisposeDSSClasses(FALSE);
 
-          ActiveCircuit[ActiveActor].NumCircuits := 0; // <<<< added
-          FreeandNil(ActiveCircuit[ActiveActor]);             // <<<< added
+        ActiveCircuit[ActiveActor].NumCircuits := 0; // <<<< added
+        FreeandNil(ActiveCircuit[ActiveActor]);             // <<<< added
            // In case the actor hasn't been destroyed
-          if ActorHandle[ActiveActor] <> nil then
-          Begin
+        if ActorHandle[ActiveActor] <> NIL then
+        begin
             ActorHandle[ActiveActor].Send_Message(EXIT_ACTOR);
             ActorHandle[ActiveActor].WaitFor;
             FreeandNil(ActorHandle[ActiveActor]);
 
-          End;
+        end;
 
             {Now, Start over}
-          CreateDSSClasses;
-          CreateDefaultDSSItems;
-          RebuildHelpForm := True; // because class strings have changed
+        CreateDSSClasses;
+        CreateDefaultDSSItems;
+        RebuildHelpForm := TRUE; // because class strings have changed
 
-       End;
+    end;
 
 {$IFNDEF FPC}
-       If Not IsDLL Then ControlPanel.UpdateElementBox ;
+    if not IsDLL then
+        ControlPanel.UpdateElementBox;
 {$ENDIF}
 
-       DefaultEarthModel     := DERI;
-       LogQueries            := FALSE;
-       MaxAllocationIterations := 2;
+    DefaultEarthModel := DERI;
+    LogQueries := FALSE;
+    MaxAllocationIterations := 2;
 
        {Prepare for new variables}
-       ParserVars.Free;
-       ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+    ParserVars.Free;
+    ParserVars := TParserVar.Create(100);  // start with space for 100 variables
 
 end;
 
 procedure TExecutive.ClearAll;
 var
-  I : integer;
+    I: Integer;
 begin
        {First get rid of all existing stuff}
-       ClearAllCircuits;
-       DisposeDSSClasses(True);
+    ClearAllCircuits;
+    DisposeDSSClasses(TRUE);
        {Now, Start over}
-       ActiveActor  :=  1;
-       CreateDSSClasses;
-       Parser[ActiveActor]    :=  Tparser.Create;
-       AuxParser[ActiveActor] :=  Tparser.Create;
-       CreateDefaultDSSItems;
-       RebuildHelpForm        := True; // because class strings have changed
+    ActiveActor := 1;
+    CreateDSSClasses;
+    Parser[ActiveActor] := Tparser.Create;
+    AuxParser[ActiveActor] := Tparser.Create;
+    CreateDefaultDSSItems;
+    RebuildHelpForm := TRUE; // because class strings have changed
 {$IFNDEF FPC}
-       If Not IsDLL Then ControlPanel.UpdateElementBox ;
+    if not IsDLL then
+        ControlPanel.UpdateElementBox;
 {$ENDIF}
        {Prepare for new variables}
-       ParserVars.Free;
-       ParserVars := TParserVar.Create(100);  // start with space for 100 variables
-       ActiveActor  :=  1;
-       NumOfActors  :=  1;
+    ParserVars.Free;
+    ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+    ActiveActor := 1;
+    NumOfActors := 1;
 end;
 
 procedure TExecutive.Set_RecorderOn(const Value: Boolean);
 begin
-  If Value Then Begin
-    If Not FRecorderOn Then Begin
-      FRecorderFile := GetOutputDirectory + 'DSSRecorder.DSS' ;
-      AssignFile(RecorderFile, FRecorderFile);
-    End;
-    ReWrite(RecorderFile);
-  End Else If FRecorderOn Then Begin
-      CloseFile(RecorderFile);
-  End;
-  GlobalResult := FRecorderFile;
-  FRecorderOn := Value;
+    if Value then
+    begin
+        if not FRecorderOn then
+        begin
+            FRecorderFile := GetOutputDirectory + 'DSSRecorder.DSS';
+            AssignFile(RecorderFile, FRecorderFile);
+        end;
+        ReWrite(RecorderFile);
+    end
+    else
+    if FRecorderOn then
+    begin
+        CloseFile(RecorderFile);
+    end;
+    GlobalResult := FRecorderFile;
+    FRecorderOn := Value;
 end;
 
-procedure TExecutive.Write_to_RecorderFile(const s: string);
+procedure TExecutive.Write_to_RecorderFile(const s: String);
 begin
-   Writeln(Recorderfile, S);
+    Writeln(Recorderfile, S);
 end;
 
 initialization
@@ -322,4 +332,3 @@ initialization
 //WriteDLLDebugFile('Executive');
 
 end.
-
