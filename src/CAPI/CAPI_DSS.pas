@@ -207,16 +207,12 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_LegacyModels(): TAPIBoolean; CDECL;
 begin
-    Result := DSS_CAPI_LEGACY_MODELS;
+    Result := False;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_LegacyModels(Value: TAPIBoolean); CDECL;
 begin
-    if (Value <> DSS_CAPI_LEGACY_MODELS) then
-    begin
-        DSS_CAPI_LEGACY_MODELS := Value;
-        DSSPrime.DSSExecutive.Command := 'clear';
-    end;
+    DoSimpleMsg(DSSPrime, DSSTranslate('LegacyModels flag is not supported in this version.'), 5016);
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_AllowChangeDir(): TAPIBoolean; CDECL;

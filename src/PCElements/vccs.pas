@@ -117,7 +117,7 @@ type
         procedure InitStateVars; OVERRIDE;
         procedure IntegrateStates; OVERRIDE;
         function NumVariables: Integer; OVERRIDE;
-        procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
+        procedure GetAllVariables(States: Array of Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
     end;
 
@@ -743,12 +743,12 @@ begin
     Result := 6;
 end;
 
-procedure TVCCSObj.GetAllVariables(States: pDoubleArray);
+procedure TVCCSObj.GetAllVariables(States: Array of Double);
 var
     i: Integer;
 begin
     for i := 1 to 6 do
-        States^[i] := Variable[i];  // property maps to Get_Variable below
+        States[i - 1] := Variable[i];  // property maps to Get_Variable below
 end;
 
 function TVCCSObj.VariableName(i: Integer): String;

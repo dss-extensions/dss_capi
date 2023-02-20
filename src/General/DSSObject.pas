@@ -58,6 +58,7 @@ type
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); VIRTUAL;
         procedure SaveWrite(F: TFileStream); VIRTUAL;
         procedure CustomSetRaw(Idx: Integer; Value: String); virtual;
+        function ParseDynVar(Parser: TDSSParser; variable: String): Boolean; VIRTUAL;
 
         property PropertyValue[Index: Integer]: String READ GetPropertyValue;
 
@@ -235,6 +236,11 @@ end;
 function TDSSObject.DSSClassName: String;
 begin
     Result := ParentClass.Name;
+end;
+
+function TDSSObject.ParseDynVar(Parser: TDSSParser; variable: String): Boolean;
+begin
+    Result := False;
 end;
 
 end.

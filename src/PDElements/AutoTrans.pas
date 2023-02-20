@@ -193,7 +193,7 @@ type
         Winding: pAutoWindingArray;
         XfmrBank: String;
         XfmrCode: String;
-        CoreType: Integer; {0=Shell; 1=1ph; 3-3leg; 5=5-leg}
+        CoreType: Integer;
         pctImag: Double;
         pctLoadLoss: Double;
         pctNoLoadLoss: Double;
@@ -1160,8 +1160,8 @@ begin
     FSWriteln(F, Format('~ m=%.1f', [m_thermal]));
     FSWriteln(F, Format('~ flrise=%.0f', [flrise]));
     FSWriteln(F, Format('~ hsrise=%.0f', [hsrise]));
-    FSWriteln(F, Format('~ %loadloss=%.0f', [pctLoadLoss]));
-    FSWriteln(F, Format('~ %noloadloss=%.0f', [pctNoLoadLoss]));
+    FSWriteln(F, Format('~ %%loadloss=%.0f', [pctLoadLoss]));
+    FSWriteln(F, Format('~ %%noloadloss=%.0f', [pctNoLoadLoss]));
 
     for i := 28 to NumPropsThisClass do
         FSWriteln(F, '~ ' + ParentClass.PropertyName^[i] + '=' + PropertyValue[i]);
@@ -1761,7 +1761,7 @@ begin
 
         // Construct ZBMatrix;
         ZB.Clear;
-        ZBase := 1.0 / (VABase / Fnphases); // base ohms on 1.0 volt basis
+        ZBase := 1.0 / (VABase / Fnphases); // base ohms on 1.0 volt basis, as in Dommel (6.46) for Zct or puXSC^[3]
 
         // Adjust specified XSC by SQR(1 + Vcommon/Vseries)
         ZCorrected := ZBase * SQR(1.0 + Winding^[2].vbase / Winding^[1].Vbase); // Correction factor for Series, as in Dommel (6.45) for Zsc or puXSC^[1]

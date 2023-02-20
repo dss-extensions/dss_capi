@@ -14,6 +14,7 @@ type
     TUuid = TGuid;    // this is a GUID compliant to RFC 4122, v4
 
     TNamedObject = class(TObject)
+    // TODO: remove TNamedObject as a whole. Use an extra structure to track the data here.
     PROTECTED
         pUuid: ^TUuid;  // compliant to RFC 4122, v4
         LName: String;  // localName is unique within a class, like the old FName
@@ -23,7 +24,7 @@ type
         function Get_CIM_ID: String;
         procedure Set_UUID(const Value: TUuid);
     PUBLIC
-        DisplayName: String; // TODO: remove
+        DisplayName: String;
 
         constructor Create(ClassName_: String);
         destructor Destroy; OVERRIDE;

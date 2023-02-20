@@ -61,9 +61,9 @@ procedure CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount
 procedure CktElement_Get_AllVariableNames_GR(); CDECL;
 procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_AllVariableValues_GR(); CDECL;
-function CktElement_Get_Variable(const MyVarName: PAnsiChar; out Code: Integer): Double; CDECL;
+function CktElement_Get_Variable(const VarName: PAnsiChar; out Code: Integer): Double; CDECL;
 function CktElement_Get_Variablei(Idx: Integer; out Code: Integer): Double; CDECL;
-procedure CktElement_Set_Variable(const MyVarName: PAnsiChar; out Code: Integer; Value: Double); CDECL;
+procedure CktElement_Set_Variable(const VarName: PAnsiChar; out Code: Integer; Value: Double); CDECL;
 procedure CktElement_Set_Variablei(Idx: Integer; out Code: Integer; Value: Double); CDECL;
 procedure CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_NodeOrder_GR(); CDECL;
@@ -77,6 +77,21 @@ procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PAP
 procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
 procedure CktElement_Get_TotalPowers(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_TotalPowers_GR(); CDECL;
+
+//
+// These are the same as CktElement_Get/Set_Variable and CktElement_Get/Set_Variablei.
+//
+//function CktElement_Get_VariableByName
+//procedure CktElement_Set_VariableByName
+//function CktElement_Get_VariableByIndex
+//procedure CktElement_Set_VariableByIndex
+
+function CktElement_Get_VariableName(): PAnsiChar; CDECL;
+procedure CktElement_Set_VariableName(const Value: PAnsiChar); CDECL;
+function CktElement_Get_VariableValue(): Double; CDECL;
+procedure CktElement_Set_VariableValue(Value: Double); CDECL;
+function CktElement_Get_VariableIdx(): Integer; CDECL;
+procedure CktElement_Set_VariableIdx(Value: Integer); CDECL;
 
 // API Extensions
 function CktElement_Get_IsIsolated(): TAPIBoolean; CDECL;
@@ -216,15 +231,24 @@ begin
     Result := ((DSS.ActiveCircuit.ActiveCktElement.DSSObjType and 3) = PD_ELEMENT)
 end;
 //------------------------------------------------------------------------------
-function InvalidCktElement(DSS: TDSSContext): Boolean; inline;
+function InvalidCktElement(DSS: TDSSContext; const NeedsPCElement: Boolean=False): Boolean; inline;
+var
+    elem: TDSSCktElement;
 begin
     Result := InvalidCircuit(DSS);
     if Result then
         Exit;
-    Result := (DSSPrime.ActiveCircuit.ActiveCktElement = NIL);
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    Result := (elem = NIL);
     if Result and DSS_CAPI_EXT_ERRORS then
     begin
         DoSimpleMsg(DSS, _('No active circuit element found! Activate one and retry.'), 97800);
+    end;
+    if NeedsPCElement and ((elem.DSSObjType and BASECLASSMASK) <> PC_ELEMENT) then
+    begin
+        DoSimpleMsg(DSS, _('The active circuit element is not a PC Element'), 100004);
+        Result := True;
+        Exit;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1110,24 +1134,19 @@ procedure CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount
 var
     Result: PPAnsiCharArray0;
     k: Integer;
-    pPCElem: TPCElement;
-
+    elem: TPCElement;
 begin
     DefaultResult(ResultPtr, ResultCount, '');
     
-    if InvalidCktElement(DSSPrime) then
+    if InvalidCktElement(DSSPrime, True) then
         Exit;
 
-    with DSSPrime.ActiveCircuit.ActiveCktElement do
-        if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
-        begin
-            pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, pPCElem.NumVariables);
-            for k := 1 to pPCElem.NumVariables do
-            begin
-                Result[k - 1] := DSS_CopyStringAsPChar(pPCElem.VariableName(k));
-            end;
-        end;
+    elem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.NumVariables);
+    for k := 1 to elem.NumVariables do
+    begin
+        Result[k - 1] := DSS_CopyStringAsPChar(elem.VariableName(k));
+    end;
 end;
 
 procedure CktElement_Get_AllVariableNames_GR(); CDECL;
@@ -1142,24 +1161,19 @@ procedure CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: 
 var
     Result: PDoubleArray0;
     k: Integer;
-    pPCElem: TPCElement;
-
+    elem: TPCElement;
 begin
     DefaultResult(ResultPtr, ResultCount);
     
-    if InvalidCktElement(DSSPrime) then
+    if InvalidCktElement(DSSPrime, True) then
         Exit;
     
-    with DSSPrime.ActiveCircuit.ActiveCktElement do
-        if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
-        begin
-            pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pPCElem.NumVariables);
-            for k := 1 to pPCElem.NumVariables do
-            begin
-                Result[k - 1] := pPCElem.Variable[k];
-            end;
-        end;
+    elem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NumVariables);
+    for k := 1 to elem.NumVariables do
+    begin
+        Result[k - 1] := elem.Variable[k];
+    end;
 end;
 
 procedure CktElement_Get_AllVariableValues_GR(); CDECL;
@@ -1169,99 +1183,78 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function CktElement_Get_Variable(const MyVarName: PAnsiChar; out Code: Integer): Double; CDECL; //TODO: Remove Code and use Error interface?
+function CktElement_Get_Variable(const VarName: PAnsiChar; out Code: Integer): Double; CDECL; //TODO: Remove Code and use Error interface?
 var
-    pPCElem: TPCElement;
+    elem: TPCElement;
     VarIndex: Integer;
 begin
     Result := 0.0;
     Code := 1; // Signifies an error; no value set
     
-    if InvalidCktElement(DSSPrime) then
+    if InvalidCktElement(DSSPrime, True) then
         Exit;
     
-    with DSSPrime.ActiveCircuit.ActiveCktElement do
-        if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
-        begin
-            pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
-            VarIndex := pPCElem.LookupVariable(MyVarName);
-            if (VarIndex > 0) and (VarIndex <= pPCElem.NumVariables) then
-            begin
-                Result := pPCElem.Variable[VarIndex];
-                Code := 0;  // Signify result is OK.
-            end;
-        end;
+    elem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
+    VarIndex := elem.LookupVariable(VarName);
+    if (VarIndex > 0) and (VarIndex <= elem.NumVariables) then
+    begin
+        Result := elem.Variable[VarIndex];
+        Code := 0;  // Signify result is OK.
+    end;
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_Variablei(Idx: Integer; out Code: Integer): Double; CDECL;
-{Get Value of a variable by index}
+// Get Value of a variable by index
 var
-    pPCElem: TPCElement;
-
+    elem: TPCElement;
 begin
     Result := 0.0;
     Code := 1; // Signifies an error; no value set
     
-    if InvalidCktElement(DSSPrime) then
+    if InvalidCktElement(DSSPrime, True) then
         Exit;
     
-    with DSSPrime.ActiveCircuit.ActiveCktElement do
-        if (DSSObjType and BASECLASSMASK) = PC_ELEMENT then
-        begin
-            pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
-            if (Idx > 0) and (Idx <= pPCElem.NumVariables) then
-            begin
-                Result := pPCElem.Variable[Idx];
-                Code := 0;  // Signify result is OK.
-            end;
-        end;
+    elem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
+    if (Idx > 0) and (Idx <= elem.NumVariables) then
+    begin
+        Result := elem.Variable[Idx];
+        Code := 0;  // Signify result is OK.
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure CktElement_Set_Variable(const MyVarName: PAnsiChar; out Code: Integer; Value: Double); CDECL; //TODO: Remove Code and use Error interface?
+procedure CktElement_Set_Variable(const VarName: PAnsiChar; out Code: Integer; Value: Double); CDECL; //TODO: Remove Code and use Error interface?
 var
-    pPCElem: TPCElement;
+    elem: TPCElement;
     VarIndex: Integer;
 begin
     Code := 1; // Signifies an error; no value set
     
-    if InvalidCktElement(DSSPrime) then
+    if InvalidCktElement(DSSPrime, True) then
         Exit;
     
-    with DSSPrime.ActiveCircuit.ActiveCktElement do
+    elem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
+    VarIndex := elem.LookupVariable(VarName);
+    if (VarIndex > 0) and (VarIndex <= elem.NumVariables) then
     begin
-        if (DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
-            Exit;
-        
-        pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
-        VarIndex := pPCElem.LookupVariable(MyVarName);
-        if (VarIndex > 0) and (VarIndex <= pPCElem.NumVariables) then
-        begin
-            pPCElem.Variable[VarIndex] := Value;
-            Code := 0;  // Signify result is OK.
-        end;
+        elem.Variable[VarIndex] := Value;
+        Code := 0;  // Signify result is OK.
     end;
 end;
 //------------------------------------------------------------------------------
 procedure CktElement_Set_Variablei(Idx: Integer; out Code: Integer; Value: Double); CDECL;
 var
-    pPCElem: TPCElement;
+    elem: TPCElement;
 begin
     Code := 1; // Signifies an error; no value set
     
-    if InvalidCktElement(DSSPrime) then
+    if InvalidCktElement(DSSPrime, True) then
         Exit;
     
-    with DSSPrime.ActiveCircuit.ActiveCktElement do
+    elem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
+    if (Idx > 0) and (Idx <= elem.NumVariables) then
     begin
-        if (DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
-            Exit;
-
-        pPCElem := (DSSPrime.ActiveCircuit.ActiveCktElement as TPCElement);
-        if (Idx > 0) and (Idx <= pPCElem.NumVariables) then
-        begin
-            pPCElem.Variable[Idx] := Value;
-            Code := 0;  // Signify result is OK.
-        end;
+        elem.Variable[Idx] := Value;
+        Code := 0;  // Signify result is OK.
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1333,7 +1326,6 @@ function CktElement_Get_OCPDevIndex(): Integer; CDECL;
 var
     iControl: Integer;
     pCktElement: TDSSCktElement;
-
 begin
     Result := 0;
     if InvalidCktElement(DSSPrime) then
@@ -1414,7 +1406,6 @@ var
     Result: PDoubleArray0;
     numcond, i, n, iV: Integer;
     Volts: Polar;
-
 begin
     // Return voltages for all terminals
     if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
@@ -1466,7 +1457,7 @@ var
     j,
     i,
     iV: Integer;
-    myBuffer: Array of Complex;
+    buffer: Array of Complex;
     Result: PDoubleArray0;
 begin
     if InvalidCktElement(DSSPrime) or MissingSolution(DSSPrime) or (DSSPrime.ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
@@ -1481,18 +1472,18 @@ begin
         cBuffer := Allocmem(2 * SizeOf(Double) * NConds * Nterms);
         GetPhasePower(cBuffer);
         iV := 0;
-        SetLength(myBuffer, Nterms);
+        SetLength(buffer, Nterms);
         for j := 1 to Nterms do
         Begin
-            myBuffer[j - 1] := cmplx(0, 0);
+            buffer[j - 1] := cmplx(0, 0);
             myInit := (j - 1) * NConds + 1;
             myEnd := NConds * j;
             for i := myInit to myEnd do
             begin
-                myBuffer[j - 1] := myBuffer[j - 1] + cBuffer^[i];
+                buffer[j - 1] := buffer[j - 1] + cBuffer^[i];
             end;
-            Result[iV + 0] := myBuffer[j - 1].re * 0.001;
-            Result[iV + 1] := myBuffer[j - 1].im * 0.001; 
+            Result[iV + 0] := buffer[j - 1].re * 0.001;
+            Result[iV + 1] := buffer[j - 1].im * 0.001; 
             Inc(iV, 2);
         End;
         Reallocmem(cBuffer,0);
@@ -1532,5 +1523,96 @@ begin
     CktElement_Get_NodeRef(DSSPrime.GR_DataPtr_PInteger, @DSSPrime.GR_Counts_PInteger[0])
 end;
 //------------------------------------------------------------------------------
+function CktElement_Get_VariableName(): PAnsiChar; CDECL;
+var
+    elem: TPCElement;
+begin
+    Result := NIL;
+    if InvalidCktElement(DSSPrime, True) then
+        Exit;
 
+    elem := TPCElement(DSSPrime.ActiveCircuit.ActiveCktElement);
+    if (DSSPrime.API_VarIdx <= 0) or (DSSPrime.API_VarIdx > elem.NumVariables) then
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 97802);
+        Exit;
+    end;
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.VariableName(DSSPrime.API_VarIdx));
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Set_VariableName(const Value: PAnsiChar); CDECL;
+var
+    elem: TPCElement;
+begin
+    if InvalidCktElement(DSSPrime, True) then
+    begin
+        DSSPrime.API_VarIdx := -1;
+        Exit;
+    end;
+    elem := TPCElement(DSSPrime.ActiveCircuit.ActiveCktElement);
+    DSSPrime.API_VarIdx := elem.LookupVariable(Value);
+    if (DSSPrime.API_VarIdx <= 0) or (DSSPrime.API_VarIdx > elem.NumVariables) then
+        DoSimpleMsg(DSSPrime, 'Invalid variable name "%s" for "%s"', [Value, elem.FullName], 100001);
+end;
+//------------------------------------------------------------------------------
+function CktElement_Get_VariableValue(): Double; CDECL;
+var
+    elem: TPCElement;
+begin
+    Result := 0;
+    if InvalidCktElement(DSSPrime, True) then
+        Exit;
+
+    elem := TPCElement(DSSPrime.ActiveCircuit.ActiveCktElement);
+    if (DSSPrime.API_VarIdx <= 0) or (DSSPrime.API_VarIdx > elem.NumVariables) then
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 100002);
+        Exit;
+    end;
+    Result := elem.Variable[DSSPrime.API_VarIdx];
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Set_VariableValue(Value: Double); CDECL;
+var
+    elem: TPCElement;
+begin
+    if InvalidCktElement(DSSPrime, True) then
+        Exit;
+
+    elem := TPCElement(DSSPrime.ActiveCircuit.ActiveCktElement);
+    if (DSSPrime.API_VarIdx <= 0) or (DSSPrime.API_VarIdx > elem.NumVariables) then
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 100002);
+        Exit;
+    end;
+    elem.Variable[DSSPrime.API_VarIdx] := Value;
+end;
+//------------------------------------------------------------------------------
+function CktElement_Get_VariableIdx(): Integer; CDECL;
+begin
+    Result := -1;
+    if InvalidCktElement(DSSPrime, True) then
+        Exit;
+    Result := DSSPrime.API_VarIdx;
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Set_VariableIdx(Value: Integer); CDECL;
+var
+    elem: TPCElement;
+begin
+    if InvalidCktElement(DSSPrime, True) then
+    begin
+        DSSPrime.API_VarIdx := -1;
+        Exit;
+    end;
+
+    elem := TPCElement(DSSPrime.ActiveCircuit.ActiveCktElement);
+    if (Value <= 0) or (Value > elem.NumVariables) then
+    begin
+        DoSimpleMsg(DSSPrime, 'Invalid variable index %d for "%s"', [DSSPrime.API_VarIdx, elem.FullName], 100003);
+        Exit;
+    end;
+    DSSPrime.API_VarIdx := Value;
+end;
+//------------------------------------------------------------------------------
 end.

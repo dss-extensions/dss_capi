@@ -533,8 +533,7 @@ begin
             TempStr := TempStr + floattoStrf(AmpRatings[k - 1], ffGeneral, 8, 4) + ',';
         TempStr := TempStr + ']';
         FSWriteln(F, Format('~ %s=%s', [PropertyName^[26]]) + TempStr);
-
-		// TODO: check missing linetype here
+        FSWriteln(F, Format('~ %s=%s', [PropertyName^[27], PropertyValue[27]]));
     end;
 end;
 

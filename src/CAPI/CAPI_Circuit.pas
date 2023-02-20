@@ -948,10 +948,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_UpdateStorage(); CDECL;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-        DSSPrime.StorageClass.UpdateAll
-    else
-        DSSPrime.Storage2Class.UpdateAll;
+    DSSPrime.StorageClass.UpdateAll
 end;
 //------------------------------------------------------------------------------
 function Circuit_Get_ParentPDElement(): Integer; CDECL;

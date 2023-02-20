@@ -86,7 +86,7 @@ type
         Overloadreport = 68,
         Voltexceptionreport = 69,
         Cfactors = 70,
-        Showexport = 71,
+        ShowExport = 71,
         Numallociterations = 72,
         DefaultBaseFrequency = 73,
         Markswitches = 74,
@@ -130,17 +130,21 @@ type
         KeepLoad = 112,
         Zmag = 113,
         SeasonRating = 114,
-        SeasonSignal = 115
+        SeasonSignal = 115,
+        LineTypes,
+        EventLogDefault,
+        LongLineCorrection,
+        ShowReports
 {$IFDEF DSS_CAPI_PM}
         ,
-        NumCPUs = 116,
-        NumCores = 117,
-        NumActors = 118,
-        ActiveActor = 119,
-        CPU = 120,
-        ActorProgress = 121,
-        Parallel = 122,
-        ConcatenateReports = 123,
+        NumCPUs,
+        NumCores,
+        NumActors,
+        ActiveActor,
+        CPU,
+        ActorProgress,
+        Parallel,
+        ConcatenateReports,
         NUMANodes
 {$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
@@ -172,6 +176,7 @@ uses
     Executive,
     ExecHelper,
     LoadShape,
+    Line,
     Utilities,
     Sysutils,
     Solution,
@@ -288,6 +293,8 @@ begin
                 PMParent.Parallel_enabled := InterpretYesNo(Param);
             ord(Opt.ConcatenateReports):
                 PMParent.ConcatenateReports := InterpretYesNo(Param);
+            ord(Opt.EventLogDefault):
+                DSS.EventLogDefault := InterpretYesNo(Param);
 {$ENDIF} //DSS_CAPI_PM            
         else
             begin
@@ -311,6 +318,7 @@ var
     ParamName: String;
     Param: String;
     TestLoadShapeObj: TLoadShapeObj;
+    LineObj: TLineObj;
 {$IFDEF DSS_CAPI_PM}
     PMParent, DSS: TDSSContext;
 begin
@@ -387,8 +395,11 @@ begin
                     DefaultLoadModel := DSS.DefaultLoadModelEnum.StringToOrdinal(Param); // for reverting to last on specified
                     LoadModel := DefaultLoadModel;
                 end;
-            20:
+            ord(TExecOption.Loadmult):
+            begin
                 DSS.ActiveCircuit.LoadMultiplier := DSS.Parser.DblValue;  // Set using LoadMultiplier property
+                DSS.ActiveCircuit.Solution.SystemYChanged := True;
+            end;
             21:
                 DSS.ActiveCircuit.NormalMinVolts := DSS.Parser.DblValue;
             22:
@@ -659,6 +670,12 @@ begin
                 PMParent.Parallel_enabled := InterpretYesNo(Param);
             ord(Opt.ConcatenateReports):
                 PMParent.ConcatenateReports := InterpretYesNo(Param);
+            ord(Opt.EventLogDefault):
+                DSS.EventLogDefault := InterpretYesNo(Param);
+            ord(Opt.LongLineCorrection):
+                DSS.ActiveCircuit.LongLineCorrection := InterpretYesNo(Param);
+            ord(Opt.ShowReports):
+                DSS.AutoDisplayShowReport := InterpretYesNo(Param);
 {$ENDIF}
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
             ord(Opt.Coverage):
@@ -681,6 +698,17 @@ begin
         case ParamPointer of
             3, 4:
                 DSS.ActiveCircuit.Solution.Update_dblHour;
+            ord(Opt.LongLineCorrection):
+                with DSS.ActiveCircuit Do
+                begin
+                    LineObj := Lines.First;
+                    while LineObj <> NIL do
+                    begin
+                        if LineObj.Enabled and LineObj.SymComponentsModel then
+                            LineObj.YprimInvalid := True;
+                        LineObj := Lines.Next;
+                    end;
+                end;            
         end;
 
         ParamName := DSS.Parser.NextParam;
@@ -999,6 +1027,14 @@ begin
                     AppendGlobalResult(DSS, PMParent.ConcatenateReports);
                 ord(Opt.NUMANodes):
                     DoSimpleMsg(DSS, _('This is not supported in DSS Extensions.'), 303); //TODO: looks like the official version has this hardcoded
+                ord(Opt.LineTypes):
+                    DSS.GlobalResult := DSS.LineTypeEnum.Joined();
+                ord(Opt.EventLogDefault):
+                    AppendGlobalResult(DSS, DSS.EventLogDefault);
+                ord(Opt.LongLineCorrection):
+                    AppendGlobalResult(DSS, DSS.ActiveCircuit.LongLineCorrection);
+                ord(Opt.ShowReports):
+                    AppendGlobalResult(DSS, DSS.AutoDisplayShowReport);
 {$ENDIF} //DSS_CAPI_PM
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
                 ord(Opt.Coverage):
@@ -1078,7 +1114,11 @@ begin
                 ord(Opt.Parallel):
                     AppendGlobalResult(DSS, PMParent.parallel_enabled);
                 ord(Opt.ConcatenateReports):
-                    AppendGlobalResult(DSS, PMParent.ConcatenateReports)
+                    AppendGlobalResult(DSS, PMParent.ConcatenateReports);
+                ord(Opt.LineTypes):
+                    DSS.GlobalResult := DSS.LineTypeEnum.Joined();
+                ord(Opt.EventLogDefault):
+                    AppendGlobalResult(DSS, DSS.EventLogDefault);
                 else
                 begin
                     DoSimpleMsg(DSS, _('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.'), 301);

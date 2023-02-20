@@ -19,8 +19,20 @@ type
     Complex3 = Array[1..3] of Complex;
     PComplex3 = ^Complex3;
 
-Var
-   As2p, Ap2s, ClarkeF, ClarkeR: TcMatrix; // Symmetrical Component Conversion Matrices
+    TPICtrl = Class(TObject)
+    private
+        den, num: Array[0..1] of Double;
+    public
+        kNum: Double;
+        kDen: Double;
+        Kp: Double;
+
+        function SolvePI(SetPoint : Double):Double;
+        constructor Create;
+        destructor Destroy; override;
+    end;
+
+    PPICtrl = ^TPICtrl;
 
 function Bessel_I0(const a: Complex): Complex;
 function Bessel_I1(const x: Complex): Complex;
@@ -43,10 +55,37 @@ function TerminalPowerIn(V, I: pComplexArray; Nphases: Integer): Complex;
 function PctNemaUnbalance(Vph: PComplex3): Double;
 procedure DblInc(var x: Double; const y: Double); inline; // increment a double
 
+var
+   As2p, Ap2s, ClarkeF, ClarkeR: TcMatrix; // Symmetrical Component Conversion Matrices
+
 implementation
 
 uses
     Math;
+
+constructor TPICtrl.Create;
+begin
+    //Initializes the constants for a rising function of 5 steps
+    kNum := 0.8647;
+    kDen := 0.1353;
+    Kp := 0.02;
+    den[1] := 0;
+    num[1] := 0;
+end;
+
+destructor TPICtrl.Destroy;
+begin
+end;
+
+function TPICtrl.SolvePI(SetPoint: Double): Double;
+Begin
+    num[0] := num[1];
+    num[1] := SetPoint * Kp;
+    den[0] := den[1];
+    den[1] := (num[0] * kNum) + (den[0] * kDen);
+    Result := den[1];
+End;
+
 
 procedure ETKInvert(A: pDoubleArray; Norder: Integer; var Error: Integer);
 //    Matrix= reference to matrix of DOUBLEs

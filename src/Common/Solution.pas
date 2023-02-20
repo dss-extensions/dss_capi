@@ -301,7 +301,7 @@ type
 
         procedure AddInAuxCurrents(SolveType: Integer);
         function SolveSystem(V: pNodeVArray): Integer;
-        procedure GetPCInjCurr;
+        procedure GetPCInjCurr(GFMOnly: Boolean = FALSE);
         procedure GetSourceInjCurrents;
         procedure ZeroInjCurr;
         procedure Upload2IncMatrix;
@@ -354,6 +354,7 @@ uses
     Utilities,
     KLUSolve,
     Line,
+    InvBasedPCE,
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
     Diakoptics,
 {$ENDIF}
@@ -747,6 +748,8 @@ begin
             pElem := Sources.Next;
         end;
 
+        // Adds GFM PCE as well
+        GetPCInjCurr(TRUE);
     end;
 end;
 
@@ -822,28 +825,31 @@ begin
                 begin
                     pGen.InitDQDVCalc;
 
-                   // solve at base var setting
-                    Iteration := 0;
-                    repeat
-                        Inc(Iteration);
-                        ZeroInjCurr;
-                        GetSourceInjCurrents;
-                        pGen.InjCurrents;   // get generator currents with nominal vars
-                        SolveSystem(NodeV);
-                    until Converged or (Iteration >= Maxiterations);
-
-                    pGen.RememberQV;  // Remember Q and V
-                    pGen.BumpUpQ;
-
-                   // solve after changing vars
-                    Iteration := 0;
-                    repeat
-                        Inc(Iteration);
-                        ZeroInjCurr;
-                        GetSourceInjCurrents;
-                        pGen.InjCurrents;   // get generator currents with nominal vars
-                        SolveSystem(NodeV);
-                    until Converged or (Iteration >= Maxiterations);
+                    // NOTE: The following was commented in https://sourceforge.net/p/electricdss/code/3534/
+                    //       The Y matrix element is used since then.
+                    //
+                    //    // solve at base var setting
+                    //     Iteration := 0;
+                    //     repeat
+                    //         Inc(Iteration);
+                    //         ZeroInjCurr;
+                    //         GetSourceInjCurrents;
+                    //         pGen.InjCurrents;   // get generator currents with nominal vars
+                    //         SolveSystem(NodeV);
+                    //     until Converged or (Iteration >= Maxiterations);
+                    //
+                    //     pGen.RememberQV;  // Remember Q and V
+                    //     pGen.BumpUpQ;
+                    //
+                    //    // solve after changing vars
+                    //     Iteration := 0;
+                    //     repeat
+                    //         Inc(Iteration);
+                    //         ZeroInjCurr;
+                    //         GetSourceInjCurrents;
+                    //         pGen.InjCurrents;   // get generator currents with nominal vars
+                    //         SolveSystem(NodeV);
+                    //     until Converged or (Iteration >= Maxiterations);
 
                     pGen.CalcdQdV; // bssed on remembered Q and V and present values of same
                     pGen.ResetStartPoint;
@@ -1025,10 +1031,10 @@ begin
     end;
 
     case Algorithm of
-        NORMALSOLVE:
-            DoNormalSolution;
         NEWTONSOLVE:
             DoNewtonSolution;
+        else // was NORMALSOLVE:
+            DoNormalSolution;
     end;
 
     DSS.ActiveCircuit.Issolved := ConvergedFlag;
@@ -1781,22 +1787,26 @@ begin
         Result := idx;
 end;
 
-procedure TSolutionObj.GetPCInjCurr;
+procedure TSolutionObj.GetPCInjCurr(GFMOnly: Boolean = FALSE);
 // Get inj currents from all enabled PC devices 
 var
     pElem: TDSSCktElement;
+    valid, onGFM: Boolean;
 begin
     with DSS.ActiveCircuit do
     begin
         pElem := PCElements.First;
         while pElem <> NIL do
         begin
-            with pElem do
-                if Enabled then
-                    InjCurrents; // uses NodeRef to add current into InjCurr Array;
+            onGFM := ((pElem is TInvBasedPCE) and (TInvBasedPCE(pElem).GFM_Mode));
+            valid := (not (GFMOnly xor onGFM)) and pElem.Enabled;
+            //TODO: depending on the system size, a dedicated list could be faster/better
+            // e.g. could check the lists from Circuit directly instead of looping through all elements
+            if valid then
+                pElem.InjCurrents(); // uses NodeRef to add current into InjCurr Array;
             pElem := PCElements.Next;
         end;
-    end;
+    end
 end;
 
 procedure TSolutionObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
@@ -2699,9 +2709,7 @@ begin
         end; // while ActorIsActive
 end;
 
-procedure TSolver.DoTerminate;        // Is the end of the thread
-var
-    ex: TObject;
+procedure TSolver.DoTerminate; // Is the end of the thread
 begin
     ActorIsActive := FALSE;
     Processing := FALSE;

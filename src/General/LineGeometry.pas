@@ -491,10 +491,10 @@ var
 begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
-    NConds := Other.NWires;   // allocates
+    NConds := Other.NWires; // allocates
     FNphases := Other.FNphases;
     LineSpacingObj := Other.LineSpacingObj;
-    FLineType := Other.FLineType; //TODO: check original
+    FLineType := Other.FLineType;
     for i := 1 to FNConds do
         FPhaseChoice^[i] := Other.FPhaseChoice^[i];
     for i := 1 to FNConds do

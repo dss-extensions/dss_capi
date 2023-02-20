@@ -1429,6 +1429,36 @@ extern "C" {
     DSS_CAPI_DLL void CktElement_Get_TotalPowers_GR(void);
 
     /*! 
+    Gets the name of the active state variable if any, otherwise, returns and empty string
+    */
+    DSS_CAPI_DLL char* CktElement_Get_VariableName(void);
+
+    /*!
+    Sets the name of the active state variable for using with the VariableValue property
+    */
+    DSS_CAPI_DLL void CktElement_Set_VariableName(const char* Value);
+    
+    /*!
+    Gets the  present value for the active state variable. If there no active variable, returns a error message.
+    */
+    DSS_CAPI_DLL double CktElement_Get_VariableValue(void);
+    
+    /*!
+    Sets the given value to be the present value for the active state variable. If there no active variable, returns a error message.
+    */
+    DSS_CAPI_DLL void CktElement_Set_VariableValue(double Value);
+
+    /*!
+    Gets the index of the active state variable if any, otherwise, returns -1
+    */
+    DSS_CAPI_DLL int32_t CktElement_Get_VariableIdx(void);
+
+    /*!
+    Activates a  state variable by index for using with the VariableValue property
+    */
+    DSS_CAPI_DLL void CktElement_Set_VariableIdx(int32_t Value);
+
+    /*! 
     Convert real and imaginary doubles to Array of doubles
     */
     DSS_CAPI_DLL void CmathLib_Get_cmplx(double** ResultPtr, int32_t* ResultCount, double RealPart, double ImagPart);
@@ -1620,13 +1650,12 @@ extern "C" {
     DSS_CAPI_DLL void DSS_Set_AllowEditor(uint16_t Value);
 
     /*! 
-    If enabled, the legacy/deprecated models for PVSystem, InvControl, Storage and StorageControl are used.
-    WARNING: Changing the active value runs a "Clear" command, discarding the current circuit. 
-    
-    Defaults to False/0 (disabled state).
-    
-    This can also be set through the environment variable DSS_CAPI_LEGACY_MODELS. Setting it to 1 enables
-    the legacy components, using the old models from the start.
+    LegacyModels was a flag used to toggle legacy (pre-2019) models for PVSystem, InvControl, Storage and
+    StorageControl.
+    In the official OpenDSS version 9.0, the old models were removed. They were temporarily present here
+    but were also removed in DSS C-API v0.13.0.
+        
+    NOTE: this function pair will be removed for v1.0. It is left to avoid breaking the current API too soon.
     
     (API Extension)
     */

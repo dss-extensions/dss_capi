@@ -14,7 +14,7 @@ INTERFACE
 
   uses
     gqueue, Command,
-    ControlClass, ControlElem, CktElement, DSSClass, PVSystem2, Arraydef, UComplex, DSSUcomplex,
+    ControlClass, ControlElem, CktElement, DSSClass, PVSystem, Arraydef, UComplex, DSSUcomplex,
     utilities, Dynamics, DSSPointerList, Classes, StrUtils;
 
   type
@@ -52,7 +52,7 @@ INTERFACE
     TExpControlObj = class(TControlElem)
       private
             ControlActionHandle: Integer;
-            ControlledElement: Array of TPVSystem2Obj;    // list of pointers to controlled PVSystem elements
+            ControlledElement: Array of TPVSystemObj;    // list of pointers to controlled PVSystem elements
             MonitoredElement : TDSSCktElement;  // First PVSystem element for now
 
             // PVSystemList information
@@ -129,7 +129,6 @@ USES
 type 
     TObj = TExpControlObj;
     TProp = TExpControlProp;
-    TPVSystemObj = TPVSystem2Obj;
 const
     NumPropsThisClass = Ord(High(TProp));
     NONE = 0;
@@ -360,7 +359,8 @@ Begin
     End;
 
     maxord := 0; // will be the size of cBuffer
-    for i := 1 to FPVSystemPointerList.Count do begin
+    for i := 1 to FPVSystemPointerList.Count do
+    begin
         // User ControlledElement[] as the pointer to the PVSystem elements
          ControlledElement[i] :=  TPVSystemObj(FPVSystemPointerList.Get(i));  // pointer to i-th PVSystem
          FNphases := ControlledElement[i].NPhases;  // TEMC TODO - what if these are different sizes (same concern exists with InvControl)
@@ -449,7 +449,7 @@ BEGIN
         if (ActiveCircuit.Solution.ControlMode <> CTRLSTATIC) then
         begin
           dt :=  ActiveCircuit.Solution.Dynavars.h;
-          FTargetQ[i] := FLastStepQ[i] + (FTargetQ[i] - FLastStepQ[i]) * (1 - Exp (-dt / FOpenTau)); // TODO - precalculate?
+          FTargetQ[i] := FLastStepQ[i] + (FTargetQ[i] - FLastStepQ[i]) * (1 - Exp(-dt / FOpenTau)); // TODO - precalculate?
         end;
 
       // only move the non-bias component by deltaQ_factor in this control iteration
@@ -636,7 +636,7 @@ begin
     if VregTau > 0.0 then begin
       dt :=  ActiveCircuit.Solution.Dynavars.h;
       Verr := FPresentVpu[j] - FVregs[j];
-      FVregs[j] := FVregs[j] + Verr * (1 - Exp (-dt / VregTau)); // TODO - precalculate?
+      FVregs[j] := FVregs[j] + Verr * (1 - Exp(-dt / VregTau)); // TODO - precalculate?
     end else begin
       Verr := 0.0;
     end;

@@ -582,26 +582,24 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Meters_Get_CountBranches(): Integer; CDECL; //TODO: check -- same as Meters_Get_SeqListSize?
+function Meters_Get_CountBranches(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-  // pelem : TDSSCktElement;
+    pElem : TDSSCktElement;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
-        
-    if pMeterObj.SequenceList = NIL then
+
+    if pMeterObj.BranchList = NIL then
         Exit;
-        
-    Result := pMeterObj.SequenceList.Count;
-    (*
-      while pElem <> Nil do   
-      Begin
-         inc(Result);
-         pElem := pMeterObj.BranchList.GoForward;
-      End;
-    *)
+
+    pElem := pMeterObj.BranchList.First;
+    while pElem <> NIL do
+    begin
+        Inc(Result);
+        pElem := pMeterObj.BranchList.GoForward;
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SAIFI(): Double; CDECL;
@@ -660,7 +658,8 @@ begin
     if not _activeObj(DSSPrime, pMeterObj) then
         Exit;
         
-    pMeterObj.CalcReliabilityIndices(AssumeRestoration);
+    pMeterObj.AssumeRestoration := AssumeRestoration;
+    pMeterObj.CalcReliabilityIndices();
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SeqListSize(): Integer; CDECL;

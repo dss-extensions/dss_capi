@@ -517,8 +517,8 @@ begin
                             CommandString := 'New, generator.' + GetUniqueGenName +
                                 ', bus1="' + BusList.NameOfIndex(MinLossBus) +
                                 '", phases=' + IntToStr(MinBusPhases) +
-                                ', kv=' + Format('%-g', [kVrat]) +
-                                ', kw=' + Format('%-g', [TestGenkW]) +
+                                ', kV=' + Format('%-g', [kVrat]) +
+                                ', kW=' + Format('%-g', [TestGenkW]) +
                                 ', ' + Format('%5.2f', [GenPF]) +
                                 Format('! Factor =  %-g (%-.3g, %-.3g)', [MaxLossImproveFactor, LossWeight, UEWeight]);
                             Command := CommandString;    // Defines Generator

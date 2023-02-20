@@ -124,7 +124,7 @@ type
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
         function NumVariables: Integer; OVERRIDE;
-        procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
+        procedure GetAllVariables(States: Array of Double); OVERRIDE;
 
         function VariableName(i: Integer): String; OVERRIDE;
 
@@ -860,8 +860,8 @@ var
     RefL,
     MonPF: Double;
     Vpolar: polar;
-    MonPower, 
-    CurrOut: Complex;
+    MonPower: Complex;
+    // CurrOut: Complex;
 
     function checkPF(): Boolean;
     begin
@@ -907,7 +907,7 @@ begin
             Vpolar := ctopolar(Vbout);
             Error := abs(1 - abs(Vpolar.mag / (VRef * 1000)));
             if Error > Tol1 then 
-                Result := TRUE
+                Result := True
             else
                 Result := checkPF();
         end;
@@ -931,8 +931,8 @@ begin
                 Error := abs(1 - abs(Vpolar.mag / (VRefD*1000)));
                 if Error > Tol1 then  
                     Result := True
-                else
-                    Result := checkPF();
+                // else
+                //     Result := checkPF();
             end
         end;
         5:  
@@ -954,7 +954,9 @@ begin
                 Vpolar := ctopolar(Vbout);
                 Error := abs(1-abs(Vpolar.mag/(VRefD*1000)));
                 if Error > Tol1 then 
-                    Result :=  True;   // In case we need a control action
+                    Result :=  True   // In case we need a control action
+                else
+                    Result := checkPF();
             end
         end
     end;
@@ -1037,20 +1039,23 @@ end;
 
 procedure TUPFCObj.Set_Variable(i: Integer; Value: Double);
 begin
-  // inherited;
-
+    if i < 1 then
+    begin
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        Exit; // No variables to set
+    end;
     case i of
         1:
             ModeUPFC := round(Value);
-        2: ; // can't set this one  -readonly
-        3: ; // can't set this one  -readonly
-        4: ; // can't set this one  -readonly
-        5: ; // can't set this one  -readonly
-        6: ; // can't set this one  -readonly
-        7: ; // can't set this one  -readonly
-        8: ; // can't set this one  -readonly
-        9: ; // can't set this one  -readonly
-        10: ; // can't set this one  -readonly
+        // 2: ; // can't set this one  -readonly
+        // 3: ; // can't set this one  -readonly
+        // 4: ; // can't set this one  -readonly
+        // 5: ; // can't set this one  -readonly
+        // 6: ; // can't set this one  -readonly
+        // 7: ; // can't set this one  -readonly
+        // 8: ; // can't set this one  -readonly
+        // 9: ; // can't set this one  -readonly
+        // 10: ; // can't set this one  -readonly
         11:
             Sr0^[1].re := Value;
         12:
@@ -1059,6 +1064,8 @@ begin
             Sr1^[1].re := Value;
         14:
             Sr1^[1].im := Value;
+    else
+        DoSimpleMsg('%s: variable index %d is read-only.', [FullName, i], 564);
     end;
 end;
 
@@ -1097,12 +1104,12 @@ begin
     end;
 end;
 
-procedure TUPFCObj.GetAllVariables(States: pDoubleArray);
+procedure TUPFCObj.GetAllVariables(States: Array of Double);
 var
     i: Integer;
 begin
     for i := 1 to NumUPFCVariables do
-        States^[i] := Variable[i];
+        States[i - 1] := Variable[i];
 end;
 
 function TUPFCObj.VariableName(i: Integer): String;

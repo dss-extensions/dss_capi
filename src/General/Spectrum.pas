@@ -177,7 +177,7 @@ begin
             //if (HarmArray <> NIL) then
             ReAllocmem(AngleArray, Sizeof(Double) * NumHarm); // Make a dummy Angle array
             for i := 1 to NumHarm do
-                AngleArray^[i] := 0.0; //TODO: remove -- left for backwards compatiblity, but this is kinda buggy
+                AngleArray[i] := 0.0; //TODO: remove -- left for backwards compatiblity, but this is kinda buggy
         end;
         ord(TProp.csvfile):
             DoCSVFile(self, csvfile);

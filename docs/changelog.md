@@ -1,4 +1,4 @@
-# Version 0.13
+# Version 0.14
 
 **not released**
 
@@ -12,15 +12,25 @@
     - expose remaining PM features (diakoptics)
     - continue work on the plotting and extended reporting API
     - see also the GitHub milestone: https://github.com/dss-extensions/dss_capi/milestone/6
-    - remove `LegacyModels` (older/deprecated models for PVSystem, Storage and related classes)
 
 
-# Version 0.12.2
+# Version 0.13.1
 
 - **Planned**:
     - matrix shapes in the count pointers
     - complements to the Obj and Batch APIs
     - i18n complements
+
+
+# Version 0.13.0
+
+- Remove our old *Legacy Models* mecanism. Right now, the API functions still exist, but will have no effect when setting and will throw an error. For a future version, the functions will be removed.
+
+- Batch API: ...
+
+- Dynamic simulations: ...
+
+
 
 # Version 0.12.1
 

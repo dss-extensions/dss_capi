@@ -39,8 +39,8 @@ library dss_capi;
 // Copyright (c) 2016 Battelle Memorial Institute
 
 
-// Copyright (c) 2017-2022, Paulo Meira
-// Copyright (c) 2017-2022, DSS C-API contributors
+// Copyright (c) 2017-2023, Paulo Meira
+// Copyright (c) 2017-2023, DSS C-API contributors
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -192,10 +192,8 @@ uses
     XfmrCode in 'src/General/XfmrCode.pas',
     XYcurve in 'src/General/XYcurve.pas',
     Ymatrix in 'src/Common/Ymatrix.pas',
-    InvControl2 in 'src/Controls/InvControl2.pas',
-    StorageController2 in 'src/Controls/StorageController2.pas',
-    PVsystem2 in 'src/PCElements/PVsystem2.pas',
-    Storage2 in 'src/PCElements/Storage2.pas',
+    DynamicExp in 'src/General/DynamicExp.pas',
+    InvDynamics in 'src/Shared/InvDynamics.pas',
 
     CAPI_Utils in 'CAPI_Utils.pas',
     CAPI_Metadata in 'CAPI_Metadata.pas',
@@ -486,6 +484,12 @@ exports
     CktElement_Get_VoltagesMagAng,
     CktElement_Get_IsIsolated,
     CktElement_Get_TotalPowers,
+    CktElement_Get_VariableName,
+    CktElement_Set_VariableName,
+    CktElement_Get_VariableValue,
+    CktElement_Set_VariableValue,
+    CktElement_Get_VariableIdx,
+    CktElement_Set_VariableIdx,
     CmathLib_Get_cmplx,
     CmathLib_Get_cabs,
     CmathLib_Get_cdang,

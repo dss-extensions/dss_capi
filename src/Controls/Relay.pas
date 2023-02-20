@@ -1663,7 +1663,7 @@ function TRelayObj.GetControlPower(): Complex;
 // Get power to control based on active power
 var
     i, k :Integer;
-    S: Complex;
+    // S: Complex;
     Vph, V012: Complex3;
     Iph, I012: Complex3;
 begin

@@ -193,6 +193,7 @@ type
     TWriteDoublePropertyFunction = procedure (obj: Pointer; Value: double);
     TWriteObjRefPropertyFunction = procedure (obj: Pointer; Value: Pointer);
     TWriteIntegerPropertyFunction = procedure (obj: Pointer; Value: Integer);
+    TWriteStringPropertyFunction = procedure (obj: Pointer; Value: String);
     TWriteStringListPropertyFunction = procedure (obj: Pointer; Value: TStringList);
     TWriteObjRefsPropertyFunction = procedure (obj: Pointer; Values: PPointer; ValueCount: Integer);
     TWriteDoublesPropertyFunction = procedure (obj: Pointer; Values: PDouble; ValueCount: Integer);
@@ -221,6 +222,7 @@ type
         function OrdinalToString(Value: Integer): String;
         function StringToOrdinal(Value: String): Integer;
         function IsOrdinalValid(Value: Integer): Boolean;
+        function Joined(): String;
     end;
 
     TAction = record
@@ -361,11 +363,8 @@ type
         FLineSpacingClass: TDSSClass;
         FLineCodeClass: TDSSClass;
         FStorageClass: TDSSClass;
-        FStorage2Class: TDSSClass;
         FPVSystemClass: TDSSClass;
-        FPVSystem2Class: TDSSClass;
         FInvControlClass: TDSSClass;
-        FInvControl2Class: TDSSClass;
         FExpControlClass: TDSSClass;
         FLineClass: TDSSClass;
         FVSourceClass: TDSSClass;
@@ -381,7 +380,6 @@ type
         FGeneratorClass: TDSSClass;
         FGenDispatcherClass: TDSSClass;
         FStorageControllerClass: TDSSClass;
-        FStorageController2Class: TDSSClass;
         FRelayClass: TDSSClass;
         FRecloserClass: TDSSClass;
         FFuseClass: TDSSClass;
@@ -396,6 +394,7 @@ type
         FXfmrCodeClass: TDSSClass;
         FGICLineClass: TDSSClass;
         FGICTransformerClass: TDSSClass;
+        FDynamicExpClass: TDSSClass;
 
         FActiveFeederObj: TObject;
         FActiveSolutionObj: TObject;
@@ -404,12 +403,10 @@ type
         FActiveExpControlObj: TObject;
         FActiveGenDispatcherObj: TObject;
         FActiveInvControlObj: TObject;
-        FActiveInvControl2Obj: TObject;
         FActiveRecloserObj: TObject;
         FActiveRegControlObj: TObject;
         FActiveRelayObj: TObject;
         FActiveStorageControllerObj: TObject;
-        FActiveStorageController2Obj: TObject;
         FActiveSwtControlObj: TObject;
         FActiveUPFCControlObj: TObject;
         // FActiveVVCControlObj: TObject;
@@ -438,9 +435,7 @@ type
         FActiveIsourceObj: TObject;
         FActiveLoadObj: TObject;
         FActivePVsystemObj: TObject;
-        FActivePVsystem2Obj: TObject;
         FActiveStorageObj: TObject;
-        FActiveStorage2Obj: TObject;
         FActiveUPFCObj: TObject;
         FActiveVCCSObj: TObject;
         FActiveVSConverterObj: TObject;
@@ -448,12 +443,13 @@ type
         FActiveAutoTransObj: TObject;
         FActiveCapacitorObj: TObject;
         FActiveFaultObj: TObject;
-        FActiveFuseObj: TObject;
-        FActiveGICTransformerObj: TObject;
-        FActiveLineObj: TObject;
-        FActiveReactorObj: TObject;
-        FActiveTransfObj: TObject;
-    
+        // FActiveFuseObj: TObject;
+        // FActiveGICTransformerObj: TObject;
+        // FActiveLineObj: TObject;
+        // FActiveReactorObj: TObject;
+        // FActiveTransfObj: TObject;
+        // FActiveDynamicExpObj: TObject;
+
         FDSSExecutive: TObject;
         FCIMExporter: TObject;
     
@@ -533,7 +529,9 @@ type
         Redirect_Abort     :Boolean;
         In_Redirect        :Boolean;
         DIFilesAreOpen     :Boolean;
-        AutoShowExport     :Boolean;
+        AutoShowExport: Boolean;
+        AutoDisplayShowReport: Boolean;
+        EventLogDefault: Boolean;
         SolutionWasAttempted :Boolean;
 
         GlobalHelpString   :String;
@@ -571,7 +569,8 @@ type
         // For external APIs
         FPropIndex: Integer;  
         FPropClass: TDSSClass;
-        
+        API_VarIdx: Integer;
+
         // Previously C-API or COM globals
         tempBuffer: AnsiString; // CAPI_Utils.pas
         ComParser: TDSSParser; // CAPI_Parser.pas
@@ -583,7 +582,7 @@ type
         
         Enums: TObjectList;
         UnitsEnum, ScanTypeEnum, SequenceEnum, ConnectionEnum, LeadLagEnum, CoreTypeEnum,
-        LineTypeEnum, EarthModelEnum, DefaultLoadModelEnum, RandomModeEnum, ControlModeEnum,
+        LineTypeEnum, EarthModelEnum, DefaultLoadModelEnum, RandomModeEnum, ControlModeEnum, InvControlModeEnum,
         SolveModeEnum, SolveAlgEnum, CktModelEnum, AddTypeEnum, LoadShapeClassEnum, MonPhaseEnum: TDSSENum;
 
         // ZIP file state
@@ -734,6 +733,7 @@ begin
     CoreTypeEnum := TDSSEnum.Create('Core Type', False, 1, 1,
         ['shell', '1-phase', '3-leg', '4-leg', '5-leg', 'core-1-phase'],
         [0, 1, 3, 4, 5, 9]);
+    CoreTypeEnum.DefaultValue := 0;
     Enums.Add(CoreTypeEnum);
 
     LeadLagEnum := TDSSEnum.Create('Phase Sequence', True, 1, 1,
@@ -758,6 +758,13 @@ begin
         [CONTROLSOFF, CTRLSTATIC, EVENTDRIVEN, TIMEDRIVEN, MULTIRATE]);
     ControlModeEnum.DefaultValue := CTRLSTATIC;
     Enums.Add(ControlModeEnum);
+
+    InvControlModeEnum := TDSSEnum.Create('Inverter Control Mode', True, 1, 1,
+        ['GFL', 'GFM'],
+        [Integer(False), Integer(True)]);
+    InvControlModeEnum.DefaultValue := Integer(False);
+    Enums.Add(InvControlModeEnum);
+
 
     SolveModeEnum := TDSSEnum.Create('Solution Mode', True, 1, 9,
         ['Snap', 'Daily', 'Yearly', 'M1', 'LD1', 'PeakDay', 'DutyCycle', 'Direct', 'MF', 'FaultStudy', 'M2', 'M3', 'LD2', 'AutoAdd', 'Dynamic', 'Harmonic', 'Time', 'HarmonicT', 'Snapshot'],
@@ -875,6 +882,7 @@ begin
     MaxAllocationIterations := 2;
     FSolutionAbort := 0;
     AutoShowExport        := FALSE;
+    AutoDisplayShowReport := TRUE;
     SolutionWasAttempted  := FALSE;
 
     DefaultBaseFreq       := GlobalDefaultBaseFreq;
@@ -893,6 +901,7 @@ begin
     
     FPropIndex := 0;
     FPropClass := NIL;
+    API_VarIdx := -1;
     
     // From ReduceCkt interface initialization
     ReduceEditString := ''; // Init to null string
@@ -912,8 +921,8 @@ begin
 end;
 
 destructor TDSSContext.Destroy;
-var
-    i: Integer;
+// var
+//     i: Integer;
 begin
     if unzipper <> NIL then
         unzipper.Free;
@@ -1026,7 +1035,7 @@ end;
 destructor TDSSClass.Destroy;
 var
    i: Integer;
-   obj: TDSSObject;
+//   obj: TDSSObject;
 begin
     // if ElementList <> NIL then
     // begin
@@ -1155,15 +1164,19 @@ begin
 
         if (ParamPointer <= 0) or (ParamPointer > NumProperties) then
         begin
-            if Length(ParamName) > 0 then
-                DoSimpleMsg('Unknown parameter "%s" (value "%s") for object "%s"', [ParamName, Param, TDSSObject(Obj).FullName], 110)
-            else
-                DoSimpleMsg('Unknown parameter for value "%s" in object "%s"', [Param, TDSSObject(Obj).FullName], 110);
-
-            if DSS_CAPI_EARLY_ABORT then
+            // Not a class property, but may still be a dyn.eq. for some classes
+            if not Obj.ParseDynVar(Parser, ParamName) then
             begin
-                Result := -1;
-                Exit;
+                if Length(ParamName) > 0 then
+                    DoSimpleMsg('Unknown parameter "%s" (value "%s") for object "%s"', [ParamName, Param, TDSSObject(Obj).FullName], 110)
+                else
+                    DoSimpleMsg('Unknown parameter for value "%s" in object "%s"', [Param, TDSSObject(Obj).FullName], 110);
+
+                if DSS_CAPI_EARLY_ABORT then
+                begin
+                    Result := -1;
+                    Exit;
+                end;
             end;
 
             ParamName := Parser.NextParam;
@@ -1584,6 +1597,21 @@ begin
             Exit;
         end;
     Result := False;
+end;
+
+function TDSSEnum.Joined(): String;
+var
+    i: Integer;
+begin
+    Result := '[';
+    for i := 0 to High(Names) do
+    begin
+        if i <> 0 then
+            Result := Result + ',';
+
+        Result := Result + Names[i];
+    end;
+    Result := Result + ']';
 end;
 
 function TDSSEnum.StringToOrdinal(Value: String): Integer; // Naive version for testing

@@ -32,11 +32,8 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, DSSPointer
      TSData,
      LineSpacing,
      Storage,
-     Storage2,
      PVSystem,
-     PVSystem2,
      InvControl,
-     InvControl2,
      ExpControl,
 
      LineCode,
@@ -55,7 +52,6 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, DSSPointer
      Generator,
      GenDispatcher,
      StorageController,
-     StorageController2,
      Relay,
      Recloser,
      Fuse,
@@ -76,10 +72,10 @@ CONST
     CRLF = sLineBreak;
     IsDLL = True;
 
-    // TODO: CALPHA has exceptionally bad precision here... change for v0.13
+    // TODO: CALPHA has exceptionally bad precision here... change for v0.14
     CALPHA: Complex = (re:-0.5; im: -0.866025); // -120 degrees phase shift
 
-    // TODO: toggle for v0.13
+    // TODO: toggle for v0.14
     // SQRT2 = 1.4142135623730950488;
     // SQRT3 = 1.7320508075688772935;
     // InvSQRT3 = 0.57735026918962576451;
@@ -152,7 +148,6 @@ VAR
     DSS_CAPI_EARLY_ABORT: Boolean;
     DSS_CAPI_ITERATE_DISABLED: Integer = 0; // default to 0 for compatibility
     DSS_CAPI_EXT_ERRORS: Boolean = True;
-    DSS_CAPI_LEGACY_MODELS_PREV: Boolean = False;
     DSS_CAPI_ALLOW_CHANGE_DIR: Boolean = True;
     DSS_CAPI_COM_DEFAULTS: Boolean = True;
     DSS_CAPI_MATRIX_SIZE: Boolean = False;
@@ -163,7 +158,6 @@ VAR
 
     DSS_CAPI_ALLOW_EDITOR: Boolean; //TODO: one per context?
     DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True; //TODO: one per context?
-    DSS_CAPI_LEGACY_MODELS: Boolean = False; //TODO: one per context?
     NoFormsAllowed: Boolean = True; //TODO: one per context?
     DSS_CAPI_ALLOW_DOSCMD: Boolean = False; //TODO: one per context?
     
@@ -256,10 +250,8 @@ Begin
 End;
 
 PROCEDURE DoErrorMsg(DSS: TDSSContext; Const S, Emsg, ProbCause:String; ErrNum:Integer);
-
 VAR
-    Msg:String;
-    Retval:Integer;
+    Msg: String;
 begin
     Msg := Format(_('Error %d Reported From OpenDSS Intrinsic Function: '), [Errnum])+ CRLF  + S
         + CRLF + CRLF + _('Error Description: ') + CRLF + Emsg
@@ -269,7 +261,7 @@ begin
     begin
         if DSS.In_Redirect then
         begin
-            RetVal := DSSMessageDlg(Msg, FALSE);
+            DSSMessageDlg(Msg, FALSE);
         end
         else
             DSSMessageDlg(Msg, TRUE);
@@ -804,10 +796,6 @@ initialization
     // Default is True, disable at initialization when DSS_CAPI_ALLOW_EDITOR = 0
     DSS_CAPI_ALLOW_EDITOR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') <> '0');
     DSS_CAPI_EXT_ERRORS := (SysUtils.GetEnvironmentVariable('DSS_CAPI_EXT_ERRORS') <> '0');
-
-    // Default is False, enable at initialization when DSS_CAPI_LEGACY_MODELS = 1
-    DSS_CAPI_LEGACY_MODELS := (SysUtils.GetEnvironmentVariable('DSS_CAPI_LEGACY_MODELS') = '1');
-    DSS_CAPI_LEGACY_MODELS := DSS_CAPI_LEGACY_MODELS_PREV;
     
     // Default is False, enable at initialization when DSS_CAPI_ALLOW_DOSCMD = 1
     DSS_CAPI_ALLOW_DOSCMD := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_DOSCMD') = '1');

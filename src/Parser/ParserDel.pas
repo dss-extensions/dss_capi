@@ -85,7 +85,7 @@ type
         function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray): Integer;
         function ParseAsVector(VectorBuffer: Array of Double): Integer;
 
-        // TODO: remove, not used in the main code, only in the COM API
+        // TODO: remove, not used in the main code, only in the COM API, kinda useless for most common programming languages
         function ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
 
         function ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray; Stride: Integer = 1; Scale: Double = 1): Integer;

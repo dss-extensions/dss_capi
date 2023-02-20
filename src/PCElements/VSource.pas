@@ -1,11 +1,10 @@
 unit VSource;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2017-2023, Paulo Meira, DSS Extensions contributors
+// Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -305,13 +304,13 @@ begin
                 SetBus(2, S2);    // default setting for Bus2
             end;
         end;
-        6:
+        ord(TProp.phases):
             NConds := Fnphases;  // Force Reallocation of terminal info
-        13:
+        ord(TProp.R1):
             R2 := R1;
-        14:
+        ord(TProp.X1):
             X2 := X1;
-        20:
+        ord(TProp.Z1):
         begin
             Z1Specified := TRUE;
             // default values for Z2, Z0
@@ -326,11 +325,11 @@ begin
                 X0 := X1;
             end;
         end;
-        21:
+        ord(TProp.Z0):
             Z0Specified := TRUE;
-        22:
+        ord(TProp.Z2):
             Z2Specified := TRUE;
-        23:
+        ord(TProp.puZ1):
         begin
             puZ1Specified := TRUE;
                 // default values for Z2, Z0
@@ -343,13 +342,13 @@ begin
                 puZ0 := puZ1;
             end;
         end;
-        24:
+        ord(TProp.puZ0):
             puZ0Specified := TRUE;
-        25:
+        ord(TProp.puZ2):
             puZ2Specified := TRUE;
         // Set shape objects;  returns nil if not valid
         // Sets the kW and kvar properties to match the peak kW demand from the Loadshape
-        28:
+        ord(TProp.Daily):
         begin
             // If Yearly load shape is not yet defined, make it the same as Daily
             if YearlyShapeObj = NIL then
@@ -359,31 +358,32 @@ begin
 
     // Set the Z spec type switch depending on which was specified.
     case Idx of
-        7, 8:
+        ord(TProp.MVAsc3), ord(TProp.MVAsc1):
             ZSpecType := 1;  // MVAsc
-        11, 12:
+        ord(TProp.Isc3), ord(TProp.Isc1):
             ZSpecType := 2;  // Isc
-        13 .. 16:
+        ord(TProp.R1), ord(TProp.X1), ord(TProp.R0), ord(TProp.X0):
             ZSpecType := 3; // Specified in Ohms
-        19:
+        ord(TProp.bus2):
             Bus2Defined := TRUE;
-        20..25:
+        ord(TProp.Z1), ord(TProp.Z0), ord(TProp.Z2), 
+        ord(TProp.puZ1), ord(TProp.puZ0), ord(TProp.puZ2):
             Zspectype := 3;
     end;
 
     case Idx of
-        2:
+        ord(TProp.basekv):
             ZBase := SQR(kvBase) / BaseMVA;
-        23:
+        ord(TProp.puZ1):
         begin
             Z1Specified := TRUE;
             puZ1Specified := TRUE;
         end;
-        24:
+        ord(TProp.puZ0):
             puZ0Specified := TRUE;
-        25:
+        ord(TProp.puZ2):
             puZ2Specified := TRUE;
-        26:
+        ord(TProp.baseMVA):
             ZBase := SQR(kvBase) / BaseMVA;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);

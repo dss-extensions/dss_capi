@@ -728,6 +728,11 @@ begin
                                 if (DebugTrace) then
                                     RegWriteTraceRecord(TapChangeToMake);
                                 PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
+                                if ShowEventLog then 
+                                    AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.',[Lastchange, PresentTap[TapWinding]]));
+                                if DebugTrace then
+                                    RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, PresentTap[TapWinding]]));
+
                                 if PendingTapChange <> 0.0 then
                                     ControlQueue.Push(DynaVars.intHour, Dynavars.t + TapDelay, 0, 0, Self)
                                 else

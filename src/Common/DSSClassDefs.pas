@@ -115,14 +115,10 @@ uses
     Sensor,
     XfmrCode,
     Storage,
-    Storage2,
     StorageController,
-    StorageController2,
     SwtControl,
     PVSystem,
-    PVSystem2,
     InvControl,
-    InvControl2,
     GICLine,
     GICTransformer,
     VSConverter,
@@ -133,13 +129,12 @@ uses
     IndMach012,
     GICSource,
     AutoTrans,
-        
+    DynamicExp,
+
     DSSHelper;
 
 procedure CreateDSSClasses(DSS: TDSSContext);
 begin
-    DSS_CAPI_LEGACY_MODELS_PREV := DSS_CAPI_LEGACY_MODELS;
-    
     DSS.Classnames := TClassNamesHashListType.Create(40);   // Makes 5 sub lists
     DSS.DSSClassList := TDSSPointerList.Create(40);  // 40 is initial size and increment
 
@@ -208,17 +203,11 @@ begin
     DSS.VCSSClass := TVCCS.Create(DSS);
     DSS.NewDSSClass(DSS.VCSSClass);
 
-
-
-
     DSS.LoadClass := TLoad.Create(DSS);
     DSS.NewDSSClass(DSS.LoadClass);
 
     DSS.TransformerClass := TTransf.Create(DSS);
     DSS.NewDSSClass(DSS.TransformerClass);
-
-
-
 
     DSS.RegControlClass := TRegControl.Create(DSS);
     DSS.NewDSSClass(DSS.RegControlClass);
@@ -235,37 +224,20 @@ begin
     DSS.FaultClass := TFault.Create(DSS);
     DSS.NewDSSClass(DSS.FaultClass);
 
+    DSS.DynamicExpClass := TDynamicExp.Create(DSS); // This needs to be before Generator, PVsystem, Storage
+    DSS.NewDSSClass(DSS.DynamicExpClass);
+
     DSS.GeneratorClass := TGenerator.Create(DSS);
     DSS.NewDSSClass(DSS.GeneratorClass);
 
     DSS.GenDispatcherClass := TGenDispatcher.Create(DSS);
     DSS.NewDSSClass(DSS.GenDispatcherClass);
 
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        DSS.StorageClass := TStorage.Create(DSS);
-        DSS.Storage2Class := NIL;
-        DSS.NewDSSClass(DSS.StorageClass);
-    end
-    else
-    begin
-    	DSS.StorageClass := NIL;
-        DSS.Storage2Class := TStorage2.Create(DSS);
-        DSS.NewDSSClass(DSS.Storage2Class);
-    end;
+    DSS.StorageClass := TStorage.Create(DSS);
+    DSS.NewDSSClass(DSS.StorageClass);
 
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        DSS.StorageControllerClass := TStorageController.Create(DSS);
-        DSS.StorageController2Class := NIL;
-        DSS.NewDSSClass(DSS.StorageControllerClass);
-    end
-    else
-    begin
-    	DSS.StorageControllerClass := NIL;
-        DSS.StorageController2Class := TStorageController2.Create(DSS);
-        DSS.NewDSSClass(DSS.StorageController2Class);
-    end;
+    DSS.StorageControllerClass := TStorageController.Create(DSS);
+    DSS.NewDSSClass(DSS.StorageControllerClass);
 
     DSS.RelayClass := TRelay.Create(DSS);
     DSS.NewDSSClass(DSS.RelayClass);
@@ -279,18 +251,8 @@ begin
     DSS.SwtControlClass := TSwtControl.Create(DSS);
     DSS.NewDSSClass(DSS.SwtControlClass);
 
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        DSS.PVSystemClass := TPVSystem.Create(DSS);
-        DSS.PVSystem2Class := NIL;
-        DSS.NewDSSClass(DSS.PVSystemClass);
-    end
-    else
-    begin
-    	DSS.PVSystemClass := NIL;
-        DSS.PVSystem2Class := TPVSystem2.Create(DSS);
-        DSS.NewDSSClass(DSS.PVSystem2Class);
-    end;
+    DSS.PVSystemClass := TPVSystem.Create(DSS);
+    DSS.NewDSSClass(DSS.PVSystemClass);
 
     DSS.UPFCClass := TUPFC.Create(DSS);
     DSS.NewDSSClass(DSS.UPFCClass);
@@ -310,18 +272,8 @@ begin
     DSS.AutoTransClass := TAutoTrans.Create(DSS); // Auto Transformer
     DSS.NewDSSClass(DSS.AutoTransClass);
 
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        DSS.InvControlClass := TInvControl.Create(DSS);
-        DSS.InvControl2Class := NIL;
-        DSS.NewDSSClass(DSS.InvControlClass);
-    end
-    else
-    begin
-    	DSS.InvControlClass := NIL;
-        DSS.InvControl2Class := TInvControl2.Create(DSS);
-        DSS.NewDSSClass(DSS.InvControl2Class);
-    end;
+    DSS.InvControlClass := TInvControl.Create(DSS);
+    DSS.NewDSSClass(DSS.InvControlClass);
 
     DSS.ExpControlClass := TExpControl.Create(DSS);
     DSS.NewDSSClass(DSS.ExpControlClass);
@@ -343,6 +295,7 @@ begin
 
     DSS.SensorClass := TSensor.Create(DSS);      // Create state estimation sensors
     DSS.NewDSSClass(DSS.SensorClass);
+
     DSS.NumIntrinsicClasses := DSS.DSSClassList.Count;
 end;
 

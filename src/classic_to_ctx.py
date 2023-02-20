@@ -139,7 +139,9 @@ for fn in glob('src/CAPI/*.pas'):
                     break
             
             missing = (set(fstart for fstart in fstarts if not '_GR(' in fstart) - file_used_funcs)
-            assert not missing, missing
+            if missing:
+                print('Missing:', missing)
+                assert not missing, missing
 
         src = src.replace(f'unit {unitname};', f'unit {ctxunitname};')
         # src = src.replace('ctx_ctx_', 'ctx_')

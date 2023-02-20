@@ -53,7 +53,6 @@ uses
     CAPI_Constants,
     DSSGlobals,
     PVSystem,
-    PVSystem2,
     SysUtils,
     PCElement,
     DSSClass,
@@ -95,26 +94,6 @@ begin
     Result := True;
 end;
 //------------------------------------------------------------------------------
-function _activeObj2(DSS: TDSSContext; out obj: TPVSystem2Obj): Boolean; inline;
-begin
-    Result := False;
-    obj := NIL;
-    if InvalidCircuit(DSS) then
-        Exit;
-    
-    obj := DSS.ActiveCircuit.PVSystems.Active;
-    if obj = NIL then
-    begin
-        if DSS_CAPI_EXT_ERRORS then
-        begin
-            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['PVSystem'], 8989);
-        end;
-        Exit;
-    end;
-    
-    Result := True;
-end;
-//------------------------------------------------------------------------------
 procedure PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
@@ -135,19 +114,10 @@ var
     Result: PPAnsiCharArray0;
     k: Integer;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumPVSystemRegisters);
+    for k := 0 to NumPVSystemRegisters - 1 do
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumPVSystemRegisters);
-        for k := 0 to NumPVSystemRegisters - 1 do
-        begin
-            Result[k] := DSS_CopyStringAsPChar(DSSPrime.PVSystemClass.RegisterNames[k + 1]);
-        end;
-        Exit;
-    end;
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumPVSystem2Registers);
-    for k := 0 to NumPVSystem2Registers - 1 do
-    begin
-        Result[k] := DSS_CopyStringAsPChar(DSSPrime.PVSystem2Class.RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(DSSPrime.PVSystemClass.RegisterNames[k + 1]);
     end;
 end;
 
@@ -162,35 +132,18 @@ procedure PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPI
 var
     Result: PDoubleArray0;
     PVSystem: TPVSystemObj;
-    PVSystem2: TPVSystem2Obj;
     k: Integer;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, pVSystem) then
-        begin
-            DefaultResult(ResultPtr, ResultCount);
-            Exit;
-        end;
-            
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, numPVSystemRegisters);
-        for k := 0 to numPVSystemRegisters - 1 do
-        begin
-            Result[k] := PVSystem.Registers[k + 1];
-        end;
-        Exit;
-    end;
-    
-    if not _activeObj2(DSSPrime, PVSystem2) then
+    if not _activeObj(DSSPrime, PVSystem) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
         
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, numPVSystem2Registers);
-    for k := 0 to numPVSystem2Registers - 1 do
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, numPVSystemRegisters);
+    for k := 0 to numPVSystemRegisters - 1 do
     begin
-        Result[k] := PVSystem2.Registers[k + 1];
+        Result[k] := PVSystem.Registers[k + 1];
     end;
     
 end;
@@ -254,19 +207,11 @@ end;
 function PVSystems_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := NIL;
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.Name);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Name(const Value: PAnsiChar); CDECL;
@@ -274,24 +219,10 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
-    if DSS_CAPI_LEGACY_MODELS then
+    if DSSPrime.PVSystemClass.SetActive(Value) then
     begin
-        if DSSPrime.PVSystemClass.SetActive(Value) then
-        begin
-            DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.PVSystemClass.ElementList.Active;
-            DSSPrime.ActiveCircuit.PVSystems.Get(DSSPrime.PVSystemClass.Active);
-        end
-        else
-        begin
-            DoSimpleMsg(DSSPrime, 'PVSystem "%s" not found in Active Circuit.', [Value], 5003);
-        end;
-        Exit;
-    end;
-
-    if DSSPrime.PVSystem2Class.SetActive(Value) then
-    begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.PVSystem2Class.ElementList.Active;
-        DSSPrime.ActiveCircuit.PVSystems.Get(DSSPrime.PVSystem2Class.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.PVSystemClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.PVSystems.Get(DSSPrime.PVSystemClass.Active);
     end
     else
     begin
@@ -302,463 +233,253 @@ end;
 function PVSystems_Get_Irradiance(): Double; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := -1.0;  // not set
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        Result := elem.PVSystemVars.FIrradiance;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    Result := elem2.PVSystemVars.FIrradiance;
+    Result := elem.PVSystemVars.FIrradiance;
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Irradiance(Value: Double); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.PVSystemVars.FIrradiance := Value;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.PVSystemVars.FIrradiance := Value;
+    elem.PVSystemVars.FIrradiance := Value;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_kvar(): Double; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := 0.0;  // not set
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        Result := elem.Presentkvar;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    Result := elem2.Presentkvar;
+    Result := elem.Presentkvar;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_kVArated(): Double; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := -1.0;  // not set
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        Result := elem.kVARating;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    Result := elem2.kVARating;
+    Result := elem.kVARating;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_kW(): Double; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := 0.0;  // not set
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        Result := elem.PresentkW;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    Result := elem2.PresentkW;
+    Result := elem.PresentkW;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_PF(): Double; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := 0.0;  // not set
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        Result := elem.PowerFactor;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    Result := elem2.PowerFactor;
+    Result := elem.PowerFactor;
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_kVArated(Value: Double); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.kVARating := Value;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.kVARating := Value;
+    elem.kVARating := Value;
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_PF(Value: Double); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.Varmode := 0;
-        elem.PowerFactor := Value;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.Varmode := 0;
-    elem2.PowerFactor := Value;
+    elem.Varmode := 0;
+    elem.PowerFactor := Value;
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_kvar(Value: Double); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.Varmode := VARMODEKVAR;
-        elem.Presentkvar := Value;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.Varmode := VARMODEKVAR;
-    elem2.Presentkvar := Value;
+    elem.Varmode := VARMODEKVAR;
+    elem.Presentkvar := Value;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_daily(): PAnsiChar; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := NIL;
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        if elem.DailyShapeObj <> NIL then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShapeObj.Name);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    if elem2.DailyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DailyShapeObj.Name);
+    if elem.DailyShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_daily(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.DailyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.DailyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
+    elem.DailyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_duty(): PAnsiChar; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := NIL;
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        if elem.DutyShapeObj <> NIL then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name);
-        Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if elem2.DutyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DutyShapeObj.Name);
+    if elem.DutyShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_duty(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.DutyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.DutyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
+    elem.DutyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_yearly(): PAnsiChar; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := NIL;
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        if elem.YearlyShapeObj <> NIL then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    if elem2.YearlyShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.YearlyShapeObj.Name);
+    if elem.YearlyShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_yearly(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.YearlyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.YearlyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
+    elem.YearlyShapeObj := ErrorIfLoadShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Tdaily(): PAnsiChar; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := NIL;
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        if elem.DailyTShapeObj <> NIL then        
-            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyTShapeObj.Name);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    if elem2.DailyTShapeObj <> NIL then        
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DailyTShapeObj.Name);
+    if elem.DailyTShapeObj <> NIL then        
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DailyTShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tdaily(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.DailyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.DailyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
+    elem.DailyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Tduty(): PAnsiChar; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := NIL;
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        if elem.DutyTShapeObj <> NIL then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyTShapeObj.Name);
-        Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if elem2.DutyTShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.DutyTShapeObj.Name);
+    if elem.DutyTShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.DutyTShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tduty(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.DutyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.DutyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
+    elem.DutyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Tyearly(): PAnsiChar; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := NIL;
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        if elem.YearlyTShapeObj <> NIL then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyTShapeObj.Name);
-        Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if elem2.YearlyTShapeObj <> NIL then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, elem2.YearlyTShapeObj.Name);
+    if elem.YearlyTShapeObj <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, elem.YearlyTShapeObj.Name);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Tyearly(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.YearlyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.YearlyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
+    elem.YearlyTShapeObj := ErrorIfTShapeNil(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Pmpp(): Double; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := -1.0;  // not set
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        Result := elem.pmpp;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    Result := elem2.pmpp;
+    Result := elem.pmpp;
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Pmpp(Value: Double); CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        elem.pmpp := Value;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    elem2.pmpp := Value;
+    elem.pmpp := Value;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_IrradianceNow(): Double; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := -1.0;  // not set
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        Result := elem.IrradianceNow;
+    if not _activeObj(DSSPrime, elem) then
         Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
-        Exit;
-    Result := elem2.IrradianceNow;
+    Result := elem.IrradianceNow;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Sensor(): PAnsiChar; CDECL;
 var
     elem: TPVSystemObj;
-    elem2: TPVSystem2Obj;
 begin
     Result := NIL;
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        if not _activeObj(DSSPrime, elem) then
-            Exit;
-        if (elem.SensorObj <> NIL) and (elem.SensorObj.MeteredElement <> NIL) then
-            Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.SensorObj.MeteredElement.FullName));
-
-        Exit;
-    end;
-    if not _activeObj2(DSSPrime, elem2) then
+    if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    if (elem2.SensorObj <> NIL) and (elem2.SensorObj.MeteredElement <> NIL) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem2.SensorObj.MeteredElement.FullName));
+    if (elem.SensorObj <> NIL) and (elem.SensorObj.MeteredElement <> NIL) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.SensorObj.MeteredElement.FullName));
 end;
 //------------------------------------------------------------------------------
 end.

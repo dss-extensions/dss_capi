@@ -177,7 +177,7 @@ type
 
         function InjCurrents: Integer; OVERRIDE;
         function NumVariables: Integer; OVERRIDE;
-        procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
+        procedure GetAllVariables(States: Array of Double); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
@@ -968,6 +968,7 @@ var
     GenHarmonic: Double;
     pBuffer: PCBuffer24;
 begin
+    E := 0;  // because of the ??? line commented out below, E is never assigned a good value
     pBuffer := @TIndMach012(ParentClass).cBuffer;
    // Set the VTerminal array
     ComputeVterminal;
@@ -1433,7 +1434,7 @@ begin
     // Do Nothing for other variables: they are read only
 end;
 
-procedure TIndMach012Obj.GetAllVariables(States: pDoubleArray);
+procedure TIndMach012Obj.GetAllVariables(States: Array of Double);
 {
   Return all state variables in double array (allocated by calling function)
 
@@ -1444,7 +1445,7 @@ var
     i: Integer;
 begin
     for i := 1 to NumIndMach012Variables do
-        States^[i] := Variable[i];
+        States[i - 1] := Variable[i];
 end;
 
 function TIndMach012Obj.GetRotorLosses: Double;

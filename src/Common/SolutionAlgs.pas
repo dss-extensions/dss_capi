@@ -95,16 +95,8 @@ procedure TSolutionAlgs.EndOfTimeStepCleanup;
    in main solution loops (see below)
 }
 begin
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        DSS.StorageClass.UpdateAll;
-        DSS.InvControlClass.UpdateAll;
-    end
-    else
-    begin
-        DSS.Storage2Class.UpdateAll;
-        DSS.InvControl2Class.UpdateAll;
-    end;
+    DSS.StorageClass.UpdateAll;
+    DSS.InvControlClass.UpdateAll;
     DSS.ExpControlClass.UpdateAll;
 
     // End of Time Step Timer

@@ -20,7 +20,7 @@ type
         FullNames = 1 shl 3,
         Pretty = 1 shl 4, 
         ExcludeDisabled = 1 shl 5,
-        State = 1 shl 6, //TODO: power flow state for the given element, if applies
+        State = 1 shl 6, //TODO: power flow state, state variables for the given element, if applies
         Debug = 1 shl 7 // TODO
     );
 {$SCOPEDENUMS OFF}
@@ -376,7 +376,7 @@ begin
                 stringListPtr := PStringList(PByte(obj) + PropertyOffset[Index]);
                 stringList := stringListPtr^;
             end;
-            InterpretTStringListArray(DSS, Value, stringList);
+            InterpretTStringListArray(DSS, Value, stringList, TPropertyFlag.Transform_LowerCase in flags);
             if TPropertyFlag.WriteByFunction in flags then
                 TWriteStringListPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, stringList);
 
@@ -1808,9 +1808,14 @@ begin
         end;
         TPropertyType.StringProperty:
         begin
-            //TODO: if IsFilename, validate path here
-            stringPtr := PString(PByte(obj) + PropertyOffset[Index]);
-            stringPtr^ := Value;
+            if TPropertyFlag.WriteByFunction in flags then
+                TWriteStringPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, Value)
+            else
+            begin
+                //TODO: if IsFilename, validate path here
+                stringPtr := PString(PByte(obj) + PropertyOffset[Index]);
+                stringPtr^ := Value;
+            end;
         end;
         TPropertyType.StringOnArrayProperty:
         begin
@@ -2762,10 +2767,21 @@ begin
             end;
 
             stringList.Clear();
-            for i := 1 to ValueCount do
+            if TPropertyFlag.Transform_LowerCase in flags then
             begin
-                stringList.Add(Value^);
-                Inc(Value);
+                for i := 1 to ValueCount do
+                begin
+                    stringList.Add(AnsiLowerCase(Value^));
+                    Inc(Value);
+                end;
+            end
+            else
+            begin
+                for i := 1 to ValueCount do
+                begin
+                    stringList.Add(Value^);
+                    Inc(Value);
+                end;
             end;
 
             if (TPropertyFlag.WriteByFunction in flags) then
@@ -2983,7 +2999,10 @@ begin
                 ) 
             )^;
         TPropertyType.StringProperty:
-            Result := PString(PByte(obj) + PropertyOffset[Index])^;
+            if TPropertyFlag.ReadByFunction in PropertyFlags[index] then
+                Result := TStringPropertyFunction(Pointer(PropertyReadFunction[Index]))(obj)
+            else
+                Result := PString(PByte(obj) + PropertyOffset[Index])^;
         TPropertyType.MakeLikeProperty:
             Result := '';//TODO? or should leave empty?
         TPropertyType.MappedStringEnumProperty:

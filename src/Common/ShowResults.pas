@@ -74,6 +74,7 @@ uses
     LineGeometry,
     YMatrix,
     SwtControl,
+    StrUtils,
     KLUSolve,
     DSSHelper;
 
@@ -83,6 +84,13 @@ var
 
 const
     TABCHAR: Char = chr(9);
+
+procedure ShowResultFile(DSS: TDSSContext; FileNm: String);
+begin
+    if not DSS.AutoDisplayShowReport then
+        Exit;
+    FireOffEditor(DSS, FileNm);
+end;
 
 procedure SetMaxBusNameLength(DSS: TDSSContext);
 var
@@ -483,7 +491,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -818,7 +826,7 @@ begin
         finally
 
             FreeAndNil(F);
-            FireOffEditor(DSS, FileNm);
+            ShowResultFile(DSS, FileNm);
             DSS.ParserVars.Add('@lastshowfile', FileNm);
 
         end;
@@ -1312,7 +1320,7 @@ begin
         if Assigned(C_buffer) then
             Freemem(c_Buffer);
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
 
@@ -1824,7 +1832,7 @@ begin
         if Assigned(C_buffer) then
             Freemem(c_Buffer);
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -1832,9 +1840,8 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ShowFaultStudy(DSS: TDSSContext; FileNm: String);
-
 var
-    i, iBus, iphs: Integer;
+    i, iBus, iphs, iphs2: Integer;
     YFault, ZFault: Tcmatrix;
     Vfault: pComplexArray;  {Big temp array}
     F: TFileStream = nil;
@@ -1843,7 +1850,9 @@ var
     CurrMag: Double;
     S: String;
     sout: String;
-
+    Zbus: Complex;
+    // Vpolar: Polar;
+    // Ipolar: Polar;
 begin
     SetMaxBusNameLength(DSS);
 
@@ -1851,12 +1860,12 @@ begin
 
         F := TBufferedFileStream.Create(FileNm, fmCreate);
 
-   { Set source voltage injection currents }
+        // Set source voltage injection currents
         with DSS.ActiveCircuit do
         begin
             with Solution do
             begin
-     {All Phase Faults}
+                // All Phase Faults
                 FSWriteln(F, 'FAULT STUDY REPORT');
                 FSWriteln(F);
                 FSWriteln(F, 'ALL-Node Fault Currents');
@@ -1864,7 +1873,7 @@ begin
                 FSWriteln(F, Pad('Bus', MaxBusNameLength), '       Node 1  X/R        Node 2  X/R        Node 3  X/R   ...  (Amps)');
                 FSWriteln(F);
                 for iBus := 1 to NumBuses do
-           {Bus Norton Equivalent Current, Isc has been previously computed}
+                    // Bus Norton Equivalent Current, Isc has been previously computed
                     with Buses^[iBus] do
                     begin
                         WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))) + ',', MaxBusNameLength + 2));
@@ -1873,26 +1882,26 @@ begin
                         begin
                             CurrMag := Cabs(BusCurrent^[i]);
                             if i > 1 then
-                                FSWrite(F, ', ');
-                                
+                                FSWrite(F, ' ');
                             
                             WriteStr(sout, CurrMag: 10: 0);
                             FSWrite(F, sout);
                             
                             if Currmag > 0.0 then
                             begin
-                                WriteStr(sout, ', ', GetXR(VBus^[i] / BusCurrent^[i]): 5: 1);
+                                Zbus := VBus[i] / BusCurrent^[i];
+                                WriteStr(sout, ', ', GetXR(Zbus): 5: 1);
                                 FSWrite(F, sout)
                             end
                             else
-                                FSWrite(F, ',   N/A');
+                                FSWrite(F, '   N/A');
                         end;
                         FSWriteln(F);
                     end;
 
                 FSWriteln(F);
 
-           {One Phase Faults}
+                // One Phase Faults
                 FSWriteln(F);
                 FSWriteln(F, 'ONE-Node to ground Faults');
                 FSWriteln(F);
@@ -1900,9 +1909,9 @@ begin
                 FSWriteln(F, Pad('Bus', MaxBusNameLength), '   Node  Amps         Node 1     Node 2     Node 3    ...');
                 FSWriteln(F);
 
-   { Solve for Fault Injection Currents}
+                // Solve for Fault Injection Currents
                 for iBus := 1 to NumBuses do
-           {Bus Norton Equivalent Current, Isc has been previously computed}
+                    // Bus Norton Equivalent Current, Isc has been previously computed
                     with Buses^[iBus] do
                     begin
                         ZFault := TcMatrix.CreateMatrix(NumNodesThisBus);
@@ -1931,13 +1940,11 @@ begin
                             end;
                             FSWriteln(F);
 
-                        end; {For iphase}
-             {Now, Stuff it in the Css Array where it belongs}
-
+                        end; // For iphase
                         ZFault.Free;
-                    end;  {With bus}
+                    end; // With bus
 
-           {Node-Node Faults}
+                // Node-Node Faults
                 FSWriteln(F);
                 FSWriteln(F, 'Adjacent Node-Node Faults');
                 FSWriteln(F);
@@ -1955,36 +1962,45 @@ begin
 
                         GFault := Cmplx(10000.0, 0.0);
 
-                        for iphs := 1 to NumNodesThisBus - 1 do
+                        for iphs := 1 to NumNodesThisBus do
                         begin
-                            YFault.CopyFrom(Ysc);
-                            YFault.AddElement(iphs, iphs, GFault);
-                            YFault.AddElement(iphs + 1, iphs + 1, GFault);
-                            YFault.AddElemSym(iphs, iphs + 1, -GFault);
-
-                            // Solve for Injection Currents
-                            YFault.Invert;
-                            YFault.MvMult(VFault, BusCurrent); // Gets voltage appearing at fault
-
-                            WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(Iphs): 4, GetNum(Iphs + 1): 4, Cabs((VFault^[iphs] - VFault^[iphs + 1]) * GFault): 12: 0, '   ');
-                            FSWrite(F, sout);
-                            for i := 1 to NumNodesThisBus do
+                            for iphs2 := 1 to NumNodesThisBus do
                             begin
-                                Vphs := Cabs(VFault^[i]);
-                                if kvbase > 0.0 then
-                                begin
-                                    Vphs := 0.001 * Vphs / kVBase;
-                                    WriteStr(sout, ' ', Vphs: 10: 3);
-                                    FSWrite(F, sout);
-                                end
-                                else
-                                begin
-                                    WriteStr(sout, ' ', Vphs: 10: 1);
-                                    FSWrite(F, sout);
-                                end;
-                            end;
-                            FSWriteln(F);
 
+                                if iphs >= iphs2 then
+                                    continue;
+
+                                YFault.CopyFrom(Ysc);
+
+                                YFault.AddElement(iphs, iphs, GFault);
+                                YFault.AddElement(iphs2, iphs2, GFault);
+                                YFault.AddElemSym(iphs, iphs2, -GFault);
+
+                                // Solve for Injection Currents
+                                YFault.Invert;
+                                YFault.MvMult(VFault, BusCurrent);  // Gets voltage appearing at fault
+
+                                WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))), MaxBusNameLength + 2), GetNum(Iphs): 4, GetNum(iphs2): 4, Cabs((VFault^[iphs] - VFault^[iphs2]) * GFault): 12: 0, '   ');
+                                FSWrite(F, sout);
+
+                                for i := 1 to NumNodesThisBus do
+                                begin
+                                    Vphs := Cabs(VFault^[i]);
+                                    if kvbase > 0.0 then
+                                    begin
+                                        Vphs := 0.001 * Vphs / kVBase;
+                                        WriteStr(sout, ' ', Vphs: 10: 3);
+                                        FSWrite(F, sout);
+                                    end
+                                    else
+                                    begin
+                                        WriteStr(sout, ' ', Vphs: 10: 1);
+                                        FSWrite(F, sout);
+                                    end;
+                                end;
+                                FSWriteln(F);
+
+                            end;
                         end; // For iphase
 
                         // Now, Stuff it in the Css Array where it belongs
@@ -1999,7 +2015,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -2147,9 +2163,9 @@ begin
     finally
 
         FreeAndNil(FDisabled);
-        FireOffEditor(DSS, DisabledFileNm);
+        ShowResultFile(DSS, DisabledFileNm);
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -2211,7 +2227,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -2281,7 +2297,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -2332,7 +2348,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -2363,7 +2379,7 @@ begin
         FSWriteln(F);
         FSWriteln(F, 'CONTROLLED TRANSFORMER TAP SETTINGS');
         FSWriteln(F);
-        FSWriteln(F, 'Name            Tap      Min       Max     Step  Position');
+        FSWriteln(F, 'Name    RegControl        Tap      Min       Max     Step      Position      Winding      Direction       CogenMode');
         FSWriteln(F);
 
         with DSS.ActiveCircuit do
@@ -2375,14 +2391,24 @@ begin
                 begin
                     iWind := pReg.TrWinding;
                     FSWrite(F, Pad(Name, 12), ' ');
-                    FSWriteln(F, Format('%8.5f %8.5f %8.5f %8.5f     %d', [PresentTap[iWind], MinTap[iWind], MaxTap[iWind], TapIncrement[iWind], TapPosition(pREg.Transformer, iWind)]));
+                    FSWrite(F, Pad(pReg.Name, 12), ' ');
+                    FSWriteln(F, Format('%8.5f %8.5f %8.5f %8.5f     %d      %d      %s      %s', [
+                        PresentTap[iWind], 
+                        MinTap[iWind], 
+                        MaxTap[iWind], 
+                        TapIncrement[iWind], 
+                        TapPosition(pReg.Transformer, iWind),
+                        iWind,
+                        StrUtils.IfThen(pReg.InReverseMode, 'Reverse', 'Forward'),
+                        BoolToStr(pReg.InCogenMode, TRUE)
+                    ]));
                 end;
                 pReg := RegControls.Next;
             end;
         end;
     finally
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -2472,7 +2498,7 @@ begin
 
         case length(Param) of
             0:
-                FireOffEditor(DSS, FileNm);
+                ShowResultFile(DSS, FileNm);
         else
             ShowTreeView(FileNm);
         end;
@@ -2588,7 +2614,7 @@ begin
         if Assigned(C_buffer) then
             Freemem(c_Buffer);
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -2647,7 +2673,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -2761,7 +2787,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -2807,7 +2833,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
@@ -2974,7 +3000,7 @@ begin
 
         FreeAndNil(F);
         Branch_List.Free;
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3005,7 +3031,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3052,7 +3078,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3205,7 +3231,7 @@ begin
     finally
         FreeAndNil(F);
         FreeAndNil(Ftree);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
         ShowTreeView(TreeNm);
     end;
@@ -3447,8 +3473,8 @@ begin
 
         FreeAndNil(F);
         FreeAndNil(F2);
-        FireOffEditor(DSS, FileNm);
-        FireOffEditor(DSS, LineCodesFileNm);
+        ShowResultFile(DSS, FileNm);
+        ShowResultFile(DSS, LineCodesFileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3498,7 +3524,7 @@ begin
             FSWriteln(F, 'Yprim matrix is Nil');
     finally
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3558,7 +3584,7 @@ begin
 
     finally
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3677,7 +3703,7 @@ begin
 
     finally
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
         ReallocMem(MaxNodeCurrent, 0); // Dispose of temp memory
     end;
@@ -3784,7 +3810,7 @@ begin
 
     finally
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3867,7 +3893,7 @@ begin
 
     finally
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3902,7 +3928,7 @@ begin
 
     finally
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3922,7 +3948,7 @@ begin
     finally
 
         FreeAndNil(F);
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
@@ -3937,7 +3963,7 @@ begin
         DSS.GlobalResult := FileNm;
 
     finally
-        FireOffEditor(DSS, FileNm);
+        ShowResultFile(DSS, FileNm);
         DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;

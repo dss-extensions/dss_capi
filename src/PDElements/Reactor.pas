@@ -108,22 +108,16 @@ type
         Z, Z1, Z2, Z0: Complex;
         Rmatrix, Gmatrix,
         XMatrix, Bmatrix: pDoubleArray;  // If not nil then overrides C
-
         Connection: TReactorConnection;   // 0 or 1 for wye (default) or delta, respectively
         SpecType: Integer;   // 1=kvar, 2=R+jX, 3=R and X matrices, 4=sym components
-
         IsParallel: LongBool;
         RpSpecified: Boolean;
         Bus2Defined: Boolean;
         Z2Specified: Boolean;
         Z0Specified: Boolean;
 
-
-    PUBLIC
-
         RCurveObj: TXYCurveObj;
         LCurveObj: TXYCurveObj;
-
 
         constructor Create(ParClass: TDSSClass; const ReactorName: String);
         destructor Destroy; OVERRIDE;
@@ -137,10 +131,6 @@ type
         procedure RecalcElementData; OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
-
-                // CIM XML access - this is only tested for the IEEE 8500-node feeder
-        property SimpleR: Double READ R;
-        property SimpleX: Double READ X;
     end;
 
 implementation

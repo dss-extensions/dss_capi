@@ -126,9 +126,9 @@ type
     PUBLIC
         FAllocationFactor: Double;   // For all types of allocation
         FkVAAllocationFactor: Double;   // for connected kVA specification
-        FConnectedkVA: Double;
-        FkWh: Double;
-        FkWhDays: Double;
+        ConnectedkVA: Double;
+        kWh: Double;
+        kWhDays: Double;
         FCFactor: Double;   // For kWh billed spec
         FAvgkW: Double;
         FPhaseCurr: pComplexArray; // this is the intermediate current computed in each power flow mode.
@@ -159,10 +159,10 @@ type
         FXRHarmRatio: Double;   // X/R at fundamental
 
         // formerly private, now read-only properties for COM access
-        FpuMean: Double;
-        FpuStdDev: Double;
-        FCVRwattFactor: Double;
-        FCVRvarFactor: Double;
+        puMean: Double;
+        puStdDev: Double;
+        CVRwattFactor: Double;
+        CVRvarFactor: Double;
         Vmaxpu: Double;
         VminEmerg: Double;  // overrides system settings IF <> 0.0
         VminNormal: Double;
@@ -203,12 +203,12 @@ type
         procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer); inline;
         function InterpolateY95_YLow(const Vmag: Double): Complex; inline;
         function InterpolateY95I_YLow(const Vmag: Double): Complex; inline; // ***Added by Celso & Paulo
-        function Get_Unserved: Boolean;
-        function Get_ExceedsNormal: Boolean;
-        procedure Set_kVAAllocationFactor(const Value: Double);
+        function Unserved(): Boolean;
+        function ExceedsNormal(): Boolean;
         procedure ComputeAllocatedLoad;
         // Set kWh properties ...
         procedure Set_CFactor(const Value: Double);
+        procedure Set_kVAAllocationFactor(const Value: Double);
         procedure Set_AllocationFactor(const Value: Double);
         procedure SetkWkvar(const PkW, Qkvar: Double);
 
@@ -261,32 +261,6 @@ type
                   // 0 = reset to 1.0
                   // 1 = Gaussian around mean and std Dev
                   // 2 = uniform
-
-        property Unserved: Boolean READ Get_Unserved;
-        property ExceedsNormal: Boolean READ Get_ExceedsNormal;
-
-        // AllocationFactor adjusts either connected kVA allocation factor or kWh CFactor
-        property AllocationFactor: Double READ FAllocationFactor WRITE Set_AllocationFactor;
-
-        // Allocate load from connected kva or kWh billing
-        
-        //TODO: remove these properties, use plain DSS properties 
-        // instead to ease the code transition?
-        property kVAAllocationFactor: Double READ FkVAAllocationFactor WRITE Set_kVAAllocationFactor;
-        property ConnectedkVA: Double READ FConnectedkVA;
-        property kWh: Double READ FkWh;// WRITE Set_kWh;
-        property kWhDays: Double READ FkWhDays;
-        property CFactor: Double READ FCFactor WRITE Set_CFactor;
-
-        property puMean: Double READ FpuMean;
-        property puStdDev: Double READ FpuStdDev;
-        property CVRwatts: Double READ FCVRwattFactor;
-        property CVRvars: Double READ FCVRvarFactor;
-        property MaxPU: Double READ Vmaxpu;
-        property MinEmerg: Double READ VminEmerg;
-        property MinNormal: Double READ VminNormal;
-        property MinPU: Double READ Vminpu;
-        Property IsPFSpecified: Boolean read PFSpecified;
     const
         nZIPV = 7;
     end;
@@ -313,7 +287,7 @@ type
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
     LoadStatusEnum, LoadModelEnum: TDSSEnum;
 
 constructor TLoad.Create(dssContext: TDSSContext);
@@ -374,8 +348,8 @@ begin
     PropertyScale[ord(TProp.pctmean)] := 0.01;
     PropertyScale[ord(TProp.pctstddev)] := 0.01;
     PropertyScale[ord(TProp.pctSeriesRL)] := 0.01;
-    PropertyOffset[ord(TProp.pctmean)] := ptruint(@obj.FpuMean);
-    PropertyOffset[ord(TProp.pctstddev)] := ptruint(@obj.FpuStdDev);
+    PropertyOffset[ord(TProp.pctmean)] := ptruint(@obj.puMean);
+    PropertyOffset[ord(TProp.pctstddev)] := ptruint(@obj.puStdDev);
     PropertyOffset[ord(TProp.pctSeriesRL)] := ptruint(@obj.puSeriesRL);
 
     // integer properties
@@ -403,7 +377,7 @@ begin
         ord(P.Cfactor), ord(P.allocationfactor)],
         [@obj.Rneut, @obj.Xneut, @obj.kVLoadBase, @obj.kwBase, @obj.PFNominal, @obj.kvarBase, @obj.kVABase, 
         @obj.RelWeighting, @obj.VLowpu, @obj.FpuXHarm, @obj.FXRHarmRatio, @obj.VMinPu, @obj.VMaxPu, @obj.VminNormal,
-        @obj.VminEmerg, @obj.FCVRwattFactor, @obj.FCVRvarFactor, @obj.kWh, @obj.FConnectedkVA, @obj.kWhdays,
+        @obj.VminEmerg, @obj.CVRwattFactor, @obj.CVRvarFactor, @obj.kWh, @obj.ConnectedkVA, @obj.kWhdays,
         @obj.FCFactor, @obj.FkVAAllocationFactor]
     );
 
@@ -632,9 +606,9 @@ begin
     FLoadModel := Other.FLoadModel;
     status := Other.status;
     FkVAAllocationFactor := Other.FkVAAllocationFactor;
-    FConnectedkVA := Other.FConnectedkVA;
-    FCVRwattFactor := Other.FCVRwattFactor;
-    FCVRvarFactor := Other.FCVRvarFactor;
+    ConnectedkVA := Other.ConnectedkVA;
+    CVRwattFactor := Other.CVRwattFactor;
+    CVRvarFactor := Other.CVRvarFactor;
     ShapeIsActual := Other.ShapeIsActual;
     puSeriesRL := Other.puSeriesRL;
     RelWeighting := Other.RelWeighting;
@@ -678,8 +652,8 @@ begin
     LoadClass := 1;
     NumCustomers := 1;
     LastYear := 0;
-    FCVRwattFactor := 1.0;
-    FCVRvarFactor := 2.0;
+    CVRwattFactor := 1.0;
+    CVRvarFactor := 2.0;
     RelWeighting := 1.0;
 
     LastGrowthFactor := 1.0;
@@ -694,10 +668,10 @@ begin
     OpenLoadSolutionCount := -1;
     YPrimOpenCond := NIL;
 
-    FConnectedkVA := 0.0;  // Loadspectype=3
-    FkWh := 0.0;  // Loadspectype=4
+    ConnectedkVA := 0.0;  // Loadspectype=3
+    kWh := 0.0;  // Loadspectype=4
     FCfactor := 4.0;
-    FkWhDays := 30.0;
+    kWhDays := 30.0;
     VminNormal := 0.0;    // indicates for program to use Circuit quantities
     VminEmerg := 0.0;
     kVLoadBase := 12.47;
@@ -716,8 +690,8 @@ begin
     FXRHarmRatio := 6.0;
 
 
-    FpuMean := 0.5;
-    FpuStdDev := 0.1;
+    puMean := 0.5;
+    puStdDev := 0.1;
     UE_Factor := 0.0;
     EEN_Factor := 0.0;
     SpectrumObj := DSS.SpectrumClass.DefaultLoad; // override base class definition
@@ -755,14 +729,14 @@ begin
             if Assigned(YearlyShapeObj) then
                 RandomMult := Gauss(YearlyShapeObj.Mean, YearlyShapeObj.StdDev)
             else
-                RandomMult := Gauss(FpuMean, FpuStdDev);
+                RandomMult := Gauss(puMean, puStdDev);
         UNIFORM:
             RandomMult := Random;  // number between 0 and 1.0
         LOGNORMAL:
             if Assigned(YearlyShapeObj) then
                 RandomMult := QuasiLognormal(YearlyShapeObj.Mean)
             else
-                RandomMult := QuasiLognormal(FpuMean);
+                RandomMult := QuasiLognormal(puMean);
     end;
 end;
 
@@ -810,10 +784,10 @@ begin
     if CVRShapeObj <> NIL then
     begin
         CVRFactor := CVRShapeObj.GetMultAtHour(Hr);    {Complex}
-        FCVRWattFactor := CVRFactor.re;
-        FCVRvarFactor := CVRFactor.im;
+        CVRWattFactor := CVRFactor.re;
+        CVRvarFactor := CVRFactor.im;
     end;
-    // Else FCVRWattFactor, etc. remain unchanged
+    // Else CVRWattFactor, etc. remain unchanged
 end;
 
 function TLoadObj.GrowthFactor(Year: Integer): Double;
@@ -1516,9 +1490,9 @@ begin
                 VRatio := Vmag / VBase;    // vbase is l-n FOR wye and l-l FOR delta
 
                 // Linear factor adjustment does not converge for some reason while power adjust does easily
-                 // WattFactor := (1.0 + FCVRwattFactor*(Vmag/VBase - 1.0));
-                if FCVRWattFactor <> 1.0 then
-                    WattFactor := pow(VRatio, FCVRWattFactor)
+                 // WattFactor := (1.0 + CVRwattFactor*(Vmag/VBase - 1.0));
+                if CVRWattFactor <> 1.0 then
+                    WattFactor := pow(VRatio, CVRWattFactor)
                 else
                     WattFactor := Vratio;  // old value (in error): 1.0;
                 if WattFactor > 0.0 then
@@ -1530,12 +1504,12 @@ begin
                     Cvar := CZERO    // Trap divide by zero error
                 //Compute Q component of current
                 else
-                if FCVRvarFactor = 2.0 then
+                if CVRvarFactor = 2.0 then
                 begin // Check for easy, quick ones first
                     Cvar := Cmplx(0.0, Yeq.im) * V; // 2 is same as Constant impedance
                 end
                 else
-                if FCVRvarFactor = 3.0 then
+                if CVRvarFactor = 3.0 then
                 begin
                     VarFactor := VRatio*VRatio*VRatio;
                     Cvar := cong(Cmplx(0.0, VarNominal * VarFactor) / V);
@@ -1543,7 +1517,7 @@ begin
                 else
                 begin
                     // Other Var factor code here if not squared or cubed
-                    VarFactor := pow(VRatio, FCVRvarFactor);
+                    VarFactor := pow(VRatio, CVRvarFactor);
                     Cvar := cong(Cmplx(0.0, VarNominal * VarFactor) / V);
                 end;
                 Curr += Cvar;  // add in Q component of current
@@ -1856,7 +1830,7 @@ begin
     Result := (ILow + M95I * (Vmag - VbaseLow)) / Vmag;   //(Ilow + M95I * (Vmag - VBaseLow))/Vmag)   // ***Changed by Celso & Paulo
 end;
 
-function TLoadObj.Get_Unserved: Boolean;
+function TLoadObj.Unserved(): Boolean;
 var
     i: Integer;
     Vpu,
@@ -1909,7 +1883,7 @@ begin
     end;
 end;
 
-function TLoadObj.Get_ExceedsNormal: Boolean;
+function TLoadObj.ExceedsNormal(): Boolean;
 var
     i: Integer;
     Vpu,
@@ -1975,7 +1949,7 @@ begin
 end;
 
 procedure TLoadObj.Set_AllocationFactor(const Value: Double);
-{This procedure is used by the energymeter allocateload function to adjust load allocation factors}
+// This procedure is used by the energymeter allocateload function to adjust load allocation factors
 begin
     FAllocationFactor := Value;
     case LoadSpecType of
@@ -2004,9 +1978,9 @@ begin
     case LoadSpecType of
 
         TLoadSpec.ConnectedkVA_PF:
-            if FConnectedkVA > 0.0 then
+            if ConnectedkVA > 0.0 then
             begin
-                kWBase := FConnectedkVA * FkVAAllocationFactor * Abs(PFNominal);
+                kWBase := ConnectedkVA * FkVAAllocationFactor * Abs(PFNominal);
                 kvarBase := kWBase * SQRT(1.0 / SQR(PFNominal) - 1.0);
                 if PFNominal < 0.0 then
                     kvarBase := -kvarBase;
@@ -2014,7 +1988,7 @@ begin
 
         TLoadSpec.kWh_PF:
         begin
-            FavgkW := FkWh / (FkWhDays * 24);
+            FavgkW := kWh / (kWhDays * 24);
             kWBase := FavgkW * FCfactor;
             kvarBase := kWBase * SQRT(1.0 / SQR(PFNominal) - 1.0);
             if PFNominal < 0.0 then
@@ -2065,7 +2039,7 @@ begin
 
     newkw := kWbase / 3.0;
     newkvar := kvarbase / 3.0;
-    newkva := FConnectedKVA / 3.0;
+    newkva := ConnectedKVA / 3.0;
 
     BeginEdit(True);
     SetInteger(ord(TProp.Phases), 1);

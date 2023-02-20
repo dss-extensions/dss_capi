@@ -75,7 +75,7 @@ function InterpretYesNo(const s: String): Boolean;
 procedure InitDblArray(NumValues: Integer; Xarray: pDoubleArray; Value: Double);
 function InterpretDblArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
 function InterpretIntArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
-procedure InterpretTStringListArray(DSS: TDSSContext; const s: String; var ResultList: TStringList);
+procedure InterpretTStringListArray(DSS: TDSSContext; const s: String; var ResultList: TStringList; ApplyLower: Boolean = False);
 function InterpretTimeStepSize(DSS: TDSSContext; const s: String): Double;
 function InterpretColorName(DSS: TDSSContext; const s: String): Integer;
 function ConstructElemName(DSS: TDSSContext; const Param: String): String;
@@ -813,7 +813,7 @@ begin
     end;
 end;
 
-procedure InterpretTStringListArray(DSS: TDSSContext; const s: String; var ResultList: TStringList);
+procedure InterpretTStringListArray(DSS: TDSSContext; const s: String; var ResultList: TStringList; ApplyLower: Boolean = False);
 // Get string values from an array specified either as a list on strings or a text file spec.
 // ResultArray is allocated as needed.
 // File is assumed to have one value per line.
@@ -827,7 +827,7 @@ begin
     if ResultList = NIL then
         ResultList := TStringList.Create()
     else
-        ResultList.Clear;
+        ResultList.Clear();
 
     DSS.AuxParser.CmdString := S;
     ParmName := DSS.AuxParser.NextParam;
@@ -846,8 +846,11 @@ begin
                 ParmName := DSS.AuxParser.NextParam;
                 NextParam := DSS.AuxParser.StrValue;
                 if Length(NextParam) > 0 then
-                begin     // Ignore Blank Lines in File
-                    ResultList.Add(NextParam);
+                begin // Ignore Blank Lines in File
+                    if ApplyLower then
+                        ResultList.Add(AnsiLowerCase(NextParam))
+                    else
+                        ResultList.Add(NextParam);
                 end;
             end;
             FreeAndNil(F);
@@ -862,7 +865,11 @@ begin
          // Parse Values of array list
         while Param <> '' do
         begin
-            ResultList.add(Param);
+            if ApplyLower then
+                ResultList.Add(AnsiLowerCase(Param))
+            else
+                ResultList.Add(Param);
+
             ParmName := DSS.AuxParser.NextParam;
             Param := DSS.AuxParser.StrValue;
         end;
@@ -1027,9 +1034,9 @@ begin
         begin
             case pLoad.LoadSpecType of
                 TLoadSpec.ConnectedkVA_PF:
-                    FSWriteln(F, 'Load.' + pLoad.Name + '.AllocationFactor=' + Format('%-.5g', [pLoad.kVAAllocationFactor]));
+                    FSWriteln(F, 'Load.' + pLoad.Name + '.AllocationFactor=' + Format('%-.5g', [pLoad.FkVAAllocationFactor]));
                 TLoadSpec.kwh_PF:
-                    FSWriteln(F, 'Load.' + pLoad.Name + '.CFactor=' + Format('%-.5g', [pLoad.CFactor]));
+                    FSWriteln(F, 'Load.' + pLoad.Name + '.CFactor=' + Format('%-.5g', [pLoad.FCFactor]));
             end;
             pLoad := Loads.Next;
         end;
@@ -2820,7 +2827,7 @@ begin
         S := S + ch;
     until ch = #10;
 
-    //TODO: Do we need to handle files with classic Mac OS line endings too?
+    //TODO: Do we need to handle files with classic Mac OS line endings too? Probably not
     if (Length(S) >= 1) and (S[Length(S)] = #10) then
     begin
         if (Length(S) >= 2) and (S[Length(S) - 1] = #13) then

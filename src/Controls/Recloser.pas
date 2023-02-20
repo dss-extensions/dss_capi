@@ -404,15 +404,13 @@ begin
             DoErrorMsg(Format(_('Recloser: "%s"'), [Name]),
                 Format(_('Terminal no. "%d" does not exist.'), [MonitoredElementTerminal]),
                 _('Re-specify terminal no.'), 392);
-        end
-        else
-        begin
-               // Sets name of i-th terminal's connected bus in Recloser's buslist
-            Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
-               // Allocate a buffer bigenough to hold everything from the monitored element
-            ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder);
-            CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+            Exit;
         end;
+        // Sets name of i-th terminal's connected bus in Recloser's buslist
+        Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
+        // Allocate a buffer bigenough to hold everything from the monitored element
+        ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder);
+        CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
     end;
 
     // Check for existence of Controlled Element

@@ -2254,7 +2254,7 @@ begin
          pLoad := Loads.First;
          WHILE pLoad <> NIL Do
          Begin
-             pLoad.kVAAllocationFactor := X;
+             pLoad.Set_kVAAllocationFactor(X);
              pLoad := Loads.Next;
          End;
     End;
@@ -2273,7 +2273,7 @@ begin
          pLoad := Loads.First;
          WHILE pLoad <> NIL Do
          Begin
-             pLoad.CFactor := X;
+             pLoad.Set_CFactor(X);
              pLoad := Loads.Next;
          End;
     End;
@@ -3450,6 +3450,11 @@ Begin
   Result := 0;
   DSS.Parser.NextParam;
   Param := DSS.Parser.StrValue;
+  if not FileExists(Param) then 
+  begin
+    DoSimpleMsg(DSS, 'UUIDs file: %s does not exist', [Param], 242);
+    exit;
+  end;
   Try
     F := DSS.GetROFileStream(Param);
     DSS.AuxParser.Delimiters := ',';
@@ -3706,14 +3711,9 @@ begin
      End;
 end;
 
-function TExecHelper.DoUpdateStorageCmd:Integer;
-
+function TExecHelper.DoUpdateStorageCmd: Integer;
 Begin
-    if DSS_CAPI_LEGACY_MODELS then
-        DSS.StorageClass.UpdateAll
-    else
-        DSS.Storage2Class.UpdateAll;
-
+    DSS.StorageClass.UpdateAll();
     Result := 0;
 End;
 
@@ -3815,8 +3815,10 @@ Begin
             Bus_Num_Interrupt := 0.0;
          End;
 
-      while pMeter <> Nil do Begin
-         pMeter.CalcReliabilityIndices(AssumeRestoration);
+      while pMeter <> Nil do 
+      Begin
+         pMeter.AssumeRestoration := AssumeRestoration;
+         pMeter.CalcReliabilityIndices();
          pMeter := DSS.ActiveCircuit.EnergyMeters.Next;
       End;
 End;

@@ -16,15 +16,15 @@ type
     TCommandList = class(TObject)
     PRIVATE
         CommandList: TCommandHashListType;
-        AbbrevAllowed: Boolean;
         function Get_NumCommands: Integer;
     PUBLIC
+        AbbrevAllowed: Boolean;
+
         constructor Create(Commands: array of String; AllowAbbrev: Boolean = True);
         destructor Destroy; OVERRIDE;
         procedure AddCommand(const cmd: String);
         function Getcommand(const Cmd: String): Integer;
         function Get(i: Integer): String;
-        property Abbrev: Boolean READ AbbrevAllowed WRITE AbbrevAllowed;
         property NumCommands: Integer READ Get_NumCommands;
     end;
 

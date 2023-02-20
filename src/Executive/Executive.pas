@@ -253,7 +253,7 @@ end;
 
 procedure TExecutive.Clear(Resetting: Boolean = True);
 begin
-    if (DSS.NumCircuits > 0) OR (DSS_CAPI_LEGACY_MODELS <> DSS_CAPI_LEGACY_MODELS_PREV) then
+    if (DSS.NumCircuits > 0) then
 	begin
 {$IFDEF DSS_CAPI_PM}
         // In case the actor hasn't been destroyed

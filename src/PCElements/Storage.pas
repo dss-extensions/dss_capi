@@ -1,92 +1,34 @@
 unit Storage;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2009-2016, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
-//  To Do:
-//    Make connection to User model
-//    Yprim for various modes
-//    Define state vars and dynamics mode behavior
-//    Complete Harmonics mode algorithm (generator mode is implemented)
-
-//  The storage element is essentially a generator that can be dispatched
-//  to either produce power or consume power commensurate with rating and
-//  amount of stored energy.
-//
-//  The storage element can also produce or absorb vars within the kVA rating of the inverter.
-//  That is, a StorageController object requests kvar and the storage element provides them if
-//  it has any capacity left. The storage element can produce/absorb kvar while idling.
-
-//  The Storage element is assumed balanced over the no. of phases defined
+// ----------------------------------------------------------
+// Copyright (c) 2018-2023, Paulo Meira, DSS Extensions contributors
+// Copyright (c) 2009-2016, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
 uses
     Classes,
+    StoreUserModel,
     DSSClass,
-    PCClass,
-    PCElement,
+    InvBasedPCE,
     ucmatrix,
     UComplex, DSSUcomplex,
     LoadShape,
     Spectrum,
     ArrayDef,
-    Dynamics;
-
-type
-{$SCOPEDENUMS ON}
-    TStorageProp = (
-        INVALID = 0,
-        phases = 1,
-        bus1 = 2,
-        kv = 3, // propKV
-        kW = 4, // propKW
-        pf = 5, // propPF
-        conn = 6, // propCONNECTION
-        kvar = 7, // propKVAR
-        kVA = 8, // propKVA
-        kWrated = 9, // propKWRATED
-        kWhrated = 10, // propKWHRATED
-        kWhstored = 11, // propKWHSTORED
-        pctstored = 12, // propPCTSTORED
-        pctreserve = 13, // propPCTRESERVE
-        State = 14, // propSTATE
-        pctDischarge = 15, // propPCTKWOUT
-        pctCharge = 16, // propPCTKWIN
-        pctEffCharge = 17, // propCHARGEEFF
-        pctEffDischarge = 18, // propDISCHARGEEFF
-        pctIdlingkW = 19, // propIDLEKW
-        pctIdlingkvar = 20, // propIDLEKVAR
-        pctR = 21, // propPCTR
-        pctX = 22, // propPCTX
-        model = 23, // propMODEL
-        Vminpu = 24, // propVMINPU
-        Vmaxpu = 25, // propVMAXPU
-        Balanced = 26, // propBalanced
-        LimitCurrent = 27, // propLimited
-        yearly = 28, // propYEARLY
-        daily = 29, // propDAILY
-        duty = 30, // propDUTY
-        DispMode = 31, // propDISPMODE
-        DischargeTrigger = 32, // propDISPOUTTRIG
-        ChargeTrigger = 33, // propDISPINTRIG
-        TimeChargeTrig = 34, // propCHARGETIME
-        cls = 35, // propCLASS
-        DynaDLL = 36, // propDynaDLL
-        DynaData = 37, // propDynaData
-        UserModel = 38, // propUSERMODEL
-        UserData = 39, // propUSERDATA
-        debugtrace = 40 // propDEBUGTRACE
-    );
-{$SCOPEDENUMS OFF}
+    Dynamics,
+    XYCurve,
+    InvDynamics,
+    MathUtil;
 
 const
-    NumStorageRegisters = 6;    // Number of energy meter registers
-    NumStorageVariables = 7;    // No state variables
-
+    NumStorageRegisters = 6; // Number of energy meter registers
+    NumBaseStorageVariables = 25;
+    NumStorageVariables = NumBaseStorageVariables + NumInvDynVars; // Number of state variables
+    VARMODEPF = 0;
+    VARMODEKVAR = 1;
 //= = = = = = = = = = = = = = DEFINE STATES = = = = = = = = = = = = = = = = = = = = = = = = =
 
     STORE_CHARGING = -1;
@@ -101,38 +43,131 @@ const
     STORE_FOLLOW = 4;
 
 type
-    // Struct that was passed to user-written DLLs (disabled in v0.12 for legacy models)
+{$SCOPEDENUMS ON}
+    TStorageProp = (
+        INVALID = 0,
+        phases,
+        bus1,
+        kv, // propKV
+        conn, // propCONNECTION
+        kW, // propKW
+        kvar, // propKVAR
+        pf, // propPF
+        kVA, // propKVA
+        pctCutin, // propCutin
+        pctCutout, // propCutout
+        EffCurve, // propInvEffCurve
+        VarFollowInverter, // propVarFollowInverter
+        kvarMax, // propkvarLimit
+        kvarMaxAbs, // propkvarLimitneg
+        WattPriority, // propPpriority
+        PFPriority, // propPFPriority
+        pctPminNoVars, // propPminNoVars
+        pctPminkvarMax, // propPminkvarLimit
+        kWrated, // propKWRATED
+        pctkWrated, // proppctkWrated
+        kWhrated, // propKWHRATED
+        kWhstored, // propKWHSTORED
+        pctstored, // propPCTSTORED
+        pctreserve, // propPCTRESERVE
+        State, // propSTATE
+        pctDischarge, // propPCTKWOUT
+        pctCharge, // propPCTKWIN
+        pctEffCharge, // propCHARGEEFF
+        pctEffDischarge, // propDISCHARGEEFF
+        pctIdlingkW, // propIDLEKW
+        
+        pctIdlingkvar, //= 31, // propIDLEKVAR was deprecated, reintroduced for v0.12.2; TODO: TO BE REMOVED AGAIN LATER
+        
+        pctR, // propPCTR
+        pctX, // propPCTX
+        model, // propMODEL
+        Vminpu, // propVMINPU
+        Vmaxpu, // propVMAXPU
+        Balanced, // propBalanced
+        LimitCurrent, // propLimited
+        yearly, // propYEARLY
+        daily, // propDAILY
+        duty, // propDUTY
+        DispMode, // propDISPMODE
+        DischargeTrigger, // propDISPOUTTRIG
+        ChargeTrigger, // propDISPINTRIG
+        TimeChargeTrig, // propCHARGETIME
+        cls, // propCLASS
+        DynaDLL, // propDynaDLL
+        DynaData, // propDynaData
+        UserModel, // propUSERMODEL
+        UserData, // propUSERDATA
+        debugtrace, // propDEBUGTRACE
+
+        kVDC, // propkVDC
+        Kp, // propkp
+        PITol, // propCtrlTol
+        SafeVoltage, // propSMT
+        SafeMode, // propSM
+        
+        DynamicEq, // propDynEq
+        DynOut, // propDynOut
+
+        ControlMode // propGFM
+
+    );
+{$SCOPEDENUMS OFF}
+
+    // Struct to pass basic data to user-written DLLs
     TStorageVars = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}packed{$ENDIF} record
 
         kWrating: Double;
         kWhRating: Double;
         kWhStored: Double;
         kWhReserve: Double;
+
         ChargeEff: Double;
         DisChargeEff: Double;
-        kVArating: Double; // --> kVArating
         kVStorageBase: Double;
-        kvarRequested: Double;
         RThev: Double;
         XThev: Double;
+
+        // Inverter Related Properties
+        FkVArating: Double;
+        Fkvarlimit: Double;
+        Fkvarlimitneg: Double;
+        P_Priority: LongBool;
+        PF_Priority: LongBool;
+        pctkWrated: Double;
+        EffFactor: Double;
+
+
+        // Interaction with InvControl
+        Vreg: Double;
+        Vavg: Double;
+        VVOperation: Double;
+        VWOperation: Double;
+        DRCOperation: Double;
+        VVDRCOperation: Double;
+        WPOperation: Double;
+        WVOperation: Double;
+//        kW_out_desired  :Double;
+
+
         // Dynamics variables
-        Vthev: Complex;  {Thevenin equivalent voltage (complex) for dynamic model}
+        Vthev: Complex;  // Thevenin equivalent voltage (complex) for dynamic model
         ZThev: Complex;
-        Vthevharm: Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
-        Thetaharm: Double;  {Thevenin equivalent voltage mag and angle reference for Harmonic model}
-        VthevMag: Double;    {Thevenin equivalent voltage for dynamic model}
-        Theta: Double;   {Power angle between voltage and current}
-        w_grid: Double;   {Grid frequency}
+        Vthevharm: Double; // Thevenin equivalent voltage mag and angle reference for Harmonic model
+        Thetaharm: Double; // Thevenin equivalent voltage mag and angle reference for Harmonic model
+        VthevMag: Double; // Thevenin equivalent voltage for dynamic model
+        Theta: Double; // Power angle between voltage and current
+        w_grid: Double; // Grid frequency
         TotalLosses: Double;
         IdlingLosses: Double;
 
         // 32-bit integers
-        NumPhases,       {Number of phases}
-        NumConductors,   {Total Number of conductors (wye-connected will have 4)}
+        NumPhases, // Number of phases
+        NumConductors, // Total Number of conductors (wye-connected will have 4)
         Conn: Integer;   // 0 = wye; 1 = Delta
     end;
 
-    TStorage = class(TPCClass)
+    TStorage = class(TInvBasedPCEClass)
     PROTECTED
         cBuffer: TCBuffer24;  // Temp buffer for calcs  24-phase Storage element?
 
@@ -147,42 +182,53 @@ type
         Function NewObject(const ObjName: String; Activate: Boolean = True): Pointer; OVERRIDE;
 
         procedure ResetRegistersAll;
-        procedure SampleAll;
-        procedure UpdateAll;
+        procedure SampleAll();
+        procedure UpdateAll();
+
     end;
 
-    TStorageObj = class(TPCElement)
+    TStorageObj = class(TInvBasedPCE)
     PRIVATE
         Yeq: Complex;   // at nominal
         Yeq95: Complex;   // at 95%
         Yeq105: Complex;   // at 105%
-        YeqIdling: Complex;   // in shunt representing idle impedance
-        YeqDischarge: Complex;   // equiv at rated power of storage element only
+        PIdling: Double;
+        YeqDischarge: Complex;   // equiv at rated power of Storage element only
         PhaseCurrentLimit: Complex;
         MaxDynPhaseCurrent: Double;
 
         DebugTrace: LongBool;
         FState: Integer;
-        FStateChanged: Boolean;
         FirstSampleAfterReset: Boolean;
         StorageSolutionCount: Integer;
-        StorageFundamental: Double;  // Thevinen equivalent voltage mag and angle reference for Harmonic model
+        StorageFundamental: Double; // Thevenin equivalent voltage mag and angle reference for Harmonic model
         StorageObjSwitchOpen: Boolean;
+
 
         ForceBalanced: LongBool;
         CurrentLimited: LongBool;
 
-        kVANotSet: Boolean;
         kvar_out: Double;
         kW_out: Double;
-        pctIdlekW: Double;
-        pctIdlekvar: Double;
-        pctChargeEff: Double;
-        pctDischargeEff: Double;
-        DischargeTrigger: Double;
-        ChargeTrigger: Double;
-        ChargeTime: Double;
-        kWhBeforeUpdate: Double;
+        FDCkW: Double;
+        pf_wp_nominal: Double;
+
+        // Variables for Inverter functionalities
+        FpctCutIn: Double;
+        FpctCutOut: Double;
+        CutInkW: Double;
+        CutOutkW: Double;
+
+        FpctPminNoVars: Double;
+        FpctPminkvarLimit: Double;
+        PminNoVars: Double;
+        PminkvarLimit: Double;
+        kVA_exceeded: Boolean;
+
+
+        kvarLimitSet: Boolean;
+        kvarLimitNegSet: Boolean;
+        kVASet: Boolean;
 
         pctR: Double;
         pctX: Double;
@@ -199,32 +245,43 @@ type
         Reg_MaxkW: Integer;
         Reg_Price: Integer;
         ShapeFactor: Complex;
-        TraceFile: TFileStream;
+
+        Tracefile: TFileStream;
+        IsUserModel: Boolean;
+        UserModel: TStoreUserModel;   // User-Written Models
+        DynaModel: TStoreDynaModel;
 
         UserModelNameStr, UserModelEditStr: String;
         DynaModelNameStr, DynaModelEditStr: String;
 
-        kvarBase: Double;  // Base vars per phase
-        VBase: Double;  // Base volts suitable for computing currents
+//        VBase           :Double;  // Base volts suitable for computing currents  made public
         VBase105: Double;
         VBase95: Double;
-        Vmaxpu: Double;
-        Vminpu: Double;
         YPrimOpenCond: TCmatrix;
-
 
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);
-        procedure CalcStorageModelContribution;
-        procedure CalcInjCurrentArray;
-        procedure CalcVTerminalPhase;
         procedure CalcYearlyMult(Hr: Double);
+
+        procedure ComputePresentkW; // Included
+        procedure ComputeInverterPower; // Included
+
+        procedure ComputekWkvar;        // Included
+        procedure ComputeDCkW; // For Storage Update
+        procedure CalcStorageModelContribution();
+        procedure CalcInjCurrentArray();
+        // PROCEDURE CalcVterminal;
+        procedure CalcVTerminalPhase();
+
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
 
-        procedure DoConstantPQStorageObj;
-        procedure DoConstantZStorageObj;
-        procedure DoDynamicMode;
-        procedure DoHarmonicMode;
+        procedure DoConstantPQStorageObj();
+        procedure DoConstantZStorageObj();
+        procedure DoDynamicMode();
+        procedure DoHarmonicMode();
+        procedure DoUserModel();
+        procedure DoDynaModel();
+        procedure DoGFM_Mode();
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
@@ -232,90 +289,151 @@ type
 
         procedure WriteTraceRecord(const s: String);
 
-        procedure SyncUpPowerQuantities;
-        procedure SetKWandKvarOut;
         procedure CheckStateTriggerLevel(Level: Double);
-        procedure UpdateStorage;    // Update Storage elements based on present kW and IntervalHrs variable
+        function CheckIfDelivering(): Boolean;
+        procedure UpdateStorage();    // Update Storage elements based on present kW and IntervalHrs variable
         function NormalizeToTOD(h: Integer; sec: Double): Double;
+
         function Get_PresentkW: Double;
         function Get_Presentkvar: Double;
         function Get_PresentkV: Double;
-        procedure Set_PresentkV(const Value: Double); //TODO: remove?
-        procedure Set_Presentkvar(const Value: Double);
-        procedure Set_PresentkW(const Value: Double);
+
+        procedure Set_kW(const Value: Double);
+        function Get_kW: Double;
+
         procedure Set_PowerFactor(const Value: Double);
+
         procedure Set_StorageState(const Value: Integer);
-        procedure Set_pctkvarOut(const Value: Double);
-        procedure Set_pctkWOut(const Value: Double);
+
+        function Get_DCkW: Double;
         function Get_kWTotalLosses: Double;
+        function Get_InverterLosses: Double;
         function Get_kWIdlingLosses: Double;
+        function Get_kWChDchLosses: Double;
+        procedure Update_EfficiencyFactor;
+
+        function Get_kWDesired: Double;
+
+        // Procedures and functions for inverter functionalities
+        procedure Set_kVARating(const Value: Double);
+
+        procedure kWOut_Calc;
 
     PROTECTED
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
     PUBLIC
+        StateDesired: Integer;  // Stores desired state (before any change due to kWh limits or %CutIn/%CutOut
+        StateChanged: Boolean;
+        StorageVars: TStorageVars;
+
+        VBase: Double;  // Base volts suitable for computing currents
+        Vmaxpu: Double;
+        Vminpu: Double;
+
         Connection: Integer;  // 0 = line-neutral; 1=Delta
-        DailyShapeObj: TLoadShapeObj;  // Daily (24 HR) Storage element shape
-        DutyShapeObj: TLoadShapeObj;  // Duty cycle load shape for changes typically less than one hour
+        DailyShapeObj: TLoadShapeObj;  // Daily Storage element Shape for this load
+        DutyShapeObj: TLoadShapeObj;  // Shape for this Storage element
         YearlyShapeObj: TLoadShapeObj;  // Shape for this Storage element
+
+        pctkWOut: Double;   // percent of kW rated output currently dispatched
+        pctkWIn: Double;
+
+        pctReserve: Double;
+        DispatchMode: Integer;
+        pctIdlekW: Double;
+        kvarRequested: Double;
+        kWRequested: Double;
+
+        kWOutIdling: Double;
+
+        pctIdlekvar: Double;
+        pctChargeEff: Double;
+        pctDischargeEff: Double;
+        DischargeTrigger: Double;
+        ChargeTrigger: Double;
+        ChargeTime: Double;
+        kWhBeforeUpdate: Double;
+        CurrentkvarLimit: Double;
+        CurrentkvarLimitNeg: Double;
+
+        CutOutkWAC: Double;  // CutInkW  reflected to the AC side of the inverter
+        CutInkWAC: Double;   // CutOutkW reflected to the AC side of the inverter
+
+        // Inverter efficiency curve
+        InverterCurveObj: TXYCurveObj;
+
+        FVWStateRequested: Boolean;   // TEST Flag indicating if VW function has requested a specific state in last control iteration
+
         StorageClass: Integer;
         VoltageModel: Integer;   // Variation with voltage
         PFNominal: Double;
-
-        StorageVars: TStorageVars;
-
-        FpctkWout: Double;   // percent of kW rated output currently dispatched
-        Fpctkvarout: Double;
-        pctkWin: Double;
-        pctReserve: Double;
-        DispatchMode: Integer;
+        PICtrl: Array of TPICtrl;
 
         Registers, Derivatives: array[1..NumStorageRegisters] of Double;
+        VarFollowInverter: LongBool;
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
+        procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
-        procedure RecalcElementData; OVERRIDE;
-        procedure CalcYPrim; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
+        procedure CalcYPrim(); OVERRIDE;
 
-        function InjCurrents: Integer; OVERRIDE;
-        function NumVariables: Integer; OVERRIDE;
-        procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
+        function InjCurrents(): Integer; OVERRIDE;
+        function NumVariables(): Integer; OVERRIDE;
+        procedure GetAllVariables(States: Array of Double); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
-        procedure SetNominalStorageOuput;
+        procedure Set_Maxkvar(const Value: Double);
+        procedure Set_Maxkvarneg(const Value: Double);
+
+        procedure SetNominalStorageOutput();
         procedure Randomize(Opt: Integer);   // 0 = reset to 1.0; 1 = Gaussian around mean and std Dev  ;  // 2 = uniform
 
         procedure ResetRegisters;
-        procedure TakeSample;
+        procedure TakeSample();
 
         // Support for Dynamics Mode
-        procedure InitStateVars; OVERRIDE;
-        procedure IntegrateStates; OVERRIDE;
+        procedure InitStateVars(); OVERRIDE;
+        procedure IntegrateStates(); OVERRIDE;
 
         // Support for Harmonics Mode
-        procedure InitHarmonics; OVERRIDE;
+        procedure InitHarmonics(); OVERRIDE;
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        property PresentkW: Double READ Get_PresentkW WRITE Set_PresentkW;
-        property Presentkvar: Double READ Get_Presentkvar WRITE Set_Presentkvar;
-        property PresentkV: Double READ Get_PresentkV WRITE Set_PresentkV;
+        property kW: Double READ Get_kW WRITE Set_kW;
+        property kWDesired: Double READ Get_kWDesired;
+
+        property PresentkW: Double READ Get_PresentkW;             // Present kW   at inverter output
+        property Presentkvar: Double READ Get_Presentkvar;           // Present kvar at inverter output
+
+        property PresentkV: Double READ Get_PresentkV;
         property PowerFactor: Double READ PFNominal WRITE Set_PowerFactor;
+        property kVARating: Double READ StorageVars.FkVARating WRITE Set_kVARating;
+       
+        property kvarLimit: Double READ StorageVars.Fkvarlimit WRITE Set_Maxkvar;
+        property kvarLimitneg: Double READ StorageVars.Fkvarlimitneg WRITE Set_Maxkvarneg;
 
         property StorageState: Integer READ FState WRITE Set_StorageState;
-        property PctkWOut: Double READ FpctkWOut WRITE Set_pctkWOut;
-        property PctkVarOut: Double READ FpctkvarOut WRITE Set_pctkvarOut;
 
         property kWTotalLosses: Double READ Get_kWTotalLosses;
         property kWIdlingLosses: Double READ Get_kWIdlingLosses;
+        property kWInverterLosses: Double READ Get_InverterLosses;
+        property kWChDchLosses: Double READ Get_kWChDchLosses;
+        property DCkW: Double READ Get_DCkW;
 
         property MinModelVoltagePU: Double READ VminPu;
+        function IsStorage(): Boolean; OVERRIDE;
+        function GetPFPriority(): Boolean; OVERRIDE;
+        procedure SetPFPriority(value: Boolean); OVERRIDE;
+        function CheckOLInverter(): Boolean; OVERRIDE;
     end;
 
 implementation
@@ -326,13 +444,11 @@ uses
     Sysutils,
     Command,
     Math,
-    MathUtil,
     DSSClassDefs,
     DSSGlobals,
     Utilities,
     DSSHelper,
-    DSSObjectHelper,
-    TypInfo;
+    DSSObjectHelper;
 
 type
     TObj = TStorageObj;
@@ -341,24 +457,24 @@ const
     NumPropsThisClass = Ord(High(TProp));
 var
     PropInfo: Pointer = NIL;    
-    DispatchModeEnum, StateEnum: TDSSEnum;
+    StateEnum, DispatchModeEnum: TDSSEnum;
 
 constructor TStorage.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
-        StateEnum := TDSSEnum.Create('LegacyStorage: State', True, 1, 1, 
+        StateEnum := TDSSEnum.Create('Storage: State', True, 1, 1, 
             ['Charging', 'Idling', 'Discharging'], 
             [-1, 0, 1]);
         StateEnum.DefaultValue := 0;
-        DispatchModeEnum := TDSSEnum.Create('LegacyStorage: Dispatch Mode', True, 1, 1, 
-            ['Default', 'Loadshape', 'Price', 'External', 'Follow'], 
+        DispatchModeEnum := TDSSEnum.Create('Storage: Dispatch Mode', True, 1, 1, 
+            ['Default', 'LoadLevel', 'Price', 'External', 'Follow'], 
             [0, 1, 2, 3, 4]);
         DispatchModeEnum.DefaultValue := 0;
     end;
 
-    inherited Create(dssContext, STORAGE_ELEMENT, 'Storage');
+    inherited Create(dssContext, Storage_ELEMENT, 'Storage');
 
      // Set Register names
     RegisterNames[1] := 'kWh';
@@ -374,9 +490,9 @@ begin
     inherited Destroy;
 end;
 
-procedure Setkvar(obj: TObj; Value: Double);
+procedure SetkW(obj: TObj; Value: Double);
 begin
-    obj.Presentkvar := Value;
+    obj.kW := Value;
 end;
 
 function Getkvar(obj: TObj): Double;
@@ -394,6 +510,16 @@ begin
     Result := obj.StorageVars.kWhStored / obj.StorageVars.kWhRating * 100.0;
 end;
 
+procedure ObjSetDynOutput(obj: TObj; variable: String);
+begin
+    obj.SetDynOutput(variable);
+end;
+
+function ObjGetDynOutputStr(obj: TObj): String;
+begin
+    Result := obj.GetDynOutputStr();
+end;
+
 procedure TStorage.DefineProperties;
 var 
     obj: TObj = NIL; // NIL (0) on purpose
@@ -401,6 +527,23 @@ begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+
+    // strings
+    PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
+    PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
+
+    PropertyType[ord(TProp.DynaDLL)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.DynaDLL)] := ptruint(@obj.DynaModelNameStr);
+    PropertyType[ord(TProp.DynaData)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.DynaData)] := ptruint(@obj.DynaModelEditStr);
+
+    PropertyType[ord(TProp.DynOut)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.DynOut)] := 1; // dummy
+    PropertyWriteFunction[ord(TProp.DynOut)] := @ObjSetDynOutput;
+    PropertyReadFunction[ord(TProp.DynOut)] := @ObjGetDynOutputStr;
+    PropertyFlags[ord(TProp.DynOut)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction];
 
     // enum properties
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
@@ -415,35 +558,38 @@ begin
     PropertyOffset[ord(TProp.DispMode)] := ptruint(@obj.DispatchMode);
     PropertyOffset2[ord(TProp.DispMode)] := PtrInt(DispatchModeEnum);
 
-    // strings
-    PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
-    PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
-
-    PropertyType[ord(TProp.DynaDLL)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.DynaDLL)] := ptruint(@obj.DynaModelNameStr);
-    PropertyType[ord(TProp.DynaData)] := TPropertyType.StringProperty;
-    PropertyOffset[ord(TProp.DynaData)] := ptruint(@obj.DynaModelEditStr);
+    PropertyType[ord(TProp.ControlMode)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.ControlMode)] := ptruint(@obj.GFM_Mode);
+    PropertyOffset2[ord(TProp.ControlMode)] := PtrInt(DSS.InvControlModeEnum);
 
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
 
     // boolean properties
+    PropertyType[ord(TProp.debugtrace)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.Balanced)] := TPropertyType.BooleanProperty;
     PropertyType[ord(TProp.LimitCurrent)] := TPropertyType.BooleanProperty;
-    PropertyType[ord(TProp.debugtrace)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.LimitCurrent)] := ptruint(@obj.CurrentLimited);
-    PropertyOffset[ord(TProp.Balanced)] := ptruint(@obj.ForceBalanced);
+    PropertyType[ord(TProp.VarFollowInverter)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.WattPriority)] := TPropertyType.BooleanProperty;
+    PropertyType[ord(TProp.PFPriority)] := TPropertyType.BooleanProperty;
     PropertyOffset[ord(TProp.debugtrace)] := ptruint(@obj.DebugTrace);
+    PropertyOffset[ord(TProp.Balanced)] := ptruint(@obj.ForceBalanced);
+    PropertyOffset[ord(TProp.LimitCurrent)] := ptruint(@obj.CurrentLimited);
+    PropertyOffset[ord(TProp.VarFollowInverter)] := ptruint(@obj.VarFollowInverter);
+    PropertyOffset[ord(TProp.WattPriority)] := ptruint(@obj.StorageVars.P_priority);
+    PropertyOffset[ord(TProp.PFPriority)] := ptruint(@obj.StorageVars.PF_priority);
 
-    // integer properties                
-    PropertyType[ord(TProp.cls)] := TPropertyType.IntegerProperty;
-    PropertyType[ord(TProp.model)] := TPropertyType.IntegerProperty;
+    PropertyType[ord(TProp.SafeMode)] := TPropertyType.BooleanProperty;
+    PropertyOffset[ord(TProp.SafeMode)] := ptruint(@obj.dynVars.SafeMode);
+    PropertyFlags[ord(TProp.SafeMode)] := [TPropertyFlag.SilentReadOnly];
+
+    // integer properties
     PropertyOffset[ord(TProp.cls)] := ptruint(@obj.StorageClass);
     PropertyOffset[ord(TProp.model)] := ptruint(@obj.VoltageModel);
-    
+    PropertyType[ord(TProp.cls)] := TPropertyType.IntegerProperty;
+    PropertyType[ord(TProp.model)] := TPropertyType.IntegerProperty;
+
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
@@ -452,16 +598,35 @@ begin
     PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyType[ord(TProp.DynamicEq)] := TPropertyType.DSSObjectReferenceProperty;
+
     PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
     PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyShapeObj);
     PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
+    PropertyOffset[ord(TProp.DynamicEq)] := ptruint(@obj.DynamicEqObj);
+
     PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
     PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
     PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.DynamicEq)] := ptruint(DSS.DynamicExpClass);
 
-    // doubles
-    PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFNominal);
-    PropertyOffset[ord(TProp.pctIdlingkvar)] := ptruint(@obj.pctIdlekvar);
+    PropertyType[ord(TProp.EffCurve)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyOffset[ord(TProp.EffCurve)] := ptruint(@obj.InverterCurveObj);
+    PropertyOffset2[ord(TProp.EffCurve)] := ptruint(DSS.XYCurveClass);
+
+    PropertyScale[ord(TProp.pctkWrated)] := 0.01;
+    PropertyOffset[ord(TProp.pctkWrated)] := ptruint(@obj.StorageVars.pctkWrated);
+
+    // adv doubles
+    PropertyOffset[ord(TProp.kvarMax)] := ptruint(@obj.StorageVars.Fkvarlimit);
+    PropertyOffset[ord(TProp.kvarMaxAbs)] := ptruint(@obj.StorageVars.Fkvarlimitneg);
+    PropertyFlags[ord(TProp.kvarMax)] := [TPropertyFlag.Transform_Abs];
+    PropertyFlags[ord(TProp.kvarMaxAbs)] := [TPropertyFlag.Transform_Abs];
+
+    PropertyType[ord(TProp.pctIdlingkvar)] := TPropertyType.DeprecatedAndRemoved; //TODO: fully remove
+    PropertyDeprecatedMessage[ord(TProp.pctIdlingkvar)] := '"%Idlingkvar" was deprecated in 2020. It does nothing since then; please update your scripts.';
+
+    // double properties (default type)
     PropertyOffset[ord(TProp.pctR)] := ptruint(@obj.pctR);
     PropertyOffset[ord(TProp.pctX)] := ptruint(@obj.pctX);
     PropertyOffset[ord(TProp.pctIdlingkW)] := ptruint(@obj.pctIdlekW);
@@ -470,23 +635,26 @@ begin
     PropertyOffset[ord(TProp.pctEffCharge)] := ptruint(@obj.pctChargeEff);
     PropertyOffset[ord(TProp.pctEffDischarge)] := ptruint(@obj.pctDischargeEff);
     PropertyOffset[ord(TProp.pctDischarge)] := ptruint(@obj.pctkWout);
+    PropertyOffset[ord(TProp.pctCharge)] := ptruint(@obj.pctkWIn);
+    PropertyOffset[ord(TProp.pctCutin)] := ptruint(@obj.FpctCutIn);
+    PropertyOffset[ord(TProp.pctCutout)] := ptruint(@obj.FpctCutOut);
     PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
-    PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.StorageVars.kVArating);
     PropertyOffset[ord(TProp.kWrated)] := ptruint(@obj.StorageVars.kWrating);
     PropertyOffset[ord(TProp.kWhrated)] := ptruint(@obj.StorageVars.kWhrating);
     PropertyOffset[ord(TProp.kWhstored)] := ptruint(@obj.StorageVars.kWhstored);
     PropertyOffset[ord(TProp.pctreserve)] := ptruint(@obj.pctReserve);
-    PropertyOffset[ord(TProp.pctCharge)] := ptruint(@obj.pctkWIn);
+    PropertyOffset[ord(TProp.pctPminNoVars)] := ptruint(@obj.FpctPminNoVars);
+    PropertyOffset[ord(TProp.pctPminkvarMax)] := ptruint(@obj.FpctPminkvarLimit);
     PropertyOffset[ord(TProp.TimeChargeTrig)] := ptruint(@obj.ChargeTime);
-    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.StorageVars.kVStorageBase);
-    PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kW_Out);
+    PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFnominal);
+    PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.StorageVars.FkVArating);
+    PropertyOffset[ord(TProp.kV)] := ptruint(@obj.StorageVars.kVStorageBase);
 
-    PropertyType[ord(TProp.kvar)] := TPropertyType.DoubleProperty;
-    PropertyOffset[ord(TProp.kvar)] := 1;
-    PropertyWriteFunction[ord(TProp.kvar)] := @Setkvar;
+
+    PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarRequested);
     PropertyReadFunction[ord(TProp.kvar)] := @Getkvar;
-    PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction];
+    PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.ReadByFunction];
 
     PropertyType[ord(TProp.pctstored)] := TPropertyType.DoubleProperty;
     PropertyOffset[ord(TProp.pctstored)] := 1;
@@ -494,6 +662,21 @@ begin
     PropertyReadFunction[ord(TProp.pctstored)] := @GetPctStored;
     PropertyFlags[ord(TProp.pctstored)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction];
 
+    PropertyType[ord(TProp.kW)] := TPropertyType.DoubleProperty;
+    PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kW_out);
+    PropertyWriteFunction[ord(TProp.kW)] := @SetkW;
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.WriteByFunction];
+
+    PropertyOffset[ord(TProp.kVDC)] := ptruint(@obj.dynVars.RatedVDC);
+    PropertyScale[ord(TProp.kVDC)] := 1000;
+
+    PropertyOffset[ord(TProp.kP)] := ptruint(@obj.dynVars.kP);
+    PropertyScale[ord(TProp.kP)] := 1.0 / 1000.0;
+
+    PropertyOffset[ord(TProp.PITol)] := ptruint(@obj.dynVars.CtrlTol);
+    PropertyScale[ord(TProp.PITol)] := 1.0 / 100.0;
+
+    PropertyOffset[ord(TProp.SafeVoltage)] := ptruint(@obj.dynVars.SMThreshold);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
@@ -513,6 +696,7 @@ end;
 procedure SetNcondsForConnection(Obj: TObj);
 begin
     with Obj do
+    begin
         case Connection of
             0:
                 NConds := Fnphases + 1;
@@ -524,16 +708,17 @@ begin
                     NConds := Fnphases;
                 end;
         end;
+    end;
 end;
 
-procedure TStorage.UpdateAll;
+procedure TStorage.UpdateAll();
 var
     i: Integer;
 begin
     for i := 1 to ElementList.Count do
         with TStorageObj(ElementList.Get(i)) do
             if Enabled then
-                UpdateStorage;
+                UpdateStorage();
 end;
 
 procedure TStorageObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
@@ -541,17 +726,66 @@ var
     i: Integer;
 begin
     case Idx of
+        ord(TProp.conn):
+            begin
+                SetNCondsForConnection(self);
+
+                // VBase is always L-N voltage unless 1-phase device or more than 3 phases
+
+                case Fnphases of
+                    2, 3:
+                        VBase := StorageVars.kVStorageBase * InvSQRT3x1000;    // L-N Volts
+                else
+                    VBase := StorageVars.kVStorageBase * 1000.0;   // Just use what is supplied
+                end;
+
+                VBase95 := Vminpu * VBase;
+                VBase105 := Vmaxpu * VBase;
+
+                Yorder := Fnconds * Fnterms;
+                YprimInvalid := TRUE;
+            end;
+
+        ord(TProp.kv):
+            case FNphases of
+                2, 3:
+                    VBase := StorageVars.kVStorageBase * InvSQRT3x1000;
+            else
+                VBase := StorageVars.kVStorageBase * 1000.0;
+            end;
+
+        ord(TProp.kVA):
+            with StorageVars do
+            begin
+                kVASet := TRUE;
+                if not kvarLimitSet then
+                    StorageVars.Fkvarlimit := FkVArating;
+                if not kvarLimitSet and not kvarLimitNegSet then
+                    StorageVars.Fkvarlimitneg := FkVArating;
+            end;
+
+        ord(TProp.pf):
+            varMode := VARMODEPF;
+
+        ord(TProp.kvar):
+            varMode := VARMODEKVAR;
+
+        ord(TProp.kvarMax):
+        begin
+            kvarLimitSet := TRUE;
+            if not kvarLimitNegSet then
+                StorageVars.Fkvarlimitneg := Abs(StorageVars.Fkvarlimit);
+        end;
+        ord(TProp.kvarMaxAbs):
+            kvarLimitNegSet := TRUE;
+
         ord(TProp.phases):
             SetNCondsForConnection(self);  // Force Reallocation of terminal info
-        ord(TProp.kW):
-        begin
-            FpctkWOut := kW_Out / StorageVars.kWRating * 100.0;
-            SyncUpPowerQuantities;   // keep kvar nominal up to date with kW and PF
-        end;
-        ord(TProp.pf):
-            SyncUpPowerQuantities;   // keep kvar nominal up to date with kW and PF
+
         ord(TProp.kWrated):
-            StorageVars.kVArating := StorageVars.kWrating;
+            if not kVASet then
+                StorageVars.FkVArating := StorageVars.kWrating;
+
         ord(TProp.kWhrated):
         begin
             StorageVars.kWhStored := StorageVars.kWhRating; // Assume fully charged
@@ -562,36 +796,23 @@ begin
         ord(TProp.pctreserve):
             StorageVars.kWhReserve := StorageVars.kWhRating * pctReserve * 0.01;
 
-        ord(TProp.conn):
+        ord(TProp.UserModel):
         begin
-            SetNCondsForConnection(self);
-
-            // VBase is always L-N voltage unless 1-phase device or more than 3 phases
-
-            case Fnphases of
-                2, 3:
-                    VBase := StorageVars.kVStorageBase * InvSQRT3x1000;    // L-N Volts
-            else
-                VBase := StorageVars.kVStorageBase * 1000.0;   // Just use what is supplied
-            end;
-
-            VBase95 := Vminpu * VBase;
-            VBase105 := Vmaxpu * VBase;
-
-            Yorder := Fnconds * Fnterms;
-            YPrimInvalid := TRUE;
+            UserModel.Name := UserModelNameStr;
+            IsUserModel := UserModel.Exists;
         end;
-        ord(TProp.kv):
+        ord(TProp.UserData):
+            if UserModel.Exists then
+                UserModel.Edit := UserModelEditStr;
+        ord(TProp.DynaDLL):
         begin
-            case FNphases of
-                2, 3:
-                    VBase := StorageVars.kVStorageBase * InvSQRT3x1000;
-            else
-                VBase := StorageVars.kVStorageBase * 1000.0;
-            end;
-            VBase95 := Vminpu * VBase;
-            VBase105 := Vmaxpu * VBase;
+            DynaModel.Name := DynaModelNameStr; 
+            IsUserModel := DynaModel.Exists;
         end;
+        ord(TProp.DynaData):
+            if DynaModel.Exists then
+                DynaModel.Edit := DynaModelEditStr;
+
         ord(TProp.debugtrace):
             if DebugTrace then
             begin   // Init trace file
@@ -604,7 +825,7 @@ begin
                     FSWrite(Tracefile, ', |Iterm' + IntToStr(i) + '|');
                 for i := 1 to nphases do
                     FSWrite(Tracefile, ', |Vterm' + IntToStr(i) + '|');
-                for i := 1 to NumVariables do
+                for i := 1 to NumVariables() do
                     FSWrite(Tracefile, ', ' + VariableName(i));
 
                 FSWrite(TraceFile, ',Vthev, Theta');
@@ -616,13 +837,15 @@ begin
                 FreeAndNil(TraceFile);
             end;
 
-        ord(TProp.UserModel):
-            DoSimpleMsg('%s model designated to use user-written model, but user-written model are not available for legacy models anymore (removed in DSS C-API v0.12).', [FullName], 567);
-        ord(TProp.DynaDLL):
-            DoSimpleMsg('%s model designated to use user-written model, but user-written model are not available for legacy models anymore (removed in DSS C-API v0.12).', [FullName], 567);
-
-        ord(TProp.kVA):
-            kVANotSet := FALSE;
+        ord(TProp.ControlMode):
+        begin
+            if GFM_mode then
+                dynVars.ResetIBR := FALSE;
+            YprimInvalid := TRUE;
+        end;
+        ord(TProp.DynamicEq):
+            if DynamicEqObj <> NIL then
+                SetLength(DynamicEqVals, DynamicEqObj.NVariables);            
     end;
     inherited PropertySideEffects(Idx, previousIntVal);
 end;
@@ -650,7 +873,7 @@ begin
         FNphases := Other.Fnphases;
         NConds := Fnphases;  // Forces reallocation of terminal stuff
         Yorder := Fnconds * Fnterms;
-        YPrimInvalid := TRUE;
+        YprimInvalid := TRUE;
     end;
 
     StorageVars.kVStorageBase := Other.StorageVars.kVStorageBase;
@@ -669,14 +892,27 @@ begin
     DailyShapeObj := Other.DailyShapeObj;
     DutyShapeObj := Other.DutyShapeObj;
     DispatchMode := Other.DispatchMode;
+    InverterCurveObj := Other.InverterCurveObj;
     StorageClass := Other.StorageClass;
     VoltageModel := Other.VoltageModel;
 
     Fstate := Other.Fstate;
-    FstateChanged := Other.FstateChanged;
-    kVANotSet := Other.kVANotSet;
+    stateChanged := Other.stateChanged;
+    kvarLimitSet := Other.kvarLimitSet;
+    kvarLimitNegSet := Other.kvarLimitNegSet;
 
-    StorageVars.kVArating := Other.StorageVars.kVArating;
+    FpctCutin := Other.FpctCutin;
+    FpctCutout := Other.FpctCutout;
+    VarFollowInverter := Other.VarFollowInverter;
+    StorageVars.Fkvarlimit := Other.StorageVars.Fkvarlimit;
+    StorageVars.Fkvarlimitneg := Other.StorageVars.Fkvarlimitneg;
+    StorageVars.FkVArating := Other.StorageVars.FkVArating;
+
+    FpctPminNoVars := Other.FpctPminNoVars;
+    FpctPminkvarLimit := Other.FpctPminkvarLimit;
+
+    kWOutIdling := Other.kWOutIdling;
+
     StorageVars.kWRating := Other.StorageVars.kWRating;
     StorageVars.kWhRating := Other.StorageVars.kWhRating;
     StorageVars.kWhStored := Other.StorageVars.kWhStored;
@@ -697,7 +933,30 @@ begin
     pctX := Other.pctX;
 
     RandomMult := Other.RandomMult;
+    VWMode := Other.VWMode;
+    VVMode := Other.VVMode;
+    DRCMode := Other.DRCMode;
+    WPMode := Other.WPMode;
+    WVMode := Other.WVMode;
+    AVRMode := Other.AVRMode;
 
+    UserModel.Name := Other.UserModel.Name;
+    DynaModel.Name := Other.DynaModel.Name;
+    UserModelNameStr := Other.UserModelNameStr;
+    DynaModelNameStr := Other.DynaModelNameStr;
+    
+    //TODO: missing from upstream
+    dynVars.RatedVDC := Other.dynVars.RatedVDC;
+    dynVars.SMThreshold := Other.dynVars.SMThreshold;
+    dynVars.SafeMode := Other.dynVars.SafeMode;
+    dynVars.kP := Other.dynVars.kP;
+    dynVars.ResetIBR := Other.dynVars.ResetIBR;
+    GFM_Mode := Other.GFM_Mode;
+    //TODO: copy PICtrl?
+
+    //TODO: this doesn't copy the parameters of the user models
+
+    IsUserModel := Other.IsUserModel;
     ForceBalanced := Other.ForceBalanced;
     CurrentLimited := Other.CurrentLimited;
 end;
@@ -714,21 +973,21 @@ begin
     end;
 end;
 
-procedure TStorage.SampleAll;  // Force all Storage elements in the circuit to take a sample
+procedure TStorage.SampleAll();  // Force all Storage elements in the circuit to take a sample
 var
     i: Integer;
 begin
     for i := 1 to ElementList.Count do
         with TStorageObj(ElementList.Get(i)) do
             if Enabled then
-                TakeSample;
+                TakeSample();
 end;
 
 constructor TStorageObj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
     inherited create(ParClass);
     Name := AnsiLowerCase(SourceName);
-    DSSObjType := ParClass.DSSClassType; // + STORAGE_ELEMENT;  // In both PCelement and Storageelement list
+    DSSObjType := ParClass.DSSClassType; // + Storage_ELEMENT;  // In both PCelement and Storageelement list
     TraceFile := nil;
 
     FNphases := 3;
@@ -739,6 +998,9 @@ begin
     YearlyShapeObj := NIL;
     DailyShapeObj := NIL;
     DutyShapeObj := NIL;
+
+    InverterCurveObj := NIL;
+
     Connection := 0;    // Wye (star)
     VoltageModel := 1;  // Typical fixed kW negative load
     StorageClass := 1;
@@ -756,26 +1018,81 @@ begin
     Yorder := Fnterms * Fnconds;
     RandomMult := 1.0;
 
-    // Output rating stuff
-    kW_out := 25.0;
-    kvar_out := 0.0;
-    kvarBase := kvar_out;     // initialize
-    PFNominal := 1.0;
+    varMode := VARMODEPF;
+    InverterON := TRUE; // start with inverterON
+    kVA_exceeded := FALSE;
+    VarFollowInverter := FALSE;
+
+    ForceBalanced := FALSE;
+    CurrentLimited := FALSE;
+
     with StorageVars do
     begin
         kWRating := 25.0;
-        kVArating := kWRating * 1.0;
+        FkVArating := kWRating;
         kWhRating := 50;
         kWhStored := kWhRating;
         kWhBeforeUpdate := kWhRating;
         kWhReserve := kWhRating * pctReserve / 100.0;
+        Fkvarlimit := FkVArating;
+        Fkvarlimitneg := FkVArating;
+        pctkWrated := 1.0;
+        P_Priority := FALSE;
+        PF_Priority := FALSE;
+
+        EffFactor := 1.0;
+
+        Vreg := 9999;
+        Vavg := 9999;
+        VVOperation := 9999;
+        VWOperation := 9999;
+        DRCOperation := 9999;
+        VVDRCOperation := 9999;
+        WPOperation := 9999;
+        WVOperation := 9999;
+    end;
+    with dynVars do
+    begin
+        RatedVDC := 8000;
+        SMThreshold := 80;
+        SafeMode := FALSE;
+        kP := 0.00001;
+        ResetIBR := FALSE;
     end;
 
-    FState := STORE_IDLING;  // Idling and fully charged
-    FStateChanged := TRUE;  // Force building of YPrim
-    pctReserve := 20.0;  // per cent of kWhRating
+    FDCkW := 25.0;
+
+    FpctCutIn := 0.0;
+    FpctCutOut := 0.0;
+
+    FpctPminNoVars := -1.0; // Deactivated by default
+    FpctPminkvarLimit := -1.0; // Deactivated by default
+
+    pf_wp_nominal := 1.0;
+
+    // Output rating stuff
+    kvar_out := 0.0;
+     // removed kvarBase     := kvar_out;     // initialize
+    PFNominal := 1.0;
+
     pctR := 0.0;
     pctX := 50.0;
+
+    // Make the StorageVars struct as public
+    PublicDataStruct := @StorageVars;
+    PublicDataSize := SizeOf(TStorageVars);
+
+    IsUserModel := FALSE;
+    UserModel := TStoreUserModel.Create(DSS);
+    DynaModel := TStoreDynaModel.Create(DSS);
+    UserModelNameStr := '';
+    UserModelEditStr := '';
+    DynaModelNameStr := '';
+    DynaModelEditStr := '';
+
+    FState := STORE_IDLING;  // Idling and fully charged
+    StateChanged := TRUE;  // Force building of YPrim
+    pctReserve := 20.0;  // per cent of kWhRating
     pctIdlekW := 1.0;
     pctIdlekvar := 0.0;
 
@@ -783,22 +1100,14 @@ begin
     ChargeTrigger := 0.0;
     pctChargeEff := 90.0;
     pctDischargeEff := 90.0;
-    FpctkWout := 100.0;
-    Fpctkvarout := 100.0;
-    pctkWin := 100.0;
+    pctkWOut := 100.0;
+    pctkWIn := 100.0;
 
     ChargeTime := 2.0;   // 2 AM
 
-    kVANotSet := TRUE;  // Flag to set the default value for kVA
-
-    // Make the StorageVars struct as public
-    PublicDataStruct := @StorageVars;
-    PublicDataSize := SizeOf(TStorageVars);
-
-    UserModelNameStr := '';
-    UserModelEditStr := '';
-    DynaModelNameStr := '';
-    DynaModelEditStr := '';
+    kVASet := FALSE;
+    kvarLimitSet := FALSE;
+    kvarLimitNegSet := FALSE;
 
     Reg_kWh := 1;
     Reg_kvarh := 2;
@@ -810,18 +1119,14 @@ begin
     DebugTrace := FALSE;
     StorageObjSwitchOpen := FALSE;
     SpectrumObj := NIL; // override base class
+    VWMode := FALSE;
+    VVMode := FALSE;
+    DRCMode := FALSE;
+    WPMode := FALSE;
+    WVMode := FALSE;
+    AVRMode := FALSE;
 
-    ForceBalanced := FALSE;
-    CurrentLimited := FALSE;
-
-    RecalcElementData;
-end;
-
-destructor TStorageObj.Destroy;
-begin
-    YPrimOpenCond.Free;
-    FreeAndNil(TraceFile);
-    inherited Destroy;
+    RecalcElementData();
 end;
 
 procedure TStorageObj.Randomize(Opt: Integer);
@@ -836,6 +1141,15 @@ begin
         LOGNORMAL:
             RandomMult := QuasiLognormal(YearlyShapeObj.Mean);
     end;
+end;
+
+destructor TStorageObj.Destroy;
+begin
+    YPrimOpenCond.Free;
+    UserModel.Free;
+    DynaModel.Free;
+    FreeAndNil(TraceFile);
+    inherited Destroy;
 end;
 
 procedure TStorageObj.CalcDailyMult(Hr: Double);
@@ -872,70 +1186,62 @@ begin
         CalcDailyMult(Hr);  // Defaults to Daily curve
 end;
 
-procedure TStorageObj.SetKWandKvarOut;
-var
-    OldState: Integer;
+procedure TStorageObj.RecalcElementData();
 begin
-    OldState := Fstate;
+    VBase95 := VMinPu * VBase;
+    VBase105 := VMaxPu * VBase;
+
     with StorageVars do
-        case FState of
-
-            STORE_CHARGING:
-            begin
-                if kWhStored < kWhRating then
-                    case DispatchMode of
-                        STORE_FOLLOW:
-                        begin
-                            kW_out := kWRating * ShapeFactor.re;
-                            kvar_out := kvarBase * ShapeFactor.im;    // ???
-                        end
-                    else
-                        kW_out := -kWRating * pctkWin / 100.0;
-                        if PFNominal = 1.0 then
-                            kvar_out := 0.0
-                        else
-                            SyncUpPowerQuantities;  // computes kvar_out from PF
-                    end
-                else
-                    Fstate := STORE_IDLING;   // all charged up
-            end;
-
-
-            STORE_DISCHARGING:
-            begin
-                if kWhStored > kWhReserve then
-                    case DispatchMode of
-                        STORE_FOLLOW:
-                        begin
-                            kW_out := kWRating * ShapeFactor.re;
-                            kvar_out := kvarBase * ShapeFactor.im;
-                        end
-                    else
-                        kW_out := kWRating * pctkWout / 100.0;
-                        if PFNominal = 1.0 then
-                            kvar_out := 0.0
-                        else
-                            SyncUpPowerQuantities; // computes kvar_out from PF
-                    end
-                else
-                    Fstate := STORE_IDLING;  // not enough storage to discharge
-            end;
-
-        end;
-
-    // If idling output is only losses
-
-    if Fstate = STORE_IDLING then
     begin
-        kW_out := 0.0;   // -kWIdlingLosses;     Just use YeqIdling
-        kvar_out := 0.0;
+        YeqDischarge := Cmplx((kWrating * 1000.0 / SQR(vbase) / FNPhases), 0.0);
+
+        // values in ohms for thevenin equivalents
+        RThev := pctR * 0.01 * SQR(PresentkV) / FkVARating * 1000.0;      // Changed
+        XThev := pctX * 0.01 * SQR(PresentkV) / FkVARating * 1000.0;      // Changed
+
+        CutInkW := FpctCutin * FkVArating / 100.0;
+        CutOutkW := FpctCutOut * FkVArating / 100.0;
+
+        if FpctPminNoVars <= 0 then
+            PminNoVars := -1.0
+        else
+            PminNoVars := FpctPminNoVars * kWrating / 100.0;
+
+        if FpctPminkvarLimit <= 0 then
+            PminkvarLimit := -1.0
+        else
+            PminkvarLimit := FpctPminkvarLimit * kWrating / 100.0;
+
+        // efficiencies
+        ChargeEff := pctChargeEff * 0.01;
+        DisChargeEff := pctDisChargeEff * 0.01;
+
+        PIdling := pctIdlekW * kWrating / 100.0;
+
+        if Assigned(InverterCurveObj) then
+        begin
+            kWOutIdling := PIdling / (InverterCurveObj.GetYValue(Pidling / (FkVArating)));
+        end
+        else
+            kWOutIdling := PIdling;
+
     end;
 
-    if OldState <> Fstate then
-        FstateChanged := TRUE;
+    SetNominalStorageOutput();
+
+    // Initialize to Zero - defaults to PQ Storage element
+    // Solution object will reset after circuit modifications
+
+    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+
+    // Update any user-written models
+    if Usermodel.Exists then
+        UserModel.FUpdateModel;  // Checks for existence and Selects
+    if Dynamodel.Exists then
+        Dynamodel.FUpdateModel;  // Checks for existence and Selects
 end;
 
-procedure TStorageObj.SetNominalStorageOuput;
+procedure TStorageObj.SetNominalStorageOutput();
 begin
     ShapeFactor := CDOUBLEONE;  // init here; changed by curve routine
     // Check to make sure the Storage element is ON
@@ -943,7 +1249,7 @@ begin
     begin
         if not (IsDynamicModel or IsHarmonicModel) then     // Leave Storage element in whatever state it was prior to entering Dynamic mode
         begin
-          // Check dispatch to see what state the storage element should be in
+            // Check dispatch to see what state the Storage element should be in
             case DispatchMode of
 
                 STORE_EXTERNALMODE: ;  // Do nothing
@@ -953,7 +1259,6 @@ begin
                     CheckStateTriggerLevel(PriceSignal);
 
             else // dispatch off element's loadshapes, If any
-
                 with Solution do
                     case Mode of
                         TSolveMode.SNAPSHOT: ; // Just solve for the present kW, kvar  // Don't check for state change
@@ -964,10 +1269,10 @@ begin
                         // MONTECARLO1,
                         // MONTEFAULT,
                         // FAULTSTUDY,
-                        // DYNAMICMODE:   ; // // do nothing for these modes
+                        // DYNAMICMODE:   ; // do nothing for these modes
                         TSolveMode.GENERALTIME:
                         begin
-                         // This mode allows use of one class of load shape
+                                // This mode allows use of one class of load shape
                             case ActiveCircuit.ActiveLoadShapeClass of
                                 USEDAILY:
                                     CalcDailyMult(DynaVars.dblHour);
@@ -979,7 +1284,7 @@ begin
                                 ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
                             end;
                         end;
-                        // Assume Daily curve, If any, for the following
+                            // Assume Daily curve, If any, for the following
                         TSolveMode.MONTECARLO2,
                         TSolveMode.MONTECARLO3,
                         TSolveMode.LOADDURATION1,
@@ -990,93 +1295,402 @@ begin
 
                         TSolveMode.DUTYCYCLE:
                             CalcDutyMult(DynaVars.dblHour);
-                        // AUTOADDFLAG:  ;
+                // AUTOADDFLAG:  ; 
                     end;
+
             end;
 
-            SetKWandKvarOut;   // Based on State and amount of energy left in storage
+            ComputekWkvar;
 
-            // Pnominalperphase is net at the terminal.  When discharging, the storage supplies the idling losses.
-            // When charging, the idling losses are subtracting from the amount entering the storage element.
+            // Pnominalperphase is net at the terminal.  If supplying idling losses, when discharging,
+            // the Storage supplies the idling losses. When charging, the idling losses are subtracting from the amount
+            // entering the Storage element.
 
-            Pnominalperphase := 1000.0 * kW_out / Fnphases;
-
-            if Fstate = STORE_IDLING then
+            with StorageVars do
             begin
-                if DispatchMode = STORE_EXTERNALMODE then   // Check for requested kvar
-                    Qnominalperphase := StorageVars.kvarRequested / Fnphases * 1000.0
-                else
-                    Qnominalperphase := 0.0;
-                Yeq := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase);   // Vbase must be L-N for 3-phase
-                Yeq95 := Yeq;
-                Yeq105 := Yeq;
-            end
-            else
-            begin
+                Pnominalperphase := 1000.0 * kW_out / Fnphases;
                 Qnominalperphase := 1000.0 * kvar_out / Fnphases;
-
-                case VoltageModel of
-                    //****  Fix this when user model gets connected in
-                    3: // Yeq := Cinv(cmplx(0.0, -StoreVARs.Xd))  ;  // Gets negated in CalcYPrim
-                else
-                    // Yeq no longer used for anything other than this calculation of Yeq95, Yeq105 and
-                    // constant Z power flow model
-                    Yeq := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase);   // Vbase must be L-N for 3-phase
-                    if (Vminpu <> 0.0) then
-                        Yeq95 := Yeq / sqr(Vminpu)  // at 95% voltage
-                    else
-                        Yeq95 := Yeq; // Always a constant Z model
-
-                    if (Vmaxpu <> 0.0) then
-                        Yeq105 := Yeq / Sqr(Vmaxpu)   // at 105% voltage
-                    else
-                        Yeq105 := Yeq;
-                end;
-                // Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
-                with StorageVars do
-                begin
-                    PhaseCurrentLimit := Cmplx(Pnominalperphase, Qnominalperphase) / VBase95;
-                    MaxDynPhaseCurrent := Cabs(PhaseCurrentLimit);
-                end;
-
             end;
-              // When we leave here, all the Yeq's are in L-N values
+
+
+            case VoltageModel of
+            //****  Fix this when user model gets connected in
+                3: // Yeq := Cinv(cmplx(0.0, -StoreVARs.Xd))  ;  // Gets negated in CalcYPrim
+            else
+                // Yeq no longer used for anything other than this calculation of Yeq95, Yeq105 and
+                // constant Z power flow model
+                Yeq := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase);   // Vbase must be L-N for 3-phase
+                if (Vminpu <> 0.0) then
+                    Yeq95 := Yeq / sqr(Vminpu)  // at 95% voltage
+                else
+                    Yeq95 := Yeq; // Always a constant Z model
+
+                if (Vmaxpu <> 0.0) then
+                    Yeq105 := Yeq / Sqr(Vmaxpu)   // at 105% voltage
+                else
+                    Yeq105 := Yeq;
+            end;
+            // Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
+            with StorageVars do
+            begin
+                PhaseCurrentLimit := Cmplx(Pnominalperphase, Qnominalperphase) / VBase95;
+                MaxDynPhaseCurrent := Cabs(PhaseCurrentLimit);
+            end;
+
+            // When we leave here, all the Yeq's are in L-N values
 
         end;  // If  NOT (IsDynamicModel or IsHarmonicModel)
-    end;  // With ActiveCircuit
+    end; // With ActiveCircuit
 
-    // If Storage element state changes, force re-calc of Y matrix
-    if FStateChanged then
+   // If Storage element state changes, force re-calc of Y matrix
+    if StateChanged then
     begin
-        YPrimInvalid := TRUE;
-        FStateChanged := FALSE;  // reset the flag
+        YprimInvalid := TRUE;
+        StateChanged := FALSE;  // reset the flag
     end;
 end;
 
-procedure TStorageObj.RecalcElementData;
+procedure TStorageObj.ComputekWkvar;
 begin
-    VBase95 := VMinPu * VBase;
-    VBase105 := VMaxPu * VBase;
+    ComputePresentkW;
+    ComputeInverterPower; // apply inverter eff after checking for cutin/cutout
+end;
 
-    // removed 5/8/17 kvarBase := kvar_out ;  // remember this for Follow Mode
+procedure TStorageObj.ComputePresentkW;
+var
+    OldState: Integer;
+begin
+    OldState := Fstate;
+    StateDesired := OldState;
+    with StorageVars do
+        case FState of
+            STORE_CHARGING:
+            begin
+                if kWhStored < kWhRating then
+                    case DispatchMode of
+                        STORE_FOLLOW:
+                        begin
+                            kW_out := kWRating * ShapeFactor.re;
+                            pctkWIn := abs(ShapeFactor.re) * 100.0;  // keep %charge updated
+                        end
+                    else
+                        kW_out := -kWRating * pctkWin / 100.0;
+                    end
+                else
+                    Fstate := STORE_IDLING;   // all charged up
+            end;
+            STORE_DISCHARGING:
+            begin
+                if kWhStored > kWhReserve then
+                    case DispatchMode of
+                        STORE_FOLLOW:
+                        begin
+                            kW_out := kWRating * ShapeFactor.re;
+                            pctkWOut := abs(ShapeFactor.re) * 100.0;  // keep %discharge updated
+                        end
+                    else
+                        kW_out := kWRating * pctkWout / 100.0;
+                    end
+                else
+                    Fstate := STORE_IDLING;  // not enough Storage to discharge
+            end;
+        end;
 
-    // values in ohms for thevenin equivalents
-    StorageVars.RThev := pctR * 0.01 * SQR(PresentkV) / StorageVars.kVARating * 1000.0;
-    StorageVars.XThev := pctX * 0.01 * SQR(PresentkV) / StorageVars.kVARating * 1000.0;
+    // If idling output is only losses
+    if Fstate = STORE_IDLING then
+    begin
+        kW_out := -kWOutIdling;
+    end;
 
-    // efficiencies
-    StorageVars.ChargeEff := pctChargeEff * 0.01;
-    StorageVars.DisChargeEff := pctDisChargeEff * 0.01;
+    if OldState <> Fstate then
+        stateChanged := TRUE;
+end;
 
-    YeqIdling := Cmplx(pctIdlekW, pctIdlekvar) * (StorageVars.kWrating * 10.0 / SQR(vbase) / FNPhases);  // 10.0 = 1000/100 = kW->W/pct
-    YeqDischarge := Cmplx((StorageVars.kWrating * 1000.0 / SQR(vbase) / FNPhases), 0.0);
+procedure TStorageObj.ComputeInverterPower;
+var
+    kVA_Gen: Double;
+    OldState: Integer;
+    TempPF: Double = 0.0; // temporary power factor
+    Qramp_limit: Double = 0.0;
+begin
+    // Reset CurrentkvarLimit to kvarLimit
+    CurrentkvarLimit := StorageVars.Fkvarlimit;
+    CurrentkvarLimitNeg := StorageVars.Fkvarlimitneg;
 
-    SetNominalStorageOuput;
+    with StorageVars do
+    begin
+        if InverterCurveObj <> NIL then
+        begin
+            if Fstate = STORE_DISCHARGING then
+            begin
+                CutOutkWAC := CutOutkW * InverterCurveObj.GetYValue(abs(CutOutkW) / FkVArating);
+                CutInkWAC := CutInkW * InverterCurveObj.GetYValue(abs(CutInkW) / FkVArating);
+            end
+            else  // Charging or Idling
+            begin
+                CutOutkWAC := CutOutkW / InverterCurveObj.GetYValue(abs(CutOutkW) / FkVArating);
+                CutInkWAC := CutInkW / InverterCurveObj.GetYValue(abs(CutInkW) / FkVArating);
+            end;
+        end
+        else // Assume Ideal Inverter
+        begin
+            CutOutkWAC := CutOutkW;
+            CutInkWAC := CutInkW;
+        end;
 
-    // Initialize to Zero - defaults to PQ Storage element
-    // Solution object will reset after circuit modifications
+        OldState := Fstate;
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+      // CutIn/CutOut checking performed on the AC side.
+        if InverterON then
+        begin
+            if abs(kW_Out) < CutOutkWAC then
+            begin
+                InverterON := FALSE;
+                Fstate := STORE_IDLING;
+            end;
+        end
+        else
+        begin
+            if abs(kW_Out) >= CutInkWAC then
+            begin
+                InverterON := TRUE;
+            end
+            else
+            begin
+                Fstate := STORE_IDLING;
+            end;
+        end;
+
+        if OldState <> Fstate then
+            stateChanged := TRUE;
+
+        // Set inverter output
+        if InverterON then
+        begin
+            kWOut_Calc;
+        end
+        else
+        begin
+            // Idling
+            kW_Out := -kWOutIdling; // In case it has just turned off due to %CutIn/%CutOut. Necessary to make sure SOC will be kept constant (higher priority than the %CutIn/%CutOut operation)
+        end;
+
+        // Calculate kvar value based on operation mode (PF or kvar)
+        if FState = STORE_IDLING then      // Should watt-pf with watt=0 be applied here?
+        // If in Idling state, check for kvarlimit only
+        begin
+            if varMode = VARMODEPF then
+            begin
+                // kvar_out := 0.0; //kW = 0 leads to kvar = 0 in constant PF Mode
+                kvar_out := kW_out * sqrt(1.0 / SQR(PFnominal) - 1.0) * sign(PFnominal);
+
+                if (kvar_out > 0.0) and (abs(kvar_out) > Fkvarlimit) then
+                    kvar_Out := Fkvarlimit
+                else
+                if (kvar_out < 0.0) and (abs(kvar_out) > Fkvarlimitneg) then
+                    kvar_Out := Fkvarlimitneg * sign(kvarRequested)
+
+            end
+            else  // kvarRequested might have been set either internally or by an InvControl
+            begin
+                if (kvarRequested > 0.0) and (abs(kvarRequested) > Fkvarlimit) then
+                    kvar_Out := Fkvarlimit
+                else
+                if (kvarRequested < 0.0) and (abs(kvarRequested) > Fkvarlimitneg) then
+                    kvar_Out := Fkvarlimitneg * sign(kvarRequested)
+                else
+                    kvar_Out := kvarRequested;
+            end;
+        end
+        else
+        // If in either Charging or Discharging states
+        begin
+            if (abs(kW_Out) < PminNoVars) then
+            begin
+                kvar_out := 0.0;  // Check minimum P for Q gen/absorption. if PminNoVars is disabled (-1), this will always be false
+
+                CurrentkvarLimit := 0;
+                CurrentkvarLimitNeg := 0.0;  // InvControl uses this.
+            end
+            else
+            if varMode = VARMODEPF then
+            begin
+                if PFnominal = 1.0 then
+                    kvar_out := 0.0
+                else
+                begin
+                    kvar_out := kW_out * sqrt(1.0 / SQR(PFnominal) - 1.0) * sign(PFnominal); //kvar_out desired by constant PF
+
+                    // Check Limits
+                    if abs(kW_out) < PminkvarLimit then // straight line limit check. if PminkvarLimit is disabled (-1), this will always be false.
+                    begin
+                        // straight line starts at max(PminNoVars, CutOutkWAC)
+                        // if CutOut differs from CutIn, take cutout since it is assumed that CutOut <= CutIn always.
+                        if abs(kW_out) >= max(PminNoVars, CutOutkWAC) then
+                        begin
+                            if (kvar_Out > 0.0) then
+                            begin
+                                Qramp_limit := Fkvarlimit / PminkvarLimit * abs(kW_out);   // generation limit
+                            end
+                            else
+                            if (kvar_Out < 0.0) then
+                            begin
+                                Qramp_limit := Fkvarlimitneg / PminkvarLimit * abs(kW_out);   // absorption limit
+                            end;
+
+                            if abs(kvar_Out) > Qramp_limit then
+                            begin
+                                kvar_out := Qramp_limit * sign(kW_out) * sign(PFnominal);
+
+                                if kvar_out > 0 then
+                                    CurrentkvarLimit := Qramp_limit;  // For use in InvControl
+                                if kvar_out < 0 then
+                                    CurrentkvarLimitNeg := Qramp_limit;  // For use in InvControl
+                            end;
+                        end
+                    end
+                    else
+                    if (abs(kvar_Out) > Fkvarlimit) or (abs(kvar_Out) > Fkvarlimitneg) then  // Other cases, check normal kvarLimit and kvarLimitNeg
+                    begin
+                        if (kvar_Out > 0.0) then
+                            kvar_out := Fkvarlimit * sign(kW_out) * sign(PFnominal)
+                        else
+                            kvar_out := Fkvarlimitneg * sign(kW_out) * sign(PFnominal);
+
+                        if PF_Priority then // Forces constant power factor when kvar limit is exceeded and PF Priority is true.
+                        begin
+                            kW_out := kvar_out * sqrt(1.0 / (1.0 - Sqr(PFnominal)) - 1.0) * sign(PFnominal);
+                        end;
+                    end;
+                end;
+            end
+            else  // VARMODE kvar
+            begin
+                // Check limits
+                if abs(kW_out) < PminkvarLimit then // straight line limit check. if PminkvarLimit is disabled (-1), this will always be false.
+                begin
+                    // straight line starts at max(PminNoVars, CutOutkWAC)
+                    // if CutOut differs from CutIn, take cutout since it is assumed that CutOut <= CutIn always.
+                    if abs(kW_out) >= max(PminNoVars, CutOutkWAC) then
+                    begin
+                        if (kvarRequested > 0.0) then
+                        begin
+                            Qramp_limit := Fkvarlimit / PminkvarLimit * abs(kW_out);   // generation limit
+                            CurrentkvarLimit := Qramp_limit;    // For use in InvControl
+                        end
+                        else
+                        if (kvarRequested < 0.0) then
+                        begin
+                            Qramp_limit := Fkvarlimitneg / PminkvarLimit * abs(kW_out);   // absorption limit
+                            CurrentkvarLimitNeg := Qramp_limit;   // For use in InvControl
+                        end;
+
+                        if abs(kvarRequested) > Qramp_limit then
+                            kvar_out := Qramp_limit * sign(kvarRequested)
+                        else
+                            kvar_out := kvarRequested;
+                    end;
+                end
+                else
+                if ((kvarRequested > 0.0) and (abs(kvarRequested) > Fkvarlimit)) or ((kvarRequested < 0.0) and (abs(kvarRequested) > Fkvarlimitneg)) then
+                begin
+                    if (kvarRequested > 0.0) then
+                        kvar_Out := Fkvarlimit * sign(kvarRequested)
+                    else
+                        kvar_Out := Fkvarlimitneg * sign(kvarRequested);
+
+                    if (varMode = VARMODEKVAR) and PF_Priority and WPMode then
+                    begin
+                        kW_out := abs(kvar_out) * sqrt(1.0 / (1.0 - Sqr(pf_wp_nominal)) - 1.0) * sign(kW_out);
+                    end
+
+                    // Forces constant power factor when kvar limit is exceeded and PF Priority is true. Temp PF is calculated based on kvarRequested
+                    // PF Priority is not valid if controlled by an InvControl operating in at least one amongst VV and DRC modes
+                    else
+                    if PF_Priority and (not VVMode or not DRCMode or not WVmode) then
+                    begin
+                        if abs(kvarRequested) > 0.0 then
+                        begin
+                            TempPF := cos(arctan(abs(kvarRequested / kW_out)));
+                            kW_out := abs(kvar_out) * sqrt(1.0 / (1.0 - Sqr(TempPF)) - 1.0) * sign(kW_out);
+                        end
+                    end
+                end
+                else
+                    kvar_Out := kvarRequested;
+            end;
+        end;
+
+        if (InverterON = FALSE) and (VarFollowInverter = TRUE) then
+            kvar_out := 0.0;
+
+        // Limit kvar and kW so that kVA of inverter is not exceeded
+        kVA_Gen := Sqrt(Sqr(kW_out) + Sqr(kvar_out));
+
+        if kVA_Gen > FkVArating then
+        begin
+            kVA_exceeded := TRUE;
+
+            // Expectional case: When kVA is exceeded and in idling state, we force P priority always
+            if (FState = STORE_IDLING) then
+            begin
+                kvar_Out := Sqrt(SQR(FkVArating) - SQR(kW_Out)) * sign(kvar_Out);
+            end
+
+            // Regular Cases
+            else
+            if (varMode = VARMODEPF) and PF_Priority then
+            // Operates under constant power factor when kVA rating is exceeded. PF must be specified and PFPriority must be TRUE
+            begin
+                kW_out := FkVArating * abs(PFnominal) * sign(kW_out);
+
+                kvar_out := FkVArating * sqrt(1 - Sqr(PFnominal)) * sign(kW_out) * sign(PFnominal);
+            end
+            else
+            if (varMode = VARMODEKVAR) and PF_Priority and WPMode then
+            begin
+                kW_out := FkVArating * abs(pf_wp_nominal) * sign(kW_out);
+                kvar_out := FkVArating * abs(sin(ArcCos(pf_wp_nominal))) * sign(kvarRequested)
+            end
+            else
+            if (varMode = VARMODEKVAR) and PF_Priority and (not VVMode or not DRCMode or not WVmode) then
+            // Operates under constant power factor (PF implicitly calculated based on kw and kvar)
+            begin
+                if abs(kvar_out) = Fkvarlimit then
+                begin   // for handling cases when kvar limit and inverter's kVA limit are exceeded
+                    kW_out := FkVArating * abs(TempPF) * sign(kW_out);  // Temp PF has already been calculated at this point
+                end
+                else
+                begin
+                    kW_out := FkVArating * abs(cos(ArcTan(kvarRequested / kW_out))) * sign(kW_out);
+                end;
+
+                kvar_out := FkVArating * abs(sin(ArcCos(kW_out / FkVArating))) * sign(kvarRequested)
+            end
+            else
+            begin
+                if P_Priority then
+                begin  // back off the kvar
+                    if kW_out > FkVArating then
+                    begin
+                        kW_out := FkVArating;
+                        kvar_out := 0.0;
+                    end
+
+                    else
+                        kvar_Out := Sqrt(SQR(FkVArating) - SQR(kW_Out)) * sign(kvar_Out);
+                end
+                else
+                    kW_Out := Sqrt(SQR(FkVArating) - SQR(kvar_Out)) * sign(kW_Out); // Q Priority   (Default) back off the kW
+
+            end;
+        end  // With StorageVars
+        else
+        if abs(kVA_Gen - FkVArating) / FkVArating < 0.0005 then
+            kVA_exceeded := TRUE
+        else
+            kVA_exceeded := FALSE;
+    end;
 end;
 
 procedure TStorageObj.CalcYPrimMatrix(Ymatrix: TcMatrix);
@@ -1087,20 +1701,13 @@ var
 begin
     FYprimFreq := ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
-
-    with  ActiveCircuit.solution do
+    
+    with ActiveCircuit.Solution do
+    begin
         if IsHarmonicModel then // IsDynamicModel or
         begin
             // Yeq is computed from %R and %X -- inverse of Rthev + j Xthev
-            case Fstate of
-                STORE_CHARGING:
-                    Y := YeqDischarge + YeqIdling;
-                STORE_IDLING:
-                    Y := YeqIdling;
-                STORE_DISCHARGING:
-                    Y := -YeqDischarge + YeqIdling;
-               // old way Y  := Yeq   // L-N value computed in initialization routines
-            end;
+            Y := Yeq;
 
             if Connection = 1 then
                 Y := Y / 3.0; // Convert to delta impedance
@@ -1116,7 +1723,7 @@ begin
                         Ymatrix.SetElemsym(i, Fnconds, Yij);
                     end;
                     1:
-                    begin // Delta connection
+                    begin   // Delta connection
                         Ymatrix.SetElement(i, i, Y);
                         Ymatrix.AddElement(i, i, Y);  // put it in again
                         for j := 1 to i - 1 do
@@ -1124,54 +1731,63 @@ begin
                     end;
                 end;
             end;
-        end
-        else
-        begin  //  Regular power flow Storage element model
-            // Yeq is always expected as the equivalent line-neutral admittance
-            case Fstate of
-                STORE_CHARGING:
-                    Y := YeqDischarge + YeqIdling;
-                STORE_IDLING:
-                    Y := YeqIdling;
-                STORE_DISCHARGING:
-                    Y := -YeqDischarge + YeqIdling;
-            end;
+            Exit;
+        end;
 
-            // ****** Need to modify the base admittance for real harmonics calcs
-            Y.im := Y.im / FreqMultiplier;
+        //  Regular power flow Storage element model
+        // Yeq is always expected as the equivalent line-neutral admittance
+        case Fstate of
+            STORE_CHARGING:
+                Y := YeqDischarge;
+            STORE_IDLING:
+                Y := 0.0;
+            STORE_DISCHARGING:
+                if not GFM_mode then
+                    Y := -YeqDischarge
+                else
+                with dynVars, StorageVars do
+                begin
+                    RatedkVLL := PresentkV;
+                    Discharging := (StorageState = STORE_DISCHARGING);
+                    mKVARating := FkVArating;
+                    CalcGFMYprim(NPhases, @YMatrix);
+                end;
+        end;
+        //---DEBUG--- WriteDLLDebugFile(Format('t=%.8g, Change To State=%s, Y=%.8g +j %.8g',[ActiveCircuit.Solution.dblHour, StateToStr, Y.re, Y.im]));
+        // ****** Need to modify the base admittance for real harmonics calcs
+        Y.im := Y.im / FreqMultiplier;
+        if GFM_mode then
+            Exit;
 
-            case Connection of
-
-                0:
-                    with YMatrix do
-                    begin // WYE
-                        Yij := -Y;
-                        for i := 1 to Fnphases do
-                        begin
-                            SetElement(i, i, Y);
-                            AddElement(Fnconds, Fnconds, Y);
-                            SetElemsym(i, Fnconds, Yij);
-                        end;
+        case Connection of
+            0:
+                with YMatrix do
+                begin // WYE
+                    Yij := -Y;
+                    for i := 1 to Fnphases do
+                    begin
+                        SetElement(i, i, Y);
+                        AddElement(Fnconds, Fnconds, Y);
+                        SetElemsym(i, Fnconds, Yij);
                     end;
-
-                1:
-                    with YMatrix do
-                    begin  // Delta  or L-L
-                        Y := Y / 3.0; // Convert to delta impedance
-                        Yij := -Y;
-                        for i := 1 to Fnphases do
-                        begin
-                            j := i + 1;
-                            if j > Fnconds then
-                                j := 1;  // wrap around for closed connections
-                            AddElement(i, i, Y);
-                            AddElement(j, j, Y);
-                            AddElemSym(i, j, Yij);
-                        end;
+                end;
+            1:
+                with YMatrix do
+                begin  // Delta  or L-L
+                    Y := Y / 3.0; // Convert to delta impedance
+                    Yij := -Y;
+                    for i := 1 to Fnphases do
+                    begin
+                        j := i + 1;
+                        if j > Fnconds then
+                            j := 1;  // wrap around for closed connections
+                        AddElement(i, i, Y);
+                        AddElement(j, j, Y);
+                        AddElemSym(i, j, Yij);
                     end;
-
-            end;
-        end; // ELSE IF Solution.mode
+                end;
+        end;
+    end;
 end;
 
 function TStorageObj.NormalizeToTOD(h: Integer; sec: Double): Double;
@@ -1189,7 +1805,6 @@ begin
 
     if Result > 24.0 then
         Result := Result - 24.0;   // Wrap around
-
 end;
 
 procedure TStorageObj.CheckStateTriggerLevel(Level: Double);
@@ -1197,7 +1812,7 @@ procedure TStorageObj.CheckStateTriggerLevel(Level: Double);
 var
     OldState: Integer;
 begin
-    FStateChanged := FALSE;
+    StateChanged := FALSE;
 
     OldState := Fstate;
 
@@ -1205,18 +1820,16 @@ begin
         if DispatchMode = STORE_FOLLOW then
         begin
             // set charge and discharge modes based on sign of loadshape
-            if (Level > 0.0) and (kWhStored > kWhReserve) then
+            if (Level > 0.0) and ((kWhStored - kWhReserve) > EPSILON) then
                 StorageState := STORE_DISCHARGING
             else
-            if (Level < 0.0) and (kWhStored < kWhRating) then
+            if (Level < 0.0) and ((kWhStored - kWhRating) < -EPSILON) then
                 StorageState := STORE_CHARGING
             else
                 StorageState := STORE_IDLING;
-
         end
         else
         begin   // All other dispatch modes  Just compare to trigger value
-
             if (ChargeTrigger = 0.0) and (DischargeTrigger = 0.0) then
                 Exit;
 
@@ -1256,18 +1869,18 @@ begin
 
     if OldState <> Fstate then
     begin
-        FstateChanged := TRUE;
-        YPrimInvalid := TRUE;
+        StateChanged := TRUE;
+        YprimInvalid := TRUE;
     end;
 end;
 
-procedure TStorageObj.CalcYPrim;
+procedure TStorageObj.CalcYPrim();
 var
     i: Integer;
 begin
     // Build only shunt Yprim
     // Build a dummy Yprim Series so that CalcV Does not fail
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) then // YPrimInvalid
+    if YprimInvalid then
     begin
         if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;
@@ -1286,7 +1899,7 @@ begin
         YPrim.Clear;
     end;
 
-    SetNominalStorageOuput;
+    SetNominalStorageOutput();
     CalcYPrimMatrix(YPrim_Shunt);
 
      // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages Doesn't fail
@@ -1296,12 +1909,11 @@ begin
     YPrim.CopyFrom(YPrim_Shunt);
 
      // Account for Open Conductors
-    inherited CalcYPrim;
+    inherited CalcYPrim();
 end;
 
 procedure TStorageObj.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
 // Add the current into the proper location according to connection
-
 // Reverse of similar routine in load  (Cnegates are switched)
 var
     j: Integer;
@@ -1310,7 +1922,7 @@ begin
         0:
         begin  //Wye
             TermArray^[i] += Curr;
-            TermArray^[Fnconds] -= Curr; // Neutral
+            TermArray^[Fnconds] += -Curr; // Neutral
         end;
         1:
         begin //DELTA
@@ -1329,7 +1941,7 @@ var
     sout: String;
 begin
     try
-        if (not DSS.InShowResults) then
+        if (not DSS.InshowResults) then
         begin
             WriteStr(sout, Format('%-.g, %d, %-.g, ',
                 [ActiveCircuit.Solution.DynaVars.dblHour,
@@ -1358,10 +1970,10 @@ begin
                 WriteStr(sout, (Cabs(Vterminal^[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
             end;
-            for i := 1 to NumVariables do
+            for i := 1 to NumVariables() do
                 FSWrite(TraceFile, Format('%-.g, ', [Variable[i]]));
 
-            FSWriteln(Tracefile);
+            FSWriteln(TRacefile);
             FSFlush(TraceFile);
         end;
     except
@@ -1372,11 +1984,12 @@ begin
     end;
 end;
 
-procedure TStorageObj.DoConstantPQStorageObj;
+procedure TStorageObj.DoConstantPQStorageObj();
 // Compute total terminal current for Constant PQ
 var
     i: Integer;
     Curr,
+//   CurrIdlingZ,
     VLN, VLL: Complex;
    //---DEBUG--- S:Complex;
     VmagLN,
@@ -1384,83 +1997,74 @@ var
     V012: array[0..2] of Complex;  // Sequence voltages
 
 begin
-     //Treat this just like the Load model
+    //Treat this just like the Load model
 
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     ZeroITerminal;
 
-    case FState of
-        STORE_IDLING:  // YPrim current is only current
-        begin
-            for i := 1 to FNPhases do
-            begin
-                Curr := InjCurrent^[i];
-                StickCurrInTerminalArray(ITerminal, Curr, i);  // Put YPrim contribution into Terminal array taking into account connection
-                IterminalUpdated := TRUE;
-                StickCurrInTerminalArray(InjCurrent, -Curr, i);    // Compensation current is zero since terminal current is same as Yprim contribution
-            end;
-        end;
-    else   // For Charging and Discharging
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
 
-        CalcVTerminalPhase; // get actual voltage across each phase of the load
-
-        if ForceBalanced and (Fnphases = 3) then
-        begin  // convert to pos-seq only
-            Phase2SymComp(Vterminal, pComplexArray(@V012));
-            V012[0] := CZERO; // Force zero-sequence voltage to zero
-            V012[2] := CZERO; // Force negative-sequence voltage to zero
-            SymComp2Phase(Vterminal, pComplexArray(@V012));  // Reconstitute Vterminal as balanced
-        end;
-
-        for i := 1 to Fnphases do
-        begin
-            case Connection of
-
-                0:
-                begin  // Wye
-                    VLN := Vterminal^[i];
-                    VMagLN := Cabs(VLN);
-                    if VMagLN <= VBase95 then
-                        Curr := Yeq95 * VLN  // Below 95% use an impedance model
-                    else
-                    if VMagLN > VBase105 then
-                        Curr := Yeq105 * VLN  // above 105% use an impedance model
-                    else
-                        Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLN);  // Between 95% -105%, constant PQ
-                    if CurrentLimited then
-                        if Cabs(Curr) > MaxDynPhaseCurrent then
-                            Curr := cong(PhaseCurrentLimit / (VLN / VMagLN));
-                end;
-
-                1:
-                begin  // Delta
-                    VLL := Vterminal^[i];
-                    VMagLL := Cabs(VLL);
-                    if Fnphases > 1 then
-                        VMagLN := VMagLL / SQRT3
-                    else
-                        VMagLN := VmagLL;  // L-N magnitude
-                    if VMagLN <= VBase95 then
-                        Curr := (Yeq95 / 3.0) * VLL  // Below 95% use an impedance model
-                    else
-                    if VMagLN > VBase105 then
-                        Curr := (Yeq105 / 3.0) * VLL  // above 105% use an impedance model
-                    else
-                        Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLL);  // Between 95% -105%, constant PQ
-                    if CurrentLimited then
-                        if Cabs(Curr) * SQRT3 > MaxDynPhaseCurrent then
-                            Curr := cong(PhaseCurrentLimit / (VLL / VMagLN)); // Note VmagLN has sqrt3 factor in it
-                end;
-
-            end;
-            StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-            IterminalUpdated := TRUE;
-            StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
-        end;
+    if ForceBalanced and (Fnphases = 3) then
+    begin  // convert to pos-seq only
+        Phase2SymComp(Vterminal, pComplexArray(@V012));
+        V012[0] := CZERO; // Force zero-sequence voltage to zero
+        V012[2] := CZERO; // Force negative-sequence voltage to zero
+        SymComp2Phase(Vterminal, pComplexArray(@V012));  // Reconstitute Vterminal as balanced
     end;
+
+    for i := 1 to Fnphases do
+    begin
+        case Connection of
+            0:
+            begin  // Wye
+                VLN := Vterminal^[i];
+                VMagLN := Cabs(VLN);
+                if VMagLN <= VBase95 then
+                    Curr := Yeq95 * VLN  // Below 95% use an impedance model
+                else
+                if VMagLN > VBase105 then
+                    Curr := Yeq105 * VLN  // above 105% use an impedance model
+                else
+                    Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLN);  // Between 95% -105%, constant PQ
+
+                if CurrentLimited then
+                    if Cabs(Curr) > MaxDynPhaseCurrent then
+                        Curr := cong(PhaseCurrentLimit / (VLN / VMagLN));
+            end;
+
+            1:
+            begin  // Delta
+                VLL := Vterminal^[i];
+                VMagLL := Cabs(VLL);
+                if Fnphases > 1 then
+                    VMagLN := VMagLL / SQRT3
+                else
+                    VMagLN := VmagLL;  // L-N magnitude
+                if VMagLN <= VBase95 then
+                    Curr := (Yeq95 / 3.0) * VLL  // Below 95% use an impedance model
+                else
+                if VMagLN > VBase105 then
+                    Curr := (Yeq105 / 3.0) * VLL  // above 105% use an impedance model
+                else
+                    Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLL);  // Between 95% -105%, constant PQ
+
+                if CurrentLimited then
+                    if Cabs(Curr) * SQRT3 > MaxDynPhaseCurrent then
+                        Curr := cong(PhaseCurrentLimit / (VLL / VMagLN)); // Note VmagLN has sqrt3 factor in it
+            end;
+
+        end;
+
+        //---DEBUG--- WriteDLLDebugFile(Format('        Phase=%d, Pnom=%.8g +j %.8g', [i, Pnominalperphase, Qnominalperphase ]));
+
+        StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
+        set_ITerminalUpdated(TRUE);
+        StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
+    end;
+    //---DEBUG--- WriteDLLDebugFile(Format('        Icomp=%s ', [CmplxArrayToString(InjCurrent, Yprim.Order) ]));
 end;
 
-procedure TStorageObj.DoConstantZStorageObj;
+procedure TStorageObj.DoConstantZStorageObj();
 // constant Z model
 var
     i: Integer;
@@ -1470,7 +2074,7 @@ var
 begin
     // Assume Yeq is kept up to date
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
-    CalcVTerminalPhase; // get actual voltage across each phase of the load
+    CalcVTerminalPhase(); // get actual voltage across each phase of the load
     ZeroITerminal;
     if Connection = 0 then
         Yeq2 := Yeq
@@ -1489,22 +2093,42 @@ begin
     begin
         Curr := Yeq2 * Vterminal^[i];   // Yeq is always line to neutral
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
-        IterminalUpdated := TRUE;
+        set_ITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
+    end;
+end;
 
+procedure TStorageObj.DoUserModel();
+// Compute total terminal Current from User-written model
+var
+    i: Integer;
+begin
+    CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
+
+    if UserModel.Exists then    // Check automatically selects the usermodel If true
+    begin
+        UserModel.FCalc(Vterminal, Iterminal);
+        set_ITerminalUpdated(TRUE);
+        with ActiveCircuit.Solution do
+        begin          // Negate currents from user model for power flow Storage element model
+            for i := 1 to FnConds do
+                InjCurrent^[i] -= Iterminal^[i];
+        end;
+    end
+    else
+    begin
+        DoSimpleMsg('%s model designated to use user-written model, but user-written model is not defined.', [FullName], 567);
     end;
 end;
 
 procedure TStorageObj.DoDynamicMode;
-// Compute Total Current and add into InjTemp
-
-//   For now, just assume the storage element Thevenin voltage is constant
-//   for the duration of the dynamic simulation.
 var
     i: Integer;
-    V012,
-    I012: array[0..2] of Complex;
-
+    PolarN: Polar;
+    Curr, NeutAmps: Complex;
+    // V012, I012: array[0..2] of Complex;
+    AngCmp, // Required in this context to force the idling losses
+    iActual: Double;
 
     procedure CalcVthev_Dyn;
     begin
@@ -1513,60 +2137,97 @@ var
     end;
 
 begin
-    // Test using DESS model
-    // Compute Vterminal
+    if DynaModel.Exists then
+    begin
+        DoDynaModel(); // do user-written model
+        Exit;
+    end;
+    if GFM_Mode then
+    begin
+        dynVars.BaseV := dynVars.BasekV * 1000 * (dynVars.it[0] / dynVars.iMaxPPhase);
+        dynVars.CalcGFMVoltage(NPhases, Vterminal);
+        YPrim.MVMult(InjCurrent, Vterminal);
+        Exit;
+    end;
+
     CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
     ZeroITerminal;
+    // This model has no limitation in the number of phases and is ideally unbalanced (no dq-dv, but is implementable as well)
+    // First, get the phase angles for the currents
+    NeutAmps := 0;
+    for i := 1 to FNphases do
+        with dynVars do
+        begin
+            AngCmp := 0;
+            // determine if the PV panel is ON
+            if it[i - 1] <= iMaxPPhase then
+                iActual := it[i - 1]
+            else
+                iActual := iMaxPPhase;
 
-    // Simple Thevenin equivalent
-    // compute terminal current (Iterminal) and take out the Yprim contribution
+            if iActual < MinAmps then
+                iActual := 0;                 // To mach with the %CutOut property
 
-    with StorageVars do
-        case Fnphases of
-            1:
-            begin
-                CalcVthev_Dyn;  // Update for latest phase angle
-                ITerminal^[1] := (VTerminal^[1] - Vthev - VTerminal^[2]) / Zthev;
-                if CurrentLimited then
-                    if Cabs(Iterminal^[1]) > MaxDynPhaseCurrent then   // Limit the current but keep phase angle
-                        ITerminal^[1] := ptocomplex(topolar(MaxDynPhaseCurrent, cang(Iterminal^[1])));
-                ITerminal^[2] := -ITerminal^[1];
-            end;
-            3:
-            begin
-                Phase2SymComp(Vterminal, pComplexArray(@V012));
+            if FState <> STORE_DISCHARGING then
+                iActual := (PIdling / Vgrid[i - 1].mag) / NPhases;
 
-                // Positive Sequence Contribution to Iterminal
-                CalcVthev_Dyn;  // Update for latest phase angle
-
-                // Positive Sequence Contribution to Iterminal
-                I012[1] := (V012[1] - Vthev) / Zthev;
-
-                if CurrentLimited and (Cabs(I012[1]) > MaxDynPhaseCurrent) then   // Limit the pos seq current but keep phase angle
-                    I012[1] := ptocomplex(topolar(MaxDynPhaseCurrent, cang(I012[1])));
-
-                if ForceBalanced then
-                begin
-                    I012[2] := CZERO;
-                end
-                else
-                    I012[2] := V012[2] / Zthev;  // for inverter
-
-                I012[0] := CZERO;
-
-                SymComp2Phase(ITerminal, pComplexArray(@I012));  // Convert back to phase components
-
-            end;
-        else
-            DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Storage Element. %s has %d phases.', [FullName, Fnphases], 5671);
-            DSS.SolutionAbort := TRUE;
+            PolarN := topolar(iActual, Vgrid[i - 1].ang + AngCmp);     // Output Current estimated for active power
+            Curr := -ptocomplex(PolarN);
+            NeutAmps -= Curr;
+            Iterminal[i] := Curr;
         end;
+
+    if FnConds > FNphases then
+        Iterminal[FnConds] := NeutAmps;
 
     // Add it into inj current array
     for i := 1 to FnConds do
-        InjCurrent^[i] -= Iterminal^[i];
+        InjCurrent[i] -= Iterminal[i];
+
+    set_ITerminalUpdated(TRUE);
 end;
-procedure TStorageObj.DoHarmonicMode;
+
+procedure TStorageObj.DoGFM_Mode();
+// Implements the grid forming inverter control routine for the storage device
+begin
+    dynVars.BaseV := VBase;
+    dynVars.Discharging := (StorageState = STORE_DISCHARGING);
+    with ActiveCircuit.Solution, dynVars do
+    begin
+        //Initialization just in case
+        dynVars.CalcGFMVoltage(NPhases, Vterminal);
+        YPrim.MVMult(InjCurrent, Vterminal);
+        set_ITerminalUpdated(FALSE);
+    end;
+end;
+
+procedure TStorageObj.DoDynaModel();
+var
+    DESSCurr: array[1..6] of Complex;  // Temporary biffer
+    i: Integer;
+begin
+    // do user written dynamics model
+    with ActiveCircuit.Solution do
+    begin  // Just pass node voltages to ground and let dynamic model take care of it
+        for i := 1 to FNconds do
+            VTerminal^[i] := NodeV^[NodeRef^[i]];
+        StorageVars.w_grid := TwoPi * Frequency;
+    end;
+
+    DynaModel.FCalc(Vterminal, pComplexArray(@DESSCurr));
+
+    CalcYPrimContribution(InjCurrent);  // Init InjCurrent Array
+    ZeroITerminal;
+
+    for i := 1 to Fnphases do
+    begin
+        StickCurrInTerminalArray(ITerminal, -DESSCurr[i], i);  // Put into Terminal array taking into account connection
+        set_ITerminalUpdated(TRUE);
+        StickCurrInTerminalArray(InjCurrent, DESSCurr[i], i);  // Put into Terminal array taking into account connection
+    end;
+end;
+
+procedure TStorageObj.DoHarmonicMode();
 // Compute Injection Current Only when in harmonics mode
 
 // Assumes spectrum is a voltage source behind subtransient reactance and YPrim has been built
@@ -1578,7 +2239,7 @@ var
     pBuffer: PCBuffer24;
 begin
     pBuffer := @TStorage(ParentClass).cBuffer;
-    ComputeVterminal;
+    ComputeVterminal();
 
     with ActiveCircuit.Solution do
     begin
@@ -1601,24 +2262,22 @@ begin
     if Connection = 0 then
         pBuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
 
-    // Inj currents = Yprim (E) 
+    // Inj currents = Yprim (E)
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
 end;
 
-procedure TStorageObj.CalcVTerminalPhase;
+procedure TStorageObj.CalcVTerminalPhase();
 var
     i, j: Integer;
 begin
     // Establish phase voltages and stick in Vterminal
     case Connection of
-
         0:
         begin
             with ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                     Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
         end;
-
         1:
         begin
             with ActiveCircuit.Solution do
@@ -1630,48 +2289,59 @@ begin
                     Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[j]);
                 end;
         end;
-
     end;
 
     StorageSolutionCount := ActiveCircuit.Solution.SolutionCount;
 end;
 
-procedure TStorageObj.CalcStorageModelContribution;
+procedure TStorageObj.CalcStorageModelContribution();
 // Calculates Storage element current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
-    IterminalUpdated := FALSE;
-    with  ActiveCircuit, ActiveCircuit.Solution do
+    set_ITerminalUpdated(FALSE);
+    with ActiveCircuit, ActiveCircuit.Solution do
     begin
         if IsDynamicModel then
-            DoDynamicMode
-        else
-        if IsHarmonicModel and (Frequency <> Fundamental) then
-            DoHarmonicMode
-        else
         begin
-            //  compute currents and put into InjTemp array;
-            case VoltageModel of
-                1:
-                    DoConstantPQStorageObj;
-                2:
-                    DoConstantZStorageObj;
-            else
-                DoConstantPQStorageObj;  // for now, until we implement the other models.
-            end;
+            DoDynamicMode();
+            Exit;
+        end;
+
+        if IsHarmonicModel and (Frequency <> Fundamental) then
+        begin
+            DoHarmonicMode();
+            Exit;
+        end;
+        
+        if GFM_Mode then
+        begin
+            DoGFM_Mode();
+            Exit;
+        end;
+
+        //  compute currents and put into InjTemp array;
+        case VoltageModel of
+            1:
+                DoConstantPQStorageObj();
+            2:
+                DoConstantZStorageObj();
+            3:
+                DoUserModel();
+        else
+            DoConstantPQStorageObj(); // for now, until we implement the other models.
         end;
     end;
-   // When this is Done, ITerminal is up to date
+    // When this is Done, ITerminal is up to date
 end;
 
-procedure TStorageObj.CalcInjCurrentArray;
+procedure TStorageObj.CalcInjCurrentArray();
 // Difference between currents in YPrim and total current
 begin
-      // Now Get Injection Currents
+    // Now Get Injection Currents
     if StorageObjSwitchOpen then
         ZeroInjCurrent
     else
-        CalcStorageModelContribution;
+        CalcStorageModelContribution();
 end;
 
 procedure TStorageObj.GetTerminalCurrents(Curr: pComplexArray);
@@ -1682,7 +2352,7 @@ begin
         if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
         begin     // recalc the contribution
             if not StorageObjSwitchOpen then
-                CalcStorageModelContribution;  // Adds totals in Iterminal as a side effect
+                CalcStorageModelContribution();  // Adds totals in Iterminal as a side effect
         end;
         inherited GetTerminalCurrents(Curr);
     end;
@@ -1691,21 +2361,75 @@ begin
         WriteTraceRecord('TotalCurrent');
 end;
 
-function TStorageObj.InjCurrents: Integer;
+function TStorageObj.InjCurrents(): Integer;
 begin
     with ActiveCircuit.Solution do
     begin
         if LoadsNeedUpdating then
-            SetNominalStorageOuput; // Set the nominal kW, etc for the type of solution being Done
+            SetNominalStorageOutput(); // Set the nominal kW, etc for the type of solution being Done
 
-        CalcInjCurrentArray;          // Difference between currents in YPrim and total terminal current
+        CalcInjCurrentArray(); // Difference between currents in YPrim and total terminal current
 
         if (DebugTrace) then
             WriteTraceRecord('Injection');
 
          // Add into System Injection Current Array
+        Result := inherited InjCurrents();
+    end;
+end;
 
-        Result := inherited InjCurrents;
+procedure TStorageObj.GetCurrents(Curr: pComplexArray);
+// Required for operation in GFM mode
+var
+    i: Integer;
+begin
+    if not GFM_Mode then
+    begin
+        inherited GetCurrents(Curr);
+        Exit;
+    end;
+
+    try
+        with ActiveCircuit.Solution do
+        begin
+            for i := 1 to Yorder do
+                Vterminal[i] := NodeV[NodeRef[i]];
+
+            YPrim.MVMult(Curr, Vterminal); // Current from Elements in System Y
+            CalcInjCurrentArray();
+            
+            // Add Together with yprim currents
+            for i := 1 to Yorder do
+                Curr[i] -= InjCurrent[i];
+        end;
+    except
+        On E: Exception do
+            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [Name]), E.Message, _('Inadequate storage allotted for circuit element.'), 327);
+    end;
+end;
+
+function TStorageObj.CheckOLInverter(): Boolean;
+// Returns True if any of the inverter phases is overloaded
+var
+    MaxAmps: Double;
+    PhaseAmps: Double;
+    i: Integer;
+begin
+    // Check if reaching saturation point in GFM
+    Result := FALSE;
+    if not GFM_Mode then
+        Exit;
+
+    MaxAmps := ((StorageVars.FkVArating * 1000) / NPhases) / VBase;
+    GetCurrents(Iterminal);
+    for i := 1 to NPhases do
+    begin
+        PhaseAmps := cabs(Iterminal[i]);
+        if PhaseAmps > MaxAmps then
+        begin
+            Result := TRUE;
+            Exit;
+        end;
     end;
 end;
 
@@ -1734,7 +2458,7 @@ begin
     Derivatives[Reg] := Deriv;
 end;
 
-procedure TStorageObj.TakeSample;
+procedure TStorageObj.TakeSample();
 // Update Energy from metered zone
 var
     S: Complex;
@@ -1779,80 +2503,247 @@ begin
     end;
 end;
 
-procedure TStorageObj.UpdateStorage;
+function TStorageObj.CheckIfDelivering(): Boolean;
+// Checks if delivering or absorbing power in GFM control mode
+var
+    i: Integer;
+    P: double;
+begin
+    // If in GFM mode, check if we are actually delivering power
+    Result := False;
+    ComputeIterminal();
+    Result := FALSE;  // Start assuming we are not delivering power
+    for i := 1 to NPhases do
+    begin
+        P := (ActiveCircuit.Solution.NodeV[NodeRef[i]] * cong(Iterminal[i])).re;
+        if (P < 0) then // If at least 1 phase is delivering, then returns True
+        begin
+            Result := True;
+            Exit;
+        end;
+    end;
+end;
+
+procedure TStorageObj.UpdateStorage();
 // Update Storage levels
+var
+    UpdateSt: Boolean;
 begin
     with StorageVars do
     begin
-        kWhBeforeUpdate := kWhStored;   // keep this for reporting change in storage as a variable
+        kWhBeforeUpdate := kWhStored;   // keep this for reporting change in Storage as a variable
+
+        // Assume User model will take care of updating Storage in dynamics mode
+        if ActiveCircuit.solution.IsDynamicModel and IsUserModel then
+            Exit;
 
         with ActiveCircuit.Solution do
             case FState of
-
                 STORE_DISCHARGING:
                 begin
-                    // Deplete storage by amount of Idling Power to achieve Present kW output
-                    kWhStored := kWhStored - (PresentkW + kWIdlingLosses) * IntervalHrs / DischargeEff;
+                    UpdateSt := TRUE;
+                    if GFM_Mode then
+                        UpdateSt := CheckIfDelivering();
+
+                    if UpdateSt then
+                        kWhStored := kWhStored - (DCkW + kWIdlingLosses) / DischargeEff * IntervalHrs
+                    else
+                    begin
+                        // We are absorbing power, let's recharge if needed
+                        kWhStored := kWhStored + (DCkW + kWIdlingLosses) / DischargeEff * IntervalHrs;
+                        if kWhStored > kWhRating then
+                            kWhStored := kWhRating;
+                    end;
+                    // check if we have enough energy to deliver
                     if kWhStored < kWhReserve then
                     begin
                         kWhStored := kWhReserve;
                         Fstate := STORE_IDLING;  // It's empty Turn it off
-                        FstateChanged := TRUE;
+                        StateChanged := TRUE;
+                        GFM_Mode := FALSE;
                     end;
                 end;
 
                 STORE_CHARGING:
                 begin
-                    // kWIdlingLosses is always positive while PresentkW is negative for Charging
-                    kWhStored := kWhStored - (PresentkW + kWIdlingLosses) * IntervalHrs * ChargeEff;
-                    if kWhStored > kWhRating then
+                    if (abs(DCkW) - kWIdlingLosses) >= 0 then // 99.9 % of the cases will fall here
                     begin
-                        kWhStored := kWhRating;
-                        Fstate := STORE_IDLING;  // It's full Turn it off
-                        FstateChanged := TRUE;
+                        kWhStored := kWhStored + (abs(DCkW) - kWIdlingLosses) * ChargeEff * IntervalHrs;
+                        if kWhStored > kWhRating then
+                        begin
+                            kWhStored := kWhRating;
+                            Fstate := STORE_IDLING;  // It's full Turn it off
+                            StateChanged := TRUE;
+                            GFM_Mode := FALSE;
+                        end;
+                    end
+                    else   // Exceptional cases when the idling losses are higher than the DCkW such that the net effect is that the
+                                 // the ideal Storage will discharge
+                    begin
+                        kWhStored := kWhStored + (abs(DCkW) - kWIdlingLosses) / DischargeEff * IntervalHrs;
+                        if kWhStored < kWhReserve then
+                        begin
+                            kWhStored := kWhReserve;
+                            Fstate := STORE_IDLING;  // It's empty Turn it off
+                            StateChanged := TRUE;
+                        end;
                     end;
+
                 end;
+
+                STORE_IDLING: ;
             end;
 
     end;
 
     // the update is done at the end of a time step so have to force
     // a recalc of the Yprim for the next time step.  Else it will stay the same.
-    if FstateChanged then
-        YPrimInvalid := TRUE;
+    if StateChanged then
+        YprimInvalid := TRUE;
+end;
+
+procedure TStorageObj.ComputeDCkW;
+// Computes actual DCkW to Update Storage SOC
+var
+    coefGuess: TCoeff;
+    coef: TCoeff;
+    N_tentatives: Integer;
+begin
+    coefGuess[1] := 0.0;
+    coefGuess[2] := 0.0;
+
+    coef[1] := 1.0;
+    coef[2] := 1.0;  // just a guess
+
+    FDCkW := Power[1].re * 0.001;  // Assume ideal inverter
+
+    if not Assigned(InverterCurveObj) then
+    begin
+    // make sure sign is correct
+        if (FState = STORE_IDLING) then
+            FDCkW := abs(FDCkW) * -1
+        else
+            FDCkW := abs(FDCkW) * FState;
+        Exit;
+    end;
+
+    N_tentatives := 0;
+    while (coef[1] <> coefGuess[1]) and (coef[2] <> coefGuess[2]) or (N_tentatives > 9) do
+    begin
+        N_tentatives := N_tentatives + 1;
+        coefGuess := InverterCurveObj.GetCoefficients(abs(FDCkW) / StorageVars.FkVArating);
+
+
+        case FState of
+
+            STORE_DISCHARGING:
+                FDCkW := QuadSolver(coefGuess[1] / StorageVars.FkVArating, coefGuess[2], -1.0 * abs(Power[1].re * 0.001));
+            STORE_CHARGING,
+            STORE_IDLING:
+                FDCkW := abs(FDCkW) * coefGuess[2] / (1.0 - (coefGuess[1] * abs(FDCkW) / StorageVars.FkVArating));
+        end;
+
+        // Final coefficients
+        coef := InverterCurveObj.GetCoefficients(abs(FDCkW) / StorageVars.FkVArating);
+    end;
+
+    // make sure sign is correct
+    if (FState = STORE_IDLING) then
+        FDCkW := abs(FDCkW) * -1
+    else
+        FDCkW := abs(FDCkW) * FState;
 end;
 
 function TStorageObj.Get_PresentkW: Double;
 begin
-    Result := kW_Out;  //Pnominalperphase * 0.001 * Fnphases;
+    Result := Pnominalperphase * 0.001 * Fnphases;
+end;
+
+function TStorageObj.Get_DCkW: Double;
+begin
+    ComputeDCkW;
+    Result := FDCkW;
+end;
+
+function TStorageObj.Get_kWDesired: Double;
+begin
+    case StateDesired of
+        STORE_CHARGING:
+            Result := -pctkWIn * StorageVars.kWRating / 100.0;
+        STORE_DISCHARGING:
+            Result := pctkWOut * StorageVars.kWRating / 100.0;
+        // STORE_IDLING:
+        //     Result := 0.0;
+    else
+        Result := 0.0;
+    end;
 end;
 
 function TStorageObj.Get_kWTotalLosses: Double;
 begin
+    Result := kWIdlingLosses + kWInverterLosses + kWChDchLosses;
+end;
+
+function TStorageObj.Get_InverterLosses: Double;
+begin
     Result := 0.0;
-    case StorageState of
-        STORE_CHARGING:
-            Result := abs(Power[1].re * (100.0 - pctChargeEff) / 100000.0) + pctChargeEff * kWIdlingLosses / 100.0; // kW
-        STORE_IDLING:
-            Result := kWIdlingLosses;
-        STORE_DISCHARGING:
-            Result := abs(Power[1].re * (100.0 / pctDisChargeEff - 1.0) / 1000.0) + (100.0 / pctDisChargeEff) * kWIdlingLosses;  // kW
+
+    with StorageVars do
+    begin
+        case StorageState of
+
+            STORE_IDLING:
+                Result := abs(Power[1].re * 0.001) - abs(DCkW);
+            STORE_CHARGING:
+                Result := abs(Power[1].re * 0.001) - abs(DCkW);
+            STORE_DISCHARGING:
+                Result := DCkW - abs(Power[1].re * 0.001);
+        end;
     end;
 end;
 
 function TStorageObj.Get_kWIdlingLosses: Double;
-var
-    i: Integer;
 begin
-    ComputeVterminal;
+    if (FState = STORE_IDLING) then
+    begin
+        Result := abs(DCkW); // For consistency keeping with voltage variations
+    end
+    else
+        Result := Pidling;
+end;
 
+function TStorageObj.Get_kWChDchLosses: Double;
+begin
     Result := 0.0;
-    // Compute sum of SQR(V) at this device -- sum of VV*
-    for i := 1 to FNphases do
-        Result := Result + (Vterminal^[i] * cong(VTerminal^[i])).re;
 
-    Result := Result * YeqIdling.re * 0.001;  // to kW
+    with StorageVars do
+    begin
+        case StorageState of
 
+            STORE_IDLING:
+                Result := 0.0;
+
+            STORE_CHARGING:
+                if (abs(DCkW) - Pidling > 0) then
+                    Result := (abs(DCkW) - Pidling) * (1.0 - 0.01 * pctChargeEff) // most cases will fall here
+                else
+                    Result := -1 * (abs(DCkW) - Pidling) * (1.0 / (0.01 * pctDischargeEff) - 1.0);             // exceptional cases when Pidling is higher than DCkW (net effect is that the ideal Storage will be discharged)
+
+            STORE_DISCHARGING:
+                Result := (DCkW + Pidling) * (1.0 / (0.01 * pctDischargeEff) - 1.0);
+        end;
+    end;
+end;
+
+procedure TStorageObj.Update_EfficiencyFactor;
+begin
+    with StorageVars do
+    begin
+        if not Assigned(InverterCurveObj) then
+            EffFactor := 1.0
+        else
+            EffFactor := InverterCurveObj.GetYValue(abs(DCkW) / FkVArating);
+    end;
 end;
 
 function TStorageObj.Get_PresentkV: Double;
@@ -1862,59 +2753,63 @@ end;
 
 function TStorageObj.Get_Presentkvar: Double;
 begin
-    Result := kvar_out;   // Qnominalperphase * 0.001 * Fnphases;
+    Result := Qnominalperphase * 0.001 * Fnphases;
 end;
 
-procedure TStorageObj.InitHarmonics;
+procedure TStorageObj.InitHarmonics();
 // This routine makes a thevenin equivalent behis the reactance spec'd in %R and %X
 var
     E, Va: complex;
 begin
-    YPrimInvalid := TRUE;  // Force rebuild of YPrims
+    YprimInvalid := TRUE;  // Force rebuild of YPrims
     StorageFundamental := ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
 
     Yeq := Cinv(Cmplx(StorageVars.RThev, StorageVars.XThev));      // used for current calcs  Always L-N
 
     // Compute reference Thevinen voltage from phase 1 current
 
-    if FState = STORE_DISCHARGING then
-    begin
-        ComputeIterminal;  // Get present value of current
+    ComputeIterminal();  // Get present value of current
 
-        with ActiveCircuit.solution do
-            case Connection of
-                0:
-                begin // wye - neutral is explicit
-                    Va := NodeV^[NodeRef^[1]] - NodeV^[NodeRef^[Fnconds]];
-                end;
-                1:
-                begin  // delta -- assume neutral is at zero
-                    Va := NodeV^[NodeRef^[1]];
-                end;
+    with ActiveCircuit.solution do
+        case Connection of
+            0:
+            begin // wye - neutral is explicit
+                Va := NodeV^[NodeRef^[1]] - NodeV^[NodeRef^[Fnconds]];
             end;
+            1:
+            begin  // delta -- assume neutral is at zero
+                Va := NodeV^[NodeRef^[1]];
+            end;
+        end;
 
-        E := Va - Iterminal^[1] * cmplx(StorageVars.Rthev, StorageVars.Xthev);
-        StorageVars.Vthevharm := Cabs(E);   // establish base mag and angle
-        StorageVars.ThetaHarm := Cang(E);
-    end
-    else
-    begin
-        StorageVars.Vthevharm := 0.0;
-        StorageVars.ThetaHarm := 0.0;
-    end;
+    E := Va - Iterminal^[1] * cmplx(StorageVars.Rthev, StorageVars.Xthev);
+    StorageVars.Vthevharm := Cabs(E);   // establish base mag and angle
+    StorageVars.ThetaHarm := Cang(E);
 end;
 
-procedure TStorageObj.InitStateVars;
+procedure TStorageObj.InitStateVars();
 // for going into dynamics mode
 var
-    // VNeut: Complex;
-    VThevPolar: Polar;
+//    VNeut: Complex;
+//    VThevPolar: Polar;
     i: Integer;
-    V012,
-    I012: array[0..2] of Complex;
-    Vabc: array[1..3] of Complex;
+//    V012, I012: array[0..2] of Complex;
+//    Vabc: array[1..3] of Complex;
+    BaseZt: Double;
 begin
-    YPrimInvalid := TRUE;  // Force rebuild of YPrims
+    YprimInvalid := TRUE; // Force rebuild of YPrims
+
+    if (Length(PICtrl) = 0) or (Length(PICtrl) < Fnphases) then
+    begin
+        SetLength(PICtrl, Fnphases);
+        for i := 0 to (Fnphases - 1) do
+        begin
+            PICtrl[i] := TPICtrl.Create();
+            PICtrl[i].Kp := dynVars.kP;
+            PICtrl[i].kNum := 0.9502;
+            PICtrl[i].kDen := 0.04979;
+        end;
+    end;
 
     with StorageVars do
     begin
@@ -1922,67 +2817,187 @@ begin
         Yeq := Cinv(ZThev);  // used to init state vars
     end;
 
-    // Compute nominal Positive sequence voltage behind equivalent filter impedance
-    if FState = STORE_DISCHARGING then
-        with ActiveCircuit.Solution do
+    if DynaModel.Exists then   // Checks existence and selects
+    begin
+        ComputeIterminal();
+        ComputeVterminal();
+        with StorageVars do
         begin
-            ComputeIterminal;
+            NumPhases := Fnphases;
+            NumConductors := Fnconds;
+            w_grid := twopi * ActiveCircuit.Solution.Frequency;
+        end;
+        DynaModel.FInit(Vterminal, Iterminal);
+        Exit;
+    end;
 
-            if FnPhases = 3 then
+    if FState <> STORE_DISCHARGING then
+        Exit;
+
+    // Compute nominal Positive sequence voltage behind equivalent filter impedance
+    with ActiveCircuit.Solution, StorageVars, dynVars do
+    begin
+        NumPhases := Fnphases;     // set Publicdata vars
+        NumConductors := Fnconds;
+        Conn := Connection;
+
+        // Sets the length of State vars to cover the num of phases
+        InitDynArrays(NumPhases);
+        
+        if NumPhases > 1 then
+            BasekV := PresentkV / sqrt(3)
+        else
+            BasekV := PresentkV;
+
+        BaseZt := 0.01 * ((PresentkV * PresentkV) / FkVArating) * 1000;
+        MaxVS := (2 - (SMThreshold / 100)) * BasekV * 1000;
+        MinVS := (SMThreshold / 100) * BasekV * 1000;
+        MinAmps := (FpctCutOut / 100) * ((FkVArating / BasekV) / NumPhases);
+        ResetIBR := FALSE;
+        iMaxPPhase := (FkVArating / BasekV) / NumPhases;
+
+        if pctX = 0 then
+            pctX := 50; // forces the value to 50% in dynamics mode if not given
+
+        XThev := pctX * BaseZt;
+        RS := pctR * BaseZt;
+        Zthev := Cmplx(RS, XThev);
+        YEQ := 1 / Zthev; // used for current calcs  Always L-N
+        ComputePresentkW();
+
+        LS := ZThev.im / (2 * PI * DSS.DefaultBaseFreq);
+        for i := 0 to (NPhases - 1) do
+        begin
+            Vgrid[i] := ctopolar(NodeV[NodeRef[i + 1]]);
+            dit[i] := 0;
+            it[i] := 0;
+            m[i] := ((RS * it[i]) + Vgrid[i].mag) / RatedVDC; // Duty factor in terms of actual voltage
+
+            if m[i] > 1 then
+                m[i] := 1;
+            ISPDelta[i] := 0;
+            AngDelta[i] := 0;
+
+        end;
+        if DynamicEqObj <> NIL then
+            for i := 0 to High(DynamicEqVals) do
+                DynamicEqVals[i][1] := 0.0; // Initializes the memory values for the dynamic equation
+    end;
+end;
+
+procedure TStorageObj.IntegrateStates();
+// dynamics mode integration routine
+var
+    NumData, j, i: Integer;
+    IMaxPhase, OFFVal: Double;
+begin
+    // Compute Derivatives and Then integrate
+    ComputeIterminal();
+
+    if Dynamodel.Exists then   // Checks for existence and Selects
+    begin
+        DynaModel.Integrate();
+        Exit;
+    end;
+    
+    with ActiveCircuit.Solution, StorageVars, dynVars do
+    begin
+        ComputePresentkW();
+        IMaxPhase := (kW_out / BasekV) / NumPhases;
+        for i := 0 to (NumPhases - 1) do
+        begin
+            if FState = STORE_DISCHARGING then
             begin
-                Phase2SymComp(ITerminal, pComplexArray(@I012));
-                // Voltage behind Xdp  (transient reactance), volts
-                // case Connection of
-                //     0:
-                //         Vneut := NodeV^[NodeRef^[Fnconds]]
-                // else
-                //     Vneut := CZERO;
-                // end;
-
-                for i := 1 to FNphases do
-                    Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
-
-                Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
-                with StorageVars do
+                with DynaVars do
+                    if (IterationFlag = 0) then //First iteration of new time step
+                        itHistory[i] := it[i] + 0.5 * h * dit[i];
+                Vgrid[i] := ctopolar(NodeV[NodeRef[i + 1]]); // Voltage at the Inv terminals
+                if not GFM_Mode then
                 begin
-                    Vthev := V012[1] - I012[1] * ZThev;    // Pos sequence
-                    VThevPolar := cToPolar(VThev);
-                    VThevMag := VThevPolar.mag;
-                    Theta := VThevPolar.ang;  // Initial phase angle
+                    if (Vgrid[i].mag < MinVS) or (Vgrid[i].mag > MaxVS) then
+                    begin
+                        ISP := 0.01; // turn off the inverter
+                        FState := STORE_IDLING;
+                        if (Vgrid[i].mag > MaxVS) then
+                            Vgrid[i].mag := MaxVs;
+
+                    end
+                    else
+                        ISP := ((kW_out * 1000) / Vgrid[i].mag) / NumPhases;
+                    if ISP > IMaxPPhase then
+                        ISP := IMaxPPhase;
+                end
+                else
+                begin
+                    if ResetIBR then
+                        VDelta[i] := (0.001 - (Vgrid[i].mag / 1000)) / BasekV
+                    else
+                        VDelta[i] := (BasekV - (Vgrid[i].mag / 1000)) / BasekV;
+                    if abs(VDelta[i]) > CtrlTol then
+                    begin
+                        ISPDelta[i] := ISPDelta[i] + (IMaxPhase * VDelta[i]) * kP * 100;
+                        if ISPDelta[i] > IMaxPhase then
+                            ISPDelta[i] := IMaxPhase
+                        else
+                        if ISPDelta[i] < 0 then
+                            ISPDelta[i] := 0.01;
+                    end;
+                    ISP := ISPDelta[i];
+                    FixPhaseAngle(i);
+                end;
+                if DynamicEqObj <> NIL then // Loads values into dynamic expression if any
+                begin
+                    NumData := (length(DynamicEqPair) div 2) - 1;
+                    DynamicEqVals[DynOut[0]][0] := it[i]; // brings back the current values/phase
+                    DynamicEqVals[DynOut[0]][1] := dit[i];
+
+                    for j := 0 to NumData do
+                    begin
+                        if not DynamicEqObj.IsInitVal(DynamicEqPair[(j * 2) + 1]) then // it's not intialization
+                        begin
+                            case DynamicEqPair[(j * 2) + 1] of
+                                2:
+                                    DynamicEqVals[DynamicEqPair[j * 2]][0] := Vgrid[i].mag; // volt per phase
+                                4: 
+                                    ;  // Nothing for this object (current)
+                                10:
+                                    DynamicEqVals[DynamicEqPair[j * 2]][0] := RatedVDC;
+                                11:
+                                begin
+                                    SolveModulation(ActiveCircuit, i, @PICtrl[i]);
+                                    DynamicEqVals[DynamicEqPair[j * 2]][0] := m[i]
+                                end
+                            else
+                                DynamicEqVals[DynamicEqPair[j * 2]][0] := PCEValue[1, DynamicEqPair[(j * 2) + 1]];
+                            end;
+                        end;
+                    end;
+                    DynamicEqObj.SolveEq(DynamicEqVals); // solves the differential equation using the given dynamic expression
+                end
+                else
+                    SolveDynamicStep(ActiveCircuit, i, @PICtrl[i]); // Solves dynamic step for inverter
+
+                // Trapezoidal method
+                with DynaVars do
+                begin
+                    if DynamicEqObj <> NIL then
+                        dit[i] := DynamicEqVals[DynOut[0]][1];
+                    it[i] := itHistory[i] + 0.5 * h * dit[i];
                 end;
             end
             else
-            begin   // Single-phase Element
-                for i := 1 to Fnconds do
-                    Vabc[i] := NodeV^[NodeRef^[i]];
-                with StorageVars do
-                begin
-                    Vthev := VDiff(NodeRef^[1], NodeRef^[2]) - ITerminal^[1] * ZThev;    // Pos sequence
-                    VThevPolar := cToPolar(VThev);
-                    VThevMag := VThevPolar.mag;
-                    Theta := VThevPolar.ang;  // Initial phase angle
-                end;
-
+            begin
+                if (Vgrid[i].mag >= MinVS) or ResetIBR then
+                    OFFVal := PIdling / Vgrid[i].mag; // To match with idling losses
+                //else
+                //    OFFVal :=  0;
+                it[i] := OFFVal; // To match with idling losses
             end;
         end;
-end;
-
-procedure TStorageObj.IntegrateStates;
-// dynamics mode integration routine
-begin
-   // Compute Derivatives and Then integrate
-
-    ComputeIterminal;
+    end;
 
     with ActiveCircuit.Solution, StorageVars do
     begin
-        with StorageVars do
-            if (Dynavars.IterationFlag = 0) then
-            begin // First iteration of new time step
-            end;
-
-        // Compute shaft dynamics
-        // TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases);
         // Write Dynamics Trace Record
         if DebugTrace then
         begin
@@ -1991,7 +3006,6 @@ begin
             FSWriteln(TraceFile);
             FSFlush(TraceFile);
         end;
-
     end;
 end;
 
@@ -1999,43 +3013,149 @@ function TStorageObj.Get_Variable(i: Integer): Double;
 // Return variables one at a time
 var
     N, k: Integer;
+    A, B: Boolean;
 begin
-    Result := -9999.99;  // error return value; no state fars
+    Result := -9999.99;  // error return value; no state vars
     if i < 1 then
+    begin
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
         Exit;
+    end;
+    if DynamicEqObj <> NIL then
+    begin
+        if i <= DynamicEqObj.NVariables * Length(DynamicEqVals[0]) then
+            Result := DynamicEqObj.Get_DynamicEqVal(i - 1, DynamicEqVals)
+        else
+            DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        Exit;
+    end;
+
     // for now, report kWhstored and mode
     with StorageVars do
         case i of
             1:
                 Result := kWhStored;
             2:
-                Result := FState;
-            3:
-                if not (FState = STORE_DISCHARGING) then
-                    Result := 0.0
+            begin
+                if not GFM_Mode then            
+                begin
+                    Result := FState;
+                    Exit
+                end;
+                    if CheckIfDelivering() then
+                        Result := STORE_DISCHARGING
+                    else
+                    if kWhStored = kWhRating then
+                        Result := STORE_IDLING
+                    else
+                        Result := STORE_CHARGING;                
+            end;
+            3, 4:
+            begin
+                A := GFM_mode and CheckIFDelivering();
+                B := (FState = STORE_DISCHARGING) and (not GFM_mode);
+                A := A or B;
+                if i = 4 then
+                    A := not A;
+                if A then
+                    Result := abs(Power[1].re * 0.001)
                 else
-                    Result := Power[1].re * 0.001; // kW_Out; // pctkWout;
-            4:
-                if not (FState = STORE_CHARGING) then
-                    Result := 0.0
-                else
-                    Result := Power[1].re * 0.001; // kW_out; // pctkWin;
+                    Result := 0.0;
+            end;
             5:
-                Result := kWTotalLosses; // Present kW charge or discharge loss incl idle losses
+                Result := -1 * Power[1].im * 0.001;
             6:
-                Result := kWIdlingLosses; // Present Idling Loss
+                Result := DCkW;
             7:
+                Result := kWTotalLosses; // Present kW charge or discharge loss incl idle losses
+            8:
+                Result := kWInverterLosses; // Inverter Losses
+            9:
+                Result := kWIdlingLosses; // Present kW Idling Loss
+            10:
+                Result := kWChDchLosses;  // Charge/Discharge Losses
+            11:
                 Result := kWhStored - kWhBeforeUpdate;
+            12:
+            begin
+                Update_EfficiencyFactor;
+                Result := EffFactor;  //Old: Result    := Get_EfficiencyFactor;
+            end;
+            13:
+                if (InverterON) then
+                    Result := 1.0
+                else
+                    Result := 0.0;
+            14:
+                Result := Vreg;
+            15:
+                Result := Vavg;
+            16:
+                Result := VVOperation;
+            17:
+                Result := VWOperation;
+            18:
+                Result := DRCOperation;
+            19:
+                Result := VVDRCOperation;
+            20:
+                Result := WPOperation;
+            21:
+                Result := WVOperation;
+            22:
+                Result := Get_kWDesired;
+            23:
+                if not (VWMode) then
+                    Result := 9999
+                else
+                    Result := kWRequested;
+            24:
+                Result := pctkWrated * kWrating;
+            25:
+                if (kVA_exceeded) then
+                    Result := 1.0
+                else
+                    Result := 0.0;
+            (NumBaseStorageVariables + 1)..NumStorageVariables:
+                Result := dynVars.Get_InvDynValue(i - NumBaseStorageVariables - 1, NPhases);
+        else
+            if UserModel.Exists then   // Checks for existence and Selects
+            begin
+                N := UserModel.FNumVars;
+                k := (i - NumStorageVariables);
+                if k <= N then
+                begin
+                    Result := UserModel.FGetVariable(k);
+                    Exit;
+                end;
+            end;
+            if DynaModel.Exists then  // Checks for existence and Selects
+            begin
+                N := DynaModel.FNumVars;
+                k := (i - NumStorageVariables);
+                if k <= N then
+                begin
+                    Result := DynaModel.FGetVariable(k);
+                    Exit;
+                end;
+            end;
         end;
 end;
 
 procedure TStorageObj.Set_Variable(i: Integer; Value: Double);
 var
     N, k: Integer;
-
 begin
     if i < 1 then
+    begin
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
         Exit;  // No variables to set
+    end;
+    if DynamicEqObj <> NIL then
+    begin
+        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName], 566);
+        Exit;
+    end;
 
     with StorageVars do
         case i of
@@ -2043,41 +3163,114 @@ begin
                 kWhStored := Value;
             2:
                 Fstate := Trunc(Value);
-            3:
-                pctkWout := Value;
-            4:
-                pctkWin := Value;
-            5..7: ; // Do Nothing; read only
+            3..13,
+            22..25: 
+                DoSimpleMsg('%s: variable index %d is read-only.', [FullName, i], 564);
+            14:
+                Vreg := Value;
+            15:
+                Vavg := Value;
+            16:
+                VVOperation := Value;
+            17:
+                VWOperation := Value;
+            18:
+                DRCOperation := Value;
+            19:
+                VVDRCOperation := Value;
+            20:
+                WPOperation := Value;
+            21:
+                WVOperation := Value;
+            (NumBaseStorageVariables + 1)..NumStorageVariables:
+                dynVars.Set_InvDynValue(i - NumBaseStorageVariables - 1, Value);
+        else
+            if UserModel.Exists then    // Checks for existence and Selects
+            begin
+                N := UserModel.FNumVars;
+                k := (i - NumStorageVariables);
+                if k <= N then
+                begin
+                    UserModel.FSetVariable(k, Value);
+                    Exit;
+                end;
+            end;
+            if DynaModel.Exists then     // Checks for existence and Selects
+            begin
+                N := DynaModel.FNumVars;
+                k := (i - NumStorageVariables);
+                if k <= N then
+                begin
+                    DynaModel.FSetVariable(k, Value);
+                    Exit;
+                end;
+            end;
         end;
 end;
 
-procedure TStorageObj.GetAllVariables(States: pDoubleArray);
+procedure TStorageObj.GetAllVariables(States: Array of Double);
 var
     i: Integer;
 begin
+    if DynamicEqObj <> NIL then
+    begin
+        for i := 1 to DynamicEqObj.NVariables * Length(DynamicEqVals[0]) do
+            States[i - 1] := DynamicEqObj.Get_DynamicEqVal(i - 1, DynamicEqVals);
+
+        Exit;
+    end;
+
     for i := 1 to NumStorageVariables do
-        States^[i] := Variable[i];
+        States[i - 1] := Variable[i];
+
+    if UserModel.Exists then
+    begin    // Checks for existence and Selects
+        // N := UserModel.FNumVars;
+        UserModel.FGetAllVars(pDoubleArray(@States[NumStorageVariables]));
+    end;
+    if DynaModel.Exists then
+    begin    // Checks for existence and Selects
+        // N := UserModel.FNumVars;
+        DynaModel.FGetAllVars(pDoubleArray(@States[NumStorageVariables]));
+    end;
 end;
 
-function TStorageObj.NumVariables: Integer;
+function TStorageObj.NumVariables(): Integer;
 begin
+    // Try DynamicExp first
+    Result := inherited NumVariables();
+    if Result <> 0 then 
+        Exit;
+
+    // Fallback to the classic
     Result := NumStorageVariables;
+
+     // Exists does a check and then does a Select
+    if UserModel.Exists then
+        Result := Result + UserModel.FNumVars;
+    if DynaModel.Exists then
+        Result := Result + DynaModel.FNumVars;
 end;
 
 function TStorageObj.VariableName(i: Integer): String;
-
 const
     BuffSize = 255;
 var
-    n,
-    i2: Integer;
+    n, i2: Integer;
     Buff: array[0..BuffSize] of AnsiChar;
     pName: pAnsichar;
-
 begin
+    Result := 'ERROR';
     if i < 1 then
         Exit;  // Someone goofed
 
+    // Try DynamicExp first
+    Result := inherited VariableName(i);
+    if Length(Result) <> 0 then
+        Exit;
+
+    // Fallback to the classic
+    n := 0;
     case i of
         1:
             Result := 'kWh';
@@ -2088,11 +3281,74 @@ begin
         4:
             Result := 'kWIn';
         5:
-            Result := 'Losses';
+            Result := 'kvarOut';
         6:
-            Result := 'Idling';
+            Result := 'DCkW';
         7:
+            Result := 'kWTotalLosses';
+        8:
+            Result := 'kWInvLosses';
+        9:
+            Result := 'kWIdlingLosses';
+        10:
+            Result := 'kWChDchLosses';
+        11:
             Result := 'kWh Chng';
+        12:
+            Result := 'InvEff';
+        13:
+            Result := 'InverterON';
+        14:
+            Result := 'Vref';
+        15:
+            Result := 'Vavg (DRC)';
+        16:
+            Result := 'VV Oper';
+        17:
+            Result := 'VW Oper';
+        18:
+            Result := 'DRC Oper';
+        19:
+            Result := 'VV_DRC Oper';
+        20:
+            Result := 'WP Oper';
+        21:
+            Result := 'WV Oper';
+        22:
+            Result := 'kWDesired';
+        23:
+            Result := 'kW VW Limit';
+        24:
+            Result := 'Limit kWOut Function';
+        25:
+            Result := 'kVA Exceeded';
+        (NumBaseStorageVariables + 1)..NumStorageVariables:
+            Result := dynVars.Get_InvDynName(i - NumBaseStorageVariables - 1);
+    else
+        if UserModel.Exists then    // Checks for existence and Selects
+        begin
+            pName := PAnsiChar(@Buff);
+            n := UserModel.FNumVars;
+            i2 := i - NumStorageVariables;
+            if i2 <= n then
+            begin
+                UserModel.FGetVarName(i2, pName, BuffSize);
+                Result := String(pName);
+                Exit;
+            end;
+        end;
+        if DynaModel.Exists then   // Checks for existence and Selects
+        begin
+            pName := PAnsiChar(@Buff);
+            n := DynaModel.FNumVars;
+            i2 := i - NumStorageVariables; // Relative index
+            if i2 <= n then
+            begin
+                DynaModel.FGetVarName(i2, pName, BuffSize);
+                Result := String(pName);
+                Exit;
+            end;
+        end;
     end;
 end;
 
@@ -2132,69 +3388,144 @@ procedure TStorageObj.Set_ConductorClosed(Index: Integer; Value: Boolean);
 begin
     inherited;
 
-    // Just turn storage element on or off;
-
+    // Just turn Storage element on or off;
     if Value then
         StorageObjSwitchOpen := FALSE
     else
         StorageObjSwitchOpen := TRUE;
 end;
 
-procedure TStorageObj.Set_pctkvarOut(const Value: Double);
+procedure TStorageObj.kWOut_Calc;
+var
+    limitkWpct: Double;
 begin
-    FpctkvarOut := Value;
-    // Force recompute of target PF and requested kVAr
-    Presentkvar := StorageVars.kWRating * sqrt(1.0 / SQR(PFNominal) - 1.0) * FpctkvarOut / 100.0;
+    with StorageVars do
+    begin
+        FVWStateRequested := FALSE;
+
+        if FState = STORE_DISCHARGING then
+            limitkWpct := kWrating * pctkWrated
+        else
+            limitkWpct := kWrating * pctkWrated * -1;
+
+//          if VWmode and (FState = STORE_DISCHARGING) then if (abs(kWRequested) < abs(limitkWpct)) then limitkWpct :=  kWRequested * sign(kW_Out);
+          // VW works only if element is not in idling state.
+          // When the VW is working in the 'limiting' region, kWRequested will be positive.
+          // When in 'requesting' region, it will be negative.
+        if VWmode and not (FState = STORE_IDLING) then
+        begin
+            if (kWRequested >= 0.0) and (abs(kWRequested) < abs(limitkWpct)) then  // Apply VW limit
+            begin
+                if FState = STORE_DISCHARGING then
+                    limitkWpct := kWRequested
+                else
+                    limitkWpct := -1 * kWRequested;
+            end
+            else
+            if kWRequested < 0.0 then // IEEE 1547 Requesting Region (not fully implemented)
+            begin
+                if FState = STORE_DISCHARGING then
+                begin
+                    if (kWhStored < kWhRating) then
+                    begin  // let it charge only if enough not fully charged
+                        FState := STORE_CHARGING;
+                        kW_out := kWRequested;
+                    end
+                    else
+                    begin
+                        FState := STORE_IDLING;
+                        kW_out := -kWOutIdling;
+                    end;
+                end
+                else  // Charging
+                begin
+                    if (kWhStored > kWhReserve) then
+                    begin  // let it charge only if enough not fully charged
+                        Fstate := STORE_DISCHARGING;
+                        kW_out := -1 * kWRequested;
+                    end
+                    else
+                    begin
+                        FState := STORE_IDLING;
+                        kW_out := -kWOutIdling;
+                    end;
+
+
+                end;
+                StateChanged := TRUE;
+                FVWStateRequested := TRUE;
+
+                // Update limitkWpct because state might have been changed
+                if FState = STORE_DISCHARGING then
+                    limitkWpct := kWrating * pctkWrated
+                else
+                    limitkWpct := kWrating * pctkWrated * -1;
+            end;
+        end;
+
+        if (limitkWpct > 0) and (kW_Out > limitkWpct) then
+            kW_Out := limitkWpct
+        else
+        if (limitkWpct < 0) and (kW_Out < limitkWpct) then
+            kW_Out := limitkWpct;
+    end;
 end;
 
-procedure TStorageObj.Set_pctkWOut(const Value: Double);
+procedure TStorageObj.Set_kW(const Value: Double);
 begin
-    FpctkWOut := Value;
-    kW_Out := FpctkWOut * StorageVars.kWRating / 100.0;
+    if Value > 0 then
+    begin
+        FState := STORE_DISCHARGING;
+        pctkWOut := Value / StorageVars.kWRating * 100.0;
+    end
+    else
+    if Value < 0 then
+    begin
+        FState := STORE_CHARGING;
+        pctkWIn := abs(Value) / StorageVars.kWRating * 100.0;
+    end
+    else
+    begin
+        FState := STORE_IDLING;
+    end;
+end;
+
+procedure TStorageObj.Set_Maxkvar(const Value: Double);
+begin
+    StorageVars.Fkvarlimit := Value;
+    SetAsNextSeq(ord(TProp.kvarMax));
+end;
+
+procedure TStorageObj.Set_Maxkvarneg(const Value: Double);
+begin
+    StorageVars.Fkvarlimitneg := Value;
+    SetAsNextSeq(ord(TProp.kvarMaxAbs));
+end;
+
+procedure TStorageObj.Set_kVARating(const Value: Double);
+begin
+    StorageVars.FkVARating := Value;
+    SetAsNextSeq(ord(TProp.kVA));
 end;
 
 procedure TStorageObj.Set_PowerFactor(const Value: Double);
 begin
     PFNominal := Value;
-    SyncUpPowerQuantities;
+    varMode := VARMODEPF;
 end;
 
-procedure TStorageObj.Set_PresentkV(const Value: Double);
+function TStorageObj.Get_kW: Double;
 begin
-    StorageVars.kVStorageBase := Value;
-    case FNphases of
-        2, 3:
-            VBase := StorageVars.kVStorageBase * InvSQRT3x1000;
+    case Fstate of
+        STORE_CHARGING:
+            Result := -pctkWIn * StorageVars.kWRating / 100.0;
+        STORE_DISCHARGING:
+            Result := pctkWOut * StorageVars.kWRating / 100.0;
+        STORE_IDLING:
+            Result := -kWOutIdling;
     else
-        VBase := StorageVars.kVStorageBase * 1000.0;
+        Result := 0.0;
     end;
-end;
-
-procedure TStorageObj.Set_Presentkvar(const Value: Double);
-// set the kvar to requested value within rating of inverter
-var
-    kVA_Gen: Double;
-begin
-    kvar_out := Value;
-    StorageVars.kvarRequested := Value;
-    // Requested kVA output
-    kVA_Gen := Sqrt(Sqr(kW_out) + Sqr(kvar_out));
-    with StorageVars do
-        if kVA_Gen > kVArating then
-            kVA_Gen := kVARating;  // Limit kVA to rated value
-    if kVA_Gen <> 0.0 then
-        PFNominal := abs(kW_out / kVA_Gen)
-    else
-        PFNominal := 1.0;
-    if (kW_out * kvar_out) < 0.0 then
-        PFNominal := -PFNominal;
-end;
-
-procedure TStorageObj.Set_PresentkW(const Value: Double);
-begin
-    FpctkWOut := Value / StorageVars.kWRating * 100.0;
-    kW_Out := Value;
-     //SyncUpPowerQuantities;
 end;
 
 procedure TStorageObj.Set_StorageState(const Value: Integer);
@@ -2203,7 +3534,7 @@ var
 begin
     SavedState := Fstate;
 
-     // Decline if storage is at its limits ; set to idling instead
+     // Decline if Storage is at its limits ; set to idling instead
 
     with StorageVars do
         case Value of
@@ -2221,33 +3552,16 @@ begin
                 if kWhStored > kWhReserve then
                     Fstate := Value
                 else
-                    Fstate := STORE_IDLING;  // not enough storage to discharge
+                    Fstate := STORE_IDLING;  // not enough Storage to discharge
             end;
         else
             Fstate := STORE_IDLING;
         end;
 
     if SavedState <> Fstate then
-        FStateChanged := TRUE;
+        StateChanged := TRUE;
 
      //---DEBUG--- WriteDLLDebugFile(Format('t=%.8g, ---State Set To %s', [ActiveCircuit.Solution.dblHour, StateToStr ]));
-end;
-
-procedure TStorageObj.SyncUpPowerQuantities;
-begin
-    if kVANotSet then
-        StorageVars.kVARating := StorageVars.kWrating;
-    kvar_out := 0.0;
-     // keep kvar nominal up to date with kW and PF
-    if (PFNominal <> 0.0) then
-    begin
-        kvar_out := kW_out * sqrt(1.0 / Sqr(PFNominal) - 1.0);
-        if PFNominal < 0.0 then
-            kvar_out := -kvar_out;
-    end;
-
-     // 5-8-2017  moved this from recalcElementdata
-    kvarbase := kvar_out;   // remember for follow mode; synch up here
 end;
 
 procedure TStorageObj.SetDragHandRegister(Reg: Integer; const Value: Double);
@@ -2256,7 +3570,22 @@ begin
         Registers[Reg] := Value;
 end;
 
+function TStorageObj.IsStorage(): Boolean;
+begin
+    Result := True;
+end;
+
+function TStorageObj.GetPFPriority(): Boolean;
+begin
+    Result := StorageVars.PF_Priority;
+end;
+
+procedure TStorageObj.SetPFPriority(value: Boolean);
+begin
+    StorageVars.PF_Priority := value;
+end;
+
 finalization
-    DispatchModeEnum.Free;
     StateEnum.Free;
+    DispatchModeEnum.Free;
 end.

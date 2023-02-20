@@ -147,7 +147,6 @@ type
         procedure SumCurrents;
         
         procedure Get_Current_Mags(cMBuffer: pDoubleArray); // Returns the Currents vector in magnitude
-
     end;
 
 
@@ -302,7 +301,6 @@ begin
     begin  // Do all conductors
         for i := 0 to Fnphases - 1 do
             Terminals[FActiveTerminal].ConductorsClosed[i] := Value;
-        // DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
         YPrimInvalid := TRUE; // this also sets the global SystemYChanged flag
     end
     else
@@ -310,7 +308,6 @@ begin
         if (Index > 0) and (Index <= Fnconds) then
         begin
             Terminals[FActiveTerminal].ConductorsClosed[index - 1] := Value;
-            // DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;
             YPrimInvalid := TRUE;
         end;
     end;
@@ -616,35 +613,48 @@ function TDSSCktElement.Get_Losses: Complex;
 // get total losses in circuit element, all phases, all terminals.
 // Returns complex losses (watts, vars)
 var
-    k, n: Integer;
+    i, j, k, n: Integer;
 begin
-    Result := CZERO;
-
+    Result := 0;
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
     ComputeIterminal;
 
     // Method: Sum complex power going into all conductors of all terminals
-    with ActiveCircuit.Solution do
-        if ActiveCircuit.PositiveSequence then
+    // Special for AutoTransformer - sum based on NPhases rather then Yorder
+
+    if (CLASSMASK and self.DSSObjType) = AUTOTRANS_ELEMENT then
+    begin
+        k := 0;
+        for j := 1 to Nterms do
         begin
-            for k := 1 to Yorder do
+            for i := 1 to Nphases do
             begin
-                n := NodeRef^[k];
-                if n > 0 then
-                    Result += NodeV^[n] * cong(Iterminal^[k]) * 3.0
+                Inc(k);
+                n := NodeRef[k];
+                if n <= 0 then
+                    continue;
+
+                Result += ActiveCircuit.Solution.NodeV[n] * cong(Iterminal[k]);
             end;
-        end
-        else
-        begin
-            for k := 1 to Yorder do
-            begin
-                n := NodeRef^[k];
-                if n > 0 then
-                    Result += NodeV^[n] * cong(Iterminal^[k]);
-            end;
+            Inc(k, Nphases)
         end;
+    end
+    else  // for all other elements
+    begin
+        for k := 1 to Yorder do
+        begin
+            n := NodeRef[k];
+            if n <= 0 then
+                continue;
+
+            Result += ActiveCircuit.Solution.NodeV[n] * cong(Iterminal[k]);
+        end;
+    end;
+
+    if ActiveCircuit.PositiveSequence then
+        Result *= 3.0;
 end;
 
 function TDSSCktElement.Get_MaxVoltageC(idxTerm: Integer): Complex;
@@ -796,13 +806,12 @@ end;
 function TDSSCktElement.Get_MaxCurrentAng(idxTerm: Integer): Double;
 // returns the angle fo the maximum current at the element's terminal
 var
-    i, k,
-    nref: Integer;
+    i, k: Integer;
     CurrAng,
     MaxCurr,
     CurrMag: Double;
-    MaxPhase: Integer;
-
+    // nref: Integer;
+    // MaxPhase: Integer;
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
     Result := 0.0;
@@ -813,7 +822,7 @@ begin
     ComputeIterminal();
     // Method: Get max current at terminal (magnitude)
     MaxCurr := 0.0;
-    MaxPhase := 1;  // Init this so it has a non zero value
+    // MaxPhase := 1;  // Init this so it has a non zero value
     k := (idxTerm - 1) * Fnconds; // starting index of terminal
     for i := 1 to Fnphases do
     begin
@@ -822,7 +831,7 @@ begin
         begin
             MaxCurr := CurrMag;
             CurrAng := Cang(Iterminal[k + i]);
-            MaxPhase := i
+            // MaxPhase := i
         end;
     end;
     Result := CurrAng;

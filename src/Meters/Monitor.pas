@@ -143,8 +143,7 @@ type
         NumTransformerCurrents: Integer;
         NumWindingVoltages: Integer;
 
-        NumStateVars: Integer;
-        StateBuffer: pDoubleArray;
+        StateBuffer: Array of Double;
 
         FlickerBuffer: pComplexArray; // store phase voltages in polar form
                                        // then convert to re=flicker level, update every time step
@@ -227,7 +226,6 @@ uses
     PstCalc,
     Capacitor,
     Storage,
-    Storage2,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
@@ -463,7 +461,6 @@ begin
     // Current Buffer has to be big enough to hold all terminals
     CurrentBuffer := NIL;
     VoltageBuffer := NIL;
-    StateBuffer := NIL;
     FlickerBuffer := NIL;
     SolutionBuffer := NIL;
     WdgCurrentsBuffer := NIL;
@@ -508,7 +505,6 @@ begin
     Header.Free;
     Bufferfile := '';
     ReAllocMem(MonBuffer, 0);
-    ReAllocMem(StateBuffer, 0);
     ReAllocMem(CurrentBuffer, 0);
     ReAllocMem(VoltageBuffer, 0);
     ReAllocMem(FlickerBuffer, 0);
@@ -598,8 +594,8 @@ begin
             case (Mode and MODEMASK) of
                 3:
                 begin
-                    NumStateVars := TPCElement(MeteredElement).Numvariables;
-                    ReallocMem(StateBuffer, Sizeof(StateBuffer^[1]) * NumStatevars);
+                    SetLength(StateBuffer, 0);
+                    SetLength(StateBuffer, TPCElement(MeteredElement).NumVariables());
                 end;
                 4:
                 begin
@@ -669,8 +665,8 @@ begin
         case (Mode and MODEMASK) of
             3:
             begin
-                NumStateVars := TPCElement(MeteredElement).Numvariables;
-                ReallocMem(StateBuffer, Sizeof(StateBuffer^[1]) * NumStatevars);
+                SetLength(StateBuffer, 0);
+                SetLength(StateBuffer, TPCElement(MeteredElement).NumVariables());
             end;
             4:
             begin
@@ -735,8 +731,8 @@ begin
             end;
             3:
             begin
-                RecordSize := NumStateVars; // Statevariabes
-                for i := 1 to NumStateVars do
+                RecordSize := Length(StateBuffer); // Statevariabes
+                for i := 1 to RecordSize do
                     Header.Add(TpcElement(MeteredElement).VariableName(i));
             end;
             4:
@@ -1268,7 +1264,7 @@ begin
         3:
         begin   // Pick up device state variables
             TPCElement(MeteredElement).GetAllVariables(StateBuffer);
-            AddDblsToBuffer(StateBuffer, NumStateVars);
+            AddDblsToBuffer(PDoubleArray(@StateBuffer[0]), Length(StateBuffer));
             Exit; // Done with this mode now
         end;
 
@@ -1323,8 +1319,7 @@ begin
         end;
         7:
         begin     // Monitor Storage Device state variables
-            if ((MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT) and DSS_CAPI_LEGACY_MODELS then
-            begin  // Storage Element
+            if ((MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT) then
                 with TStorageObj(MeteredElement) do
                 begin
                     AddDblToBuffer(PresentkW);
@@ -1333,19 +1328,7 @@ begin
                     AddDblToBuffer(((StorageVars.kWhStored) / (StorageVars.kWhRating)) * 100);
                     AddDblToBuffer(StorageState);
                 end;
-            end
-            else
-            if ((MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT) and not DSS_CAPI_LEGACY_MODELS then
-            begin   // Storage2 Element
-                with TStorage2Obj(MeteredElement) do
-                begin
-                    AddDblToBuffer(PresentkW);
-                    AddDblToBuffer(Presentkvar);
-                    AddDblToBuffer(StorageVars.kWhStored);
-                    AddDblToBuffer(((StorageVars.kWhStored) / (StorageVars.kWhRating)) * 100);
-                    AddDblToBuffer(StorageState);
-                end;
-            end;
+
             Exit;  // Done with this mode now.
         end;
 

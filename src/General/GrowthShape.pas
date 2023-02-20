@@ -161,7 +161,7 @@ begin
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
 
-    CommandList.Abbrev := FALSE; //TODO: why only this class?
+    CommandList.AbbrevAllowed := FALSE; //TODO: why only this class?
 end;
 
 function TGrowthShape.NewObject(const ObjName: String; Activate: Boolean): Pointer;

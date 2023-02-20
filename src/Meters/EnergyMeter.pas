@@ -334,7 +334,7 @@ type
         function MakeVPhaseReportFileName: String;
         procedure AssignVoltBaseRegisterNames;
 
-        procedure TotalupDownstreamCustomers;
+        procedure TotalupDownstreamCustomers();
 
 
     PROTECTED
@@ -379,6 +379,7 @@ type
         SAIDI: Double;
         CAIDI: Double;
         CustInterrupts: Double;
+        AssumeRestoration: Boolean;
 
         // Source reliability
         Source_NumInterruptions: Double; // Annual interruptions for upline circuit
@@ -415,7 +416,7 @@ type
         procedure SaveZone();
         procedure GetPCEatZone(const allowEmpty: Boolean = False);
 
-        procedure CalcReliabilityIndices(AssumeRestoration: Boolean);
+        procedure CalcReliabilityIndices();
 
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
@@ -869,17 +870,8 @@ begin
 
     // Reset Generator Objects, too
     DSS.GeneratorClass.ResetRegistersAll;
-
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        DSS.StorageClass.ResetRegistersAll;
-        DSS.PVSystemClass.ResetRegistersAll;
-    end
-    else
-    begin
-        DSS.Storage2Class.ResetRegistersAll;
-        DSS.PVSystem2Class.ResetRegistersAll;
-    end;
+    DSS.StorageClass.ResetRegistersAll;
+    DSS.PVSystemClass.ResetRegistersAll;
 end;
 
 procedure TEnergyMeter.SampleAll;  // Force all EnergyMeters in the circuit to take a sample
@@ -915,16 +907,8 @@ begin
     // Sample Generator ans Storage Objects, too
     DSS.GeneratorClass.SampleAll;
     
-    if DSS_CAPI_LEGACY_MODELS then
-    begin
-        DSS.StorageClass.SampleAll; // samples energymeter part of storage elements (not update)
-        DSS.PVSystemClass.SampleAll;
-    end
-    else
-    begin
-        DSS.Storage2Class.SampleAll; // samples energymeter part of storage elements (not update)
-        DSS.PVSystem2Class.SampleAll;
-    end;
+    DSS.StorageClass.SampleAll; // samples energymeter part of storage elements (not update)
+    DSS.PVSystemClass.SampleAll;
 end;
 
 procedure TEnergyMeter.SaveAll;  // Force all EnergyMeters in the circuit to take a sample
@@ -972,6 +956,7 @@ begin
     SAIDI := 0.0;
     CAIDI := 0.0;
     CustInterrupts := 0.0;
+    AssumeRestoration := FALSE;
     Source_NumInterruptions := 0.0; // Annual interruptions for upline circuit
     Source_IntDuration := 0.0; // Aver interruption duration of upline circuit
 
@@ -1693,7 +1678,7 @@ begin
         WriteDemandIntervalData;
 end;
 
-procedure TEnergyMeterObj.TotalUpDownstreamCustomers;
+procedure TEnergyMeterObj.TotalUpDownstreamCustomers();
 var
     i: Integer;
     //, Accumulator
@@ -1749,7 +1734,11 @@ begin
                 Include(Flags, Flg.Checked);
                 Inc(BranchTotalCustomers, BranchNumCustomers);
                 if ParentPDElement <> NIL then
-                    Inc(ParentPDElement.BranchTotalCustomers, BranchTotalCustomers);
+                    //TODO: check
+                    if (Flg.HasOCPDevice in Flags) and AssumeRestoration and (Flg.HasAutoOCPDevice in Flags) then
+                        Inc(ParentPDElement.BranchTotalCustomers, 0)
+                    else
+                        Inc(ParentPDElement.BranchTotalCustomers, BranchTotalCustomers);
             end;
     end;
 end;
@@ -2031,7 +2020,7 @@ begin
         // ****************  END MAIN LOOP *****************************
     end;
 
-    TotalupDownstreamCustomers;
+    TotalupDownstreamCustomers();
 
     AssignVoltBaseRegisterNames;
 end;
@@ -2041,7 +2030,7 @@ var
     i: Integer;
 begin
     for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
+        Curr[i] := 0;
 end;
 
 procedure TEnergyMeterObj.ZoneDump;
@@ -2203,13 +2192,13 @@ begin
                             if (ConnectedPhase > 0) and (ConnectedPhase < 4)   // Restrict to phases 1..3
                             then
                                 if SensorObj.NPhases = 1 then
-                                    AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[1]
+                                    Set_AllocationFactor(FAllocationFactor * SensorObj.PhsAllocationFactor^[1])
                                 else
-                                    AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[ConnectedPhase];
+                                    Set_AllocationFactor(FAllocationFactor * SensorObj.PhsAllocationFactor^[ConnectedPhase]);
                         end;
                 else
                     with LoadElem do
-                        AllocationFactor := AllocationFactor * SensorObj.AvgAllocFactor;
+                        Set_AllocationFactor(FAllocationFactor * SensorObj.AvgAllocFactor);
                 end;
             LoadElem := BranchList.NextObject // Next load at this bus
         end;
@@ -2436,7 +2425,7 @@ begin
     end;
 end;
 
-procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration: Boolean);
+procedure TEnergyMeterObj.CalcReliabilityIndices();
 var
     PD_Elem: TPDElement;
     pSection: ^TFeederSection;
@@ -2769,8 +2758,8 @@ begin
                         if LoadElement.HasBeenAllocated then
                         begin
                             // Manually set the allocation factor so it shows up
-                            DSS.Parser.CmdString := 'allocationfactor=' + Format('%-.4g', [LoadElement.AllocationFactor]);
-                            LoadElement.Edit(DSS.Parser);
+                            LoadElement.PropertySideEffects(ord(TLoadProp.allocationfactor), 0);
+                            LoadElement.SetAsNextSeq(ord(TLoadProp.allocationfactor));
                         end;
                         ActiveCktElement := shuntElement; // reset in case Edit mangles it
                         Inc(NLoads);

@@ -345,7 +345,7 @@ begin
     if not _activeObj(DSSPrime, pLoad) then
         Exit;
 
-    Result := pLoad.AllocationFactor;
+    Result := pLoad.FAllocationFactor;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Cfactor(): Double; CDECL;
@@ -356,7 +356,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := elem.CFactor;
+    Result := elem.FCFactor;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Class_(): Integer; CDECL;
@@ -390,7 +390,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := elem.CVRvars;
+    Result := elem.CVRvarFactor;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_CVRwatts(): Double; CDECL;
@@ -401,7 +401,7 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
 
-    Result := elem.CVRwatts;
+    Result := elem.CVRwattFactor;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_daily(): PAnsiChar; CDECL;
@@ -580,7 +580,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.MaxPU;
+    Result := elem.Vmaxpu;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Vminemerg(): Double; CDECL;
@@ -590,7 +590,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.MinEmerg;
+    Result := elem.VminEmerg;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Vminnorm(): Double; CDECL;
@@ -600,7 +600,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.MinNormal;
+    Result := elem.VminNormal;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Vminpu(): Double; CDECL;
@@ -610,7 +610,7 @@ begin
     Result := 0.0;
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    Result := elem.MinPU;
+    Result := elem.Vminpu;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_xfkVA(): Double; CDECL;
@@ -732,7 +732,7 @@ var
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
-    elem.FkWh := Value;
+    elem.kWh := Value;
     elem.PropertySideEffects(ord(TLoadProp.kwh));
 end;
 //------------------------------------------------------------------------------

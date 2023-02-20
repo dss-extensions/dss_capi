@@ -347,9 +347,9 @@ begin
             19:
                 Filename := 'EXP_P_BYPHASE.csv';
             20:
-                FileName := 'CIM100.XML';
+                FileName := 'CIM100';
             21:
-                FileName := 'CIM100x.XML';
+                FileName := 'CIM100x.xml';
             22:
                 FileName := '';
             23:
@@ -603,10 +603,7 @@ begin
         48:
             ExportYCurrents(DSS, Filename);
         49:
-            if DSS_CAPI_LEGACY_MODELS then
-                ExportPVSystemMeters(DSS, FileName)
-            else
-                ExportPVSystem2Meters(DSS, FileName);
+            ExportPVSystemMeters(DSS, FileName);
         50:
             ExportStorageMeters(DSS, Filename);
         51:

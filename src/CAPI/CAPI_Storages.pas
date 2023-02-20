@@ -28,26 +28,19 @@ uses
     CAPI_Constants,
     Executive,
     Sysutils,
-    Storage2,
+    Storage,
     DSSPointerlist,
     DSSGlobals,
     DSSClass,
     DSSHelper;
 
 
-function OldModels(DSS: TDSSContext): Boolean;
-begin
-    Result := DSS_CAPI_LEGACY_MODELS;
-    if DSS_CAPI_LEGACY_MODELS then
-        DoSimpleMsg(DSS, _('The Storages API is not available in the legacy-models mode!'), 18990);
-end;
-
 //------------------------------------------------------------------------------
-function _activeObj(DSS: TDSSContext; out obj: TStorage2Obj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TStorageObj): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
-    if InvalidCircuit(DSS) or OldModels(DSS) then
+    if InvalidCircuit(DSS) then
         Exit;
     
     obj := DSS.ActiveCircuit.StorageElements.Active;
@@ -66,7 +59,7 @@ end;
 procedure Storages_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if InvalidCircuit(DSSPrime) or OldModels(DSSPrime) then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.StorageElements, False);
 end;
@@ -74,7 +67,7 @@ end;
 function Storages_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit(DSSPrime) or OldModels(DSSPrime) then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     Result := DSSPrime.ActiveCircuit.StorageElements.Count;
 end;
@@ -82,7 +75,7 @@ end;
 function Storages_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit(DSSPrime) or OldModels(DSSPrime) then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     Result := Generic_CktElement_Get_First(DSSPrime, DSSPrime.ActiveCircuit.StorageElements);
 end;
@@ -90,14 +83,14 @@ end;
 function Storages_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit(DSSPrime) or OldModels(DSSPrime) then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     Result := Generic_CktElement_Get_Next(DSSPrime, DSSPrime.ActiveCircuit.StorageElements);
 end;
 //------------------------------------------------------------------------------
 function Storages_Get_Name(): PAnsiChar; CDECL;
 var
-    elem: TStorage2Obj;
+    elem: TStorageObj;
 begin
     Result := NIL;
     if not _activeObj(DSSPrime, elem) then
@@ -109,12 +102,12 @@ end;
 procedure Storages_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 begin
-    if InvalidCircuit(DSSPrime) or OldModels(DSSPrime) then
+    if InvalidCircuit(DSSPrime) then
         Exit;
-    if DSSPrime.Storage2Class.SetActive(Value) then
+    if DSSPrime.StorageClass.SetActive(Value) then
     begin
-        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.Storage2Class.ElementList.Active;
-        DSSPrime.ActiveCircuit.StorageElements.Get(DSSPrime.Storage2Class.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.StorageClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.StorageElements.Get(DSSPrime.StorageClass.Active);
     end
     else
     begin
@@ -125,16 +118,16 @@ end;
 function Storages_Get_idx(): Integer; CDECL;
 begin
     Result := 0;
-    if InvalidCircuit(DSSPrime) or OldModels(DSSPrime) then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     Result := DSSPrime.ActiveCircuit.StorageElements.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Storages_Set_idx(Value: Integer); CDECL;
 var
-    pStorage: TStorage2Obj;
+    pStorage: TStorageObj;
 begin
-    if InvalidCircuit(DSSPrime) or OldModels(DSSPrime) then
+    if InvalidCircuit(DSSPrime) then
         Exit;
     pStorage := DSSPrime.ActiveCircuit.StorageElements.Get(Value);
     if pStorage = NIL then
@@ -150,17 +143,17 @@ var
     Result: PPAnsiCharArray0;
     k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumStorage2Registers);
-    for k := 0 to NumStorage2Registers - 1 do
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumStorageRegisters);
+    for k := 0 to NumStorageRegisters - 1 do
     begin
-        Result[k] := DSS_CopyStringAsPChar(DSSPrime.Storage2Class.RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(DSSPrime.StorageClass.RegisterNames[k + 1]);
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Storages_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray0;
-    elem: TStorage2Obj;
+    elem: TStorageObj;
     k: Integer;
 begin
     if not _activeObj(DSSPrime, elem) then
@@ -169,8 +162,8 @@ begin
         Exit;
     end;
 
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumStorage2Registers);
-    for k := 0 to NumStorage2Registers - 1 do
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumStorageRegisters);
+    for k := 0 to NumStorageRegisters - 1 do
     begin
         Result[k] := elem.Registers[k + 1];
     end;
@@ -184,7 +177,7 @@ end;
 //------------------------------------------------------------------------------
 function Storages_Get_puSOC(): Double; CDECL;
 var
-    elem: TStorage2Obj;
+    elem: TStorageObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -194,7 +187,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Storages_Set_puSOC(Value: Double); CDECL;
 var
-    elem: TStorage2Obj;
+    elem: TStorageObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
@@ -204,7 +197,7 @@ end;
 //------------------------------------------------------------------------------
 function Storages_Get_State(): Integer; CDECL;
 var
-    elem: TStorage2Obj;
+    elem: TStorageObj;
 begin
     Result := 0;
     if not _activeObj(DSSPrime, elem) then
@@ -214,7 +207,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Storages_Set_State(Value: Integer); CDECL;
 var
-    elem: TStorage2Obj;
+    elem: TStorageObj;
 begin
     if not _activeObj(DSSPrime, elem) then
         Exit;

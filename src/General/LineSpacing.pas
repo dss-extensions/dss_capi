@@ -149,8 +149,8 @@ begin
     case Idx of
         ord(TProp.nconds):
         begin
-            FX := Allocmem(Sizeof(FX^[1]) * FNconds);
-            FY := Allocmem(Sizeof(FY^[1]) * FNconds);
+            ReAllocmem(FX, Sizeof(FX^[1]) * FNconds);
+            ReAllocmem(FY, Sizeof(FY^[1]) * FNconds);
             Units := UNITS_FT;
             DataChanged := TRUE;
         end;

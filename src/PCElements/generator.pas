@@ -2,7 +2,7 @@ unit generator;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -68,7 +68,9 @@ uses
     // GrowthShape,
     Spectrum,
     ArrayDef,
-    Dynamics;
+    DynEqPCE,
+    Dynamics,
+    DynamicExp;
 
 const
     NumGenRegisters = 6;    // Number of energy meter registers
@@ -119,7 +121,10 @@ type
         FuelkWh,
         pctFuel,
         pctReserve,
-        Refuel
+        Refuel,
+
+        DynamicEq, 
+        DynOut
     );
 {$SCOPEDENUMS OFF}
     // Generator public data/state variable structure
@@ -162,7 +167,7 @@ type
         XRdp: Double;  // Assumed X/R for Xd'
     end;
 
-    TGenerator = class(TPCClass)
+    TGenerator = class(TDynEqPCEClass)
     PROTECTED
         cBuffer: TCBuffer24;  // Temp buffer for calcs  24-phase generator?
 
@@ -180,7 +185,7 @@ type
         procedure SampleAll;
     end;
 
-    TGeneratorObj = class(TPCElement)
+    TGeneratorObj = class(TDynEqPCE)
     PRIVATE
         // Moved to GeneratorVars        Zthev           :Complex;
         Yeq: Complex;   // at nominal
@@ -233,6 +238,7 @@ type
 // moved to GeneratorVars        VthevMag        :Double;    {Thevinen equivalent voltage for dynamic model}
         YPrimOpenCond: TCmatrix;  // To handle cases where one conductor of load is open ; We revert to admittance for inj currents
         YQFixed: Double;  // Fixed value of y for type 7 load
+        Yii: Double; // for Type 3 Generator
         ShapeIsActual: Boolean;
         ForceBalanced: LongBool;
 
@@ -319,8 +325,8 @@ type
 
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
-        function NumVariables: Integer; OVERRIDE;
-        procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
+        function NumVariables(): Integer; OVERRIDE;
+        procedure GetAllVariables(States: Array of Double); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
@@ -368,6 +374,7 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Utilities,
+    KLUSolve,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
@@ -421,6 +428,16 @@ begin
     Obj.GenActive := True;
 end;
 
+procedure ObjSetDynOutput(obj: TObj; variable: String);
+begin
+    obj.SetDynOutput(variable);
+end;
+
+function ObjGetDynOutputStr(obj: TObj): String;
+begin
+    Result := obj.GetDynOutputStr();
+end;
+
 procedure TGenerator.DefineProperties;
 var 
     obj: TObj = NIL; // NIL (0) on purpose
@@ -452,6 +469,12 @@ begin
     PropertyOffset[ord(TProp.ShaftModel)] := ptruint(@obj.ShaftModelNameStr);
     PropertyOffset[ord(TProp.ShaftData)] := ptruint(@obj.ShaftModelEditStr);
 
+    PropertyType[ord(TProp.DynOut)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.DynOut)] := 1; // dummy
+    PropertyWriteFunction[ord(TProp.DynOut)] := @ObjSetDynOutput;
+    PropertyReadFunction[ord(TProp.DynOut)] := @ObjGetDynOutputStr;
+    PropertyFlags[ord(TProp.DynOut)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.ReadByFunction];
+
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
@@ -480,14 +503,17 @@ begin
     PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyType[ord(TProp.DynamicEq)] := TPropertyType.DSSObjectReferenceProperty;
     
     PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
     PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyDispShapeObj);
     PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
+    PropertyOffset[ord(TProp.DynamicEq)] := ptruint(@obj.DynamicEqObj);
 
     PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
     PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
     PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset2[ord(TProp.DynamicEq)] := ptruint(DSS.DynamicExpClass);
 
     // double properties (default type)
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kWBase);
@@ -673,6 +699,11 @@ begin
                 
             TProp.kVA, TProp.MVA:
                 kVANotSet := FALSE;
+
+            TProp.DynamicEq:
+                if DynamicEqObj <> NIL then
+                    SetLength(DynamicEqVals, DynamicEqObj.NVariables);
+
         end;
 
     inherited PropertySideEffects(Idx, previousIntVal);
@@ -792,7 +823,7 @@ begin
     DutyShapeObj := NIL;  // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
     DutyStart := 0.0;
     Connection := 0;    // Wye (star)
-    GenModel := 1;  {Typical fixed kW negative load}
+    GenModel := 1; // Typical fixed kW negative load
     GenClass := 1;
     LastYear := 0;
     LastGrowthFactor := 1.0;
@@ -872,6 +903,8 @@ begin
     FuelkWh := 0.0;
     pctFuel := 100.0;
     pctReserve := 20.0;
+
+    DynamicEqObj := NIL;
 
     RecalcElementData;
 end;
@@ -1189,6 +1222,11 @@ begin
         begin  //  Regular power flow generator model
             // Yeq is always expected as the equivalent line-neutral admittance
             Y := -Yeq;  // negate for generation    Yeq is L-N quantity
+
+            // if Type 3 generator, only put a little (1%) in Yprim
+            if GenModel = 3 then 
+                Y := Y / 100.0;
+
             // ****** Need to modify the base admittance for real harmonics calcs
             Y.im := Y.im / FreqMultiplier;
 
@@ -1313,11 +1351,11 @@ begin
                 DSS.SolveModeEnum.OrdinalToString(ord(DSS.ActiveCircuit.Solution.mode)), ', ',
                 DSS.DefaultLoadModelEnum.OrdinalToString(DSS.ActiveCircuit.Solution.LoadModel), ', ',
                 GenModel: 0, ', ',
-                DQDV: 8: 0, ', ',
-                (V_Avg * 0.001732 / GenVars.kVgeneratorbase): 8: 3, ', ',
+                DQDV: 10: 4, ', ',
+                (V_Avg * 0.001732 / GenVars.kVgeneratorbase): 10: 5, ', ',
                 (GenVars.Vtarget - V_Avg): 9: 1, ', ',
-                (Genvars.Qnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
-                (Genvars.Pnominalperphase * 3.0 / 1.0e6): 8: 2, ', ',
+                (Genvars.Qnominalperphase * 3.0 / 1.0e6): 8: 3, ', ',
+                (Genvars.Pnominalperphase * 3.0 / 1.0e6): 8: 3, ', ',
                 s, ', '
             );
             FSWrite(TraceFile, sout);
@@ -2119,21 +2157,16 @@ end;
 
 procedure TGeneratorObj.CalcDQDV;
 var
-    Vdiff: Double;
     i: Integer;
+    cYii: Complex;
 begin
-    CalcVTerminal;
-    V_Avg := 0.0;
-    for i := 1 to Fnphases do
-        V_Avg := V_Avg + Cabs(Vterminal^[i]);
-    V_Avg := V_Avg / Fnphases;
+    // use 1st node element of Y matrix For DQDV
+    i := NodeRef[1];
+    KLUSolve.GetMatrixElement(ActiveCircuit.Solution.hYsystem, i, i, @cYii);
+    Yii := Cabs(cYii);
+    // DQDV := Yii;  // Save in DQDV for now
+    DQDV := 2.0 * Yii * Vbase * vpu;  // Save in DQDV for now
 
-    Vdiff := V_Avg - V_Remembered;
-    if (Vdiff <> 0.0) then
-        DQDV := (Genvars.Qnominalperphase - var_Remembered) / Vdiff
-    else
-        DQDV := 0.0;  // Something strange has occured
-                       // this will force a de facto P,Q model
     DQDVSaved := DQDV;  //Save for next time  Allows generator to be enabled/disabled during simulation
 end;
 
@@ -2181,10 +2214,11 @@ end;
 procedure TGeneratorObj.InitStateVars;
 var
     // VNeut,
-    i: Integer;
+    i, NumData: Integer;
     V012,
     I012: array[0..2] of Complex;
     Vabc: array[1..3] of Complex;
+    VXd: Complex;  // voltage drop through machine
 begin
     YPrimInvalid := TRUE;  // Force rebuild of YPrims
 
@@ -2215,51 +2249,78 @@ begin
 
                     3:
                     begin
-                 // Calculate Edp based on Pos Seq only
+                        // Calculate Edp based on Pos Seq only
                         Phase2SymComp(ITerminal, pComplexArray(@I012));
-                     // Voltage behind Xdp  (transient reactance), volts
+                        // Voltage behind Xdp  (transient reactance), volts
 
                         for i := 1 to FNphases do
                             Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
                         Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
-                        Edp := V012[1] - I012[1] * Zthev;    // Pos sequence
+                        VXd := I012[1] * Zthev;
+                        Edp := V012[1] - VXd;    // Pos sequence
                         VThevMag := Cabs(Edp);
                     end;
                 else
                     DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName, Fnphases], 5672);
                     DSS.SolutionAbort := TRUE;
                 end;
-                // Shaft variables
-                // Theta is angle on Vthev[1] relative to system reference
-                //Theta  := Cang(Vthev^[1]);   // Assume source at 0
-                Theta := Cang(Edp);
-                if GenModel = 7 then
-                    Model7LastAngle := Theta;
 
-                dTheta := 0.0;
-                w0 := Twopi * ActiveCircuit.Solution.Frequency;
-                // recalc Mmass and D in case the frequency has changed
-                with GenVars do
+                if DynamicEqObj = NIL then
                 begin
-                    GenVars.Mmass := 2.0 * GenVars.Hmass * GenVars.kVArating * 1000.0 / (w0);   // M = W-sec
-                    D := Dpu * kVArating * 1000.0 / (w0);
-                end;
-                Pshaft := -Power[1].re; // Initialize Pshaft to present power Output
+                    // Shaft variables
+                    // Theta is angle on Vthev[1] relative to system reference
+                    //Theta  := Cang(Vthev^[1]);   // Assume source at 0
+                    Theta := Cang(Edp);
+                    if GenModel = 7 then
+                        Model7LastAngle := Theta;
 
-                Speed := 0.0;    // relative to synch speed
-                dSpeed := 0.0;
-
-                // Init User-written models
-                //Ncond:Integer; V, I:pComplexArray; const X,Pshaft,Theta,Speed,dt,time:Double
-                with ActiveCircuit.Solution do
-                    if GenModel = 6 then
+                    dTheta := 0.0;
+                    w0 := Twopi * ActiveCircuit.Solution.Frequency;
+                    // recalc Mmass and D in case the frequency has changed
+                    with GenVars do
                     begin
-                        if UserModel.Exists then
-                            UserModel.FInit(Vterminal, Iterminal);
-                        if ShaftModel.Exists then
-                            ShaftModel.Finit(Vterminal, Iterminal);
+                        GenVars.Mmass := 2.0 * GenVars.Hmass * GenVars.kVArating * 1000.0 / (w0);   // M = W-sec
+                        D := Dpu * kVArating * 1000.0 / (w0);
                     end;
+                    Pshaft := -Power[1].re; // Initialize Pshaft to present power Output
 
+                    Speed := 0.0;    // relative to synch speed
+                    dSpeed := 0.0;
+
+                    // Init User-written models
+                    //Ncond:Integer; V, I:pComplexArray; const X,Pshaft,Theta,Speed,dt,time:Double
+                    with ActiveCircuit.Solution do
+                        if GenModel = 6 then
+                        begin
+                            if UserModel.Exists then
+                                UserModel.FInit(Vterminal, Iterminal);
+                            if ShaftModel.Exists then
+                                ShaftModel.Finit(Vterminal, Iterminal);
+                        end;
+                end
+                else // if DynamicEqObj <> nil then
+                begin
+                    // Initializes the memory values for the dynamic equation
+                    for i := 0 to High(DynamicEqVals) do 
+                        DynamicEqVals[i][1] := 0.0;
+
+                    // Check for initializations using calculated values (P0, Q0)
+                    NumData := (Length(DynamicEqPair) div 2) - 1;
+                    for i := 0 to NumData do
+                    begin
+                        if DynamicEqObj.IsInitVal(DynamicEqPair[(i * 2) + 1]) then
+                        begin
+                            if DynamicEqPair[(i * 2) + 1] = 9 then
+                            begin
+                                DynamicEqVals[DynamicEqPair[i * 2]][0] := Cang(Edp);
+                                if GenModel = 7 then 
+                                    Model7LastAngle := DynamicEqVals[DynamicEqPair[i * 2]][0];
+                            end
+                            else
+                                DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue[1, DynamicEqPair[(i * 2) + 1]];
+                        end;
+                    end;
+                end
             end
         else
         begin
@@ -2276,6 +2337,7 @@ end;
 procedure TGeneratorObj.IntegrateStates;
 var
     TracePower: Complex;
+    i, NumData: Integer;
 begin
    // Compute Derivatives and then integrate
 
@@ -2286,47 +2348,87 @@ begin
 
     with ActiveCircuit.Solution, GenVars do
     begin
-        with DynaVars do
-            if (IterationFlag = 0) then
-            begin {First iteration of new time step}
-                ThetaHistory := Theta + 0.5 * h * dTheta;
-                SpeedHistory := Speed + 0.5 * h * dSpeed;
+        if DynamicEqObj = NIL then
+        begin
+            with DynaVars do
+                if (IterationFlag = 0) then
+                begin {First iteration of new time step}
+                    ThetaHistory := Theta + 0.5 * h * dTheta;
+                    SpeedHistory := Speed + 0.5 * h * dSpeed;
+                end;
+
+            // Compute shaft dynamics
+            TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases);
+            dSpeed := (Pshaft + TracePower.re - D * Speed) / Mmass;
+            // dSpeed := (Torque + TerminalPowerIn(Vtemp,Itemp,FnPhases).re/Speed) / (Mmass);
+            dTheta := Speed;
+
+            // Trapezoidal method
+            with DynaVars do
+            begin
+                Speed := SpeedHistory + 0.5 * h * dSpeed;
+                Theta := ThetaHistory + 0.5 * h * dTheta;
             end;
 
-        // Compute shaft dynamics
-        TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases);
-        dSpeed := (Pshaft + TracePower.re - D * Speed) / Mmass;
-//      dSpeed := (Torque + TerminalPowerIn(Vtemp,Itemp,FnPhases).re/Speed) / (Mmass);
-        dTheta := Speed;
+            // Write Dynamics Trace Record
+            if DebugTrace then
+            begin
+                FSWrite(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
+                FSWrite(TraceFile, Format(' Flag=%d ', [Dynavars.Iterationflag]));
+                FSWrite(TraceFile, Format(' Speed=%-.5g ', [Speed]));
+                FSWrite(TraceFile, Format(' dSpeed=%-.5g ', [dSpeed]));
+                FSWrite(TraceFile, Format(' Pshaft=%-.5g ', [PShaft]));
+                FSWrite(TraceFile, Format(' P=%-.5g Q= %-.5g', [TracePower.Re, TracePower.im]));
+                FSWrite(TraceFile, Format(' M=%-.5g ', [Mmass]));
+                FSWriteln(TraceFile);
+                FSFlush(TraceFile);
+            end;
 
-        // Trapezoidal method
+            if GenModel = 6 then
+            begin
+                if UserModel.Exists then
+                    UserModel.Integrate;
+                if ShaftModel.Exists then
+                    ShaftModel.Integrate;
+            end;
+            Exit;
+        end;
+
+        // if DynamicEqObj <> NIL...
+        // Dynamics using an external equation
+        with DynaVars do
+            if IterationFlag = 0 then 
+                begin // First iteration of new time step
+                    SpeedHistory := DynamicEqVals[DynOut[0]][0] + 0.5*h*DynamicEqVals[DynOut[0]][1]; // first speed
+                    ThetaHistory := DynamicEqVals[DynOut[1]][0] + 0.5*h*DynamicEqVals[DynOut[1]][1]; // then angle
+                End;
+
+        // Check for initializations using calculated values (P, Q, VMag, VAng, IMag, IAng)
+        NumData := (Length(DynamicEqPair) div 2) - 1;
+        for i := 0 to NumData do
+            if not DynamicEqObj.IsInitVal(DynamicEqPair[(i * 2) + 1]) then // it's not intialization
+            begin
+                case DynamicEqPair[(i * 2) + 1] of
+                    0:  DynamicEqVals[DynamicEqPair[i * 2]][0] := -TerminalPowerIn(Vterminal,Iterminal,FnPhases).re;
+                    1:  DynamicEqVals[DynamicEqPair[i * 2]][0] := -TerminalPowerIn(Vterminal,Iterminal,FnPhases).im;
+                else
+                    DynamicEqVals[DynamicEqPair[i * 2]][0] := PCEValue[1, DynamicEqPair[(i * 2) + 1]];
+                end;
+            end;
+        
+        // solves the differential equation using the given values
+        DynamicEqObj.SolveEq(DynamicEqVals);
+        
+        // Trapezoidal method - Places the values in the same vars to keep the code consistent
         with DynaVars do
         begin
-            Speed := SpeedHistory + 0.5 * h * dSpeed;
-            Theta := ThetaHistory + 0.5 * h * dTheta;
+            Speed := SpeedHistory + 0.5 * h * DynamicEqVals[DynOut[0]][1];
+            Theta := ThetaHistory + 0.5 * h * DynamicEqVals[DynOut[1]][1];
         end;
 
-        // Write Dynamics Trace Record
-        if DebugTrace then
-        begin
-            FSWrite(TraceFile, Format('t=%-.5g ', [Dynavars.t]));
-            FSWrite(TraceFile, Format(' Flag=%d ', [Dynavars.Iterationflag]));
-            FSWrite(TraceFile, Format(' Speed=%-.5g ', [Speed]));
-            FSWrite(TraceFile, Format(' dSpeed=%-.5g ', [dSpeed]));
-            FSWrite(TraceFile, Format(' Pshaft=%-.5g ', [PShaft]));
-            FSWrite(TraceFile, Format(' P=%-.5g Q= %-.5g', [TracePower.Re, TracePower.im]));
-            FSWrite(TraceFile, Format(' M=%-.5g ', [Mmass]));
-            FSWriteln(TraceFile);
-            FSFlush(TraceFile);
-        end;
-
-        if GenModel = 6 then
-        begin
-            if UserModel.Exists then
-                UserModel.Integrate;
-            if ShaftModel.Exists then
-                ShaftModel.Integrate;
-        end;
+        // saves the new integration values in memoryspace
+        DynamicEqVals[DynOut[0]][0] := Speed;
+        DynamicEqVals[DynOut[1]][0] := Theta;
     end;
 end;
 
@@ -2338,7 +2440,18 @@ begin
     N := 0;
     Result := -9999.99;  // error return value
     if i < 1 then
-        Exit;  // Someone goofed
+    begin
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        Exit;
+    end;
+    if DynamicEqObj <> NIL then
+    begin
+        if i <= DynamicEqObj.NVariables * Length(DynamicEqVals[0]) then
+            Result := DynamicEqObj.Get_DynamicEqVal(i - 1, DynamicEqVals)
+        else
+            DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        Exit;
+    end;
 
     with GenVars do
         case i of
@@ -2384,14 +2497,24 @@ var
 begin
     N := 0;
     if i < 1 then
-        Exit;  // Someone goofed
+    begin
+        DoSimpleMsg('%s: invalid variable index %d.', [FullName, i], 565);
+        Exit;  // No variables to set
+    end;
+    if DynamicEqObj <> NIL then
+    begin
+        DoSimpleMsg('%s: cannot set state variable when using DynamicEq.', [FullName], 566);
+        Exit;
+    end;
+
     with GenVars do
         case i of
             1:
                 Speed := (Value - w0) * TwoPi;
             2:
                 Theta := Value / RadiansToDegrees; // deg to rad
-            3: ;// meaningless to set Vd := Value * vbase; // pu to volts
+            3: // meaningless to set Vd := Value * vbase; // pu to volts
+                DoSimpleMsg('%s: variable index %d is read-only.', [FullName, i], 564);
             4:
                 Pshaft := Value;
             5:
@@ -2399,7 +2522,6 @@ begin
             6:
                 dTheta := Value;
         else
-        begin
             if UserModel.Exists then
             begin
                 N := UserModel.FNumVars;
@@ -2410,7 +2532,7 @@ begin
                     Exit;
                 end;
             end;
-         // If we get here, must be in the shaft model
+            // If we get here, must be in the shaft model
             if ShaftModel.Exists then
             begin
                 k := (i - (NumGenVariables + N));
@@ -2418,32 +2540,44 @@ begin
                     ShaftModel.FSetVariable(k, Value);
             end;
         end;
-        end;
 end;
 
-procedure TGeneratorObj.GetAllVariables(States: pDoubleArray);
-
+procedure TGeneratorObj.GetAllVariables(States: Array of Double);
 var
     i, N: Integer;
 begin
     N := 0;
+    if DynamicEqObj <> NIL then
+    begin
+        for i := 1 to DynamicEqObj.NVariables * Length(DynamicEqVals[0]) do
+            States[i - 1] := DynamicEqObj.Get_DynamicEqVal(i - 1, DynamicEqVals);
+
+        Exit;
+    end;
+
     for i := 1 to NumGenVariables do
-        States^[i] := Variable[i];
+        States[i - 1] := Variable[i];
 
     if UserModel.Exists then
     begin
         N := UserModel.FNumVars;
-        UserModel.FGetAllVars(pDoubleArray(@States^[NumGenVariables + 1]));
+        UserModel.FGetAllVars(pDoubleArray(@States[NumGenVariables]));
     end;
 
     if ShaftModel.Exists then
     begin
-        ShaftModel.FGetAllVars(pDoubleArray(@States^[NumGenVariables + 1 + N]));
+        ShaftModel.FGetAllVars(pDoubleArray(@States[NumGenVariables + N]));
     end;
 end;
 
-function TGeneratorObj.NumVariables: Integer;
+function TGeneratorObj.NumVariables(): Integer;
 begin
+    // Try DynamicExp first
+    Result := inherited NumVariables();
+    if Result <> 0 then 
+        Exit;
+
+    // Fallback to the classic
     Result := NumGenVariables;
     if UserModel.Exists then
         Result := Result + UserModel.FNumVars;
@@ -2455,16 +2589,21 @@ function TGeneratorObj.VariableName(i: Integer): String;
 const
     BuffSize = 255;
 var
-    n,
-    i2: Integer;
+    n, i2: Integer;
     Buff: array[0..BuffSize] of AnsiChar;
     pName: pAnsichar;
-
 begin
     Result := 'ERROR';
-    n := 0;
     if i < 1 then
         Exit;  // Someone goofed
+
+    // Try DynamicExp first
+    Result := inherited VariableName(i);
+    if Length(Result) <> 0 then
+        Exit;
+
+    // Fallback to the classic
+    n := 0;
     case i of
         1:
             Result := 'Frequency';
@@ -2479,29 +2618,27 @@ begin
         6:
             Result := 'dTheta (Deg)';
     else
+        if UserModel.Exists then  // Checks for existence and Selects
         begin
-            if UserModel.Exists then  // Checks for existence and Selects
+            pName := PAnsiChar(@Buff);
+            n := UserModel.FNumVars;
+            i2 := i - NumGenVariables;
+            if i2 <= n then
             begin
-                pName := PAnsiChar(@Buff);
-                n := UserModel.FNumVars;
-                i2 := i - NumGenVariables;
-                if i2 <= n then
-                begin
-                    // DLL functions require AnsiString type
-                    UserModel.FGetVarName(i2, pName, BuffSize);
-                    Result := String(pName);
-                    Exit;
-                end;
-            end;
-
-            if ShaftModel.Exists then
-            begin
-                pName := PAnsiChar(Buff);
-                i2 := i - NumGenVariables - n;
-                if i2 > 0 then
-                    UserModel.FGetVarName(i2, pName, BuffSize);
+                // DLL functions require AnsiString type
+                UserModel.FGetVarName(i2, pName, BuffSize);
                 Result := String(pName);
+                Exit;
             end;
+        end;
+
+        if ShaftModel.Exists then
+        begin
+            pName := PAnsiChar(Buff);
+            i2 := i - NumGenVariables - n;
+            if i2 > 0 then
+                UserModel.FGetVarName(i2, pName, BuffSize);
+            Result := String(pName);
         end;
     end;
 end;
@@ -2575,11 +2712,7 @@ begin
     inherited;
 
     // Just turn generator on or off;
-
-    if Value then
-        GenSwitchOpen := FALSE
-    else
-        GenSwitchOpen := TRUE;
+    GenSwitchOpen := Value;
 end;
 
 procedure TGeneratorObj.Set_PowerFactor(const Value: Double);
@@ -2603,19 +2736,19 @@ end;
 procedure TGeneratorObj.SyncUpPowerQuantities;
 begin
     // keep kvar nominal up to date with kW and PF
-    if (PFNominal <> 0.0) then
-    begin
-        kvarBase := kWBase * sqrt(1.0 / Sqr(PFNominal) - 1.0);
-        Genvars.Pnominalperphase := 1000.0 * kWBase / Fnphases;
-        Genvars.Qnominalperphase := 1000.0 * kvarBase / Fnphases;
-        kvarMax := 2.0 * kvarBase;
-        kvarMin := -kvarMax;
-        if PFNominal < 0.0 then
-            kvarBase := -kvarBase;
+    if (PFNominal = 0.0) then
+        Exit;
 
-        if kVANotSet then
-            GenVars.kVARating := kWBase * 1.2;
-    end;
+    kvarBase := kWBase * sqrt(1.0 / Sqr(PFNominal) - 1.0);
+    Genvars.Pnominalperphase := 1000.0 * kWBase / Fnphases;
+    Genvars.Qnominalperphase := 1000.0 * kvarBase / Fnphases;
+    kvarMax := 2.0 * kvarBase;
+    kvarMin := -kvarMax;
+    if PFNominal < 0.0 then
+        kvarBase := -kvarBase;
+
+    if kVANotSet then
+        GenVars.kVARating := kWBase * 1.2;
 end;
 
 procedure TGeneratorObj.SetDragHandRegister(Reg: Integer;
@@ -2661,6 +2794,7 @@ begin
     Model7Lastangle := Model7angle;
 end;
 
-finalization    GenStatusEnum.Free;
+finalization
+    GenStatusEnum.Free;
     GenDispModeEnum.Free;
 end.

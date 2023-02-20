@@ -58,7 +58,7 @@ end;
 
 function ATAN2(x, iy: Double): Double;
 const
-    PI = 3.14159265359; { 180 DEGREES } // TODO: remove for 0.13
+    PI = 3.14159265359; { 180 DEGREES } // TODO: remove for 0.13 -- only used for RPN calc and DynamicExp
 begin
     if (x < 0.0) and (iy >= 0) then
         Result := arctan(iy / x) + PI

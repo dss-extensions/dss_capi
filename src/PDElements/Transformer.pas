@@ -185,7 +185,7 @@ type
         Winding: pWindingArray;
         XfmrBank: String;
         XfmrCodeObj: TDSSObject;
-        CoreType: Integer; // 0=Shell; 1=1ph; 3-3leg; 5=5-leg
+        CoreType: Integer;
 
         n_thermal: Double;
         m_thermal: Double; // Exponents
@@ -1057,7 +1057,7 @@ begin
             if i = 1 then
                 FSWriteln(F, Format('~ Wdg=%d bus=%s', [i, firstbus]))
             else
-                FSWriteln(F, Format('~ Wdg=%s bus=%s', [i, nextbus]));
+                FSWriteln(F, Format('~ Wdg=%d bus=%s', [i, nextbus]));
             case Connection of
                 0:
                     FSWriteln(F, '~ conn=wye');
@@ -1067,7 +1067,7 @@ begin
             FSWriteln(F, Format('~ kv=%.2f', [kVLL]));
             FSWriteln(F, Format('~ kVA=%.1f', [kVA]));
             FSWriteln(F, Format('~ tap=%.3f', [putap]));
-            FSWriteln(F, Format('~ %R=%.2f', [(Rpu * 100.0)]));
+            FSWriteln(F, Format('~ %%R=%.2f', [(Rpu * 100.0)]));
             FSWriteln(F, Format('~ RdcOhms=%.7g', [Rdcohms]));
             FSWriteln(F, Format('~ rneut=%.3f', [rneut]));
             FSWriteln(F, Format('~ xneut=%.3f', [xneut]));
@@ -1091,8 +1091,8 @@ begin
     FSWriteln(F, Format('~ m=%.1f', [m_thermal]));
     FSWriteln(F, Format('~ flrise=%.0f', [flrise]));
     FSWriteln(F, Format('~ hsrise=%.0f', [hsrise]));
-    FSWriteln(F, Format('~ %loadloss=%.0f', [pctLoadLoss]));
-    FSWriteln(F, Format('~ %noloadloss=%.0f', [pctNoLoadLoss]));
+    FSWriteln(F, Format('~ %%loadloss=%.0f', [pctLoadLoss]));
+    FSWriteln(F, Format('~ %%noloadloss=%.0f', [pctNoLoadLoss]));
 
     for i := 28 to NumPropsThisClass do
         FSWriteln(F, '~ ' + ParentClass.PropertyName^[i] + '=' + PropertyValue[i]);

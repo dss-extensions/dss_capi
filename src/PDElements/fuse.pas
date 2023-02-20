@@ -66,7 +66,6 @@ type
     TFuseObj = class(TControlElem)
     PRIVATE
         PreviousControlledElement: TDSSCktElement;
-        //MonitoredElement: TDSSCktElement; // TODO: check why this exists (TControlElem already has one)
 
         hAction: array[1..FUSEMAXDIM] of Integer;  // handle to control queue actions
         ReadyToBlow: array[1..FUSEMAXDIM] of Boolean;

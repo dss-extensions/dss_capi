@@ -278,6 +278,8 @@ begin
                                                             while ShuntElement <> NIL do
                                                             begin
                                                                 //TODO: remove parser usage
+                                                                // ShuntElement.SetBus(1, DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)));
+                                                                // and SideEffects...
                                                                 DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.NameOfIndex(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
                                                                 ShuntElement.Edit(DSS.Parser);
                                                                 ShuntElement := PresentBranch.NextShuntObject;

@@ -20,11 +20,8 @@ uses
     TSData,
     LineSpacing,
     Storage,
-    Storage2,
     PVSystem,
-    PVSystem2,
     InvControl,
-    InvControl2,
     ExpControl,
     LineCode,
     LineGeometry,
@@ -42,7 +39,6 @@ uses
     Generator,
     GenDispatcher,
     StorageController,
-    StorageController2,
     Relay,
     Recloser,
     Fuse,
@@ -63,7 +59,8 @@ uses
     DSSObject,
     Executive,
     ControlProxy,
-    ExportCIMXML;
+    ExportCIMXML,
+    DynamicExp;
     
 type
    
@@ -87,6 +84,7 @@ type
         function GetEnergyMeterClass: TEnergyMeter; inline;
         function GetMonitorClass: TDSSMonitor; inline;
         function GetSensorClass: TSensor; inline;
+        function GetDynamicExpClass: TDynamicExp; inline;
         function GetTCC_CurveClass: TTCC_Curve; inline;
         function GetWireDataClass: TWireData; inline;
         function GetCNDataClass: TCNData; inline;
@@ -95,11 +93,8 @@ type
         function GetLineSpacingClass: TLineSpacing; inline;
         function GetLineCodeClass: TLineCode; inline;
         function GetStorageClass: TStorage; inline;
-        function GetStorage2Class: TStorage2; inline;
         function GetPVSystemClass: TPVSystem; inline;
-        function GetPVSystem2Class: TPVSystem2; inline;
         function GetInvControlClass: TInvControl; inline;
-        function GetInvControl2Class: TInvControl2; inline;
         function GetExpControlClass: TExpControl; inline;
         function GetLineClass: TLine; inline;
         function GetVSourceClass: TVSource; inline;
@@ -115,7 +110,6 @@ type
         function GetGeneratorClass: TGenerator; inline;
         function GetGenDispatcherClass: TGenDispatcher; inline;
         function GetStorageControllerClass: TStorageController; inline;
-        function GetStorageController2Class: TStorageController2; inline;
         function GetRelayClass: TRelay; inline;
         function GetRecloserClass: TRecloser; inline;
         function GetFuseClass: TFuse; inline;
@@ -147,6 +141,7 @@ type
         procedure SetEnergyMeterClass(val: TEnergyMeter); inline;
         procedure SetMonitorClass(val: TDSSMonitor); inline;
         procedure SetSensorClass(val: TSensor); inline;
+        procedure SetDynamicExpClass(val: TDynamicExp); inline;
         procedure SetTCC_CurveClass(val: TTCC_Curve); inline;
         procedure SetWireDataClass(val: TWireData); inline;
         procedure SetCNDataClass(val: TCNData); inline;
@@ -155,11 +150,8 @@ type
         procedure SetLineSpacingClass(val: TLineSpacing); inline;
         procedure SetLineCodeClass(val: TLineCode); inline;
         procedure SetStorageClass(val: TStorage); inline;
-        procedure SetStorage2Class(val: TStorage2); inline;
         procedure SetPVSystemClass(val: TPVSystem); inline;
-        procedure SetPVSystem2Class(val: TPVSystem2); inline;
         procedure SetInvControlClass(val: TInvControl); inline;
-        procedure SetInvControl2Class(val: TInvControl2); inline;
         procedure SetExpControlClass(val: TExpControl); inline;
         procedure SetLineClass(val: TLine); inline;
         procedure SetVSourceClass(val: TVSource); inline;
@@ -175,7 +167,6 @@ type
         procedure SetGeneratorClass(val: TGenerator); inline;
         procedure SetGenDispatcherClass(val: TGenDispatcher); inline;
         procedure SetStorageControllerClass(val: TStorageController); inline;
-        procedure SetStorageController2Class(val: TStorageController2); inline;
         procedure SetRelayClass(val: TRelay); inline;
         procedure SetRecloserClass(val: TRecloser); inline;
         procedure SetFuseClass(val: TFuse); inline;
@@ -220,6 +211,7 @@ type
         property EnergyMeterClass: TEnergyMeter read GetEnergyMeterClass write SetEnergyMeterClass;
         property MonitorClass: TDSSMonitor read GetMonitorClass write SetMonitorClass;
         property SensorClass: TSensor read GetSensorClass write SetSensorClass;
+        property DynamicExpClass: TDynamicExp read GetDynamicExpClass write SetDynamicExpClass;
         property TCC_CurveClass: TTCC_Curve read GetTCC_CurveClass write SetTCC_CurveClass;
         property WireDataClass: TWireData read GetWireDataClass write SetWireDataClass;
         property CNDataClass: TCNData read GetCNDataClass write SetCNDataClass;
@@ -228,11 +220,8 @@ type
         property LineSpacingClass: TLineSpacing read GetLineSpacingClass write SetLineSpacingClass;
         property LineCodeClass: TLineCode read GetLineCodeClass write SetLineCodeClass;
         property StorageClass: TStorage read GetStorageClass write SetStorageClass;
-        property Storage2Class: TStorage2 read GetStorage2Class write SetStorage2Class;
         property PVSystemClass: TPVSystem read GetPVSystemClass write SetPVSystemClass;
-        property PVSystem2Class: TPVSystem2 read GetPVSystem2Class write SetPVSystem2Class;
         property InvControlClass: TInvControl read GetInvControlClass write SetInvControlClass;
-        property InvControl2Class: TInvControl2 read GetInvControl2Class write SetInvControl2Class;
         property ExpControlClass: TExpControl read GetExpControlClass write SetExpControlClass;
         property LineClass: TLine read GetLineClass write SetLineClass;
         property VSourceClass: TVSource read GetVSourceClass write SetVSourceClass;
@@ -248,7 +237,6 @@ type
         property GeneratorClass: TGenerator read GetGeneratorClass write SetGeneratorClass;
         property GenDispatcherClass: TGenDispatcher read GetGenDispatcherClass write SetGenDispatcherClass;
         property StorageControllerClass: TStorageController read GetStorageControllerClass write SetStorageControllerClass;
-        property StorageController2Class: TStorageController2 read GetStorageController2Class write SetStorageController2Class;
         property RelayClass: TRelay read GetRelayClass write SetRelayClass;
         property RecloserClass: TRecloser read GetRecloserClass write SetRecloserClass;
         property FuseClass: TFuse read GetFuseClass write SetFuseClass;
@@ -285,6 +273,7 @@ function TDSSGlobalHelper.GetSpectrumClass: TSpectrum; begin Result := TSpectrum
 function TDSSGlobalHelper.GetEnergyMeterClass: TEnergyMeter; begin Result := TEnergyMeter(FEnergyMeterClass); end;
 function TDSSGlobalHelper.GetMonitorClass: TDSSMonitor; begin Result := TDSSMonitor(FMonitorClass); end;
 function TDSSGlobalHelper.GetSensorClass: TSensor; begin Result := TSensor(FSensorClass); end;
+function TDSSGlobalHelper.GetDynamicExpClass: TDynamicExp; begin Result := TDynamicExp(FDynamicExpClass); end;
 function TDSSGlobalHelper.GetTCC_CurveClass: TTCC_Curve; begin Result := TTCC_Curve(FTCC_CurveClass); end;
 function TDSSGlobalHelper.GetWireDataClass: TWireData; begin Result := TWireData(FWireDataClass); end;
 function TDSSGlobalHelper.GetCNDataClass: TCNData; begin Result := TCNData(FCNDataClass); end;
@@ -293,11 +282,8 @@ function TDSSGlobalHelper.GetLineGeometryClass: TLineGeometry; begin Result := T
 function TDSSGlobalHelper.GetLineSpacingClass: TLineSpacing; begin Result := TLineSpacing(FLineSpacingClass); end;
 function TDSSGlobalHelper.GetLineCodeClass: TLineCode; begin Result := TLineCode(FLineCodeClass); end;
 function TDSSGlobalHelper.GetStorageClass: TStorage; begin Result := TStorage(FStorageClass); end;
-function TDSSGlobalHelper.GetStorage2Class: TStorage2; begin Result := TStorage2(FStorage2Class); end;
 function TDSSGlobalHelper.GetPVSystemClass: TPVSystem; begin Result := TPVSystem(FPVSystemClass); end;
-function TDSSGlobalHelper.GetPVSystem2Class: TPVSystem2; begin Result := TPVSystem2(FPVSystem2Class); end;
 function TDSSGlobalHelper.GetInvControlClass: TInvControl; begin Result := TInvControl(FInvControlClass); end;
-function TDSSGlobalHelper.GetInvControl2Class: TInvControl2; begin Result := TInvControl2(FInvControl2Class); end;
 function TDSSGlobalHelper.GetExpControlClass: TExpControl; begin Result := TExpControl(FExpControlClass); end;
 function TDSSGlobalHelper.GetLineClass: TLine; begin Result := TLine(FLineClass); end;
 function TDSSGlobalHelper.GetVSourceClass: TVSource; begin Result := TVSource(FVSourceClass); end;
@@ -313,7 +299,6 @@ function TDSSGlobalHelper.GetFaultClass: TFault; begin Result := TFault(FFaultCl
 function TDSSGlobalHelper.GetGeneratorClass: TGenerator; begin Result := TGenerator(FGeneratorClass); end;
 function TDSSGlobalHelper.GetGenDispatcherClass: TGenDispatcher; begin Result := TGenDispatcher(FGenDispatcherClass); end;
 function TDSSGlobalHelper.GetStorageControllerClass: TStorageController; begin Result := TStorageController(FStorageControllerClass); end;
-function TDSSGlobalHelper.GetStorageController2Class: TStorageController2; begin Result := TStorageController2(FStorageController2Class); end;
 function TDSSGlobalHelper.GetRelayClass: TRelay; begin Result := TRelay(FRelayClass); end;
 function TDSSGlobalHelper.GetRecloserClass: TRecloser; begin Result := TRecloser(FRecloserClass); end;
 function TDSSGlobalHelper.GetFuseClass: TFuse; begin Result := TFuse(FFuseClass); end;
@@ -349,6 +334,7 @@ procedure TDSSGlobalHelper.SetSpectrumClass(val: TSpectrum); begin FSpectrumClas
 procedure TDSSGlobalHelper.SetEnergyMeterClass(val: TEnergyMeter); begin FEnergyMeterClass := val; end;
 procedure TDSSGlobalHelper.SetMonitorClass(val: TDSSMonitor); begin FMonitorClass := val; end;
 procedure TDSSGlobalHelper.SetSensorClass(val: TSensor); begin FSensorClass := val; end;
+procedure TDSSGlobalHelper.SetDynamicExpClass(val: TDynamicExp); begin FDynamicExpClass := val; end;
 procedure TDSSGlobalHelper.SetTCC_CurveClass(val: TTCC_Curve); begin FTCC_CurveClass := val; end;
 procedure TDSSGlobalHelper.SetWireDataClass(val: TWireData); begin FWireDataClass := val; end;
 procedure TDSSGlobalHelper.SetCNDataClass(val: TCNData); begin FCNDataClass := val; end;
@@ -357,11 +343,8 @@ procedure TDSSGlobalHelper.SetLineGeometryClass(val: TLineGeometry); begin FLine
 procedure TDSSGlobalHelper.SetLineSpacingClass(val: TLineSpacing); begin FLineSpacingClass := val; end;
 procedure TDSSGlobalHelper.SetLineCodeClass(val: TLineCode); begin FLineCodeClass := val; end;
 procedure TDSSGlobalHelper.SetStorageClass(val: TStorage); begin FStorageClass := val; end;
-procedure TDSSGlobalHelper.SetStorage2Class(val: TStorage2); begin FStorage2Class := val; end;
 procedure TDSSGlobalHelper.SetPVSystemClass(val: TPVSystem); begin FPVSystemClass := val; end;
-procedure TDSSGlobalHelper.SetPVSystem2Class(val: TPVSystem2); begin FPVSystem2Class := val; end;
 procedure TDSSGlobalHelper.SetInvControlClass(val: TInvControl); begin FInvControlClass := val; end;
-procedure TDSSGlobalHelper.SetInvControl2Class(val: TInvControl2); begin FInvControl2Class := val; end;
 procedure TDSSGlobalHelper.SetExpControlClass(val: TExpControl); begin FExpControlClass := val; end;
 procedure TDSSGlobalHelper.SetLineClass(val: TLine); begin FLineClass := val; end;
 procedure TDSSGlobalHelper.SetVSourceClass(val: TVSource); begin FVSourceClass := val; end;
@@ -377,7 +360,6 @@ procedure TDSSGlobalHelper.SetFaultClass(val: TFault); begin FFaultClass := val;
 procedure TDSSGlobalHelper.SetGeneratorClass(val: TGenerator); begin FGeneratorClass := val; end;
 procedure TDSSGlobalHelper.SetGenDispatcherClass(val: TGenDispatcher); begin FGenDispatcherClass := val; end;
 procedure TDSSGlobalHelper.SetStorageControllerClass(val: TStorageController); begin FStorageControllerClass := val; end;
-procedure TDSSGlobalHelper.SetStorageController2Class(val: TStorageController2); begin FStorageController2Class := val; end;
 procedure TDSSGlobalHelper.SetRelayClass(val: TRelay); begin FRelayClass := val; end;
 procedure TDSSGlobalHelper.SetRecloserClass(val: TRecloser); begin FRecloserClass := val; end;
 procedure TDSSGlobalHelper.SetFuseClass(val: TFuse); begin FFuseClass := val; end;

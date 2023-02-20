@@ -186,6 +186,7 @@ type
         MeterZonesComputed: Boolean;
         PositiveSequence: Boolean;  // Model is to be interpreted as Pos seq
         NeglectLoadY: Boolean;
+        LongLineCorrection: Boolean; // Apply long line correction where feasible (single phase lines, positive sequence models, 3-phase lines with Symmetrical Components Model)
 
         // Voltage limits
         NormalMinVolts,
@@ -492,6 +493,7 @@ begin
     MeterZonesComputed := FALSE;
     PositiveSequence := FALSE;
     NeglectLoadY := FALSE;
+    LongLineCorrection := FALSE;
 
     NormalMinVolts := 0.95;
     NormalMaxVolts := 1.05;
@@ -590,8 +592,7 @@ destructor TDSSCircuit.Destroy;
 var
     i: Integer;
     pCktElem: TDSSCktElement;
-    ElemName: String;
-
+    ElemName: String = '';
 begin
     for i := 1 to NumDevices do
     begin
@@ -605,7 +606,7 @@ begin
         end;
     end;
     for i := 1 to NumBuses do
-        Buses^[i].Free;
+        Buses[i].Free;
 
     Reallocmem(Buses, 0);
     Reallocmem(MapNodeToBus, 0);
@@ -1486,7 +1487,7 @@ begin
                     SetElementActive('Load.' + myLoads[j]);
                     myWeight := 0.0;
                     myPF := TLoadObj(DSS.ActiveDSSObject).PFNominal;
-                    PFSpecified := TLoadObj(DSS.ActiveDSSObject).IsPFSpecified;
+                    PFSpecified := TLoadObj(DSS.ActiveDSSObject).PFSpecified;
                     if TLoadObj(DSS.ActiveDSSObject).YearlyShapeObj <> NIL then
                         DSS.LoadshapeClass.SetActive(TLoadObj(DSS.ActiveDSSObject).YearlyShapeObj.Name)
                     else
@@ -2616,6 +2617,8 @@ begin
             FSWriteln(F, 'Set Cktmodel=', DSS.CktModelEnum.OrdinalToString(Integer(PositiveSequence)));
         if DuplicatesAllowed then
             FSWriteln(F, 'set allowdup=yes');
+        If LongLineCorrection Then 
+            FSWriteln(F, 'Set LongLineCorrection=True');
         FSWriteln(F);
 
         // Write Redirect for all populated DSS Classes  Except Solution Class

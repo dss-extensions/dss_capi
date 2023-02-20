@@ -33,7 +33,7 @@ type
     PSingle = PFloat32;
     PPSingle = PPFloat32;
     
-    // TODO: for 0.13, update to Int64 and Boolean
+    // TODO: for 0.14, update to Int64 and Boolean (at least on 64-bit platforms?)
     TAPISize = Int32;
     PAPISize = ^Int32;
     TAPIBoolean = WordBool;

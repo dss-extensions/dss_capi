@@ -165,6 +165,10 @@ end;
 
 destructor TUPFCControlObj.Destroy;
 begin
+    FUPFCNameList.Free();
+    UPFCList.Free();
+    Reallocmem(FWeights, 0);
+
     inherited Destroy;
 end;
 
@@ -219,7 +223,7 @@ begin
         Update := Update or obj.CheckStatus();
     end;
 
-    {Checks if at least one UPFC needs to be updated}
+    // Checks if at least one UPFC needs to be updated
     if Update then
     begin
         with ActiveCircuit, ActiveCircuit.Solution do
@@ -231,8 +235,11 @@ function TUPFCControlObj.MakeUPFCList: Boolean;
 var
     obj: TUPFCObj;
     i: Integer;
+    clsUPFC: TDSSClass;
 begin
     Result := FALSE;
+
+    clsUPFC := DSS.UPFCClass;
   
     // Clears everything
     FUPFCNameList.Clear;
@@ -242,35 +249,35 @@ begin
     begin    // Name list is defined - Use it
         for i := 1 to ListSize do 
         begin
-            obj := ParentClass.Find(FUPFCNameList.Strings[i - 1]);
+            obj := clsUPFC.Find(FUPFCNameList.Strings[i - 1]);
             if Assigned(obj) and obj.Enabled then 
                 UPFCList.Add(obj);
         end;
     end
     else  // No list given
     begin
-        {Search through the entire circuit for enabled UPFCs and add them to the list}
+        // Search through the entire circuit for enabled UPFCs and add them to the list
 
-        for i := 1 to ParentClass.ElementCount do
+        for i := 1 to clsUPFC.ElementCount do
         begin
-            obj := ParentClass.ElementList.Get(i);
+            obj := clsUPFC.ElementList.Get(i);
          
             // Checks if it's enabled
             if obj.Enabled then
                 UPFCList.Add(obj);
         end;
 
-        {Allocate uniform weights}
+        // Allocate uniform weights
         ListSize := UPFCList.Count;
-        Reallocmem(FWeights, Sizeof(FWeights^[1]) * ListSize);
+        Reallocmem(FWeights, Sizeof(Double) * ListSize);
         for i := 1 to ListSize do 
-            FWeights^[i] := 1.0;
+            FWeights[i] := 1.0;
     end;
 
     // Add up total weights
     TotalWeight := 0.0;
     for i := 1 to ListSize do
-        TotalWeight := TotalWeight + FWeights^[i];
+        TotalWeight := TotalWeight + FWeights[i];
 
     if UPFCList.Count > 0 then 
         Result := TRUE;

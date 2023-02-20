@@ -95,7 +95,7 @@ begin
     MonitorVariable := '';
     MonitorVarIndex := 0;
     FControlledElement := NIL;
-    ShowEventLog := TRUE;
+    ShowEventLog := DSS.EventLogDefault;
 end;
 
 destructor TControlElem.Destroy;

@@ -26,9 +26,7 @@ procedure ExportFaultStudy(DSS: TDSSContext; FileNm: String);
 procedure ExportMeters(DSS: TDSSContext; FileNm: String);
 procedure ExportGenMeters(DSS: TDSSContext; FileNm: String);
 procedure ExportPVSystemMeters(DSS: TDSSContext; FileNm: String);
-procedure ExportPVSystem2Meters(DSS: TDSSContext; FileNm: String);
 procedure ExportStorageMeters(DSS: TDSSContext; FileNm: String);
-procedure ExportStorage2Meters(DSS: TDSSContext; FileNm: String);
 procedure ExportLoads(DSS: TDSSContext; FileNm: String);
 procedure ExportCapacity(DSS: TDSSContext; FileNm: String);
 procedure ExportOverloads(DSS: TDSSContext; FileNm: String);
@@ -105,15 +103,14 @@ uses
     NamedObject,
     GICTransformer,
     PVSystem,
-    PVSystem2,
     Storage,
-    Storage2,
     KLUSolve,
     DSSHelper,
     ExportCIMXML,
     LineSpacing,
     CNData,
     TSData,
+    StrUtils,
     DSSObject;
 
 procedure WriteElementVoltagesExportFile(DSS: TDSSContext; F: TFileStream; pElem: TDSSCktElement; MaxNumNodes: Integer);
@@ -1529,7 +1526,7 @@ end;
 procedure ExportFaultStudy(DSS: TDSSContext; FileNm: String);
 
 var
-    i, iBus, iphs: Integer;
+    i, iBus, iphs, iphs2: Integer;
     YFault: Tcmatrix;
     Vfault: pComplexArray;  {Big temp array}
     F: TFileStream = nil;
@@ -1609,18 +1606,23 @@ begin
 
                         MaxCurr := 0.0;
 
-                        for iphs := 1 to NumNodesThisBus - 1 do
+                        for iphs := 1 to NumNodesThisBus do
                         begin
                             YFault.CopyFrom(Ysc);
+                            if iphs = NumNodesThisBus then
+                                iphs2 := 1
+                            else
+                                iphs2 := iphs + 1;
+
                             YFault.AddElement(iphs, iphs, GFault);
-                            YFault.AddElement(iphs + 1, iphs + 1, GFault);
-                            YFault.AddElemSym(iphs, iphs + 1, -GFault);
+                            YFault.AddElement(iphs2, iphs2, GFault);
+                            YFault.AddElemSym(iphs, iphs2, -GFault);
 
                             // Solve for Injection Currents
                             YFault.Invert;
                             YFault.MvMult(VFault, BusCurrent); // Gets voltage appearing at fault
 
-                            CurrMag := Cabs((VFault^[iphs] - VFault^[iphs + 1]) * GFault);
+                            CurrMag := Cabs((VFault^[iphs] - VFault^[iphs2]) * GFault);
                             if CurrMag > MaxCurr then
                                 MaxCurr := CurrMag;
                         end; // For iphase
@@ -2068,10 +2070,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultiplePVSystem2MeterFiles(DSS: TDSSContext); forward;
-
 procedure WriteMultiplePVSystemMeterFiles(DSS: TDSSContext);
-
 var
     F: TFileStream = nil;
     i, j: Integer;
@@ -2080,12 +2079,6 @@ var
     Separator: String;
 
 begin
-    if not DSS_CAPI_LEGACY_MODELS then
-    begin
-        WriteMultiplePVSystem2MeterFiles(DSS);
-        Exit;
-    end;
-
     if DSS.PVSystemClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
@@ -2131,68 +2124,9 @@ begin
     end;
 end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultiplePVSystem2MeterFiles(DSS: TDSSContext);
-
-var
-    F: TFileStream = nil;
-    i, j: Integer;
-    pElem: TPVSystem2Obj;
-    FileNm,
-    Separator: String;
-
-begin
-    if DSS.PVSystem2Class = NIL then
-        Exit;  // oops somewhere!!
-    Separator := ', ';
-
-    pElem := DSS.ActiveCircuit.PVSystems.First;
-    while pElem <> NIL do
-    begin
-        if pElem.Enabled then
-        begin
-            try
-                FileNm := DSS.OutputDirectory + 'EXP_PV_' + AnsiUpperCase(pElem.Name) + '.csv';
-
-                if not FileExists(FileNm) then
-                begin
-                    F := TBufferedFileStream.Create(FileNm, fmCreate);
-                    // Write New Header
-                    FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
-                    for i := 1 to NumPVSystem2Registers do
-                        FSWrite(F, Separator, '"' + DSS.PVSystem2Class.RegisterNames[i] + '"');
-                    FSWriteln(F);
-                    FreeAndNil(F);
-                end;
-
-                F := TBufferedFileStream.Create(FileNm, fmOpenReadWrite);
-                F.Seek(0, soEnd);
-                with DSS.ActiveCircuit do
-                begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
-                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
-                    for j := 1 to NumPVSystem2Registers do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
-                    FSWriteln(F);
-                end;
-                AppendGlobalResult(DSS, FileNm);
-            finally
-                FreeAndNil(F);
-            end;
-
-        end;
-        pElem := DSS.ActiveCircuit.PVSystems.Next;
-    end;
-end;
-
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSinglePVSystem2MeterFile(DSS: TDSSContext; FileNm: String); forward;
-
 procedure WriteSinglePVSystemMeterFile(DSS: TDSSContext; FileNm: String);
-
 var
     F: TFileStream = nil;
     i, j: Integer;
@@ -2201,12 +2135,6 @@ var
     ReWriteFile: Boolean;
 
 begin
-    if not DSS_CAPI_LEGACY_MODELS then
-    begin
-        WriteSinglePVSystem2MeterFile(DSS, FileNm);
-        Exit;
-    end;
-
 
     if DSS.PVSystemClass = NIL then
         Exit;  // oops somewhere!!
@@ -2231,7 +2159,6 @@ begin
                 RewriteFile := TRUE;
 
             FreeAndNil(F);
-
         end
         else
         begin
@@ -2284,99 +2211,9 @@ begin
     end;
 end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSinglePVSystem2MeterFile(DSS: TDSSContext; FileNm: String);
-var
-    F: TFileStream = nil;
-    i, j: Integer;
-    pElem: TPVSystem2Obj;
-    Separator, TestStr: String;
-    ReWriteFile: Boolean;
-
-begin
-
-    if DSS.PVSystem2Class = NIL then
-        Exit;  // oops somewhere!!
-    Separator := ', ';
-
-
-    try
-
-        if FileExists(FileNm) then
-        begin  // See if it has already been written on
-            F := TBufferedFileStream.Create(FileNm, fmOpenRead or fmShareDenyWrite);
-            if ((F.Position+1) < F.Size) then
-            begin
-                FSReadLn(F, TestStr);
-                // See if it likely that the file is OK
-                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
-                    RewriteFile := FALSE       // Assume the file is OK
-                else
-                    RewriteFile := TRUE;
-            end
-            else
-                RewriteFile := TRUE;
-
-            FreeAndNil(F);
-        end
-        else
-        begin
-            ReWriteFile := TRUE;
-        end;
-
-        // Either open or append the file
-        if RewriteFile then
-        begin
-            FreeAndNil(F);
-            F := TBufferedFileStream.Create(FileNm, fmCreate); 
-            // Write New Header
-            FSWrite(F, 'Year, LDCurve, Hour, PVSystem');
-            for i := 1 to NumGenRegisters do
-                FSWrite(F, Separator, '"' + DSS.PVSystem2Class.RegisterNames[i] + '"');
-            FSWriteln(F);
-        end
-        else
-        begin
-            FreeAndNil(F);
-            F := TBufferedFileStream.Create(FileNm, fmOpenReadWrite); 
-            F.Seek(0, soEnd);
-        end;
-
-
-        pElem := DSS.ActiveCircuit.PVSystems.First;
-        while pElem <> NIL do
-        begin
-            if pElem.Enabled then
-                with DSS.ActiveCircuit do
-                begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
-                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
-                    for j := 1 to NumPVSystem2Registers do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
-                    FSWriteln(F);
-                end;
-
-            pElem := DSS.ActiveCircuit.PVSystems.Next;
-        end;
-
-        DSS.GlobalResult := FileNm;
-
-    finally
-
-        FreeAndNil(F);
-
-    end;
-end;
-
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-procedure WriteMultipleStorage2MeterFiles(DSS: TDSSContext); forward;
-
 procedure WriteMultipleStorageMeterFiles(DSS: TDSSContext);
-
 var
     F: TFileStream = nil;
     i, j: Integer;
@@ -2385,12 +2222,6 @@ var
     Separator: String;
 
 begin
-    if not DSS_CAPI_LEGACY_MODELS then
-    begin
-        WriteMultipleStorage2MeterFiles(DSS);
-        Exit;
-    end;
-
     if DSS.StorageClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
@@ -2436,161 +2267,13 @@ begin
     end;
 end;
 
-procedure WriteMultipleStorage2MeterFiles(DSS: TDSSContext);
-var
-    F: TFileStream = nil;
-    i, j: Integer;
-    pElem: TStorage2Obj;
-    FileNm,
-    Separator: String;
-
-begin
-    if DSS.Storage2Class = NIL then
-        Exit;  // oops somewhere!!
-    Separator := ', ';
-
-    pElem := DSS.ActiveCircuit.StorageElements.First;
-    while pElem <> NIL do
-    begin
-        if pElem.Enabled then
-        begin
-            try
-                FileNm := DSS.OutputDirectory + 'EXP_PV_' + AnsiUpperCase(pElem.Name) + '.csv';
-
-                if not FileExists(FileNm) then
-                begin
-                    F := TBufferedFileStream.Create(FileNm, fmCreate);
-                    // Write New Header
-                    FSWrite(F, 'Year, LDCurve, Hour, Storage');
-                    for i := 1 to NumStorage2Registers do
-                        FSWrite(F, Separator, '"' + DSS.Storage2Class.RegisterNames[i] + '"');
-                    FSWriteln(F);
-                    FreeAndNil(F);
-                end;
-
-                F := TBufferedFileStream.Create(FileNm, fmOpenReadWrite);
-                F.Seek(0, soEnd);
-                with DSS.ActiveCircuit do
-                begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
-                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
-                    for j := 1 to NumStorage2Registers do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
-                    FSWriteln(F);
-                end;
-                AppendGlobalResult(DSS, FileNm);
-            finally
-                FreeAndNil(F);
-            end;
-
-        end;
-        pElem := DSS.ActiveCircuit.StorageElements.Next;
-    end;
-end;
-
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSingleStorage2MeterFile(DSS: TDSSContext; FileNm: String); forward;
-
 procedure WriteSingleStorageMeterFile(DSS: TDSSContext; FileNm: String);
-
 var
     F: TFileStream = nil;
     i, j: Integer;
     pElem: TStorageObj;
-    Separator, TestStr: String;
-    ReWriteFile: Boolean;
-
-begin
-    if not DSS_CAPI_LEGACY_MODELS then
-    begin
-        WriteSingleStorage2MeterFile(DSS, FileNm);
-        Exit;
-    end;
-
-    if DSS.StorageClass = NIL then
-        Exit;  // oops somewhere!!
-    Separator := ', ';
-
-
-    try
-
-        if FileExists(FileNm) then
-        begin  // See if it has already been written on
-            F := TBufferedFileStream.Create(FileNm, fmOpenRead or fmShareDenyWrite);
-            if ((F.Position+1) < F.Size) then
-            begin
-                FSReadLn(F, TestStr);
-                // See if it likely that the file is OK
-                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
-                    RewriteFile := FALSE       // Assume the file is OK
-                else
-                    RewriteFile := TRUE;
-            end
-            else
-                RewriteFile := TRUE;
-
-            FreeAndNil(F);
-
-        end
-        else
-        begin
-            ReWriteFile := TRUE;
-        end;
-
-        // Either open or append the file
-        if RewriteFile then
-        begin
-            FreeAndNil(F);
-            F := TBufferedFileStream.Create(FileNm, fmCreate); 
-            // Write New Header
-            FSWrite(F, 'Year, LDCurve, Hour, Storage');
-            for i := 1 to NumStorageRegisters do
-                FSWrite(F, Separator, '"' + DSS.StorageClass.RegisterNames[i] + '"');
-            FSWriteln(F);
-        end
-        else
-        begin
-            FreeAndNil(F);
-            F := TBufferedFileStream.Create(FileNm, fmOpenReadWrite); 
-            F.Seek(0, soEnd);
-        end;
-
-        pElem := DSS.ActiveCircuit.StorageElements.First;
-        while pElem <> NIL do
-        begin
-            if pElem.Enabled then
-                with DSS.ActiveCircuit do
-                begin
-                    FSWrite(F, IntToStr(Solution.Year), Separator);
-                    FSWrite(F, LoadDurCurve, Separator);
-                    FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
-                    FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
-                    for j := 1 to NumStorageRegisters do
-                        FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
-                    FSWriteln(F);
-                end;
-
-            pElem := DSS.ActiveCircuit.StorageElements.Next;
-        end;
-
-        DSS.GlobalResult := FileNm;
-
-    finally
-
-        FreeAndNil(F);
-
-    end;
-end;
-
-
-procedure WriteSingleStorage2MeterFile(DSS: TDSSContext; FileNm: String);
-var
-    F: TFileStream = nil;
-    i, j: Integer;
-    pElem: TStorage2Obj;
     Separator, TestStr: String;
     ReWriteFile: Boolean;
 begin
@@ -2631,8 +2314,8 @@ begin
             F := TBufferedFileStream.Create(FileNm, fmCreate);
             // Write New Header
             FSWrite(F, 'Year, LDCurve, Hour, Storage');
-            for i := 1 to NumStorage2Registers do
-                FSWrite(F, Separator, '"' + DSS.Storage2Class.RegisterNames[i] + '"');
+            for i := 1 to NumStorageRegisters do
+                FSWrite(F, Separator, '"' + DSS.StorageClass.RegisterNames[i] + '"');
             FSWriteln(F);
         end
         else
@@ -2653,7 +2336,7 @@ begin
                     FSWrite(F, LoadDurCurve, Separator);
                     FSWrite(F, IntToStr(Solution.DynaVars.intHour), Separator);
                     FSWrite(F, Pad('"' + AnsiUpperCase(pElem.Name) + '"', 14));
-                    for j := 1 to NumStorage2Registers do
+                    for j := 1 to NumStorageRegisters do
                         FSWrite(F, Separator, Format('%10.0f', [PElem.Registers[j]]));
                     FSWriteln(F);
                 end;
@@ -2698,21 +2381,6 @@ begin
         WriteSinglePVSystemMeterFile(DSS, FileNM);
 end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportPVSystem2Meters(DSS: TDSSContext; FileNm: String);
-
-// Export Values of Generator Meter Elements
-// If switch /m is specified, a separate file is created for each generator using the generator's name
-
-begin
-
-    if AnsiLowerCase(Copy(FileNm, 1, 2)) = '/m' then
-        WriteMultiplePVSystem2MeterFiles(DSS)
-    else
-        WriteSinglePVSystem2MeterFile(DSS, FileNM);
-end;
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportStorageMeters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of Generator Meter Elements
@@ -2726,20 +2394,6 @@ begin
         WriteSingleStorageMeterFile(DSS, FileNM);
 end;
 
-procedure ExportStorage2Meters(DSS: TDSSContext; FileNm: String);
-
-// Export Values of Generator Meter Elements
-// If switch /m is specified, a separate file is created for each generator using the generator's name
-
-begin
-
-    if AnsiLowerCase(Copy(FileNm, 1, 2)) = '/m' then
-        WriteMultipleStorage2MeterFiles(DSS)
-    else
-        WriteSingleStorage2MeterFile(DSS, FileNM);
-end;
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportLoads(DSS: TDSSContext; FileNm: String);
 // Export Loads to view present allocation
 var
@@ -2764,7 +2418,7 @@ begin
                     WriteStr(sout, 
                         AnsiUpperCase(Name),
                         Separator, ConnectedkVA: 8: 1,
-                        Separator, kVAAllocationFactor: 5: 3,
+                        Separator, FkVAAllocationFactor: 5: 3,
                         Separator, NPhases: 0,
                         Separator, kWBase: 8: 1,
                         Separator, kvarBase: 8: 1,
@@ -4080,7 +3734,7 @@ var
 begin
     try
         F := TBufferedFileStream.Create(FileNm, fmCreate);
-        FSWriteln(F, 'Name, Tap, Min, Max, Step, Position');
+        FSWriteln(F, 'Name, RegControl, Tap, Min, Max, Step, Position, Winding, Direction, CogenMode');
 
         with DSS.ActiveCircuit do
         begin
@@ -4091,7 +3745,17 @@ begin
                 begin
                     iWind := pReg.TrWinding;
                     FSWrite(F, Name);
-                    FSWriteln(F, Format(', %8.5f, %8.5f, %8.5f, %8.5f, %d', [PresentTap[iWind], MinTap[iWind], MaxTap[iWind], TapIncrement[iWind], TapPosition(pREg.Transformer, iWind)]));
+                    FSWriteln(F, Format(', %s , %8.5f, %8.5f, %8.5f, %8.5f, %d, %d, %s, %s', [
+                        pReg.Name,
+                        PresentTap[iWind], 
+                        MinTap[iWind], 
+                        MaxTap[iWind], 
+                        TapIncrement[iWind], 
+                        TapPosition(pReg.Transformer, iWind),
+                        iWind,
+                        StrUtils.IfThen(pReg.InReverseMode, 'Reverse', 'Forward'),
+                        BoolToStr(pReg.InCogenMode, TRUE)
+                    ]));
                 end;
                 pReg := RegControls.Next;
             end;
