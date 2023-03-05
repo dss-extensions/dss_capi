@@ -115,7 +115,7 @@ uses
     DSSHelper;
 
 procedure _CalcSeqCurrents(pActiveElement: TDSSCktElement; i012: pComplexArray);
-{Assumes V012 is properly allocated before call.}
+// Assumes V012 is properly allocated before call.
 var
     Nvalues, i, j, k, iV: Integer;
     IPh, I012a: Complex3;
@@ -126,7 +126,7 @@ begin
         Nvalues := NPhases;
         if Nvalues <> 3 then
         begin
-            {Handle non-3 phase elements}
+            // Handle non-3 phase elements
             if (Nphases = 1) and PositiveSequence then
             begin
                 NValues := NConds * NTerms;
@@ -136,7 +136,7 @@ begin
                 for i := 1 to 3 * NTerms do
                     i012^[i] := CZERO;   // Initialize Result
                 iV := 2;  // pos seq is 2nd element in array
-                {Populate only phase 1 quantities in Pos seq}
+                // Populate only phase 1 quantities in Pos seq
                 for j := 1 to NTerms do
                 begin
                     k := (j - 1) * NConds;
@@ -353,7 +353,6 @@ end;
 procedure CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray0;
-    NValues: Integer;
 begin
     DefaultResult(ResultPtr, ResultCount);
     
@@ -362,8 +361,7 @@ begin
         
     with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
-        NValues := NConds * NTerms;
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * (NConds * NTerms));
         GetCurrents(pComplexArray(Result));
     end
 end;
@@ -379,7 +377,7 @@ procedure CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PAPISize)
 // Bus Voltages at active terminal
 var
     Result: PDoubleArray0;
-    numcond, i, n, iV: Integer;
+    i, n, iV: Integer;
     Volts: Complex;
 begin
     // Return voltages for all terminals
@@ -390,11 +388,10 @@ begin
 
     with DSSPrime.ActiveCircuit, ActiveCktElement do
     begin
-        numcond := NConds * Nterms;
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * numcond - 1) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * (NConds * Nterms));
         // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
         iV := 0;
-        for i := 1 to numcond do
+        for i := 1 to NConds * Nterms do
         begin
             n := ActiveCktElement.NodeRef^[i];
             Volts := Solution.NodeV^[n]; // ok if =0
@@ -906,7 +903,7 @@ begin
     begin
         cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
         if cValues = NIL then Exit;
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * SQR(Yorder));
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Yorder * Yorder);
         Move(cValues^, ResultPtr^, ResultCount^ * SizeOf(Double));
     end
 end;

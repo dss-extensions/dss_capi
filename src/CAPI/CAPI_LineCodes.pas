@@ -329,7 +329,7 @@ begin
     with pLineCode do
     begin
         Factor := (TwoPi * BaseFrequency * 1.0e-9);
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(FNphases));
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, FNphases * FNphases);
         k := 0;
         for i := 1 to FNPhases do
             for j := 1 to FNphases do
@@ -362,7 +362,7 @@ begin
 
     with pLineCode do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(FNphases));
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, FNphases * FNphases);
         k := 0;
         for i := 1 to FNPhases do
             for j := 1 to FNphases do
@@ -395,7 +395,7 @@ begin
 
     with pLineCode do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(FNphases));
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, FNphases * FNphases);
         k := 0;
         for i := 1 to FNPhases do
             for j := 1 to FNphases do

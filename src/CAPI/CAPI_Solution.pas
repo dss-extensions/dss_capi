@@ -897,7 +897,7 @@ begin
         with DSSPrime.ActiveCircuit.Solution do
         begin
             ArrSize := Laplacian.NZero * 3;
-            Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
+            Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, ArrSize + 1); //TODO: remove the +1
             Counter := 0;
             IMIdx := 0;
             while IMIdx < ArrSize do

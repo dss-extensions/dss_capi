@@ -378,7 +378,7 @@ begin
     with elem do
     begin
         Factor := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;  // corrected 2.9.2018 RCD
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(Nphases));
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases);
         k := 0;
         for i := 1 to NPhases do
             for j := 1 to Nphases do
@@ -423,7 +423,7 @@ begin
     end;
     with elem do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases);
         k := 0;
         for i := 1 to NPhases do
             for j := 1 to Nphases do
@@ -468,7 +468,7 @@ begin
     end;
     with elem do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(Nphases));
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases);
         k := 0;
         for i := 1 to NPhases do
             for j := 1 to Nphases do
@@ -765,7 +765,6 @@ end;
 procedure Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 // Return the YPrim matrix for this element
 var
-    NValues: Integer;
     cValues: pComplexArray;
     elem: TLineObj;
 begin
@@ -776,7 +775,6 @@ begin
     end;
     with elem do
     begin
-        NValues := SQR(Yorder);
         cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
         if cValues = NIL then
         begin   // check for unassigned array
@@ -784,8 +782,8 @@ begin
             Exit;  // Get outta here
         end;
         
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
-        Move(cValues[1], ResultPtr[0], 2 * NValues * SizeOf(Double));
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Yorder * Yorder);
+        Move(cValues[1], ResultPtr[0], 2 * Yorder * Yorder * SizeOf(Double));
     end
 end;
 

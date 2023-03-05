@@ -847,7 +847,8 @@ begin
         end
         else
         begin  // for 1-phase buses, do not attempt to compute.
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);  // just return -1's in array
+            //TODO: actual error?
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
             Result[0] := -99999.0;
             Result[1] := 0.0;
         end;
@@ -930,7 +931,8 @@ begin
         end
         else
         begin  // for 1-phase buses, do not attempt to compute.
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);  // just return -1's in array
+            //TODO: actual error?
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
             Result[0] := -99999.0;
             Result[1] := 0.0;
         end;
@@ -1233,7 +1235,7 @@ begin
             Exit;
         end;
 
-        Nvalues := SQR(NumNodesThisBus) * 2;  // Should be 9 complex numbers
+        Nvalues := NumNodesThisBus * NumNodesThisBus * 2;  // Should be 9 complex numbers
         // Compute ZSC012 for 3-phase buses else leave it zeros
         // ZSC012 = Ap2s Zsc As2p
         Zsc012Temp := Zsc.MtrxMult(As2p);  // temp for intermediate result
@@ -1243,7 +1245,7 @@ begin
         // Cleanup
         Zsc012Temp.Free;
 
-        {Return all the elements of ZSC012}
+        // Return all the elements of ZSC012
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValues);
         Move(ZSC012.GetValuesArrayPtr(Norder)[1], ResultPtr[0], NValues * SizeOf(Double));
     end;

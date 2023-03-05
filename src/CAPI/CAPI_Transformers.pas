@@ -639,6 +639,7 @@ begin
         end;
         elem := lst.Next;
     end;
+    //TODO: shrink to remove extra elements?
     
     // Keep the results in VA (NOT kVA) for consistency with CktElement_Get_Losses
 end;

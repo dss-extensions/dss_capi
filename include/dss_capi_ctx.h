@@ -157,7 +157,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t ctx_Bus_Get_NumNodes(void* ctx);
 
     /*! 
-    Double Array of sequence voltages at this bus.
+    Double Array of sequence voltages at this bus. Magnitudes only.
     */
     DSS_CAPI_DLL void ctx_Bus_Get_SeqVoltages(void* ctx, double** ResultPtr, int32_t* ResultCount);
     /*! 

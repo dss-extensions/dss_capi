@@ -567,7 +567,7 @@ begin
         pElem := pList.Next;
     end;
 
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2); // weird shape
     CResultPtr := PPolar(ResultPtr);
 
     // Get the actual values

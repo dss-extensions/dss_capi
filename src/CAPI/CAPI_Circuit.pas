@@ -234,7 +234,7 @@ begin
     end;
     with DSSPrime.ActiveCircuit do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NumNodes - 1) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes);
         k := 0;
         for i := 1 to NumBuses do
         begin
@@ -621,20 +621,18 @@ end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-{Return System Y matrix, complex form}
-
+// Return System Y matrix, complex form
 var
     Result: PDoubleArray0;
     iV: Longword;
     i, j, p: Longword;
-    NValues: Longword;
     hY: NativeUint;
     nBus, nNZ: Longword;
     ColPtr, RowIdx: array of Longword;
     cVals: array of Complex;
 
 begin
-    { Return zero length Array if no circuit or no Y matrix}
+    // Return zero length Array if no circuit or no Y matrix
     if (InvalidCircuit(DSSPrime)) or (DSSPrime.ActiveCircuit.Solution.hY = 0) then
     begin
         DefaultResult(ResultPtr, ResultCount);
@@ -654,8 +652,7 @@ begin
         GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
 
         // allocate a square matrix
-        NValues := SQR(NumNodes);
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);  // Make array for complex
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes * NumNodes);  // Make array for complex
 
         // DSS_RecreateArray_PDouble already zero-fills the array
             
@@ -681,7 +678,7 @@ end;
 
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-{Return distances from each bus to its parent energymeter in an array that aligns with the buslist}
+// Return distances from each bus to its parent energymeter in an array that aligns with the buslist
 var
     Result: PDoubleArray0;
     i: Integer;

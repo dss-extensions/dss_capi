@@ -347,13 +347,13 @@ var
     s: Single;
     AllocSize: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    DefaultResult(ResultPtr, ResultCount);
     if not _activeObj(DSSPrime, pMon) then
         Exit;
     if pMon.SampleCount <= 0 then
         Exit;
 
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount - 1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
     pMon.MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
     FirstCol := pMon.Header.Strings[0];
     // check first col to see if it is "Freq" for harmonics solution
