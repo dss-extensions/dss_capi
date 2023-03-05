@@ -3207,8 +3207,7 @@ begin
         with ActiveCircuit do
         begin
       // build the lists of base voltages and operational voltage limits
-            i := 1;
-            while LegalVoltageBases[i] > 0.0 do
+            for i := 0 to High(LegalVoltageBases) do
             begin
                 s := GetBaseVName(LegalVoltageBases[i]);
                 pName1.LocalName := s;
@@ -3253,8 +3252,6 @@ begin
                 RefNode(FunPrf, 'OperationalLimit.OperationalLimitType', pRangeBLoLimit);
                 DoubleNode(FunPrf, 'VoltageLimit.value', 0.9166667 * 1000.0 * LegalVoltageBases[i]);
                 EndInstance(FunPrf, 'VoltageLimit');
-
-                inc(i);
             end;
 
             for i := 1 to NumBuses do

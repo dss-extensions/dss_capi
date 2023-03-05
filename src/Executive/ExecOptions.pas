@@ -803,11 +803,8 @@ begin
                     begin
                         i := 1;
                         DSS.GlobalResult := '(';
-                        while LegalVoltageBases^[i] > 0.0 do
-                        begin
-                            DSS.GlobalResult := DSS.GlobalResult + Format('%-g, ', [LegalVoltageBases^[i]]);
-                            inc(i);
-                        end;
+                        for i := 0 to High(LegalVoltageBases) do
+                            DSS.GlobalResult := DSS.GlobalResult + Format('%-g, ', [LegalVoltageBases[i]]);
                         DSS.GlobalResult := DSS.GlobalResult + ')';
                     end;
                 40:

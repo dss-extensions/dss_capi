@@ -1863,12 +1863,10 @@ begin
     FSWriteln(F, 'Set ueregs=', IntArraytoString(DSS.ActiveCircuit.UEregs, DSS.ActiveCircuit.NumUERegs));
     FSWriteln(F, 'Set lossregs=', IntArraytoString(DSS.ActiveCircuit.Lossregs, DSS.ActiveCircuit.NumLossRegs));
     FSWrite(F, 'Set voltagebases=(');  //  changes the default voltage base rules
-    i := 1;
     with DSS.ActiveCircuit do
-        while LegalVoltageBases^[i] > 0.0 do
+        for i := 0 to High(LegalVoltageBases) do
         begin
-            FSWrite(F, Format('%10.2f', [LegalVoltageBases^[i]]));
-            inc(i);
+            FSWrite(F, Format('%10.2f', [LegalVoltageBases[i]]));
         end;
     FSWriteln(F, ')');
     FSWriteln(F, 'Set algorithm=' + DSS.SolveAlgEnum.OrdinalToString(Algorithm));

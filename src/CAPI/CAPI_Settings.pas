@@ -317,8 +317,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
-var
-    i, Count: Integer;
 begin
     if InvalidCircuit(DSSPrime) then
     begin
@@ -328,15 +326,8 @@ begin
 
     with DSSPrime.ActiveCircuit do
     begin
-        {Count the number of voltagebases specified}
-        i := 0;
-        repeat
-            Inc(i);
-        until LegalVoltageBases^[i] = 0.0;
-        Count := i - 1;
-
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Count);
-        Move(LegalVoltageBases[1], ResultPtr^, Count * SizeOf(Double));
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Length(LegalVoltageBases));
+        Move(LegalVoltageBases[0], ResultPtr^, Length(LegalVoltageBases) * SizeOf(Double));
     end
 end;
 
@@ -359,13 +350,10 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
         
-    {LegalVoltageBases is a zero-terminated array, so we have to allocate
-     one more than the number of actual values}
     with DSSPrime.ActiveCircuit do
     begin
-        Reallocmem(LegalVoltageBases, SizeOf(Double) * (ValueCount + 1));
-        Move(ValuePtr^, LegalVoltageBases[1], ValueCount * SizeOf(Double));
-        LegalVoltageBases^[ValueCount + 1] := 0.0;
+        SetLength(LegalVoltageBases, ValueCount);
+        Move(ValuePtr^, LegalVoltageBases[0], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------

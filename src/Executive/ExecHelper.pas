@@ -1126,16 +1126,13 @@ VAR
    Num   :Integer;
 begin
      Dummy := AllocMem(Sizeof(Double) * 1000); // Big Buffer
-     Num   := DSS.Parser.ParseAsVector(1000, Dummy);
+     Num := DSS.Parser.ParseAsVector(1000, Dummy);
      // Parsing zero-fills the array
-
-     // LegalVoltageBases is a zero-terminated array, so we have to allocate
-     // one more than the number of actual values
 
      WITH DSS.ActiveCircuit Do
      Begin
-       Reallocmem(LegalVoltageBases, Sizeof(LegalVoltageBases^[1])*(Num+1));
-       FOR i := 1 to Num+1 Do LegalVoltageBases^[i] := Dummy^[i];
+       SetLength(LegalVoltageBases, Num);
+       FOR i := 1 to Num Do LegalVoltageBases[i - 1] := Dummy^[i];
      End;
 
      Reallocmem(Dummy, 0);

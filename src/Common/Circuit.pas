@@ -192,7 +192,7 @@ type
         NormalMaxVolts,
         EmergMaxVolts,
         EmergMinVolts: Double;  //per unit voltage restraints for this circuit
-        LegalVoltageBases: pDoubleArray;
+        LegalVoltageBases: Array of Double;
 
         // Global circuit multipliers
         GeneratorDispatchReference,
@@ -444,16 +444,15 @@ begin
 
     ControlQueue := TControlQueue.Create(DSS);
 
-    LegalVoltageBases := AllocMem(SizeOf(LegalVoltageBases^[1]) * 8);
+    SetLength(LegalVoltageBases, 7);
      // Default Voltage Bases
-    LegalVoltageBases^[1] := 0.208;
-    LegalVoltageBases^[2] := 0.480;
-    LegalVoltageBases^[3] := 12.47;
-    LegalVoltageBases^[4] := 24.9;
-    LegalVoltageBases^[5] := 34.5;
-    LegalVoltageBases^[6] := 115.0;
-    LegalVoltageBases^[7] := 230.0;
-    LegalVoltageBases^[8] := 0.0;  // terminates array
+    LegalVoltageBases[0] := 0.208;
+    LegalVoltageBases[1] := 0.480;
+    LegalVoltageBases[2] := 12.47;
+    LegalVoltageBases[3] := 24.9;
+    LegalVoltageBases[4] := 34.5;
+    LegalVoltageBases[5] := 115.0;
+    LegalVoltageBases[6] := 230.0;
 
     ActiveLoadShapeClass := USENONE; // Signify not set
 
@@ -613,7 +612,6 @@ begin
     Reallocmem(NodeBuffer, 0);
     Reallocmem(UEregs, 0);
     Reallocmem(Lossregs, 0);
-    Reallocmem(LegalVoltageBases, 0);
 
     DeviceList.Free;
     BusList.Free;

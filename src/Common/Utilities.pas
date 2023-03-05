@@ -1099,26 +1099,24 @@ function NearestBasekV(DSS: TDSSContext; kV: Double): Double;
 // Find closest base voltage
 var
     TestkV: Double;
-    Count: Integer;
+    i: Integer;
     Diff,
     MinDiff: Double;
 begin
-    Count := 1;
-    TestkV := DSS.ActiveCircuit.LegalVoltageBases^[1];
-    Result := TestkV;
+    Result := 0;
     MinDiff := 1.0E50;  // Big whompin number
-
-    while TestkV <> 0.0 do
+    for i := 0 to High(DSS.ActiveCircuit.LegalVoltageBases) do
     begin
+        TestkV := DSS.ActiveCircuit.LegalVoltageBases[i];
+        if TestkV = 0 then
+            break;
+
         Diff := Abs(1.0 - kV / TestkV);     // Get Per unit difference
         if Diff < MinDiff then
         begin
             MinDiff := Diff;
             Result := TestkV;
         end;
-
-        Inc(Count);
-        TestkV := DSS.ActiveCircuit.LegalVoltageBases^[Count];
     end;
 end;
 
