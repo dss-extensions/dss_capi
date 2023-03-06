@@ -532,6 +532,8 @@ exports
     DSS_Set_LegacyModels, // API extension
     DSS_Get_AllowChangeDir, // API extension
     DSS_Set_AllowChangeDir, // API extension
+    DSS_Get_EnableArrayDimensions, // API extension
+    DSS_Set_EnableArrayDimensions, // API extension
     DSS_Get_COMErrorResults, // API extension
     DSS_Set_COMErrorResults, // API extension
     DSS_Get_AllowDOScmd, // API extension

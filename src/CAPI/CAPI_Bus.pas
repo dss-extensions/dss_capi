@@ -495,7 +495,7 @@ begin
             if Assigned(Buses^[ActiveBusIndex].Zsc) then
             begin
                 Nelements := Buses^[ActiveBusIndex].Zsc.Order;
-                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements);
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
                 iV := 0;
                 with Buses^[ActiveBusIndex] do
                     for i := 1 to Nelements do
@@ -548,7 +548,7 @@ begin
             if Assigned(Buses^[ActiveBusIndex].Ysc) then
             begin
                 Nelements := Buses^[ActiveBusIndex].Ysc.Order;
-                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements);
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
                 iV := 0;
                 with Buses^[ActiveBusIndex] do
                     for i := 1 to Nelements do
@@ -1246,7 +1246,7 @@ begin
         Zsc012Temp.Free;
 
         // Return all the elements of ZSC012
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValues);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValues, NumNodesThisBus, NumNodesThisBus);
         Move(ZSC012.GetValuesArrayPtr(Norder)[1], ResultPtr[0], NValues * SizeOf(Double));
     end;
 end;

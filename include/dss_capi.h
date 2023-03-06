@@ -563,7 +563,9 @@ extern "C" {
     DSS_CAPI_DLL void Bus_Get_LoadList_GR(void);
 
     /*! 
-    Array of 18 doubles (9 complex values) containing the complete 012 Zsc matrix
+    Array of doubles (complex) containing the complete 012 Zsc matrix. 
+    Only available after Zsc is computed, either through the "ZscRefresh" command, or running a "FaultStudy" solution.
+    Only available for buses with 3 nodes.
     */
     DSS_CAPI_DLL void Bus_Get_ZSC012Matrix(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1197,7 +1199,7 @@ extern "C" {
     DSS_CAPI_DLL void CktElement_Get_Powers_GR(void);
 
     /*! 
-    Double array of symmetrical component currents into each 3-phase terminal
+    Double array of symmetrical component currents (magnitudes only) into each 3-phase terminal
     */
     DSS_CAPI_DLL void CktElement_Get_SeqCurrents(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1206,7 +1208,7 @@ extern "C" {
     DSS_CAPI_DLL void CktElement_Get_SeqCurrents_GR(void);
 
     /*! 
-    Double array of sequence powers into each 3-phase teminal
+    Complex array of sequence powers (kW, kvar) into each 3-phase teminal
     */
     DSS_CAPI_DLL void CktElement_Get_SeqPowers(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1215,7 +1217,7 @@ extern "C" {
     DSS_CAPI_DLL void CktElement_Get_SeqPowers_GR(void);
 
     /*! 
-    Double array of symmetrical component voltages at each 3-phase terminal
+    Double array of symmetrical component voltages (magnitudes only) at each 3-phase terminal
     */
     DSS_CAPI_DLL void CktElement_Get_SeqVoltages(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1259,7 +1261,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t CktElement_Get_NumProperties(void);
 
     /*! 
-    Residual currents for each terminal: (mag, angle)
+    Residual currents for each terminal: (magnitude, angle in degrees)
     */
     DSS_CAPI_DLL void CktElement_Get_Residuals(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1691,6 +1693,28 @@ extern "C" {
     */
     DSS_CAPI_DLL uint16_t DSS_Get_AllowChangeDir(void);
     DSS_CAPI_DLL void DSS_Set_AllowChangeDir(uint16_t Value);
+    
+    /*! 
+    If enabled, the engine will fill the array dimensions as the third and forth elements of 
+    the "count" pointer (first elements is the current size, second is the capacity). For user-managed
+    memory, the user must provide a valid "count" pointer with the correct capacity.
+
+    Most matrices from the DSS engine are column-major (a.k.a. "Fortran order").
+
+    If the array is not a matrix, the elements are left as zeroes, i.e. the current size can be used as 
+    the dimension of the vector.
+    For complex matrices, the sizes are referred to the number of complex elements, not the primary the float64 elements.
+
+    Defaults to False/0 in the 0.13.x versions of DSS C-API. 
+    This might change to false in future versions.
+
+    This can also be set through the environment variable DSS_CAPI_ARRAY_DIMS. Setting it to 1 to
+    enable the behavior on start-up.
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL uint16_t DSS_Get_EnableArrayDimensions(void);
+    DSS_CAPI_DLL void DSS_Set_EnableArrayDimensions(uint16_t Value);
 
     /*! 
     If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the 
@@ -2676,6 +2700,9 @@ extern "C" {
     */
     DSS_CAPI_DLL double Lines_Get_X0(void);
 
+    /*!
+    Reactance matrix (full), ohms per unit length. Array of doubles.
+    */
     DSS_CAPI_DLL void Lines_Get_Xmatrix(double** ResultPtr, int32_t* ResultCount);
     /*! 
     Same as Lines_Get_Xmatrix but using the global buffer interface for results

@@ -1047,7 +1047,7 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
-                    if DSS_CAPI_MATRIX_SIZE then
+                    if DSS_CAPI_ARRAY_DIMS then
                     begin
                         ValueCount[2] := 0;
                         ValueCount[3] := 0;
@@ -1265,7 +1265,7 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
-                    if DSS_CAPI_MATRIX_SIZE then
+                    if DSS_CAPI_ARRAY_DIMS then
                     begin
                         ValueCount[2] := 0;
                         ValueCount[3] := 0;
@@ -1396,7 +1396,7 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
-                    if DSS_CAPI_MATRIX_SIZE then
+                    if DSS_CAPI_ARRAY_DIMS then
                     begin
                         ValueCount[2] := 0;
                         ValueCount[3] := 0;
@@ -1612,7 +1612,7 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
-                    if DSS_CAPI_MATRIX_SIZE then
+                    if DSS_CAPI_ARRAY_DIMS then
                     begin
                         ValueCount[2] := 0;
                         ValueCount[3] := 0;
@@ -3104,10 +3104,10 @@ begin
     end;
 end;
 
-procedure TDSSClassHelper.GetObjDoubles(Obj: Pointer; Index: Integer; var ResultPtr: PDouble; ResultCount: PAPISize);
+procedure TDSSClassHelper.GetObjDoubles(Obj: Pointer; Index: Integer; var ResultPtr: PDouble; ResultCount: PAPISize); //TODO: check for missing array sizes, especially when ReadByFunction
 var
     c: PComplex;
-    i, j, count, step: Integer;
+    i, j, count, dim1, dim2, step: Integer;
     doublePtr, outPtr: PDouble;
     mat: TCMatrix;
     scale: Double;
@@ -3146,9 +3146,12 @@ begin
                 count := PropertyOffset2[Index]
             end
             else if TPropertyFlag.SizeIsFunction in PropertyFlags[Index] then
-                count := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
+                count := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj) //TODO: check if we can use a simple flag for this
             else
                 count := PInteger(PByte(obj) + PropertyOffset2[Index])^;
+
+            dim1 := 0;
+            dim2 := 0;
 
             if TPropertyFlag.ReadByFunction in PropertyFlags[Index] then
             begin
@@ -3164,12 +3167,16 @@ begin
                 doublePtr := PPDouble(PByte(obj) + PropertyOffset[Index])^;
 
             if PropertyType[Index] = TPropertyType.DoubleSymMatrixProperty then
+            begin
+                dim1 := count;
+                dim2 := count;
                 count := count * count;
+            end;
 
             if (count <= 0) or (doublePtr = NIL) then
                 Exit;
 
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, count);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, count, dim1, dim2);
             if PropertyScale[Index] <> 1 then
             begin
                 for i := 1 to count do
@@ -3192,7 +3199,7 @@ begin
             if mat = NIL then
                 Exit;
 
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order, mat.Order, mat.Order);
             outPtr := @Result[0];
 
             if TPropertyFlag.ImagPart in PropertyFlags[Index] then
@@ -3487,7 +3494,7 @@ begin
             begin
                 ObjResultCount[0] := 0;
                 ObjResultCount[1] := 0;
-                if DSS_CAPI_MATRIX_SIZE then
+                if DSS_CAPI_ARRAY_DIMS then
                 begin
                     ObjResultCount[2] := 0;
                     ObjResultCount[3] := 0;

@@ -567,7 +567,7 @@ begin
         pElem := pList.Next;
     end;
 
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2); // weird shape
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
     CResultPtr := PPolar(ResultPtr);
 
     // Get the actual values
@@ -587,6 +587,12 @@ begin
         begin
             cBuffer := pComplexArray(ResultPtr);
             CResultPtr := PPolar(ResultPtr);
+            if DSS_CAPI_ARRAY_DIMS then
+            begin
+                ResultCount[2] := 2;
+                ResultCount[3] := NValuesTotal;
+            end;
+
             for i := 1 to NValuesTotal do
             begin
                 CResultPtr^ := ctopolardeg(cBuffer^[i]);
@@ -709,7 +715,7 @@ begin
     
     if magnitude then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3, 3, NTermsTotal);
         i012 := i012v;
         for i := 0 to NTermsTotal * 3 - 1 do
         begin
@@ -719,7 +725,7 @@ begin
     end
     else
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3 * 2);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3 * 2, 3, NTermsTotal);
         Move(i012v^, ResultPtr[0], NTermsTotal * 3 * 2 * SizeOf(Double));
     end;
 

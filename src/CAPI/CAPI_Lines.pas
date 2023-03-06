@@ -378,7 +378,7 @@ begin
     with elem do
     begin
         Factor := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;  // corrected 2.9.2018 RCD
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases, Nphases, Nphases);
         k := 0;
         for i := 1 to NPhases do
             for j := 1 to Nphases do
@@ -423,7 +423,7 @@ begin
     end;
     with elem do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases, Nphases, Nphases);
         k := 0;
         for i := 1 to NPhases do
             for j := 1 to Nphases do
@@ -468,7 +468,7 @@ begin
     end;
     with elem do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Nphases * Nphases, Nphases, Nphases);
         k := 0;
         for i := 1 to NPhases do
             for j := 1 to Nphases do
@@ -782,7 +782,7 @@ begin
             Exit;  // Get outta here
         end;
         
-        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Yorder * Yorder);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Yorder * Yorder, Yorder, Yorder);
         Move(cValues[1], ResultPtr[0], 2 * Yorder * Yorder * SizeOf(Double));
     end
 end;

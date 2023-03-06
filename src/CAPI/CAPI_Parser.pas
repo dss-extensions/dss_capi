@@ -34,6 +34,7 @@ implementation
 
 uses
     CAPI_Constants,
+    DSSGlobals,
     ParserDel,
     ArrayDef,
     DSSClass;
@@ -141,9 +142,16 @@ end;
 
 //------------------------------------------------------------------------------
 procedure Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PAPISize; ExpectedOrder: Integer); CDECL;
+var
+    ActualOrder: Integer;
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedOrder * ExpectedOrder);
-    DSSPrime.ComParser.ParseAsMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
+    ActualOrder := DSSPrime.ComParser.ParseAsMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
+    if (ActualOrder > 0) and (DSS_CAPI_ARRAY_DIMS) then
+    begin
+        ResultCount[2] := ActualOrder;
+        ResultCount[3] := ActualOrder;
+    end;
 end;
 
 procedure Parser_Get_Matrix_GR(ExpectedOrder: Integer); CDECL;
@@ -154,9 +162,16 @@ end;
 
 //------------------------------------------------------------------------------
 procedure Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PAPISize; ExpectedOrder: Integer); CDECL;
+var
+    ActualOrder: Integer;
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedOrder * ExpectedOrder);
-    DSSPrime.ComParser.ParseAsSymMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
+    ActualOrder := DSSPrime.ComParser.ParseAsSymMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
+    if (ActualOrder > 0) and (DSS_CAPI_ARRAY_DIMS) then
+    begin
+        ResultCount[2] := ActualOrder;
+        ResultCount[3] := ActualOrder;
+    end;
 end;
 
 procedure Parser_Get_SymMatrix_GR(ExpectedOrder: Integer); CDECL;

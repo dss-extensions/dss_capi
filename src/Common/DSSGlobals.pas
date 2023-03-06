@@ -150,7 +150,7 @@ VAR
     DSS_CAPI_EXT_ERRORS: Boolean = True;
     DSS_CAPI_ALLOW_CHANGE_DIR: Boolean = True;
     DSS_CAPI_COM_DEFAULTS: Boolean = True;
-    DSS_CAPI_MATRIX_SIZE: Boolean = False;
+    DSS_CAPI_ARRAY_DIMS: Boolean = False;
     GlobalDefaultBaseFreq: Double = 60.0;
     CPU_Freq           : int64;   // Used to store the CPU performance counter frequency (not the actual CPU frequency)
     CPU_Cores          : integer;
@@ -804,6 +804,9 @@ initialization
     DSS_CAPI_COM_DEFAULTS := (GetEnvironmentVariable('DSS_CAPI_COM_DEFAULTS') <> '0');;
     // For the 0.12.x branch, default is True, disable at initialization when DSS_CAPI_ALLOW_CHANGE_DIR = 0
     DSS_CAPI_ALLOW_CHANGE_DIR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_CHANGE_DIR') <> '0');
+
+    // For the 0.13.x branch, default is False, enable at initialization when DSS_CAPI_ARRAY_DIMS = 1
+    DSS_CAPI_ARRAY_DIMS := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ARRAY_DIMS') = '1');
 
 try
    DSSPrime := TDSSContext.Create(nil, True);

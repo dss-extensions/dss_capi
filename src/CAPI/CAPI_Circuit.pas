@@ -652,7 +652,7 @@ begin
         GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
 
         // allocate a square matrix
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes * NumNodes);  // Make array for complex
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes * NumNodes, NumNodes, NumNodes);  // Make array for complex
 
         // DSS_RecreateArray_PDouble already zero-fills the array
             

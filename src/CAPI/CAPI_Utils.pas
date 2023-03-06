@@ -76,24 +76,23 @@ procedure DSS_Dispose_PPAnsiChar(var p: PPAnsiChar; cnt: TAPISize); CDECL;
 procedure DSS_Dispose_PPointer(var p: PPointer); CDECL;
 
 function DSS_CreateArray_PByte(var p: PByte; cnt: PAPISize; const incount: TAPISize): PByteArray;
-function DSS_CreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize): PSingleArray0;
-function DSS_CreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize): PDoubleArray0;
-function DSS_CreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize): PIntegerArray0;
+function DSS_CreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PDoubleArray0;
+function DSS_CreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PIntegerArray0;
 function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize): PPAnsiCharArray0;
 function DSS_CreateArray_PPointer(var p: PPointer; cnt: PAPISize; const incount: TAPISize): PPointerArray0;
 
 
 // NOTE: these do not copy to copy old values
 procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; cnt: PAPISize; const incount: TAPISize);
-procedure DSS_RecreateArray_PSingle(var res: PSingleArray0; var p: PSingle; cnt: PAPISize; const incount: TAPISize);
-procedure DSS_RecreateArray_PDouble(var res: PDoubleArray0; var p: PDouble; cnt: PAPISize; const incount: TAPISize);
-procedure DSS_RecreateArray_PInteger(var res: PIntegerArray0; var p: PInteger; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PSingle(var res: PSingleArray0; var p: PSingle; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0);
+procedure DSS_RecreateArray_PDouble(var res: PDoubleArray0; var p: PDouble; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0);
+procedure DSS_RecreateArray_PInteger(var res: PIntegerArray0; var p: PInteger; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0);
 procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray0; var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize);
 procedure DSS_RecreateArray_PPointer(var res: PPointerArray0; var p: PPointer; cnt: PAPISize; const incount: TAPISize);
 function DSS_RecreateArray_PByte(var p: PByte; cnt: PAPISize; const incount: TAPISize): PByteArray;
-function DSS_RecreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize): PSingleArray0;
-function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize): PDoubleArray0;
-function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize): PIntegerArray0;
+function DSS_RecreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PSingleArray0;
+function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PDoubleArray0;
+function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PIntegerArray0;
 function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize): PPAnsiCharArray0;
 function DSS_RecreateArray_PPointer(var p: PPointer; cnt: PAPISize; const incount: TAPISize): PPointerArray0;
 // MATLAB doesn't handle pointers that well,
@@ -224,10 +223,10 @@ procedure DefaultResult(var ResultPtr: PSingle; ResultCount: PAPISize; Value: Si
 begin
     if not DSS_CAPI_COM_DEFAULTS then
     begin
-        DSS_RecreateArray_PSingle(ResultPtr, ResultCount, 0);
+        DSS_RecreateArray_PSingle(ResultPtr, ResultCount, 0, 0, 0);
         Exit;
     end;
-    DSS_RecreateArray_PSingle(ResultPtr, ResultCount, 1);
+    DSS_RecreateArray_PSingle(ResultPtr, ResultCount, 1, 0, 0);
     ResultPtr^ := Value;
 end;
 //------------------------------------------------------------------------------
@@ -360,28 +359,43 @@ begin
     result := PByteArray(p);
 end;
 
-function DSS_CreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize): PSingleArray0;
+function DSS_CreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PSingleArray0;
 begin
     cnt[0] := incount;
     cnt[1] := incount;
     p := AllocMem(incount * sizeof(Single));
     result := PSingleArray0(p);
+    if (DSS_CAPI_ARRAY_DIMS) then
+    begin
+        cnt[2] := nr;
+        cnt[3] := nc;
+    end;
 end;
 
-function DSS_CreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize): PDoubleArray0;
+function DSS_CreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PDoubleArray0;
 begin
     cnt[0] := incount;
     cnt[1] := incount;
     p := AllocMem(incount * sizeof(Double));
     result := PDoubleArray0(p);
+    if (DSS_CAPI_ARRAY_DIMS) then
+    begin
+        cnt[2] := nr;
+        cnt[3] := nc;
+    end;
 end;
 
-function DSS_CreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize): PIntegerArray0;
+function DSS_CreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PIntegerArray0;
 begin
     cnt[0] := incount;
     cnt[1] := incount;
     p := AllocMem(incount * sizeof(Integer));
     result := PIntegerArray0(p);
+    if (DSS_CAPI_ARRAY_DIMS) then
+    begin
+        cnt[2] := nr;
+        cnt[3] := nc;
+    end;
 end;
 
 function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PAPISize; const incount: TAPISize): PPAnsiCharArray0;
@@ -401,24 +415,27 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize): PIntegerArray0;
+function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PIntegerArray0;
 begin
     if (cnt[1] < incount) then
     begin
         DSS_Dispose_PInteger(p);
-        Result := DSS_CreateArray_PInteger(p, cnt, incount);
-    end
-    else
+        Result := DSS_CreateArray_PInteger(p, cnt, incount, nr, nc);
+        Exit;
+    end;
+    cnt[0] := incount;
+    Result := PIntegerArray0(p);
+    FillByte(Result^, incount * sizeof(Integer), 0); // needs to zero it for compatibility
+    if (DSS_CAPI_ARRAY_DIMS) then
     begin
-        cnt[0] := incount;
-        Result := PIntegerArray0(p);
-        FillByte(Result^, incount * sizeof(Integer), 0); // needs to zero it for compatibility
+        cnt[2] := nr;
+        cnt[3] := nc;
     end;
 end;
 
-procedure DSS_RecreateArray_PInteger(var res: PIntegerArray0; var p: PInteger; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PInteger(var res: PIntegerArray0; var p: PInteger; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0);
 begin
-    res := DSS_RecreateArray_PInteger(p, cnt, incount);
+    res := DSS_RecreateArray_PInteger(p, cnt, incount, nr, nc);
 end;
 
 //------------------------------------------------------------------------------
@@ -441,13 +458,11 @@ begin
     begin
         DSS_Dispose_PPointer(p);
         Result := DSS_CreateArray_PPointer(p, cnt, incount);
-    end
-    else
-    begin
-        cnt[0] := incount;
-        Result := PPointerArray0(p);
-        FillByte(Result^, incount * sizeof(Pointer), 0); // needs to zero it for compatibility
+        Exit;
     end;
+    cnt[0] := incount;
+    Result := PPointerArray0(p);
+    FillByte(Result^, incount * sizeof(Pointer), 0); // needs to zero it for compatibility
 end;
 
 procedure DSS_RecreateArray_PPointer(var res: PPointerArray0; var p: PPointer; cnt: PAPISize; const incount: TAPISize);
@@ -456,45 +471,52 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function DSS_RecreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize): PSingleArray0;
+function DSS_RecreateArray_PSingle(var p: PSingle; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PSingleArray0;
 begin
     if (cnt[1] < incount) then
     begin
         DSS_Dispose_PSingle(p);
-        Result := DSS_CreateArray_PSingle(p, cnt, incount);
-    end
-    else
+        Result := DSS_CreateArray_PSingle(p, cnt, incount, nr, nc);
+        Exit;
+    end;
+    cnt[0] := incount;
+    Result := PSingleArray0(p);
+    FillByte(Result^, incount * sizeof(Single), 0); // needs to zero it for compatibility
+    if (DSS_CAPI_ARRAY_DIMS) then
     begin
-        cnt[0] := incount;
-        Result := PSingleArray0(p);
-        FillByte(Result^, incount * sizeof(Single), 0); // needs to zero it for compatibility
+        cnt[2] := nr;
+        cnt[3] := nc;
     end;
 end;
 
-procedure DSS_RecreateArray_PSingle(var res: PSingleArray0; var p: PSingle; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PSingle(var res: PSingleArray0; var p: PSingle; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0);
 begin
-    res := DSS_RecreateArray_PSingle(p, cnt, incount);
+    res := DSS_RecreateArray_PSingle(p, cnt, incount, nr, nc);
 end;
 
 //------------------------------------------------------------------------------
-function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize): PDoubleArray0;
+function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0): PDoubleArray0;
 begin
     if (cnt[1] < incount) then
     begin
         DSS_Dispose_PDouble(p);
-        Result := DSS_CreateArray_PDouble(p, cnt, incount);
-    end
-    else
+        Result := DSS_CreateArray_PDouble(p, cnt, incount, nr, nc);
+        Exit;
+    end;
+
+    cnt[0] := incount;
+    Result := PDoubleArray0(p);
+    FillByte(Result^, incount * sizeof(Double), 0); // needs to zero it for compatibility
+    if (DSS_CAPI_ARRAY_DIMS) then
     begin
-        cnt[0] := incount;
-        Result := PDoubleArray0(p);
-        FillByte(Result^, incount * sizeof(Double), 0); // needs to zero it for compatibility
+        cnt[2] := nr;
+        cnt[3] := nc;
     end;
 end;
 
-procedure DSS_RecreateArray_PDouble(var res: PDoubleArray0; var p: PDouble; cnt: PAPISize; const incount: TAPISize);
+procedure DSS_RecreateArray_PDouble(var res: PDoubleArray0; var p: PDouble; cnt: PAPISize; const incount: TAPISize; const nr: TAPISize=0; const nc: TAPISize=0);
 begin
-    res := DSS_RecreateArray_PDouble(p, cnt, incount);
+    res := DSS_RecreateArray_PDouble(p, cnt, incount, nr, nc);
 end;
 
 //------------------------------------------------------------------------------
@@ -504,13 +526,11 @@ begin
     begin
         DSS_Dispose_PByte(p);
         Result := DSS_CreateArray_PByte(p, cnt, incount);
-    end
-    else
-    begin
-        cnt[0] := incount;
-        Result := PByteArray(p);
-        FillByte(Result^, incount * sizeof(Byte), 0); // needs to zero it for compatibility
+        Exit;
     end;
+    cnt[0] := incount;
+    Result := PByteArray(p);
+    FillByte(Result^, incount * sizeof(Byte), 0); // needs to zero it for compatibility
 end;
 
 procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; cnt: PAPISize; const incount: TAPISize);

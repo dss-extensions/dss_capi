@@ -42,6 +42,8 @@ procedure DSS_RegisterPlotCallback(cb: dss_callback_plot_t); CDECL;
 procedure DSS_RegisterMessageCallback(cb: dss_callback_message_t); CDECL;
 function DSS_Get_AllowDOScmd(): TAPIBoolean; CDECL;
 procedure DSS_Set_AllowDOScmd(Value: TAPIBoolean); CDECL;
+function DSS_Get_EnableArrayDimensions(): TAPIBoolean; CDECL;
+procedure DSS_Set_EnableArrayDimensions(Value: TAPIBoolean); CDECL;
 
 implementation
 
@@ -230,6 +232,29 @@ begin
             DSSPrime.SetCurrentDSSDir(GetCurrentDir());
         end;
     end;
+end;
+//------------------------------------------------------------------------------
+function DSS_Get_EnableArrayDimensions(): TAPIBoolean; CDECL;
+begin
+    Result := DSS_CAPI_ARRAY_DIMS;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_Set_EnableArrayDimensions(Value: TAPIBoolean); CDECL;
+begin
+    DSS_CAPI_ARRAY_DIMS := Value;
+    if not Value then
+        with DSSPrime do
+        begin
+            // Clean-up any previous values to avoid issues in the consumers
+            GR_Counts_PPAnsiChar[2] := 0;
+            GR_Counts_PPAnsiChar[3] := 0;
+            GR_Counts_PDouble[2] := 0;
+            GR_Counts_PDouble[3] := 0;
+            GR_Counts_PInteger[2] := 0;
+            GR_Counts_PInteger[3] := 0;
+            GR_Counts_PByte[2] := 0;
+            GR_Counts_PByte[3] := 0;
+        end;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_RegisterPlotCallback(cb: dss_callback_plot_t); CDECL;

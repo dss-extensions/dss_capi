@@ -201,7 +201,7 @@ begin
 
     mat := pLineGeometry.YCmatrix[Frequency, Length, Units];
     Factor := (TwoPi * Frequency * 1.0e-9);
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order, mat.Order, mat.Order);
     k := 0;
     for i := 1 to mat.Order do
         for j := 1 to mat.Order do
@@ -232,7 +232,7 @@ begin
     end;
 
     mat := pLineGeometry.Zmatrix[Frequency, Length, Units];
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order, mat.Order, mat.Order);
     k := 0;
     for i := 1 to mat.Order do
         for j := 1 to mat.Order do
@@ -263,7 +263,7 @@ begin
     end;
 
     mat := pLineGeometry.Zmatrix[Frequency, Length, Units];
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, mat.Order * mat.Order, mat.Order, mat.Order);
     k := 0;
     for i := 1 to mat.Order do
         for j := 1 to mat.Order do
@@ -295,7 +295,7 @@ begin
 
     mat := pLineGeometry.Zmatrix[Frequency, Length, Units];
     data := mat.GetValuesArrayPtr(order);
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * order * order);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * order * order, order, order);
     Move(data[1], ResultPtr[0], ResultCount[0] * SizeOf(Double));
 end;
 

@@ -626,7 +626,7 @@ begin
     end;
     
     lst := DSSPrime.ActiveCircuit.Transformers;
-    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, lst.Count * 2 * 3);
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, lst.Count * 2 * 3, 3, lst.Count);
     CResult := PComplexArray(ResultPtr);
     k := 1;
     elem := lst.First;
@@ -640,7 +640,7 @@ begin
         elem := lst.Next;
     end;
     //TODO: shrink to remove extra elements?
-    
+
     // Keep the results in VA (NOT kVA) for consistency with CktElement_Get_Losses
 end;
 

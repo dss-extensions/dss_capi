@@ -827,7 +827,7 @@ begin
     end;
     cls := batch^.ParentClass;
     N := cls.NumProperties + 1;
-    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, batchSize * N);
+    DSS_RecreateArray_PInteger(ResultPtr, ResultCount, batchSize * N, N, batchSize);
     presult := ResultPtr;
     for i := 1 to batchSize do
     begin

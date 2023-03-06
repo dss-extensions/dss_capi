@@ -531,7 +531,7 @@ begin
     if pReactor.Rmatrix = NIL then
         Exit; //TODO: would an error here be useful?
 
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pReactor.Nphases * pReactor.Nphases);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pReactor.Nphases * pReactor.Nphases, pReactor.Nphases, pReactor.Nphases);
     Move(pReactor.Rmatrix[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
@@ -553,7 +553,7 @@ begin
     if pReactor.Xmatrix = NIL then
         Exit;
         
-    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pReactor.Nphases * pReactor.Nphases);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pReactor.Nphases * pReactor.Nphases, pReactor.Nphases, pReactor.Nphases);
     Move(pReactor.Xmatrix[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
