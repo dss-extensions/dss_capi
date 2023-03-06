@@ -515,7 +515,7 @@ extern "C" {
     DSS_CAPI_DLL void Bus_Get_VLL_GR(void);
 
     /*! 
-    Array of doubles containig voltage magnitude, angle pairs in per unit
+    Array of doubles containig voltage magnitude, angle (degrees) pairs in per unit
     */
     DSS_CAPI_DLL void Bus_Get_puVmagAngle(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -524,7 +524,7 @@ extern "C" {
     DSS_CAPI_DLL void Bus_Get_puVmagAngle_GR(void);
 
     /*! 
-    Array of doubles containing voltages in Magnitude (VLN), angle (deg)
+    Array of doubles containing voltages in Magnitude (VLN), angle (degrees)
     */
     DSS_CAPI_DLL void Bus_Get_VMagAngle(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -711,7 +711,7 @@ extern "C" {
     DSS_CAPI_DLL double CapControls_Get_Delay(void);
 
     /*! 
-    Time delay [s] before swithcing off a step. Control may reset before actually switching.
+    Time delay [s] before switching off a step. Control may reset before actually switching.
     */
     DSS_CAPI_DLL double CapControls_Get_DelayOff(void);
 
@@ -793,7 +793,7 @@ extern "C" {
     DSS_CAPI_DLL void CapControls_Set_Delay(double Value);
 
     /*! 
-    Time delay [s] before swithcing off a step. Control may reset before actually switching.
+    Time delay [s] before switching off a step. Control may reset before actually switching.
     */
     DSS_CAPI_DLL void CapControls_Set_DelayOff(double Value);
 
@@ -929,7 +929,7 @@ extern "C" {
     DSS_CAPI_DLL void Circuit_Get_SubstationLosses_GR(void);
 
     /*! 
-    Total power, kW delivered to the circuit
+    Total power (complex), kVA delivered to the circuit
     */
     DSS_CAPI_DLL void Circuit_Get_TotalPower(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -998,7 +998,9 @@ extern "C" {
     DSS_CAPI_DLL void Circuit_Get_AllNodeNames_GR(void);
 
     /*! 
-    System Y matrix (after a solution has been performed)
+    System Y matrix (after a solution has been performed). 
+    This is deprecated as it returns a dense matrix. Only use it for small systems.
+    For large-scale systems, prefer YMatrix_GetCompressedYMatrix.
     */
     DSS_CAPI_DLL void Circuit_Get_SystemY(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1167,7 +1169,7 @@ extern "C" {
     DSS_CAPI_DLL uint16_t CktElement_Get_Enabled(void);
 
     /*! 
-    Total losses in the element: two-element complex array, in VA
+    Total losses in the element: two-element double array (complex), in VA (watts, vars)
     */
     DSS_CAPI_DLL void CktElement_Get_Losses(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1397,7 +1399,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t CktElement_Get_OCPDevType(void);
 
     /*! 
-    Currents in magnitude, angle format as a array of doubles.
+    Currents in magnitude, angle (degrees) format as a array of doubles.
     */
     DSS_CAPI_DLL void CktElement_Get_CurrentsMagAng(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -2799,7 +2801,7 @@ extern "C" {
     DSS_CAPI_DLL void Lines_Set_Xg(double Value);
 
     /*! 
-    Yprimitive: Does Nothing at present on Put; Dangerous
+    Yprimitive for the active line object.
     */
     DSS_CAPI_DLL void Lines_Get_Yprim(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -4110,7 +4112,7 @@ extern "C" {
 
 
     /*! 
-    Double array of the symmetrical component currents into each 3-phase terminal, for each PD element.
+    Double array of the symmetrical component currents (magnitudes only) into each 3-phase terminal, for each PD element.
     
     (API Extension)
     */
@@ -4134,7 +4136,7 @@ extern "C" {
 
 
     /*! 
-    Double array of sequence powers into each 3-phase teminal, for each PD element
+    Complex array of sequence powers into each 3-phase teminal, for each PD element
     
     (API Extension)
     */
