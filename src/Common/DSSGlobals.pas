@@ -134,8 +134,6 @@ CONST
     PROFILELLALL = 9996;
     PROFILELLPRI = 9995;
     PROFILELL    = 9994;
-    PROFILEPUKM = 9993;  // not mutually exclusive to the other choices 9999..9994
-    PROFILE120KFT = 9992;  // not mutually exclusive to the other choices 9999..9994
     
     ProgramName = 'dss-extensions';
     MaxCircuits = 2; //TODO: remove limit? or completely remove the concept of a separate circuit, i.e., make it so a DSSContext always contains one circuit

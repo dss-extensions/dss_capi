@@ -79,7 +79,7 @@ type
         ValueIndex{, MarkerIdx}: Integer; { For General & AutoAdd }
 
         PhasesToPlot: Integer; // Profile Plot
-        ProfileScale: Integer; // CYMDIST or pu/km scaling
+        ProfileScale: String; // CYMDIST or pu/km scaling
 
         Channels: array of Cardinal; // for Monitor Plot
         Bases: array of Double; // for Monitor Plot
@@ -99,6 +99,8 @@ type
         constructor Create;
     end;
 
+
+
 constructor TDSSPlot.Create;
 begin
     MaxScale := 0.0; // Find MaxScale
@@ -111,7 +113,7 @@ begin
     ShowLoops := FALSE;
     ShowSubs := FALSE;
     Quantity := 'Power';
-    PlotType := 'CircuitPlot';
+    PlotType := 'Circuit';
     MatrixType := '';
     // MarkerIdx := 24;
     ObjectName := '';
@@ -144,7 +146,7 @@ begin
     SinglePhLineStyle := 1;
     DaisyBusList := TStringList.Create;
     PhasesToPlot := PROFILE3PH;
-    ProfileScale := PROFILEPUKM;
+    ProfileScale := 'pukm';
 end;
 
 procedure DefineOptions(var PlotOption: ArrayOfString);
@@ -253,27 +255,27 @@ begin
                     case Param[1] of
                         'A':
                         begin
-                            PlotType := 'AutoAddLogPlot';
+                            PlotType := 'AutoAddLog';
                             ObjectName := DSS.CircuitName_ + 'AutoAddLog.csv';
                             ValueIndex := 2;
                         end;
                         'C':
-                            PlotType := 'CircuitPlot';
+                            PlotType := 'Circuit';
                         'E':
                             if CompareTextShortest('ener', Param) = 0 then
-                                PlotType := 'EnergyPlot'
+                                PlotType := 'Energy'
                             else
-                                PlotType := 'EvolutionPlot'
+                                PlotType := 'Evolution'
                             ;
                         'G':
-                            PlotType := 'GeneralDataPlot';
+                            PlotType := 'GeneralData';
                         'L':
                             PlotType := 'LoadShape';
                         'M':
                             if CompareTextShortest('mon', Param) = 0 then
-                                PlotType := 'MonitorPlot'
+                                PlotType := 'Monitor'
                             else
-                                PlotType := 'MatrixPlot'
+                                PlotType := 'Matrix'
                             ;
                         'P':
                             if CompareTextShortest('pro', Param) = 0 then
@@ -286,14 +288,14 @@ begin
                                     PlotType := 'PriceShape';
                             end;
                         'S':
-                            PlotType := 'ScatterPlot'
+                            PlotType := 'Scatter'
                             ;
                         'T':
                             PlotType := 'TShape'
                             ;
                         'D':
                         begin
-                            PlotType := 'DaisyPlot';
+                            PlotType := 'Daisy';
                             DaisyBusList.Clear;
                         end;
                         'Z':
@@ -303,16 +305,16 @@ begin
                 2:
                     case Param[1] of
                         'V':
-                            Quantity := 'Voltage';
+                            Quantity := 'Voltages';
                         'C':
                             case Param[2] of
                                 'A':
-                                    Quantity := 'Capacity';
+                                    Quantity := 'Capacities';
                                 'U':
-                                    Quantity := 'Current';
+                                    Quantity := 'Currents';
                             end;
                         'P':
-                            Quantity := 'Power';
+                            Quantity := 'Powers';
                         'L':
                             if CompareTextShortest('los', Param) = 0 then
                                 Quantity := 'Losses'
@@ -422,9 +424,9 @@ begin
                 end;
                 22:
                 begin
-                    ProfileScale := PROFILEPUKM;
+                    ProfileScale := 'pukm';
                     if CompareTextShortest(Param, '120KFT') = 0 then
-                        ProfileScale := PROFILE120KFT;
+                        ProfileScale := '120kft';
                 end;
                 23:
                     PlotID := Parser.StrValue;
