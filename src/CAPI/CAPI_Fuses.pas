@@ -429,9 +429,9 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.ControlledElement.NPhases);
     for i := 1 to elem.ControlledElement.NPhases do
         if elem.FNormalState[i] = CTRL_CLOSE then 
-            Result[i - 1] := 'closed' 
+            Result[i - 1] := DSS_CopyStringAsPChar('closed') 
         else 
-            Result[i - 1] := 'open';
+            Result[i - 1] := DSS_CopyStringAsPChar('open');
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Get_State(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -449,9 +449,9 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, elem.ControlledElement.NPhases);
     for i := 1 to elem.ControlledElement.NPhases do
         if elem.States[i] = CTRL_CLOSE then 
-            Result[i - 1] := 'closed' 
+            Result[i - 1] := DSS_CopyStringAsPChar('closed')
         else 
-            Result[i - 1] := 'open';
+            Result[i - 1] := DSS_CopyStringAsPChar('open');
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_State(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
