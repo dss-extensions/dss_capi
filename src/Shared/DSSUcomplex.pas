@@ -1,11 +1,9 @@
 unit DSSUcomplex;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -85,7 +83,7 @@ end;
 
 function CDANG(const a: complex): Double;
 begin
-    Result := ATAN2(A.RE, A.IM) * 57.29577951;
+    Result := ATAN2(A.RE, A.IM) * 57.29577951; // TODO: better precision
 end;
 
 function CtoPOLAR(const a: complex): polar;
@@ -125,7 +123,7 @@ function PDEGtoCompLeX(const magn, angle: Double): complex;
 var
     Ang: Double;
 begin
-    Ang := Angle / 57.29577951;
+    Ang := Angle / 57.29577951; //TODO: better precision
     with Result do
     begin
         RE := Magn * Cos(Ang);
