@@ -73,7 +73,9 @@ type
         function GetToken(const LineBuffer: String; var LinePos: Integer): String;
         function InterpretRPNString(var Code: Integer): Double;
     PUBLIC
-        constructor Create;
+        DSSCtx: TObject;
+
+        constructor Create(dssContext: TObject);
         destructor Destroy; OVERRIDE;
         property DblValue: Double READ MakeDouble;
         property IntValue: Integer READ MakeInteger;
@@ -107,7 +109,8 @@ implementation
 
 uses
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    DSSGlobals;
 
 const
     Commentchar = '!';
@@ -255,10 +258,11 @@ begin
         end;
 end;
 
-constructor TDSSParser.Create;
+constructor TDSSParser.Create(dssContext: TObject);
 begin
     inherited Create;
 
+    DSSCtx := dssContext;
     ParserVars := nil;
     DelimChars := ',=';
     WhiteSpaceChars := ' ' + #9;   // blank + tab
@@ -543,6 +547,7 @@ begin
             inc(NumElements);
             if NumElements <= ExpectedSize then
                 VectorBuffer^[NumElements] := MakeDouble;
+            //TODO: warn about extra elements
             if LastDelimiter = MatrixRowTerminator then
                 BREAK;
             TokenBuffer := GetToken(ParseBuffer, ParseBufferPos);
@@ -565,20 +570,24 @@ var
     i, j, k, ElementsFound: Integer;
     RowBuf: pDoubleArray;
 begin
+    Result := 0;
     if FAutoIncrement then
         GetNextParam;
 
-    RowBuf := NIL;
+    RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
+    for i := 1 to (ExpectedOrder * ExpectedOrder) do
+        MatrixBuffer^[i] := 0.0;
 
     try
-        RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
-
-        for i := 1 to (ExpectedOrder * ExpectedOrder) do
-            MatrixBuffer^[i] := 0.0;
-
         for i := 1 to ExpectedOrder do
         begin
             ElementsFound := ParseAsVector(ExpectedOrder, RowBuf);
+
+            if ElementsFound > (ExpectedOrder * ExpectedOrder) then
+            begin
+                DoSimpleMsg(TDSSContext(DSSCtx), _('Matrix Buffer in ParseAsMatrix too small. Check your input data, especially dimensions and number of phases.'), 65533);
+                Exit;
+            end;
 
             // Returns matrix in Column Order (Fortran order)
             k := i;
@@ -587,17 +596,12 @@ begin
                 MatrixBuffer^[k] := RowBuf^[j];
                 Inc(k, ExpectedOrder);
             end;
-
         end;
-
-    except
-        On E: Exception do
-            DSSMessageDlg('Matrix Buffer in ParseAsMatrix Probably Too Small: ' + E.Message, TRUE);
+        Result := ExpectedOrder;
+    finally
+        if Assigned(RowBuf) then
+            FreeMem(RowBuf, (Sizeof(Double) * ExpectedOrder));
     end;
-
-    if Assigned(RowBuf) then
-        FreeMem(RowBuf, (Sizeof(Double) * ExpectedOrder));
-    result := ExpectedOrder;
 end;
 
 function TDSSParser.ParseAsSymMatrix(MatrixBuffer: Array of Double; Stride: Integer; Scale: Double): Integer;
@@ -607,47 +611,51 @@ end;
 
 function TDSSParser.ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray; Stride: Integer; Scale: Double): Integer;
 var
-    i, j, pos,
+    i, j, subpos, maxpos,
     ElementsFound: Integer;
     RowBuf: pDoubleArray;
 begin
+    Result := 0;
     if FAutoIncrement then
         GetNextParam;
 
-    RowBuf := NIL;
+    RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
+    maxpos := ExpectedOrder * ExpectedOrder - 1;
+    for i := 0 to (ExpectedOrder * ExpectedOrder) - 1 do
+        MatrixBuffer[i * Stride + 1] := 0.0;
 
     try
-        RowBuf := Allocmem(Sizeof(Double) * ExpectedOrder);
-
-        for i := 0 to (ExpectedOrder * ExpectedOrder) - 1 do
-            MatrixBuffer[i * Stride + 1] := 0.0;
-
         for i := 0 to (ExpectedOrder - 1) do
         begin
             ElementsFound := ParseAsVector(ExpectedOrder, RowBuf);
 
             for j := 0 to (ElementsFound - 1) do
             begin
-                pos := (j * ExpectedOrder + i) * Stride + 1;
+                subpos := (j * ExpectedOrder + i);
+                if subpos > maxpos then
+                begin
+                    DoSimpleMsg(TDSSContext(DSSCtx), _('Matrix Buffer in ParseAsSymMatrix too small. Check your input data, especially dimensions and number of phases.'), 65534);
+                    Exit;
+                end;
 
-                MatrixBuffer^[pos] := RowBuf^[j + 1] * Scale;
+                MatrixBuffer^[subpos * Stride + 1] := RowBuf^[j + 1] * Scale;
 
                 if i = j then
                     continue;
 
-                pos := (i * ExpectedOrder + j) * Stride + 1;
-                MatrixBuffer^[pos] := RowBuf^[j + 1] * Scale;
+                subpos := (i * ExpectedOrder + j);
+                if subpos > maxpos then
+                begin
+                    DoSimpleMsg(TDSSContext(DSSCtx), _('Matrix Buffer in ParseAsSymMatrix too small. Check your input data, especially dimensions and number of phases.'), 65534);
+                    Exit;
+                end;
+                MatrixBuffer^[subpos * Stride + 1] := RowBuf^[j + 1] * Scale;
             end;
         end;
-
-    except
-        On E: Exception do
-            DSSMessageDlg('Matrix Buffer in ParseAsSymMatrix Probably Too Small: ' + E.Message, TRUE);
-    end;
-
-    if Assigned(RowBuf) then
+        Result := ExpectedOrder;
+    finally
         FreeMem(RowBuf, (Sizeof(Double) * ExpectedOrder));
-    Result := ExpectedOrder;
+    end;
 end;
 
 function TDSSParser.MakeString: String;

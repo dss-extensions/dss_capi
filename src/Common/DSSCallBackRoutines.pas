@@ -106,6 +106,7 @@ end;
 procedure ParserLoad(S: pAnsiChar; Maxlen: Cardinal); STDCALL;
 
 begin
+    CallBackParser.DSSCtx := DSSPrime;
     CallBackParser.CmdString := String(S);
 end;
 
@@ -114,6 +115,7 @@ end;
 procedure ParserIntValue(var i: Integer); STDCALL;
 
 begin
+    CallBackParser.DSSCtx := DSSPrime;
     with CallBackParser do
     begin
         i := IntValue;
@@ -126,6 +128,7 @@ end;
 procedure ParserDblValue(var x: Double); STDCALL;
 
 begin
+    CallBackParser.DSSCtx := DSSPrime;
     with CallBackParser do
     begin
         x := DblValue;
@@ -139,8 +142,10 @@ procedure ParserStrValue(s: pAnsiChar; Maxlen: Cardinal); STDCALL;
 {Copies null-terminated string into location pointed to by S up to the max chars specified}
 
 begin
+    CallBackParser.DSSCtx := DSSPrime;
     with CallBackParser do
     begin
+        SetLength(CB_Param, Maxlen);
         StrlCopy(s, pAnsiChar(Ansistring(CB_Param)), Maxlen);
     end;
 end;
@@ -150,6 +155,7 @@ end;
 
 function ParserNextParam(ParamName: pAnsiChar; Maxlen: Cardinal): Integer; STDCALL;
 begin
+    CallBackParser.DSSCtx := DSSPrime;
     with CallBackParser do
     begin
         CB_ParamName := NextParam;
@@ -529,7 +535,7 @@ initialization
         GetResultStr := GetResultStrCallBack;
     end;
 
-    CallBackParser := TDSSParser.Create;
+    CallBackParser := TDSSParser.Create(NIL); //TODO: this is bad. Maybe we should restrict user-models.
 
 {====================================================================================================================}
 

@@ -856,9 +856,9 @@ begin
     SetDataPath(self, StartupDirectory);
     
     ParserVars := TParserVar.Create(100);  // start with space for 100 variables
-    Parser := TDSSParser.Create;
-    PropParser := TDSSParser.Create;
-    AuxParser := TDSSParser.Create;
+    Parser := TDSSParser.Create(self);
+    PropParser := TDSSParser.Create(self);
+    AuxParser := TDSSParser.Create(self);
     
     // Share parser variables
     Parser.SetVars(ParserVars);
@@ -908,7 +908,7 @@ begin
     EnergyMeterName := '';
     FirstPDelement := '';
     
-    ComParser := ParserDel.TDSSParser.Create;  // create COM Parser object
+    ComParser := ParserDel.TDSSParser.Create(self);  // create COM Parser object
     ActiveAction := NIL;
     FControlProxyObj := TControlProxyObj.Create(self);
     

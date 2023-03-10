@@ -519,7 +519,7 @@ begin
                 // No changes, just dispose the temporary copy
                 FreeMem(darray);
             end;
-            Result := True;
+            Result := (DSS.ErrorNumber = 0);
         end;
         TPropertyType.ComplexPartSymMatrixProperty:
         begin
@@ -545,7 +545,7 @@ begin
                 mat.CopyFrom(matbak);
             end;
             matbak.Free;
-            Result := True;
+            Result := (DSS.ErrorNumber = 0);
         end;
 
         TPropertyType.DoubleArrayProperty,
