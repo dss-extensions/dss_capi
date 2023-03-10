@@ -106,8 +106,7 @@ type
 
     TLoadShapeObj = class(TDSSObject)
     PRIVATE
-        LastValueAccessed,
-        FNumPoints: Integer;  // Number of points in curve -- TODO: int64
+        LastValueAccessed: Integer;
 
         FStdDevCalculated: Boolean;
         FMean,
@@ -125,6 +124,7 @@ type
         procedure Set_StdDev(const Value: Double);  // Normalize the curve presently in memory
         function GetMultAtHourSingle(hr: Double): Complex;
     PUBLIC
+        NumPoints: Integer;  // Number of points in curve -- TODO: int64
         Interval: Double;  //=0.0 then random interval     (hr)
 
         // Double data
@@ -180,7 +180,6 @@ type
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
-        property NumPoints: Integer READ FNumPoints WRITE FNumPoints;
         property PresentInterval: Double READ Get_Interval;
         property Mean: Double READ Get_Mean WRITE Set_Mean;
         property StdDev: Double READ Get_StdDev WRITE Set_StdDev;
@@ -326,32 +325,32 @@ begin
     // double arrays, special
     PropertyType[ord(TProp.hour)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.hour)] := ptruint(@obj.dH);
-    PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.NumPoints);
     PropertyOffset3[ord(TProp.hour)] := ptruint(@obj.ExternalMemory);
     PropertyFlags[ord(TProp.hour)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly];
 
     PropertyType[ord(TProp.mult)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.mult)] := ptruint(@obj.dP);
-    PropertyOffset2[ord(TProp.mult)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.mult)] := ptruint(@obj.NumPoints);
     PropertyOffset3[ord(TProp.mult)] := ptruint(@obj.ExternalMemory);
     PropertyFlags[ord(TProp.mult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly, TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.mult)] := ord(TProp.pmult);
 
     PropertyType[ord(TProp.Pmult)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Pmult)] := ptruint(@obj.dP);
-    PropertyOffset2[ord(TProp.Pmult)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.Pmult)] := ptruint(@obj.NumPoints);
     PropertyOffset3[ord(TProp.Pmult)] := ptruint(@obj.ExternalMemory);
     PropertyFlags[ord(TProp.Pmult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly];
 
     PropertyType[ord(TProp.Qmult)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Qmult)] := ptruint(@obj.dQ);
-    PropertyOffset2[ord(TProp.Qmult)] := ptruint(@obj.FNumPoints);
+    PropertyOffset2[ord(TProp.Qmult)] := ptruint(@obj.NumPoints);
     PropertyOffset3[ord(TProp.Qmult)] := ptruint(@obj.ExternalMemory);
     PropertyFlags[ord(TProp.Qmult)] := [TPropertyFlag.CustomSetRaw, TPropertyFlag.CustomGet, TPropertyFlag.ConditionalReadOnly];
 
     // integer
     Propertytype[ord(TProp.npts)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.npts)] := ptruint(@obj.FNumPoints);
+    PropertyOffset[ord(TProp.npts)] := ptruint(@obj.NumPoints);
     PropertyWriteFunction[ord(TProp.npts)] := @SetNumPoints;
     PropertyFlags[ord(TProp.npts)] := [TPropertyFlag.WriteByFunction];
 
@@ -563,12 +562,12 @@ begin
     case Idx of
         ord(TProp.npts):
             // Force as the always first property when saving in a later point
+            // Doing this here we don't need to force the order everywhere later,
+            // especially since in DSS C-API's implementation we don't keep a string
+            // copy of every field.
             PrpSequence[Idx] := -10;
         ord(TProp.mult), ord(TProp.Pmult), ord(TProp.csvfile), ord(TProp.sngfile), ord(TProp.dblfile), ord(TProp.qmult):
-        begin
             FStdDevCalculated := FALSE;   // now calculated on demand
-            NumPoints := FNumPoints;  // Keep Properties in order for save command
-        end;
         ord(TProp.Qmax):
             MaxQSpecified := TRUE;
         ord(TProp.MemoryMapping):
@@ -804,7 +803,7 @@ begin
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
         i := -1;
-        while ((F.Position + 1) < F.Size) and (i < (FNumPoints - 1)) do
+        while ((F.Position + 1) < F.Size) and (i < (NumPoints - 1)) do
         begin
             Inc(i);
             FSReadln(F, s); // read entire line and parse with AuxParser
@@ -825,7 +824,7 @@ begin
         end;
         FreeAndNil(F);
         inc(i);
-        if i <> FNumPoints then
+        if i <> NumPoints then
             NumPoints := i;
     except
         On E: Exception do
@@ -876,7 +875,7 @@ begin
         if Interval = 0.0 then
             ReAllocmem(dH, Sizeof(Double) * NumPoints);
         i := -1;
-        while ((F.Position + 1) < F.Size) and (i < (FNumPoints - 1)) do
+        while ((F.Position + 1) < F.Size) and (i < (NumPoints - 1)) do
         begin
             Inc(i);
             FSReadln(F, s); // read entire line  and parse with AuxParser
@@ -895,7 +894,7 @@ begin
         end;
         FreeAndNil(F);
         inc(i);
-        if i <> FNumPoints then
+        if i <> NumPoints then
             NumPoints := i;
     except
         On E: Exception do
@@ -947,15 +946,15 @@ begin
             // Take the opportunity to use float32 data
             UseFloat32;
             if sP = nil then
-                ReallocMem(sP, FNumPoints * SizeOf(Single));
+                ReallocMem(sP, NumPoints * SizeOf(Single));
             i := -1;
             
             if Interval = 0.0 then
             begin
                 if sH = nil then
-                    ReallocMem(sH, FNumPoints * SizeOf(Single));
+                    ReallocMem(sH, NumPoints * SizeOf(Single));
 
-                while i < (FNumPoints - 1) do
+                while i < (NumPoints - 1) do
                 begin
                     Inc(i);
                     if F.Read(sH[i], 4) <> 4 then break;
@@ -964,8 +963,8 @@ begin
             end
             else
             begin
-                bytesRead := F.Read(sP[0], FNumPoints * sizeof(Single));
-                FNumPoints := min(bytesRead div 4, FNumPoints);
+                bytesRead := F.Read(sP[0], NumPoints * sizeof(Single));
+                NumPoints := min(bytesRead div 4, NumPoints);
             end;
             FreeAndNil(F);
             Exit;
@@ -979,7 +978,7 @@ begin
         
         if Interval = 0.0 then 
         begin
-            while i < (FNumPoints - 1) do
+            while i < (NumPoints - 1) do
             begin
                 Inc(i);
                 if F.Read(Hr, sizeof(Single)) <> sizeof(Single) then break;
@@ -988,15 +987,15 @@ begin
                 dP[i] := M;
             end;
             inc(i);
-            if i <> FNumPoints then
+            if i <> NumPoints then
                 NumPoints := i;
         end
         else 
         begin
-            ReallocMem(sP, FNumPoints * SizeOf(Single));
-            bytesRead := F.Read(sP[0], FNumPoints * sizeof(Single));
-            FNumPoints := min(bytesRead div sizeof(Single), FNumPoints);
-            for i := 0 to FNumPoints - 1 do
+            ReallocMem(sP, NumPoints * SizeOf(Single));
+            bytesRead := F.Read(sP[0], NumPoints * sizeof(Single));
+            NumPoints := min(bytesRead div sizeof(Single), NumPoints);
+            for i := 0 to NumPoints - 1 do
                 dP[i] := sP[i];
             ReallocMem(sP, 0);
         end;
@@ -1050,20 +1049,20 @@ begin
         
         if Interval = 0.0 then 
         begin
-            while i < (FNumPoints - 1) do
+            while i < (NumPoints - 1) do
             begin
                 Inc(i);
                 if F.Read(dH[i], sizeof(Double)) <> sizeof(Double) then break;
                 if F.Read(dP[i], sizeof(Double)) <> sizeof(Double) then break;
             end;
             inc(i);
-            if i <> FNumPoints then
+            if i <> NumPoints then
                 NumPoints := i;
         end
         else 
         begin
-            bytesRead := F.Read(dP[0], FNumPoints * sizeof(Double));
-            FNumPoints := min(bytesRead div sizeof(Double), FNumPoints);
+            bytesRead := F.Read(dP[0], NumPoints * sizeof(Double));
+            NumPoints := min(bytesRead div sizeof(Double), NumPoints);
         end;
         FreeAndNil(F);
         if F <> nil then
@@ -1083,7 +1082,7 @@ begin
     Stride := 1;
     LastValueAccessed := 1;
 
-    FNumPoints := 0;
+    NumPoints := 0;
     Interval := 1.0;  // hr
     dH := NIL;
     dP := NIL;
@@ -1191,10 +1190,10 @@ begin
     Result.re := 1.0;
     Result.im := 1.0;    // default return value if no points in curve
 
-    if FNumPoints <= 0 then
+    if NumPoints <= 0 then
         Exit;
         
-    if FNumPoints = 1 then
+    if NumPoints = 1 then
     begin
         Result.re := dP[0];
         if Assigned(dQ) then
@@ -1222,10 +1221,10 @@ begin
             Exit;
         end;
         
-        if i > FNumPoints then 
-            i := i mod FNumPoints;  // Wrap around using remainder
+        if i > NumPoints then 
+            i := i mod NumPoints;  // Wrap around using remainder
         if i = 0 then 
-            i := FNumPoints;
+            i := NumPoints;
         
         dec(i);
         offset := i * Stride;
@@ -1244,16 +1243,16 @@ begin
     //  of the time, this function will be called sequentially
 
     // Normalize Hr to max hour in curve to get wraparound
-    if Hr > dH[Stride * (FNumPoints - 1)] then
+    if Hr > dH[Stride * (NumPoints - 1)] then
     begin
-        offset := Stride * (FNumPoints - 1);
+        offset := Stride * (NumPoints - 1);
         Hr := Hr - Trunc(Hr / dH[offset]) * dH[offset];
     end;
     
     if dH[Stride * LastValueAccessed] > Hr then
         LastValueAccessed := 0;  // Start over from beginning
         
-    for i := LastValueAccessed to FNumPoints - 1 do
+    for i := LastValueAccessed to NumPoints - 1 do
     begin
         offset := Stride * i;
         if Abs(dH[offset] - Hr) < 0.00001 then  // If close to an actual point, just use it.
@@ -1310,7 +1309,7 @@ begin
     end;
 
     // If we fall through the loop, just use last value
-    LastValueAccessed := FNumPoints - 2;
+    LastValueAccessed := NumPoints - 2;
     Result.re := dP[Stride * LastValueAccessed];
     if Assigned(dQ) then
         Result.im := dQ[Stride * LastValueAccessed]
@@ -1327,17 +1326,17 @@ var
     var
         i: Integer;
     begin
-        if FNumPoints > 0 then
+        if NumPoints > 0 then
         begin
             if MaxMult <= 0.0 then
             begin
                 MaxMult := Abs(Multipliers[0]);
-                for i := 1 to FNumPoints - 1 do
+                for i := 1 to NumPoints - 1 do
                     MaxMult := Max(MaxMult, Abs(Multipliers[i]));
             end;
             if MaxMult = 0.0 then
                 MaxMult := 1.0; // Avoid divide by zero
-            for i := 0 to FNumPoints - 1 do
+            for i := 0 to NumPoints - 1 do
                 Multipliers[i] := Multipliers[i] / MaxMult;
         end;
     end;
@@ -1346,17 +1345,17 @@ var
     var
         i: Integer;
     begin
-        if FNumPoints > 0 then
+        if NumPoints > 0 then
         begin
             if MaxMult <= 0.0 then
 			begin
                 MaxMult := Abs(Multipliers[0]);
-                for i := 1 to FNumPoints - 1 do
+                for i := 1 to NumPoints - 1 do
                     MaxMult := Max(MaxMult, Abs(Multipliers[i]));
             end;
             if MaxMult = 0.0 then
                 MaxMult := 1.0; // Avoid divide by zero
-            for i := 0 to FNumPoints - 1 do
+            for i := 0 to NumPoints - 1 do
                 Multipliers[i] := Multipliers[i] / MaxMult;
         end;
     end;
@@ -1395,21 +1394,21 @@ begin
     if UseMMF or ExternalMemory then
         Exit;
 
-    if FNumPoints > 0 then
+    if NumPoints > 0 then
     begin
         if Assigned(dP) then
         begin
             if Interval > 0.0 then
-                RCDMeanandStdDev(dP, FNumPoints, FMean, FStdDev)
+                RCDMeanandStdDev(dP, NumPoints, FMean, FStdDev)
             else
-                CurveMeanAndStdDev(PDoubleArray(dP), PDoubleArray(dH), FNumPoints, FMean, FStdDev);
+                CurveMeanAndStdDev(PDoubleArray(dP), PDoubleArray(dH), NumPoints, FMean, FStdDev);
         end
         else
         Begin
             if Interval > 0.0 then
-                RCDMeanandStdDevSingle(sP, FNumPoints, FMean, FStdDev)
+                RCDMeanandStdDevSingle(sP, NumPoints, FMean, FStdDev)
             else
-                CurveMeanAndStdDevSingle(PSingleArray(sP), PSingleArray(sH), FNumPoints, FMean, FStdDev);
+                CurveMeanAndStdDevSingle(PSingleArray(sP), PSingleArray(sH), NumPoints, FMean, FStdDev);
         End;
     end;
 
@@ -1452,7 +1451,7 @@ end;
 function TLoadShapeObj.Mult(i: Integer): Double;
 begin
     dec(i);
-    if (i < FNumPoints) and (i >= 0) then
+    if (i < NumPoints) and (i >= 0) then
     begin
         if UseMMF then
             Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i + 1, mmLineLen)
@@ -1470,7 +1469,7 @@ end;
 function TLoadShapeObj.PMult(i: Integer): Double;
 begin
     dec(i);
-    if (i < FNumPoints) and (i >= 0) then
+    if (i < NumPoints) and (i >= 0) then
     begin
         if UseMMF then
             Result := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i + 1, mmLineLen)
@@ -1491,7 +1490,7 @@ begin
         Exit;
     Result := True;
     
-    if (i < FNumPoints) and (i >= 0) then
+    if (i < NumPoints) and (i >= 0) then
     begin
         if UseMMF then
             m := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ)
@@ -1509,7 +1508,7 @@ begin
     dec(i);
     if Interval = 0 then
     begin
-        if (i < FNumPoints) and (i >= 0) then
+        if (i < NumPoints) and (i >= 0) then
         begin
             if dH <> nil then
                 Result := dH[Stride * i]
@@ -1545,15 +1544,15 @@ begin
                 Exit;
             end;
             if dP <> NIL then
-                Result := GetDSSArray_Real(FNumPoints, pDoubleArray(dP))
+                Result := GetDSSArray_Real(NumPoints, pDoubleArray(dP))
             else if sP <> NIL then
-                Result := GetDSSArray_Single(FNumPoints, pSingleArray(sP));
+                Result := GetDSSArray_Single(NumPoints, pSingleArray(sP));
         end;
         ord(TProp.hour):
             if dH <> NIL then
-                Result := GetDSSArray_Real(FNumPoints, pDoubleArray(dH))
+                Result := GetDSSArray_Real(NumPoints, pDoubleArray(dH))
             else if sH <> NIL then
-                Result := GetDSSArray_Single(FNumPoints, pSingleArray(sH));
+                Result := GetDSSArray_Single(NumPoints, pSingleArray(sH));
         ord(TProp.qmult):
         begin
             if UseMMF then
@@ -1562,9 +1561,9 @@ begin
                 Exit;
             end;
             if Assigned(dQ) then
-                Result := GetDSSArray_Real(FNumPoints, pDoubleArray(dQ))
+                Result := GetDSSArray_Real(NumPoints, pDoubleArray(dQ))
             else if Assigned(sQ) then
-                Result := GetDSSArray_Single(FNumPoints, pSingleArray(sQ));
+                Result := GetDSSArray_Single(NumPoints, pSingleArray(sQ));
         end;
     else
         Result := inherited GetPropertyValue(index);
@@ -1809,24 +1808,24 @@ begin
 
     if Assigned(dH) then
     begin
-        ReallocMem(sH, FNumPoints * SizeOf(Single));
-        for i := 1 to FNumPoints do
+        ReallocMem(sH, NumPoints * SizeOf(Single));
+        for i := 1 to NumPoints do
             sH[i] := dH[i];
         FreeMem(dH);
         dH := nil;
     end;
     if Assigned(dP) then
     begin
-        ReallocMem(sP, FNumPoints * SizeOf(Single));
-        for i := 1 to FNumPoints do
+        ReallocMem(sP, NumPoints * SizeOf(Single));
+        for i := 1 to NumPoints do
             sP[i] := dP[i];
         FreeMem(dP);
         dP := nil;
     end;
     if Assigned(dQ) then
     begin
-        ReallocMem(sQ, FNumPoints * SizeOf(Single));
-        for i := 1 to FNumPoints do
+        ReallocMem(sQ, NumPoints * SizeOf(Single));
+        for i := 1 to NumPoints do
             sQ[i] := dQ[i];
         FreeMem(dQ);
         dQ := nil;
@@ -1850,8 +1849,8 @@ begin
     begin
         if dH = NIL then
         begin
-            ReallocMem(dH, FNumPoints * SizeOf(Double));
-            for i := 0 to FNumPoints - 1 do
+            ReallocMem(dH, NumPoints * SizeOf(Double));
+            for i := 0 to NumPoints - 1 do
                 dH[i] := sH[i];
         end;
         FreeMem(sH);
@@ -1861,8 +1860,8 @@ begin
     begin
         if dP = NIL then
         begin
-            ReallocMem(dP, FNumPoints * SizeOf(Double));
-            for i := 0 to FNumPoints - 1 do
+            ReallocMem(dP, NumPoints * SizeOf(Double));
+            for i := 0 to NumPoints - 1 do
                 dP[i] := sP[i];
         end;
         FreeMem(sP);
@@ -1872,8 +1871,8 @@ begin
     begin
         if dQ = NIL then
         begin
-            ReallocMem(dQ, FNumPoints * SizeOf(Double));
-            for i := 0 to FNumPoints - 1 do
+            ReallocMem(dQ, NumPoints * SizeOf(Double));
+            for i := 0 to NumPoints - 1 do
                 dQ[i] := sQ[i];
         end;
         FreeMem(sQ);
@@ -1900,10 +1899,10 @@ begin
     Result.re := 1.0;
     Result.im := 1.0;    // default return value if no points in curve
 
-    if FNumPoints <= 0 then         // Handle Exceptional cases
+    if NumPoints <= 0 then         // Handle Exceptional cases
         Exit;
 
-    if FNumPoints = 1 then
+    if NumPoints = 1 then
     begin
         Result.re := sP[0];
         if Assigned(sQ) then
@@ -1916,10 +1915,10 @@ begin
     if Interval > 0.0 then
     begin
         i := round(hr / Interval);
-        if i > FNumPoints then 
-            i := i mod FNumPoints;  // Wrap around using remainder
+        if i > NumPoints then 
+            i := i mod NumPoints;  // Wrap around using remainder
         if i = 0 then 
-            i := FNumPoints;
+            i := NumPoints;
 
         dec(i);
         offset := i * Stride;
@@ -1938,16 +1937,16 @@ begin
     //  of the time, this function will be called sequentially
 
     // Normalize Hr to max hour in curve to get wraparound
-    if Hr > sH[Stride * (FNumPoints - 1)] then
+    if Hr > sH[Stride * (NumPoints - 1)] then
     begin
-        offset := Stride * (FNumPoints - 1);
+        offset := Stride * (NumPoints - 1);
         Hr := Hr - Trunc(Hr / sH[offset]) * sH[offset];
     end;
 
     if sH[Stride * LastValueAccessed] > Hr then
         LastValueAccessed := 0;  // Start over from beginning
     
-    for i := LastValueAccessed to FNumPoints - 1 do
+    for i := LastValueAccessed to NumPoints - 1 do
     begin
         offset := Stride * i;
         if Abs(sH[offset] - Hr) < 0.00001 then  // If close to an actual point, just use it.
@@ -1975,7 +1974,7 @@ begin
     end;
 
     // If we fall through the loop, just use last value
-    LastValueAccessed := FNumPoints - 2;
+    LastValueAccessed := NumPoints - 2;
     Result.re := sP[Stride * LastValueAccessed];
     if Assigned(sQ) then
         Result.im := sQ[Stride * LastValueAccessed]
