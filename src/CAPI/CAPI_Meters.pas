@@ -328,7 +328,7 @@ begin
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMeterObj.NPhases);
     for k := 0 to pMeterObj.NPhases - 1 do
-        Result[k] := Cabs(pMeterObj.CalculatedCurrent^[k + 1]);
+        Result[k] := Cabs(pMeterObj.CalculatedCurrent[k + 1]);
 end;
 
 procedure Meters_Get_CalcCurrent_GR(); CDECL;
@@ -355,7 +355,7 @@ begin
         
     Value := PDoubleArray0(ValuePtr);
     for i := 1 to pMeterObj.NPhases do
-        pMeterObj.CalculatedCurrent^[i] := cmplx(Value[i - 1], 0.0);   // Just set the real part
+        pMeterObj.CalculatedCurrent[i] := Value[i - 1];   // Just set the real part
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;

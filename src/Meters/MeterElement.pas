@@ -47,14 +47,24 @@ uses
     Sysutils;
 
 procedure TMeterElement.AllocateSensorArrays;
+var
+    i: Integer;
 begin
     if Assigned(Meteredelement) then
-        ReallocMem(CalculatedCurrent, Sizeof(CalculatedCurrent^[1]) * MeteredElement.Yorder);
-    if Assigned(Meteredelement) then
-        ReallocMem(CalculatedVoltage, Sizeof(CalculatedVoltage^[1]) * MeteredElement.Yorder);
-    ReAllocMem(SensorCurrent, Sizeof(SensorCurrent^[1]) * Fnphases);
-    ReAllocMem(SensorVoltage, Sizeof(SensorVoltage^[1]) * Fnphases);
-    ReAllocMem(PhsAllocationFactor, Sizeof(PhsAllocationFactor^[1]) * Fnphases);
+    begin
+        ReallocMem(CalculatedCurrent, Sizeof(Complex) * MeteredElement.Yorder);
+        ReallocMem(CalculatedVoltage, Sizeof(Complex) * MeteredElement.Yorder);
+
+        // To avoid random values
+        for i := 1 to MeteredElement.Yorder do
+        begin
+            CalculatedCurrent[i] := 0;
+            CalculatedVoltage[i] := 0;
+        end;
+    end;
+    ReAllocMem(SensorCurrent, Sizeof(Double) * Fnphases);
+    ReAllocMem(SensorVoltage, Sizeof(Double) * Fnphases);
+    ReAllocMem(PhsAllocationFactor, Sizeof(Double) * Fnphases);
 end;
 
 procedure TMeterElement.CalcAllocationFactors;
