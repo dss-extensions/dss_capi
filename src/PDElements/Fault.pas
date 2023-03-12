@@ -521,7 +521,7 @@ begin
                 begin
                     Is_ON := TRUE;
                     YPrimInvalid := TRUE;
-                    AppendtoEventLog('Fault.' + Name, '**APPLIED**');
+                    AppendtoEventLog(FullName, '**APPLIED**');
                 end;
             end
             else
@@ -532,7 +532,7 @@ begin
                         Is_ON := FALSE;
                         Cleared := TRUE;
                         YPrimInvalid := TRUE;
-                        AppendtoEventLog('Fault.' + Name, '**CLEARED**');
+                        AppendtoEventLog(FullName, '**CLEARED**');
                     end;
             end;
         end;

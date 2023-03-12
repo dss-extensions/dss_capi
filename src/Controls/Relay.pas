@@ -733,7 +733,7 @@ procedure TRelayObj.RecalcElementData;
 begin
     if DebugTrace then
         AppendToEventLog(
-            'Relay.' + self.Name,
+            Self.FullName,
             Format('RecalcElementData NumReclose=%d', [NumReclose])
         );
 
@@ -873,7 +873,7 @@ end;
 procedure TRelayObj.DoPendingAction(const Code, ProxyHdl: Integer);
 begin
     if DebugTrace then
-        AppendToEventLog('Relay.' + self.Name, Format(
+        AppendToEventLog(Self.FullName, Format(
             'DoPendingAction Code=%d State=%d ArmedOpen=%s Close=%s Reset=%s Count=%d NumReclose=%d', [
                 Integer (Code),
                 Integer (FPresentState),
@@ -897,11 +897,11 @@ begin
                         begin
                             LockedOut := TRUE;
                             if ShowEventLog then
-                                AppendtoEventLog('Relay.' + Self.Name, Format(_('Opened on %s & Locked Out'), [RelayTarget]));
+                                AppendtoEventLog(Self.FullName, Format(_('Opened on %s & Locked Out'), [RelayTarget]));
                         end
                         else
                         if ShowEventLog then
-                            AppendtoEventLog('Relay.' + Self.Name, Format(_('Opened on %s'), [RelayTarget]));
+                            AppendtoEventLog(Self.FullName, Format(_('Opened on %s'), [RelayTarget]));
 
                         if PhaseTarget and ShowEventLog then
                             AppendtoEventLog(' ', _('Phase Target'));
@@ -921,7 +921,7 @@ begin
                         ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
                         Inc(OperationCount);
                         if ShowEventLog then
-                            AppendtoEventLog('Relay.' + Self.Name, _('Closed'));
+                            AppendtoEventLog(Self.FullName, _('Closed'));
 
                         ArmedForClose := FALSE;
 
@@ -933,7 +933,7 @@ begin
                 if ArmedForClose and not LockedOut then
                 begin
                     if ShowEventLog then
-                        if ShowEventLog then AppendToEventLog('Relay.'+Self.Name, _('Reset'));
+                        if ShowEventLog then AppendToEventLog(Self.FullName, _('Reset'));
 
                     Reset();
 
@@ -978,7 +978,7 @@ end;
 procedure TRelayObj.Reset;
 begin
     if ShowEventLog then
-        AppendToEventLog ('Relay.' + self.Name, _('Resetting'));
+        AppendToEventLog (Self.FullName, _('Resetting'));
 
     FPresentState := NormalState;
 
@@ -1173,7 +1173,7 @@ begin
                     GroundTime := TDGround * GroundCurve.GetTCCTime(Cmag / GroundTrip);
 
                 if DebugTrace then
-                    AppendToEventLog('Relay.' + Self.Name, Format(
+                    AppendToEventLog(Self.FullName, Format(
                         _('Ground Trip: Mag=%.3g, Mult=%.3g, Time=%.3g'),
                         [Cmag, Cmag / GroundTrip, GroundTime]
                     ));
@@ -1222,7 +1222,7 @@ begin
 
                 if DebugTrace then
                     AppendToEventLog(
-                        'Relay.' + Self.Name, Format(
+                        Self.FullName, Format(
                         _('Phase %d Trip: Mag=%.3g, Mult=%.3g, Time=%.3g'),
                         [i-CondOffset, Cmag, Cmag / PhaseTrip, PhaseTime]
                     ));
@@ -1354,7 +1354,7 @@ begin
         if PickedUp then
         begin
             if DebugTrace then
-                AppendToEventLog ('Relay.' + Self.Name, 'Picked up');
+                AppendToEventLog (Self.FullName, 'Picked up');
 
             if ArmedForReset then
             begin
@@ -1459,7 +1459,7 @@ begin
         end;
 
         if DebugTrace then
-            AppendToEventLog('Relay.' + self.Name, Format(
+            AppendToEventLog(Self.FullName, Format(
                 'FaultDetected=%s',
                 [BoolToStr(FaultDetected)]
             ));
@@ -1468,7 +1468,7 @@ begin
         if td21_i < 1 then
         begin
             if DebugTrace then
-                AppendToEventLog ('Relay.' + self.Name, 'Initialize cqueue');
+                AppendToEventLog (Self.FullName, 'Initialize cqueue');
 
             for i := 1 to td21_pt do
             begin
@@ -1548,7 +1548,7 @@ begin
                     begin
                         Zdir := -(Vloop / Iloop);
                         if DebugTrace then
-                            AppendToEventLog('Relay.' + self.Name, Format(
+                            AppendToEventLog(Self.FullName, Format(
                                 'Zhsd[%d,%d]=%.4f+j%.4f, Zdir=%.4f+j%.4f',
                                 [i, j, Zhsd.re, Zhsd.im, Zdir.re, Zdir.im]
                             ));
@@ -1558,7 +1558,7 @@ begin
                             Uhsd := Zhsd * Iloop - Vloop;
                             Uhsd2 := cabs2 (Uhsd);
                             if DebugTrace then
-                                AppendToEventLog('Relay.' + self.Name, Format(
+                                AppendToEventLog(Self.FullName, Format(
                                     '     Uhsd=%.2f, Uref=%.2f',
                                     [cabs(Uhsd), cabs(Uref)]
                                 ));
@@ -1589,14 +1589,14 @@ begin
             if PickedUp then
             begin
                 if DebugTrace then
-                    AppendToEventLog ('Relay.'+Self.Name, 'Picked up');
+                    AppendToEventLog (Self.FullName, 'Picked up');
 
                 if ArmedForReset then
                 begin
                     ActiveCircuit.ControlQueue.Delete(LastEventHandle);
                     ArmedForReset := FALSE;
                     if DebugTrace then
-                        AppendToEventLog('Relay.' + self.Name, 'Dropping last event.');
+                        AppendToEventLog(Self.FullName, 'Dropping last event.');
                 end;
 
                 if not ArmedForOpen then
@@ -1609,7 +1609,7 @@ begin
 
                         LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event, CTRL_OPEN, 0, Self);
                         if DebugTrace then
-                            AppendToEventLog('Relay.' + self.Name, Format('Pushing trip event for %.3f', [t_event]));
+                            AppendToEventLog(Self.FullName, Format('Pushing trip event for %.3f', [t_event]));
 
                         ArmedForOpen := TRUE;
 
@@ -1617,7 +1617,7 @@ begin
                         begin
                             LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
                             if DebugTrace then
-                                AppendToEventLog ('Relay.' + self.Name, Format(
+                                AppendToEventLog (Self.FullName, Format(
                                     'Pushing reclose event for %.3f',
                                     [t_event + RecloseIntervals^[OperationCount]]
                                 ));
@@ -1637,7 +1637,7 @@ begin
                         LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
 
                     if DebugTrace then
-                        AppendToEventLog('Relay.' + self.Name, Format(
+                        AppendToEventLog(Self.FullName, Format(
                             'Pushing reset event for %.3f',
                             [ActiveCircuit.Solution.DynaVars.t + ResetTime]
                         ));
@@ -1649,7 +1649,7 @@ begin
                     ArmedForOpen := FALSE;
                     ArmedForClose := FALSE;
                     if DebugTrace then
-                        AppendToEventLog('Relay.' + self.Name, Format (
+                        AppendToEventLog(Self.FullName, Format (
                             'Dropping out at %.3f',
                             [ActiveCircuit.Solution.DynaVars.t]
                         ));
@@ -1716,7 +1716,7 @@ begin
                             ArmedForClose := FALSE;
                             if DebugTrace then
                                 AppendToEventLog(
-                                    'Relay.'+ self.Name, 
+                                    Self.FullName, 
                                     Format('DOC - Reset on Forward Net Balanced Active Power: %.2f kW', [ControlPower.re])
                                 );
                         end
@@ -1725,7 +1725,7 @@ begin
                     begin
                         if DebugTrace then
                             AppendToEventLog(
-                                'Relay.'+ self.Name, 
+                                Self.FullName, 
                                 Format('DOC - Forward Net Balanced Active Power: %.2f kW. DOC Element blocked.', [ControlPower.re])
                             );
                     end;
@@ -2098,7 +2098,7 @@ begin
                 if (TimeTest >= 0.0) then
                 begin
                     if DebugTrace then
-                        AppendToEventLog('Relay.' + Self.Name, Format('Directional Overcurrent - Phase %d Trip: Mag=%.5g, Ang=%.5g, Time=%.5g', [i - CondOffset, Cmag, Cangle, TimeTest]));
+                        AppendToEventLog(Self.FullName, Format('Directional Overcurrent - Phase %d Trip: Mag=%.5g, Ang=%.5g, Time=%.5g', [i - CondOffset, Cmag, Cangle, TimeTest]));
                     if TripTime < 0.0 then
                         TripTime := TimeTest
                     else

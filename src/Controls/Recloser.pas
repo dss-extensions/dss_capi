@@ -478,14 +478,14 @@ begin
                             if OperationCount > NumReclose then
                             begin
                                 LockedOut := TRUE;
-                                AppendtoEventLog('Recloser.' + Self.Name, 'Opened, Locked Out');
+                                AppendtoEventLog(Self.FullName, 'Opened, Locked Out');
                             end
                             else
                             begin
                                 if OperationCount > NumFast then
-                                    AppendtoEventLog('Recloser.' + Self.Name, 'Opened, Delayed')
+                                    AppendtoEventLog(Self.FullName, 'Opened, Delayed')
                                 else
-                                    AppendtoEventLog('Recloser.' + Self.Name, 'Opened, Fast');
+                                    AppendtoEventLog(Self.FullName, 'Opened, Fast');
                             end;
                             if PhaseTarget then
                                 AppendtoEventLog(' ', 'Phase Target');
@@ -502,7 +502,7 @@ begin
                         begin
                             ControlledElement.Closed[0] := TRUE; // Close all phases of active terminal
                             Inc(OperationCount);
-                            AppendtoEventLog('Recloser.' + Self.Name, 'Closed');
+                            AppendtoEventLog(Self.FullName, 'Closed');
                             ArmedForClose := FALSE;
                         end;
                 else // Nada

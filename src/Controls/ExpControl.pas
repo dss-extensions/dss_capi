@@ -419,7 +419,7 @@ BEGIN
       if (FWithinTol[i]=False) then begin
         // look up Qpu from the slope crossing at Vreg, and add the bias
         Qpu := -QVSlope * (FPresentVpu[i] - FVregs[i]) + FQbias;
-        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
+        If ShowEventLog Then AppendtoEventLog(Self.FullName +','+PVSys.Name,
           Format(' Setting Qpu= %.5g at FVreg= %.5g, Vpu= %.5g', [Qpu, FVregs[i],FPresentVpu[i]]));
       end;
 
@@ -437,7 +437,7 @@ BEGIN
       if FPreferQ then begin
         Plimit := Qbase * Sqrt (1 - Qpu * Qpu);
         if Plimit < PVSys.PresentkW then begin
-          If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
+          If ShowEventLog Then AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
             Format(' curtailing %.3f to %.3f kW', [PVSys.PresentkW, Plimit]));
           PVSys.PresentkW := Plimit;
           PVSys.puPmpp := Plimit/PVSys.Pmpp;
@@ -457,7 +457,7 @@ BEGIN
       Qset := FLastIterQ[i] + DeltaQ * FdeltaQ_factor;
  //     Qset := FQbias * Qbase;
       If PVSys.Presentkvar <> Qset Then PVSys.Presentkvar := Qset;
-      If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name +','+ PVSys.Name,
+      If ShowEventLog Then AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
                              Format(' Setting PVSystem output kvar= %.5g',
                              [PVSys.Presentkvar]));
       FLastIterQ[i] := Qset;
@@ -522,11 +522,11 @@ begin
         Set_PendingChange(CHANGEVARLEVEL,i);
         With  ActiveCircuit.Solution.DynaVars Do
           ControlActionHandle := ActiveCircuit.ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self);
-        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+        If ShowEventLog Then AppendtoEventLog(Self.FullName + ' ' + PVSys.Name, Format
           (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]));
       end else begin
         FWithinTol[i] := True;
-        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+        If ShowEventLog Then AppendtoEventLog(Self.FullName + ' ' + PVSys.Name, Format
           (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]));
       end;
     end;  {For}
@@ -643,7 +643,7 @@ begin
     if FVregs[j] < VregMin then FVregs[j] := VregMin;
     if FVregs[j] > VregMax then FVregs[j] := VregMax;
     PVSys.Set_Variable(5,FVregs[j]);
-    If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
+    If ShowEventLog Then AppendtoEventLog(Self.FullName + ',' + PVSys.Name,
       Format(' Setting new Vreg= %.5g Vpu=%.5g Verr=%.5g',
       [FVregs[j], FPresentVpu[j], Verr]));
   end;

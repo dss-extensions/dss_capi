@@ -1014,7 +1014,7 @@ begin
                     QOldVV := TPVSystemObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TPVSystemObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TPVSystemObj(DERElem).FullName,
                             Format('VOLTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredVV, TPVSystemObj(DERElem).Presentkvar]));
                 end
@@ -1024,7 +1024,7 @@ begin
                     QOldVV := TStorageObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TStorageObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TStorageObj(DERElem).FullName,
                             Format('VOLTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredVV, TStorageObj(DERElem).Presentkvar]));
 
@@ -1116,7 +1116,7 @@ begin
                         QOldAVR := TPVSystemObj(DERElem).Presentkvar;
 
                         if ShowEventLog then
-                            AppendtoEventLog('InvControl.' + Self.Name + ', ' + TPVSystemObj(DERElem).FullName,
+                            AppendtoEventLog(Self.FullName + ', ' + TPVSystemObj(DERElem).FullName,
                                 Format('VOLTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
                                 [QDesiredAVR, TPVSystemObj(DERElem).Presentkvar]));
                     end
@@ -1126,7 +1126,7 @@ begin
                         QOldAVR := TStorageObj(DERElem).Presentkvar;
 
                         if ShowEventLog then
-                            AppendtoEventLog('InvControl.' + Self.Name + ', ' + TStorageObj(DERElem).FullName,
+                            AppendtoEventLog(Self.FullName + ', ' + TStorageObj(DERElem).FullName,
                                 Format('VOLTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
                                 [QDesiredAVR, TStorageObj(DERElem).Presentkvar]));
 
@@ -1198,7 +1198,7 @@ begin
                     QOldVV := TPVSystemObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TPVSystemObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TPVSystemObj(DERElem).FullName,
                             Format('WATTPF mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredWP, TPVSystemObj(DERElem).Presentkvar]));
                 end
@@ -1208,7 +1208,7 @@ begin
                     QOldVV := TStorageObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TStorageObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TStorageObj(DERElem).FullName,
                             Format('WATTPF mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredWP, TStorageObj(DERElem).Presentkvar]));
 
@@ -1276,7 +1276,7 @@ begin
                     QOldVV := TPVSystemObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TPVSystemObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TPVSystemObj(DERElem).FullName,
                             Format('WATTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredWV, TPVSystemObj(DERElem).Presentkvar]));
                 end
@@ -1286,7 +1286,7 @@ begin
                     QOldVV := TStorageObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TStorageObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TStorageObj(DERElem).FullName,
                             Format('WATTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredWV, TStorageObj(DERElem).Presentkvar]));
 
@@ -1371,7 +1371,7 @@ begin
                     QOldDRC := TPVSystemObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TPVSystemObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TPVSystemObj(DERElem).FullName,
                             Format('DRC mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredDRC, TPVSystemObj(DERElem).Presentkvar]));
                 end
@@ -1381,7 +1381,7 @@ begin
                     QOldDRC := TStorageObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TStorageObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TStorageObj(DERElem).FullName,
                             Format('DRC mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredDRC, TStorageObj(DERElem).Presentkvar]));
 
@@ -1469,7 +1469,7 @@ begin
                     QOldVVDRC := TPVSystemObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TPVSystemObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TPVSystemObj(DERElem).FullName,
                             Format('**VV_DRC mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredVVDRC, TPVSystemObj(DERElem).Presentkvar]));
                 end
@@ -1479,7 +1479,7 @@ begin
                     QOldVVDRC := TStorageObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TStorageObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TStorageObj(DERElem).FullName,
                             Format('**VV_DRC mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredVVDRC, TStorageObj(DERElem).Presentkvar]));
                 end;
@@ -1549,7 +1549,7 @@ begin
                         FVWOperation := 0; // 0.01% is the value chosen at the moment
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TPVSystemObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TPVSystemObj(DERElem).FullName,
                             Format('**VOLTWATT mode set PVSystem kW output limit to **, kW= %.5g. Actual output is kW= %.5g.',
                             [PLimitVW, TPVSystemObj(DERElem).presentkW]));
                 end
@@ -1559,7 +1559,7 @@ begin
                         FVWOperation := 0; // 0.01% is the value chosen at the moment
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TStorageObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TStorageObj(DERElem).FullName,
                             Format('**VOLTWATT mode set Storage kW output limit to ** kW= %.5g. Actual output is kW= %.5g.',
                             [PLimitVW, TStorageObj(DERElem).presentkW]));
 
@@ -1664,7 +1664,7 @@ begin
                     QOldVV := TPVSystemObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TPVSystemObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TPVSystemObj(DERElem).FullName,
                             Format('**VV_VW mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredVV, TPVSystemObj(DERElem).presentkvar]));
                 end
@@ -1674,7 +1674,7 @@ begin
                     QOldVV := TStorageObj(DERElem).Presentkvar;
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TStorageObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TStorageObj(DERElem).FullName,
                             Format('**VV_VW mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
                             [QDesiredVV, TStorageObj(DERElem).presentkvar]));
                 end;
@@ -1686,7 +1686,7 @@ begin
                         FVWOperation := 0; // 0.01% is the value chosen at the moment
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TPVSystemObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TPVSystemObj(DERElem).FullName,
                             Format('**VV_VW mode set PVSystem kW output limit to **, kW= %.5g. Actual output is kW= %.5g.',
                             [PLimitVW, TPVSystemObj(DERElem).presentkW]));
                 end
@@ -1696,7 +1696,7 @@ begin
                         FVWOperation := 0; // 0.01% is the value chosen at the moment
 
                     if ShowEventLog then
-                        AppendtoEventLog('InvControl.' + Self.Name + ', ' + TStorageObj(DERElem).FullName,
+                        AppendtoEventLog(Self.FullName + ', ' + TStorageObj(DERElem).FullName,
                             Format('**VV_VW mode set Storage kW output limit to** kW= %.5g. Actual output is kW= %.5g.',
                             [PLimitVW, TStorageObj(DERElem).presentkW]));
                 end;
@@ -2001,7 +2001,7 @@ begin
                                     ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                                 if ShowEventLog then
-                                    AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                    AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                         Format(_('**Ready to change var output due to DRC trigger in VV_DRC mode**, Vavgpu= %.5g, VPriorpu=%.5g'),
                                         [FPresentDRCVpu, FAvgpDRCVpuPrior]));
                             end;
@@ -2022,7 +2022,7 @@ begin
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
-                                AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                     Format(_('**Ready to change VV_DRC output due to volt-var trigger in VV_DRC mode**, Vavgpu= %.5g, VPriorpu=%.5g'),
                                     [FPresentVpu, FAvgpVpuPrior]));
 
@@ -2094,7 +2094,7 @@ begin
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
-                                AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                     Format('**Ready to change VV_VW output due to volt-watt trigger**, Vavgpu= %.5g, VPriorpu=%.5g',
                                     [FPresentVpu, FAvgpVpuPrior]));
                             ;
@@ -2113,7 +2113,7 @@ begin
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
-                                AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                     Format('**Ready to change VV_VW output due to volt-var trigger**, Vavgpu= %.5g, VPriorpu=%.5g',
                                     [FPresentVpu, FAvgpVpuPrior]));
                         end;
@@ -2174,7 +2174,7 @@ begin
                             with  ActiveCircuit.Solution.DynaVars do
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
                             if ShowEventLog then
-                                AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                     Format('**Ready to limit watt output due to VOLTWATT mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                     [FPresentVpu, FAvgpVpuPrior]));
                         end;
@@ -2212,7 +2212,7 @@ begin
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
-                                AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                     Format('**Ready to change var output due to AVR trigger in AVR mode**, Vavgpu= %.5g, VPriorpu=%.5g, Vsetpoint=%.5g, VsetpointLimited=%.5g',
                                     [FPresentVpu, FAvgpVpuPrior, Fv_setpoint, Fv_setpointLimited]));
                         end;
@@ -2260,7 +2260,7 @@ begin
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
-                                AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                     Format('**Ready to change var output due to volt-var trigger in volt-var mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                     [FPresentVpu, FAvgpVpuPrior]));
                         end;
@@ -2308,7 +2308,7 @@ begin
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
-                                AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                     Format('**Ready to change var output due to watt-pf trigger in watt-pf mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                     [FPresentVpu, FAvgpVpuPrior]));
                         end;
@@ -2356,7 +2356,7 @@ begin
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
-                                AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                     Format('**Ready to change var output due to watt-var trigger in watt-var mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                     [FPresentVpu, FAvgpVpuPrior]));
                         end;
@@ -2398,7 +2398,7 @@ begin
                                     ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                                 if ShowEventLog then
-                                    AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                    AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                         Format('**Ready to change var output due to DRC trigger in DRC mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                         [FPresentDRCVpu, FAvgpDRCVpuPrior]));
                             end;
@@ -2415,7 +2415,7 @@ begin
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
-                                AppendtoEventLog('InvControl.' + Self.Name + ', ' + DERElem.FullName,
+                                AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
                                     Format('**Ready to change var output due to DRC trigger in DRC mode**, Vavgpu= %.5g, VPriorpu=%.5g, QoutPU=%.3g, QDesiredEndpu=%.3g',
                                     [FPresentDRCVpu, FAvgpDRCVpuPrior, QoutputDRCpu, QDesireEndpu]));
 

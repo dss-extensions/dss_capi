@@ -435,7 +435,7 @@ begin
             if ReadyToBlow[Phs] then
             begin   // ignore if we became disarmed in meantime
                 ControlledElement.Closed[Phs] := FALSE;   // Open all phases of active terminal
-                AppendtoEventLog('Fuse.' + Self.Name, 'Phase ' + IntToStr(Phs) + ' Blown');
+                AppendtoEventLog(Self.FullName, 'Phase ' + IntToStr(Phs) + ' Blown');
                 hAction[phs] := 0;
             end;
     end;

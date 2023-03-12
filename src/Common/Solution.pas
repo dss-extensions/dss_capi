@@ -1342,7 +1342,7 @@ begin
                 ActiveIncCell[2] := 1;
                 inc(temp_counter);
                 setlength(Inc_Mat_Rows, temp_counter);
-                Inc_Mat_Rows[temp_counter - 1] := 'Line.' + elem.Name;
+                Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
                 for TermIdx := 1 to 2 do
                 begin
                     LineBus := elem.GetBus(TermIdx);
@@ -1388,7 +1388,7 @@ begin
                 ActiveIncCell[2] := 1;
                 inc(temp_counter);
                 setlength(Inc_Mat_Rows, temp_counter);
-                Inc_Mat_Rows[temp_counter - 1] := 'Transformer.' + elem.Name;
+                Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
                 for TermIdx := 1 to elem.NumWindings do
                 begin
                     LineBus := elem.GetBus(TermIdx);
@@ -1435,7 +1435,7 @@ begin
                 begin
                     inc(temp_counter);
                     setlength(Inc_Mat_Rows, temp_counter);
-                    Inc_Mat_Rows[temp_counter - 1] := 'Capacitor.' + elem.Name;
+                    Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
                     ActiveIncCell[2] := 1;
                     for CapTermIdx := 1 to 2 do
                     begin

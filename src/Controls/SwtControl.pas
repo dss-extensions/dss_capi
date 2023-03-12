@@ -325,13 +325,13 @@ begin
             begin
                 ControlledElement.Closed[0] := FALSE; // Open all phases of active terminal
                 PresentState := CTRL_OPEN;
-                AppendtoEventLog('SwtControl.' + Self.Name, 'Opened');
+                AppendtoEventLog(Self.FullName, 'Opened');
             end;
             if (Code = Integer(CTRL_CLOSE)) and (PresentState = CTRL_OPEN) then
             begin
                 ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
                 PresentState := CTRL_CLOSE;
-                AppendtoEventLog('SwtControl.' + Self.Name, 'Closed');
+                AppendtoEventLog(Self.FullName, 'Closed');
             end;
             Armed := FALSE;  // reset the switch
         end;
