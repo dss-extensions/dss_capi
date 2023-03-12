@@ -85,13 +85,13 @@ type
         property NextParam: String READ GetNextParam;
         function ParseAsBusName(Param: String; var NumNodes: Integer; NodeArray: pIntegerArray): String;//TODO: make it a separate function
         function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray): Integer;
-        function ParseAsVector(VectorBuffer: Array of Double): Integer;
+        function ParseAsVector(var VectorBuffer: ArrayOfDouble): Integer;
 
         // TODO: remove, not used in the main code, only in the COM API, kinda useless for most common programming languages
         function ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
 
         function ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray; Stride: Integer = 1; Scale: Double = 1): Integer;
-        function ParseAsSymMatrix(MatrixBuffer: Array of Double; Stride: Integer = 1; Scale: Double = 1): Integer;
+        function ParseAsSymMatrix(var MatrixBuffer: ArrayOfDouble; Stride: Integer = 1; Scale: Double = 1): Integer;
         procedure ResetDelims;   // resets delimiters to default
         procedure CheckforVar(var TokenBuffer_: String);
         procedure SetVars(vars: TParserVar);
@@ -513,7 +513,7 @@ begin
     end;
 end;
 
-function TDSSParser.ParseAsVector(VectorBuffer: Array of Double): Integer;
+function TDSSParser.ParseAsVector(var VectorBuffer: ArrayOfDouble): Integer;
 begin
     Result := ParseAsVector(Length(VectorBuffer), pDoubleArray(@VectorBuffer[0]));
 end;
@@ -604,7 +604,7 @@ begin
     end;
 end;
 
-function TDSSParser.ParseAsSymMatrix(MatrixBuffer: Array of Double; Stride: Integer; Scale: Double): Integer;
+function TDSSParser.ParseAsSymMatrix(var MatrixBuffer: ArrayOfDouble; Stride: Integer; Scale: Double): Integer;
 begin
     Result := ParseAsSymMatrix(Length(MatrixBuffer), pDoubleArray(@MatrixBuffer[0]), Stride);
 end;

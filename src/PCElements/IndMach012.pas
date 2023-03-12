@@ -177,7 +177,7 @@ type
 
         function InjCurrents: Integer; OVERRIDE;
         function NumVariables: Integer; OVERRIDE;
-        procedure GetAllVariables(States: Array of Double); OVERRIDE;
+        procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
@@ -1307,6 +1307,7 @@ function TIndMach012Obj.VariableName(i: Integer): String;
   if you are not defining state variables.
 }
 begin
+    Result := 'ERROR';
     if i < 1 then
         Exit;  // This means Someone goofed
     case i of
@@ -1360,7 +1361,6 @@ end;
 function TIndMach012Obj.Get_Variable(i: Integer): Double;
 begin
     Result := -9999.99;   // Error Value
-
     with MachineData do
         case i of
             1:
@@ -1434,7 +1434,7 @@ begin
     // Do Nothing for other variables: they are read only
 end;
 
-procedure TIndMach012Obj.GetAllVariables(States: Array of Double);
+procedure TIndMach012Obj.GetAllVariables(var States: ArrayOfDouble);
 {
   Return all state variables in double array (allocated by calling function)
 

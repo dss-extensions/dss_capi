@@ -326,7 +326,7 @@ type
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
-        procedure GetAllVariables(States: Array of Double); OVERRIDE;
+        procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
@@ -2542,7 +2542,7 @@ begin
         end;
 end;
 
-procedure TGeneratorObj.GetAllVariables(States: Array of Double);
+procedure TGeneratorObj.GetAllVariables(var States: ArrayOfDouble);
 var
     i, N: Integer;
 begin

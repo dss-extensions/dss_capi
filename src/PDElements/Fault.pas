@@ -174,7 +174,7 @@ begin
     PropertyOffset[ord(TProp.MinAmps)] := ptruint(@obj.MinAmps);
 
     PropertyOffset[ord(TProp.r)] := ptruint(@obj.G);
-    PropertyInverse[ord(TProp.r)] := True;
+    PropertyFlags[ord(TProp.r)] := [TPropertyFlag.InverseValue];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;

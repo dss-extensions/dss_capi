@@ -175,10 +175,10 @@ begin
 
     // adv doubles
     PropertyOffset[ord(TProp.R1)] := ptruint(@obj.G1);
-    PropertyInverse[ord(TProp.R1)] := True;
+    PropertyFlags[ord(TProp.R1)] := [TPropertyFlag.InverseValue];
 
     PropertyOffset[ord(TProp.R2)] := ptruint(@obj.G2);
-    PropertyInverse[ord(TProp.R2)] := True;
+    PropertyFlags[ord(TProp.R2)] := [TPropertyFlag.InverseValue];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;

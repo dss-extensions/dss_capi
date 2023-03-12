@@ -213,6 +213,7 @@ begin
     if TPropertyFlag.FullNameAsArray in flags then Result.Add('FullNameAsArray');
     if TPropertyFlag.Util in flags then Result.Add('Util');
     if TPropertyFlag.Deprecated in flags then Result.Add('Deprecated');
+    if TPropertyFlag.InverseValue in flags then Result.Add('InverseValue');
 end;
 
 function prepareEnum(e: TDSSEnum; enumIds: TClassNamesHashListType): TJSONObject;
@@ -315,7 +316,6 @@ begin
                 'scale', PropertyScale[i],
                 'valueOffset', PropertyValueOffset[i],
                 'trapZero', PropertyTrapZero[i],
-                'inverse', PropertyInverse[i],
                 'type', stype,
                 'params', TJSONArray.Create([PropertyOffset[i], param2, PropertyOffset3[i]]),
                 'flags', flagsToArray(PropertyFlags[i])
@@ -1281,7 +1281,6 @@ begin
 
     if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and 
         (flags = []) and
-        (not cls.PropertyInverse[Index]) and
         (cls.PropertyScale[Index] = 1) then
     begin
         case Operation of
@@ -1514,7 +1513,6 @@ begin
 
     if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and 
         (flags = []) and
-        (not cls.PropertyInverse[Index]) and
         (cls.PropertyScale[Index] = 1) then
     begin
         for i := 1 to batchSize do
@@ -1564,7 +1562,6 @@ begin
 
     if (cls.PropertyType[Index] <> TPropertyType.IntegerOnStructArrayProperty) and 
         (flags = []) and
-        (not cls.PropertyInverse[Index]) and
         (cls.PropertyScale[Index] = 1) then
     begin
         for i := 1 to batchSize do

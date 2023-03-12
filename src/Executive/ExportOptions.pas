@@ -11,7 +11,8 @@ interface
 
 uses
     Command,
-    DSSClass;
+    DSSClass,
+    ArrayDef;
 
 type
 {$SCOPEDENUMS ON}

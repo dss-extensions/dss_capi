@@ -10,7 +10,9 @@ unit ExecCommands;
 interface
 
 uses
-    Command, DSSClass;
+    Command,
+    DSSClass,
+    ArrayDef;
 
 type
     //Main executive commands

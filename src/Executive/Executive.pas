@@ -15,7 +15,8 @@ USES
       Contnrs,
       DSSClass,
       CAPI_Utils,
-      CAPI_Types;
+      CAPI_Types,
+      ArrayDef;
 
 TYPE
      TExecutive = class(TObject)

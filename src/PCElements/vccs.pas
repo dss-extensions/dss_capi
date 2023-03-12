@@ -117,7 +117,7 @@ type
         procedure InitStateVars; OVERRIDE;
         procedure IntegrateStates; OVERRIDE;
         function NumVariables: Integer; OVERRIDE;
-        procedure GetAllVariables(States: Array of Double); OVERRIDE;
+        procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
     end;
 
@@ -743,7 +743,7 @@ begin
     Result := 6;
 end;
 
-procedure TVCCSObj.GetAllVariables(States: Array of Double);
+procedure TVCCSObj.GetAllVariables(var States: ArrayOfDouble);
 var
     i: Integer;
 begin

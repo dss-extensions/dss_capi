@@ -54,7 +54,7 @@ type
         procedure InitStateVars; VIRTUAL;
         procedure IntegrateStates; VIRTUAL;
         function NumVariables: Integer; VIRTUAL;
-        procedure GetAllVariables(States: Array of Double); VIRTUAL;
+        procedure GetAllVariables(var States: ArrayOfDouble); VIRTUAL;
 
         function VariableName(i: Integer): String; VIRTUAL;
         function LookupVariable(const s: String): Integer;
@@ -188,7 +188,7 @@ begin
  // By default do nothing
 end;
 
-procedure TPCElement.GetAllVariables(States: Array of Double);
+procedure TPCElement.GetAllVariables(var States: ArrayOfDouble);
 begin
     // Do Nothing
 end;

@@ -92,6 +92,7 @@ type
         Util, // things like X and Y from XYcurve that don't have value as data
         Unused,
         PDElement, // if obj reference, must be a PDElement
+        InverseValue, // e.g. for G if exposed as R
         Deprecated
     );
 
@@ -173,11 +174,6 @@ type
     );
 {$SCOPEDENUMS OFF}
 
-    ArrayOfDouble = Array of Double;
-    ArrayOfInteger = Array of Integer;
-    ArrayOfString = Array of String;
-    ArrayOfPointer = Array of Pointer;
-
     PropertyTypeArray = Array[1..100] of TPropertyType;
     pPropertyTypeArray = ^PropertyTypeArray;
 
@@ -189,7 +185,7 @@ type
     TDoublesPropertyFunction = procedure (obj: Pointer; var ResultPtr: PDouble; ResultCount: PAPISize);
     TObjRefsPropertyFunction = procedure (obj: Pointer; var ResultPtr: PPointer; ResultCount: PAPISize);
 
-    // TDoubleArrayPropertyFunction = function (obj: Pointer): Array of Double;
+    // TDoubleArrayPropertyFunction = function (obj: Pointer): ArrayOfDouble;
     TWriteDoublePropertyFunction = procedure (obj: Pointer; Value: double);
     TWriteObjRefPropertyFunction = procedure (obj: Pointer; Value: Pointer);
     TWriteIntegerPropertyFunction = procedure (obj: Pointer; Value: Integer);
@@ -275,7 +271,6 @@ type
         PropertySource: pStringArray;
         PropertyScale, PropertyValueOffset: pDoubleArray;
         PropertyTrapZero: pDoubleArray;
-        PropertyInverse: pBooleanArray;
         PropertyType: pPropertyTypeArray;
         PropertyWriteFunction, PropertyReadFunction: PPointerArray;
         PropertyOffset: pPtrIntArray; // For most simple properties
@@ -1020,7 +1015,6 @@ BEGIN
     PropertyScale := nil;
     PropertyValueOffset := nil;
     PropertyTrapZero := nil;
-    PropertyInverse := nil;
     PropertyType := nil;
     PropertyOffset := nil;
     PropertyOffset2 := nil;
@@ -1074,7 +1068,6 @@ begin
     Reallocmem(PropertyReadFunction, 0);
     Reallocmem(PropertyWriteFunction, 0);
     Reallocmem(PropertyTrapZero, 0);
-    Reallocmem(PropertyInverse, 0);
     SetLength(PropertyFlags, 0);
 
     ElementList.Free;
@@ -1320,7 +1313,6 @@ begin
     PropertyScale := Allocmem(SizeOf(Double) * NumProperties);
     PropertyValueOffset := Allocmem(SizeOf(Double) * NumProperties);
     PropertyTrapZero := Allocmem(SizeOf(Double) * NumProperties);
-    PropertyInverse := Allocmem(SizeOf(Boolean) * NumProperties);
     PropertyType := Allocmem(SizeOf(TPropertyType) * NumProperties);
     PropertyOffset := Allocmem(SizeOf(PtrInt) * NumProperties);
     PropertyOffset2 := Allocmem(SizeOf(PtrInt) * NumProperties);
@@ -1339,7 +1331,6 @@ begin
         PropertyScale[i] := 1;
         PropertyValueOffset[i] := 0;
         PropertyTrapZero[i] := 0;
-        PropertyInverse[i] := False;
         PropertyOffset[i] := -1;
         PropertyOffset2[i] := 0;
         PropertyOffset3[i] := 0;

@@ -24,6 +24,8 @@ type
         Debug = 1 shl 7 // TODO
     );
 {$SCOPEDENUMS OFF}
+    
+    ArrayOfDSSObject = Array of TDSSObject;
 
     TDSSClassHelper = class helper for TDSSClass
     private
@@ -75,12 +77,12 @@ type
         function SetInteger(Index: Integer; Value: Integer): Boolean;
         function SetString(Index: Integer; Value: String): Boolean;
         function SetObject(Index: Integer; Value: TDSSObject): Boolean;
-        function SetDoubles(Index: Integer; Value: Array of Double): Boolean; overload;
+        function SetDoubles(Index: Integer; Value: ArrayOfDouble): Boolean; overload;
         function SetDoubles(Index: Integer; Value: PDouble; ValueCount: Integer): Boolean; overload;
-        function SetIntegers(Index: Integer; Value: Array of Integer): Boolean; overload;
+        function SetIntegers(Index: Integer; Value: ArrayOfInteger): Boolean; overload;
         function SetIntegers(Index: Integer; Value: PInteger; ValueCount: Integer): Boolean; overload;
-        function SetStrings(Index: Integer; Value: Array of String): Boolean; overload;
-        function SetObjects(Index: Integer; Value: Array of TDSSObject): Boolean; overload;
+        function SetStrings(Index: Integer; Value: ArrayOfString): Boolean; overload;
+        function SetObjects(Index: Integer; Value: ArrayOfDSSObject): Boolean; overload;
         function SetObjects(Index: Integer; Value: TDSSObjectPtr; ValueCount: Integer): Boolean; overload;
         function SetStrings(Index: Integer; Value: PPAnsiChar; ValueCount: Integer): Boolean; overload;
 
@@ -1921,7 +1923,7 @@ begin
         Value := PropertyTrapZero[Index];
     end;
 
-    if (Value <> 0) and PropertyInverse[Index] then
+    if (Value <> 0) and (TPropertyFlag.InverseValue in flags) then
         Value := 1.0 / Value;
 
     if (TPropertyFlag.WriteByFunction in flags) then
@@ -2210,7 +2212,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetObjects(Index: Integer; Value: Array of TDSSObject): Boolean;
+function TDSSObjectHelper.SetObjects(Index: Integer; Value: ArrayOfDSSObject): Boolean;
 begin
     Result := SetObjects(Index, @Value[0], Length(Value));
 end;
@@ -2230,7 +2232,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetIntegers(Index: Integer; Value: Array of Integer): Boolean;
+function TDSSObjectHelper.SetIntegers(Index: Integer; Value: ArrayOfInteger): Boolean;
 begin
     Result := SetIntegers(Index, @Value[0], Length(Value));
 end;
@@ -2250,7 +2252,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetDoubles(Index: Integer; Value: Array of Double): Boolean;
+function TDSSObjectHelper.SetDoubles(Index: Integer; Value: ArrayOfDouble): Boolean;
 begin
     Result := SetDoubles(Index, @Value[0], Length(Value));
 end;
@@ -2270,7 +2272,7 @@ begin
         EndEdit(1);
 end;
 
-function TDSSObjectHelper.SetStrings(Index: Integer; Value: Array of String): Boolean;
+function TDSSObjectHelper.SetStrings(Index: Integer; Value: ArrayOfString): Boolean;
 var
     ValuePChar: Array of PChar = NIL;
     i: Integer;
@@ -2931,7 +2933,7 @@ begin
             if TPropertyFlag.ScaledByFunction in PropertyFlags[index] then
                 scale := TPropertyScaleFunction(Pointer(PropertyOffset2[Index]))(obj, True); // True = Getter scale
 
-            if PropertyInverse[Index] then
+            if TPropertyFlag.InverseValue in PropertyFlags[index] then
                 Result := 1 / (Result / scale)
             else
                 Result := Result / scale;

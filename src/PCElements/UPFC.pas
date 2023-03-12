@@ -124,7 +124,7 @@ type
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
 
         function NumVariables: Integer; OVERRIDE;
-        procedure GetAllVariables(States: Array of Double); OVERRIDE;
+        procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
 
         function VariableName(i: Integer): String; OVERRIDE;
 
@@ -1104,7 +1104,7 @@ begin
     end;
 end;
 
-procedure TUPFCObj.GetAllVariables(States: Array of Double);
+procedure TUPFCObj.GetAllVariables(var States: ArrayOfDouble);
 var
     i: Integer;
 begin

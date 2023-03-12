@@ -385,7 +385,7 @@ type
 
         function InjCurrents(): Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
-        procedure GetAllVariables(States: Array of Double); OVERRIDE;
+        procedure GetAllVariables(var States: ArrayOfDouble); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
@@ -3208,7 +3208,7 @@ begin
         end;
 end;
 
-procedure TStorageObj.GetAllVariables(States: Array of Double);
+procedure TStorageObj.GetAllVariables(var States: ArrayOfDouble);
 var
     i: Integer;
 begin

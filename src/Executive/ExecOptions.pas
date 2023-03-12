@@ -10,7 +10,9 @@ unit ExecOptions;
 interface
 
 uses
-    Command, DSSClass;
+    Command,
+    DSSClass,
+    ArrayDef;
 
 type
 {$SCOPEDENUMS ON}

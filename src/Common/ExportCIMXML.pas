@@ -2404,7 +2404,7 @@ procedure TIEEE1547Controller.FindSignalTerminals;
 var
     i, j, k, dotpos: Integer;
     bus, phase: String;
-    elements: ArrayOfString;
+    elements: Array of String;
     found: Boolean;
     pElem: TDSSCktElement;
 begin

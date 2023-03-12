@@ -559,9 +559,9 @@ begin
     Delay_Time := Other.Delay_Time;
     Breaker_time := Other.Breaker_time;
 
-    Reallocmem(RecloseIntervals, SizeOf(RecloseIntervals^[1]) * 4);      // Always make a max of 4
+    // Already allocated
     for i := 1 to NumReclose do
-        RecloseIntervals^[i] := Other.RecloseIntervals^[i];
+        RecloseIntervals[i] := Other.RecloseIntervals[i];
 
     kVBase := Other.kVBase;
     LockedOut := Other.LockedOut;
@@ -643,12 +643,12 @@ begin
     GroundInst := 0.0;
     ResetTime := 15.0;
     NumReclose := 3;
-    RecloseIntervals := NIL;
 
-    Reallocmem(RecloseIntervals, SizeOf(RecloseIntervals^[1]) * 4); // fixed allocation of 4
-    RecloseIntervals^[1] := 0.5;
-    RecloseIntervals^[2] := 2.0;
-    RecloseIntervals^[3] := 2.0;
+    RecloseIntervals := NIL;
+    Reallocmem(RecloseIntervals, SizeOf(Double) * 4); // fixed allocation of 4
+    RecloseIntervals[1] := 0.5;
+    RecloseIntervals[2] := 2.0;
+    RecloseIntervals[3] := 2.0;
 
     FPresentState := CTRL_CLOSE;
     NormalState := CTRL_CLOSE;
@@ -1250,7 +1250,7 @@ begin
                             RelayTarget := RelayTarget + ' Gnd';
                         LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Breaker_time, CTRL_OPEN, 0, Self);
                         if OperationCount <= NumReclose then
-                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Breaker_time + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
+                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Breaker_time + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
                         ArmedForOpen := TRUE;
                         ArmedForClose := TRUE;
                     end;
@@ -1374,7 +1374,7 @@ begin
                     ArmedForOpen := TRUE;
                     if OperationCount <= NumReclose then
                     begin
-                        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
+                        LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
                         ArmedForClose := TRUE;
                     end;
                 end;
@@ -1615,11 +1615,11 @@ begin
 
                         if OperationCount <= NumReclose then
                         begin
-                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
+                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, t_event + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
                             if DebugTrace then
                                 AppendToEventLog (Self.FullName, Format(
                                     'Pushing reclose event for %.3f',
-                                    [t_event + RecloseIntervals^[OperationCount]]
+                                    [t_event + RecloseIntervals[OperationCount]]
                                 ));
                             ArmedForClose := TRUE;
                         end;
@@ -2114,7 +2114,7 @@ begin
                         RelayTarget := 'DOC';
                         LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Breaker_time, CTRL_OPEN, 0, Self);
                         if OperationCount <= NumReclose then
-                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Breaker_time + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
+                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Breaker_time + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
                         ArmedForOpen := TRUE;
                         ArmedForClose := TRUE;
                     end;
@@ -2283,7 +2283,7 @@ begin
                     if (Vmax > 0.9) then
                         with ActiveCircuit do  // OK if voltage > 90%
                         begin
-                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
+                            LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
                             ArmedForClose := TRUE;
                         end;
                 end

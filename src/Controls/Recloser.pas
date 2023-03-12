@@ -315,9 +315,9 @@ begin
     NumReclose := Other.NumReclose;
     NumFast := Other.NumFast;
 
-    Reallocmem(RecloseIntervals, SizeOf(RecloseIntervals^[1]) * 4);      // Always make a max of 4
+    // Already allocated
     for i := 1 to NumReclose do
-        RecloseIntervals^[i] := Other.RecloseIntervals^[i];
+        RecloseIntervals[i] := Other.RecloseIntervals[i];
 
     LockedOut := Other.LockedOut;
     FPresentState := Other.FPresentState;
@@ -362,10 +362,10 @@ begin
     NumFast := 1;
 
     RecloseIntervals := NIL;
-    Reallocmem(RecloseIntervals, SizeOf(RecloseIntervals^[1]) * 4); // fixed allocation of 4
-    RecloseIntervals^[1] := 0.5;
-    RecloseIntervals^[2] := 2.0;
-    RecloseIntervals^[3] := 2.0;
+    Reallocmem(RecloseIntervals, SizeOf(Double) * 4); // fixed allocation of 4
+    RecloseIntervals[1] := 0.5;
+    RecloseIntervals[2] := 2.0;
+    RecloseIntervals[3] := 2.0;
 
     FPresentState := CTRL_CLOSE;
     NormalState := CTRL_CLOSE;
@@ -639,7 +639,7 @@ begin
                     begin
                         ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Delaytime, CTRL_OPEN, 0, Self);
                         if OperationCount <= NumReclose then
-                            ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + DelayTime + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
+                            ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + DelayTime + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
                         ArmedForOpen := TRUE;
                         ArmedForClose := TRUE;
                     end;
