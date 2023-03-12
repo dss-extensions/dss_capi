@@ -214,7 +214,7 @@ type
         Name: String;
     //public
         DefaultValue: Integer;
-        UseFirstFound, AllowLonger: Boolean;
+        UseFirstFound, AllowLonger, TryExactFirst: Boolean;
         Hybrid: Boolean;
 
         constructor Create(EnumName: String; IsSequential: Boolean; MinCh, MaxCh: Integer; EnumNames: Array of String; EnumOrds: Array of Integer);
@@ -766,11 +766,19 @@ begin
     Enums.Add(InvControlModeEnum);
 
 
-    SolveModeEnum := TDSSEnum.Create('Solution Mode', True, 1, 9,
-        ['Snap', 'Daily', 'Yearly', 'M1', 'LD1', 'PeakDay', 'DutyCycle', 'Direct', 'MF', 'FaultStudy', 'M2', 'M3', 'LD2', 'AutoAdd', 'Dynamic', 'Harmonic', 'Time', 'HarmonicT', 'Snapshot'],
-        [Ord(TSolveMode.SNAPSHOT), Ord(TSolveMode.DAILYMODE), Ord(TSolveMode.YEARLYMODE), Ord(TSolveMode.MONTECARLO1), Ord(TSolveMode.LOADDURATION1), Ord(TSolveMode.PEAKDAY), Ord(TSolveMode.DUTYCYCLE), Ord(TSolveMode.DIRECT), Ord(TSolveMode.MONTEFAULT), Ord(TSolveMode.FAULTSTUDY), Ord(TSolveMode.MONTECARLO2), Ord(TSolveMode.MONTECARLO3), Ord(TSolveMode.LOADDURATION2), Ord(TSolveMode.AUTOADDFLAG), Ord(TSolveMode.DYNAMICMODE), Ord(TSolveMode.HARMONICMODE), Ord(TSolveMode.GENERALTIME), Ord(TSolveMode.HARMONICMODET), Ord(TSolveMode.SNAPSHOT)]);
+    SolveModeEnum := TDSSEnum.Create('Solution Mode', True, 2, 9,
+        ['Snap', 'Daily', 'Yearly', 'M1', 'LD1', 'PeakDay', 'DutyCycle', 'Direct', 'MF', 'FaultStudy', 'M2', 'M3', 'LD2', 'AutoAdd', 'Dynamic', 'Harmonic', 'Time', 'HarmonicT', 'Snapshot',
+            // Extras for compatibility
+            'Dynamics', 'Harmonics',
+            // TODO: Do we need special case for single letters?
+            'S', 'Y', 'H', 'T','F'
+        ],
+        [Ord(TSolveMode.SNAPSHOT), Ord(TSolveMode.DAILYMODE), Ord(TSolveMode.YEARLYMODE), Ord(TSolveMode.MONTECARLO1), Ord(TSolveMode.LOADDURATION1), Ord(TSolveMode.PEAKDAY), Ord(TSolveMode.DUTYCYCLE), Ord(TSolveMode.DIRECT), Ord(TSolveMode.MONTEFAULT), Ord(TSolveMode.FAULTSTUDY), Ord(TSolveMode.MONTECARLO2), Ord(TSolveMode.MONTECARLO3), Ord(TSolveMode.LOADDURATION2), Ord(TSolveMode.AUTOADDFLAG), Ord(TSolveMode.DYNAMICMODE), Ord(TSolveMode.HARMONICMODE), Ord(TSolveMode.GENERALTIME), Ord(TSolveMode.HARMONICMODET), Ord(TSolveMode.SNAPSHOT),
+         Ord(TSolveMode.DYNAMICMODE), Ord(TSolveMode.HARMONICMODE),
+         Ord(TSolveMode.SNAPSHOT), Ord(TSolveMode.YEARLYMODE), Ord(TSolveMode.HARMONICMODE), Ord(TSolveMode.GENERALTIME), Ord(TSolveMode.FAULTSTUDY)]);
     SolveModeEnum.DefaultValue := Ord(TSolveMode.SNAPSHOT);
     SolveModeEnum.UseFirstFound := True; // Some example/test files use just "Harm", which is ambiguous
+    SolveModeEnum.TryExactFirst := True;
     Enums.Add(SolveModeEnum);
 
     SolveAlgEnum := TDSSEnum.Create('Solution Algorithm', True, 2, 2,
@@ -1529,6 +1537,7 @@ begin
     DefaultValue := -9999999;
     AllowLonger := False;
     UseFirstFound := False;
+    TryExactFirst := False;
     Hybrid := False;
 
     MinOrdinal := 9999999;
@@ -1633,10 +1642,22 @@ begin
             Result := Max(1, Result);
             Exit;
         end;
+        
+        if TryExactFirst then
+        begin
+            // case insensitive
+            i := AnsiIndexText(Value, Names);
+            if i <> -1 then
+            begin
+                Result := Ordinals[i];
+                Exit;
+            end;
+        end;
 
         Result := DefaultValue;
         if DefaultValue = -9999999 then
             raise Exception.Create(Format('Could not match enum ("%s") value "%s"', [Name, Value]));
+
         Exit;
         //TODO: error
     end;
@@ -1662,7 +1683,9 @@ begin
                 Result := Ordinals[i];
 
                 if (nch = Length(Value)) and (UseFirstFound) then
+                begin
                     Exit;
+                end;
 
                 Inc(found);
                 if found > 1 then
@@ -1671,7 +1694,9 @@ begin
         end;
         
         if found = 1 then
+        begin
             exit; // Found the match, can exit safely
+        end;
     end;
 
     if Hybrid then
