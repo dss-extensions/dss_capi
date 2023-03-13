@@ -65,6 +65,10 @@ begin
     ReAllocMem(SensorCurrent, Sizeof(Double) * Fnphases);
     ReAllocMem(SensorVoltage, Sizeof(Double) * Fnphases);
     ReAllocMem(PhsAllocationFactor, Sizeof(Double) * Fnphases);
+
+    // To avoid random values
+    for i := 1 to Fnphases do
+        PhsAllocationFactor[i] := 0;
 end;
 
 procedure TMeterElement.CalcAllocationFactors;

@@ -89,7 +89,7 @@ uses
     DSSObjectHelper;
 
 //------------------------------------------------------------------------------
-function _activeObj(DSS: TDSSContext; out obj: TEnergyMeterObj): Boolean; inline;
+function _activeObj(DSS: TDSSContext; out obj: TEnergyMeterObj; needsSequenceList: Boolean = False): Boolean; inline;
 begin
     Result := False;
     obj := NIL;
@@ -106,6 +106,15 @@ begin
         Exit;
     end;
     
+    if (needsSequenceList) and (obj.SequenceList = NIL) then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg(DSS, 'SequenceList for %s is not initialized. Try solving or running "Makebuslist" first.', [obj.FullName], 8988);
+        end;
+        Exit;
+    end;
+
     Result := True;
 end;
 //------------------------------------------------------------------------------
@@ -618,9 +627,10 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pMeterObj) then
+    if not _activeObj(DSSPrime, pMeterObj, True) then
         Exit;
 
+    
     Result := pMeterObj.SequenceList.ActiveIndex;
 end;
 //------------------------------------------------------------------------------
@@ -628,7 +638,7 @@ procedure Meters_Set_SequenceIndex(Value: Integer); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
-    if not _activeObj(DSSPrime, pMeterObj) then
+    if not _activeObj(DSSPrime, pMeterObj, True) then
         Exit;
 
     with pMeterObj do
@@ -667,7 +677,7 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pMeterObj) then
+    if not _activeObj(DSSPrime, pMeterObj, True) then
         Exit;
         
     Result := pMeterObj.SequenceList.Count;
@@ -680,7 +690,7 @@ var
 
 begin
     Result := 0;
-    if not _activeObj(DSSPrime, pMeterObj) then
+    if not _activeObj(DSSPrime, pMeterObj, True) then
         Exit;
 
     with DSSPrime.ActiveCircuit do
@@ -688,10 +698,6 @@ begin
         if Buses = NIL then 
             Exit;
     
-        pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-        if pMeterObj = NIL then
-            Exit;
-        
         PD_Element := pMeterObj.SequenceList.Get(1);
         if PD_Element = NIL then
             Exit;
