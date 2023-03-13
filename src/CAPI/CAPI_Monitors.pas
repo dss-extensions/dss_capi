@@ -406,13 +406,13 @@ begin
     if pMon.SampleCount <= 0 then
         Exit;
 
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
     pMon.MonitorStream.Seek(256 + 4 * 4, soFromBeginning); // Skip header
     FirstCol := pMon.Header.Strings[0];
 
     // check first col to see if it is "Hour"
     if Sysutils.CompareText(FirstCol, 'hour') = 0 then
     begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMon.SampleCount);
         AllocSize := Sizeof(Single) * pMon.RecordSize;
         SngBuffer := Allocmem(AllocSize);
         k := 0;
