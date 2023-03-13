@@ -331,8 +331,10 @@ type
         procedure FreeTopology;
         function GetBusAdjacentPDLists: TAdjArray;
         function GetBusAdjacentPCLists: TAdjArray;
-        function getPCEatBus(BusName: String; useNone: Boolean = TRUE): ArrayOfString;
-        function getPDEatBus(BusName: String; useNone: Boolean = TRUE): ArrayOfString;
+        function getPCEatBus(BusIdx: Integer; useNone: Boolean = TRUE): ArrayOfString; overload;
+        function getPDEatBus(BusIdx: Integer; useNone: Boolean = TRUE): ArrayOfString; overload;
+        function getPCEatBus(BusName: String; useNone: Boolean = TRUE; busIdx: Integer = 0): ArrayOfString; overload;
+        function getPDEatBus(BusName: String; useNone: Boolean = TRUE; busIdx: Integer = 0): ArrayOfString; overload;
         function ReportPCEatBus(BusName: String): String;
         function ReportPDEatBus(BusName: String): String;
 
@@ -1751,16 +1753,37 @@ end;
 
 {$ENDIF}
 
+function TDSSCircuit.getPDEatBus(BusIdx: Integer; useNone: Boolean): ArrayOfString;
+begin
+    Result := getPDEatBus(BusList.NameOfIndex(BusIdx), useNone, BusIdx);
+end;
+
+function TDSSCircuit.getPCEatBus(BusIdx: Integer; useNone: Boolean): ArrayOfString;
+begin
+    Result := getPCEatBus(BusList.NameOfIndex(BusIdx), useNone, BusIdx);
+end;
+
 // Returns the list of all PDE connected to the bus name given at BusName
-function TDSSCircuit.getPDEatBus(BusName: String; useNone: Boolean): ArrayOfString;
+function TDSSCircuit.getPDEatBus(BusName: String; useNone: Boolean; busIdx: Integer): ArrayOfString;
 var
     Dss_Class: TDSSClass;
-    j, i: Integer;
-    myBus: array of String;
+    j, i, n, nbus, t: Integer;
+    myBus: array[0..1] of String;
+    nodes: Array of Integer = NIL;
+    found: Boolean;
 begin
-    SetLength(myBus, 2);
     SetLength(Result, 0);
     BusName := AnsiLowerCase(BusName);
+    if busIdx = 0 then
+        busIdx := BusList.Find(BusName);
+
+    if busIdx <> 0 then
+    begin
+        SetLength(nodes, Buses[busIdx].NumNodesThisBus);
+        for i := 1 to Buses[busIdx].NumNodesThisBus do
+            nodes[i - 1] := Buses[busIdx].GetRef(i);
+    end;
+
     for i := 1 to DSS.DSSClassList.Count do
     begin
         Dss_Class := DSS.DSSClassList.Get(i);
@@ -1775,12 +1798,46 @@ begin
             DSS_Class.First;
             for j := 1 to DSS_Class.ElementCount do
             begin
-                myBus[0] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(1)));
-                myBus[1] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(2)));
-                if ((myBus[0] = BusName) or (myBus[1] = BusName)) and (myBus[0] <> myBus[1]) then
+                if (nodes <> NIL) and (ActiveCktElement.Terminals <> NIL) and (ActiveCktElement.Terminals[0].TermNodeRef <> NIL) then
                 begin
-                    SetLength(Result, length(Result) + 1);
-                    Result[High(Result)] := ActiveCktElement.FullName;
+                    // Fast path
+                    found := False;
+                    for t := 0 to Min(High(ActiveCktElement.Terminals), 2) do
+                    begin
+                        for n := 0 to High(ActiveCktElement.Terminals[t].TermNodeRef) do
+                        begin
+                            for nbus := 0 to High(nodes) do
+                            begin
+                                found := (ActiveCktElement.Terminals[t].TermNodeRef[n] = nodes[nbus]);
+                                if not found then
+                                    continue;
+
+                                myBus[0] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(1)));
+                                myBus[1] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(2)));
+                                if (myBus[0] <> myBus[1]) then
+                                begin
+                                    SetLength(Result, length(Result) + 1);
+                                    Result[High(Result)] := ActiveCktElement.FullName;
+                                end;
+                                break;
+                            end;
+                            if found then
+                                break;
+                        end;
+                        if found then
+                            break;
+                    end;
+                end
+                else
+                begin
+                    // Original code as fallback
+                    myBus[0] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(1)));
+                    myBus[1] := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(2)));
+                    if ((myBus[0] = BusName) or (myBus[1] = BusName)) and (myBus[0] <> myBus[1]) then
+                    begin
+                        SetLength(Result, length(Result) + 1);
+                        Result[High(Result)] := ActiveCktElement.FullName;
+                    end;
                 end;
                 DSS_Class.Next;
             end;
@@ -1794,14 +1851,27 @@ begin
 end;
 
 // Returns the list of all PCE connected to the bus nam given at BusName
-function TDSSCircuit.getPCEatBus(BusName: String; useNone: Boolean): ArrayOfString;
+function TDSSCircuit.getPCEatBus(BusName: String; useNone: Boolean; busIdx: Integer): ArrayOfString;
 var
     Dss_Class: TDSSClass;
-    j, i: Integer;
+    j, i, n, nbus: Integer;
     myBus: String;
+    nodes: Array of Integer = NIL;
+    found: Boolean;
 begin
     SetLength(Result, 0);
     BusName := AnsiLowerCase(BusName);
+
+    if busIdx = 0 then
+        busIdx := BusList.Find(BusName);
+
+    if busIdx <> 0 then
+    begin
+        SetLength(nodes, Buses[busIdx].NumNodesThisBus);
+        for i := 1 to Buses[busIdx].NumNodesThisBus do
+            nodes[i - 1] := Buses[busIdx].GetRef(i);
+    end;
+
     for i := 1 to DSS.DSSClassList.Count do
     begin
         Dss_Class := DSS.DSSClassList.Get(i);
@@ -1817,11 +1887,35 @@ begin
         DSS_Class.First;
         for j := 1 to DSS_Class.ElementCount do
         begin
-            myBus := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(1)));
-            if myBus = BusName then
+            if (nodes <> NIL) and (ActiveCktElement.Terminals <> NIL) and (ActiveCktElement.Terminals[0].TermNodeRef <> NIL) then
             begin
-                SetLength(Result, length(Result) + 1);
-                Result[High(Result)] := ActiveCktElement.FullName;
+                // Fast path
+                found := False;
+                for n := 0 to High(ActiveCktElement.Terminals[0].TermNodeRef) do
+                begin
+                    for nbus := 0 to High(nodes) do
+                    begin
+                        found := (ActiveCktElement.Terminals[0].TermNodeRef[n] = nodes[nbus]);
+                        if not found then
+                            continue;
+
+                        SetLength(Result, length(Result) + 1);
+                        Result[High(Result)] := ActiveCktElement.FullName;
+                        break;
+                    end;
+                    if found then
+                        break;
+                end;
+            end
+            else
+            begin
+                // Original code as fallback
+                myBus := AnsiLowerCase(StripExtension(ActiveCktElement.GetBus(1)));
+                if myBus = BusName then
+                begin
+                    SetLength(Result, length(Result) + 1);
+                    Result[High(Result)] := ActiveCktElement.FullName;
+                end;
             end;
             DSS_Class.Next;
         end;
