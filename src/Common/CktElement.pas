@@ -929,7 +929,7 @@ procedure TDSSCktElement.DumpProperties(F: TFileStream; Complete: Boolean; Leaf:
 var
     i, j: Integer;
 begin
-    inherited DumpProperties(F, Complete);
+    inherited DumpProperties(F, Complete, Leaf);
 
     if FEnabled then
         FSWriteln(F, '! ENABLED')

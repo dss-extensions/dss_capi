@@ -1031,7 +1031,7 @@ begin
                   FOR i := 1 to DSS.ActiveDSSClass.ElementCount Do
                   Begin
                       DSS.ActiveDSSClass.Active := i;
-                      DSS.ActiveDSSObject.DumpProperties(F, DebugDump);
+                      DSS.ActiveDSSObject.DumpProperties(F, DebugDump, True);
                   End;
                End;
         ELSE
@@ -1040,12 +1040,12 @@ begin
                DoSimpleMsg(DSS, 'Error! Object "%s" not found.', [ObjName], 256) ;
                Exit;
            End
-           ELSE DSS.ActiveDSSObject.DumpProperties(F, DebugDump);  // Dump only properties of active circuit element
+           ELSE DSS.ActiveDSSObject.DumpProperties(F, DebugDump, True);  // Dump only properties of active circuit element
         END;
 
       End
       ELSE IF IsSolution THEN  Begin
-         DSS.ActiveCircuit.Solution.DumpProperties(F, DebugDump);
+         DSS.ActiveCircuit.Solution.DumpProperties(F, DebugDump, True);
       End
       ELSE begin
         // Dump general Circuit stuff
@@ -1071,7 +1071,7 @@ begin
               _('File may be read only, in use, or disk full?'), 257);
         End;
 
-        DSS.ActiveCircuit.Solution.DumpProperties(F,DebugDump);
+        DSS.ActiveCircuit.Solution.DumpProperties(F,DebugDump, True);
       End;
 
   FINALLY
