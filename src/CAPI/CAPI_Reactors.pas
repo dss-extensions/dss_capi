@@ -346,7 +346,7 @@ begin
     begin
         SetBus(1, S);
      // Default Bus2 to zero node of Bus1 if not already defined. (Wye Grounded connection)
-        if not Bus2Defined then
+        if ((not Bus2Defined) and (Nterms > 1)) then
         begin
          // Strip node designations from S
             dotpos := Pos('.', S);
