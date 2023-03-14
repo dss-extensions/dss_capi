@@ -1554,7 +1554,10 @@ var
 begin
     if (Value < MinOrdinal) or (Value > MaxOrdinal) then
     begin
-        Result := ''; //TODO: error? Usually on purpose though, may need a flag
+        if Hybrid then
+            Result := IntToStr(Value)
+        else            
+            Result := ''; //TODO: error? Usually on purpose though, may need a flag
         Exit;
     end;
 
