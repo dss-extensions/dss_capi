@@ -567,7 +567,7 @@ begin
     if pAction <> NIL then
         with Paction^ do
         begin
-            Result := Format('%d, %d, %-.g, %d, %d, %s ',
+            Result := Format('%d, %d, %.9g, %d, %d, %s ',
                 [ActionHandle, ActionTime.Hour, ActionTime.sec, ActionCode, ProxyHandle, ControlElement.Name]);
         end
     else
