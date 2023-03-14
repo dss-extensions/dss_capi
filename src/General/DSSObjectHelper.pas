@@ -621,8 +621,17 @@ begin
                 end;
                 TPropertyType.DoubleVArrayProperty:
                 begin
-                    PropParser.Token := Value;
-                    PropParser.ParseAsVector(integerPtr^, pDoubleArray(PPDouble(dataPtr)^));
+                    if TPropertyFlag.ArrayMaxSize in flags then
+                    begin
+                        maxSize := PropertyOffset3[Index];
+                        PropParser.Token := Value;
+                        integerPtr^ := PropParser.ParseAsVector(maxSize, pDoubleArray(PPDouble(dataPtr)^));
+                    end
+                    else
+                    begin
+                        PropParser.Token := Value;
+                        PropParser.ParseAsVector(integerPtr^, pDoubleArray(PPDouble(dataPtr)^));                        
+                    end;
                 end;
                 TPropertyType.DoubleFArrayProperty:
                 begin
