@@ -301,7 +301,7 @@ begin
     if Length(FileName) = 0 then
     begin
         ParamName := DSS.Parser.NextParam;
-        FileName := AnsiLowerCase(DSS.Parser.StrValue);    // should be full path name to work universally
+        FileName := DSS.Parser.StrValue;    // should be full path name to work universally
     end;
 
     DSS.InShowResults := TRUE;
