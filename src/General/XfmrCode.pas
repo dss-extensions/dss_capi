@@ -421,6 +421,8 @@ var
     Other: TObj;
     i: Integer;
 begin
+    inherited MakeLike(OtherPtr);
+
     Other := TObj(OtherPtr);
     FNphases := Other.FNphases;
     SetNumWindings(Other.NumWindings);

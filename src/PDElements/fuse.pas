@@ -267,6 +267,8 @@ var
     Other: TObj;
     i: Integer;
 begin
+    inherited MakeLike(OtherPtr);
+
     Other := TObj(OtherPtr);
     FNPhases := Other.Fnphases;
     NConds := Other.Fnconds; // Force Reallocation of terminal stuff

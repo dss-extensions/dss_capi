@@ -1187,6 +1187,8 @@ procedure TDSSCktElement.MakeLike(OtherObj: Pointer);
 var
     OtherCktObj: TDSSCktElement;
 begin
+    inherited MakeLike(OtherObj);
+
     OtherCktObj := TDSSCktElement(OtherObj);
     BaseFrequency := OtherCktObj.BaseFrequency;
     Enabled := TRUE;
