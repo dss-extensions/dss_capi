@@ -1,0 +1,68 @@
+name: Build Zepben Linux libraries
+
+on: 
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Tag to use for lib release'
+        required: true
+        type: string
+
+jobs:
+  find-commit:
+    runs-on: ubuntu-latest
+    outputs:
+      commitID: ${{ steps.find-commit.outputs.commit }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ env.GITHUB_TOKEN }}
+
+      - name: Work around git permission issue
+        run: |
+          dname=$(echo ${{github.repository}} | cut -d'/' -f2)
+          git config --global --add safe.directory /__w/$dname/$dname
+        shell: sh
+
+      - name: Find commit
+        id: find-commit
+        run: |
+          commit=$(git rev-parse ${{ github.event.inputs.tag }})
+          echo "::set-output name=commit::$(echo $commit)"
+
+  build_linux_x64:
+    needs: [find-commit]
+    runs-on: ubuntu-latest
+    container: zepben/dss-capi-builder
+
+    steps:
+      - uses: actions/checkout@v3
+
+
+      - name: Build the libraries
+        run: |
+          make ci
+        shell: bash
+
+      - name: Package the libraries
+        run: |
+          make package
+          mv package/dss-libs.bz2 dss-libs-${{ github.event.inputs.tag }}
+        shell: bash
+
+
+
+      - name: Create Release and upload assets
+        if: success()
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          draft: false
+          prerelease: false
+          files: |
+            package/dss-libs-${{ github.event.inputs.tag }}
+        continue-on-error: false
