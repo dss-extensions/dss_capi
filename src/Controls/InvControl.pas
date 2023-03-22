@@ -49,7 +49,7 @@ type
         ArGraLowV,
         ArGraHiV,
         DynReacavgwindowlen,
-        deltaQ_Factor, 
+        deltaQ_Factor,
         VoltageChangeTolerance,
         VarChangeTolerance,
         VoltwattYAxis,
@@ -379,7 +379,7 @@ const
     DELTAPDEFAULT = 0.5;
 
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
     ModeEnum, CombiModeEnum, VoltageCurveXRefEnum, VoltWattYAxisEnum, RoCEnum, RefQEnum, ControlModelEnum: TDSSEnum;
 
 constructor TInvControl.Create(dssContext: TDSSContext);
@@ -387,20 +387,20 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
-        ModeEnum := TDSSEnum.Create('InvControl: Control Mode', True, 1, 5, 
+        ModeEnum := TDSSEnum.Create('InvControl: Control Mode', True, 1, 5,
             ['Voltvar', 'VoltWatt', 'DynamicReaccurr', 'WattPF', 'Wattvar', 'AVR', 'GFM'],
             [ord(VOLTVAR), ord(VOLTWATT), ord(DRC), ord(WATTPF), ord(WATTVAR), ord(AVR), ord(GFM)]);
-        CombiModeEnum := TDSSEnum.Create('InvControl: Combi Mode', True, 4, 4, 
+        CombiModeEnum := TDSSEnum.Create('InvControl: Combi Mode', True, 4, 4,
             ['VV_VW', 'VV_DRC'], [ord(VV_VW), ord(VV_DRC)]);
-        VoltageCurveXRefEnum := TDSSEnum.Create('InvControl: Voltage Curve X Ref', True, 1, 2, 
+        VoltageCurveXRefEnum := TDSSEnum.Create('InvControl: Voltage Curve X Ref', True, 1, 2,
             ['Rated', 'Avg', 'RAvg'], [0, 1, 2]);
-        VoltWattYAxisEnum := TDSSEnum.Create('InvControl: Volt-watt Y-Axis', True, 1, 2, 
+        VoltWattYAxisEnum := TDSSEnum.Create('InvControl: Volt-watt Y-Axis', True, 1, 2,
             ['PAvailablePU', 'PMPPPU', 'PctPMPPPU', 'KVARatingPU'], [0, 1, 2, 3]);
-        RoCEnum := TDSSEnum.Create('InvControl: Rate-of-change Mode', True, 3, 3, 
+        RoCEnum := TDSSEnum.Create('InvControl: Rate-of-change Mode', True, 3, 3,
             ['Inactive', 'LPF', 'RiseFall'], [ord(INACTIVE), ord(LPF), ord(RISEFALL)]);
-        RefQEnum := TDSSEnum.Create('InvControl: Reactive Power Reference', True, 4, 4, 
+        RefQEnum := TDSSEnum.Create('InvControl: Reactive Power Reference', True, 4, 4,
             ['VARAVAL', 'VARMAX'], [0, 1]);
-        ControlModelEnum := TDSSEnum.Create('InvControl: Control Model', True, 1, 1, 
+        ControlModelEnum := TDSSEnum.Create('InvControl: Control Model', True, 1, 1,
             ['Linear', 'Exponential'], [0, 1]);
         RefQEnum.AllowLonger := True;
     end;
@@ -535,7 +535,7 @@ begin
     PropertyType[ord(TProp.avgwindowlen)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.avgwindowlen)] := ptruint(@obj.FRollAvgWindowLength);
     PropertyFlags[ord(TProp.avgwindowlen)] := [TPropertyFlag.IntervalUnits];
-    
+
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
@@ -546,7 +546,7 @@ var
     Obj: TObj;
 begin
     Obj := TObj.Create(Self, ObjName);
-    if Activate then 
+    if Activate then
         ActiveCircuit.ActiveCktElement := Obj;
     Obj.ClassIndex := AddObjectToList(Obj, Activate);
     Result := Obj;
@@ -706,7 +706,7 @@ begin
             FEffFactor := Other.CtrlVars[i].FEffFactor;
             FDCkW := Other.CtrlVars[i].FDCkW;
             FPPriority := Other.CtrlVars[i].FPPriority;
-            FActiveVVCurve := Other.CtrlVars[i].FActiveVVCurve;          
+            FActiveVVCurve := Other.CtrlVars[i].FActiveVVCurve;
         end;
     end;
 
@@ -850,7 +850,7 @@ begin
 
     if FDERPointerList.Count > 0 then
     // Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element
-    // This sets it to a realistic value to avoid crashes later 
+    // This sets it to a realistic value to avoid crashes later
     begin
         MonitoredElement := TInvBasedPCE(FDERPointerList.Get(1));   // Set MonitoredElement to 1st elemnent in list
         Setbus(1, MonitoredElement.Firstbus);
@@ -1300,7 +1300,7 @@ begin
                 DERElem.VWmode := FALSE;
                 DERElem.Varmode := VARMODEKVAR;
                 DERElem.DRCmode := TRUE;
-                
+
                 //--------------------------------------------- Main process ---------------------------------------------//
 
                 // Calculates QDesireDRCpu
@@ -1702,7 +1702,7 @@ begin
                 end;
             end
             // Grid forming inverter
-            else 
+            else
             if (ControlMode = GFM) then
             begin
                 with ActiveCircuit.Solution do
@@ -2121,7 +2121,7 @@ begin
                 else
                     // Do nothing
                 end
-            else 
+            else
             if ControlMode <> NONE_MODE then
                 case ControlMode of
                     VOLTWATT:  // volt-watt control mode
@@ -2434,7 +2434,7 @@ begin
                                         Valid := DERElem.CheckOLInverter() // Checks if Inv OL
                                     else
                                         Valid := True;
-                                    
+
                                     Valid := Valid and not DERElem.dynVars.ResetIBR // Check if we are not resetting
                                 end
                                 else
@@ -2698,7 +2698,7 @@ begin
             else
                 FVpuSolutionIdx := FVpuSolutionIdx + 1;
         end;
-        
+
         DERElem := ControlledElement[j];
         with CtrlVars[j] do
         begin
@@ -2841,13 +2841,19 @@ begin
                 DeltaQ := QDesireEndpu * QHeadRoom
             else
                 DeltaQ := QDesireEndpu * QHeadRoomNeg;
-        
+
             if CtrlModel = TInvControlModel.Linear then
             begin
                 DeltaQ := DeltaQ - QOldVV;
                 if FdeltaQ_factor = FLAGDELTAQ then
-                    Change_deltaQ_factor(j);
-            
+                    Change_deltaQ_factor(j)
+{$IFDEF DSS_CAPI_NOCOMPATFLAGS}
+                    ;
+{$ELSE}
+                else
+                if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.InvControl9611)) = 0 then
+                    FdeltaQFactor := FdeltaQ_factor;
+{$ENDIF}
                 QDesiredVV := QOldVV + DeltaQ * FdeltaQFactor;
             end
             else
@@ -2872,17 +2878,24 @@ var
 begin
     with CtrlVars[j] do
     begin
-        if QDesireEndpu >= 0.0 then 
+        if QDesireEndpu >= 0.0 then
             DeltaQ := QDesireEndpu * QHeadRoom
         else
             DeltaQ := QDesireEndpu * QHeadRoomNeg;
-    
+
         if CtrlModel = TInvControlModel.Linear then
         begin
             DeltaQ -= QOldAVR;
             if FdeltaQ_factor = FLAGDELTAQ then
-                Change_deltaQ_factor(j);
-            
+                Change_deltaQ_factor(j)
+{$IFDEF DSS_CAPI_NOCOMPATFLAGS}
+                ;
+{$ELSE}
+            else
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.InvControl9611)) = 0 then
+                FdeltaQFactor := FdeltaQ_factor;
+{$ENDIF}
+
             QDesiredAVR := QOldAVR + 0.2 * DeltaQ;
             // QDesiredAVR := QDesireEndpu * QHeadRoomNeg
         end
@@ -2924,17 +2937,24 @@ var
 begin
     with CtrlVars[j] do
     begin
-        if QDesireEndpu >= 0.0 then 
+        if QDesireEndpu >= 0.0 then
             DeltaQ := QDesireEndpu * QHeadRoom
         else
             DeltaQ := QDesireEndpu * QHeadRoomNeg;
-    
+
         if CtrlModel = TInvControlModel.Linear then
         begin
             DeltaQ := DeltaQ - QOldDRC;
             if FdeltaQ_factor = FLAGDELTAQ then
-                Change_deltaQ_factor(j);
-            
+                Change_deltaQ_factor(j)
+{$IFDEF DSS_CAPI_NOCOMPATFLAGS}
+                ;
+{$ELSE}
+            else
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.InvControl9611)) = 0 then
+                FdeltaQFactor := FdeltaQ_factor;
+{$ENDIF}
+
             QDesiredDRC := QOldDRC + DeltaQ * FdeltaQFactor;
         end
         else
@@ -2953,16 +2973,24 @@ var
 begin
     with CtrlVars[j] do
     begin
-        if QDesireEndpu >= 0.0 then 
+        if QDesireEndpu >= 0.0 then
             DeltaQ := QDesireEndpu * QHeadRoom
         else
             DeltaQ := QDesireEndpu * QHeadRoomNeg;
-    
+
         if CtrlModel = TInvControlModel.Linear then
         begin
             DeltaQ -= QOldVVDRC;
-            if FdeltaQ_factor = FLAGDELTAQ then 
-                Change_deltaQ_factor(j);
+            if FdeltaQ_factor = FLAGDELTAQ then
+                Change_deltaQ_factor(j)
+{$IFDEF DSS_CAPI_NOCOMPATFLAGS}
+                ;
+{$ELSE}
+            else
+            if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.InvControl9611)) = 0 then
+                FdeltaQFactor := FdeltaQ_factor;
+{$ENDIF}
+
             QDesiredVVDRC := QOldVVDRC + DeltaQ * FdeltaQFactor;
         end
         else

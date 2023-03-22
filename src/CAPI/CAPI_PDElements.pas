@@ -587,7 +587,7 @@ begin
         begin
             cBuffer := pComplexArray(ResultPtr);
             CResultPtr := PPolar(ResultPtr);
-            if DSS_CAPI_ARRAY_DIMS then
+            if DSS_EXTENSIONS_ARRAY_DIMS then
             begin
                 ResultCount[2] := 2;
                 ResultCount[3] := NValuesTotal;

@@ -1058,7 +1058,7 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
-                    if DSS_CAPI_ARRAY_DIMS then
+                    if DSS_EXTENSIONS_ARRAY_DIMS then
                     begin
                         ValueCount[2] := 0;
                         ValueCount[3] := 0;
@@ -1276,7 +1276,7 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
-                    if DSS_CAPI_ARRAY_DIMS then
+                    if DSS_EXTENSIONS_ARRAY_DIMS then
                     begin
                         ValueCount[2] := 0;
                         ValueCount[3] := 0;
@@ -1407,7 +1407,7 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
-                    if DSS_CAPI_ARRAY_DIMS then
+                    if DSS_EXTENSIONS_ARRAY_DIMS then
                     begin
                         ValueCount[2] := 0;
                         ValueCount[3] := 0;
@@ -1623,7 +1623,7 @@ begin
                 begin
                     ValueCount[0] := 0;
                     ValueCount[1] := 0;
-                    if DSS_CAPI_ARRAY_DIMS then
+                    if DSS_EXTENSIONS_ARRAY_DIMS then
                     begin
                         ValueCount[2] := 0;
                         ValueCount[3] := 0;
@@ -3505,7 +3505,7 @@ begin
             begin
                 ObjResultCount[0] := 0;
                 ObjResultCount[1] := 0;
-                if DSS_CAPI_ARRAY_DIMS then
+                if DSS_EXTENSIONS_ARRAY_DIMS then
                 begin
                     ObjResultCount[2] := 0;
                     ObjResultCount[3] := 0;

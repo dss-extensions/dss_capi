@@ -724,12 +724,18 @@ begin
         MaxError := Math.Max(MaxError, ErrorSaved^[i]);  // update max error
     end;
 
-    
-    if (MaxError <= ConvergenceTolerance) and (not IsNaN(MaxError)) and (not IsInfinite(MaxError)) then
-        Result := TRUE
-    else
-        Result := FALSE;
-
+{$IFNDEF DSS_CAPI_NOCOMPATFLAGS}
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoSolverFloatChecks)) = 0 then
+{$ENDIF}
+        Result := (MaxError <= ConvergenceTolerance) and (not IsNaN(MaxError)) and (not IsInfinite(MaxError))
+{$IFNDEF DSS_CAPI_NOCOMPATFLAGS}
+    else 
+    if IsNaN(MaxError) or IsInfinite(MaxError) then
+    begin
+        Result := ConvergedFlag; // 
+        Exit;
+    end;
+{$ENDIF}
     ConvergedFlag := Result;
 end;
 

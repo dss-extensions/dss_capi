@@ -44,6 +44,8 @@ function DSS_Get_AllowDOScmd(): TAPIBoolean; CDECL;
 procedure DSS_Set_AllowDOScmd(Value: TAPIBoolean); CDECL;
 function DSS_Get_EnableArrayDimensions(): TAPIBoolean; CDECL;
 procedure DSS_Set_EnableArrayDimensions(Value: TAPIBoolean); CDECL;
+function DSS_Get_CompatFlags(): LongWord; CDECL;
+procedure DSS_Set_CompatFlags(Value: LongWord); CDECL;
 
 implementation
 
@@ -56,7 +58,8 @@ uses
     Executive,
     CmdForms,
     DSSHelper,
-    Classes;
+    Classes,
+    MathUtil;
 
 procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 begin
@@ -236,12 +239,12 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_EnableArrayDimensions(): TAPIBoolean; CDECL;
 begin
-    Result := DSS_CAPI_ARRAY_DIMS;
+    Result := DSS_EXTENSIONS_ARRAY_DIMS;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_EnableArrayDimensions(Value: TAPIBoolean); CDECL;
 begin
-    DSS_CAPI_ARRAY_DIMS := Value;
+    DSS_EXTENSIONS_ARRAY_DIMS := Value;
     if not Value then
         with DSSPrime do
         begin
@@ -295,6 +298,17 @@ end;
 procedure DSS_Set_AllowDOScmd(Value: TAPIBoolean); CDECL;
 begin
     DSS_CAPI_ALLOW_DOSCMD := Value;
+end;
+//------------------------------------------------------------------------------
+function DSS_Get_CompatFlags(): LongWord; CDECL;
+begin
+    Result := DSS_EXTENSIONS_COMPAT;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_Set_CompatFlags(Value: LongWord); CDECL;
+begin
+    DSS_EXTENSIONS_COMPAT := Value;
+    SelectAs2pVersion((DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.BadPrecision)) <> 0);
 end;
 //------------------------------------------------------------------------------
 end.

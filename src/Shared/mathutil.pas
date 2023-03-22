@@ -54,14 +54,19 @@ procedure SymComp2Phase(Vph, V012: PComplex3);
 function TerminalPowerIn(V, I: pComplexArray; Nphases: Integer): Complex;
 function PctNemaUnbalance(Vph: PComplex3): Double;
 procedure DblInc(var x: Double; const y: Double); inline; // increment a double
+procedure SelectAs2pVersion(useOfficial: Boolean);
 
 var
-   As2p, Ap2s, ClarkeF, ClarkeR: TcMatrix; // Symmetrical Component Conversion Matrices
+   As2p, Ap2s: TcMatrix; // Symmetrical Component Conversion Matrices
 
 implementation
 
 uses
     Math;
+
+var
+   As2p_official, Ap2s_official: TcMatrix; // Symmetrical Component Conversion Matrices, usptream versions
+   As2p_ours, Ap2s_ours: TcMatrix; // Symmetrical Component Conversion Matrices, better precision
 
 constructor TPICtrl.Create;
 begin
@@ -260,6 +265,24 @@ begin
         SetElemsym(2, 3, aa_3);
     end;
 end;
+
+procedure SetAMatrix_official(Amat: Tcmatrix);
+var
+    a, aa: complex;
+    i: Integer;
+begin
+    a := cmplx(-0.5,0.866025403);
+    aa := cmplx(-0.5,-0.866025403);    
+    with Amat do
+    begin
+        for i := 1 to 3 do
+            SetElemSym(1, i, CONE);
+        SetElement(2, 2, aa);
+        SetElement(3, 3, aa);
+        SetElemsym(2, 3, a);
+    end;
+end;
+
 
 function Gauss(Mean, StdDev: Double): Double;
 // Returns a normally distributed random variable
@@ -492,19 +515,41 @@ begin
     x := x + y;
 end;
 
+procedure SelectAs2pVersion(useOfficial: Boolean);
+begin
+    if useOfficial then
+    begin
+        // WriteLn('SelectAs2pVersion: selecting worse precision, but numerically compatible with official OpenDSS');
+        Ap2s := Ap2s_official;
+        As2p := As2p_official;
+    end
+    else
+    begin
+        // WriteLn('SelectAs2pVersion: selecting beter precision, but numerically incompatible with official OpenDSS');
+        Ap2s := Ap2s_ours;
+        As2p := As2p_ours;
+    end;
+end;
+
 initialization
     Randomize;
-    As2p := TcMatrix.CreateMatrix(3);
-    Ap2s := TcMatrix.CreateMatrix(3);
-    ClarkeF := TcMatrix.CreateMatrix(3);
-    ClarkeR := TcMatrix.CreateMatrix(3);
-    SetAMatrix(As2p);
-    SetAMatrix_inv(Ap2s);
-    // SetClarkeMatrices;
-    // Sqrt23 := Sqrt(2.0/3.0); // for park
+    As2p_ours := TcMatrix.CreateMatrix(3);
+    Ap2s_ours := TcMatrix.CreateMatrix(3);
+    SetAMatrix(As2p_ours);
+    SetAMatrix_inv(Ap2s_ours);
+
+    As2p_official := TcMatrix.CreateMatrix(3);
+    Ap2s_official := TcMatrix.CreateMatrix(3);
+    SetAMatrix_official(As2p_official);
+    SetAMatrix_official(Ap2s_official);
+    Ap2s_official.Invert();
+
+    // select ours by default
+    SelectAs2pVersion(False);
+
 finalization
-    As2p.Free;
-    Ap2s.Free;
-    ClarkeF.Free;
-    ClarkeR.Free;
+    As2p_official.Free;
+    Ap2s_official.Free;
+    As2p_ours.Free;
+    Ap2s_ours.Free;
 end.

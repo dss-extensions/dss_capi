@@ -1538,13 +1538,40 @@ extern "C" {
     Defaults to False/0 in the 0.13.x versions of DSS C-API. 
     This might change to false in future versions.
 
-    This can also be set through the environment variable DSS_CAPI_ARRAY_DIMS. Setting it to 1 to
-    enable the behavior on start-up.
-
     (API Extension)
     */
     DSS_CAPI_DLL uint16_t ctx_DSS_Get_EnableArrayDimensions(void* ctx);
     DSS_CAPI_DLL void ctx_DSS_Set_EnableArrayDimensions(void* ctx, uint16_t Value);
+
+    /*! 
+    Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.
+    The current bit flags are:
+
+        - 0x1 (bit 0): If enabled, don't check for NaNs in the inner solution loop. This can lead to various errors.
+            This flag is useful for legacy applications that don't handle OpenDSS API errors properly. Through the 
+            development of DSS Extensions, we noticed this is actually a quite common issue.
+        - 0x2 (bit 1): Toggle worse precision for certain aspects of the engine. For example, the sequence-to-phase 
+            (`As2p`) and sequence-to-phase (`Ap2s`) transform matrices. On DSS C-API, we fill the matrix explicitly
+            using higher precision, while numerical inversion of an initially worse precision matrix is used in the 
+            official OpenDSS. We will introduce better precision for other aspects of the engine in the future, 
+            so this flag can be used to toggle the old/bad values where feasible.
+        - 0x4 (bit 2): Toggle some InvControl behavior introduced in OpenDSS 9.6.1.1. It could be a regression 
+            but needs further investigation, so we added this flag in the time being.
+
+    These flags may change for each version of DSS C-API, but the same value will not be reused. That is,
+    when we remove a compatibility flag, it will have no effect but will also not affect anything else
+    besides raising an error if the user tries to toggle a flag that was available in a previous version.
+
+    We expect to keep a very limited number of flags. Since the flags are more transient than the other
+    options/flags, it was preferred to add this generic function instead of a separate function per
+    flag.
+
+    Related enumeration: DSSCompatFlags
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL uint32_t ctx_DSS_Get_CompatFlags(void* ctx);
+    DSS_CAPI_DLL void ctx_DSS_Set_CompatFlags(void* ctx, uint32_t Value);
 
     /*! 
     If enabled, in case of errors or empty arrays, the API returns arrays with values compatible with the 
@@ -1555,7 +1582,7 @@ extern "C" {
     - In the enabled state (COMErrorResults=True), the function will return "[0.0]" instead. This should
       be compatible with the return value of the official COM interface.
     
-    Defaults to True/1 (enabled state) in the v0.12.x series. This will change to false in future series.
+    Defaults to True/1 (enabled state) in the v0.13.x series. This will change to false in future series.
     
     This can also be set through the environment variable DSS_CAPI_COM_DEFAULTS. Setting it to 0 disables
     the legacy/COM behavior. The value can be toggled through the API at any time.

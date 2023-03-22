@@ -26,6 +26,12 @@ USES
 
 type
 {$SCOPEDENUMS ON}
+    TDSSCompatFlags = (
+        NoSolverFloatChecks = 1,
+        BadPrecision = 2,
+        InvControl9611 = 4
+    );
+
     TDSSObjectFlag = (
         EditionActive, 
         HasBeenSaved, // originally from TDSSObject

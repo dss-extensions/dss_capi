@@ -365,7 +365,7 @@ begin
     cnt[1] := incount;
     p := AllocMem(incount * sizeof(Single));
     result := PSingleArray0(p);
-    if (DSS_CAPI_ARRAY_DIMS) then
+    if (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         cnt[2] := nr;
         cnt[3] := nc;
@@ -378,7 +378,7 @@ begin
     cnt[1] := incount;
     p := AllocMem(incount * sizeof(Double));
     result := PDoubleArray0(p);
-    if (DSS_CAPI_ARRAY_DIMS) then
+    if (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         cnt[2] := nr;
         cnt[3] := nc;
@@ -391,7 +391,7 @@ begin
     cnt[1] := incount;
     p := AllocMem(incount * sizeof(Integer));
     result := PIntegerArray0(p);
-    if (DSS_CAPI_ARRAY_DIMS) then
+    if (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         cnt[2] := nr;
         cnt[3] := nc;
@@ -426,7 +426,7 @@ begin
     cnt[0] := incount;
     Result := PIntegerArray0(p);
     FillByte(Result^, incount * sizeof(Integer), 0); // needs to zero it for compatibility
-    if (DSS_CAPI_ARRAY_DIMS) then
+    if (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         cnt[2] := nr;
         cnt[3] := nc;
@@ -482,7 +482,7 @@ begin
     cnt[0] := incount;
     Result := PSingleArray0(p);
     FillByte(Result^, incount * sizeof(Single), 0); // needs to zero it for compatibility
-    if (DSS_CAPI_ARRAY_DIMS) then
+    if (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         cnt[2] := nr;
         cnt[3] := nc;
@@ -507,7 +507,7 @@ begin
     cnt[0] := incount;
     Result := PDoubleArray0(p);
     FillByte(Result^, incount * sizeof(Double), 0); // needs to zero it for compatibility
-    if (DSS_CAPI_ARRAY_DIMS) then
+    if (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         cnt[2] := nr;
         cnt[3] := nc;

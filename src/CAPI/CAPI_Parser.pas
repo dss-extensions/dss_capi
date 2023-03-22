@@ -147,7 +147,7 @@ var
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedOrder * ExpectedOrder);
     ActualOrder := DSSPrime.ComParser.ParseAsMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
-    if (ActualOrder > 0) and (DSS_CAPI_ARRAY_DIMS) then
+    if (ActualOrder > 0) and (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         ResultCount[2] := ActualOrder;
         ResultCount[3] := ActualOrder;
@@ -167,7 +167,7 @@ var
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ExpectedOrder * ExpectedOrder);
     ActualOrder := DSSPrime.ComParser.ParseAsSymMatrix(ResultCount^, ArrayDef.PDoubleArray(ResultPtr));
-    if (ActualOrder > 0) and (DSS_CAPI_ARRAY_DIMS) then
+    if (ActualOrder > 0) and (DSS_EXTENSIONS_ARRAY_DIMS) then
     begin
         ResultCount[2] := ActualOrder;
         ResultCount[3] := ActualOrder;
