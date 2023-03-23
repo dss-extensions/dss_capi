@@ -546,6 +546,11 @@ var
 begin
     try
         u := TDSSUnZipper(DSS.unzipper);
+        if u = NIL then
+        begin
+            DoSimpleMsg(DSS, _('No ZIP file is open.'), 4015);
+            Exit;
+        end;
         u.Enabled := True;
         SetInZipPath('');
 
