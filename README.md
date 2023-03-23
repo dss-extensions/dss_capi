@@ -23,13 +23,13 @@ If you are looking for the bindings to other languages:
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible with the API of the official OpenDSS COM classes.
 - [dss.hpp](https://dss-extensions.org/dss_capi/): header-only library for C++, also hosped in this repository (`include/` directory). Allows using DSS C-API more comfortably from C++, abstract away memory management and low-level details such as API conventions of the DSS C-API library. Currently uses Eigen and fmt.
 
-Version 0.12.x is based on OpenDSS revision 3460, with many extra/custom features.
+Version 0.13.x is based on OpenDSS revision 3595, with many extra/custom features.
 
 **For the source-code of a specific version, check the Git tags.**
 
-While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targetting version 0.13, which will become v1.0 when we consider it ready.
+While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targetting version 0.14, which will become v1.0 when we consider it ready.
 
-Instead of using extra numeric parameters as in the official DDLL interface, each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
+Instead of using extra numeric parameters as in the official DDLL interface ("OpenDSSDirect" or "DCSL"), each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
 ```
     double Loads_Get_kva();
@@ -46,8 +46,9 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.12.x/docs/changelog.md) for a detailed list.
 
+- **2023-03-24 / version 0.13.0: Various updates, including bugfixes and several OpenDSS feature ports; the reference is now OpenDSS v9.6.1.1.**
 - 2022-07-16 / version 0.12.1: Incremental release to fix address a bug found just after 0.12.0 was released.
-- **2022-07-13 / version 0.12.0: Extensive updates, includes ports of the PM functions, a new/rewritten property system, new API extensions, better performance, and other features.**
+- 2022-07-13 / version 0.12.0: Extensive updates, includes ports of the PM functions, a new/rewritten property system, new API extensions, better performance, and other features.
 - 2021-03-09 / version 0.10.7-1: Includes a fix for some reports which presented corrupted text in version 0.10.7.
 - 2020-12-28 / version 0.10.7: Maintenance release based on on OpenDSS revision 2963. Includes fixes and new features from the official OpenDSS. [A new document describing the DSS properties](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/dss_properties.md) was added.
 - 2020-07-31 / version 0.10.6: New API extensions, and ported changes from the official OpenDSS codebase. Includes some bugfixes, a new extended validation error messages and new compatibility toggles.

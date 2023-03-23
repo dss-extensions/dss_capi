@@ -23,15 +23,13 @@ Caso procure integração com outras linguagens de programação:
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) permite integração multi-plataforma (Windows, Linux, MacOS) bastante compatível com a API do módulo COM oficial, de fato contorna algumas dificuldades de COM.
 - [dss.hpp](https://dss-extensions.org/dss_capi/): biblioteca de headers para C++, hospedada também neste repositório (pasta `include/`). Permite usar a DSS C-API de forma confortável sem ser necessário gerenciar os detalhes como o gerenciamento de memória ou convenção de API da DSS C-API. Atualmente usa Eigen e fmt.
 
-A versão 0.12.x é baseada no OpenDSS revisão (SVN) 3460, com várias funcionalidades customizadas e extras.
+A versão 0.13.x é baseada no OpenDSS revisão (SVN) 3595, com várias funcionalidades customizadas e extras.
 
 **Este branch pode estar em desenvolvimento. Para uma versão específica, consulte os tags do Git do repositório.**
 
-Apesar de o objetivo principal (compatibilidade com COM) ter sido alcançado, este é um sempre um trabalho em andamento.
+Apesar de o objetivo principal (compatibilidade com COM) ter sido alcançado, este é um sempre um trabalho em andamento. Em especial, há mudanças planejadas para a versão 0.14, que se tornará v1.0 quando considerada completa.
 
-While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targetting version 0.13, which will become v1.0 when we consider it ready.
-
-Ao invés de usar parâmetros numéricos como na interface DDLL oficial (OpenDSSDirect), cada propriedade COM foi exposta como um par de funções. Por exemplo, a propriedade `kVA` das cargas é exposta como:
+Ao invés de usar parâmetros numéricos como na interface DDLL oficial ("OpenDSSDirect" ou "DCSL"), cada propriedade COM foi exposta como um par de funções. Por exemplo, a propriedade `kVA` das cargas é exposta como:
 
 ```
     double Loads_Get_kva();
@@ -48,8 +46,9 @@ A partir de 2019-03-05, este repositório contém todo o código fonte em lingua
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
+- **2023-03-24 / version 0.13.0: Várias melhorias, incluindo correção de bugs e portes de várias modificações do OpenDSS oficial; a referência para esta versão é o OpenDSS v9.6.1.1.**
 - 2022-07-16 / version 0.12.1: Versão incremental, corrigindo um bug encontrado logo após o lançamento da versão 0.12.0.
-- **2022-07-13 / version 0.12.0: Grande atualização, inclui funções do mecanismo paralelo, um novo sistema de propriedades, novas extensões de API, melhor desempenho, além de outras novidades.**
+- 2022-07-13 / version 0.12.0: Grande atualização, inclui funções do mecanismo paralelo, um novo sistema de propriedades, novas extensões de API, melhor desempenho, além de outras novidades.
 - 2020-12-28 / versão 0.10.7: Versão de manutenção, baseado no OpenDSS r2963. Inclui correções importantes e algumas novas funções do OpenDSS oficial.
 - 2020-07-31 / versão 0.10.6: Novas extensões para a API e alterações do OpenDSS oficial portadas. Inclui algumas correções de bugs, um novo mecanismo de mensagens de erro de validação, além de novos flags de compatibilidade.
 - 2020-03-03 / versão 0.10.5: Principalmente manutenção, com correção de algumas falhas. Inclui alterações portadas da versão COM e do código do OpenDSS oficial. Binários da variação da versão 8 excluidos desta versão.

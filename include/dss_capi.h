@@ -1,7 +1,7 @@
 /*! \file dss_capi.h */
 #ifndef DSS_CAPI_DLL_H
 #define DSS_CAPI_DLL_H
-#define DSS_CAPI_VERSION "0.12.0-dev"
+#define DSS_CAPI_VERSION "0.13.0-dev"
 #ifndef DSS_CAPI_DLL
 //#define DSS_CAPI_DLL __declspec(dllimport)
 #define DSS_CAPI_DLL
@@ -45,7 +45,7 @@ extern "C" {
         MonitorModes_States = 0x00000003, ///< For monitoring State Variables (for PC Elements only)
         MonitorModes_Sequence = 0x00000010, ///< Reports the monitored quantities as sequence quantities
         MonitorModes_Magnitude = 0x00000020, ///< Reports the monitored quantities in Magnitude Only
-        MonitorModes_PosOnly = 0x00000040 ///< Reports the Positive Seq only or avg of all phases
+        MonitorModes_PosOnly = 0x00000040 ///< Reports the positive-sequence only or avg of all phases
     };
 
     enum SolveModes {
@@ -87,7 +87,7 @@ extern "C" {
 
     enum CktModels { ///< Settings_[Get/Set]_CktModel
         CktModels_Multiphase = 0, ///< Circuit model is multiphase (default)
-        CktModels_PositiveSeq = 1 ///< Circuit model is positive sequence model only
+        CktModels_PositiveSeq = 1 ///< Circuit model is positive-sequence model only
     };
 
     enum RandomModes { ///< Solution_[Get/Set]_Random
@@ -114,7 +114,7 @@ extern "C" {
         ActionCodes_Open = 1, ///< Open a switch
         ActionCodes_Close = 2, ///< Close a switch
         ActionCodes_Reset = 3, ///< Reset to the shelf state (unlocked, closed for a switch)
-        ActionCodes_Lock = 4, ///< Lock a switch, prventing both manual and automatic operation
+        ActionCodes_Lock = 4, ///< Lock a switch, preventing both manual and automatic operation
         ActionCodes_Unlock = 5, ///< Unlock a switch, permitting both manual and automatic operation
         ActionCodes_TapUp = 6, ///< Move a regulator tap up
         ActionCodes_TapDown = 7 ///< Move a regulator tap down
@@ -292,7 +292,7 @@ extern "C" {
     DSS_CAPI_DLL void ActiveClass_Get_AllNames_GR(void);
 
     /*! 
-    Sets first element in the active class to be the active DSS object. If object is a CktElement, ActiveCktELment also points to this element. Returns 0 if none.
+    Sets first element in the active class to be the active DSS object. If object is a CktElement, ActiveCktElement also points to this element. Returns 0 if none.
     */
     DSS_CAPI_DLL int32_t ActiveClass_Get_First(void);
 
@@ -473,7 +473,7 @@ extern "C" {
     DSS_CAPI_DLL void Bus_Set_y(double Value);
 
     /*! 
-    Distance from energymeter (if non-zero)
+    Distance from EnergyMeter (if non-zero)
     */
     DSS_CAPI_DLL double Bus_Get_Distance(void);
 
@@ -528,7 +528,7 @@ extern "C" {
     DSS_CAPI_DLL void Bus_Get_puVLL_GR(void);
 
     /*! 
-    For 2- and 3-phase buses, returns array of complex numbers represetin L-L voltages in volts. Returns -1.0 for 1-phase bus. If more than 3 phases, returns only first 3.
+    For 2- and 3-phase buses, returns array of complex numbers representing L-L voltages in volts. Returns -1.0 for 1-phase bus. If more than 3 phases, returns only first 3.
     */
     DSS_CAPI_DLL void Bus_Get_VLL(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -537,7 +537,7 @@ extern "C" {
     DSS_CAPI_DLL void Bus_Get_VLL_GR(void);
 
     /*! 
-    Array of doubles containig voltage magnitude, angle (degrees) pairs in per unit
+    Array of doubles containing voltage magnitude, angle (degrees) pairs in per unit
     */
     DSS_CAPI_DLL void Bus_Get_puVmagAngle(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -721,7 +721,7 @@ extern "C" {
     DSS_CAPI_DLL char* CapControls_Get_Capacitor(void);
 
     /*! 
-    Transducer ratio from pirmary current to control current.
+    Transducer ratio from primary current to control current.
     */
     DSS_CAPI_DLL double CapControls_Get_CTratio(void);
 
@@ -763,7 +763,7 @@ extern "C" {
     DSS_CAPI_DLL char* CapControls_Get_Name(void);
 
     /*! 
-    Gets the next CapControl in the circut. Returns 0 if none.
+    Gets the next CapControl in the circuit. Returns 0 if none.
     */
     DSS_CAPI_DLL int32_t CapControls_Get_Next(void);
 
@@ -788,7 +788,7 @@ extern "C" {
     DSS_CAPI_DLL uint16_t CapControls_Get_UseVoltOverride(void);
 
     /*! 
-    With VoltOverride, swtich off whenever PT voltage exceeds this level.
+    With VoltOverride, switch off whenever PT voltage exceeds this level.
     */
     DSS_CAPI_DLL double CapControls_Get_Vmax(void);
 
@@ -803,7 +803,7 @@ extern "C" {
     DSS_CAPI_DLL void CapControls_Set_Capacitor(const char* Value);
 
     /*! 
-    Transducer ratio from pirmary current to control current.
+    Transducer ratio from primary current to control current.
     */
     DSS_CAPI_DLL void CapControls_Set_CTratio(double Value);
 
@@ -860,7 +860,7 @@ extern "C" {
     DSS_CAPI_DLL void CapControls_Set_UseVoltOverride(uint16_t Value);
 
     /*! 
-    With VoltOverride, swtich off whenever PT voltage exceeds this level.
+    With VoltOverride, switch off whenever PT voltage exceeds this level.
     */
     DSS_CAPI_DLL void CapControls_Set_Vmax(double Value);
 
@@ -1232,7 +1232,7 @@ extern "C" {
     DSS_CAPI_DLL void CktElement_Get_SeqCurrents_GR(void);
 
     /*! 
-    Complex array of sequence powers (kW, kvar) into each 3-phase teminal
+    Complex array of sequence powers (kW, kvar) into each 3-phase terminal
     */
     DSS_CAPI_DLL void CktElement_Get_SeqPowers(double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1992,7 +1992,7 @@ extern "C" {
     DSS_CAPI_DLL void Fuses_Set_TCCcurve(const char* Value);
 
     /*! 
-    Multiplier or actual amps for the TCCcurve object. Defaults to 1.0.  Multipliy current values of TCC curve by this to get actual amps.
+    Multiplier or actual amps for the TCCcurve object. Defaults to 1.0.  Multiply current values of TCC curve by this to get actual amps.
     */
     DSS_CAPI_DLL double Fuses_Get_RatedCurrent(void);
 
@@ -2109,12 +2109,12 @@ extern "C" {
     DSS_CAPI_DLL void Generators_Get_RegisterValues_GR(void);
 
     /*! 
-    Indicates whether the generator is forced ON regardles of other dispatch criteria.
+    Indicates whether the generator is forced ON regardless of other dispatch criteria.
     */
     DSS_CAPI_DLL uint16_t Generators_Get_ForcedON(void);
 
     /*! 
-    Indicates whether the generator is forced ON regardles of other dispatch criteria.
+    Indicates whether the generator is forced ON regardless of other dispatch criteria.
     */
     DSS_CAPI_DLL void Generators_Set_ForcedON(uint16_t Value);
 
@@ -2525,19 +2525,19 @@ extern "C" {
     DSS_CAPI_DLL void LineCodes_Set_R1(double Value);
 
     /*! 
-    Posiive-sequence reactance, ohms per unit length
+    Positive-sequence reactance, ohms per unit length
     */
     DSS_CAPI_DLL double LineCodes_Get_X1(void);
 
     DSS_CAPI_DLL void LineCodes_Set_X1(double Value);
 
     /*! 
-    Zero-Sequence Resistance, ohms per unit length
+    Zero-sequence Resistance, ohms per unit length
     */
     DSS_CAPI_DLL double LineCodes_Get_R0(void);
 
     /*! 
-    Zero Sequence Reactance, Ohms per unit length
+    Zero-sequence Reactance, Ohms per unit length
     */
     DSS_CAPI_DLL double LineCodes_Get_X0(void);
 
@@ -2665,12 +2665,12 @@ extern "C" {
     DSS_CAPI_DLL int32_t Lines_Get_Phases(void);
 
     /*! 
-    Positive Sequence resistance, ohms per unit length.
+    Positive-sequence resistance, ohms per unit length.
     */
     DSS_CAPI_DLL double Lines_Get_R1(void);
 
     /*! 
-    Positive Sequence reactance, ohms per unit length.
+    Positive-sequence reactance, ohms per unit length.
     */
     DSS_CAPI_DLL double Lines_Get_X1(void);
 
@@ -2707,22 +2707,22 @@ extern "C" {
     DSS_CAPI_DLL void Lines_Set_Phases(int32_t Value);
 
     /*! 
-    Positive Sequence resistance, ohms per unit length.
+    Positive-sequence resistance, ohms per unit length.
     */
     DSS_CAPI_DLL void Lines_Set_R1(double Value);
 
     /*! 
-    Positive Sequence reactance, ohms per unit length.
+    Positive-sequence reactance, ohms per unit length.
     */
     DSS_CAPI_DLL void Lines_Set_X1(double Value);
 
     /*! 
-    Zero Sequence capacitance, nanofarads per unit length.
+    Zero-sequence capacitance, nanofarads per unit length.
     */
     DSS_CAPI_DLL double Lines_Get_C0(void);
 
     /*! 
-    Positive Sequence capacitance, nanofarads per unit length.
+    Positive-sequence capacitance, nanofarads per unit length.
     */
     DSS_CAPI_DLL double Lines_Get_C1(void);
 
@@ -2733,7 +2733,7 @@ extern "C" {
     DSS_CAPI_DLL void Lines_Get_Cmatrix_GR(void);
 
     /*! 
-    Zero Sequence resistance, ohms per unit length.
+    Zero-sequence resistance, ohms per unit length.
     */
     DSS_CAPI_DLL double Lines_Get_R0(void);
 
@@ -2747,7 +2747,7 @@ extern "C" {
     DSS_CAPI_DLL void Lines_Get_Rmatrix_GR(void);
 
     /*! 
-    Zero Sequence reactance ohms per unit length.
+    Zero-sequence reactance ohms per unit length.
     */
     DSS_CAPI_DLL double Lines_Get_X0(void);
 
@@ -2761,19 +2761,19 @@ extern "C" {
     DSS_CAPI_DLL void Lines_Get_Xmatrix_GR(void);
 
     /*! 
-    Zero Sequence capacitance, nanofarads per unit length.
+    Zero-sequence capacitance, nanofarads per unit length.
     */
     DSS_CAPI_DLL void Lines_Set_C0(double Value);
 
     /*! 
-    Positive Sequence capacitance, nanofarads per unit length.
+    Positive-sequence capacitance, nanofarads per unit length.
     */
     DSS_CAPI_DLL void Lines_Set_C1(double Value);
 
     DSS_CAPI_DLL void Lines_Set_Cmatrix(double* ValuePtr, int32_t ValueCount);
 
     /*! 
-    Zero Sequence resistance, ohms per unit length.
+    Zero-sequence resistance, ohms per unit length.
     */
     DSS_CAPI_DLL void Lines_Set_R0(double Value);
 
@@ -2783,7 +2783,7 @@ extern "C" {
     DSS_CAPI_DLL void Lines_Set_Rmatrix(double* ValuePtr, int32_t ValueCount);
 
     /*! 
-    Zero Sequence reactance ohms per unit length.
+    Zero-sequence reactance ohms per unit length.
     */
     DSS_CAPI_DLL void Lines_Set_X0(double Value);
 

@@ -98,7 +98,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_ActiveClass_Get_AllNames_GR(void* ctx);
 
     /*! 
-    Sets first element in the active class to be the active DSS object. If object is a CktElement, ActiveCktELment also points to this element. Returns 0 if none.
+    Sets first element in the active class to be the active DSS object. If object is a CktElement, ActiveCktElement also points to this element. Returns 0 if none.
     */
     DSS_CAPI_DLL int32_t ctx_ActiveClass_Get_First(void* ctx);
 
@@ -279,7 +279,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Bus_Set_y(void* ctx, double Value);
 
     /*! 
-    Distance from energymeter (if non-zero)
+    Distance from EnergyMeter (if non-zero)
     */
     DSS_CAPI_DLL double ctx_Bus_Get_Distance(void* ctx);
 
@@ -334,7 +334,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Bus_Get_puVLL_GR(void* ctx);
 
     /*! 
-    For 2- and 3-phase buses, returns array of complex numbers represetin L-L voltages in volts. Returns -1.0 for 1-phase bus. If more than 3 phases, returns only first 3.
+    For 2- and 3-phase buses, returns array of complex numbers representing L-L voltages in volts. Returns -1.0 for 1-phase bus. If more than 3 phases, returns only first 3.
     */
     DSS_CAPI_DLL void ctx_Bus_Get_VLL(void* ctx, double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -343,7 +343,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Bus_Get_VLL_GR(void* ctx);
 
     /*! 
-    Array of doubles containig voltage magnitude, angle (degrees) pairs in per unit
+    Array of doubles containing voltage magnitude, angle (degrees) pairs in per unit
     */
     DSS_CAPI_DLL void ctx_Bus_Get_puVmagAngle(void* ctx, double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -527,7 +527,7 @@ extern "C" {
     DSS_CAPI_DLL char* ctx_CapControls_Get_Capacitor(void* ctx);
 
     /*! 
-    Transducer ratio from pirmary current to control current.
+    Transducer ratio from primary current to control current.
     */
     DSS_CAPI_DLL double ctx_CapControls_Get_CTratio(void* ctx);
 
@@ -569,7 +569,7 @@ extern "C" {
     DSS_CAPI_DLL char* ctx_CapControls_Get_Name(void* ctx);
 
     /*! 
-    Gets the next CapControl in the circut. Returns 0 if none.
+    Gets the next CapControl in the circuit. Returns 0 if none.
     */
     DSS_CAPI_DLL int32_t ctx_CapControls_Get_Next(void* ctx);
 
@@ -594,7 +594,7 @@ extern "C" {
     DSS_CAPI_DLL uint16_t ctx_CapControls_Get_UseVoltOverride(void* ctx);
 
     /*! 
-    With VoltOverride, swtich off whenever PT voltage exceeds this level.
+    With VoltOverride, switch off whenever PT voltage exceeds this level.
     */
     DSS_CAPI_DLL double ctx_CapControls_Get_Vmax(void* ctx);
 
@@ -609,7 +609,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_CapControls_Set_Capacitor(void* ctx, const char* Value);
 
     /*! 
-    Transducer ratio from pirmary current to control current.
+    Transducer ratio from primary current to control current.
     */
     DSS_CAPI_DLL void ctx_CapControls_Set_CTratio(void* ctx, double Value);
 
@@ -666,7 +666,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_CapControls_Set_UseVoltOverride(void* ctx, uint16_t Value);
 
     /*! 
-    With VoltOverride, swtich off whenever PT voltage exceeds this level.
+    With VoltOverride, switch off whenever PT voltage exceeds this level.
     */
     DSS_CAPI_DLL void ctx_CapControls_Set_Vmax(void* ctx, double Value);
 
@@ -1038,7 +1038,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_CktElement_Get_SeqCurrents_GR(void* ctx);
 
     /*! 
-    Complex array of sequence powers (kW, kvar) into each 3-phase teminal
+    Complex array of sequence powers (kW, kvar) into each 3-phase terminal
     */
     DSS_CAPI_DLL void ctx_CktElement_Get_SeqPowers(void* ctx, double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1798,7 +1798,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Fuses_Set_TCCcurve(void* ctx, const char* Value);
 
     /*! 
-    Multiplier or actual amps for the TCCcurve object. Defaults to 1.0.  Multipliy current values of TCC curve by this to get actual amps.
+    Multiplier or actual amps for the TCCcurve object. Defaults to 1.0.  Multiply current values of TCC curve by this to get actual amps.
     */
     DSS_CAPI_DLL double ctx_Fuses_Get_RatedCurrent(void* ctx);
 
@@ -1915,12 +1915,12 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Generators_Get_RegisterValues_GR(void* ctx);
 
     /*! 
-    Indicates whether the generator is forced ON regardles of other dispatch criteria.
+    Indicates whether the generator is forced ON regardless of other dispatch criteria.
     */
     DSS_CAPI_DLL uint16_t ctx_Generators_Get_ForcedON(void* ctx);
 
     /*! 
-    Indicates whether the generator is forced ON regardles of other dispatch criteria.
+    Indicates whether the generator is forced ON regardless of other dispatch criteria.
     */
     DSS_CAPI_DLL void ctx_Generators_Set_ForcedON(void* ctx, uint16_t Value);
 
@@ -2331,19 +2331,19 @@ extern "C" {
     DSS_CAPI_DLL void ctx_LineCodes_Set_R1(void* ctx, double Value);
 
     /*! 
-    Posiive-sequence reactance, ohms per unit length
+    Positive-sequence reactance, ohms per unit length
     */
     DSS_CAPI_DLL double ctx_LineCodes_Get_X1(void* ctx);
 
     DSS_CAPI_DLL void ctx_LineCodes_Set_X1(void* ctx, double Value);
 
     /*! 
-    Zero-Sequence Resistance, ohms per unit length
+    Zero-sequence Resistance, ohms per unit length
     */
     DSS_CAPI_DLL double ctx_LineCodes_Get_R0(void* ctx);
 
     /*! 
-    Zero Sequence Reactance, Ohms per unit length
+    Zero-sequence Reactance, Ohms per unit length
     */
     DSS_CAPI_DLL double ctx_LineCodes_Get_X0(void* ctx);
 
@@ -2471,12 +2471,12 @@ extern "C" {
     DSS_CAPI_DLL int32_t ctx_Lines_Get_Phases(void* ctx);
 
     /*! 
-    Positive Sequence resistance, ohms per unit length.
+    Positive-sequence resistance, ohms per unit length.
     */
     DSS_CAPI_DLL double ctx_Lines_Get_R1(void* ctx);
 
     /*! 
-    Positive Sequence reactance, ohms per unit length.
+    Positive-sequence reactance, ohms per unit length.
     */
     DSS_CAPI_DLL double ctx_Lines_Get_X1(void* ctx);
 
@@ -2513,22 +2513,22 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Lines_Set_Phases(void* ctx, int32_t Value);
 
     /*! 
-    Positive Sequence resistance, ohms per unit length.
+    Positive-sequence resistance, ohms per unit length.
     */
     DSS_CAPI_DLL void ctx_Lines_Set_R1(void* ctx, double Value);
 
     /*! 
-    Positive Sequence reactance, ohms per unit length.
+    Positive-sequence reactance, ohms per unit length.
     */
     DSS_CAPI_DLL void ctx_Lines_Set_X1(void* ctx, double Value);
 
     /*! 
-    Zero Sequence capacitance, nanofarads per unit length.
+    Zero-sequence capacitance, nanofarads per unit length.
     */
     DSS_CAPI_DLL double ctx_Lines_Get_C0(void* ctx);
 
     /*! 
-    Positive Sequence capacitance, nanofarads per unit length.
+    Positive-sequence capacitance, nanofarads per unit length.
     */
     DSS_CAPI_DLL double ctx_Lines_Get_C1(void* ctx);
 
@@ -2539,7 +2539,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Lines_Get_Cmatrix_GR(void* ctx);
 
     /*! 
-    Zero Sequence resistance, ohms per unit length.
+    Zero-sequence resistance, ohms per unit length.
     */
     DSS_CAPI_DLL double ctx_Lines_Get_R0(void* ctx);
 
@@ -2553,7 +2553,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Lines_Get_Rmatrix_GR(void* ctx);
 
     /*! 
-    Zero Sequence reactance ohms per unit length.
+    Zero-sequence reactance ohms per unit length.
     */
     DSS_CAPI_DLL double ctx_Lines_Get_X0(void* ctx);
 
@@ -2567,19 +2567,19 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Lines_Get_Xmatrix_GR(void* ctx);
 
     /*! 
-    Zero Sequence capacitance, nanofarads per unit length.
+    Zero-sequence capacitance, nanofarads per unit length.
     */
     DSS_CAPI_DLL void ctx_Lines_Set_C0(void* ctx, double Value);
 
     /*! 
-    Positive Sequence capacitance, nanofarads per unit length.
+    Positive-sequence capacitance, nanofarads per unit length.
     */
     DSS_CAPI_DLL void ctx_Lines_Set_C1(void* ctx, double Value);
 
     DSS_CAPI_DLL void ctx_Lines_Set_Cmatrix(void* ctx, double* ValuePtr, int32_t ValueCount);
 
     /*! 
-    Zero Sequence resistance, ohms per unit length.
+    Zero-sequence resistance, ohms per unit length.
     */
     DSS_CAPI_DLL void ctx_Lines_Set_R0(void* ctx, double Value);
 
@@ -2589,7 +2589,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Lines_Set_Rmatrix(void* ctx, double* ValuePtr, int32_t ValueCount);
 
     /*! 
-    Zero Sequence reactance ohms per unit length.
+    Zero-sequence reactance ohms per unit length.
     */
     DSS_CAPI_DLL void ctx_Lines_Set_X0(void* ctx, double Value);
 

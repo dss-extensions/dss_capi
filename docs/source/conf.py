@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'dss.hpp'
-copyright = '2022, Paulo Meira, DSS Extensions contributors'
+copyright = '2022-2023, Paulo Meira, DSS Extensions contributors'
 author = 'Paulo Meira, DSS Extensions contributors'
 
 
