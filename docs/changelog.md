@@ -43,10 +43,11 @@ Although only officially released on March 2023, most of the changes below were 
     - Port DynamicExp and related functionality. In our implementation, we also add a new class DynEqPCE to avoid some redundant code (could still be improved). the Generator and the new InvBasePCE derive from this new DynEqPCE. **Note**: the `DynamicEq` functionality from the upstream still seems incomplete and some things are not fully implemented or maybe buggy, so we only ported now to remove the burden of porting this down the line. If you find issues, feel free to report here on DSS Extensions, but we recommended checking first with the official OpenDSS -- if the issue is also found in the official version, prefer to report in the official OpenDSS forum first so everyone gets the fixes and our implementation doesn't diverge too much.
     - CktElement/API: add a few new functions related to state variables.
     - Circuit, Line: port the `LongLineCorrection` flag now that it seems to be fixed upstream. Note that we didn't publish releases with the previous buggy version from the upstream OpenDSS (that applied the long-line correction for everything).
-    - LineSpacing: port side-effect from upstream; changing `nconds` now reallocs and doesn't leak previously allocated memory. Not a common operation, so it's not very relevant.
+    - LineSpacing: port side-effect from upstream; changing `nconds` now reallocates and doesn't leak previously allocated memory. Not a common operation, so it's not very relevant.
     - CktElement: port code for handling losses in AutoTrans
 - Other API updates:
     - DSSContext API: allow `null` pointer for the prime/default instance. This should ease the transition. Issue: https://github.com/dss-extensions/dss_capi/issues/119
+    - Batch API: for a couple of fast-path operations, add checks for edit state, automatically issuing `BeginEdit` and `EndEdit` for the objects in the batch.
     - `Fuses_Reset`: fix C header (remove extra/unused parameter)
     - `Fuses_Get_State` and `Fuses_Get_NormalState`: add missing string copy. Sometimes this could cause memory corruption.
     - `Bus_Get_ZSC012Matrix`: check for nulls
@@ -58,6 +59,13 @@ Although only officially released on March 2023, most of the changes below were 
     - New `DSS_Set_EnableArrayDimensions`/`DSS_Get_EnableArrayDimensions`: for Array results in the API, implement optional matrix sizes; when setting `DSS_Set_EnableArrayDimensions(true)`, the array size pointer will be filled with two extra elements to represent the matrix size (if the data is a matrix instead of a plain vector). For complex number, the dimensions are filled in relation to complex elements instead of double/float64 elements even though we currently reuse the double/float64 array interface. Issue: https://github.com/dss-extensions/dss_capi/issues/113
 
 Note that a couple of SVN changes were ignored on purpose since they introduced potential issues, while many other changes and bug-fixes did not affect the DSS C-API version since our implementation is quite different in some places.
+
+- complements to the Obj and Batch APIs
+
+- Batch API: ...
+
+- Dynamic simulations: ...
+
 
 # Version 0.12.1
 

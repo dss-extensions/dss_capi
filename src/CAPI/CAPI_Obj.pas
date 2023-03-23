@@ -816,10 +816,10 @@ end;
 procedure Batch_GetPropSeq(var ResultPtr: PInteger; ResultCount: PAPISize; batch: TDSSObjectPtr; batchSize: Integer); CDECL;
 var
     cls: TDSSClass;
-    propOffset: PtrUint;
+    // propOffset: PtrUint;
     presult: PInteger;
     i, N: Integer;
-    flags: TPropertyFlags;
+    // propFlags: TPropertyFlags;
 begin
     if (batch = NIL) or (batch^ = NIL) then
     begin
@@ -839,7 +839,7 @@ end;
 
 procedure Batch_CreateFromNew(DSS: TDSSContext; var ResultPtr: TDSSObjectPtr; ResultCount: PAPISize; ClsIdx: Integer; Names: PPAnsiChar; Count: Integer; BeginEdit: TAPIBoolean); CDECL;
 var
-    Obj: TDSSObject;
+    // Obj: TDSSObject;
     Cls: TDSSClass;
     outptr: TDSSObjectPtr;
     i: Integer;
@@ -976,7 +976,7 @@ var
     outptr: TDSSObjectPtr;
     propOffset: PtrUint;
     i: Integer;
-    flags: TPropertyFlags;
+    propFlags: TPropertyFlags;
 begin
     if DSS = NIL then DSS := DSSPrime;
     cls := DSS.DSSClassList.At(clsIdx);
@@ -996,7 +996,7 @@ begin
         Exit;
     end;
 
-    flags := cls.PropertyFlags[propIdx];
+    propFlags := cls.PropertyFlags[propIdx];
     propOffset := cls.PropertyOffset[propIdx];
     objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
     ensureBatchSize(cls.ElementList.Count, ResultPtr, ResultCount);
@@ -1006,9 +1006,9 @@ begin
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.BooleanProperty]) and 
-        (not (TPropertyFlag.CustomGet in flags)) and
-        (not (TPropertyFlag.ReadByFunction in flags)) and
-        (not (TPropertyFlag.ScaledByFunction in flags)) then
+        (not (TPropertyFlag.CustomGet in propFlags)) and
+        (not (TPropertyFlag.ReadByFunction in propFlags)) and
+        (not (TPropertyFlag.ScaledByFunction in propFlags)) then
     begin
         // 40-50% faster than calling the function
         for i := 1 to cls.ElementList.Count do
@@ -1112,7 +1112,7 @@ var
     propOffset: PtrUint;
     presult: PInteger;
     i: Integer;
-    flags: TPropertyFlags;
+    propFlags: TPropertyFlags;
 begin
     if (batch = NIL) or (batch^ = NIL) then
     begin
@@ -1120,7 +1120,7 @@ begin
     end;
 
     cls := batch^.ParentClass;
-    flags := cls.PropertyFlags[Index];
+    propFlags := cls.PropertyFlags[Index];
     propOffset := cls.PropertyOffset[Index];
 
     DSS_RecreateArray_PInteger(ResultPtr, ResultCount, batchSize);
@@ -1143,13 +1143,13 @@ begin
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.BooleanProperty]) and 
-        (not (TPropertyFlag.CustomGet in flags)) and
-        (not (TPropertyFlag.ReadByFunction in flags)) and
-        (not (TPropertyFlag.ScaledByFunction in flags)) then
+        (not (TPropertyFlag.CustomGet in propFlags)) and
+        (not (TPropertyFlag.ReadByFunction in propFlags)) and
+        (not (TPropertyFlag.ScaledByFunction in propFlags)) then
     begin
         for i := 1 to batchSize do
         begin
-            presult^ := (PInteger(PtrUint(batch^) + propoffset))^;
+            presult^ := (PInteger(PtrUint(batch^) + propOffset))^;
             inc(batch);
             inc(presult);
         end;
@@ -1263,13 +1263,14 @@ var
     i: Integer;
     prev: Double;
     doublePtr: PDouble;
-    flags: TPropertyFlags;
+    propFlags: TPropertyFlags;
+    singleEdit: Boolean;
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
 
     cls := batch^.ParentClass;
-    flags := cls.PropertyFlags[Index];
+    propFlags := cls.PropertyFlags[Index];
     propOffset := cls.PropertyOffset[Index];
 
     if not (cls.PropertyType[Index] in [
@@ -1280,41 +1281,63 @@ begin
         Exit;
 
     if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and 
-        (flags = []) and
+        (propFlags = []) and
         (cls.PropertyScale[Index] = 1) then
     begin
         case Operation of
             Batch_Multiply:
                 for i := 1 to batchSize do
                 begin
+                    singleEdit := not (Flg.EditionActive in batch^.Flags);
+                    if singleEdit then
+                        cls.BeginEdit(batch^, False);
+
                     doublePtr := (PDouble(PtrUint(batch^) + propOffset));
                     prev := doubleptr^;
                     doublePtr^ := doublePtr^ * Value;
                     batch^.SetAsNextSeq(Index);
                     batch^.PropertySideEffects(Index, Round(prev));
+
+                    if singleEdit then
+                        cls.EndEdit(batch^, 1);
                     inc(batch);
                 end;
             Batch_Increment:
                 for i := 1 to batchSize do
                 begin
+                    singleEdit := not (Flg.EditionActive in batch^.Flags);
+                    if singleEdit then
+                        cls.BeginEdit(batch^, False);
+
                     doublePtr := (PDouble(PtrUint(batch^) + propOffset));
                     prev := doubleptr^;
                     doublePtr^ := doublePtr^ + Value;
                     batch^.SetAsNextSeq(Index);
                     batch^.PropertySideEffects(Index, Round(prev));
+
+                    if singleEdit then
+                        cls.EndEdit(batch^, 1);
                     inc(batch);
                 end;
         else
             for i := 1 to batchSize do
             begin
+                singleEdit := not (Flg.EditionActive in batch^.Flags);
+                if singleEdit then
+                    cls.BeginEdit(batch^, False);
+
                 doublePtr := (PDouble(PtrUint(batch^) + propOffset));
                 prev := doubleptr^;
                 doublePtr^ := Value;
                 batch^.SetAsNextSeq(Index);
                 batch^.PropertySideEffects(Index, Round(prev));
+
+                if singleEdit then
+                    cls.EndEdit(batch^, 1);
                 inc(batch);
             end;
         end;
+
         Exit;
     end;
 
@@ -1343,18 +1366,18 @@ end;
 procedure Batch_Int32(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Operation: Integer; Value: Integer); CDECL;
 var
     cls: TDSSClass;
-    propOffset: PtrUint;
+    // propOffset: PtrUint;
     i: Integer;
     // prev: Integer;
     // intptr: PInteger;
-    flags: TPropertyFlags;
+    // propFlags: TPropertyFlags;
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
 
     cls := batch^.ParentClass;
-    flags := cls.PropertyFlags[Index];
-    propOffset := cls.PropertyOffset[Index];
+    // propFlags := cls.PropertyFlags[Index];
+    // propOffset := cls.PropertyOffset[Index];
 
     if not (cls.PropertyType[Index] in [
         TPropertyType.IntegerProperty,
@@ -1371,9 +1394,9 @@ begin
     //     TPropertyType.MappedIntEnumProperty,
     //     TPropertyType.MappedStringEnumProperty,
     //     TPropertyType.BooleanProperty]) and 
-    //     (not (TPropertyFlag.CustomSet in flags)) and
-    //     (not (TPropertyFlag.WriteByFunction in flags)) and
-    //     (not (TPropertyFlag.ScaledByFunction in flags)) then
+    //     (not (TPropertyFlag.CustomSet in propFlags)) and
+    //     (not (TPropertyFlag.WriteByFunction in propFlags)) and
+    //     (not (TPropertyFlag.ScaledByFunction in propFlags)) then
     // begin
     //     for i := 1 to batchSize do
     //     begin
@@ -1411,17 +1434,17 @@ end;
 procedure Batch_SetString(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PAnsiChar); CDECL;
 var
     cls: TDSSClass;
-    propOffset: PtrUint;
+    // propOffset: PtrUint;
     i: Integer;
-    flags: TPropertyFlags;
+    // propFlags: TPropertyFlags;
     sValue: String;
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
 
     cls := batch^.ParentClass;
-    flags := cls.PropertyFlags[Index];
-    propOffset := cls.PropertyOffset[Index];
+    // propFlags := cls.PropertyFlags[Index];
+    // propOffset := cls.PropertyOffset[Index];
     
     if not (cls.PropertyType[Index] in [
         // TPropertyType.StringEnumActionProperty, --TODO? Not in SetObjString
@@ -1447,14 +1470,14 @@ end;
 // var
     // cls: TDSSClass;
     // i: Integer;
-    // flags: TPropertyFlags;
+    // propFlags: TPropertyFlags;
     // sValue: String;
 // begin
     // if (batch = NIL) or (batch^ = NIL) then
         // Exit;
 // 
     // cls := batch^.ParentClass;
-    // flags := cls.PropertyFlags[Index];
+    // propFlags := cls.PropertyFlags[Index];
     // propOffset := cls.PropertyOffset[Index];
     // sValue := Value;
     // for i := 1 to batchSize do
@@ -1467,16 +1490,16 @@ end;
 procedure Batch_SetObject(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObject); CDECL;
 var
     cls: TDSSClass;
-    propOffset: PtrUint;
+    // propOffset: PtrUint;
     i: Integer;
-    flags: TPropertyFlags;
+    // propFlags: TPropertyFlags;
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
 
     cls := batch^.ParentClass;
-    flags := cls.PropertyFlags[Index];
-    propOffset := cls.PropertyOffset[Index];
+    // propFlags := cls.PropertyFlags[Index];
+    // propOffset := cls.PropertyOffset[Index];
 
     if cls.PropertyType[Index] <> TPropertyType.DSSObjectReferenceProperty then
         Exit;
@@ -1495,13 +1518,14 @@ var
     i: Integer;
     prev: Double;
     doublePtr: PDouble;
-    flags: TPropertyFlags;
+    propFlags: TPropertyFlags;
+    singleEdit: Boolean;
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
 
     cls := batch^.ParentClass;
-    flags := cls.PropertyFlags[Index];
+    propFlags := cls.PropertyFlags[Index];
     propOffset := cls.PropertyOffset[Index];
 
     if not (cls.PropertyType[Index] in [
@@ -1512,15 +1536,22 @@ begin
         Exit;
 
     if (cls.PropertyType[Index] = TPropertyType.DoubleProperty) and 
-        (flags = []) and
+        (propFlags = []) and
         (cls.PropertyScale[Index] = 1) then
     begin
         for i := 1 to batchSize do
         begin
+            singleEdit := not (Flg.EditionActive in batch^.Flags);
+            if singleEdit then
+                cls.BeginEdit(batch^, False);
+
             doublePtr := PDouble(PtrUint(batch^) + propOffset);
             prev := doubleptr^;
             doublePtr^ := Value^;
             batch^.PropertySideEffects(Index, Round(prev));
+
+            if singleEdit then
+                cls.EndEdit(batch^, 1);
             inc(batch);
             inc(Value);
         end;
@@ -1542,13 +1573,14 @@ var
     i: Integer;
     prev: Integer;
     intPtr: PInteger;
-    flags: TPropertyFlags;
+    propFlags: TPropertyFlags;
+    singleEdit: Boolean;
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
 
     cls := batch^.ParentClass;
-    flags := cls.PropertyFlags[Index];
+    propFlags := cls.PropertyFlags[Index];
     propOffset := cls.PropertyOffset[Index];
 
     if not (cls.PropertyType[Index] in [
@@ -1561,15 +1593,22 @@ begin
         Exit;
 
     if (cls.PropertyType[Index] <> TPropertyType.IntegerOnStructArrayProperty) and 
-        (flags = []) and
+        (propFlags = []) and
         (cls.PropertyScale[Index] = 1) then
     begin
         for i := 1 to batchSize do
         begin
+            singleEdit := not (Flg.EditionActive in batch^.Flags);
+            if singleEdit then
+                cls.BeginEdit(batch^, False);
+
             intPtr := PInteger(PtrUint(batch^) + propOffset);
             prev := intPtr^;
             intPtr^ := Value^;
             batch^.PropertySideEffects(Index, prev);
+
+            if singleEdit then
+                cls.EndEdit(batch^, 1);
             inc(batch);
             inc(Value);
         end;
@@ -1587,20 +1626,20 @@ end;
 procedure Batch_SetStringArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: PPAnsiChar); CDECL;
 var
     cls: TDSSClass;
-    propOffset: PtrUint;
+    // propOffset: PtrUint;
     i: Integer;
-    flags: TPropertyFlags;
+    // propFlags: TPropertyFlags;
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
 
     cls := batch^.ParentClass;
-    flags := cls.PropertyFlags[Index];
-    propOffset := cls.PropertyOffset[Index];
+    // propFlags := cls.PropertyFlags[Index];
+    // propOffset := cls.PropertyOffset[Index];
     
     if not (cls.PropertyType[Index] in [
         // TPropertyType.StringEnumActionProperty, --TODO? Not in SetObjString
-        //TPropertyType.MappedStringEnumOnStructArrayProperty, --TODO? Not in SetObjString
+        // TPropertyType.MappedStringEnumOnStructArrayProperty, --TODO? Not in SetObjString
         TPropertyType.StringProperty,
         TPropertyType.BusProperty,
         TPropertyType.MappedStringEnumProperty,
@@ -1621,16 +1660,16 @@ end;
 procedure Batch_SetObjectArray(batch: TDSSObjectPtr; batchSize: Integer; Index: Integer; Value: TDSSObjectPtr); CDECL;
 var
     cls: TDSSClass;
-    propOffset: PtrUint;
+    // propOffset: PtrUint;
     i: Integer;
-    flags: TPropertyFlags;
+    // propFlags: TPropertyFlags;
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
 
     cls := batch^.ParentClass;
-    flags := cls.PropertyFlags[Index];
-    propOffset := cls.PropertyOffset[Index];
+    // propFlags := cls.PropertyFlags[Index];
+    // propOffset := cls.PropertyOffset[Index];
 
     if cls.PropertyType[Index] <> TPropertyType.DSSObjectReferenceProperty then
         Exit;
