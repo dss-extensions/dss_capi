@@ -85,25 +85,12 @@ function TCktElementClass.BeginEdit(ptr: Pointer; SetActive_: Boolean): Pointer;
 var
     Obj: TObj;
 begin
-    // This is the default action, some classes do a bit more
-    if ptr <> NIL then
-        Obj := TObj(ptr)
-    else
-        Obj := ElementList.Active;
-
-    if (Obj <> NIL) and (Flg.EditionActive in Obj.Flags) then
-    begin
-        DosimpleMsg('%s: Object already being edited!', [Obj.FullName], 37737);
-        Exit;
-    end;
-
+    Obj := TObj(inherited BeginEdit(ptr, False));
     if SetActive_ then
     begin
         //TODO: e.g. DSS.ActiveCapControlObj := Obj; -- if ever required for all elements
         ActiveCircuit.ActiveCktElement := Obj;
     end;
-
-    Include(Obj.Flags, Flg.EditionActive);
     Result := Obj;
 end;
 

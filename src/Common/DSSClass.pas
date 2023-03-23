@@ -1122,20 +1122,20 @@ begin
     else
         Obj := ElementList.Active;
 
-    if (Obj <> NIL) and (Flg.EditionActive in Obj.Flags) then
-    begin
-        DosimpleMsg('%s: Object already being edited!', [Obj.FullName], 37737);
-        Exit;
-    end;
-
+    Result := Obj;
     if SetActive then
     begin
         //TODO: e.g. DSS.ActiveConductorDataObj := Obj; -- if ever required later
         DSS.ActiveDSSObject := Obj;
     end;
 
+    if (Obj <> NIL) and (Flg.EditionActive in Obj.Flags) then
+    begin
+        //TODO: refine the logic to throw the error
+        DosimpleMsg('%s: Object already being edited!', [Obj.FullName], 37737);
+        Exit;
+    end;
     Include(Obj.Flags, Flg.EditionActive);
-    Result := Obj;
 end;
 
 function TDSSClass.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
@@ -1156,7 +1156,12 @@ begin
     // Get the target object and initialize the edition
     Obj := TDSSObject(BeginEdit(NIL, True));
 
-    //TODO: error handling? if Obj = NIL then...
+    if Obj = NIL then
+    begin
+        Result := -1;
+        DoSimpleMsg(_('There is no active element to edit.'), 37738);
+        Exit;
+    end;
 
     // Previous Edit loop
     ParamPointer := 0;
@@ -1182,6 +1187,7 @@ begin
                 if DSS_CAPI_EARLY_ABORT then
                 begin
                     Result := -1;
+                    EndEdit(Obj, Result);
                     Exit;
                 end;
             end;
@@ -1198,6 +1204,7 @@ begin
             if DSS_CAPI_EARLY_ABORT then
             begin
                 Result := -1;
+                EndEdit(Obj, Result);
                 Exit;
             end;
 
