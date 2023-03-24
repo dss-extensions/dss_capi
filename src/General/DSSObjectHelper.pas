@@ -2515,8 +2515,14 @@ begin
             dataPtr := PPDouble(PByte(obj) + PropertyOffset[Index]);
             
             // Allow both the full matrix or the triangle
-            if (ValueCount <> (Norder * Norder)) and (ValueCount <> (Norder * (Norder - 1)) div 2) then
-                Exit; // TODO: error?
+            if (ValueCount <> (Norder * Norder)) and (ValueCount <> (Norder * (Norder + 1)) div 2) then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Provide either the full matrix or the lower triangle.', 
+                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                2020036);
+                Exit;
+            end;
 
             doublePtr := PPDouble(dataPtr)^;
             if doublePtr = NIL then
@@ -2531,21 +2537,20 @@ begin
             else
             begin
                 for i := 0 to Norder - 1 do
-                    for j := 0 to Norder - 1 do
-                        if j >= i then
-                        begin
-                            doublePtr[i * Norder + j] := Value^;
-                            if i <> j then
-                                doublePtr[j * Norder + i] := Value^;
+                    for j := 0 to i do
+                    begin
+                        doublePtr[i * Norder + j] := Value^;
+                        if i <> j then
+                            doublePtr[j * Norder + i] := Value^;
 
-                            Inc(Value);
-                        end;
+                        Inc(Value);
+                    end;
             end;
             if scale <> 1 then
             begin
                 for i := 0 to Norder - 1 do
                     for j := 0 to Norder - 1 do
-                        doublePtr[i * Norder + j] := doublePtr[i * Norder + j] * scale;
+                        doublePtr[i * Norder + j] *= scale;
             end;
         end;
         TPropertyType.ComplexPartSymMatrixProperty:
@@ -2561,8 +2566,14 @@ begin
                 Inc(doublePtr);
 
             // Allow both the full matrix or the triangle
-            if (ValueCount <> (Norder * Norder)) and (ValueCount <> (Norder * (Norder - 1)) div 2) then
-                Exit; // TODO: error?
+            if (ValueCount <> (Norder * Norder)) and (ValueCount <> (Norder * (Norder + 1)) div 2) then
+            begin
+                DoSimpleMsg(
+                    '%s.%s: Invalid number of elements. Provide either the full matrix or the lower triangle.', 
+                    [TDSSObject(obj).FullName, PropertyName[Index], Value],
+                2020037);
+                Exit;
+            end;
 
             if ValueCount = (Norder * Norder) then
             begin
@@ -2577,21 +2588,19 @@ begin
             else
             begin
                 for i := 0 to Norder - 1 do
-                    for j := 0 to Norder - 1 do
-                        if j >= i then
-                        begin
-                            doublePtr[i * Norder + j] := Value^;
-                            if i <> j then
-                                doublePtr[j * Norder + i] := Value^;
-
-                            Inc(Value);
-                        end;
+                    for j := 0 to i do
+                    begin
+                        doublePtr[(i * Norder + j) * 2] := Value^;
+                        if i <> j then
+                            doublePtr[(j * Norder + i) * 2] := Value^;
+                        Inc(Value);
+                    end;
             end;
             if scale <> 1 then
             begin
                 for i := 0 to Norder - 1 do
                     for j := 0 to Norder - 1 do
-                        doublePtr[i * Norder + j] := doublePtr[i * Norder + j] * scale;
+                        doublePtr[(i * Norder + j) * 2] *= scale;
             end;
         end;    
         TPropertyType.DoubleArrayProperty,
