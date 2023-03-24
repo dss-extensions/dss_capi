@@ -1445,7 +1445,9 @@ begin
         if propName = 'cls' then
             propName := 'class'
         else if AnsiLowerCase(propName) = 'typ' then
-            propName := propName + 'e';
+            propName := propName + 'e'
+        else if propName = 'vr' then
+            propName := 'var';
             
         PropertyName[PropOffset + i] := propName;
         PropertySource[PropOffset + i] := PropSource;
