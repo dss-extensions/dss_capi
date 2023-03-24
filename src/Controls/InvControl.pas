@@ -423,7 +423,6 @@ end;
 procedure TInvControl.DefineProperties;
 var
     obj: TObj = NIL; // NIL (0) on purpose
-    ControlModelEnum: TDSSEnum = NIL;
 begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
