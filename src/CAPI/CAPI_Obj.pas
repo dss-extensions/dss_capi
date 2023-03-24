@@ -391,6 +391,11 @@ begin
     if BeginEdit then
         Cls.BeginEdit(Obj, False);
 
+    if Cls.DSSClassType = DSS_OBJECT then
+        DSS.DSSObjs.Add(Obj)
+    else
+        DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));
+
     Result := Obj;
 end;
 
@@ -859,6 +864,11 @@ begin
         for i := 1 to Count do
         begin
             outptr^ := Cls.NewObject(Format('%s_%d', [prefix, i]), False);
+            if Cls.DSSClassType = DSS_OBJECT then
+                DSS.DSSObjs.Add(outptr^)
+            else
+                DSS.ActiveCircuit.AddCktElement(TDSSCktElement(outptr^));
+
             inc(outptr);
         end;
     end
@@ -867,6 +877,11 @@ begin
         for i := 1 to Count do
         begin
             outptr^ := Cls.NewObject(Names^, False);
+            if Cls.DSSClassType = DSS_OBJECT then
+                DSS.DSSObjs.Add(outptr^)
+            else
+                DSS.ActiveCircuit.AddCktElement(TDSSCktElement(outptr^));
+
             inc(outptr);
             inc(Names);
         end;
