@@ -1807,6 +1807,9 @@ begin
         Value := AnsiLowerCase(Value);
 
     case PropertyType[Index] of
+        TPropertyType.DSSObjectReferenceProperty:
+            ParseObjPropertyValue(Obj, Index, Value, prevInt);
+
         TPropertyType.MakeLikeProperty:
         begin
             otherObj := obj.ParentClass.Find(Value);
@@ -2481,7 +2484,7 @@ var
     positionPtr, sizePtr: PInteger;
     scale: Double;
     doublePtr: PDouble;
-    dataPtr: PPDouble;
+    dataPtr: PPDouble = NIL;
     complexPtr: PComplex;
     ptype: TPropertyType;
     flags: TPropertyFlags;
@@ -2765,17 +2768,135 @@ end;
 
 procedure TDSSClassHelper.SetObjStrings(ptr: Pointer; Index: Integer; Value: PPAnsiChar; ValueCount: Integer);
 var
-    i, maxSize, step: Integer;
+    i, maxSize, step, intVal: Integer;
     positionPtr, integerPtr: PInteger;
     flags: TPropertyFlags;
     stringListPtr: PStringList;
     stringList: TStringList;
     stringPtr: PString;
     Obj: TDSSObject;
+    cls: TDSSClass;
+    ElemName: String;
+    objs: Array of TDSSObject = NIL;
+    otherObj: TDSSObject;
+    otherObjPtr: TDSSObjectPtr;
 begin
     Obj := TDSSObject(ptr);
     flags := PropertyFlags[Index];
     case PropertyType[Index] of 
+        TPropertyType.DSSObjectReferenceArrayProperty:
+        begin
+            // Class of the objects
+            cls := Pointer(PropertyOffset2[Index]);
+
+            if TPropertyFlag.WriteByFunction in flags then
+            begin
+                SetLength(objs, ValueCount);
+                if cls <> NIL then
+                begin
+                    for i := 1 to ValueCount do
+                    begin
+                        ElemName := Value^;
+                        // if TPropertyFlag.CheckForVar in flags then
+                        //     PropParser.CheckforVar(ElemName);
+
+                        otherObj := cls.Find(ElemName, False);
+                        if otherObj = NIL then
+                        begin
+                            DoSimpleMsg(
+                                Format('%s.%s: %s object "%s" not found.',
+                                    [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, ElemName]
+                                ), 403);
+                            Exit;
+                        end;
+                        objs[i - 1] := otherObj;
+                        Inc(Value);
+                    end;
+                end
+                else
+                begin
+                    for i := 1 to ValueCount do
+                    begin
+                        ElemName := ConstructElemName(DSS, AnsiLowerCase(Value^));
+                        intVal := GetCktElementIndex(DSS, ElemName);
+                        otherObj := NIL;
+                        if intVal > 0 then
+                            otherObj := DSS.ActiveCircuit.CktElements.Get(intVal);
+
+                        if otherObj = NIL then
+                        begin
+                            DoSimpleMsg(
+                                Format('%s.%s: object "%s" not found.',
+                                    [TDSSObject(obj).FullName, PropertyName[Index], ElemName]
+                                ), 403);
+                            Exit;
+                        end;
+                        objs[i - 1] := otherObj;
+                        Inc(Value);
+                    end;
+                end;
+                TWriteObjRefsPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, PPointer(@objs[0]), Length(objs));
+                // Result := True;
+                Exit;
+            end;
+
+            // Number of items
+            intVal := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
+
+            if intVal < 1 then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: No objects are expected! Check if the order of property assignments is correct.',
+                        [TDSSObject(obj).FullName, PropertyName[Index]]
+                    ), 402);
+                Exit;
+            end;
+            if intVal <> ValueCount then
+            begin
+                DoSimpleMsg(
+                    Format('%s.%s: Number of elements expected (%d) does not match the number of provided elements (%d).',
+                        [TDSSObject(obj).FullName, PropertyName[Index], intVal, ValueCount]
+                    ), 406);
+                Exit;
+            end;
+
+            // Current position
+            positionPtr := NIL;
+            if (PropertyStructArrayIndexOffset2 <> 0) or (PropertyStructArrayIndexOffset <> 0)  then
+            begin
+                if TPropertyFlag.AltIndex in flags then
+                    positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset2)
+                else
+                    positionPtr := PInteger(PByte(obj) + PropertyStructArrayIndexOffset);
+            end;
+
+            // Start of array
+            otherObjPtr := TDSSObjectPtrPtr((PtrUint(obj) + PtrUint(PropertyOffset[Index])))^;
+
+            // TODO: if cls = NIL,..
+            i := 0;
+            for i := 1 to intVal do
+            begin
+                otherObj := cls.Find(Value^, False);
+                if otherObj = NIL then
+                begin
+                    DoSimpleMsg(
+                        Format('%s.%s: %s object "%s" not found.',
+                            [TDSSObject(obj).FullName, PropertyName[Index], cls.Name, Value^]
+                        ), 403);
+                    Exit;
+                end
+                else
+                    otherObjPtr^ := otherObj;
+
+                Inc(Value);
+            end;
+
+            if positionPtr <> NIL then
+                positionPtr^ := i;
+
+            // Result := True;
+        end;
         TPropertyType.StringListProperty:
         begin
             if (TPropertyFlag.WriteByFunction in flags) then

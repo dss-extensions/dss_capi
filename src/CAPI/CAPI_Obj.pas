@@ -1469,7 +1469,8 @@ begin
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.StringOnArrayProperty,
         TPropertyType.StringOnStructArrayProperty,
-        TPropertyType.BusOnStructArrayProperty
+        TPropertyType.BusOnStructArrayProperty,
+        TPropertyType.DSSObjectReferenceProperty
     ]) then
         Exit;
 
@@ -1660,7 +1661,8 @@ begin
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.StringOnArrayProperty,
         TPropertyType.StringOnStructArrayProperty,
-        TPropertyType.BusOnStructArrayProperty        
+        TPropertyType.BusOnStructArrayProperty,
+        TPropertyType.DSSObjectReferenceProperty
     ]) then
         Exit;
 
@@ -1681,6 +1683,12 @@ var
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
+
+    if Value = NIL then
+    begin
+        Batch_SetObject(batch, batchSize, Index, NIL);
+        Exit;
+    end;
 
     cls := batch^.ParentClass;
     // propFlags := cls.PropertyFlags[Index];
