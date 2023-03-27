@@ -142,6 +142,30 @@ for fn in glob('src/CAPI/*.pas'):
             if missing:
                 print('Missing:', missing)
                 assert not missing, missing
+        else:
+            for impl in impls:
+                for fstart, ftype, funcname in zip(fstarts, file_ftypes, file_funcnames):
+                    if fstart not in impl:
+                        continue
+
+                    if not '_GR(' in fstart:
+                        new_impl, sub_count = re.subn(
+                            rf'{re.escape(fstart)}(.*?){n}begin{n}(.*?)', 
+                            rf'{fstart}\1{n}begin{n}    if DSSPrime = NIL then DSSPrime := DSSPRIME;{n}\2',
+                            impl, 
+                            1,
+                            flags=re.DOTALL|re.IGNORECASE
+                        )
+                        assert sub_count == 1
+                        assert fstart not in file_used_funcs, fstart
+                        src = src.replace(impl, new_impl)
+                        file_used_funcs.add(fstart)
+                    break
+            
+            missing = (set(fstart for fstart in fstarts if not '_GR(' in fstart) - file_used_funcs)
+            if missing:
+                print('Missing:', missing)
+                assert not missing, missing
 
         src = src.replace(f'unit {unitname};', f'unit {ctxunitname};')
         # src = src.replace('ctx_ctx_', 'ctx_')
