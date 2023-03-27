@@ -1760,6 +1760,8 @@ extern "C" {
     options/flags, it was preferred to add this generic function instead of a separate function per
     flag.
 
+    **These flags are global**, affecting any DSS context in the process.
+
     Related enumeration: DSSCompatFlags
 
     (API Extension)
