@@ -10,7 +10,7 @@
 
 - **Planned**:
     - (maybe) expose/reimplement remaining PM features (diakoptics)
-    - continue work on the plotting and extended reporting API
+    - continue work on the extended reporting API
     - see also the GitHub milestone: https://github.com/dss-extensions/dss_capi/milestone/6
     - i18n complements
     - drop the `ctx_` prefix for most functions, leave the DSSContext API as the default version. We plan to drop the current single-instance API, but we can add a header with inline C functions, prefixed, for easier migration. 
@@ -29,7 +29,7 @@ Although only officially released on March 2023, most of the changes below were 
 - CtrlQueue: adjust string formatting of items; although this doesn't affect the numeric results, the strings from the queue had some truncated numbers.
 - Property system: For compatibility with the official version, allow autoresizing some arrays when given conflicting number of elements through the text interface or scripts.
 - `Like` property: Although not recommended and [deprecated in the official OpenDSS](https://sourceforge.net/p/electricdss/discussion/861977/thread/8b59d21eb6/?limit=25#b57c/f668), the sequence of properties filled in the original copy is also copied. If you use `Like`, remember to check if the copy actually worked since some classes are known to not copy every property correctly.
-- Plotting and UI: fixes for `DaisyPlot` and `GeneralDataPlot`, especially multi-platform handling. Change how some properties are exposed in the JSON interchange to the callbacks.
+- Plotting and UI: The engine side plotting callback system is now complete. There are fixes for `DaisyPlot` and `GeneralDataPlot`, especially multi-platform handling. Changed how some properties are exposed in the JSON interchange to the callbacks. Implement argument handling and callback dispatch for `DI_Plot`, `CompareCases` and `YearlyCurves`.
 - `New` commands: Fix potential issue with null pointers and duplicate names when `DuplicatesAllowed=False`.
 - EnergyMeter: Fix error message when the metered element is not a PDElement.
 - CIMXML export: Fix issues present since v0.12.0; reported in https://github.com/dss-extensions/OpenDSSDirect.py/issues/121

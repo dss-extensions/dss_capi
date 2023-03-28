@@ -2969,6 +2969,10 @@ Var
     iRegisters:Array of Integer;
     NumRegs:Integer;
     PeakDay:Boolean;
+    plotParams: TJSONObject = NIL;
+    jsonRegisters: TJSONArray = NIL;
+    plotParamsStr: String = '';
+    gotError: Boolean = True;
 Begin
      IF DSS.DIFilesAreOpen Then DSS.EnergyMeterClass.CloseAllDIFiles;
 
@@ -3008,7 +3012,29 @@ Begin
          Param := DSS.Parser.StrValue;
      End;
 
-     //TODO!!! DSSPlotObj.DoDI_Plot(CaseName, CaseYear, iRegisters, PeakDay, MeterName);
+     try
+        jsonRegisters := TJSONArray.Create();
+        for i := 0 to High(iRegisters) do
+            jsonRegisters.Add(iRegisters[i]);
+
+        plotParams := TJSONObject.Create([
+            'PlotType', 'DI',
+            'CaseYear', CaseYear,
+            'CaseName', CaseName,
+            'MeterName', MeterName,
+            'Registers', jsonRegisters,
+            'PeakDay', PeakDay
+        ]);
+
+        plotParamsStr := plotParams.FormatJSON();
+        DSS.DSSPlotCallback(DSS, PChar(plotParamsStr));
+        gotError := False;
+     finally
+        FreeAndNil(plotParams);
+     end;
+
+      if gotError then
+        DoSimpleMsg(DSS, _('Could not setup DI_Plot data'), 778);
 
      iRegisters := Nil;
      Result := 0;
@@ -3021,6 +3047,9 @@ Var
     UnKnown: Boolean;
     Reg: Integer;
     CaseName1, CaseName2, WhichFile: String;
+    plotParams: TJSONObject = NIL;
+    plotParamsStr: String = '';
+    gotError: Boolean = True;
 Begin
      IF DSS.DIFilesAreOpen Then DSS.EnergyMeterClass.CloseAllDIFiles;
      CaseName1 := 'base';
@@ -3059,7 +3088,24 @@ Begin
          Param := DSS.Parser.StrValue;
      End;
 
-     //TODO!!! DSSPlotObj.DoCompareCases(CaseName1, CaseName2, WhichFile,  Reg);
+     try
+        plotParams := TJSONObject.Create([
+            'PlotType', 'CompareCases',
+            'CaseName1', CaseName1,
+            'CaseName2', CaseName2,
+            'MeterName', WhichFile,
+            'Register', Reg
+        ]);
+        plotParamsStr := plotParams.FormatJSON();
+        DSS.DSSPlotCallback(DSS, PChar(plotParamsStr));
+        gotError := False;
+     finally
+        FreeAndNil(plotParams);
+     end;
+
+      if gotError then
+        DoSimpleMsg(DSS, _('Could not setup DI_Plot data'), 778);     
+
      Result := 0;
 end;
 
@@ -3073,13 +3119,17 @@ Var
     iRegisters: Array of Integer;
     Nregs: Integer;
     WhichFile: String;
+    plotParams: TJSONObject = NIL;
+    jsonCaseNames: TJSONArray = NIL;
+    jsonRegisters: TJSONArray = NIL;
+    plotParamsStr: String = '';
+    gotError: Boolean = True;
 Begin
      IF DSS.DIFilesAreOpen Then DSS.EnergyMeterClass.CloseAllDIFiles;
 
      Nregs := 1;
      SetLength(iRegisters, Nregs);
-     CaseNames := TStringList.Create;
-     CaseNames.Clear;
+     jsonCaseNames := TJSONArray.Create();
      WhichFile := 'Totals';
 
      ParamPointer := 0;
@@ -3105,7 +3155,7 @@ Begin
                 DSS.AuxParser.NextParam;
                 Param := DSS.AuxParser.StrValue;
                 While Length(Param)>0 Do Begin
-                    CaseNames.Add(Param);
+                    jsonCaseNames.Add(Param);
                     DSS.AuxParser.NextParam;
                     Param := DSS.AuxParser.StrValue;
                 End;
@@ -3124,10 +3174,30 @@ Begin
          Param := DSS.Parser.StrValue;
      End;
 
-     //TODO!!! DSSPlotObj.DoYearlyCurvePlot(CaseNames, WhichFile,  iRegisters);
+     try
+        jsonRegisters := TJSONArray.Create();
+        for i := 0 to High(iRegisters) do
+            jsonRegisters.Add(iRegisters[i]);
+
+        plotParams := TJSONObject.Create([
+            'PlotType', 'YearlyCurve',
+            'CaseNames', jsonCaseNames,
+            'MeterName', WhichFile,
+            'Registers', jsonRegisters
+        ]);
+        jsonCaseNames := NIL;
+        plotParamsStr := plotParams.FormatJSON();
+        DSS.DSSPlotCallback(DSS, PChar(plotParamsStr));
+        gotError := False;
+     finally
+        FreeAndNil(plotParams);
+        FreeAndNil(jsonCaseNames);
+     end;
+
+      if gotError then
+        DoSimpleMsg(DSS, _('Could not setup YearlyCurves data'), 779);
 
      iRegisters := Nil;
-     CaseNames.Free;
      Result := 0;
 End;
 
