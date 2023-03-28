@@ -1900,6 +1900,13 @@ extern "C" {
     DSS_CAPI_DLL char* Error_Get_Description(void);
 
     /*! 
+    Set the description of error for last operation; for advanced usage only, e.g. callbacks
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void Error_Set_Description(const char* Value);
+
+    /*! 
     Error Number (returns current value and then resets to zero)
     */
     DSS_CAPI_DLL int32_t Error_Get_Number(void);

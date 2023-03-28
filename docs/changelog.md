@@ -47,6 +47,7 @@ Although only officially released on March 2023, most of the changes below were 
     - CktElement: port code for handling losses in AutoTrans
 - Other API updates:
     - DSSContext API: allow `null` pointer for the prime/default instance. This should ease the transition. Issue: https://github.com/dss-extensions/dss_capi/issues/119
+    - Error API: add `Error_Set_Description` to allow easier setting an error message from callbacks (this is for advanced usage)
     - Batch and Obj API: 
         - For a couple of fast-path operations, add checks for edit state, automatically issuing `BeginEdit` and `EndEdit` for the objects in the batch.
         - Allow passing strings (object names) instead of pointers for object references

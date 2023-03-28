@@ -15,6 +15,7 @@ function Error_Get_EarlyAbort(): TAPIBoolean; CDECL;
 procedure Error_Set_EarlyAbort(Value: TAPIBoolean); CDECL;
 function Error_Get_ExtendedErrors(): TAPIBoolean; CDECL;
 procedure Error_Set_ExtendedErrors(Value: TAPIBoolean); CDECL;
+procedure Error_Set_Description(Value: PAnsiChar); CDECL;
 
 implementation
 
@@ -61,4 +62,10 @@ begin
     DSS_CAPI_EXT_ERRORS := Value;
 end;
 //------------------------------------------------------------------------------
+procedure Error_Set_Description(Value: PAnsiChar); CDECL;
+begin
+    DSSPrime.LastErrorMessage := Value;
+end;
+//------------------------------------------------------------------------------
+
 end.

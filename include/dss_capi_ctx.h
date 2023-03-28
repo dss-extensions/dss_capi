@@ -1706,6 +1706,13 @@ extern "C" {
     DSS_CAPI_DLL char* ctx_Error_Get_Description(void* ctx);
 
     /*! 
+    Set the description of error for last operation; for advanced usage only, e.g. callbacks
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void ctx_Error_Set_Description(void* ctx, const char* Value);
+
+    /*! 
     Error Number (returns current value and then resets to zero)
     */
     DSS_CAPI_DLL int32_t ctx_Error_Get_Number(void* ctx);
