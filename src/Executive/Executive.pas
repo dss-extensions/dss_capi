@@ -515,19 +515,34 @@ end;
 procedure TExecutive.ZipOpen(ZipFileName: String);
 var
     unzipper: TDSSUnZipper = NIL;
+    gotError: Boolean = False;
+    errorMsg: String = '';
 begin
     if (not DSS_CAPI_ALLOW_CHANGE_DIR) then
         ZipFileName := ExpandFileName(AdjustInputFilePath(DSS, ZipFileName));
 
     try
-        unzipper := TDSSUnZipper.Create(ZipFileName);
-        unzipper.PrepareHashmap();
+        gotError := True;
+        if not FileExists(ZipFileName) then
+        begin
+            errorMsg := 'File does not exist.';
+        end
+        else
+        begin
+            unzipper := TDSSUnZipper.Create(ZipFileName);
+            unzipper.PrepareHashmap();
+            gotError := False;
+        end;
     except
         on E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error preparing ZIP "%s": %s', [ZipFileName, E.message], 4016);
-            FreeAndNil(unzipper);
+            errorMsg := E.message;
         end;
+    end;
+    if gotError then
+    begin
+        DoSimpleMsg(DSS, 'Error preparing ZIP "%s": %s', [ZipFileName, errorMsg], 4016);
+        FreeAndNil(unzipper);
     end;
     if DSS.unzipper <> NIL then
         DSS.unzipper.Free();
