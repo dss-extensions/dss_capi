@@ -382,6 +382,7 @@ TYPE
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
         Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer);Override;
         Function CheckOLInverter(ActorID : Integer): Boolean;
+        Function CheckAmpsLimit(ActorID : Integer): Boolean;
         Procedure Set_FstateChanged(const Value : Boolean);
 
         Property kW                 :Double  Read Get_kW                     Write Set_kW;
@@ -521,7 +522,9 @@ Const
   propDynEq              = 57;
   propDynOut             = 58;
   propGFM                = 59;
-  NumPropsThisClass = 59; // Make this agree with the last property constant
+  propAmpsLimit          = 60;
+  propAmpsError          = 61;
+  NumPropsThisClass = 61; // Make this agree with the last property constant
 
 VAR
 
@@ -779,7 +782,11 @@ Begin
                             'Defines the control mode for the inverter. It can be one of {GFM | GFL*}. By default it is GFL (Grid Following Inverter).' +
                                  ' Use GFM (Grid Forming Inverter) for energizing islanded microgrids, but, if the device is conencted to the grid, it is highly recommended to use GFL.' + CRLF + CRLF +
                                  'GFM control mode disables any control action set by the InvControl device.');
-
+    AddProperty('AmpLimit', propAmpsLimit,
+                            'Is the current limiter per phase for the IBR when operating in GFM mode. This limit is imposed to prevent the IBR to enter into Safe Mode when reaching the IBR power ratings.' + CRLF +
+                            'Once the IBR reaches this value, it remains there without moving into Safe Mode. This value needs to be set lower than the IBR Amps rating.');
+    AddProperty('AmpLimitGain', propAmpsError,
+                            'Use it for fine tunning the current limiter when active, by default is 0.8, it has to be a value between 0.1 and 1. This value allows users to fine tune the IBRs current limiter to match with the user requirements.');
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
@@ -1029,10 +1036,10 @@ Begin
                                     else
                                       GFM_mode  :=  False;
                                     YprimInvalid[ActorID] :=  True;
-                                  End
-
-
-             ELSE
+                                  End;
+                propAmpsLimit   : myDynVars.ILimit            := Parser[ActorID].DblValue;
+                propAmpsError   : myDynVars.VError            := Parser[ActorID].DblValue;
+              ELSE
                // Inherited parameters
                  ClassEdit(ActiveStorageObj, ParamPointer - NumPropsThisClass)
              END;
@@ -1269,6 +1276,8 @@ End;
 
 //----------------------------------------------------------------------------
 Constructor TStorageObj.Create(ParClass:TDSSClass; const SourceName:String);
+var
+  i : integer;
 Begin
 
      Inherited create(ParClass);
@@ -1343,6 +1352,9 @@ Begin
         SMThreshold       :=  80;
         SafeMode          :=  False;
         kP                :=  0.00001;
+        ILimit            :=  -1;         // No Amps limit
+        IComp             :=  0;
+        VError            :=  0.8;
      End;
      setlength(PICtrl, 0);
 
@@ -2660,25 +2672,23 @@ End;
 // Implements the grid forming inverter control routine for the storage device
 procedure TStorageObj.DoGFM_Mode(ActorID : Integer);
 Var
-  j,
   i           : Integer;
   myW,
-  myError     : Double;
+  ZSys        : Double;
 
 Begin
 
-  myDynVars.BaseV          :=  VBase;
-  myDynVars.Discharging     :=  StorageState = STORE_DISCHARGING;
-
   with ActiveCircuit[ActorID].Solution, myDynVars do
   Begin
-    {Initialization just in case}
-//    if length( myDynVars.Vgrid ) < NPhases then setlength(myDynVars.Vgrid, NPhases);
-
-//    for i := 1 to NPhases do Vgrid[i - 1]      :=  ctopolar( NodeV^[ NodeRef^[ i ] ] );
-    myDynVars.CalcGFMVoltage( ActorID, NPhases, Vterminal );
+    BaseV       :=  VBase;
+    Discharging :=  StorageState = STORE_DISCHARGING;
+    if IComp > 0 then
+    Begin
+      ZSys    :=  ( 2 * ( Vbase * ILimit ) ) - IComp;
+      BaseV   :=  ( ZSys / ILimit ) * VError ;
+    End;
+    CalcGFMVoltage( ActorID, NPhases, Vterminal );
     YPrim.MVMult( InjCurrent, Vterminal );
-
     set_ITerminalUpdated(FALSE, ActorID);
   End;
 End;
@@ -2686,7 +2696,7 @@ End;
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TStorageObj.DoDynaModel(ActorID : Integer);
 Var
-    DESSCurr  : Array[1..6] of Complex;  // Temporary biffer
+    DESSCurr  : Array[1..6] of Complex;  // Temporary buffer
     i, j      : Integer;
 
 begin
@@ -2903,10 +2913,8 @@ Begin
        End;
 
        YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
-
-       GetInjCurrents(ComplexBuffer, ActorID);  // Get present value of inj currents
       // Add Together  with yprim currents
-       FOR i := 1 TO Yorder DO Curr^[i] := Csub(Curr^[i], ComplexBuffer^[i]);
+       FOR i := 1 TO Yorder DO Curr^[i] := Csub(Curr^[i], InjCurrent^[i]);
 
       End;  {With}
     EXCEPT
@@ -2944,6 +2952,41 @@ Begin
       Begin
         Result  :=  True;
         break;
+      End;
+    End;
+  End;
+End;
+
+// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+// Returns True if any of the inverter phases has reached the current limit
+// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
+Function TStorageObj.CheckAmpsLimit(ActorID : Integer): Boolean;
+var
+  myCurr    : complex;
+  myVolts,
+  NomP,
+  PhaseP,
+  PhaseAmps : Double;
+  i         : Integer;
+Begin
+  // Check if reaching saturation point in GFM
+  Result  :=  False;
+  NomP    :=  myDynvars.ILimit * VBase;
+  if GFM_Mode then
+  Begin
+    GetCurrents(Iterminal, ActorID);
+    myDynVars.IComp         :=  0.0;
+    for i := 1 to NPhases do
+    Begin
+      myCurr                  :=  Iterminal^[i];
+      PhaseAmps               :=  cabs( myCurr);
+      myVolts                 :=  ctopolar(ActiveCircuit[ActorID].Solution.NodeV[NodeRef[i]]).mag;
+      PhaseP                  :=  PhaseAmps * myVolts;
+      if PhaseP > NomP then
+      Begin
+        if PhaseP > myDynVars.IComp then
+          myDynVars.IComp :=  PhaseP;
+        Result  :=  True;
       End;
     End;
   End;
@@ -3511,12 +3554,15 @@ PROCEDURE TStorageObj.IntegrateStates(ActorID : Integer);
 // dynamics mode integration routine
 
 VAR
+  GFMUpdate   : Boolean;        // To avoid updating the IBR if current limit reached
   NumData,
   j,
-  i         : Integer;
+  i           : Integer;
   IMaxPhase,
-  OFFVal    : Double;
-  TracePower: Complex;
+  IPresent,                     // present amps per phase
+  OFFVal      : Double;
+  TracePower  : Complex;
+  myCurr      : Array of Complex; // For storing the present currents when using current limiter
 
 Begin
  // Compute Derivatives and Then integrate
@@ -3560,7 +3606,19 @@ Begin
             Begin
               if ResetIBR then  VDelta[i]   :=  ( 0.001 - ( Vgrid[i].mag / 1000 ) ) / BasekV
               else              VDelta[i]   :=  ( BasekV - ( Vgrid[i].mag / 1000 ) ) / BasekV;
-              if abs(VDelta[i]) > CtrlTol then
+              GFMUpdate     :=  True;
+              // Checks if there is current limit set
+              if ILimit > 0 then
+              Begin
+                setlength(myCurr, NPhases + 1);
+                GetCurrents(@myCurr[0], ActorID);
+                for j := 0 to ( Nphases - 1 ) do
+                Begin
+                  IPresent    :=  ctopolar( myCurr[j] ).mag;
+                  GFMUpdate   :=  GFMUpdate and (IPresent < ( ILimit * VError ));
+                End;
+              End;
+              if ( abs(VDelta[i]) > CtrlTol ) and GFMUpdate then
               BEgin
                 ISPDelta[i] :=  ISPDelta[i] + ( IMaxPhase * VDelta[i] ) * kP * 100;
                 if ISPDelta[i] > IMaxPhase then ISPDelta[i] :=  IMaxPhase
