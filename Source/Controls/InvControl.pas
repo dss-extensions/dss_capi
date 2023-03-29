@@ -2052,17 +2052,20 @@ begin
           Begin
             if ( ControlledElement.DSSClassName = myDERTypes[EStorage] ) then
             Begin
-              if TStorageObj(ControlledElement).CheckOLInverter(ActorID) then
+              if TStorageObj(ControlledElement).myDynVars.ILimit <= 0 then              // If there is no Amps limit, check OL
               Begin
+                if TStorageObj(ControlledElement).CheckOLInverter(ActorID) then
+                Begin
 
-                  if not IsDynamicModel then
-                  Begin
-                    DER_OL                                              :=  True;
-                    TStorageObj(ControlledElement).StorageState         :=  0;  // It's burning, Turn it off
-                    TStorageObj(ControlledElement).StateChanged         :=  TRUE;
-                  End
-                  Else
-                    TStorageObj(ControlledElement).myDynVars.ResetIBR   :=  True; // The dynamic alg will take it to safety
+                    if not IsDynamicModel then
+                    Begin
+                      DER_OL                                              :=  True;
+                      TStorageObj(ControlledElement).StorageState         :=  0;        // It's burning, Turn it off
+                      TStorageObj(ControlledElement).StateChanged         :=  TRUE;
+                    End
+                    Else
+                      TStorageObj(ControlledElement).myDynVars.ResetIBR   :=  True;     // The dynamic alg will take it to safety
+                End
               End;
             End
             else
@@ -2751,16 +2754,23 @@ begin
                           if ControlledElement.GFM_Mode then
                           Begin
                             // Check of it's in GFM mode
-                            if ControlledELement.DSSClassName = myDERTypes[EStorage] then                              // storage case
+                            if ControlledELement.DSSClassName = myDERTypes[EStorage] then                       // storage case
                             Begin
                               if ( TStorageObj(ControlledElement).StorageState = 1 ) then                       // Check if it's in discharging mode
-                                Valid   :=  TStorageObj(ControlledElement).CheckOLInverter(ActorID);            // Checks if Inv OL
+
+                                if (TStorageObj(ControlledElement).myDynVars.ILimit > 0) then
+                                  Valid   :=  TStorageObj(ControlledElement).CheckAmpsLimit(ActorID)            // Checks if reached the Amps limit
+                                else
+                                  Valid   :=  TStorageObj(ControlledElement).CheckOLInverter(ActorID);          // Checks if Inv OL
                                 Valid   :=  Valid and not TStorageObj(ControlledElement).myDynVars.ResetIBR     // Check if we are not resetting
                             End
                             else
                             Begin                                                                               // PVSystem case
-                              Valid   :=  TPVSystemObj(ControlledElement).CheckOLInverter(ActorID);             // Checks if Inv OL
-                              Valid   :=  Valid and not TPVSystemObj(ControlledElement).myDynVars.ResetIBR     // Check if we are not resetting
+                              if (TPVSystemObj(ControlledElement).myDynVars.ILimit > 0) then
+                                Valid   :=  TPVSystemObj(ControlledElement).CheckAmpsLimit(ActorID)             // Checks if reached the Amps limit
+                              else
+                                Valid   :=  TPVSystemObj(ControlledElement).CheckOLInverter(ActorID);           // Checks if Inv OL
+                              Valid   :=  Valid and not TPVSystemObj(ControlledElement).myDynVars.ResetIBR      // Check if we are not resetting
                             End;
 
                             if Valid then
