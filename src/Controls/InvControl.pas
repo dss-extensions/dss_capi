@@ -1711,7 +1711,8 @@ begin
                     begin
                         if DERElem.IsStorage() then
                         begin
-                            if DERElem.CheckOLInverter() then
+                            // If there is no Amps limit, check OL
+                            if (DERElem.dynVars.ILimit <= 0) and DERElem.CheckOLInverter() then
                             begin
                                 if not IsDynamicModel then
                                 begin
@@ -2427,21 +2428,17 @@ begin
                             if DERElem.GFM_Mode then
                             begin
                                 // Check if it's in GFM mode
-                                if DERElem.IsStorage() then // storage case
+                                if (not DERElem.IsStorage()) or (DERElem.IsStorage() and (TStorageObj(DERElem).StorageState = 1)) then // storage case
                                 begin
-                                    if (TStorageObj(DERElem).StorageState = 1) then // Check if it's in discharging mode
-                                        Valid := DERElem.CheckOLInverter() // Checks if Inv OL
+                                    if DERElem.dynVars.ILimit > 0 then
+                                        Valid := DERElem.CheckAmpsLimit() // Checks if reached the Amps limit
                                     else
-                                        Valid := True;
-
-                                    Valid := Valid and not DERElem.dynVars.ResetIBR // Check if we are not resetting
+                                        Valid := DERElem.CheckOLInverter(); // Checks if Inv OL
                                 end
                                 else
-                                begin // PVSystem case
-                                    Valid := DERElem.CheckOLInverter(); // Checks if Inv OL
-                                    Valid := Valid and not DERElem.dynVars.ResetIBR // Check if we are not resetting
-                                end;
+                                    Valid := True; /// <<<---
 
+                                Valid := Valid and not DERElem.dynVars.ResetIBR; // Check if we are not resetting
                                 if Valid then
                                 begin
                                     with ActiveCircuit.Solution.DynaVars do

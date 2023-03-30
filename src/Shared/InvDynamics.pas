@@ -36,6 +36,9 @@ type
         MinAmps, // Min amps required for exporting energy
         mKVARating, // For GFM impedance calculation and avoid messing with other calcs
         RatedkVLL, // As defined when decalred the element, for GFM impedance calculation and avoid messing with other calcs
+        ILimit, // Created for limiting the output current without entering into safe mode
+        IComp, // For storing the compensation value when the Amps limiter is active
+        VError, // Stores the systemic error correction factor for current limiting
         ISP: Double; // Current setpoint according to the actual DER kW
         Discharging: Boolean; // To verify if the storage device is discharging
         ResetIBR: Boolean; // flag for forcing the IBR to turn OFF

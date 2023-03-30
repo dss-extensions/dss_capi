@@ -3556,7 +3556,7 @@ begin
             StartInstance(FunPrf, 'PowerElectronicsConnection', pPV);
             CircuitNode(FunPrf, ActiveCircuit);
             RefNode(FunPrf, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
-            DoubleNode(EpPrf, 'PowerElectronicsConnection.maxIFault', 1.0 / pPV.MinModelVoltagePU);
+            DoubleNode(EpPrf, 'PowerElectronicsConnection.maxIFault', 1.0 / pPV.VminPu);
             DoubleNode(SshPrf, 'PowerElectronicsConnection.p', pPV.Presentkw * 1000.0);
             DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
             ConverterControlEnum(SshPrf, pPV.VarMode, pPV.UsingCIMDynamics);
@@ -3606,7 +3606,7 @@ begin
             StartInstance(FunPrf, 'PowerElectronicsConnection', pBat);
             CircuitNode(FunPrf, ActiveCircuit);
             RefNode(FunPrf, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
-            DoubleNode(EpPrf, 'PowerElectronicsConnection.maxIFault', 1.0 / pBat.MinModelVoltagePU);
+            DoubleNode(EpPrf, 'PowerElectronicsConnection.maxIFault', 1.0 / pBat.VminPu);
             DoubleNode(SshPrf, 'PowerElectronicsConnection.p', pBat.Presentkw * 1000.0);
             DoubleNode(SshPrf, 'PowerElectronicsConnection.q', pBat.Presentkvar * 1000.0);
             ConverterControlEnum(SshPrf, pBat.VarMode, pBat.UsingCIMDynamics);
