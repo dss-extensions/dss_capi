@@ -115,11 +115,13 @@ type
         function GetPFPriority(): Boolean; virtual;
         procedure SetPFPriority(value: Boolean); virtual; abstract;
         function CheckOLInverter(): Boolean; virtual; abstract;
+        procedure SetNominalDEROutput(); virtual; abstract;
         function UsingCIMDynamics(): Boolean;
         function CheckAmpsLimit(): Boolean;
         procedure Randomize(Opt: Integer);
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
         procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
+        function Get_Presentkvar: Double;
     end;
 
 implementation
@@ -282,6 +284,11 @@ begin
             TermArray[j] -= Curr;
         end;
     end;
+end;
+
+function TInvBasedPCE.Get_Presentkvar: Double;
+begin
+    Result := Qnominalperphase * 0.001 * Fnphases;
 end;
 
 end.
