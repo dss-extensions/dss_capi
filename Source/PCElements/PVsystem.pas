@@ -1265,9 +1265,8 @@ Begin
 
          YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
 
-         GetInjCurrents(ComplexBuffer, ActorID);  // Get present value of inj currents
         // Add Together  with yprim currents
-         FOR i := 1 TO Yorder DO Curr^[i] := Csub(Curr^[i], ComplexBuffer^[i]);
+         FOR i := 1 TO Yorder DO Curr^[i] := Csub(Curr^[i], InjCurrent^[i]);
 
       EXCEPT
         On E: Exception Do
