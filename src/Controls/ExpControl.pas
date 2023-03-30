@@ -454,7 +454,7 @@ begin
             end;
 
       // apply limits on Qpu, then define the target in kVAR
-            PVSys.SetNominalPVSystemOuput; // as does InvControl
+            PVSys.SetNominalDEROutput; // as does InvControl
             if FPreferQ then
                 Qmaxpu := 1.0
             else

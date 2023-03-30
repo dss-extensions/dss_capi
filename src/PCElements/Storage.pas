@@ -248,7 +248,6 @@ type
         function NormalizeToTOD(h: Integer; sec: Double): Double;
 
         function Get_PresentkW: Double;
-        function Get_Presentkvar: Double;
         function Get_PresentkV: Double;
 
         procedure Set_kW(const Value: Double);
@@ -328,7 +327,7 @@ type
         procedure Set_Maxkvar(const Value: Double);
         procedure Set_Maxkvarneg(const Value: Double);
 
-        procedure SetNominalStorageOutput();
+        procedure SetNominalDEROutput(); OVERRIDE;
 
         procedure ResetRegisters;
         procedure TakeSample();
@@ -1139,7 +1138,7 @@ begin
 
     end;
 
-    SetNominalStorageOutput();
+    SetNominalDEROutput();
 
     // Initialize to Zero - defaults to PQ Storage element
     // Solution object will reset after circuit modifications
@@ -1153,7 +1152,7 @@ begin
         Dynamodel.FUpdateModel;  // Checks for existence and Selects
 end;
 
-procedure TStorageObj.SetNominalStorageOutput();
+procedure TStorageObj.SetNominalDEROutput();
 begin
     ShapeFactor := CDOUBLEONE;  // init here; changed by curve routine
     // Check to make sure the Storage element is ON
@@ -1814,7 +1813,7 @@ begin
         YPrim.Clear;
     end;
 
-    SetNominalStorageOutput();
+    SetNominalDEROutput();
     CalcYPrimMatrix(YPrim_Shunt);
 
      // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages Doesn't fail
@@ -2266,7 +2265,7 @@ begin
     with ActiveCircuit.Solution do
     begin
         if LoadsNeedUpdating then
-            SetNominalStorageOutput(); // Set the nominal kW, etc for the type of solution being Done
+            SetNominalDEROutput(); // Set the nominal kW, etc for the type of solution being Done
 
         CalcInjCurrentArray(); // Difference between currents in YPrim and total terminal current
 
@@ -2619,11 +2618,6 @@ end;
 function TStorageObj.Get_PresentkV: Double;
 begin
     Result := StorageVars.kVStorageBase;
-end;
-
-function TStorageObj.Get_Presentkvar: Double;
-begin
-    Result := Qnominalperphase * 0.001 * Fnphases;
 end;
 
 procedure TStorageObj.InitHarmonics();

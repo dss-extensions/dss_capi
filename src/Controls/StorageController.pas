@@ -1208,7 +1208,7 @@ begin
 //                        If ShowEventLog Then  AppendToEventLog(Self.FullName,
 //                        Format('Desired decrease is greater than present output. Pdiff = %-.6g, FleetkW = %-.6g. Setting Fleet to Idle', [PDiff, Get_FleetkW()]));
 //                        SetFleetToIdle;   // also sets presentkW = 0
-//                        For i := 1 to FleetSize Do Begin TStorageObj(FleetPointerList.Get(i)).SetNominalStorageOutput() End; // To Update Current kvarLimit
+//                        For i := 1 to FleetSize Do Begin TStorageObj(FleetPointerList.Get(i)).SetNominalDEROutput() End; // To Update Current kvarLimit
 //                        PushTimeOntoControlQueue(STORE_IDLING);  // force a new power flow solution
 //                        ChargingAllowed := TRUE;
 //                        SkipkWDispatch  := TRUE;
@@ -1259,7 +1259,7 @@ begin
 
                                 if (abs(PresentkW) - StorageObj.kWOutIdling > EPSILON) then  // if not already idling
                                 begin
-                                    SetNominalStorageOutput();
+                                    SetNominalDEROutput();
                                     ActualkWDispatch := PresentkW;
                                     StorekWChanged := TRUE; // if not idling at first, force a new powerflow
 
@@ -1282,7 +1282,7 @@ begin
                                             if StorageVars.kWhStored > StorageVars.kWhReserve then
                                             begin
                                                 kW := DispatchkW;
-                                                SetNominalStorageOutput();
+                                                SetNominalDEROutput();
                                                 ActualkWDispatch := PresentkW;
                                                 StorekWChanged := TRUE;     // This is what keeps the control iterations going
 
@@ -1297,7 +1297,7 @@ begin
                                       // idling and update current kvarlimit for usage by InvControl
 
                                             StorageState := STORE_IDLING;     // overrides SetFleetToDischarge
-                                            SetNominalStorageOutput(); // to update current kvarLimit
+                                            SetNominalDEROutput(); // to update current kvarLimit
                                             ActualkWDispatch := PresentkW;
                                             if ShowEventLog then
                                                 AppendToEventLog(Self.FullName,
@@ -1309,7 +1309,7 @@ begin
                                     begin  // Attempt to set discharge kW;  Storage element will revert to idling if out of capacity
 
                                         kW := DispatchkW;
-                                        SetNominalStorageOutput();
+                                        SetNominalDEROutput();
                                         ActualkWDispatch := PresentkW;
                                         StorekWChanged := TRUE;     // This is what keeps the control iterations going
 
@@ -1531,7 +1531,7 @@ begin
 
                                 if (abs(PresentkW) - StorageObj.kWOutIdling > EPSILON) then  // if not already idling
                                 begin
-                                    SetNominalStorageOutput();
+                                    SetNominalDEROutput();
                                     ActualkWDispatch := PresentkW;
                                     StorekWChanged := TRUE; // if not idling at first, force a new powerflow
 
@@ -1554,7 +1554,7 @@ begin
                                             if StorageVars.kWhStored > StorageVars.kWhReserve then
                                             begin
                                                 kW := ChargekW;
-                                                SetNominalStorageOutput();
+                                                SetNominalDEROutput();
                                                 ActualkWDispatch := PresentkW;
                                                 StorekWChanged := TRUE;     // This is what keeps the control iterations going
 
@@ -1569,7 +1569,7 @@ begin
                                       // idling and update current kvarlimit for usage by InvControl
 
                                             StorageState := STORE_IDLING;     // overrides SetFleetToCharge
-                                            SetNominalStorageOutput(); // to update current kvarLimit
+                                            SetNominalDEROutput(); // to update current kvarLimit
                                             ActualkWDispatch := PresentkW;
                                             if ShowEventLog then
                                                 AppendToEventLog(Self.FullName,
@@ -1581,7 +1581,7 @@ begin
                                     begin  // Attempt to set discharge kW;  Storage element will revert to idling if out of capacity
                                      //StorageObj.PresentkW  :=  ChargekW;
                                         kW := ChargekW;
-                                        SetNominalStorageOutput();
+                                        SetNominalDEROutput();
                                         ActualkWDispatch := PresentkW;
         //                                           KwtoPercentagekW := (ChargekW*100) / StorageVars.kWrating;  // old approach
         //                                           StorageObj.pctkWin := abs(KwtoPercentagekW);                // old approach

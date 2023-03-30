@@ -205,7 +205,6 @@ type
         procedure UpdatePVSystem;    // Update PVSystem elements based on present kW and IntervalHrs variable
 
         function Get_PresentkW: Double;
-        function Get_Presentkvar: Double;
         function Get_PresentIrradiance: Double;
 
         procedure Set_PowerFactor(const Value: Double);
@@ -254,7 +253,7 @@ type
         procedure Set_Maxkvar(const Value: Double);
         procedure Set_Maxkvarneg(const Value: Double);
 
-        procedure SetNominalPVSystemOuput();
+        procedure SetNominalDEROutput(); OVERRIDE;
 
         procedure ResetRegisters;
         procedure TakeSample();
@@ -1012,7 +1011,7 @@ begin
 
     end;
 
-    SetNominalPVSystemOuput();
+    SetNominalDEROutput();
 
     // Initialize to Zero - defaults to PQ PVSystem element
     // Solution object will reset after circuit modifications
@@ -1024,7 +1023,7 @@ begin
         UserModel.FUpdateModel;
 end;
 
-procedure TPVsystemObj.SetNominalPVSystemOuput();
+procedure TPVsystemObj.SetNominalDEROutput();
 begin
     ShapeFactor := CDOUBLEONE;  // init here; changed by curve routine
     TShapeValue := PVSystemVars.FTemperature; // init here; changed by curve routine
@@ -1503,7 +1502,7 @@ begin
         YPrim.Clear;
     end;
 
-    SetNominalPVSystemOuput();
+    SetNominalDEROutput();
     CalcYPrimMatrix(YPrim_Shunt);
 
     // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages Doesn't fail
@@ -1953,7 +1952,7 @@ begin
     with ActiveCircuit.Solution do
     begin
         if LoadsNeedUpdating then
-            SetNominalPVSystemOuput(); // Set the nominal kW, etc for the type of solution being Done
+            SetNominalDEROutput(); // Set the nominal kW, etc for the type of solution being Done
 
         CalcInjCurrentArray();          // Difference between currents in YPrim and total terminal current
 
@@ -2036,11 +2035,6 @@ end;
 function TPVsystemObj.Get_PresentIrradiance: Double;
 begin
     Result := PVSystemVars.FIrradiance * ShapeFactor.re;
-end;
-
-function TPVsystemObj.Get_Presentkvar: Double;
-begin
-    Result := Qnominalperphase * 0.001 * Fnphases;
 end;
 
 procedure TPVsystemObj.InitHarmonics();
