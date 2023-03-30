@@ -83,7 +83,9 @@ type
         SafeMode, // propSM
         DynamicEq, // propDynEq
         DynOut, // propDynOut
-        ControlMode // propGFM
+        ControlMode, // propGFM
+        AmpLimit,
+        AmpLimitGain
     );
 {$SCOPEDENUMS OFF}
 
@@ -110,7 +112,7 @@ type
         Fkvarlimit: Double; //maximum kvar output of the PVSystem (unsigned)
         Fkvarlimitneg: Double;
 
-    // Variables set from InvControl. They are results of monitor in mode 3
+        // Variables set from InvControl. They are results of monitor in mode 3
         Vreg: Double; // will be set from InvControl or ExpControl
         Vavg: Double;
         VVOperation: Double;
@@ -119,7 +121,7 @@ type
         VVDRCOperation: Double;
         WPOperation: Double;
         WVOperation: Double;
-    //        kW_out_desired   :Double;
+        // kW_out_desired   :Double;
 
         // 32-bit integers
         NumPhases: Integer;   // Number of phases
@@ -150,66 +152,25 @@ type
 
     TPVsystemObj = class(TInvBasedPCE)
     PRIVATE
-        YEQ: Complex;   // at nominal
-        YEQ_Min: Complex;   // at Vmin
-        YEQ_Max: Complex;   // at VMax
-        PhaseCurrentLimit: Complex;
         Zthev: Complex;
 
         LastThevAngle: Double;
 
-        DebugTrace: LongBool;
         PVSystemSolutionCount: Integer;
         PVSystemFundamental: Double;  // Thevinen equivalent voltage mag and angle reference for Harmonic model
         PVsystemObjSwitchOpen: Boolean;
-        FirstSampleAfterReset: Boolean;
 
-      //PFSpecified             :Boolean;
-      //kvarSpecified           :Boolean;
+        // PFSpecified: Boolean;
+        // kvarSpecified: Boolean;
 
-        ForceBalanced: LongBool;
-        CurrentLimited: LongBool;
-
-        kvar_out: Double;
-        kW_out: Double;
         kvarRequested: Double;
-        Fpf_wp_nominal: Double;
         kWRequested: Double;
 
-        CutInkW: Double;
-        CutOutkW: Double;
-        FpctPminNoVars: Double;
-        FpctPminkvarLimit: Double;
-        PminNoVars: Double;
-        PminkvarLimit: Double;
-
-        pctR: Double;
-        pctX: Double;
-
-        OpenPVSystemSolutionCount: Integer;
-
-        Pnominalperphase: Double;
-        Qnominalperphase: Double;
-        RandomMult: Double;
-
-        Reg_Hours: Integer;
-        Reg_kvarh: Integer;
-        Reg_kWh: Integer;
-        Reg_MaxkVA: Integer;
-        Reg_MaxkW: Integer;
-        Reg_Price: Integer;
-        ShapeFactor: Complex;
         TShapeValue: Double;
 
-        TraceFile: TFileStream;
         UserModel: TPVsystemUserModel;   // User-Written Models
 
-        UserModelNameStr, UserModelEditStr: String;
-
         varBase: Double; // Base vars per phase
-        VBaseMax: Double;
-        VBaseMin: Double;
-        YPrimOpenCond: TCmatrix;
 
         procedure CalcDailyMult(Hr: Double);  // now incorporates DutyStart offset
         procedure CalcDutyMult(Hr: Double);
@@ -238,7 +199,6 @@ type
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
-        procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
 
         procedure WriteTraceRecord(const s: String);
 
@@ -249,7 +209,6 @@ type
         function Get_PresentIrradiance: Double;
 
         procedure Set_PowerFactor(const Value: Double);
-        procedure Set_pf_wp_nominal(const Value: Double);
 
         procedure Set_kVARating(const Value: Double);
         procedure Set_Pmpp(const Value: Double);
@@ -262,40 +221,19 @@ type
     PUBLIC
         PVSystemVars: TPVSystemVars;
 
-        VBase: Double;  // Base volts suitable for computing currents
-        Vmaxpu: Double;
-        Vminpu: Double;
-
-        CurrentkvarLimit: Double;
-        CurrentkvarLimitNeg: Double;
-        FpctCutIn: Double;
-        FpctCutOut: Double;
-
-        Connection: Integer;  // 0 = line-neutral; 1=Delta
-        DailyShapeObj: TLoadShapeObj;  // Daily PVSystem element irradianceShape for this load
-        DutyShapeObj: TLoadShapeObj;  // irradiance Shape for this PVSystem element
         DutyStart: Double; // starting time offset into the DutyShape [hrs] for this PVsystem
-        YearlyShapeObj: TLoadShapeObj;  // Yearly irradiance Shape for this PVSystem element
 
         DailyTShapeObj: TTShapeObj;
         DutyTShapeObj: TTShapeObj;
         YearlyTShapeObj: TTShapeObj;
 
-        InverterCurveObj: TXYCurveObj;
         Power_TempCurveObj: TXYCurveObj;
 
-        kvarLimitSet: Boolean;
-        kvarLimitNegSet: Boolean;
-
         FClass: Integer;
-        VoltageModel: Integer;   // Variation with voltage
-        PFnominal: Double;
 
         Registers: array[1..NumPVSystemRegisters] of Double;
         Derivatives: array[1..NumPVSystemRegisters] of Double;
-        PICtrl: array of TPICtrl;
 
-        VarFollowInverter: LongBool;
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
@@ -305,7 +243,6 @@ type
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         function InjCurrents(): Integer; OVERRIDE;
         function NumVariables(): Integer; OVERRIDE;
@@ -318,8 +255,6 @@ type
         procedure Set_Maxkvarneg(const Value: Double);
 
         procedure SetNominalPVSystemOuput();
-        procedure Randomize(Opt: Integer);   // 0 = reset to 1.0; 1 = Gaussian around mean and std Dev  ;  // 2 = uniform
-
 
         procedure ResetRegisters;
         procedure TakeSample();
@@ -348,8 +283,6 @@ type
         property puPmpp: Double READ PVSystemVars.FpuPmpp WRITE PVSystemVars.FpuPmpp;
         property kvarLimit: Double READ PVSystemVars.Fkvarlimit WRITE Set_Maxkvar;
         property kvarLimitneg: Double READ PVSystemVars.Fkvarlimitneg WRITE Set_Maxkvarneg;
-        property MinModelVoltagePU: Double READ VminPu;
-        property pf_wp_nominal: Double WRITE Set_pf_wp_nominal;
         property IrradianceNow: Double READ ShapeFactor.re;
     end;
 
@@ -549,6 +482,8 @@ begin
     PropertyScale[ord(TProp.PITol)] := 1.0 / 100.0;
 
     PropertyOffset[ord(TProp.SafeVoltage)] := ptruint(@obj.dynVars.SMThreshold);
+    PropertyOffset[ord(TProp.AmpLimit)] := ptruint(@obj.dynVars.ILimit);
+    PropertyOffset[ord(TProp.AmpLimitGain)] := ptruint(@obj.dynVars.VError);
 
 
     ActiveProperty := NumPropsThisClass;
@@ -820,16 +755,12 @@ begin
     Yorder := 0;  // To trigger an initial allocation
     Nterms := 1;  // forces allocations
 
-    YearlyShapeObj := NIL;  // If YearlyShapeobj = nil Then the Irradiance alway stays nominal
-    DailyShapeObj := NIL;  // If DaillyShapeobj = nil Then the Irradiance alway stays nominal
-    DutyShapeObj := NIL;  // If DutyShapeobj = nil Then the Irradiance alway stays nominal
     DutyStart := 0.0;
 
     YearlyTShapeObj := NIL;  // If YearlyShapeobj = nil Then the Temperature always stays nominal
     DailyTShapeObj := NIL;  // If DaillyShapeobj = nil Then the Temperature always stays nominal
     DutyTShapeObj := NIL;  // If DutyShapeobj = nil Then the Temperature always stays nominal
 
-    InverterCurveObj := NIL;
     Power_TempCurveObj := NIL;
 
     Connection := 0;    // Wye (star, L-N)
@@ -837,7 +768,6 @@ begin
     FClass := 1;
 
     PVSystemSolutionCount := -1;  // For keep track of the present solution in Injcurrent calcs
-    OpenPVSystemSolutionCount := -1;
     YPrimOpenCond := NIL;
 
     PVSystemVars.kVPVSystemBase := 12.47;
@@ -847,7 +777,6 @@ begin
     VBaseMin := Vminpu * Vbase;
     VBaseMax := Vmaxpu * Vbase;
     Yorder := Fnterms * Fnconds;
-    RandomMult := 1.0;
 
     varMode := VARMODEPF;
     InverterON := TRUE;
@@ -890,7 +819,7 @@ begin
     FpctPminNoVars := -1.0;
     FpctPminkvarLimit := -1.0;
 
-    Fpf_wp_nominal := 1.0;
+    pf_wp_nominal := 1.0;
 
     // Output rating stuff
     kW_out := 500.0;
@@ -936,20 +865,6 @@ begin
     UserModel.Free;
     FreeAndNil(TraceFile);
     inherited Destroy;
-end;
-
-procedure TPVsystemObj.Randomize(Opt: Integer);
-begin
-    case Opt of
-        0:
-            RandomMult := 1.0;
-        GAUSSIAN:
-            RandomMult := Gauss(YearlyShapeObj.Mean, YearlyShapeObj.StdDev);
-        UNIfORM:
-            RandomMult := Random;  // number between 0 and 1.0
-        LOGNORMAL:
-            RandomMult := QuasiLognormal(YearlyShapeObj.Mean);
-    end;
 end;
 
 procedure TPVsystemObj.CalcDailyMult(Hr: Double);
@@ -1013,36 +928,6 @@ begin
         CalcDailyTemperature(Hr);  // Defaults to Daily curve
 end;
 
-procedure TPVsystemObj.GetCurrents(Curr: pComplexArray);
-// Required for operation in GFM mode
-var
-    i: Integer;
-begin
-    if not GFM_Mode then
-    begin
-        inherited GetCurrents(Curr);
-        Exit;
-    end;
-
-    // if GFM_Mode then
-    with ActiveCircuit.Solution do
-    begin
-        try
-            for i := 1 to Yorder do
-                Vterminal[i] := NodeV[NodeRef[i]];
-
-            YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
-            CalcInjCurrentArray();  // Get present value of inj currents
-            // Add Together with yprim currents
-            for i := 1 to Yorder do
-                Curr[i] -=  InjCurrent[i];
-        except
-            On E: Exception do
-                DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [Name]), E.Message, _('Inadequate storage allotted for circuit element.'), 327);
-        end;
-    end;
-end;
-
 function TPVsystemObj.CheckOLInverter(): Boolean;
 // Returns True if any of the inverter phases is overloaded
 var
@@ -1073,6 +958,7 @@ procedure TPVsystemObj.DoGFM_Mode();
 // Implements the grid forming inverter control routine for the PVSystem device
 var
     i: Integer;
+    ZSys: Double;
 begin
     dynVars.BaseV := VBase;
     dynVars.Discharging := TRUE;
@@ -1085,6 +971,12 @@ begin
 
         for i := 1 to NPhases do
             Vgrid[i - 1] := ctopolar(NodeV[NodeRef[i]]);
+
+        if IComp > 0 then
+        begin
+            ZSys := (2 * (Vbase * ILimit)) - IComp;
+            BaseV := (ZSys / ILimit) * VError;
+        end;
         
         CalcGFMVoltage(NPhases, Vterminal);
         YPrim.MVMult(InjCurrent, Vterminal);
@@ -1230,15 +1122,13 @@ begin
                 else
                     YEQ_Max := YEQ;
 
-            { Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
-            }
+                // Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
+
                 with PVSystemvars do
                 begin
                     PhaseCurrentLimit := Cmplx(Pnominalperphase, Qnominalperphase) / VBaseMin;
                     MaxDynPhaseCurrent := Cabs(PhaseCurrentLimit);
                 end;
-
-
             end;
            // When we leave here, all the YEQ's are in L-N values
 
@@ -1493,7 +1383,7 @@ begin
 
                 if (varMode = VARMODEKVAR) and PF_Priority and WPMode then
                 begin
-                    kW_out := abs(kvar_out) * sqrt(1.0 / (1.0 - Sqr(Fpf_wp_nominal)) - 1.0) * sign(kW_out);
+                    kW_out := abs(kvar_out) * sqrt(1.0 / (1.0 - Sqr(pf_wp_nominal)) - 1.0) * sign(kW_out);
                 end
                 // Forces constant power factor when kvar limit is exceeded and PF Priority is true. Temp PF is calculated based on kvarRequested
                 else
@@ -1527,8 +1417,8 @@ begin
             else
             if (varMode = VARMODEKVAR) and PF_Priority and WPMode then
             begin
-                kW_out := FkVArating * abs(Fpf_wp_nominal) * sign(kW_out);
-                kvar_out := FkVArating * abs(sin(ArcCos(Fpf_wp_nominal))) * sign(kvarRequested)
+                kW_out := FkVArating * abs(pf_wp_nominal) * sign(kW_out);
+                kvar_out := FkVArating * abs(sin(ArcCos(pf_wp_nominal))) * sign(kvarRequested)
             end
             else
             if (varMode = VARMODEKVAR) and PF_Priority and (not VVMode or not DRCMode or not WVmode or not AVRMode) then
@@ -1626,35 +1516,7 @@ begin
     inherited CalcYPrim();
 end;
 
-procedure TPVsystemObj.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
- // Add the current into the proper location according to connection
-
- // Reverse of similar routine in load  (Cnegates are switched)
-
-var
-    j: Integer;
-
-begin
-    case Connection of
-        0:
-        begin  //Wye
-            TermArray[i] += Curr;
-            TermArray[Fnconds] -= Curr; // Neutral
-        end;
-
-        1:
-        begin //DELTA
-            TermArray[i] += Curr;
-            j := i + 1;
-            if j > Fnconds then
-                j := 1;
-            TermArray[j] -= Curr;
-        end;
-    end;
-end;
-
 procedure TPVsystemObj.WriteTraceRecord(const s: String);
-
 var
     i: Integer;
     sout: String;
@@ -2319,7 +2181,10 @@ end;
 procedure TPVsystemObj.IntegrateStates();
 // dynamics mode integration routine
 var
+    GFMUpdate: Boolean; // To avoid updating the IBR if current limit reached
     NumData, j, i: Integer;
+    IPresent: Double; // present amps per phase
+    curr: array of Complex; // For storing the present currents when using current limiter
 begin
     // Compute Derivatives and Then integrate
     ComputeIterminal();
@@ -2383,7 +2248,21 @@ begin
                     VDelta[i] := (0.001 - (Vgrid[i].mag / 1000)) / BasekV
                 else
                     VDelta[i] := (BasekV - (Vgrid[i].mag / 1000)) / BasekV;
-                if abs(VDelta[i]) > CtrlTol then
+
+                GFMUpdate := TRUE;
+                
+                // Checks if there is current limit set
+                if ILimit > 0 then
+                begin
+                    setlength(curr, NPhases + 1);
+                    GetCurrents(pComplexArray(@curr[0]));
+                    for j := 0 to (Nphases - 1) do
+                    begin
+                        IPresent := cabs(curr[j]);
+                        GFMUpdate := GFMUpdate and (IPresent < (ILimit * VError));
+                    end;
+                end;
+                if (abs(VDelta[i]) > CtrlTol) and GFMUpdate then
                 begin
                     ISPDelta[i] += (IMaxPPhase * VDelta[i]) * kP * 100;
                     if ISPDelta[i] > IMaxPPhase then
@@ -2754,11 +2633,6 @@ begin
     varMode := VARMODEPF;
 end;
 
-procedure TPVsystemObj.Set_pf_wp_nominal(const Value: Double);
-begin
-    Fpf_wp_nominal := Value;
-end;
-
 procedure TPVsystemObj.SetDragHandRegister(Reg: Integer; const Value: Double);
 begin
     if (Value > Registers[reg]) then
@@ -2779,6 +2653,5 @@ procedure TPVSystemObj.SetPFPriority(value: Boolean);
 begin
     PVSystemVars.PF_Priority := value;
 end;
-
 
 end.

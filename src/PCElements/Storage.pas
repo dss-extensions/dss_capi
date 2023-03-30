@@ -109,8 +109,9 @@ type
         DynamicEq, // propDynEq
         DynOut, // propDynOut
 
-        ControlMode // propGFM
-
+        ControlMode, // propGFM
+        AmpLimit,
+        AmpLimitGain
     );
 {$SCOPEDENUMS OFF}
 
@@ -189,75 +190,28 @@ type
 
     TStorageObj = class(TInvBasedPCE)
     PRIVATE
-        Yeq: Complex;   // at nominal
-        Yeq95: Complex;   // at 95%
-        Yeq105: Complex;   // at 105%
         PIdling: Double;
         YeqDischarge: Complex;   // equiv at rated power of Storage element only
-        PhaseCurrentLimit: Complex;
         MaxDynPhaseCurrent: Double;
 
-        DebugTrace: LongBool;
         FState: Integer;
-        FirstSampleAfterReset: Boolean;
         StorageSolutionCount: Integer;
         StorageFundamental: Double; // Thevenin equivalent voltage mag and angle reference for Harmonic model
         StorageObjSwitchOpen: Boolean;
 
-
-        ForceBalanced: LongBool;
-        CurrentLimited: LongBool;
-
-        kvar_out: Double;
-        kW_out: Double;
         FDCkW: Double;
-        pf_wp_nominal: Double;
 
-        // Variables for Inverter functionalities
-        FpctCutIn: Double;
-        FpctCutOut: Double;
-        CutInkW: Double;
-        CutOutkW: Double;
-
-        FpctPminNoVars: Double;
-        FpctPminkvarLimit: Double;
-        PminNoVars: Double;
-        PminkvarLimit: Double;
         kVA_exceeded: Boolean;
 
-
-        kvarLimitSet: Boolean;
-        kvarLimitNegSet: Boolean;
         kVASet: Boolean;
 
-        pctR: Double;
-        pctX: Double;
-
-        OpenStorageSolutionCount: Integer;
-        Pnominalperphase: Double;
-        Qnominalperphase: Double;
-        RandomMult: Double;
-
-        Reg_Hours: Integer;
-        Reg_kvarh: Integer;
-        Reg_kWh: Integer;
-        Reg_MaxkVA: Integer;
-        Reg_MaxkW: Integer;
-        Reg_Price: Integer;
-        ShapeFactor: Complex;
-
-        Tracefile: TFileStream;
         IsUserModel: Boolean;
         UserModel: TStoreUserModel;   // User-Written Models
         DynaModel: TStoreDynaModel;
 
-        UserModelNameStr, UserModelEditStr: String;
         DynaModelNameStr, DynaModelEditStr: String;
 
 //        VBase           :Double;  // Base volts suitable for computing currents  made public
-        VBase105: Double;
-        VBase95: Double;
-        YPrimOpenCond: TCmatrix;
 
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);
@@ -285,7 +239,6 @@ type
 
         procedure Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
         procedure SetDragHandRegister(Reg: Integer; const Value: Double);
-        procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
 
         procedure WriteTraceRecord(const s: String);
 
@@ -327,15 +280,6 @@ type
         StateChanged: Boolean;
         StorageVars: TStorageVars;
 
-        VBase: Double;  // Base volts suitable for computing currents
-        Vmaxpu: Double;
-        Vminpu: Double;
-
-        Connection: Integer;  // 0 = line-neutral; 1=Delta
-        DailyShapeObj: TLoadShapeObj;  // Daily Storage element Shape for this load
-        DutyShapeObj: TLoadShapeObj;  // Shape for this Storage element
-        YearlyShapeObj: TLoadShapeObj;  // Shape for this Storage element
-
         pctkWOut: Double;   // percent of kW rated output currently dispatched
         pctkWIn: Double;
 
@@ -354,31 +298,22 @@ type
         ChargeTrigger: Double;
         ChargeTime: Double;
         kWhBeforeUpdate: Double;
-        CurrentkvarLimit: Double;
-        CurrentkvarLimitNeg: Double;
 
         CutOutkWAC: Double;  // CutInkW  reflected to the AC side of the inverter
         CutInkWAC: Double;   // CutOutkW reflected to the AC side of the inverter
 
-        // Inverter efficiency curve
-        InverterCurveObj: TXYCurveObj;
 
         FVWStateRequested: Boolean;   // TEST Flag indicating if VW function has requested a specific state in last control iteration
 
         StorageClass: Integer;
-        VoltageModel: Integer;   // Variation with voltage
-        PFNominal: Double;
-        PICtrl: Array of TPICtrl;
 
         Registers, Derivatives: array[1..NumStorageRegisters] of Double;
-        VarFollowInverter: LongBool;
 
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
         procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
         procedure MakeLike(OtherPtr: Pointer); override;
 
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
         procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
@@ -394,7 +329,6 @@ type
         procedure Set_Maxkvarneg(const Value: Double);
 
         procedure SetNominalStorageOutput();
-        procedure Randomize(Opt: Integer);   // 0 = reset to 1.0; 1 = Gaussian around mean and std Dev  ;  // 2 = uniform
 
         procedure ResetRegisters;
         procedure TakeSample();
@@ -429,7 +363,6 @@ type
         property kWChDchLosses: Double READ Get_kWChDchLosses;
         property DCkW: Double READ Get_DCkW;
 
-        property MinModelVoltagePU: Double READ VminPu;
         function IsStorage(): Boolean; OVERRIDE;
         function GetPFPriority(): Boolean; OVERRIDE;
         procedure SetPFPriority(value: Boolean); OVERRIDE;
@@ -651,7 +584,6 @@ begin
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.StorageVars.FkVArating);
     PropertyOffset[ord(TProp.kV)] := ptruint(@obj.StorageVars.kVStorageBase);
 
-
     PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarRequested);
     PropertyReadFunction[ord(TProp.kvar)] := @Getkvar;
     PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.ReadByFunction];
@@ -677,6 +609,8 @@ begin
     PropertyScale[ord(TProp.PITol)] := 1.0 / 100.0;
 
     PropertyOffset[ord(TProp.SafeVoltage)] := ptruint(@obj.dynVars.SMThreshold);
+    PropertyOffset[ord(TProp.AmpLimit)] := ptruint(@obj.dynVars.ILimit);
+    PropertyOffset[ord(TProp.AmpLimitGain)] := ptruint(@obj.dynVars.VError);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
@@ -739,8 +673,8 @@ begin
                     VBase := StorageVars.kVStorageBase * 1000.0;   // Just use what is supplied
                 end;
 
-                VBase95 := Vminpu * VBase;
-                VBase105 := Vmaxpu * VBase;
+                VBaseMin := Vminpu * VBase;
+                VBaseMax := Vmaxpu * VBase;
 
                 Yorder := Fnconds * Fnterms;
                 YprimInvalid := TRUE;
@@ -880,8 +814,8 @@ begin
     Vbase := Other.Vbase;
     Vminpu := Other.Vminpu;
     Vmaxpu := Other.Vmaxpu;
-    Vbase95 := Other.Vbase95;
-    Vbase105 := Other.Vbase105;
+    VBaseMin := Other.VBaseMin;
+    VBaseMax := Other.VBaseMax;
     kW_out := Other.kW_out;
     kvar_out := Other.kvar_out;
     Pnominalperphase := Other.Pnominalperphase;
@@ -995,28 +929,20 @@ begin
     Yorder := 0;  // To trigger an initial allocation
     Nterms := 1;  // forces allocations
 
-    YearlyShapeObj := NIL;
-    DailyShapeObj := NIL;
-    DutyShapeObj := NIL;
-
-    InverterCurveObj := NIL;
-
     Connection := 0;    // Wye (star)
     VoltageModel := 1;  // Typical fixed kW negative load
     StorageClass := 1;
 
     StorageSolutionCount := -1;  // For keep track of the present solution in Injcurrent calcs
-    OpenStorageSolutionCount := -1;
     YPrimOpenCond := NIL;
 
     StorageVars.kVStorageBase := 12.47;
     VBase := 7200.0;
     Vminpu := 0.90;
     Vmaxpu := 1.10;
-    VBase95 := Vminpu * Vbase;
-    VBase105 := Vmaxpu * Vbase;
+    VBaseMin := Vminpu * Vbase;
+    VBaseMax := Vmaxpu * Vbase;
     Yorder := Fnterms * Fnconds;
-    RandomMult := 1.0;
 
     varMode := VARMODEPF;
     InverterON := TRUE; // start with inverterON
@@ -1129,20 +1055,6 @@ begin
     RecalcElementData();
 end;
 
-procedure TStorageObj.Randomize(Opt: Integer);
-begin
-    case Opt of
-        0:
-            RandomMult := 1.0;
-        GAUSSIAN:
-            RandomMult := Gauss(YearlyShapeObj.Mean, YearlyShapeObj.StdDev);
-        UNIfORM:
-            RandomMult := Random;  // number between 0 and 1.0
-        LOGNORMAL:
-            RandomMult := QuasiLognormal(YearlyShapeObj.Mean);
-    end;
-end;
-
 destructor TStorageObj.Destroy;
 begin
     YPrimOpenCond.Free;
@@ -1188,8 +1100,8 @@ end;
 
 procedure TStorageObj.RecalcElementData();
 begin
-    VBase95 := VMinPu * VBase;
-    VBase105 := VMaxPu * VBase;
+    VBaseMin := VMinPu * VBase;
+    VBaseMax := VMaxPu * VBase;
 
     with StorageVars do
     begin
@@ -1317,23 +1229,23 @@ begin
             //****  Fix this when user model gets connected in
                 3: // Yeq := Cinv(cmplx(0.0, -StoreVARs.Xd))  ;  // Gets negated in CalcYPrim
             else
-                // Yeq no longer used for anything other than this calculation of Yeq95, Yeq105 and
+                // Yeq no longer used for anything other than this calculation of YEQ_Min, YEQ_Max and
                 // constant Z power flow model
                 Yeq := Cmplx(Pnominalperphase, -Qnominalperphase) / Sqr(Vbase);   // Vbase must be L-N for 3-phase
                 if (Vminpu <> 0.0) then
-                    Yeq95 := Yeq / sqr(Vminpu)  // at 95% voltage
+                    YEQ_Min := Yeq / sqr(Vminpu)  // at 95% voltage
                 else
-                    Yeq95 := Yeq; // Always a constant Z model
+                    YEQ_Min := Yeq; // Always a constant Z model
 
                 if (Vmaxpu <> 0.0) then
-                    Yeq105 := Yeq / Sqr(Vmaxpu)   // at 105% voltage
+                    YEQ_Max := Yeq / Sqr(Vmaxpu)   // at 105% voltage
                 else
-                    Yeq105 := Yeq;
+                    YEQ_Max := Yeq;
             end;
             // Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
             with StorageVars do
             begin
-                PhaseCurrentLimit := Cmplx(Pnominalperphase, Qnominalperphase) / VBase95;
+                PhaseCurrentLimit := Cmplx(Pnominalperphase, Qnominalperphase) / VBaseMin;
                 MaxDynPhaseCurrent := Cabs(PhaseCurrentLimit);
             end;
 
@@ -1915,29 +1827,6 @@ begin
     inherited CalcYPrim();
 end;
 
-procedure TStorageObj.StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
-// Add the current into the proper location according to connection
-// Reverse of similar routine in load  (Cnegates are switched)
-var
-    j: Integer;
-begin
-    case Connection of
-        0:
-        begin  //Wye
-            TermArray[i] += Curr;
-            TermArray[Fnconds] += -Curr; // Neutral
-        end;
-        1:
-        begin //DELTA
-            TermArray[i] += Curr;
-            j := i + 1;
-            if j > Fnconds then
-                j := 1;
-            TermArray[j] -= Curr;
-        end;
-    end;
-end;
-
 procedure TStorageObj.WriteTraceRecord(const s: String);
 var
     i: Integer;
@@ -2022,11 +1911,11 @@ begin
             begin  // Wye
                 VLN := Vterminal[i];
                 VMagLN := Cabs(VLN);
-                if VMagLN <= VBase95 then
-                    Curr := Yeq95 * VLN  // Below 95% use an impedance model
+                if VMagLN <= VBaseMin then
+                    Curr := YEQ_Min * VLN  // Below 95% use an impedance model
                 else
-                if VMagLN > VBase105 then
-                    Curr := Yeq105 * VLN  // above 105% use an impedance model
+                if VMagLN > VBaseMax then
+                    Curr := YEQ_Max * VLN  // above 105% use an impedance model
                 else
                     Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLN);  // Between 95% -105%, constant PQ
 
@@ -2043,11 +1932,11 @@ begin
                     VMagLN := VMagLL / SQRT3
                 else
                     VMagLN := VmagLL;  // L-N magnitude
-                if VMagLN <= VBase95 then
-                    Curr := (Yeq95 / 3.0) * VLL  // Below 95% use an impedance model
+                if VMagLN <= VBaseMin then
+                    Curr := (YEQ_Min / 3.0) * VLL  // Below 95% use an impedance model
                 else
-                if VMagLN > VBase105 then
-                    Curr := (Yeq105 / 3.0) * VLL  // above 105% use an impedance model
+                if VMagLN > VBaseMax then
+                    Curr := (YEQ_Max / 3.0) * VLL  // above 105% use an impedance model
                 else
                     Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLL);  // Between 95% -105%, constant PQ
 
@@ -2192,12 +2081,20 @@ end;
 
 procedure TStorageObj.DoGFM_Mode();
 // Implements the grid forming inverter control routine for the storage device
+var
+    i: Integer;
+    W: Double;
+    ZSys: Double;
 begin
-    dynVars.BaseV := VBase;
-    dynVars.Discharging := (StorageState = STORE_DISCHARGING);
-    with ActiveCircuit.Solution, dynVars do
+    with ActiveCircuit.Solution do
     begin
-        //Initialization just in case
+        dynVars.BaseV := VBase;
+        dynVars.Discharging := (StorageState = STORE_DISCHARGING);
+        if dynVars.IComp > 0 then
+        begin
+            ZSys := (2 * (Vbase * dynVars.ILimit)) - dynVars.IComp;
+            dynVars.BaseV := (ZSys / dynVars.ILimit) * dynVars.VError;
+        end;
         dynVars.CalcGFMVoltage(NPhases, Vterminal);
         YPrim.MVMult(InjCurrent, Vterminal);
         set_ITerminalUpdated(FALSE);
@@ -2378,36 +2275,6 @@ begin
 
          // Add into System Injection Current Array
         Result := inherited InjCurrents();
-    end;
-end;
-
-procedure TStorageObj.GetCurrents(Curr: pComplexArray);
-// Required for operation in GFM mode
-var
-    i: Integer;
-begin
-    if not GFM_Mode then
-    begin
-        inherited GetCurrents(Curr);
-        Exit;
-    end;
-
-    try
-        with ActiveCircuit.Solution do
-        begin
-            for i := 1 to Yorder do
-                Vterminal[i] := NodeV[NodeRef[i]];
-
-            YPrim.MVMult(Curr, Vterminal); // Current from Elements in System Y
-            CalcInjCurrentArray();
-            
-            // Add Together with yprim currents
-            for i := 1 to Yorder do
-                Curr[i] -= InjCurrent[i];
-        end;
-    except
-        On E: Exception do
-            DoErrorMsg(Format(_('GetCurrents for Element: %s.'), [Name]), E.Message, _('Inadequate storage allotted for circuit element.'), 327);
     end;
 end;
 
@@ -2891,8 +2758,11 @@ end;
 procedure TStorageObj.IntegrateStates();
 // dynamics mode integration routine
 var
+    GFMUpdate: Boolean; // To avoid updating the IBR if current limit reached
     NumData, j, i: Integer;
     IMaxPhase, OFFVal: Double;
+    IPresent: Double; // present amps per phase
+    curr: Array of Complex; // For storing the present currents when using current limiter
 begin
     // Compute Derivatives and Then integrate
     ComputeIterminal();
@@ -2936,7 +2806,22 @@ begin
                         VDelta[i] := (0.001 - (Vgrid[i].mag / 1000)) / BasekV
                     else
                         VDelta[i] := (BasekV - (Vgrid[i].mag / 1000)) / BasekV;
-                    if abs(VDelta[i]) > CtrlTol then
+
+                    GFMUpdate := TRUE;
+                    
+                    // Checks if there is current limit set
+                    if ILimit > 0 then
+                    begin
+                        SetLength(curr, NPhases + 1);
+                        GetCurrents(pComplexArray(@curr[0]));
+                        for j := 0 to (Nphases - 1) do
+                        begin
+                            IPresent := cabs(curr[j]);
+                            GFMUpdate := GFMUpdate and (IPresent < (ILimit * VError));
+                        end;
+                    end;
+
+                    if (abs(VDelta[i]) > CtrlTol) and GFMUpdate then
                     begin
                         ISPDelta[i] := ISPDelta[i] + (IMaxPhase * VDelta[i]) * kP * 100;
                         if ISPDelta[i] > IMaxPhase then
