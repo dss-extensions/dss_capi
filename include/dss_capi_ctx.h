@@ -2665,7 +2665,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_Lines_Set_Xg(void* ctx, double Value);
 
     /*! 
-    Yprimitive for the active line object.
+    Yprimitive for the active line object (complex array).
     */
     DSS_CAPI_DLL void ctx_Lines_Get_Yprim(void* ctx, double** ResultPtr, int32_t* ResultCount);
     /*! 
