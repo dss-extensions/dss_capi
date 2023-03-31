@@ -5318,7 +5318,7 @@ extern "C" {
     DSS_CAPI_DLL int32_t Solution_Get_MaxIterations(void);
 
     /*! 
-    Set present solution mode (by a text code - see DSS Help)
+    Get present solution mode
     */
     DSS_CAPI_DLL int32_t Solution_Get_Mode(void);
 
@@ -5379,7 +5379,7 @@ extern "C" {
     DSS_CAPI_DLL void Solution_Set_MaxIterations(int32_t Value);
 
     /*! 
-    Set present solution mode (by a text code - see DSS Help)
+    Set present solution mode
     */
     DSS_CAPI_DLL void Solution_Set_Mode(int32_t Mode);
 
