@@ -256,7 +256,6 @@ begin
     end
     else    // Everything else must be a circuit element or DSS Object
     begin
-
         Handle := AddObject(ObjClass, ObjName);
     end;
 
@@ -1626,73 +1625,78 @@ var
 begin
     Result := 0;
 
-   // Search for class IF not already active
-   // IF nothing specified, LastClassReferenced remains
+    // Search for class IF not already active
+    // IF nothing specified, LastClassReferenced remains
     if CompareText(Objtype, DSS.ActiveDSSClass.Name) <> 0 then
         DSS.LastClassReferenced := DSS.ClassNames.Find(ObjType);
 
-    case DSS.LastClassReferenced of
-        0:
-        begin
-            DoSimpleMsg(DSS, 'New Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString], 263);
-            Result := 0;
-            Exit;
-        end;{Error}
-    else
+    if DSS.LastClassReferenced = 0 then
+    begin
+        DoSimpleMsg(DSS, 'New Command: Object Type "%s" not found. %s', [ObjType, CRLF + DSS.Parser.CmdString], 263);
+        Result := 0;
+        Exit;
+    end;
 
-     // intrinsic and user Defined models
-     // Make a new circuit element
-        DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
 
-      // Name must be supplied
-        if Length(Name) = 0 then
+    // intrinsic and user Defined models
+    // Make a new circuit element
+    DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
+
+    // Name must be supplied
+    if Length(Name) = 0 then
+    begin
+        DoSimpleMsg(DSS, 'Object Name Missing %s', [CRLF + DSS.Parser.CmdString], 264);
+        Exit;
+    end;
+
+    // now let's make a new object or set an existing one active, whatever the case
+    if DSS.ActiveDSSClass.DSSClassType = DSS_OBJECT then
+    begin
+        if (DSS.ActiveCircuit = NIL) and ((DSS.ActiveDSSClass = DSS.LineCodeClass) or (DSS.ActiveDSSClass = DSS.LineGeometryClass)) then
         begin
-            DoSimpleMsg(DSS, 'Object Name Missing %s', [CRLF + DSS.Parser.CmdString], 264);
+            DoSimpleMsg(DSS, _('You Must Create a circuit first: "new circuit.yourcktname"'), 279);
             Exit;
         end;
 
+        // These can be added WITHout having an active circuit
+        // Duplicates not allowed in general DSS objects;
+        if not DSS.ActiveDSSClass.SetActive(Name) then
+        begin
+            Obj := DSS.ActiveDSSClass.NewObject(Name, TRUE, Result);
+            DSS.DSSObjs.Add(Obj);  // Stick in pointer list to keep track of it
+        end;
+    end
+    else
+    begin
+        // These are circuit elements
+        if DSS.ActiveCircuit = NIL then
+        begin
+            DoSimpleMsg(DSS, _('You Must Create a circuit first: "new circuit.yourcktname"'), 265);
+            Exit;
+        end;
 
-        // now let's make a new object or set an existing one active, whatever the case
-        case DSS.ActiveDSSClass.DSSClassType of
-            // These can be added WITHout having an active circuit
-            // Duplicates not allowed in general DSS objects;
-            DSS_OBJECT:
-                if not DSS.ActiveDSSClass.SetActive(Name) then
-                begin
-                    Obj := DSS.ActiveDSSClass.NewObject(Name, TRUE, Result);
-                    DSS.DSSObjs.Add(Obj);  // Stick in pointer list to keep track of it
-                end;
+        // IF Object already exists.  Treat as an Edit IF dulicates not allowed
+        if DSS.ActiveCircuit.DuplicatesAllowed then
+        begin
+            Obj := DSS.ActiveDSSClass.NewObject(Name, TRUE, Result); // Returns index into this class
+            DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));   // Adds active object to active circuit
+        end
         else
-            // These are circuit elements
-            if DSS.ActiveCircuit = NIL then
+        begin // Check to see if we can set it active first
+            if not DSS.ActiveDSSClass.SetActive(Name) then
             begin
-                DoSimpleMsg(DSS, _('You Must Create a circuit first: "new circuit.yourcktname"'), 265);
-                Exit;
-            end;
-
-          // IF Object already exists.  Treat as an Edit IF dulicates not allowed
-            if DSS.ActiveCircuit.DuplicatesAllowed then
-            begin
-                Obj := DSS.ActiveDSSClass.NewObject(Name, TRUE, Result); // Returns index into this class
+                Obj := DSS.ActiveDSSClass.NewObject(Name, TRUE, Result);   // Returns index into this class
                 DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));   // Adds active object to active circuit
             end
             else
-            begin      // Check to see if we can set it active first
-                if not DSS.ActiveDSSClass.SetActive(Name) then
-                begin
-                    Obj := DSS.ActiveDSSClass.NewObject(Name, TRUE, Result);   // Returns index into this class
-                    DSS.ActiveCircuit.AddCktElement(TDSSCktElement(Obj));   // Adds active object to active circuit
-                end
-                else
-                begin
-                    DoSimpleMsg(DSS, 'Warning: Duplicate new element definition: "%s.%s". Element being redefined.', [DSS.ActiveDSSClass.Name, Name], 266);
-                    Exit;
-                end;
+            begin
+                DoSimpleMsg(DSS, 'Warning: Duplicate new element definition: "%s.%s". Element being redefined.', [DSS.ActiveDSSClass.Name, Name], 266);
+                Exit;
             end;
-
         end;
-        DSS.ActiveDSSClass.Edit(DSS.Parser);    // Process remaining instructions on the command line
+
     end;
+    DSS.ActiveDSSClass.Edit(DSS.Parser);    // Process remaining instructions on the command line
 end;
 
 

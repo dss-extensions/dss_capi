@@ -270,25 +270,28 @@ var
     i, DataPtr, Yr: Integer;
     Mult, MultInc: Double;
 begin
-  // Fill up the YearMult array with total yearly multiplier from base year
-    Mult := Multiplier^[1];
+    if (NYears = 0) or (Multiplier = NIL) then
+        Exit;
+
+    // Fill up the YearMult array with total yearly multiplier from base year
+    Mult := Multiplier[1];
     MultInc := Mult;
-    YearMult^[1] := Mult;
+    YearMult[1] := Mult;
     DataPtr := 1;
-    Yr := Round(Year^[1]);
+    Yr := Round(Year[1]);
     for i := 2 to NYears do
     begin
         Inc(Yr);
         if DataPtr < Npts then
         begin
-            if Year^[DataPtr + 1] = Yr then
+            if Year[DataPtr + 1] = Yr then
             begin
                 INC(DataPtr);
-                MultInc := Multiplier^[DataPtr];
+                MultInc := Multiplier[DataPtr];
             end;
         end;
         Mult := Mult * MultInc;
-        YearMult^[i] := Mult;
+        YearMult[i] := Mult;
     end;
 end;
 

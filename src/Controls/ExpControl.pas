@@ -124,7 +124,7 @@ type
 
         procedure Reset; OVERRIDE;  // Reset to initial defined state
 
-        function MakePVSystemList: Boolean;
+        function MakePVSystemList(doRecalc: Boolean = TRUE): Boolean;
 
         property PendingChange[DevIndex: Integer]: Integer READ Get_PendingChange WRITE Set_PendingChange;
 
@@ -371,7 +371,7 @@ var
 begin
     FOpenTau := Tresponse / 2.3026;
     if FPVSystemPointerList.Count = 0 then
-        MakePVSystemList;
+        MakePVSystemList(FALSE);
 
     if FPVSystemPointerList.Count > 0 then
     begin
@@ -581,7 +581,7 @@ begin
     end; {If FlistSize}
 end;
 
-function TExpControlObj.MakePVSystemList: Boolean;
+function TExpControlObj.MakePVSystemList(doRecalc: Boolean): Boolean;
 var
     PVSysClass: TDSSClass;
     PVSys: TPVsystemObj;
@@ -652,7 +652,9 @@ begin
         FVregs[i] := FVregInit;
         FPendingChange[i] := NONE;
     end;
-    RecalcElementData;
+    if doRecalc then
+        RecalcElementData;
+
     if FPVSystemPointerList.Count > 0 then
         Result := TRUE;
 end;
