@@ -7,9 +7,9 @@
 
 Veja [FAQ](https://github.com/dss-extensions/dss-extensions#faq) (em inglês) para algumas notas.
 
-Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v9+) através de uma interface C plana, que tenta reproduzir a maioria dos métodos COM, além de adicionar diversas funcionalidades. De fato, a maior parte do código foi inicialmente derivado dos arquivos da implementação COM, com um conjunto crescente de modificações e extensões. O DLL resultante pode ser usado diretamente ou através de módulos de interface, como o módulo `DSS Python`. DSS Python representa um módulo para linguagem Python que imita a mesma estrutura do módulo COM (como exposto via `win32com` ou `comtypes`), efetivamente nos permitindo alcançar compatilibilidade multi-plataforma a nível de Python. 
+Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v9+) através de uma interface C plana, que tenta reproduzir a maioria dos métodos COM, além de adicionar diversas funcionalidades. De fato, a maior parte do código foi inicialmente derivado dos arquivos da implementação COM, com um conjunto crescente de modificações e extensões. O DLL resultante pode ser usado diretamente ou através de módulos de interface, como o módulo `DSS Python`. DSS Python representa um módulo para linguagem Python que imita a mesma estrutura do módulo COM (como exposto via `win32com` ou `comtypes`), efetivamente nos permitindo alcançar compatibilidade multi-plataforma a nível de Python. 
 
-Atráves dos outros projetos hospedados como DSS Extensions, a biblioteca DSS C-API torna possível usar o motor do OpenDSS en múltiplos sistemas operacionais (Windows, Linux, macOS) e múltiplicas arquiteturas (Intel x86, x86-64, ARM32, e ARM64, incluindo os processadores M1 e M2 da Apple). A grande maioria das funcionalidades adicionadas nesta biblioteca são compartilhadas com todos os outros projetos. Caso tenha interesse numa linguagem não suportada pelos projetos abaixo, abra um novo "issue" aqui ou em https://github.com/dss-extensions/dss-extensions/issues
+Através dos outros projetos hospedados como DSS Extensions, a biblioteca DSS C-API torna possível usar o motor do OpenDSS en múltiplos sistemas operacionais (Windows, Linux, macOS) e múltiplas arquiteturas (Intel x86, x86-64, ARM32, e ARM64, incluindo os processadores M1 e M2 da Apple). A grande maioria das funcionalidades adicionadas nesta biblioteca são compartilhadas com todos os outros projetos. Caso tenha interesse numa linguagem não suportada pelos projetos abaixo, abra um novo "issue" aqui ou em https://github.com/dss-extensions/dss-extensions/issues
 
 <p align="center">
     <img alt="Visão geral dos repositórios relacionados" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap_pt.png" width=600>
@@ -46,7 +46,8 @@ A partir de 2019-03-05, este repositório contém todo o código fonte em lingua
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
-- **2023-03-24 / version 0.13.0: Várias melhorias, incluindo correção de bugs e portes de várias modificações do OpenDSS oficial; a referência para esta versão é o OpenDSS v9.6.1.1.**
+- **2023-04-01 / version 0.13.1: Traz apenas algumas potenciais correções relacionadas a 3 propriedades de PVSystem**
+- 2023-03-29 / version 0.13.0: Várias melhorias, incluindo correção de bugs e portes de várias modificações do OpenDSS oficial; a referência para esta versão é o OpenDSS v9.6.1.1.
 - 2022-07-16 / version 0.12.1: Versão incremental, corrigindo um bug encontrado logo após o lançamento da versão 0.12.0.
 - 2022-07-13 / version 0.12.0: Grande atualização, inclui funções do mecanismo paralelo, um novo sistema de propriedades, novas extensões de API, melhor desempenho, além de outras novidades.
 - 2020-12-28 / versão 0.10.7: Versão de manutenção, baseado no OpenDSS r2963. Inclui correções importantes e algumas novas funções do OpenDSS oficial.

@@ -15,7 +15,13 @@
     - i18n complements
     - drop the `ctx_` prefix for most functions, leave the DSSContext API as the default version. We plan to drop the current single-instance API, but we can add a header with inline C functions, prefixed, for easier migration. 
 
-# Version 0.13.0
+# Versions 0.13.x
+
+## Version 0.13.1
+
+Very minor release to address a potential issue we noticed with three of the PVSystem properties.
+
+## Version 0.13.0
 
 Version 0.13.0 was expected to be version 0.12.2. Due to some more large changes from the upstream/official OpenDSS, we decided to increment to 0.13 instead.
 Although only officially released on March 2023, most of the changes below were already available in an alpha version release on December 2022.

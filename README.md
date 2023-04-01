@@ -9,7 +9,7 @@ Please see [FAQ](https://github.com/dss-extensions/dss-extensions#faq) for a cou
 
 This library exposes the OpenDSS/OpenDSS-PM v9+ engine in a plain C interface that tries to reproduce most of the COM methods, plus many extensions. In fact, most of the code was initially derived from the COM implementation files. The resulting DLL can be using directly by advanced users or, for example, through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level.
 
-Through the other projects under DSS Extensions, DSS C-API enables projects to use the OpenDSS in multiple platforms (Windows, Linux, macOS) across multiple architectures (Intel x86, x86-64, ARM32, and ARM64, including Apple's M1 and M2). Most of the features added to this based libraty is shared across all other projects. If you need support for a language not listed below, please open a new issue (either here or in https://github.com/dss-extensions/dss-extensions/issues) and we will evaluate that language.
+Through the other projects under DSS Extensions, DSS C-API enables projects to use the OpenDSS in multiple platforms (Windows, Linux, macOS) across multiple architectures (Intel x86, x86-64, ARM32, and ARM64, including Apple's M1 and M2). Most of the features added to this based library is shared across all other projects. If you need support for a language not listed below, please open a new issue (either here or in https://github.com/dss-extensions/dss-extensions/issues) and we will evaluate that language.
 
 <p align="center">
     <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap.png" width=600>
@@ -27,7 +27,7 @@ Version 0.13.x is based on OpenDSS revision 3595, with many extra/custom feature
 
 **For the source-code of a specific version, check the Git tags.**
 
-While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targetting version 0.14, which will become v1.0 when we consider it ready.
+While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targeting version 0.14, which will become v1.0 when we consider it ready.
 
 Instead of using extra numeric parameters as in the official DDLL interface ("OpenDSSDirect" or "DCSL"), each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
@@ -46,7 +46,8 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.12.x/docs/changelog.md) for a detailed list.
 
-- **2023-03-24 / version 0.13.0: Various updates, including bugfixes and several OpenDSS feature ports; the reference is now OpenDSS v9.6.1.1.**
+- **2023-04-01 / version 0.13.1: Minor release to address a few PVSystem properties**
+- 2023-03-29 / version 0.13.0: Various updates, including bugfixes and several OpenDSS feature ports; the reference is now OpenDSS v9.6.1.1.
 - 2022-07-16 / version 0.12.1: Incremental release to fix address a bug found just after 0.12.0 was released.
 - 2022-07-13 / version 0.12.0: Extensive updates, includes ports of the PM functions, a new/rewritten property system, new API extensions, better performance, and other features.
 - 2021-03-09 / version 0.10.7-1: Includes a fix for some reports which presented corrupted text in version 0.10.7.
