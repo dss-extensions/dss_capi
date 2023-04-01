@@ -158,7 +158,7 @@ type
 
         LastThevAngle: Double;
 
-        DebugTrace: Boolean;
+        DebugTrace: LongBool;
         PVSystemSolutionCount: Integer;
         PVSystemFundamental: Double;  // Thevinen equivalent voltage mag and angle reference for Harmonic model
         PVsystemObjSwitchOpen: Boolean;
@@ -167,8 +167,8 @@ type
       //PFSpecified             :Boolean;
       //kvarSpecified           :Boolean;
 
-        ForceBalanced: Boolean;
-        CurrentLimited: Boolean;
+        ForceBalanced: LongBool;
+        CurrentLimited: LongBool;
 
         kvar_out: Double;
         kW_out: Double;
