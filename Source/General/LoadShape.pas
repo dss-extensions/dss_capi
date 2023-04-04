@@ -121,6 +121,7 @@ TYPE
 
         Enabled,
         UseActual           : Boolean;
+        Interpolation       : Integer;
 
         {***********************************************************************
         *                    Memory mapping variables                          *
@@ -165,6 +166,7 @@ TYPE
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
         PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+        Function Get_Interpolation_Idx(StrValue : String): Integer;
 
         Property NumPoints :Integer Read FNumPoints Write Set_NumPoints;
         Property PresentInterval :Double Read Get_Interval;
@@ -183,7 +185,9 @@ implementation
 
 USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils,  MathUtil, Utilities, Classes, TOPExport, Math, PointerList;
 
-Const NumPropsThisClass = 21;
+Const NumPropsThisClass = 22;
+      AVG_IP            = 1;
+      EDGE_IP           = 2;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLoadShape.Create;  // Creates superstructure for all Line objects
@@ -238,6 +242,7 @@ Begin
      PropertyName[19] := 'Pmult';         // synonym for Mult
      PropertyName[20] := 'PQCSVFile';     // Redirect to a file with p, q pairs
      PropertyName[21] := 'MemoryMapping'; // Enable/disable using Memory mapping for this shape
+     PropertyName[22] := 'Interpolation'; // Enable/disable using Memory mapping for this shape
 
      // define Property help values
 
@@ -303,6 +308,9 @@ Begin
                          'If the interval=0, there should be 3 items on each line: (hour, Pmult, Qmult)';
      PropertyHelp[21] := '{Yes | No* | True | False*} Enables the memory mapping functionality for dealing with large amounts of load shapes. '+CRLF+
                          'By defaul is False. Use it to accelerate the model loading when the containing a large number of load shapes.';
+     PropertyHelp[22] := '{AVG* | EDGE} Defines the interpolation method used for connecting distant dots within the load shape. '+CRLF+ CRLF+
+                         'By defaul is AVG (average), which will return a multiplier for missing intervals based on the closest multiplier in time.' + CRLF+
+                         'EDGE interpolation keeps the last known value for missing intervals until the next defined multiplier arrives';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -608,6 +616,7 @@ BEGIN
                 END;
            20:  Do2ColCSVFile(Param);
            21:  UseMMF := InterpretYesNo(Param);
+           22:  Interpolation  :=  Get_Interpolation_Idx(Parser[ActorID].StrValue);
 
          ELSE
            // Inherited parameters
@@ -1014,6 +1023,7 @@ BEGIN
      myViewLen          :=  1000;   // 1kB by default, it may change for not missing a row
 
      ArrayPropertyIndex :=  0;
+     Interpolation      :=  AVG_IP;
 
      InitPropertyValues(0);
 
@@ -1083,7 +1093,12 @@ BEGIN
     BEGIN
       IF Interval > 0.0 THEN                                      // Using Interval
       BEGIN
-        Index         :=  round(hr/Interval);
+        Case Interpolation of
+          EDGE_IP:
+            Index         :=  floor(hr/Interval);
+          else
+            Index         :=  round(hr/Interval);
+        end;
         if UseMMF then
         BEGIN
           IF Index > myDataSize Then Index := Index Mod myDataSize;  // Wrap around using remainder
@@ -1327,6 +1342,12 @@ Begin
 
 
 end;
+
+Function TLoadShapeObj.Get_Interpolation_Idx(StrValue : String): Integer;
+Begin
+  Result  :=  1;
+  if StrValue = 'EDGE' then Result :=   EDGE_IP;
+End;
 
 FUNCTION TLoadShapeObj.GetPropertyValue(Index: Integer): String;
 begin
