@@ -82,13 +82,22 @@ type
         Qbase = 18,   // for normalization, use peak if 0
         Pmult = 19,   // synonym for Mult
         PQCSVFile = 20, // Redirect to a file with p, q pairs
-        MemoryMapping = 21 // Enable/disable using Memory mapping for this shape
+        MemoryMapping = 21, // Enable/disable using Memory mapping for this shape
+        Interpolation = 22
     );
 
     TMMShapeType = (
         P = 0,
         Q = 1
     );
+
+{$PUSH}
+{$Z4} // keep enums as int32 values
+    TLoadShapeInterp = (
+        Avg = 0,
+        Edge = 1
+    );
+{$POP}
 {$SCOPEDENUMS OFF}
 
     TLoadShape = class(TDSSClass)
@@ -139,6 +148,7 @@ type
         Enabled: Boolean;
         ExternalMemory: LongBool;
         UseActual: LongBool;
+        interpolation: TLoadShapeInterp;
         Stride: Integer;
 
         // Memory mapping variables
@@ -210,6 +220,8 @@ type
 type
     TObj = TLoadShapeObj;
     TProp = TLoadShapeProp;
+
+{$SCOPEDENUMS ON}
 {$PUSH}
 {$Z4} // keep enums as int32 values
     TLoadShapeAction = (
@@ -218,12 +230,13 @@ type
         SngSave = 2
     );
 {$POP}
+{$SCOPEDENUMS OFF}
 
 const
     NumPropsThisClass = Ord(High(TProp));
 var
     PropInfo: Pointer = NIL;    
-    ActionEnum: TDSSEnum;
+    ActionEnum, InterpEnum: TDSSEnum;
 
 procedure Do2ColCSVFile(Obj: TObj; const FileName: String);forward;
 procedure DoDblFile(Obj: TObj; const FileName: String);forward;
@@ -238,6 +251,9 @@ begin
         ActionEnum := TDSSEnum.Create('LoadShape: Action', True, 1, 1, 
             ['Normalize', 'DblSave', 'SngSave'], 
             [ord(TLoadShapeAction.Normalize), ord(TLoadShapeAction.DblSave), ord(TLoadShapeAction.SngSave)]);
+        InterpEnum := TDSSEnum.Create('LoadShape: Interpolation', True, 1, 1, 
+            ['Avg', 'Edge'], 
+            [ord(TLoadShapeInterp.Avg), ord(TLoadShapeInterp.Edge)]);
     end;
 
     inherited Create(dssContext, DSS_OBJECT, 'LoadShape');
@@ -354,10 +370,16 @@ begin
     PropertyWriteFunction[ord(TProp.npts)] := @SetNumPoints;
     PropertyFlags[ord(TProp.npts)] := [TPropertyFlag.WriteByFunction];
 
+    // enums
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
     PropertyOffset[ord(TProp.Action)] := ptruint(@DoAction); 
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum); 
+
+    // plain enum
+    PropertyType[ord(TProp.Interpolation)] := TPropertyType.MappedStringEnumProperty;
+    PropertyOffset[ord(TProp.Interpolation)] := ptruint(@obj.interpolation); 
+    PropertyOffset2[ord(TProp.Interpolation)] := PtrInt(InterpEnum); 
 
     // strings
     PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
@@ -1115,6 +1137,8 @@ begin
     pqcsvfile := '';
 
     mmViewLen := 1000;   // 1kB by default, it may change for not missing a row
+
+    interpolation := TLoadShapeInterp.Avg;
 end;
 
 destructor TLoadShapeObj.Destroy;
@@ -1205,7 +1229,11 @@ begin
 
     if Interval > 0.0 then
     begin
-        i := round(hr / Interval);
+        if interpolation = TLoadShapeInterp.Edge then
+            i := floor(hr / Interval)
+        else
+            i := round(hr / Interval);
+
         if UseMMF then
         begin
             if i > mmDataSize then 
@@ -1914,7 +1942,11 @@ begin
 
     if Interval > 0.0 then
     begin
-        i := round(hr / Interval);
+        if interpolation = TLoadShapeInterp.Edge then
+            i := floor(hr / Interval)
+        else
+            i := round(hr / Interval);
+
         if i > NumPoints then 
             i := i mod NumPoints;  // Wrap around using remainder
         if i = 0 then 
