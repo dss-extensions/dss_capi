@@ -3083,7 +3083,7 @@ extern "C" {
     DSS_CAPI_DLL double Loads_Get_Rneut(void);
 
     /*! 
-    Name of harmonic current spectrrum shape.
+    Name of harmonic current spectrum shape.
     */
     DSS_CAPI_DLL char* Loads_Get_Spectrum(void);
 
