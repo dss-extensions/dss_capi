@@ -882,17 +882,15 @@ var
 begin
     // Split off Obj class and name
     dotpos := Pos('.', FullObjName);
-    case dotpos of
-        0:
-        begin
-            ObjName := Copy(FullObjName, 1, Length(FullObjName));  // assume it is all objname; class defaults
-            ClassName := '';
-        end;
+    if dotpos = 0 then
+    begin
+        ObjName := Copy(FullObjName, 1, Length(FullObjName));  // assume it is all objname; class defaults
+        ClassName := '';
+    end
     else
     begin
         ClassName := Copy(FullObjName, 1, dotpos - 1);
         ObjName := Copy(FullObjName, dotpos + 1, Length(FullObjName));
-    end;
     end;
 
     // Check object name in case it is a variable

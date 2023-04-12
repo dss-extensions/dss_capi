@@ -1470,7 +1470,7 @@ begin
         SetLength(buffer, Nterms);
         for j := 1 to Nterms do
         Begin
-            buffer[j - 1] := cmplx(0, 0);
+            buffer[j - 1] := 0;
             myInit := (j - 1) * NConds + 1;
             myEnd := NConds * j;
             for i := myInit to myEnd do

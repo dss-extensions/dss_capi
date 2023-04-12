@@ -359,17 +359,13 @@ var
 begin
     Classref := DSS.ClassNames.Find(ObjType);
 
-    case Classref of
-        0:
-        begin
-            DoSimpleMsg(DSS, Format(_('Error! Object Class "%s" not found.'), [ObjType]) + CRLF + DSS.Parser.CmdString, 903);
-            Result := FALSE;
-            Exit;
-        end;{Error}
-    else
-        DSS.LastClassReferenced := Classref;
+    if Classref = 0 then
+    begin
+        DoSimpleMsg(DSS, Format(_('Error! Object Class "%s" not found.'), [ObjType]) + CRLF + DSS.Parser.CmdString, 903);
+        Result := FALSE;
+        Exit;
     end;
-
+    DSS.LastClassReferenced := Classref;
     Result := TRUE;
 end;
 

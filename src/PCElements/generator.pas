@@ -1454,7 +1454,7 @@ begin
 
         // Checks the output in case of using Fuel
         if UseFuel and (not GenActive) then
-            Curr := cmplx(0, 0);
+            Curr := 0;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1483,7 +1483,7 @@ begin
 
         // Checks the output in case of using Fuel
         if UseFuel and (not GenActive) then
-            Curr := cmplx(0, 0);
+            Curr := 0;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1541,7 +1541,7 @@ begin
             
             // Checks the output in case of using Fuel
             if UseFuel and (not GenActive) then
-                Curr := cmplx(0, 0);
+                Curr := 0;
             
             StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
             IterminalUpdated := TRUE;
@@ -1600,7 +1600,7 @@ begin
         
         // Checks the output in case of using Fuel
         if UseFuel and (not GenActive) then
-            Curr := cmplx(0, 0);
+            Curr := 0;
         
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1664,7 +1664,7 @@ begin
 
         // Checks the output in case of using Fuel
         if UseFuel and (not GenActive) then
-            Curr := cmplx(0, 0);
+            Curr := 0;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1757,7 +1757,7 @@ begin
 
                 // Checks the output in case of using Fuel
                 if UseFuel and (not GenActive) then
-                    DeltaCurr := cmplx(0, 0);
+                    DeltaCurr := 0;
 
                 StickCurrInTerminalArray(ITerminal, -DeltaCurr, i);  // Put into Terminal array taking into account connection
                 ITerminalUpdated := TRUE;

@@ -579,12 +579,10 @@ begin
         // Main solution Algorithm dispatcher
         with DSS.ActiveCircuit do
         begin
-            case Year of
-                0:
-                    DefaultGrowthFactor := 1.0;    // RCD 8-17-00
+            if Year = 0 then
+                DefaultGrowthFactor := 1.0    // RCD 8-17-00
             else
                 DefaultGrowthFactor := IntPower(DefaultGrowthRate, (year - 1));
-            end;
         end;
 {$IFDEF DLL_ENGINE}
         Fire_InitControls;

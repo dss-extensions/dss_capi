@@ -529,13 +529,13 @@ begin
         if (VinMag > VHLimit) or (VinMag < VLLimit) then
         begin   // Check Limits (Voltage)
             UPFCON := FALSE;
-            CurrOut := cmplx(0, 0);
+            CurrOut := 0;
         end
         else                                                       // Limits OK
         begin
             case ModeUPFC of
                 0:
-                    CurrOut := cmplx(0, 0); //UPFC off
+                    CurrOut := 0; //UPFC off
                 1:
                 begin              //UPFC as a voltage regulator
                     Vpolar := ctopolar(Vbout);
@@ -561,7 +561,7 @@ begin
                     end;
                 end;
                 2:
-                    CurrOut := cmplx(0, 0); //UPFC as a phase angle regulator
+                    CurrOut := 0; //UPFC as a phase angle regulator
                 3:
                 begin              //UPFC in Dual mode Voltage and Phase angle regulator
                     Vpolar := ctopolar(Vbout);
@@ -628,7 +628,7 @@ begin
                     end
                     else
                     begin
-                        CurrOut := cmplx(0, 0); //UPFC off
+                        CurrOut := 0; //UPFC off
                         SR0^[Cond] := CurrOut;
                         SF2 := FALSE;   // Says to the other controller to do nothing
                     end;
@@ -675,7 +675,7 @@ begin
                     end
                     else
                     begin
-                        CurrOut := cmplx(0, 0); //UPFC off
+                        CurrOut := 0; //UPFC off
                         SR0^[Cond] := CurrOut;
                         SF2 := FALSE;   // Says to the other controller to do nothing
                         SyncFlag := FALSE;
@@ -730,7 +730,7 @@ begin
                 case ModeUPFC of
                     0:
                     begin
-                        CurrIn := cmplx(0, 0);
+                        CurrIn := 0;
                         UPFC_Power := 0;
                     end;
                     1:
@@ -784,7 +784,7 @@ begin
                         end
                         else
                         begin   // Do nothing, aparently the input voltage is OK
-                            CurrIn := cmplx(0, 0);
+                            CurrIn := 0;
                             SR0^[Cond] := CurrIn;
                             UPFC_Power := 0;
                         end;
@@ -822,7 +822,7 @@ begin
                 end;
             end
             else
-                CurrIn := cmplx(0, 0);
+                CurrIn := 0;
         Result := CurrIn;
     except
         DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName], 334);
@@ -891,7 +891,7 @@ begin
     // Limits OK
     case ModeUPFC of
         0:
-            // CurrOut := cmplx(0,0); //UPFC off
+            // CurrOut := 0; //UPFC off
             ;
         1:  
         begin //UPFC as a voltage regulator

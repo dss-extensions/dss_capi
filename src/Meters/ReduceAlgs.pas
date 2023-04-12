@@ -335,7 +335,6 @@ begin
                                                 if not LineElement2.IsSwitch then
                                                     LineElement2.MergeWith(LineElement1, SERIESMERGE){Series Merge}
                                         end;
-                            else //Nada
                             end;
 
             LineElement1 := BranchList.GoForward;

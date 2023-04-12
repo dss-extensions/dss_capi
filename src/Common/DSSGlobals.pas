@@ -322,13 +322,13 @@ Begin
       ObjClass := '';
       // Split off Obj class and name
       dotpos := Pos('.', Param);
-      CASE dotpos OF
-         0:ObjName := Copy(Param, 1, Length(Param));  // assume it is all name; class defaults
-      ELSE Begin
+      if dotpos = 0 then
+         ObjName := Copy(Param, 1, Length(Param))  // assume it is all name; class defaults
+      else
+      begin
            ObjClass := Copy(Param, 1, dotpos-1);
            ObjName  := Copy(Param, dotpos+1, Length(Param));
-           End;
-      End;
+      end;
 
       IF Length(ObjClass) > 0 THEN SetObjectClass(DSS, ObjClass);
 
