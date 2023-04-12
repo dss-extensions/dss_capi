@@ -1151,23 +1151,19 @@ begin
         end
         else
         begin
-        // Dump general Circuit stuff
+            // Dump general Circuit stuff
 
             if DebugDump then
                 DSS.ActiveCircuit.DebugDump(F);
-        // Dump circuit objects
+            // Dump circuit objects
             try
-                pObject := DSS.ActiveCircuit.CktElements.First;
-                while pObject <> NIL do
+                for pObject in DSS.ActiveCircuit.CktElements do
                 begin
                     pObject.DumpProperties(F, DebugDump, TRUE);
-                    pObject := DSS.ActiveCircuit.CktElements.Next;
                 end;
-                pObject := DSS.DSSObjs.First;
-                while pObject <> NIL do
+                for pObject in DSS.DSSObjs do
                 begin
                     pObject.DumpProperties(F, DebugDump, TRUE);
-                    pObject := DSS.DSSObjs.Next;
                 end;
             except
                 On E: Exception do
@@ -1208,15 +1204,13 @@ procedure TExecHelper.SetActiveCircuit(const cktname: String);
 var
     pCkt: TDSSCircuit;
 begin
-    pCkt := DSS.Circuits.First;
-    while pCkt <> NIL do
+    for pCkt in DSS.Circuits do
     begin
         if AnsiCompareText(pCkt.Name, cktname) = 0 then
         begin
             DSS.ActiveCircuit := pCkt;
             Exit;
         end;
-        pCkt := DSS.Circuits.Next;
     end;
 
    // IF none is found, just leave as is after giving error
@@ -1363,22 +1357,18 @@ var
     pClass: TDSSClass;
     pCapElement: TCapacitorObj;
     pReacElement: TReactorObj;
-    ObjRef: Integer;
 begin
     // Mark all buses as keepers if there are capacitors or reactors on them
     pClass := GetDSSClassPtr(DSS, 'capacitor');
     if pClass <> NIL then
     begin
-        ObjRef := pClass.First;
-        while Objref > 0 do
+        for pCapElement in pClass do
         begin
-            pCapElement := TCapacitorObj(DSS.ActiveDSSObject);
             if pCapElement.IsShunt then
             begin
                 if pCapElement.Enabled then
                     DSS.ActiveCircuit.Buses[pCapElement.Terminals[0].Busref].Keep := TRUE;
             end;
-            ObjRef := pClass.Next;
         end;
     end;
 
@@ -1386,10 +1376,8 @@ begin
     pClass := GetDSSClassPtr(DSS, 'reactor');
     if pClass <> NIL then
     begin
-        ObjRef := pClass.First;
-        while Objref > 0 do
+        for pReacElement in pClass do
         begin
-            pReacElement := TReactorObj(DSS.ActiveDSSObject);
             if pReacElement.IsShunt then
                 try
                     if pReacElement.Enabled then
@@ -1401,7 +1389,6 @@ begin
                         Break;
                     end;
                 end;
-            ObjRef := pClass.Next;
         end;
     end;
 end;
@@ -1434,11 +1421,9 @@ begin
     case Param[1] of
         'A':
         begin
-            metobj := DSS.ActiveCircuit.EnergyMeters.First;
-            while metobj <> NIL do
+            for MetObj in DSS.ActiveCircuit.EnergyMeters do
             begin
                 MetObj.ReduceZone;
-                MetObj := DSS.ActiveCircuit.EnergyMeters.Next;
             end;
         end;
 
@@ -1466,11 +1451,9 @@ var
 begin
     with DSS.ActiveCircuit do
     begin
-        pMon := Monitors.First;
-        while pMon <> NIL do
+        for pMon in Monitors do
         begin
             pMon.ResetIt;
-            pMon := Monitors.Next;
         end;
         Result := 0;
 
@@ -2401,27 +2384,21 @@ begin
         for iterCount := 1 to DSS.MaxAllocationIterations do
         begin
            // Do EnergyMeters
-            pMeter := EnergyMeters.First;
-            while pMeter <> NIL do
+            for pMeter in EnergyMeters do
             begin
                 pMeter.CalcAllocationFactors;
-                pMeter := EnergyMeters.Next;
             end;
 
            // Now do other Sensors
-            pSensor := Sensors.First;
-            while pSensor <> NIL do
+            for pSensor in Sensors do
             begin
                 pSensor.CalcAllocationFactors;
-                pSensor := Sensors.Next;
             end;
 
             // Now let the EnergyMeters run down the circuit setting the loads
-            pMeter := EnergyMeters.First;
-            while pMeter <> NIL do
+            for pMeter in EnergyMeters do
             begin
                 pMeter.AllocateLoad;
-                pMeter := EnergyMeters.Next;
             end;
             Solution.Solve;  {Update the solution}
 
@@ -2440,11 +2417,9 @@ begin
     else
         with DSS.ActiveCircuit do
         begin
-            pLoad := Loads.First;
-            while pLoad <> NIL do
+            for pLoad in Loads do
             begin
                 pLoad.Set_kVAAllocationFactor(X);
-                pLoad := Loads.Next;
             end;
         end;
 end;
@@ -2460,11 +2435,9 @@ begin
     else
         with DSS.ActiveCircuit do
         begin
-            pLoad := Loads.First;
-            while pLoad <> NIL do
+            for pLoad in Loads do
             begin
                 pLoad.Set_CFactor(X);
-                pLoad := Loads.Next;
             end;
         end;
 end;
@@ -2823,11 +2796,9 @@ begin
 
     DSS.ActiveCircuit.PositiveSequence := TRUE;
 
-    CktElem := DSS.ActiveCircuit.CktElements.First;
-    while CktElem <> NIL do
+    for CktElem in DSS.ActiveCircuit.CktElements do
     begin
         CktElem.MakePosSequence();
-        CktElem := DSS.ActiveCircuit.CktElements.Next;
     end;
 end;
 
@@ -2908,11 +2879,9 @@ begin
     // initialize the Checked Flag FOR all circuit Elements
     with DSS.ActiveCircuit do
     begin
-        CktElem := CktElements.First;
-        while (CktElem <> NIL) do
+        for CktElem in CktElements do
         begin
             Exclude(CktElem.Flags, Flg.Checked);
-            CktElem := CktElements.Next;
         end;
     end;
 
@@ -2922,11 +2891,9 @@ begin
     case Param[1] of
         'A':
         begin
-            metobj := DSS.ActiveCircuit.EnergyMeters.First;
-            while metobj <> NIL do
+            for metobj in DSS.ActiveCircuit.EnergyMeters do
             begin
                 MetObj.InterpolateCoordinates;
-                MetObj := DSS.ActiveCircuit.EnergyMeters.Next;
             end;
         end;
 
@@ -3839,8 +3806,7 @@ var
     kvln: Double;
 begin
     Result := 0;
-    pLoad := DSS.ActiveCircuit.Loads.First;
-    while pLoad <> NIL do
+    for pLoad in DSS.ActiveCircuit.Loads do
     begin
         sBus := StripExtension(pLoad.GetBus(1));
         iBus := DSS.ActiveCircuit.BusList.Find(sBus);
@@ -3853,7 +3819,6 @@ begin
 
         pLoad.PropertySideEffects(ord(TLoadProp.kV));
         pLoad.RecalcElementData;
-        pLoad := DSS.ActiveCircuit.Loads.Next;
     end;
 
     for i := 1 to DSS.ActiveCircuit.Generators.Count do
@@ -3946,7 +3911,6 @@ end;
 function TExecHelper.DoCvrtLoadshapesCmd: Integer;
 var
     pLoadshape: TLoadShapeObj;
-    iLoadshape: Integer;
     LoadShapeClass: TLoadShape;
    //ParamName      :String;
     Param: String;
@@ -3974,14 +3938,11 @@ begin
     Fname := DSS.OutputDirectory {CurrentDSSDir} + 'ReloadLoadshapes.dss';
     F := TBufferedFileStream.Create(Fname, fmCreate);
 
-    iLoadshape := LoadShapeClass.First;
-    while iLoadshape > 0 do
+    for pLoadShape in LoadShapeClass do
     begin
-        pLoadShape := LoadShapeClass.GetActiveObj;
         DSS.Parser.CmdString := Action;
         pLoadShape.Edit(DSS.Parser);
         FSWriteln(F, Format('New %s Npts=%d Interval=%.8g %s', [pLoadShape.FullName, pLoadShape.NumPoints, pLoadShape.Interval, DSS.GlobalResult]));
-        iLoadshape := LoadShapeClass.Next;
     end;
 
     FreeAndNil(F);
@@ -4270,13 +4231,11 @@ var
     //ParamName,
     Param: String;
     AssumeRestoration: Boolean;
-
 begin
     Result := 0;
 
-// Do for each Energymeter object in active circuit
-    pMeter := DSS.ActiveCircuit.EnergyMeters.First;
-    if pMeter = NIL then
+    // Do for each Energymeter object in active circuit
+    if DSS.ActiveCircuit.EnergyMeters.Count = 0 then
     begin
         DoSimpleMsg(DSS, _('No EnergyMeter Objects Defined. EnergyMeter objects required for this function.'), 28724);
         Exit;
@@ -4299,17 +4258,15 @@ begin
                 Bus_Num_Interrupt := 0.0;
             end;
 
-    while pMeter <> NIL do
+    for pMeter in DSS.ActiveCircuit.EnergyMeters do
     begin
         pMeter.AssumeRestoration := AssumeRestoration;
         pMeter.CalcReliabilityIndices();
-        pMeter := DSS.ActiveCircuit.EnergyMeters.Next;
     end;
 end;
 
 function TExecHelper.DoVarCmd: Integer;
-{Process Script variables}
-
+// Process Script variables
 var
     ParamName: String;
     Param: String;
@@ -4323,13 +4280,12 @@ begin
 
     if Length(Param) = 0 then  // show all vars
     begin
-          {
-          MsgStrings := TStringList.Create;
-          MsgStrings.Add('Variable, Value');
-          for iVar := 1 to DSS.ParserVars.NumVariables  do
-              MsgStrings.Add(DSS.ParserVars.VarString[iVar] );
-          ShowMessageForm(MsgStrings);
-          MsgStrings.Free;}
+          // MsgStrings := TStringList.Create;
+          // MsgStrings.Add('Variable, Value');
+          // for iVar := 1 to DSS.ParserVars.NumVariables  do
+          //     MsgStrings.Add(DSS.ParserVars.VarString[iVar] );
+          // ShowMessageForm(MsgStrings);
+          // MsgStrings.Free;
         Str := _('Variable, Value') + CRLF;
         for iVar := 1 to DSS.ParserVars.NumVariables do
             Str := Str + DSS.ParserVars.VarString[iVar] + CRLF;
@@ -4425,8 +4381,7 @@ begin
     elem := DSS.ActiveCircuit.CktElements.Get(DeviceIndex);
     with DSS.ActiveCircuit do
     begin
-        pMeter := EnergyMeters.First;
-        while pMeter <> NIL do
+        for pMeter in EnergyMeters do
         begin
             if pMeter.MeteredElement = elem then
             begin
@@ -4436,7 +4391,6 @@ begin
                     );
                 Exit;
             end;
-            pMeter := EnergyMeters.Next;
         end;
     end;
 

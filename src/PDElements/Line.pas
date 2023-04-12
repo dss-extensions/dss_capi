@@ -1623,12 +1623,10 @@ procedure TLineObj.UpdateControlElements(NewLine, OldLine: TLineObj);
 var
     pControlElem: TControlElem;
 begin
-    pControlElem := ActiveCircuit.DSSControls.First;
-    while pControlElem <> NIL do
+    for pControlElem in ActiveCircuit.DSSControls do
     begin
         if OldLine = pControlElem.MonitoredElement then // TODO: check if this works (and needs to work) with Fuse
             pControlElem.ParsePropertyValue(pControlElem.ParentClass.CommandList.GetCommand('element'), NewLine.FullName);
-        pControlElem := ActiveCircuit.DSSControls.Next;
     end;
 end;
 

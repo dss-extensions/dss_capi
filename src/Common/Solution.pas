@@ -744,12 +744,10 @@ var
 begin
     with DSS.ActiveCircuit do
     begin
-        pElem := Sources.First;
-        while pElem <> NIL do
+        for pElem in Sources do
         begin
             if pElem.Enabled then
                 pElem.InjCurrents; // uses NodeRef to add current into InjCurr Array;
-            pElem := Sources.Next;
         end;
 
         // Adds GFM PCE as well
@@ -819,49 +817,47 @@ begin
 
     with DSS.ActiveCircuit do
     begin
-        pGen := Generators.First;
-        while pGen <> NIL do
+        for pGen in Generators do
         begin
-            if pGen.Enabled then
+            if not pGen.Enabled then
+                continue;
+
+            // for PV generator models only ...
+            if pGen.genModel = 3 then
             begin
-              // for PV generator models only ...
-                if pGen.genModel = 3 then
-                begin
-                    pGen.InitDQDVCalc;
+                pGen.InitDQDVCalc;
 
-                    // NOTE: The following was commented in https://sourceforge.net/p/electricdss/code/3534/
-                    //       The Y matrix element is used since then.
-                    //
-                    //    // solve at base var setting
-                    //     Iteration := 0;
-                    //     repeat
-                    //         Inc(Iteration);
-                    //         ZeroInjCurr;
-                    //         GetSourceInjCurrents;
-                    //         pGen.InjCurrents;   // get generator currents with nominal vars
-                    //         SolveSystem(NodeV);
-                    //     until Converged or (Iteration >= Maxiterations);
-                    //
-                    //     pGen.RememberQV;  // Remember Q and V
-                    //     pGen.BumpUpQ;
-                    //
-                    //    // solve after changing vars
-                    //     Iteration := 0;
-                    //     repeat
-                    //         Inc(Iteration);
-                    //         ZeroInjCurr;
-                    //         GetSourceInjCurrents;
-                    //         pGen.InjCurrents;   // get generator currents with nominal vars
-                    //         SolveSystem(NodeV);
-                    //     until Converged or (Iteration >= Maxiterations);
+                // NOTE: The following was commented in https://sourceforge.net/p/electricdss/code/3534/
+                //       The Y matrix element is used since then.
+                //
+                //    // solve at base var setting
+                //     Iteration := 0;
+                //     repeat
+                //         Inc(Iteration);
+                //         ZeroInjCurr;
+                //         GetSourceInjCurrents;
+                //         pGen.InjCurrents;   // get generator currents with nominal vars
+                //         SolveSystem(NodeV);
+                //     until Converged or (Iteration >= Maxiterations);
+                //
+                //     pGen.RememberQV;  // Remember Q and V
+                //     pGen.BumpUpQ;
+                //
+                //    // solve after changing vars
+                //     Iteration := 0;
+                //     repeat
+                //         Inc(Iteration);
+                //         ZeroInjCurr;
+                //         GetSourceInjCurrents;
+                //         pGen.InjCurrents;   // get generator currents with nominal vars
+                //         SolveSystem(NodeV);
+                //     until Converged or (Iteration >= Maxiterations);
 
-                    pGen.CalcdQdV; // bssed on remembered Q and V and present values of same
-                    pGen.ResetStartPoint;
+                pGen.CalcdQdV; // bssed on remembered Q and V and present values of same
+                pGen.ResetStartPoint;
 
-                    Did_One := TRUE;
-                end;
+                Did_One := TRUE;
             end;
-            pGen := Generators.Next;
         end;
 
     end;
@@ -1338,35 +1334,33 @@ begin
     // This rouitne adds the Lines to the incidence matrix vectors
     with DSS.ActiveCircuit do
     begin
-        elem := Lines.First;
-        while elem <> NIL do
+        for elem in Lines do
         begin
-            if elem.Enabled then
+            if not elem.Enabled then
+                continue;
+
+            ActiveIncCell[2] := 1;
+            inc(temp_counter);
+            setlength(Inc_Mat_Rows, temp_counter);
+            Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
+            for TermIdx := 1 to 2 do
             begin
-                ActiveIncCell[2] := 1;
-                inc(temp_counter);
-                setlength(Inc_Mat_Rows, temp_counter);
-                Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
-                for TermIdx := 1 to 2 do
+                LineBus := elem.GetBus(TermIdx);
+                BusdotIdx := ansipos('.', LineBus);
+                if BusdotIdx <> 0 then
+                    LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
+                // Evaluates the position of the Bus in the array
+                ActiveIncCell[1] := 1;
+                EndFlag := TRUE;
+                while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
                 begin
-                    LineBus := elem.GetBus(TermIdx);
-                    BusdotIdx := ansipos('.', LineBus);
-                    if BusdotIdx <> 0 then
-                        LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-                    // Evaluates the position of the Bus in the array
-                    ActiveIncCell[1] := 1;
-                    EndFlag := TRUE;
-                    while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
-                    begin
-                        if LineBus = BusList.NameOfIndex(ActiveIncCell[1]) then
-                            EndFlag := FALSE;
-                        ActiveIncCell[1] := ActiveIncCell[1] + 1;
-                    end;
-                    Upload2IncMatrix;
+                    if LineBus = BusList.NameOfIndex(ActiveIncCell[1]) then
+                        EndFlag := FALSE;
+                    ActiveIncCell[1] := ActiveIncCell[1] + 1;
                 end;
-                inc(ActiveIncCell[0]);
+                Upload2IncMatrix;
             end;
-            elem := Lines.Next;
+            inc(ActiveIncCell[0]);
         end;
     end;
 end;
@@ -1378,41 +1372,37 @@ var
     TermIdx,
     BusdotIdx: Integer;
     EndFlag: Boolean;
-    lst: TDSSPointerList;
 begin
     // This routine adds the Transformers to the incidence matrix vectors
     with DSS.ActiveCircuit do
     begin
-        lst := DSS.ActiveCircuit.Transformers;
-        elem := lst.First;
-        while elem <> NIL do
+        for elem in DSS.ActiveCircuit.Transformers do
         begin
-            if elem.Enabled then
+            if not elem.Enabled then
+                continue;
+            
+            ActiveIncCell[2] := 1;
+            inc(temp_counter);
+            setlength(Inc_Mat_Rows, temp_counter);
+            Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
+            for TermIdx := 1 to elem.NumWindings do
             begin
-                ActiveIncCell[2] := 1;
-                inc(temp_counter);
-                setlength(Inc_Mat_Rows, temp_counter);
-                Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
-                for TermIdx := 1 to elem.NumWindings do
+                LineBus := elem.GetBus(TermIdx);
+                BusdotIdx := ansipos('.', LineBus);
+                if BusdotIdx <> 0 then
+                    LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
+                // Evaluates the position of the Bus in the array
+                ActiveIncCell[1] := 1;
+                EndFlag := TRUE;
+                while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
                 begin
-                    LineBus := elem.GetBus(TermIdx);
-                    BusdotIdx := ansipos('.', LineBus);
-                    if BusdotIdx <> 0 then
-                        LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-                    // Evaluates the position of the Bus in the array
-                    ActiveIncCell[1] := 1;
-                    EndFlag := TRUE;
-                    while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
-                    begin
-                        if LineBus = BusList.NameOfIndex(ActiveIncCell[1]) then
-                            EndFlag := FALSE;
-                        ActiveIncCell[1] := ActiveIncCell[1] + 1;
-                    end;
-                    Upload2IncMatrix;
+                    if LineBus = BusList.NameOfIndex(ActiveIncCell[1]) then
+                        EndFlag := FALSE;
+                    ActiveIncCell[1] := ActiveIncCell[1] + 1;
                 end;
-                inc(ActiveIncCell[0]);
+                Upload2IncMatrix;
             end;
-            elem := lst.Next;
+            inc(ActiveIncCell[0]);
         end;
     end;
 end;
@@ -1421,7 +1411,6 @@ procedure TSolutionObj.AddSeriesCap2IncMatrix;
 var
     CapBus: String;
     elem: TCapacitorObj;
-    lst: TDSSPointerList;
     CapTermIdx,
     BusdotIdx: Integer;
     CapEndFlag: Boolean;
@@ -1429,39 +1418,33 @@ begin
     // This routine adds the series capacitors to the incidence matrix vectors
     with DSS.ActiveCircuit do
     begin
-        lst := ShuntCapacitors;
-        elem := lst.First;
-        while elem <> NIL do
+        for elem in ShuntCapacitors  do
         begin
-            if elem.NumTerminals > 1 then
+            if not (elem.NumTerminals > 1) or not elem.Enabled then
+                continue;
+
+            inc(temp_counter);
+            setlength(Inc_Mat_Rows, temp_counter);
+            Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
+            ActiveIncCell[2] := 1;
+            for CapTermIdx := 1 to 2 do
             begin
-                if elem.Enabled then
+                CapBus := elem.GetBus(CapTermIdx);
+                BusdotIdx := ansipos('.', CapBus);
+                if BusdotIdx <> 0 then
+                    CapBus := Copy(CapBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
+                // Evaluates the position of the Bus in the array
+                ActiveIncCell[1] := 1;
+                CapEndFlag := TRUE;
+                while (ActiveIncCell[1] <= NumBuses) and (CapEndFlag) do
                 begin
-                    inc(temp_counter);
-                    setlength(Inc_Mat_Rows, temp_counter);
-                    Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
-                    ActiveIncCell[2] := 1;
-                    for CapTermIdx := 1 to 2 do
-                    begin
-                        CapBus := elem.GetBus(CapTermIdx);
-                        BusdotIdx := ansipos('.', CapBus);
-                        if BusdotIdx <> 0 then
-                            CapBus := Copy(CapBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-                        // Evaluates the position of the Bus in the array
-                        ActiveIncCell[1] := 1;
-                        CapEndFlag := TRUE;
-                        while (ActiveIncCell[1] <= NumBuses) and (CapEndFlag) do
-                        begin
-                            if CapBus = BusList.NameOfIndex(ActiveIncCell[1]) then
-                                CapEndFlag := FALSE;
-                            ActiveIncCell[1] := ActiveIncCell[1] + 1;
-                        end;
-                        Upload2IncMatrix;
-                    end;
-                    inc(ActiveIncCell[0]);
+                    if CapBus = BusList.NameOfIndex(ActiveIncCell[1]) then
+                        CapEndFlag := FALSE;
+                    ActiveIncCell[1] := ActiveIncCell[1] + 1;
                 end;
+                Upload2IncMatrix;
             end;
-            elem := lst.Next;
+            inc(ActiveIncCell[0]);
         end;
     end;
 end;
@@ -1469,11 +1452,11 @@ end;
 procedure TSolutionObj.AddSeriesReac2IncMatrix;
 var
     RBus: String;
-    elem,
     DevClassIndex: Integer;
     TermIdx,
     BusdotIdx: Integer;
     EndFlag: Boolean;
+    elem: TDSSCktElement;
 begin
     // This routine adds the series reactors to the incidence matrix vectors
     with DSS.ActiveCircuit do
@@ -1481,20 +1464,19 @@ begin
         DevClassIndex := DSS.ClassNames.Find('reactor');
         DSS.LastClassReferenced := DevClassIndex;
         DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
-        elem := DSS.ActiveDSSClass.First;
-        while elem <> 0 do
+        for elem in DSS.ActiveDSSClass do
         begin
-            RBus := ActiveCktElement.GetBus(2);
+            RBus := elem.GetBus(2);
             BusdotIdx := ansipos('.0', RBus);
             if BusdotIdx = 0 then
             begin
                 inc(temp_counter);
                 setlength(Inc_Mat_Rows, temp_counter);
-                Inc_Mat_Rows[temp_counter - 1] := 'Reactor.' + ActiveCktElement.Name;
+                Inc_Mat_Rows[temp_counter - 1] := elem.FullName;
                 ActiveIncCell[2] := 1;
                 for TermIdx := 1 to 2 do
                 begin
-                    RBus := ActiveCktElement.GetBus(TermIdx);
+                    RBus := elem.GetBus(TermIdx);
                     BusdotIdx := ansipos('.', RBus);
                     if BusdotIdx <> 0 then
                         RBus := Copy(RBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
@@ -1510,7 +1492,6 @@ begin
                     Upload2IncMatrix;
                 end;
             end;
-            elem := DSS.ActiveDSSClass.Next;
             inc(ActiveIncCell[0]);
         end;
     end;
@@ -1799,8 +1780,7 @@ var
 begin
     with DSS.ActiveCircuit do
     begin
-        pElem := PCElements.First;
-        while pElem <> NIL do
+        for pElem in PCElements do
         begin
             onGFM := ((pElem is TInvBasedPCE) and (TInvBasedPCE(pElem).GFM_Mode));
             valid := (not (GFMOnly xor onGFM)) and pElem.Enabled;
@@ -1808,7 +1788,6 @@ begin
             // e.g. could check the lists from Circuit directly instead of looping through all elements
             if valid then
                 pElem.InjCurrents(); // uses NodeRef to add current into InjCurr Array;
-            pElem := PCElements.Next;
         end;
     end
 end;
@@ -1983,15 +1962,12 @@ end;
 procedure TSolutionObj.SumAllCurrents;
 var
     pelem: TDSSCktElement;
-
 begin
     with DSS.ActiveCircuit do
     begin
-        pelem := CktElements.First;
-        while pelem <> NIL do
+        for pelem in CktElements do
         begin
             pelem.SumCurrents;   // sum terminal currents into system Currents Array
-            pelem := CktElements.Next;
         end;
     end;
 end;
@@ -2042,12 +2018,10 @@ begin
         ControlDevice := NIL;
         try
             // Sample all controls and set action times in control Queue
-            ControlDevice := DSSControls.First;
-            while ControlDevice <> NIL do
+            for ControlDevice in DSSControls do
             begin
                 if ControlDevice.Enabled then
                     ControlDevice.Sample;
-                ControlDevice := DSSControls.Next;
             end;
 
         except
@@ -2800,7 +2774,7 @@ begin
         // Disables the link branch
         DSS.DssExecutive.Command := myPDEList[0] + '.enabled=False'; //TODO: rewrite
         // Now disables all the VSources added artificially
-        while VSourceObj <> NIL do
+        for VSourceObj in DSS.VsourceClass.ElementList do
         begin
             BusName := AnsiLowerCase(VSourceObj.Name);
             if (BusName = 'source') then
@@ -2811,8 +2785,6 @@ begin
             else
             if (BusName = 'vph_3') then
                 VSourceObj.Enabled := FALSE; // Disables the artificial VSource phase 3
-
-            VSourceObj := DSS.VsourceClass.ElementList.Next;
         end;
     end;
 end;
@@ -2892,28 +2864,24 @@ end;
 //         with DSS.ActiveCircuit, Solution do
 //         begin
 //             // Starts looking for VSource
-//             VSourceObj := DSS.VsourceClass.ElementList.First;
-//             while VSourceObj <> NIL do
+//             for VSourceObj in DSS.VsourceClass.ElementList do
 //             begin
 //                 if VSourceObj.enabled then
 //                 begin
 //                     Result := TRUE;
 //                     break;
 //                 end;
-//                 VSourceObj := DSS.VsourceClass.ElementList.Next;
 //             end;
 //             if not Result then
 //             begin
 //                 // Goes for ISources
-//                 ISourceObj := DSS.IsourceClass.ElementList.First;
-//                 while ISourceObj <> NIL do
+//                 for ISourceObj in DSS.IsourceClass.ElementList do
 //                 begin
 //                     if ISourceObj.enabled then
 //                     begin
 //                         Result := TRUE;
 //                         break;
 //                     end;
-//                     ISourceObj := DSS.IsourceClass.ElementList.Next;
 //                 end;
 //             end;
 //         end;

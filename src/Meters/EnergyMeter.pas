@@ -770,8 +770,7 @@ begin
             Exit;  // Do not do anything
 
         // initialize the Checked Flag FOR all circuit Elements
-        pCktElement := CktElements.First;
-        while (pCktElement <> NIL) do
+        for pCktElement in CktElements do
         begin
             with pCktElement do
             begin
@@ -780,25 +779,20 @@ begin
                 for i := 1 to NTerms do
                     TerminalsChecked[i - 1] := FALSE;
             end;
-            pCktElement := CktElements.Next;
         end;
 
         // Clear some things that will be set by the Meter Zone
-        PDElem := PDElements.First;
-        while PDElem <> NIL do
+        for PDElem in PDElements do
         begin
             PDElem.MeterObj := NIL;
             PDElem.SensorObj := NIL;
             PDElem.ParentPDElement := NIL;
-            PDElem := PDElements.Next;
         end;
 
-        PCElem := PCElements.First;
-        while PCElem <> NIL do
+        for PCElem in PCElements do
         begin
             PCElem.MeterObj := NIL;
             PCElem.SensorObj := NIL;
-            PCElem := PCElements.Next;
         end;
 
         // Set up the bus adjacency lists for faster searches to build meter zone lists.
@@ -859,11 +853,9 @@ begin
         CreateFDI_Totals;
     end;
 
-    mtr := DSS.ActiveCircuit.EnergyMeters.First;
-    while mtr <> NIL do
+    for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
         mtr.ResetRegisters;
-        mtr := DSS.ActiveCircuit.EnergyMeters.Next;
     end;
 
     SystemMeter.Reset;
@@ -879,12 +871,10 @@ var
     mtr: TEnergyMeterObj;
     i: Integer;
 begin
-    mtr := DSS.ActiveCircuit.EnergyMeters.First;
-    while mtr <> NIL do
+    for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
         if mtr.enabled then
             mtr.TakeSample;
-        mtr := DSS.ActiveCircuit.EnergyMeters.Next;
     end;
 
     SystemMeter.TakeSample;
@@ -915,12 +905,10 @@ procedure TEnergyMeter.SaveAll;  // Force all EnergyMeters in the circuit to tak
 var
     mtr: TEnergyMeterObj;
 begin
-    mtr := DSS.ActiveCircuit.EnergyMeters.First;
-    while mtr <> NIL do
+    for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
         if mtr.enabled then
             mtr.SaveRegisters;
-        mtr := DSS.ActiveCircuit.EnergyMeters.Next;
     end;
 
     SystemMeter.Save;
@@ -1689,12 +1677,10 @@ begin
         Exit;
 
     // Init totals and checked flag
-    CktElem := SequenceList.First;
-    while CktElem <> NIL do
+    for CktElem in SequenceList do
     begin
         Exclude(CktElem.Flags, Flg.Checked);
         CktElem.BranchTotalCustomers := 0;
-        CktElem := SequenceList.Next;
     end;
 
     // This algorithm could be made more efficient with a Sequence list
@@ -1753,11 +1739,9 @@ begin
     // Initialize all to FALSE
     with ActiveCircuit do
     begin
-        CktElem := PDElements.First;
-        while CktElem <> NIL do
+        for CktElem in PDElements do
         begin
             Exclude(CktElem.Flags, Flg.HasEnergyMeter);
-            CktElem := PDElements.Next;
         end;
     end;
 
@@ -2721,12 +2705,10 @@ begin
                     WriteActiveDSSObject(DSS, FXfmrs, 'New');     // sets HasBeenSaved := TRUE
                     if Flg.HasControl in cktElem.Flags then
                     begin
-                        pControlElem := cktElem.ControlElementList.First;
-                        while pControlElem <> NIL do
+                        for pControlElem in cktElem.ControlElementList do
                         begin
                             ActiveCktElement := pControlElem;
                             WriteActiveDSSObject(DSS, FXfmrs, 'New');  //  regulator control ...Also, relays, switch controls
-                            pControlElem := cktElem.ControlElementList.Next;
                         end;
                     end;
                 end
@@ -2737,12 +2719,10 @@ begin
                     WriteActiveDSSObject(DSS, FBranches, 'New');     // sets HasBeenSaved := TRUE
                     if Flg.HasControl in cktElem.Flags then
                     begin
-                        pControlElem := cktElem.ControlElementList.First;
-                        while pControlElem <> NIL do
+                        for pControlElem in cktElem.ControlElementList do
                         begin
                             ActiveCktElement := pControlElem;
                             WriteActiveDSSObject(DSS, FBranches, 'New');  //  regulator control ...Also, relays, switch controls
-                            pControlElem := cktElem.ControlElementList.Next;
                         end;
                     end;
                 end;
@@ -2772,12 +2752,10 @@ begin
                         WriteActiveDSSObject(DSS, FGens, 'New');
                         if Flg.HasControl in shuntElement.Flags then
                         begin
-                            pControlElem := shuntElement.ControlElementList.First;
-                            while pControlElem <> NIL do
+                            for pControlElem in shuntElement.ControlElementList do
                             begin
                                 ActiveCktElement := pControlElem;
                                 WriteActiveDSSObject(DSS, FGens, 'New');
-                                pControlElem := shuntElement.ControlElementList.Next;
                             end;
                         end;
                     end
@@ -2788,12 +2766,10 @@ begin
                         WriteActiveDSSObject(DSS, FCaps, 'New');
                         if Flg.HasControl in shuntElement.Flags then
                         begin
-                            pControlElem := shuntElement.ControlElementList.First;
-                            while pControlElem <> NIL do
+                            for pControlElem in shuntElement.ControlElementList do
                             begin
                                 ActiveCktElement := pControlElem;
                                 WriteActiveDSSObject(DSS, FCaps, 'New');
-                                pControlElem := shuntElement.ControlElementList.Next;
                             end;
                         end;
                     end
@@ -3044,12 +3020,10 @@ begin
         end;
 
         // Close all the DI file for each meter
-        mtr := DSS.ActiveCircuit.EnergyMeters.First;
-        while mtr <> NIL do
+        for mtr in DSS.ActiveCircuit.EnergyMeters do
         begin
             if mtr.enabled then
                 mtr.CloseDemandIntervalFile;
-            mtr := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
 
         WriteTotalsFile;  // Sum all energymeter registers to "Totals_{}.csv"
@@ -3150,12 +3124,10 @@ begin
     begin
         ClearDI_Totals;  // clears accumulator arrays
 
-        mtr := DSS.ActiveCircuit.EnergyMeters.First;
-        while mtr <> NIL do
+        for mtr in DSS.ActiveCircuit.EnergyMeters do
         begin
             if mtr.enabled then
                 mtr.AppendDemandIntervalFile;
-            mtr := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
 
         SystemMeter.AppendDemandIntervalFile;
@@ -3228,101 +3200,100 @@ begin
     end;
 
     // CHECK PDELEMENTS ONLY
-    PDelem := DSS.ActiveCircuit.PDElements.First;
-    while PDelem <> NIL do
+    for PDelem in DSS.ActiveCircuit.PDElements do
     begin
-        if (PDelem.Enabled) and (not PDelem.IsShunt) then
-        begin   // Ignore shunts
+        if (not PDelem.Enabled) or PDelem.IsShunt then
+            continue;
 
-            if (PdElem.Normamps > 0.0) or (PdElem.Emergamps > 0.0) then
+        // Ignore shunts
+        
+        if (PdElem.Normamps > 0.0) or (PdElem.Emergamps > 0.0) then
+        begin
+            PDelem.ComputeIterminal;
+            Cmax := PDelem.MaxTerminalOneImag; // For now, check only terminal 1 for overloads
+            
+            // Section introduced in 02/20/2019 for allowing the automatic change of ratings
+            // when the seasonal ratings option is active
+            ClassName := AnsiLowerCase(PDElem.DSSClassName);
+            if DSS.SeasonalRating and (ClassName = 'line') and (PDElem.NumAmpRatings > 1) then
             begin
-                PDelem.ComputeIterminal;
-                Cmax := PDelem.MaxTerminalOneImag; // For now, check only terminal 1 for overloads
-                
-                // Section introduced in 02/20/2019 for allowing the automatic change of ratings
-                // when the seasonal ratings option is active
-                ClassName := AnsiLowerCase(PDElem.DSSClassName);
-                if DSS.SeasonalRating and (ClassName = 'line') and (PDElem.NumAmpRatings > 1) then
+                if (RatingIdx > PDElem.NumAmpRatings) or (RatingIdx < 0) then
                 begin
-                    if (RatingIdx > PDElem.NumAmpRatings) or (RatingIdx < 0) then
+                    NormAmps := PDElem.NormAmps;
+                    EmergAmps := pdelem.EmergAmps;
+                end
+                else
+                begin
+                    NormAmps := PDElem.AmpRatings[RatingIdx];
+                    EmergAmps := PDElem.AmpRatings[RatingIdx];
+                end;
+            end
+            else
+            begin
+                NormAmps := PDElem.NormAmps;
+                EmergAmps := pdelem.EmergAmps;
+            end;
+
+
+            if (Cmax > NormAmps) or (Cmax > EmergAmps) then
+            begin
+                // Gets the currents for the active Element
+                dBuffer := Allocmem(sizeof(Double) * PDElem.NPhases * PDElem.NTerms);
+                PDElem.Get_Current_Mags(dBuffer);
+                dVector := Allocmem(sizeof(Double) * 3); // for storing
+                for i := 1 to 3 do
+                    dVector[i] := 0.0;
+                if PDElem.NPhases < 3 then
+                begin
+                    ClassName := PDElem.FirstBus;
+                    j := ansipos('.', ClassName);     // Removes the name of the bus
+                    ClassName := ClassName.Substring(j);
+                    for i := 1 to 3 do
                     begin
-                        NormAmps := PDElem.NormAmps;
-                        EmergAmps := pdelem.EmergAmps;
-                    end
-                    else
-                    begin
-                        NormAmps := PDElem.AmpRatings[RatingIdx];
-                        EmergAmps := PDElem.AmpRatings[RatingIdx];
+                        j := ansipos('.', ClassName);   // goes for the phase Number
+                        if j = 0 then
+                        begin
+                            k := strtoint(ClassName);
+                            dVector[k] := dBuffer^[i];
+                            break
+                        end
+                        else
+                        begin
+                            k := strtoint(ClassName.Substring(0, j - 1));
+                            dVector[k] := dBuffer^[i];
+                            ClassName := ClassName.Substring(j);
+                        end;
                     end;
                 end
                 else
                 begin
-                    NormAmps := PDElem.NormAmps;
-                    EmergAmps := pdelem.EmergAmps;
+                    for i := 1 to 3 do
+                        dVector[i] := dBuffer^[i];
                 end;
 
+                with DSS.ActiveCircuit.Solution do
+                    WriteintoMem(OV_MHandle, DynaVars.dblHour);
+                WriteintoMemStr(OV_MHandle, ', ' + EncloseQuotes(PDelem.FullName));
+                WriteintoMem(OV_MHandle, PDElem.NormAmps);
+                WriteintoMem(OV_MHandle, pdelem.EmergAmps);
+                if PDElem.Normamps > 0.0 then
+                    WriteintoMem(OV_MHandle, Cmax / PDElem.Normamps * 100.0)
+                else
+                    WriteintoMem(OV_MHandle, 0.0);
+                if PDElem.Emergamps > 0.0 then
+                    WriteintoMem(OV_MHandle, Cmax / PDElem.Emergamps * 100.0)
+                else
+                    WriteintoMem(OV_MHandle, 0.0);
+                with ActiveCircuit do // Find bus of first terminal
+                    WriteintoMem(OV_MHandle, Buses[MapNodeToBus[PDElem.NodeRef[1]].BusRef].kVBase);
+                // Adds the currents in Amps per phase at the end of the report
+                for i := 1 to 3 do
+                    WriteintoMem(OV_MHandle, dVector[i]);
 
-                if (Cmax > NormAmps) or (Cmax > EmergAmps) then
-                begin
-                    // Gets the currents for the active Element
-                    dBuffer := Allocmem(sizeof(Double) * PDElem.NPhases * PDElem.NTerms);
-                    PDElem.Get_Current_Mags(dBuffer);
-                    dVector := Allocmem(sizeof(Double) * 3); // for storing
-                    for i := 1 to 3 do
-                        dVector[i] := 0.0;
-                    if PDElem.NPhases < 3 then
-                    begin
-                        ClassName := PDElem.FirstBus;
-                        j := ansipos('.', ClassName);     // Removes the name of the bus
-                        ClassName := ClassName.Substring(j);
-                        for i := 1 to 3 do
-                        begin
-                            j := ansipos('.', ClassName);   // goes for the phase Number
-                            if j = 0 then
-                            begin
-                                k := strtoint(ClassName);
-                                dVector[k] := dBuffer^[i];
-                                break
-                            end
-                            else
-                            begin
-                                k := strtoint(ClassName.Substring(0, j - 1));
-                                dVector[k] := dBuffer^[i];
-                                ClassName := ClassName.Substring(j);
-                            end;
-                        end;
-                    end
-                    else
-                    begin
-                        for i := 1 to 3 do
-                            dVector[i] := dBuffer^[i];
-                    end;
+                WriteintoMemStr(OV_MHandle, ' ' + Char(10));
 
-                    with DSS.ActiveCircuit.Solution do
-                        WriteintoMem(OV_MHandle, DynaVars.dblHour);
-                    WriteintoMemStr(OV_MHandle, ', ' + EncloseQuotes(PDelem.FullName));
-                    WriteintoMem(OV_MHandle, PDElem.NormAmps);
-                    WriteintoMem(OV_MHandle, pdelem.EmergAmps);
-                    if PDElem.Normamps > 0.0 then
-                        WriteintoMem(OV_MHandle, Cmax / PDElem.Normamps * 100.0)
-                    else
-                        WriteintoMem(OV_MHandle, 0.0);
-                    if PDElem.Emergamps > 0.0 then
-                        WriteintoMem(OV_MHandle, Cmax / PDElem.Emergamps * 100.0)
-                    else
-                        WriteintoMem(OV_MHandle, 0.0);
-                    with ActiveCircuit do // Find bus of first terminal
-                        WriteintoMem(OV_MHandle, Buses[MapNodeToBus[PDElem.NodeRef[1]].BusRef].kVBase);
-                    // Adds the currents in Amps per phase at the end of the report
-                    for i := 1 to 3 do
-                        WriteintoMem(OV_MHandle, dVector[i]);
-
-                    WriteintoMemStr(OV_MHandle, ' ' + Char(10));
-
-                end;
             end;
         end;
-        PDelem := DSS.ActiveCircuit.PDElements.Next;
     end;
 end;
 
@@ -3616,15 +3587,12 @@ begin
     for i := 1 to NumEMRegisters do
         RegSum[i] := 0.0;
 
-    mtr := DSS.ActiveCircuit.EnergyMeters.First;
-    while mtr <> NIL do
+    for mtr in DSS.ActiveCircuit.EnergyMeters do
     begin
         if mtr.enabled then
             with Mtr do
                 for i := 1 to NumEMRegisters do
                     Regsum[i] := Regsum[i] + Registers[i] * TotalsMask[i];
-
-        mtr := DSS.ActiveCircuit.EnergyMeters.Next;
     end;
 
     try     // Writes the file
@@ -3799,12 +3767,10 @@ begin
     begin
         ClearDI_Totals;  // clears accumulator arrays
 
-        mtr := DSS.ActiveCircuit.EnergyMeters.First;
-        while mtr <> NIL do
+        for mtr in DSS.ActiveCircuit.EnergyMeters do
         begin
             if mtr.enabled then
                 mtr.OpenDemandIntervalFile;
-            mtr := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
 
         SystemMeter.OpenDemandIntervalFile;

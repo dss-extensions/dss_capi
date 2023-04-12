@@ -1002,8 +1002,7 @@ begin
     if InvalidCktElement(DSSPrime) then
         Exit;
 
-    ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementlist.First;
-    while ctrl <> NIL do
+    for ctrl in DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementlist do
     begin
         case (ctrl.DSSObjType and CLASSMASK) of
             CAP_CONTROL,
@@ -1014,8 +1013,6 @@ begin
         end;
         if Result then
             Exit;
-
-        ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementlist.Next;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1028,8 +1025,7 @@ begin
     if InvalidCktElement(DSSPrime) then
         Exit;
 
-    ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementList.First;
-    while ctrl <> NIL do
+    for ctrl in DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementList do
     begin
         case (ctrl.DSSObjType and CLASSMASK) of
             SWT_CONTROL:
@@ -1039,8 +1035,6 @@ begin
         end;
         if Result then
             Exit;
-
-        ctrl := DSSPrime.ActiveCircuit.ActiveCktElement.ControlElementlist.Next;
     end;
 end;
 //------------------------------------------------------------------------------

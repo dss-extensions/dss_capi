@@ -170,32 +170,30 @@ begin
     end
     else
     begin
-         {Construct Bus List from Energy Meters Zone Lists}
-         // Include only buses in EnergyMeter lists
-             // Consider all meters
+        // Construct Bus List from Energy Meters Zone Lists
+        // Include only buses in EnergyMeter lists
+        // Consider all meters
         FBusListCreatedHere := TRUE;
         FBusList := TBusHashListType.Create(DSS.ActiveCircuit.NumBuses);
-        pMeter := DSS.ActiveCircuit.EnergyMeters.First;
-        while pMeter <> NIL do
+        for pMeter in DSS.ActiveCircuit.EnergyMeters do
         begin
-            if pMeter.BranchList <> NIL then
-            begin
-                PDElem := pMeter.BranchList.First;
-                while PDElem <> NIL do
-                begin // add only unique busnames
-                    for i := 1 to PDElem.Nterms do
+            if pMeter.BranchList = NIL then
+                continue;
+
+            PDElem := pMeter.BranchList.First;
+            while PDElem <> NIL do
+            begin // add only unique busnames
+                for i := 1 to PDElem.Nterms do
+                begin
+                    Bname := StripExtension(PDElem.GetBus(i));
+                    retval := FBusList.Find(Bname);
+                    if retval = 0 then
                     begin
-                        Bname := StripExtension(PDElem.GetBus(i));
-                        retval := FBusList.Find(Bname);
-                        if retval = 0 then
-                        begin
-                            FBusList.Add(BName);    // return value is index of bus
-                        end;
+                        FBusList.Add(BName);    // return value is index of bus
                     end;
-                    PDElem := pMeter.BranchList.GoForward;
                 end;
+                PDElem := pMeter.BranchList.GoForward;
             end;
-            pMeter := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
     end;
 
@@ -724,7 +722,6 @@ end;
 procedure TAutoAdd.ComputekWLosses_EEN;
 var
     pMeter: TEnergyMeterObj;
-
 begin
     if DSS.ActiveCircuit.EnergyMeters.Count = 0 then
     begin
@@ -732,22 +729,18 @@ begin
         // Just go by total system losses
         kWLosses := DSS.ActiveCircuit.Losses.re * 0.001;
         kWEEN := 0.0;
-
     end
     else
     begin   // Sum losses in energy meters and add EEN
         kWLosses := 0.0;
         kWEEN := 0.0;
 
-        with DSS.ActiveCircuit do
+        with DSS.ActiveCircuit do 
         begin
-            pMeter := DSS.ActiveCircuit.Energymeters.First;
-            while pMeter <> NIL do
+            for pMeter in DSS.ActiveCircuit.Energymeters do
             begin
                 kWLosses := kWLosses + SumSelectedRegisters(pMeter, LossRegs, NumLossRegs);
                 kWEEN := kWEEN + SumSelectedRegisters(pMeter, UEregs, NumUEregs);
-
-                pMeter := DSS.ActiveCircuit.EnergyMeters.Next;
             end;
         end;
     end;
@@ -759,8 +752,5 @@ begin
     BaseLosses := kWLosses;
     BaseEEN := kWEEN;
 end;
-
-initialization
-
 
 end.

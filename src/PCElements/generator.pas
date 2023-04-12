@@ -779,11 +779,9 @@ procedure TGenerator.ResetRegistersAll;  // Force all EnergyMeters in the circui
 var
     pGen: TGeneratorObj;
 begin
-    pGen := ActiveCircuit.Generators.First;
-    while (pGen <> NIL) do
+    for pGen in ActiveCircuit.Generators do
     begin
         pGen.ResetRegisters;
-        pGen := ActiveCircuit.Generators.Next;
     end;
 end;
 
@@ -791,12 +789,10 @@ procedure TGenerator.SampleAll;  // Force all EnergyMeters in the circuit to tak
 var
     pGen: TGeneratorObj;
 begin
-    pGen := ActiveCircuit.Generators.First;
-    while pGen <> NIL do
+    for pGen in ActiveCircuit.Generators do
     begin
         if pGen.enabled then
             pGen.TakeSample;
-        pGen := ActiveCircuit.Generators.Next;
     end;
 end;
 

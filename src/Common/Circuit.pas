@@ -318,7 +318,7 @@ type
 
         function Save(Dir: String): Boolean;
 
-        procedure ProcessBusDefs;
+        procedure ProcessBusDefs(element: TDSSCktElement);
         procedure ReProcessBusDefs;
         procedure DoResetMeterZones;
         function SetElementActive(const FullObjectName: String): Integer;
@@ -1386,6 +1386,7 @@ var
     PFSpecified,
     UseActual: Boolean;
     qmult: Double;
+    lsobj: TLoadShapeObj;
 begin
     UseActual := FALSE;
     if AnsiLowerCase(mode) = 'actual' then
@@ -1403,17 +1404,13 @@ begin
     // Disables DER if any
     // Disable_All_DER();
     // Disables Monitors and EnergyMeters if any
-    EMeter := EnergyMeters.First;
-    while EMeter <> NIL do
+    for EMeter in EnergyMeters do
     begin
         EMeter.Enabled := FALSE;
-        EMeter := EnergyMeters.Next;
     end;
-    pMonitor := Monitors.First;
-    while pMonitor <> NIL do
+    for pMonitor in Monitors do
     begin
         pMonitor.Enabled := FALSE;
-        pMonitor := Monitors.Next;
     end;
 
     // Add monitors and Energy Meters at link branches
@@ -1425,15 +1422,14 @@ begin
         DSS.DSSExecutive.Command := 'New EnergyMeter.myEMZone' + InttoStr(i) + ' element=' + Link_Branches[i] + ' terminal=1';
     end;
     // Gets the max number of iterations to configure the simulation using the existing loadshapes
-    iElem := DSS.LoadshapeClass.First;
     j := 0;
-    while iElem <> 0 do
+    for lsobj in DSS.LoadshapeClass do
     begin
-        ActiveLSObject := DSS.ActiveDSSObject as TLoadShapeObj;
-        k := ActiveLSObject.NumPoints;
+        DSS.ActiveDSSObject := lsobj;
+        ActiveLSObject := lsobj;
+        k := lsobj.NumPoints;
         if k > j then
             j := k;
-        iElem := DSS.LoadshapeClass.Next;
     end;
     // Configures simulation
     solution.Mode := TSolveMode.SNAPSHOT;
@@ -1449,11 +1445,9 @@ begin
     CreateDir(Fileroot); // Creates the folder for storing the modified circuit
     DelFilesFromDir(Fileroot); // Removes all the files inside the new directory (if exists)
     // Now starts aggregating the loadshapes per zone
-    EnergyMeters.First;
     setlength(myLoadShapes, 1);
-    for i := 1 to EnergyMeters.Count do
+    for EMeter in EnergyMeters do
     begin
-        EMeter := EnergyMeters.Active;
         if EMeter.Enabled then
         begin
             // First, get the total load at nominal value for the zone
@@ -1546,16 +1540,13 @@ begin
                 setlength(myLoadShapes, length(myLoadShapes) + 1);
             end;
         end;
-        EnergyMeters.Next;
     end;
     setlength(myLoadShapes, length(myLoadShapes) - 1);
     // Deactivate all loadshapes in the model
-    DSS.LoadshapeClass.First;
-    for j := 1 to DSS.LoadshapeClass.ElementCount do
+    for lsobj in DSS.LoadshapeClass do
     begin
         DSS.ActiveDSSObject := DSS.LoadshapeClass.ElementList.Active;
-        TLoadshapeObj(DSS.ActiveDSSObject).Enabled := FALSE;
-        DSS.LoadshapeClass.Next;
+        lsobj.Enabled := FALSE;
     end;
 
     // Declare the new loadshapes in the model
@@ -1573,10 +1564,8 @@ begin
     // also, disables the energy meters created and restores the originals
     //  DSS.DSSExecutive.Command :=  'solve snap';
     k := 0;
-    EnergyMeters.First;
-    for i := 1 to EnergyMeters.Count do
+    for EMeter in EnergyMeters.Count do
     begin
-        EMeter := EnergyMeters.Active;
         if EMeter.Enabled then
         begin
             EMeter.GetPCEatZone;
@@ -1608,7 +1597,6 @@ begin
         end
         else
             EMeter.Enabled := TRUE;
-        EnergyMeters.Next;
     end;
 
     // saves the new model
@@ -1643,11 +1631,9 @@ begin
         if (TextCmd <> '**Error**') and fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then
         begin
             // ***********The directory is ready for storing the new circuit****************
-            EMeter := EnergyMeters.First;
-            while EMeter <> NIL do
+            for EMeter in EnergyMeters do
             begin
                 EMeter.Enabled := FALSE;
-                EMeter := EnergyMeters.Next;
             end;
             // ************ Creates the meters at the tearing locations  ********************
             Result := 1; // Resets the result variable (Return)
@@ -1955,13 +1941,13 @@ begin
             Result := Result + myPDEList[i] + ',';
 end;
 
-procedure TDSSCircuit.ProcessBusDefs;
+procedure TDSSCircuit.ProcessBusDefs(element: TDSSCktElement);
 var
     CurrentBus, BusName: String;
     NNodes, NP, Ncond, i, j, iTerm, RetVal: Integer;
     NodesOK: Boolean;
 begin
-    with ActiveCktElement do
+    with element do
     begin
         np := NPhases;
         Ncond := NConds;
@@ -2293,6 +2279,7 @@ procedure TDSSCircuit.ReProcessBusDefs;
 var
     CktElementSave: TDSSCktElement;
     i: Integer;
+    element: TDSSCktElement;
 begin
     if LogEvents then
         LogThisEvent(DSS, 'Reprocessing Bus Definitions');
@@ -2310,14 +2297,12 @@ begin
 
     // Now redo all enabled circuit elements
     CktElementSave := ActiveCktElement;
-    ActiveCktElement := CktElements.First;
-    while ActiveCktElement <> NIL do
+    for element in CktElements do
     begin
-        if ActiveCktElement.Enabled then
-            ProcessBusDefs;
+        if element.Enabled then
+            ProcessBusDefs(element);
         if AbortBusProcess then
             Exit;
-        ActiveCktElement := CktElements.Next;
     end;
 
     ActiveCktElement := CktElementSave;  // restore active circuit element
@@ -2346,9 +2331,8 @@ var
     pdelem: TPDElement;
 begin
     // Return total losses in all PD Elements
-    pdelem := PDElements.First;
     Result := 0;
-    while pdelem <> NIL do
+    for pdelem in PDElements do
     begin
         if pdelem.enabled then
         begin
@@ -2356,7 +2340,6 @@ begin
             if not pdElem.IsShunt then
                 Result += pdelem.losses;
         end;
-        pdelem := PDElements.Next;
     end;
 end;
 
@@ -2400,11 +2383,9 @@ procedure TDSSCircuit.InvalidateAllPCElements;
 var
     p: TDSSCktElement;
 begin
-    p := PCElements.First;
-    while (p <> NIL) do
+    for p in PCElements do
     begin
         p.YprimInvalid := TRUE;
-        p := PCElements.Next;
     end;
 
     Solution.SystemYChanged := TRUE;  // Force rebuild of matrix on next solution
@@ -2432,14 +2413,11 @@ begin
     for i := 1 to NumEMRegisters do
         RegisterTotals[i] := 0.;
 
-    pEM := EnergyMeters.First;
-    while pEM <> NIL do
+    for pEM in EnergyMeters do
         with PEM do
         begin
             for i := 1 to NumEMRegisters do
                 RegisterTotals[i] := RegisterTotals[i] + Registers[i] * TotalsMask[i];
-
-            pEM := EnergyMeters.Next;
         end;
 end;
 
@@ -2861,14 +2839,12 @@ begin
     if not assigned(Branch_List) then
     begin
         // Initialize all Circuit Elements and Buses to not checked, then build a new tree
-        elem := CktElements.First;
-        while assigned(elem) do
+        for elem in CktElements do
         begin
             Exclude(elem.Flags, Flg.Checked);
             for i := 1 to elem.Nterms do
                 elem.TerminalsChecked[i - 1] := FALSE;
             Include(elem.Flags, Flg.IsIsolated); // till proven otherwise
-            elem := CktElements.Next;
         end;
         for i := 1 to NumBuses do
             Buses[i].BusChecked := FALSE;

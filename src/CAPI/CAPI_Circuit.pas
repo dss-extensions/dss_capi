@@ -142,18 +142,14 @@ begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
     if MissingSolution(DSSPrime) then
         Exit;
-    with DSSPrime.ActiveCircuit do
+
+    Loss := 0;
+    for pLine in DSSPrime.ActiveCircuit.Lines do
     begin
-        pLine := Lines.First;
-        Loss := 0;
-        while pLine <> NIL do
-        begin
-            Loss += pLine.Losses;
-            pLine := Lines.Next;
-        end;
-        Result[0] := Loss.re * 0.001;
-        Result[1] := Loss.im * 0.001;
+        Loss += pLine.Losses;
     end;
+    Result[0] := Loss.re * 0.001;
+    Result[1] := Loss.im * 0.001;
 end;
 
 procedure Circuit_Get_LineLosses_GR(); CDECL;
@@ -297,19 +293,14 @@ begin
     if MissingSolution(DSSPrime) then 
         Exit;
     
-    with DSSPrime.ActiveCircuit do
+    Loss := 0;
+    for pTransf in DSSPrime.ActiveCircuit.Transformers do
     begin
-        pTransf := Transformers.First;
-        Loss := 0;
-        while pTransf <> NIL do
-        begin
-            if pTransf.Issubstation then
-                Loss += pTransf.Losses;
-            pTransf := Transformers.Next;
-        end;
-        Result[0] := Loss.re * 0.001;
-        Result[1] := Loss.im * 0.001;
-    end
+        if pTransf.Issubstation then
+            Loss += pTransf.Losses;
+    end;
+    Result[0] := Loss.re * 0.001;
+    Result[1] := Loss.im * 0.001;
 end;
 
 procedure Circuit_Get_SubstationLosses_GR(); CDECL;
@@ -332,18 +323,13 @@ begin
     if MissingSolution(DSSPrime) then
         Exit;
     
-    with DSSPrime.ActiveCircuit do
+    cPower := 0;
+    for pCktElem in DSSPrime.ActiveCircuit.Sources do
     begin
-        pCktElem := Sources.First;
-        cPower := 0;
-        while pCktElem <> NIL do
-        begin
-            cPower += pcktElem.Power[1];
-            pCktElem := Sources.Next;
-        end;
-        Result[0] := cPower.re * 0.001;
-        Result[1] := cPower.im * 0.001;
-    end
+        cPower += pcktElem.Power[1];
+    end;
+    Result[0] := cPower.re * 0.001;
+    Result[1] := cPower.im * 0.001;
 end;
 
 procedure Circuit_Get_TotalPower_GR(); CDECL;
@@ -452,20 +438,17 @@ begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
     end;
-    with DSSPrime.ActiveCircuit do
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * DSSPrime.ActiveCircuit.NumDevices);
+    CResultPtr := pComplex(ResultPtr);
+    
+    for pCktElem in DSSPrime.ActiveCircuit.CktElements do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumDevices);
-        CResultPtr := pComplex(ResultPtr);
-        pCktElem := CktElements.First;
-        while pCktElem <> NIL do
-        begin
-            CResultPtr^ := pCktElem.Losses;
-            Inc(CResultPtr);
-            pCktElem := CktElements.Next;
-        end;
-        for i := 0 to 2*NumDevices - 1 do
-            Result[i] := Result[i] * 0.001;
-    end
+        CResultPtr^ := pCktElem.Losses;
+        Inc(CResultPtr);
+    end;
+    for i := 0 to ResultCount[0] - 1 do
+        Result[i] := Result[i] * 0.001;
 end;
 
 procedure Circuit_Get_AllElementLosses_GR(); CDECL;

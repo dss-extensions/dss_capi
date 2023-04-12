@@ -371,21 +371,14 @@ end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TSolutionAlgs.IntegratePCStates;
- {Integrate states in all PC Elements.  At present, only PC Elements
-  can have dynamic states}
-
+// Integrate states in all PC Elements.  At present, only PC Elements
+// can have dynamic states
 var
     pcelem: TPCElement;
-
 begin
-    with DSS.ActiveCircuit do
+    for pcelem in DSS.ActiveCircuit.PCelements do
     begin
-        pcelem := PCelements.First;
-        while pcelem <> NIL do
-        begin
-            pcelem.IntegrateStates;
-            pcelem := PCelements.Next;
-        end;
+        pcelem.IntegrateStates;
     end;
 end;
 
@@ -978,14 +971,15 @@ begin
 end;
 
 procedure TSolutionAlgs.DisableAllFaults;
+var 
+    obj: TFaultObj;
 begin
     with DSS.ActiveCircuit do
     begin
-        DSS.ActiveFaultObj := Faults.First;
-        while DSS.ActiveFaultObj <> NIL do
+        for obj in Faults do
         begin
+            DSS.ActiveFaultObj := obj; // for backwards compatibility
             DSS.ActiveFaultObj.Enabled := FALSE;
-            DSS.ActiveFaultObj := Faults.Next;
         end
     end;
 end;
@@ -1112,20 +1106,20 @@ begin
     with DSS.ActiveCircuit do
     begin
         // Check Sources -- each could have a different base frequency
-        p := Sources.First;
-        while p <> NIL do
+        for p in Sources do
         begin
-            if p.Enabled then
-                if p.SpectrumObj <> NIL then
+            if not p.Enabled then
+                continue;
+
+            if p.SpectrumObj <> NIL then
+            begin
+                pSpectrum := p.SpectrumObj;
+                f := GetSourceFrequency(p);
+                for j := 1 to pSpectrum.NumHarm do
                 begin
-                    pSpectrum := p.SpectrumObj;
-                    f := GetSourceFrequency(p);
-                    for j := 1 to pSpectrum.NumHarm do
-                    begin
-                        AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray[j] * f);
-                    end;
+                    AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray[j] * f);
                 end;
-            p := Sources.Next;
+            end;
         end;
     end;
 
@@ -1134,15 +1128,13 @@ begin
     SpectrumInUse := AllocMem(SizeOf(Integer) * DSS.SpectrumClass.ElementCount);  //Allocate and zero
     with DSS.ActiveCircuit do
     begin
-        p := PCelements.First;
-        while p <> NIL do
+        for p in PCelements  do
         begin
             if p.enabled then
                 if (p.SpectrumObj <> NIL) and (DSS.SpectrumClass.Find(p.SpectrumObj.Name) <> NIL) then
                 begin
                     SpectrumInUse^[DSS.SpectrumClass.Active] := 1;
                 end;
-            p := PCelements.Next;
         end;
     end;
 

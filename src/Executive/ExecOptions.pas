@@ -703,12 +703,10 @@ begin
             ord(Opt.LongLineCorrection):
                 with DSS.ActiveCircuit Do
                 begin
-                    LineObj := Lines.First;
-                    while LineObj <> NIL do
+                    for LineObj in Lines do
                     begin
                         if LineObj.Enabled and LineObj.SymComponentsModel then
                             LineObj.YprimInvalid := True;
-                        LineObj := Lines.Next;
                     end;
                 end;            
         end;

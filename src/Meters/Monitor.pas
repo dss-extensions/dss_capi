@@ -364,12 +364,10 @@ procedure TDSSMonitor.ResetAll;  // Force all monitors in the circuit to reset
 var
     Mon: TMonitorObj;
 begin
-    Mon := ActiveCircuit.Monitors.First;
-    while Mon <> NIL do
+    for Mon in ActiveCircuit.Monitors do
     begin
         if Mon.enabled then
             Mon.ResetIt;
-        Mon := ActiveCircuit.Monitors.Next;
     end;
 end;
 
@@ -378,13 +376,11 @@ var
     Mon: TMonitorObj;
     // sample all monitors except mode 5 monitors
 begin
-    Mon := ActiveCircuit.Monitors.First;
-    while Mon <> NIL do
+    for Mon in ActiveCircuit.Monitors do
     begin
         if Mon.enabled then
             if Mon.Mode <> 5 then
                 Mon.TakeSample;
-        Mon := ActiveCircuit.Monitors.Next;
     end;
 end;
 
@@ -393,13 +389,11 @@ var
     Mon: TMonitorObj;
     // sample all Mode 5 monitors except monitors
 begin
-    Mon := ActiveCircuit.Monitors.First;
-    while Mon <> NIL do
+    for Mon in ActiveCircuit.Monitors do
     begin
         if Mon.enabled then
             if Mon.Mode = 5 then
                 Mon.TakeSample;
-        Mon := ActiveCircuit.Monitors.Next;
     end;
 end;
 
@@ -407,26 +401,21 @@ procedure TDSSMonitor.PostProcessAll;
 var
     Mon: TMonitorObj;
 begin
-    Mon := ActiveCircuit.Monitors.First;
-    while Mon <> NIL do
+    for Mon in ActiveCircuit.Monitors do
     begin
         if Mon.Enabled then
             Mon.PostProcess;
-        Mon := ActiveCircuit.Monitors.Next;
     end;
 end;
 
 procedure TDSSMonitor.SaveAll;     // Force all monitors in the circuit to save their buffers to disk
 var
     Mon: TMonitorObj;
-
 begin
-    Mon := ActiveCircuit.Monitors.First;
-    while Mon <> NIL do
+    for Mon in ActiveCircuit.Monitors do
     begin
         if Mon.Enabled then
             Mon.Save;
-        Mon := ActiveCircuit.Monitors.Next;
     end;
 end;
 

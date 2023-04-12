@@ -553,13 +553,11 @@ begin
                 // Disables the Energymeters for the zones
                 with DSS.ActiveCircuit, Solution do
                 begin
-                    EMeter := EnergyMeters.First;
-                    while EMeter <> NIL do
+                    for EMeter in EnergyMeters do
                     begin
                         j := ansipos('zone_', EMeter.Name);
                         if j <> 0 then
                             EMeter.Enabled := FALSE;
-                        EMeter := EnergyMeters.Next;
                     end;
                 end;
                 Ymatrix.BuildYMatrix(DSS, WHOLEMATRIX, FALSE);

@@ -123,18 +123,17 @@ begin
     k := 0;
     elm := NIL;
     if ActiveTree(DSSPrime, topo) then
-        elm := DSSPrime.ActiveCircuit.PDElements.First;
-
-    while assigned(elm) do
     begin
-        if Flg.IsIsolated in elm.Flags then
+        for elm in DSSPrime.ActiveCircuit.PDElements do
         begin
-            Result[k] := elm.FullName;
-            Inc(k);
-            if k > 0 then
-                SetLength(Result, k + 1);
+            if Flg.IsIsolated in elm.Flags then
+            begin
+                Result[k] := elm.FullName;
+                Inc(k);
+                if k > 0 then
+                    SetLength(Result, k + 1);
+            end;
         end;
-        elm := DSSPrime.ActiveCircuit.PDElements.Next;
     end;
     if k = 0 then
     begin
@@ -309,12 +308,10 @@ begin
     if not ActiveTree(DSSPrime, topo) then
         Exit;
 
-    elm := DSSPrime.ActiveCircuit.PDElements.First;
-    while assigned(elm) do
+    for elm in DSSPrime.ActiveCircuit.PDElements do
     begin
         if Flg.IsIsolated in elm.Flags then
             Inc(Result);
-        elm := DSSPrime.ActiveCircuit.PDElements.Next;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -381,8 +378,7 @@ begin
     k := 0;
     if ActiveTree(DSSPrime, topo) then
     begin
-        elm := DSSPrime.ActiveCircuit.PCElements.First;
-        while assigned(elm) do
+        for elm in DSSPrime.ActiveCircuit.PCElements do
         begin
             if Flg.IsIsolated in elm.Flags then
             begin
@@ -391,7 +387,6 @@ begin
                 if k > 0 then
                     SetLength(Result, (k) + 1);
             end;
-            elm := DSSPrime.ActiveCircuit.PCElements.Next;
         end;
     end;
     
@@ -459,12 +454,10 @@ begin
     if not ActiveTree(DSSPrime, topo) then
         Exit;
         
-    elm := DSSPrime.ActiveCircuit.PCElements.First;
-    while assigned(elm) do
+    for elm in DSSPrime.ActiveCircuit.PCElements do
     begin
         if Flg.IsIsolated in elm.Flags then
             Inc(Result);
-        elm := DSSPrime.ActiveCircuit.PCElements.Next;
     end;
 end;
 //------------------------------------------------------------------------------

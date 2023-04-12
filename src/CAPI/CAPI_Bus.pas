@@ -1163,12 +1163,10 @@ begin
         BusReference := ActiveBusIndex;
         // Count number of LOAD elements connected to this bus
         LoadCount := 0;
-        pElem := TDSSCktElement(Loads.First);
-        while pElem <> NIL do
+        for pElem in Loads do
         begin
             if CheckBusReference(pElem, BusReference, j) then
                 Inc(LoadCount);
-            pElem := TDSSCktElement(Loads.Next);
         end;
 
         if LoadCount <= 0 then
@@ -1181,15 +1179,13 @@ begin
 
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, LoadCount);
         k := 0;
-        pElem := TDSSCktElement(Loads.First);
-        while Assigned(pElem) do
+        for pElem in Loads do
         begin
             if CheckBusReference(pElem, BusReference, j) then
             begin
                 Result[k] := DSS_CopyStringAsPChar('LOAD.' + pElem.name);
                 Inc(k);
             end;
-            pElem := TDSSCktElement(Loads.Next);
         end;
     end;
 end;

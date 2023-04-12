@@ -64,11 +64,9 @@ begin
     begin
         if LogEvents then
             LogThisEvent(Ckt.DSS, _('Recalc All Yprims'));
-        pElem := CktElements.First;
-        while pElem <> NIL do
+        for pElem in CktElements do
         begin
             pElem.CalcYPrim;
-            pElem := CktElements.Next;
         end;
     end;
 end;
@@ -86,26 +84,22 @@ begin
             LogThisEvent(Ckt.DSS, _('Recalc Invalid Yprims'));
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-        pElem := IncrCktElements.First;
-        while pElem <> NIL do
+        for pElem in IncrCktElements do
         begin
             with pElem do
                 if YprimInvalid then
                 begin
                     CalcYPrim;
                 end;
-            pElem := IncrCktElements.Next;
         end;
 {$ENDIF}
-        pElem := CktElements.First;
-        while pElem <> NIL do
+        for pElem in CktElements do
         begin
             with pElem do
                 if YprimInvalid {or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)} then
                 begin
                     CalcYPrim;
                 end;
-            pElem := CktElements.Next;
         end;
     end;
 end;
@@ -169,8 +163,7 @@ begin
     abortIncremental := False;
 
     // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
-    pElem := Ckt.IncrCktElements.First;
-    while pElem <> NIL do with pElem do
+    for pElem in Ckt.IncrCktElements do with pElem do
     begin
         if (Enabled and (Yprim = NIL)) then
         begin
@@ -220,7 +213,6 @@ begin
                 end;
             end;
         end;
-        pElem := Ckt.IncrCktElements.Next;
     end;
 
     if IncrYprim <> NIL then
@@ -244,14 +236,12 @@ begin
         until not coordIt.Next;
     end;
 
-    pElem := Ckt.CktElements.First;
-    while (not abortIncremental) and (pElem <> NIL) do with pElem do
+    for pElem in Ckt.CktElements do with pElem do
     begin
+        if abortIncremental then break;
+
         if (not Enabled) or (Yprim = NIL) then
-        begin
-            pElem := Ckt.CktElements.Next;
             continue;
-        end;
 
         for i := 1 to Yprim.order do
         begin
@@ -283,8 +273,6 @@ begin
         end;
 
         if abortIncremental then break;
-
-        pElem := Ckt.CktElements.Next;
     end;
 
     if abortIncremental then
@@ -411,8 +399,7 @@ begin
         begin
 {$ENDIF}
             // Full method, handles all elements
-            pElem := CktElements.First;
-            while pElem <> NIL do
+            for pElem in CktElements do
             begin
                 with pElem do
                     if (Enabled) then
@@ -428,7 +415,6 @@ begin
                             if AddPrimitiveMatrix(hY, Yorder, PLongWord(@NodeRef[1]), @CMatArray[1]) < 1 then
                                 raise EEsolv32Problem.Create(_('Node index out of range adding to System Y Matrix'))
                     end;   // If Enabled
-                pElem := CktElements.Next;
             end;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         end // if not Incremental

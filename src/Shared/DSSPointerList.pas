@@ -14,6 +14,19 @@ uses
     SysUtils;
 
 type
+    TDSSPointerList = class;
+
+    TDSSPointerEnumerator = class
+    private
+        lst: TDSSPointerList;
+        currentPtr: Pointer;
+        function Get_Current(): Pointer;
+    public
+        constructor Create(alst: TDSSPointerList); 
+        function MoveNext(): Boolean;
+        property Current: Pointer READ Get_Current;
+    end;
+
     TDSSPointerList = class(TObject)
     PRIVATE
         NumInList: Integer;
@@ -39,8 +52,10 @@ type
         property Count: Integer READ NumInList;
         property Active: Pointer READ Get_Active;
         property ActiveIndex: Integer READ ActiveItem;
+        procedure ResetActive();
 
         property InternalPointer: pPointerArray read List;
+        function GetEnumerator(): TDSSPointerEnumerator;
     end;
 
 implementation
@@ -144,6 +159,34 @@ procedure TDSSPointerList.Clear;
 begin
     ActiveItem := 0;
     NumInList := 0;
+end;
+
+procedure TDSSPointerList.ResetActive();
+begin
+    ActiveItem := 0;
+end;
+
+function TDSSPointerList.GetEnumerator(): TDSSPointerEnumerator;
+begin
+    Result := TDSSPointerEnumerator.Create(self);
+end;
+
+function TDSSPointerEnumerator.Get_Current(): Pointer;
+begin
+    Result := currentPtr;
+end;
+
+function TDSSPointerEnumerator.MoveNext(): Boolean;
+begin
+    currentPtr := lst.Next;
+    Result := currentPtr <> NIL;
+end;
+
+constructor TDSSPointerEnumerator.Create(alst: TDSSPointerList);
+begin
+    lst := alst;
+    currentPtr := NIL;
+    lst.ResetActive();
 end;
 
 end.

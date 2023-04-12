@@ -346,25 +346,20 @@ begin
     idx_before := pList.ActiveIndex;
     k := 0;
     numEnabled := pList.Count;
-//    elem := pList.First;
-//    while elem <> NIL do
+//    for elem in pList do
 //    begin
 //        if elem.Enabled then 
 //            Inc(numEnabled);
-//        elem := pList.Next;
 //    end;
-    elem := pList.First;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, numEnabled);
-    
-    
-    while elem <> NIL do
+
+    for elem in pList do
     begin
         // if (elem.Enabled or DSS_CAPI_ITERATE_DISABLED) then
         begin
             Result[k] := DSS_CopyStringAsPChar(elem.FullName);
             Inc(k);
         end;
-        elem := pList.Next;
     end;
     if (idx_before > 0) and (idx_before <= pList.Count) then
         pList.Get(idx_before);
@@ -442,12 +437,11 @@ begin
     pList := DSS.ActiveCircuit.PDElements;
     idx_before := pList.ActiveIndex;
     k := 0;
-    pElem := pList.First;
     case What of
     3: 
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.Count * 2); // complex
-            while pElem <> NIL do
+            for pElem in pList do
             begin
                 if pElem.Enabled then
                 begin
@@ -456,7 +450,6 @@ begin
                     Result[k + 1] := Localpower.im * 0.001;
                 end;
                 Inc(k, 2);
-                pElem := pList.Next;
             end;
         end;
     0, 1, 2:
@@ -481,7 +474,7 @@ begin
             maxSize := GetMaxCktElementSize(DSS);
             Getmem(cBuffer, sizeof(Complex) * maxSize);
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.Count); // real
-            while pElem <> NIL do
+            for pElem in pList do 
             begin
                 if pElem.Enabled then
                 begin
@@ -489,7 +482,6 @@ begin
                     Result[k] := _PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem, cBuffer);
                 end;
                 Inc(k);
-                pElem := pList.Next;
             end;
         finally
             if Assigned(cBuffer) then
@@ -559,27 +551,23 @@ begin
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements
-    pElem := pList.First;
     NValuesTotal := 0;
-    while pElem <> NIL do
+    for pElem in pList do
     begin
         Inc(NValuesTotal, pElem.NConds * pElem.NTerms);
-        pElem := pList.Next;
     end;
 
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
     CResultPtr := PPolar(ResultPtr);
 
     // Get the actual values
-    pElem := pList.First;
-    while pElem <> NIL do
+    for pElem in pList do
     begin
         NValues := pElem.NConds * pElem.NTerms;
         if pElem.Enabled then
             pElem.GetCurrents(pComplexArray(CResultPtr));
             
         Inc(CResultPtr, NValues);
-        pElem := pList.Next;
     end;
     
     case What of
@@ -651,21 +639,18 @@ begin
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements, max. terminals, max. conductors
-    pElem := pList.First;
     NTermsTotal := 0;
-    while pElem <> NIL do
+    for pElem in pList do
     begin
         Inc(NTermsTotal, pElem.NTerms);
-        pElem := pList.Next;
     end;
 
     // Get the actual values
-    pElem := pList.First;
     i012v := AllocMem(SizeOf(Complex) * 3 * NTermsTotal);
     i012 := i012v; // this is a running pointer
     maxSize := GetMaxCktElementSize(DSS);
     cBuffer := AllocMem(SizeOf(Complex) * maxSize);
-    while pElem <> NIL do
+    for pElem in pList do
     begin
         with pElem do
         begin
@@ -710,7 +695,6 @@ begin
                 end;
             end;
         end;
-        pElem := pList.Next;
     end;
     
     if magnitude then
@@ -779,20 +763,17 @@ begin
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements
-    pElem := pList.First;
     NValuesTotal := 0;
-    while pElem <> NIL do
+    for pElem in pList do
     begin
         Inc(NValuesTotal, pElem.NConds * pElem.NTerms);
-        pElem := pList.Next;
     end;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
     CResultPtr := PComplex(ResultPtr);
 
     // Get the actual values
-    pElem := pList.First;
-    while pElem <> NIL do
+    for pElem in pList do
     begin
         NValues := pElem.NConds * pElem.NTerms;
         
@@ -800,7 +781,6 @@ begin
             pElem.GetPhasePower(pComplexArray(CResultPtr));
             
         Inc(CResultPtr, NValues);
-        pElem := pList.Next;
     end;
     
     if (idx_before > 0) and (idx_before <= pList.Count) then
@@ -841,18 +821,16 @@ begin
     idx_before := pList.ActiveIndex;
 
     // Get the total number of (complex) elements
-    pElem := pList.First;
     NValuesTotal := 0;
     MaxNValues := 0;
     
-    while pElem <> NIL do
+    for pElem in pList do
     begin
         if pElem.Enabled then
         begin
             Inc(NValuesTotal, 3 * pElem.NTerms);
             MaxNValues := Max(MaxNValues, pElem.NConds * pElem.NTerms);
         end;
-        pElem := pList.Next;
     end;
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
@@ -860,15 +838,13 @@ begin
     cBuffer := Allocmem(sizeof(Complex) * MaxNValues);
 
     // Get the actual values
-    pElem := pList.First;
     iCount := 0;
-    while pElem <> NIL do
+    for pElem in pList do
     begin
         with DSSPrime.ActiveCircuit, pElem do
         begin
 //            if not pElem.Enabled then  
 //            begin
-//                pElem := pList.Next;
 //                continue;
 //            end;
             
@@ -931,7 +907,7 @@ begin
                 end;
             end;
             Inc(CResultPtr, 3 * pElem.NTerms);
-            pElem := pList.Next;
+            
         end;
     end;
     ReAllocMem(cBuffer, 0);
@@ -975,41 +951,36 @@ begin
 //            Inc(numEnabled);
 //        pElem := pList.Next;
 //    end;
-    pElem := pList.First;
-    
     DSS_RecreateArray_PInteger(ResultPtr, ResultCount, numEnabled);
     pval := ResultPtr;
     
     case what of
         0:
-            while pElem <> NIL do
+            for pElem in pList do
             begin
                 // if pElem.Enabled then
                 begin
                     pval^ := pElem.NPhases;
                     Inc(pval);
                 end;
-                pElem := pList.Next;
             end;
         1:
-            while pElem <> NIL do
+            for pElem in pList do
             begin
                 // if pElem.Enabled then
                 begin
                     pval^ := pElem.Nconds;
                     Inc(pval);
                 end;
-                pElem := pList.Next;
             end;
         2:
-            while pElem <> NIL do
+            for pElem in pList do
             begin
                 // if pElem.Enabled then
                 begin
                     pval^ := pElem.Nterms;
                     Inc(pval);
                 end;
-                pElem := pList.Next;
             end;
     end;
         

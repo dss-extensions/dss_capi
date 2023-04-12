@@ -240,6 +240,18 @@ type
     dss_callback_message_t = function (DSS: TDSSContext; messageStr: PChar; messageType: Integer): Integer; CDECL;
 
     // Base for all collection classes
+    TDSSClass = class;
+
+    TDSSObjectEnumerator = class
+    private
+        dsscls: TDSSClass;
+        function Get_Current(): Pointer;
+    public
+        constructor Create(acls: TDSSClass); 
+        function MoveNext(): Boolean;
+        property Current: Pointer READ Get_Current;
+    end;
+
     TDSSClass = class(TObject)
     type 
         THashListType = {$IFDEF DSS_CAPI_HASHLIST}TAltHashList;{$ELSE}THashList;{$ENDIF}
@@ -326,7 +338,8 @@ type
         Property First:Integer read Get_First;
         Property Next:Integer read Get_Next;
         Property Name:String read Class_Name;
-        
+
+        function GetEnumerator: TDSSObjectEnumerator;
     protected
         // DSSContext convenience functions
         procedure DoErrorMsg(Const S, Emsg, ProbCause: String; ErrNum: Integer);inline;
@@ -1722,6 +1735,27 @@ begin
     if DefaultValue = -9999999 then
        raise Exception.Create(Format('Could not match enum ("%s") value "%s"', [Name, Value]));
     Result := DefaultValue;    
+end;
+
+function TDSSClass.GetEnumerator(): TDSSObjectEnumerator;
+begin
+    Result := TDSSObjectEnumerator.Create(self);
+end;
+
+function TDSSObjectEnumerator.Get_Current(): Pointer;
+begin
+    Result := dsscls.GetActiveObj();
+end;
+
+function TDSSObjectEnumerator.MoveNext(): Boolean;
+begin
+    Result := dsscls.Next <> 0;
+end;
+
+constructor TDSSObjectEnumerator.Create(acls: TDSSClass);
+begin
+    dsscls := acls;
+    dsscls.ActiveElement := 0;
 end;
 
 constructor TProxyClass.Create(dssContext: TDSSContext; Targets: Array Of String);

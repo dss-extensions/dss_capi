@@ -1027,8 +1027,7 @@ begin
 
     with DSS.ActiveCircuit do
     begin
-        pLoad := Loads.First;
-        while pLoad <> NIL do
+        for pLoad in Loads do
         begin
             case pLoad.LoadSpecType of
                 TLoadSpec.ConnectedkVA_PF:
@@ -1036,7 +1035,6 @@ begin
                 TLoadSpec.kwh_PF:
                     FSWriteln(F, 'Load.' + pLoad.Name + '.CFactor=' + Format('%-.5g', [pLoad.FCFactor]));
             end;
-            pLoad := Loads.Next;
         end;
     end;
 
@@ -1086,8 +1084,7 @@ begin
         end;
 
    // Dump All present DSSClasses
-   pClass := DSS.DSSClassList.First;
-   while pClass <> NIL do
+   for pClass in DSS.DSSClassList do
    begin
        FSWriteln(F, '[' + pClass.name + ']');
        for i := 1 to pClass.NumProperties do
@@ -1095,7 +1092,6 @@ begin
            WriteStr(sout, i: 0, ', "', pClass.PropertyName[i], '", "', ReplaceCRLF(pClass.GetPropertyHelp(i)), '"');
            FSWriteln(F, sout);
        end;
-       pClass := DSS.DSSClassList.Next;
    end;
     FreeAndNil(F);
 end;
@@ -1224,12 +1220,10 @@ begin
         with DSS.ActiveCircuit do
         begin
             // Go through all PC Elements
-            pcElem := PCElements.First;
-            while pcElem <> NIL do
+            for pcElem in PCElements do
             begin
                 if pcElem.Enabled then
                     pcElem.InitHarmonics;   // Virtual function
-                pcElem := PCElements.Next;
             end;
             Result := TRUE;
         end
@@ -1245,13 +1239,10 @@ begin
     // If state variables not defined for a PC class, does nothing
     with DSS.ActiveCircuit do
     begin
-        pcelem := PCElements.First;
-
-        while pcelem <> NIL do
+        for pcelem in PCElements do
         begin
             if pcelem.Enabled then
                 pcelem.InitStateVars;
-            pcelem := PCElements.Next;
         end;
     end;
 end;
@@ -1263,30 +1254,24 @@ begin
     // Invalidate All PC Elements; Any could be a machine
     with DSS.ActiveCircuit do
     begin
-        pcelem := PCElements.First;
-
-        while pcelem <> NIL do
+        for pcelem in PCElements do
         begin
             if pcelem.Enabled then
                 pcelem.YPrimInvalid := TRUE;
-            pcelem := PCElements.Next;
         end;
     end;
 end;
 
 function DoResetFaults(DSS: TDSSContext): Integer;
 var
-    pFault: TFaultOBj;
-
+    pFault: TFaultObj;
 begin
     Result := 0;
     with DSS.ActiveCircuit do
     begin
-        pFault := TFaultObj(Faults.First);
-        while pFault <> NIL do
+        for pFault in Faults do
         begin
             pFault.Reset;
-            pFault := TFaultObj(Faults.Next);
         end;
     end;
 end;
@@ -1298,12 +1283,10 @@ begin
     Result := 0;
     with DSS.ActiveCircuit do
     begin
-        ControlDevice := DSSControls.First;
-        while ControlDevice <> NIL do
+        for ControlDevice in DSSControls do
         begin
             if ControlDevice.Enabled then
                 ControlDevice.Reset;
-            ControlDevice := DSSControls.Next;
         end;
     end;
 end;
@@ -1847,11 +1830,9 @@ var
     CktElem: TDSSCktElement;
 begin
     Result := 0;
-    cktElem := DSS.ActiveCircuit.Sources.First;
-    while CktElem <> NIL do
+    for cktElem in DSS.ActiveCircuit.Sources do
     begin
         Result -= CktElem.power[1];
-        cktElem := DSS.ActiveCircuit.Sources.Next;
     end;
 end;
 
@@ -2532,8 +2513,7 @@ begin
         BusList := TempBusList; // Reassign
 
         // Rename the bus names in each circuit element before renaming the elements
-        pCktElem := Cktelements.First;
-        while pCktElem <> NIL do
+        for pCktElem in Cktelements do
         begin
             BaseClass := (pCktElem.DSSObjType and BASECLASSMASK);
             if (BaseClass = PC_ELEMENT) or (BaseClass = PD_ELEMENT) then
@@ -2560,7 +2540,6 @@ begin
                 DSS.Parser.CmdString := S;
                 pCktElem.Edit(DSS.Parser);
             end;
-            pCktElem := CktElements.Next;
         end;
 
         // Rename the circuit elements to generic values
@@ -2570,8 +2549,7 @@ begin
         ControlUpDateStrings := TStringList.Create;
         ControlUpDatePtrs := TList.Create;
 
-        pCktElem := Cktelements.First;
-        while pCktElem <> NIL do
+        for pCktElem in Cktelements do
         begin
             case (pCktElem.DSSObjType and CLASSMASK) of
                 CAP_CONTROL:
@@ -2615,23 +2593,18 @@ begin
                     ControlUpDatePtrs.Add(pCktElem);
                 end;
             end;
-
-            pCktElem := Cktelements.Next;
         end;
 
-        pCktElem := Cktelements.First;
-        while pCktElem <> NIL do
+        for pCktElem in Cktelements do
         begin
             Exclude(pCktElem.Flags, Flg.Checked);     // Initialize to not checked
-            pCktElem := Cktelements.Next;
         end;
 
         DevListSize := DeviceList.Count;
         DeviceList.Free;
         DeviceList := THashList.Create(DevListSize);
 
-        pCktElem := Cktelements.First;
-        while pCktElem <> NIL do
+        for pCktElem in Cktelements do
         begin
             if not (Flg.Checked in pCktElem.Flags) then
             begin
@@ -2641,22 +2614,19 @@ begin
                     XFMR_ELEMENT:
                         if Flg.HasControl in pCktElem.Flags then
                         begin
-                            pCtrlElem := pCktElem.ControlElementList.First;
-                            while assigned(pCtrlElem) do
+                            for pCtrlElem in pCktElem.ControlElementList do
                             begin
                                 if (pCtrlElem.DSSObjType and CLASSMASK) = REG_CONTROL then
                                 begin
                                     DSS.Parser.CmdString := Format('Transformer=%s', [pCktElem.Name]);
                                     pCtrlElem.Edit(DSS.Parser);
                                 end;
-                                pCtrlElem := pCktElem.ControlElementList.Next;
                             end;
                         end;
                 else
                     // nada
                 end;
             end;
-            pCktElem := Cktelements.Next;
         end;
 
         // Run the control update scripts now that everything is renamed
