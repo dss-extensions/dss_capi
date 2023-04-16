@@ -335,9 +335,9 @@ begin
     Reallocmem(SR0, SizeOf(Sr0^[1]) * Fnphases);
     Reallocmem(SR1, SizeOf(Sr1^[1]) * Fnphases);
     for i := 1 to FNphases do
-        Sr0^[i] := CZERO; //For multiphase model
+        Sr0^[i] := 0; //For multiphase model
     for i := 1 to FNphases do
-        Sr1^[i] := CZERO; //For multiphase model
+        Sr1^[i] := 0; //For multiphase model
     for i := 1 to FNphases do
         ERR0[i] := 0; //For multiphase model
 
@@ -345,8 +345,8 @@ begin
     SetLength(InCurr, FNphases + 1);
     for i := 0 to FNphases do
     begin
-        OutCurr[i] := CZERO; //For multiphase model
-        InCurr[i] := CZERO; //For multiphase model
+        OutCurr[i] := 0; //For multiphase model
+        InCurr[i] := 0; //For multiphase model
     end;
 
     // If there is a controller, sets the flag for it to consider de new UPFC
@@ -731,11 +731,11 @@ begin
                     0:
                     begin
                         CurrIn := cmplx(0, 0);
-                        UPFC_Power := CZERO;
+                        UPFC_Power := 0;
                     end;
                     1:
                     begin                     // Voltage regulation mode
-                        CurrIn := CZERO;
+                        CurrIn := 0;
                         // Ctemp := cong(cmul(cdiv(Vbout, Vbin), cong(SR0^[Cond]))); //Balancing powers
                         Losses := CalcUPFCLosses(Cabs(Vbin) / (VRef * 1000));
                         // CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
@@ -753,7 +753,7 @@ begin
                     end;
                     3:
                     begin                    // Dual mode
-                        CurrIn := CZERO;
+                        CurrIn := 0;
                         // Ctemp := cong(cmul(cdiv(Vbout, Vbin), cong(SR0^[Cond]))); //Balancing powers
                         Losses := CalcUPFCLosses(Cabs(Vbin) / (VRef * 1000));
                         // CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
@@ -775,7 +775,7 @@ begin
                     begin                   // Two band reference Mode   (Only Voltage control mode)
                         if SF2 then
                         begin    // Normal control routine considering the dynamic reference
-                            CurrIn := CZERO;
+                            CurrIn := 0;
                             // Ctemp := cong(cmul(cdiv(Vbout, Vbin), cong(SR0^[Cond]))); //Balancing powers
                             Losses := CalcUPFCLosses(Cabs(Vbin) / (VRefD * 1000));
                             // CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
@@ -786,14 +786,14 @@ begin
                         begin   // Do nothing, aparently the input voltage is OK
                             CurrIn := cmplx(0, 0);
                             SR0^[Cond] := CurrIn;
-                            UPFC_Power := CZERO;
+                            UPFC_Power := 0;
                         end;
                     end;
                     5:
                     begin                    // Two band reference mode (Dual control mode)
                         if SF2 then
                         begin
-                            CurrIn := CZERO;
+                            CurrIn := 0;
                             // Ctemp := cong(cmul(cdiv(Vbout, Vbin), cong(SR0^[Cond]))); //Balancing powers
                             Losses := CalcUPFCLosses(Cabs(Vbin) / (VRefD * 1000));
                             // CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
@@ -802,9 +802,9 @@ begin
                         end
                         else
                         begin   // Do nothing, aparently the input voltage is OK
-                            CurrIn := CZERO;
+                            CurrIn := 0;
                             SR1^[Cond] := CurrIn;
-                            UPFC_Power := CZERO;
+                            UPFC_Power := 0;
                         end;
                         //Always corrects PF
                         if SyncFlag then

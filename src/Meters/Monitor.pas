@@ -1567,19 +1567,19 @@ begin
             begin
                 if IsPower then
                 begin
-                    Sum := cZero;
+                    Sum := 0;
                     for i := 1 to Fnphases do
                         Sum += VoltageBuffer^[i];
                     AddDblsToBuffer(pDoubleArray(@Sum.re), 2);
                 end
                 else
                 begin  // Average the phase magnitudes and  sum angles
-                    Sum := cZero;
+                    Sum := 0;
                     for i := 1 to Fnphases do
                         Sum += VoltageBuffer^[i];
                     Sum.re := Sum.re / FnPhases;
                     AddDblsToBuffer(pDoubleArray(@Sum.re), 2);
-                    Sum := cZero;
+                    Sum := 0;
                     for i := 1 to Fnphases do
                         Sum += CurrentBuffer^[Offset + i];   // Corrected 3-11-13
                     Sum.re := Sum.re / FnPhases;
@@ -1878,7 +1878,7 @@ begin
 // Revised 12-7-99 to return Zero current instead of Monitored element current because
 // it was messing up Newton iteration.
     for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
+        Curr^[i] := 0;
 end;
 
 procedure TMonitorObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);

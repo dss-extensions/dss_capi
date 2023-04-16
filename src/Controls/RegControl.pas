@@ -586,7 +586,7 @@ var
 begin
     case FPTphase of
 //         AVGPHASES: Begin
-//                        Result := CZERO;
+//                        Result := 0;
 //                        FOR i := 1 to Nphs Do Result := Result + Cabs(VBuffer^[i]);
 //                        Result := Result / (Nphs*PTRatio);
 //                    End;

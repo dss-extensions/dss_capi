@@ -1153,7 +1153,7 @@ begin
             // Check Ground Trip, if any
             if ((GroundCurve <> NIL) or (Delay_Time > 0.0)) and (GroundTrip > 0.0) then
             begin
-                Csum := CZERO;
+                Csum := 0;
                 for i := (1 + CondOffset) to (Fnphases + CondOffset) do
                 begin
                     Csum += cBuffer^[i];
@@ -1292,7 +1292,7 @@ begin
             for i := 1 to MonitoredElement.NPhases do
                 cBuffer^[i + CondOffset] := -cBuffer^[i + CondOffset];
 
-        Ires := cZERO;
+        Ires := 0;
         for i := 1 to MonitoredElement.Nphases do
             Ires += cBuffer^[i + CondOffset];
 
@@ -1518,7 +1518,7 @@ begin
         begin  // one cycle since we started, or since the last operation
             PickedUp := False;
             min_distance := 1.0e30;
-            Ires := cZERO;
+            Ires := 0;
             for i := 1 to MonitoredElement.Nphases do
                 Ires += td21_dI^[i];
 

@@ -693,7 +693,7 @@ begin
     k := 0;
     for i := 1 to len do
     begin
-        Result.insert(j, k, cZERO);
+        Result.insert(j, k, 0);
         inc(k);
         if k = row then
         begin

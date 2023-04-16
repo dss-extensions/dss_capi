@@ -2347,7 +2347,7 @@ var
 begin
     // Return total losses in all PD Elements
     pdelem := PDElements.First;
-    Result := cZERO;
+    Result := 0;
     while pdelem <> NIL do
     begin
         if pdelem.enabled then

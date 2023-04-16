@@ -243,9 +243,9 @@ end;
 
 procedure GetActiveElementLossesCallBack(var TotalLosses, LoadLosses, NoLoadLosses: Complex); STDCALL;
 begin
-    TotalLosses := CZERO;
-    LoadLosses := CZERO;
-    NoLoadLosses := CZERO;
+    TotalLosses := 0;
+    LoadLosses := 0;
+    NoLoadLosses := 0;
     if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
         with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
@@ -258,7 +258,7 @@ end;
 
 procedure GetActiveElementPowerCallBack(Terminal: Integer; var TotalPower: Complex); STDCALL;
 begin
-    TotalPower := CZERO;
+    TotalPower := 0;
     if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
         with DSSPrime.ActiveCircuit do
             with ActiveCktElement do

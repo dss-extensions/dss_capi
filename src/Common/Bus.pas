@@ -217,7 +217,7 @@ begin
     if Assigned(Zsc) then
         Result := Zsc.AvgDiagonal + Zsc.AvgOffDiagonal * 2
     else
-        Result := cZERO;
+        Result := 0;
 end;
 
 function TDSSBus.Get_Zsc1: Complex;
@@ -226,7 +226,7 @@ begin
     if Assigned(Zsc) then
         Result := Zsc.AvgDiagonal - Zsc.AvgOffDiagonal
     else
-        Result := cZERO;
+        Result := 0;
 end;
 
 function TDSSBus.FindIdx(NodeNum: SmallInt): Integer;

@@ -575,7 +575,7 @@ begin
             // Check Ground Trip, if any
             if GroundCurve <> NIL then
             begin
-                Csum := CZERO;
+                Csum := 0;
                 for i := (1 + CondOffset) to (Fnphases + CondOffset) do
                     Csum += cBuffer^[i];
                 Cmag := Cabs(Csum);

@@ -2729,10 +2729,10 @@ begin
             //FdeltaQFactor := DELTAQDEFAULT;
             FdeltaPFactor := DELTAPDEFAULT;
 
-            // allocated enough memory to buffer to hold voltages and initialize to cZERO
+            // allocated enough memory to buffer to hold voltages and initialize to 0
             Reallocmem(tempVbuffer, Sizeof(Complex) * DERElem.NConds);
             for k := 1 to DERElem.NConds do
-                tempVbuffer[k] := cZERO;
+                tempVbuffer[k] := 0;
 
             priorRollAvgWindow := FRollAvgWindow.AvgVal;
             priorDRCRollAvgWindow := FDRCRollAvgWindow.AvgVal;

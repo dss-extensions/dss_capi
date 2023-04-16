@@ -418,7 +418,7 @@ var
     i: Integer;
 begin
     for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
+        Curr^[i] := 0;
 end;
 
 procedure TFuseObj.DoPendingAction(const Phs, ProxyHdl: Integer);

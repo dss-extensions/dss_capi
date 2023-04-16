@@ -394,7 +394,7 @@ begin
                 if abs(Frequency - SrcFrequency) < EPSILON2 then
                     Result := pdegtocomplex(NAmps, Angle)
                 else
-                    Result := CZERO;
+                    Result := 0;
             end;
 
     except

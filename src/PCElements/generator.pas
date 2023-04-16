@@ -1713,8 +1713,8 @@ begin
     if ForceBalanced and (Fnphases = 3) then
     begin    // convert to pos-seq only
         Phase2SymComp(Vterminal, pComplexArray(@V012));
-        V012[0] := CZERO; // Force zero-sequence voltage to zero
-        V012[2] := CZERO; // Force negative-sequence voltage to zero
+        V012[0] := 0; // Force zero-sequence voltage to zero
+        V012[2] := 0; // Force negative-sequence voltage to zero
         SymComp2Phase(Vterminal, pComplexArray(@V012));  // Reconstitute Vterminal as balanced
     end;
 
@@ -1840,7 +1840,7 @@ begin
                                 I012[1] := ptocomplex(topolar(Model7MaxPhaseCurr, cang(I012[1])));
                             if ForceBalanced  // set the negative sequence current
                             then
-                                I012[2] := CZERO
+                                I012[2] := 0
                             else
                                 I012[2] := V012[2] / Zthev;  // for inverter ZThev is  (Xd' + j0)
 
@@ -1856,7 +1856,7 @@ begin
 
                     // Adjust for generator connection
                     if (Connection = 1) or ForceBalanced then
-                        I012[0] := CZERO
+                        I012[0] := 0
                     else
                         I012[0] := V012[0] / Cmplx(0.0, Xdpp);
 
@@ -2085,7 +2085,7 @@ begin
         end
         else
         begin
-            S := CZERO;
+            S := 0;
             Smag := 0.0;
             HourValue := 0.0;
         end;
@@ -2324,7 +2324,7 @@ begin
             end
         else
         begin
-            Vthev := cZERO;
+            Vthev := 0;
             Theta := 0.0;
             dTheta := 0.0;
             w0 := 0;

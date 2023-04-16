@@ -419,7 +419,7 @@ begin
     if not Closed[1] then 
     begin
         for i := 1 to Fnphases do 
-            Curr^[i] := CZERO;
+            Curr^[i] := 0;
         Exit;
     end;
 

@@ -1386,7 +1386,7 @@ var
 
 begin
     pc := p;
-    Result := CZERO;
+    Result := 0;
     for i := 1 to Nph do
         Result += pc^[i];
 end;
@@ -1853,7 +1853,7 @@ function GetTotalPowerFromSources(DSS: TDSSContext): Complex;
 var
     CktElem: TDSSCktElement;
 begin
-    Result := CZERO;
+    Result := 0;
     cktElem := DSS.ActiveCircuit.Sources.First;
     while CktElem <> NIL do
     begin

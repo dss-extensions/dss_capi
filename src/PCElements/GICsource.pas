@@ -366,7 +366,7 @@ begin
             begin
                 Vterminal^[i] := pdegtocomplex(Vmag, (Angle));   // all the same for zero sequence
                  // bottom part of the vector is zero
-                VTerminal^[i + Fnphases] := CZERO;    // See comments in GetInjCurrents
+                VTerminal^[i + Fnphases] := 0;    // See comments in GetInjCurrents
             end;
         end;
 

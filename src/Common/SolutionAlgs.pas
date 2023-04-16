@@ -933,7 +933,7 @@ begin
                 ref1 := RefNo[i];
                 if ref1 > 0 then
                 begin
-                    Currents^[ref1] := cONE;
+                    Currents^[ref1] := 1;
                     // SparseSet expects 1st element of voltage array, not 0-th element
                     if SolveSparseSet(hYsystem, pComplexArray(@NodeV^[1]), pComplexArray(@Currents^[1])) < 1 then
                         raise EEsolv32Problem.Create('Error Solving System Y Matrix in ComputeYsc. Problem with Sparse matrix solver.');
@@ -942,7 +942,7 @@ begin
                     begin
                         Zsc.SetElement(j, i, NodeV^[RefNo[j]]);
                     end;
-                    Currents^[Ref1] := cZERO;
+                    Currents^[Ref1] := 0;
                 end;
             end;
             Ysc.CopyFrom(Zsc);
@@ -958,7 +958,7 @@ begin
     with DSS.ActiveCircuit, Solution do
     begin
         for j := 1 to NumNodes do
-            Currents^[j] := cZERO;
+            Currents^[j] := 0;
 
         ProgressCount := 0;
 

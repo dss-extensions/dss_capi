@@ -896,7 +896,7 @@ begin
                 for i := 1 to Fnphases do
                 begin
                     Vterminal^[i] := Vharm;
-                    VTerminal^[i + Fnphases] := CZERO;
+                    VTerminal^[i + Fnphases] := 0;
                     if (i < Fnphases) then
                     begin
                         case ScanType of
@@ -925,7 +925,7 @@ begin
                     else
                         Vterminal^[i] := pdegtocomplex(Vmag, (360.0 + Angle - (i - 1) * 360.0 / Fnphases));
                     end;
-                    VTerminal^[i + Fnphases] := CZERO;    // See comments in GetInjCurrents
+                    VTerminal^[i + Fnphases] := 0;    // See comments in GetInjCurrents
                 end;
 
             end;

@@ -153,7 +153,7 @@ begin
             else
             begin   // not enabled
                 for i := 1 to Yorder do
-                    Curr^[i] := CZERO;
+                    Curr^[i] := 0;
             end;
         end;  {With}
 
@@ -278,7 +278,7 @@ var
     i: Integer;
 begin
     for i := 1 to Yorder do
-        InjCurrent^[i] := CZERO;
+        InjCurrent^[i] := 0;
 end;
 
 procedure TPCElement.set_ITerminalUpdated(const Value: Boolean);

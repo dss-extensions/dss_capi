@@ -1339,15 +1339,15 @@ begin
     // and mark all load downline from an overloaded branch as unserved
     // If localonly, check only metered element
 
-    TotalLosses := CZERO;     // Initialize loss accumulators
-    TotalLoadLosses := CZERO;
-    TotalNoLoadLosses := CZERO;
-    TotalLineLosses := CZERO;
-    TotalLineModeLosses := CZERO;
-    TotalZeroModeLosses := CZERO;
-    Total3phaseLosses := CZERO;
-    Total1phaseLosses := CZERO;
-    TotalTransformerLosses := CZERO;
+    TotalLosses := 0;     // Initialize loss accumulators
+    TotalLoadLosses := 0;
+    TotalNoLoadLosses := 0;
+    TotalLineLosses := 0;
+    TotalLineModeLosses := 0;
+    TotalZeroModeLosses := 0;
+    Total3phaseLosses := 0;
+    Total1phaseLosses := 0;
+    TotalTransformerLosses := 0;
 
      // Init all voltage base loss accumulators
     for i := 1 to MaxVBaseCount do

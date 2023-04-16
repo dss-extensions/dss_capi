@@ -455,7 +455,7 @@ begin
 
     TotalLosses := Losses;  // Watts, vars
     LoadLosses := TotalLosses;
-    NoLoadLosses := CZERO;
+    NoLoadLosses := 0;
 end;
 
 function TDSSCktElement.InjCurrents: Integer;  // Applies to PC Elements
@@ -586,7 +586,7 @@ function TDSSCktElement.Get_Power(idxTerm: Integer): Complex;    // Get total co
 var
     i, k, n: Integer;
 begin
-    Result := CZERO;
+    Result := 0;
     ActiveTerminalIdx := idxTerm;
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
@@ -670,7 +670,7 @@ var
     MaxPhase: Integer;
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
-    Result := CZERO;
+    Result := 0;
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
@@ -729,7 +729,7 @@ var
     MaxPhase: Integer;
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
-    Result := CZERO;
+    Result := 0;
     if (not FEnabled) or (NodeRef = NIL) then
         Exit;
         
@@ -1085,7 +1085,7 @@ begin
         if (iTerm < 1) or (iTerm > fNterms) then
         begin
             for i := 1 to Ncond do
-                VBuffer^[i] := CZERO;
+                VBuffer^[i] := 0;
             Exit;
         end;
 
@@ -1101,11 +1101,11 @@ end;
 
 procedure TDSSCktElement.GetSeqLosses(var PosSeqLosses, NegSeqLosses, ZeroModeLosses: complex);
 begin
-// For the base class, just return CZERO
+// For the base class, just return 0
 // Derived classes have to supply appropriate function
-    PosSeqLosses := CZERO;
-    NegSeqLosses := CZERO;
-    ZeroModeLosses := CZERO;
+    PosSeqLosses := 0;
+    NegSeqLosses := 0;
+    ZeroModeLosses := 0;
 end;
 
 function IsGroundBus(const S: String): Boolean;
@@ -1180,7 +1180,7 @@ begin
         inc(it, 2);
     end;
     //for i := 1 to Yorder do
-    //    ITerminal[i] := CZERO;
+    //    ITerminal[i] := 0;
 end;
 
 procedure TDSSCktElement.MakeLike(OtherObj: Pointer);

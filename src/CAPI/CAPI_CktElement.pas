@@ -134,7 +134,7 @@ begin
                 GetCurrents(cBuffer);
 
                 for i := 1 to 3 * NTerms do
-                    i012^[i] := CZERO;   // Initialize Result
+                    i012^[i] := 0;   // Initialize Result
                 iV := 2;  // pos seq is 2nd element in array
                 // Populate only phase 1 quantities in Pos seq
                 for j := 1 to NTerms do
@@ -190,7 +190,7 @@ begin
             if (Nphases = 1) and PositiveSequence then
             begin
                 for i := 1 to 3 * NTerms do
-                    V012^[i] := CZERO;   // Initialize Result
+                    V012^[i] := 0;   // Initialize Result
                 iV := 2;  // pos seq is 2nd element in array
                 {Populate only phase 1 quantities in Pos seq}
                 for j := 1 to NTerms do
@@ -865,7 +865,7 @@ begin
         iV := 0;
         for i := 1 to NTerms do
         begin
-            cResid := CZERO;
+            cResid := 0;
             k := (i - 1) * Nconds;
             for j := 1 to Nconds do
             begin

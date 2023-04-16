@@ -1,11 +1,9 @@
 unit Spectrum;
 
- {
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Harmonic Spectrum specified as Harmonic, pct magnitude and angle
 //
@@ -326,18 +324,18 @@ function TSpectrumObj.GetMult(const h: Double): Complex;
 var
     i: Integer;
 begin
-     {Search List for  harmonic (nearest 0.01 harmonic) and return multiplier}
+    // Search List for  harmonic (nearest 0.01 harmonic) and return multiplier
     for i := 1 to NumHarm do
     begin
         if Abs(h - HarmArray^[i]) < 0.01 then
         begin
             Result := MultArray^[i];
             Exit;
-        end; {IF}
-    end; {For}
+        end;
+    end;
 
-     {None Found, return zero}
-    Result := cZERO;
+    // None Found, return zero
+    Result := 0;
 end;
 
 function TSpectrumObj.HarmArrayHasaZero(var ZeroPoint: Integer): Boolean;
@@ -356,7 +354,7 @@ begin
 end;
 
 procedure TSpectrumObj.SetMultArray;
-{Rotate all phase angles so that the fundamental is at zero}
+// Rotate all phase angles so that the fundamental is at zero
 var
     i: Integer;
     FundAngle: Double;

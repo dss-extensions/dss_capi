@@ -530,7 +530,7 @@ var
 begin
     // Return array of zero
     for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
+        Curr^[i] := 0;
 end;
 
 procedure TSensorObj.UpdateCurrentVector;

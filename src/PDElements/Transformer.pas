@@ -1378,7 +1378,7 @@ begin
                     Vterminal^[i] := NodeV^[NodeRef^[i]]
             else
                 for i := 1 to Yorder do
-                    Vterminal^[i] := CZERO;
+                    Vterminal^[i] := 0;
 
 
         k := 0;
@@ -1401,7 +1401,7 @@ begin
                         VTerm^[i] := Vterminal^[iphase + (iWind - 1) * FNconds];
                         VTerm^[i + 1] := Vterminal^[jphase + (iWind - 1) * FNconds];
                     end
-                end; {CASE}
+                end;
 
             end;
             Y_Term.MVmult(ITerm, VTerm);  // ITerm = Y_Term Vterm
@@ -1417,8 +1417,6 @@ begin
         ReallocMem(Vterm, 0);
         ReallocMem(Iterm, 0);
         ReallocMem(Iterm_NL, 0);
-
-
     except
         On E: Exception do
             DoSimpleMsg(Format(_('Error filling voltage buffer in GetAllWindingCurrents for Circuit Element: %s'), [FullName]) + CRLF +
@@ -1440,7 +1438,7 @@ begin
         if (iWind < 1) or (iWind > NumWindings) then
         begin
             for i := 1 to FNconds do
-                VBuffer^[i] := CZERO;
+                VBuffer^[i] := 0;
             Exit;
         end;
 
@@ -1463,7 +1461,7 @@ begin
                     ii := RotatePhases(i);      // Get next phase in sequence
                     VBuffer^[i] := Vterminal^[i + k] - Vterminal^[ii + k];
                 end
-            end; {CASE}
+            end;
 
     except
         On E: Exception do
@@ -1491,9 +1489,9 @@ var
 begin
     if not FEnabled then
     begin
-        TotalLosses := CZERO;
-        LoadLosses := CZERO;
-        NoLoadLosses := CZERO;
+        TotalLosses := 0;
+        LoadLosses := 0;
+        NoLoadLosses := 0;
         Exit;
     end;
 
@@ -1505,7 +1503,7 @@ begin
     ComputeVterminal;
     Yprim_Shunt.MVmult(cTempIterminal, Vterminal);
     // No Load Losses are sum of all powers coming into YPrim_Shunt from each terminal
-    NoLoadLosses := CZERO;
+    NoLoadLosses := 0;
     for i := 1 to Yorder do
         NoLoadLosses += VTerminal^[i] * cong(cTempIterminal^[i]);
 
@@ -1725,7 +1723,6 @@ var
     A: pComplexArray;
     ctempArray1,
     ctempArray2: pComplexArray;
-    cMinusOne: Complex;
     AT: TcMatrix;
     Yadder: Complex;
     Rmult: Double;
@@ -1806,24 +1803,23 @@ begin
         ctempArray2 := AllocMem(SizeOf(Complex) * NumWindings * 2);
 
         A := AllocMem(SizeOf(Complex) * NumWindings * 2);
-        cMinusOne := cmplx(-1.0, 0.0);
         AT := TcMatrix.Creatematrix(NumWindings);
         for i := 1 to NumWindings - 1 do
-            AT.SetElement(i + 1, i, cONE);
+            AT.SetElement(i + 1, i, 1);
         for i := 1 to NumWindings - 1 do
-            AT.SetElement(1, i, cMinusOne);
-        ctemparray1^[NumWindings] := CZERO;
+            AT.SetElement(1, i, -1);
+        ctemparray1^[NumWindings] := 0;
         for i := 1 to Numwindings do
         begin
             if i = 1 then
                 for k := 1 to NumWindings - 1 do
-                    A^[k] := cMinusOne
+                    A^[k] := -1
             else
                 for k := 1 to NumWindings - 1 do
                     if k = (i - 1) then
-                        A^[k] := cONE
+                        A^[k] := 1
                     else
-                        A^[k] := cZERO;
+                        A^[k] := 0;
             ZB.MVmult(ctemparray1, A); // Zb.invert * A
             AT.MVmult(ctempArray2, ctemparray1); // AT * Result
             for j := 1 to NumWindings do
@@ -1853,7 +1849,7 @@ begin
             with Winding^[i] do
                 AT.SetElement(2 * i, i, Cmplx(-1.0 / (VBase * ZeroTapFix(puTap)), 0.0));
         for i := 1 to 2 * Numwindings do
-            ctemparray1^[i] := CZERO;
+            ctemparray1^[i] := 0;
 
         for i := 1 to 2 * Numwindings do
         begin
@@ -1866,7 +1862,7 @@ begin
                     if i = 2 * k then
                         A^[k] := Cmplx((-1.0 / (VBase * ZeroTapFix(puTap))), 0.0)
                     else
-                        A^[k] := cZERO;
+                        A^[k] := 0;
                 end;
             // Main Transformer part
             Y_1Volt.MVmult(ctemparray1, A);

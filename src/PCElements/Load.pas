@@ -927,7 +927,7 @@ begin
     if (Vminpu <> 0.0) then
         Yeq95 := Yeq / sqr(Vminpu)   // at 95% voltage
     else
-        Yeq95 := CZERO;
+        Yeq95 := 0;
 
     if (Vmaxpu <> 0.0) then
         Yeq105 := Yeq / sqr(Vmaxpu)   // at 105% voltage
@@ -1385,9 +1385,9 @@ begin
             Curr := Yeq * V  // Below VbaseZ resort to linear equal to Yprim contribution
         else
         begin
-            CurrZ := CZERO;
-            CurrI := CZERO;
-            CurrP := CZERO;
+            CurrZ := 0;
+            CurrI := 0;
+            CurrP := 0;
 
             if VMag <= VBase95 then
             begin
@@ -1498,10 +1498,10 @@ begin
                 if WattFactor > 0.0 then
                     Curr := cong(Cmplx(WNominal * WattFactor, 0.0) / V)
                 else
-                    Curr := CZERO; // P component of current
+                    Curr := 0; // P component of current
 
                 if Vmag = 0.0 then
-                    Cvar := CZERO    // Trap divide by zero error
+                    Cvar := 0    // Trap divide by zero error
                 //Compute Q component of current
                 else
                 if CVRvarFactor = 2.0 then

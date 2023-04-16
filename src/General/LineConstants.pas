@@ -493,7 +493,7 @@ begin
             // Assume round conductor
             Alpha := c1_j1 * sqrt(FFrequency * mu0 / FRDC^[i]);
             if Cabs(Alpha) > 35.0 then
-                I0I1 := CONE
+                I0I1 := 1
             else
                 I0I1 := Bessel_I0(Alpha) / Bessel_I1(Alpha);
 

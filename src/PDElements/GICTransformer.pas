@@ -403,7 +403,7 @@ var
     i: Integer;
 begin
     ComputeIterminal;
-    Curr := CZERO;
+    Curr := 0;
     for i := 1 to Fnphases do
         Curr += Iterminal^[i];
     GICperPhase := Cabs(Curr) / Fnphases;

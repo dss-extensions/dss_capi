@@ -417,7 +417,7 @@ begin
                 if Is_ON then
                     Value := Cmplx(G / RandomMult, 0.0)
                 else
-                    Value := CZERO;
+                    Value := 0;
                 Value2 := -Value;
                 for i := 1 to Fnphases do
                 begin
@@ -436,7 +436,7 @@ begin
                         if Is_ON then
                             Value := Cmplx(Gmatrix^[(iOffset + j)] / RandomMult, 0.0)
                         else
-                            Value := CZERO;
+                            Value := 0;
                         SetElement(i, j, Value);
                         SetElement(i + Fnphases, j + Fnphases, Value);
                         Value := -Value;

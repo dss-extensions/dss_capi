@@ -445,7 +445,7 @@ begin
             if LogEvents then
                 LogThisEvent(DSS, _('Reallocating Solution Arrays'));
             ReAllocMem(NodeV, SizeOf(NodeV^[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
-            NodeV^[0] := CZERO;
+            NodeV^[0] := 0;
             ReAllocMem(Currents, SizeOf(Currents^[1]) * (NumNodes + 1)); // Allocate System current array
             ReAllocMem(AuxCurrents, SizeOf(AuxCurrents^[1]) * (NumNodes + 1)); // Allocate System current array
             if (VMagSaved <> NIL) then

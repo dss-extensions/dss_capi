@@ -213,7 +213,7 @@ function TerminalPowerIn(V, I: pComplexArray; Nphases: Integer): Complex;
 var
     j: Integer;
 begin
-    Result := CZERO;
+    Result := 0;
     for j := 1 to Nphases do
     begin
         Result += V^[j] * cong(I^[j]);
@@ -241,7 +241,7 @@ begin
     with Amat do
     begin
         for i := 1 to 3 do
-            SetElemSym(1, i, CONE);
+            SetElemSym(1, i, 1);
         SetElement(2, 2, aa);
         SetElement(3, 3, aa);
         SetElemsym(2, 3, a);
@@ -255,7 +255,7 @@ var
 begin
     a_3 := cmplx(-0.5, 0.8660254037844387) / 3;
     aa_3 := cmplx(-0.5, -0.8660254037844387) / 3;
-    one_3 := CONE / 3;
+    one_3 := 1.0 / 3;
     with Amat_inv do
     begin
         for i := 1 to 3 do
@@ -276,7 +276,7 @@ begin
     with Amat do
     begin
         for i := 1 to 3 do
-            SetElemSym(1, i, CONE);
+            SetElemSym(1, i, 1);
         SetElement(2, 2, aa);
         SetElement(3, 3, aa);
         SetElemsym(2, 3, a);
@@ -432,7 +432,7 @@ begin
     if (Abs(Denom.Re) > 0.0) or (abs(Denom.im) > 0.0) then
         Result := (Z1 * Z2) / Denom
     else // Error
-        Result := CZERO;
+        Result := 0;
 end;
 
 // z = I0(a)
@@ -447,7 +447,7 @@ var
     zSQR25: Complex;
 
 begin
-    RESULT := COne;                // term 0
+    RESULT := 1;                // term 0
     zSQR25 := (a * a) * 0.25;
     term := zSQR25;
     RESULT += zSQR25;      // term 1

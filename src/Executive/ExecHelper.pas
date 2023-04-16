@@ -2618,7 +2618,7 @@ begin
         with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
             for j := 1 to NumNodes do
-                Currents^[j] := cZERO;  // Clear Currents array
+                Currents^[j] := 0;  // Clear Currents array
 
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin

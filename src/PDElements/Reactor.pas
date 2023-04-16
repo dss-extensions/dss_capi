@@ -858,7 +858,7 @@ begin
     begin
         TotalLosses := Losses;  // Side effect: computes Iterminal and Vterminal
      {Compute losses in Rp Branch from voltages across shunt element -- node to ground}
-        NoLoadLosses := CZERO;
+        NoLoadLosses := 0;
         with ActiveCircuit.Solution do
             for i := 1 to FNphases do
                 with NodeV^[NodeRef^[i]] do

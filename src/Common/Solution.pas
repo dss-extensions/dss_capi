@@ -1319,7 +1319,7 @@ var
     I: Integer;
 begin
     for i := 0 to DSS.ActiveCircuit.NumNodes do
-        Currents^[i] := CZERO;
+        Currents^[i] := 0;
 end;
 
 procedure TSolutionObj.Upload2IncMatrix;

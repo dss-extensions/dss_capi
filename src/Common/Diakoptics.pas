@@ -151,8 +151,8 @@ begin
     // DSS.ActiveCircuit.V_0.sparse_matrix_Cmplx(length(AllNNames), 1);
     for i := 0 to High(AllNNames) do
     begin
-        DSS.ActiveCircuit.Ic.Insert(i, 0, cZERO);
-        // DSS.ActiveCircuit.V_0.Insert(i, 0, cZERO);
+        DSS.ActiveCircuit.Ic.Insert(i, 0, 0);
+        // DSS.ActiveCircuit.V_0.Insert(i, 0, 0);
     end;
 end;
 
@@ -220,7 +220,7 @@ begin
         for idx2 := 0 to idx3 do
         begin
             for idx := 1 to col do
-                CVector^[idx] := cZERO;  // Makes it zero
+                CVector^[idx] := 0;  // Makes it zero
 
             for idx := 1 to length(Contours.CData) do
             begin

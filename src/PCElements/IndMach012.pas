@@ -520,10 +520,10 @@ begin
 
     dSdP := Compute_dSdP;
 
-    Is1 := CZERO;
-    V1 := CZERO;
-    Is2 := CZERO;
-    V2 := CZERO;
+    Is1 := 0;
+    V1 := 0;
+    Is2 := 0;
+    V2 := 0;
 
     FirstIteration := TRUE;
 
@@ -634,11 +634,11 @@ procedure TIndMach012Obj.InitModel(V012, I012: TSymCompArray);
 begin
     // Compute Voltage behind transient reactance and set derivatives to zero
     // *** already done *** E1 := V012[1] - I012[1] * Zsp;
-    dE1dt := czero;
+    dE1dt := 0;
     E1n := E1;
     dE1dtn := dE1dt;
     E2 := V012[2] - I012[2] * Zsp;
-    dE2dt := czero;
+    dE2dt := 0;
     E2n := E2;
     dE2dtn := dE2dt;
 end;

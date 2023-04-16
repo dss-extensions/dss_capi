@@ -313,7 +313,7 @@ begin
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
     Reallocmem(LastCurrents, SizeOf(LastCurrents^[1]) * Yorder);
     for i := 1 to Yorder do
-        LastCurrents^[i] := CZERO;
+        LastCurrents^[i] := 0;
 end;
 
 procedure TVSConverterObj.CalcYPrim;
@@ -428,7 +428,7 @@ begin
         RotatePhasorDeg(Vmag, 1.0, Deg);
         ComplexBuffer^[i] := Vmag;
     end;
-    ComplexBuffer^[FNPhases] := CZERO;
+    ComplexBuffer^[FNPhases] := 0;
     YPrim.MVMult(Curr, ComplexBuffer);
 
   // calculate the converter AC power, exclusive of the losses, using LastCurrents

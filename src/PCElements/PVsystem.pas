@@ -1722,8 +1722,8 @@ begin
     if ForceBalanced and (Fnphases = 3) then
     begin  // convert to pos-seq only
         Phase2SymComp(Vterminal, pComplexArray(@V012));
-        V012[0] := CZERO; // Force zero-sequence voltage to zero
-        V012[2] := CZERO; // Force negative-sequence voltage to zero
+        V012[0] := 0; // Force zero-sequence voltage to zero
+        V012[2] := 0; // Force negative-sequence voltage to zero
         SymComp2Phase(Vterminal, pComplexArray(@V012));  // Reconstitute Vterminal as balanced
     end;
 
@@ -1817,8 +1817,8 @@ begin
     if ForceBalanced and (Fnphases = 3) then
     begin  // convert to pos-seq only
         Phase2SymComp(Vterminal, pComplexArray(@V012));
-        V012[0] := CZERO; // Force zero-sequence voltage to zero
-        V012[2] := CZERO; // Force negative-sequence voltage to zero
+        V012[0] := 0; // Force zero-sequence voltage to zero
+        V012[2] := 0; // Force negative-sequence voltage to zero
         SymComp2Phase(Vterminal, pComplexArray(@V012));  // Reconstitute Vterminal as balanced
     end;
 
@@ -1967,7 +1967,7 @@ begin
         if SpectrumObj <> NIL then
             E := SpectrumObj.GetMult(PVSystemHarmonic) * VThevHarm // Get base harmonic magnitude
         else
-            E := CZERO;
+            E := 0;
 
         RotatePhasorRad(E, PVSystemHarmonic, ThetaHarm);  // Time shift by fundamental frequency phase shift
         for i := 1 to Fnphases do

@@ -1290,9 +1290,9 @@ var
     I012: array[0..2] of Complex;
 
 begin
-    PosSeqLosses := CZERO;
-    NegSeqLosses := CZERO;
-    ZeroSeqLosses := CZERO;
+    PosSeqLosses := 0;
+    NegSeqLosses := 0;
+    ZeroSeqLosses := 0;
 
     // Method: sum seq powers going into each terminal
     
@@ -1366,11 +1366,11 @@ begin
             else
             begin // matrix was input directly, or built from physical data
                 // average the diagonal and off-dialgonal elements
-                Zs := CZERO;
+                Zs := 0;
                 for i := 1 to FnPhases do
                     Zs += Z.GetElement(i, i);
                 Zs := Zs / (Fnphases * LengthMult);
-                Zm := CZERO;
+                Zm := 0;
                 for i := 1 to FnPhases - 1 do     // Corrected 6-21-04
                 begin
                     for j := i + 1 to FnPhases do

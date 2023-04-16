@@ -222,7 +222,7 @@ begin
         end
         else
             for i := 1 to Yorder do
-                Curr[i] := cZero;
+                Curr[i] := 0;
 
     except
         On E: Exception do
@@ -240,7 +240,7 @@ begin
     if (NormAmps = 0.0) or not Enabled then
     begin
         OverLoad_EEN := 0.0;  // bug fixed 1/10/00
-        Result := cZero;
+        Result := 0;
         Exit;
     end;
 
@@ -255,7 +255,7 @@ begin
     else
     begin
         OverLoad_EEN := 0.0;
-        Result := cZero;
+        Result := 0;
     end;
 end;
 
@@ -267,7 +267,7 @@ begin
     if (EmergAmps = 0.0) or not Enabled then
     begin
         Overload_UE := 0.0;  // bug fixed 1/10/00
-        Result := cZero;
+        Result := 0;
         Exit;
     end;
 
@@ -283,7 +283,7 @@ begin
     else
     begin
         Overload_UE := 0.0;
-        Result := cZero;
+        Result := 0;
     end;
 end;
 
