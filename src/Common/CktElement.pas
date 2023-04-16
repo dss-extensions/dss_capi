@@ -99,6 +99,7 @@ type
         destructor Destroy; OVERRIDE;
         procedure MakeLike(OtherObj: Pointer); override;
 
+        function AllConductorsClosed(): Boolean;
         function GetYPrim(var Ymatrix: TCmatrix; Opt: Integer): Integer; VIRTUAL;  //returns values of array
         function GetYPrimValues(Opt: Integer): pComplexArray; VIRTUAL;
         function MaxTerminalOneIMag: Double;   // Max of Iterminal 1 phase currents
@@ -1194,5 +1195,18 @@ begin
     Enabled := TRUE;
 end;
 
+function TDSSCktElement.AllConductorsClosed(): Boolean;
+var
+    i, j: Integer;
+begin
+    Result := TRUE;
+    for i := 1 to Nterms do
+        for j := 1 to NConds do
+            if not Terminals[i - 1].ConductorsClosed[j - 1] then
+            begin
+                Result := FALSE;
+                Exit;
+            end;
+end;
 
 end.

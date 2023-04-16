@@ -181,7 +181,6 @@ type
         PFSpecified: Boolean;  // Added 3-16-16 to fix problem with UseActual
         PFChanged: Boolean;
 
-        function AllTerminalsClosed: Boolean;
         procedure CalcDailyMult(Hr: Double);
         procedure CalcDutyMult(Hr: Double);
         procedure CalcInjCurrentArray;
@@ -1648,20 +1647,6 @@ begin
     end;
 end;
 
-function TLoadObj.AllTerminalsClosed: Boolean;
-var
-    i, j: Integer;
-begin
-    Result := TRUE;
-    for i := 1 to Nterms do
-        for j := 1 to NConds do
-            if not Terminals[i - 1].ConductorsClosed[j - 1] then
-            begin
-                Result := FALSE;
-                Exit;
-            end;
-end;
-
 procedure TLoadObj.CalcVTerminalPhase;
 var
     i, j: Integer;
@@ -1736,7 +1721,7 @@ var
     i, j, k: Integer;
 begin
     // IF a terminal is open, THEN standard load models don't apply, so check it out first
-    if (not DSS_CAPI_LOADS_TERMINAL_CHECK) OR AllTerminalsClosed then
+    if (not DSS_CAPI_LOADS_TERMINAL_CHECK) OR AllConductorsClosed() then
     begin
         // Now Get Injection Currents
         CalcLoadModelContribution
