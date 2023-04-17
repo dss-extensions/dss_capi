@@ -2275,9 +2275,9 @@ begin
                         for j := 1 to NumNodesThisBus do
                         begin
                             if ZMatrix then
-                                Z := Zsc.GetElement(i, j)
+                                Z := Zsc[i, j]
                             else
-                                Z := Ysc.GetElement(i, j);
+                                Z := Ysc[i, j];
                             DSS.GlobalResult := DSS.GlobalResult + Format('%-.5g, %-.5g,   ', [Z.re, Z.im]);
 
                         end;
@@ -2334,9 +2334,9 @@ begin
         // Cleanup
         Zsc012Temp.Free;
         // Just return diagonal elements only
-        Z0 := Zsc012.GetElement(1, 1);
-        Z1 := Zsc012.GetElement(2, 2);
-        Z2 := Zsc012.GetElement(3, 3);
+        Z0 := Zsc012[1, 1];
+        Z1 := Zsc012[2, 2];
+        Z2 := Zsc012[3, 3];
         DSS.GlobalResult := DSS.GlobalResult + Format('Z0, (%-.5g, +j %-.5g), ', [Z0.re, Z0.im]) + CRLF;
         DSS.GlobalResult := DSS.GlobalResult + Format('Z1, (%-.5g, +j %-.5g), ', [Z1.re, Z1.im]) + CRLF;
         DSS.GlobalResult := DSS.GlobalResult + Format('Z2, (%-.5g, +j %-.5g), ', [Z2.re, Z2.im]);

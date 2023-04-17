@@ -52,6 +52,8 @@ type
         function Kron(EliminationRow: Integer): TcMatrix;  // Perform Kron reduction on last row/col and return new matrix
 
         property Order: Integer READ Norder;
+
+        property GetSetElement[i, j: Integer]: Complex Read GetElement Write SetElement; Default; 
     end;
 
 implementation
@@ -434,10 +436,10 @@ begin
         for j := 1 to Norder do   // Column j
         begin
             for i := 1 to Norder do
-                cTemp2^[i] := B.GetElement(i, j); // Row i
+                cTemp2[i] := B[i, j]; // Row i
             MVmult(cTemp1, cTemp2);
             for i := 1 to Norder do
-                Result.SetElement(i, j, cTemp1^[i]);
+                Result[i, j] := cTemp1[i];
         end;
         Reallocmem(cTemp1, 0);    // Discard temp arrays
         Reallocmem(cTemp2, 0);

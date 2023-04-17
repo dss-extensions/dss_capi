@@ -154,7 +154,7 @@ begin
         begin
             Zspacing := Lfactor * ln(1.0 / Fradius^[i]);
         end;
-        Zmat.SetElement(i, i, Zi + Zspacing + Get_Ze(i, i, EarthModel));
+        Zmat[i, i] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
     end;
 
   // CN self impedances
@@ -167,7 +167,7 @@ begin
         Zspacing := Lfactor * ln(1.0 / GmrCN);
         Zi := cmplx(ResCN, 0.0);
         idxi := i + FNumConds;
-        Zmat.SetElement(idxi, idxi, Zi + Zspacing + Get_Ze(i, i, EarthModel));
+        Zmat[idxi, idxi] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
     end;
 
   // Mutual Impedances - between CN cores and bare neutrals
@@ -226,7 +226,7 @@ begin
         RadOut := 0.5 * FDiaIns^[i];
         RadIn := RadOut - FInsLayer^[i];
         Denom := ln(RadOut / RadIn);
-        FYCMatrix.SetElement(i, i, cmplx(0.0, Yfactor / Denom));
+        FYCMatrix[i, i] := cmplx(0.0, Yfactor / Denom);
     end;
 
     if ReducedSize > 0 then

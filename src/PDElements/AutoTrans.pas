@@ -1180,78 +1180,67 @@ begin
         ZBTemp.Invert;
 
         FSWriteln(F, 'ZB:');
-        with ZBTemp do
+        for i := 1 to NumWindings - 1 do
         begin
-            for i := 1 to NumWindings - 1 do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, format('%g ', [GetElement(i, j).re]));
-                FSWriteln(F);
-            end;
-            for i := 1 to NumWindings - 1 do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, format('%g ', [GetElement(i, j).im]));
-                FSWriteln(F);
-            end;
+            for j := 1 to i do
+                FSWrite(F, format('%g ', [ZBTemp[i, j].re]));
+            FSWriteln(F);
+        end;
+        for i := 1 to NumWindings - 1 do
+        begin
+            for j := 1 to i do
+                FSWrite(F, format('%g ', [ZBTemp[i, j].im]));
+            FSWriteln(F);
         end;
 
         ZBTemp.Free;
 
         FSWriteln(F);
         FSWriteln(F, 'ZB: (inverted)');
-        with ZB do
+        for i := 1 to NumWindings - 1 do
         begin
-            for i := 1 to NumWindings - 1 do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).re]));
-                FSWriteln(F);
-            end;
-            for i := 1 to NumWindings - 1 do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).im]));
-                FSWriteln(F);
-            end;
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [ZB[i, j].re]));
+            FSWriteln(F);
+        end;
+        for i := 1 to NumWindings - 1 do
+        begin
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [ZB[i, j].im]));
+            FSWriteln(F);
         end;
 
         FSWriteln(F);
         FSWriteln(F, 'Y_OneVolt');
-        with Y_1Volt do
+        for i := 1 to NumWindings do
         begin
-            for i := 1 to NumWindings do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).re]));
-                FSWriteln(F);
-                
-            end;
-            for i := 1 to NumWindings do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).im]));
-                FSWriteln(F);
-            end;
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [Y_1Volt[i, j].re]));
+            FSWriteln(F);
+            
+        end;
+        for i := 1 to NumWindings do
+        begin
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [Y_1Volt[i, j].im]));
+            FSWriteln(F);
         end;
 
         FSWriteln(F);
         FSWriteln(F, 'Y_Terminal');
-        with Y_Term do
+        for i := 1 to 2 * NumWindings do
         begin
-            for i := 1 to 2 * NumWindings do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).re]));
-                FSWriteln(F);
-            end;
-            for i := 1 to 2 * NumWindings do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).im]));
-                FSWriteln(F);
-            end;
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [Y_Term[i, j].re]));
+            FSWriteln(F);
         end;
+        for i := 1 to 2 * NumWindings do
+        begin
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [Y_Term[i, j].im]));
+            FSWriteln(F);
+        end;
+
         FSWriteln(F);
         FSWrite(F, 'TermRef= ');
         for i := 1 to 2 * NumWindings * Fnphases do
@@ -1671,10 +1660,10 @@ begin
         begin
             for j := 1 to i do
             begin
-                Value := Y_Terminal.GetElement(i, j);
+                Value := Y_Terminal[i, j];
         // This value goes in Yprim nphases times
                 for k := 0 to Fnphases - 1 do
-                    AddElemSym(TermRef^[i + k * NW2], TermRef^[j + k * NW2], Value);
+                    AddElemSym(TermRef[i + k * NW2], TermRef[j + k * NW2], Value);
             end;
         end;
     end;
@@ -1698,12 +1687,12 @@ begin
 
     for i := 1 to NumWindings do
     begin
-        yR := Cmplx(1.0 / (Winding^[i].Rdcohms), 0.0); // convert to Siemens
+        yR := 1.0 / (Winding[i].Rdcohms); // convert to Siemens
         with Y_Term do
         begin
             idx := 2 * i - 1;
-            SetElement(idx, idx, yR);
-            SetElement(idx + 1, idx + 1, yR);
+            Y_Term[idx, idx] := yR;
+            Y_Term[idx + 1, idx + 1] := yR;
             SetElemSym(idx, idx + 1, -yR);   // set off-diagonals
         end;
     end;
@@ -1715,9 +1704,9 @@ begin
         with Y_Term do
             for i := 1 to NumWindings do
             begin
-                Yadder := cmplx(-Winding^[i].Y_PPM, 0.0);    // G + j0
+                Yadder := -Winding[i].Y_PPM;    // G + j0
                 for j := (2 * i - 1) to (2 * i) do
-                    SetElement(j, j, GetElement(j, j) + Yadder);
+                    AddElement(j, j, Yadder);
                     // SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));
             end;
 end;
@@ -1769,9 +1758,9 @@ begin
         //             = Xhl*(Vs+Vc)*Vc/Vs^2 + Xht*(Vs+Vc)/Vs - Xlt*Vc/Vs
         if NumWindings > 2 then
         begin
-            Vc := Winding^[2].VBase;
-            Vs := Winding^[1].VBase;
-            puXst := puXSC^[1] * (Vs + Vc) * Vc / Vs / Vs + puXSC^[2] * (Vs + Vc) / Vs - puXSC^[3] * Vc / Vs;
+            Vc := Winding[2].VBase;
+            Vs := Winding[1].VBase;
+            puXst := puXSC[1] * (Vs + Vc) * Vc / Vs / Vs + puXSC[2] * (Vs + Vc) / Vs - puXSC[3] * Vc / Vs;
         end
         else
             puXst := 0.0;
@@ -1779,33 +1768,32 @@ begin
         for i := 1 to Numwindings - 1 do
         begin
             if i = 1 then
-                ZB.SetElement(i, i, Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i + 1].Rpu), Freqmult * puXSC^[i]) * ZCorrected)
+                ZB[i, i] := Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i + 1].Rpu), Freqmult * puXSC^[i]) * ZCorrected
             else
             if i = 2 then
-                ZB.SetElement(i, i, Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i + 1].Rpu), Freqmult * puXst) * Zbase)
+                ZB[i, i] := Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i + 1].Rpu), Freqmult * puXst) * Zbase
             else
-                ZB.SetElement(i, i, Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i + 1].Rpu), Freqmult * puXSC^[i]) * Zbase);
+                ZB[i, i] := Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i + 1].Rpu), Freqmult * puXSC^[i]) * Zbase;
         end;
 
         // Off diagonals
         k := NumWindings;
-        with ZB do
-            for  i := 1 to Numwindings - 1 do
+        for  i := 1 to Numwindings - 1 do
+        begin
+            for j := i + 1 to Numwindings - 1 do
             begin
-                for j := i + 1 to Numwindings - 1 do
-                begin
-                    SetElemSym(i, j,
-                        (
-                            GetElement(i, i) 
-                            + GetElement(j, j)
-                            - Cmplx(Rmult * (Winding^[i + 1].Rpu + Winding^[j + 1].Rpu), Freqmult * puXSC^[k]) * ZBase
-                        ) * 0.5
-                    );
-                    Inc(k);
-                end;
+                ZB.SetElemSym(i, j,
+                    (
+                        ZB[i, i]
+                        + ZB[j, j]
+                        - Cmplx(Rmult * (Winding^[i + 1].Rpu + Winding^[j + 1].Rpu), Freqmult * puXSC^[k]) * ZBase
+                    ) * 0.5
+                );
+                Inc(k);
             end;
+        end;
 
-        ZB.Invert;   // mhos on one volt base
+        ZB.Invert();   // mhos on one volt base
 
         if ZB.InvertError > 0 then
         begin
@@ -1814,7 +1802,7 @@ begin
                 _('Invalid impedance specified. Replaced with tiny conductance to ground.'), 117);
             ZB.Clear;
             for i := 1 to ZB.Order do
-                ZB.SetElement(i, i, Cmplx(EPSILON, 0.0));
+                ZB[i, i] := EPSILON;
         end;
 
         // Now construct Y_Oneturn = AT * ZB.Invert * A
@@ -1835,10 +1823,10 @@ begin
         A := AllocMem(SizeOf(Complex) * NumWindings * 2);
         AT := TcMatrix.Creatematrix(NumWindings);
         for i := 1 to NumWindings - 1 do
-            AT.SetElement(i + 1, i, 1);
+            AT[i + 1, i] := 1;
         for i := 1 to NumWindings - 1 do
-            AT.SetElement(1, i, -1);
-        ctemparray1^[NumWindings] := 0;
+            AT[1, i] := -1;
+        ctemparray1[NumWindings] := 0;
         for i := 1 to Numwindings do
         begin
             if i = 1 then
@@ -1853,7 +1841,7 @@ begin
             ZB.MVmult(ctemparray1, A); // Zb.invert * A
             AT.MVmult(ctempArray2, ctemparray1); // AT * Result
             for j := 1 to NumWindings do
-                Y_1Volt.SetElement(j, i, ctempArray2^[j]);
+                Y_1Volt[j, i] := ctempArray2[j];
         end;
 
         // Add magnetizing Reactance to 2nd winding, assuming it is closest to the core
@@ -1876,13 +1864,13 @@ begin
         // 8/22/2013 Added ZeroTapFix so that regcontrol can set a tap to zero
 
         for i := 1 to NumWindings do
-            with Winding^[i] do
-                AT.SetElement(2 * i - 1, i, Cmplx(1.0 / (VBase * ZeroTapFix(puTap)), 0.0));
+            with Winding[i] do
+                AT[2 * i - 1, i] := 1.0 / (VBase * ZeroTapFix(puTap));
         for i := 1 to NumWindings do
-            with Winding^[i] do
-                AT.SetElement(2 * i, i, Cmplx(-1.0 / (VBase * ZeroTapFix(puTap)), 0.0));
+            with Winding[i] do
+                AT[2 * i, i] := -1.0 / (VBase * ZeroTapFix(puTap));
         for i := 1 to 2 * Numwindings do
-            ctemparray1^[i] := 0;
+            ctemparray1[i] := 0;
 
         for i := 1 to 2 * Numwindings do
         begin
@@ -1890,23 +1878,23 @@ begin
                 with Winding^[k] do
                 begin
                     if i = (2 * k - 1) then
-                        A^[k] := Cmplx((1.0 / (VBase * ZeroTapFix(puTap))), 0.0)
+                        A[k] := 1.0 / (VBase * ZeroTapFix(puTap))
                     else
                     if i = 2 * k then
-                        A^[k] := Cmplx((-1.0 / (VBase * ZeroTapFix(puTap))), 0.0)
+                        A[k] := -1.0 / (VBase * ZeroTapFix(puTap))
                     else
-                        A^[k] := 0;
+                        A[k] := 0;
                 end;
             // Main AutoTrans part
             Y_1Volt.MVmult(ctemparray1, A);
             AT.MVmult(ctemparray2, ctemparray1);    // AT * Result
             for j := 1 to 2 * NumWindings do
-                Y_Term.SetElement(j, i, ctemparray2^[j]);
+                Y_Term[j, i] := ctemparray2[j];
             // No Load part
             Y_1Volt_NL.MVmult(ctemparray1, A);
             AT.MVmult(ctemparray2, ctemparray1);    // AT * Result
             for j := 1 to 2 * NumWindings do
-                Y_Term_NL.SetElement(j, i, ctemparray2^[j]);
+                Y_Term_NL[j, i] := ctemparray2[j];
         end;
 
         // Add a small Admittance to both conductors of each winding so that
@@ -1918,7 +1906,7 @@ begin
                 begin
                     Yadder := cmplx(0.0, Winding^[i].Y_PPM);
                     for j := (2 * i - 1) to (2 * i) do
-                        SetElement(j, j, GetElement(j, j) + Yadder);
+                        AddElement(j, j, Yadder);
                         // SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));
                 end;
 

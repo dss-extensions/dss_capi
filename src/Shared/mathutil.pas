@@ -242,8 +242,8 @@ begin
     begin
         for i := 1 to 3 do
             SetElemSym(1, i, 1);
-        SetElement(2, 2, aa);
-        SetElement(3, 3, aa);
+        Amat[2, 2] := aa;
+        Amat[3, 3] := aa;
         SetElemsym(2, 3, a);
     end;
 end;
@@ -260,8 +260,8 @@ begin
     begin
         for i := 1 to 3 do
             SetElemSym(1, i, one_3);
-        SetElement(2, 2, a_3);
-        SetElement(3, 3, a_3);
+        Amat_inv[2, 2] := a_3;
+        Amat_inv[3, 3] := a_3;
         SetElemsym(2, 3, aa_3);
     end;
 end;
@@ -277,8 +277,8 @@ begin
     begin
         for i := 1 to 3 do
             SetElemSym(1, i, 1);
-        SetElement(2, 2, aa);
-        SetElement(3, 3, aa);
+        Amat[2, 2] := aa;
+        Amat[3, 3] := aa;
         SetElemsym(2, 3, a);
     end;
 end;

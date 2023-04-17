@@ -1459,36 +1459,31 @@ procedure DumpComplexMatrix(DSS: TDSSContext; F: TFileStream; AMatrix: TcMatrix)
 var
     i, j: Integer;
 begin
+    if AMatrix = NIL then
+        Exit;
+
     try
-        if AMatrix <> NIL then
+        FSWriteln(F, '!(Real part)');
+        for i := 1 to AMatrix.Order do
         begin
-            FSWriteln(F, '!(Real part)');
-            with AMatrix do
-            begin
-                for i := 1 to Order do
-                begin
-                    FSWrite(F, '! ');
-                    for j := 1 to i do
-                        FSWrite(F, Format('%g ', [GetElement(i, j).re]));
-                    FSWriteln(F);
-                end;
-                FSWriteln(F, '!(Imaginary part) = ');
-                for i := 1 to Order do
-                begin
-                    FSWrite(F, '! ');
-                    for j := 1 to i do
-                        FSWrite(F, Format('%g ', [GetElement(i, j).im]));
-                    ;
-                    FSWriteln(F);
-                end;
-            end;
+            FSWrite(F, '! ');
+            for j := 1 to i do
+                FSWrite(F, Format('%g ', [AMatrix[i, j].re]));
+            FSWriteln(F);
+        end;
+        FSWriteln(F, '!(Imaginary part) = ');
+        for i := 1 to AMatrix.Order do
+        begin
+            FSWrite(F, '! ');
+            for j := 1 to i do
+                FSWrite(F, Format('%g ', [AMatrix[i, j].im]));
+            FSWriteln(F);
         end;
     except
         On E: Exception do
         begin
             DoSimpleMsg(DSS, 'Write aborted. Error in Dump Complex Matrix: %s', [E.message], 716);
         end;
-
     end;
 end;
 

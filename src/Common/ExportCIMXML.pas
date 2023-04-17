@@ -4454,9 +4454,9 @@ begin
                                     RefNode(EpPrf, 'PhaseImpedanceData.PhaseImpedance', pName1);
                                     IntegerNode(EpPrf, 'PhaseImpedanceData.row', i);
                                     IntegerNode(EpPrf, 'PhaseImpedanceData.column', j);
-                                    DoubleNode(EpPrf, 'PhaseImpedanceData.r', Z.GetElement(i, j).re / 1609.34);
-                                    DoubleNode(EpPrf, 'PhaseImpedanceData.x', Z.GetElement(i, j).im / 1609.34);
-                                    DoubleNode(EpPrf, 'PhaseImpedanceData.b', YC.GetElement(i, j).im / 1609.34);
+                                    DoubleNode(EpPrf, 'PhaseImpedanceData.r', Z[i, j].re / 1609.34);
+                                    DoubleNode(EpPrf, 'PhaseImpedanceData.x', Z[i, j].im / 1609.34);
+                                    DoubleNode(EpPrf, 'PhaseImpedanceData.b', YC[i, j].im / 1609.34);
                                     EndInstance(EpPrf, 'PhaseImpedanceData');
                                     inc(seq)
                                 end;
@@ -4605,9 +4605,9 @@ begin
                             RefNode(EpPrf, 'PhaseImpedanceData.PhaseImpedance', pLnCd);
                             IntegerNode(EpPrf, 'PhaseImpedanceData.row', i);
                             IntegerNode(EpPrf, 'PhaseImpedanceData.column', j);
-                            DoubleNode(EpPrf, 'PhaseImpedanceData.r', Z.GetElement(i, j).re * v1);
-                            DoubleNode(EpPrf, 'PhaseImpedanceData.x', Z.GetElement(i, j).im * v1);
-                            DoubleNode(EpPrf, 'PhaseImpedanceData.b', YC.GetElement(i, j).im * v1);
+                            DoubleNode(EpPrf, 'PhaseImpedanceData.r', Z[i, j].re * v1);
+                            DoubleNode(EpPrf, 'PhaseImpedanceData.x', Z[i, j].im * v1);
+                            DoubleNode(EpPrf, 'PhaseImpedanceData.b', YC[i, j].im * v1);
                             EndInstance(EpPrf, 'PhaseImpedanceData');
                             inc(seq)
                         end;

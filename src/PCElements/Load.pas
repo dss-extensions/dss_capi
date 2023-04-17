@@ -1069,7 +1069,7 @@ begin
         begin // WYE
             for i := 1 to Fnphases do
             begin
-                Ymatrix.SetElement(i, i, Y);
+                Ymatrix[i, i] := Y;
                 Ymatrix.AddElement(Fnconds, Fnconds, Y);
                 Ymatrix.SetElemsym(i, Fnconds, Yij);
             end;
@@ -1078,7 +1078,7 @@ begin
             // If neutral is floating, make sure there is some small
             // connection to ground  by increasing the last diagonal slightly
             if Rneut < 0.0 then
-                Ymatrix.SetElement(Fnconds, Fnconds, Ymatrix.GetElement(Fnconds, Fnconds) * 1.000001)
+                Ymatrix[Fnconds, Fnconds] := Ymatrix[Fnconds, Fnconds] * 1.000001
         end;
         TLoadConnection.Delta:
         begin  // Delta  or L-L
@@ -1139,7 +1139,7 @@ begin
 
      // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
     for i := 1 to Yorder do
-        Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
+        Yprim_Series[i, i] := Yprim_Shunt[i, i] * 1.0e-10;
 
     YPrim.CopyFrom(YPrim_Shunt);
 
@@ -1759,7 +1759,7 @@ begin
                         begin
                             ZeroRow(j + k);
                             ZeroCol(j + k);
-                            SetElement(j + k, j + k, Cmplx(1.0e-12, 0.0));  // In case node gets isolated
+                            YPrimOpenCond[j + k, j + k] := 1.0e-12;  // In case node gets isolated
                         end;
                     end;
                     k := k + Fnconds;
@@ -1772,7 +1772,7 @@ begin
         ComputeVTerminal;
         YPrimOpenCond.MVmult(ComplexBuffer, Vterminal);
         for i := 1 to Yorder do
-            ComplexBuffer^[i] := -ComplexBuffer^[i];
+            ComplexBuffer[i] := -ComplexBuffer[i];
     end;
 end;
 

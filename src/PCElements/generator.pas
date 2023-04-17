@@ -1193,13 +1193,13 @@ begin
                 case Connection of
                     0:
                     begin
-                        Ymatrix.SetElement(i, i, Y);
+                        Ymatrix[i, i] := Y;
                         Ymatrix.AddElement(Fnconds, Fnconds, Y);
                         Ymatrix.SetElemsym(i, Fnconds, Yij);
                     end;
                     1:
                     begin   {Delta connection}
-                        Ymatrix.SetElement(i, i, Y);
+                        Ymatrix[i, i] := Y;
                         Ymatrix.AddElement(i, i, Y);  // put it in again
                         for j := 1 to i - 1 do
                             Ymatrix.SetElemsym(i, j, Yij);
@@ -1237,7 +1237,7 @@ begin
                         Yij := -Y;
                         for i := 1 to Fnphases do
                         begin
-                            SetElement(i, i, Y);
+                            YMatrix[i, i] := Y;
                             AddElement(Fnconds, Fnconds, Y);
                             SetElemsym(i, Fnconds, Yij);
                         end;
@@ -1301,7 +1301,7 @@ begin
 
     // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
     for i := 1 to Yorder do
-        Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
+        Yprim_Series[i, i] := Yprim_Shunt[i, i] * 1.0e-10;
 
     YPrim.CopyFrom(YPrim_Shunt);
 

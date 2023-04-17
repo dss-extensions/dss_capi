@@ -463,10 +463,7 @@ begin
 
     with YPrimTemp do
     begin
-    { Now, Put in Yprim matrix }
-
-    {If the fault is not ON, the set zero conductance}
-
+        // Now, Put in Yprim matrix
         case SpecType of
 
             SPEC_GSU:
@@ -475,10 +472,10 @@ begin
                 Value2 := -Value;
                 for i := 1 to Fnphases do
                 begin
-                    SetElement(i, i, Value);     // Elements are only on the diagonals
-                    SetElement(i + Fnphases, i + Fnphases, Value);
+                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
                     SetElemSym(i, i + Fnphases, Value2);
-                end;  {For}
+                end;
             end;
 
             SPEC_AUTO:
@@ -488,19 +485,19 @@ begin
                 Value2 := -Value;
                 for i := 1 to Fnphases do
                 begin
-                    SetElement(i, i, Value);     // Elements are only on the diagonals
-                    SetElement(i + Fnphases, i + Fnphases, Value);
+                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
                     SetElemSym(i, i + Fnphases, Value2);
-                end;  {For}
+                end;
                 // Terminals 3 and 4
                 Value := Cmplx(G2, 0.0);
                 Value2 := -Value;
                 for i := (2 * Fnphases + 1) to 3 * Fnphases do
                 begin
-                    SetElement(i, i, Value);     // Elements are only on the diagonals
-                    SetElement(i + Fnphases, i + Fnphases, Value);
+                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
                     SetElemSym(i, i + Fnphases, Value2);
-                end;  {For}
+                end;
             end;
 
             SPEC_YY:
@@ -510,24 +507,24 @@ begin
                 Value2 := -Value;
                 for i := 1 to Fnphases do
                 begin
-                    SetElement(i, i, Value);     // Elements are only on the diagonals
-                    SetElement(i + Fnphases, i + Fnphases, Value);
+                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
                     SetElemSym(i, i + Fnphases, Value2);
-                end;  {For}
+                end;
                 // Terminals 3 and 4
                 Value := Cmplx(G2, 0.0);
                 Value2 := -Value;
                 for i := (2 * Fnphases + 1) to 3 * Fnphases do
                 begin
-                    SetElement(i, i, Value);     // Elements are only on the diagonals
-                    SetElement(i + Fnphases, i + Fnphases, Value);
+                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
                     SetElemSym(i, i + Fnphases, Value2);
-                end;  {For}
+                end;
             end;
 
         end;
 
-    end; {With YPRIM}
+    end; // With YPRIM
 
     YPrim.CopyFrom(YPrimTemp);
 

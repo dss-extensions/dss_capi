@@ -206,7 +206,7 @@ begin
     for i := 1 to mat.Order do
         for j := 1 to mat.Order do
         begin
-            Result[k] := mat.GetElement(i, j).im / Factor;
+            Result[k] := mat[i, j].im / Factor;
             Inc(k);
         end;
 end;
@@ -237,7 +237,7 @@ begin
     for i := 1 to mat.Order do
         for j := 1 to mat.Order do
         begin
-            Result[k] := mat.GetElement(i, j).re;
+            Result[k] := mat[i, j].re;
             Inc(k);
         end;
 end;
@@ -268,7 +268,7 @@ begin
     for i := 1 to mat.Order do
         for j := 1 to mat.Order do
         begin
-            Result[k] := mat.GetElement(i, j).im;
+            Result[k] := mat[i, j].im;
             Inc(k);
         end;
 end;

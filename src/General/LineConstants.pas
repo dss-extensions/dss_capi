@@ -204,7 +204,7 @@ begin
             Zspacing := Lfactor * ln(1.0 / Fradius^[i]);
         end;
 
-        FZmatrix.SetElement(i, i, Zi + Zspacing + Get_Ze(i, i, EarthModel));
+        FZmatrix[i, i] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
 
     end;
 
@@ -231,9 +231,9 @@ begin
     for i := 1 to FnumConds do
     begin
         if Fcapradius^[i] < 0 then
-            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * Fy^[i] / Fradius^[i])))
+            FYCMatrix[i, i] := cmplx(0.0, pfactor * ln(2.0 * Fy^[i] / Fradius^[i]))
         else
-            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * Fy^[i] / Fcapradius^[i])));
+            FYCMatrix[i, i] := cmplx(0.0, pfactor * ln(2.0 * Fy^[i] / Fcapradius^[i]));
     end;
 
     for i := 1 to FNumConds do
@@ -565,7 +565,7 @@ begin
         FYCreduced := TCmatrix.CreateMatrix(Norder);
         for i := 1 to Norder do
             for j := 1 to Norder do
-                FYCreduced.SetElement(i, j, FYCmatrix.GetElement(i, j));
+                FYCreduced[i, j] := FYCmatrix[i, j];
 
         // Left with reduced matrix
     end;

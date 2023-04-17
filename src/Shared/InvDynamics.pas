@@ -274,7 +274,7 @@ begin
 
     for i := 1 to NPhases do
     begin
-        Z.SetElement(i, i, Zs);
+        Z[i, i] := Zs;
         for j := 1 to i - 1 do
         begin
             Z.SetElemsym(i, j, Zm);

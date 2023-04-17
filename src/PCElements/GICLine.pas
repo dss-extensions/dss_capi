@@ -357,7 +357,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        Z.SetElement(i, i, Zs);
+        Z[i, i] := Zs;
         for j := 1 to i - 1 do
         begin
             Z.SetElemsym(i, j, Zm);
@@ -403,9 +403,9 @@ begin
     begin
         for j := 1 to Fnphases do
         begin
-            Value := Z.GetElement(i, j);
+            Value := Z[i, j];
             Value.im := Value.im * FreqMultiplier;  {Modify from base freq}
-            Zinv.SetElement(i, j, value);
+            Zinv[i, j] := value;
         end;
     end;
 
@@ -416,7 +416,7 @@ begin
             Zinv.AddElement(i, i, Cmplx(0.0, Xc));
     end;
 
-    Zinv.Invert;  {Invert in place}
+    Zinv.Invert();  {Invert in place}
 
     if Zinv.InvertError > 0 then
     begin       {If error, put in Large series conductance}
@@ -425,7 +425,7 @@ begin
             _('Invalid impedance specified. Replaced with small resistance.'), 325);
         Zinv.Clear;
         for i := 1 to Fnphases do
-            Zinv.SetElement(i, i, Cmplx(1.0 / EPSILON, 0.0));
+            Zinv[i, i] := 1.0 / EPSILON;
     end;
 
    // YPrim_Series.CopyFrom(Zinv);
@@ -434,9 +434,9 @@ begin
     begin
         for j := 1 to FNPhases do
         begin
-            Value := Zinv.GetElement(i, j);
-            YPrim_series.SetElement(i, j, Value);
-            YPrim_series.SetElement(i + FNPhases, j + FNPhases, Value);
+            Value := Zinv[i, j];
+            YPrim_series[i, j] := Value;
+            YPrim_series[i + FNPhases, j + FNPhases] := Value;
             YPrim_series.SetElemsym(i + FNPhases, j, -Value)
         end;
     end;
@@ -585,7 +585,7 @@ begin
         begin
             for j := 1 to i do
             begin
-                c := Z.GetElement(i, j);
+                c := Z[i, j];
                 FSWrite(F, Format('%.8g +j %.8g ', [C.re, C.im]));
             end;
             FSWriteln(F);

@@ -751,14 +751,14 @@ begin
                 case Connection of
                     0:
                     begin
-                        Ymatrix.SetElement(i, i, Y);  // sets the element
+                        Ymatrix[i, i] := Y;  // sets the element
                         // Ymatrix.AddElement(Fnconds, Fnconds, Y);  // sums the element
                         // Ymatrix.SetElemsym(i, Fnconds, Yij);
                     end;
                     1:
                     begin   {Delta connection}
                         Yadder := Y * 1.000001;  // to prevent floating delta
-                        Ymatrix.SetElement(i, i, Y + Yadder);   // add a little bit to diagonal
+                        Ymatrix[i, i] := Y + Yadder;   // add a little bit to diagonal //TODO: check
                         Ymatrix.AddElement(i, i, Y);  // put it in again
                         for j := 1 to i - 1 do
                             Ymatrix.SetElemsym(i, j, Yij);
@@ -781,11 +781,10 @@ begin
             case Connection of
 
                 0:
-                    with YMatrix do
                     begin // WYE
                         for i := 1 to Fnphases do
                         begin
-                            SetElement(i, i, Y);
+                            YMatrix[i, i] := Y;
                             {
                             AddElement(Fnconds, Fnconds, Y);
                             SetElemsym(i, Fnconds, Yij);
@@ -875,7 +874,7 @@ begin
      // so that CalcVoltages doesn't fail
      // This is just one of a number of possible strategies but seems to work most of the time
     for i := 1 to Yorder do
-        Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
+        Yprim_Series[i, i] := Yprim_Shunt[i, i] * 1.0e-10;
 
      // copy YPrim_shunt into YPrim; That's all that is needed for most PC Elements
     YPrim.CopyFrom(YPrim_Shunt);
@@ -898,7 +897,7 @@ begin
     IterminalUpdated := TRUE;
 
     for i := 1 to FNphases do
-        InjCurrent^[i] -= Iterminal^[i];
+        InjCurrent[i] -= Iterminal[i];
     if (DebugTrace) then
         WriteTraceRecord;
 end;

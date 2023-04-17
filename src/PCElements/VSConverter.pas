@@ -350,8 +350,8 @@ begin
     begin
         for i := 1 to (Fnphases - Ndc) do
         begin
-            SetElement(i, i, Value);
-            SetElement(i + Fnphases, i + Fnphases, Value);
+            YPrim_Series[i, i] := Value;
+            YPrim_Series[i + Fnphases, i + Fnphases] := Value;
             SetElemSym(i, i + Fnphases, Value2);
         end;
     end;

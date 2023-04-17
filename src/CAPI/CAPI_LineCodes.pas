@@ -334,7 +334,7 @@ begin
         for i := 1 to FNPhases do
             for j := 1 to FNphases do
             begin
-                Result[k] := YC.GetElement(i, j).im / Factor;
+                Result[k] := YC[i, j].im / Factor;
                 Inc(k);
             end;
     end;
@@ -367,7 +367,7 @@ begin
         for i := 1 to FNPhases do
             for j := 1 to FNphases do
             begin
-                Result[k] := Z.GetElement(i, j).re;
+                Result[k] := Z[i, j].re;
                 Inc(k);
             end;
     end;
@@ -400,7 +400,7 @@ begin
         for i := 1 to FNPhases do
             for j := 1 to FNphases do
             begin
-                Result[k] := Z.GetElement(i, j).im;
+                Result[k] := Z[i, j].im;
                 Inc(k);
             end;
     end;
@@ -441,7 +441,7 @@ begin
         for i := 1 to FNPhases do
             for j := 1 to FNphases do
             begin
-                Yc.SetElement(i, j, Cmplx(0.0, Value[k] * Factor));
+                Yc[i, j] := Cmplx(0.0, Value[k] * Factor);
                 Inc(k);
             end;
     end;
@@ -475,8 +475,8 @@ begin
         for i := 1 to FNPhases do
             for j := 1 to FNphases do
             begin
-                ZTemp := Z.GetElement(i, j);
-                Z.SetElement(i, j, Cmplx(Value[k], ZTemp.im));
+                ZTemp := Z[i, j];
+                Z[i, j] := Cmplx(Value[k], ZTemp.im);
                 Inc(k);
             end;
     end;
@@ -510,8 +510,8 @@ begin
         for i := 1 to FNPhases do
             for j := 1 to FNphases do
             begin
-                ZTemp := Z.GetElement(i, j);
-                Z.SetElement(i, j, Cmplx(ZTemp.re, Value[k]));
+                ZTemp := Z[i, j];
+                Z[i, j] := Cmplx(ZTemp.re, Value[k]);
                 Inc(k);
             end;
     end;

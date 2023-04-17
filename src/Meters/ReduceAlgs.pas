@@ -136,9 +136,9 @@ begin
         with LineElement do
         begin
             if NPhases > 1 then
-                Ztest := Cabs(Z.Getelement(1, 1) - Z.GetElement(1, 2)) * Len
+                Ztest := Cabs(Z[1, 1] - Z[1, 2]) * Len
             else
-                Ztest := Cabs(Z.Getelement(1, 1)) * Len;
+                Ztest := Cabs(Z[1, 1]) * Len;
         end;
 
     if Ztest <= DSS.ActiveCircuit.ReductionZmag then

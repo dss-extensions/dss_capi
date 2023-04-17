@@ -209,7 +209,7 @@ begin
                     jnode := NodeRef[j];
                     if jnode = 0 then continue;
                     
-                    val := IncrYprim.GetElement(i, j);
+                    val := IncrYprim[i, j];
                     if (val.re <> 0) or (val.im <> 0) then
                     begin
                         changedNodes.Insert(inode);
@@ -269,7 +269,7 @@ begin
                 if (changedElements.Find((QWord(inode) shl 32) or (QWord(jnode))) = nil) then
                     continue;
 
-                val := Yprim.GetElement(i, j);
+                val := Yprim[i, j];
                 if (val.re = 0) and (val.im = 0) then continue;
 
                 if IncrementMatrixElement(Ckt.Solution.hYsystem, inode, jnode, val.re, val.im) = 0 then

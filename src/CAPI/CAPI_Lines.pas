@@ -384,9 +384,9 @@ begin
             for j := 1 to Nphases do
             begin
                 if GeometrySpecified Or SpacingSpecified then  
-                    Result[k] := Yc.GetElement(i, j).im / Factor / Len
+                    Result[k] := Yc[i, j].im / Factor / Len
                 else 
-                    Result[k] := Yc.GetElement(i, j).im / Factor;
+                    Result[k] := Yc[i, j].im / Factor;
 
                 Inc(k);
             end;
@@ -429,9 +429,9 @@ begin
             for j := 1 to Nphases do
             begin
                 if GeometrySpecified Or SpacingSpecified then
-                    Result[k] := Z.GetElement(i, j).Re / Len
+                    Result[k] := Z[i, j].Re / Len
                 else 
-                    Result[k] := Z.GetElement(i, j).Re / UnitsConvert;
+                    Result[k] := Z[i, j].Re / UnitsConvert;
 
                 Inc(k);
             end;
@@ -474,9 +474,9 @@ begin
             for j := 1 to Nphases do
             begin
                 if GeometrySpecified Or SpacingSpecified then
-                    Result[k] := Z.GetElement(i, j).im / Len
+                    Result[k] := Z[i, j].im / Len
                 else
-                    Result[k] := Z.GetElement(i, j).im / UnitsConvert;
+                    Result[k] := Z[i, j].im / UnitsConvert;
 
                 Inc(k);
             end;
@@ -543,7 +543,7 @@ begin
         for i := 1 to NPhases do
             for j := 1 to Nphases do
             begin
-                Yc.SetElement(i, j, Cmplx(0.0, Value[k] * Factor));
+                Yc[i, j] := Cmplx(0.0, Value[k] * Factor);
                 Inc(k);
             end;
         YprimInvalid := TRUE;
@@ -589,8 +589,8 @@ begin
         for i := 1 to NPhases do
             for j := 1 to Nphases do
             begin
-                ZTemp := Z.GetElement(i, j);
-                Z.SetElement(i, j, Cmplx(Value[k], ZTemp.im));
+                ZTemp := Z[i, j];
+                Z[i, j] := Cmplx(Value[k], ZTemp.im);
                 Inc(k);
             end;
         YprimInvalid := TRUE;
@@ -636,8 +636,8 @@ begin
         for i := 1 to NPhases do
             for j := 1 to Nphases do
             begin
-                ZTemp := Z.GetElement(i, j);
-                Z.SetElement(i, j, Cmplx(Ztemp.re, Value[k]));
+                ZTemp := Z[i, j];
+                Z[i, j] := Cmplx(Ztemp.re, Value[k]);
                 Inc(k);
             end;
         YprimInvalid := TRUE;

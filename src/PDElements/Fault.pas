@@ -415,14 +415,14 @@ begin
             1:
             begin
                 if Is_ON then
-                    Value := Cmplx(G / RandomMult, 0.0)
+                    Value := G / RandomMult
                 else
                     Value := 0;
                 Value2 := -Value;
                 for i := 1 to Fnphases do
                 begin
-                    SetElement(i, i, Value);     // Elements are only on the diagonals
-                    SetElement(i + Fnphases, i + Fnphases, Value);
+                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
                     SetElemSym(i, i + Fnphases, Value2);
                 end;
             end;
@@ -437,8 +437,8 @@ begin
                             Value := Cmplx(Gmatrix^[(iOffset + j)] / RandomMult, 0.0)
                         else
                             Value := 0;
-                        SetElement(i, j, Value);
-                        SetElement(i + Fnphases, j + Fnphases, Value);
+                        YPrimTemp[i, j] := Value;
+                        YPrimTemp[i + Fnphases, j + Fnphases] := Value;
                         Value := -Value;
                         SetElemSym(i, j + Fnphases, Value);
                     end;

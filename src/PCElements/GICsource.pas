@@ -336,8 +336,8 @@ begin
     with YPrim_Series do
         for i := 1 to Fnphases do
         begin
-            SetElement(i, i, Value);
-            SetElement(i + Fnphases, i + Fnphases, Value);
+            YPrim_Series[i, i] := Value;
+            YPrim_Series[i + Fnphases, i + Fnphases] := Value;
             SetElemSym(i, i + Fnphases, NegValue);
         end;
 

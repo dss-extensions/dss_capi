@@ -654,7 +654,7 @@ begin
    // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
     if IsShunt then
         for i := 1 to Yorder do
-            Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
+            Yprim_Series[i, i] := Yprim_Shunt[i, i] * 1.0e-10;
 
 
     Yprim.Copyfrom(YPrimTemp);
@@ -860,7 +860,7 @@ begin
                         Value := -Value;
                         for i := 1 to Fnphases do
                         begin
-                            SetElement(i, i, Value2);
+                            YprimWork[i, i] := Value2;
                             for j := 1 to i - 1 do
                                 SetElemSym(i, j, Value);
                         end;
@@ -873,8 +873,8 @@ begin
                     Value2 := -Value;
                     for i := 1 to Fnphases do
                     begin
-                        SetElement(i, i, Value);     // Elements are only on the diagonals
-                        SetElement(i + Fnphases, i + Fnphases, Value);
+                        YprimWork[i, i] := Value;     // Elements are only on the diagonals
+                        YprimWork[i + Fnphases, i + Fnphases] := Value;
                         SetElemSym(i, i + Fnphases, Value2);
                     end;
                 end;
@@ -888,8 +888,8 @@ begin
                     for j := 1 to Fnphases do
                     begin
                         Value := Cmplx(0.0, Cmatrix^[(iOffset + j)] * w);
-                        SetElement(i, j, Value);
-                        SetElement(i + Fnphases, j + Fnphases, Value);
+                        YprimWork[i, j] := Value;
+                        YprimWork[i + Fnphases, j + Fnphases] := Value;
                         Value := -Value;
                         SetElemSym(i, j + Fnphases, Value);
                     end;
@@ -908,15 +908,15 @@ begin
                             // Add a little bit to each phase so it will invert
                             for i := 1 to Fnphases do
                             begin
-                                SetElement(i, i, GetElement(i, i) * 1.000001);
+                                YprimWork[i, i] := YprimWork[i, i] * 1.000001;
                             end;
-                            Invert;
+                            Invert();
                             for i := 1 to Fnphases do
                             begin
-                                Value := ZL + GetElement(i, i);
-                                SetElement(i, i, Value);
+                                Value := ZL + YprimWork[i, i];
+                                YprimWork[i, i] := Value;
                             end;
-                            Invert;
+                            Invert();
                         end;
                     else // WYE - just put ZL in series
                         // DO Nothing; Already in - see above
@@ -927,10 +927,10 @@ begin
                     Invert;
                     for i := 1 to Fnphases do
                     begin
-                        Value := ZL + GetElement(i, i);
-                        SetElement(i, i, Value);
+                        Value := ZL + YprimWork[i, i];
+                        YprimWork[i, i]:= Value;
                     end;
-                    Invert;
+                    Invert();
                 end;
             end;
 

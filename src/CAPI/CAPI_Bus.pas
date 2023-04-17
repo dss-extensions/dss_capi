@@ -501,7 +501,7 @@ begin
                     for i := 1 to Nelements do
                         for j := 1 to Nelements do
                         begin
-                            Z := Zsc.GetElement(i, j);
+                            Z := Zsc[i, j];
                             Result[iV] := Z.Re;
                             Inc(iV);
                             Result[iV] := Z.Im;
@@ -554,7 +554,7 @@ begin
                     for i := 1 to Nelements do
                         for j := 1 to Nelements do
                         begin
-                            Y1 := Ysc.GetElement(i, j);
+                            Y1 := Ysc[i, j];
                             Result[iV] := Y1.Re;
                             Inc(iV);
                             Result[iV] := Y1.Im;

@@ -901,8 +901,8 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        Z.SetElement(i, i, Zs);
-        Yc.SetElement(i, i, Ys);
+        Z[i, i] := Zs;
+        Yc[i, i] := Ys;
         for j := 1 to i - 1 do
         begin
             Z.SetElemsym(i, j, Zm);
@@ -1032,8 +1032,8 @@ begin
 
                 for i := 1 to Fnphases do
                 begin
-                    Z.SetElement(i, i, Zs);
-                    Yc.SetElement(i, i, Ys);
+                    Z[i, i] := Zs;
+                    Yc[i, i] := Ys;
                     for j := 1 to i - 1 do
                     begin
                         Z.SetElemsym(i, j, Zm);
@@ -1094,7 +1094,7 @@ begin
                 _('Invalid impedance specified. Replaced with tiny conductance.'), 183);
             Zinv.Clear;
             for i := 1 to Fnphases do
-                Zinv.SetElement(i, i, Cmplx(epsilon, 0.0));
+                Zinv[i, i] := epsilon;
         end
         else
             // Now, Put in Yprim_Series matrix 
@@ -1102,9 +1102,9 @@ begin
             begin
                 for j := 1 to Fnphases do
                 begin
-                    Value := Zinv.GetElement(i, j);
-                    SetElement(i, j, Value);
-                    SetElement(i + Fnphases, j + Fnphases, Value);
+                    Value := Zinv[i, j];
+                    YPrim_Series[i, j] := Value;
+                    YPrim_Series[i + Fnphases, j + Fnphases] := Value;
                     Value := -Value;
                     SetElemSym(i, j + Fnphases, Value);
                 end;
@@ -1236,7 +1236,7 @@ begin
         begin
             for j := 1 to Fnphases do
             begin
-                FSWrite(F, Format('%.9f ', [(Z.GetElement(i, j).re / LengthMult / FunitsConvert)]));
+                FSWrite(F, Format('%.9f ', [(Z[i, j].re / LengthMult / FunitsConvert)]));
             end;
             FSWrite(F, '|');
         end;
@@ -1246,7 +1246,7 @@ begin
         begin
             for j := 1 to Fnphases do
             begin
-                FSWrite(F, Format('%.9f ', [(Z.GetElement(i, j).im / LengthMult / FunitsConvert)]));
+                FSWrite(F, Format('%.9f ', [(Z[i, j].im / LengthMult / FunitsConvert)]));
             end;
             FSWrite(F, '|');
         end;
@@ -1256,7 +1256,7 @@ begin
         begin
             for j := 1 to Fnphases do
             begin
-                FSWrite(F, Format('%.3f ', [(Yc.GetElement(i, j).im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9)]));
+                FSWrite(F, Format('%.3f ', [(Yc[i, j].im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9)]));
             end;
             FSWrite(F, '|');
         end;
@@ -1368,13 +1368,13 @@ begin
                 // average the diagonal and off-dialgonal elements
                 Zs := 0;
                 for i := 1 to FnPhases do
-                    Zs += Z.GetElement(i, i);
+                    Zs += Z[i, i];
                 Zs := Zs / (Fnphases * LengthMult);
                 Zm := 0;
                 for i := 1 to FnPhases - 1 do     // Corrected 6-21-04
                 begin
                     for j := i + 1 to FnPhases do
-                        Zm += Z.GetElement(i, j);
+                        Zm += Z[i, j];
                 end;
                 Zm := Zm / (LengthMult * Fnphases * (FnPhases - 1.0) / 2.0);
                 Z1 := Zs - Zm;
@@ -1382,11 +1382,11 @@ begin
                 // Do same for Capacitances
                 Cs := 0.0;
                 for i := 1 to FnPhases do
-                    Cs := Cs + Yc.GetElement(i, i).im;
+                    Cs := Cs + Yc[i, i].im;
                 Cm := 0.0;
                 for i := 1 to FnPhases - 1 do    // corrected 4-9-2020
                     for j := i + 1 to FnPhases do
-                        Cm := Cm + Yc.GetElement(i, j).im;
+                        Cm := Cm + Yc[i, j].im;
                 C1_new := (Cs - Cm) / TwoPi / BaseFrequency / (LengthMult * Fnphases * (FnPhases - 1.0) / 2.0) * 1.0e9; // nanofarads
 
                 // compensate for length units
@@ -1832,7 +1832,7 @@ begin
 
     Zinv.Clear;
     for i := 1 to Zinv.order do
-        Zinv.SetElement(i, i, Z1);   // Set Diagonals
+        Zinv[i, i] := Z1;   // Set Diagonals
 
     Zinv.Invert;  // back to zinv for inserting in Yprim
 

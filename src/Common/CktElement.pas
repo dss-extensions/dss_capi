@@ -975,7 +975,7 @@ begin
             begin
                 FSWrite(F, '! ');
                 for j := 1 to Yorder do
-                    FSWrite(F, Format(' %13.10g |', [YPrim.GetElement(i, j).re]));
+                    FSWrite(F, Format(' %13.10g |', [YPrim[i, j].re]));
                 FSWriteln(F);
             end;
             FSWriteln(F, '! YPrim (B Matrix) = ');
@@ -983,7 +983,7 @@ begin
             begin
                 FSWrite(F, '! ');
                 for j := 1 to Yorder do
-                    FSWrite(F, Format(' %13.10g |', [YPrim.GetElement(i, j).im]));
+                    FSWrite(F, Format(' %13.10g |', [YPrim[i, j].im]));
                 FSWriteln(F);
             end;
         end;
@@ -1017,7 +1017,7 @@ begin
                     end;
                 // First do Kron Reduction
                     ElimRow := j + k;
-                    Ynn := GetElement(ElimRow, ElimRow);
+                    Ynn := Ymatrix[ElimRow, ElimRow];
                     if Cabs(Ynn) = 0.0 then
                         Ynn.re := EPSILON;
                     RowEliminated^[ElimRow] := 1;
@@ -1025,12 +1025,12 @@ begin
                     begin
                         if RowEliminated^[ii] = 0 then
                         begin
-                            Yin := GetElement(ii, ElimRow);
+                            Yin := Ymatrix[ii, ElimRow];
                             for jj := ii to Yorder do
                                 if RowEliminated^[jj] = 0 then
                                 begin
-                                    Yij := GetElement(ii, jj);
-                                    Ynj := GetElement(ElimRow, jj);
+                                    Yij := Ymatrix[ii, jj];
+                                    Ynj := Ymatrix[ElimRow, jj];
                                     SetElemSym(ii, jj, Yij - ((Yin * Ynj) / Ynn));
                                 end;
                         end;
@@ -1039,7 +1039,7 @@ begin
                     ZeroRow(ElimRow);
                     ZeroCol(ElimRow);
                     // put a small amount on the diagonal in case node gets isolated
-                    SetElement(ElimRow, ElimRow, cEpsilon);
+                    Ymatrix[ElimRow, ElimRow] := cEpsilon;
                 end;
             end;
             k := k + Fnconds;

@@ -78,7 +78,7 @@ begin
         FYCreduced := TCmatrix.CreateMatrix(Norder);
         for i := 1 to Norder do
             for j := 1 to Norder do
-                FYCreduced.SetElement(i, j, FYCmatrix.GetElement(i, j));
+                FYCreduced[i, j] := FYCmatrix[i, j];
     end;
 end;
 

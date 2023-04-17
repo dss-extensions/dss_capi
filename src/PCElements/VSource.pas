@@ -656,7 +656,7 @@ begin
 
         for i := 1 to Fnphases do
         begin
-            Z.SetElement(i, i, Zs);
+            Z[i, i] := Zs;
             for j := 1 to i - 1 do
             begin
                 Z.SetElemsym(i, j, Zm);
@@ -674,7 +674,7 @@ begin
         Value := Z2 + Z1 + Z0;
         Value := Value / 3.0;
         for i := 1 to Fnphases do
-            Z.SetElement(i, i, Value);
+            Z[i, i] := Value;
 
         // Off-Diagonals
         if FnPhases = 3 then     // otherwise undefined
@@ -691,17 +691,14 @@ begin
              // Apply 1/3 ...
             Value1 := Value1 / 3.0;
             Value2 := Value2 / 3.0;
-            with Z do
-            begin
-                //Lower Triangle
-                SetElement(2, 1, Value1);
-                SetElement(3, 1, Value2);
-                SetElement(3, 2, Value1);
-                //Upper Triangle
-                SetElement(1, 2, Value2);
-                SetElement(1, 3, Value1);
-                SetElement(2, 3, Value2);
-            end;
+            //Lower Triangle
+            Z[2, 1] := Value1;
+            Z[3, 1] := Value2;
+            Z[3, 2] := Value1;
+            //Upper Triangle
+            Z[1, 2] := Value2;
+            Z[1, 3] := Value1;
+            Z[2, 3] := Value2;
 
         end;
 
@@ -763,7 +760,7 @@ begin
             Zinv.Clear;
             Value := puZIdeal * Zbase;  // convert to ohms
             for i := 1 to Fnphases do
-                Zinv.SetElement(i, i, value);
+                Zinv[i, i] := value;
         end
 
         else
@@ -774,9 +771,9 @@ begin
             begin
                 for j := 1 to Fnphases do
                 begin
-                    Value := Z.GetElement(i, j);
+                    Value := Z[i, j];
                     Value.im := Value.im * FreqMultiplier; // Modify from base freq
-                    Zinv.SetElement(i, j, value);
+                    Zinv[i, j] := value;
                 end;
             end;
     end;
@@ -791,7 +788,7 @@ begin
             _('Invalid impedance specified. Replaced with small resistance.'), 325);
         Zinv.Clear;
         for i := 1 to Fnphases do
-            Zinv.SetElement(i, i, Cmplx(1.0 / EPSILON, 0.0));
+            Zinv[i, i] := 1.0 / EPSILON;
     end;
 
     // YPrim_Series.CopyFrom(Zinv);
@@ -800,12 +797,12 @@ begin
     begin
         for j := 1 to FNPhases do
         begin
-            Value := Zinv.GetElement(i, j);
-            YPrim_series.SetElement(i, j, Value);
-            YPrim_series.SetElement(i + FNPhases, j + FNPhases, Value);
+            Value := Zinv[i, j];
+            YPrim_series[i, j] := Value;
+            YPrim_series[i + FNPhases, j + FNPhases] := Value;
             //YPrim_series.SetElemsym(i + FNPhases, j, -Value)
-            YPrim_series.SetElement(i, j + Fnphases, -Value);
-            YPrim_series.SetElement(i + Fnphases, j, -Value);
+            YPrim_series[i, j + Fnphases] := -Value;
+            YPrim_series[i + Fnphases, j] := -Value;
         end;
     end;
 
@@ -1008,7 +1005,7 @@ begin
         begin
             for j := 1 to i do
             begin
-                c := Z.GetElement(i, j);
+                c := Z[i, j];
                 FSWrite(F, Format('%.8g +j %.8g ', [C.re, C.im]));
             end;
             FSWriteln(F);

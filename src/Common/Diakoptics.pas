@@ -173,7 +173,7 @@ begin
         TempMat := TCmatrix.CreateMatrix(ZCC.NRows);
         for idx := 0 to High(ZCC.CData) do
         begin
-            TempMat.SetElement(ZCC.CData[idx].Row + 1, ZCC.CData[idx].Col + 1, ZCC.CData[idx].Value);
+            TempMat[ZCC.CData[idx].Row + 1, ZCC.CData[idx].Col + 1] := ZCC.CData[idx].Value;
         end;
         // Inverts the ZCC equivalent
         TempMat.Invert;
@@ -185,7 +185,7 @@ begin
         begin
             for col := 0 to NumCols do
             begin
-                value := TempMat.GetElement(idx + 1, col + 1);
+                value := TempMat[idx + 1, col + 1];
                 if (value.re <> 0) and (value.re <> 0) then
                     Y4.insert(idx, col, value);
             end;
@@ -412,7 +412,7 @@ begin
                         count := 0;
                         for j := 1 to (NValues div 4) do
                         begin
-                            ZLL.insert((row + idx), (col + idx), LinkPrim.GetElement(row + 1, col + 1));
+                            ZLL.insert((row + idx), (col + idx), LinkPrim[row + 1, col + 1]);
                             inc(count);
                             if count > 2 then
                             begin

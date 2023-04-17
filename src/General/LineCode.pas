@@ -459,8 +459,8 @@ begin
 
     for i := 1 to FNphases do
     begin
-        Z.SetElement(i, i, Zs);
-        Yc.SetElement(i, i, Ys);
+        Z[i, i] := Zs;
+        Yc[i, i] := Ys;
         for j := 1 to i - 1 do
         begin
             Z.SetElemsym(i, j, Zm);
@@ -468,7 +468,7 @@ begin
         end;
     end;
     Zinv.Copyfrom(Z);
-    Zinv.Invert;
+    Zinv.Invert();
 end;
 
 procedure TLineCodeObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
@@ -481,20 +481,20 @@ begin
 
     with ParentClass do
     begin
-        FSWriteln(F, Format('~ %s=%d', [PropertyName^[1], FNphases]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[2], R1]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[3], X1]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[4], R0]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[5], X0]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[6], C1 * 1.0e9]));
-        FSWriteln(F, Format('~ %s=%.5f', [PropertyName^[7], C0 * 1.0e9]));
-        FSWriteln(F, Format('~ %s=%s',   [PropertyName^[8], PropertyValue[8]]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName[1], FNphases]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[2], R1]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[3], X1]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[4], R0]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[5], X0]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[6], C1 * 1.0e9]));
+        FSWriteln(F, Format('~ %s=%.5f', [PropertyName[7], C0 * 1.0e9]));
+        FSWriteln(F, Format('~ %s=%s',   [PropertyName[8], PropertyValue[8]]));
         FSWrite(F, '~ ' + PropertyName^[9] + '=' + '"');
         for i := 1 to FNPhases do
         begin
             for j := 1 to FNphases do
             begin
-                FSWrite(F, Format('%.8f ', [Z.GetElement(i, j).re]));
+                FSWrite(F, Format('%.8f ', [Z[i, j].re]));
             end;
             FSWrite(F, '|');
         end;
@@ -504,7 +504,7 @@ begin
         begin
             for j := 1 to FNphases do
             begin
-                FSWrite(F, Format('%.8f ', [Z.GetElement(i, j).im]));
+                FSWrite(F, Format('%.8f ', [Z[i, j].im]));
             end;
             FSWrite(F, '|');
         end;
@@ -514,7 +514,7 @@ begin
         begin
             for j := 1 to FNphases do
             begin
-                FSWrite(F, Format('%.8f ', [(Yc.GetElement(i, j).im / TwoPi / BaseFrequency * 1.0E9)]));
+                FSWrite(F, Format('%.8f ', [(Yc[i, j].im / TwoPi / BaseFrequency * 1.0E9)]));
             end;
             FSWrite(F, '|');
         end;
@@ -526,14 +526,14 @@ begin
             FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
         end;
 
-        FSWriteln(F, Format('~ %s=%d', [PropertyName^[22], FNeutralConductor]));
-        FSWriteln(F, Format('~ %s=%d', [PropertyName^[25], NumAmpRatings]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName[22], FNeutralConductor]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName[25], NumAmpRatings]));
         TempStr := '[';
         for  k := 1 to NumAmpRatings do
             TempStr := TempStr + floattoStrf(AmpRatings[k - 1], ffGeneral, 8, 4) + ',';
         TempStr := TempStr + ']';
-        FSWriteln(F, Format('~ %s=%s', [PropertyName^[26]]) + TempStr);
-        FSWriteln(F, Format('~ %s=%s', [PropertyName^[27], PropertyValue[27]]));
+        FSWriteln(F, Format('~ %s=%s', [PropertyName[26]]) + TempStr);
+        FSWriteln(F, Format('~ %s=%s', [PropertyName[27], PropertyValue[27]]));
     end;
 end;
 
@@ -550,50 +550,48 @@ begin
     NewZ := NIL;
     NewYC := NIL;
 
-    if Fnphases > 1 then
-    begin
-        try
-            NewZ := Z.Kron(FNeutralConductor);       // Perform Kron Reductions into temp space
-            // Have to invert the Y matrix to eliminate properly
-            YC.Invert;  // Vn = 0 not In
-            NewYC := YC.Kron(FNeutralConductor);
-        except
-            On E: Exception do
-                DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName, FNeutralConductor], 103);
-        end;
-
-        // Reallocate into smaller space   if Kron was successful
-
-        if (NewZ <> NIL) and (NewYC <> NIL) then
-        begin
-            NewYC.Invert;  // Back to Y
-
-            Numphases := NewZ.order;
-
-            // Get rid of Z and YC and replace
-            Z.Free;
-            YC.Free;
-
-            Z := NewZ;
-            YC := NewYC;
-
-            FNeutralConductor := 0;
-
-            // Change Property values to reflect Kron reduction for save circuit function
-            SetAsNextSeq(ord(TProp.nphases));
-            SetAsNextSeq(ord(TProp.rmatrix));
-            SetAsNextSeq(ord(TProp.xmatrix));
-            SetAsNextSeq(ord(TProp.cmatrix));
-        end
-        else
-        begin
-            DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName, FNeutralConductor], 103);
-        end;
-    end
-    else
+    if Fnphases <= 1 then
     begin
         DoSimpleMsg('Cannot perform Kron Reduction on a 1-phase LineCode: %s', [FullName], 103);
+        Exit;
     end;
+
+    try
+        NewZ := Z.Kron(FNeutralConductor);       // Perform Kron Reductions into temp space
+        // Have to invert the Y matrix to eliminate properly
+        YC.Invert;  // Vn = 0 not In
+        NewYC := YC.Kron(FNeutralConductor);
+    except
+        On E: Exception do
+            DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName, FNeutralConductor], 103);
+    end;
+
+    // Reallocate into smaller space   if Kron was successful
+
+    if (NewZ = NIL) or (NewYC = NIL) then
+    begin
+        DoSimpleMsg('Kron Reduction failed: %s. Attempting to eliminate Neutral Conductor %d.', [FullName, FNeutralConductor], 103);
+        Exit;
+    end;
+
+    NewYC.Invert();  // Back to Y
+
+    Numphases := NewZ.order;
+
+    // Get rid of Z and YC and replace
+    Z.Free;
+    YC.Free;
+
+    Z := NewZ;
+    YC := NewYC;
+
+    FNeutralConductor := 0;
+
+    // Change Property values to reflect Kron reduction for save circuit function
+    SetAsNextSeq(ord(TProp.nphases));
+    SetAsNextSeq(ord(TProp.rmatrix));
+    SetAsNextSeq(ord(TProp.xmatrix));
+    SetAsNextSeq(ord(TProp.cmatrix));
 end;
 
 end.

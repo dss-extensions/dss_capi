@@ -613,7 +613,7 @@ begin
                         Value := -Value;
                         for i := 1 to Fnphases do
                         begin
-                            SetElement(i, i, Value2);
+                            YPrimTemp[i, i] := Value2;
                             for j := 1 to i - 1 do
                                 SetElemSym(i, j, Value);
                         end;
@@ -623,8 +623,8 @@ begin
                 begin // Wye
                     for i := 1 to Fnphases do
                     begin
-                        SetElement(i, i, Value);     // Elements are only on the diagonals
-                        SetElement(i + Fnphases, i + Fnphases, Value);
+                        YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                        YPrimTemp[i + Fnphases, i + Fnphases] := Value;
                         SetElemSym(i, i + Fnphases, -Value);
                     end;
                 end;
@@ -649,8 +649,8 @@ begin
                                 Value := Cmplx(Gmatrix^[idx], Bmatrix^[idx] / FreqMultiplier)
                             else
                                 Value := Cmplx(Gmatrix^[idx], 0.0);
-                            SetElement(i, j, Value);
-                            SetElement(i + Fnphases, j + Fnphases, Value);
+                            YPrimTemp[i, j] := Value;
+                            YPrimTemp[i + Fnphases, j + Fnphases] := Value;
                             SetElemSym(i, j + Fnphases, -Value);
                         end;
                     end;
@@ -675,16 +675,16 @@ begin
                             _('Invalid impedance specified. Replaced with tiny conductance.'), 234);
                         ZMatrix.Clear;
                         for i := 1 to Fnphases do
-                            ZMatrix.SetElement(i, i, Cmplx(epsilon, 0.0));
+                            ZMatrix[i, i] := epsilon;
                     end;
 
                     for i := 1 to Fnphases do
                     begin
                         for j := 1 to Fnphases do
                         begin
-                            Value := Zmatrix.GetElement(i, j);
-                            SetElement(i, j, Value);
-                            SetElement(i + Fnphases, j + Fnphases, Value);
+                            Value := Zmatrix[i, j];
+                            YPrimTemp[i, j] := Value;
+                            YPrimTemp[i + Fnphases, j + Fnphases] := Value;
                             SetElemSym(i, j + Fnphases, -Value);
                         end;
                     end;
@@ -714,7 +714,7 @@ begin
                 Value := Value / 3.0;
                 for i := 1 to Fnphases do
                 begin
-                    Zmatrix.SetElement(i, i, Value)
+                    Zmatrix[i, i] := Value;
                 end;
 
                 if FnPhases = 3 then     // otherwise undefined
@@ -732,40 +732,37 @@ begin
 
                     Value1 := Value1/  3.0;
                     Value2 := Value2/  3.0;
-                    with Zmatrix do
-                    begin
-                        //Lower Triangle
-                        SetElement(2, 1, Value1);
-                        SetElement(3, 1, Value2);
-                        SetElement(3, 2, Value1);
-                        //Upper Triangle
-                        SetElement(1, 2, Value2);
-                        SetElement(1, 3, Value1);
-                        SetElement(2, 3, Value2);
-                    end;
 
+                    //Lower Triangle
+                    Zmatrix[2, 1] := Value1;
+                    Zmatrix[3, 1] := Value2;
+                    Zmatrix[3, 2] := Value1;
+                    //Upper Triangle
+                    Zmatrix[1, 2] := Value2;
+                    Zmatrix[1, 3] := Value1;
+                    Zmatrix[2, 3] := Value2;
                 end;
 
-                ZMatrix.Invert;  // Invert in place - is now Ymatrix
+                ZMatrix.Invert();  // Invert in place - is now Ymatrix
                 if ZMatrix.InvertError > 0 then
                 begin // If error, put in tiny series conductance
                     DoErrorMsg('TReactorObj.CalcYPrim', 
                         Format(_('Matrix Inversion Error for Reactor "%s"'), [Name]),
                         _('Invalid impedance specified. Replaced with tiny conductance.'), 234);
-                    ZMatrix.Clear;
+                    ZMatrix.Clear();
                     for i := 1 to Fnphases do
-                        ZMatrix.SetElement(i, i, Cmplx(epsilon, 0.0));
+                        ZMatrix[i, i] := epsilon;
                 end;
 
                 for i := 1 to Fnphases do
                 begin
                     for j := 1 to Fnphases do
                     begin
-                        Value := Zmatrix.GetElement(i, j);
-                        SetElement(i, j, Value);
-                        SetElement(i + Fnphases, j + Fnphases, Value);
-                        SetElement(i, j + Fnphases, -Value);
-                        SetElement(i + Fnphases, j, -Value);
+                        Value := Zmatrix[i, j];
+                        YPrimTemp[i, j] := Value;
+                        YPrimTemp[i + Fnphases, j + Fnphases] := Value;
+                        YPrimTemp[i, j + Fnphases] := -Value;
+                        YPrimTemp[i + Fnphases, j] := -Value;
                     end;
                 end;
 
@@ -781,10 +778,10 @@ begin
     begin
         if (Nphases = 1) and (not ActiveCircuit.PositiveSequence) then  // assume a neutral or grounding reactor; Leave diagonal in the circuit
             for i := 1 to Yorder do
-                Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i))
+                Yprim_Series[i, i] := Yprim_Shunt[i, i]
         else
             for i := 1 to Yorder do
-                Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
+                Yprim_Series[i, i] := Yprim_Shunt[i, i] * 1.0e-10;
     end;
 
     Yprim.Copyfrom(YPrimTemp);
@@ -812,7 +809,7 @@ begin
                         for i := 1 to Fnphases do
                         begin
                             for j := 1 to Fnphases do
-                                FSWrite(F, Format('%-.5g ', [RMatrix^[(i - 1) * Fnphases + j]]));
+                                FSWrite(F, Format('%-.5g ', [RMatrix[(i - 1) * Fnphases + j]]));
                             if i <> Fnphases then
                                 FSWrite(F, '|');
                         end;
@@ -825,7 +822,7 @@ begin
                         for i := 1 to Fnphases do
                         begin
                             for j := 1 to Fnphases do
-                                FSWrite(F, Format('%-.5g ', [XMatrix^[(i - 1) * Fnphases + j]]));
+                                FSWrite(F, Format('%-.5g ', [XMatrix[(i - 1) * Fnphases + j]]));
                             if i <> Fnphases then
                                 FSWrite(F, '|');
                         end;
@@ -842,7 +839,7 @@ begin
                 19:
                     FSWriteln(F, Format('~ LmH=%-.8g', [L * 1000.0]));
             else
-                FSWriteln(F, '~ ' + PropertyName^[k] + '=' + PropertyValue[k]);
+                FSWriteln(F, '~ ' + PropertyName[k] + '=' + PropertyValue[k]);
             end;
         end;
 end;
@@ -908,24 +905,24 @@ begin
                     // R1
                     Rs := 0.0;   // Avg Self
                     for i := 1 to FnPhases do
-                        Rs := Rs + Rmatrix^[(i - 1) * Fnphases + i];
+                        Rs := Rs + Rmatrix[(i - 1) * Fnphases + i];
                     Rs := Rs / FnPhases;
                     Rm := 0.0;     //Avg mutual
                     for i := 2 to FnPhases do
                         for j := i to FnPhases do
-                            Rm := Rm + Rmatrix^[(i - 1) * Fnphases + j];
+                            Rm := Rm + Rmatrix[(i - 1) * Fnphases + j];
                     Rm := Rm / (FnPhases * (Fnphases - 1.0) / 2.0);
                     R := (Rs - Rm);
 
                     // X1
                     Rs := 0.0;   // Avg Self
                     for i := 1 to FnPhases do
-                        Rs := Rs + Xmatrix^[(i - 1) * Fnphases + i];
+                        Rs := Rs + Xmatrix[(i - 1) * Fnphases + i];
                     Rs := Rs / FnPhases;
                     Rm := 0.0;     //Avg mutual
                     for i := 2 to FnPhases do
                         for j := i to FnPhases do
-                            Rm := Rm + Xmatrix^[(i - 1) * Fnphases + j];
+                            Rm := Rm + Xmatrix[(i - 1) * Fnphases + j];
                     Rm := Rm / (FnPhases * (Fnphases - 1.0) / 2.0);
                     X := (Rs - Rm);
 
