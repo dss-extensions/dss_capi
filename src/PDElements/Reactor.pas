@@ -849,28 +849,24 @@ procedure TReactorObj.GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Compl
 var
     i: Integer;
 begin
-  {Only report No Load Losses if Rp defined and Reactor is a shunt device;
-   Else do default behavior.}
-
+    // Only report No Load Losses if Rp defined and Reactor is a shunt device;
+    // Else do default behavior.
     if (RpSpecified and IsShunt and (Rp <> 0.0)) then
     begin
         TotalLosses := Losses;  // Side effect: computes Iterminal and Vterminal
-     {Compute losses in Rp Branch from voltages across shunt element -- node to ground}
+        // Compute losses in Rp Branch from voltages across shunt element -- node to ground
         NoLoadLosses := 0;
         with ActiveCircuit.Solution do
             for i := 1 to FNphases do
                 with NodeV[NodeRef[i]] do
-                    NoLoadLosses += cmplx((SQR(re) + SQR(im)) / Rp, 0.0);  // V^2/Rp
+                    NoLoadLosses += (re * re + im * im) / Rp;  // V^2/Rp
 
         if ActiveCircuit.PositiveSequence then
             NoLoadLosses := NoLoadLosses * 3.0;
         LoadLosses := TotalLosses - NoLoadLosses;  // Subtract no load losses from total losses
-
-    end
-
-    else
-        inherited;   {do the default Cktelement behaviors}
-
+        Exit;
+    end;
+    inherited; // do the default Cktelement behaviors
 end;
 
 procedure TReactorObj.MakePosSequence();

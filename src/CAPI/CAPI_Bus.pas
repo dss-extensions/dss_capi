@@ -144,10 +144,9 @@ var
     Result: PDoubleArray0;
     Nvalues, i, iV: Integer;
     VPh, V012: Complex3;
-
+    pBus: TDSSBus;
 begin
-    if (InvalidCircuit(DSSPrime)) or
-        (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
+    if not _activeObj(DSSPrime, pBus) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -155,7 +154,7 @@ begin
 
     with DSSPrime.ActiveCircuit do
     begin
-        Nvalues := Buses[ActiveBusIndex].NumNodesThisBus;
+        Nvalues := pBus.NumNodesThisBus;
         if Nvalues > 3 then
             Nvalues := 3;
 
@@ -169,7 +168,7 @@ begin
             iV := 0;
             for i := 1 to 3 do
             begin
-                Vph[i] := Solution.NodeV[Buses[ActiveBusIndex].Find(i)];
+                Vph[i] := Solution.NodeV[pBus.Find(i)];
             end;
 
             Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
@@ -260,7 +259,7 @@ begin
                 NodeIdx := FindIdx(jj);  // Get the index of the Node that matches jj
                 inc(jj)
             until NodeIdx > 0;
-            Result[iV] := Buses[ActiveBusIndex].GetNum(NodeIdx);
+            Result[iV] := pBus.GetNum(NodeIdx);
             Inc(iV);
         end;
     end;
@@ -279,10 +278,9 @@ var
     Result: PDoubleArray0;
     Isc: Complex;
     i, iV, NValues: Integer;
-
+    pBus: TDSSBus;
 begin
-    if (InvalidCircuit(DSSPrime)) or
-        (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
+    if not _activeObj(DSSPrime, pBus) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -290,14 +288,14 @@ begin
 
     with DSSPrime.ActiveCircuit do
     begin
-        if Buses[ActiveBusIndex].BusCurrent <> NIL then
+        if pBus.BusCurrent <> NIL then
         begin
-            NValues := Buses[ActiveBusIndex].NumNodesThisBus;
+            NValues := pBus.NumNodesThisBus;
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
             iV := 0;
             for i := 1 to NValues do
             begin
-                Isc := Buses[ActiveBusIndex].BusCurrent[i];
+                Isc := pBus.BusCurrent[i];
                 Result[iV] := Isc.Re;
                 Inc(iV);
                 Result[iV] := Isc.Im;
@@ -423,10 +421,9 @@ procedure Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray0;
     Z: Complex;
-
+    pBus: TDSSBus;
 begin
-    if (InvalidCircuit(DSSPrime)) or
-        (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
+    if not _activeObj(DSSPrime, pBus) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -434,7 +431,7 @@ begin
 
     with DSSPrime.ActiveCircuit do
     begin
-        Z := Buses[ActiveBusIndex].Zsc0;
+        Z := pBus.Zsc0;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         Result[0] := Z.Re;
         Result[1] := Z.Im;
@@ -452,9 +449,9 @@ procedure Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 var
     Result: PDoubleArray0;
     Z: Complex;
+    pBus: TDSSBus;
 begin
-    if (InvalidCircuit(DSSPrime)) or
-        (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
+    if not _activeObj(DSSPrime, pBus) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -462,7 +459,7 @@ begin
 
     with DSSPrime.ActiveCircuit do
     begin
-        Z := Buses[ActiveBusIndex].Zsc1;
+        Z := pBus.Zsc1;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         Result[0] := Z.Re;
         Result[1] := Z.Im;
@@ -481,31 +478,29 @@ var
     Result: PDoubleArray0;
     Nelements, iV, i, j: Integer;
     Z: Complex;
-
+    pBus: TDSSBus;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if (InvalidCircuit(DSSPrime)) or
-        (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
 
     try
         with DSSPrime.ActiveCircuit do
         begin
-            if Assigned(Buses[ActiveBusIndex].Zsc) then
+            if Assigned(pBus.Zsc) then
             begin
-                Nelements := Buses[ActiveBusIndex].Zsc.Order;
+                Nelements := pBus.Zsc.Order;
                 Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
                 iV := 0;
-                with Buses[ActiveBusIndex] do
-                    for i := 1 to Nelements do
-                        for j := 1 to Nelements do
-                        begin
-                            Z := Zsc[i, j];
-                            Result[iV] := Z.Re;
-                            Inc(iV);
-                            Result[iV] := Z.Im;
-                            Inc(iV);
-                        end;
+                for i := 1 to Nelements do
+                    for j := 1 to Nelements do
+                    begin
+                        Z := pBus.Zsc[i, j];
+                        Result[iV] := Z.Re;
+                        Inc(iV);
+                        Result[iV] := Z.Im;
+                        Inc(iV);
+                    end;
             end
         end
     except
@@ -535,31 +530,28 @@ var
     Result: PDoubleArray0;
     Nelements, iV, i, j: Integer;
     Y1: Complex;
-
+    pBus: TDSSBus;
 begin
     DefaultResult(ResultPtr, ResultCount);
-    if (InvalidCircuit(DSSPrime)) or
-        (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
 
     try
         with DSSPrime.ActiveCircuit do
-            if Assigned(Buses[ActiveBusIndex].Ysc) then
+            if Assigned(pBus.Ysc) then
             begin
-                Nelements := Buses[ActiveBusIndex].Ysc.Order;
+                Nelements := pBus.Ysc.Order;
                 Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Nelements * Nelements, Nelements, Nelements);
                 iV := 0;
-                with Buses[ActiveBusIndex] do
-                    for i := 1 to Nelements do
-                        for j := 1 to Nelements do
-                        begin
-                            Y1 := Ysc[i, j];
-                            Result[iV] := Y1.Re;
-                            Inc(iV);
-                            Result[iV] := Y1.Im;
-                            Inc(iV);
-                        end;
-
+                for i := 1 to Nelements do
+                    for j := 1 to Nelements do
+                    begin
+                        Y1 := pBus.Ysc[i, j];
+                        Result[iV] := Y1.Re;
+                        Inc(iV);
+                        Result[iV] := Y1.Im;
+                        Inc(iV);
+                    end;
             end
     except
         On E: Exception do
@@ -620,26 +612,23 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Set_y(Value: Double); CDECL;
+var
+    pBus: TDSSBus;
 begin
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-        if (ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses) then
-        begin
-            Buses[ActiveBusIndex].CoordDefined := TRUE;
-            Buses[ActiveBusIndex].y := Value;
-        end;
+    pBus.CoordDefined := TRUE;
+    pBus.y := Value;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_Distance(): Double; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0.0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-
-    with DSSPrime.ActiveCircuit do
-        if ((ActiveBusIndex > 0) and (ActiveBusIndex <= NumBuses)) then
-            Result := Buses[ActiveBusIndex].DistFromMeter;
+    Result := pBus.DistFromMeter;
 end;
 //------------------------------------------------------------------------------
 function Bus_GetUniqueNodeNumber(StartNumber: Integer): Integer; CDECL;
@@ -661,10 +650,9 @@ var
     Result: PDoubleArray0;
     Nvalues, i, iV: Integer;
     VPh, V012: Complex3;
-
+    pBus: TDSSBus;
 begin
-    if (InvalidCircuit(DSSPrime)) or
-        (not ((DSSPrime.ActiveCircuit.ActiveBusIndex > 0) and (DSSPrime.ActiveCircuit.ActiveBusIndex <= DSSPrime.ActiveCircuit.NumBuses))) then
+    if not _activeObj(DSSPrime, pBus) then
     begin
         DefaultResult(ResultPtr, ResultCount);
         Exit;
@@ -672,7 +660,7 @@ begin
 
     with DSSPrime.ActiveCircuit do
     begin
-        Nvalues := Buses[ActiveBusIndex].NumNodesThisBus;
+        Nvalues := pBus.NumNodesThisBus;
         if Nvalues > 3 then
             Nvalues := 3;
 
@@ -685,7 +673,7 @@ begin
         begin
             iV := 0;
             for i := 1 to 3 do
-                Vph[i] := Solution.NodeV[Buses[ActiveBusIndex].Find(i)];
+                Vph[i] := Solution.NodeV[pBus.Find(i)];
 
             Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
 
@@ -708,65 +696,69 @@ end;
 
 //------------------------------------------------------------------------------
 function Bus_Get_Int_Duration(): Double; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0.0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
 
-    with DSSPrime.ActiveCircuit do
-        if ActiveBusIndex > 0 then
-            Result := Buses[ActiveBusIndex].Bus_Int_Duration;
+    Result := pBus.Bus_Int_Duration;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_Lambda(): Double; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0.0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
 
-    with DSSPrime.ActiveCircuit do
-        if ActiveBusIndex > 0 then
-            Result := Buses[ActiveBusIndex].BusFltRate;
+    Result := pBus.BusFltRate;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_Cust_Duration(): Double; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0.0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-        if ActiveBusIndex > 0 then
-            Result := Buses[ActiveBusIndex].BusCustDurations;
+
+    Result := pBus.BusCustDurations;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_Cust_Interrupts(): Double; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0.0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-        if ActiveBusIndex > 0 then
-            Result := Buses[ActiveBusIndex].BusCustDurations;
+
+    Result := pBus.BusCustDurations;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_N_Customers(): Integer; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-        if ActiveBusIndex > 0 then
-            Result := Buses[ActiveBusIndex].BusTotalNumCustomers;
+
+    Result := pBus.BusTotalNumCustomers;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_N_interrupts(): Double; CDECL;
+var
+    pBus: TDSSBus;
 begin
     Result := 0.0;
-    if InvalidCircuit(DSSPrime) then
+    if not _activeObj(DSSPrime, pBus) then
         Exit;
-    with DSSPrime.ActiveCircuit do
-        if ActiveBusIndex > 0 then
-            Result := Buses[ActiveBusIndex].Bus_Num_Interrupt;
+
+    Result := pBus.Bus_Num_Interrupt;
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_puVLL(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;

@@ -61,6 +61,7 @@ type
 
         procedure AllocateBusQuantities;
         procedure AllocateBusState;
+        procedure ZeroReliabilityAccums();
 
         function Add(Circuit: TNamedObject; NodeNum: SmallInt): Integer;
         function Find(NodeNum: SmallInt): Integer; // Returns reference num for node by node number
@@ -251,6 +252,17 @@ begin
     FreeMem(BusCurrent);
     VBus := AllocMem(Sizeof(Complex) * FNumNodesThisBus);
     BusCurrent := AllocMem(Sizeof(Complex) * FNumNodesThisBus);
+end;
+
+procedure TDSSBus.ZeroReliabilityAccums();
+begin
+    BusCustInterrupts := 0.0;
+    BusFltRate := 0.0;
+    BusTotalNumCustomers := 0;
+    BusTotalMiles := 0.0;
+    BusCustDurations := 0.0;
+    Bus_Num_Interrupt := 0.0;
+    BusSectionID := -1; // signify not set
 end;
 
 end.

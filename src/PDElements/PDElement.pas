@@ -288,21 +288,9 @@ begin
 end;
 
 procedure TPDElement.ZeroReliabilityAccums;
-var
-    FromBus: TDSSBus;
-
 begin
-    FromBus := ActiveCircuit.Buses[Terminals[FromTerminal - 1].BusRef];
-    with FromBus do
-    begin
-        BusCustInterrupts := 0.0;
-        BusFltRate := 0.0;
-        BusTotalNumCustomers := 0;
-        BusTotalMiles := 0.0;
-        BusCustDurations := 0.0;
-        Bus_Num_Interrupt := 0.0;
-        BusSectionID := -1; // signify not set
-    end;
+    // acummulated in the first terminal
+    ActiveCircuit.Buses[Terminals[FromTerminal - 1].BusRef].ZeroReliabilityAccums();
 end;
 
 procedure TPDElement.MakeLike(OtherObj: Pointer);
