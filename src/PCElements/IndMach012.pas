@@ -740,7 +740,7 @@ begin
             if MachineON then
                 Y := Yeq   // L-N value computed in initialization routines
             else
-                Y := Cmplx(EPSILON, 0.0);
+                Y := EPSILON;
 
             if Connection = 1 then
                 Y := Y / 3.0; // Convert to delta impedance
@@ -811,7 +811,7 @@ end;
 function TIndMach012Obj.Compute_dSdP: Double;
 begin
 // dSdP based on rated slip and rated voltage
-    V1 := Cmplx(MachineData.kvGeneratorBase * 1000.0 / 1.732, 0.0);
+    V1 := MachineData.kvGeneratorBase * 1000.0 / 1.732;
     if S1 <> 0.0 then
         Get_PFlowModelCurrent(V1, S1, Is1, Ir1);
     Result := S1 / (V1 * cong(Is1)).Re;

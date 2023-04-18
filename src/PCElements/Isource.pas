@@ -381,7 +381,7 @@ begin
                             USEDUTY:
                                 CalcDutyMult(DynaVars.dblHour);
                         else
-                            ShapeFactor := Cmplx(1.0, 0.0);     // default to 1 + j0 if not known
+                            ShapeFactor := 1.0;     // default to 1 + j0 if not known
                         end;
                     end;
                 end;

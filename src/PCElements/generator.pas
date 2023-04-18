@@ -1178,7 +1178,7 @@ begin
             if GenON then
                 Y := Yeq   // L-N value computed in initialization routines
             else
-                Y := Cmplx(EPSILON, 0.0);
+                Y := EPSILON;
 
             if Connection = 1 then
                 Y := Y / 3.0; // Convert to delta impedance
@@ -1636,7 +1636,7 @@ begin
                     Curr := Cmplx(Yeq105.re, YQfixed) * V
                 else
                 begin
-                    Curr := cong(Cmplx(Genvars.Pnominalperphase, 0.0) / V); // P component of current
+                    Curr := cong(Genvars.Pnominalperphase / V); // P component of current
                     Curr += Cmplx(0.0, YQFixed) * V;  // add in Q component of current
                 end;
             end;
@@ -1655,7 +1655,7 @@ begin
                     Curr := Cmplx(Yeq105.re / 3.0, YQfixed / 3.0) * V
                 else
                 begin
-                    Curr := cong(Cmplx(Genvars.Pnominalperphase, 0.0) / V); // P component of current
+                    Curr := cong(Genvars.Pnominalperphase / V); // P component of current
                     Curr += Cmplx(0.0, YQFixed / 3.0) * V;  // add in Q component of current
                 end;
             end;
@@ -2225,7 +2225,7 @@ begin
     begin
         case Genmodel of
             7:
-                Zthev := Cmplx(Xdp, 0.0); // use Xd' as an equivalent R for the inverter
+                Zthev := Xdp; // use Xd' as an equivalent R for the inverter
         else
             Zthev := Cmplx(Xdp / XRdp, Xdp);
         end;

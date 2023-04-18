@@ -856,7 +856,7 @@ begin
                         USEDUTY:
                             CalcDutyMult(DynaVars.dblHour);
                     else
-                        ShapeFactor := Cmplx(PerUnit, 0.0); // default to PerUnit + j0 if not known
+                        ShapeFactor := PerUnit; // default to PerUnit + j0 if not known
                     end;
                 end;
             end;
@@ -1021,7 +1021,7 @@ begin
         ShapeIsActual := DailyShapeObj.UseActual;
     end
     else
-        ShapeFactor := cmplx(PerUnit, 0.0); // Default to no daily variation
+        ShapeFactor := PerUnit; // Default to no daily variation
 end;
 
 procedure TVSourceObj.CalcDutyMult(Hr: Double);
@@ -1044,7 +1044,7 @@ begin
         ShapeIsActual := YearlyShapeObj.UseActual;
     end
     else
-        ShapeFactor := cmplx(PerUnit, 0.0); // Defaults to no variation
+        ShapeFactor := PerUnit; // Defaults to no variation
 end;
 
 procedure TVsourceObj.MakePosSequence();

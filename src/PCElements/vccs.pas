@@ -507,7 +507,7 @@ begin
     s3 := s4;
     s5 := 0;
     s6 := 0;
-    sV1 := cmplx(1.0, 0.0);
+    sV1 := 1.0;
     vlast := Vterminal[1] / BaseVolt;
 
   // initialize the history terms for HW model source convention
@@ -553,7 +553,7 @@ begin
     s4 := s3;
     s5 := 0;
     s6 := 0;
-    sV1 := cmplx(1.0, 0.0);
+    sV1 := 1.0;
     vlast := Vterminal[1] / BaseVolt;
 
   // initialize the history terms for HW model source convention

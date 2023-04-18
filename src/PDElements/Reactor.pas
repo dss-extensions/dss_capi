@@ -387,18 +387,18 @@ begin
         Reallocmem(Rmatrix, 0)
     else
     begin
-        Reallocmem(Rmatrix, SizeOf(Rmatrix^[1]) * Fnphases * Fnphases);
+        Reallocmem(Rmatrix, SizeOf(Rmatrix[1]) * Fnphases * Fnphases);
         for i := 1 to Fnphases * Fnphases do
-            Rmatrix^[i] := Other.Rmatrix^[i];
+            Rmatrix[i] := Other.Rmatrix[i];
     end;
 
     if Other.Xmatrix = NIL then
         Reallocmem(Xmatrix, 0)
     else
     begin
-        Reallocmem(Xmatrix, SizeOf(Xmatrix^[1]) * Fnphases * Fnphases);
+        Reallocmem(Xmatrix, SizeOf(Xmatrix[1]) * Fnphases * Fnphases);
         for i := 1 to Fnphases * Fnphases do
-            Xmatrix^[i] := Other.Xmatrix^[i];
+            Xmatrix[i] := Other.Xmatrix[i];
     end;
 end;
 
@@ -503,30 +503,30 @@ begin
 
     if IsParallel and (SpecType = 3) then
     begin
-        ReAllocmem(Gmatrix, SizeOf(Gmatrix^[1]) * Fnphases * Fnphases);
-        ReAllocmem(Bmatrix, SizeOf(Bmatrix^[1]) * Fnphases * Fnphases);
+        ReAllocmem(Gmatrix, SizeOf(Gmatrix[1]) * Fnphases * Fnphases);
+        ReAllocmem(Bmatrix, SizeOf(Bmatrix[1]) * Fnphases * Fnphases);
 
         // Copy Rmatrix to Gmatrix and Invert
         for i := 1 to Fnphases * Fnphases do
-            Gmatrix^[i] := RMatrix^[i];
+            Gmatrix[i] := Rmatrix[i];
 // should be Gmatrix         ETKInvert(Rmatrix, Fnphases, CheckError);
         ETKInvert(Gmatrix, Fnphases, CheckError);
         if CheckError > 0 then
         begin
             DoSimpleMsg('Error inverting R Matrix for "%s" - G is zeroed.', [FullName], 232);
             for i := 1 to Fnphases * Fnphases do
-                Gmatrix^[i] := 0.0;
+                Gmatrix[i] := 0.0;
         end;
 
         // Copy Xmatrix to Bmatrix and Invert
         for i := 1 to Fnphases * Fnphases do
-            Bmatrix^[i] := -XMatrix^[i];
+            Bmatrix[i] := -Xmatrix[i];
         ETKInvert(Bmatrix, Fnphases, CheckError);
         if CheckError > 0 then
         begin
             DoSimpleMsg('Error inverting X Matrix for "%s" - B is zeroed.', [FullName], 233);
             for i := 1 to Fnphases * Fnphases do
-                Bmatrix^[i] := 0.0;
+                Bmatrix[i] := 0.0;
         end;
     end;
 end;
@@ -602,7 +602,7 @@ begin
             Value := Cinv(Cmplx(RValue, LValue * Twopi * FYprimFreq));
             // Add in Rp Value if specified
             if RpSpecified then
-                Value += Cmplx(Gp, 0.0);
+                Value += Gp;
 
             if Connection = TReactorConnection.Delta then
             begin   // Line-Line
@@ -646,9 +646,9 @@ begin
                         idx := (j - 1) * Fnphases + i;
                         // FreqMultiplier = 0 signifies GIC model where we only need R part
                         if FreqMultiplier > 0.0 then
-                            Value := Cmplx(Gmatrix^[idx], Bmatrix^[idx] / FreqMultiplier)
+                            Value := Cmplx(Gmatrix[idx], Bmatrix[idx] / FreqMultiplier)
                         else
-                            Value := Cmplx(Gmatrix^[idx], 0.0);
+                            Value := Gmatrix[idx];
                         YPrimTemp[i, j] := Value;
                         YPrimTemp[i + Fnphases, j + Fnphases] := Value;
                         YPrimTemp[i, j + Fnphases] := -Value;
@@ -665,7 +665,7 @@ begin
                 for i := 1 to Fnphases * Fnphases do
                 begin
                     // Correct the impedances for frequency
-                    ZValues[i] := Cmplx(RMatrix^[i], Xmatrix^[i] * FreqMultiplier);
+                    ZValues[i] := Cmplx(Rmatrix[i], Xmatrix[i] * FreqMultiplier);
                 end;
 
                 ZMatrix.Invert(); // Invert in place - is now Ymatrix

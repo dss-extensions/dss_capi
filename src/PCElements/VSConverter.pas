@@ -450,8 +450,8 @@ begin
     if Idc < -Idclim then
         Idc := -Idclim;
 
-    Curr[FNphases] := cmplx(Idc, 0.0);
-    Curr[2 * FNphases] := cmplx(-Idc, 0.0);
+    Curr[FNphases] := Idc;
+    Curr[2 * FNphases] := -Idc;
     ITerminalUpdated := FALSE;
 end;
 

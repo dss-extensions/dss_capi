@@ -462,14 +462,14 @@ begin
         begin
             if i <> j then
             begin
-                hterm := cmplx(Fyi + Fyj, 0.0) + Cinv(Fme) * 2.0;
+                hterm := (Fyi + Fyj) + Cinv(Fme) * 2.0;
                 xterm := Fx[i] - Fx[j];
                 LnArg := Csqrt(hterm * hterm + xterm * xterm);
                 Result := Cmplx(0.0, Fw * Mu0 / twopi) * Cln(lnArg);
             end
             else
             begin
-                hterm := cmplx(Fyi, 0.0) + Cinv(Fme);
+                hterm := Fyi + Cinv(Fme);
                 Result := Cmplx(0.0, Fw * Mu0 / twopi) * Cln(hterm * 2.0);
             end;
  // {****}          WriteDLLDebugFile(Format('Deri: Z(%d,%d) = %.8g +j %.8g; hterm= %.8g + j %.8g',[i,j, Result.re, result.im, hterm.re, hterm.im]));

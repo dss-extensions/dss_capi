@@ -1001,7 +1001,7 @@ begin
         YNeut := 0
     else
     if (Rneut = 0.0) and (Xneut = 0.0) then // Solidly Grounded
-        YNeut := Cmplx(1.0e6, 0.0)  // 1 microohm resistor
+        YNeut := 1.0e6  // 1 microohm resistor
     else
         YNeut := Cinv(Cmplx(Rneut, XNeut));
 
@@ -1028,7 +1028,7 @@ begin
             if ActiveCircuit.NeglectLoadY then
             begin
                 // Just a small value so things don't die and we get the actual injection current out the terminal
-                Y := cmplx(Epsilon, 0.0)
+                Y := Epsilon
             end
             else // compute equivalent Y assuming some of the load is series R-L and the rest is parallel R-L
             begin
@@ -1258,6 +1258,7 @@ begin
             Curr := Yeq105 * V  // above 105% use an impedance model
         else
         begin
+            // NOTE: This cannot be replaced "cong(WNominal / V)" or it bugs
             Curr := cong(Cmplx(WNominal, 0.0) / V);  // Above 95%, constant P
             Curr += Cmplx(0.0, Yeq.im) * V;  // add in Q component of current
         end;

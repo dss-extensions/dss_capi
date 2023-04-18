@@ -331,7 +331,7 @@ begin
     end;
 
     // Assume 0.0001 ohms resistance for GIC Source
-    Value := Cmplx(10000.0, 0.0);
+    Value := 10000.0;
     NegValue := -Value;
     for i := 1 to Fnphases do
     begin

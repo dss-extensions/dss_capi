@@ -165,7 +165,7 @@ begin
         GmrCN := Power(FGmrStrand[i] * FkStrand[i] * Power(RadCN, FkStrand[i] - 1.0),
             1.0 / FkStrand[i]);
         Zspacing := Lfactor * ln(1.0 / GmrCN);
-        Zi := cmplx(ResCN, 0.0);
+        Zi := ResCN;
         idxi := i + FNumConds;
         Zmat[idxi, idxi] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
     end;
