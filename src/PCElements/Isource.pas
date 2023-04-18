@@ -310,7 +310,7 @@ end;
 
 procedure TIsourceObj.RecalcElementData;
 begin
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
 
 procedure TIsourceObj.CalcYPrim;
@@ -381,7 +381,7 @@ begin
                             USEDUTY:
                                 CalcDutyMult(DynaVars.dblHour);
                         else
-                            ShapeFactor := Cmplx(1.0, 0.0);     // default to 1 + j0 if not known
+                            ShapeFactor := 1.0;     // default to 1 + j0 if not known
                         end;
                     end;
                 end;
@@ -422,7 +422,7 @@ begin
         GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
         // Add Together  with yprim currents
         for i := 1 to Yorder do
-            Curr^[i] := -ComplexBuffer^[i];
+            Curr[i] := -ComplexBuffer^[i];
 
     except
         On E: Exception do
@@ -443,8 +443,8 @@ begin
 
         for i := 1 to Fnphases do
         begin
-            Curr^[i] := BaseCurr;
-            Curr^[i + FnPhases] := -BaseCurr;  // 2nd Terminal
+            Curr[i] := BaseCurr;
+            Curr[i + FnPhases] := -BaseCurr;  // 2nd Terminal
             if (i < Fnphases) then
             begin
                 if IsHarmonicModel then

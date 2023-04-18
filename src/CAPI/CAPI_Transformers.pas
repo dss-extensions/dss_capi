@@ -187,7 +187,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.Winding^[elem.ActiveWinding].kvll;
+        Result := elem.Winding[elem.ActiveWinding].kvll;
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_kVA(): Double; CDECL;
@@ -629,15 +629,13 @@ begin
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, lst.Count * 2 * 3, 3, lst.Count);
     CResult := PComplexArray(ResultPtr);
     k := 1;
-    elem := lst.First;
-    while elem <> NIL do
+    for elem in lst do
     begin
         if elem.Enabled or (DSS_CAPI_ITERATE_DISABLED = 1) then
         begin
             elem.GetLosses(CResult[k], CResult[k + 1], CResult[k + 2]);
             Inc(k, 3);
         end;
-        elem := lst.Next;
     end;
     //TODO: shrink to remove extra elements?
 

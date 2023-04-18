@@ -104,14 +104,14 @@ begin
         while pLineElem1 <> NIL do
         begin
             if IsLineElement(pLineElem1) then
-                with  BranchList.PresentBranch do
+                with BranchList.PresentBranch do
                 begin
                     // If it is at the end of a section and has no load,cap, reactor, or coordinate, just throw it away
                     if IsDangling then
                     begin
                         ToBusRef := ToBusReference;  // only access this property once!
                         if ToBusRef > 0 then
-                            with DSS.ActiveCircuit.Buses^[ToBusRef] do
+                            with DSS.ActiveCircuit.Buses[ToBusRef] do
                                 if not (Keep) then
                                     pLineElem1.Enabled := FALSE;
                     end;
@@ -136,9 +136,9 @@ begin
         with LineElement do
         begin
             if NPhases > 1 then
-                Ztest := Cabs(Z.Getelement(1, 1) - Z.GetElement(1, 2)) * Len
+                Ztest := Cabs(Z[1, 1] - Z[1, 2]) * Len
             else
-                Ztest := Cabs(Z.Getelement(1, 1)) * Len;
+                Ztest := Cabs(Z[1, 1]) * Len;
         end;
 
     if Ztest <= DSS.ActiveCircuit.ReductionZmag then
@@ -196,7 +196,7 @@ begin
                                     if ParentNode <> NIL then
                                     begin
                                         if ParentNode.NumChildBranches = 1 then   // only works for in-line
-                                            if not DSS.ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then
+                                            if not DSS.ActiveCircuit.Buses[PresentBranch.ToBusReference].Keep then
                                             begin     // Check Keeplist
                                                 // Let's consider merging
                                                 // First Check for any Capacitors. Skip if any
@@ -244,7 +244,7 @@ begin
 
                                 if (PresentBranch.NumChildBranches = 1) then // Merge with child
                                 begin
-                                    if not DSS.ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then    // check keeplist
+                                    if not DSS.ActiveCircuit.Buses[PresentBranch.ToBusReference].Keep then    // check keeplist
                                     begin
                                         // Let's consider merging
                                         // First Check for any Capacitors. Skip if any
@@ -327,7 +327,7 @@ begin
 
                                 1:
                                     if NumShuntObjects = 0 then
-                                        if not DSS.ActiveCircuit.Buses^[ToBusReference].Keep then
+                                        if not DSS.ActiveCircuit.Buses[ToBusReference].Keep then
                                         begin
                                             // Let's consider merging
                                             LineElement2 := FirstChildBranch.CktObject;
@@ -335,7 +335,6 @@ begin
                                                 if not LineElement2.IsSwitch then
                                                     LineElement2.MergeWith(LineElement1, SERIESMERGE){Series Merge}
                                         end;
-                            else //Nada
                             end;
 
             LineElement1 := BranchList.GoForward;
@@ -365,7 +364,7 @@ begin
                                     // see if eligible for merging
                                     if PresentBranch.NumChildBranches = 1 then
                                         if PresentBranch.NumShuntObjects = 0 then
-                                            if not DSS.ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then
+                                            if not DSS.ActiveCircuit.Buses[PresentBranch.ToBusReference].Keep then
                                             begin
                                                 // Let's consider merging
                                                 LineElement2 := PresentBranch.FirstChildBranch.CktObject;
@@ -415,13 +414,13 @@ begin
                 TotalkVA := PDelem.Power[FromTerminal] / 1000.0;
                 NewLoadName := Format('Eq_%s_%s', [FirstPDElement.Name, StripExtension(BusName)]);
                 // Pick up the kV Base for the From bus
-                LoadBus := DSS.ActiveCircuit.Buses^[FromBusReference];
+                LoadBus := DSS.ActiveCircuit.Buses[FromBusReference];
                 if Loadbus.kVBase > 0.0 then
                     LoadBasekV := LoadBus.kVBase
                 else
                 begin    // Try to guess from the present voltage at the first node on the bus
                     DSS.ActiveCircuit.Solution.UpdateVBus;
-                    LoadBasekV := Cabs(Loadbus.Vbus^[1]) * 0.001;
+                    LoadBasekV := Cabs(Loadbus.VBus[1]) * 0.001;
                 end;
                 if FirstPDElement.NPhases > 1 then
                     LoadBasekV := LoadBasekV * Sqrt3;
@@ -483,7 +482,7 @@ begin
         begin
             // Check to see if this is a 1-phase switch or other branch in the middle of a 3-phase branch and go on
             // If the To bus has more than 1 phase, keep this branch else lump the load at the From node
-            pBus := DSS.ActiveCircuit.Buses^[Branchlist.PresentBranch.ToBusReference];  //To Bus
+            pBus := DSS.ActiveCircuit.Buses[Branchlist.PresentBranch.ToBusReference];  //To Bus
 
             if pBus.NumNodesThisBus = 1 then // Eliminate the lateral starting with this branch
             begin
@@ -498,13 +497,13 @@ begin
                             BusName := BusName + '.1';
 
                         // Pick up the kV Base for the From bus
-                        HeadBus := DSS.ActiveCircuit.Buses^[PresentBranch.FromBusReference];
+                        HeadBus := DSS.ActiveCircuit.Buses[PresentBranch.FromBusReference];
                         if (HeadBus.kVBase > 0.0) then
                             HeadBasekV := HeadBus.kVBase  // Use defined voltage base
                         else
                         begin    // Try to guess voltage base from the present voltage at the first node on the bus
                             DSS.ActiveCircuit.Solution.UpdateVBus;
-                            HeadBasekV := Cabs(HeadBus.Vbus^[1]) * 0.001;
+                            HeadBasekV := Cabs(HeadBus.VBus[1]) * 0.001;
                         end;
                     end;
 

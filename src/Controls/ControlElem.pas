@@ -177,7 +177,7 @@ var
     i: Integer;
 begin
     for i := 1 to Fnconds do
-        Curr^[i] := 0;
+        Curr[i] := 0;
 end;
 
 procedure TControlElem.CalcYPrim;

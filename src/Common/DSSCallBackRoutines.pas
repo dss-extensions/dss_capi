@@ -192,13 +192,13 @@ begin
      {First bus}
             BusIdx := CktElement.Terminals[0].busref;
             if BusIdx > 0 then
-                with DSSPrime.ActiveCircuit.Buses^[BusIdx] do
+                with DSSPrime.ActiveCircuit.Buses[BusIdx] do
                     if CoordDefined then
                         StrlCopy(Name1, pAnsiChar(Ansistring(DSSPrime.ActiveCircuit.BusList.NameOfIndex(Busidx))), Len1);
       {Second bus}
             BusIdx := CktElement.Terminals[1].busref;
             if BusIdx > 0 then
-                with DSSPrime.ActiveCircuit.Buses^[BusIdx] do
+                with DSSPrime.ActiveCircuit.Buses[BusIdx] do
                     if CoordDefined then
                         StrlCopy(Name2, pAnsiChar(Ansistring(DSSPrime.ActiveCircuit.BusList.NameOfIndex(Busidx))), Len2);
         end; {If CktElement}
@@ -218,7 +218,7 @@ begin
             begin
                 NumVoltages := Min(Yorder, NumVoltages);  // reset buffer size
                 for i := 1 to NumVoltages do
-                    V^[i] := Solution.NodeV^[NodeRef^[i]];
+                    V[i] := Solution.NodeV[NodeRef[i]];
             end;
 end;
 
@@ -235,7 +235,7 @@ begin
                 ComputeIterminal;
                 NumCurrents := Min(Yorder, NumCurrents); // Reset to actual number of elements returned
                 for i := 1 to NumCurrents do
-                    Curr^[i] := ITerminal^[i];
+                    Curr[i] := ITerminal[i];
             end;
 end;
 
@@ -298,7 +298,7 @@ begin
             with ActiveCktElement do
             begin
                 for i := 1 to Min(Yorder, Maxsize) do
-                    NodeReferenceArray^[i] := NodeRef^[i];
+                    NodeReferenceArray[i] := NodeRef[i];
             end;
 end;
 
@@ -371,7 +371,7 @@ function IsBusCoordinateDefinedCallback(BusRef: Integer): Boolean; STDCALL;
 begin
     Result := FALSE;
     if Assigned(DSSPrime.ActiveCircuit) and (busRef > 0) then
-        Result := DSSPrime.ActiveCircuit.Buses^[BusRef].CoordDefined;
+        Result := DSSPrime.ActiveCircuit.Buses[BusRef].CoordDefined;
 end;
 
 {====================================================================================================================}
@@ -381,8 +381,8 @@ begin
     Y := 0.0;
     if Assigned(DSSPrime.ActiveCircuit) and (busRef > 0) then
     begin
-        X := DSSPrime.ActiveCircuit.Buses^[BusRef].X;
-        Y := DSSPrime.ActiveCircuit.Buses^[BusRef].Y;
+        X := DSSPrime.ActiveCircuit.Buses[BusRef].X;
+        Y := DSSPrime.ActiveCircuit.Buses[BusRef].Y;
     end;
 end;
 
@@ -392,7 +392,7 @@ begin
     Result := 0.0;
     if Assigned(DSSPrime.ActiveCircuit) and (busRef > 0) then
     begin
-        Result := DSSPrime.ActiveCircuit.Buses^[BusRef].kVBase;
+        Result := DSSPrime.ActiveCircuit.Buses[BusRef].kVBase;
     end;
 end;
 
@@ -402,7 +402,7 @@ begin
     Result := 0.0;
     if Assigned(DSSPrime.ActiveCircuit) and (busRef > 0) then
     begin
-        Result := DSSPrime.ActiveCircuit.Buses^[BusRef].DistFromMeter;
+        Result := DSSPrime.ActiveCircuit.Buses[BusRef].DistFromMeter;
     end;
 end;
 

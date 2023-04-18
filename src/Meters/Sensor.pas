@@ -287,12 +287,10 @@ procedure TSensor.ResetAll; // Force all Sensors in the circuit to reset
 var
     pSensor: TSensorObj;
 begin
-    pSensor := ActiveCircuit.Sensors.First;
-    while pSensor <> NIL do
+    for pSensor in ActiveCircuit.Sensors do
     begin
         if pSensor.enabled then
             pSensor.ResetIt;
-        pSensor := ActiveCircuit.Sensors.Next;
     end;
 end;
 
@@ -300,12 +298,10 @@ procedure TSensor.SampleAll; // Force all Sensors in the circuit to take a sampl
 var
     pSensor: TSensorObj;
 begin
-    pSensor := ActiveCircuit.Sensors.First;
-    while pSensor <> NIL do
+    for pSensor in ActiveCircuit.Sensors do
     begin
         if pSensor.enabled then
             pSensor.TakeSample;
-        pSensor := ActiveCircuit.Sensors.Next;
     end;
 end;
 
@@ -321,19 +317,15 @@ var
     CktElem: TDSSCktElement;
 begin
     // Initialize all to FALSE
-    with  ActiveCircuit do
+    with ActiveCircuit do
     begin
-        CktElem := PDElements.First;
-        while CktElem <> NIL do
+        for CktElem in PDElements do
         begin
             Exclude(CktElem.Flags, Flg.HasSensorObj);
-            CktElem := PDElements.Next;
         end;
-        CktElem := PCElements.First;
-        while CktElem <> NIL do
+        for CktElem in PCElements  do
         begin
             Exclude(CktElem.Flags, Flg.HasSensorObj);
-            CktElem := PCElements.Next;
         end;
     end;
 
@@ -530,7 +522,7 @@ var
 begin
     // Return array of zero
     for i := 1 to Fnconds do
-        Curr^[i] := 0;
+        Curr[i] := 0;
 end;
 
 procedure TSensorObj.UpdateCurrentVector;

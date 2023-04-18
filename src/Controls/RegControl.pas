@@ -564,8 +564,8 @@ begin
                 Setbus(1, RegulatedBus)   // hopefully this will actually exist
             else
                 Setbus(1, ControlledElement.GetBus(ElementTerminal));
-            ReAllocMem(VBuffer, SizeOF(Vbuffer^[1]) * ControlledElement.NPhases);  // buffer to hold regulator voltages
-            ReAllocMem(CBuffer, SizeOF(CBuffer^[1]) * ControlledElement.Yorder);
+            ReAllocMem(VBuffer, SizeOF(Vbuffer[1]) * ControlledElement.NPhases);  // buffer to hold regulator voltages
+            ReAllocMem(CBuffer, SizeOF(CBuffer[1]) * ControlledElement.Yorder);
         end;
     end
     else
@@ -587,37 +587,37 @@ begin
     case FPTphase of
 //         AVGPHASES: Begin
 //                        Result := 0;
-//                        FOR i := 1 to Nphs Do Result := Result + Cabs(VBuffer^[i]);
+//                        FOR i := 1 to Nphs Do Result := Result + Cabs(VBuffer[i]);
 //                        Result := Result / (Nphs*PTRatio);
 //                    End;
 //
         MAXPHASE:
         begin
             ControlledPhase := 1;
-            V := Cabs(VBuffer^[ControlledPhase]);
+            V := Cabs(VBuffer[ControlledPhase]);
             for i := 2 to Nphs do
-                if Cabs(VBuffer^[i]) > V then
+                if Cabs(VBuffer[i]) > V then
                 begin
-                    V := Cabs(VBuffer^[i]);
+                    V := Cabs(VBuffer[i]);
                     ControlledPhase := i;
                 end;
-            Result := VBuffer^[ControlledPhase] / PTRatio;
+            Result := VBuffer[ControlledPhase] / PTRatio;
         end;
         MINPHASE:
         begin
             ControlledPhase := 1;
-            V := Cabs(VBuffer^[ControlledPhase]);
+            V := Cabs(VBuffer[ControlledPhase]);
             for i := 2 to Nphs do
-                if Cabs(VBuffer^[i]) < V then
+                if Cabs(VBuffer[i]) < V then
                 begin
-                    V := Cabs(VBuffer^[i]);
+                    V := Cabs(VBuffer[i]);
                     ControlledPhase := i;
                 end;
-            Result := VBuffer^[ControlledPhase] / PTRatio;
+            Result := VBuffer[ControlledPhase] / PTRatio;
         end;
     else
     {Just use one phase because that's what most controls do.}
-        Result := VBuffer^[FPTPhase] / PTRatio;
+        Result := VBuffer[FPTPhase] / PTRatio;
         ControlledPhase := FPTPhase;
     end;
 end;
@@ -631,7 +631,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
 
     if Complete then
@@ -942,19 +942,19 @@ begin
 
     if UsingRegulatedBus then
     begin
-        TransformerConnection := ControlledTransformer.Winding^[ElementTerminal].Connection;
+        TransformerConnection := ControlledTransformer.Winding[ElementTerminal].Connection;
         ComputeVTerminal;   // Computes the voltage at the bus being regulated
         for i := 1 to Fnphases do
         begin
             case TransformerConnection of
                 0:
                 begin      // Wye
-                    VBuffer^[i] := Vterminal^[i];
+                    VBuffer[i] := Vterminal[i];
                 end;
                 1:
                 begin   // Delta
                     ii := ControlledTransformer.RotatePhases(i);      // Get next phase in sequence using Transformer Obj rotate
-                    VBuffer^[i] := Vterminal^[i] - Vterminal^[ii];
+                    VBuffer[i] := Vterminal[i] - Vterminal[ii];
                 end
             end;
         end;
@@ -972,7 +972,7 @@ begin
         if UsingRegulatedBus then
         begin
             ControlledTransformer.GetWindingVoltages(ElementTerminal, VBuffer);
-            Vlocalbus := Cabs(VBuffer^[1] / PTRatio);
+            Vlocalbus := Cabs(VBuffer[1] / PTRatio);
         end
         else
         begin
@@ -987,7 +987,7 @@ begin
     begin
         ControlledElement.GetCurrents(Cbuffer);
         // Convert current to control current by CTRating
-        ILDC := (CBuffer^[ControlledElement.Nconds * (ElementTerminal - 1) + ControlledPhase]) / CTRating;
+        ILDC := (CBuffer[ControlledElement.Nconds * (ElementTerminal - 1) + ControlledPhase]) / CTRating;
         if LDC_Z = 0.0 then  // Standard R, X LDC
         begin
             if InReverseMode or InCogenMode then
@@ -1007,7 +1007,7 @@ begin
 
     Vactual := Cabs(Vcontrol);   // Assumes looking forward; see below
 
-    with  ControlledTransformer do
+    with ControlledTransformer do
     begin
          // Check for out of band voltage
         if InReverseMode then
@@ -1242,7 +1242,7 @@ begin
             else
                 Setbus(1, ControlledElement.GetBus(ElementTerminal));
             ReAllocMem(VBuffer, SizeOF(Vbuffer^[1]) * ControlledElement.NPhases);  // buffer to hold regulator voltages
-            ReAllocMem(CBuffer, SizeOF(CBuffer^[1]) * ControlledElement.Yorder);
+            ReAllocMem(CBuffer, SizeOF(CBuffer[1]) * ControlledElement.Yorder);
         end;
     end;
     inherited;

@@ -558,7 +558,7 @@ begin
             ReAllocmem(puXSC, SizeOF(puXSC^[1]) * NewWdgSize);
             for i := OldWdgSize + 1 to NewWdgSize do
                 puXSC^[i] := 0.30;
-            Reallocmem(TermRef, SizeOf(TermRef^[1]) * 2 * NumWindings * Fnphases);
+            Reallocmem(TermRef, SizeOf(TermRef[1]) * 2 * NumWindings * Fnphases);
 
             // Reallocate impedance matrices
             ZB.Free;
@@ -577,34 +577,34 @@ begin
             if (ActiveWinding = 1) then
             begin
                 for i := 2 to NumWindings do
-                    Winding^[i].kVA := Winding^[1].kVA;
-                NormMaxHkVA := 1.1 * Winding^[1].kVA;    // Defaults for new winding rating.
-                EmergMaxHkVA := 1.5 * Winding^[1].kVA;
+                    Winding[i].kVA := Winding[1].kVA;
+                NormMaxHkVA := 1.1 * Winding[1].kVA;    // Defaults for new winding rating.
+                EmergMaxHkVA := 1.5 * Winding[1].kVA;
             end
             else
             if NumWindings = 2 then
             begin
-                Winding^[1].kVA := Winding^[2].kVA;  // For 2-winding, force both kVAs to be same
+                Winding[1].kVA := Winding[2].kVA;  // For 2-winding, force both kVAs to be same
             end;
             // Update LoadLosskW if winding %r changed. Using only windings 1 and 2
         ord(TProp.pctR):
-            pctLoadLoss := (Winding^[1].Rpu + Winding^[2].Rpu) * 100.0;
+            pctLoadLoss := (Winding[1].Rpu + Winding[2].Rpu) * 100.0;
         ord(TProp.Rdcohms):
-            Winding^[ActiveWinding].RdcSpecified := TRUE;
+            Winding[ActiveWinding].RdcSpecified := TRUE;
         ord(TProp.kVAs):
         begin
-            NormMaxHkVA := 1.1 * Winding^[1].kVA;    // Defaults for new winding rating.
-            EmergMaxHkVA := 1.5 * Winding^[1].kVA;
+            NormMaxHkVA := 1.1 * Winding[1].kVA;    // Defaults for new winding rating.
+            EmergMaxHkVA := 1.5 * Winding[1].kVA;
         end;
         17..19:
             XHXChanged := TRUE;
         26:
         begin    // Assume load loss is split evenly  between windings 1 and 2
-            Winding^[1].Rpu := pctLoadLoss / 2.0 / 100.0;
-            Winding^[2].Rpu := Winding^[1].Rpu;
+            Winding[1].Rpu := pctLoadLoss / 2.0 / 100.0;
+            Winding[2].Rpu := Winding[1].Rpu;
         end;
         37:
-            pctLoadLoss := (Winding^[1].Rpu + Winding^[2].Rpu) * 100.0;  // Update
+            pctLoadLoss := (Winding[1].Rpu + Winding[2].Rpu) * 100.0;  // Update
         // 38:
         //     DoSimpleMsg('Bank Property not used with AutoTrans object.', 100130);
         // 39:
@@ -690,7 +690,7 @@ begin
     YPrimInvalid := TRUE;
 
     for i := 1 to NumWindings do
-        Winding^[i] := Other.Winding^[i];
+        Winding[i] := Other.Winding[i];
         
     SetTermRef;
 
@@ -747,19 +747,19 @@ begin
     XfmrBank := '';
     XfmrCode := '';
 
-    VABase := Winding^[1].kVA * 1000.0;
+    VABase := Winding[1].kVA * 1000.0;
     ThermalTimeconst := 2.0;
     n_thermal := 0.8;
     m_thermal := 0.8;
     FLrise := 65.0;
     HSrise := 15.0;  // Hot spot rise
-    NormMaxHkVA := 1.1 * Winding^[1].kVA;
-    EmergMaxHkVA := 1.5 * Winding^[1].kVA;
-    pctLoadLoss := 2.0 * Winding^[1].Rpu * 100.0; //  assume two windings for init'ing
+    NormMaxHkVA := 1.1 * Winding[1].kVA;
+    EmergMaxHkVA := 1.5 * Winding[1].kVA;
+    pctLoadLoss := 2.0 * Winding[1].Rpu * 100.0; //  assume two windings for init'ing
     ppm_FloatFactor := 0.000001;
     // ompute antifloat added for each winding
     for i := 1 to NumWindings do
-        Winding^[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase / FNPhases);
+        Winding[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase / FNPhases);
 
     // Default the no load properties to zero
     pctNoLoadLoss := 0.0;
@@ -789,12 +789,12 @@ begin
     // Redefine 2nd node of Series winding to same as first node of 2nd winding (common winding)
 
     if iTerm = 2 then
-        if Winding^[1].Connection = TAutoTransConnection.Series then
+        if Winding[1].Connection = TAutoTransConnection.Series then
         begin
             for i := 1 to Fnphases do
             begin
-                NodeRef^[Fnphases + i] := NodeRef^[i + Fnconds];
-                Terminals[iTerm - 1].TermNodeRef[Fnphases + i - 1] := NodeRef^[i + Fnconds];
+                NodeRef[Fnphases + i] := NodeRef[i + Fnconds];
+                Terminals[iTerm - 1].TermNodeRef[Fnphases + i - 1] := NodeRef[i + Fnconds];
             end;
         end;
 end;
@@ -830,18 +830,18 @@ begin
     // Determine Delta Direction
     // If high voltage is delta, delta leads y
     // If high voltage is wye, delta lags wye
-    if Winding^[1].connection = Winding^[2].connection then
+    if Winding[1].connection = Winding[2].connection then
         DeltaDirection := 1
     else
-    if Winding^[1].connection = TAutoTransConnection.Series then
+    if Winding[1].connection = TAutoTransConnection.Series then
         DeltaDirection := 1  // Auto
     else
     begin
-        if Winding^[1].kVLL >= Winding^[2].kVLL then
+        if Winding[1].kVLL >= Winding[2].kVLL then
             iHvolt := 1
         else
             iHVolt := 2;
-        case Winding^[iHvolt].Connection of
+        case Winding[iHvolt].Connection of
             TAutoTransConnection.Wye:
                 if HVLeadsLV then
                     DeltaDirection := -1
@@ -853,7 +853,7 @@ begin
                 else
                     DeltaDirection := -1;
         else
-         // ---old code --- If Winding^[2].Connection = 0 Then DeltaDirection := -1 Else DeltaDirection := 1;
+         // ---old code --- If Winding[2].Connection = 0 Then DeltaDirection := -1 Else DeltaDirection := 1;
         end;
     end;
 
@@ -861,7 +861,7 @@ begin
 
     for i := 1 to NumWindings do
     begin
-        with Winding^[i] do
+        with Winding[i] do
             if (NumTaps > 0) then
                 TapIncrement := (MaxTap - MinTap) / NumTaps
             else
@@ -887,7 +887,7 @@ begin
 
    // Set winding voltage bases (in volts)
     for i := 1 to NumWindings do
-        with Winding^[i] do  // Get the actual turns voltage base for each winding
+        with Winding[i] do  // Get the actual turns voltage base for each winding
             case Connection of
                 TAutoTransConnection.Wye:
                     case Fnphases of
@@ -902,9 +902,9 @@ begin
                 begin                            // Series winding for Auto  Should be Winding[1]
                     case Fnphases of
                         2, 3:
-                            kVseries := (kVLL - Winding^[2].kVLL) / SQRT3;
+                            kVseries := (kVLL - Winding[2].kVLL) / SQRT3;
                     else
-                        kVseries := kVLL - Winding^[2].kVLL;
+                        kVseries := kVLL - Winding[2].kVLL;
                     end;
                     if kVSeries = 0.0 then
                         kVSeries := kVLL * 0.0001; // In case series has same voltage as common
@@ -913,11 +913,11 @@ begin
             end;
 
    {Base rating of Winding 1 }
-    VABase := Winding^[1].kVA * 1000.0;
+    VABase := Winding[1].kVA * 1000.0;
 
    // Set Rdc parameters for each winding.
     for i := 1 to NumWindings do
-        with Winding^[i] do
+        with Winding[i] do
         begin
             if RdcSpecified then
                 Rdcpu := RdcOhms / (SQR(VBase) / VABase)
@@ -929,24 +929,24 @@ begin
         end;
 
     for i := 1 to NumWindings do
-        Winding^[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase / FNPhases);
+        Winding[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase / FNPhases);
 
    { Normal and Emergency terminal current Rating for UE check}
     Vfactor := 1.0;  // ensure initialization
-    case Winding^[1].connection of
+    case Winding[1].connection of
         TAutoTransConnection.Wye:
-            VFactor := Winding^[1].VBase * 0.001;   // wye
+            VFactor := Winding[1].VBase * 0.001;   // wye
         TAutoTransConnection.Delta:
             case Fnphases of
                 1:
-                    VFactor := Winding^[1].VBase * 0.001;
+                    VFactor := Winding[1].VBase * 0.001;
                 2, 3:
-                    VFactor := Winding^[1].VBase * 0.001 / SQRT3;
+                    VFactor := Winding[1].VBase * 0.001 / SQRT3;
             else
-                VFactor := Winding^[1].VBase * 0.001 * 0.5 / sin(pi / Fnphases);
+                VFactor := Winding[1].VBase * 0.001 * 0.5 / sin(pi / Fnphases);
             end;
         TAutoTransConnection.Series:
-            VFactor := Winding^[1].VBase * 0.001;   // Series Winding
+            VFactor := Winding[1].VBase * 0.001;   // Series Winding
     end;
 
      {Divide per phase kVA by voltage to neutral}
@@ -973,9 +973,9 @@ begin
                 3:
                 begin   // if WDG= was ever used write out arrays ...
                     for i := 12 to 16 do
-                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName^[i], GetPropertyValue(i)]));
+                        FSWrite(F, Format(' %s=%s', [ParentClass.PropertyName[i], GetPropertyValue(i)]));
                     for i := 1 to Numwindings do
-                        FSWrite(F, Format(' wdg=%d %sR=%.7g', [i, '%', Winding^[i].Rpu * 100.0]));
+                        FSWrite(F, Format(' wdg=%d %sR=%.7g', [i, '%', Winding[i].Rpu * 100.0]));
                 end;
                 4..9:
                     ; // Ignore these properties; use arrays instead
@@ -1003,52 +1003,52 @@ begin
             for j := 1 to NumWindings do
             begin
                 Inc(k);
-                TermRef^[k] := (j - 1) * fNconds + 1;  // fNconds = 2
+                TermRef[k] := (j - 1) * fNconds + 1;  // fNconds = 2
                 Inc(k);
-                TermRef^[k] := j * fNconds;
+                TermRef[k] := j * fNconds;
             end;
     else
         // Typical array for 3-phase auto
         // This builds the YPrim and the NodeRef array maps it into Y
-        //     TermRef^[1] := 1;
-        //     TermRef^[2] := 4;
-        //     TermRef^[3] := 7;
-        //     TermRef^[4] := 10;
-        //     TermRef^[5] := 2;
-        //     TermRef^[6] := 5;
-        //     TermRef^[7] := 8;
-        //     TermRef^[8] := 11;
-        //     TermRef^[9] := 3;
-        //     TermRef^[10] := 6;
-        //     TermRef^[11] := 9;
-        //     TermRef^[12] := 12;
+        //     TermRef[1] := 1;
+        //     TermRef[2] := 4;
+        //     TermRef[3] := 7;
+        //     TermRef[4] := 10;
+        //     TermRef[5] := 2;
+        //     TermRef[6] := 5;
+        //     TermRef[7] := 8;
+        //     TermRef[8] := 11;
+        //     TermRef[9] := 3;
+        //     TermRef[10] := 6;
+        //     TermRef[11] := 9;
+        //     TermRef[12] := 12;
 
         for i := 1 to Fnphases do
         begin
             for  j := 1 to NumWindings do
             begin
                 Inc(k);
-                case Winding^[j].Connection of
+                case Winding[j].Connection of
                     TAutoTransConnection.Wye:
                     begin      // Wye
-                        TermRef^[k] := (j - 1) * FNConds + i;
+                        TermRef[k] := (j - 1) * FNConds + i;
                         Inc(k);
-                        TermRef^[k] := TermRef^[k - 1] + Fnphases;
+                        TermRef[k] := TermRef[k - 1] + Fnphases;
                     end;
                     // **** WILL THIS WORK for 2-PHASE OPEN DELTA ???? Need to check this sometime
 
                     TAutoTransConnection.Delta:
                     begin   // Delta
-                        TermRef^[k] := (j - 1) * fNconds + i;
+                        TermRef[k] := (j - 1) * fNconds + i;
                         Inc(k);
-                        TermRef^[k] := (j - 1) * fNconds + RotatePhases(i);  // connect to next phase in sequence
+                        TermRef[k] := (j - 1) * fNconds + RotatePhases(i);  // connect to next phase in sequence
                     end;
 
                     TAutoTransConnection.Series:
                     begin // Series Winding for Auto Transfomer
-                        TermRef^[k] := i;
+                        TermRef[k] := i;
                         Inc(k);
-                        TermRef^[k] := i + Fnphases;
+                        TermRef[k] := i + Fnphases;
                     end;
                 end;
             end;
@@ -1120,7 +1120,7 @@ begin
 
     for i := 1 to NumWindings do
     begin
-        with Winding^[i] do
+        with Winding[i] do
         begin
             if i = 1 then
                 FSWriteln(F, Format('~ Wdg=%d bus=%s', [i, firstbus]))
@@ -1164,12 +1164,12 @@ begin
     FSWriteln(F, Format('~ %%noloadloss=%.0f', [pctNoLoadLoss]));
 
     for i := 28 to NumPropsThisClass do
-        FSWriteln(F, '~ ' + ParentClass.PropertyName^[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 
     with ParentClass do
     begin
         for i := NumPropsthisClass + 1 to NumProperties do
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
     end;
 
     if Complete then
@@ -1180,82 +1180,71 @@ begin
         ZBTemp.Invert;
 
         FSWriteln(F, 'ZB:');
-        with ZBTemp do
+        for i := 1 to NumWindings - 1 do
         begin
-            for i := 1 to NumWindings - 1 do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, format('%g ', [GetElement(i, j).re]));
-                FSWriteln(F);
-            end;
-            for i := 1 to NumWindings - 1 do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, format('%g ', [GetElement(i, j).im]));
-                FSWriteln(F);
-            end;
+            for j := 1 to i do
+                FSWrite(F, format('%g ', [ZBTemp[i, j].re]));
+            FSWriteln(F);
+        end;
+        for i := 1 to NumWindings - 1 do
+        begin
+            for j := 1 to i do
+                FSWrite(F, format('%g ', [ZBTemp[i, j].im]));
+            FSWriteln(F);
         end;
 
         ZBTemp.Free;
 
         FSWriteln(F);
         FSWriteln(F, 'ZB: (inverted)');
-        with ZB do
+        for i := 1 to NumWindings - 1 do
         begin
-            for i := 1 to NumWindings - 1 do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).re]));
-                FSWriteln(F);
-            end;
-            for i := 1 to NumWindings - 1 do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).im]));
-                FSWriteln(F);
-            end;
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [ZB[i, j].re]));
+            FSWriteln(F);
+        end;
+        for i := 1 to NumWindings - 1 do
+        begin
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [ZB[i, j].im]));
+            FSWriteln(F);
         end;
 
         FSWriteln(F);
         FSWriteln(F, 'Y_OneVolt');
-        with Y_1Volt do
+        for i := 1 to NumWindings do
         begin
-            for i := 1 to NumWindings do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).re]));
-                FSWriteln(F);
-                
-            end;
-            for i := 1 to NumWindings do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).im]));
-                FSWriteln(F);
-            end;
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [Y_1Volt[i, j].re]));
+            FSWriteln(F);
+            
+        end;
+        for i := 1 to NumWindings do
+        begin
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [Y_1Volt[i, j].im]));
+            FSWriteln(F);
         end;
 
         FSWriteln(F);
         FSWriteln(F, 'Y_Terminal');
-        with Y_Term do
+        for i := 1 to 2 * NumWindings do
         begin
-            for i := 1 to 2 * NumWindings do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).re]));
-                FSWriteln(F);
-            end;
-            for i := 1 to 2 * NumWindings do
-            begin
-                for j := 1 to i do
-                    FSWrite(F, Format('%.4f ', [GetElement(i, j).im]));
-                FSWriteln(F);
-            end;
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [Y_Term[i, j].re]));
+            FSWriteln(F);
         end;
+        for i := 1 to 2 * NumWindings do
+        begin
+            for j := 1 to i do
+                FSWrite(F, Format('%.4f ', [Y_Term[i, j].im]));
+            FSWriteln(F);
+        end;
+
         FSWriteln(F);
         FSWrite(F, 'TermRef= ');
         for i := 1 to 2 * NumWindings * Fnphases do
-            FSWrite(F, IntToStr(TermRef^[i]) + ' ');
+            FSWrite(F, IntToStr(TermRef[i]) + ' ');
         FSWriteln(F);
 
     end;
@@ -1299,7 +1288,7 @@ end;
 function TAutoTransObj.Get_PresentTap(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
-        Result := Winding^[i].puTap
+        Result := Winding[i].puTap
     else
         Result := 0.0;
 end;
@@ -1309,7 +1298,7 @@ var
     TempVal: Double;
 begin
     if (i > 0) and (i <= NumWindings) then
-        with Winding^[i] do
+        with Winding[i] do
         begin
            {Range Checking}
             TempVal := Value;
@@ -1331,7 +1320,7 @@ end;
 function TAutoTransObj.Get_WdgResistance(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
-        Result := Winding^[i].Rpu
+        Result := Winding[i].Rpu
     else
         Result := 0.0;
 end;
@@ -1339,7 +1328,7 @@ end;
 function TAutoTransObj.Get_WdgkVA(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
-        Result := Winding^[i].kVA
+        Result := Winding[i].kVA
     else
         Result := 0.0;
 end;
@@ -1358,7 +1347,7 @@ end;
 function TAutoTransObj.Get_WdgConnection(i: Integer): Integer;
 begin
     if (i > 0) and (i <= NumWindings) then
-        Result := Ord(Winding^[i].Connection)
+        Result := Ord(Winding[i].Connection)
     else
         Result := 0;
 end;
@@ -1366,7 +1355,7 @@ end;
 function TAutoTransObj.Get_MinTap(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
-        Result := Winding^[i].MinTap
+        Result := Winding[i].MinTap
     else
         Result := 0.0;
 end;
@@ -1374,7 +1363,7 @@ end;
 function TAutoTransObj.Get_MaxTap(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
-        Result := Winding^[i].MaxTap
+        Result := Winding[i].MaxTap
     else
         Result := 0.0;
 end;
@@ -1382,7 +1371,7 @@ end;
 function TAutoTransObj.Get_NumTaps(i: Integer): Integer;
 begin
     if (i > 0) and (i <= NumWindings) then
-        Result := Winding^[i].NumTaps
+        Result := Winding[i].NumTaps
     else
         Result := 0;
 end;
@@ -1390,7 +1379,7 @@ end;
 function TAutoTransObj.Get_TapIncrement(i: Integer): Double;
 begin
     if (i > 0) and (i <= NumWindings) then
-        Result := Winding^[i].TapIncrement
+        Result := Winding[i].TapIncrement
     else
         Result := 0.0;
 end;
@@ -1420,10 +1409,10 @@ begin
         with ActiveCircuit.Solution do
             if Assigned(NodeV) then
                 for i := 1 to Yorder do
-                    Vterminal^[i] := NodeV^[NodeRef^[i]]
+                    Vterminal[i] := NodeV[NodeRef[i]]
             else
                 for i := 1 to Yorder do
-                    Vterminal^[i] := 0;
+                    Vterminal[i] := 0;
 
 
         k := 0;
@@ -1432,22 +1421,22 @@ begin
             for iWind := 1 to NumWindings do
             begin
                 i := 2 * iWind - 1;
-                case Winding^[iWind].Connection of
+                case Winding[iWind].Connection of
                     TAutoTransConnection.Wye:
                     begin   // Wye  (Common winding usually)
-                        VTerm^[i] := Vterminal^[iphase + (iWind - 1) * FNconds];
-                        VTerm^[i + 1] := Vterminal^[iphase + (iWind - 1) * FNconds + FNphases];
+                        VTerm^[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                        VTerm^[i + 1] := Vterminal[iphase + (iWind - 1) * FNconds + FNphases];
                     end;
                     TAutoTransConnection.Delta:
                     begin   // Delta
                         jphase := RotatePhases(iphase);      // Get next phase in sequence
-                        VTerm^[i] := Vterminal^[iphase + (iWind - 1) * FNconds];
-                        VTerm^[i + 1] := Vterminal^[jphase + (iWind - 1) * FNconds];
+                        VTerm^[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                        VTerm^[i + 1] := Vterminal[jphase + (iWind - 1) * FNconds];
                     end;
                     TAutoTransConnection.Series:
                     begin    // Series Winding
-                        VTerm^[i] := Vterminal^[iphase + (iWind - 1) * FNconds];
-                        VTerm^[i + 1] := Vterminal^[iphase + Fnphases];
+                        VTerm^[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                        VTerm^[i + 1] := Vterminal[iphase + Fnphases];
                     end;
                 end; {CASE}
 
@@ -1486,32 +1475,32 @@ begin
         if (iWind < 1) or (iWind > NumWindings) then
         begin
             for i := 1 to FNconds do
-                VBuffer^[i] := 0;
+                VBuffer[i] := 0;
             Exit;
         end;
 
         // Load up VTerminal - already allocated for all cktelements
         with ActiveCircuit.Solution do
             for i := 1 to Yorder do
-                Vterminal^[i] := NodeV^[NodeRef^[i]];
+                Vterminal[i] := NodeV[NodeRef[i]];
 
 
         k := (iWind - 1) * FNconds;    // Offset for winding
         NeutTerm := Fnphases + k + 1;
         for i := 1 to Fnphases do
-            case Winding^[iWind].Connection of
+            case Winding[iWind].Connection of
                 TAutoTransConnection.Wye:
                 begin      // Wye
-                    VBuffer^[i] := Vterminal^[i + k] - Vterminal^[NeutTerm];
+                    VBuffer[i] := Vterminal[i + k] - Vterminal[NeutTerm];
                 end;
                 TAutoTransConnection.Delta:
                 begin   // Delta
                     ii := RotatePhases(i);      // Get next phase in sequence
-                    VBuffer^[i] := Vterminal^[i + k] - Vterminal^[ii + k];
+                    VBuffer[i] := Vterminal[i + k] - Vterminal[ii + k];
                 end;
                 TAutoTransConnection.Series:
                 begin      // Series   (winding 1)
-                    VBuffer^[i] := Vterminal^[i + k] - Vterminal^[i + Fnconds];
+                    VBuffer[i] := Vterminal[i + k] - Vterminal[i + Fnconds];
                 end;
             end;
 
@@ -1526,9 +1515,9 @@ end;
 function TAutoTransObj.Get_BaseVoltage(i: Integer): Double;
 begin
     if (i < 1) or (i > NumWindings) then
-        Result := Winding^[1].VBase
+        Result := Winding[1].VBase
     else
-        Result := Winding^[i].VBase;
+        Result := Winding[i].VBase;
 end;
 
 procedure TAutoTransObj.GetCurrents(Curr: pComplexArray);
@@ -1539,7 +1528,7 @@ begin
 
     // Combine Series (wdg 1) and Common winding (2) Currents to get X Terminal Currents
     for i := 1 to Fnphases do
-        Curr^[i + FnConds] += Curr^[i + Fnphases];
+        Curr[i + FnConds] += Curr[i + Fnphases];
 end;
 
 procedure TAutoTransObj.GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex);
@@ -1628,14 +1617,14 @@ begin
         new_buses[i - 1] := Getbus(i);
 
     for i := 1 to NumWindings do
-        with Winding^[i] do
+        with Winding[i] do
             if (NPhases > 1) or (Connection <> TAutoTransConnection.Wye) then
                 new_kVs[i - 1] := kVLL / SQRT3
             else
                 new_kVs[i - 1] := kVLL;
 
     for i := 1 to NumWindings do
-        with Winding^[i] do
+        with Winding[i] do
             new_kVAs[i - 1] := kVA / FNPhases;
     
     new_norm := NormMaxHkVA / FNPhases;
@@ -1662,27 +1651,24 @@ var
     Value: complex;
     j: Integer;
 begin
-    with YPrim_Component do
+    // Now, Put in Yprim matrix
+    // have to add every element of Y_terminal into Yprim somewhere
+    NW2 := 2 * NumWindings;
+    for i := 1 to NW2 do
     begin
-    { Now, Put in Yprim matrix }
-    {have to add every element of Y_terminal into Yprim somewhere}
-        NW2 := 2 * NumWindings;
-        for i := 1 to NW2 do
+        for j := 1 to i do
         begin
-            for j := 1 to i do
-            begin
-                Value := Y_Terminal.GetElement(i, j);
-        // This value goes in Yprim nphases times
-                for k := 0 to Fnphases - 1 do
-                    AddElemSym(TermRef^[i + k * NW2], TermRef^[j + k * NW2], Value);
-            end;
+            Value := Y_Terminal[i, j];
+            // This value goes in Yprim nphases times
+            for k := 0 to Fnphases - 1 do
+                YPrim_Component.AddElemSym(TermRef[i + k * NW2], TermRef[j + k * NW2], Value);
         end;
     end;
 end;
 
 function TAutoTransObj.Get_BasekVLL(i: Integer): Double;
 begin
-    Result := Winding^[i].kVLL;
+    Result := Winding[i].kVLL;
 end;
 
 
@@ -1698,28 +1684,25 @@ begin
 
     for i := 1 to NumWindings do
     begin
-        yR := Cmplx(1.0 / (Winding^[i].Rdcohms), 0.0); // convert to Siemens
-        with Y_Term do
-        begin
-            idx := 2 * i - 1;
-            SetElement(idx, idx, yR);
-            SetElement(idx + 1, idx + 1, yR);
-            SetElemSym(idx, idx + 1, -yR);   // set off-diagonals
-        end;
+        yR := 1.0 / (Winding[i].Rdcohms); // convert to Siemens
+        idx := 2 * i - 1;
+        Y_Term[idx, idx] := yR;
+        Y_Term[idx + 1, idx + 1] := yR;
+        Y_Term[idx, idx + 1] := -yR;   // set off-diagonals
+        Y_Term[idx + 1, idx] := -yR;   // set off-diagonals
     end;
 
     // For GIC add a small *Conductance* to both conductors of each winding so that
     // the matrix will always invert even if the user neglects to define a voltage
     // reference on all sides
     if ppm_FloatFactor <> 0.0 then
-        with Y_Term do
-            for i := 1 to NumWindings do
-            begin
-                Yadder := cmplx(-Winding^[i].Y_PPM, 0.0);    // G + j0
-                for j := (2 * i - 1) to (2 * i) do
-                    SetElement(j, j, GetElement(j, j) + Yadder);
-                    // SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));
-            end;
+        for i := 1 to NumWindings do
+        begin
+            Yadder := -Winding[i].Y_PPM;    // G + j0
+            for j := (2 * i - 1) to (2 * i) do
+                Y_Term.AddElement(j, j, Yadder);
+                // SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));
+        end;
 end;
 
 procedure TAutoTransObj.CalcY_Terminal(FreqMult: Double);
@@ -1763,15 +1746,15 @@ begin
         ZBase := 1.0 / (VABase / Fnphases); // base ohms on 1.0 volt basis, as in Dommel (6.46) for Zct or puXSC^[3]
 
         // Adjust specified XSC by SQR(1 + Vcommon/Vseries)
-        ZCorrected := ZBase * SQR(1.0 + Winding^[2].vbase / Winding^[1].Vbase); // Correction factor for Series, as in Dommel (6.45) for Zsc or puXSC^[1]
+        ZCorrected := ZBase * SQR(1.0 + Winding[2].vbase / Winding[1].Vbase); // Correction factor for Series, as in Dommel (6.45) for Zsc or puXSC^[1]
         // since the losses are correct as they are, mimic Dommel (6.50) for Zst or puXSC^[2], without disturbing Zbase or Zcorrected
         // Dommel: Xst = Xhl*Vh*Vl/(Vh-Vl)^2 + Xht*Vh/(Vh-Vl) - Xlt*Vl/(Vh-Vl)
         //             = Xhl*(Vs+Vc)*Vc/Vs^2 + Xht*(Vs+Vc)/Vs - Xlt*Vc/Vs
         if NumWindings > 2 then
         begin
-            Vc := Winding^[2].VBase;
-            Vs := Winding^[1].VBase;
-            puXst := puXSC^[1] * (Vs + Vc) * Vc / Vs / Vs + puXSC^[2] * (Vs + Vc) / Vs - puXSC^[3] * Vc / Vs;
+            Vc := Winding[2].VBase;
+            Vs := Winding[1].VBase;
+            puXst := puXSC[1] * (Vs + Vc) * Vc / Vs / Vs + puXSC[2] * (Vs + Vc) / Vs - puXSC[3] * Vc / Vs;
         end
         else
             puXst := 0.0;
@@ -1779,33 +1762,31 @@ begin
         for i := 1 to Numwindings - 1 do
         begin
             if i = 1 then
-                ZB.SetElement(i, i, Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i + 1].Rpu), Freqmult * puXSC^[i]) * ZCorrected)
+                ZB[i, i] := Cmplx(Rmult * (Winding[1].Rpu + Winding[i + 1].Rpu), Freqmult * puXSC^[i]) * ZCorrected
             else
             if i = 2 then
-                ZB.SetElement(i, i, Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i + 1].Rpu), Freqmult * puXst) * Zbase)
+                ZB[i, i] := Cmplx(Rmult * (Winding[1].Rpu + Winding[i + 1].Rpu), Freqmult * puXst) * Zbase
             else
-                ZB.SetElement(i, i, Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i + 1].Rpu), Freqmult * puXSC^[i]) * Zbase);
+                ZB[i, i] := Cmplx(Rmult * (Winding[1].Rpu + Winding[i + 1].Rpu), Freqmult * puXSC^[i]) * Zbase;
         end;
 
         // Off diagonals
         k := NumWindings;
-        with ZB do
-            for  i := 1 to Numwindings - 1 do
+        for  i := 1 to Numwindings - 1 do
+        begin
+            for j := i + 1 to Numwindings - 1 do
             begin
-                for j := i + 1 to Numwindings - 1 do
-                begin
-                    SetElemSym(i, j,
-                        (
-                            GetElement(i, i) 
-                            + GetElement(j, j)
-                            - Cmplx(Rmult * (Winding^[i + 1].Rpu + Winding^[j + 1].Rpu), Freqmult * puXSC^[k]) * ZBase
-                        ) * 0.5
-                    );
-                    Inc(k);
-                end;
+                ZB[i, j] := (
+                        ZB[i, i]
+                        + ZB[j, j]
+                        - Cmplx(Rmult * (Winding[i + 1].Rpu + Winding[j + 1].Rpu), Freqmult * puXSC^[k]) * ZBase
+                ) * 0.5;
+                ZB[j, i] := ZB[i, j];
+                Inc(k);
             end;
+        end;
 
-        ZB.Invert;   // mhos on one volt base
+        ZB.Invert();   // mhos on one volt base
 
         if ZB.InvertError > 0 then
         begin
@@ -1814,7 +1795,7 @@ begin
                 _('Invalid impedance specified. Replaced with tiny conductance to ground.'), 117);
             ZB.Clear;
             for i := 1 to ZB.Order do
-                ZB.SetElement(i, i, Cmplx(EPSILON, 0.0));
+                ZB[i, i] := EPSILON;
         end;
 
         // Now construct Y_Oneturn = AT * ZB.Invert * A
@@ -1825,8 +1806,8 @@ begin
         //  AT = Transpose of A =  1  0 ...    N X N-1
         //                         0  1 ..
         //
-        Y_1Volt.Clear;
-        Y_1Volt_NL.Clear;
+        Y_1Volt.Clear();
+        Y_1Volt_NL.Clear();
 
         // Allocate temp complex arrays
         ctempArray1 := AllocMem(SizeOf(Complex) * NumWindings * 2);
@@ -1835,10 +1816,10 @@ begin
         A := AllocMem(SizeOf(Complex) * NumWindings * 2);
         AT := TcMatrix.Creatematrix(NumWindings);
         for i := 1 to NumWindings - 1 do
-            AT.SetElement(i + 1, i, 1);
+            AT[i + 1, i] := 1;
         for i := 1 to NumWindings - 1 do
-            AT.SetElement(1, i, -1);
-        ctemparray1^[NumWindings] := 0;
+            AT[1, i] := -1;
+        ctemparray1[NumWindings] := 0;
         for i := 1 to Numwindings do
         begin
             if i = 1 then
@@ -1853,7 +1834,7 @@ begin
             ZB.MVmult(ctemparray1, A); // Zb.invert * A
             AT.MVmult(ctempArray2, ctemparray1); // AT * Result
             for j := 1 to NumWindings do
-                Y_1Volt.SetElement(j, i, ctempArray2^[j]);
+                Y_1Volt[j, i] := ctempArray2[j];
         end;
 
         // Add magnetizing Reactance to 2nd winding, assuming it is closest to the core
@@ -1869,58 +1850,57 @@ begin
 
         AT.Free;
 
-        Y_Term.Clear;
-        Y_Term_NL.Clear;
+        Y_Term.Clear();
+        Y_Term_NL.Clear();
         AT := TcMatrix.Creatematrix(NumWindings * 2);
 
         // 8/22/2013 Added ZeroTapFix so that regcontrol can set a tap to zero
 
         for i := 1 to NumWindings do
-            with Winding^[i] do
-                AT.SetElement(2 * i - 1, i, Cmplx(1.0 / (VBase * ZeroTapFix(puTap)), 0.0));
+            with Winding[i] do
+                AT[2 * i - 1, i] := 1.0 / (VBase * ZeroTapFix(puTap));
         for i := 1 to NumWindings do
-            with Winding^[i] do
-                AT.SetElement(2 * i, i, Cmplx(-1.0 / (VBase * ZeroTapFix(puTap)), 0.0));
+            with Winding[i] do
+                AT[2 * i, i] := -1.0 / (VBase * ZeroTapFix(puTap));
         for i := 1 to 2 * Numwindings do
-            ctemparray1^[i] := 0;
+            ctemparray1[i] := 0;
 
         for i := 1 to 2 * Numwindings do
         begin
             for k := 1 to NumWindings do
-                with Winding^[k] do
+                with Winding[k] do
                 begin
                     if i = (2 * k - 1) then
-                        A^[k] := Cmplx((1.0 / (VBase * ZeroTapFix(puTap))), 0.0)
+                        A[k] := 1.0 / (VBase * ZeroTapFix(puTap))
                     else
                     if i = 2 * k then
-                        A^[k] := Cmplx((-1.0 / (VBase * ZeroTapFix(puTap))), 0.0)
+                        A[k] := -1.0 / (VBase * ZeroTapFix(puTap))
                     else
-                        A^[k] := 0;
+                        A[k] := 0;
                 end;
             // Main AutoTrans part
             Y_1Volt.MVmult(ctemparray1, A);
             AT.MVmult(ctemparray2, ctemparray1);    // AT * Result
             for j := 1 to 2 * NumWindings do
-                Y_Term.SetElement(j, i, ctemparray2^[j]);
+                Y_Term[j, i] := ctemparray2[j];
             // No Load part
             Y_1Volt_NL.MVmult(ctemparray1, A);
             AT.MVmult(ctemparray2, ctemparray1);    // AT * Result
             for j := 1 to 2 * NumWindings do
-                Y_Term_NL.SetElement(j, i, ctemparray2^[j]);
+                Y_Term_NL[j, i] := ctemparray2[j];
         end;
 
         // Add a small Admittance to both conductors of each winding so that
         // the matrix will always invert even if the user neglects to define a voltage
         // reference on all sides
         if ppm_FloatFactor <> 0.0 then
-            with Y_Term do
-                for i := 1 to NumWindings do
-                begin
-                    Yadder := cmplx(0.0, Winding^[i].Y_PPM);
-                    for j := (2 * i - 1) to (2 * i) do
-                        SetElement(j, j, GetElement(j, j) + Yadder);
-                        // SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));
-                end;
+            for i := 1 to NumWindings do
+            begin
+                Yadder := cmplx(0.0, Winding[i].Y_PPM);
+                for j := (2 * i - 1) to (2 * i) do
+                    Y_Term.AddElement(j, j, Yadder);
+                    // SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));
+            end;
 
         AT.Free;
         Reallocmem(A, 0);

@@ -387,18 +387,18 @@ begin
         Reallocmem(Rmatrix, 0)
     else
     begin
-        Reallocmem(Rmatrix, SizeOf(Rmatrix^[1]) * Fnphases * Fnphases);
+        Reallocmem(Rmatrix, SizeOf(Rmatrix[1]) * Fnphases * Fnphases);
         for i := 1 to Fnphases * Fnphases do
-            Rmatrix^[i] := Other.Rmatrix^[i];
+            Rmatrix[i] := Other.Rmatrix[i];
     end;
 
     if Other.Xmatrix = NIL then
         Reallocmem(Xmatrix, 0)
     else
     begin
-        Reallocmem(Xmatrix, SizeOf(Xmatrix^[1]) * Fnphases * Fnphases);
+        Reallocmem(Xmatrix, SizeOf(Xmatrix[1]) * Fnphases * Fnphases);
         for i := 1 to Fnphases * Fnphases do
-            Xmatrix^[i] := Other.Xmatrix^[i];
+            Xmatrix[i] := Other.Xmatrix[i];
     end;
 end;
 
@@ -503,30 +503,30 @@ begin
 
     if IsParallel and (SpecType = 3) then
     begin
-        ReAllocmem(Gmatrix, SizeOf(Gmatrix^[1]) * Fnphases * Fnphases);
-        ReAllocmem(Bmatrix, SizeOf(Bmatrix^[1]) * Fnphases * Fnphases);
+        ReAllocmem(Gmatrix, SizeOf(Gmatrix[1]) * Fnphases * Fnphases);
+        ReAllocmem(Bmatrix, SizeOf(Bmatrix[1]) * Fnphases * Fnphases);
 
         // Copy Rmatrix to Gmatrix and Invert
         for i := 1 to Fnphases * Fnphases do
-            Gmatrix^[i] := RMatrix^[i];
+            Gmatrix[i] := Rmatrix[i];
 // should be Gmatrix         ETKInvert(Rmatrix, Fnphases, CheckError);
         ETKInvert(Gmatrix, Fnphases, CheckError);
         if CheckError > 0 then
         begin
             DoSimpleMsg('Error inverting R Matrix for "%s" - G is zeroed.', [FullName], 232);
             for i := 1 to Fnphases * Fnphases do
-                Gmatrix^[i] := 0.0;
+                Gmatrix[i] := 0.0;
         end;
 
         // Copy Xmatrix to Bmatrix and Invert
         for i := 1 to Fnphases * Fnphases do
-            Bmatrix^[i] := -XMatrix^[i];
+            Bmatrix[i] := -Xmatrix[i];
         ETKInvert(Bmatrix, Fnphases, CheckError);
         if CheckError > 0 then
         begin
             DoSimpleMsg('Error inverting X Matrix for "%s" - B is zeroed.', [FullName], 233);
             for i := 1 to Fnphases * Fnphases do
-                Bmatrix^[i] := 0.0;
+                Bmatrix[i] := 0.0;
         end;
     end;
 end;
@@ -570,183 +570,105 @@ begin
         YPrimTemp := Yprim_Series;
 
 
-    with YPrimTemp do
-    begin
-        FYprimFreq := ActiveCircuit.Solution.Frequency;
-        FreqMultiplier := FYprimFreq / BaseFrequency;
+    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FreqMultiplier := FYprimFreq / BaseFrequency;
 
-        // If GIC simulation, Resistance Only
-        if ActiveCircuit.Solution.Frequency < 0.51 then
-        begin    // 0.5 Hz is cutoff
-            if X > 0.0 then
-                if R <= 0.0 then
-                    R := X / 50.0;   // Assume X/R = 50
-            FYprimFreq := 0.0;        // Set these to 0.0 for GIC model
-            FreqMultiplier := 0.0;    // sets reactance part to zero
-        end;
+    // If GIC simulation, Resistance Only
+    if ActiveCircuit.Solution.Frequency < 0.51 then
+    begin    // 0.5 Hz is cutoff
+        if X > 0.0 then
+            if R <= 0.0 then
+                R := X / 50.0;   // Assume X/R = 50
+        FYprimFreq := 0.0;        // Set these to 0.0 for GIC model
+        FreqMultiplier := 0.0;    // sets reactance part to zero
+    end;
 
-        // Now, Put in Yprim matrix
+    // Now, Put in Yprim matrix
 
-        case SpecType of
+    case SpecType of
 
-            1, 2:
-            begin   {Some form of R and X specified}
-               // Adjust for frequency
-                if Assigned(RCurveObj) then
-                    RValue := R * RCurveObj.GetYValue(FYprimFreq)
-                else
-                    RValue := R;
-                if Assigned(LCurveObj) then
-                    LValue := L * LCurveObj.GetYValue(FYprimFreq)
-                else
-                    LValue := L;
+        1, 2:
+        begin   // Some form of R and X specified
+            // Adjust for frequency
+            if Assigned(RCurveObj) then
+                RValue := R * RCurveObj.GetYValue(FYprimFreq)
+            else
+                RValue := R;
+            if Assigned(LCurveObj) then
+                LValue := L * LCurveObj.GetYValue(FYprimFreq)
+            else
+                LValue := L;
 
-                Value := Cinv(Cmplx(RValue, LValue * Twopi * FYprimFreq));
-               // Add in Rp Value if specified
-                if RpSpecified then
-                    Value += Cmplx(Gp, 0.0);
+            Value := Cinv(Cmplx(RValue, LValue * Twopi * FYprimFreq));
+            // Add in Rp Value if specified
+            if RpSpecified then
+                Value += Gp;
 
-                case Connection of
-                    TReactorConnection.Delta:
-                    begin   // Line-Line
-                        Value2 := Value * 2.0;
-                        Value := -Value;
-                        for i := 1 to Fnphases do
-                        begin
-                            SetElement(i, i, Value2);
-                            for j := 1 to i - 1 do
-                                SetElemSym(i, j, Value);
-                        end;
-                        // Remainder of the matrix is all zero
-                    end;
-                else
-                begin // Wye
-                    for i := 1 to Fnphases do
-                    begin
-                        SetElement(i, i, Value);     // Elements are only on the diagonals
-                        SetElement(i + Fnphases, i + Fnphases, Value);
-                        SetElemSym(i, i + Fnphases, -Value);
-                    end;
-                end;
-                end;
-
-            end;
-
-            3:
-            begin    // Z matrix specified
-                //Compute Z matrix
-
-                // Put in Parallel R & L 
-                if IsParallel then
-                begin // Build Z as a Y Matrix
-                    for i := 1 to Fnphases do
-                    begin
-                        for j := 1 to Fnphases do
-                        begin
-                            idx := (j - 1) * Fnphases + i;
-                            // FreqMultiplier = 0 signifies GIC model where we only need R part
-                            if FreqMultiplier > 0.0 then
-                                Value := Cmplx(Gmatrix^[idx], Bmatrix^[idx] / FreqMultiplier)
-                            else
-                                Value := Cmplx(Gmatrix^[idx], 0.0);
-                            SetElement(i, j, Value);
-                            SetElement(i + Fnphases, j + Fnphases, Value);
-                            SetElemSym(i, j + Fnphases, -Value);
-                        end;
-                    end;
-
-                end
-                else
-                begin // For Series R and X
-                    Zmatrix := TcMatrix.CreateMatrix(Fnphases);
-                    ZValues := Zmatrix.GetValuesArrayPtr(Fnphases);  // So we can stuff array fast
-                    // Put in Series R & L
-                    for i := 1 to Fnphases * Fnphases do
-                    begin
-                        // Correct the impedances for frequency
-                        ZValues^[i] := Cmplx(RMatrix^[i], Xmatrix^[i] * FreqMultiplier);
-                    end;
-
-                    ZMatrix.Invert; // Invert in place - is now Ymatrix
-                    if ZMatrix.InvertError > 0 then
-                    begin // If error, put in tiny series conductance
-                        DoErrorMsg('TReactorObj.CalcYPrim', 
-                            Format(_('Matrix Inversion Error for Reactor "%s"'), [Name]),
-                            _('Invalid impedance specified. Replaced with tiny conductance.'), 234);
-                        ZMatrix.Clear;
-                        for i := 1 to Fnphases do
-                            ZMatrix.SetElement(i, i, Cmplx(epsilon, 0.0));
-                    end;
-
-                    for i := 1 to Fnphases do
-                    begin
-                        for j := 1 to Fnphases do
-                        begin
-                            Value := Zmatrix.GetElement(i, j);
-                            SetElement(i, j, Value);
-                            SetElement(i + Fnphases, j + Fnphases, Value);
-                            SetElemSym(i, j + Fnphases, -Value);
-                        end;
-                    end;
-
-                    Zmatrix.Free;
-                end;
-            end;
-
-            4:
-            begin  // Symmetrical component Z's specified
-//
-//   parallel doesn't make sense
-//              If IsParallel Then
-//                ...
-                
-                // Series R+jX
-
-                Zmatrix := TcMatrix.CreateMatrix(Fnphases);
-
-                 // diagonal elements  -- all the same
-                if Fnphases = 1 then // assume positive sequence only model
-                    Value := Z1
-                else
-                    Value := Z2 + Z1 + Z0;
-
-                Value.im := Value.im * FreqMultiplier; // Correct the impedances for frequency
-                Value := Value / 3.0;
+            if Connection = TReactorConnection.Delta then
+            begin   // Line-Line
+                Value2 := Value * 2.0;
+                Value := -Value;
                 for i := 1 to Fnphases do
                 begin
-                    Zmatrix.SetElement(i, i, Value)
-                end;
-
-                if FnPhases = 3 then     // otherwise undefined
-                begin
-                    // There are two possible off-diagonal elements  if Z1 <> Z2
-                    // Calpha is defined as 1 /_ -120 instead of 1 /_ 120
-
-                    Calpha1 := cong(Calpha);   // Change it to agree with textbooks
-                    Calpha2 := Calpha1 * Calpha1;  // Alpha squared  = 1 /_ 240 = 1/_-120
-                    Value2 := Calpha2 * Z2 + Calpha1 * Z1 + Z0;
-                    Value1 := Calpha2 * Z1 + Calpha1 * Z2 + Z0;
-
-                    Value1.im := Value1.im * FreqMultiplier; // Correct the impedances for frequency
-                    Value2.im := Value2.im * FreqMultiplier; // Correct the impedances for frequency
-
-                    Value1 := Value1/  3.0;
-                    Value2 := Value2/  3.0;
-                    with Zmatrix do
+                    YPrimTemp[i, i] := Value2;
+                    for j := 1 to i - 1 do
                     begin
-                        //Lower Triangle
-                        SetElement(2, 1, Value1);
-                        SetElement(3, 1, Value2);
-                        SetElement(3, 2, Value1);
-                        //Upper Triangle
-                        SetElement(1, 2, Value2);
-                        SetElement(1, 3, Value1);
-                        SetElement(2, 3, Value2);
+                        YPrimTemp[i, j] := Value;
+                        YPrimTemp[j, i] := Value;
                     end;
+                end;
+                // Remainder of the matrix is all zero
+            end
+            else
+            begin // Wye
+                for i := 1 to Fnphases do
+                begin
+                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
+                    YPrimTemp[i, i + Fnphases] := -Value;
+                    YPrimTemp[i + Fnphases, i] := -Value;
+                end;
+            end;
 
+        end;
+
+        3:
+        begin    // Z matrix specified
+            //Compute Z matrix
+
+            // Put in Parallel R & L 
+            if IsParallel then
+            begin // Build Z as a Y Matrix
+                for i := 1 to Fnphases do
+                begin
+                    for j := 1 to Fnphases do
+                    begin
+                        idx := (j - 1) * Fnphases + i;
+                        // FreqMultiplier = 0 signifies GIC model where we only need R part
+                        if FreqMultiplier > 0.0 then
+                            Value := Cmplx(Gmatrix[idx], Bmatrix[idx] / FreqMultiplier)
+                        else
+                            Value := Gmatrix[idx];
+                        YPrimTemp[i, j] := Value;
+                        YPrimTemp[i + Fnphases, j + Fnphases] := Value;
+                        YPrimTemp[i, j + Fnphases] := -Value;
+                        YPrimTemp[j + Fnphases, i] := -Value;
+                    end;
                 end;
 
-                ZMatrix.Invert;  // Invert in place - is now Ymatrix
+            end
+            else
+            begin // For Series R and X
+                Zmatrix := TcMatrix.CreateMatrix(Fnphases);
+                ZValues := Zmatrix.GetValuesArrayPtr(Fnphases);  // So we can stuff array fast
+                // Put in Series R & L
+                for i := 1 to Fnphases * Fnphases do
+                begin
+                    // Correct the impedances for frequency
+                    ZValues[i] := Cmplx(Rmatrix[i], Xmatrix[i] * FreqMultiplier);
+                end;
+
+                ZMatrix.Invert(); // Invert in place - is now Ymatrix
                 if ZMatrix.InvertError > 0 then
                 begin // If error, put in tiny series conductance
                     DoErrorMsg('TReactorObj.CalcYPrim', 
@@ -754,26 +676,102 @@ begin
                         _('Invalid impedance specified. Replaced with tiny conductance.'), 234);
                     ZMatrix.Clear;
                     for i := 1 to Fnphases do
-                        ZMatrix.SetElement(i, i, Cmplx(epsilon, 0.0));
+                        ZMatrix[i, i] := epsilon;
                 end;
 
                 for i := 1 to Fnphases do
                 begin
                     for j := 1 to Fnphases do
                     begin
-                        Value := Zmatrix.GetElement(i, j);
-                        SetElement(i, j, Value);
-                        SetElement(i + Fnphases, j + Fnphases, Value);
-                        SetElement(i, j + Fnphases, -Value);
-                        SetElement(i + Fnphases, j, -Value);
+                        Value := Zmatrix[i, j];
+                        YPrimTemp[i, j] := Value;
+                        YPrimTemp[i + Fnphases, j + Fnphases] := Value;
+                        YPrimTemp[i, j + Fnphases] := -Value;
+                        YPrimTemp[j + Fnphases, i] := -Value;
                     end;
                 end;
 
                 Zmatrix.Free;
-
             end;
-       //    END;
         end;
+
+        4:
+        begin  // Symmetrical component Z's specified
+//
+//   parallel doesn't make sense
+//              If IsParallel Then
+//                ...
+            
+            // Series R+jX
+
+            Zmatrix := TcMatrix.CreateMatrix(Fnphases);
+
+                // diagonal elements  -- all the same
+            if Fnphases = 1 then // assume positive sequence only model
+                Value := Z1
+            else
+                Value := Z2 + Z1 + Z0;
+
+            Value.im := Value.im * FreqMultiplier; // Correct the impedances for frequency
+            Value := Value / 3.0;
+            for i := 1 to Fnphases do
+            begin
+                Zmatrix[i, i] := Value;
+            end;
+
+            if FnPhases = 3 then     // otherwise undefined
+            begin
+                // There are two possible off-diagonal elements  if Z1 <> Z2
+                // Calpha is defined as 1 /_ -120 instead of 1 /_ 120
+
+                Calpha1 := cong(Calpha);   // Change it to agree with textbooks
+                Calpha2 := Calpha1 * Calpha1;  // Alpha squared  = 1 /_ 240 = 1/_-120
+                Value2 := Calpha2 * Z2 + Calpha1 * Z1 + Z0;
+                Value1 := Calpha2 * Z1 + Calpha1 * Z2 + Z0;
+
+                Value1.im := Value1.im * FreqMultiplier; // Correct the impedances for frequency
+                Value2.im := Value2.im * FreqMultiplier; // Correct the impedances for frequency
+
+                Value1 := Value1/  3.0;
+                Value2 := Value2/  3.0;
+
+                //Lower Triangle
+                Zmatrix[2, 1] := Value1;
+                Zmatrix[3, 1] := Value2;
+                Zmatrix[3, 2] := Value1;
+                //Upper Triangle
+                Zmatrix[1, 2] := Value2;
+                Zmatrix[1, 3] := Value1;
+                Zmatrix[2, 3] := Value2;
+            end;
+
+            ZMatrix.Invert();  // Invert in place - is now Ymatrix
+            if ZMatrix.InvertError > 0 then
+            begin // If error, put in tiny series conductance
+                DoErrorMsg('TReactorObj.CalcYPrim', 
+                    Format(_('Matrix Inversion Error for Reactor "%s"'), [Name]),
+                    _('Invalid impedance specified. Replaced with tiny conductance.'), 234);
+                ZMatrix.Clear();
+                for i := 1 to Fnphases do
+                    ZMatrix[i, i] := epsilon;
+            end;
+
+            for i := 1 to Fnphases do
+            begin
+                for j := 1 to Fnphases do
+                begin
+                    Value := Zmatrix[i, j];
+                    YPrimTemp[i, j] := Value;
+                    YPrimTemp[i + Fnphases, j + Fnphases] := Value;
+                    YPrimTemp[i, j + Fnphases] := -Value;
+                    YPrimTemp[i + Fnphases, j] := -Value;
+                end;
+            end;
+
+            Zmatrix.Free;
+
+        end;
+    //    END;
     end;
 
     // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
@@ -781,10 +779,10 @@ begin
     begin
         if (Nphases = 1) and (not ActiveCircuit.PositiveSequence) then  // assume a neutral or grounding reactor; Leave diagonal in the circuit
             for i := 1 to Yorder do
-                Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i))
+                Yprim_Series[i, i] := Yprim_Shunt[i, i]
         else
             for i := 1 to Yorder do
-                Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
+                Yprim_Series[i, i] := Yprim_Shunt[i, i] * 1.0e-10;
     end;
 
     Yprim.Copyfrom(YPrimTemp);
@@ -808,11 +806,11 @@ begin
                 7:
                     if Rmatrix <> NIL then
                     begin
-                        FSWrite(F, PropertyName^[k] + '= (');
+                        FSWrite(F, PropertyName[k] + '= (');
                         for i := 1 to Fnphases do
                         begin
                             for j := 1 to Fnphases do
-                                FSWrite(F, Format('%-.5g ', [RMatrix^[(i - 1) * Fnphases + j]]));
+                                FSWrite(F, Format('%-.5g ', [RMatrix[(i - 1) * Fnphases + j]]));
                             if i <> Fnphases then
                                 FSWrite(F, '|');
                         end;
@@ -821,11 +819,11 @@ begin
                 8:
                     if Xmatrix <> NIL then
                     begin
-                        FSWrite(F, PropertyName^[k] + '= (');
+                        FSWrite(F, PropertyName[k] + '= (');
                         for i := 1 to Fnphases do
                         begin
                             for j := 1 to Fnphases do
-                                FSWrite(F, Format('%-.5g ', [XMatrix^[(i - 1) * Fnphases + j]]));
+                                FSWrite(F, Format('%-.5g ', [XMatrix[(i - 1) * Fnphases + j]]));
                             if i <> Fnphases then
                                 FSWrite(F, '|');
                         end;
@@ -842,7 +840,7 @@ begin
                 19:
                     FSWriteln(F, Format('~ LmH=%-.8g', [L * 1000.0]));
             else
-                FSWriteln(F, '~ ' + PropertyName^[k] + '=' + PropertyValue[k]);
+                FSWriteln(F, '~ ' + PropertyName[k] + '=' + PropertyValue[k]);
             end;
         end;
 end;
@@ -851,28 +849,24 @@ procedure TReactorObj.GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Compl
 var
     i: Integer;
 begin
-  {Only report No Load Losses if Rp defined and Reactor is a shunt device;
-   Else do default behavior.}
-
+    // Only report No Load Losses if Rp defined and Reactor is a shunt device;
+    // Else do default behavior.
     if (RpSpecified and IsShunt and (Rp <> 0.0)) then
     begin
         TotalLosses := Losses;  // Side effect: computes Iterminal and Vterminal
-     {Compute losses in Rp Branch from voltages across shunt element -- node to ground}
+        // Compute losses in Rp Branch from voltages across shunt element -- node to ground
         NoLoadLosses := 0;
         with ActiveCircuit.Solution do
             for i := 1 to FNphases do
-                with NodeV^[NodeRef^[i]] do
-                    NoLoadLosses += cmplx((SQR(re) + SQR(im)) / Rp, 0.0);  // V^2/Rp
+                with NodeV[NodeRef[i]] do
+                    NoLoadLosses += (re * re + im * im) / Rp;  // V^2/Rp
 
         if ActiveCircuit.PositiveSequence then
             NoLoadLosses := NoLoadLosses * 3.0;
         LoadLosses := TotalLosses - NoLoadLosses;  // Subtract no load losses from total losses
-
-    end
-
-    else
-        inherited;   {do the default Cktelement behaviors}
-
+        Exit;
+    end;
+    inherited; // do the default Cktelement behaviors
 end;
 
 procedure TReactorObj.MakePosSequence();
@@ -908,24 +902,24 @@ begin
                     // R1
                     Rs := 0.0;   // Avg Self
                     for i := 1 to FnPhases do
-                        Rs := Rs + Rmatrix^[(i - 1) * Fnphases + i];
+                        Rs := Rs + Rmatrix[(i - 1) * Fnphases + i];
                     Rs := Rs / FnPhases;
                     Rm := 0.0;     //Avg mutual
                     for i := 2 to FnPhases do
                         for j := i to FnPhases do
-                            Rm := Rm + Rmatrix^[(i - 1) * Fnphases + j];
+                            Rm := Rm + Rmatrix[(i - 1) * Fnphases + j];
                     Rm := Rm / (FnPhases * (Fnphases - 1.0) / 2.0);
                     R := (Rs - Rm);
 
                     // X1
                     Rs := 0.0;   // Avg Self
                     for i := 1 to FnPhases do
-                        Rs := Rs + Xmatrix^[(i - 1) * Fnphases + i];
+                        Rs := Rs + Xmatrix[(i - 1) * Fnphases + i];
                     Rs := Rs / FnPhases;
                     Rm := 0.0;     //Avg mutual
                     for i := 2 to FnPhases do
                         for j := i to FnPhases do
-                            Rm := Rm + Xmatrix^[(i - 1) * Fnphases + j];
+                            Rm := Rm + Xmatrix[(i - 1) * Fnphases + j];
                     Rm := Rm / (FnPhases * (Fnphases - 1.0) / 2.0);
                     X := (Rs - Rm);
 

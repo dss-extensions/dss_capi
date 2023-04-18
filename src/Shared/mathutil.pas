@@ -216,7 +216,7 @@ begin
     Result := 0;
     for j := 1 to Nphases do
     begin
-        Result += V^[j] * cong(I^[j]);
+        Result += V[j] * cong(I[j]);
     end;
 end;
 
@@ -227,60 +227,69 @@ var
 begin
     for j := 1 to N do
     begin
-        kWkVAR^[j] := V^[j] * cong(I^[j]) * 0.001;
+        kWkVAR^[j] := V[j] * cong(I[j]) * 0.001;
     end;
 end;
 
 procedure SetAMatrix(Amat: Tcmatrix);
 var
     a, aa: complex;
-    i: Integer;
 begin
     a := cmplx(-0.5, 0.8660254037844387);
     aa := cmplx(-0.5, -0.8660254037844387);
-    with Amat do
-    begin
-        for i := 1 to 3 do
-            SetElemSym(1, i, 1);
-        SetElement(2, 2, aa);
-        SetElement(3, 3, aa);
-        SetElemsym(2, 3, a);
-    end;
+
+    Amat[1, 1] := 1;
+    Amat[1, 2] := 1;
+    Amat[1, 3] := 1;
+
+    Amat[2, 1] := 1;
+    Amat[2, 2] := aa;
+    Amat[2, 3] := a;
+
+    Amat[3, 1] := 1;
+    Amat[3, 2] := a;
+    Amat[3, 3] := aa;
 end;
 
 procedure SetAMatrix_inv(Amat_inv: Tcmatrix);
 var
     a_3, aa_3, one_3: complex;
-    i: Integer;
 begin
     a_3 := cmplx(-0.5, 0.8660254037844387) / 3;
     aa_3 := cmplx(-0.5, -0.8660254037844387) / 3;
     one_3 := 1.0 / 3;
-    with Amat_inv do
-    begin
-        for i := 1 to 3 do
-            SetElemSym(1, i, one_3);
-        SetElement(2, 2, a_3);
-        SetElement(3, 3, a_3);
-        SetElemsym(2, 3, aa_3);
-    end;
+
+    Amat_inv[1, 1] := one_3;
+    Amat_inv[1, 2] := one_3;
+    Amat_inv[1, 3] := one_3;
+
+    Amat_inv[2, 1] := one_3;
+    Amat_inv[2, 2] := a_3;
+    Amat_inv[2, 3] := aa_3;
+
+    Amat_inv[3, 1] := one_3;
+    Amat_inv[3, 2] := aa_3;
+    Amat_inv[3, 3] := a_3;
 end;
 
 procedure SetAMatrix_official(Amat: Tcmatrix);
 var
     a, aa: complex;
-    i: Integer;
 begin
     a := cmplx(-0.5,0.866025403);
     aa := cmplx(-0.5,-0.866025403);    
-    with Amat do
-    begin
-        for i := 1 to 3 do
-            SetElemSym(1, i, 1);
-        SetElement(2, 2, aa);
-        SetElement(3, 3, aa);
-        SetElemsym(2, 3, a);
-    end;
+
+    Amat[1, 1] := 1;
+    Amat[1, 2] := 1;
+    Amat[1, 3] := 1;
+
+    Amat[2, 1] := 1;
+    Amat[2, 2] := aa;
+    Amat[2, 3] := a;
+
+    Amat[3, 1] := 1;
+    Amat[3, 2] := a;
+    Amat[3, 3] := aa;
 end;
 
 

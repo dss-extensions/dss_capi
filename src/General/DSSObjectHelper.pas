@@ -899,7 +899,7 @@ begin
     Result := TJSONArray.Create([]);
     with Result as TJSONArray do
         for i := 1 to n do
-            Add(ints^[i]);
+            Add(ints[i]);
 end;
 
 function GetDSSArray_Real_JSON(n: Integer; dbls: pDoubleArray; scale: Double): TJSONData;
@@ -917,14 +917,14 @@ begin
         begin
             for i := 1 to n do
             begin
-                Add(dbls^[i]);
+                Add(dbls[i]);
             end
         end
         else
         begin
             for i := 1 to n do
             begin
-                Add(dbls^[i] / scale);
+                Add(dbls[i] / scale);
             end;
         end;
 end;
@@ -1124,13 +1124,13 @@ begin
                         for i := 1 to mat.order do
                         begin
                             for j := 1 to i do
-                                Add(mat.GetElement(i, j).im / scale);
+                                Add(mat[i, j].im / scale);
                         end
                     else
                         for i := 1 to mat.order do
                         begin
                             for j := 1 to i do
-                                Add(mat.GetElement(i, j).re / scale);
+                                Add(mat[i, j].re / scale);
                         end;
 
                 Exit;
@@ -1472,7 +1472,7 @@ begin
                     for i := 1 to mat.order do
                     begin
                         for j := 1 to i do
-                            PropStr := PropStr + Format('%g ', [mat.GetElement(i, j).im / scale]);
+                            PropStr := PropStr + Format('%g ', [mat[i, j].im / scale]);
                         if i < mat.order then
                             PropStr := PropStr + '|';
                     end
@@ -1480,7 +1480,7 @@ begin
                     for i := 1 to mat.order do
                     begin
                         for j := 1 to i do
-                            PropStr := PropStr + Format('%g ', [mat.GetElement(i, j).re / scale]);
+                            PropStr := PropStr + Format('%g ', [mat[i, j].re / scale]);
                         if i < mat.order then
                             PropStr := PropStr + '|';
                     end;
@@ -3348,7 +3348,7 @@ begin
                 begin
                     for j := 1 to mat.Order do
                     begin
-                        outPtr^ := mat.GetElement(i, j).im / scale;
+                        outPtr^ := mat[i, j].im / scale;
                         Inc(outPtr);
                     end;
                 end
@@ -3357,7 +3357,7 @@ begin
                 begin
                     for j := 1 to mat.Order do
                     begin
-                        outPtr^ := mat.GetElement(i, j).re / scale;
+                        outPtr^ := mat[i, j].re / scale;
                         Inc(outPtr);
                     end;
                 end;

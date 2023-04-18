@@ -268,7 +268,7 @@ begin
     k := 0;
     for i := 1 to elem.NumReclose do
     begin
-        Result[k] := elem.RecloseIntervals^[i];
+        Result[k] := elem.RecloseIntervals[i];
         Inc(k);
     end;
 end;

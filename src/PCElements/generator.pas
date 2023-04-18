@@ -779,11 +779,9 @@ procedure TGenerator.ResetRegistersAll;  // Force all EnergyMeters in the circui
 var
     pGen: TGeneratorObj;
 begin
-    pGen := ActiveCircuit.Generators.First;
-    while (pGen <> NIL) do
+    for pGen in ActiveCircuit.Generators do
     begin
         pGen.ResetRegisters;
-        pGen := ActiveCircuit.Generators.Next;
     end;
 end;
 
@@ -791,12 +789,10 @@ procedure TGenerator.SampleAll;  // Force all EnergyMeters in the circuit to tak
 var
     pGen: TGeneratorObj;
 begin
-    pGen := ActiveCircuit.Generators.First;
-    while pGen <> NIL do
+    for pGen in ActiveCircuit.Generators do
     begin
         if pGen.enabled then
             pGen.TakeSample;
-        pGen := ActiveCircuit.Generators.Next;
     end;
 end;
 
@@ -1158,7 +1154,7 @@ begin
     DQDV := DQDVSaved;         // for Model = 3
     DeltaQMax := (varMax - varMin) * 0.10;  // Limit to 10% of range
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 
     // Update any user-written models
     if Usermodel.Exists then
@@ -1176,13 +1172,13 @@ begin
     FYprimFreq := ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
-    with  ActiveCircuit.solution do
+    with ActiveCircuit.solution do
         if IsDynamicModel or IsHarmonicModel then
         begin
             if GenON then
                 Y := Yeq   // L-N value computed in initialization routines
             else
-                Y := Cmplx(EPSILON, 0.0);
+                Y := EPSILON;
 
             if Connection = 1 then
                 Y := Y / 3.0; // Convert to delta impedance
@@ -1193,16 +1189,20 @@ begin
                 case Connection of
                     0:
                     begin
-                        Ymatrix.SetElement(i, i, Y);
+                        Ymatrix[i, i] := Y;
                         Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                        Ymatrix.SetElemsym(i, Fnconds, Yij);
+                        Ymatrix[i, Fnconds] := Yij;
+                        Ymatrix[Fnconds, i] := Yij;
                     end;
                     1:
                     begin   {Delta connection}
-                        Ymatrix.SetElement(i, i, Y);
+                        Ymatrix[i, i] := Y;
                         Ymatrix.AddElement(i, i, Y);  // put it in again
                         for j := 1 to i - 1 do
-                            Ymatrix.SetElemsym(i, j, Yij);
+                        begin
+                            Ymatrix[i, j] := Yij;
+                            Ymatrix[j, i] := Yij;
+                        end;
                     end;
                 end;
             end;
@@ -1232,18 +1232,17 @@ begin
 
             case Connection of
                 0:
-                    with YMatrix do
                     begin // WYE
                         Yij := -Y;
                         for i := 1 to Fnphases do
                         begin
-                            SetElement(i, i, Y);
-                            AddElement(Fnconds, Fnconds, Y);
-                            SetElemsym(i, Fnconds, Yij);
+                            YMatrix[i, i] := Y;
+                            YMatrix.AddElement(Fnconds, Fnconds, Y);
+                            YMatrix[i, Fnconds] := Yij;
+                            YMatrix[Fnconds, i] := Yij;
                         end;
                     end;
                 1:
-                    with YMatrix do
                     begin  // Delta  or L-L
                         Y := Y / 3.0; // Convert to delta impedance
                         Yij := -Y;
@@ -1252,9 +1251,9 @@ begin
                             j := i + 1;
                             if j > Fnconds then
                                 j := 1;  // wrap around for closed connections
-                            AddElement(i, i, Y);
-                            AddElement(j, j, Y);
-                            AddElemSym(i, j, Yij);
+                            YMatrix.AddElement(i, i, Y);
+                            YMatrix.AddElement(j, j, Y);
+                            YMatrix.AddElemSym(i, j, Yij);
                         end;
                     end;
             end;
@@ -1301,7 +1300,7 @@ begin
 
     // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
     for i := 1 to Yorder do
-        Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
+        Yprim_Series[i, i] := Yprim_Shunt[i, i] * 1.0e-10;
 
     YPrim.CopyFrom(YPrim_Shunt);
 
@@ -1321,17 +1320,17 @@ begin
 
         0:
         begin  //Wye
-            TermArray^[i] += Curr;
-            TermArray^[Fnconds] -= Curr; // Neutral
+            TermArray[i] += Curr;
+            TermArray[Fnconds] -= Curr; // Neutral
         end;
 
         1:
         begin //DELTA
-            TermArray^[i] += Curr;
+            TermArray[i] += Curr;
             j := i + 1;
             if j > Fnconds then
                 j := 1;
-            TermArray^[j] -= Curr;
+            TermArray[j] -= Curr;
         end;
     end;
 end;
@@ -1361,17 +1360,17 @@ begin
             FSWrite(TraceFile, sout);
             for i := 1 to fnphases do
             begin
-                WriteStr(sout, (Cabs(InjCurrent^[i])): 8: 1, ', ');
+                WriteStr(sout, (Cabs(InjCurrent[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
             end;
             for i := 1 to fnphases do
             begin
-                WriteStr(sout, (Cabs(ITerminal^[i])): 8: 1, ', ');
+                WriteStr(sout, (Cabs(ITerminal[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
             end;
             for i := 1 to fnphases do
             begin
-                WriteStr(sout, (Cabs(Vterminal^[i])): 8: 1, ', ');
+                WriteStr(sout, (Cabs(Vterminal[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
             end;
             WriteStr(sout, GenVars.VThevMag: 8: 1, ', ', Genvars.Theta * 180.0 / PI);
@@ -1417,7 +1416,7 @@ begin
     CalcVTerminalPhase; // get actual voltage across each phase of the load
     for i := 1 to Fnphases do
     begin
-        V := Vterminal^[i];
+        V := Vterminal[i];
         VMag := Cabs(V);
 
         case Connection of
@@ -1454,7 +1453,7 @@ begin
 
         // Checks the output in case of using Fuel
         if UseFuel and (not GenActive) then
-            Curr := cmplx(0, 0);
+            Curr := 0;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1479,11 +1478,11 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        Curr := Yeq2 * Vterminal^[i];   // Yeq is always line to neutral
+        Curr := Yeq2 * Vterminal[i];   // Yeq is always line to neutral
 
         // Checks the output in case of using Fuel
         if UseFuel and (not GenActive) then
-            Curr := cmplx(0, 0);
+            Curr := 0;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1507,7 +1506,7 @@ begin
     // Guess at a new var output value
     V_Avg := 0.0;
     for i := 1 to Fnphases do
-        V_Avg := V_Avg + Cabs(Vterminal^[i]);
+        V_Avg := V_Avg + Cabs(Vterminal[i]);
 
     if Connection = 1 then
         V_Avg := V_Avg / (SQRT3 * Fnphases)
@@ -1537,11 +1536,11 @@ begin
         // Presumably the var source will take care of the voltage problems
         for i := 1 to Fnphases do
         begin
-            Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / Vterminal^[i]);
+            Curr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / Vterminal[i]);
             
             // Checks the output in case of using Fuel
             if UseFuel and (not GenActive) then
-                Curr := cmplx(0, 0);
+                Curr := 0;
             
             StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
             IterminalUpdated := TRUE;
@@ -1566,7 +1565,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        V := Vterminal^[i];
+        V := Vterminal[i];
         VMag := Cabs(V);
 
         case Connection of
@@ -1600,7 +1599,7 @@ begin
         
         // Checks the output in case of using Fuel
         if UseFuel and (not GenActive) then
-            Curr := cmplx(0, 0);
+            Curr := 0;
         
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1624,7 +1623,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        V := Vterminal^[i];
+        V := Vterminal[i];
         Vmag := Cabs(V);
 
         case Connection of
@@ -1637,7 +1636,7 @@ begin
                     Curr := Cmplx(Yeq105.re, YQfixed) * V
                 else
                 begin
-                    Curr := cong(Cmplx(Genvars.Pnominalperphase, 0.0) / V); // P component of current
+                    Curr := cong(Genvars.Pnominalperphase / V); // P component of current
                     Curr += Cmplx(0.0, YQFixed) * V;  // add in Q component of current
                 end;
             end;
@@ -1656,7 +1655,7 @@ begin
                     Curr := Cmplx(Yeq105.re / 3.0, YQfixed / 3.0) * V
                 else
                 begin
-                    Curr := cong(Cmplx(Genvars.Pnominalperphase, 0.0) / V); // P component of current
+                    Curr := cong(Genvars.Pnominalperphase / V); // P component of current
                     Curr += Cmplx(0.0, YQFixed / 3.0) * V;  // add in Q component of current
                 end;
             end;
@@ -1664,7 +1663,7 @@ begin
 
         // Checks the output in case of using Fuel
         if UseFuel and (not GenActive) then
-            Curr := cmplx(0, 0);
+            Curr := 0;
 
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         IterminalUpdated := TRUE;
@@ -1687,7 +1686,7 @@ begin
         with ActiveCircuit.Solution do
         begin          // Negate currents from user model for power flow generator model
             for i := 1 to FnConds do
-                InjCurrent^[i] -= Iterminal^[i];
+                InjCurrent[i] -= Iterminal[i];
         end;
     end
     else
@@ -1725,7 +1724,7 @@ begin
         case Connection of
             0:
             begin
-                VLN := Vterminal^[i];   // VTerminal is LN for this connection
+                VLN := Vterminal[i];   // VTerminal is LN for this connection
                 VMagLN := Cabs(VLN);
                 with Genvars do
                     PhaseCurr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLN);
@@ -1738,7 +1737,7 @@ begin
             end;
             1:
             begin
-                VLL := Vterminal^[i];     // VTerminal is LL for this connection
+                VLL := Vterminal[i];     // VTerminal is LL for this connection
                 VMagLL := Cabs(VLL);
                 case Fnphases of
                     2, 3:   // 2 or 3 phase generator model 7
@@ -1757,7 +1756,7 @@ begin
 
                 // Checks the output in case of using Fuel
                 if UseFuel and (not GenActive) then
-                    DeltaCurr := cmplx(0, 0);
+                    DeltaCurr := 0;
 
                 StickCurrInTerminalArray(ITerminal, -DeltaCurr, i);  // Put into Terminal array taking into account connection
                 ITerminalUpdated := TRUE;
@@ -1808,14 +1807,14 @@ begin
                     end;
 
 
-                    ITerminal^[1] := (VTerminal^[1] - Vthev - VTerminal^[2]) / Zthev;  // ZThev is based on Xd'
+                    ITerminal[1] := (VTerminal^[1] - Vthev - VTerminal^[2]) / Zthev;  // ZThev is based on Xd'
                     if Genmodel = 7 then
                     begin
-                        if Cabs(Iterminal^[1]) > Model7MaxPhaseCurr then   // Limit the current but keep phase angle
-                            ITerminal^[1] := ptocomplex(topolar(Model7MaxPhaseCurr, cang(Iterminal^[1])));
+                        if Cabs(Iterminal[1]) > Model7MaxPhaseCurr then   // Limit the current but keep phase angle
+                            ITerminal[1] := ptocomplex(topolar(Model7MaxPhaseCurr, cang(Iterminal[1])));
                     end;
 
-                    ITerminal^[2] := -ITerminal^[1];
+                    ITerminal[2] := -ITerminal[1];
                 end;
 
             3:
@@ -1864,7 +1863,7 @@ begin
 
                     // Neutral current
                     if Connection = 0 then
-                        ITerminal^[FnConds] := -I012[0] * 3;
+                        ITerminal[FnConds] := -I012[0] * 3;
                 end;
         else
             DoSimpleMsg('Dynamics mode is implemented only for 1- or 3-phase Generators. %s has %d phases.', [FullName, Fnphases], 5671);
@@ -1877,7 +1876,7 @@ begin
 
     // Add it into inj current array
     for i := 1 to FnConds do
-        InjCurrent^[i] -= Iterminal^[i];
+        InjCurrent[i] -= Iterminal[i];
 
     // Take Care of any shaft model calcs
     if (GenModel = 6) and ShaftModel.Exists then      // auto selects model
@@ -1915,7 +1914,7 @@ begin
 
     // Handle Wye Connection
     if Connection = 0 then
-        pBuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
+        pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
 
     // Inj currents = Yprim (E)
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
@@ -1932,7 +1931,7 @@ begin
         begin
             with ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
-                    Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
+                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[Fnconds]);
         end;
 
         1:
@@ -1943,7 +1942,7 @@ begin
                     j := i + 1;
                     if j > Fnconds then
                         j := 1;
-                    Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[j]);
+                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[j]);
                 end;
         end;
     end;
@@ -1962,7 +1961,7 @@ procedure TGeneratorObj.CalcGenModelContribution;
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
     IterminalUpdated := FALSE;
-    with  ActiveCircuit, ActiveCircuit.Solution do
+    with ActiveCircuit, ActiveCircuit.Solution do
     begin
         if IsDynamicModel then
             DoDynamicMode
@@ -2150,7 +2149,7 @@ begin
     CalcVTerminal;
     V_Avg := 0.0;
     for i := 1 to Fnphases do
-        V_Avg := V_Avg + Cabs(Vterminal^[i]);
+        V_Avg := V_Avg + Cabs(Vterminal[i]);
     V_Avg := V_Avg / Fnphases;
     V_Remembered := V_Avg;
 end;
@@ -2194,12 +2193,12 @@ begin
             with ActiveCircuit.solution do
                 case Connection of
                     0:{wye - neutral is explicit}
-                        Va := NodeV^[NodeRef^[1]] - NodeV^[NodeRef^[Fnconds]];
+                        Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
                     1:{delta -- assume neutral is at zero}
-                        Va := NodeV^[NodeRef^[1]];
+                        Va := NodeV[NodeRef[1]];
                 end;
 
-            E := Va - Iterminal^[1] * cmplx(0.0, Xdpp);
+            E := Va - Iterminal[1] * cmplx(0.0, Xdpp);
             Vthevharm := Cabs(E);   // establish base mag and angle
             ThetaHarm := Cang(E);
         end
@@ -2226,7 +2225,7 @@ begin
     begin
         case Genmodel of
             7:
-                Zthev := Cmplx(Xdp, 0.0); // use Xd' as an equivalent R for the inverter
+                Zthev := Xdp; // use Xd' as an equivalent R for the inverter
         else
             Zthev := Cmplx(Xdp / XRdp, Xdp);
         end;
@@ -2243,7 +2242,7 @@ begin
 
                     1:
                     begin
-                        Edp := NodeV^[NodeRef^[1]] - NodeV^[NodeRef^[2]] - ITerminal^[1] * Zthev;
+                        Edp := NodeV[NodeRef[1]] - NodeV[NodeRef[2]] - ITerminal[1] * Zthev;
                         VThevMag := Cabs(Edp);
                     end;
 
@@ -2254,7 +2253,7 @@ begin
                         // Voltage behind Xdp  (transient reactance), volts
 
                         for i := 1 to FNphases do
-                            Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
+                            Vabc[i] := NodeV[NodeRef[i]];   // Wye Voltage
                         Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
                         VXd := I012[1] * Zthev;
                         Edp := V012[1] - VXd;    // Pos sequence

@@ -118,7 +118,7 @@ begin
     begin
         with ParentClass do
             for i := 1 to NumProperties do
-                FSWriteLn(F, '~ ' + PropertyName^[i] + '=' + GetPropertyValue(i));
+                FSWriteLn(F, '~ ' + PropertyName[i] + '=' + GetPropertyValue(i));
         
         if Complete then
             FSWriteln(F);        
@@ -177,13 +177,13 @@ begin
     Result := 0;
 
     if idx > 0 then
-        idx := PrpSequence^[idx];
+        idx := PrpSequence[idx];
     for i := 1 to ParentClass.NumProperties do
     begin
-        if (PrpSequence^[i] <> 0) and (PrpSequence^[i] > idx) then
-            if PrpSequence^[i] < Smallest then
+        if (PrpSequence[i] <> 0) and (PrpSequence[i] > idx) then
+            if PrpSequence[i] < Smallest then
             begin
-                Smallest := PrpSequence^[i];
+                Smallest := PrpSequence[i];
                 Result := i;
             end;
     end;

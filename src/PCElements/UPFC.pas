@@ -396,12 +396,12 @@ begin
      // Diagonals  (all the same)
     Value := Z1;
     for i := 1 to Fnphases do
-        Z.SetElement(i, i, Value);
+        Z[i, i] := Value;
 
     Reallocmem(SR0, SizeOf(Sr0^[1]) * Fnphases);
     Reallocmem(SR1, SizeOf(Sr1^[1]) * Fnphases);
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
 
 
@@ -438,9 +438,9 @@ begin
     begin
         for j := 1 to Fnphases do
         begin
-            Value := Z.GetElement(i, j);
+            Value := Z[i, j];
             Value.im := Value.im * FreqMultiplier; // Modify from base freq
-            Zinv.SetElement(i, j, value);
+            Zinv[i, j] := value;
         end;
     end;
     Zinv.Invert; // Invert in place
@@ -452,7 +452,7 @@ begin
             _('Invalid impedance specified. Replaced with small resistance.'), 325);
         Zinv.Clear;
         for i := 1 to Fnphases do
-            Zinv.SetElement(i, i, Cmplx(1.0 / EPSILON, 0.0));
+            Zinv[i, i] := 1.0 / EPSILON;
     end;
 
    // YPrim_Series.CopyFrom(Zinv);
@@ -461,12 +461,11 @@ begin
     begin
         for j := 1 to FNPhases do
         begin
-            Value := Zinv.GetElement(i, j);
-            YPrim_series.SetElement(i, j, Value);
-            YPrim_series.SetElement(i + FNPhases, j + FNPhases, Value);
-            //YPrim_series.SetElemsym(i + FNPhases, j, -Value)
-            YPrim_series.SetElement(i, j + Fnphases, -Value);
-            YPrim_series.SetElement(i + Fnphases, j, -Value);
+            Value := Zinv[i, j];
+            YPrim_series[i, j] := Value;
+            YPrim_series[i + FNPhases, j + FNPhases] := Value;
+            YPrim_series[i, j + Fnphases] := -Value;
+            YPrim_series[i + Fnphases, j] := -Value;
         end;
     end;
 
@@ -529,13 +528,13 @@ begin
         if (VinMag > VHLimit) or (VinMag < VLLimit) then
         begin   // Check Limits (Voltage)
             UPFCON := FALSE;
-            CurrOut := cmplx(0, 0);
+            CurrOut := 0;
         end
         else                                                       // Limits OK
         begin
             case ModeUPFC of
                 0:
-                    CurrOut := cmplx(0, 0); //UPFC off
+                    CurrOut := 0; //UPFC off
                 1:
                 begin              //UPFC as a voltage regulator
                     Vpolar := ctopolar(Vbout);
@@ -561,7 +560,7 @@ begin
                     end;
                 end;
                 2:
-                    CurrOut := cmplx(0, 0); //UPFC as a phase angle regulator
+                    CurrOut := 0; //UPFC as a phase angle regulator
                 3:
                 begin              //UPFC in Dual mode Voltage and Phase angle regulator
                     Vpolar := ctopolar(Vbout);
@@ -628,7 +627,7 @@ begin
                     end
                     else
                     begin
-                        CurrOut := cmplx(0, 0); //UPFC off
+                        CurrOut := 0; //UPFC off
                         SR0^[Cond] := CurrOut;
                         SF2 := FALSE;   // Says to the other controller to do nothing
                     end;
@@ -675,7 +674,7 @@ begin
                     end
                     else
                     begin
-                        CurrOut := cmplx(0, 0); //UPFC off
+                        CurrOut := 0; //UPFC off
                         SR0^[Cond] := CurrOut;
                         SF2 := FALSE;   // Says to the other controller to do nothing
                         SyncFlag := FALSE;
@@ -730,7 +729,7 @@ begin
                 case ModeUPFC of
                     0:
                     begin
-                        CurrIn := cmplx(0, 0);
+                        CurrIn := 0;
                         UPFC_Power := 0;
                     end;
                     1:
@@ -784,7 +783,7 @@ begin
                         end
                         else
                         begin   // Do nothing, aparently the input voltage is OK
-                            CurrIn := cmplx(0, 0);
+                            CurrIn := 0;
                             SR0^[Cond] := CurrIn;
                             UPFC_Power := 0;
                         end;
@@ -822,7 +821,7 @@ begin
                 end;
             end
             else
-                CurrIn := cmplx(0, 0);
+                CurrIn := 0;
         Result := CurrIn;
     except
         DoSimpleMsg('Error computing current for "%s". Check specification. Aborting.', [FullName], 334);
@@ -840,13 +839,13 @@ begin
     begin
         for i := 1 to fnphases do
         begin
-            Vbin := NodeV^[NodeRef^[i]];           //Gets voltage at the input of UPFC Cond i
-            Vbout := NodeV^[NodeRef^[i + fnphases]]; //Gets voltage at the output of UPFC Cond i
+            Vbin := NodeV[NodeRef[i]];           //Gets voltage at the input of UPFC Cond i
+            Vbout := NodeV[NodeRef[i + fnphases]]; //Gets voltage at the output of UPFC Cond i
 
             // These functions were modified to follow the UPFC Dynamic
             // (Different from VSource)
-            Curr^[i + fnphases] := OutCurr[i];
-            Curr^[i] := InCurr[i];
+            Curr[i + fnphases] := OutCurr[i];
+            Curr[i] := InCurr[i];
         end;
     end;
 end;
@@ -891,7 +890,7 @@ begin
     // Limits OK
     case ModeUPFC of
         0:
-            // CurrOut := cmplx(0,0); //UPFC off
+            // CurrOut := 0; //UPFC off
             ;
         1:  
         begin //UPFC as a voltage regulator
@@ -988,7 +987,7 @@ begin
             GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
             // Add Together  with yprim currents
             for i := 1 to Yorder do
-                Curr^[i] := Curr^[i] - ComplexBuffer^[i];
+                Curr[i] := Curr[i] - ComplexBuffer^[i];
         end;
     except
         On E: Exception do
@@ -1007,7 +1006,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
 
     if Complete then
@@ -1020,7 +1019,7 @@ begin
         begin
             for j := 1 to i do
             begin
-                c := Z.GetElement(i, j);
+                c := Z[i, j];
                 FSWrite(F, Format('%.8g +j %.8g ', [C.re, C.im]));
             end;
             FSWriteln(F);

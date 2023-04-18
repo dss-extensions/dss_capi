@@ -486,29 +486,27 @@ var
 begin
     with Ckt do
     begin
-        psrc := Sources.First;
-        while psrc <> NIL do
+        for psrc in Sources do
         begin
-            if psrc.Enabled then
+            if not psrc.Enabled then
+                continue;
+
+            if Analyze or (not (Flg.Checked in psrc.Flags)) then
             begin
-                if Analyze or (not (Flg.Checked in psrc.Flags)) then
-                begin
-                    if (psrc.Terminals[0].BusRef = BusNum) then
-                    begin  // ?Connected to this bus ?
-                        if Analyze then
-                        begin
-                            Exclude(psrc.Flags, Flg.IsIsolated);
-                            BranchList.PresentBranch.IsDangling := FALSE;
-                        end;
-                        if not (Flg.Checked in psrc.Flags) then
-                        begin
-                            BranchList.AddNewObject(psrc);
-                            Include(psrc.Flags, Flg.Checked);
-                        end;
+                if (psrc.Terminals[0].BusRef = BusNum) then
+                begin  // ?Connected to this bus ?
+                    if Analyze then
+                    begin
+                        Exclude(psrc.Flags, Flg.IsIsolated);
+                        BranchList.PresentBranch.IsDangling := FALSE;
+                    end;
+                    if not (Flg.Checked in psrc.Flags) then
+                    begin
+                        BranchList.AddNewObject(psrc);
+                        Include(psrc.Flags, Flg.Checked);
                     end;
                 end;
             end;
-            psrc := Sources.Next;
         end;
     end;
 end;
@@ -649,7 +647,7 @@ begin
                 BranchList.PresentBranch.ToBusReference := TestBusNum;   // Add this as a "to" bus reference
                 if TestBusNum > 0 then
                 begin
-                    Ckt.Buses^[TestBusNum].BusChecked := TRUE;
+                    Ckt.Buses[TestBusNum].BusChecked := TRUE;
                     GetSourcesConnectedToBus(Ckt, TestBusNum, BranchList, Analyze);
                     GetPCElementsConnectedToBus(lstPC[TestBusNum], BranchList, Analyze);
                     GetShuntPDElementsConnectedToBus(lstPD[TestBusNum], BranchList, Analyze);
@@ -679,20 +677,17 @@ begin
         lstPC[i] := TList.Create;
     end;
 
-    pCktElement := Ckt.PCElements.First;
-    while pCktElement <> NIL do
+    for pCktElement in Ckt.PCElements do
     begin
         if pCktElement.Enabled then
         begin
             i := pCktElement.Terminals[0].BusRef;
             lstPC[i].Add(pCktElement);
         end;
-        pCktElement := Ckt.PCElements.Next;
     end;
 
-    pCktElement := Ckt.PDElements.First;
+    for pCktElement in Ckt.PDElements do
     // Put only eligible PDElements in the list
-    while pCktElement <> NIL do
     begin
         if pCktElement.Enabled then
             if IsShuntElement(pCktElement) then
@@ -707,7 +702,6 @@ begin
                     i := pCktElement.Terminals[j - 1].BusRef;
                     lstPD[i].Add(pCktElement);
                 end;
-        pCktElement := Ckt.PDElements.Next;
     end;
 end;
 

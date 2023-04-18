@@ -61,6 +61,7 @@ type
 
         procedure AllocateBusQuantities;
         procedure AllocateBusState;
+        procedure ZeroReliabilityAccums();
 
         function Add(Circuit: TNamedObject; NodeNum: SmallInt): Integer;
         function Find(NodeNum: SmallInt): Integer; // Returns reference num for node by node number
@@ -96,8 +97,8 @@ constructor TDSSBus.Create(dssContext: TDSSContext);
 begin
     inherited Create('Bus');
     Allocation := 4;
-    Nodes := AllocMem(Sizeof(Nodes^[1]) * Allocation);
-    RefNo := AllocMem(Sizeof(RefNo^[1]) * Allocation);
+    Nodes := AllocMem(Sizeof(Nodes[1]) * Allocation);
+    RefNo := AllocMem(Sizeof(RefNo[1]) * Allocation);
     FNumNodesThisBus := 0;
     Ysc := NIL;
     Zsc := NIL;
@@ -138,8 +139,8 @@ begin
     if FNumNodesThisBus > Allocation then
     begin
         Allocation := Allocation + 1;
-        ReallocMem(Nodes, Sizeof(Nodes^[1]) * Allocation);
-        ReallocMem(RefNo, Sizeof(RefNo^[1]) * Allocation);
+        ReallocMem(Nodes, Sizeof(Nodes[1]) * Allocation);
+        ReallocMem(RefNo, Sizeof(RefNo[1]) * Allocation);
     end;
 end;
 
@@ -154,12 +155,12 @@ begin
         begin
              // Add a node to the bus
             AddANode;
-            Nodes^[FNumNodesThisBus] := NodeNum;
+            Nodes[FNumNodesThisBus] := NodeNum;
 
             with TDSSCircuit(Circuit) do
             begin
                 INC(NumNodes);  // Global node number for circuit
-                RefNo^[FNumNodesThisBus] := NumNodes;
+                RefNo[FNumNodesThisBus] := NumNodes;
                 Result := NumNodes;  // Return global node number
             end;
         end;
@@ -173,9 +174,9 @@ var
 begin
     for i := 1 to FNumNodesThisBus do
     begin
-        if Nodes^[i] = NodeNum then
+        if Nodes[i] = NodeNum then
         begin
-            Result := RefNo^[i];
+            Result := RefNo[i];
             Exit;
         end;
     end;
@@ -186,14 +187,14 @@ function TDSSBus.GetRef(NodeIndex: Integer): Integer;
 begin
     Result := 0;
     if (NodeIndex > 0) and (NodeIndex <= FNumNodesThisBus) then
-        Result := Refno^[NodeIndex];
+        Result := RefNo[NodeIndex];
 end;
 
 function TDSSBus.GetNum(NodeIndex: Integer): SmallInt;
 begin
     Result := 0;
     if (NodeIndex > 0) and (NodeIndex <= FNumNodesThisBus) then
-        Result := Nodes^[NodeIndex];
+        Result := Nodes[NodeIndex];
 end;
 
 procedure TDSSBus.AllocateBusQuantities;
@@ -236,7 +237,7 @@ var
 begin
     for i := 1 to FNumNodesThisBus do
     begin
-        if Nodes^[i] = NodeNum then
+        if Nodes[i] = NodeNum then
         begin
             Result := i;
             Exit;
@@ -251,6 +252,17 @@ begin
     FreeMem(BusCurrent);
     VBus := AllocMem(Sizeof(Complex) * FNumNodesThisBus);
     BusCurrent := AllocMem(Sizeof(Complex) * FNumNodesThisBus);
+end;
+
+procedure TDSSBus.ZeroReliabilityAccums();
+begin
+    BusCustInterrupts := 0.0;
+    BusFltRate := 0.0;
+    BusTotalNumCustomers := 0;
+    BusTotalMiles := 0.0;
+    BusCustDurations := 0.0;
+    Bus_Num_Interrupt := 0.0;
+    BusSectionID := -1; // signify not set
 end;
 
 end.

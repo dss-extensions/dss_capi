@@ -901,12 +901,14 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        Z.SetElement(i, i, Zs);
-        Yc.SetElement(i, i, Ys);
+        Z[i, i] := Zs;
+        Yc[i, i] := Ys;
         for j := 1 to i - 1 do
         begin
-            Z.SetElemsym(i, j, Zm);
-            Yc.SetElemsym(i, j, Ym);
+            Z[i, j] := Zm;
+            Z[j, i] := Zm;
+            Yc[i, j] := Ym;
+            Yc[j, i] := Ym;
         end;
     end;
 
@@ -959,217 +961,214 @@ begin
     ClearYPrim;
 
     // Build Series YPrim
-    with YPrim_Series do
+
+    // Build Zmatrix
+    if GeometrySpecified then
     begin
-        // Build Zmatrix
-        if GeometrySpecified then
-        begin
-            FMakeZFromGeometry(ActiveCircuit.Solution.Frequency); // Includes length in proper units
-            if DSS.SolutionAbort then
-                Exit;
+        FMakeZFromGeometry(ActiveCircuit.Solution.Frequency); // Includes length in proper units
+        if DSS.SolutionAbort then
+            Exit;
 
-        end
-        else
-        if SpacingSpecified then
-        begin
-            FMakeZFromSpacing(ActiveCircuit.Solution.Frequency); // Includes length in proper units
-            if DSS.SolutionAbort then
-                Exit;
-        end
-        else
-        begin  
-            // Z is from line code or specified in line data
-            // In this section Z is assumed in ohms per unit length
-            LengthMultiplier := Len / FUnitsConvert;   // convert to per unit length
-            FYprimFreq := ActiveCircuit.Solution.Frequency;
-            FreqMultiplier := FYprimFreq / BaseFrequency;
+    end
+    else
+    if SpacingSpecified then
+    begin
+        FMakeZFromSpacing(ActiveCircuit.Solution.Frequency); // Includes length in proper units
+        if DSS.SolutionAbort then
+            Exit;
+    end
+    else
+    begin  
+        // Z is from line code or specified in line data
+        // In this section Z is assumed in ohms per unit length
+        LengthMultiplier := Len / FUnitsConvert;   // convert to per unit length
+        FYprimFreq := ActiveCircuit.Solution.Frequency;
+        FreqMultiplier := FYprimFreq / BaseFrequency;
 
-            // If positive sequence, long-line correction can be taken into account here
-            // It needs to be recalculated for every frequency
-            if SymComponentsModel and ActiveCircuit.LongLineCorrection then  // Should only enter here if sequence components model
+        // If positive sequence, long-line correction can be taken into account here
+        // It needs to be recalculated for every frequency
+        if SymComponentsModel and ActiveCircuit.LongLineCorrection then  // Should only enter here if sequence components model
+        begin
+            // These values are specific for the harmonic being tested (adjust for frequency)
+            R1_h := R1;
+            X1_h := X1 * FYprimFreq / BaseFrequency; // Adjust for frequency here
+            C1_h := C1;
+            G1_h := 0.0;  // DoLongLine uses a tiny conductance to avoid skipping case where C1=0
+            
+            // Do the same for zero sequence
+            R0_h := R0;
+            X0_h := X0 * FYprimFreq / BaseFrequency; // Adjust for frequency here
+            C0_h := C0;
+            G0_h := 0.0;  // DoLongLine uses a tiny conductance to avoid skipping case where C0=0
+
+            // long-line equivalent PI
+            // To avoid errors in higher freqs, we shouldn't skip cases with C1=0. Critical to match IEEE 14bus harmonics benchmark.
+            // Do long-line correction for tested frequency for +seq mode
+            // Use R1_h, X1_h, C1_h, G1_h to correct Y prim
+            DoLongLine(FYprimFreq, R1, X1, C1, R1_h, X1_h, C1_h, G1_h);
+
+            if ((FnPhases > 1) and not ActiveCircuit.PositiveSequence) then
             begin
-                // These values are specific for the harmonic being tested (adjust for frequency)
-                R1_h := R1;
-                X1_h := X1 * FYprimFreq / BaseFrequency; // Adjust for frequency here
-                C1_h := C1;
-                G1_h := 0.0;  // DoLongLine uses a tiny conductance to avoid skipping case where C1=0
-                
-                // Do the same for zero sequence
-                R0_h := R0;
-                X0_h := X0 * FYprimFreq / BaseFrequency; // Adjust for frequency here
-                C0_h := C0;
-                G0_h := 0.0;  // DoLongLine uses a tiny conductance to avoid skipping case where C0=0
-
-                // long-line equivalent PI
-                // To avoid errors in higher freqs, we shouldn't skip cases with C1=0. Critical to match IEEE 14bus harmonics benchmark.
-                // Do long-line correction for tested frequency for +seq mode
-                // Use R1_h, X1_h, C1_h, G1_h to correct Y prim
-                DoLongLine(FYprimFreq, R1, X1, C1, R1_h, X1_h, C1_h, G1_h);
-
-                if ((FnPhases > 1) and not ActiveCircuit.PositiveSequence) then
-                begin
-                    // apply long line correction to 0seq mode as well
-                    DoLongLine(FYprimFreq, R0, X0, C0, R0_h, X0_h, C0_h, G0_h);
-                end
-                else
-                begin
-                    // zero sequence the same as positive sequence
-                    R0_h := R1_h;
-                    X0_h := X1_h;
-                    C0_h := C1_h;
-                    G0_h := G1_h;
-                end;
-
-                Ztemp := cmplx(R1_h, X1_h) * 2.0;
-                Zs := (Ztemp + Cmplx(R0_h, X0_h)) / 3;
-                Zm := (cmplx(R0_h, X0_h) - Cmplx(R1_h, X1_h)) / 3;
-
-                Yc1 := TwoPi * FYprimFreq * C1_h;
-                Yc0 := TwoPi * FYprimFreq * C0_h;
-
-                Ys := ((Cmplx(G1_h, Yc1) * 2.0) + Cmplx(G0_h, Yc0)) / 3;
-                Ym := (cmplx(G0_h, Yc0) - Cmplx(G1_h, Yc1)) / 3;
-
-                for i := 1 to Fnphases do
-                begin
-                    Z.SetElement(i, i, Zs);
-                    Yc.SetElement(i, i, Ys);
-                    for j := 1 to i - 1 do
-                    begin
-                        Z.SetElemsym(i, j, Zm);
-                        Yc.SetElemsym(i, j, Ym);
-                    end;
-                end;
-
-                // Put in Series RL
-                ZValues := Z.GetValuesArrayPtr(Norder);
-                ZinvValues := Zinv.GetValuesArrayPtr(Norder);
-                  // Correct the impedances for length and frequency
-                  // Rg increases with frequency
-                  // Xg modified by ln of sqrt(1/f)
-                if Xg <> 0.0 then
-                    Xgmod := 0.5 * KXg * ln(FreqMultiplier)
-                else
-                    Xgmod := 0.0;
-
-                for i := 1 to Norder * Norder do
-                    // Apply freq multiplier only to Xgmod as we have already accounted for freq adjustment above
-                    ZinvValues^[i] := Cmplx((ZValues^[i].re + Rg * (FreqMultiplier - 1.0)) * LengthMultiplier, (ZValues^[i].im - Xgmod * FreqMultiplier) * LengthMultiplier);
+                // apply long line correction to 0seq mode as well
+                DoLongLine(FYprimFreq, R0, X0, C0, R0_h, X0_h, C0_h, G0_h);
             end
             else
             begin
-                // Original piece of code is kept here
-                
-                // Put in Series RL 
-                ZValues := Z.GetValuesArrayPtr(Norder);
-                ZinvValues := Zinv.GetValuesArrayPtr(Norder);
-                 // Correct the impedances for length and frequency
-                 // Rg increases with frequency
-                 // Xg modified by ln of sqrt(1/f)
-                if Xg <> 0.0 then
-                    Xgmod := 0.5 * KXg * ln(FreqMultiplier)
-                else
-                    Xgmod := 0.0;
-
-                for i := 1 to Norder * Norder do
-                    ZinvValues^[i] := Cmplx((ZValues^[i].re + Rg * (FreqMultiplier - 1.0)) * LengthMultiplier, (ZValues^[i].im - Xgmod) * LengthMultiplier * FreqMultiplier);
-
+                // zero sequence the same as positive sequence
+                R0_h := R1_h;
+                X0_h := X1_h;
+                C0_h := C1_h;
+                G0_h := G1_h;
             end;
-            
-            Zinv.Invert;  // Invert Z in-place to get values to put in Yprim
-        end;
 
-        // At this point have Z and Zinv in proper values including length
-        // If GIC simulation, convert Zinv back to sym components, R Only
+            Ztemp := cmplx(R1_h, X1_h) * 2.0;
+            Zs := (Ztemp + Cmplx(R0_h, X0_h)) / 3;
+            Zm := (cmplx(R0_h, X0_h) - Cmplx(R1_h, X1_h)) / 3;
 
-        if ActiveCircuit.Solution.Frequency < 0.51 then     // 0.5 Hz is cutoff
-            ConvertZinvToPosSeqR;
+            Yc1 := TwoPi * FYprimFreq * C1_h;
+            Yc0 := TwoPi * FYprimFreq * C0_h;
 
-        if Zinv.Inverterror > 0 then
-        begin
-            // If error, put in tiny series conductance
-// TEMc - shut this up for the CDPSM connectivity profile test, or whenever else it gets annoying
-            DoErrorMsg('TLineObj.CalcYPrim', 
-                Format(_('Matrix Inversion Error for Line "%s"'), [Name]),
-                _('Invalid impedance specified. Replaced with tiny conductance.'), 183);
-            Zinv.Clear;
-            for i := 1 to Fnphases do
-                Zinv.SetElement(i, i, Cmplx(epsilon, 0.0));
-        end
-        else
-            // Now, Put in Yprim_Series matrix 
+            Ys := ((Cmplx(G1_h, Yc1) * 2.0) + Cmplx(G0_h, Yc0)) / 3;
+            Ym := (cmplx(G0_h, Yc0) - Cmplx(G1_h, Yc1)) / 3;
+
             for i := 1 to Fnphases do
             begin
-                for j := 1 to Fnphases do
+                Z[i, i] := Zs;
+                Yc[i, i] := Ys;
+                for j := 1 to i - 1 do
                 begin
-                    Value := Zinv.GetElement(i, j);
-                    SetElement(i, j, Value);
-                    SetElement(i + Fnphases, j + Fnphases, Value);
-                    Value := -Value;
-                    SetElemSym(i, j + Fnphases, Value);
+                    Z[i, j] := Zm;
+                    Z[j, i] := Zm;
+                    Yc[i, j] := Ym;
+                    Yc[j, i] := Ym;
                 end;
             end;
 
+            // Put in Series RL
+            ZValues := Z.GetValuesArrayPtr(Norder);
+            ZinvValues := Zinv.GetValuesArrayPtr(Norder);
+            // Correct the impedances for length and frequency
+            // Rg increases with frequency
+            // Xg modified by ln of sqrt(1/f)
+            if Xg <> 0.0 then
+                Xgmod := 0.5 * KXg * ln(FreqMultiplier)
+            else
+                Xgmod := 0.0;
 
+            for i := 1 to Norder * Norder do
+                // Apply freq multiplier only to Xgmod as we have already accounted for freq adjustment above
+                ZinvValues[i] := Cmplx((ZValues[i].re + Rg * (FreqMultiplier - 1.0)) * LengthMultiplier, (ZValues[i].im - Xgmod * FreqMultiplier) * LengthMultiplier);
+        end
+        else
+        begin
+            // Original piece of code is kept here
+            
+            // Put in Series RL 
+            ZValues := Z.GetValuesArrayPtr(Norder);
+            ZinvValues := Zinv.GetValuesArrayPtr(Norder);
+            // Correct the impedances for length and frequency
+            // Rg increases with frequency
+            // Xg modified by ln of sqrt(1/f)
+            if Xg <> 0.0 then
+                Xgmod := 0.5 * KXg * ln(FreqMultiplier)
+            else
+                Xgmod := 0.0;
+
+            for i := 1 to Norder * Norder do
+                ZinvValues[i] := Cmplx((ZValues[i].re + Rg * (FreqMultiplier - 1.0)) * LengthMultiplier, (ZValues[i].im - Xgmod) * LengthMultiplier * FreqMultiplier);
+
+        end;
+        
+        Zinv.Invert();  // Invert Z in-place to get values to put in Yprim
     end;
+
+    // At this point have Z and Zinv in proper values including length
+    // If GIC simulation, convert Zinv back to sym components, R Only
+
+    if ActiveCircuit.Solution.Frequency < 0.51 then     // 0.5 Hz is cutoff
+        ConvertZinvToPosSeqR();
+
+    if Zinv.Inverterror > 0 then
+    begin
+        // If error, put in tiny series conductance
+// TEMc - shut this up for the CDPSM connectivity profile test, or whenever else it gets annoying
+        DoErrorMsg('TLineObj.CalcYPrim', 
+            Format(_('Matrix Inversion Error for Line "%s"'), [Name]),
+            _('Invalid impedance specified. Replaced with tiny conductance.'), 183);
+        Zinv.Clear;
+        for i := 1 to Fnphases do
+            Zinv[i, i] := epsilon;
+    end
+    else
+        // Now, Put in Yprim_Series matrix 
+        for i := 1 to Fnphases do
+        begin
+            for j := 1 to Fnphases do
+            begin
+                Value := Zinv[i, j];
+                YPrim_Series[i, j] := Value;
+                YPrim_Series[i + Fnphases, j + Fnphases] := Value;
+                Value := -Value;
+                YPrim_Series[i, j + Fnphases] := Value;
+                YPrim_Series[j + Fnphases, i] := Value;
+            end;
+        end;
+
 
     YPrim.Copyfrom(Yprim_Series);      // Initialize YPrim for series impedances
 
     // Increase diagonal elements of both sides of line so that we will avoid isolated bus problem
     // add equivalent of 10 kvar capacitive at 345 kV
-    with Yprim_Series do
-        for i := 1 to Yorder do
-            AddElement(i, i, CAP_EPSILON);
+    for i := 1 to Yorder do
+        Yprim_Series.AddElement(i, i, CAP_EPSILON);
 
      // Now Build the Shunt admittances and add into YPrim
     if ActiveCircuit.Solution.Frequency > 0.51 then   // Skip Capacitance for GIC
-        with YPrim_Shunt do
+    begin
+        // Put half the Shunt Capacitive Admittance at each end
+        YValues := Yc.GetValuesArrayPtr(Norder);
+
+        if GeometrySpecified or SpacingSpecified then
         begin
-            // Put half the Shunt Capacitive Admittance at each end
-            YValues := Yc.GetValuesArrayPtr(Norder);
+            // Values are already compensated for length and frequency
+            k := 0;
+            for j := 1 to Fnphases do
+                for i := 1 to Fnphases do
+                begin
+                    Inc(k);    // Assume matrix in col order (1,1  2,1  3,1 ...)
+                    Value := YValues[k] / 2.0;  // half at each end ...
+                    YPrim_Shunt.AddElement(i, j, Value);
+                    YPrim_Shunt.AddElement(i + Fnphases, j + Fnphases, Value);
+                end;
 
-            if GeometrySpecified or SpacingSpecified then
-            begin
-                // Values are already compensated for length and frequency
-                k := 0;
-                for j := 1 to Fnphases do
-                    for i := 1 to Fnphases do
+        end
+        else
+        begin
+            // Regular line model - values computed per unit length at base frequency
+            k := 0;
+            for j := 1 to Fnphases do
+                for i := 1 to Fnphases do
+                begin
+                    Inc(k);    // Assume matrix in col order (1,1  2,1  3,1 ...)
+                    if SymComponentsModel and ActiveCircuit.LongLineCorrection then // Should only enter here if sequence components model
                     begin
-                        Inc(k);    // Assume matrix in col order (1,1  2,1  3,1 ...)
-                        Value := YValues^[k] / 2.0;  // half at each end ...
-                        AddElement(i, j, Value);
-                        AddElement(i + Fnphases, j + Fnphases, Value);
-                    end;
-
-            end
-            else
-            begin
-                // Regular line model - values computed per unit length at base frequency
-                k := 0;
-                for j := 1 to Fnphases do
-                    for i := 1 to Fnphases do
+                        // If we enter here, frequency adjustment has already been applied above during Z and Yc recalculation (and also affected by long-line correction)
+                        Value := Cmplx(YValues[k].re / 2.0, YValues[k].im * LengthMultiplier / 2.0);
+                    end
+                    else
                     begin
-                        Inc(k);    // Assume matrix in col order (1,1  2,1  3,1 ...)
-                        if SymComponentsModel and ActiveCircuit.LongLineCorrection then // Should only enter here if sequence components model
-                        begin
-                            // If we enter here, frequency adjustment has already been applied above during Z and Yc recalculation (and also affected by long-line correction)
-                            Value := Cmplx(YValues^[k].re / 2.0, YValues^[k].im * LengthMultiplier / 2.0);
-                        end
-                        else
-                        begin
-                            Value := Cmplx(0.0, YValues^[k].im * LengthMultiplier * FreqMultiplier / 2.0);
-                        end;
-                        AddElement(i, j, Value);
-                        AddElement(i + Fnphases, j + Fnphases, Value);
+                        Value := Cmplx(0.0, YValues[k].im * LengthMultiplier * FreqMultiplier / 2.0);
                     end;
-            end;
-
-        // Now Account for Open Conductors
-        // For any conductor that is open, zero out row and column
-
+                    YPrim_Shunt.AddElement(i, j, Value);
+                    YPrim_Shunt.AddElement(i + Fnphases, j + Fnphases, Value);
+                end;
         end;
 
+    end;
+
     YPrim.AddFrom(Yprim_Shunt);
+    // Now Account for Open Conductors
+    // For any conductor that is open, zero out row and column
     inherited CalcYPrim;
     YprimInvalid := FALSE;
 end;
@@ -1184,46 +1183,46 @@ begin
 
     with ParentClass do
     begin
-        FSWriteln(F, '~ ' + PropertyName^[1] + '=' + firstbus);
-        FSWriteln(F, '~ ' + PropertyName^[2] + '=' + nextbus);
+        FSWriteln(F, '~ ' + PropertyName[1] + '=' + firstbus);
+        FSWriteln(F, '~ ' + PropertyName[2] + '=' + nextbus);
 
         if LineCodeObj <> NIL then
-            FSWriteln(F, '~ ' + PropertyName^[3] + '=' + LineCodeObj.Name)
+            FSWriteln(F, '~ ' + PropertyName[3] + '=' + LineCodeObj.Name)
         else
-            FSWriteln(F, '~ ' + PropertyName^[3] + '=' + '');
+            FSWriteln(F, '~ ' + PropertyName[3] + '=' + '');
 
-        FSWriteln(F, Format('~ %s=%d', [PropertyName^[4], len]));
-        FSWriteln(F, Format('~ %s=%d', [PropertyName^[5], Fnphases]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName[4], len]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName[5], Fnphases]));
         if SymComponentsModel then
             rslt := Format('%-.7g', [R1 / FUnitsConvert])
         else
             rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName^[6] + '=' + Rslt);
+        FSWriteln(F, '~ ' + PropertyName[6] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [X1 / FUnitsConvert])
         else
             rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName^[7] + '=' + Rslt);
+        FSWriteln(F, '~ ' + PropertyName[7] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [R0 / FUnitsConvert])
         else
             rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName^[8] + '=' + Rslt);
+        FSWriteln(F, '~ ' + PropertyName[8] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [X0 / FUnitsConvert])
         else
             rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName^[9] + '=' + Rslt);
+        FSWriteln(F, '~ ' + PropertyName[9] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [C1 * 1.0e9 / FUnitsConvert])
         else
             rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName^[10] + '=' + Rslt);
+        FSWriteln(F, '~ ' + PropertyName[10] + '=' + Rslt);
         if SymComponentsModel then
             rslt := Format('%-.7g', [C0 * 1.0e9 / FUnitsConvert])
         else
             rslt := '----';
-        FSWriteln(F, '~ ' + PropertyName^[11] + '=' + Rslt);
+        FSWriteln(F, '~ ' + PropertyName[11] + '=' + Rslt);
 
         // If GeometrySpecified Or SpacingSpecified then length is embedded in Z and Yc    4-9-2020
         if GeometrySpecified or SpacingSpecified then
@@ -1231,44 +1230,44 @@ begin
         else
             LengthMult := 1.0;
 
-        FSWrite(F, '~ ' + PropertyName^[12] + '=' + '"');
+        FSWrite(F, '~ ' + PropertyName[12] + '=' + '"');
         for i := 1 to Fnphases do
         begin
             for j := 1 to Fnphases do
             begin
-                FSWrite(F, Format('%.9f ', [(Z.GetElement(i, j).re / LengthMult / FunitsConvert)]));
+                FSWrite(F, Format('%.9f ', [(Z[i, j].re / LengthMult / FunitsConvert)]));
             end;
             FSWrite(F, '|');
         end;
         FSWriteln(F, '"');
-        FSWrite(F, '~ ' + PropertyName^[13] + '=' + '"');
+        FSWrite(F, '~ ' + PropertyName[13] + '=' + '"');
         for i := 1 to Fnphases do
         begin
             for j := 1 to Fnphases do
             begin
-                FSWrite(F, Format('%.9f ', [(Z.GetElement(i, j).im / LengthMult / FunitsConvert)]));
+                FSWrite(F, Format('%.9f ', [(Z[i, j].im / LengthMult / FunitsConvert)]));
             end;
             FSWrite(F, '|');
         end;
         FSWriteln(F, '"');
-        FSWrite(F, '~ ' + PropertyName^[14] + '=' + '"');
+        FSWrite(F, '~ ' + PropertyName[14] + '=' + '"');
         for i := 1 to Fnphases do
         begin
             for j := 1 to Fnphases do
             begin
-                FSWrite(F, Format('%.3f ', [(Yc.GetElement(i, j).im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9)]));
+                FSWrite(F, Format('%.3f ', [(Yc[i, j].im / TwoPi / BaseFrequency / LengthMult / FunitsConvert * 1.0E9)]));
             end;
             FSWrite(F, '|');
         end;
         FSWriteln(F, '"');
 
-        FSWrite(F, '~ ' + PropertyName^[15] + '=');
+        FSWrite(F, '~ ' + PropertyName[15] + '=');
         FSWriteln(F, StrTOrF(IsSwitch));
 
         // Dump the rest by default
         for i := 16 to NumProperties do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
     end;
 end;
@@ -1303,9 +1302,9 @@ begin
         begin
             k := (i - 1) * Fnphases + 1;
             for j := 0 to 2 do
-                Vph[j] := ActiveCircuit.Solution.NodeV^[NodeRef^[k + j]];
+                Vph[j] := ActiveCircuit.Solution.NodeV[NodeRef[k + j]];
             Phase2SymComp(pComplexArray(@Vph), pComplexArray(@V012));
-            Phase2SymComp(pComplexArray(@Iterminal^[k]), pComplexArray(@I012));
+            Phase2SymComp(pComplexArray(@Iterminal[k]), pComplexArray(@I012));
             PosSeqLosses += V012[1] * cong(I012[1]);
             NegSeqLosses += V012[2] * cong(I012[2]); // accumulate both line modes
             ZeroSeqLosses += V012[0] * cong(I012[0]);
@@ -1368,13 +1367,13 @@ begin
                 // average the diagonal and off-dialgonal elements
                 Zs := 0;
                 for i := 1 to FnPhases do
-                    Zs += Z.GetElement(i, i);
+                    Zs += Z[i, i];
                 Zs := Zs / (Fnphases * LengthMult);
                 Zm := 0;
                 for i := 1 to FnPhases - 1 do     // Corrected 6-21-04
                 begin
                     for j := i + 1 to FnPhases do
-                        Zm += Z.GetElement(i, j);
+                        Zm += Z[i, j];
                 end;
                 Zm := Zm / (LengthMult * Fnphases * (FnPhases - 1.0) / 2.0);
                 Z1 := Zs - Zm;
@@ -1382,11 +1381,11 @@ begin
                 // Do same for Capacitances
                 Cs := 0.0;
                 for i := 1 to FnPhases do
-                    Cs := Cs + Yc.GetElement(i, i).im;
+                    Cs := Cs + Yc[i, i].im;
                 Cm := 0.0;
                 for i := 1 to FnPhases - 1 do    // corrected 4-9-2020
                     for j := i + 1 to FnPhases do
-                        Cm := Cm + Yc.GetElement(i, j).im;
+                        Cm := Cm + Yc[i, j].im;
                 C1_new := (Cs - Cm) / TwoPi / BaseFrequency / (LengthMult * Fnphases * (FnPhases - 1.0) / 2.0) * 1.0e9; // nanofarads
 
                 // compensate for length units
@@ -1451,10 +1450,10 @@ begin
             i := 1;
             while (Common1 = 0) and (i <= 2) do
             begin
-                TestBusNum := ActiveCircuit.MapNodeToBus^[NodeRef^[1 + (i - 1) * Fnconds]].BusRef;
+                TestBusNum := ActiveCircuit.MapNodeToBus[NodeRef[1 + (i - 1) * Fnconds]].BusRef;
                 for j := 1 to 2 do
                 begin
-                    if ActiveCircuit.MapNodeToBus^[Other.NodeRef^[1 + (j - 1) * Other.Nconds]].BusRef = TestBusNum then
+                    if ActiveCircuit.MapNodeToBus[Other.NodeRef[1 + (j - 1) * Other.Nconds]].BusRef = TestBusNum then
                     begin
                         Common1 := i;
                         Common2 := j;
@@ -1624,12 +1623,10 @@ procedure TLineObj.UpdateControlElements(NewLine, OldLine: TLineObj);
 var
     pControlElem: TControlElem;
 begin
-    pControlElem := ActiveCircuit.DSSControls.First;
-    while pControlElem <> NIL do
+    for pControlElem in ActiveCircuit.DSSControls do
     begin
         if OldLine = pControlElem.MonitoredElement then // TODO: check if this works (and needs to work) with Fuse
             pControlElem.ParsePropertyValue(pControlElem.ParentClass.CommandList.GetCommand('element'), NewLine.FullName);
-        pControlElem := ActiveCircuit.DSSControls.Next;
     end;
 end;
 
@@ -1832,7 +1829,7 @@ begin
 
     Zinv.Clear;
     for i := 1 to Zinv.order do
-        Zinv.SetElement(i, i, Z1);   // Set Diagonals
+        Zinv[i, i] := Z1;   // Set Diagonals
 
     Zinv.Invert;  // back to zinv for inserting in Yprim
 

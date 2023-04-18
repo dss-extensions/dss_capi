@@ -212,12 +212,10 @@ var
     i, j: Integer;
 begin
     HelpList := TList.Create();
-    pDSSClass := DSSClassList.First;
-    while pDSSClass <> NIL do
+    for pDSSClass in DSSClassList do
     begin
         if (pDSSClass.DSSClassType and BASECLASSMASK) = BaseClass then
             HelpList.Add(pDSSClass);
-        pDSSClass := DSSClassList.Next;
     end;
     HelpList.Sort(@CompareClassNames);
 
@@ -316,8 +314,7 @@ var
 begin
     if Length(opt) > 0 then
     begin
-        pDSSClass := DSSClassList.First;
-        while pDSSClass <> NIL do
+        for pDSSClass in DSSClassList do
         begin
             if AnsiStartsStr(opt, AnsiLowerCase(pDSSClass.name)) then
             begin
@@ -326,7 +323,6 @@ begin
                 for i := 1 to pDSSClass.NumProperties do
                     WriteLnCB('  ' + pDSSClass.PropertyName[i] + ': ' + pDSSClass.GetPropertyHelp(i), DSSMessageType.Help);
             end;
-            pDSSClass := DSSClassList.Next;
         end;
         Exit;
     end;
@@ -361,12 +357,10 @@ var
     i, j: Integer;
 begin
     HelpList := TList.Create();
-    pDSSClass := DSS.DSSClassList.First;
-    while pDSSClass <> NIL do
+    for pDSSClass in DSS.DSSClassList do
     begin
         if (pDSSClass.DSSClassType and BASECLASSMASK) = BaseClass then
             HelpList.Add(pDSSClass);
-        pDSSClass := DSS.DSSClassList.Next;
     end;
     HelpList.Sort(@CompareClassNames);
 

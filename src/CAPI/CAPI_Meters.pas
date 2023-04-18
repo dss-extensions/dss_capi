@@ -406,7 +406,7 @@ begin
 
     for i := 1 to pMeterObj.NPhases do
     begin
-        pMeterObj.PhsAllocationFactor^[i] := Value[i - 1];
+        pMeterObj.PhsAllocationFactor[i] := Value[i - 1];
     end;
 end;
 //------------------------------------------------------------------------------
@@ -703,7 +703,7 @@ begin
             Exit;
             
         with PD_Element do
-            Result := Buses^[Terminals[FromTerminal - 1].BusRef].BusTotalNumCustomers;
+            Result := Buses[Terminals[FromTerminal - 1].BusRef].BusTotalNumCustomers;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -764,7 +764,7 @@ begin
     with pMeterObj do
     begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections^[ActiveSection].AverageRepairTime
+            Result := FeederSections[ActiveSection].AverageRepairTime
         else
             InvalidActiveSection(DSSPrime);
     end;
@@ -781,7 +781,7 @@ begin
     with pMeterObj do
     begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections^[ActiveSection].SumFltRatesXRepairHrs
+            Result := FeederSections[ActiveSection].SumFltRatesXRepairHrs
         else
             InvalidActiveSection(DSSPrime);
     end;
@@ -798,7 +798,7 @@ begin
     with pMeterObj do
     begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections^[ActiveSection].NBranches
+            Result := FeederSections[ActiveSection].NBranches
         else
             InvalidActiveSection(DSSPrime);
     end;
@@ -815,7 +815,7 @@ begin
     with pMeterObj do
     begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections^[ActiveSection].NCustomers
+            Result := FeederSections[ActiveSection].NCustomers
         else
             InvalidActiveSection(DSSPrime);
     end;
@@ -832,7 +832,7 @@ begin
     with pMeterObj do
     begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections^[ActiveSection].OCPDeviceType
+            Result := FeederSections[ActiveSection].OCPDeviceType
         else
             InvalidActiveSection(DSSPrime);
     end;
@@ -849,7 +849,7 @@ begin
     with pMeterObj do
     begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections^[ActiveSection].SumBranchFltRates
+            Result := FeederSections[ActiveSection].SumBranchFltRates
         else
             InvalidActiveSection(DSSPrime);
     end;
@@ -866,7 +866,7 @@ begin
     with pMeterObj do
     begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections^[ActiveSection].SeqIndex
+            Result := FeederSections[ActiveSection].SeqIndex
         else
             InvalidActiveSection(DSSPrime);
     end;
@@ -883,7 +883,7 @@ begin
     with pMeterObj do
     begin
         if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
-            Result := FeederSections^[ActiveSection].TotalCustomers
+            Result := FeederSections[ActiveSection].TotalCustomers
         else
             InvalidActiveSection(DSSPrime);
     end;

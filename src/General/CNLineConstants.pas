@@ -56,46 +56,46 @@ uses
 
 function TCNLineConstants.Get_kStrand(i: Integer): Integer;
 begin
-    Result := FkStrand^[i];
+    Result := FkStrand[i];
 end;
 
 function TCNLineConstants.Get_DiaStrand(i, units: Integer): Double;
 begin
-    Result := FDiaStrand^[i] * From_Meters(Units);
+    Result := FDiaStrand[i] * From_Meters(Units);
 end;
 
 function TCNLineConstants.Get_GmrStrand(i, units: Integer): Double;
 begin
-    Result := FGmrStrand^[i] * From_Meters(Units);
+    Result := FGmrStrand[i] * From_Meters(Units);
 end;
 
 function TCNLineConstants.Get_RStrand(i, units: Integer): Double;
 begin
-    Result := FRStrand^[i] * From_Per_Meter(Units);
+    Result := FRStrand[i] * From_Per_Meter(Units);
 end;
 
 procedure TCNLineConstants.Set_kStrand(i: Integer; const Value: Integer);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FkStrand^[i] := Value;
+        FkStrand[i] := Value;
 end;
 
 procedure TCNLineConstants.Set_DiaStrand(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FDiaStrand^[i] := Value * To_Meters(units);
+        FDiaStrand[i] := Value * To_Meters(units);
 end;
 
 procedure TCNLineConstants.Set_GmrStrand(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FGmrStrand^[i] := Value * To_Meters(units);
+        FGmrStrand[i] := Value * To_Meters(units);
 end;
 
 procedure TCNLineConstants.Set_RStrand(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FRStrand^[i] := Value * To_Per_Meter(units);
+        FRStrand[i] := Value * To_Per_Meter(units);
 end;
 
 procedure TCNLineConstants.Calc(f: Double; EarthModel: Integer);
@@ -148,26 +148,26 @@ begin
         if PowerFreq then
         begin // for less than 1 kHz, use published GMR
             Zi.im := 0.0;
-            Zspacing := Lfactor * ln(1.0 / FGMR^[i]);  // use GMR
+            Zspacing := Lfactor * ln(1.0 / FGMR[i]);  // use GMR
         end
         else
         begin
-            Zspacing := Lfactor * ln(1.0 / Fradius^[i]);
+            Zspacing := Lfactor * ln(1.0 / Fradius[i]);
         end;
-        Zmat.SetElement(i, i, Zi + Zspacing + Get_Ze(i, i, EarthModel));
+        Zmat[i, i] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
     end;
 
   // CN self impedances
     for i := 1 to FNPhases do
     begin
-        ResCN := FRstrand^[i] / FkStrand^[i];
-        RadCN := 0.5 * (FDiaCable^[i] - FDiaStrand^[i]);
-        GmrCN := Power(FGmrStrand^[i] * FkStrand^[i] * Power(RadCN, FkStrand^[i] - 1.0),
-            1.0 / FkStrand^[i]);
+        ResCN := FRstrand[i] / FkStrand[i];
+        RadCN := 0.5 * (FDiaCable[i] - FDiaStrand[i]);
+        GmrCN := Power(FGmrStrand[i] * FkStrand[i] * Power(RadCN, FkStrand[i] - 1.0),
+            1.0 / FkStrand[i]);
         Zspacing := Lfactor * ln(1.0 / GmrCN);
-        Zi := cmplx(ResCN, 0.0);
+        Zi := ResCN;
         idxi := i + FNumConds;
-        Zmat.SetElement(idxi, idxi, Zi + Zspacing + Get_Ze(i, i, EarthModel));
+        Zmat[idxi, idxi] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
     end;
 
   // Mutual Impedances - between CN cores and bare neutrals
@@ -175,8 +175,9 @@ begin
     begin
         for j := 1 to i - 1 do
         begin
-            Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-            Zmat.SetElemSym(i, j, Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel));
+            Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
+            Zmat[i, j] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            Zmat[j, i] := Zmat[i, j];
         end;
     end;
 
@@ -187,24 +188,26 @@ begin
         for j := 1 to i - 1 do
         begin  // CN to other CN
             idxj := j + FNumConds;
-            Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-            Zmat.SetElemSym(idxi, idxj, Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel));
+            Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
+            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            Zmat[idxj, idxi] := Zmat[idxi, idxj];
         end;
         for j := 1 to FNumConds do
         begin // CN to cores and bare neutrals
             idxj := j;
-            RadCN := 0.5 * (FDiaCable^[i] - FDiaStrand^[i]);
+            RadCN := 0.5 * (FDiaCable[i] - FDiaStrand[i]);
             if i = j then
             begin // CN to its own phase core
                 Dij := RadCN;
             end
             else
             begin // CN to another phase or bare neutral
-                Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-                Dij := Power(Power(Dij, FkStrand^[i]) - Power(RadCN, FkStrand^[i]),
-                    1.0 / FkStrand^[i]);
+                Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
+                Dij := Power(Power(Dij, FkStrand[i]) - Power(RadCN, FkStrand[i]),
+                    1.0 / FkStrand[i]);
             end;
-            Zmat.SetElemSym(idxi, idxj, Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel));
+            Zmat[idxi, idxj] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            Zmat[idxj, idxi] := Zmat[idxi, idxj];
         end;
     end;
 
@@ -222,11 +225,11 @@ begin
   // assumes the insulation may lie between semicon layers
     for i := 1 to FNPhases do
     begin
-        Yfactor := twopi * e0 * FEpsR^[i] * Fw; // includes frequency so C==>Y
-        RadOut := 0.5 * FDiaIns^[i];
-        RadIn := RadOut - FInsLayer^[i];
+        Yfactor := twopi * e0 * FEpsR[i] * Fw; // includes frequency so C==>Y
+        RadOut := 0.5 * FDiaIns[i];
+        RadIn := RadOut - FInsLayer[i];
         Denom := ln(RadOut / RadIn);
-        FYCMatrix.SetElement(i, i, cmplx(0.0, Yfactor / Denom));
+        FYCMatrix[i, i] := cmplx(0.0, Yfactor / Denom);
     end;
 
     if ReducedSize > 0 then
@@ -239,10 +242,10 @@ end;
 constructor TCNLineConstants.Create(NumConductors: Integer);
 begin
     inherited Create(NumConductors);
-    FkStrand := Allocmem(Sizeof(FkStrand^[1]) * FNumConds);
-    FDiaStrand := Allocmem(Sizeof(FDiaStrand^[1]) * FNumConds);
-    FGmrStrand := Allocmem(Sizeof(FGmrStrand^[1]) * FNumConds);
-    FRStrand := Allocmem(Sizeof(FRStrand^[1]) * FNumConds);
+    FkStrand := Allocmem(Sizeof(FkStrand[1]) * FNumConds);
+    FDiaStrand := Allocmem(Sizeof(FDiaStrand[1]) * FNumConds);
+    FGmrStrand := Allocmem(Sizeof(FGmrStrand[1]) * FNumConds);
+    FRStrand := Allocmem(Sizeof(FRStrand[1]) * FNumConds);
 end;
 
 destructor TCNLineConstants.Destroy;

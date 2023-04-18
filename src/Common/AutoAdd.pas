@@ -97,7 +97,7 @@ begin
     with Mtr do
         for i := 1 to count do
         begin
-            Result := Result + Registers[regs^[i]] * TotalsMask[Regs^[i]];
+            Result := Result + Registers[regs[i]] * TotalsMask[regs[i]];
         end;
 end;
 
@@ -158,11 +158,11 @@ begin
         // No energymeters in circuit
         // Include all buses in the circuit
         BusIdxListSize := DSS.ActiveCircuit.BusList.Count;
-        BusIdxList := AllocMem(Sizeof(BusIdxList^[1]) * BusIdxListSize);
+        BusIdxList := AllocMem(Sizeof(BusIdxList[1]) * BusIdxListSize);
 
         for i := 1 to BusIdxListSize do
         begin
-            BusIdxList^[i] := i;
+            BusIdxList[i] := i;
         end;
 
         BusIdxListCreated := TRUE;
@@ -170,42 +170,40 @@ begin
     end
     else
     begin
-         {Construct Bus List from Energy Meters Zone Lists}
-         // Include only buses in EnergyMeter lists
-             // Consider all meters
+        // Construct Bus List from Energy Meters Zone Lists
+        // Include only buses in EnergyMeter lists
+        // Consider all meters
         FBusListCreatedHere := TRUE;
         FBusList := TBusHashListType.Create(DSS.ActiveCircuit.NumBuses);
-        pMeter := DSS.ActiveCircuit.EnergyMeters.First;
-        while pMeter <> NIL do
+        for pMeter in DSS.ActiveCircuit.EnergyMeters do
         begin
-            if pMeter.BranchList <> NIL then
-            begin
-                PDElem := pMeter.BranchList.First;
-                while PDElem <> NIL do
-                begin // add only unique busnames
-                    for i := 1 to PDElem.Nterms do
+            if pMeter.BranchList = NIL then
+                continue;
+
+            PDElem := pMeter.BranchList.First;
+            while PDElem <> NIL do
+            begin // add only unique busnames
+                for i := 1 to PDElem.Nterms do
+                begin
+                    Bname := StripExtension(PDElem.GetBus(i));
+                    retval := FBusList.Find(Bname);
+                    if retval = 0 then
                     begin
-                        Bname := StripExtension(PDElem.GetBus(i));
-                        retval := FBusList.Find(Bname);
-                        if retval = 0 then
-                        begin
-                            FBusList.Add(BName);    // return value is index of bus
-                        end;
+                        FBusList.Add(BName);    // return value is index of bus
                     end;
-                    PDElem := pMeter.BranchList.GoForward;
                 end;
+                PDElem := pMeter.BranchList.GoForward;
             end;
-            pMeter := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
     end;
 
      // Make busIdxList from FBusList
     BusIdxListSize := FBusList.Count;
-    BusIdxList := AllocMem(Sizeof(BusIdxList^[i]) * BusIdxListSize);
+    BusIdxList := AllocMem(Sizeof(BusIdxList[i]) * BusIdxListSize);
 
     for i := 1 to BusIdxListSize do
     begin
-        BusIdxList^[i] := DSS.ActiveCircuit.BusList.Find(FBusList.NameOfIndex(i));
+        BusIdxList[i] := DSS.ActiveCircuit.BusList.Find(FBusList.NameOfIndex(i));
     end;
 
     if FBusListCreatedHere then
@@ -381,7 +379,7 @@ begin
             DSS.EnergyMeterClass.SampleAll;
 
         { Check to see if bus base voltages have been defined }
-            if Buses^[NumBuses].kVBase = 0.0 then
+            if Buses[NumBuses].kVBase = 0.0 then
                 SetVoltageBases;
 
             if ModeChanged then
@@ -446,7 +444,7 @@ begin
                     begin
                         Inc(ProgressCount);
 
-                        BusIndex := BusIdxList^[i];
+                        BusIndex := BusIdxList[i];
 
                         if BusIndex > 0 then
                         begin
@@ -463,7 +461,7 @@ begin
                              {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
 
                              {Assume either a 3-phase or 1-phase generator}
-                            if Buses^[BusIndex].NumNodesThisBus < 3 then
+                            if Buses[BusIndex].NumNodesThisBus < 3 then
                                 Phases := 1
                             else
                                 Phases := 3;
@@ -485,7 +483,7 @@ begin
 
                                 LossImproveFactor := WeightedLosses;
 
-                                FSWrite(Flog, Format('"%s", %-g', [TestBus, Buses^[BusIndex].kVBase * SQRT3]));
+                                FSWrite(Flog, Format('"%s", %-g', [TestBus, Buses[BusIndex].kVBase * SQRT3]));
                                 FSWrite(Flog, Format(', %-g, %-g', [kWLosses, puLossImprovement * 100.0]));
                                 FSWrite(Flog, Format(', %-g, %-g', [kWEEN, puEENImprovement * 100.0]));
                                 FSWriteln(Flog, Format(', %-g, %d', [LossImproveFactor, Iteration]));
@@ -511,9 +509,9 @@ begin
                         with DSS.DSSExecutive do
                         begin
                             if MinBusPhases >= 3 then
-                                kVrat := Buses^[MinLossBus].kVBase * SQRT3
+                                kVrat := Buses[MinLossBus].kVBase * SQRT3
                             else
-                                kVrat := Buses^[MinLossBus].kVBase;
+                                kVrat := Buses[MinLossBus].kVBase;
                             CommandString := 'New, generator.' + GetUniqueGenName +
                                 ', bus1="' + BusList.NameOfIndex(MinLossBus) +
                                 '", phases=' + IntToStr(MinBusPhases) +
@@ -561,7 +559,7 @@ begin
                     begin
                         Inc(ProgressCount);
                        {Make sure testbus is actually in the circuit}
-                        BusIndex := BusIdxList^[i];
+                        BusIndex := BusIdxList[i];
                         if BusIndex > 0 then
                         begin
                             TestBus := BusList.NameOfIndex(BusIndex);
@@ -573,14 +571,14 @@ begin
                            {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
 
                           {Assume either a 3-phase or 1-phase Capacitor}
-                            if Buses^[BusIndex].NumNodesThisBus < 3 then
+                            if Buses[BusIndex].NumNodesThisBus < 3 then
                                 Phases := 1
                             else
                                 Phases := 3;
 
                                // Apply the capacitor at the bus rating
 
-                            kVrat := Buses^[BusIndex].kVBase;  // L-N Base kV
+                            kVrat := Buses[BusIndex].kVBase;  // L-N Base kV
                             Ycap := (TestCapkvar * 0.001 / Phases) / (kVRat * kVRat);
 
 
@@ -599,7 +597,7 @@ begin
 
                                 LossImproveFactor := WeightedLosses;
 
-                                FSWrite(Flog, Format('"%s", %-g', [TestBus, Buses^[BusIndex].kVBase * SQRT3]));
+                                FSWrite(Flog, Format('"%s", %-g', [TestBus, Buses[BusIndex].kVBase * SQRT3]));
                                 FSWrite(Flog, Format(', %-g, %-g', [kWLosses, puLossImprovement * 100.0]));
                                 FSWrite(Flog, Format(', %-g, %-g', [kWEEN, puEENImprovement * 100.0]));
                                 FSWriteln(Flog, Format(', %-g, %d', [LossImproveFactor, Iteration]));
@@ -625,9 +623,9 @@ begin
                         with DSS.DSSExecutive do
                         begin
                             if MinBusPhases >= 3 then
-                                kVrat := Buses^[MinLossBus].kVBase * SQRT3
+                                kVrat := Buses[MinLossBus].kVBase * SQRT3
                             else
-                                kVrat := Buses^[MinLossBus].kVBase;
+                                kVrat := Buses[MinLossBus].kVBase;
 
                             CommandString := 'New, Capacitor.' + GetUniqueCapName +
                                 ', bus1="' + BusList.NameOfIndex(MinLossBus) +
@@ -679,17 +677,17 @@ begin
                 // For buses with voltage <> 0, add into aux current array
                 for i := 1 to Phases do
                 begin
-                    Nref := Buses^[BusIndex].GetRef(i);
+                    Nref := Buses[BusIndex].GetRef(i);
                     if Nref > 0 then
                     begin   // add in only non-ground currents
-                        BusV := NodeV^[Nref];
+                        BusV := NodeV[Nref];
                         if (BusV.re <> 0.0) or (BusV.im <> 0.0) then
                             // Current  INTO the system network
                             case SolveType of
                                 NEWTONSOLVE:
-                                    Currents^[NRef] -= cong(GenVA / BusV);  // Terminal Current
+                                    Currents[NRef] -= cong(GenVA / BusV);  // Terminal Current
                                 NORMALSOLVE:
-                                    Currents^[NRef] += cong(GenVA / BusV);   // Injection Current
+                                    Currents[NRef] += cong(GenVA / BusV);   // Injection Current
                             end;
                     end;
                 end;
@@ -701,17 +699,17 @@ begin
                 // For buses with voltage <> 0, add into aux current array
                 for i := 1 to Phases do
                 begin
-                    Nref := Buses^[BusIndex].GetRef(i);
+                    Nref := Buses[BusIndex].GetRef(i);
                     if Nref > 0 then
                     begin
-                        BusV := NodeV^[Nref];
+                        BusV := NodeV[Nref];
                         if (BusV.re <> 0.0) or (BusV.im <> 0.0) then
                          {Current  INTO the system network}
                             case SolveType of
                                 NEWTONSOLVE:
-                                    Currents^[NRef] += Cmplx(0.0, Ycap) * BusV; // Terminal Current
+                                    Currents[NRef] += Cmplx(0.0, Ycap) * BusV; // Terminal Current
                                 NORMALSOLVE:
-                                    Currents^[NRef] += Cmplx(0.0, -Ycap) * BusV; // Injection Current
+                                    Currents[NRef] += Cmplx(0.0, -Ycap) * BusV; // Injection Current
                             end;  // Constant Y model
                     end;
                 end;
@@ -724,7 +722,6 @@ end;
 procedure TAutoAdd.ComputekWLosses_EEN;
 var
     pMeter: TEnergyMeterObj;
-
 begin
     if DSS.ActiveCircuit.EnergyMeters.Count = 0 then
     begin
@@ -732,22 +729,18 @@ begin
         // Just go by total system losses
         kWLosses := DSS.ActiveCircuit.Losses.re * 0.001;
         kWEEN := 0.0;
-
     end
     else
     begin   // Sum losses in energy meters and add EEN
         kWLosses := 0.0;
         kWEEN := 0.0;
 
-        with DSS.ActiveCircuit do
+        with DSS.ActiveCircuit do 
         begin
-            pMeter := DSS.ActiveCircuit.Energymeters.First;
-            while pMeter <> NIL do
+            for pMeter in DSS.ActiveCircuit.Energymeters do
             begin
                 kWLosses := kWLosses + SumSelectedRegisters(pMeter, LossRegs, NumLossRegs);
                 kWEEN := kWEEN + SumSelectedRegisters(pMeter, UEregs, NumUEregs);
-
-                pMeter := DSS.ActiveCircuit.EnergyMeters.Next;
             end;
         end;
     end;
@@ -759,8 +752,5 @@ begin
     BaseLosses := kWLosses;
     BaseEEN := kWEEN;
 end;
-
-initialization
-
 
 end.

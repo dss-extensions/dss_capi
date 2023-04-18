@@ -406,47 +406,45 @@ begin
     if RandomMult = 0.0 then
         RandomMult := 0.000001;
 
-    with YPrimTemp do
-    begin
-        // Now, Put in Yprim matrix
-        // If the fault is not ON, the set zero conductance
-        case SpecType of
-
-            1:
+    // Now, Put in Yprim matrix
+    // If the fault is not ON, the set zero conductance
+    case SpecType of
+        1:
+        begin
+            if Is_ON then
+                Value := G / RandomMult
+            else
+                Value := 0;
+            Value2 := -Value;
+            for i := 1 to Fnphases do
             begin
-                if Is_ON then
-                    Value := Cmplx(G / RandomMult, 0.0)
-                else
-                    Value := 0;
-                Value2 := -Value;
-                for i := 1 to Fnphases do
-                begin
-                    SetElement(i, i, Value);     // Elements are only on the diagonals
-                    SetElement(i + Fnphases, i + Fnphases, Value);
-                    SetElemSym(i, i + Fnphases, Value2);
-                end;
+                YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                YPrimTemp[i + Fnphases, i + Fnphases] := Value;
+                YPrimTemp[i, i + Fnphases] := Value2;
+                YPrimTemp[i + Fnphases, i] := Value2;
             end;
-            2:
-            begin    // G matrix specified
-                for i := 1 to Fnphases do
+        end;
+        2:
+        begin    // G matrix specified
+            for i := 1 to Fnphases do
+            begin
+                ioffset := (i - 1) * Fnphases;
+                for j := 1 to Fnphases do
                 begin
-                    ioffset := (i - 1) * Fnphases;
-                    for j := 1 to Fnphases do
-                    begin
-                        if Is_ON then
-                            Value := Cmplx(Gmatrix^[(iOffset + j)] / RandomMult, 0.0)
-                        else
-                            Value := 0;
-                        SetElement(i, j, Value);
-                        SetElement(i + Fnphases, j + Fnphases, Value);
-                        Value := -Value;
-                        SetElemSym(i, j + Fnphases, Value);
-                    end;
+                    if Is_ON then
+                        Value := Cmplx(Gmatrix[(iOffset + j)] / RandomMult, 0.0)
+                    else
+                        Value := 0;
+                    YPrimTemp[i, j] := Value;
+                    YPrimTemp[i + Fnphases, j + Fnphases] := Value;
+                    Value := -Value;
+                    YPrimTemp[i, j + Fnphases] := Value;
+                    YPrimTemp[j + Fnphases, i] := Value;
                 end;
             end;
         end;
-
     end;
+
 
     YPrim.CopyFrom(YPrimTemp);
 
@@ -462,15 +460,15 @@ begin
 
     with ParentClass do
     begin
-        FSWriteln(F, '~ ' + PropertyName^[1] + '=' + firstbus);
-        FSWriteln(F, '~ ' + PropertyName^[2] + '=' + nextbus);
+        FSWriteln(F, '~ ' + PropertyName[1] + '=' + firstbus);
+        FSWriteln(F, '~ ' + PropertyName[2] + '=' + nextbus);
 
-        FSWriteln(F, Format('~ %s=%d', [PropertyName^[3], Fnphases]));
-        FSWriteln(F, Format('~ %s=%.2f', [PropertyName^[4], (1.0 / G)]));
-        FSWriteln(F, Format('~ %s=%.1f', [PropertyName^[5], (StdDev * 100.0)]));
+        FSWriteln(F, Format('~ %s=%d', [PropertyName[3], Fnphases]));
+        FSWriteln(F, Format('~ %s=%.2f', [PropertyName[4], (1.0 / G)]));
+        FSWriteln(F, Format('~ %s=%.1f', [PropertyName[5], (StdDev * 100.0)]));
         if Gmatrix <> NIL then
         begin
-            FSWrite(F, '~ ' + PropertyName^[6] + '= (');
+            FSWrite(F, '~ ' + PropertyName[6] + '= (');
             for i := 1 to Fnphases do
             begin
                 for j := 1 to i do
@@ -480,16 +478,16 @@ begin
             end;
             FSWriteln(F, ')');
         end;
-        FSWriteln(F, Format('~ %s=%.3f', [PropertyName^[7], ON_Time]));
+        FSWriteln(F, Format('~ %s=%.3f', [PropertyName[7], ON_Time]));
         if IsTemporary then
-            FSWriteln(F, '~ ' + PropertyName^[8] + '= Yes')
+            FSWriteln(F, '~ ' + PropertyName[8] + '= Yes')
         else
-            FSWriteln(F, '~ ' + PropertyName^[8] + '= No');
-        FSWriteln(F, Format('~ %s=%.1f', [PropertyName^[9], Minamps]));
+            FSWriteln(F, '~ ' + PropertyName[8] + '= No');
+        FSWriteln(F, Format('~ %s=%.1f', [PropertyName[9], Minamps]));
 
         for i := NumPropsthisClass to NumProperties do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
 
         if Complete then
@@ -547,7 +545,7 @@ begin
     Result := FALSE;
     for i := 1 to FNphases do
     begin
-        if Cabs(Iterminal^[i]) > MinAmps then
+        if Cabs(Iterminal[i]) > MinAmps then
         begin
             Result := TRUE;
             Exit;

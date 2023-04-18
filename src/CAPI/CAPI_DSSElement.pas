@@ -39,7 +39,7 @@ begin
             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumProperties);
             for k := 1 to NumProperties do
             begin
-                Result[k - 1] := DSS_CopyStringAsPChar(PropertyName^[k]);
+                Result[k - 1] := DSS_CopyStringAsPChar(PropertyName[k]);
             end;
         end;
 end;

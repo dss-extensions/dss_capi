@@ -470,7 +470,7 @@ var
     go_flag: Boolean;
     i: Integer;
 begin
-    Result := cmplx(0, 0);
+    Result := 0;
     go_flag := TRUE;
     i := 0;
     while go_flag do
@@ -840,7 +840,7 @@ begin
                 tempa := apos;
                 tempb := bpos;
 
-                sum := cmplx(0, 0);
+                sum := 0;
 
             // iterate over all elements with
             // same row and col value

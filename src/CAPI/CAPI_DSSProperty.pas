@@ -74,7 +74,7 @@ begin
     if IsPropIndexInvalid(DSSPrime, 33005) then
         Exit;
 
-    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.ParentClass.PropertyName^[DSSPrime.FPropIndex]);
+    Result := DSS_GetAsPAnsiChar(DSSPrime, DSSPrime.ActiveDSSObject.ParentClass.PropertyName[DSSPrime.FPropIndex]);
 end;
 //------------------------------------------------------------------------------
 function DSSProperty_Get_Val(): PAnsiChar; CDECL;
@@ -118,7 +118,7 @@ begin
         Exit;
 
     with DSSPrime.ActiveDSSObject do
-        DSSPrime.DSSExecutive.Command := 'Edit ' + FullName + ' ' + ParentClass.PropertyName^[DSSPrime.FPropIndex] + '=' + (Value);
+        DSSPrime.DSSExecutive.Command := 'Edit ' + FullName + ' ' + ParentClass.PropertyName[DSSPrime.FPropIndex] + '=' + (Value);
 end;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Index(const Value: Integer); CDECL;
@@ -163,7 +163,7 @@ begin
     begin
         for i := 1 to DSSPrime.FPropClass.NumProperties do
         begin
-            if CompareText(Value, DSSPrime.FPropClass.PropertyName^[i]) = 0 then
+            if CompareText(Value, DSSPrime.FPropClass.PropertyName[i]) = 0 then
             begin
                 DSSPrime.FPropIndex := i;
                 Exit;

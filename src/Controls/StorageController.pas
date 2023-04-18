@@ -504,9 +504,9 @@ begin
             FElementListSpecified := TRUE;
             FleetSize := FStorageNameList.count;
             // Realloc weights to be same size as possible number of storage elements
-            Reallocmem(FWeights, Sizeof(FWeights^[1]) * FleetSize);
+            Reallocmem(FWeights, Sizeof(FWeights[1]) * FleetSize);
             for i := 1 to FleetSize do
-                FWeights^[i] := 1.0;
+                FWeights[i] := 1.0;
         end;
         ord(TProp.Seasons):
         begin
@@ -558,9 +558,9 @@ begin
     FleetSize := FStorageNameList.count;
     if FleetSize > 0 then
     begin
-        Reallocmem(FWeights, Sizeof(FWeights^[1]) * FleetSize);
+        Reallocmem(FWeights, Sizeof(FWeights[1]) * FleetSize);
         for i := 1 to FleetSize do
-            FWeights^[i] := Other.FWeights^[i];
+            FWeights[i] := Other.FWeights[i];
     end;
 
     DisChargeMode := Other.DisChargeMode;
@@ -751,7 +751,7 @@ begin
             Setbus(1, MonitoredElement.GetBus(ElementTerminal));
 
             // Allocate a buffer bigenough to hold everything from the monitored element
-            ReAllocMem(cBuffer, SizeOF(cBuffer^[1]) * MonitoredElement.Yorder);
+            ReAllocMem(cBuffer, SizeOF(cBuffer[1]) * MonitoredElement.Yorder);
             CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
         end;
     end
@@ -783,7 +783,7 @@ begin
         Nconds := FNphases;
         Setbus(1, MonitoredElement.GetBus(ElementTerminal));
         // Allocate a buffer big enough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder);
+        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
         CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
     end;
     inherited;
@@ -1126,7 +1126,7 @@ begin
         begin
             MonitoredElement.ComputeVterminal();
             VoltsArr := MonitoredElement.Vterminal;
-            ElemVolts := cabs(VoltsArr^[1]);
+            ElemVolts := cabs(VoltsArr[1]);
             kWNeeded := ((MonitoredElement.NPhases * Pdiff * ElemVolts) / 1000.0);
 //         kWNeeded     :=  ((Pdiff * ElemVolts) / 1000.0);
             AmpsDiff := PDiff;
@@ -1162,7 +1162,7 @@ begin
 //                     Begin
 //                       MonitoredElement.ComputeVterminal();
 //                       VoltsArr     :=  MonitoredElement.Vterminal;
-//                       ElemVolts    :=  cabs(VoltsArr^[1]);
+//                       ElemVolts    :=  cabs(VoltsArr[1]);
 //                       Pdiff        :=  Pdiff + (FleetkW * 1000 / ElemVolts);
 //                     End;
 //                   end;
@@ -1176,7 +1176,7 @@ begin
                 begin
                     MonitoredElement.ComputeVterminal();
                     VoltsArr := MonitoredElement.Vterminal;
-                    ElemVolts := cabs(VoltsArr^[1]);
+                    ElemVolts := cabs(VoltsArr[1]);
                     Pdiff := Pdiff + (Get_FleetkW() * 1000 / (ElemVolts * MonitoredElement.NPhases));
 //                 Pdiff        :=  Pdiff + (Get_FleetkW() * 1000 / (ElemVolts ));
                 end;
@@ -1251,7 +1251,7 @@ begin
                         with StorageObj do
                         begin
                       // compute new dispatch value for this storage element ...
-                            DispatchkW := Min(StorageVars.kWrating, (PresentkW + kWNeeded * DispFactor * (FWeights^[i] / TotalWeight))); // Dispatch kWNeeded
+                            DispatchkW := Min(StorageVars.kWrating, (PresentkW + kWNeeded * DispFactor * (FWeights[i] / TotalWeight))); // Dispatch kWNeeded
 
                             if DispatchkW <= 0.0 then // if kWNeeded is too low, DispatchkW may be negative depending on idling losses. In this case, just set it to idling
                             begin
@@ -1417,7 +1417,7 @@ begin
         begin
             MonitoredElement.ComputeVterminal();
             VoltsArr := MonitoredElement.Vterminal;
-            ElemVolts := cabs(VoltsArr^[1]);     // LN voltage
+            ElemVolts := cabs(VoltsArr[1]);     // LN voltage
             kWNeeded := ((MonitoredElement.NPhases * PDiff * ElemVolts) / 1000.0);
 //         kWNeeded     :=  (( PDiff * ElemVolts) / 1000.0);
             AmpsDiff := PDiff;
@@ -1460,7 +1460,7 @@ begin
             begin
                 MonitoredElement.ComputeVterminal();
                 VoltsArr := MonitoredElement.Vterminal;
-                ElemVolts := cabs(VoltsArr^[1]);
+                ElemVolts := cabs(VoltsArr[1]);
                 Pdiff := Pdiff + (Get_FleetkW() * 1000 / (ElemVolts * MonitoredElement.NPhases));   // get actual Pdiff in Currents (discount FleetkW)  (assuming same number of phases of Fleet and Monitored Element)
 //                 Pdiff        :=  Pdiff + (Get_FleetkW() * 1000 / (ElemVolts ));
             end;
@@ -1519,9 +1519,9 @@ begin
 
 
                        // compute new charging value for this storage element ...
-  //                                ChargekW := -1 * Min(StorageVars.kWrating, abs(PresentkW + Pdiff *(FWeights^[i]/TotalWeight)));  // old approach
+  //                                ChargekW := -1 * Min(StorageVars.kWrating, abs(PresentkW + Pdiff *(FWeights[i]/TotalWeight)));  // old approach
 
-                            ChargekW := PresentkW + kWNeeded * (FWeights^[i] / TotalWeight) * DispFactor; // may be positive or negative
+                            ChargekW := PresentkW + kWNeeded * (FWeights[i] / TotalWeight) * DispFactor; // may be positive or negative
                             if ChargekW < 0 then
                                 ChargekW := Max(-1 * StorageVars.kWrating, ChargekW); // check against kVA rating
 
@@ -1906,16 +1906,16 @@ begin
 
         // Allocate uniform weights
         FleetSize := FleetPointerList.Count;
-        Reallocmem(FWeights, Sizeof(FWeights^[1]) * FleetSize);
+        Reallocmem(FWeights, Sizeof(FWeights[1]) * FleetSize);
         for i := 1 to FleetSize do
-            FWeights^[i] := 1.0;
+            FWeights[i] := 1.0;
 
     end;
 
    // Add up total weights
     TotalWeight := 0.0;
     for i := 1 to FleetSize do
-        TotalWeight := TotalWeight + FWeights^[i];
+        TotalWeight := TotalWeight + FWeights[i];
 
     if FleetPointerList.Count > 0 then
         Result := TRUE;
@@ -1951,18 +1951,18 @@ begin
         case FMonPhase of
             AVG:
             begin  // Get avg of all phases
-                ControlPower := Cmplx(0.0, 0.0);
+                ControlPower := 0;
                 for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
-                    ControlPower := ControlPower + cBuffer^[i];
+                    ControlPower := ControlPower + cBuffer[i];
             end;
             MAXPHASE:
             begin  // Get abs max of all phases
-                ControlPower := Cmplx(0.0, 0.0);
+                ControlPower := 0;
                 for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
                 begin
-                    TempPower := abs(cBuffer^[i].re);
+                    TempPower := abs(cBuffer[i].re);
                     if TempPower > abs(ControlPower.re) then
-                        ControlPower := cBuffer^[i];
+                        ControlPower := cBuffer[i];
                     // ControlPowerPhase := i;
                 end;
                           // Compute equivalent total power of all phases assuming equal to max power in all phases
@@ -1973,9 +1973,9 @@ begin
                 ControlPower := Cmplx(1.0e50, 1.0e50);
                 for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
                 begin
-                    TempPower := abs(cBuffer^[i].re);
+                    TempPower := abs(cBuffer[i].re);
                     if TempPower < abs(ControlPower.re) then
-                        ControlPower := cBuffer^[i];
+                        ControlPower := cBuffer[i];
                     // ControlPowerPhase := i;
                 end;
                           // Compute equivalent total power of all phases assuming equal to min power in all phases
@@ -1983,7 +1983,7 @@ begin
             end;
         else
             // Compute equivalent total power of all phases assuming equal to power in selected phases
-            ControlPower := Cbuffer^[FMonPhase] * Fnphases;  // monitored phase only
+            ControlPower := cBuffer[FMonPhase] * Fnphases;  // monitored phase only
         end;
     end;
 
@@ -2003,26 +2003,26 @@ begin
         begin
             ControlCurrent := 0.0;     // Get avg of all phases
             for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
-                ControlCurrent := ControlCurrent + Cabs(cBuffer^[i]);
+                ControlCurrent := ControlCurrent + Cabs(cBuffer[i]);
             ControlCurrent := ControlCurrent / Fnphases;
         end;
         MAXPHASE:
         begin
             ControlCurrent := 0.0;     // Get max of all phases
             for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
-                ControlCurrent := max(ControlCurrent, Cabs(cBuffer^[i]));
+                ControlCurrent := max(ControlCurrent, Cabs(cBuffer[i]));
             ControlCurrent := ControlCurrent;
         end;
         MINPHASE:
         begin
             ControlCurrent := 1.0e50;     // Get min of all phases
             for i := (1 + CondOffset) to (MonitoredElement.NConds + CondOffset) do
-                ControlCurrent := min(ControlCurrent, Cabs(cBuffer^[i]));
+                ControlCurrent := min(ControlCurrent, Cabs(cBuffer[i]));
             ControlCurrent := ControlCurrent;
         end;
     else
     {Just use one phase because that's what most controls do.}
-        ControlCurrent := Cabs(Cbuffer^[FMonPhase]);  // monitored phase only
+        ControlCurrent := Cabs(cBuffer[FMonPhase]);  // monitored phase only
     end;
 end;
 

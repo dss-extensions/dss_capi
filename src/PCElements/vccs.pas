@@ -329,7 +329,7 @@ end;
 
 procedure TVCCSObj.RecalcElementData;
 begin
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 
     Irated := Prated / Vrated / FNphases;
     BaseVolt := Vrated;
@@ -395,7 +395,7 @@ begin
         GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
     // Add Together with yprim currents
         for i := 1 to Yorder do
-            Curr^[i] := -ComplexBuffer^[i];
+            Curr[i] := -ComplexBuffer^[i];
     except
         On E: Exception do
             DoErrorMsg(Format(_('GetCurrents for VCCS Element: %s.'), [Name]), 
@@ -406,9 +406,9 @@ end;
 procedure TVCCSObj.UpdateSequenceVoltage;
 begin
     if FNPhases = 3 then
-        sV1 := (Vterminal^[1] + (ALPHA1 * Vterminal^[2] + ALPHA2 * Vterminal^[3])) / 3.0
+        sV1 := (Vterminal[1] + (ALPHA1 * Vterminal[2] + ALPHA2 * Vterminal[3])) / 3.0
     else
-        sV1 := Vterminal^[1];
+        sV1 := Vterminal[1];
 end;
 
 procedure TVCCSObj.GetInjCurrents(Curr: pComplexArray);
@@ -419,7 +419,7 @@ begin
     if not Closed[1] then 
     begin
         for i := 1 to Fnphases do 
-            Curr^[i] := 0;
+            Curr[i] := 0;
         Exit;
     end;
 
@@ -434,17 +434,17 @@ begin
             i1 := pdegtocomplex (s4 * BaseCurr, cdang (sV1));
             case Fnphases of
                 1: 
-                    Curr^[1] := i1;
+                    Curr[1] := i1;
                 3: 
                 begin
-                    Curr^[1] := i1;
-                    Curr^[2] := i1 * ALPHA2;
-                    Curr^[3] := i1 * ALPHA1;
+                    Curr[1] := i1;
+                    Curr[2] := i1 * ALPHA2;
+                    Curr[3] := i1 * ALPHA1;
                 end;
             else
                 for i := 1 to Fnphases do
                 begin
-                    Curr^[i] := pdegtocomplex(s4 * BaseCurr, cdang(Vterminal^[i]));
+                    Curr[i] := pdegtocomplex(s4 * BaseCurr, cdang(Vterminal[i]));
                 end;
             end;
         end
@@ -452,7 +452,7 @@ begin
         begin
             for i := 1 to Fnphases do
             begin
-                Curr^[i] := pdegtocomplex(s3 * BaseCurr, cdang(Vterminal^[i]));
+                Curr[i] := pdegtocomplex(s3 * BaseCurr, cdang(Vterminal[i]));
             end;
         end;
     end
@@ -460,7 +460,7 @@ begin
     begin
         for i := 1 to Fnphases do
         begin
-            Curr^[i] := pdegtocomplex(BaseCurr, cdang(Vterminal^[i]));
+            Curr[i] := pdegtocomplex(BaseCurr, cdang(Vterminal[i]));
         end;
     end;
 end;
@@ -501,14 +501,14 @@ var
     i, k: Integer;
 begin
     ComputeIterminal;
-    s1 := cabs(Vterminal^[1]) / BaseVolt;
-    s4 := cabs(Iterminal^[1]) / BaseCurr;
+    s1 := cabs(Vterminal[1]) / BaseVolt;
+    s4 := cabs(Iterminal[1]) / BaseCurr;
     s2 := s4;
     s3 := s4;
     s5 := 0;
     s6 := 0;
-    sV1 := cmplx(1.0, 0.0);
-    vlast := Vterminal^[1] / BaseVolt;
+    sV1 := 1.0;
+    vlast := Vterminal[1] / BaseVolt;
 
   // initialize the history terms for HW model source convention
     for i := 1 to Ffiltlen do
@@ -545,16 +545,16 @@ begin
         exit;
     end;
     ComputeIterminal;
-    iang := cang(Iterminal^[1]);
-    vang := cang(Vterminal^[1]);
-    s1 := cabs(Vterminal^[1]) / BaseVolt;
-    s3 := cabs(Iterminal^[1]) / BaseCurr;
+    iang := cang(Iterminal[1]);
+    vang := cang(Vterminal[1]);
+    s1 := cabs(Vterminal[1]) / BaseVolt;
+    s3 := cabs(Iterminal[1]) / BaseCurr;
     s2 := s3;
     s4 := s3;
     s5 := 0;
     s6 := 0;
-    sV1 := cmplx(1.0, 0.0);
-    vlast := Vterminal^[1] / BaseVolt;
+    sV1 := 1.0;
+    vlast := Vterminal[1] / BaseVolt;
 
   // initialize the history terms for HW model source convention
     d := 1 / FsampleFreq;
@@ -675,7 +675,7 @@ begin
     nstep := trunc(1e-6 + h / d);
     w := 2 * Pi * f;
 
-    vnow := Vterminal^[1] / BaseVolt;
+    vnow := Vterminal[1] / BaseVolt;
     vin := 0;
     y := 0;
     iu := sIdxU;

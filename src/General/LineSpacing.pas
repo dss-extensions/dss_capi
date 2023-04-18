@@ -149,8 +149,8 @@ begin
     case Idx of
         ord(TProp.nconds):
         begin
-            ReAllocmem(FX, Sizeof(FX^[1]) * FNconds);
-            ReAllocmem(FY, Sizeof(FY^[1]) * FNconds);
+            ReAllocmem(FX, Sizeof(FX[1]) * FNconds);
+            ReAllocmem(FY, Sizeof(FY[1]) * FNconds);
             Units := UNITS_FT;
             DataChanged := TRUE;
         end;
@@ -171,9 +171,9 @@ begin
     PropertySideEffects(ord(TProp.NConds), 0);
     NPhases := Other.NPhases;
     for i := 1 to FNConds do
-        FX^[i] := Other.FX^[i];
+        FX[i] := Other.FX[i];
     for i := 1 to FNConds do
-        FY^[i] := Other.FY^[i];
+        FY[i] := Other.FY[i];
     Units := Other.Units;
     DataChanged := TRUE;
 end;
@@ -207,16 +207,16 @@ var
 begin
     r := '[';
     if N > 0 then
-        r := r + Format('%-g', [pF^[1]]);
+        r := r + Format('%-g', [pF[1]]);
     for i := 2 to N do
-        r := r + Format(',%-g', [pF^[i]]);
+        r := r + Format(',%-g', [pF[i]]);
     Result := r + ']';
 end;
 
 function TLineSpacingObj.Get_FX(i: Integer): Double;
 begin
     if i <= FNConds then
-        Result := FX^[i]
+        Result := FX[i]
     else
         Result := 0.0;
 end;
@@ -224,7 +224,7 @@ end;
 function TLineSpacingObj.Get_FY(i: Integer): Double;
 begin
     if i <= FNConds then
-        Result := FY^[i]
+        Result := FY[i]
     else
         Result := 0.0;
 end;
@@ -232,13 +232,13 @@ end;
 procedure TLineSpacingObj.Set_FX(i: Integer; Value: Double);
 begin
     if (i > 0) and (i <= FNConds) then
-        FX^[i] := Value;
+        FX[i] := Value;
 end;
 
 procedure TLineSpacingObj.Set_FY(i: Integer; Value: Double);
 begin
     if (i > 0) and (i <= FNConds) then
-        FY^[i] := Value;
+        FY[i] := Value;
 end;
 
 end.

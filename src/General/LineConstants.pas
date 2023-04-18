@@ -197,14 +197,14 @@ begin
         if PowerFreq then
         begin // for less than 1 kHz, use published GMR
             Zi.im := 0.0;
-            Zspacing := Lfactor * ln(1.0 / FGMR^[i]);  // use GMR
+            Zspacing := Lfactor * ln(1.0 / FGMR[i]);  // use GMR
         end
         else
         begin
-            Zspacing := Lfactor * ln(1.0 / Fradius^[i]);
+            Zspacing := Lfactor * ln(1.0 / Fradius[i]);
         end;
 
-        FZmatrix.SetElement(i, i, Zi + Zspacing + Get_Ze(i, i, EarthModel));
+        FZmatrix[i, i] := Zi + Zspacing + Get_Ze(i, i, EarthModel);
 
     end;
 
@@ -214,8 +214,9 @@ begin
     begin
         for j := 1 to i - 1 do
         begin
-            Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-            FZmatrix.SetElemSym(i, j, Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel));
+            Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
+            FZmatrix[i, j] := Lfactor * ln(1.0 / Dij) + Get_Ze(i, j, EarthModel);
+            FZmatrix[j, i] := FZmatrix[i, j];
         end;
     end;
 
@@ -230,19 +231,20 @@ begin
 
     for i := 1 to FnumConds do
     begin
-        if Fcapradius^[i] < 0 then
-            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * Fy^[i] / Fradius^[i])))
+        if Fcapradius[i] < 0 then
+            FYCMatrix[i, i] := cmplx(0.0, pfactor * ln(2.0 * Fy[i] / Fradius[i]))
         else
-            FYCMatrix.SetElement(i, i, cmplx(0.0, pfactor * ln(2.0 * Fy^[i] / Fcapradius^[i])));
+            FYCMatrix[i, i] := cmplx(0.0, pfactor * ln(2.0 * Fy[i] / Fcapradius[i]));
     end;
 
     for i := 1 to FNumConds do
     begin
         for j := 1 to i - 1 do
         begin
-            Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-            Dijp := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] + Fy^[j])); // distance to image j
-            FYCMatrix.SetElemSym(i, j, cmplx(0.0, pfactor * ln(Dijp / Dij)));
+            Dij := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] - Fy[j]));
+            Dijp := sqrt(sqr(Fx[i] - Fx[j]) + sqr(Fy[i] + Fy[j])); // distance to image j
+            FYCMatrix[i, j] := cmplx(0.0, pfactor * ln(Dijp / Dij));
+            FYCMatrix[j, i] := FYCMatrix[i, j];
         end;
     end;
 
@@ -267,7 +269,7 @@ begin
     // Check for 0 Y coordinate
     for i := 1 to FNumConds do
     begin
-        if (FY^[i] <= 0.0) then
+        if (FY[i] <= 0.0) then
         begin
             Result := TRUE;
             ErrorMessage := Format('Conductor %d height must be  > 0. ', [i]);
@@ -280,8 +282,8 @@ begin
     begin
         for j := i + 1 to FNumConds do
         begin
-            Dij := Sqrt(SQR(FX^[i] - FX^[j]) + SQR(FY^[i] - FY^[j]));
-            if (Dij < (Fradius^[i] + Fradius^[j])) then
+            Dij := Sqrt(SQR(FX[i] - FX[j]) + SQR(FY[i] - FY[j]));
+            if (Dij < (Fradius[i] + Fradius[j])) then
             begin
                 Result := TRUE;
                 ErrorMessage := Format('Conductors %d and %d occupy the same space.',
@@ -313,13 +315,13 @@ begin
 
     // Initialize to  not set
     for i := 1 to FNumConds do
-        FGMR^[i] := -1.0;
+        FGMR[i] := -1.0;
     for i := 1 to FNumConds do
-        Fradius^[i] := -1.0;
+        Fradius[i] := -1.0;
     for i := 1 to FNumConds do
-        Fcapradius^[i] := -1.0;
+        Fcapradius[i] := -1.0;
     for i := 1 to FNumConds do
-        FRdc^[i] := -1.0;
+        FRdc[i] := -1.0;
 
     FZMatrix := TCMatrix.CreateMatrixInplace(FNumconds, pComplex(FData + FNumConds * 7));
     FYCMatrix := TCMatrix.CreateMatrixInPlace(FNumconds, pComplex(FData + FNumConds * 7 + FNumconds * FNumconds * 2));
@@ -350,37 +352,37 @@ end;
 
 function TLineConstants.Get_Capradius(i, units: Integer): Double;
 begin
-    Result := Fcapradius^[i] * From_Meters(Units);
+    Result := Fcapradius[i] * From_Meters(Units);
 end;
 
 function TLineConstants.Get_GMR(i, units: Integer): Double;
 begin
-    Result := FGMR^[i] * From_Meters(Units);
+    Result := FGMR[i] * From_Meters(Units);
 end;
 
 function TLineConstants.Get_Rac(i, units: Integer): Double;
 begin
-    Result := FRAC^[i] * From_per_Meter(Units);
+    Result := FRAC[i] * From_per_Meter(Units);
 end;
 
 function TLineConstants.Get_radius(i, units: Integer): Double;
 begin
-    Result := Fradius^[i] * From_Meters(Units);
+    Result := Fradius[i] * From_Meters(Units);
 end;
 
 function TLineConstants.Get_Rdc(i, units: Integer): Double;
 begin
-    Result := FRDC^[i] * From_per_Meter(Units);
+    Result := FRDC[i] * From_per_Meter(Units);
 end;
 
 function TLineConstants.Get_X(i, units: Integer): Double;
 begin
-    Result := FX^[i] * From_Meters(Units);
+    Result := FX[i] * From_Meters(Units);
 end;
 
 function TLineConstants.Get_Y(i, units: Integer): Double;
 begin
-    Result := FY^[i] * From_Meters(Units);
+    Result := FY[i] * From_Meters(Units);
 end;
 
 function TLineConstants.Get_YCmatrix(f, Lngth: Double;
@@ -405,7 +407,7 @@ begin
     YCvalues := Result.GetValuesArrayPtr(Newsize);
     UnitLengthConversion := From_per_meter(Units) * lngth;
     for i := 1 to NewSize * NewSize do
-        YCValues^[i] *= UnitLengthConversion;
+        YCValues[i] *= UnitLengthConversion;
 end;
 
 function TLineConstants.Get_Ze(i, j, EarthModel: Integer): Complex;
@@ -414,8 +416,8 @@ var
     mij, thetaij, Dij, Fyi, Fyj: Double;
     term1, term2, term3, term4, term5: Double;
 begin
-    Fyi := Abs(Fy^[i]);
-    Fyj := Abs(Fy^[j]);
+    Fyi := Abs(Fy[i]);
+    Fyj := Abs(Fy[j]);
 
     case EarthModel of
 
@@ -435,7 +437,7 @@ begin
             end
             else
             begin
-                Dij := sqrt(sqr(Fyi + Fyj) + sqr(Fx^[i] - Fx^[j]));
+                Dij := sqrt(sqr(Fyi + Fyj) + sqr(Fx[i] - Fx[j]));
                 thetaij := ArcCos((Fyi + Fyj) / Dij);
             end;
             mij := 2.8099e-3 * Dij * sqrt(FFrequency / Frhoearth);
@@ -460,14 +462,14 @@ begin
         begin
             if i <> j then
             begin
-                hterm := cmplx(Fyi + Fyj, 0.0) + Cinv(Fme) * 2.0;
-                xterm := cmplx(Fx^[i] - Fx^[j], 0.0);
+                hterm := (Fyi + Fyj) + Cinv(Fme) * 2.0;
+                xterm := Fx[i] - Fx[j];
                 LnArg := Csqrt(hterm * hterm + xterm * xterm);
                 Result := Cmplx(0.0, Fw * Mu0 / twopi) * Cln(lnArg);
             end
             else
             begin
-                hterm := cmplx(Fyi, 0.0) + Cinv(Fme);
+                hterm := Fyi + Cinv(Fme);
                 Result := Cmplx(0.0, Fw * Mu0 / twopi) * Cln(hterm * 2.0);
             end;
  // {****}          WriteDLLDebugFile(Format('Deri: Z(%d,%d) = %.8g +j %.8g; hterm= %.8g + j %.8g',[i,j, Result.re, result.im, hterm.re, hterm.im]));
@@ -482,22 +484,22 @@ begin
     case EarthModel of
         SIMPLECARSON:
         begin
-            Result := cmplx(FRac^[i], Fw * Mu0 / (8 * pi));
+            Result := cmplx(FRac[i], Fw * Mu0 / (8 * pi));
         end;
         FULLCARSON:
         begin // no skin effect
-            Result := cmplx(FRac^[i], Fw * Mu0 / (8 * pi));
+            Result := cmplx(FRac[i], Fw * Mu0 / (8 * pi));
         end;
         DERI:
         begin // with skin effect model
             // Assume round conductor
-            Alpha := c1_j1 * sqrt(FFrequency * mu0 / FRDC^[i]);
+            Alpha := c1_j1 * sqrt(FFrequency * mu0 / FRDC[i]);
             if Cabs(Alpha) > 35.0 then
                 I0I1 := 1
             else
                 I0I1 := Bessel_I0(Alpha) / Bessel_I1(Alpha);
 
-            Result := C1_j1 * I0I1 * (Sqrt(FRdc^[i] * FFrequency * mu0) / 2.0);
+            Result := C1_j1 * I0I1 * (Sqrt(FRdc[i] * FFrequency * mu0) / 2.0);
         end;
     end;
 end;
@@ -528,7 +530,7 @@ begin
     // Convert the values by units and length
     UnitLengthConversion := From_per_meter(Units) * lngth;
     for i := 1 to NewSize * NewSize do
-        ZValues^[i] *= UnitLengthConversion;
+        ZValues[i] *= UnitLengthConversion;
 end;
 
 procedure TLineConstants.Kron(Norder: Integer);
@@ -565,7 +567,7 @@ begin
         FYCreduced := TCmatrix.CreateMatrix(Norder);
         for i := 1 to Norder do
             for j := 1 to Norder do
-                FYCreduced.SetElement(i, j, FYCmatrix.GetElement(i, j));
+                FYCreduced[i, j] := FYCmatrix[i, j];
 
         // Left with reduced matrix
     end;
@@ -580,7 +582,7 @@ end;
 procedure TLineConstants.Set_Capradius(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then 
-        Fcapradius^[i] := Value * To_Meters(units);
+        Fcapradius[i] := Value * To_Meters(units);
 end;
 
 procedure TLineConstants.Set_Frequency(const Value: Double);
@@ -603,9 +605,9 @@ procedure TLineConstants.Set_GMR(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
     begin
-        FGMR^[i] := Value * To_Meters(units);
-        if Fradius^[i] < 0.0 then
-            Fradius^[i] := FGMR^[i] / 0.7788; // equivalent round conductor
+        FGMR[i] := Value * To_Meters(units);
+        if Fradius[i] < 0.0 then
+            Fradius[i] := FGMR[i] / 0.7788; // equivalent round conductor
     end;
 end;
 
@@ -617,7 +619,7 @@ end;
 procedure TLineConstants.Set_Rac(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FRac^[i] := Value * To_per_Meter(units);
+        FRac[i] := Value * To_per_Meter(units);
 end;
 
 procedure TLineConstants.Set_radius(i, units: Integer;
@@ -625,28 +627,28 @@ procedure TLineConstants.Set_radius(i, units: Integer;
 begin
     if (i > 0) and (i <= FNumConds) then
     begin
-        Fradius^[i] := Value * To_Meters(units);
-        if FGMR^[i] < 0.0 then
-            FGMR^[i] := Fradius^[i] * 0.7788; // Default to round conductor
+        Fradius[i] := Value * To_Meters(units);
+        if FGMR[i] < 0.0 then
+            FGMR[i] := Fradius[i] * 0.7788; // Default to round conductor
     end;
 end;
 
 procedure TLineConstants.Set_Rdc(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FRdc^[i] := Value * To_per_Meter(units);
+        FRdc[i] := Value * To_per_Meter(units);
 end;
 
 procedure TLineConstants.Set_X(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FX^[i] := Value * To_Meters(units);
+        FX[i] := Value * To_Meters(units);
 end;
 
 procedure TLineConstants.Set_Y(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FY^[i] := Value * To_Meters(units);
+        FY[i] := Value * To_Meters(units);
 end;
 
 end.

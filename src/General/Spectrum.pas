@@ -212,15 +212,15 @@ begin
     Other := TObj(OtherPtr);
     NumHarm := Other.NumHarm;
 
-    ReallocMem(HarmArray, Sizeof(HarmArray^[1]) * NumHarm);
-    ReallocMem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);
-    ReallocMem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm);
+    ReallocMem(HarmArray, Sizeof(HarmArray[1]) * NumHarm);
+    ReallocMem(puMagArray, Sizeof(puMagArray[1]) * NumHarm);
+    ReallocMem(AngleArray, Sizeof(AngleArray[1]) * NumHarm);
 
     for i := 1 to NumHarm do
     begin
-        HarmArray^[i] := Other.HarmArray^[i];
-        puMagArray^[i] := Other.puMagArray^[i];
-        AngleArray^[i] := Other.AngleArray^[i];
+        HarmArray[i] := Other.HarmArray[i];
+        puMagArray[i] := Other.puMagArray[i];
+        AngleArray[i] := Other.AngleArray[i];
     end;
 end;
 
@@ -264,9 +264,9 @@ begin
         end;
 
         try
-            ReAllocmem(HarmArray, Sizeof(HarmArray^[1]) * NumHarm);
-            ReAllocmem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);
-            ReAllocmem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm);
+            ReAllocmem(HarmArray, Sizeof(HarmArray[1]) * NumHarm);
+            ReAllocmem(puMagArray, Sizeof(puMagArray[1]) * NumHarm);
+            ReAllocmem(AngleArray, Sizeof(AngleArray[1]) * NumHarm);
             i := 0;
             while ((F.Position + 1) < F.Size) and (i < NumHarm) do
             begin
@@ -276,11 +276,11 @@ begin
                 begin
                     CmdString := S;
                     NextParam;
-                    HarmArray^[i] := DblValue;
+                    HarmArray[i] := DblValue;
                     NextParam;
-                    puMagArray^[i] := DblValue * 0.01;
+                    puMagArray[i] := DblValue * 0.01;
                     NextParam;
-                    AngleArray^[i] := DblValue;
+                    AngleArray[i] := DblValue;
                 end;
             end;
             F.Free();
@@ -304,7 +304,7 @@ begin
 
     with ParentClass do
         for i := 1 to NumProperties do
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
 
     if Complete then
     begin
@@ -312,9 +312,9 @@ begin
         FSWriteln(F, 'Harmonic, Mult.re, Mult.im, Mag,  Angle');
         for i := 1 to NumHarm do
         begin
-            FSWrite(F, Format('%-g', [HarmArray^[i]]), ', ');
-            FSWrite(F, Format('%-g, %-g, ', [MultArray^[i].re, MultArray^[i].im]));
-            FSWrite(F, Format('%-g, %-g', [Cabs(MultArray^[i]), Cdang(MultArray^[i])]));
+            FSWrite(F, Format('%-g', [HarmArray[i]]), ', ');
+            FSWrite(F, Format('%-g, %-g, ', [MultArray[i].re, MultArray[i].im]));
+            FSWrite(F, Format('%-g, %-g', [Cabs(MultArray[i]), Cdang(MultArray[i])]));
             FSWriteln(F);
         end;
     end;
@@ -327,9 +327,9 @@ begin
     // Search List for  harmonic (nearest 0.01 harmonic) and return multiplier
     for i := 1 to NumHarm do
     begin
-        if Abs(h - HarmArray^[i]) < 0.01 then
+        if Abs(h - HarmArray[i]) < 0.01 then
         begin
-            Result := MultArray^[i];
+            Result := MultArray[i];
             Exit;
         end;
     end;
@@ -345,7 +345,7 @@ begin
     Result := FALSE;
     ZeroPoint := 0;
     for i := 1 to NumHarm do
-        if HarmArray^[i] = 0.0 then
+        if HarmArray[i] = 0.0 then
         begin
             Result := TRUE;
             ZeroPoint := i;
@@ -365,16 +365,16 @@ begin
         FundAngle := 0.0;
         for i := 1 to NumHarm do
         begin
-            if Round(HarmArray^[i]) = 1 then
+            if Round(HarmArray[i]) = 1 then
             begin
-                FundAngle := AngleArray^[i];
+                FundAngle := AngleArray[i];
                 Break;
             end;
         end;
 
-        Reallocmem(MultArray, Sizeof(MultArray^[1]) * NumHarm);
+        Reallocmem(MultArray, Sizeof(MultArray[1]) * NumHarm);
         for i := 1 to NumHarm do
-            MultArray^[i] := pdegtocomplex(puMagArray^[i], (AngleArray^[i] - HarmArray^[i] * FundAngle));
+            MultArray[i] := pdegtocomplex(puMagArray[i], (AngleArray[i] - HarmArray[i] * FundAngle));
 
     except
         DoSimpleMsg('Exception while computing %s. Check Definition. Aborting', [FullName], 655);

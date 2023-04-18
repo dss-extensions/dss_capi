@@ -527,7 +527,7 @@ begin
 
     FirstIteration := TRUE;
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 
     SetNominalPower;
 
@@ -546,7 +546,7 @@ procedure TIndMach012Obj.Integrate;
 var
     h2: Double;
 begin
-    with  ActiveCircuit.Solution.Dynavars do
+    with ActiveCircuit.Solution.Dynavars do
     begin
         if IterationFlag = 0 then
         begin  // on predictor step
@@ -583,7 +583,7 @@ begin
      //  Get_ModelCurrent(V2, S2, Is2, Ir2);
     I012[1] := Is1;    // Save for variable calcs
     I012[2] := Is2;
-    I012[0] := cmplx(0.0, 0.0);
+    I012[0] := 0;
 end;
 
 procedure TIndMach012Obj.CalcPFlow(var V012, I012: TSymCompArray);
@@ -613,7 +613,7 @@ begin
 
     I012[1] := Is1;    // Save for variable calcs
     I012[2] := Is2;
-    I012[0] := cmplx(0.0, 0.0);
+    I012[0] := 0;
 end;
 
 procedure TIndMach012Obj.Randomize(Opt: Integer);
@@ -667,7 +667,7 @@ begin
 
                     1:
                     begin
-                        E1 := NodeV^[NodeRef^[1]] - NodeV^[NodeRef^[2]] - ITerminal^[1] * Zsp;
+                        E1 := NodeV[NodeRef[1]] - NodeV[NodeRef[2]] - ITerminal[1] * Zsp;
                     end;
 
                     3:
@@ -677,7 +677,7 @@ begin
 
                         // Voltage behind Zsp  (transient reactance), volts
                         for i := 1 to FNphases do
-                            Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
+                            Vabc[i] := NodeV[NodeRef[i]];   // Wye Voltage
                         Phase2SymComp(pComplexArray(@Vabc), pComplexArray(@V012));
                         E1 := V012[1] - I012[1] * Zsp;    // Pos sequence
                     end;
@@ -740,7 +740,7 @@ begin
             if MachineON then
                 Y := Yeq   // L-N value computed in initialization routines
             else
-                Y := Cmplx(EPSILON, 0.0);
+                Y := EPSILON;
 
             if Connection = 1 then
                 Y := Y / 3.0; // Convert to delta impedance
@@ -751,17 +751,18 @@ begin
                 case Connection of
                     0:
                     begin
-                        Ymatrix.SetElement(i, i, Y);  // sets the element
-                        // Ymatrix.AddElement(Fnconds, Fnconds, Y);  // sums the element
-                        // Ymatrix.SetElemsym(i, Fnconds, Yij);
+                        Ymatrix[i, i] := Y;  // sets the element
                     end;
                     1:
                     begin   {Delta connection}
                         Yadder := Y * 1.000001;  // to prevent floating delta
-                        Ymatrix.SetElement(i, i, Y + Yadder);   // add a little bit to diagonal
+                        Ymatrix[i, i] := Y + Yadder;   // add a little bit to diagonal //TODO: check
                         Ymatrix.AddElement(i, i, Y);  // put it in again
                         for j := 1 to i - 1 do
-                            Ymatrix.SetElemsym(i, j, Yij);
+                        begin
+                            Ymatrix[i, j] := Yij;
+                            Ymatrix[j, i] := Yij;
+                        end;
                     end;
                 end;
             end;
@@ -781,20 +782,14 @@ begin
             case Connection of
 
                 0:
-                    with YMatrix do
                     begin // WYE
                         for i := 1 to Fnphases do
                         begin
-                            SetElement(i, i, Y);
-                            {
-                            AddElement(Fnconds, Fnconds, Y);
-                            SetElemsym(i, Fnconds, Yij);
-                            }
+                            YMatrix[i, i] := Y;
                         end;
                     end;
 
                 1:
-                    with YMatrix do
                     begin  // Delta  or L-L
                         Y := Y / 3.0; // Convert to delta impedance
                         Yij := -Y;
@@ -803,9 +798,9 @@ begin
                             j := i + 1;
                             if j > Fnconds then
                                 j := 1;  // wrap around for closed connections
-                            AddElement(i, i, Y);
-                            AddElement(j, j, Y);
-                            AddElemSym(i, j, Yij);
+                            YMatrix.AddElement(i, i, Y);
+                            YMatrix.AddElement(j, j, Y);
+                            YMatrix.AddElemSym(i, j, Yij);
                         end;
                     end;
             end;
@@ -816,7 +811,7 @@ end;
 function TIndMach012Obj.Compute_dSdP: Double;
 begin
 // dSdP based on rated slip and rated voltage
-    V1 := Cmplx(MachineData.kvGeneratorBase * 1000.0 / 1.732, 0.0);
+    V1 := MachineData.kvGeneratorBase * 1000.0 / 1.732;
     if S1 <> 0.0 then
         Get_PFlowModelCurrent(V1, S1, Is1, Ir1);
     Result := S1 / (V1 * cong(Is1)).Re;
@@ -875,7 +870,7 @@ begin
      // so that CalcVoltages doesn't fail
      // This is just one of a number of possible strategies but seems to work most of the time
     for i := 1 to Yorder do
-        Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
+        Yprim_Series[i, i] := Yprim_Shunt[i, i] * 1.0e-10;
 
      // copy YPrim_shunt into YPrim; That's all that is needed for most PC Elements
     YPrim.CopyFrom(YPrim_Shunt);
@@ -898,7 +893,7 @@ begin
     IterminalUpdated := TRUE;
 
     for i := 1 to FNphases do
-        InjCurrent^[i] -= Iterminal^[i];
+        InjCurrent[i] -= Iterminal[i];
     if (DebugTrace) then
         WriteTraceRecord;
 end;
@@ -946,7 +941,7 @@ begin
 
     IterminalUpdated := TRUE;
     for i := 1 to FNphases do
-        InjCurrent^[i] -= ITerminal^[i];
+        InjCurrent[i] -= ITerminal[i];
 end;
 
 procedure TIndMach012Obj.DoHarmonicMode;
@@ -991,7 +986,7 @@ begin
 
    {Handle Wye Connection}
     if Connection = 0 then
-        pBuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
+        pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
 
    // In this case the injection currents are simply Yprim(frequency) times the voltage buffer
    // Refer to Load.Pas for load-type objects
@@ -1006,7 +1001,7 @@ procedure TIndMach012Obj.CalcIndMach012ModelContribution;
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 begin
     IterminalUpdated := FALSE;
-    with  ActiveCircuit, ActiveCircuit.Solution do
+    with ActiveCircuit, ActiveCircuit.Solution do
     begin
         if IsDynamicModel then
             DoDynamicMode

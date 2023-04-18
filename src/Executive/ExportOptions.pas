@@ -479,15 +479,10 @@ begin
 {$ENDIF}
                     if Parm2 = 'all' then
                     begin
-                        pMon := DSS.ActiveCircuit.Monitors.First;
-                        while pMon <> NIL do
+                        for pMon in DSS.ActiveCircuit.Monitors do
                         begin
-                            if pMon <> NIL then
-                            begin
-                                pMon.TranslateToCSV(FALSE);
-                                FileName := DSS.GlobalResult;
-                            end;
-                            pMon := DSS.ActiveCircuit.Monitors.Next;
+                            pMon.TranslateToCSV(FALSE);
+                            FileName := DSS.GlobalResult;
                         end;
                     end
                     else
@@ -511,15 +506,10 @@ begin
                     begin
                         if Parm2 = 'all' then
                         begin
-                            pMon := PMParent.Children[idxP].ActiveCircuit.Monitors.First;
-                            while pMon <> NIL do
+                            for pMon in PMParent.Children[idxP].ActiveCircuit.Monitors do
                             begin
-                                if pMon <> NIL then
-                                begin
-                                    pMon.TranslateToCSV(FALSE);
-                                    FileName := DSS.GlobalResult;
-                                end;
-                                pMon := PMParent.Children[idxP].ActiveCircuit.Monitors.Next;
+                                pMon.TranslateToCSV(FALSE);
+                                FileName := DSS.GlobalResult;
                             end;
                         end
                         else

@@ -64,11 +64,9 @@ begin
     begin
         if LogEvents then
             LogThisEvent(Ckt.DSS, _('Recalc All Yprims'));
-        pElem := CktElements.First;
-        while pElem <> NIL do
+        for pElem in CktElements do
         begin
             pElem.CalcYPrim;
-            pElem := CktElements.Next;
         end;
     end;
 end;
@@ -86,26 +84,22 @@ begin
             LogThisEvent(Ckt.DSS, _('Recalc Invalid Yprims'));
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-        pElem := IncrCktElements.First;
-        while pElem <> NIL do
+        for pElem in IncrCktElements do
         begin
             with pElem do
                 if YprimInvalid then
                 begin
                     CalcYPrim;
                 end;
-            pElem := IncrCktElements.Next;
         end;
 {$ENDIF}
-        pElem := CktElements.First;
-        while pElem <> NIL do
+        for pElem in CktElements do
         begin
             with pElem do
                 if YprimInvalid {or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)} then
                 begin
                     CalcYPrim;
                 end;
-            pElem := CktElements.Next;
         end;
     end;
 end;
@@ -141,9 +135,9 @@ begin
     with DSS.ActiveCircuit, Solution do
     begin
         for i := 1 to NumNodes do
-            with MapNodeToBus^[i] do
+            with MapNodeToBus[i] do
             begin
-                NodeVbase^[i] := Buses^[BusRef].kvbase * 1000.0;
+                NodeVbase^[i] := Buses[BusRef].kvbase * 1000.0;
             end;
         VoltageBaseChanged := FALSE;
     end;
@@ -169,8 +163,7 @@ begin
     abortIncremental := False;
 
     // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
-    pElem := Ckt.IncrCktElements.First;
-    while pElem <> NIL do with pElem do
+    for pElem in Ckt.IncrCktElements do with pElem do
     begin
         if (Enabled and (Yprim = NIL)) then
         begin
@@ -209,7 +202,7 @@ begin
                     jnode := NodeRef[j];
                     if jnode = 0 then continue;
                     
-                    val := IncrYprim.GetElement(i, j);
+                    val := IncrYprim[i, j];
                     if (val.re <> 0) or (val.im <> 0) then
                     begin
                         changedNodes.Insert(inode);
@@ -220,7 +213,6 @@ begin
                 end;
             end;
         end;
-        pElem := Ckt.IncrCktElements.Next;
     end;
 
     if IncrYprim <> NIL then
@@ -244,14 +236,12 @@ begin
         until not coordIt.Next;
     end;
 
-    pElem := Ckt.CktElements.First;
-    while (not abortIncremental) and (pElem <> NIL) do with pElem do
+    for pElem in Ckt.CktElements do with pElem do
     begin
+        if abortIncremental then break;
+
         if (not Enabled) or (Yprim = NIL) then
-        begin
-            pElem := Ckt.CktElements.Next;
             continue;
-        end;
 
         for i := 1 to Yprim.order do
         begin
@@ -269,7 +259,7 @@ begin
                 if (changedElements.Find((QWord(inode) shl 32) or (QWord(jnode))) = nil) then
                     continue;
 
-                val := Yprim.GetElement(i, j);
+                val := Yprim[i, j];
                 if (val.re = 0) and (val.im = 0) then continue;
 
                 if IncrementMatrixElement(Ckt.Solution.hYsystem, inode, jnode, val.re, val.im) = 0 then
@@ -283,8 +273,6 @@ begin
         end;
 
         if abortIncremental then break;
-
-        pElem := Ckt.CktElements.Next;
     end;
 
     if abortIncremental then
@@ -411,8 +399,7 @@ begin
         begin
 {$ENDIF}
             // Full method, handles all elements
-            pElem := CktElements.First;
-            while pElem <> NIL do
+            for pElem in CktElements do
             begin
                 with pElem do
                     if (Enabled) then
@@ -428,7 +415,6 @@ begin
                             if AddPrimitiveMatrix(hY, Yorder, PLongWord(@NodeRef[1]), @CMatArray[1]) < 1 then
                                 raise EEsolv32Problem.Create(_('Node index out of range adding to System Y Matrix'))
                     end;   // If Enabled
-                pElem := CktElements.Next;
             end;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         end // if not Incremental
@@ -444,9 +430,9 @@ begin
         begin
             if LogEvents then
                 LogThisEvent(DSS, _('Reallocating Solution Arrays'));
-            ReAllocMem(NodeV, SizeOf(NodeV^[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
-            NodeV^[0] := 0;
-            ReAllocMem(Currents, SizeOf(Currents^[1]) * (NumNodes + 1)); // Allocate System current array
+            ReAllocMem(NodeV, SizeOf(NodeV[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
+            NodeV[0] := 0;
+            ReAllocMem(Currents, SizeOf(Currents[1]) * (NumNodes + 1)); // Allocate System current array
             ReAllocMem(AuxCurrents, SizeOf(AuxCurrents^[1]) * (NumNodes + 1)); // Allocate System current array
             if (VMagSaved <> NIL) then
                 ReallocMem(VMagSaved, 0);
@@ -502,7 +488,7 @@ begin
         begin
             GetMatrixElement(hY, i, i, @c);
             if Cabs(C) = 0.0 then
-                with MapNodeToBus^[i] do
+                with MapNodeToBus[i] do
                 begin
                     Result := Result + Format(_('%sZero diagonal for bus %s, node %d'), [CRLF, BusList.NameOfIndex(Busref), NodeNum]);
                 end;
@@ -511,7 +497,7 @@ begin
     // new diagnostics
         GetSingularCol(hY, @sCol); // returns a 1-based node number
         if sCol > 0 then
-            with MapNodeToBus^[sCol] do
+            with MapNodeToBus[sCol] do
             begin
                 Result := Result + Format(_('%sMatrix singularity at bus %s, node %d'), [CRLF, BusList.NameOfIndex(Busref), sCol]);
             end;
@@ -534,7 +520,7 @@ begin
                             iFirst := p + 1;
                     end;
                 end;
-                with MapNodeToBus^[iFirst] do
+                with MapNodeToBus[iFirst] do
                 begin
                     Result := Result + CRLF + Format(_('  #%d has %d nodes, including bus %s (node %d)'), [i, iCount, BusList.NameOfIndex(Busref), iFirst]);
                 end;

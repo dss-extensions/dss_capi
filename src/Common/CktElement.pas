@@ -218,7 +218,7 @@ begin
         exit;
     end;
     for i := 1 to FNTerms do
-        FBusNames^[i] := ''; // Free up strings
+        FBusNames[i] := ''; // Free up strings
 
     SetLength(Terminals, 0);
     SetLength(TerminalsChecked, 0);
@@ -360,7 +360,7 @@ begin
      // because they are Strings, we have to do it differently
 
     if Value < fNterms then
-        ReallocMem(FBusNames, Sizeof(FBusNames^[1]) * Value)  // Keeps old values; truncates storage
+        ReallocMem(FBusNames, Sizeof(FBusNames[1]) * Value)  // Keeps old values; truncates storage
     else
     begin
         if FBusNames = NIL then
@@ -368,7 +368,7 @@ begin
             // First allocation
             //  Always allocate  arrays of strings with AllocMem so that the pointers are all nil
             // else Delphi thinks non-zero values are pointing to an existing string.
-            FBusNames := AllocMem(Sizeof(FBusNames^[1]) * Value); //    fill with zeros or strings will crash
+            FBusNames := AllocMem(Sizeof(FBusNames[1]) * Value); //    fill with zeros or strings will crash
             for i := 1 to Value do
                 FBusNames[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
                  // This is so devices like transformers which may be defined on multiple commands
@@ -376,13 +376,13 @@ begin
         end
         else
         begin
-            NewBusNames := AllocMem(Sizeof(FBusNames^[1]) * Value);  // make some new space
+            NewBusNames := AllocMem(Sizeof(FBusNames[1]) * Value);  // make some new space
             for i := 1 to fNterms do
-                NewBusNames[i] := FBusNames^[i];   // copy old into new
+                NewBusNames[i] := FBusNames[i];   // copy old into new
             for i := 1 to fNterms do
                 FBusNames[i] := '';   // decrement usage counts by setting to nil string
             for i := fNterms + 1 to Value do
-                NewBusNames^[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
+                NewBusNames[i] := Name + '_' + IntToStr(i);  // Make up a bus name to stick in.
             ReAllocMem(FBusNames, 0);  // dispose of old array storage
             FBusNames := NewBusNames;
         end;
@@ -396,9 +396,9 @@ begin
 
     FNterms := Value;    // Set new number of terminals
     Yorder := FNterms * Fnconds;
-    ReallocMem(Vterminal, Sizeof(Vterminal^[1]) * Yorder);
-    ReallocMem(Iterminal, Sizeof(Iterminal^[1]) * Yorder);
-    ReallocMem(ComplexBuffer, Sizeof(ComplexBuffer^[1]) * Yorder);    // used by both PD and PC elements
+    ReallocMem(Vterminal, Sizeof(Vterminal[1]) * Yorder);
+    ReallocMem(Iterminal, Sizeof(Iterminal[1]) * Yorder);
+    ReallocMem(ComplexBuffer, Sizeof(ComplexBuffer[1]) * Yorder);    // used by both PD and PC elements
 
     for i := 1 to Value do
         Terminals[i - 1].Init(Fnconds);
@@ -472,16 +472,16 @@ var
     Size, Size2: Integer;
 begin
     // Allocate NodeRef and move new values into it.
-    Size := Yorder * SizeOf(NodeRef^[1]);
-    Size2 := SizeOf(NodeRef^[1]) * Fnconds;  // Size for one terminal
+    Size := Yorder * SizeOf(NodeRef[1]);
+    Size2 := SizeOf(NodeRef[1]) * Fnconds;  // Size for one terminal
     ReallocMem(NodeRef, Size);  // doesn't do anything if already properly allocated
-    Move(NodeRefArray^[1], NodeRef^[(iTerm - 1) * Fnconds + 1], Size2);  // Zap
-    Move(NodeRefArray^[1], Terminals[iTerm - 1].TermNodeRef[0], Size2);  // Copy in Terminal as well
+    Move(NodeRefArray[1], NodeRef[(iTerm - 1) * Fnconds + 1], Size2);  // Zap
+    Move(NodeRefArray[1], Terminals[iTerm - 1].TermNodeRef[0], Size2);  // Copy in Terminal as well
 
     // Allocate temp array used to hold voltages and currents for calcs
-    ReallocMem(Vterminal, Yorder * SizeOf(Vterminal^[1]));
-    ReallocMem(Iterminal, Yorder * SizeOf(Iterminal^[1]));
-    ReallocMem(ComplexBuffer, Yorder * SizeOf(ComplexBuffer^[1]));
+    ReallocMem(Vterminal, Yorder * SizeOf(Vterminal[1]));
+    ReallocMem(Iterminal, Yorder * SizeOf(Iterminal[1]));
+    ReallocMem(ComplexBuffer, Yorder * SizeOf(ComplexBuffer[1]));
 end;
 
 function TDSSCktElement.Get_FirstBus: String;
@@ -489,7 +489,7 @@ begin
     if FNterms > 0 then
     begin
         BusIndex := 1;
-        Result := FBusNames^[BusIndex];
+        Result := FBusNames[BusIndex];
     end
     else
         Result := '';
@@ -502,7 +502,7 @@ begin
     begin
         Inc(BusIndex);
         if BusIndex <= FNterms then
-            Result := FBusNames^[BusIndex]
+            Result := FBusNames[BusIndex]
         else
             BusIndex := FNterms;
     end;
@@ -512,7 +512,7 @@ function TDSSCktElement.GetBus(i: Integer): String;  // Get bus name by index
 
 begin
     if i <= FNTerms then
-        Result := FBusNames^[i]
+        Result := FBusNames[i]
     else
         Result := '';
 end;
@@ -521,7 +521,7 @@ procedure TDSSCktElement.SetBus(i: Integer; const s: String); // Set bus name by
 begin
     if i <= FNterms then
     begin
-        FBusNames^[i] := AnsiLowerCase(S);
+        FBusNames[i] := AnsiLowerCase(S);
         ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
     end
     else
@@ -569,7 +569,7 @@ begin
         Exit;
         
     for i := 1 to Fnphases do
-        with Iterminal^[i] do
+        with Iterminal[i] do
             Result := Max(Result, SQR(re) + SQR(im));
             
     Result := Sqrt(Result);  // just do the sqrt once and save a little time
@@ -580,7 +580,7 @@ var
     i: Integer;
 begin
     for i := 1 to Fnphases do
-        cMBuffer^[i] := cabs(Iterminal^[i]);
+        cMBuffer[i] := cabs(Iterminal[i]);
 end;
 
 function TDSSCktElement.Get_Power(idxTerm: Integer): Complex;    // Get total complex power in active terminal
@@ -602,7 +602,7 @@ begin
         begin
             n := ActiveTerminal^.TermNodeRef[i - 1]; // don't bother for grounded node
             if n > 0 then
-                Result += NodeV^[n] * cong(Iterminal[k + i]);
+                Result += NodeV[n] * cong(Iterminal[k + i]);
         end;
     end;
     // If this is a positive sequence circuit, then we need to multiply by 3 to get the 3-phase power
@@ -699,9 +699,9 @@ begin
     with ActiveCircuit.Solution do     // Get power into max phase of active terminal
     begin
         if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
-            volts := NodeV^[nref]
+            volts := NodeV[nref]
         else
-            volts := NodeV^[nref] - NodeV^[nrefN];
+            volts := NodeV[nref] - NodeV[nrefN];
     end;
     Result := volts;
 end;
@@ -758,9 +758,9 @@ begin
     with ActiveCircuit.Solution do     // Get power into max phase of active terminal
     begin
         if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
-            volts := NodeV^[nref]
+            volts := NodeV[nref]
         else
-            volts := NodeV^[nref] - NodeV^[nrefN];
+            volts := NodeV[nref] - NodeV[nrefN];
         Result := volts * cong(Iterminal[k + MaxPhase]);
     end;
 
@@ -877,13 +877,13 @@ begin
     with ActiveCircuit.Solution do
         for i := 1 to Yorder do
         begin
-            n := NodeRef^[i]; // increment through terminals
+            n := NodeRef[i]; // increment through terminals
             if n > 0 then
             begin
                 if ActiveCircuit.PositiveSequence then
-                    PowerBuffer^[i] := NodeV^[n] * cong(Iterminal^[i]) * 3.0
+                    PowerBuffer[i] := NodeV[n] * cong(Iterminal[i]) * 3.0
                 else
-                    PowerBuffer^[i] := NodeV^[n] * cong(Iterminal^[i]);
+                    PowerBuffer[i] := NodeV[n] * cong(Iterminal[i]);
             end;
         end;
 end;
@@ -909,20 +909,20 @@ begin
     with ActiveCircuit.Solution do
         for i := 1 to Num_Phases do
         begin
-            cLoss := cmplx(0.0, 0.0);
+            cLoss := 0;
             for j := 1 to FNTerms do
             begin
                 k := (j - 1) * FNconds + i;
-                n := NodeRef^[k]; // increment through terminals
+                n := NodeRef[k]; // increment through terminals
                 if n > 0 then
                 begin
                     if ActiveCircuit.PositiveSequence then
-                        cLoss += NodeV^[n] * cong(Iterminal^[k]) * 3.0
+                        cLoss += NodeV[n] * cong(Iterminal[k]) * 3.0
                     else
-                        cLoss += NodeV^[n] * cong(Iterminal^[k]);
+                        cLoss += NodeV[n] * cong(Iterminal[k]);
                 end;
             end;
-            LossBuffer^[i] := cLoss;
+            LossBuffer[i] := cLoss;
         end;
 end;
 
@@ -947,7 +947,7 @@ begin
             FSWrite(F, 'nil')
         else
             for i := 1 to Yorder do
-                FSWrite(F, IntToStr(NodeRef^[i]), ' ');
+                FSWrite(F, IntToStr(NodeRef[i]), ' ');
         FSWriteln(F, '"');
         FSWrite(F, '! Terminal Status: [');
         for i := 1 to fNTerms do
@@ -975,7 +975,7 @@ begin
             begin
                 FSWrite(F, '! ');
                 for j := 1 to Yorder do
-                    FSWrite(F, Format(' %13.10g |', [YPrim.GetElement(i, j).re]));
+                    FSWrite(F, Format(' %13.10g |', [YPrim[i, j].re]));
                 FSWriteln(F);
             end;
             FSWriteln(F, '! YPrim (B Matrix) = ');
@@ -983,7 +983,7 @@ begin
             begin
                 FSWrite(F, '! ');
                 for j := 1 to Yorder do
-                    FSWrite(F, Format(' %13.10g |', [YPrim.GetElement(i, j).im]));
+                    FSWrite(F, Format(' %13.10g |', [YPrim[i, j].im]));
                 FSWriteln(F);
             end;
         end;
@@ -1000,61 +1000,59 @@ begin
     // Now Account for Open Conductors
     // Perform a Kron Reduction on rows where I is forced to zero.
     // Then for any conductor that is open, zero out row and column.
-    with Ymatrix do
+    ElementOpen := FALSE;
+    k := 0;
+    for i := 1 to fNTerms do
     begin
-        ElementOpen := FALSE;
-        k := 0;
-        for i := 1 to fNTerms do
+        for j := 1 to Fnconds do
         begin
-            for j := 1 to Fnconds do
+            if not Terminals[i - 1].ConductorsClosed[j - 1] then
             begin
-                if not Terminals[i - 1].ConductorsClosed[j - 1] then
+                if not ElementOpen then
                 begin
-                    if not ElementOpen then
-                    begin
-                        RowEliminated := AllocMem(Sizeof(Integer) * Yorder);
-                        ElementOpen := TRUE;
-                    end;
-                // First do Kron Reduction
-                    ElimRow := j + k;
-                    Ynn := GetElement(ElimRow, ElimRow);
-                    if Cabs(Ynn) = 0.0 then
-                        Ynn.re := EPSILON;
-                    RowEliminated^[ElimRow] := 1;
-                    for ii := 1 to Yorder do
-                    begin
-                        if RowEliminated^[ii] = 0 then
-                        begin
-                            Yin := GetElement(ii, ElimRow);
-                            for jj := ii to Yorder do
-                                if RowEliminated^[jj] = 0 then
-                                begin
-                                    Yij := GetElement(ii, jj);
-                                    Ynj := GetElement(ElimRow, jj);
-                                    SetElemSym(ii, jj, Yij - ((Yin * Ynj) / Ynn));
-                                end;
-                        end;
-                    end;
-                    // Now zero out row and column
-                    ZeroRow(ElimRow);
-                    ZeroCol(ElimRow);
-                    // put a small amount on the diagonal in case node gets isolated
-                    SetElement(ElimRow, ElimRow, cEpsilon);
+                    RowEliminated := AllocMem(Sizeof(Integer) * Yorder);
+                    ElementOpen := TRUE;
                 end;
+                // First do Kron Reduction
+                ElimRow := j + k;
+                Ynn := Ymatrix[ElimRow, ElimRow];
+                if Cabs(Ynn) = 0.0 then
+                    Ynn.re := EPSILON;
+                RowEliminated[ElimRow] := 1;
+                for ii := 1 to Yorder do
+                begin
+                    if RowEliminated[ii] = 0 then
+                    begin
+                        Yin := Ymatrix[ii, ElimRow];
+                        for jj := ii to Yorder do
+                            if RowEliminated[jj] = 0 then
+                            begin
+                                Yij := Ymatrix[ii, jj];
+                                Ynj := Ymatrix[ElimRow, jj];
+                                Ymatrix[ii, jj] := Yij - ((Yin * Ynj) / Ynn);
+                                Ymatrix[jj, ii] := Ymatrix[ii, jj];
+                            end;
+                    end;
+                end;
+                // Now zero out row and column
+                Ymatrix.ZeroRow(ElimRow);
+                Ymatrix.ZeroCol(ElimRow);
+                // put a small amount on the diagonal in case node gets isolated
+                Ymatrix[ElimRow, ElimRow] := cEpsilon;
             end;
-            k := k + Fnconds;
         end;
-        // Clean up at end of loop.
-        // Add in cEpsilon to diagonal elements of remaining rows to avoid leaving a bus hanging.
-        // This happens on low-impedance simple from-to elements when one terminal opened.
-        if ElementOpen then
-        begin
-            for ii := 1 to Yorder do
-                if RowEliminated^[ii] = 0 then
-                    AddElement(ii, ii, cEpsilon);
+        k := k + Fnconds;
+    end;
+    // Clean up at end of loop.
+    // Add in cEpsilon to diagonal elements of remaining rows to avoid leaving a bus hanging.
+    // This happens on low-impedance simple from-to elements when one terminal opened.
+    if ElementOpen then
+    begin
+        for ii := 1 to Yorder do
+            if RowEliminated[ii] = 0 then
+                Ymatrix.AddElement(ii, ii, cEpsilon);
 
-            Reallocmem(RowEliminated, 0);
-        end;
+        Reallocmem(RowEliminated, 0);
     end;
 end;
 
@@ -1070,7 +1068,7 @@ begin
     ComputeIterminal;
     with ActiveCircuit.Solution do
         for i := 1 to Yorder do
-            Currents^[NodeRef^[i]] += Iterminal^[i];  // Noderef=0 is OK
+            Currents[NodeRef[i]] += Iterminal[i];  // Noderef=0 is OK
 end;
 
 procedure TDSSCktElement.GetTermVoltages(iTerm: Integer; VBuffer: PComplexArray);
@@ -1086,13 +1084,13 @@ begin
         if (iTerm < 1) or (iTerm > fNterms) then
         begin
             for i := 1 to Ncond do
-                VBuffer^[i] := 0;
+                VBuffer[i] := 0;
             Exit;
         end;
 
         with ActiveCircuit.Solution do
             for i := 1 to NCond do
-                Vbuffer^[i] := NodeV^[Terminals[iTerm - 1].TermNodeRef[i - 1]];
+                Vbuffer[i] := NodeV[Terminals[iTerm - 1].TermNodeRef[i - 1]];
 
     except
         On E: Exception do
@@ -1135,10 +1133,10 @@ var
 begin
     for i := 1 to FNterms do
     begin
-        grnd := IsGroundBus(FBusNames^[i]);
-        FBusNames^[i] := StripExtension(FBusNames^[i]);
+        grnd := IsGroundBus(FBusNames[i]);
+        FBusNames[i] := StripExtension(FBusNames[i]);
         if grnd then
-            FBusNames^[i] := FBusNames^[i] + '.0';
+            FBusNames[i] := FBusNames[i] + '.0';
     end;
 end;
 
@@ -1162,7 +1160,7 @@ begin
             (vterm + 1)^ := (nv + 1)^;
             inc(vterm, 2);
             inc(nref);
-            // VTerminal^[i] := NodeV^[NodeRef^[i]];
+            // VTerminal[i] := NodeV[NodeRef[i]];
         end;
     end;
 end;

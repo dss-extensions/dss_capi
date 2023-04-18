@@ -310,7 +310,7 @@ var
 begin
     if (FRac = 0.0) and (FXac = 0.0) then
         FRac := EPSILON;
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
     Reallocmem(LastCurrents, SizeOf(LastCurrents^[1]) * Yorder);
     for i := 1 to Yorder do
         LastCurrents^[i] := 0;
@@ -346,14 +346,12 @@ begin
     Value := cinv(Value);
     Value2 := -Value;
 
-    with YPrim_Series do
+    for i := 1 to (Fnphases - Ndc) do
     begin
-        for i := 1 to (Fnphases - Ndc) do
-        begin
-            SetElement(i, i, Value);
-            SetElement(i + Fnphases, i + Fnphases, Value);
-            SetElemSym(i, i + Fnphases, Value2);
-        end;
+        YPrim_Series[i, i] := Value;
+        YPrim_Series[i + Fnphases, i + Fnphases] := Value;
+        YPrim_Series[i, i + Fnphases] := Value2;
+        YPrim_Series[i + Fnphases, i] := Value2;
     end;
     YPrim.CopyFrom(YPrim_Series);
     inherited CalcYPrim; // may open some conductors
@@ -380,8 +378,8 @@ begin
             GetInjCurrents(ComplexBuffer);
             for i := 1 to Yorder do
             begin
-                Curr^[i] := Curr^[i] - ComplexBuffer^[i];
-                LastCurrents^[i] := Curr^[i];
+                Curr[i] := Curr[i] - ComplexBuffer^[i];
+                LastCurrents^[i] := Curr[i];
             end;
         end;
     except
@@ -416,7 +414,7 @@ begin
     GetTerminalCurrents(ITerminal);
 
   // do the AC voltage source injection - dependent voltage sources kept in ComplexBuffer
-    Vdc := Vterminal^[FNphases];
+    Vdc := Vterminal[FNphases];
     if (Vdc.re = 0.0) and (Vdc.im = 0.0) then
         Vdc.re := 1000.0 * FkVdc;
     Vmag := Vdc * (0.353553 * Fm);
@@ -437,7 +435,7 @@ begin
     for i := 1 to Nac do
     begin
 //    Sphase := ComplexBuffer^[i] * cong(LastCurrents^[i]);
-        Sphase := ComplexBuffer^[i] * cong(Iterminal^[i]);
+        Sphase := ComplexBuffer^[i] * cong(Iterminal[i]);
         Stotal := Stotal + Sphase;
     end;
     Pac := Stotal.re;
@@ -452,8 +450,8 @@ begin
     if Idc < -Idclim then
         Idc := -Idclim;
 
-    Curr^[FNphases] := cmplx(Idc, 0.0);
-    Curr^[2 * FNphases] := cmplx(-Idc, 0.0);
+    Curr[FNphases] := Idc;
+    Curr[2 * FNphases] := -Idc;
     ITerminalUpdated := FALSE;
 end;
 

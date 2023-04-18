@@ -104,7 +104,7 @@ begin
     Result := 0;
     with ActiveCircuit.Solution do
         for i := 1 to Yorder do
-            Currents^[NodeRef^[i]] += InjCurrent^[i];
+            Currents[NodeRef[i]] += InjCurrent[i];
 end;
 
 procedure TPCElement.GetTerminalCurrents(Curr: pComplexArray);
@@ -117,13 +117,13 @@ begin
     begin   // Just copy iTerminal unless iTerminal=Curr
         if Curr <> ITerminal then
             for i := 1 to Yorder do
-                Curr^[i] := ITerminal^[i];
+                Curr[i] := ITerminal[i];
     end
     else
     begin
         YPrim.MVmult(Curr, VTerminal);
         for i := 1 to Yorder do
-            Curr^[i] -= Injcurrent^[i];
+            Curr[i] -= InjCurrent[i];
         IterminalUpdated := TRUE;
     end;
     IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
@@ -153,7 +153,7 @@ begin
             else
             begin   // not enabled
                 for i := 1 to Yorder do
-                    Curr^[i] := 0;
+                    Curr[i] := 0;
             end;
         end;  {With}
 
@@ -242,7 +242,7 @@ begin
         with ParentClass do
             for i := 1 to NumProperties do
             begin
-                FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+                FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
             end;
 
         if Complete then
@@ -278,7 +278,7 @@ var
     i: Integer;
 begin
     for i := 1 to Yorder do
-        InjCurrent^[i] := 0;
+        InjCurrent[i] := 0;
 end;
 
 procedure TPCElement.set_ITerminalUpdated(const Value: Boolean);

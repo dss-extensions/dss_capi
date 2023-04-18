@@ -656,10 +656,11 @@ begin
 
         for i := 1 to Fnphases do
         begin
-            Z.SetElement(i, i, Zs);
+            Z[i, i] := Zs;
             for j := 1 to i - 1 do
             begin
-                Z.SetElemsym(i, j, Zm);
+                Z[i, j] := Zm;
+                Z[j, i] := Zm;
             end;
         end;
     end
@@ -674,7 +675,7 @@ begin
         Value := Z2 + Z1 + Z0;
         Value := Value / 3.0;
         for i := 1 to Fnphases do
-            Z.SetElement(i, i, Value);
+            Z[i, i] := Value;
 
         // Off-Diagonals
         if FnPhases = 3 then     // otherwise undefined
@@ -691,17 +692,14 @@ begin
              // Apply 1/3 ...
             Value1 := Value1 / 3.0;
             Value2 := Value2 / 3.0;
-            with Z do
-            begin
-                //Lower Triangle
-                SetElement(2, 1, Value1);
-                SetElement(3, 1, Value2);
-                SetElement(3, 2, Value1);
-                //Upper Triangle
-                SetElement(1, 2, Value2);
-                SetElement(1, 3, Value1);
-                SetElement(2, 3, Value2);
-            end;
+            //Lower Triangle
+            Z[2, 1] := Value1;
+            Z[3, 1] := Value2;
+            Z[3, 2] := Value1;
+            //Upper Triangle
+            Z[1, 2] := Value2;
+            Z[1, 3] := Value1;
+            Z[2, 3] := Value2;
 
         end;
 
@@ -725,7 +723,7 @@ begin
         Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
     end;
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
 
 procedure TVsourceObj.CalcYPrim;
@@ -763,7 +761,7 @@ begin
             Zinv.Clear;
             Value := puZIdeal * Zbase;  // convert to ohms
             for i := 1 to Fnphases do
-                Zinv.SetElement(i, i, value);
+                Zinv[i, i] := value;
         end
 
         else
@@ -774,9 +772,9 @@ begin
             begin
                 for j := 1 to Fnphases do
                 begin
-                    Value := Z.GetElement(i, j);
+                    Value := Z[i, j];
                     Value.im := Value.im * FreqMultiplier; // Modify from base freq
-                    Zinv.SetElement(i, j, value);
+                    Zinv[i, j] := value;
                 end;
             end;
     end;
@@ -791,7 +789,7 @@ begin
             _('Invalid impedance specified. Replaced with small resistance.'), 325);
         Zinv.Clear;
         for i := 1 to Fnphases do
-            Zinv.SetElement(i, i, Cmplx(1.0 / EPSILON, 0.0));
+            Zinv[i, i] := 1.0 / EPSILON;
     end;
 
     // YPrim_Series.CopyFrom(Zinv);
@@ -800,12 +798,11 @@ begin
     begin
         for j := 1 to FNPhases do
         begin
-            Value := Zinv.GetElement(i, j);
-            YPrim_series.SetElement(i, j, Value);
-            YPrim_series.SetElement(i + FNPhases, j + FNPhases, Value);
-            //YPrim_series.SetElemsym(i + FNPhases, j, -Value)
-            YPrim_series.SetElement(i, j + Fnphases, -Value);
-            YPrim_series.SetElement(i + Fnphases, j, -Value);
+            Value := Zinv[i, j];
+            YPrim_series[i, j] := Value;
+            YPrim_series[i + FNPhases, j + FNPhases] := Value;
+            YPrim_series[i, j + Fnphases] := -Value;
+            YPrim_series[i + Fnphases, j] := -Value;
         end;
     end;
 
@@ -859,7 +856,7 @@ begin
                         USEDUTY:
                             CalcDutyMult(DynaVars.dblHour);
                     else
-                        ShapeFactor := Cmplx(PerUnit, 0.0); // default to PerUnit + j0 if not known
+                        ShapeFactor := PerUnit; // default to PerUnit + j0 if not known
                     end;
                 end;
             end;
@@ -895,7 +892,7 @@ begin
                 RotatePhasorDeg(Vharm, SrcHarmonic, Angle);  // Rotate for phase 1 shift
                 for i := 1 to Fnphases do
                 begin
-                    Vterminal^[i] := Vharm;
+                    Vterminal[i] := Vharm;
                     VTerminal^[i + Fnphases] := 0;
                     if (i < Fnphases) then
                     begin
@@ -919,11 +916,11 @@ begin
                 begin
                     case Sequencetype of
                         -1:
-                            Vterminal^[i] := pdegtocomplex(Vmag, (360.0 + Angle + (i - 1) * 360.0 / Fnphases));  // neg seq
+                            Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle + (i - 1) * 360.0 / Fnphases));  // neg seq
                         0:
-                            Vterminal^[i] := pdegtocomplex(Vmag, (360.0 + Angle));   // all the same for zero sequence
+                            Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle));   // all the same for zero sequence
                     else
-                        Vterminal^[i] := pdegtocomplex(Vmag, (360.0 + Angle - (i - 1) * 360.0 / Fnphases));
+                        Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle - (i - 1) * 360.0 / Fnphases));
                     end;
                     VTerminal^[i + Fnphases] := 0;    // See comments in GetInjCurrents
                 end;
@@ -952,17 +949,17 @@ var
     i: Integer;
 begin
     try
-        with    ActiveCircuit.Solution do
+        with ActiveCircuit.Solution do
         begin
             for i := 1 to Yorder do
-                Vterminal^[i] := NodeV^[NodeRef^[i]];
+                Vterminal[i] := NodeV[NodeRef[i]];
 
             YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
 
             GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
             // Add together with yprim currents
             for i := 1 to Yorder do
-                Curr^[i] := Curr^[i] - ComplexBuffer^[i];
+                Curr[i] := Curr[i] - ComplexBuffer^[i];
         end;
     except
         On E: Exception do
@@ -995,7 +992,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
 
     if Complete then
@@ -1008,7 +1005,7 @@ begin
         begin
             for j := 1 to i do
             begin
-                c := Z.GetElement(i, j);
+                c := Z[i, j];
                 FSWrite(F, Format('%.8g +j %.8g ', [C.re, C.im]));
             end;
             FSWriteln(F);
@@ -1024,7 +1021,7 @@ begin
         ShapeIsActual := DailyShapeObj.UseActual;
     end
     else
-        ShapeFactor := cmplx(PerUnit, 0.0); // Default to no daily variation
+        ShapeFactor := PerUnit; // Default to no daily variation
 end;
 
 procedure TVSourceObj.CalcDutyMult(Hr: Double);
@@ -1047,7 +1044,7 @@ begin
         ShapeIsActual := YearlyShapeObj.UseActual;
     end
     else
-        ShapeFactor := cmplx(PerUnit, 0.0); // Defaults to no variation
+        ShapeFactor := PerUnit; // Defaults to no variation
 end;
 
 procedure TVsourceObj.MakePosSequence();

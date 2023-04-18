@@ -703,12 +703,10 @@ begin
             ord(Opt.LongLineCorrection):
                 with DSS.ActiveCircuit Do
                 begin
-                    LineObj := Lines.First;
-                    while LineObj <> NIL do
+                    for LineObj in Lines do
                     begin
                         if LineObj.Enabled and LineObj.SymComponentsModel then
                             LineObj.YprimInvalid := True;
-                        LineObj := Lines.Next;
                     end;
                 end;            
         end;
@@ -885,7 +883,7 @@ begin
                 58:
                     with DSS.ActiveCircuit do
                         for i := 1 to NumBuses do
-                            if Buses^[i].Keep then
+                            if Buses[i].Keep then
                                 AppendGlobalResult(DSS, BusList.NameOfIndex(i));
                 59:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.ReductionStrategyString);

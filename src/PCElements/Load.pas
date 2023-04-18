@@ -434,7 +434,7 @@ begin
             VBaseLow := VLowpu * VBase;
 
             Yorder := Fnconds * Fnterms;
-            Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+            Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
             YPrimInvalid := TRUE;
         end;
 
@@ -612,7 +612,7 @@ begin
     puSeriesRL := Other.puSeriesRL;
     RelWeighting := Other.RelWeighting;
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
     Reallocmem(FPhaseCurr, SizeOf(FPhaseCurr^[1]) * FNphases);
 
     ZIPVset := Other.ZIPVset;
@@ -702,7 +702,7 @@ begin
 
     ZIPVset := False;
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
     Reallocmem(FPhaseCurr, SizeOf(FPhaseCurr^[1]) * FNphases);
     RecalcElementData;
 end;
@@ -998,10 +998,10 @@ begin
     SetNominalLoad;
 
     if Rneut < 0.0 then  // flag FOR open neutral
-        YNeut := Cmplx(0.0, 0.0)
+        YNeut := 0
     else
     if (Rneut = 0.0) and (Xneut = 0.0) then // Solidly Grounded
-        YNeut := Cmplx(1.0e6, 0.0)  // 1 microohm resistor
+        YNeut := 1.0e6  // 1 microohm resistor
     else
         YNeut := Cinv(Cmplx(Rneut, XNeut));
 
@@ -1028,7 +1028,7 @@ begin
             if ActiveCircuit.NeglectLoadY then
             begin
                 // Just a small value so things don't die and we get the actual injection current out the terminal
-                Y := cmplx(Epsilon, 0.0)
+                Y := Epsilon
             end
             else // compute equivalent Y assuming some of the load is series R-L and the rest is parallel R-L
             begin
@@ -1069,16 +1069,17 @@ begin
         begin // WYE
             for i := 1 to Fnphases do
             begin
-                Ymatrix.SetElement(i, i, Y);
+                Ymatrix[i, i] := Y;
                 Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                Ymatrix.SetElemsym(i, Fnconds, Yij);
+                Ymatrix[i, Fnconds] := Yij;
+                Ymatrix[Fnconds, i] := Yij;
             end;
             Ymatrix.AddElement(Fnconds, Fnconds, YNeut);  // Neutral
 
             // If neutral is floating, make sure there is some small
             // connection to ground  by increasing the last diagonal slightly
             if Rneut < 0.0 then
-                Ymatrix.SetElement(Fnconds, Fnconds, Ymatrix.GetElement(Fnconds, Fnconds) * 1.000001)
+                Ymatrix[Fnconds, Fnconds] := Ymatrix[Fnconds, Fnconds] * 1.000001
         end;
         TLoadConnection.Delta:
         begin  // Delta  or L-L
@@ -1139,7 +1140,7 @@ begin
 
      // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
     for i := 1 to Yorder do
-        Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i) * 1.0e-10);
+        Yprim_Series[i, i] := Yprim_Shunt[i, i] * 1.0e-10;
 
     YPrim.CopyFrom(YPrim_Shunt);
 
@@ -1156,17 +1157,17 @@ begin
 
         TLoadConnection.Wye:
         begin  //Wye
-            TermArray^[i] -= Curr;
-            TermArray^[Fnconds] += Curr; // Neutral
+            TermArray[i] -= Curr;
+            TermArray[Fnconds] += Curr; // Neutral
         end;
 
         TLoadConnection.Delta:
         begin //DELTA
-            TermArray^[i] -= Curr;
+            TermArray[i] -= Curr;
             j := i + 1;
             if j > Fnconds then
                 j := 1;  // rotate the phases
-            TermArray^[j] += Curr;
+            TermArray[j] += Curr;
         end;
     end;
 end;
@@ -1184,7 +1185,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        V := Vterminal^[i];
+        V := Vterminal[i];
         VMag := Cabs(V);
 
         if VMag <= VBaseLow then
@@ -1220,7 +1221,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        Curr := Yeq * Vterminal^[i];
+        Curr := Yeq * Vterminal[i];
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
         FPhaseCurr^[i] := Curr;
@@ -1245,7 +1246,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        V := Vterminal^[i];
+        V := Vterminal[i];
         VMag := Cabs(V);
         if VMag <= VBaseLow then
             Curr := Yeq * V  // Below VbaseZ resort to linear equal to Yprim contribution
@@ -1257,6 +1258,7 @@ begin
             Curr := Yeq105 * V  // above 105% use an impedance model
         else
         begin
+            // NOTE: This cannot be replaced "cong(WNominal / V)" or it bugs
             Curr := cong(Cmplx(WNominal, 0.0) / V);  // Above 95%, constant P
             Curr += Cmplx(0.0, Yeq.im) * V;  // add in Q component of current
         end;
@@ -1288,7 +1290,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        V := Vterminal^[i];
+        V := Vterminal[i];
 
         Vmag := Cabs(V);
         if VMag <= VBaseLow then
@@ -1364,7 +1366,7 @@ begin
                 if i >= Fnconds then
                     Vterminal[i] -= Vaux
                 else
-                    Vterminal[i] -= Vterminal[i + 1]; // VDiff(NodeRef^[i], NodeRef^[j]);
+                    Vterminal[i] -= Vterminal[i + 1]; // VDiff(NodeRef[i], NodeRef[j]);
             end;
         end;
     end;
@@ -1376,7 +1378,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        V := Vterminal^[i];
+        V := Vterminal[i];
         VMag := Cabs(V);
 
         // May 31, 2016 changed to linear model below VbaseLow -- converges better for low voltage
@@ -1473,7 +1475,7 @@ begin
     try
         for i := 1 to Fnphases do
         begin
-            V := Vterminal^[i];
+            V := Vterminal[i];
             Vmag := Cabs(V);
 
             if VMag <= VBaseLow then
@@ -1554,7 +1556,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        V := Vterminal^[i];
+        V := Vterminal[i];
         VMag := Cabs(V);
         if VMag <= VBaseLow then
             Curr := Yeq * V  // Below VbaseZ resort to linear equal to Yprim contribution
@@ -1592,7 +1594,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        V := Vterminal^[i];
+        V := Vterminal[i];
         Vmag := Cabs(V);
         if VMag <= VBaseLow then
             Curr := Yeq * V  // Below VbaseZ resort to linear equal to Yprim contribution
@@ -1658,7 +1660,7 @@ begin
         begin
             with ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
-                    Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
+                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[Fnconds]);
         end;
 
         TLoadConnection.Delta:
@@ -1669,7 +1671,7 @@ begin
                     j := i + 1;
                     if j > Fnconds then
                         j := 1;
-                    Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[j]);
+                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[j]);
                 end;
         end;
 
@@ -1748,22 +1750,19 @@ begin
 
             // Now Account FOR the Open Conductors
             // For any conductor that is open, zero out row and column
-            with YPrimOpenCond do
+            k := 0;
+            for i := 1 to Fnterms do
             begin
-                k := 0;
-                for i := 1 to Fnterms do
+                for j := 1 to Fnconds do
                 begin
-                    for j := 1 to Fnconds do
+                    if not Terminals[i - 1].ConductorsClosed[j - 1] then
                     begin
-                        if not Terminals[i - 1].ConductorsClosed[j - 1] then
-                        begin
-                            ZeroRow(j + k);
-                            ZeroCol(j + k);
-                            SetElement(j + k, j + k, Cmplx(1.0e-12, 0.0));  // In case node gets isolated
-                        end;
+                        YPrimOpenCond.ZeroRow(j + k);
+                        YPrimOpenCond.ZeroCol(j + k);
+                        YPrimOpenCond[j + k, j + k] := 1.0e-12;  // In case node gets isolated
                     end;
-                    k := k + Fnconds;
                 end;
+                k := k + Fnconds;
             end;
             OpenLoadSolutionCount := ActiveCircuit.Solution.SolutionCount;
 
@@ -1772,7 +1771,7 @@ begin
         ComputeVTerminal;
         YPrimOpenCond.MVmult(ComplexBuffer, Vterminal);
         for i := 1 to Yorder do
-            ComplexBuffer^[i] := -ComplexBuffer^[i];
+            ComplexBuffer[i] := -ComplexBuffer[i];
     end;
 end;
 
@@ -1841,7 +1840,7 @@ begin
     Vpu := Vbase;
     for i := 1 to Fnphases do
     begin
-        Vmag := Cabs(Vterminal^[i]);
+        Vmag := Cabs(Vterminal[i]);
         if (Vmag < Vpu) then
             Vpu := Vmag;
     end;
@@ -1897,7 +1896,7 @@ begin
     Vpu := Vbase;
     for i := 1 to Fnphases do
     begin
-        Vmag := Cabs(Vterminal^[i]);
+        Vmag := Cabs(Vterminal[i]);
         if (Vmag < Vpu) then
             Vpu := Vmag;
     end;
@@ -1992,7 +1991,7 @@ begin
     ReallocMem(HarmMag, Sizeof(HarmMag^[1]) * FNphases);
     ReallocMem(HarmAng, Sizeof(HarmAng^[1]) * FNphases);
 
-     // Currents := AllocMem(Sizeof(Currents^[1])*Yorder);   // to hold currents
+     // Currents := AllocMem(Sizeof(Currents[1])*Yorder);   // to hold currents
 
     LoadFundamental := ActiveCircuit.Solution.Frequency;
 

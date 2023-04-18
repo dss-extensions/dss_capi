@@ -231,7 +231,7 @@ procedure Solution_Set_Hour(Value: Integer); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
-    with  DSSPrime.ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         DynaVars.intHour := Value;
         Update_dblHour;
@@ -281,7 +281,7 @@ begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
-    with  DSSPrime.ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         DynaVars.t := Value;
         Update_dblHour;

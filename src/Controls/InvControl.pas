@@ -1808,7 +1808,7 @@ begin
             numNodes := DERElem.NPhases;
 
             for j := 1 to numNodes do
-                cBuffer[j] := DERElem.Vterminal^[j];
+                cBuffer[j] := DERElem.Vterminal[j];
 
 
             case FMonBusesPhase of
@@ -2089,7 +2089,7 @@ begin
 
                             Set_PendingChange(CHANGEWATTVARLEVEL, i);
 
-                            with  ActiveCircuit.Solution.DynaVars do
+                            with ActiveCircuit.Solution.DynaVars do
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
@@ -2108,7 +2108,7 @@ begin
                             // Resets DER state variable only if it has not converged yet
                             FVVOperation := 0;
                             Set_PendingChange(CHANGEWATTVARLEVEL, i);
-                            with  ActiveCircuit.Solution.DynaVars do
+                            with ActiveCircuit.Solution.DynaVars do
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
@@ -2170,7 +2170,7 @@ begin
 
                             Set_PendingChange(CHANGEWATTLEVEL, i);
 
-                            with  ActiveCircuit.Solution.DynaVars do
+                            with ActiveCircuit.Solution.DynaVars do
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
                             if ShowEventLog then
                                 AppendtoEventLog(Self.FullName + ', ' + DERElem.FullName,
@@ -2207,7 +2207,7 @@ begin
 
                             Set_PendingChange(CHANGEVARLEVEL, i);
 
-                            with  ActiveCircuit.Solution.DynaVars do
+                            with ActiveCircuit.Solution.DynaVars do
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
@@ -2255,7 +2255,7 @@ begin
 
                             Set_PendingChange(CHANGEVARLEVEL, i);
 
-                            with  ActiveCircuit.Solution.DynaVars do
+                            with ActiveCircuit.Solution.DynaVars do
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
@@ -2303,7 +2303,7 @@ begin
 
                             Set_PendingChange(CHANGEVARLEVEL, i);
 
-                            with  ActiveCircuit.Solution.DynaVars do
+                            with ActiveCircuit.Solution.DynaVars do
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
@@ -2351,7 +2351,7 @@ begin
 
                             Set_PendingChange(CHANGEVARLEVEL, i);
 
-                            with  ActiveCircuit.Solution.DynaVars do
+                            with ActiveCircuit.Solution.DynaVars do
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
@@ -2410,7 +2410,7 @@ begin
                             (ActiveCircuit.Solution.ControlIteration = 1)) then
                         begin
                             Set_PendingChange(CHANGEVARLEVEL, i);
-                            with  ActiveCircuit.Solution.DynaVars do
+                            with ActiveCircuit.Solution.DynaVars do
                                 ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
                             if ShowEventLog then
@@ -2444,7 +2444,7 @@ begin
 
                                 if Valid then
                                 begin
-                                    with  ActiveCircuit.Solution.DynaVars do
+                                    with ActiveCircuit.Solution.DynaVars do
                                         ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, self);
                                 end;
                             end;
@@ -2749,7 +2749,7 @@ begin
             FRollAvgWindow.Add(solnvoltage, ActiveCircuit.Solution.DynaVars.h, FRollAvgWindowLength);
             FDRCRollAvgWindow.Add(solnvoltage, ActiveCircuit.Solution.DynaVars.h, FDRCRollAvgWindowLength);
 
-            FVpuSolution[FVpuSolutionIdx] := solnvoltage / ((ActiveCircuit.Buses^[DERElem.terminals[0].busRef].kVBase) * 1000.0);
+            FVpuSolution[FVpuSolutionIdx] := solnvoltage / ((ActiveCircuit.Buses[DERElem.terminals[0].busRef].kVBase) * 1000.0);
 
             Reallocmem(tempVbuffer, 0);   // Clean up memory
         end;

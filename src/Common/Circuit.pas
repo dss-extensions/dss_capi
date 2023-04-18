@@ -318,7 +318,7 @@ type
 
         function Save(Dir: String): Boolean;
 
-        procedure ProcessBusDefs;
+        procedure ProcessBusDefs(element: TDSSCktElement);
         procedure ReProcessBusDefs;
         procedure DoResetMeterZones;
         function SetElementActive(const FullObjectName: String): Integer;
@@ -442,8 +442,8 @@ begin
     Relays := TDSSPointerList.Create(10);
     Fuses := TDSSPointerList.Create(50);
 
-    Buses := Allocmem(Sizeof(Buses^[1]) * Maxbuses);
-    MapNodeToBus := Allocmem(Sizeof(MapNodeToBus^[1]) * MaxNodes);
+    Buses := Allocmem(Sizeof(Buses[1]) * Maxbuses);
+    MapNodeToBus := Allocmem(Sizeof(MapNodeToBus[1]) * MaxNodes);
 
     ControlQueue := TControlQueue.Create(DSS);
 
@@ -460,7 +460,7 @@ begin
     ActiveLoadShapeClass := USENONE; // Signify not set
 
     NodeBufferMax := 50;
-    NodeBuffer := AllocMem(SizeOf(NodeBuffer^[1]) * NodeBufferMax); // A place to hold the nodes
+    NodeBuffer := AllocMem(SizeOf(NodeBuffer[1]) * NodeBufferMax); // A place to hold the nodes
 
      // Init global circuit load and harmonic source multipliers
     FLoadMultiplier := 1.0;
@@ -867,7 +867,7 @@ begin
         BusName := BusName.Substring(0, jj - 1);
 
     SetActiveBus(DSS, BusName);
-    pBus := Buses^[ActiveBusIndex];
+    pBus := Buses[ActiveBusIndex];
     for kk := 1 to pBus.NumNodesThisBus do
     begin
         text := 'New ISource.' + inttostr(BusNum) + '_' + inttostr(kk) + ' phases=1 bus1=' + BusName + '.' + inttostr(kk) + ' amps=0.000001 angle=0';
@@ -1386,6 +1386,7 @@ var
     PFSpecified,
     UseActual: Boolean;
     qmult: Double;
+    lsobj: TLoadShapeObj;
 begin
     UseActual := FALSE;
     if AnsiLowerCase(mode) = 'actual' then
@@ -1403,17 +1404,13 @@ begin
     // Disables DER if any
     // Disable_All_DER();
     // Disables Monitors and EnergyMeters if any
-    EMeter := EnergyMeters.First;
-    while EMeter <> NIL do
+    for EMeter in EnergyMeters do
     begin
         EMeter.Enabled := FALSE;
-        EMeter := EnergyMeters.Next;
     end;
-    pMonitor := Monitors.First;
-    while pMonitor <> NIL do
+    for pMonitor in Monitors do
     begin
         pMonitor.Enabled := FALSE;
-        pMonitor := Monitors.Next;
     end;
 
     // Add monitors and Energy Meters at link branches
@@ -1425,15 +1422,14 @@ begin
         DSS.DSSExecutive.Command := 'New EnergyMeter.myEMZone' + InttoStr(i) + ' element=' + Link_Branches[i] + ' terminal=1';
     end;
     // Gets the max number of iterations to configure the simulation using the existing loadshapes
-    iElem := DSS.LoadshapeClass.First;
     j := 0;
-    while iElem <> 0 do
+    for lsobj in DSS.LoadshapeClass do
     begin
-        ActiveLSObject := DSS.ActiveDSSObject as TLoadShapeObj;
-        k := ActiveLSObject.NumPoints;
+        DSS.ActiveDSSObject := lsobj;
+        ActiveLSObject := lsobj;
+        k := lsobj.NumPoints;
         if k > j then
             j := k;
-        iElem := DSS.LoadshapeClass.Next;
     end;
     // Configures simulation
     solution.Mode := TSolveMode.SNAPSHOT;
@@ -1449,11 +1445,9 @@ begin
     CreateDir(Fileroot); // Creates the folder for storing the modified circuit
     DelFilesFromDir(Fileroot); // Removes all the files inside the new directory (if exists)
     // Now starts aggregating the loadshapes per zone
-    EnergyMeters.First;
     setlength(myLoadShapes, 1);
-    for i := 1 to EnergyMeters.Count do
+    for EMeter in EnergyMeters do
     begin
-        EMeter := EnergyMeters.Active;
         if EMeter.Enabled then
         begin
             // First, get the total load at nominal value for the zone
@@ -1546,16 +1540,13 @@ begin
                 setlength(myLoadShapes, length(myLoadShapes) + 1);
             end;
         end;
-        EnergyMeters.Next;
     end;
     setlength(myLoadShapes, length(myLoadShapes) - 1);
     // Deactivate all loadshapes in the model
-    DSS.LoadshapeClass.First;
-    for j := 1 to DSS.LoadshapeClass.ElementCount do
+    for lsobj in DSS.LoadshapeClass do
     begin
         DSS.ActiveDSSObject := DSS.LoadshapeClass.ElementList.Active;
-        TLoadshapeObj(DSS.ActiveDSSObject).Enabled := FALSE;
-        DSS.LoadshapeClass.Next;
+        lsobj.Enabled := FALSE;
     end;
 
     // Declare the new loadshapes in the model
@@ -1573,10 +1564,8 @@ begin
     // also, disables the energy meters created and restores the originals
     //  DSS.DSSExecutive.Command :=  'solve snap';
     k := 0;
-    EnergyMeters.First;
-    for i := 1 to EnergyMeters.Count do
+    for EMeter in EnergyMeters.Count do
     begin
-        EMeter := EnergyMeters.Active;
         if EMeter.Enabled then
         begin
             EMeter.GetPCEatZone;
@@ -1608,7 +1597,6 @@ begin
         end
         else
             EMeter.Enabled := TRUE;
-        EnergyMeters.Next;
     end;
 
     // saves the new model
@@ -1643,11 +1631,9 @@ begin
         if (TextCmd <> '**Error**') and fileexists(Pchar(FileName + '.part.' + inttostr(Num_pieces))) then
         begin
             // ***********The directory is ready for storing the new circuit****************
-            EMeter := EnergyMeters.First;
-            while EMeter <> NIL do
+            for EMeter in EnergyMeters do
             begin
                 EMeter.Enabled := FALSE;
-                EMeter := EnergyMeters.Next;
             end;
             // ************ Creates the meters at the tearing locations  ********************
             Result := 1; // Resets the result variable (Return)
@@ -1674,14 +1660,14 @@ begin
                         begin
                             BusName := Inc_Mat_Cols[Active_Cols[dbg]];
                             SetActiveBus(DSS, BusName); // Activates the Bus
-                            pBus := Buses^[ActiveBusIndex];
+                            pBus := Buses[ActiveBusIndex];
                             jj := 1;
                             // this code so nodes come out in order from smallest to larges
                             repeat
                                 NodeIdx := pBus.FindIdx(jj); // Get the index of the Node that matches jj
                                 inc(jj)
                             until NodeIdx > 0;
-                            Volts := ctopolardeg(Solution.NodeV^[pBus.RefNo[NodeIdx]]);  // referenced to pBus
+                            Volts := ctopolardeg(Solution.NodeV[pBus.RefNo[NodeIdx]]);  // referenced to pBus
                             Term_volts[dbg] := Volts.mag;
                         end;
 
@@ -1696,14 +1682,14 @@ begin
 
                         PConn_Names[i] := BusName;
                         SetActiveBus(DSS, BusName);           // Activates the Bus
-                        pBus := Buses^[ActiveBusIndex];
+                        pBus := Buses[ActiveBusIndex];
 
                         for jj := 1 to 3 do
                         begin
                             // this code so nodes come out in order from smallest to larges
                             NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
 
-                            Volts := ctopolardeg(Solution.NodeV^[pBus.RefNo[NodeIdx]]);  // referenced to pBus
+                            Volts := ctopolardeg(Solution.NodeV[pBus.RefNo[NodeIdx]]);  // referenced to pBus
                             PConn_Voltages[j] := (Volts.mag / 1000);
                             inc(j);
                             PConn_Voltages[j] := Volts.ang;
@@ -1721,14 +1707,14 @@ begin
                         BusName := Inc_Mat_Cols[0];
                         PConn_Names[i] := BusName;
                         SetActiveBus(DSS, BusName);           // Activates the Bus
-                        pBus := Buses^[ActiveBusIndex];
+                        pBus := Buses[ActiveBusIndex];
                         // Stores the voltages for the Reference bus first
                         for jj := 1 to 3 do
                         begin
                             // this code so nodes come out in order from smallest to larges
                             NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
 
-                            Volts := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+                            Volts := ctopolardeg(Solution.NodeV[pBus.GetRef(NodeIdx)]);  // referenced to pBus
                             PConn_Voltages[j] := (Volts.mag / 1000);
                             inc(j);
                             PConn_Voltages[j] := Volts.ang;
@@ -1955,13 +1941,13 @@ begin
             Result := Result + myPDEList[i] + ',';
 end;
 
-procedure TDSSCircuit.ProcessBusDefs;
+procedure TDSSCircuit.ProcessBusDefs(element: TDSSCktElement);
 var
     CurrentBus, BusName: String;
     NNodes, NP, Ncond, i, j, iTerm, RetVal: Integer;
     NodesOK: Boolean;
 begin
-    with ActiveCktElement do
+    with element do
     begin
         np := NPhases;
         Ncond := NConds;
@@ -1972,12 +1958,12 @@ begin
             NodesOK := TRUE;
            // Assume normal phase rotation  for default
             for i := 1 to np do
-                NodeBuffer^[i] := i; // set up buffer with defaults
+                NodeBuffer[i] := i; // set up buffer with defaults
  
             // Default all other conductors to a ground connection
             // If user wants them ungrounded, must be specified explicitly!
             for i := np + 1 to NCond do
-                NodeBuffer^[i] := 0;
+                NodeBuffer[i] := 0;
 
             // Parser will override bus connection if any specified
             BusName := DSS.Parser.ParseAsBusName(CurrentBus, NNodes, NodeBuffer);
@@ -1985,7 +1971,7 @@ begin
             // Check for error in node specification
             for j := 1 to NNodes do
             begin
-                if NodeBuffer^[j] < 0 then
+                if NodeBuffer[j] < 0 then
                 begin
                     retval := DSSMessageDlg('Error in Node specification for Element: "' + ParentClass.Name + '.' + Name + '"' + CRLF +
                         'Bus Spec: "' + DSS.Parser.Token + '"', FALSE);
@@ -2021,7 +2007,7 @@ begin
     if NumBuses > MaxBuses then
     begin
         Inc(MaxBuses, IncBuses);
-        ReallocMem(Buses, SizeOf(Buses^[1]) * MaxBuses);
+        ReallocMem(Buses, SizeOf(Buses[1]) * MaxBuses);
     end;
 end;
 
@@ -2030,7 +2016,7 @@ begin
     if NumNodes > MaxNodes then
     begin
         Inc(MaxNodes, IncNodes);
-        ReallocMem(MapNodeToBus, SizeOf(MapNodeToBus^[1]) * MaxNodes);
+        ReallocMem(MapNodeToBus, SizeOf(MapNodeToBus[1]) * MaxNodes);
     end;
 end;
 
@@ -2045,7 +2031,7 @@ begin
         DoErrorMsg(DSS, 'TDSSCircuit.AddBus', 'BusName for Object "' + ActiveCktElement.Name + '" is null.',
             'Error in definition of object.', 424);
         for i := 1 to ActiveCktElement.NConds do
-            NodeBuffer^[i] := 0;
+            NodeBuffer[i] := 0;
         Result := 0;
         Exit;
     end;
@@ -2056,23 +2042,23 @@ begin
         Result := BusList.Add(BusName);    // Result is index of bus
         Inc(NumBuses);
         AddABus;   // Allocates more memory if necessary
-        Buses^[NumBuses] := TDSSBus.Create(DSS);
+        Buses[NumBuses] := TDSSBus.Create(DSS);
     end;
 
     // Define nodes belonging to the bus
     // Replace Nodebuffer values with global reference number
-    with Buses^[Result] do
+    with Buses[Result] do
     begin
         for i := 1 to NNodes do
         begin
-            NodeRef := Add(self, NodeBuffer^[i]);
+            NodeRef := Add(self, NodeBuffer[i]);
             if NodeRef = NumNodes then
             begin  // This was a new node so Add a NodeToBus element ????
                 AddANodeBus;   // Allocates more memory if necessary
-                MapNodeToBus^[NumNodes].BusRef := Result;
-                MapNodeToBus^[NumNodes].NodeNum := NodeBuffer^[i]
+                MapNodeToBus[NumNodes].BusRef := Result;
+                MapNodeToBus[NumNodes].NodeNum := NodeBuffer[i]
             end;
-            NodeBuffer^[i] := NodeRef;  //  Swap out in preparation to setnoderef call
+            NodeBuffer[i] := NodeRef;  //  Swap out in preparation to setnoderef call
         end;
     end;
 end;
@@ -2237,13 +2223,13 @@ var
     i: Integer;
 begin
     // Save existing bus definitions and names for info that needs to be restored
-    SavedBuses := Allocmem(Sizeof(SavedBuses^[1]) * NumBuses);
-    SavedBusNames := Allocmem(Sizeof(SavedBusNames^[1]) * NumBuses);
+    SavedBuses := Allocmem(Sizeof(SavedBuses[1]) * NumBuses);
+    SavedBusNames := Allocmem(Sizeof(SavedBusNames[1]) * NumBuses);
 
     for i := 1 to NumBuses do
     begin
-        SavedBuses^[i] := Buses^[i];
-        SavedBusNames^[i] := BusList.NameOfIndex(i);
+        SavedBuses[i] := Buses[i];
+        SavedBusNames[i] := BusList.NameOfIndex(i);
     end;
     SavedNumBuses := NumBuses;
 end;
@@ -2256,11 +2242,11 @@ begin
     // Restore  kV bases, other values to buses still in the list
     for i := 1 to SavedNumBuses do
     begin
-        idx := BusList.Find(SavedBusNames^[i]);
+        idx := BusList.Find(SavedBusNames[i]);
         if idx <> 0 then
-            with Buses^[idx] do
+            with Buses[idx] do
             begin
-                pBus := SavedBuses^[i];
+                pBus := SavedBuses[i];
                 kvBase := pBus.kVBase;
                 x := pBus.x;
                 Y := pBus.y;
@@ -2273,16 +2259,16 @@ begin
                     begin
                         jdx := FindIdx(pBus.GetNum(j));  // Find index in new bus for j-th node  in old bus
                         if jdx > 0 then
-                            Vbus^[jdx] := pBus.VBus^[j];
+                            VBus[jdx] := pBus.VBus[j];
                     end;
                 end;
             end;
-        SavedBusNames^[i] := ''; // De-allocate string
+        SavedBusNames[i] := ''; // De-allocate string
     end;
 
     if Assigned(SavedBuses) then
         for i := 1 to SavedNumBuses do
-            SavedBuses^[i].Free;  // gets rid of old bus voltages, too
+            SavedBuses[i].Free;  // gets rid of old bus voltages, too
 
     ReallocMem(SavedBuses, 0);
     ReallocMem(SavedBusNames, 0);
@@ -2293,6 +2279,7 @@ procedure TDSSCircuit.ReProcessBusDefs;
 var
     CktElementSave: TDSSCktElement;
     i: Integer;
+    element: TDSSCktElement;
 begin
     if LogEvents then
         LogThisEvent(DSS, 'Reprocessing Bus Definitions');
@@ -2310,20 +2297,18 @@ begin
 
     // Now redo all enabled circuit elements
     CktElementSave := ActiveCktElement;
-    ActiveCktElement := CktElements.First;
-    while ActiveCktElement <> NIL do
+    for element in CktElements do
     begin
-        if ActiveCktElement.Enabled then
-            ProcessBusDefs;
+        if element.Enabled then
+            ProcessBusDefs(element);
         if AbortBusProcess then
             Exit;
-        ActiveCktElement := CktElements.Next;
     end;
 
     ActiveCktElement := CktElementSave;  // restore active circuit element
 
     for i := 1 to NumBuses do
-        Buses^[i].AllocateBusState;
+        Buses[i].AllocateBusState;
     RestoreBusInfo;     // frees old bus info, too
     DoResetMeterZones;  // Fix up meter zones to correspond
 
@@ -2346,9 +2331,8 @@ var
     pdelem: TPDElement;
 begin
     // Return total losses in all PD Elements
-    pdelem := PDElements.First;
     Result := 0;
-    while pdelem <> NIL do
+    for pdelem in PDElements do
     begin
         if pdelem.enabled then
         begin
@@ -2356,7 +2340,6 @@ begin
             if not pdElem.IsShunt then
                 Result += pdelem.losses;
         end;
-        pdelem := PDElements.Next;
     end;
 end;
 
@@ -2372,9 +2355,9 @@ begin
     for i := 1 to NumBuses do
     begin
         FSWrite(F, '  ', Pad(BusList.NameOfIndex(i), 12));
-        FSWrite(F, ' (', IntToStr(Buses^[i].NumNodesThisBus), ' Nodes)');
-        for j := 1 to Buses^[i].NumNodesThisBus do
-            FSWrite(F, ' ', IntToStr(Buses^[i].Getnum(j)));
+        FSWrite(F, ' (', IntToStr(Buses[i].NumNodesThisBus), ' Nodes)');
+        for j := 1 to Buses[i].NumNodesThisBus do
+            FSWrite(F, ' ', IntToStr(Buses[i].Getnum(j)));
         FSWriteln(F);
     end;
     FSWriteln(F, 'DeviceList:');
@@ -2389,8 +2372,8 @@ begin
     FSWriteln(F, 'NodeToBus Array:');
     for i := 1 to NumNodes do
     begin
-        j := MapNodeToBus^[i].BusRef;
-        WriteStr(sout, '  ', i: 2, ' ', j: 2, ' (=', BusList.NameOfIndex(j), '.', MapNodeToBus^[i].NodeNum: 0, ')');
+        j := MapNodeToBus[i].BusRef;
+        WriteStr(sout, '  ', i: 2, ' ', j: 2, ' (=', BusList.NameOfIndex(j), '.', MapNodeToBus[i].NodeNum: 0, ')');
         FSWrite(F, sout);
         FSWriteln(F);
     end;
@@ -2400,11 +2383,9 @@ procedure TDSSCircuit.InvalidateAllPCElements;
 var
     p: TDSSCktElement;
 begin
-    p := PCElements.First;
-    while (p <> NIL) do
+    for p in PCElements do
     begin
         p.YprimInvalid := TRUE;
-        p := PCElements.Next;
     end;
 
     Solution.SystemYChanged := TRUE;  // Force rebuild of matrix on next solution
@@ -2432,14 +2413,11 @@ begin
     for i := 1 to NumEMRegisters do
         RegisterTotals[i] := 0.;
 
-    pEM := EnergyMeters.First;
-    while pEM <> NIL do
+    for pEM in EnergyMeters do
         with PEM do
         begin
             for i := 1 to NumEMRegisters do
                 RegisterTotals[i] := RegisterTotals[i] + Registers[i] * TotalsMask[i];
-
-            pEM := EnergyMeters.Next;
         end;
 end;
 
@@ -2454,7 +2432,7 @@ var
         Result := 0.0;
         for i := 1 to count do
         begin
-            Result := Result + mtrRegisters[regs^[i]];
+            Result := Result + mtrRegisters[regs[i]];
         end;
     end;
 
@@ -2791,10 +2769,10 @@ begin
 
         for i := 1 to NumBuses do
         begin
-            if Buses^[i].CoordDefined then
+            if Buses[i].CoordDefined then
             begin
                 FSWrite(F, CheckForBlanks(BusList.NameOfIndex(i)));
-                FSWriteLn(F, Format(', %-g, %-g', [Buses^[i].X, Buses^[i].Y]));
+                FSWriteLn(F, Format(', %-g, %-g', [Buses[i].X, Buses[i].Y]));
             end;
         end;
 
@@ -2861,17 +2839,15 @@ begin
     if not assigned(Branch_List) then
     begin
         // Initialize all Circuit Elements and Buses to not checked, then build a new tree
-        elem := CktElements.First;
-        while assigned(elem) do
+        for elem in CktElements do
         begin
             Exclude(elem.Flags, Flg.Checked);
             for i := 1 to elem.Nterms do
                 elem.TerminalsChecked[i - 1] := FALSE;
             Include(elem.Flags, Flg.IsIsolated); // till proven otherwise
-            elem := CktElements.Next;
         end;
         for i := 1 to NumBuses do
-            Buses^[i].BusChecked := FALSE;
+            Buses[i].BusChecked := FALSE;
         Branch_List := GetIsolatedSubArea(self, Sources.First, TRUE);  // calls back to build adjacency lists
     end;
     Result := Branch_List;

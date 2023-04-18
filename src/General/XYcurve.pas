@@ -209,8 +209,8 @@ begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, FNumPoints * 2);
             for i := 1 to FNumPoints do
             begin
-                Result[2 * (i - 1)] := XValues^[i];
-                Result[2 * (i - 1) + 1] := YValues^[i];
+                Result[2 * (i - 1)] := XValues[i];
+                Result[2 * (i - 1) + 1] := YValues[i];
             end;
             Exit;
         end;
@@ -312,17 +312,17 @@ begin
         begin
             // Force as the always first property when saving in a later point
             PrpSequence[Idx] := -10;
-            ReAllocmem(YValues, Sizeof(YValues^[1]) * FNumPoints);
-            ReAllocmem(XValues, Sizeof(XValues^[1]) * FNumPoints);
+            ReAllocmem(YValues, Sizeof(YValues[1]) * FNumPoints);
+            ReAllocmem(XValues, Sizeof(XValues[1]) * FNumPoints);
         end;
         ord(TProp.Yarray):
-            Y := Yvalues^[1];
+            Y := YValues[1];
         ord(TProp.Xarray):
-            X := Xvalues^[1];
+            X := XValues[1];
         ord(TProp.csvfile), ord(TProp.sngfile), ord(TProp.dblfile): 
         begin
-            X := Xvalues^[1];
-            Y := Yvalues^[1];
+            X := XValues[1];
+            Y := YValues[1];
         end;
     end;
 
@@ -351,12 +351,12 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     FNumPoints := Other.NumPoints;
-    ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
-    ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
+    ReAllocmem(XValues, Sizeof(XValues[1]) * NumPoints);
+    ReAllocmem(YValues, Sizeof(YValues[1]) * NumPoints);
     for i := 1 to NumPoints do
-        XValues^[i] := Other.XValues^[i];
+        XValues[i] := Other.XValues[i];
     for i := 1 to NumPoints do
-        YValues^[i] := Other.YValues^[i];
+        YValues[i] := Other.YValues[i];
 
     FXshift := Other.FXshift;
     FYshift := Other.FYshift;
@@ -412,13 +412,13 @@ begin
 
     if FNumPoints = 1 then
     begin
-        Result := YValues^[1];
+        Result := YValues[1];
         Exit;
     end;
 
     // Start with previous value accessed under the assumption that most
     // of the time, the values won't change much
-    if (XValues^[LastValueAccessed] > X) then
+    if (XValues[LastValueAccessed] > X) then
         LastValueAccessed := 1; // Start over from Beginning
 
     // if off the curve for the first point, extrapolate from the first two points
@@ -431,14 +431,14 @@ begin
     // In the middle of the arrays
     for i := LastValueAccessed + 1 to FNumPoints do
     begin
-        if (Abs(XValues^[i] - X) < 0.00001) then  // If close to an actual point, just use it.
+        if (Abs(XValues[i] - X) < 0.00001) then  // If close to an actual point, just use it.
         begin
-            Result := YValues^[i];
+            Result := YValues[i];
             LastValueAccessed := i;
             Exit;
         end
         else
-        if (XValues^[i] > X) then
+        if (XValues[i] > X) then
         // INTERPOLATE between two values
         begin
             LastValueAccessed := i - 1;
@@ -478,7 +478,7 @@ begin
 
     // Start with previous value accessed under the assumption that most
     // of the time, the values won't change much
-    if (XValues^[LastValueAccessed] > X) then
+    if (XValues[LastValueAccessed] > X) then
         LastValueAccessed := 1; // Start over from Beginning
 
     // if off the curve for the first point, extrapolate from the first two points
@@ -486,8 +486,8 @@ begin
     begin
         // Assume the same coefficients determined by the first two points. Necessary to keep
         // consistency with TXYcurveObj.GetYValue function.
-        coef[1] := (YValues^[2] - YValues^[1]) / (XValues^[2] - XValues^[1]);
-        coef[2] := YValues^[2] - coef[1] * XValues^[2];
+        coef[1] := (YValues[2] - YValues[1]) / (XValues[2] - XValues[1]);
+        coef[2] := YValues[2] - coef[1] * XValues[2];
 
         Result := coef;
         Exit;
@@ -495,20 +495,20 @@ begin
 
     // In the middle of the arrays
     for i := LastValueAccessed + 1 to FNumPoints do
-        if (XValues^[i] > X) then
+        if (XValues[i] > X) then
         // INTERPOLATE between two values
         begin
             LastValueAccessed := i - 1;
-            coef[1] := (YValues^[i] - YValues^[i - 1]) / (XValues^[i] - XValues^[i - 1]);
-            coef[2] := YValues^[i] - coef[1] * XValues^[i];
+            coef[1] := (YValues[i] - YValues[i - 1]) / (XValues[i] - XValues[i - 1]);
+            coef[2] := YValues[i] - coef[1] * XValues[i];
             Result := coef;
             Exit;
         end;
 
     // Assume the same coefficients determined by the last two points. Necessary to keep
     // consistency with TXYcurveObj.GetYValue function.
-    coef[1] := (YValues^[FNumPoints] - YValues^[FNumPoints - 1]) / (XValues^[FNumPoints] - XValues^[FNumPoints - 1]);
-    coef[2] := YValues^[FNumPoints] - coef[1] * XValues^[FNumPoints];
+    coef[1] := (YValues[FNumPoints] - YValues[FNumPoints - 1]) / (XValues[FNumPoints] - XValues[FNumPoints - 1]);
+    coef[2] := YValues[FNumPoints] - coef[1] * XValues[FNumPoints];
     Result := coef;
 end;
 
@@ -521,7 +521,7 @@ function TXYcurveObj.Get_YValue(i: Integer): Double;
 begin
     if (i <= FNumPoints) and (i > 0) then
     begin
-        Result := YValues^[i];
+        Result := YValues[i];
         LastValueAccessed := i;
     end
     else
@@ -537,7 +537,7 @@ function TXYcurveObj.Get_XValue(i: Integer): Double;
 begin
     if (i <= FNumPoints) and (i > 0) then
     begin
-        Result := XValues^[i];
+        Result := XValues[i];
         LastValueAccessed := i;
     end
     else
@@ -561,18 +561,18 @@ begin
 
     if FNumPoints = 1 then
     begin
-        Result := XValues^[1];
+        Result := XValues[1];
         Exit;
     end;
 
     for i := 2 to FNumPoints do
     begin
-        if ((Y >= YValues^[i - 1]) and (Y <= YValues^[i])) then
+        if ((Y >= YValues[i - 1]) and (Y <= YValues[i])) then
         begin
             Result := InterpolatePoints(i - 1, i, Y, YValues, XValues);
             Exit;
         end;
-        if ((Y <= YValues^[i - 1]) and (Y >= YValues^[i])) then
+        if ((Y <= YValues[i - 1]) and (Y >= YValues[i])) then
         begin
             Result := InterpolatePoints(i - 1, i, Y, YValues, XValues);
             Exit;
@@ -580,16 +580,16 @@ begin
     end;
 
     // Y is out of range, need to determine which end to extrapolate from
-    if YValues^[1] <= YValues^[FNumPoints] then
+    if YValues[1] <= YValues[FNumPoints] then
     begin // increasing Y values
-        if Y <= YValues^[1] then
+        if Y <= YValues[1] then
             Result := InterpolatePoints(1, 2, Y, YValues, XValues)
         else
             Result := InterpolatePoints(FNumPoints - 1, FNumPoints, Y, YValues, XValues);
     end
     else
     begin // decreasing Y values
-        if Y >= YValues^[1] then
+        if Y >= YValues[1] then
             Result := InterpolatePoints(1, 2, Y, YValues, XValues)
         else
             Result := InterpolatePoints(FNumPoints - 1, FNumPoints, Y, YValues, XValues);
@@ -600,11 +600,11 @@ function TXYcurveObj.InterpolatePoints(i, j: Integer; X: Double; Xarray, Yarray:
 var
     Den: Double;
 begin
-    Den := (Xarray^[i] - Xarray^[j]);
+    Den := (Xarray[i] - Xarray[j]);
     if Den <> 0.0 then
-        Result := Yarray^[j] + (X - Xarray^[j]) / Den * (Yarray^[i] - Yarray^[j])
+        Result := Yarray[j] + (X - Xarray[j]) / Den * (Yarray[i] - Yarray[j])
     else
-        Result := Yarray^[i]; // Y is undefined, return ith value
+        Result := Yarray[i]; // Y is undefined, return ith value
 end;
 
 procedure TXYcurveObj.Set_X(Value: Double);
@@ -616,7 +616,7 @@ end;
 procedure TXYCurveObj.Set_XValue(Index: Integer; Value: Double);
 begin
     if Index <= FNumPoints then
-        XValues^[Index] := Value;
+        XValues[Index] := Value;
 end;
 
 procedure TXYcurveObj.Set_Y(Value: Double);
@@ -628,7 +628,7 @@ end;
 procedure TXYCurveObj.Set_YValue(Index: Integer; Value: Double);
 begin
     if Index <= FNumPoints then
-        YValues^[Index] := Value;
+        YValues[Index] := Value;
 end;
 
 end.

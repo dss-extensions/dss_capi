@@ -364,7 +364,7 @@ begin
             // Sets name of i-th terminal's connected bus in Fuse's buslist
             Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
             // Allocate a buffer big enough to hold everything from the monitored element
-            ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder);
+            ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
             CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
         end;
     end;
@@ -418,7 +418,7 @@ var
     i: Integer;
 begin
     for i := 1 to Fnconds do
-        Curr^[i] := 0;
+        Curr[i] := 0;
 end;
 
 procedure TFuseObj.DoPendingAction(const Phs, ProxyHdl: Integer);
@@ -469,7 +469,7 @@ begin
 
                 if FuseCurve <> NIL then
                 begin
-                    Cmag := Cabs(cBuffer^[i]);
+                    Cmag := Cabs(cBuffer[i]);
                     TripTime := FuseCurve.GetTCCTime(Cmag / RatedCurrent);
                 end;
 
