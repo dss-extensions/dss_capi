@@ -899,7 +899,7 @@ begin
     Result := TJSONArray.Create([]);
     with Result as TJSONArray do
         for i := 1 to n do
-            Add(ints^[i]);
+            Add(ints[i]);
 end;
 
 function GetDSSArray_Real_JSON(n: Integer; dbls: pDoubleArray; scale: Double): TJSONData;
@@ -917,14 +917,14 @@ begin
         begin
             for i := 1 to n do
             begin
-                Add(dbls^[i]);
+                Add(dbls[i]);
             end
         end
         else
         begin
             for i := 1 to n do
             begin
-                Add(dbls^[i] / scale);
+                Add(dbls[i] / scale);
             end;
         end;
 end;

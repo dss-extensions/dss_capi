@@ -396,7 +396,7 @@ begin
     
     for i := 1 to NumNodes do
     begin
-        Currmag := Cabs(Cbuffer^[i]);
+        Currmag := Cabs(cBuffer[i]);
         if Currmag > MaxCurrent then
             MaxCurrent := Currmag;
     end;
@@ -595,7 +595,7 @@ begin
 
             for i := 1 to NValuesTotal do
             begin
-                CResultPtr^ := ctopolardeg(cBuffer^[i]);
+                CResultPtr^ := ctopolardeg(cBuffer[i]);
                 inc(CResultPtr);
             end;
         end;
@@ -695,7 +695,7 @@ begin
                 begin
                     for i := 1 to 3 * NTerms do
                     begin
-                        i012^ := Cmplx(-1.0, 0.0);  // Signify n/A
+                        i012^ := -1;  // Signify n/A
                         Inc(i012);
                     end;
                 end;
@@ -886,9 +886,9 @@ begin
                     for j := 1 to NTerms do
                     begin
                         k := (j - 1) * NConds;
-                        n := NodeRef^[k + 1];
-                        Vph[1] := Solution.NodeV^[n];  // Get voltage at node
-                        S := Vph[1] * cong(cBuffer^[k + 1]);   // Compute power per phase
+                        n := NodeRef[k + 1];
+                        Vph[1] := Solution.NodeV[n];  // Get voltage at node
+                        S := Vph[1] * cong(cBuffer[k + 1]);   // Compute power per phase
                         Result[icount] := S.re * 0.003; // 3-phase kW conversion
                         Result[icount + 1] := S.im * 0.003; // 3-phase kvar conversion
                         Inc(icount, 6);
@@ -914,9 +914,9 @@ begin
                 begin
                     k := (j - 1) * NConds;
                     for i := 1 to 3 do
-                        Vph[i] := Solution.NodeV^[NodeRef^[i + k]];
+                        Vph[i] := Solution.NodeV[NodeRef[i + k]];
                     for i := 1 to 3 do
-                        Iph[i] := cBuffer^[k + i];
+                        Iph[i] := cBuffer[k + i];
 
                     Phase2SymComp(@Iph, @I012);
                     Phase2SymComp(@Vph, @V012);

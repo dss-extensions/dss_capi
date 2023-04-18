@@ -38,14 +38,14 @@ begin
     with DSSPrime.ActiveCircuit do
     begin
         i := Index;
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Buses^[i].NumNodesThisBus);
-        if Buses^[i].kVBase > 0.0 then
-            BaseFactor := 1000.0 * Buses^[i].kVBase
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Buses[i].NumNodesThisBus);
+        if Buses[i].kVBase > 0.0 then
+            BaseFactor := 1000.0 * Buses[i].kVBase
         else
             BaseFactor := 1.0;
-        for j := 1 to Buses^[i].NumNodesThisBus do
+        for j := 1 to Buses[i].NumNodesThisBus do
         begin
-            Volts := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
+            Volts := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(j)]);
             Result[j - 1] := Volts / BaseFactor;
         end;
     end
@@ -73,10 +73,10 @@ begin
     with DSSPrime.ActiveCircuit do
     begin
         i := Index;
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Buses^[i].NumNodesThisBus);
-        for j := 1 to Buses^[i].NumNodesThisBus do
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * Buses[i].NumNodesThisBus);
+        for j := 1 to Buses[i].NumNodesThisBus do
         begin
-            Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)];
+            Volts := DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(j)];
             k := (j - 1) * 2;
             Result[k] := Volts.re;
             Result[k + 1] := Volts.im;

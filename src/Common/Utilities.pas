@@ -407,7 +407,7 @@ begin
         Result := '[';
         for i := 1 to count do
         begin
-            Result := Result + IntToStr(iarray^[i]);
+            Result := Result + IntToStr(iarray[i]);
             if i <> count then
                 Result := Result + ', ';
         end;
@@ -423,9 +423,9 @@ begin
     Result := '[NULL]';
     if count > 0 then
     begin
-        Result := Format('[%.10g', [dblarray^[1]]);
+        Result := Format('[%.10g', [dblarray[1]]);
         for i := 2 to count do
-            Result := Result + Format(', %.10g', [dblarray^[i]]);
+            Result := Result + Format(', %.10g', [dblarray[i]]);
         Result := Result + ']';
     end;
 end;
@@ -438,9 +438,9 @@ begin
     Result := '[NULL]';
     if count > 0 then
     begin
-        Result := Format('[%.10g +j %.10g', [cpxarray^[1].re, cpxarray^[1].im]);
+        Result := Format('[%.10g +j %.10g', [cpxarray[1].re, cpxarray[1].im]);
         for i := 2 to count do
-            Result := Result + Format(', %.10g +j %.10g', [cpxarray^[i].re, cpxarray^[i].im]);
+            Result := Result + Format(', %.10g +j %.10g', [cpxarray[i].re, cpxarray[i].im]);
         Result := Result + ']';
     end;
 end;
@@ -486,7 +486,7 @@ var
 // Set all elements of a double array
 begin
     for i := 1 to NumValues do
-        Xarray^[i] := Value;
+        Xarray[i] := Value;
 end;
 
 function InterpretDblArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
@@ -575,7 +575,7 @@ begin
                         DSS.AuxParser.CmdString := InputLine;
                         for iskip := 1 to CSVColumn do
                             ParmName := DSS.AuxParser.NextParam;
-                        ResultArray^[i] := DSS.AuxParser.dblValue;
+                        ResultArray[i] := DSS.AuxParser.dblValue;
                     end
                     else
                     begin
@@ -608,8 +608,8 @@ begin
             DoSimpleMsg(DSS, 'File of doubles "%s" could not be opened.', [Param], 70501);
             Exit;
         end;
-        Result := Min(Maxvalues, F.Size div sizeof(ResultArray^[1]));  // no. of doubles
-        F.ReadBuffer(ResultArray^[1], SizeOf(ResultArray^[1]) * Result);
+        Result := Min(Maxvalues, F.Size div sizeof(ResultArray[1]));  // no. of doubles
+        F.ReadBuffer(ResultArray[1], SizeOf(ResultArray[1]) * Result);
         F.Free;
     end
     else if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'sngfile') = 0) then
@@ -630,7 +630,7 @@ begin
         Result := Min(Maxvalues, MStream.Size div sizeof(Single));  // no. of singles
         for i := 1 to Result do
         begin
-            ResultArray^[i] := sngArray[i];  // Single to Double
+            ResultArray[i] := sngArray[i];  // Single to Double
         end;
         MStream.Free;
     end
@@ -639,7 +639,7 @@ begin
          // Parse Values of array list
         for i := 1 to MaxValues do
         begin
-            ResultArray^[i] := DSS.AuxParser.DblValue;    // Fills array with zeros if we run out of numbers
+            ResultArray[i] := DSS.AuxParser.DblValue;    // Fills array with zeros if we run out of numbers
             DSS.AuxParser.NextParam;
         end;
     end;
@@ -751,7 +751,7 @@ begin
                 if (F.Position + 1) < F.Size then
                 begin
                     FSReadln(F, line);
-                    ResultArray^[i] := StrToInt(line);
+                    ResultArray[i] := StrToInt(line);
                 end
                 else
                 begin
@@ -772,7 +772,7 @@ begin
          // Parse Values of array list
         for i := 1 to MaxValues do
         begin
-            ResultArray^[i] := DSS.AuxParser.IntValue;    // Fills array with zeros if we run out of numbers
+            ResultArray[i] := DSS.AuxParser.IntValue;    // Fills array with zeros if we run out of numbers
             DSS.AuxParser.NextParam;
         end;
     end;
@@ -913,14 +913,14 @@ begin
     until Length(Param) = 0;
 
     // reallocate iarray  to new size
-    ReallocMem(iarray, sizeof(iarray^[1]) * count);
+    ReallocMem(iarray, sizeof(iarray[1]) * count);
 
     // Parse again for real
     DSS.AuxParser.cmdString := S;
     for i := 1 to Count do
     begin
         DSS.AuxParser.NextParam;
-        iarray^[i] := DSS.AuxParser.IntValue;
+        iarray[i] := DSS.AuxParser.IntValue;
     end;
 end;
 
@@ -1092,7 +1092,7 @@ begin
        FSWriteln(F, '[' + pClass.name + ']');
        for i := 1 to pClass.NumProperties do
        begin
-           WriteStr(sout, i: 0, ', "', pClass.PropertyName^[i], '", "', ReplaceCRLF(pClass.GetPropertyHelp(i)), '"');
+           WriteStr(sout, i: 0, ', "', pClass.PropertyName[i], '", "', ReplaceCRLF(pClass.GetPropertyHelp(i)), '"');
            FSWriteln(F, sout);
        end;
        pClass := DSS.DSSClassList.Next;
@@ -1151,8 +1151,8 @@ begin
             F.WriteBuffer(dNumNodes, sizeOf(Double));
             for i := 1 to NumNodes do
             begin
-                F.WriteBuffer(NodeV^[i].re, sizeOf(Double));
-                F.WriteBuffer(NodeV^[i].im, sizeOf(Double));
+                F.WriteBuffer(NodeV[i].re, sizeOf(Double));
+                F.WriteBuffer(NodeV[i].im, sizeOf(Double));
             end;
         end;
 
@@ -1193,8 +1193,8 @@ begin
             if NumNodes = Round(dNumNodes) then
                 for i := 1 to NumNodes do
                 begin
-                    F.ReadBuffer(NodeV^[i].re, sizeof(Double));
-                    F.ReadBuffer(NodeV^[i].im, sizeof(Double));
+                    F.ReadBuffer(NodeV[i].re, sizeof(Double));
+                    F.ReadBuffer(NodeV[i].im, sizeof(Double));
                 end
             else
             begin
@@ -1313,7 +1313,7 @@ begin
     if NodeRef = 0 then
         Result := 0
     else
-        Result := DSS.ActiveCircuit.MapNodeToBus^[NodeRef].NodeNum
+        Result := DSS.ActiveCircuit.MapNodeToBus[NodeRef].NodeNum
 end;
 
 procedure RotatePhasorDeg(var Phasor: Complex; const h, AngleDeg: Double);
@@ -1346,16 +1346,16 @@ begin
     // Assume we get P + jQ
     for i := 1 to N do
     begin
-        Mag := Cabs(Buffer^[i]);
+        Mag := Cabs(Buffer[i]);
         if Mag > 0.0 then
         begin
-            PF := PFSign(Buffer^[i]) * Abs(Buffer^[i].Re) / Mag;
+            PF := PFSign(Buffer[i]) * Abs(Buffer[i].Re) / Mag;
             if PF < 0.0 then
                 PF := 2.0 - abs(PF);
         end
         else
             PF := 1.0;  // for zero power
-        Buffer^[i].im := PF;
+        Buffer[i].im := PF;
     end;
 end;
 
@@ -1366,8 +1366,8 @@ var
 begin
     for i := 1 to N do
     begin
-        x := CtoPolarDeg(Buffer^[i]);
-        with Buffer^[i], x do
+        x := CtoPolarDeg(Buffer[i]);
+        with Buffer[i], x do
         begin
             re := Mag;
             im := Ang;
@@ -1386,7 +1386,7 @@ begin
     pc := p;
     Result := 0;
     for i := 1 to Nph do
-        Result += pc^[i];
+        Result += pc[i];
 end;
 
 function ResidualPolar(p: Pointer; Nph: Integer): Complex;
@@ -1448,7 +1448,7 @@ procedure AppendToEventLog(DSS: TDSSContext; const opdev: String; const action: 
 var
     S: String;
 begin
-    with  DSS.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
         S := Format('Hour=%d, Sec=%-.5g, ControlIter=%d, Element=%s, Action=%s',
             [DynaVars.intHour, Dynavars.t, ControlIteration, OpDev, AnsiUpperCase(action)]);
     DSS.EventStrings.Add(S);
@@ -1635,7 +1635,7 @@ var
 begin
     with DSS.ActiveCircuit do
         for i := 1 to NumBuses do
-            Buses^[i].Keep := FALSE;
+            Buses[i].Keep := FALSE;
 end;
 
 function ExtractComment(const s: String): String;
@@ -1784,13 +1784,13 @@ begin
     begin
         for i := 1 to NumBuses do
         begin
-            if buses^[i].kVBase > 0.0 then
+            if Buses[i].kVBase > 0.0 then
             begin
-                for j := 1 to Buses^[i].NumNodesThisBus do
+                for j := 1 to Buses[i].NumNodesThisBus do
                 begin
-                    Nref := Buses^[i].GetRef(j);
+                    Nref := Buses[i].GetRef(j);
                     if Nref > 0 then
-                        Result := Max(Result, Cabs(Solution.NodeV^[nref]) / Buses^[i].kvbase);
+                        Result := Max(Result, Cabs(Solution.NodeV[nref]) / Buses[i].kvbase);
                 end;
             end;
         end;
@@ -1810,7 +1810,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         for i := 1 to NumBuses do
-            with buses^[i] do
+            with Buses[i] do
                 if kVBase > 0.0 then
                 begin
                     for j := 1 to NumNodesThisBus do
@@ -1818,7 +1818,7 @@ begin
                         Nref := GetRef(j);
                         if Nref > 0 then
                         begin
-                            Vmagpu := Cabs(Solution.NodeV^[nref]) / kvbase;
+                            Vmagpu := Cabs(Solution.NodeV[nref]) / kvbase;
                             if IgnoreNeutrals then
                             begin
                                 if (Vmagpu > 100.0) then
@@ -2119,12 +2119,12 @@ begin
     if scale = 1 then
     begin
         for i := 1 to n do
-            Result := Result + Format(' %-.6g', [dbls^[i]])
+            Result := Result + Format(' %-.6g', [dbls[i]])
     end
     else
     begin
         for i := 1 to n do
-            Result := Result + Format(' %-.6g', [dbls^[i] / scale]);
+            Result := Result + Format(' %-.6g', [dbls[i] / scale]);
     end;
 
     Result := Result + ']';
@@ -2143,7 +2143,7 @@ begin
     Result := '[';
     for i := 1 to n do
     begin
-        tmp := sngs^[i];
+        tmp := sngs[i];
         Result := Result + Format(' %-.6g', [tmp]);
     end;
     Result := Result + ']';
@@ -2160,7 +2160,7 @@ begin
     end;
     Result := '[';
     for i := 1 to n do
-        Result := Result + Format(' %-.d', [ints^[i]]);
+        Result := Result + Format(' %-.d', [ints[i]]);
     Result := Result + ']';
 end;
 
@@ -2193,9 +2193,9 @@ begin
     Result := StartNode;
     iBusidx := DSS.ActiveCircuit.Buslist.Find(sBusName);
     if iBusidx > 0 then
-        while DSS.ActiveCircuit.Buses^[iBusidx].FindIdx(Result) <> 0 do
+        while DSS.ActiveCircuit.Buses[iBusidx].FindIdx(Result) <> 0 do
             Inc(Result);
-    DSS.ActiveCircuit.Buses^[iBusidx].Add(DSS.ActiveCircuit, result);  // add it to the list so next call will be unique
+    DSS.ActiveCircuit.Buses[iBusidx].Add(DSS.ActiveCircuit, result);  // add it to the list so next call will be unique
 end;
 
 procedure ShowMessageBeep(DSS: TDSSContext; const s: String);
@@ -2360,9 +2360,9 @@ begin
     if npts = 0 then
         exit;
 
-    Result := dbls^[1];
+    Result := dbls[1];
     for i := 2 to npts do
-        Result := max(Result, dbls^[i]);
+        Result := max(Result, dbls[i]);
 end;
 
 function iMaxAbsdblArrayValue(npts: Integer; dbls: pDoubleArray): Integer;
@@ -2376,11 +2376,11 @@ begin
         exit;
 
     Result := 1;
-    MaxValue := abs(dbls^[1]);
+    MaxValue := abs(dbls[1]);
     for i := 2 to npts do
-        if abs(dbls^[i]) > Maxvalue then
+        if abs(dbls[i]) > Maxvalue then
         begin
-            Maxvalue := abs(dbls^[i]);
+            Maxvalue := abs(dbls[i]);
             Result := i;   // save index
         end;
 end;
@@ -2396,11 +2396,11 @@ begin
         exit;
 
     Result := 1;
-    MaxValue := abs(sngs^[1]);
+    MaxValue := abs(sngs[1]);
     for i := 2 to npts do
-        if abs(sngs^[i]) > Maxvalue then
+        if abs(sngs[i]) > Maxvalue then
         begin
-            Maxvalue := abs(sngs^[i]);
+            Maxvalue := abs(sngs[i]);
             Result := i;   // save index
         end;
 end;

@@ -405,7 +405,7 @@ begin
     ComputeIterminal;
     Curr := 0;
     for i := 1 to Fnphases do
-        Curr += Iterminal^[i];
+        Curr += Iterminal[i];
     GICperPhase := Cabs(Curr) / Fnphases;
     if Kspecified then
     begin
@@ -461,70 +461,70 @@ begin
   // make sure randommult is 1.0 if not solution mode MonteFault
 
 
-    with YPrimTemp do
-    begin
-        // Now, Put in Yprim matrix
-        case SpecType of
+    // Now, Put in Yprim matrix
+    case SpecType of
 
-            SPEC_GSU:
+        SPEC_GSU:
+        begin
+            Value := G1;
+            Value2 := -Value;
+            for i := 1 to Fnphases do
             begin
-                Value := Cmplx(G1, 0.0);
-                Value2 := -Value;
-                for i := 1 to Fnphases do
-                begin
-                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
-                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
-                    SetElemSym(i, i + Fnphases, Value2);
-                end;
+                YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                YPrimTemp[i + Fnphases, i + Fnphases] := Value;
+                YPrimTemp[i, i + Fnphases] := Value2;
+                YPrimTemp[i + Fnphases, i] := Value2;
             end;
-
-            SPEC_AUTO:
-            begin
-                // Terminals 1 and 2
-                Value := Cmplx(G1, 0.0);
-                Value2 := -Value;
-                for i := 1 to Fnphases do
-                begin
-                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
-                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
-                    SetElemSym(i, i + Fnphases, Value2);
-                end;
-                // Terminals 3 and 4
-                Value := Cmplx(G2, 0.0);
-                Value2 := -Value;
-                for i := (2 * Fnphases + 1) to 3 * Fnphases do
-                begin
-                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
-                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
-                    SetElemSym(i, i + Fnphases, Value2);
-                end;
-            end;
-
-            SPEC_YY:
-            begin
-                // Terminals 1 and 2
-                Value := Cmplx(G1, 0.0);
-                Value2 := -Value;
-                for i := 1 to Fnphases do
-                begin
-                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
-                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
-                    SetElemSym(i, i + Fnphases, Value2);
-                end;
-                // Terminals 3 and 4
-                Value := Cmplx(G2, 0.0);
-                Value2 := -Value;
-                for i := (2 * Fnphases + 1) to 3 * Fnphases do
-                begin
-                    YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
-                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
-                    SetElemSym(i, i + Fnphases, Value2);
-                end;
-            end;
-
         end;
 
-    end; // With YPRIM
+        SPEC_AUTO:
+        begin
+            // Terminals 1 and 2
+            Value := G1;
+            Value2 := -Value;
+            for i := 1 to Fnphases do
+            begin
+                YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                YPrimTemp[i + Fnphases, i + Fnphases] := Value;
+                YPrimTemp[i, i + Fnphases] := Value2;
+                YPrimTemp[i + Fnphases, i] := Value2;
+            end;
+            // Terminals 3 and 4
+            Value := G2;
+            Value2 := -Value;
+            for i := (2 * Fnphases + 1) to 3 * Fnphases do
+            begin
+                YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                YPrimTemp[i + Fnphases, i + Fnphases] := Value;
+                YPrimTemp[i, i + Fnphases] := Value2;
+                YPrimTemp[i + Fnphases, i] := Value2;
+            end;
+        end;
+
+        SPEC_YY:
+        begin
+            // Terminals 1 and 2
+            Value := G1;
+            Value2 := -Value;
+            for i := 1 to Fnphases do
+            begin
+                YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                YPrimTemp[i + Fnphases, i + Fnphases] := Value;
+                YPrimTemp[i, i + Fnphases] := Value2;
+                YPrimTemp[i + Fnphases, i] := Value2;
+            end;
+            // Terminals 3 and 4
+            Value := G2;
+            Value2 := -Value;
+            for i := (2 * Fnphases + 1) to 3 * Fnphases do
+            begin
+                YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
+                YPrimTemp[i + Fnphases, i + Fnphases] := Value;
+                YPrimTemp[i + Fnphases, i] := Value2;
+                YPrimTemp[i, i + Fnphases] := Value2;
+            end;
+        end;
+    end;
 
     YPrim.CopyFrom(YPrimTemp);
 

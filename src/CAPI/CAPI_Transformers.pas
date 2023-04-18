@@ -187,7 +187,7 @@ begin
 
     if (elem.ActiveWinding > 0) and 
        (elem.ActiveWinding <= elem.NumWindings) then
-        Result := elem.Winding^[elem.ActiveWinding].kvll;
+        Result := elem.Winding[elem.ActiveWinding].kvll;
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_kVA(): Double; CDECL;

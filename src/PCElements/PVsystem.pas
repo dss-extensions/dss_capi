@@ -1125,7 +1125,7 @@ begin
     // Initialize to Zero - defaults to PQ PVSystem element
     // Solution object will reset after circuit modifications
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 
     // Update any user-written models
     if Usermodel.Exists then
@@ -1274,7 +1274,8 @@ begin
                     begin
                         Ymatrix[i, i] := Y;
                         Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                        Ymatrix.SetElemsym(i, Fnconds, Yij);
+                        Ymatrix[i, Fnconds] := Yij;
+                        Ymatrix[Fnconds, i] := Yij;
                     end;
 
                     1:
@@ -1282,7 +1283,10 @@ begin
                         Ymatrix[i, i] := Y;
                         Ymatrix.AddElement(i, i, Y);  // put it in again
                         for j := 1 to i - 1 do
-                            Ymatrix.SetElemsym(i, j, Yij);
+                        begin
+                            Ymatrix[i, j] := Yij;
+                            Ymatrix[j, i] := Yij;
+                        end;
                     end;
                 end;
             end;
@@ -1312,19 +1316,18 @@ begin
 
         case Connection of
             0:
-                with YMatrix do
                 begin // WYE
                     Yij := -Y;
                     for i := 1 to Fnphases do
                     begin
                         YMatrix[i, i] := Y;
-                        AddElement(Fnconds, Fnconds, Y);
-                        SetElemsym(i, Fnconds, Yij);
+                        YMatrix.AddElement(Fnconds, Fnconds, Y);
+                        YMatrix[i, Fnconds] := Yij;
+                        YMatrix[Fnconds, i] := Yij;
                     end;
                 end;
 
             1:
-                with YMatrix do
                 begin  // Delta  or L-L
                     Y := Y / 3.0; // Convert to delta impedance
                     Yij := -Y;
@@ -1333,9 +1336,9 @@ begin
                         j := i + 1;
                         if j > Fnconds then
                             j := 1;  // wrap around for closed connections
-                        AddElement(i, i, Y);
-                        AddElement(j, j, Y);
-                        AddElemSym(i, j, Yij);
+                        YMatrix.AddElement(i, i, Y);
+                        YMatrix.AddElement(j, j, Y);
+                        YMatrix.AddElemSym(i, j, Yij);
                     end;
                 end;
         end;
@@ -1635,17 +1638,17 @@ begin
     case Connection of
         0:
         begin  //Wye
-            TermArray^[i] += Curr;
-            TermArray^[Fnconds] -= Curr; // Neutral
+            TermArray[i] += Curr;
+            TermArray[Fnconds] -= Curr; // Neutral
         end;
 
         1:
         begin //DELTA
-            TermArray^[i] += Curr;
+            TermArray[i] += Curr;
             j := i + 1;
             if j > Fnconds then
                 j := 1;
-            TermArray^[j] -= Curr;
+            TermArray[j] -= Curr;
         end;
     end;
 end;
@@ -1672,17 +1675,17 @@ begin
             FSWrite(TraceFile, sout);
             for i := 1 to nphases do
             begin
-                WriteStr(sout, (Cabs(InjCurrent^[i])): 8: 1, ', ');
+                WriteStr(sout, (Cabs(InjCurrent[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
             end;
             for i := 1 to nphases do
             begin
-                WriteStr(sout, (Cabs(ITerminal^[i])): 8: 1, ', ');
+                WriteStr(sout, (Cabs(ITerminal[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
             end;
             for i := 1 to nphases do
             begin
-                WriteStr(sout, (Cabs(Vterminal^[i])): 8: 1, ', ');
+                WriteStr(sout, (Cabs(Vterminal[i])): 8: 1, ', ');
                 FSWrite(TraceFile, sout);
             end;
 
@@ -1733,7 +1736,7 @@ begin
 
             0:
             begin  // Wye
-                VLN := Vterminal^[i];
+                VLN := Vterminal[i];
                 VMagLN := Cabs(VLN);
 
                 if CurrentLimited then
@@ -1762,7 +1765,7 @@ begin
 
             1:
             begin  // Delta
-                VLL := Vterminal^[i];
+                VLL := Vterminal[i];
                 VMagLL := Cabs(VLL);
 
                 if CurrentLimited then
@@ -1831,7 +1834,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        Curr := YEQ2 * Vterminal^[i];
+        Curr := YEQ2 * Vterminal[i];
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         set_ITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
@@ -1853,7 +1856,7 @@ begin
         with ActiveCircuit.Solution do
         begin          // Negate currents from user model for power flow PVSystem element model
             for i := 1 to FnConds do
-                InjCurrent^[i] -= Iterminal^[i];
+                InjCurrent[i] -= Iterminal[i];
         end;
     end
     else
@@ -1980,7 +1983,7 @@ begin
 
     // Handle Wye Connection
     if Connection = 0 then
-        pBuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
+        pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
 
     // Inj currents = Yprim (E) 
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
@@ -1999,7 +2002,7 @@ begin
         begin
             with ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
-                    Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
+                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[Fnconds]);
         end;
 
         1:
@@ -2010,7 +2013,7 @@ begin
                     j := i + 1;
                     if j > Fnconds then
                         j := 1;
-                    Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[j]);
+                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[j]);
                 end;
         end;
     end;
@@ -2195,12 +2198,12 @@ begin
         case Connection of
             0:
             begin // wye - neutral is explicit
-                Va := NodeV^[NodeRef^[1]] - NodeV^[NodeRef^[Fnconds]];
+                Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
             end;
 
             1:
             begin  // delta -- assume neutral is at zero
-                Va := NodeV^[NodeRef^[1]];
+                Va := NodeV[NodeRef[1]];
             end;
         end;
     end;
@@ -2208,7 +2211,7 @@ begin
     with PVSystemVars do
     begin
         YEQ := Cinv(Cmplx(RThev, XThev));           // used for current calcs  Always L-N
-        E := Va - Iterminal^[1] * cmplx(Rthev, Xthev);
+        E := Va - Iterminal[1] * cmplx(Rthev, Xthev);
         Vthevharm := Cabs(E);   // establish base mag and angle
         ThetaHarm := Cang(E);
     end;
@@ -2293,7 +2296,7 @@ begin
             for i := 0 to (NPhases - 1) do
             begin
                 dit[i] := 0;
-                Vgrid[i] := ctopolar(NodeV^[NodeRef^[i + 1]]);
+                Vgrid[i] := ctopolar(NodeV[NodeRef[i + 1]]);
                 if GFM_Mode then
                     it[i] := 0
                 else
@@ -2363,7 +2366,7 @@ begin
                     itHistory[i] := it[i] + 0.5 * h * dit[i];
                 end;
             
-            Vgrid[i] := ctopolar(NodeV^[NodeRef[i + 1]]); // Voltage at the Inv terminals
+            Vgrid[i] := ctopolar(NodeV[NodeRef[i + 1]]); // Voltage at the Inv terminals
             // Compute the actual target (Amps)
 
             if not GFM_Mode then

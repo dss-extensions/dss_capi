@@ -322,8 +322,8 @@ begin
     SngBuffer := Allocmem(AllocSize); // Need a buffer to convert from float32 to float64
     for i := 1 to pMon.SampleCount do
     begin
-        pMon.MonitorStream.Read(sngBuffer^[1], AllocSize);  // read rest of record
-        Result[i - 1] := sngBuffer^[Index];
+        pMon.MonitorStream.Read(sngBuffer[1], AllocSize);  // read rest of record
+        Result[i - 1] := sngBuffer[Index];
     end;
     Reallocmem(SngBuffer, 0);  // Dispose of buffer
 end;
@@ -368,7 +368,7 @@ begin
             begin
                 Read(freq, SizeOf(freq));  // frequency
                 Read(s, SizeOf(s));   // harmonic
-                Read(sngBuffer^[1], AllocSize);  // read rest of record
+                Read(sngBuffer[1], AllocSize);  // read rest of record
             end;
             Result[k] := freq;
             inc(k);
@@ -422,7 +422,7 @@ begin
             begin
                 Read(hr, SizeOf(hr));  // Hour
                 Read(s, SizeOf(s));   // Seconds past the hour
-                Read(sngBuffer^[1], AllocSize);  // read rest of record
+                Read(sngBuffer[1], AllocSize);  // read rest of record
             end;
             Result[k] := hr + s / 3600.0;
             inc(k);

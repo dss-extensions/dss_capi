@@ -649,7 +649,7 @@ begin
                 BranchList.PresentBranch.ToBusReference := TestBusNum;   // Add this as a "to" bus reference
                 if TestBusNum > 0 then
                 begin
-                    Ckt.Buses^[TestBusNum].BusChecked := TRUE;
+                    Ckt.Buses[TestBusNum].BusChecked := TRUE;
                     GetSourcesConnectedToBus(Ckt, TestBusNum, BranchList, Analyze);
                     GetPCElementsConnectedToBus(lstPC[TestBusNum], BranchList, Analyze);
                     GetShuntPDElementsConnectedToBus(lstPD[TestBusNum], BranchList, Analyze);

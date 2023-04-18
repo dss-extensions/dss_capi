@@ -145,7 +145,7 @@ begin
     with DSSPrime.ActiveCircuit do
     begin
         pLine := Lines.First;
-        Loss := Cmplx(0.0, 0.0);
+        Loss := 0;
         while pLine <> NIL do
         begin
             Loss += pLine.Losses;
@@ -204,9 +204,9 @@ begin
         k := 0;
         for i := 1 to NumBuses do
         begin
-            for j := 1 to Buses^[i].NumNodesThisBus do
+            for j := 1 to Buses[i].NumNodesThisBus do
             begin
-                Result[k] := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
+                Result[k] := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(j)]);
                 Inc(k);
             end;
         end;
@@ -238,9 +238,9 @@ begin
         k := 0;
         for i := 1 to NumBuses do
         begin
-            for j := 1 to Buses^[i].NumNodesThisBus do
+            for j := 1 to Buses[i].NumNodesThisBus do
             begin
-                Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)];
+                Volts := DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(j)];
                 Result[k] := Volts.re;
                 Inc(k);
                 Result[k] := Volts.im;
@@ -274,7 +274,7 @@ begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumDevices);
         for i := 1 to NumDevices do
         begin
-            with  TDSSCktElement(CktElements.Get(i)) do
+            with TDSSCktElement(CktElements.Get(i)) do
                 Result[i - 1] := DSS_CopyStringAsPChar(FullName);
         end;
     end
@@ -300,7 +300,7 @@ begin
     with DSSPrime.ActiveCircuit do
     begin
         pTransf := Transformers.First;
-        Loss := Cmplx(0.0, 0.0);
+        Loss := 0;
         while pTransf <> NIL do
         begin
             if pTransf.Issubstation then
@@ -335,7 +335,7 @@ begin
     with DSSPrime.ActiveCircuit do
     begin
         pCktElem := Sources.First;
-        cPower := Cmplx(0.0, 0.0);
+        cPower := 0;
         while pCktElem <> NIL do
         begin
             cPower += pcktElem.Power[1];
@@ -536,13 +536,13 @@ begin
         k := 0;
         for i := 1 to NumBuses do
         begin
-            if Buses^[i].kVBase > 0.0 then
-                BaseFactor := 1000.0 * Buses^[i].kVBase
+            if Buses[i].kVBase > 0.0 then
+                BaseFactor := 1000.0 * Buses[i].kVBase
             else
                 BaseFactor := 1.0;
-            for j := 1 to Buses^[i].NumNodesThisBus do
+            for j := 1 to Buses[i].NumNodesThisBus do
             begin
-                Volts := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
+                Volts := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(j)]);
                 Result[k] := Volts / BaseFactor;
                 Inc(k);
             end;
@@ -603,9 +603,9 @@ begin
         for i := 1 to NumBuses do
         begin
             BusName := BusList.NameOfIndex(i);
-            for j := 1 to Buses^[i].NumNodesThisBus do
+            for j := 1 to Buses[i].NumNodesThisBus do
             begin
-                Result[k] := DSS_CopyStringAsPChar(BusName + '.' + IntToStr(Buses^[i].GetNum(j)));
+                Result[k] := DSS_CopyStringAsPChar(BusName + '.' + IntToStr(Buses[i].GetNum(j)));
                 Inc(k);
             end;
         end;
@@ -694,7 +694,7 @@ begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumBuses);
         for i := 0 to NumBuses - 1 do
         begin
-            Result[i] := Buses^[i + 1].DistFromMeter;
+            Result[i] := Buses[i + 1].DistFromMeter;
         end;
     end;
 end;
@@ -724,9 +724,9 @@ begin
         k := 0;
         for i := 1 to NumBuses do
         begin
-            for j := 1 to Buses^[i].NumNodesThisBus do
+            for j := 1 to Buses[i].NumNodesThisBus do
             begin
-                Result[k] := Buses^[i].DistFromMeter;
+                Result[k] := Buses[i].DistFromMeter;
                 Inc(k);
             end;
         end;
@@ -760,10 +760,10 @@ begin
         k := 0;
         for i := 1 to NumBuses do
         begin
-            NodeIdx := Buses^[i].FindIdx(Phase);
+            NodeIdx := Buses[i].FindIdx(Phase);
             if NodeIdx > 0 then   // Node found with this phase number
             begin
-                Result[k] := Buses^[i].DistFromMeter;
+                Result[k] := Buses[i].DistFromMeter;
                 Inc(k);
             end;
         end;
@@ -799,10 +799,10 @@ begin
         k := 0;
         for i := 1 to NumBuses do
         begin
-            NodeIdx := Buses^[i].FindIdx(Phase);
+            NodeIdx := Buses[i].FindIdx(Phase);
             if NodeIdx > 0 then   // Node found with this phase number
             begin
-                Result[k] := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]);
+                Result[k] := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(NodeIdx)]);
                 Inc(k);
             end;
         end;
@@ -840,14 +840,14 @@ begin
         k := 0;
         for i := 1 to NumBuses do
         begin
-            NodeIdx := Buses^[i].FindIdx(Phase);
+            NodeIdx := Buses[i].FindIdx(Phase);
             if NodeIdx > 0 then   // Node found with this phase number
             begin
-                if Buses^[i].kVBase > 0.0 then
-                    BaseFactor := 1000.0 * Buses^[i].kVBase
+                if Buses[i].kVBase > 0.0 then
+                    BaseFactor := 1000.0 * Buses[i].kVBase
                 else
                     BaseFactor := 1.0;
-                Result[k] := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]) / Basefactor;
+                Result[k] := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV[Buses[i].GetRef(NodeIdx)]) / Basefactor;
                 Inc(k);
             end;
         end;
@@ -886,7 +886,7 @@ begin
         k := 0;
         for i := 1 to NumBuses do
         begin
-            NodeIdx := Buses^[i].FindIdx(Phase);
+            NodeIdx := Buses[i].FindIdx(Phase);
             if NodeIdx > 0 then   // Node found with this phase number
             begin
                 Temp[k] := Format('%s.%d', [BusList.NameOfIndex(i), Phase]);
@@ -992,7 +992,7 @@ begin
         k := 0;
         for i := 1 to NumNodes do
         begin
-            with MapNodeToBus^[i] do
+            with MapNodeToBus[i] do
                 Result[k] := DSS_CopyStringAsPChar(Format('%s.%-d', [AnsiUpperCase(BusList.NameOfIndex(Busref)), NodeNum]));
             Inc(k);
         end;
@@ -1023,7 +1023,7 @@ begin
         CResultPtr := pComplex(ResultPtr);
         for i := 1 to NumNodes do
         begin
-            CResultPtr^ := DSSPrime.ActiveCircuit.Solution.Currents^[i];
+            CResultPtr^ := DSSPrime.ActiveCircuit.Solution.Currents[i];
             Inc(CResultPtr);
         end;
     end
@@ -1052,7 +1052,7 @@ begin
             CResultPtr := pComplex(ResultPtr);
             for i := 1 to NumNodes do
             begin
-                CResultPtr^ := DSSPrime.ActiveCircuit.Solution.NodeV^[i];
+                CResultPtr^ := DSSPrime.ActiveCircuit.Solution.NodeV[i];
                 Inc(CResultPtr);
             end;
         end

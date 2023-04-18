@@ -60,7 +60,7 @@ begin
         myRow := 0;
         for i := 0 to (Contours.NCols - 1) do
         begin
-            VPartial.insert(i, 0, NodeV^[Contours.CData[myRow].Row + 1] - NodeV^[Contours.CData[myRow + 1].Row + 1]);
+            VPartial.insert(i, 0, NodeV[Contours.CData[myRow].Row + 1] - NodeV[Contours.CData[myRow + 1].Row + 1]);
             myRow := myRow + 2;
         end;
         // Loads the partial solution considering the previous iteration
@@ -126,10 +126,10 @@ begin
         for i := 1 to NumBuses do
         begin
             BusName := BusList.NameOfIndex(i);
-            for j := 1 to Buses^[i].NumNodesThisBus do
+            for j := 1 to Buses[i].NumNodesThisBus do
             begin
                 setlength(AllNNames, (length(AllNNames) + 1));
-                AllNNames[high(AllNNames)] := BusName + '.' + IntToStr(Buses^[i].GetNum(j));
+                AllNNames[high(AllNNames)] := BusName + '.' + IntToStr(Buses[i].GetNum(j));
             end;
         end;
     end;
@@ -213,28 +213,28 @@ begin
         col := NNodes;
         dec(Links);
         ZCT.sparse_matrix_Cmplx(col, Links * 3);
-        CVector := Allocmem(SizeOf(CVector^[1]) * (col + 1));
-        ZVector := Allocmem(SizeOf(ZVector^[1]) * (col + 1));
+        CVector := Allocmem(SizeOf(CVector[1]) * (col + 1));
+        ZVector := Allocmem(SizeOf(ZVector[1]) * (col + 1));
         idx3 := Links * 3 - 1;
 
         for idx2 := 0 to idx3 do
         begin
             for idx := 1 to col do
-                CVector^[idx] := 0;  // Makes it zero
+                CVector[idx] := 0;  // Makes it zero
 
             for idx := 1 to length(Contours.CData) do
             begin
                 if Contours.CData[idx - 1].col = idx2 then
                 begin
                     row := Contours.CData[idx - 1].row + 1;
-                    CVector^[row] := Contours.CData[idx - 1].Value;
+                    CVector[row] := Contours.CData[idx - 1].Value;
                 end;
             end;
-            SolveSparseSet(hy, pComplexArray(@ZVector^[1]), pComplexArray(@CVector^[1]));
+            SolveSparseSet(hy, pComplexArray(@ZVector[1]), pComplexArray(@CVector[1]));
 
             for idx := 1 to col do           // inserts result into the ZCT matrix
             begin
-                CTemp := ZVector^[idx];
+                CTemp := ZVector[idx];
                 if (CTemp.re <> 0) and (CTemp.im <> 0) then
                     ZCT.insert((idx - 1), idx2, ZVector[idx]);
             end;
@@ -277,7 +277,7 @@ begin
         for i := 1 to NumNodes do
         begin
             setlength(Node_Names, (length(Node_Names) + 1));
-            with MapNodeToBus^[i] do
+            with MapNodeToBus[i] do
                 Node_Names[High(Node_names)] := Format('%s.%-d', [AnsiLowerCase(BusList.NameOfIndex(Busref)), NodeNum]);
         end;
 
@@ -389,7 +389,7 @@ begin
                         // Extracts the YPrim of the Link branch
                         for j := 1 to (NValues div 4) do
                         begin
-                            LinkPrim.SetElement(row, col, cValues^[k]);
+                            LinkPrim.SetElement(row, col, cValues[k]);
                             inc(count);
                             if count > 2 then
                             begin

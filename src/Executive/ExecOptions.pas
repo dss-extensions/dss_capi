@@ -885,7 +885,7 @@ begin
                 58:
                     with DSS.ActiveCircuit do
                         for i := 1 to NumBuses do
-                            if Buses^[i].Keep then
+                            if Buses[i].Keep then
                                 AppendGlobalResult(DSS, BusList.NameOfIndex(i));
                 59:
                     AppendGlobalResult(DSS, DSS.ActiveCircuit.ReductionStrategyString);

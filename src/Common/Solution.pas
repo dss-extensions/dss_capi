@@ -195,7 +195,7 @@ type
         SolverOptions: Uint64;   // KLUSolveX options
 
         // Voltage and Current Arrays
-        NodeV: pNodeVArray;    // Main System Voltage Array   allows NodeV^[0]=0
+        NodeV: pNodeVArray;    // Main System Voltage Array   allows NodeV[0]=0
         Currents: pNodeVArray;      // Main System Currents Array
 
 // ******************************************************************************
@@ -704,7 +704,7 @@ begin
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         if not ADiakoptics or (DSS.Parent = NIL) then
 {$ENDIF}
-            VMag := Cabs(NodeV^[i])
+            VMag := Cabs(NodeV[i])
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         else
             VMag := Cabs(VoltInActor1(i));
@@ -712,14 +712,14 @@ begin
         ;
 {$ENDIF}
         // If base specified, use it; otherwise go on present magnitude
-        if NodeVbase^[i] > 0.0 then
-            ErrorSaved^[i] := Abs(Vmag - VmagSaved^[i]) / NodeVbase^[i]
+        if NodeVbase[i] > 0.0 then
+            ErrorSaved[i] := Abs(Vmag - VmagSaved[i]) / NodeVbase[i]
         else
         if Vmag <> 0.0 then
-            ErrorSaved^[i] := Abs(1.0 - VmagSaved^[i] / Vmag);
+            ErrorSaved[i] := Abs(1.0 - VmagSaved[i] / Vmag);
 
-        VMagSaved^[i] := Vmag;  // for next go-'round
-        MaxError := Math.Max(MaxError, ErrorSaved^[i]);  // update max error
+        VMagSaved[i] := Vmag;  // for next go-'round
+        MaxError := Math.Max(MaxError, ErrorSaved[i]);  // update max error
     end;
 
 {$IFNDEF DSS_CAPI_NOCOMPATFLAGS}
@@ -956,7 +956,7 @@ var
 begin
     with DSS.ActiveCircuit do
     begin
-        ReAllocMem(dV, SizeOf(dV^[1]) * (NumNodes + 1)); // Make sure this is always big enough
+        ReAllocMem(dV, SizeOf(dV[1]) * (NumNodes + 1)); // Make sure this is always big enough
 
         if ControlIteration = 1 then
             GetPCInjCurr;  // Update the load multipliers for this solution
@@ -986,10 +986,10 @@ begin
 
             // Compute new guess at voltages
             for i := 1 to NumNodes do     // 0 node is always 0
-                with NodeV^[i] do
+                with NodeV[i] do
                 begin
-                    re := re - dV^[i].re;
-                    im := im - dV^[i].im;
+                    re := re - dV[i].re;
+                    im := im - dV[i].im;
                 end;
 
         until (Converged and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
@@ -1093,8 +1093,8 @@ begin
 
         with DSS.ActiveCircuit do
             for i := 1 to NumBuses do
-                with Buses^[i] do
-                    kVBase := NearestBasekV(DSS, Cabs(NodeV^[RefNo[1]]) * 0.001732) / SQRT3;  // l-n base kV
+                with Buses[i] do
+                    kVBase := NearestBasekV(DSS, Cabs(NodeV[RefNo[1]]) * 0.001732) / SQRT3;  // l-n base kV
 
         InitializeNodeVbase(DSS);      // for convergence test
 
@@ -1317,7 +1317,7 @@ var
     I: Integer;
 begin
     for i := 0 to DSS.ActiveCircuit.NumNodes do
-        Currents^[i] := 0;
+        Currents[i] := 0;
 end;
 
 procedure TSolutionObj.Upload2IncMatrix;
@@ -1938,7 +1938,7 @@ begin
         Result := VoltInActor1(i) - VoltInActor1(j)  // V1-V2
     else
 {$ENDIF}    
-        Result := NodeV^[i] - NodeV^[j];  // V1-V2
+        Result := NodeV[i] - NodeV[j];  // V1-V2
 end;
 
 procedure TSolutionObj.WriteConvergenceReport(const Fname: String);
@@ -1957,13 +1957,13 @@ begin
         FSWriteln(F, '"Bus.Node", "Error", "|V|","Vbase"');
         with DSS.ActiveCircuit do
             for i := 1 to NumNodes do
-                with MapNodeToBus^[i] do
+                with MapNodeToBus[i] do
                 begin
                     WriteStr(sout, 
                         '"', pad((BusList.NameOfIndex(Busref) + '.' + IntToStr(NodeNum) + '"'), 18),
-                        ', ', ErrorSaved^[i]: 10: 5,
-                        ', ', VmagSaved^[i]: 14,
-                        ', ', NodeVbase^[i]: 14
+                        ', ', ErrorSaved[i]: 10: 5,
+                        ', ', VmagSaved[i]: 14,
+                        ', ', NodeVbase[i]: 14
                     );
                     FSWrite(F, sout);
                     FSWriteln(F);
@@ -1985,7 +1985,7 @@ var
     pelem: TDSSCktElement;
 
 begin
-    with  DSS.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         pelem := CktElements.First;
         while pelem <> NIL do
@@ -2357,10 +2357,10 @@ begin
                 for i := 1 to NumBuses do
                 begin
                     BusName := BusList.NameOfIndex(i);
-                    for j := 1 to Buses^[i].NumNodesThisBus do
+                    for j := 1 to Buses[i].NumNodesThisBus do
                     begin
-                        Volts := NodeV^[Buses^[i].RefNo[j]];
-                        WriteStr(sout, BusName, ', ', Buses^[i].GetNum(j): 0, Format(', %-.7g, %-.7g', [Cabs(Volts), CDang(Volts)]));
+                        Volts := NodeV[Buses[i].RefNo[j]];
+                        WriteStr(sout, BusName, ', ', Buses[i].GetNum(j): 0, Format(', %-.7g, %-.7g', [Cabs(Volts), CDang(Volts)]));
                         FSWriteln(F, sout);
                     end;
                 end;
@@ -2395,10 +2395,10 @@ begin
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         if not ADiakoptics or (DSS.Parent = NIL) then
 {$ENDIF}
-            Result := SolveSparseSet(hY, pComplexArray(@V^[1]), pComplexArray(@Currents^[1])) // Solve for present InjCurr
+            Result := SolveSparseSet(hY, pComplexArray(@V^[1]), pComplexArray(@Currents[1])) // Solve for present InjCurr
 {$IFDEF DSS_CAPI_ADIAKOPTICS}
         else
-            Result := SolveSparseSet(hY, pComplexArray(@V^[LocalBusIdx[0]]), pComplexArray(@Currents^[1]));  // Solve for present InjCurr in Actor 1 context
+            Result := SolveSparseSet(hY, pComplexArray(@V^[LocalBusIdx[0]]), pComplexArray(@Currents[1]));  // Solve for present InjCurr in Actor 1 context
 {$ELSE}
         ;
 {$ENDIF}
@@ -2448,10 +2448,10 @@ var
 begin
     with DSS.ActiveCircuit do
         for i := 1 to NumBuses do
-            with Buses^[i] do
+            with Buses[i] do
                 if Assigned(Vbus) then
                     for j := 1 to NumNodesThisBus do
-                        VBus^[j] := NodeV^[RefNo[j]];
+                        VBus[j] := NodeV[RefNo[j]];
 end;
 
 procedure TSolutionObj.RestoreNodeVfromVbus;
@@ -2460,10 +2460,10 @@ var
 begin
     with DSS.ActiveCircuit do
         for i := 1 to NumBuses do
-            with Buses^[i] do
+            with Buses[i] do
                 if Assigned(Vbus) then
                     for j := 1 to NumNodesThisBus do
-                        NodeV^[RefNo[j]] := VBus^[j];
+                        NodeV[RefNo[j]] := VBus[j];
 end;
 
 function TSolutionObj.SolveYDirect: Integer;
@@ -2829,7 +2829,7 @@ end;
 //         for i := 1 to NumNodes do
 //         begin
 //             idx := LocalBusIdx[i - 1];
-//             DSS.Parent.ActiveCircuit.Solution.NodeV^[idx] := Solution.NodeV^[i];
+//             DSS.Parent.ActiveCircuit.Solution.NodeV[idx] := Solution.NodeV[i];
 //         end;
 //     end;
 // end;
@@ -2841,7 +2841,7 @@ begin
     if NodeIdx <> 0 then
         NodeIdx := NodeIdx + (LocalBusIdx[0] - 1);
     // In the context of actor 1
-    Result := DSS.Parent.ActiveCircuit.Solution.NodeV^[NodeIdx];
+    Result := DSS.Parent.ActiveCircuit.Solution.NodeV[NodeIdx];
 end;
 
 // Updates the local ISources using the data obtained
@@ -2871,7 +2871,7 @@ begin
             begin
                 // Adds the present current with the adjustment
                 myCmplx := DSS.Parent.ActiveCircuit.Ic.CData[idx].Value * (-1.0);
-                Currents^[AD_IBus.Items[i]] := myCmplx + Currents^[AD_IBus.Items[i]];
+                Currents[AD_IBus.Items[i]] := myCmplx + Currents[AD_IBus.Items[i]];
             end;  // Otherwise is just another ISource in the zone
         end;
     end;
@@ -2939,7 +2939,7 @@ begin
         begin
             for i := 1 to NumNodes do
             begin
-                with MapNodeToBus^[i] do
+                with MapNodeToBus[i] do
                     SrcBus[high(SrcBus)] := Format('%s.%-d', [AnsiUpperCase(BusList.NameOfIndex(Busref)), NodeNum]);
                 setlength(SrcBus, (length(SrcBus) + 1));
             end;
@@ -2955,7 +2955,7 @@ begin
         begin
             for i := 1 to NumNodes do
             begin
-                with MapNodeToBus^[i] do
+                with MapNodeToBus[i] do
                     LclBus[high(LclBus)] := Format('%s.%-d', [AnsiUpperCase(BusList.NameOfIndex(Busref)), NodeNum]);
                 setlength(LclBus, (length(LclBus) + 1));
             end;

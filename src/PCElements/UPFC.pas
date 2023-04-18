@@ -401,7 +401,7 @@ begin
     Reallocmem(SR0, SizeOf(Sr0^[1]) * Fnphases);
     Reallocmem(SR1, SizeOf(Sr1^[1]) * Fnphases);
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
 
 
@@ -464,7 +464,6 @@ begin
             Value := Zinv[i, j];
             YPrim_series[i, j] := Value;
             YPrim_series[i + FNPhases, j + FNPhases] := Value;
-            //YPrim_series.SetElemsym(i + FNPhases, j, -Value)
             YPrim_series[i, j + Fnphases] := -Value;
             YPrim_series[i + Fnphases, j] := -Value;
         end;
@@ -840,13 +839,13 @@ begin
     begin
         for i := 1 to fnphases do
         begin
-            Vbin := NodeV^[NodeRef^[i]];           //Gets voltage at the input of UPFC Cond i
-            Vbout := NodeV^[NodeRef^[i + fnphases]]; //Gets voltage at the output of UPFC Cond i
+            Vbin := NodeV[NodeRef[i]];           //Gets voltage at the input of UPFC Cond i
+            Vbout := NodeV[NodeRef[i + fnphases]]; //Gets voltage at the output of UPFC Cond i
 
             // These functions were modified to follow the UPFC Dynamic
             // (Different from VSource)
-            Curr^[i + fnphases] := OutCurr[i];
-            Curr^[i] := InCurr[i];
+            Curr[i + fnphases] := OutCurr[i];
+            Curr[i] := InCurr[i];
         end;
     end;
 end;
@@ -988,7 +987,7 @@ begin
             GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
             // Add Together  with yprim currents
             for i := 1 to Yorder do
-                Curr^[i] := Curr^[i] - ComplexBuffer^[i];
+                Curr[i] := Curr[i] - ComplexBuffer^[i];
         end;
     except
         On E: Exception do
@@ -1007,7 +1006,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
 
     if Complete then

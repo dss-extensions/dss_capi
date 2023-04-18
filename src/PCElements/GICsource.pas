@@ -304,7 +304,7 @@ begin
             Volts := Compute_VLine;
     end;
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
 
 procedure TGICSourceObj.CalcYPrim;
@@ -333,13 +333,13 @@ begin
     // Assume 0.0001 ohms resistance for GIC Source
     Value := Cmplx(10000.0, 0.0);
     NegValue := -Value;
-    with YPrim_Series do
-        for i := 1 to Fnphases do
-        begin
-            YPrim_Series[i, i] := Value;
-            YPrim_Series[i + Fnphases, i + Fnphases] := Value;
-            SetElemSym(i, i + Fnphases, NegValue);
-        end;
+    for i := 1 to Fnphases do
+    begin
+        YPrim_Series[i, i] := Value;
+        YPrim_Series[i + Fnphases, i + Fnphases] := Value;
+        YPrim_Series[i, i + Fnphases] := NegValue;
+        YPrim_Series[i + Fnphases, i] := NegValue;
+    end;
 
     YPrim.Copyfrom(Yprim_Series);      // Initialize YPrim for series impedances
     // Now Account for Open Conductors
@@ -364,7 +364,7 @@ begin
                 Vmag := 0.0;
             for i := 1 to Fnphases do
             begin
-                Vterminal^[i] := pdegtocomplex(Vmag, (Angle));   // all the same for zero sequence
+                Vterminal[i] := pdegtocomplex(Vmag, (Angle));   // all the same for zero sequence
                  // bottom part of the vector is zero
                 VTerminal^[i + Fnphases] := 0;    // See comments in GetInjCurrents
             end;
@@ -393,14 +393,14 @@ begin
         with ActiveCircuit.Solution do
         begin
             for i := 1 to Yorder do
-                Vterminal^[i] := NodeV^[NodeRef^[i]];
+                Vterminal[i] := NodeV[NodeRef[i]];
 
             YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
 
             GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
             // Add Together  with yprim currents
             for i := 1 to Yorder do
-                Curr^[i] := Curr^[i] - ComplexBuffer^[i];
+                Curr[i] := Curr[i] - ComplexBuffer^[i];
 
         end;
     except

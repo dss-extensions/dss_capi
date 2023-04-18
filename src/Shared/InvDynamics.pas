@@ -277,7 +277,8 @@ begin
         Z[i, i] := Zs;
         for j := 1 to i - 1 do
         begin
-            Z.SetElemsym(i, j, Zm);
+            Z[i, j] := Zm;
+            Z[j, i] := Zm;
         end;
     end;
 

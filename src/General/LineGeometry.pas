@@ -338,13 +338,13 @@ begin
                     FLineData.Nphases := FNConds;
             end;
         ord(TProp.cond):
-            if Funits^[FactiveCond] = -1 then
-                Funits^[FactiveCond] := FLastUnit;  // makes this a sticky value so you don't have to repeat it
+            if FUnits[FactiveCond] = -1 then
+                FUnits[FactiveCond] := FLastUnit;  // makes this a sticky value so you don't have to repeat it
         ord(TProp.wire):
-            if FPhaseChoice^[ActiveCond] = Unknown then
+            if FPhaseChoice[ActiveCond] = Unknown then
                 ChangeLineConstantsType(Overhead);
         ord(TProp.units):
-            FLastUnit := FUnits^[ActiveCond];
+            FLastUnit := FUnits[ActiveCond];
         ord(TProp.cncable), ord(TProp.cncables):
             ChangeLineConstantsType(ConcentricNeutral);
         ord(TProp.tscable), ord(TProp.tscables):
@@ -357,11 +357,11 @@ begin
                     FreeAndNil(FLineData);
 
                 // Allocations
-                Reallocmem(FWireData, Sizeof(FWireData^[1]) * FNconds);
-                Reallocmem(FX, Sizeof(FX^[1]) * FNconds);
-                Reallocmem(FY, Sizeof(FY^[1]) * FNconds);
-                Reallocmem(FUnits, Sizeof(Funits^[1]) * FNconds);
-                Reallocmem(FPhaseChoice, Sizeof(FPhaseChoice^[1]) * FNconds);
+                Reallocmem(FWireData, Sizeof(FWireData[1]) * FNconds);
+                Reallocmem(FX, Sizeof(FX[1]) * FNconds);
+                Reallocmem(FY, Sizeof(FY[1]) * FNconds);
+                Reallocmem(FUnits, Sizeof(FUnits[1]) * FNconds);
+                Reallocmem(FPhaseChoice, Sizeof(FPhaseChoice[1]) * FNconds);
             end
             else
             begin
@@ -371,7 +371,7 @@ begin
                 
             if FNconds > previousIntVal then
                 for i := Max(1, previousIntVal) to FNconds do
-                    FPhaseChoice^[i] := Unknown;
+                    FPhaseChoice[i] := Unknown;
 
             for i := 1 to FNconds do
             begin
@@ -383,15 +383,15 @@ begin
 
             // Initialize Allocations
             for i := 1 to FNconds do
-                FPhaseChoice^[i] := Overhead;
+                FPhaseChoice[i] := Overhead;
             for i := 1 to FNconds do
-                FWireData^[i] := NIL;
+                FWireData[i] := NIL;
             for i := 1 to FNconds do
-                FX^[i] := 0.0;
+                FX[i] := 0.0;
             for i := 1 to FNconds do
-                FY^[i] := 0.0;
+                FY[i] := 0.0;
             for i := 1 to FNconds do
-                FUnits^[i] := -1;  // default to ft
+                FUnits[i] := -1;  // default to ft
             FLastUnit := UNITS_FT;
         end;
         ord(TProp.spacing):
@@ -402,9 +402,9 @@ begin
                     FLastUnit := LineSpacingObj.Units;
                     for i := 1 to FNConds do
                     begin
-                        FX^[i] := LineSpacingObj.Xcoord[i];
-                        FY^[i] := LineSpacingObj.Ycoord[i];
-                        FUnits^[i] := FLastUnit;
+                        FX[i] := LineSpacingObj.Xcoord[i];
+                        FY[i] := LineSpacingObj.Ycoord[i];
+                        FUnits[i] := FLastUnit;
                     end
                 end
                 else
@@ -417,19 +417,19 @@ begin
             i := 1;
             if Idx = ord(TProp.wires) then
             begin
-                if FPhaseChoice^[ActiveCond] = Unknown then
+                if FPhaseChoice[ActiveCond] = Unknown then
                 begin
                     // no other cables set for ActiveCond
                 end
                 else 
-                if FPhaseChoice^[ActiveCond] <> Overhead then
+                if FPhaseChoice[ActiveCond] <> Overhead then
                     // these are buried neutral wires
                     // (only when the phase conductors not overhead)
                     i := FNPhases + 1;
             end;
             if i = 1 then
             begin
-                conductorObj := FWireData^[1];
+                conductorObj := FWireData[1];
                 if (conductorObj.NormAmps > 0.0) and (Normamps = 0.0) then 
                     Normamps  := conductorObj.NormAmps;
                 
@@ -450,7 +450,7 @@ begin
             conductorObj := FWireData[ActiveCond];
             if Assigned(conductorObj) then
             begin
-                FWireData^[ActiveCond] := conductorObj;
+                FWireData[ActiveCond] := conductorObj;
                 // Default the current ratings for this geometry to the rating of the first conductor
                 if (ActiveCond = 1) then
                 begin
@@ -496,15 +496,15 @@ begin
     LineSpacingObj := Other.LineSpacingObj;
     FLineType := Other.FLineType;
     for i := 1 to FNConds do
-        FPhaseChoice^[i] := Other.FPhaseChoice^[i];
+        FPhaseChoice[i] := Other.FPhaseChoice[i];
     for i := 1 to FNConds do
-        FWireData^[i] := Other.FWireData^[i];
+        FWireData[i] := Other.FWireData[i];
     for i := 1 to FNConds do
-        FX^[i] := Other.FX^[i];
+        FX[i] := Other.FX[i];
     for i := 1 to FNConds do
-        FY^[i] := Other.FY^[i];
+        FY[i] := Other.FY[i];
     for i := 1 to FNConds do
-        FUnits^[i] := Other.FUnits^[i];
+        FUnits[i] := Other.FUnits[i];
     DataChanged := TRUE;
     NormAmps := Other.NormAmps;
     EmergAmps := Other.EmergAmps;
@@ -525,7 +525,7 @@ begin
     FWireData := NIL;
     FX := NIL;
     FY := NIL;
-    Funits := NIL;
+    FUnits := NIL;
     FLineData := NIL;
     LineSpacingObj := NIL;
 
@@ -555,7 +555,7 @@ begin
     Reallocmem(Fwiredata, 0);
     Reallocmem(FY, 0);
     Reallocmem(FX, 0);
-    Reallocmem(Funits, 0);
+    Reallocmem(FUnits, 0);
     Reallocmem(FPhaseChoice, 0);
 
     inherited destroy;
@@ -571,27 +571,27 @@ begin
 
     for i := 1 to 2 do
     begin
-        FSWriteln(F, '~ ' + ParentClass.PropertyName^[i] + '=' + GetPropertyValue(i));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + GetPropertyValue(i));
     end;
     for j := 1 to FNConds do
     begin
         ActiveCond := j;
-        FSWriteln(F, '~ ' + ParentClass.PropertyName^[3] + '=' + GetPropertyValue(3));
-        FSWriteln(F, '~ ' + ParentClass.PropertyName^[4] + '=' + GetPropertyValue(4));
-        FSWriteln(F, '~ ' + ParentClass.PropertyName^[5] + '=' + GetPropertyValue(5));
-        FSWriteln(F, '~ ' + ParentClass.PropertyName^[6] + '=' + GetPropertyValue(6));
-        FSWriteln(F, '~ ' + ParentClass.PropertyName^[7] + '=' + GetPropertyValue(7));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[3] + '=' + GetPropertyValue(3));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[4] + '=' + GetPropertyValue(4));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[5] + '=' + GetPropertyValue(5));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[6] + '=' + GetPropertyValue(6));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[7] + '=' + GetPropertyValue(7));
     end;
     for i := 8 to ParentClass.NumProperties do
     begin
-        FSWriteln(F, '~ ' + ParentClass.PropertyName^[i] + '=' + GetPropertyValue(i));
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + GetPropertyValue(i));
     end;
 end;
 
 function TLineGeometryObj.Get_FX(i: Integer): Double;
 begin
     if i <= FNConds then
-        Result := FX^[i]
+        Result := FX[i]
     else
         Result := 0.0;
 end;
@@ -599,7 +599,7 @@ end;
 function TLineGeometryObj.Get_FY(i: Integer): Double;
 begin
     if i <= FNConds then
-        Result := FY^[i]
+        Result := FY[i]
     else
         Result := 0.0;
 end;
@@ -607,7 +607,7 @@ end;
 function TLineGeometryObj.Get_FUnits(i: Integer): Integer;
 begin
     if i <= FNConds then
-        Result := FUnits^[i]
+        Result := FUnits[i]
     else
         Result := 0;
 end;
@@ -615,19 +615,19 @@ end;
 procedure TLineGeometryObj.Set_FX(i: Integer; Value: Double);
 begin
     if i <= FNConds then
-        FX^[i] := Value;
+        FX[i] := Value;
 end;
 
 procedure TLineGeometryObj.Set_FY(i: Integer; Value: Double);
 begin
     if i <= FNConds then
-        FY^[i] := Value;
+        FY[i] := Value;
 end;
 
 procedure TLineGeometryObj.Set_FUnits(i: Integer; Value: Integer);
 begin
     if i <= FNConds then
-        FUnits^[i] := Value;
+        FUnits[i] := Value;
 end;
 
 function TLineGeometryObj.Get_ConductorName(i: Integer): String;
@@ -641,7 +641,7 @@ end;
 function TLineGeometryObj.Get_ConductorData(i: Integer): TConductorDataObj;
 begin
     if i <= FNConds then
-        Result := FWireData^[i]
+        Result := FWireData[i]
     else
         Result := NIL;
 end;
@@ -656,7 +656,7 @@ end;
 
 function TLineGeometryObj.Get_PhaseChoice(i: Integer): ConductorChoice;
 begin
-    Result := FPhaseChoice^[i];
+    Result := FPhaseChoice[i];
 end;
 
 function TLineGeometryObj.Get_RhoEarth: Double;
@@ -717,7 +717,7 @@ begin
                             else
                                 strPhaseChoice := 'wire';
                             FSWriteln(F, Format('~ Cond=%d %s=%s X=%.7g h=%.7g units=%s',
-                                [i, strPhaseChoice, FWireData[i].Name, FX^[i], FY^[i], LineUnitsStr(FUnits^[i])]));
+                                [i, strPhaseChoice, FWireData[i].Name, FX[i], FY[i], LineUnitsStr(FUnits[i])]));
                         end;
                         wroteConds := True;
                     end;
@@ -740,8 +740,8 @@ begin
         if Value <= FNconds then
         begin
             FActiveCond := Value;
-            if Funits^[FactiveCond] = -1 then
-                Funits^[FactiveCond] := FLastUnit;  // makes this a sticky value so you don't have to repeat it
+            if FUnits[FactiveCond] = -1 then
+                FUnits[FactiveCond] := FLastUnit;  // makes this a sticky value so you don't have to repeat it
         end;
 end;
 
@@ -754,7 +754,7 @@ begin
     needNew := FALSE;
 
     if (ActiveCond > 0) and (ActiveCond <= FNConds) and 
-       (newPhaseChoice <> FPhaseChoice^[ActiveCond]) then
+       (newPhaseChoice <> FPhaseChoice[ActiveCond]) then
         needNew := TRUE
     else
     if (FLineData = NIL) or (FNConds <> FLineData.Nconductors) then
@@ -781,7 +781,7 @@ begin
         FLineData := newLineData;
     end;
     if (ActiveCond > 0) and (ActiveCond <= FNConds) then
-        FPhaseChoice^[ActiveCond] := newPhaseChoice;
+        FPhaseChoice[ActiveCond] := newPhaseChoice;
 end;
 
 procedure TLineGeometryObj.set_Nconds(const Value: Integer);
@@ -819,18 +819,18 @@ var
 begin
     for i := 1 to FNconds do
     begin
-        FLineData.X[i, Funits^[i]] := FX^[i];
-        FLineData.Y[i, Funits^[i]] := FY^[i];
-        FLineData.radius[i, FWireData^[i].RadiusUnits] := FWireData^[i].Radius;
-        FLineData.capradius[i, FWireData^[i].RadiusUnits] := FWireData^[i].capRadius;
-        FLineData.GMR[i, FWireData^[i].GMRUnits] := FWireData^[i].GMR;
-        FLineData.Rdc[i, FWireData^[i].ResUnits] := FWireData^[i].Rdc;
-        FLineData.Rac[i, FWireData^[i].ResUnits] := FWireData^[i].Rac;
-        if (FWireData^[i] is TCNDataObj) then
+        FLineData.X[i, FUnits[i]] := FX[i];
+        FLineData.Y[i, FUnits[i]] := FY[i];
+        FLineData.radius[i, FWireData[i].RadiusUnits] := FWireData[i].Radius;
+        FLineData.capradius[i, FWireData[i].RadiusUnits] := FWireData[i].capRadius;
+        FLineData.GMR[i, FWireData[i].GMRUnits] := FWireData[i].GMR;
+        FLineData.Rdc[i, FWireData[i].ResUnits] := FWireData[i].Rdc;
+        FLineData.Rac[i, FWireData[i].ResUnits] := FWireData[i].Rac;
+        if (FWireData[i] is TCNDataObj) then
         begin
             with (FLineData as TCNLineConstants) do
             begin
-                cnd := (FWireData^[i] as TCNDataObj);
+                cnd := (FWireData[i] as TCNDataObj);
                 EpsR[i] := cnd.EpsR;
                 InsLayer[i, cnd.RadiusUnits] := cnd.InsLayer;
                 DiaIns[i, cnd.RadiusUnits] := cnd.DiaIns;
@@ -842,11 +842,11 @@ begin
             end;
         end
         else
-        if (FWireData^[i] is TTSDataObj) then
+        if (FWireData[i] is TTSDataObj) then
         begin
             with (FLineData as TTSLineConstants) do
             begin
-                tsd := (FWireData^[i] as TTSDataObj);
+                tsd := (FWireData[i] as TTSDataObj);
                 EpsR[i] := tsd.EpsR;
                 InsLayer[i, tsd.RadiusUnits] := tsd.InsLayer;
                 DiaIns[i, tsd.RadiusUnits] := tsd.DiaIns;
@@ -897,16 +897,16 @@ begin
     ChangeLineConstantsType(newPhaseChoice);
 
     for i := 1 to FNConds do
-        FWireData^[i] := Wires^[i];
+        FWireData[i] := Wires[i];
     for i := 1 to FNConds do
-        FX^[i] := Spc.Xcoord[i];
+        FX[i] := Spc.Xcoord[i];
     for i := 1 to FNConds do
-        FY^[i] := Spc.Ycoord[i];
+        FY[i] := Spc.Ycoord[i];
     for i := 1 to FNConds do
-        FUnits^[i] := Spc.Units;
+        FUnits[i] := Spc.Units;
     DataChanged := TRUE;
-    NormAmps := Wires^[1].NormAmps;
-    EmergAmps := Wires^[1].EmergAmps;
+    NormAmps := Wires[1].NormAmps;
+    EmergAmps := Wires[1].EmergAmps;
 
     UpdateLineGeometryData(activecircuit.solution.Frequency);
 end;

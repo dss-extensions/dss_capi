@@ -562,7 +562,7 @@ begin
         // Sets name of i-th terminal's connected bus in CapControl's buslist
         Setbus(1, MonitoredElement.GetBus(ElementTerminal));
         // Allocate a buffer bigenough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder);
+        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
         ControlVars.CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
     end;
 
@@ -597,7 +597,7 @@ begin
     begin
         Setbus(1, MonitoredElement.GetBus(ElementTerminal));
         // Allocate a buffer bigenough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder);
+        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
         ControlVars.CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
     end;
     inherited;
@@ -607,10 +607,9 @@ procedure TCapControlObj.GetBusVoltages(pBus: TDSSBus; Buff: pComplexArray);
 var
     j: Integer;
 begin
-    with pBus do
-        if Assigned(Vbus) then    // uses nphases from CapControlObj
-            for j := 1 to nPhases do //TODO (@meira) check if nphases is ambiguous
-                cBuffer^[j] := ActiveCircuit.Solution.NodeV^[GetRef(j)];
+    if Assigned(pBus.Vbus) then    // uses nphases from CapControlObj
+        for j := 1 to nPhases do //TODO (@meira) check if nphases is ambiguous
+            Buff[j] := ActiveCircuit.Solution.NodeV[pBus.GetRef(j)];
 end;
 
 procedure TCapControlObj.GetControlCurrent(var ControlCurrent: Double);
@@ -624,26 +623,26 @@ begin
             begin
                 ControlCurrent := 0.0;     // Get avg of all phases
                 for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                    ControlCurrent := ControlCurrent + Cabs(cBuffer^[i]);
+                    ControlCurrent := ControlCurrent + Cabs(cBuffer[i]);
                 ControlCurrent := ControlCurrent / Fnphases / CTRatio;
             end;
             MAXPHASE:
             begin
                 ControlCurrent := 0.0;     // Get max of all phases
                 for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                    ControlCurrent := max(ControlCurrent, Cabs(cBuffer^[i]));
+                    ControlCurrent := max(ControlCurrent, Cabs(cBuffer[i]));
                 ControlCurrent := ControlCurrent / CTRatio;
             end;
             MINPHASE:
             begin
                 ControlCurrent := 1.0e50;     // Get min of all phases
                 for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                    ControlCurrent := min(ControlCurrent, Cabs(cBuffer^[i]));
+                    ControlCurrent := min(ControlCurrent, Cabs(cBuffer[i]));
                 ControlCurrent := ControlCurrent / CTRatio;
             end;
         else
             // Just use one phase because that's what most controls do.
-            ControlCurrent := Cabs(Cbuffer^[FCTphase]) / CTRatio;  // monitored phase only
+            ControlCurrent := Cabs(cBuffer[FCTphase]) / CTRatio;  // monitored phase only
         end;
 end;
 
@@ -744,21 +743,21 @@ begin
             begin
                 ControlVoltage := 0.0;
                 for i := 1 to MonitoredElement.NPhases do
-                    ControlVoltage := ControlVoltage + Cabs(cBuffer^[i]);
+                    ControlVoltage := ControlVoltage + Cabs(cBuffer[i]);
                 ControlVoltage := ControlVoltage / MonitoredElement.NPhases / PTRatio;
             end;
             MAXPHASE:
             begin
                 ControlVoltage := 0.0;
                 for i := 1 to MonitoredElement.NPhases do
-                    ControlVoltage := Max(ControlVoltage, Cabs(cBuffer^[i]));
+                    ControlVoltage := Max(ControlVoltage, Cabs(cBuffer[i]));
                 ControlVoltage := ControlVoltage / PTRatio;
             end;
             MINPHASE:
             begin
                 ControlVoltage := 1.0E50;
                 for i := 1 to MonitoredElement.NPhases do
-                    ControlVoltage := Min(ControlVoltage, Cabs(cBuffer^[i]));
+                    ControlVoltage := Min(ControlVoltage, Cabs(cBuffer[i]));
                 ControlVoltage := ControlVoltage / PTRatio;
             end;
         else
@@ -766,9 +765,9 @@ begin
             // Use L-L aB if capacitor is delta connected!!
             case TCapacitorObj(ControlledElement).Connection of
                 TCapacitorConnection.Delta:
-                    ControlVoltage := Cabs(cBuffer^[FPTPhase] - cBuffer^[NextDeltaPhase(FPTPhase)]) / PTRatio;
+                    ControlVoltage := Cabs(cBuffer[FPTPhase] - cBuffer[NextDeltaPhase(FPTPhase)]) / PTRatio;
             else
-                ControlVoltage := Cabs(cBuffer^[FPTPhase]) / PTRatio;     // Wye - Default
+                ControlVoltage := Cabs(cBuffer[FPTPhase]) / PTRatio;     // Wye - Default
             end;
         end;
 end;
@@ -813,7 +812,7 @@ begin
 
                 if VoverrideBusSpecified then
                 begin
-                    GetBusVoltages(ActiveCircuit.Buses^[VOverrideBusIndex], cBuffer);
+                    GetBusVoltages(ActiveCircuit.Buses[VOverrideBusIndex], cBuffer);
                 end
                 else
                     MonitoredElement.GetTermVoltages(ElementTerminal, cBuffer);

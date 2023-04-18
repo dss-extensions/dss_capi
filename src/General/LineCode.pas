@@ -463,8 +463,10 @@ begin
         Yc[i, i] := Ys;
         for j := 1 to i - 1 do
         begin
-            Z.SetElemsym(i, j, Zm);
-            Yc.SetElemsym(i, j, Ym);
+            Z[i, j] := Zm;
+            Z[j, i] := Zm;
+            Yc[i, j] := Ym;
+            Yc[j, i] := Ym;
         end;
     end;
     Zinv.Copyfrom(Z);
@@ -489,7 +491,7 @@ begin
         FSWriteln(F, Format('~ %s=%.5f', [PropertyName[6], C1 * 1.0e9]));
         FSWriteln(F, Format('~ %s=%.5f', [PropertyName[7], C0 * 1.0e9]));
         FSWriteln(F, Format('~ %s=%s',   [PropertyName[8], PropertyValue[8]]));
-        FSWrite(F, '~ ' + PropertyName^[9] + '=' + '"');
+        FSWrite(F, '~ ' + PropertyName[9] + '=' + '"');
         for i := 1 to FNPhases do
         begin
             for j := 1 to FNphases do
@@ -499,7 +501,7 @@ begin
             FSWrite(F, '|');
         end;
         FSWriteln(F, '"');
-        FSWrite(F, '~ ' + PropertyName^[10] + '=' + '"');
+        FSWrite(F, '~ ' + PropertyName[10] + '=' + '"');
         for i := 1 to FNPhases do
         begin
             for j := 1 to FNphases do
@@ -509,7 +511,7 @@ begin
             FSWrite(F, '|');
         end;
         FSWriteln(F, '"');
-        FSWrite(F, '~ ' + PropertyName^[11] + '=' + '"');
+        FSWrite(F, '~ ' + PropertyName[11] + '=' + '"');
         for i := 1 to FNPhases do
         begin
             for j := 1 to FNphases do
@@ -523,7 +525,7 @@ begin
 
         for i := 12 to 21 do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
 
         FSWriteln(F, Format('~ %s=%d', [PropertyName[22], FNeutralConductor]));

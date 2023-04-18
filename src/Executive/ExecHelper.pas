@@ -1376,7 +1376,7 @@ begin
             if pCapElement.IsShunt then
             begin
                 if pCapElement.Enabled then
-                    DSS.ActiveCircuit.Buses^[pCapElement.Terminals[0].Busref].Keep := TRUE;
+                    DSS.ActiveCircuit.Buses[pCapElement.Terminals[0].Busref].Keep := TRUE;
             end;
             ObjRef := pClass.Next;
         end;
@@ -1393,11 +1393,11 @@ begin
             if pReacElement.IsShunt then
                 try
                     if pReacElement.Enabled then
-                        DSS.ActiveCircuit.Buses^[pReacElement.Terminals[0].Busref].Keep := TRUE;
+                        DSS.ActiveCircuit.Buses[pReacElement.Terminals[0].Busref].Keep := TRUE;
                 except
                     On E: Exception do
                     begin
-                        DoSimpleMsg(DSS, '%s %s Reactor=%s Bus No.=%d ', [E.Message, CRLF, pReacElement.Name, pReacElement.NodeRef^[1]], 9999);
+                        DoSimpleMsg(DSS, '%s %s Reactor=%s Bus No.=%d ', [E.Message, CRLF, pReacElement.Name, pReacElement.NodeRef[1]], 9999);
                         Break;
                     end;
                 end;
@@ -1742,9 +1742,9 @@ begin
         if ActiveBusIndex > 0 then
         begin
             if Comparetext(ParamName, 'kvln') = 0 then
-                Buses^[ActiveBusIndex].kVBase := kVValue
+                Buses[ActiveBusIndex].kVBase := kVValue
             else
-                Buses^[ActiveBusIndex].kVBase := kVValue / SQRT3;
+                Buses[ActiveBusIndex].kVBase := kVValue / SQRT3;
             Result := 0;
             Solution.VoltageBaseChanged := TRUE;
            // Solution.SolutionInitialized := FALSE;  // Force reinitialization
@@ -1838,7 +1838,7 @@ begin
                     begin
                         iBus := BusList.Find(Param);
                         if iBus > 0 then
-                            Buses^[iBus].Keep := TRUE;
+                            Buses[iBus].Keep := TRUE;
                     end;
             end;
             FreeAndNil(F);
@@ -1859,7 +1859,7 @@ begin
             begin
                 iBus := BusList.Find(Param);
                 if iBus > 0 then
-                    Buses^[iBus].Keep := TRUE;
+                    Buses[iBus].Keep := TRUE;
             end;
 
             DSS.AuxParser.NextParam;
@@ -1901,7 +1901,7 @@ begin
             GetCurrents(cBuffer);
             for i := 1 to NValues do
             begin
-                DSS.GlobalResult := DSS.GlobalResult + Format('%10.5g, %6.1f,', [cabs(cBuffer^[i]), Cdang(cBuffer^[i])]);
+                DSS.GlobalResult := DSS.GlobalResult + Format('%10.5g, %6.1f,', [cabs(cBuffer[i]), Cdang(cBuffer[i])]);
             end;
             Reallocmem(cBuffer, 0);
         end
@@ -1931,7 +1931,7 @@ begin
                 DSS.GlobalResult := '';
                 for i := 1 to NValues do
                 begin
-                    DSS.GlobalResult := DSS.GlobalResult + Format('%d, ', [GetNodeNum(DSS, NodeRef^[i])]);
+                    DSS.GlobalResult := DSS.GlobalResult + Format('%d, ', [GetNodeNum(DSS, NodeRef[i])]);
                 end;
             end
         else
@@ -1980,7 +1980,7 @@ begin
             GetPhaseLosses(NValues, cBuffer);
             for i := 1 to NValues do
             begin
-                DSS.GlobalResult := DSS.GlobalResult + Format('%10.5g, %10.5g,', [cBuffer^[i].re * 0.001, cBuffer^[i].im * 0.001]);
+                DSS.GlobalResult := DSS.GlobalResult + Format('%10.5g, %10.5g,', [cBuffer[i].re * 0.001, cBuffer[i].im * 0.001]);
             end;
             Reallocmem(cBuffer, 0);
         end
@@ -2016,7 +2016,7 @@ begin
             begin
                 for i := 1 to NValues do
                 begin
-                    DSS.GlobalResult := DSS.GlobalResult + Format('%10.5g, %10.5g,', [cBuffer^[i].re * 0.001, cBuffer^[i].im * 0.001]);
+                    DSS.GlobalResult := DSS.GlobalResult + Format('%10.5g, %10.5g,', [cBuffer[i].re * 0.001, cBuffer[i].im * 0.001]);
                 end;
             end
             else
@@ -2024,12 +2024,12 @@ begin
                 setlength(myBuffer, Nterms);
                 for j := 1 to Nterms do
                 begin
-                    myBuffer[j - 1] := cmplx(0.0, 0.0);
+                    myBuffer[j - 1] := 0;
                     myInit := (j - 1) * NConds + 1;
                     myEnd := NConds * j;
                     for i := myInit to myEnd do
                     begin
-                        myBuffer[j - 1] := myBuffer[j - 1] + cBuffer^[i];
+                        myBuffer[j - 1] := myBuffer[j - 1] + cBuffer[i];
                     end;
                     DSS.GlobalResult := DSS.GlobalResult + Format('%10.5g, %10.5g,', [myBuffer[j - 1].re * 0.001, myBuffer[j - 1].im * 0.001]);
                 end;
@@ -2071,7 +2071,7 @@ begin
                             k := (j - 1) * NConds;
                             for i := 1 to 3 do
                             begin
-                                Iph[i] := cBuffer^[k + i];
+                                Iph[i] := cBuffer[k + i];
                             end;
                             Phase2SymComp(pComplexArray(@Iph), pComplexArray(@I012));
                             for i := 1 to 3 do
@@ -2120,11 +2120,11 @@ begin
                             k := (j - 1) * NConds;
                             for i := 1 to 3 do
                             begin
-                                Vph[i] := Solution.NodeV^[Terminals[j - 1].TermNodeRef[i - 1]];
+                                Vph[i] := Solution.NodeV[Terminals[j - 1].TermNodeRef[i - 1]];
                             end;
                             for i := 1 to 3 do
                             begin
-                                Iph[i] := cBuffer^[k + i];
+                                Iph[i] := cBuffer[k + i];
                             end;
                             Phase2SymComp(pComplexArray(@Iph), pComplexArray(@I012));
                             Phase2SymComp(pComplexArray(@Vph), pComplexArray(@V012));
@@ -2177,7 +2177,7 @@ begin
                                     k := (j - 1) * NConds;
                                     for i := 1 to 3 do
                                     begin
-                                        Vph[i] := Solution.NodeV^[NodeRef^[i + k]];
+                                        Vph[i] := Solution.NodeV[NodeRef[i + k]];
                                     end;
                                     Phase2SymComp(pComplexArray(@Vph), pComplexArray(@V012));   // Compute Symmetrical components
 
@@ -2228,11 +2228,11 @@ begin
         begin
             if ActiveBusIndex <> 0 then
             begin
-                ActiveBus := Buses^[ActiveBusIndex];
+                ActiveBus := Buses[ActiveBusIndex];
                 DSS.GlobalResult := '';
                 for i := 1 to ActiveBus.NumNodesThisBus do
                 begin
-                    Volts := Solution.NodeV^[ActiveBus.GetRef(i)];
+                    Volts := Solution.NodeV[ActiveBus.GetRef(i)];
                     Vmag := Cabs(Volts);
                     if PerUnit and (ActiveBus.kvbase > 0.0) then
                     begin
@@ -2265,7 +2265,7 @@ begin
         begin
             if ActiveBusIndex <> 0 then
             begin
-                ActiveBus := Buses^[ActiveBusIndex];
+                ActiveBus := Buses[ActiveBusIndex];
                 DSS.GlobalResult := '';
                 if not assigned(ActiveBus.Zsc) then
                     Exit;
@@ -2312,7 +2312,7 @@ begin
         Exit;
     end;
 
-    ActiveBus := DSS.ActiveCircuit.Buses^[DSS.ActiveCircuit.ActiveBusIndex];
+    ActiveBus := DSS.ActiveCircuit.Buses[DSS.ActiveCircuit.ActiveBusIndex];
     DSS.GlobalResult := '';
     if not assigned(ActiveBus.Zsc) then
         Exit;
@@ -2355,7 +2355,7 @@ begin
         begin
             if ActiveBusIndex <> 0 then
             begin
-                ActiveBus := Buses^[ActiveBusIndex];
+                ActiveBus := Buses[ActiveBusIndex];
                 DSS.GlobalResult := '';
                 if not assigned(ActiveBus.Zsc) then
                     Exit;
@@ -2618,12 +2618,12 @@ begin
         with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
             for j := 1 to NumNodes do
-                Currents^[j] := 0;  // Clear Currents array
+                Currents[j] := 0;  // Clear Currents array
 
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
-                if not assigned(Buses^[ActiveBusIndex].Zsc) then
-                    Buses^[ActiveBusIndex].AllocateBusQuantities;
+                if not assigned(Buses[ActiveBusIndex].Zsc) then
+                    Buses[ActiveBusIndex].AllocateBusQuantities;
                 Solution.ComputeYsc(ActiveBusIndex);      // Compute YSC for active Bus
                 Result := 0;
             end;
@@ -2778,7 +2778,7 @@ begin
                     iB := DSS.ActiveCircuit.Buslist.Find(BusName);
                     if iB > 0 then
                     begin
-                        with DSS.ActiveCircuit.Buses^[iB] do
+                        with DSS.ActiveCircuit.Buses[iB] do
                         begin     // Returns TBus object
                             NextParam;
                             if SwapXY then
@@ -3013,9 +3013,9 @@ begin
             Ymax := -1.0e50;
             for i := 1 to Numbuses do
             begin
-                if Buses^[i].CoordDefined then
+                if Buses[i].CoordDefined then
                 begin
-                    with  Buses^[i] do
+                    with Buses[i] do
                     begin
                         Xmax := Max(Xmax, x);
                         XMin := Min(Xmin, x);
@@ -3030,9 +3030,9 @@ begin
 
             for i := 1 to Numbuses do
             begin
-                if Buses^[i].CoordDefined then
+                if Buses[i].CoordDefined then
                 begin
-                    with  Buses^[i] do
+                    with Buses[i] do
                     begin
                         vector := cmplx(x - xc, y - yc);
                         Vector := Vector * a;
@@ -3076,14 +3076,14 @@ begin
                         begin
                             DSS.AuxParser.Nextparam;
                             node := DSS.AuxParser.Intvalue;
-                            with  DSS.ActiveCircuit.Buses^[BusIndex] do
+                            with DSS.ActiveCircuit.Buses[BusIndex] do
                                 for i := 1 to NumNodesThisBus do
                                 begin
                                     if GetNum(i) = node then
                                     begin
                                         DSS.AuxParser.Nextparam;
                                         Vmag := DSS.AuxParser.Dblvalue;
-                                        Diff := Cabs(DSS.ActiveCircuit.Solution.NodeV^[GetRef(i)]) - Vmag;
+                                        Diff := Cabs(DSS.ActiveCircuit.Solution.NodeV[GetRef(i)]) - Vmag;
                                         if Vmag <> 0.0 then
                                         begin
                                             WriteStr(sout, BusName, '.', node, ', ', (Diff / Vmag * 100.0): 7: 2, ', %');
@@ -3844,7 +3844,7 @@ begin
     begin
         sBus := StripExtension(pLoad.GetBus(1));
         iBus := DSS.ActiveCircuit.BusList.Find(sBus);
-        pBus := DSS.ActiveCircuit.Buses^[iBus];
+        pBus := DSS.ActiveCircuit.Buses[iBus];
         kvln := pBus.kVBase;
         if (pLoad.Connection = TLoadConnection.Delta) or (pLoad.NPhases = 3) then
             pLoad.kVLoadBase := kvln * sqrt(3.0)
@@ -3861,7 +3861,7 @@ begin
         pGen := DSS.ActiveCircuit.Generators.Get(i);
         sBus := StripExtension(pGen.GetBus(1));
         iBus := DSS.ActiveCircuit.BusList.Find(sBus);
-        pBus := DSS.ActiveCircuit.Buses^[iBus];
+        pBus := DSS.ActiveCircuit.Buses[iBus];
         kvln := pBus.kVBase;
         if (pGen.Connection = 1) or (pGen.NPhases > 1) then
             pGen.PresentKV := kvln * sqrt(3.0)
@@ -3921,7 +3921,7 @@ begin
                     begin
                         idx := DSS.ActiveCircuit.BusList.Find(DevName);
                         if idx > 0 then
-                            pName := DSS.ActiveCircuit.Buses^[idx];
+                            pName := DSS.ActiveCircuit.Buses[idx];
                     end
                     else
                     begin
@@ -4025,7 +4025,7 @@ begin
     iBusidx := DSS.ActiveCircuit.Buslist.Find(sBusName);
     if iBusidx > 0 then
     begin
-        B1Ref := DSS.ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
+        B1Ref := DSS.ActiveCircuit.Buses[iBusidx].Find(NodeBuffer[1])
     end
     else
     begin
@@ -4033,7 +4033,7 @@ begin
         Exit;
     end;
 
-    V1 := DSS.ActiveCircuit.Solution.NodeV^[B1Ref];
+    V1 := DSS.ActiveCircuit.Solution.NodeV[B1Ref];
 
     // Get 2nd node voltage
     NodeBuffer[1] := 1;
@@ -4041,7 +4041,7 @@ begin
     iBusidx := DSS.ActiveCircuit.Buslist.Find(sBusName);
     if iBusidx > 0 then
     begin
-        B2Ref := DSS.ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
+        B2Ref := DSS.ActiveCircuit.Buses[iBusidx].Find(NodeBuffer[1])
     end
     else
     begin
@@ -4049,7 +4049,7 @@ begin
         Exit;
     end;
 
-    V2 := DSS.ActiveCircuit.Solution.NodeV^[B2Ref];
+    V2 := DSS.ActiveCircuit.Solution.NodeV[B2Ref];
 
     VNodeDiff := V1 - V2;
     DSS.GlobalResult := Format('%.7g, V,    %.7g, deg  ', [Cabs(VNodeDiff), CDang(VNodeDiff)]);
@@ -4165,7 +4165,7 @@ begin
         iB := DSS.ActiveCircuit.Buslist.Find(BusName);
         if iB > 0 then
         begin
-            with DSS.ActiveCircuit.Buses^[iB] do
+            with DSS.ActiveCircuit.Buses[iB] do
             begin     // Returns TBus object
                 x := Xval;
                 y := Yval;
@@ -4293,7 +4293,7 @@ begin
        // initialize bus quantities
     with DSS.ActiveCircuit do
         for i := 1 to NumBuses do
-            with Buses^[i] do
+            with Buses[i] do
             begin
                 BusFltRate := 0.0;
                 Bus_Num_Interrupt := 0.0;

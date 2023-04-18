@@ -360,7 +360,8 @@ begin
         Z[i, i] := Zs;
         for j := 1 to i - 1 do
         begin
-            Z.SetElemsym(i, j, Zm);
+            Z[i, j] := Zm;
+            Z[j, i] := Zm;
         end;
     end;
 
@@ -369,7 +370,7 @@ begin
 
     Vmag := Volts;
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 end;
 
 procedure TGICLineObj.CalcYPrim;
@@ -437,7 +438,8 @@ begin
             Value := Zinv[i, j];
             YPrim_series[i, j] := Value;
             YPrim_series[i + FNPhases, j + FNPhases] := Value;
-            YPrim_series.SetElemsym(i + FNPhases, j, -Value)
+            YPrim_series[i + FNPhases, j] := -Value;
+            YPrim_series[j, i + FNPhases] := -Value;
         end;
     end;
 
@@ -470,7 +472,7 @@ begin
                 RotatePhasorDeg(Vharm, SrcHarmonic, Angle);  // Rotate for phase 1 shift
                 for i := 1 to Fnphases do
                 begin
-                    Vterminal^[i] := Vharm;
+                    Vterminal[i] := Vharm;
                     VTerminal^[i + Fnphases] := 0;
                     if (i < Fnphases) then
                     begin
@@ -493,11 +495,11 @@ begin
                 begin
                     case Sequencetype of   // Always 0 for GIC
                         -1:
-                            Vterminal^[i] := pdegtocomplex(Vmag, (360.0 + Angle + (i - 1) * 360.0 / Fnphases));  // neg seq
+                            Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle + (i - 1) * 360.0 / Fnphases));  // neg seq
                         0:
-                            Vterminal^[i] := pdegtocomplex(Vmag, (360.0 + Angle));   // all the same for zero sequence
+                            Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle));   // all the same for zero sequence
                     else
-                        Vterminal^[i] := pdegtocomplex(Vmag, (360.0 + Angle - (i - 1) * 360.0 / Fnphases));
+                        Vterminal[i] := pdegtocomplex(Vmag, (360.0 + Angle - (i - 1) * 360.0 / Fnphases));
                     end;
                 // bottom part of the vector is zero
                     VTerminal^[i + Fnphases] := 0;    // See comments in GetInjCurrents
@@ -526,14 +528,14 @@ begin
         with ActiveCircuit.Solution do
         begin
             for  i := 1 to Yorder do
-                Vterminal^[i] := NodeV^[NodeRef^[i]];
+                Vterminal[i] := NodeV[NodeRef[i]];
 
             YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
 
             GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
             // Add Together  with yprim currents
             for i := 1 to Yorder do
-                Curr^[i] := Curr^[i] - ComplexBuffer^[i];
+                Curr[i] := Curr[i] - ComplexBuffer^[i];
 
         end;
     except
@@ -569,7 +571,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
 
     if Complete then

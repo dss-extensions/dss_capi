@@ -1293,7 +1293,7 @@ Function TDSSClass.Get_NextPropertyName:String;
 BEGIN
     Inc(ActiveProperty);
     IF ActiveProperty<=NumProperties THEN
-        Result := PropertyName^[ActiveProperty]
+        Result := PropertyName[ActiveProperty]
     ELSE 
         Result := '';
 END;

@@ -132,7 +132,7 @@ var
     FromBus: TDSSBus;
 begin
     FromBus := ActiveCircuit.Buses[Terminals[FromTerminal - 1].BusRef];
-    with  FromBus do
+    with FromBus do
         BusCustInterrupts += Bus_Num_Interrupt * BranchTotalCustomers;
 end;
 

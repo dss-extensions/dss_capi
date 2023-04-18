@@ -603,42 +603,42 @@ begin
                 end;
                 5:
                 begin
-                    ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1]) * NumSolutionVars);
+                    ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer[1]) * NumSolutionVars);
                 end;
                 8:
                 begin
                     if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
-                        with  TAutoTransObj(MeteredElement) do
+                        with TAutoTransObj(MeteredElement) do
                             NumTransformerCurrents := 2 * NumWindings * nphases
                     else
-                        with  TTransfObj(MeteredElement) do
+                        with TTransfObj(MeteredElement) do
                             NumTransformerCurrents := 2 * NumWindings * nphases;
                     ReallocMem(WdgCurrentsBuffer, Sizeof(Complex) * NumTransformerCurrents);
                 end;
                 10:
                 begin
                     if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
-                        with  TAutoTransObj(MeteredElement) do
+                        with TAutoTransObj(MeteredElement) do
                             NumWindingVoltages := NumWindings * nphases
                     else
-                        with  TTransfObj(MeteredElement) do
+                        with TTransfObj(MeteredElement) do
                             NumWindingVoltages := NumWindings * nphases;
                     ReallocMem(WdgVoltagesBuffer, Sizeof(Complex) * NumWindingVoltages);   // total all phases, all windings
                     ReallocMem(PhsVoltagesBuffer, Sizeof(Complex) * nphases);
                 end;
                 11:
                 begin
-                    ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
-                    ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.Yorder);
+                    ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer[1])*MeteredElement.Yorder);
+                    ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1])*MeteredElement.Yorder);
                 end;
                 12: 
                 begin
-                    ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
-                    ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*(MeteredElement.Yorder + 1));
+                    ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer[1])*MeteredElement.Yorder);
+                    ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1])*(MeteredElement.Yorder + 1));
                 end;
             else
-                ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1]) * MeteredElement.Yorder);
-                ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1]) * MeteredElement.NConds);
+                ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer[1]) * MeteredElement.Yorder);
+                ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1]) * MeteredElement.NConds);
             end;
 
             ClearMonitorStream;
@@ -674,11 +674,11 @@ begin
             end;
             5:
             begin
-                ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1]) * NumSolutionVars);
+                ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer[1]) * NumSolutionVars);
             end;
         else
-            ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1]) * MeteredElement.Yorder);
-            ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1]) * MeteredElement.NConds);
+            ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer[1]) * MeteredElement.Yorder);
+            ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer[1]) * MeteredElement.NConds);
         end;
         ClearMonitorStream;
         ValidMonitor := TRUE;
@@ -1234,14 +1234,14 @@ begin
             // To save some time, call ComputeITerminal
             MeteredElement.ComputeIterminal;   // only does calc if needed
             for i := 1 to MeteredElement.Yorder do
-                CurrentBuffer^[i] := MeteredElement.Iterminal^[i];
+                CurrentBuffer[i] := MeteredElement.Iterminal[i];
 
             try
                 for i := 1 to Fnconds do
                 begin
                 // NodeRef is set by the main Circuit object
                 // It is the index of the terminal into the system node list
-                    VoltageBuffer^[i] := ActiveCircuit.Solution.NodeV^[NodeRef^[i]];
+                    VoltageBuffer[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
                 end;
             except
                 On E: Exception do
@@ -1273,7 +1273,7 @@ begin
             try
                 for i := 1 to Fnphases do
                 begin
-                    FlickerBuffer^[i] := ActiveCircuit.Solution.NodeV^[NodeRef^[i]];
+                    FlickerBuffer^[i] := ActiveCircuit.Solution.NodeV[NodeRef[i]];
                 end;
             except
                 On E: Exception do
@@ -1286,21 +1286,21 @@ begin
             (* Capture Solution Variables *)
             with ActiveCircuit.Solution do
             begin
-                SolutionBuffer^[1] := Iteration;
-                SolutionBuffer^[2] := ControlIteration;
-                SolutionBuffer^[3] := MaxIterations;
-                SolutionBuffer^[4] := MaxControlIterations;
+                SolutionBuffer[1] := Iteration;
+                SolutionBuffer[2] := ControlIteration;
+                SolutionBuffer[3] := MaxIterations;
+                SolutionBuffer[4] := MaxControlIterations;
                 if ConvergedFlag then
-                    SolutionBuffer^[5] := 1
+                    SolutionBuffer[5] := 1
                 else
-                    SolutionBuffer^[5] := 0;
-                SolutionBuffer^[6] := IntervalHrs;
-                SolutionBuffer^[7] := SolutionCount;
-                SolutionBuffer^[8] := Ord(Mode);
-                SolutionBuffer^[9] := Frequency;
-                SolutionBuffer^[10] := Year;
-                SolutionBuffer^[11] := Time_Solve;
-                SolutionBuffer^[12] := Time_Step;
+                    SolutionBuffer[5] := 0;
+                SolutionBuffer[6] := IntervalHrs;
+                SolutionBuffer[7] := SolutionCount;
+                SolutionBuffer[8] := Ord(Mode);
+                SolutionBuffer[9] := Frequency;
+                SolutionBuffer[10] := Year;
+                SolutionBuffer[11] := Time_Solve;
+                SolutionBuffer[12] := Time_Step;
             end;
 
         end;
@@ -1413,20 +1413,20 @@ begin
             {Get All node voltages at all terminals}
             MeteredElement.ComputeVterminal();
             For i := 1 to MeteredElement.Yorder do 
-                VoltageBuffer^[i] := MeteredElement.Vterminal^[i];
+                VoltageBuffer[i] := MeteredElement.Vterminal[i];
 
             ConvertComplexArrayToPolar( VoltageBuffer, MeteredElement.Yorder);
             {Put Terminal Voltages into Monitor}
-            AddDblsToBuffer(pDoubleArray(@VoltageBuffer^[1].re), 2 * MeteredElement.Yorder);
+            AddDblsToBuffer(pDoubleArray(@VoltageBuffer[1].re), 2 * MeteredElement.Yorder);
 
             {Get all terminsl currents}
             MeteredElement.ComputeIterminal();   // only does calc if needed
             for i := 1 to MeteredElement.Yorder do 
-                CurrentBuffer^[i] := MeteredElement.Iterminal^[i];
+                CurrentBuffer[i] := MeteredElement.Iterminal[i];
 
             ConvertComplexArrayToPolar( CurrentBuffer, MeteredElement.Yorder);
             {Put Terminal currents into Monitor}
-            AddDblsToBuffer(pDoubleArray(@CurrentBuffer^[1].re), 2 * MeteredElement.Yorder);
+            AddDblsToBuffer(pDoubleArray(@CurrentBuffer[1].re), 2 * MeteredElement.Yorder);
             Exit;
         end;
         12: 
@@ -1441,7 +1441,7 @@ begin
                     BuffInit := 1 + NPhases * (k - 1);
                     BuffEnd := NPhases * k;
                     for i := BuffInit to BuffEnd do
-                        VoltageBuffer^[i - (BuffInit - 1)] := Vterminal^[i];
+                        VoltageBuffer[i - (BuffInit - 1)] := Vterminal[i];
 
                     if NPhases = NConds then
                         myRefIdx := NPhases + 1
@@ -1449,28 +1449,28 @@ begin
                         myRefIdx := NConds;
 
                     //Brings the first phase to the last place for calculations
-                    VoltageBuffer^[myRefIdx] := VoltageBuffer^[1];
+                    VoltageBuffer[myRefIdx] := VoltageBuffer[1];
                     
                     // Calculates the LL voltages
                     for i := 1 to NPhases do
-                        VoltageBuffer^[i] := VoltageBuffer^[i] - VoltageBuffer^[i + 1];
+                        VoltageBuffer[i] := VoltageBuffer[i] - VoltageBuffer[i + 1];
                     
                     ConvertComplexArrayToPolar(VoltageBuffer, Yorder);
                     
                     // Put Terminal Voltages into Monitor
-                    AddDblsToBuffer(pDoubleArray(@VoltageBuffer^[1].re), 2 * NPhases);
+                    AddDblsToBuffer(pDoubleArray(@VoltageBuffer[1].re), 2 * NPhases);
                 end;
 
                 // Get all terminsl currents
                 ComputeIterminal();   // only does calc if needed
                 
                 for i := 1 to Yorder do 
-                    CurrentBuffer^[i] := Iterminal^[i];
+                    CurrentBuffer[i] := Iterminal[i];
                 
                 ConvertComplexArrayToPolar(CurrentBuffer, Yorder);
                 
                 // Put Terminal currents into Monitor
-                AddDblsToBuffer(pDoubleArray(@CurrentBuffer^[1].re), 2 * Yorder);
+                AddDblsToBuffer(pDoubleArray(@CurrentBuffer[1].re), 2 * Yorder);
                 
                 Exit;
             end;
@@ -1483,12 +1483,12 @@ begin
     if ((Mode and SEQUENCEMASK) > 0) and (Fnphases = 3) then
     begin  // Convert to Symmetrical components
         Phase2SymComp(PComplex3(VoltageBuffer), @V012);
-        Phase2SymComp(PComplex3(@CurrentBuffer^[Offset + 1]), @I012);
+        Phase2SymComp(PComplex3(@CurrentBuffer[Offset + 1]), @I012);
         NumVI := 3;
         IsSequence := TRUE;
        // Replace voltage and current buffer with sequence quantities
         for i := 1 to 3 do
-            VoltageBuffer^[i] := V012[i];
+            VoltageBuffer[i] := V012[i];
         for i := 1 to 3 do
             CurrentBuffer[Offset + i] := I012[i];
     end
@@ -1507,24 +1507,24 @@ begin
             begin
                 if VIPolar then
                 begin
-                    ResidualVolt := ResidualPolar(@VoltageBuffer^[1], Fnphases);
-                    ResidualCurr := ResidualPolar(@CurrentBuffer^[Offset + 1], Fnphases);
+                    ResidualVolt := ResidualPolar(@VoltageBuffer[1], Fnphases);
+                    ResidualCurr := ResidualPolar(@CurrentBuffer[Offset + 1], Fnphases);
                 end
                 else
                 begin
-                    ResidualVolt := Residual(@VoltageBuffer^[1], Fnphases);
-                    ResidualCurr := Residual(@CurrentBuffer^[Offset + 1], Fnphases);
+                    ResidualVolt := Residual(@VoltageBuffer[1], Fnphases);
+                    ResidualCurr := Residual(@CurrentBuffer[Offset + 1], Fnphases);
                 end;
             end;
             if VIPolar then
             begin
                 ConvertComplexArrayToPolar(VoltageBuffer, NumVI);
-                ConvertComplexArrayToPolar(PComplexArray(@CurrentBuffer^[Offset + 1]), NumVI);    // Corrected 3-11-13
+                ConvertComplexArrayToPolar(PComplexArray(@CurrentBuffer[Offset + 1]), NumVI);    // Corrected 3-11-13
             end;
         end;
         1:
         begin     // Convert Voltage Buffer to power kW, kvar or Mag/Angle
-            CalckPowers(VoltageBuffer, VoltageBuffer, PComplexArray(@CurrentBuffer^[Offset + 1]), NumVI);
+            CalckPowers(VoltageBuffer, VoltageBuffer, PComplexArray(@CurrentBuffer[Offset + 1]), NumVI);
             if (IsSequence or ActiveCircuit.PositiveSequence) then
                 CmulArray(VoltageBuffer, 3.0, NumVI); // convert to total power
             if Ppolar then
@@ -1544,13 +1544,13 @@ begin
         32:
         begin // Save Magnitudes only
             for i := 1 to NumVI do
-                AddDblToBuffer(VoltageBuffer^[i].re {Cabs(VoltageBuffer^[i])});
+                AddDblToBuffer(VoltageBuffer[i].re {Cabs(VoltageBuffer[i])});
             if IncludeResidual then
                 AddDblToBuffer(ResidualVolt.re);
             if not IsPower then
             begin
                 for i := 1 to NumVI do
-                    AddDblToBuffer(CurrentBuffer^[Offset + i].re {Cabs(CurrentBuffer^[Offset+i])});
+                    AddDblToBuffer(CurrentBuffer[Offset + i].re {Cabs(CurrentBuffer[Offset+i])});
                 if IncludeResidual then
                     AddDblToBuffer(ResidualCurr.re);
             end;
@@ -1559,9 +1559,9 @@ begin
         begin // Save Pos Seq or Avg of all Phases or Total power (Complex)
             if isSequence then
             begin
-                AddDblsToBuffer(pDoubleArray(@VoltageBuffer^[2].re), 2);
+                AddDblsToBuffer(pDoubleArray(@VoltageBuffer[2].re), 2);
                 if not IsPower then
-                    AddDblsToBuffer(pDoubleArray(@CurrentBuffer^[Offset + 2].re), 2);
+                    AddDblsToBuffer(pDoubleArray(@CurrentBuffer[Offset + 2].re), 2);
             end
             else
             begin
@@ -1569,19 +1569,19 @@ begin
                 begin
                     Sum := 0;
                     for i := 1 to Fnphases do
-                        Sum += VoltageBuffer^[i];
+                        Sum += VoltageBuffer[i];
                     AddDblsToBuffer(pDoubleArray(@Sum.re), 2);
                 end
                 else
                 begin  // Average the phase magnitudes and  sum angles
                     Sum := 0;
                     for i := 1 to Fnphases do
-                        Sum += VoltageBuffer^[i];
+                        Sum += VoltageBuffer[i];
                     Sum.re := Sum.re / FnPhases;
                     AddDblsToBuffer(pDoubleArray(@Sum.re), 2);
                     Sum := 0;
                     for i := 1 to Fnphases do
-                        Sum += CurrentBuffer^[Offset + i];   // Corrected 3-11-13
+                        Sum += CurrentBuffer[Offset + i];   // Corrected 3-11-13
                     Sum.re := Sum.re / FnPhases;
                     AddDblsToBuffer(pDoubleArray(@Sum.re), 2);
                 end;
@@ -1591,15 +1591,15 @@ begin
         begin  // Save Pos Seq or Aver magnitude of all Phases of total kVA (Magnitude)
             if isSequence then
             begin
-                AddDblToBuffer(VoltageBuffer^[2].Re);    // First double is magnitude
+                AddDblToBuffer(VoltageBuffer[2].Re);    // First double is magnitude
                 if not IsPower then
-                    AddDblToBuffer(CurrentBuffer^[Offset + 2].Re);
+                    AddDblToBuffer(CurrentBuffer[Offset + 2].Re);
             end
             else
             begin
                 dSum := 0.0;
                 for i := 1 to Fnphases do
-                    dSum := dSum + VoltageBuffer^[i].re; //Cabs(VoltageBuffer^[i]);
+                    dSum := dSum + VoltageBuffer[i].re; //Cabs(VoltageBuffer[i]);
                 if not IsPower then
                     dSum := dSum / Fnphases;
                 AddDblToBuffer(dSum);
@@ -1607,7 +1607,7 @@ begin
                 begin
                     dSum := 0.0;
                     for i := 1 to Fnphases do
-                        dSum := dSum + CurrentBuffer^[Offset + i].re; //Cabs(CurrentBuffer^[Offset+i]);
+                        dSum := dSum + CurrentBuffer[Offset + i].re; //Cabs(CurrentBuffer[Offset+i]);
                     dSum := dSum / Fnphases;
                     AddDblToBuffer(dSum);
                 end;
@@ -1619,15 +1619,15 @@ begin
             4:
                 AddDblsToBuffer(pDoubleArray(@FlickerBuffer^[1].re), Fnphases * 2);
             5:
-                AddDblsToBuffer(pDoubleArray(@SolutionBuffer^[1]), NumSolutionVars);
+                AddDblsToBuffer(pDoubleArray(@SolutionBuffer[1]), NumSolutionVars);
         else
         begin
-            AddDblsToBuffer(pDoubleArray(@VoltageBuffer^[1].re), NumVI * 2);
+            AddDblsToBuffer(pDoubleArray(@VoltageBuffer[1].re), NumVI * 2);
             if not IsPower then
             begin
                 if IncludeResidual then
                     AddDblsToBuffer(pDoubleArray(@ResidualVolt), 2);
-                AddDblsToBuffer(pDoubleArray(@CurrentBuffer^[Offset + 1].re), NumVI * 2);
+                AddDblsToBuffer(pDoubleArray(@CurrentBuffer[Offset + 1].re), NumVI * 2);
                 if IncludeResidual then
                     AddDblsToBuffer(pDoubleArray(@ResidualCurr), 2);
             end;
@@ -1717,7 +1717,7 @@ begin
         begin
             pst[p] := AllocMem(Sizeof(SngBuffer[1]) * Npst);
             busref := MeteredElement.Terminals[MeteredTerminal].BusRef;
-            Vbase := 1000.0 * ActiveCircuit.Buses^[busref].kVBase;
+            Vbase := 1000.0 * ActiveCircuit.Buses[busref].kVBase;
             FlickerMeter(N, BaseFrequency, Vbase, data[0], data[p + 1], pst[p]);
         end;
 
@@ -1878,7 +1878,7 @@ begin
 // Revised 12-7-99 to return Zero current instead of Monitored element current because
 // it was messing up Newton iteration.
     for i := 1 to Fnconds do
-        Curr^[i] := 0;
+        Curr[i] := 0;
 end;
 
 procedure TMonitorObj.DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean);
@@ -1892,7 +1892,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
 
 

@@ -675,7 +675,7 @@ begin
     with ParentClass do
         for i := 1 to NumProperties do
         begin
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
         end;
 
     if Complete then
@@ -800,10 +800,10 @@ var
     i: Integer;
 begin
     for i := 1 to Value do
-        FStates^[i] := 1;
+        FStates[i] := 1;
      // set remainder steps, if any, to 0
     for i := Value + 1 to FNumSteps do
-        FStates^[i] := 0;
+        FStates[i] := 0;
 
      // Force rebuild of YPrims if necessary.
     if Value <> FLastStepInService then
@@ -830,110 +830,108 @@ var
     w, FreqMultiple: Double;
     HasZL: Boolean;
 begin
-    with YprimWork do
+    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FreqMultiple := FYprimFreq / BaseFrequency;
+    w := TwoPi * FYprimFreq;
+    HasZL := (FR[iStep] + Abs(FXL[iSTep])) > 0.0;
+
+    if HasZL then
     begin
-        FYprimFreq := ActiveCircuit.Solution.Frequency;
-        FreqMultiple := FYprimFreq / BaseFrequency;
-        w := TwoPi * FYprimFreq;
+        ZL := Cmplx(FR[iSTep], FXL[iSTep] * FreqMultiple);
+    end;
 
-        if (FR^[iStep] + Abs(FXL^[iSTep])) > 0.0 then
-            HasZL := TRUE
-        else
-            HasZL := FALSE;
+    // Now, Put C into in Yprim matrix
 
-        if HasZL then
+    case SpecType of
+        1, 2:
         begin
-            ZL := Cmplx(FR^[iSTep], FXL^[iSTep] * FreqMultiple);
-        end;
-
-        // Now, Put C into in Yprim matrix
-
-        case SpecType of
-
-            1, 2:
-            begin
-                Value := Cmplx(0.0, FC^[iSTep] * w);
-                case Connection of
-                    TCapacitorConnection.Delta:
-                    begin   // Line-Line
-                        Value2 := Value * 2.0;
-                        Value := -Value;
-                        for i := 1 to Fnphases do
-                        begin
-                            YprimWork[i, i] := Value2;
-                            for j := 1 to i - 1 do
-                                SetElemSym(i, j, Value);
-                        end;
-                // Remainder of the matrix is all zero
-                    end;
-                else
-                begin // Wye
-                    if HasZL then
-                        Value := Cinv(ZL + Cinv(Value)); // add in ZL
-                    Value2 := -Value;
+            Value := Cmplx(0.0, FC^[iSTep] * w);
+            case Connection of
+                TCapacitorConnection.Delta:
+                begin   // Line-Line
+                    Value2 := Value * 2.0;
+                    Value := -Value;
                     for i := 1 to Fnphases do
                     begin
-                        YprimWork[i, i] := Value;     // Elements are only on the diagonals
-                        YprimWork[i + Fnphases, i + Fnphases] := Value;
-                        SetElemSym(i, i + Fnphases, Value2);
+                        YprimWork[i, i] := Value2;
+                        for j := 1 to i - 1 do
+                        begin
+                            YprimWork[i, j] := Value;
+                            YprimWork[j, i] := Value;
+                        end;
                     end;
+            // Remainder of the matrix is all zero
                 end;
-                end;
-            end;
-            3:
-            begin    // C matrix specified
+            else
+            begin // Wye
+                if HasZL then
+                    Value := Cinv(ZL + Cinv(Value)); // add in ZL
+                Value2 := -Value;
                 for i := 1 to Fnphases do
                 begin
-                    ioffset := (i - 1) * Fnphases;
-                    for j := 1 to Fnphases do
-                    begin
-                        Value := Cmplx(0.0, Cmatrix^[(iOffset + j)] * w);
-                        YprimWork[i, j] := Value;
-                        YprimWork[i + Fnphases, j + Fnphases] := Value;
-                        Value := -Value;
-                        SetElemSym(i, j + Fnphases, Value);
-                    end;
+                    YprimWork[i, i] := Value;     // Elements are only on the diagonals
+                    YprimWork[i + Fnphases, i + Fnphases] := Value;
+                    YprimWork[i, i + Fnphases] := Value2;
+                    YprimWork[i + Fnphases, i] := Value2;
+                end;
+            end;
+            end;
+        end;
+        3:
+        begin    // C matrix specified
+            for i := 1 to Fnphases do
+            begin
+                ioffset := (i - 1) * Fnphases;
+                for j := 1 to Fnphases do
+                begin
+                    Value := Cmplx(0.0, Cmatrix[(iOffset + j)] * w);
+                    YprimWork[i, j] := Value;
+                    YprimWork[i + Fnphases, j + Fnphases] := Value;
+                    Value := -Value;
+                    YprimWork[i, j + Fnphases] := Value;
+                    YprimWork[j + Fnphases, i] := Value;
                 end;
             end;
         end;
+    end;
 
-        // Add line reactance for filter reactor, if any
-        if HasZL then
-            case SpecType of
+    // Add line reactance for filter reactor, if any
+    if not HasZL then
+        Exit;
 
-                1, 2:
-                    case Connection of
-                        TCapacitorConnection.Delta: // Line-Line
-                        begin
-                            // Add a little bit to each phase so it will invert
-                            for i := 1 to Fnphases do
-                            begin
-                                YprimWork[i, i] := YprimWork[i, i] * 1.000001;
-                            end;
-                            Invert();
-                            for i := 1 to Fnphases do
-                            begin
-                                Value := ZL + YprimWork[i, i];
-                                YprimWork[i, i] := Value;
-                            end;
-                            Invert();
-                        end;
-                    else // WYE - just put ZL in series
-                        // DO Nothing; Already in - see above
-                    end;
+    case SpecType of
 
-                3:
+        1, 2:
+            case Connection of
+                TCapacitorConnection.Delta: // Line-Line
                 begin
-                    Invert;
+                    // Add a little bit to each phase so it will invert
+                    for i := 1 to Fnphases do
+                    begin
+                        YprimWork[i, i] := YprimWork[i, i] * 1.000001;
+                    end;
+                    YprimWork.Invert();
                     for i := 1 to Fnphases do
                     begin
                         Value := ZL + YprimWork[i, i];
-                        YprimWork[i, i]:= Value;
+                        YprimWork[i, i] := Value;
                     end;
-                    Invert();
+                    YprimWork.Invert();
                 end;
+            else // WYE - just put ZL in series
+                // DO Nothing; Already in - see above
             end;
 
+        3:
+        begin
+            YprimWork.Invert();
+            for i := 1 to Fnphases do
+            begin
+                Value := ZL + YprimWork[i, i];
+                YprimWork[i, i]:= Value;
+            end;
+            YprimWork.Invert();
+        end;
     end;
 end;
 

@@ -1355,7 +1355,6 @@ begin
     if (not Enabled) or (NodeRef = NIL) or (ActiveCircuit.Solution.NodeV = NIL) then
         Exit;
 
-    try
     Vterm := Allocmem(SizeOf(Complex) * 2 * NumWindings);
     Iterm := Allocmem(SizeOf(Complex) * 2 * NumWindings);
     ITerm_NL := Allocmem(SizeOf(Complex) * 2 * NumWindings);
@@ -1364,11 +1363,10 @@ begin
     with ActiveCircuit.Solution do
         if Assigned(NodeV) then
             for i := 1 to Yorder do
-                    Vterminal^[i] := NodeV^[NodeRef^[i]]
+                Vterminal[i] := NodeV[NodeRef[i]]
         else
             for i := 1 to Yorder do
-                    Vterminal^[i] := 0;
-
+                Vterminal[i] := 0;
 
     k := 0;
     for iPhase := 1 to Fnphases do
@@ -1378,20 +1376,19 @@ begin
             NeutTerm := iWind * FNConds;
             i := 2 * iWind - 1;
 
-                case Winding^[iWind].Connection of
+            case Winding[iWind].Connection of
                 0:
                 begin   // Wye
-                        VTerm^[i] := Vterminal^[iphase + (iWind - 1) * FNconds];
-                        VTerm^[i + 1] := Vterminal^[NeutTerm];
+                    VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                    VTerm[i + 1] := Vterminal[NeutTerm];
                 end;
                 1:
                 begin   // Delta
                     jphase := RotatePhases(iphase);      // Get next phase in sequence
-                        VTerm^[i] := Vterminal^[iphase + (iWind - 1) * FNconds];
-                        VTerm^[i + 1] := Vterminal^[jphase + (iWind - 1) * FNconds];
+                    VTerm[i] := Vterminal[iphase + (iWind - 1) * FNconds];
+                    VTerm[i + 1] := Vterminal[jphase + (iWind - 1) * FNconds];
                 end
             end;
-
         end;
         Y_Term.MVmult(ITerm, VTerm);  // ITerm = Y_Term Vterm
         Y_Term_NL.MVmult(ITerm_NL, Vterm);// no load part
@@ -1399,19 +1396,12 @@ begin
         for i := 1 to 2 * NumWindings do
         begin
             k := k + 1;
-                CurrBuffer^[k] := ITerm^[i] + ITerm_NL^[i];
+            CurrBuffer[k] := ITerm[i] + ITerm_NL[i];
         end;
     end;
-
     ReallocMem(Vterm, 0);
     ReallocMem(Iterm, 0);
     ReallocMem(Iterm_NL, 0);
-    except
-        On E: Exception do
-            DoSimpleMsg(Format(_('Error filling voltage buffer in GetAllWindingCurrents for Circuit Element: %s'), [FullName]) + CRLF +
-                _('Probable Cause: Invalid definition of element.') + CRLF +
-                _('System Error Message: ') + E.Message, 100114);
-    end;
 end;
 
 procedure TTransfObj.GetWindingVoltages(iWind: Integer; VBuffer: pComplexArray);
@@ -1592,38 +1582,35 @@ var
     j: Integer;
 begin
     // Account for neutral impedances
-    with YPrim_Series do
+    for i := 1 to NumWindings do
     begin
-        for i := 1 to NumWindings do
+        with Winding[i] do
         begin
-            with Winding[i] do
+            if Connection = 0 then
             begin
-                if Connection = 0 then
+                // handle wye, but ignore delta  (and open wye)
+                if Rneut >= 0 then
                 begin
-                    // handle wye, but ignore delta  (and open wye)
-                    if Rneut >= 0 then
-                    begin
-                        // <0 is flag for open neutral  (Ignore)
-                        if (Rneut = 0) and (Xneut = 0) then
-                            // Solidly Grounded
-                            Value := 1000000
-                        else
-                            // 1 microohm resistor
-                            Value := Cinv(Cmplx(Rneut, XNeut * FreqMultiplier));
-                        j := i * fNconds;
-                        AddElement(j, j, Value);
-                    end
-
+                    // <0 is flag for open neutral  (Ignore)
+                    if (Rneut = 0) and (Xneut = 0) then
+                        // Solidly Grounded
+                        Value := 1000000
                     else
-                    begin
-                        // Bump up neutral admittance a bit in case neutral is floating
-                        j := i * fNconds;
-                        if ppm_FloatFactor <> 0.0 then
-                            AddElement(j, j, Cmplx(0.0, Y_PPM));
-                            // SetElement(j, j, CmulReal_im(GetElement(j, j), ppm_FloatFactorPlusOne));
-                    end;
+                        // 1 microohm resistor
+                        Value := Cinv(Cmplx(Rneut, XNeut * FreqMultiplier));
+                    j := i * fNconds;
+                    YPrim_Series.AddElement(j, j, Value);
+                end
 
+                else
+                begin
+                    // Bump up neutral admittance a bit in case neutral is floating
+                    j := i * fNconds;
+                    if ppm_FloatFactor <> 0.0 then
+                        YPrim_Series.AddElement(j, j, Cmplx(0.0, Y_PPM));
+                        // SetElement(j, j, CmulReal_im(GetElement(j, j), ppm_FloatFactorPlusOne));
                 end;
+
             end;
         end;
     end;
@@ -1638,20 +1625,17 @@ var
     j: Integer;
 
 begin
-    with YPrim_Component do
+    // Now, Put in Yprim matrix
+    // have to add every element of Y_terminal into Yprim somewhere
+    NW2 := 2 * NumWindings;
+    for i := 1 to NW2 do
     begin
-        // Now, Put in Yprim matrix
-        // have to add every element of Y_terminal into Yprim somewhere
-        NW2 := 2 * NumWindings;
-        for i := 1 to NW2 do
+        for j := 1 to i do
         begin
-            for j := 1 to i do
-            begin
-                Value := Y_Terminal[i, j];
-                // This value goes in Yprim nphases times
-                for k := 0 to Fnphases - 1 do
-                    AddElemSym(TermRef[i + k * NW2], TermRef[j + k * NW2], Value);
-            end;
+            Value := Y_Terminal[i, j];
+            // This value goes in Yprim nphases times
+            for k := 0 to Fnphases - 1 do
+                YPrim_Component.AddElemSym(TermRef[i + k * NW2], TermRef[j + k * NW2], Value);
         end;
     end;
 end;
@@ -1679,21 +1663,21 @@ begin
         idx := 2 * i - 1;
         Y_Term[idx, idx] := yR;
         Y_Term[idx + 1, idx + 1] := yR;
-        Y_Term.SetElemSym(idx, idx + 1, -yR);   // set off-diagonals
+        Y_Term[idx, idx + 1] := -yR;   // set off-diagonals
+        Y_Term[idx + 1, idx] := -yR;   // set off-diagonals
     end;
 
     // For GIC add a small *Conductance* to both conductors of each winding so that
     // the matrix will always invert even if the user neglects to define a voltage
     // reference on all sides
     if ppm_FloatFactor <> 0.0 then
-        with Y_Term do
-            for i := 1 to NumWindings do
-            begin
-                Yadder := -Winding[i].Y_PPM;    // G + j0
-                for j := (2 * i - 1) to (2 * i) do
-                    AddElement(j, j, Yadder);
-                    // SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));
-            end;
+        for i := 1 to NumWindings do
+        begin
+            Yadder := -Winding[i].Y_PPM;    // G + j0
+            for j := (2 * i - 1) to (2 * i) do
+                Y_Term.AddElement(j, j, Yadder);
+                // SetElement(j, j, CmulReal_im(GetElement(j, j) , ppm_FloatFactorPlusOne));
+        end;
 end;
 
 procedure TTransfObj.CalcY_Terminal(FreqMult: Double);
@@ -1745,15 +1729,15 @@ begin
     begin
         for j := i + 1 to Numwindings - 1 do
         begin
-            ZB.SetElemSym(i, j,
-                (
-                    ZB[i, i]
-                    + ZB[j, j]
-                    - Cmplx(
-                        Rmult * (Winding[i + 1].Rpu + Winding[j + 1].Rpu), 
-                        Freqmult * XSC[k]
-                    ) * ZBase
-                ) * 0.5);
+            ZB[i, j] := (
+                ZB[i, i]
+                + ZB[j, j]
+                - Cmplx(
+                    Rmult * (Winding[i + 1].Rpu + Winding[j + 1].Rpu), 
+                    Freqmult * XSC[k]
+                ) * ZBase
+            ) * 0.5;
+            ZB[j, i] := ZB[i, j];
             Inc(k);
         end;
     end;

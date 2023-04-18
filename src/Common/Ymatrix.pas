@@ -141,9 +141,9 @@ begin
     with DSS.ActiveCircuit, Solution do
     begin
         for i := 1 to NumNodes do
-            with MapNodeToBus^[i] do
+            with MapNodeToBus[i] do
             begin
-                NodeVbase^[i] := Buses^[BusRef].kvbase * 1000.0;
+                NodeVbase^[i] := Buses[BusRef].kvbase * 1000.0;
             end;
         VoltageBaseChanged := FALSE;
     end;
@@ -444,9 +444,9 @@ begin
         begin
             if LogEvents then
                 LogThisEvent(DSS, _('Reallocating Solution Arrays'));
-            ReAllocMem(NodeV, SizeOf(NodeV^[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
-            NodeV^[0] := 0;
-            ReAllocMem(Currents, SizeOf(Currents^[1]) * (NumNodes + 1)); // Allocate System current array
+            ReAllocMem(NodeV, SizeOf(NodeV[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
+            NodeV[0] := 0;
+            ReAllocMem(Currents, SizeOf(Currents[1]) * (NumNodes + 1)); // Allocate System current array
             ReAllocMem(AuxCurrents, SizeOf(AuxCurrents^[1]) * (NumNodes + 1)); // Allocate System current array
             if (VMagSaved <> NIL) then
                 ReallocMem(VMagSaved, 0);
@@ -502,7 +502,7 @@ begin
         begin
             GetMatrixElement(hY, i, i, @c);
             if Cabs(C) = 0.0 then
-                with MapNodeToBus^[i] do
+                with MapNodeToBus[i] do
                 begin
                     Result := Result + Format(_('%sZero diagonal for bus %s, node %d'), [CRLF, BusList.NameOfIndex(Busref), NodeNum]);
                 end;
@@ -511,7 +511,7 @@ begin
     // new diagnostics
         GetSingularCol(hY, @sCol); // returns a 1-based node number
         if sCol > 0 then
-            with MapNodeToBus^[sCol] do
+            with MapNodeToBus[sCol] do
             begin
                 Result := Result + Format(_('%sMatrix singularity at bus %s, node %d'), [CRLF, BusList.NameOfIndex(Busref), sCol]);
             end;
@@ -534,7 +534,7 @@ begin
                             iFirst := p + 1;
                     end;
                 end;
-                with MapNodeToBus^[iFirst] do
+                with MapNodeToBus[iFirst] do
                 begin
                     Result := Result + CRLF + Format(_('  #%d has %d nodes, including bus %s (node %d)'), [i, iCount, BusList.NameOfIndex(Busref), iFirst]);
                 end;

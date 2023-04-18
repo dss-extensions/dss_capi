@@ -134,13 +134,13 @@ begin
                 GetCurrents(cBuffer);
 
                 for i := 1 to 3 * NTerms do
-                    i012^[i] := 0;   // Initialize Result
+                    i012[i] := 0;   // Initialize Result
                 iV := 2;  // pos seq is 2nd element in array
                 // Populate only phase 1 quantities in Pos seq
                 for j := 1 to NTerms do
                 begin
                     k := (j - 1) * NConds;
-                    i012^[iV] := cBuffer^[1 + k];
+                    i012[iV] := cBuffer[1 + k];
                     Inc(iV, 3);  // inc to pos seq of next terminal
                 end;
                 Reallocmem(cBuffer, 0);
@@ -148,7 +148,7 @@ begin
            // if neither 3-phase or pos seq model, just put in -1.0 for each element
             else
                 for i := 1 to 3 * NTerms do
-                    i012^[i] := Cmplx(-1.0, 0.0);  // Signify n/A
+                    i012[i] := -1;  // Signify n/A
         end
         else
         begin    // for 3-phase elements
@@ -160,12 +160,12 @@ begin
             begin
                 k := (j - 1) * NConds;
                 for i := 1 to 3 do
-                    Iph[i] := cBuffer^[k + i];
+                    Iph[i] := cBuffer[k + i];
                 Phase2SymComp(@Iph, @I012a);
 
                 for i := 1 to 3 do
                 begin     // Stuff it in the result array
-                    i012^[iV] := i012a[i];
+                    i012[iV] := i012a[i];
                     Inc(iV);
                 end;
             end;
@@ -190,20 +190,20 @@ begin
             if (Nphases = 1) and PositiveSequence then
             begin
                 for i := 1 to 3 * NTerms do
-                    V012^[i] := 0;   // Initialize Result
+                    V012[i] := 0;   // Initialize Result
                 iV := 2;  // pos seq is 2nd element in array
                 {Populate only phase 1 quantities in Pos seq}
                 for j := 1 to NTerms do
                 begin
                     k := (j - 1) * NConds;
-                    V012^[iV] := Solution.NodeV^[NodeRef^[1 + k]];
+                    V012[iV] := Solution.NodeV[NodeRef[1 + k]];
                     Inc(iV, 3);  // inc to pos seq of next terminal
                 end;
             end
            // if neither 3-phase or pos seq model, just put in -1.0 for each element
             else
                 for i := 1 to 3 * NTerms do
-                    V012^[i] := Cmplx(-1.0, 0.0);  // Signify n/A
+                    V012[i] := -1;  // Signify n/A
         end
         else
         begin    // for 3-phase elements
@@ -212,12 +212,12 @@ begin
             begin
                 k := (j - 1) * NConds;
                 for i := 1 to 3 do
-                    Vph[i] := Solution.NodeV^[NodeRef^[i + k]];
+                    Vph[i] := Solution.NodeV[NodeRef[i + k]];
                 Phase2SymComp(@Vph, @V012a);   // Compute Symmetrical components
 
                 for i := 1 to 3 do
                 begin     // Stuff it in the result array
-                    V012^[iV] := V012a[i];
+                    V012[iV] := V012a[i];
                     Inc(iV);
                 end;
             end;
@@ -393,8 +393,8 @@ begin
         iV := 0;
         for i := 1 to NConds * Nterms do
         begin
-            n := ActiveCktElement.NodeRef^[i];
-            Volts := Solution.NodeV^[n]; // ok if =0
+            n := ActiveCktElement.NodeRef[i];
+            Volts := Solution.NodeV[n]; // ok if =0
             Result[iV] := Volts.re;
             Inc(iV);
             Result[iV] := Volts.im;
@@ -560,7 +560,7 @@ begin
             _CalcSeqCurrents(ActiveCktElement, i012);
             // return 0 based array
             for i := 1 to 3 * Nterms do
-                Result[i - 1] := Cabs(i012^[i]);  // return mag only
+                Result[i - 1] := Cabs(i012[i]);  // return mag only
 
             Reallocmem(i012, 0);  // throw away temp memory
 
@@ -618,9 +618,9 @@ begin
                 for j := 1 to NTerms do
                 begin
                     k := (j - 1) * NConds;
-                    n := NodeRef^[k + 1];
-                    Vph[1] := Solution.NodeV^[n];  // Get voltage at node
-                    S := Vph[1] * cong(cBuffer^[k + 1]);   // Compute power per phase
+                    n := NodeRef[k + 1];
+                    Vph[1] := Solution.NodeV[n];  // Get voltage at node
+                    S := Vph[1] * cong(cBuffer[k + 1]);   // Compute power per phase
                     Result[icount] := S.re * 0.003; // 3-phase kW conversion
                     inc(icount);
                     Result[icount] := S.im * 0.003; // 3-phase kvar conversion
@@ -642,9 +642,9 @@ begin
             begin
                 k := (j - 1) * NConds;
                 for i := 1 to 3 do
-                    Vph[i] := Solution.NodeV^[NodeRef^[i + k]];
+                    Vph[i] := Solution.NodeV[NodeRef[i + k]];
                 for i := 1 to 3 do
-                    Iph[i] := cBuffer^[k + i];
+                    Iph[i] := cBuffer[k + i];
                 Phase2SymComp(@Iph, @I012);
                 Phase2SymComp(@Vph, @V012);
                 for i := 1 to 3 do
@@ -699,7 +699,7 @@ begin
             CalcSeqVoltages(ActiveCktElement, V012);
             // return 0 based array
             for i := 1 to 3 * Nterms do
-                Result[i - 1] := Cabs(V012^[i]);  // return mag only
+                Result[i - 1] := Cabs(V012[i]);  // return mag only
 
             Reallocmem(V012, 0);  // throw away temp memory
 
@@ -821,7 +821,7 @@ begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumProperties);
         for k := 1 to NumProperties do
         begin
-            Result[k - 1] := DSS_CopyStringAsPChar(PropertyName^[k]);
+            Result[k - 1] := DSS_CopyStringAsPChar(PropertyName[k]);
         end;
     end;
 end;
@@ -870,7 +870,7 @@ begin
             for j := 1 to Nconds do
             begin
                 inc(k);
-                cResid += CBuffer^[k];
+                cResid += CBuffer[k];
             end;
             Result[iV] := Cabs(cResid);
             Inc(iV);
@@ -1283,7 +1283,7 @@ begin
         begin
             for j := (i - 1) * NConds + 1 to i * Nconds do
             begin
-                Result[k] := GetNodeNum(DSSPrime, NodeRef^[j]);
+                Result[k] := GetNodeNum(DSSPrime, NodeRef[j]);
                 inc(k);
             end;
         end;
@@ -1379,7 +1379,7 @@ begin
         iV := 0;
         for i := 1 to NValues do
         begin
-            CMagAng := ctopolardeg(cBuffer^[i]); // convert to mag/angle
+            CMagAng := ctopolardeg(cBuffer[i]); // convert to mag/angle
             Result[iV] := CMagAng.mag;
             Inc(iV);
             Result[iV] := CMagAng.ang;
@@ -1417,8 +1417,8 @@ begin
         iV := 0;
         for i := 1 to numcond do
         begin
-            n := ActiveCktElement.NodeRef^[i];
-            Volts := ctopolardeg(Solution.NodeV^[n]); // ok if =0
+            n := ActiveCktElement.NodeRef[i];
+            Volts := ctopolardeg(Solution.NodeV[n]); // ok if =0
             Result[iV] := Volts.mag;
             Inc(iV);
             Result[iV] := Volts.ang;
@@ -1475,7 +1475,7 @@ begin
             myEnd := NConds * j;
             for i := myInit to myEnd do
             begin
-                buffer[j - 1] := buffer[j - 1] + cBuffer^[i];
+                buffer[j - 1] := buffer[j - 1] + cBuffer[i];
             end;
             Result[iV + 0] := buffer[j - 1].re * 0.001;
             Result[iV + 1] := buffer[j - 1].im * 0.001; 

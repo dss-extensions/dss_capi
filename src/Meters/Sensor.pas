@@ -321,7 +321,7 @@ var
     CktElem: TDSSCktElement;
 begin
     // Initialize all to FALSE
-    with  ActiveCircuit do
+    with ActiveCircuit do
     begin
         CktElem := PDElements.First;
         while CktElem <> NIL do
@@ -530,7 +530,7 @@ var
 begin
     // Return array of zero
     for i := 1 to Fnconds do
-        Curr^[i] := 0;
+        Curr[i] := 0;
 end;
 
 procedure TSensorObj.UpdateCurrentVector;

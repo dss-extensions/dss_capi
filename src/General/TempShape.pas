@@ -299,16 +299,16 @@ begin
     Other := TObj(OtherPtr);
     FNumPoints := Other.NumPoints;
     Interval := Other.Interval;
-    ReallocMem(TValues, SizeOf(TValues^[1]) * NumPoints);
+    ReallocMem(TValues, SizeOf(TValues[1]) * NumPoints);
     for i := 1 to NumPoints do
-        TValues^[i] := Other.TValues^[i];
+        TValues[i] := Other.TValues[i];
     if Interval > 0.0 then
         ReallocMem(Hours, 0)
     else
     begin
-        ReallocMem(Hours, SizeOf(Hours^[1]) * NumPoints);
+        ReallocMem(Hours, SizeOf(Hours[1]) * NumPoints);
         for i := 1 to NumPoints do
-            Hours^[i] := Other.Hours^[i];
+            Hours[i] := Other.Hours[i];
     end;
 end;
 
@@ -357,7 +357,7 @@ begin
 
     if FNumPoints = 1 then
     begin
-        Result := TValues^[1];
+        Result := TValues[1];
         Exit;
     end;
 
@@ -368,7 +368,7 @@ begin
             Index := Index mod FNumPoints;  // Wrap around using remainder
         if Index = 0 then
             Index := FNumPoints;
-        Result := TValues^[Index];
+        Result := TValues[Index];
         Exit;
     end;
 
@@ -378,34 +378,34 @@ begin
     // of the time, this FUNCTION will be called sequentially
 
     // Normalize Hr to max hour in curve to get wraparound
-    if (Hr > Hours^[FNumPoints]) then
+    if (Hr > Hours[FNumPoints]) then
     begin
-        Hr := Hr - Trunc(Hr / Hours^[FNumPoints]) * Hours^[FNumPoints];
+        Hr := Hr - Trunc(Hr / Hours[FNumPoints]) * Hours[FNumPoints];
     end;
 
-    if (Hours^[LastValueAccessed] > Hr) then
+    if (Hours[LastValueAccessed] > Hr) then
         LastValueAccessed := 1;  // Start over from Beginning
     for i := LastValueAccessed + 1 to FNumPoints do
     begin
-        if (Abs(Hours^[i] - Hr) < 0.00001) then  // If close to an actual point, just use it.
+        if (Abs(Hours[i] - Hr) < 0.00001) then  // If close to an actual point, just use it.
         begin
-            Result := TValues^[i];
+            Result := TValues[i];
             LastValueAccessed := i;
             Exit;
         end
         else
-        if (Hours^[i] > Hr) then      // Interpolate for temperature
+        if (Hours[i] > Hr) then      // Interpolate for temperature
         begin
             LastValueAccessed := i - 1;
-            Result := TValues^[LastValueAccessed] +
-                (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed]) *
-                (TValues^[i] - TValues^[LastValueAccessed]);
+            Result := TValues[LastValueAccessed] +
+                (Hr - Hours[LastValueAccessed]) / (Hours[i] - Hours[LastValueAccessed]) *
+                (TValues[i] - TValues[LastValueAccessed]);
             Exit;
         end;
     end;
     // If we fall through the loop, just use last value
     LastValueAccessed := FNumPoints - 1;
-    Result := TValues^[FNumPoints];
+    Result := TValues[FNumPoints];
 end;
 
 procedure TTShapeObj.CalcMeanandStdDev;
@@ -426,7 +426,7 @@ begin
     else
     begin
         if LastValueAccessed > 1 then
-            Result := Hours^[LastValueAccessed] - Hours^[LastValueAccessed - 1]
+            Result := Hours[LastValueAccessed] - Hours[LastValueAccessed - 1]
         else
             Result := 0.0;
     end;
@@ -450,7 +450,7 @@ function TTShapeObj.Temperature(i: Integer): Double;
 begin
     if (i <= FNumPoints) and (i > 0) then
     begin
-        Result := TValues^[i];
+        Result := TValues[i];
         LastValueAccessed := i;
     end
     else
@@ -463,7 +463,7 @@ begin
     begin
         if (i <= FNumPoints) and (i > 0) then
         begin
-            Result := Hours^[i];
+            Result := Hours[i];
             LastValueAccessed := i;
         end
         else
@@ -471,7 +471,7 @@ begin
     end
     else
     begin
-        Result := Hours^[i] * Interval;
+        Result := Hours[i] * Interval;
         LastValueAccessed := i;
     end;
 end;
@@ -489,7 +489,7 @@ begin
     try
         FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s.dbl', [Name]);
         F := TBufferedFileStream.Create(FName, fmCreate);
-        F.WriteBuffer(TValues^[1], NumPoints * SizeOf(Double));
+        F.WriteBuffer(TValues[1], NumPoints * SizeOf(Double));
         DSS.GlobalResult := 'Temp=[dblfile=' + FName + ']';
     finally
         FreeAndNil(F);
@@ -513,7 +513,7 @@ begin
         F := TBufferedFileStream.Create(FName, fmCreate);
         for i := 1 to NumPoints do
         begin
-            Temp := TValues^[i];
+            Temp := TValues[i];
             F.WriteBuffer(Temp, SizeOf(Temp));
         end;
         DSS.GlobalResult := 'Temp=[sngfile=' + FName + ']';

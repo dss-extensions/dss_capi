@@ -529,8 +529,8 @@ begin
       // Calculate the present average voltage  magnitude
             PVSys.ComputeVTerminal;
             for j := 1 to PVSys.Yorder do
-                cBuffer[j] := PVSys.Vterminal^[j];
-            BasekV := ActiveCircuit.Buses^[PVSys.terminals[0].busRef].kVBase;
+                cBuffer[j] := PVSys.Vterminal[j];
+            BasekV := ActiveCircuit.Buses[PVSys.terminals[0].busRef].kVBase;
             Vpresent := 0;
             for j := 1 to PVSys.NPhases do
                 Vpresent := Vpresent + Cabs(cBuffer[j]);
@@ -566,7 +566,7 @@ begin
             begin
                 FWithinTol[i] := FALSE;
                 Set_PendingChange(CHANGEVARLEVEL, i);
-                with  ActiveCircuit.Solution.DynaVars do
+                with ActiveCircuit.Solution.DynaVars do
                     ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ' ' + PVSys.Name, Format(' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr, Qerr]));

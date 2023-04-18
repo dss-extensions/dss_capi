@@ -752,10 +752,10 @@ begin
             Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
 
             // Allocate a buffer big enough to hold everything from the monitored element
-            ReAllocMem(cBuffer, SizeOf(cbuffer^[1]) * MonitoredElement.Yorder);
+            ReAllocMem(cBuffer, SizeOf(cbuffer[1]) * MonitoredElement.Yorder);
 
             if (ControlType = Distance) or (ControlType = TD21) or (ControlType = DOC) then
-                ReAllocMem(cvBuffer, SizeOf(cvBuffer^[1]) * MonitoredElement.Yorder);
+                ReAllocMem(cvBuffer, SizeOf(cvBuffer[1]) * MonitoredElement.Yorder);
 
             CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
 
@@ -853,10 +853,10 @@ begin
         Setbus(1, MonitoredElement.GetBus(ElementTerminal));
 
         // Allocate a buffer big enough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOf(cbuffer^[1]) * MonitoredElement.Yorder);
+        ReAllocMem(cBuffer, SizeOf(cbuffer[1]) * MonitoredElement.Yorder);
 
         if (ControlType = Distance) or (ControlType = TD21) or (ControlType = DOC) then
-            ReAllocMem(cvBuffer, SizeOf(cvBuffer^[1]) * MonitoredElement.Yorder);
+            ReAllocMem(cvBuffer, SizeOf(cvBuffer[1]) * MonitoredElement.Yorder);
 
         CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
     end;
@@ -1098,7 +1098,7 @@ begin
         MonitoredElement.ActiveTerminalIdx := MonitoredElementTerminal;
         MonitoredElement.GetCurrents(cBuffer);
         iOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds;  // offset for active terminal
-        Phase2SymComp(pComplexArray(@cBuffer^[iOffset + 1]), pComplexArray(@I012));
+        Phase2SymComp(pComplexArray(@cBuffer[iOffset + 1]), pComplexArray(@I012));
         NegSeqCurrentMag := Cabs(I012[3]);
         if NegSeqCurrentMag >= PickupAmps46 then
         begin
@@ -1156,7 +1156,7 @@ begin
                 Csum := 0;
                 for i := (1 + CondOffset) to (Fnphases + CondOffset) do
                 begin
-                    Csum += cBuffer^[i];
+                    Csum += cBuffer[i];
                 end;
                 Cmag := Cabs(Csum);
                 if (GroundInst > 0.0) and (Cmag >= GroundInst) and (OperationCount = 1) then
@@ -1193,7 +1193,7 @@ begin
             begin
                 for i := (1 + CondOffset) to (Fnphases + CondOffset) do
                 begin
-                    Cmag := Cabs(cBuffer^[i]);
+                    Cmag := Cabs(cBuffer[i]);
                     if (PhaseInst > 0.0) and (Cmag >= PhaseInst) and (OperationCount = 1) then
                     begin
                         PhaseTime := 0.01 + Breaker_time;  // Inst trip on first operation
@@ -1290,11 +1290,11 @@ begin
 
         if Dist_Reverse then
             for i := 1 to MonitoredElement.NPhases do
-                cBuffer^[i + CondOffset] := -cBuffer^[i + CondOffset];
+                cBuffer[i + CondOffset] := -cBuffer[i + CondOffset];
 
         Ires := 0;
         for i := 1 to MonitoredElement.Nphases do
-            Ires += cBuffer^[i + CondOffset];
+            Ires += cBuffer[i + CondOffset];
 
         kIres := Dist_K0 * Ires;
         MonitoredElement.GetTermVoltages(MonitoredElementTerminal, cvBuffer);
@@ -1305,14 +1305,14 @@ begin
             begin
                 if (i = j) then
                 begin
-                    Vloop := cvBuffer^[i];
-                    Iloop := cBuffer^[i + CondOffset] + kIres;
+                    Vloop := cvBuffer[i];
+                    Iloop := cBuffer[i + CondOffset] + kIres;
                     Zreach := Dist_Z1 * Mground; // not Dist_Z0 because it's included in Dist_K0
                 end
                 else
                 begin
-                    Vloop := cvBuffer^[i] - cvBuffer^[j];
-                    Iloop := cBuffer^[i + CondOffset] - cBuffer^[j + CondOffset];
+                    Vloop := cvBuffer[i] - cvBuffer[j];
+                    Iloop := cBuffer[i + CondOffset] - cBuffer[j + CondOffset];
                     Zreach := Dist_Z1 * Mphase;
                 end;
 
@@ -1424,10 +1424,10 @@ begin
             td21_pt := i;
             td21_quiet := td21_pt + 1;
             td21_stride := 2 * Nphases;
-            ReAllocMem(td21_h, SizeOf(td21_h^[1]) * td21_stride * td21_pt);
-            ReAllocMem(td21_dV, SizeOf(td21_dV^[1]) * Nphases);
-            ReAllocMem(td21_Uref, SizeOf(td21_Uref^[1]) * Nphases);
-            ReAllocMem(td21_dI, SizeOf(td21_dI^[1]) * Nphases);
+            ReAllocMem(td21_h, SizeOf(td21_h[1]) * td21_stride * td21_pt);
+            ReAllocMem(td21_dV, SizeOf(td21_dV[1]) * Nphases);
+            ReAllocMem(td21_Uref, SizeOf(td21_Uref[1]) * Nphases);
+            ReAllocMem(td21_dI, SizeOf(td21_dI[1]) * Nphases);
             if DebugTrace then
                 AppendToEventLog(self.FullName,
                     Format(
@@ -1448,12 +1448,12 @@ begin
 
         if Dist_Reverse then
             for i := 1 to MonitoredElement.NPhases do
-                cBuffer^[i+CondOffset] := -cBuffer^[i+CondOffset];
+                cBuffer[i+CondOffset] := -cBuffer[i+CondOffset];
 
         i2fault := PhaseTrip * PhaseTrip;
         for i := 1 to Nphases do
         begin
-            i2 := cabs2 (cBuffer^[i+CondOffset]);
+            i2 := cabs2 (cBuffer[i+CondOffset]);
             if i2 > i2fault then
                 FaultDetected := True;
         end;
@@ -1476,9 +1476,9 @@ begin
                 for j := 1 to Nphases do
                 begin
                     iv := ib + j;
-                    td21_h^[iv] := cvBuffer^[j];
+                    td21_h[iv] := cvBuffer[j];
                     ii := ib + Nphases + j;
-                    td21_h^[ii] := cBuffer^[j+CondOffset];
+                    td21_h[ii] := cBuffer[j+CondOffset];
                 end;
             end;
             td21_i := 1;
@@ -1491,10 +1491,10 @@ begin
         for j := 1 to Nphases do
         begin
             iv := ib + j;
-            td21_Uref^[j] := td21_h^[iv];
-            td21_dV^[j] := cvBuffer^[j] - td21_h^[iv];
+            td21_Uref[j] := td21_h[iv];
+            td21_dV[j] := cvBuffer[j] - td21_h[iv];
             ii := ib + Nphases + j;
-            td21_dI^[j] := cBuffer^[j+CondOffset] - td21_h^[ii];
+            td21_dI[j] := cBuffer[j+CondOffset] - td21_h[ii];
         end;
 
         // do the relay processing
@@ -1504,9 +1504,9 @@ begin
             for j := 1 to Nphases do
             begin
                 iv := ib + j;
-                td21_h^[iv] := cvBuffer^[j];
+                td21_h[iv] := cvBuffer[j];
                 ii := ib + Nphases + j;
-                td21_h^[ii] := cBuffer^[j+CondOffset];
+                td21_h[ii] := cBuffer[j+CondOffset];
             end;
             td21_i := td21_next;
 
@@ -1520,7 +1520,7 @@ begin
             min_distance := 1.0e30;
             Ires := 0;
             for i := 1 to MonitoredElement.Nphases do
-                Ires += td21_dI^[i];
+                Ires += td21_dI[i];
 
             kIres := Dist_K0 * Ires;
             for i := 1 to MonitoredElement.NPhases do
@@ -1529,16 +1529,16 @@ begin
                 begin
                     if (i = j) then
                     begin
-                        Uref := td21_Uref^[i];
-                        Vloop := td21_dV^[i];
-                        Iloop := td21_dI^[i] + kIres;
+                        Uref := td21_Uref[i];
+                        Vloop := td21_dV[i];
+                        Iloop := td21_dI[i] + kIres;
                         Zhsd := Dist_Z1 * Mground; // not Dist_Z0 because it's included in Dist_K0
                     end
                     else
                     begin
-                        Uref := td21_Uref^[i] - td21_Uref^[j];
-                        Vloop := td21_dV^[i] - td21_dV^[j];
-                        Iloop := td21_dI^[i] - td21_dI^[j];
+                        Uref := td21_Uref[i] - td21_Uref[j];
+                        Vloop := td21_dV[i] - td21_dV[j];
+                        Iloop := td21_dI[i] - td21_dI[j];
                         Zhsd := Dist_Z1 * Mphase;
                     end;
 
@@ -1740,17 +1740,17 @@ begin
 
             // Shift angle to cBuffer to be relative to cvBuffer
             for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                cBuffer^[i] := PDEGtoCompLeX(Cabs(cBuffer^[i]), CDANG(cBuffer^[i]) - CDANG(cvBuffer^[i - CondOffset]));
+                cBuffer[i] := PDEGtoCompLeX(Cabs(cBuffer[i]), CDANG(cBuffer[i]) - CDANG(cvBuffer[i - CondOffset]));
 
             for i := (1 + CondOffset) to (Fnphases + CondOffset) do
             begin
                 TimeTest := -1.0;
-                Cmag := Cabs(cBuffer^[i]);
-                Cangle := Cdang(cBuffer^[i]);
+                Cmag := Cabs(cBuffer[i]);
+                Cangle := Cdang(cBuffer[i]);
 
                 if (DOC_TiltAngleLow = 90.0) or (DOC_TiltAngleLow = 270.0) then
                 begin
-                    if cBuffer^[i].re <= -1 * DOC_TripSetLow then
+                    if cBuffer[i].re <= -1 * DOC_TripSetLow then
                     begin
                         if (DOC_TripSetMag > 0.0) then
                         begin // Circle Specified.
@@ -1760,7 +1760,7 @@ begin
                                 begin
                                     if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
                                     begin
-                                        if cBuffer^[i].re < -1 * DOC_TripSetHigh then
+                                        if cBuffer[i].re < -1 * DOC_TripSetHigh then
                                         begin // Left-side of High Straight-Line
                                             if Delay_Time > 0.0 then
                                                 TimeTest := Delay_Time
@@ -1785,7 +1785,7 @@ begin
                                     end
                                     else
                                     begin
-                                        if cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) then
+                                        if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
                                         begin // Left-side of High Straight-Line
                                             if Delay_Time > 0.0 then
                                                 TimeTest := Delay_Time
@@ -1839,7 +1839,7 @@ begin
                             begin // High Straight-Line Specified.
                                 if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
                                 begin
-                                    if cBuffer^[i].re < -1 * DOC_TripSetHigh then
+                                    if cBuffer[i].re < -1 * DOC_TripSetHigh then
                                     begin // Left-side of High Straight-Line
                                         if Delay_Time > 0.0 then
                                             TimeTest := Delay_Time
@@ -1864,7 +1864,7 @@ begin
                                 end
                                 else
                                 begin
-                                    if cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) then
+                                    if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
                                     begin // Left-side of High Straight-Line
                                         if Delay_Time > 0.0 then
                                             TimeTest := Delay_Time
@@ -1904,7 +1904,7 @@ begin
                 end
                 else
                 begin // 90, 270
-                    if cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleLow)) * (cBuffer^[i].re + DOC_TripSetLow) then
+                    if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleLow)) * (cBuffer[i].re + DOC_TripSetLow) then
                     begin
                         if DOC_TripSetMag > 0.0 then
                         begin // Circle Specified.
@@ -1914,7 +1914,7 @@ begin
                                 begin
                                     if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
                                     begin
-                                        if cBuffer^[i].re < -1 * DOC_TripSetHigh then
+                                        if cBuffer[i].re < -1 * DOC_TripSetHigh then
                                         begin // Left-side of High Straight-Line
                                             if Delay_Time > 0.0 then
                                                 TimeTest := Delay_Time
@@ -1939,7 +1939,7 @@ begin
                                     end
                                     else
                                     begin
-                                        if cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) then
+                                        if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
                                         begin // Left-side of High Straight-Line
                                             if Delay_Time > 0.0 then
                                                 TimeTest := Delay_Time
@@ -1994,7 +1994,7 @@ begin
                             begin // High Straight-Line Specified.
                                 if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
                                 begin
-                                    if cBuffer^[i].re < -1 * DOC_TripSetHigh then
+                                    if cBuffer[i].re < -1 * DOC_TripSetHigh then
                                     begin // Left-side of High Straight-Line
 
                                         if Delay_Time > 0.0 then
@@ -2020,7 +2020,7 @@ begin
                                 end
                                 else
                                 begin
-                                    if cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) then
+                                    if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
                                     begin // Left-side of High Straight-Line
                                         if Delay_Time > 0.0 then
                                             TimeTest := Delay_Time
@@ -2065,7 +2065,7 @@ begin
                         begin
                             if (DOC_TiltAngleHigh = 90.0) or (DOC_TiltAngleHigh = 270.0) then
                             begin
-                                if cBuffer^[i].re < -1 * DOC_TripSetHigh then
+                                if cBuffer[i].re < -1 * DOC_TripSetHigh then
                                 begin // Left-side of High Straight-Line
                                     if Delay_Time > 0.0 then
                                         TimeTest := Delay_Time
@@ -2079,7 +2079,7 @@ begin
                             end
                             else
                             begin
-                                if cBuffer^[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer^[i].re + DOC_TripSetHigh) then
+                                if cBuffer[i].im < Tan(DegToRad(DOC_TiltAngleHigh)) * (cBuffer[i].re + DOC_TripSetHigh) then
                                 begin // Left-side of High Straight-Line
                                     if Delay_Time > 0.0 then
                                         TimeTest := Delay_Time
@@ -2187,7 +2187,7 @@ begin
         Vmax := 0.0;
         for i := 1 to MonitoredElement.NPhases do
         begin
-            Vmag := Cabs(cBuffer^[i]);
+            Vmag := Cabs(cBuffer[i]);
             if Vmag > Vmax then
                 Vmax := Vmag;
             if Vmag < Vmin then

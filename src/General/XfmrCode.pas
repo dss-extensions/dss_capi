@@ -345,46 +345,46 @@ begin
             Reallocmem(Winding, Sizeof(TWinding) * MaxWindings);  // Reallocate collector array
             for i := 1 to MaxWindings do
                 Winding[i].Init();
-            ReAllocmem(XSC, SizeOF(XSC^[1]) * NewXSCSize);
+            ReAllocmem(XSC, SizeOF(XSC[1]) * NewXSCSize);
             for i := OldXSCSize + 1 to NewXSCSize do
             begin
-                XSC^[i] := 0.30;   // default to something
+                XSC[i] := 0.30;   // default to something
             end
         end;
         ord(TProp.kVA):
             if (ActiveWinding = 1) then
             begin
                 for i := 2 to NumWindings do
-                    Winding^[i].kVA := Winding^[1].kVA;
-                NormMaxHkVA := 1.1 * Winding^[1].kVA;    // Defaults for new winding rating.
-                EmergMaxHkVA := 1.5 * Winding^[1].kVA;
+                    Winding[i].kVA := Winding[1].kVA;
+                NormMaxHkVA := 1.1 * Winding[1].kVA;    // Defaults for new winding rating.
+                EmergMaxHkVA := 1.5 * Winding[1].kVA;
             end
             else
             if NumWindings = 2 then
             begin
-                Winding^[1].kVA := Winding^[2].kVA;  // For 2-winding, force both kVAs to be same
+                Winding[1].kVA := Winding[2].kVA;  // For 2-winding, force both kVAs to be same
             end;
         // Update LoadLosskW if winding %r changed. Using only windings 1 and 2
         ord(TProp.pctR):
-            pctLoadLoss := (Winding^[1].Rpu + Winding^[2].Rpu) * 100.0;
+            pctLoadLoss := (Winding[1].Rpu + Winding[2].Rpu) * 100.0;
         ord(TProp.kVAs):
         begin
-            NormMaxHkVA := 1.1 * Winding^[1].kVA;    // Defaults for new winding rating.
-            EmergMaxHkVA := 1.5 * Winding^[1].kVA;
+            NormMaxHkVA := 1.1 * Winding[1].kVA;    // Defaults for new winding rating.
+            EmergMaxHkVA := 1.5 * Winding[1].kVA;
         end;
         15..17:
             Include(Flags, Flg.NeedsRecalc);
         24:
         begin    // Assume load loss is split evenly  between windings 1 and 2
-            Winding^[1].Rpu := pctLoadLoss / 2.0 / 100.0;
-            Winding^[2].Rpu := Winding^[1].Rpu;
+            Winding[1].Rpu := pctLoadLoss / 2.0 / 100.0;
+            Winding[2].Rpu := Winding[1].Rpu;
         end;
         33:
-            pctLoadLoss := (Winding^[1].Rpu + Winding^[2].Rpu) * 100.0; // Keep this up to date
+            pctLoadLoss := (Winding[1].Rpu + Winding[2].Rpu) * 100.0; // Keep this up to date
         34..36:
             Include(Flags, Flg.NeedsRecalc);
         37:
-            Winding^[ActiveWinding].RdcSpecified := TRUE;
+            Winding[ActiveWinding].RdcSpecified := TRUE;
         38:
             SetLength(kVARatings, NumkVARatings);
     end;
@@ -404,11 +404,11 @@ begin
                 for i := 1 to (NumWindings - 1) * NumWindings div 2 do
                     case i of
                         1:
-                            XSC^[1] := XHL;
+                            XSC[1] := XHL;
                         2:
-                            XSC^[2] := XHT;
+                            XSC[2] := XHT;
                         3:
-                            XSC^[3] := XLT;
+                            XSC[3] := XLT;
                     end;
         end;
         Exclude(Flags, Flg.EditionActive);
@@ -427,13 +427,13 @@ begin
     FNphases := Other.FNphases;
     SetNumWindings(Other.NumWindings);
     for i := 1 to NumWindings do
-        Winding^[i] := Other.Winding^[i];
+        Winding[i] := Other.Winding[i];
 
     XHL := Other.XHL;
     XHT := Other.XHT;
     XLT := Other.XLT;
     for i := 1 to (NumWindings * (NumWindings - 1) div 2) do
-        XSc^[i] := Other.XSC^[i];
+        XSc[i] := Other.XSC[i];
     ThermalTimeConst := Other.ThermalTimeConst;
     n_thermal := Other.n_thermal;
     m_thermal := Other.m_thermal;
@@ -469,20 +469,20 @@ begin
     XHL := 0.07;
     XHT := 0.35;
     XLT := 0.30;
-    XSC := Allocmem(SizeOF(XSC^[1]) * ((NumWindings - 1) * NumWindings div 2));
-    VABase := Winding^[1].kVA * 1000.0;
+    XSC := Allocmem(SizeOF(XSC[1]) * ((NumWindings - 1) * NumWindings div 2));
+    VABase := Winding[1].kVA * 1000.0;
     ThermalTimeconst := 2.0;
     n_thermal := 0.8;
     m_thermal := 0.8;
     FLrise := 65.0;
     HSrise := 15.0;  // Hot spot rise
-    NormMaxHkVA := 1.1 * Winding^[1].kVA;
-    EmergMaxHkVA := 1.5 * Winding^[1].kVA;
-    pctLoadLoss := 2.0 * Winding^[1].Rpu * 100.0; //  assume two windings
+    NormMaxHkVA := 1.1 * Winding[1].kVA;
+    EmergMaxHkVA := 1.5 * Winding[1].kVA;
+    pctLoadLoss := 2.0 * Winding[1].Rpu * 100.0; //  assume two windings
     ppm_FloatFactor := 0.000001;
     // Compute antifloat added for each winding
     for i := 1 to NumWindings do
-        Winding^[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase / FNPhases);
+        Winding[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase / FNPhases);
     pctNoLoadLoss := 0.0;
     pctImag := 0.0;
 
@@ -538,7 +538,7 @@ begin
 
     for i := 1 to NumWindings do
     begin
-        with Winding^[i] do
+        with Winding[i] do
         begin
             FSWriteln(F, '~ Wdg=' + IntToStr(i));
 
@@ -566,7 +566,7 @@ begin
     FSWriteln(F, Format('~ X23=%.3f', [xlt * 100.0]));
     FSWrite(F, '~ Xscmatrix= "');
     for i := 1 to (NumWindings - 1) * NumWindings div 2 do
-        FSWrite(F, Format('%.2f ', [Xsc^[i] * 100.0]));
+        FSWrite(F, Format('%.2f ', [Xsc[i] * 100.0]));
     FSWriteln(F, '"');
     FSWriteln(F, Format('~ NormMAxHkVA=%.0f', [NormMAxHkVA]));
     FSWriteln(F, Format('~ EmergMAxHkVA=%.0f', [EmergMAxHkVA]));
@@ -579,12 +579,12 @@ begin
     FSWriteln(F, Format('~ %%noloadloss=%.0f', [pctNoLoadLoss]));
 
     for i := 28 to NumPropsThisClass do
-        FSWriteln(F, '~ ' + ParentClass.PropertyName^[i] + '=' + PropertyValue[i]);
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
 
     with ParentClass do
     begin
         for i := NumPropsthisClass + 1 to NumProperties do
-            FSWriteln(F, '~ ' + PropertyName^[i] + '=' + PropertyValue[i]);
+            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
     end;
 end;
 

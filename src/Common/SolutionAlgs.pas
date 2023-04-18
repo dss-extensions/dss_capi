@@ -895,7 +895,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         for i := 1 to NumBuses do
-            Buses^[i].AllocateBusQuantities;
+            Buses[i].AllocateBusQuantities;
     end;
 end;
 
@@ -908,7 +908,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         for i := 1 to NumBuses do
-            with Buses^[i] do
+            with Buses[i] do
             begin
                 Ysc.MVMult(BusCurrent, VBus);
             end;
@@ -925,7 +925,7 @@ var
 begin
     with DSS.ActiveCircuit, Solution do
     begin
-        with Buses^[iB] do
+        with Buses[iB] do
         begin
             Zsc.Clear;
             for i := 1 to NumNodesThisBus do
@@ -958,7 +958,7 @@ begin
     with DSS.ActiveCircuit, Solution do
     begin
         for j := 1 to NumNodes do
-            Currents^[j] := 0;
+            Currents[j] := 0;
 
         ProgressCount := 0;
 
@@ -1122,7 +1122,7 @@ begin
                     f := GetSourceFrequency(p);
                     for j := 1 to pSpectrum.NumHarm do
                     begin
-                        AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray^[j] * f);
+                        AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray[j] * f);
                     end;
                 end;
             p := Sources.Next;
@@ -1155,7 +1155,7 @@ begin
             pSpectrum := DSS.SpectrumClass.GetActiveObj;
             for j := 1 to pSpectrum.NumHarm do
             begin
-                AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray^[j] * DSS.ActiveCircuit.Fundamental);
+                AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray[j] * DSS.ActiveCircuit.Fundamental);
             end;
         end;
     end;

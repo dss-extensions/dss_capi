@@ -1232,7 +1232,7 @@ begin
     // Initialize to Zero - defaults to PQ Storage element
     // Solution object will reset after circuit modifications
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent[1]) * Yorder);
 
     // Update any user-written models
     if Usermodel.Exists then
@@ -1720,14 +1720,18 @@ begin
                     begin
                         Ymatrix[i, i] := Y;
                         Ymatrix.AddElement(Fnconds, Fnconds, Y);
-                        Ymatrix.SetElemsym(i, Fnconds, Yij);
+                        Ymatrix[i, Fnconds] := Yij;
+                        Ymatrix[Fnconds, i] := Yij;
                     end;
                     1:
                     begin   // Delta connection
                         Ymatrix[i, i] := Y;
                         Ymatrix.AddElement(i, i, Y);  // put it in again
                         for j := 1 to i - 1 do
-                            Ymatrix.SetElemsym(i, j, Yij);
+                        begin
+                            Ymatrix[i, j] := Yij;
+                            Ymatrix[j, i] := Yij;
+                        end;
                     end;
                 end;
             end;
@@ -1761,18 +1765,17 @@ begin
 
         case Connection of
             0:
-                with YMatrix do
                 begin // WYE
                     Yij := -Y;
                     for i := 1 to Fnphases do
                     begin
                         YMatrix[i, i] := Y;
-                        AddElement(Fnconds, Fnconds, Y);
-                        SetElemsym(i, Fnconds, Yij);
+                        YMatrix.AddElement(Fnconds, Fnconds, Y);
+                        YMatrix[i, Fnconds] := Yij;
+                        YMatrix[Fnconds, i] := Yij;
                     end;
                 end;
             1:
-                with YMatrix do
                 begin  // Delta  or L-L
                     Y := Y / 3.0; // Convert to delta impedance
                     Yij := -Y;
@@ -1781,9 +1784,9 @@ begin
                         j := i + 1;
                         if j > Fnconds then
                             j := 1;  // wrap around for closed connections
-                        AddElement(i, i, Y);
-                        AddElement(j, j, Y);
-                        AddElemSym(i, j, Yij);
+                        YMatrix.AddElement(i, i, Y);
+                        YMatrix.AddElement(j, j, Y);
+                        YMatrix.AddElemSym(i, j, Yij);
                     end;
                 end;
         end;
@@ -2091,7 +2094,7 @@ begin
 
     for i := 1 to Fnphases do
     begin
-        Curr := Yeq2 * Vterminal^[i];   // Yeq is always line to neutral
+        Curr := Yeq2 * Vterminal[i];   // Yeq is always line to neutral
         StickCurrInTerminalArray(ITerminal, -Curr, i);  // Put into Terminal array taking into account connection
         set_ITerminalUpdated(TRUE);
         StickCurrInTerminalArray(InjCurrent, Curr, i);  // Put into Terminal array taking into account connection
@@ -2112,7 +2115,7 @@ begin
         with ActiveCircuit.Solution do
         begin          // Negate currents from user model for power flow Storage element model
             for i := 1 to FnConds do
-                InjCurrent^[i] -= Iterminal^[i];
+                InjCurrent[i] -= Iterminal[i];
         end;
     end
     else
@@ -2210,7 +2213,7 @@ begin
     with ActiveCircuit.Solution do
     begin  // Just pass node voltages to ground and let dynamic model take care of it
         for i := 1 to FNconds do
-            VTerminal^[i] := NodeV^[NodeRef^[i]];
+            VTerminal^[i] := NodeV[NodeRef[i]];
         StorageVars.w_grid := TwoPi * Frequency;
     end;
 
@@ -2260,7 +2263,7 @@ begin
 
     // Handle Wye Connection
     if Connection = 0 then
-        pBuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
+        pBuffer[Fnconds] := Vterminal[Fnconds];  // assume no neutral injection voltage
 
     // Inj currents = Yprim (E)
     YPrim.MVMult(InjCurrent, pComplexArray(pBuffer));
@@ -2276,7 +2279,7 @@ begin
         begin
             with ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
-                    Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
+                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[Fnconds]);
         end;
         1:
         begin
@@ -2286,7 +2289,7 @@ begin
                     j := i + 1;
                     if j > Fnconds then
                         j := 1;
-                    Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[j]);
+                    Vterminal[i] := VDiff(NodeRef[i], NodeRef[j]);
                 end;
         end;
     end;
@@ -2774,15 +2777,15 @@ begin
         case Connection of
             0:
             begin // wye - neutral is explicit
-                Va := NodeV^[NodeRef^[1]] - NodeV^[NodeRef^[Fnconds]];
+                Va := NodeV[NodeRef[1]] - NodeV[NodeRef[Fnconds]];
             end;
             1:
             begin  // delta -- assume neutral is at zero
-                Va := NodeV^[NodeRef^[1]];
+                Va := NodeV[NodeRef[1]];
             end;
         end;
 
-    E := Va - Iterminal^[1] * cmplx(StorageVars.Rthev, StorageVars.Xthev);
+    E := Va - Iterminal[1] * cmplx(StorageVars.Rthev, StorageVars.Xthev);
     StorageVars.Vthevharm := Cabs(E);   // establish base mag and angle
     StorageVars.ThetaHarm := Cang(E);
 end;

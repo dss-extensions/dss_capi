@@ -141,10 +141,10 @@ var
     i: Integer;
 begin
     for i := 1 to N do
-        if X^[i] > 0.0 then
-            LogX^[i] := Ln(X^[i])
+        if X[i] > 0.0 then
+            LogX[i] := Ln(X[i])
         else
-            LogX^[i] := Ln(0.001);
+            LogX[i] := Ln(0.001);
 end;
 
 procedure TTCC_CurveObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
@@ -152,10 +152,10 @@ begin
     case Idx of
         1:
         begin    // Reallocate arrays to corresponde to Npts
-            ReAllocmem(C_Values, Sizeof(C_Values^[1]) * Npts);
-            ReAllocmem(LogC, Sizeof(LogC^[1]) * Npts);
-            ReAllocmem(T_values, Sizeof(T_values^[1]) * Npts);
-            ReAllocmem(LogT, Sizeof(LogT^[1]) * Npts);
+            ReAllocmem(C_Values, Sizeof(C_Values[1]) * Npts);
+            ReAllocmem(LogC, Sizeof(LogC[1]) * Npts);
+            ReAllocmem(T_values, Sizeof(T_values[1]) * Npts);
+            ReAllocmem(LogT, Sizeof(LogT[1]) * Npts);
         end;
         2:
             CalcLogPoints(C_Values, LogC, Npts);
@@ -173,18 +173,18 @@ begin
     inherited MakeLike(OtherPtr);
     Other := TObj(OtherPtr);
     Npts := Other.Npts;
-    ReAllocmem(C_Values, Sizeof(C_Values^[1]) * Npts);
-    ReAllocmem(LogC, Sizeof(LogC^[1]) * Npts);
-    ReAllocmem(T_values, Sizeof(T_values^[1]) * Npts);
-    ReAllocmem(LogT, Sizeof(LogT^[1]) * Npts);
+    ReAllocmem(C_Values, Sizeof(C_Values[1]) * Npts);
+    ReAllocmem(LogC, Sizeof(LogC[1]) * Npts);
+    ReAllocmem(T_values, Sizeof(T_values[1]) * Npts);
+    ReAllocmem(LogT, Sizeof(LogT[1]) * Npts);
     for i := 1 to Npts do
-        C_Values^[i] := Other.C_Values^[i];
+        C_Values[i] := Other.C_Values[i];
     for i := 1 to Npts do
-        T_values^[i] := Other.T_values^[i];
+        T_values[i] := Other.T_values[i];
     for i := 1 to Npts do
-        LogC^[i] := Other.LogC^[i];
+        LogC[i] := Other.LogC[i];
     for i := 1 to Npts do
-        LogT^[i] := Other.LogT^[i];
+        LogT[i] := Other.LogT[i];
 end;
 
 constructor TTCC_CurveObj.Create(ParClass: TDSSClass; const TCC_CurveName: String);
@@ -221,47 +221,47 @@ begin
     Result := -1.0;    // default return value
 
     // If current is less than first point, just leave
-    if C_Value < C_Values^[1] then
+    if C_Value < C_Values[1] then
         Exit;
 
 
     if NPts > 0 then         // Handle Exceptional cases
         if NPts = 1 then
-            Result := T_Values^[1]
+            Result := T_Values[1]
         else
         begin
             // Start with previous value accessed under the assumption that most
             // of the time, this function will be called sequentially
 
-            if C_Values^[LastValueAccessed] > C_Value then
+            if C_Values[LastValueAccessed] > C_Value then
                 LastValueAccessed := 1;  // Start over from beginning
             for i := LastValueAccessed + 1 to Npts do
             begin
-                if C_Values^[i] = C_Value then
+                if C_Values[i] = C_Value then
                 begin
-                    Result := T_Values^[i];        // direct hit!
+                    Result := T_Values[i];        // direct hit!
                     LastValueAccessed := i;
                     Exit;
                 end
 
                 else
-                if C_Values^[i] > C_Value then
+                if C_Values[i] > C_Value then
                 begin   // Log-Log interpolation
                     LastValueAccessed := i - 1;
                     if C_value > 0.0 then
                         LogTest := Ln(C_Value)
                     else
                         LogTest := Ln(0.001);
-                    Result := exp(LogT^[LastValueAccessed] +
-                        (LogTest - LogC^[LastValueAccessed]) / (LogC^[i] - LogC^[LastValueAccessed]) *
-                        (LogT^[i] - LogT^[LastValueAccessed]));
+                    Result := exp(LogT[LastValueAccessed] +
+                        (LogTest - LogC[LastValueAccessed]) / (LogC[i] - LogC[LastValueAccessed]) *
+                        (LogT[i] - LogT[LastValueAccessed]));
                     Exit;
                 end;
             end;
 
             // If we fall through the loop, just use last value
             LastValueAccessed := Npts - 1;
-            Result := T_Values^[Npts];
+            Result := T_Values[Npts];
         end;
 end;
 
@@ -272,20 +272,20 @@ var
 begin
     result := -1.0;  // No op return
 
-    if V_Value > C_Values^[1] then
+    if V_Value > C_Values[1] then
     begin
         if Npts = 1 then
-            Result := T_Values^[1]
+            Result := T_Values[1]
         else
         begin
             i := 1;
-            while C_Values^[i] < V_Value do
+            while C_Values[i] < V_Value do
             begin
                 inc(i);
                 if i > Npts then
                     Break;
             end;
-            Result := T_Values^[i - 1];
+            Result := T_Values[i - 1];
         end;
     end;
 end;
@@ -297,20 +297,20 @@ var
 begin
     result := -1.0;  // No op return
 
-    if V_Value < C_Values^[Npts] then
+    if V_Value < C_Values[Npts] then
     begin
         if Npts = 1 then
-            Result := T_Values^[1]
+            Result := T_Values[1]
         else
         begin
             i := Npts;
-            while C_Values^[i] > V_Value do
+            while C_Values[i] > V_Value do
             begin
                 dec(i);
                 if i = 0 then
                     Break;
             end;
-            Result := T_Values^[i + 1];
+            Result := T_Values[i + 1];
         end;
     end;
 end;
@@ -319,7 +319,7 @@ function TTCC_CurveObj.Value(i: Integer): Double;
 begin
     if (i <= Npts) and (i > 0) then
     begin
-        Result := C_Values^[i];
+        Result := C_Values[i];
         LastValueAccessed := i;
     end
     else
@@ -330,7 +330,7 @@ function TTCC_CurveObj.Time(i: Integer): Double;
 begin
     if (i <= Npts) and (i > 0) then
     begin
-        Result := T_Values^[i];
+        Result := T_Values[i];
         LastValueAccessed := i;
     end
     else

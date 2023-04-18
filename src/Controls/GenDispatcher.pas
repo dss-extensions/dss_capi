@@ -176,9 +176,9 @@ begin
         begin   // levelize the list
             FGenPointerList.Clear;  // clear this for resetting on first sample
             FListSize := FGeneratorNameList.count;
-            Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
+            Reallocmem(FWeights, Sizeof(FWeights[1]) * FListSize);
             for i := 1 to FListSize do
-                FWeights^[i] := 1.0;
+                FWeights[i] := 1.0;
         end;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);
@@ -303,7 +303,7 @@ begin
             begin
                 Gen := FGenPointerList.Get(i);
               // compute new dispatch value for this generator ...
-                GenkW := Max(1.0, (Gen.kWBase + PDiff * (FWeights^[i] / TotalWeight)));
+                GenkW := Max(1.0, (Gen.kWBase + PDiff * (FWeights[i] / TotalWeight)));
                 if GenkW <> Gen.kWBase then
                 begin
                     Gen.kWBase := GenkW;
@@ -319,7 +319,7 @@ begin
             begin
                 Gen := FGenPointerList.Get(i);
               // compute new dispatch value for this generator ...
-                Genkvar := Max(0.0, (Gen.kvarBase + QDiff * (FWeights^[i] / TotalWeight)));
+                Genkvar := Max(0.0, (Gen.kvarBase + QDiff * (FWeights[i] / TotalWeight)));
                 if Genkvar <> Gen.kvarBase then
                 begin
                     Gen.kvarBase := Genkvar;
@@ -369,15 +369,15 @@ begin
         end;
         // Allocate uniform weights
         FListSize := FGenPointerList.Count;
-        Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
+        Reallocmem(FWeights, Sizeof(FWeights[1]) * FListSize);
         for i := 1 to FListSize do
-            FWeights^[i] := 1.0;
+            FWeights[i] := 1.0;
     end;
 
     // Add up total weights
     TotalWeight := 0.0;
     for i := 1 to FlistSize do
-        TotalWeight := TotalWeight + FWeights^[i];
+        TotalWeight := TotalWeight + FWeights[i];
 
     if FGenPointerList.Count > 0 then
         Result := TRUE;

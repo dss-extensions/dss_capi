@@ -93,7 +93,7 @@ begin
 (*   Height of cable doesn't matter
   Removed 5-25-2016 RcD
   For i := 1 to FNumConds do Begin
-    if (FY^[i] >= 0.0) then Begin
+    if (FY[i] >= 0.0) then Begin
       Result := TRUE;
       ErrorMessage :=
         Format('Cable %d height must be < 0. ', [ i ]);
@@ -104,16 +104,16 @@ begin
     for i := 1 to FNumConds do
     begin
         if i <= FNPhases then
-            Ri := FRadius^[i]
+            Ri := FRadius[i]
         else
-            Ri := 0.5 * FDiaCable^[i];
+            Ri := 0.5 * FDiaCable[i];
         for j := i + 1 to FNumConds do
         begin
             if j <= FNPhases then
-                Rj := FRadius^[j]
+                Rj := FRadius[j]
             else
-                Rj := 0.5 * FDiaCable^[j];
-            Dij := Sqrt(SQR(FX^[i] - FX^[j]) + SQR(FY^[i] - FY^[j]));
+                Rj := 0.5 * FDiaCable[j];
+            Dij := Sqrt(SQR(FX[i] - FX[j]) + SQR(FY[i] - FY[j]));
             if (Dij < (Ri + Rj)) then
             begin
                 Result := TRUE;
@@ -141,7 +141,7 @@ end;
 
 function TCableConstants.Get_DiaCable(i, units: Integer): Double;
 begin
-    Result := FDiaCable^[i] * From_Meters(Units);
+    Result := FDiaCable[i] * From_Meters(Units);
 end;
 
 procedure TCableConstants.Set_EpsR(i: Integer; const Value: Double);
@@ -165,7 +165,7 @@ end;
 procedure TCableConstants.Set_DiaCable(i, units: Integer; const Value: Double);
 begin
     if (i > 0) and (i <= FNumConds) then
-        FDiaCable^[i] := Value * To_Meters(units);
+        FDiaCable[i] := Value * To_Meters(units);
 end;
 
 constructor TCableConstants.Create(NumConductors: Integer);
@@ -174,7 +174,7 @@ begin
     FEpsR := Allocmem(Sizeof(FEpsR^[1]) * FNumConds);
     FInsLayer := Allocmem(Sizeof(FInsLayer^[1]) * FNumConds);
     FDiaIns := Allocmem(Sizeof(FDiaIns^[1]) * FNumConds);
-    FDiaCable := Allocmem(Sizeof(FDiaCable^[1]) * FNumConds);
+    FDiaCable := Allocmem(Sizeof(FDiaCable[1]) * FNumConds);
 end;
 
 destructor TCableConstants.Destroy;

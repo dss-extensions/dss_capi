@@ -273,11 +273,11 @@ begin
             // Force as the always first property when saving in a later point
             PrpSequence[Idx] := -10;
 
-            ReAllocmem(PriceValues, Sizeof(PriceValues^[1]) * FNumPoints);
+            ReAllocmem(PriceValues, Sizeof(PriceValues[1]) * FNumPoints);
             if Interval > 0.0 then
                 ReallocMem(Hours, 0) //TODO: check if required
             else
-                ReAllocmem(Hours, Sizeof(Hours^[1]) * FNumPoints);
+                ReAllocmem(Hours, Sizeof(Hours[1]) * FNumPoints);
         end;
         ord(TProp.interval):
             if Interval > 0.0 then
@@ -315,16 +315,16 @@ begin
     Other := TObj(OtherPtr);
     FNumPoints := Other.FNumPoints;
     Interval := Other.Interval;
-    ReallocMem(PriceValues, SizeOf(PriceValues^[1]) * FNumPoints);
+    ReallocMem(PriceValues, SizeOf(PriceValues[1]) * FNumPoints);
     for i := 1 to FNumPoints do
-        PriceValues^[i] := Other.PriceValues^[i];
+        PriceValues[i] := Other.PriceValues[i];
     if Interval > 0.0 then
         ReallocMem(Hours, 0)
     else
     begin
-        ReallocMem(Hours, SizeOf(Hours^[1]) * FNumPoints);
+        ReallocMem(Hours, SizeOf(Hours[1]) * FNumPoints);
         for i := 1 to FNumPoints do
-            Hours^[i] := Other.Hours^[i];
+            Hours[i] := Other.Hours[i];
     end;
 end;
 
@@ -373,7 +373,7 @@ begin
 
     if FNumPoints = 1 then
     begin
-        Result := PriceValues^[1];
+        Result := PriceValues[1];
         Exit;
     end;
 
@@ -384,7 +384,7 @@ begin
             Index := Index mod FNumPoints;  // Wrap around using remainder
         if Index = 0 then
             Index := FNumPoints;
-        Result := PriceValues^[Index];
+        Result := PriceValues[Index];
         Exit;
     end;
 
@@ -394,35 +394,35 @@ begin
     // of the time, this FUNCTION will be called sequentially
 
     // Normalize Hr to max hour in curve to get wraparound
-    if (Hr > Hours^[FNumPoints]) then
+    if (Hr > Hours[FNumPoints]) then
     begin
-        Hr := Hr - Trunc(Hr / Hours^[FNumPoints]) * Hours^[FNumPoints];
+        Hr := Hr - Trunc(Hr / Hours[FNumPoints]) * Hours[FNumPoints];
     end;
 
-    if (Hours^[LastValueAccessed] > Hr) then
+    if (Hours[LastValueAccessed] > Hr) then
         LastValueAccessed := 1;  // Start over from Beginning
     for i := LastValueAccessed + 1 to FNumPoints do
     begin
-        if (Abs(Hours^[i] - Hr) < 0.00001) then  // If close to an actual point, just use it.
+        if (Abs(Hours[i] - Hr) < 0.00001) then  // If close to an actual point, just use it.
         begin
-            Result := PriceValues^[i];
+            Result := PriceValues[i];
             LastValueAccessed := i;
             Exit;
         end
         else
-        if (Hours^[i] > Hr) then      // Interpolate for Price
+        if (Hours[i] > Hr) then      // Interpolate for Price
         begin
             LastValueAccessed := i - 1;
-            Result := PriceValues^[LastValueAccessed] +
-                (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed]) *
-                (PriceValues^[i] - PriceValues^[LastValueAccessed]);
+            Result := PriceValues[LastValueAccessed] +
+                (Hr - Hours[LastValueAccessed]) / (Hours[i] - Hours[LastValueAccessed]) *
+                (PriceValues[i] - PriceValues[LastValueAccessed]);
             Exit;
         end;
     end;
 
     // If we fall through the loop, just use last value
     LastValueAccessed := FNumPoints - 1;
-    Result := PriceValues^[FNumPoints];
+    Result := PriceValues[FNumPoints];
 end;
 
 procedure TPriceShapeObj.CalcMeanandStdDev;
@@ -443,7 +443,7 @@ begin
     else
     begin
         if LastValueAccessed > 1 then
-            Result := Hours^[LastValueAccessed] - Hours^[LastValueAccessed - 1]
+            Result := Hours[LastValueAccessed] - Hours[LastValueAccessed - 1]
         else
             Result := 0.0;
     end;
@@ -467,7 +467,7 @@ function TPriceShapeObj.Price(i: Integer): Double;
 begin
     if (i <= FNumPoints) and (i > 0) then
     begin
-        Result := PriceValues^[i];
+        Result := PriceValues[i];
         LastValueAccessed := i;
     end
     else
@@ -480,7 +480,7 @@ begin
     begin
         if (i <= FNumPoints) and (i > 0) then
         begin
-            Result := Hours^[i];
+            Result := Hours[i];
             LastValueAccessed := i;
         end
         else
@@ -488,7 +488,7 @@ begin
     end
     else
     begin
-        Result := Hours^[i] * Interval;
+        Result := Hours[i] * Interval;
         LastValueAccessed := i;
     end;
 end;
@@ -507,7 +507,7 @@ begin
     try
         FName := DSS.OutputDirectory {CurrentDSSDir} + Format('%s.dbl', [Name]);
         F := TBufferedFileStream.Create(FName, fmCreate);
-        F.WriteBuffer(PriceValues^[1], NumPoints * SizeOf(Double));
+        F.WriteBuffer(PriceValues[1], NumPoints * SizeOf(Double));
         DSS.GlobalResult := 'Price=[dblfile=' + FName + ']';
     finally
         FreeAndNil(F);
@@ -532,7 +532,7 @@ begin
         F := TBufferedFileStream.Create(FName, fmCreate);
         for i := 1 to NumPoints do
         begin
-            sngPrice := PriceValues^[i];
+            sngPrice := PriceValues[i];
             F.Write(sngPrice, sizeof(sngPrice));
         end;
         DSS.GlobalResult := 'Price=[sngfile=' + FName + ']';

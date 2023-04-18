@@ -409,7 +409,7 @@ begin
         // Sets name of i-th terminal's connected bus in Recloser's buslist
         Setbus(1, MonitoredElement.GetBus(MonitoredElementTerminal));
         // Allocate a buffer bigenough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder);
+        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
         CondOffset := (MonitoredElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
     end;
 
@@ -457,7 +457,7 @@ begin
         Nconds := FNphases;
         Setbus(1, MonitoredElement.GetBus(ElementTerminal));
         // Allocate a buffer bigenough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder);
+        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
         CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
     end;
     inherited;
@@ -577,7 +577,7 @@ begin
             begin
                 Csum := 0;
                 for i := (1 + CondOffset) to (Fnphases + CondOffset) do
-                    Csum += cBuffer^[i];
+                    Csum += cBuffer[i];
                 Cmag := Cabs(Csum);
                 if (GroundInst > 0.0) and (Cmag >= GroundInst) and (OperationCount = 1) then
                     GroundTime := 0.01 + DelayTime      // Inst trip on first operation
@@ -599,7 +599,7 @@ begin
             begin
                 for i := (1 + CondOffset) to (Fnphases + CondOffset) do
                 begin
-                    Cmag := Cabs(cBuffer^[i]);
+                    Cmag := Cabs(cBuffer[i]);
 
 
                     if (PhaseInst > 0.0) and (Cmag >= PhaseInst) and (OperationCount = 1) then

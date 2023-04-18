@@ -210,10 +210,10 @@ begin
     Npts := Other.Npts;
     ReallocMem(Multiplier, SizeOf(Double) * Npts);
     for i := 1 to Npts do
-        Multiplier^[i] := Other.Multiplier^[i];
+        Multiplier[i] := Other.Multiplier[i];
     ReallocMem(Year, SizeOf(Double) * Npts);
     for i := 1 to Npts do
-        Year^[i] := Other.Year^[i];
+        Year[i] := Other.Year[i];
 end;
 
 constructor TGrowthShapeObj.Create(ParClass: TDSSClass; const GrowthShapeName: String);
@@ -226,7 +226,7 @@ begin
     Year := NIL;
     Multiplier := NIL;
     NYears := 30;
-    YearMult := AllocMem(SizeOf(yearMult^[1]) * NYears);
+    YearMult := AllocMem(SizeOf(yearMult[1]) * NYears);
     csvfile := '';
     dblfile := '';
     sngfile := '';
@@ -251,16 +251,16 @@ begin
 
     if NPts > 0 then
     begin         // Handle Exceptional cases
-        Index := Yr - Round(Year^[1]);
+        Index := Yr - Round(Year[1]);
         if Index > 0 then
         begin     // Returns 1.0 for base year or any year previous
             if Index > Nyears then
             begin  // Make some more space
                 NYears := Index + 10;
-                ReallocMem(YearMult, SizeOf(YearMult^[1]) * NYears);
+                ReallocMem(YearMult, SizeOf(YearMult[1]) * NYears);
                 ReCalcYearMult;
             end;
-            Result := YearMult^[Index];
+            Result := YearMult[Index];
         end;
     end;
 end;
