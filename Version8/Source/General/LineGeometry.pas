@@ -225,7 +225,7 @@ Begin
                          CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.' +
                          'Defaults to first conductor if not specified.';
      PropertyHelp[19] := 'Code designating the type of line. ' +  CRLF +
-                         'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW' + CRLF +  CRLF +
+                         'One of: OH, UG, UG_TS, UG_CN, SWT_LDBRK, SWT_FUSE, SWT_SECT, SWT_REC, SWT_DISC, SWT_BRK, SWT_ELBOW, BUSBAR' + CRLF +  CRLF +
                          'OpenDSS currently does not use this internally. For whatever purpose the user defines. Default is OH.' ;
 
      ActiveProperty := NumPropsThisClass;
