@@ -83,6 +83,7 @@ type
         FCapSpecified: Boolean; // To make sure user specifies C in some form
         SymComponentsChanged: Boolean;
         SymComponentsModel: LongBool;
+        RatingsSpecified: Boolean;
         IsSwitch: LongBool;
 
         FLineType: Integer; // Pointer to code for type of line
@@ -107,7 +108,7 @@ type
         LineGeometryObj: TLineGeometryObj;
         LineSpacingObj: TLineSpacingObj;
 
-        FLineWireData: pConductorDataArray;
+        LineWireData: pConductorDataArray;
 
         procedure FMakeZFromGeometry(f: Double); // make new Z, Zinv, Yc, etc
         procedure KillGeometrySpecified;
@@ -262,19 +263,19 @@ begin
     //PropertyStructArrayIndexOffset := ptruint(@obj.FActiveCond);
 
     PropertyType[ord(TProp.tscables)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.tscables)] := ptruint(@obj.FLineWireData);
+    PropertyOffset[ord(TProp.tscables)] := ptruint(@obj.LineWireData);
     PropertyOffset2[ord(TProp.tscables)] := ptruint(DSS.TSDataClass);
     PropertyFlags[ord(TProp.tscables)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.tscables)] := ord(TProp.wires);
 
     PropertyType[ord(TProp.cncables)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.cncables)] := ptruint(@obj.FLineWireData);
+    PropertyOffset[ord(TProp.cncables)] := ptruint(@obj.LineWireData);
     PropertyOffset2[ord(TProp.cncables)] := ptruint(DSS.CNDataClass);
     PropertyFlags[ord(TProp.cncables)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.cncables)] := ord(TProp.wires);
 
     PropertyType[ord(TProp.wires)] := TPropertyType.DSSObjectReferenceArrayProperty;
-    PropertyOffset[ord(TProp.wires)] := ptruint(@obj.FLineWireData);
+    PropertyOffset[ord(TProp.wires)] := ptruint(@obj.LineWireData);
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
     PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray];
@@ -457,6 +458,8 @@ begin
     // HrsToRepair := LineCodeObj.HrsToRepair;
 
     SetAsNextSeq(ord(TProp.Ratings));
+    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
+    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
 
     if Fnphases <> LineCodeObj.FNphases then
     begin
@@ -575,19 +578,24 @@ begin
                 len := 0.001;
                 ResetLengthUnits;
             end;
-        ord(TProp.Xg), ord(TProp.rho):
+        ord(TProp.Xg),
+        ord(TProp.rho):
             Kxg := Xg / ln(658.5 * sqrt(rho / BaseFrequency));
         ord(TProp.geometry):
             FetchGeometryCode();
-        ord(TProp.spacing), ord(TProp.wires), ord(TProp.cncables), ord(TProp.tscables):
+        ord(TProp.spacing), 
+        ord(TProp.wires), 
+        ord(TProp.cncables), 
+        ord(TProp.tscables):
         begin
             if Idx = ord(TProp.spacing) then
                 FetchLineSpacing();
-            if Assigned(LineSpacingObj) and Assigned(FLineWireData) then
+            if (LineSpacingObj <> NIL) and (LineWireData <> NIL) then
             begin
                 SymComponentsModel := FALSE;
                 SymComponentsChanged := FALSE;
                 KillGeometrySpecified;
+                RatingsSpecified := FALSE;
             end;
             YprimInvalid := TRUE;
         end;
@@ -605,6 +613,11 @@ begin
             if GeometrySpecified then
                 LineGeometryObj.rhoearth := rho; // TODO: This is weird
         end;
+        ord(TProp.Seasons), 
+        ord(TProp.Ratings),
+        (NumPropsThisClass + ord(TPDElementProp.NormAmps)),
+        (NumPropsThisClass + ord(TPDElementProp.EmergAmps)):
+            RatingsSpecified := TRUE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);
 end;
@@ -657,15 +670,15 @@ begin
 
         for i := istart to LineSpacingObj.NWires do
         begin
-            FLineWireData[i] := TConductorDataObj(Value^);
-            if FLineWireData[i].NumAmpRatings > NewNumRat then
+            LineWireData[i] := TConductorDataObj(Value^);
+            if LineWireData[i].NumAmpRatings > NewNumRat then
             begin
-                NewNumRat := FLineWireData[i].NumAmpRatings;
-                NewRatings := Copy(FLineWireData[i].AmpRatings, 0, NewNumRat);
+                NewNumRat := LineWireData[i].NumAmpRatings;
+                NewRatings := Copy(LineWireData[i].AmpRatings, 0, NewNumRat);
                 RatingsInc := TRUE; // Yes, there are seasonal ratings
             end;
-            NormAmps := FLineWireData[i].NormAmps;
-            EmergAmps := FLineWireData[i].EmergAmps;
+            NormAmps := LineWireData[i].NormAmps;
+            EmergAmps := LineWireData[i].EmergAmps;
             Inc(Value);
         end;
 
@@ -676,6 +689,8 @@ begin
         end;
 
         SetAsNextSeq(ord(TProp.Ratings));
+        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
+        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
     end;
 end;
 
@@ -780,6 +795,7 @@ begin
 
     SymComponentsChanged := FALSE;
     SymComponentsModel := TRUE;
+    RatingsSpecified := FALSE;
 
     LineGeometryObj := NIL;
     LengthUnits := UNITS_NONE; // Assume everything matches
@@ -790,7 +806,7 @@ begin
     FLineType := 1;  // Default to OH Line
 
     LineSpacingObj := NIL;
-    FLineWireData := NIL;
+    LineWireData := NIL;
     FWireDataSize := 0;
     FPhaseChoice := Unknown;
 
@@ -812,7 +828,7 @@ begin
         Zinv.Free;
     if Assigned(Yc) then
         Yc.Free;
-    Reallocmem(FLineWireData, 0);
+    Reallocmem(LineWireData, 0);
     inherited destroy;
 end;
 
@@ -1643,7 +1659,7 @@ begin
     Yorder := Fnconds * Fnterms;
     YPrimInvalid := TRUE;       // Force Rebuild of Y matrix
 
-    FLineWireData := Allocmem(Sizeof(FLineWireData^[1]) * LineSpacingObj.NWires);
+    LineWireData := Allocmem(Sizeof(LineWireData[1]) * LineSpacingObj.NWires);
     FWireDataSize := LineSpacingObj.NWires;
 end;
 
@@ -1665,6 +1681,8 @@ begin
     NormAmps := LineGeometryObj.NormAmps;
     EmergAmps := LineGeometryObj.EmergAmps;
     SetAsNextSeq(ord(TProp.Ratings));
+    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
+    SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
 
     FNPhases := LineGeometryObj.Nconds;
     Nconds := FNPhases;  // Force Reallocation of terminal info
@@ -1742,13 +1760,19 @@ begin
 
     // make a temporary LineGeometry to calculate line constants
     pGeo := TLineGeometryObj.Create(DSS.LineGeometryClass, Name);
-    pGeo.LoadSpacingAndWires(LineSpacingObj, FLineWireData); // this sets OH, CN, or TS
+    pGeo.LoadSpacingAndWires(LineSpacingObj, LineWireData); // this sets OH, CN, or TS
 
     if FrhoSpecified then
         pGeo.rhoearth := rho;
-    NormAmps := pGeo.NormAmps;
-    EmergAmps := pGeo.EmergAmps;
-    SetAsNextSeq(ord(TProp.Ratings));
+
+    if not RatingsSpecified then
+    begin
+        NormAmps := pGeo.NormAmps;
+        EmergAmps := pGeo.EmergAmps;
+        SetAsNextSeq(ord(TProp.Ratings));
+        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.NormAmps));
+        SetAsNextSeq(NumPropsThisClass + ord(TPDElementProp.EmergAmps));
+    end;
 
     DSS.ActiveEarthModel := FEarthModel;
 
@@ -1781,7 +1805,7 @@ begin
     begin
         LineSpacingObj := NIL;
         FWireDataSize := 0;
-        Reallocmem(FLineWireData, 0);
+        Reallocmem(LineWireData, 0);
         FPhaseChoice := Unknown;
         FZFrequency := -1.0;
     end;
@@ -1845,7 +1869,7 @@ end;
 function TLineObj.NumConductorData: Integer;
 begin
     Result := 0;
-    if Assigned(FLineWireData) then
+    if Assigned(LineWireData) then
         Result := LineSpacingObj.NWires;
     if Assigned(LineGeometryObj) then
         Result := LineGeometryObj.NWires;
@@ -1854,10 +1878,10 @@ end;
 function TLineObj.FetchConductorData(i: Integer): TConductorDataObj;
 begin
     Result := NIL;
-    if Assigned(FLineWireData) then
+    if Assigned(LineWireData) then
     begin
         if i <= LineSpacingObj.Nwires then
-            Result := FLineWireData[i];
+            Result := LineWireData[i];
     end
     else
     if Assigned(LineGeometryObj) then
@@ -1879,7 +1903,7 @@ end;
 
 function TLineObj.SpacingSpecified: Boolean;
 begin
-    Result := Assigned(LineSpacingObj) and Assigned(FLineWireData);
+    Result := Assigned(LineSpacingObj) and Assigned(LineWireData);
 end;
 
 end.

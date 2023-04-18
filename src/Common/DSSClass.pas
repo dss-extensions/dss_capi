@@ -722,8 +722,8 @@ begin
     Enums.Add(EarthModelEnum);
 
     LineTypeEnum := TDSSEnum.Create('Line Type', True, 2, 4,
-        ['oh', 'ug', 'ug_ts', 'ug_cn', 'swt_ldbrk', 'swt_fuse', 'swt_sect', 'swt_rec', 'swt_disc', 'swt_brk', 'swt_elbow'],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+        ['oh', 'ug', 'ug_ts', 'ug_cn', 'swt_ldbrk', 'swt_fuse', 'swt_sect', 'swt_rec', 'swt_disc', 'swt_brk', 'swt_elbow', 'busbar'],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     LineTypeEnum.DefaultValue := 1;
     Enums.Add(LineTypeEnum);
 
