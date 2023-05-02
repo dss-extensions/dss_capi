@@ -33,7 +33,6 @@ TYPE
 
          Procedure Set_Name(const Value:String);
          Function  CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
-         procedure Set_Edit(const Value: String);
          function  Get_Exists: Boolean;
 
       Public
@@ -55,7 +54,7 @@ TYPE
         // this property loads library (if needed), sets the procedure variables, and makes a new instance
         // old reference is freed first
          property Name : String read Fname write Set_Name;
-         property Edit : String write Set_Edit;
+         procedure Edit(const Value: String);
          property Exists : Boolean read Get_Exists;
 
          Procedure   Select;
@@ -84,7 +83,6 @@ TYPE
 
          Procedure Set_Name(const Value:String);
          Function  CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
-         procedure Set_Edit(const Value: String);
          function  Get_Exists: Boolean;
 
       public
@@ -110,7 +108,7 @@ TYPE
         // this property loads library (if needed), sets the procedure variables, and makes a new instance
         // old reference is freed first
         property Name:String read Fname write Set_Name;
-        property Edit:String write Set_Edit;
+        procedure Edit(const Value: String);
         property Exists:Boolean read Get_Exists;
 
         Procedure   Select;
@@ -177,7 +175,7 @@ begin
         Fselect(FID);
 end;
 
-procedure TStoreUserModel.Set_Edit(const Value: String);
+procedure TStoreUserModel.Edit(const Value: String);
 begin
         If FID <> 0 Then FEdit(pansichar(AnsiString(Value)), Length(Value));
         // Else Ignore
@@ -300,7 +298,7 @@ begin
      Fselect(FID);
 end;
 
-procedure TStoreDynaModel.Set_Edit(const Value: String);
+procedure TStoreDynaModel.Edit(const Value: String);
 begin
      If FID <> 0 Then FEdit(pansichar(AnsiString(Value)), Length(Value));
 end;

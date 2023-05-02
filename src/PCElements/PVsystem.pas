@@ -601,7 +601,7 @@ begin
             UserModel.Name := UserModelNameStr;  // Connect to user written models
         ord(TProp.UserData):
             if UserModel.Exists then
-                UserModel.Edit := UserModelEditStr;  // Send edit string to user model
+                UserModel.Edit(UserModelEditStr);  // Send edit string to user model
 
         ord(TProp.phases):
         begin

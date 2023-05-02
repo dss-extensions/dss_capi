@@ -27,7 +27,6 @@ TYPE
 
          Procedure Set_Name(const Value:String);
          Function  CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
-         procedure Set_Edit(const Value: String);
          function  Get_Exists: Boolean;
 
       protected
@@ -56,7 +55,7 @@ TYPE
         // this property loads library (if needed), sets the procedure variables, and makes a new instance
         // old reference is freed first
         property Name:String read Fname write Set_Name;
-        property Edit:String write Set_Edit;
+        procedure Edit(const Value: String);
         property Exists:Boolean read Get_Exists;
 
         Procedure   Select;
@@ -121,7 +120,7 @@ begin
         Fselect(FID);
 end;
 
-procedure TPVsystemUserModel.Set_Edit(const Value: String);
+procedure TPVsystemUserModel.Edit(const Value: String);
 begin
         If FID <> 0 Then FEdit(pansichar(AnsiString(Value)), Length(Value));
         // Else Ignore

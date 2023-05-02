@@ -646,12 +646,12 @@ begin
                 UserModel.Name := UserModelNameStr;  // Connect to user written models
             TProp.UserData:
                 if UserModel.Exists then
-                    UserModel.Edit := UserModelEditStr;  // Send edit string to user model
+                    UserModel.Edit(UserModelEditStr);  // Send edit string to user model
             TProp.ShaftModel:
                 ShaftModel.Name := ShaftModelNameStr;
             TProp.ShaftData:
                 if ShaftModel.Exists then
-                    ShaftModel.Edit := ShaftModelEditStr;
+                    ShaftModel.Edit(ShaftModelEditStr);
 
             // if a model 3 generator added, force calc of dQdV
             TProp.model:

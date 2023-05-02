@@ -45,7 +45,6 @@ TYPE
 
          Procedure Set_Name(const Value:String);
          Function  CheckFuncError(Addr:Pointer; FuncName:String):Pointer;
-         procedure Set_Edit(const Value: String);
          function  Get_Exists: Boolean;
 
       public
@@ -65,7 +64,7 @@ TYPE
         // old reference is freed first
         // Wide string OK here
         property  Name:String    read  Fname write Set_Name;
-        property  Edit:String    write Set_Edit;
+        procedure Edit(const Value: String);
         property  Exists:Boolean read  Get_Exists;
       end;
 
@@ -138,7 +137,7 @@ begin
         Fselect(FID);
 end;
 
-procedure TCapUserControl.Set_Edit(const Value: String);
+procedure TCapUserControl.Edit(const Value: String);
 begin
      If FID <> 0 Then FEdit(pAnsichar(AnsiString(Value)), Length(Value));
 end;

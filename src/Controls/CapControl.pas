@@ -384,7 +384,7 @@ begin
         end;
         ord(TProp.UserData):
             if UserModel.Exists then
-                UserModel.Edit := UserModelEditStr;  // Send edit string to user model
+                UserModel.Edit(UserModelEditStr);  // Send edit string to user model
     end;
 
     if IsUserModel then

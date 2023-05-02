@@ -803,7 +803,7 @@ begin
         end;
         ord(TProp.UserData):
             if UserModel.Exists then
-                UserModel.Edit := UserModelEditStr;
+                UserModel.Edit(UserModelEditStr);
         ord(TProp.DynaDLL):
         begin
             DynaModel.Name := DynaModelNameStr; 
@@ -811,7 +811,7 @@ begin
         end;
         ord(TProp.DynaData):
             if DynaModel.Exists then
-                DynaModel.Edit := DynaModelEditStr;
+                DynaModel.Edit(DynaModelEditStr);
 
         ord(TProp.debugtrace):
             if DebugTrace then
