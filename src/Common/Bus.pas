@@ -76,14 +76,14 @@ type
     end;
 
     // Bus Collection
-    pTBusArray = ^TBusArray;
+    PBusArray = ^TBusArray;
     TBusArray = array[1..10] of TDSSBus;
 
     TNodeBus = record
         BusRef: Integer;   // Ref to Bus in circuit's BusList
         NodeNum: SmallInt;
     end;
-    pTNodeBusArray = ^TNodeBusArray;
+    PNodeBusArray = ^TNodeBusArray;
     TNodeBusArray = array[1..2] of TNodeBus;
 
 implementation

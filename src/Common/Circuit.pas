@@ -67,7 +67,7 @@ type
         FCaseName: String;
 
         // Temp arrays for when the bus swap takes place
-        SavedBuses: pTBusArray;
+        SavedBuses: PBusArray;
         SavedBusNames: pStringArray;
         SavedNumBuses: Integer;
         FLoadMultiplier: Double;  // global multiplier for every load
@@ -176,8 +176,8 @@ type
         IncDevices, IncBuses, IncNodes: Integer;
 
         // Bus and Node stuff
-        Buses: pTBusArray;
-        MapNodeToBus: pTNodeBusArray;
+        Buses: PBusArray;
+        MapNodeToBus: PNodeBusArray;
 
         // Flags
         Issolved: Boolean;
