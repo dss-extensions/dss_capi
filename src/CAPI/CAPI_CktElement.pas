@@ -246,7 +246,8 @@ begin
     end;
     if NeedsPCElement and ((elem.DSSObjType and BASECLASSMASK) <> PC_ELEMENT) then
     begin
-        DoSimpleMsg(DSS, _('The active circuit element is not a PC Element'), 100004);
+        if DSS_CAPI_EXT_ERRORS then
+            DoSimpleMsg(DSS, _('The active circuit element is not a PC Element'), 100004);
         Result := True;
         Exit;
     end;
