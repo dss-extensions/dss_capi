@@ -242,7 +242,7 @@ Begin
      PropertyName[19] := 'Pmult';         // synonym for Mult
      PropertyName[20] := 'PQCSVFile';     // Redirect to a file with p, q pairs
      PropertyName[21] := 'MemoryMapping'; // Enable/disable using Memory mapping for this shape
-     PropertyName[22] := 'Interpolation'; // Enable/disable using Memory mapping for this shape
+     PropertyName[22] := 'Interpolation'; // Changes the interpolation method for sparse load shapes
 
      // define Property help values
 
@@ -1066,6 +1066,7 @@ VAR
   UpLimit,
   LowLimit,
   Index,
+  k,
   j,
   i           : Integer;
 
@@ -1146,34 +1147,52 @@ BEGIN
             LastValueAccessed := i;
             Exit;
           END
-          ELSE IF Hours^[i]>Hr THEN      // Interpolate for multiplier
+          ELSE IF Hours^[i]>Hr THEN
           BEGIN
-            LastValueAccessed := i-1;
-            if UseMMF then
-            BEGIN
-              Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, LastValueAccessed, myLineLen) +
-                        (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
-                        (InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen) -
-                        InterpretDblArrayMMF(myView, myFileType, myColumn, LastValueAccessed, myLineLen));
-              If Assigned(QMultipliers) Then
-                  Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, LastValueAccessed, myLineLenQ) +
-                        (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
-                        (InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, i, myLineLenQ) -
-                        InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, LastValueAccessed, myLineLenQ))
-              Else  Result.im  := Set_Result_im(Result.re );
-            END
-            ELSE
-            BEGIN
-              Result.re := PMultipliers^[LastValueAccessed] +
-                       (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
-                       (PMultipliers^[i] -PMultipliers^[LastValueAccessed]);
-              If Assigned(QMultipliers) Then
-                  Result.im := QMultipliers^[LastValueAccessed] +
-                       (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
-                       (QMultipliers^[i] -QMultipliers^[LastValueAccessed])
-              Else Result.im := Set_Result_im(Result.re);
-            END;
-            Exit ;
+            if Interpolation = EDGE_IP then
+            Begin       // Use the edge values
+              Result    :=  cmplx(0,0);
+              for k := 1 to NumPoints do
+              Begin
+                if Hours^[k] <= Hr then
+                Begin
+                  Result.re := PMultipliers^[k];
+                  if Assigned(QMultipliers) then
+                    Result.im :=  QMultipliers^[k];
+                End
+                Else
+                  Exit;
+              End;
+            End
+            Else
+            Begin       // Interpolate for multiplier
+              LastValueAccessed := i-1;
+              if UseMMF then
+              BEGIN
+                Result.re     :=  InterpretDblArrayMMF(myView, myFileType, myColumn, LastValueAccessed, myLineLen) +
+                          (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                          (InterpretDblArrayMMF(myView, myFileType, myColumn, i, myLineLen) -
+                          InterpretDblArrayMMF(myView, myFileType, myColumn, LastValueAccessed, myLineLen));
+                If Assigned(QMultipliers) Then
+                    Result.im := InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, LastValueAccessed, myLineLenQ) +
+                          (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                          (InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, i, myLineLenQ) -
+                          InterpretDblArrayMMF(myViewQ, myFileTypeQ, myColumnQ, LastValueAccessed, myLineLenQ))
+                Else  Result.im  := Set_Result_im(Result.re );
+              END
+              ELSE
+              BEGIN
+                Result.re := PMultipliers^[LastValueAccessed] +
+                         (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                         (PMultipliers^[i] -PMultipliers^[LastValueAccessed]);
+                If Assigned(QMultipliers) Then
+                    Result.im := QMultipliers^[LastValueAccessed] +
+                         (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed])*
+                         (QMultipliers^[i] -QMultipliers^[LastValueAccessed])
+                Else Result.im := Set_Result_im(Result.re);
+              END;
+              Exit ;
+            End;
           END;
         END;
         // If we fall through the loop, just use last value

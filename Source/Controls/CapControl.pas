@@ -33,7 +33,7 @@ INTERFACE
 
 USES
      Command, ControlClass, ControlElem, CktElement, Bus, DSSClass, Arraydef, ucomplex,
-     Capacitor, utilities, CapControlVars, CapUserControl;
+     Capacitor, utilities, CapControlVars, CapUserControl, LoadShape;
 
 TYPE
 
@@ -59,27 +59,29 @@ TYPE
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
    TCapControlObj = class(TControlElem)
      private
-            ControlType      : ECapControlType;
+        ControlType         : ECapControlType;
 
-            ControlVars      : TCapControlVars;
+        ControlVars         : TCapControlVars;
 
-            ControlledCapacitor : TCapacitorObj;
+        ControlledCapacitor : TCapacitorObj;
 
-            cBuffer : pComplexArray;    // Complexarray buffer
+        cBuffer             : pComplexArray;    // Complexarray buffer
 
-            IsUserModel     :Boolean;
-            UserModel       :TCapUserControl;
+        IsUserModel         : Boolean;
+        UserModel           : TCapUserControl;
 
-            FpctMinkvar : double;
+        FpctMinkvar         : double;
 
-            FUNCTION  Get_Capacitor : TCapacitorObj;
-            FUNCTION  NormalizeToTOD(h : Integer; sec : Double) : Double;
-            procedure Set_PendingChange(const Value : EControlAction);
-            Function  Get_PendingChange : EControlAction;
-            Procedure GetControlVoltage(Var ControlVoltage : Double);
-            Procedure GetControlCurrent(Var ControlCurrent : Double);
-            Procedure GetBusVoltages(pBus : TDSSBus; Buff : pComplexArray; ActorID : Integer);
+        myShapeName         : String;         // Name of the shape for this controller
+        myShapeObj          : TLoadShapeObj;  // Shape for this controller
 
+        FUNCTION  Get_Capacitor : TCapacitorObj;
+        FUNCTION  NormalizeToTOD(h : Integer; sec : Double) : Double;
+        procedure Set_PendingChange(const Value : EControlAction);
+        Function  Get_PendingChange : EControlAction;
+        Procedure GetControlVoltage(Var ControlVoltage : Double);
+        Procedure GetControlCurrent(Var ControlCurrent : Double);
+        Procedure GetBusVoltages(pBus : TDSSBus; Buff : pComplexArray; ActorID : Integer);
 
      public
 
@@ -136,7 +138,7 @@ CONST
     AVGPHASES = -1;
     MAXPHASE  = -2;
     MINPHASE  = -3;
-    NumPropsThisClass = 22;
+    NumPropsThisClass = 23;
 
 
 {--------------------------------------------------------------------------}
@@ -192,6 +194,7 @@ Begin
      PropertyName[20] := 'UserData';
      PropertyName[21] := 'pctMinkvar';
      PropertyName[22] := 'Reset';
+     PropertyName[23] := 'ControlSignal';
 
 
      PropertyHelp[1] := 'Full object name of the circuit element, typically a line or transformer, '+
@@ -203,7 +206,7 @@ Begin
                         'Do not specify the full object name; "Capacitor" is assumed for '  +
                         'the object class.  Example:'+CRLF+CRLF+
                         'Capacitor=cap1';
-     PropertyHelp[4] := '{Current | voltage | kvar | PF | time } Control type.  Specify the ONsetting and OFFsetting ' +
+     PropertyHelp[4] := '{Current | voltage | kvar | PF | time | Follow } Control type.  Specify the ONsetting and OFFsetting ' +
                         'appropriately with the type of control. (See help for ONsetting)';
      PropertyHelp[5] := 'Ratio of the PT that converts the monitored voltage to the control voltage. '+
                         'Default is 60.  If the capacitor is Wye, the 1st phase line-to-neutral voltage is monitored.  Else, the line-to-line ' +
@@ -215,7 +218,8 @@ Begin
                         'Voltage: Line-Neutral (or Line-Line for delta) Volts / PTratio' +CRLF+
                         'kvar:    Total kvar, all phases (3-phase for pos seq model). This is directional. ' + CRLF +
                         'PF:      Power Factor, Total power in monitored terminal. Negative for Leading. ' + CRLF +
-                        'Time:    Hrs from Midnight as a floating point number (decimal). 7:30am would be entered as 7.5.';
+                        'Time:    Hrs from Midnight as a floating point number (decimal). 7:30am would be entered as 7.5.' + CRLF +
+                        'Follow: Follows a loadshape (ControlSignal) to determine when to turn ON /OFF the capacitor. If the value is different than 0 the cap will connect to the grid, otherwise, it will be disconnected.';
      PropertyHelp[8] := 'Value at which the control arms to switch the capacitor OFF. (See help for ONsetting)' +
                         'For Time control, is OK to have Off time the next day ( < On time)';
      PropertyHelp[9] := 'Time delay, in seconds, from when the control is armed before it sends out the switching ' +
@@ -245,6 +249,9 @@ Begin
      PropertyHelp[20] :=  'String (in quotes or parentheses if necessary) that gets passed to the user-written CapControl model Edit function for defining the data required for that model. ';
      PropertyHelp[21] :=  'For PF control option, min percent of total bank kvar at which control will close capacitor switch. Default = 50.';
      PropertyHelp[22] :=  '{Yes | No} If Yes, forces Reset of this CapControl.' ;
+     PropertyHelp[23] :=  'Is the name of the load shape used for controlling the connection/disconnection of the capacitor to the grid, '+
+                          'when the load shape is DIFFERENT than ZERO (0) the capacitor will be ON and conencted to the grid.' +
+                          'Otherwise, if the load shape value is EQUAL to ZERO (0) the capacitor bank will be OFF and disconnected from the grid.';
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -300,6 +307,7 @@ Begin
                     'k': ControlType := KVARCONTROL;
                     't': ControlType := TIMECONTROL;
                     'p': ControlType := PFCONTROL;
+                    'f': ControlType := FOLLOWCONTROL;
                ELSE
                    DoSimpleMsg(Format('Unrecognized CapControl Type: "%s" (Capcontrol.%s)', [param, ActiveCapControlObj.name]), 352);
                End;
@@ -333,6 +341,7 @@ Begin
                   Reset(ActorID);
                   PropertyValue[22]  := 'n'; // so it gets reported properly
                End;
+           23:  myShapeName := Param;
          ELSE
            // Inherited parameters
            ClassEdit( ActiveCapControlObj, ParamPointer - NumPropsthisClass)
@@ -376,7 +385,8 @@ Begin
          End;
 
          case ParamPointer of
-              19: IsUserModel := UserModel.Exists;
+            19: IsUserModel := UserModel.Exists;
+            23: myShapeObj := LoadShapeClass[ActorID].Find(myShapeName);
          end;
 
          If IsUserModel Then  ControlType := USERCONTROL;
@@ -469,57 +479,59 @@ Begin
                          // in base class
      With ControlVars Do
      Begin
-         FCTPhase := 1;
-         FPTPhase := 1;
+         FCTPhase         := 1;
+         FPTPhase         := 1;
 
-         PTRatio      := 60.0;
-         CTRatio      := 60.0;
-         ControlType  := CURRENTCONTROL;
-         ONDelay      := 15.0;
-         OFFDelay     := 15.0;
-         DeadTime     := 300.0;
-         LastOpenTime := -DeadTime;
+         PTRatio          := 60.0;
+         CTRatio          := 60.0;
+         ControlType      := CURRENTCONTROL;
+         ONDelay          := 15.0;
+         OFFDelay         := 15.0;
+         DeadTime         := 300.0;
+         LastOpenTime     := -DeadTime;
 
-         ON_Value     := 300.0;
-         OFF_Value    := 200.0;
+         ON_Value         := 300.0;
+         OFF_Value        := 200.0;
 
-         PFON_Value   := 0.95;
-         PFOFF_Value  := 1.05;
+         PFON_Value       := 0.95;
+         PFOFF_Value      := 1.05;
 
-         Voverride      := FALSE;
-         VoverrideEvent := FALSE;
+         Voverride        := FALSE;
+         VoverrideEvent   := FALSE;
          VoverrideBusSpecified := FALSE;
          VOverrideBusName := '';   // This is not in public data Struct at this time
 
-         Vmax         := 126;
-         Vmin         := 115;
-         PresentState := CTRL_CLOSE;
+         Vmax             := 126;
+         Vmin             := 115;
+         PresentState     := CTRL_CLOSE;
 
-         ShouldSwitch :=  FALSE;
-         Armed        :=  FALSE;
-         PendingChange:= CTRL_NONE;
+         ShouldSwitch     :=  FALSE;
+         Armed            :=  FALSE;
+         PendingChange    := CTRL_NONE;
      End;
 
-     PublicDataStruct := @ControlVars;   // So User-written models can access
-     PublicDataSize   := Sizeof(TCapControlVars);
+     PublicDataStruct   := @ControlVars;   // So User-written models can access
+     PublicDataSize     := Sizeof(TCapControlVars);
 
-     ElementName       := '';
-     ControlledElement := nil;
-     ElementTerminal   := 1;
+     ElementName        := '';
+     ControlledElement  := nil;
+     ElementTerminal    := 1;
      ControlVars.CapacitorName     := '';
-     MonitoredElement  := Nil;
+     MonitoredElement   := Nil;
+     myShapeName        := '';
+     myShapeObj         := Nil;
 
-     FpctMinkvar := 50.0;
+     FpctMinkvar        := 50.0;
 
-     IsUserModel := FALSE;
-     UserModel  := TCapUserControl.Create;   // Inits handles, FID
+     IsUserModel        := FALSE;
+     UserModel          := TCapUserControl.Create;   // Inits handles, FID
 
 
      ControlVars.ControlActionHandle := 0;
 
-     cBuffer := Nil; // Complex buffer
+     cBuffer            := Nil; // Complex buffer
 
-     DSSObjType := ParClass.DSSClassType; //cap_CONTROL;
+     DSSObjType         := ParClass.DSSClassType; //cap_CONTROL;
 
      InitPropertyValues(0);
 
@@ -857,6 +869,7 @@ VAR
    CurrTest,
    Vtest,
    NormalizedTime,
+   NextState,
    Q       :Double;
    S       :Complex;
 
@@ -1128,7 +1141,19 @@ begin
                       End;
 
                  End;
-
+                 FOLLOWCONTROL: {Follow}
+                 Begin
+                  with ActiveCircuit[ActorID].Solution do
+                  Begin
+                    NextState :=  myShapeObj.GetMult(DynaVars.dblHour).re;
+                    if not ( ( NextState <> 0 ) xor ( PresentState = CTRL_OPEN ) ) then
+                    Begin
+                      if PresentState = CTRL_OPEN then PendingChange := CTRL_CLOSE
+                      else                             PendingChange := CTRL_OPEN;
+                      ShouldSwitch := TRUE;
+                    End;
+                  End;
+                 End;
          End;
      End;
      WITH ActiveCircuit[ActorID], ControlVars Do
@@ -1229,6 +1254,7 @@ begin
      PropertyValue[19] := '';
      PropertyValue[20] := '';
      PropertyValue[21] := '50';
+     PropertyValue[23] := '';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
