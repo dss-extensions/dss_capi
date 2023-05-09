@@ -1,12 +1,13 @@
 The Open Distribution System Simulator, OpenDSS
 
-Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
+Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
 All rights reserved.
 
 Version 9.6.1.1
 
 Changes this version
 ====================
+- CapControl updated with control mode Follow, in this mode the capacitor activation depends on the value of a given loadshape (ControlSignal).
 - New flag added to avoid displaying reports automatically when generated (ShowReports).
 - New color themes added to the GUI. Go to Set -> Color Themes and check if you like it (Just added 2 as an experiment).
 - Adds grid forming inverter capabilities to Inverter-base resources (Storage and PVSystem) for microgrid studies in QSTS.
