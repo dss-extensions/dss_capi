@@ -1011,7 +1011,7 @@ extern "C" {
     DSS_CAPI_DLL double ctx_CktElement_Get_NormalAmps(void* ctx);
 
     /*! 
-    Complex array of losses by phase
+    Complex array of losses (kVA) by phase
     */
     DSS_CAPI_DLL void ctx_CktElement_Get_PhaseLosses(void* ctx, double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1020,7 +1020,7 @@ extern "C" {
     DSS_CAPI_DLL void ctx_CktElement_Get_PhaseLosses_GR(void* ctx);
 
     /*! 
-    Complex array of powers into each conductor of each terminal
+    Complex array of powers (kVA) into each conductor of each terminal
     */
     DSS_CAPI_DLL void ctx_CktElement_Get_Powers(void* ctx, double** ResultPtr, int32_t* ResultCount);
     /*! 
@@ -1251,7 +1251,7 @@ extern "C" {
     DSS_CAPI_DLL uint16_t ctx_CktElement_Get_IsIsolated(void* ctx);
 
     /*! 
-    Returns the total powers (complex) at ALL terminals of the active circuit element.
+    Returns an array with the total powers (complex, kVA) at ALL terminals of the active circuit element.
     */
     DSS_CAPI_DLL void ctx_CktElement_Get_TotalPowers(void* ctx, double** ResultPtr, int32_t* ResultCount);
 
