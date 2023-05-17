@@ -1,6 +1,7 @@
 @echo off
 @SETLOCAL
 
+mkdir lib\win_x64
 python src\classic_to_ctx.py
 
 where /q fpc

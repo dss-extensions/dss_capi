@@ -5,6 +5,7 @@
 
 set -e -x
 
+mkdir  -p lib/linux_arm32/
 python3 src/classic_to_ctx.py
 
 rm -rf build/units_arm32

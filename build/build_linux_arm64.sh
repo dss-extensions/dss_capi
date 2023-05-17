@@ -3,6 +3,7 @@
 # Tested with a Raspberry Pi 4 Model B
 set -e -x
 
+mkdir  -p lib/linux_arm64/
 python3 src/classic_to_ctx.py
 
 rm -rf build/units_arm64

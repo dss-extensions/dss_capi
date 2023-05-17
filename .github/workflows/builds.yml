@@ -23,6 +23,7 @@ jobs:
         run: |
           curl -s -L "${KLUSOLVE_URL}" -o klusolve.tar.gz
           tar zxf klusolve.tar.gz
+          mkdir -p dss_capi/lib/linux_x64
           cp -r klusolvex/lib/* dss_capi/lib/
       - name: Build
         run: |
@@ -57,6 +58,7 @@ jobs:
         run: |
           curl -s -L "${KLUSOLVE_URL}" -o klusolve.tar.gz
           tar zxf klusolve.tar.gz
+          mkdir -p dss_capi/lib/linux_x86
           cp -r klusolvex/lib/* dss_capi/lib/
       - name: Build
         run: |
@@ -75,7 +77,7 @@ jobs:
     name: 'macOS x64 and ARM64'
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with: 
           fetch-depth: 0
           path: 'dss_capi'
@@ -90,6 +92,8 @@ jobs:
           wget "https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_darwin_arm64.tar.gz" -Oklusolve_arm64.tar.gz -q
           tar zxf klusolve_x64.tar.gz
           tar zxf klusolve_arm64.tar.gz
+          mkdir -p dss_capi/lib/darwin_x64
+          mkdir -p dss_capi/lib/darwin_arm64
           cp -r klusolvex/lib/* dss_capi/lib/
       - name: Build x64
         run: |
@@ -114,7 +118,7 @@ jobs:
     name: 'Windows x64'
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with: 
           fetch-depth: 0
           path: 'dss_capi'
@@ -130,6 +134,8 @@ jobs:
         run: |
           "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_win_x64-gcc8.1.zip -o klusolve_x64.zip
           7z x -y -o. klusolve_x64.zip
+          mkdir dss_capi\lib
+          mkdir dss_capi\lib\win_x64
           xcopy /E klusolvex\lib dss_capi\lib
       - name: Build
         #TODO? cv2pdb (generate PDB for MSVC) and dlltool (generate lib compatible with GCC)
@@ -152,7 +158,7 @@ jobs:
     name: 'Windows x86'
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with: 
           fetch-depth: 0
           path: 'dss_capi'
@@ -166,6 +172,8 @@ jobs:
         run: |
           "c:\Program Files\Git\mingw64\bin\curl" -s -L https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_win_x86-msvc2017.zip -o klusolve_x86.zip
           7z x -y -o. klusolve_x86.zip
+          mkdir dss_capi\lib
+          mkdir dss_capi\lib\win_x86
           xcopy /E klusolvex\lib dss_capi\lib
       - name: Build
         #TODO? cv2pdb (generate PDB for MSVC) and dlltool (generate lib compatible with GCC)

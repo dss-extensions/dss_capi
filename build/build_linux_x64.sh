@@ -2,6 +2,7 @@
 
 set -e -x
 
+mkdir  -p lib/linux_x64/
 python3 src/classic_to_ctx.py
 
 rm -rf build/units_x64

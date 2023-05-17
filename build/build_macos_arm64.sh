@@ -2,6 +2,7 @@
 
 set -e -x
 
+mkdir -p lib/darwin_arm64/
 python3 src/classic_to_ctx.py
 
 export LDFLAGS=-L`pwd`/lib/darwin_arm64/
