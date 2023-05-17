@@ -191,9 +191,11 @@ var
     jsonDaisyBusList: TJSONArray = NIL;
     jsonBases: TJSONArray = NIL;
     jsonChannels: TJSONArray = NIL;
+    jsonBusMarkers: TJSONArray = NIL;
     plotParamsStr: String;
     Parser: TDSSParser;
     ActiveCircuit: TDSSCircuit;
+    busMarker: TBusMarker;
 begin
     Result := 0;
 
@@ -456,6 +458,17 @@ begin
         for i := 0 to High(Bases) do
             jsonBases.Add(Bases[i]);
         
+        jsonBusMarkers := TJSONArray.Create();
+        for busMarker in ActiveCircuit.BusMarkerList do
+        begin
+            jsonBusMarkers.Add(TJSONObject.Create([
+                'Name', busMarker.BusName,
+                'Color', ColorToHTML(busMarker.AddMarkerColor),
+                'Code', busMarker.AddMarkerCode,
+                'Size', busMarker.AddMarkerSize
+            ]));
+        end;
+
         plotParams := TJSONObject.Create([
             'PlotType', PlotType,
             'MatrixType', MatrixType,
@@ -515,7 +528,8 @@ begin
                 'MarkFuses', ActiveCircuit.MarkFuses,
                 'MarkReclosers', ActiveCircuit.MarkReclosers,
                 'MarkRelays', ActiveCircuit.MarkRelays
-            ])
+            ]),
+            'BusMarkers', jsonBusMarkers
         ]);
         // plotParams.CompressedJSON := True;
         plotParamsStr := plotParams.FormatJSON();
