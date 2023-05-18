@@ -271,17 +271,17 @@ procedure TcktTree.PushAllChildren;
 var
     pChild: Pointer;
 begin
-    if PresentBranch <> NIL then
+    if PresentBranch = NIL then
+        Exit;
+
+    // Push all children of present node onto stack
+    pChild := PresentBranch.FirstChildBranch;
+    while pChild <> NIL do
     begin
-     // Push all children of present node onto stack
-        pChild := PresentBranch.FirstChildBranch;
-        while pChild <> NIL do
-        begin
-            ForwardStack.Push(pChild);
-            pChild := PresentBranch.NextChildBranch;
-        end;
-        PresentBranch.ChildAdded := FALSE;
+        ForwardStack.Push(pChild);
+        pChild := PresentBranch.NextChildBranch;
     end;
+    PresentBranch.ChildAdded := FALSE;
 end;
 
 function TcktTree.Get_Forward: Pointer;
@@ -307,6 +307,11 @@ end;
 
 function TcktTree.Get_Backward: Pointer;
 begin
+    if PresentBranch = NIL then
+    begin
+        Result := NIL;
+        Exit;
+    end;
     // Move Backwardfrom Present node and reset forward stack
     PresentBranch := PresentBranch.ParentBranch;
     ForwardStack.Clear;
@@ -318,6 +323,12 @@ end;
 
 function TcktTree.Get_Parent: Pointer;
 begin
+    if PresentBranch = NIL then
+    begin
+        Result := NIL;
+        Exit;
+    end;
+
     if PresentBranch.FParentBranch <> NIL then
         Result := PresentBranch.FParentBranch.CktObject
     else
@@ -326,7 +337,7 @@ end;
 
 function TcktTree.Get_First: Pointer;
 begin
-// go to beginning and reset forward stack
+    // go to beginning and reset forward stack
     PresentBranch := FirstNode;
     ForwardStack.Clear;
     PushAllChildren;
