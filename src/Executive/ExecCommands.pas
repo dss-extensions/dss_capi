@@ -382,13 +382,16 @@ begin
             begin
                 DSS.DSSExecutive.ParseObjName(ParamName, ObjName, PropName);
                 if Length(ObjName) > 0 then
-                    SetObject(DSS, ObjName);  // Set active element
+                begin
+                    if not SetObject(DSS, ObjName) then  // Set active element
+                        Exit;
+                end;
                 if DSS.ActiveDSSObject <> NIL then
                 begin
                     // rebuild command line and pass to editor
                     // use quotes to ensure first parameter is interpreted OK after rebuild
                     DSS.Parser.CmdString := PropName + '="' + Param + '" ' + DSS.Parser.Remainder;
-                    DSS.ActiveDSSClass.Edit(DSS.Parser);
+                    DSS.ActiveDSSObject.ParentClass.Edit(DSS.Parser);
                 end;
             end;
             Exit;  // Done - don't need to do anything ELSE

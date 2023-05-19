@@ -181,7 +181,7 @@ procedure ClearAllCircuits_SingleContext(DSS: TDSSContext);
 procedure ClearAllCircuits_AllContexts(DSS: TDSSContext);
 {$ENDIF}
 
-procedure SetObject(DSS: TDSSContext; const param :string);
+function SetObject(DSS: TDSSContext; const param :string): Boolean;
 function  SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
 procedure SetDataPath(DSS: TDSSContext; const PathName:String);
 
@@ -310,7 +310,7 @@ begin
     DoSimpleMsg(DSS, Format(_(S), fmtArgs), ErrNum)
 end;
 
-PROCEDURE SetObject(DSS: TDSSContext; const param :string);
+function SetObject(DSS: TDSSContext; const param :string): Boolean;
 
 {Set object active by name}
 
@@ -319,6 +319,7 @@ VAR
    ObjName, ObjClass :String;
 
 Begin
+    Result := true;
       ObjClass := '';
       // Split off Obj class and name
       dotpos := Pos('.', Param);
@@ -338,6 +339,7 @@ Begin
         IF Not DSS.ActiveDSSClass.SetActive(Objname) THEN
         Begin // scroll through list of objects untill a match
           DoSimpleMsg(DSS, Format(_('Error! Object "%s" not found.'), [ObjName]) + CRLF + DSS.Parser.CmdString, 904);
+          Result := false;
         End
         ELSE
         With DSS.ActiveCircuit Do
@@ -352,7 +354,10 @@ Begin
         End;
       End
       ELSE
+    begin
         DoSimpleMsg(DSS, _('Error! Active object type/class is not set.'), 905);
+        Result := false;
+    end;
 end;
 
 FUNCTION SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;

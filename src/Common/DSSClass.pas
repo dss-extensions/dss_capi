@@ -1148,7 +1148,8 @@ begin
         DosimpleMsg('%s: Object already being edited!', [Obj.FullName], 37737);
         Exit;
     end;
-    Include(Obj.Flags, Flg.EditionActive);
+    if (Obj <> NIL) then
+        Include(Obj.Flags, Flg.EditionActive);
 end;
 
 function TDSSClass.EndEdit(ptr: Pointer; const NumChanges: integer): Boolean;
