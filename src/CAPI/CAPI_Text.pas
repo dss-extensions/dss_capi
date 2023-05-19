@@ -42,22 +42,9 @@ var
     strs: TStringList;
 begin
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    try
-        strs := TStringList.Create();
-        strs.AddText(Value);
-        for i := 1 to strs.Count do
-            if Length(strs[i - 1]) > 0 then
-            begin
-                DSSPrime.DSSExecutive.Set_Command(strs[i - 1], i);  // Convert to String
-                if DSSPrime.ErrorNumber <> 0 then
-                begin
-                    //TODO: complement error message?
-                    Exit;
-                end;
-            end;
-    finally
-        strs.Free;
-    end;
+    strs := TStringList.Create();
+    strs.AddText(Value);
+    DSSPrime.DSSExecutive.DoRedirect(false, strs); // DoRedirect will free the stringlist.
 end;
 //------------------------------------------------------------------------------
 procedure Text_CommandArray(const Value: PPAnsiChar; ValueCount: TAPISize); CDECL;

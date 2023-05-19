@@ -25,7 +25,7 @@ type
         function DoBatchEditCmd: Integer;
         function DoSelectCmd: Integer;
         function DoMoreCmd: Integer;
-        function DoRedirect(IsCompile: Boolean): Integer;
+        function DoRedirect(IsCompile: Boolean; inputStrings: TStringList = NIL): Integer;
         function DoSaveCmd: Integer;
         function DoSampleCmd: Integer;
 
@@ -338,7 +338,7 @@ begin
     end;
 end;
 
-function TExecHelper.DoRedirect(IsCompile: Boolean): Integer;
+function TExecHelper.DoRedirect(IsCompile: Boolean; inputStrings: TStringList): Integer;
 //  This routine should be recursive
 //  So you can redirect input an arbitrary number of times
 
@@ -355,15 +355,23 @@ var
     stringIdx: Integer;
     LineNum: Integer = 0;
     Fstream: TStream;
+    wasProvidedStrings: Boolean = false;
 begin
     gotTheFile := FALSE;
-    strings := NIL;
+    strings := inputStrings;
     Result := 0;
     InBlockComment := FALSE;  // Discarded off stack upon return
     // Therefore extent of block comment does not extend beyond a file
     // Going back up the redirect stack
 
-    if InZip then
+    if (strings <> NIL) then
+    begin
+        gotTheFile := true;
+        ReDirFileExp := '<user-provided string>';
+        wasProvidedStrings := true;
+    end;
+
+    if (not gotTheFile) and InZip then
     begin
         // Get next parm and try to interpret as a file name
         DSS.Parser.NextParam;
@@ -390,7 +398,8 @@ begin
         gotTheFile := TRUE;
         SaveDir := DSS.inZipPath;
     end
-    else
+    else 
+    if (not gotTheFile) then
     begin
         // Get next parm and try to interpret as a file name
         DSS.Parser.NextParam;
@@ -523,18 +532,21 @@ begin
     // OK, we finally got one open, so we're going to continue
     try
         try
-            // Change Directory to path specified by file in CASE that
-            // loads in more files
-            CurrDir := ExtractFileDir(DSS.ReDirFile);
-            if not InZip then
+            if not wasProvidedStrings then // skip directory shenanigans when provided the file contents directly
             begin
-                DSS.SetCurrentDSSDir(CurrDir);
-                if IsCompile then
-                    SetDataPath(DSS, CurrDir);  // change datadirectory
-            end
-            else
-            begin
-                SetInZipPath(CurrDir);
+                // Change Directory to path specified by file in CASE that
+                // loads in more files
+                CurrDir := ExtractFileDir(DSS.ReDirFile);
+                if not InZip then
+                begin
+                    DSS.SetCurrentDSSDir(CurrDir);
+                    if IsCompile then
+                        SetDataPath(DSS, CurrDir);  // change datadirectory
+                end
+                else
+                begin
+                    SetInZipPath(CurrDir);
+                end;
             end;
 
             DSS.Redirect_Abort := FALSE;
@@ -604,7 +616,7 @@ begin
                 end; // for stringIdx := 1 to strings.Count do
             end;
 
-            if DSS.ActiveCircuit <> NIL then
+            if (not wasProvidedStrings) and (DSS.ActiveCircuit <> NIL) then
                 DSS.ActiveCircuit.CurrentDirectory := CurrDir + PathDelim;
 
         except
@@ -628,24 +640,27 @@ begin
         DSS.In_Redirect := FALSE;
         DSS.ParserVars.Add('@lastfile', DSS.ReDirFile);
 
-        if not InZip then
+        if not wasProvidedStrings then // skip directory shenanigans when provided the file contents directly
         begin
-            if IsCompile then
+            if not InZip then
             begin
-                SetDataPath(DSS, CurrDir); // change datadirectory
-                DSS.LastCommandWasCompile := TRUE;
-                DSS.ParserVars.Add('@lastcompilefile', LocalCompFileName); // will be last one off the stack
+                if IsCompile then
+                begin
+                    SetDataPath(DSS, CurrDir); // change datadirectory
+                    DSS.LastCommandWasCompile := TRUE;
+                    DSS.ParserVars.Add('@lastcompilefile', LocalCompFileName); // will be last one off the stack
+                end
+                else
+                begin
+                    DSS.SetCurrentDSSDir(SaveDir);    // set back to where we were for redirect, but not compile
+                    DSS.ParserVars.Add('@lastredirectfile', DSS.ReDirFile);
+                end;
             end
             else
             begin
-                DSS.SetCurrentDSSDir(SaveDir);    // set back to where we were for redirect, but not compile
-                DSS.ParserVars.Add('@lastredirectfile', DSS.ReDirFile);
+                if not IsCompile then
+                    SetInZipPath(SaveDir);
             end;
-        end
-        else
-        begin
-            if not IsCompile then
-                SetInZipPath(SaveDir);
         end;
     end;
 end;
