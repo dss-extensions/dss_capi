@@ -403,7 +403,7 @@ begin
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.StringProperty,
         TPropertyType.MakeLikeProperty,
-        TPropertyType.StringOnArrayProperty,
+        // TPropertyType.StringOnArrayProperty,
         TPropertyType.StringOnStructArrayProperty:
         begin
             SetObjString(Obj, Index, Value);
@@ -999,7 +999,7 @@ begin
             TPropertyType.BusProperty,
             TPropertyType.BusOnStructArrayProperty,
             TPropertyType.StringSilentROFunctionProperty,
-            TPropertyType.StringOnArrayProperty,
+        // TPropertyType.StringOnArrayProperty,
             TPropertyType.StringEnumActionProperty,
             TPropertyType.StringOnStructArrayProperty,
             TPropertyType.StringProperty,
@@ -1354,7 +1354,7 @@ begin
             TPropertyType.BusProperty,
             TPropertyType.BusOnStructArrayProperty,
             TPropertyType.StringSilentROFunctionProperty,
-            TPropertyType.StringOnArrayProperty,
+            // TPropertyType.StringOnArrayProperty,
             TPropertyType.StringEnumActionProperty,
             TPropertyType.StringOnStructArrayProperty,
             TPropertyType.MappedStringEnumOnStructArrayProperty,
@@ -1831,11 +1831,11 @@ begin
                 stringPtr^ := Value;
             end;
         end;
-        TPropertyType.StringOnArrayProperty:
-        begin
-            stringPtr := PPString(PByte(obj) + PropertyOffset[Index])^;
-            stringPtr[PInteger(PByte(obj) + PropertyOffset2[Index])^ - 1] := Value;
-        end;
+        // TPropertyType.StringOnArrayProperty:
+        // begin
+        //     stringPtr := PPString(PByte(obj) + PropertyOffset[Index])^;
+        //     stringPtr[PInteger(PByte(obj) + PropertyOffset2[Index])^ - 1] := Value;
+        // end;
         TPropertyType.StringOnStructArrayProperty:
         begin
             stringPtr := PString(
@@ -2968,8 +2968,8 @@ begin
                 Inc(integerPtr);
             end;
         end;
-        TPropertyType.StringOnStructArrayProperty, // shortcut
-        TPropertyType.StringOnArrayProperty: // shortcut
+        TPropertyType.StringOnStructArrayProperty: // shortcut
+        // TPropertyType.StringOnArrayProperty: // shortcut
         begin
             // Number of items
             maxSize := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;
@@ -3118,11 +3118,11 @@ begin
             Result := TDSSCktElement(obj).GetBus(PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^);
         TPropertyType.StringSilentROFunctionProperty:
             Result := TStringPropertyFunction(Pointer(PropertyOffset[Index]))(obj);
-        TPropertyType.StringOnArrayProperty:
-            Result := (
-                (PPString(PByte(obj) + PropertyOffset[Index])^)
-                    [PInteger(PByte(obj) + PropertyOffset2[Index])^ - 1]
-            );
+        // TPropertyType.StringOnArrayProperty:
+        //     Result := (
+        //         (PPString(PByte(obj) + PropertyOffset[Index])^)
+        //             [PInteger(PByte(obj) + PropertyOffset2[Index])^ - 1]
+        //     );
         TPropertyType.MappedStringEnumOnStructArrayProperty:
             Result := TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(PInteger(
                 PPByte(PByte(obj) + PropertyStructArrayOffset)^ + // Pointer to the pointer array
@@ -3690,8 +3690,8 @@ begin
                 Inc(integerPtr);
             end;
         end;
-        TPropertyType.StringOnStructArrayProperty, // shortcut
-        TPropertyType.StringOnArrayProperty: // shortcut
+        TPropertyType.StringOnStructArrayProperty: // shortcut
+        // TPropertyType.StringOnArrayProperty: // shortcut
         begin
             // Number of items
             count := PInteger(PByte(obj) + PropertyStructArrayCountOffset)^;

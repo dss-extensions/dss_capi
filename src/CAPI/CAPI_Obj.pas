@@ -1200,7 +1200,7 @@ begin
         TPropertyType.StringSilentROFunctionProperty,
         TPropertyType.StringProperty,
         TPropertyType.BusProperty,
-        TPropertyType.StringOnArrayProperty,
+        // TPropertyType.StringOnArrayProperty,
         TPropertyType.StringOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.MappedStringEnumProperty,
@@ -1467,7 +1467,7 @@ begin
         TPropertyType.StringProperty,
         TPropertyType.BusProperty,
         TPropertyType.MappedStringEnumProperty,
-        TPropertyType.StringOnArrayProperty,
+        // TPropertyType.StringOnArrayProperty,
         TPropertyType.StringOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.DSSObjectReferenceProperty
@@ -1659,7 +1659,7 @@ begin
         TPropertyType.StringProperty,
         TPropertyType.BusProperty,
         TPropertyType.MappedStringEnumProperty,
-        TPropertyType.StringOnArrayProperty,
+        // TPropertyType.StringOnArrayProperty,
         TPropertyType.StringOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.DSSObjectReferenceProperty

@@ -163,7 +163,7 @@ type
         // For (double,string,integer)-on-array, 
         // offset is the offset pointer to the pointer/array
         // offset2 is the offset pointer to the element index (Integer)
-        StringOnArrayProperty,  //1-based
+        // StringOnArrayProperty,  //1-based
 
         // For (double,string,integer)-on-array, 
         // offset is the offset pointer to the pointer/array
