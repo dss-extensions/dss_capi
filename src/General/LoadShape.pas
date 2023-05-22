@@ -1191,7 +1191,8 @@ function TLoadShapeObj.GetMultAtHour(hr: Double): Complex;
 // The value returned is the nearest to the interval requested.  Thus if you request
 // hour=12.25 and the interval is 1.0, you will get interval 12.
 var
-    i: Integer;
+    i, k: Integer;
+    koffset, 
     offset, // index including stride
     poffset: Int64; // previous index including stride
     
@@ -1306,33 +1307,55 @@ begin
             Exit;
         end;
         
-        if dH[offset] > Hr then      // Interpolate for multiplier
+        if dH[offset] > Hr then
         begin
-            LastValueAccessed := i - 1;
-            poffset := offset - Stride;
-            if UseMMF then
+            if Interpolation = TLoadShapeInterp.Edge then
             begin
-                Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed + 1, mmLineLen) +
-                    (Hr - dH[LastValueAccessed]) / (dH[i] - dH[LastValueAccessed]) *
-                    (InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen) -
-                    InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed, mmLineLen));
-                if Assigned(dQ) then
-                    Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed + 1, mmLineLenQ) +
+                // Use the edge values
+                Result := 0;
+                //TODO: after we have more tests, rewrite this to walk back from i instead of this loop
+                for k := 1 to NumPoints do
+                begin
+                    koffset := Stride * (k - 1);
+                    if dH[koffset] <= Hr then
+                    begin
+                        Result.re := dP[koffset];
+                        if dQ <> NIL then
+                            Result.im := dQ[koffset];
+                    end
+                    else
+                        Exit;
+                end;
+            end
+            else
+            begin
+                // Interpolate for multiplier
+                LastValueAccessed := i - 1;
+                poffset := offset - Stride;
+                if UseMMF then
+                begin
+                    Result.re := InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed + 1, mmLineLen) +
                         (Hr - dH[LastValueAccessed]) / (dH[i] - dH[LastValueAccessed]) *
-                        (InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ) -
-                        InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed, mmLineLenQ))
+                        (InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, i, mmLineLen) -
+                        InterpretDblArrayMMF(DSS, mmView, mmFileType, mmColumn, LastValueAccessed, mmLineLen));
+                    if Assigned(dQ) then
+                        Result.im := InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed + 1, mmLineLenQ) +
+                            (Hr - dH[LastValueAccessed]) / (dH[i] - dH[LastValueAccessed]) *
+                            (InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, i, mmLineLenQ) -
+                            InterpretDblArrayMMF(DSS, mmViewQ, mmFileTypeQ, mmColumnQ, LastValueAccessed, mmLineLenQ))
+                    else
+                        Result.im := Set_Result_im(Result.re);
+                        
+                    Exit;
+                end;
+
+                Result.re := dP[poffset] + (Hr - dH[poffset]) / (dH[i] - dH[poffset]) * (dP[i] - dP[poffset]);
+                if Assigned(dQ) then
+                    Result.im := dQ[poffset] + (Hr - dH[poffset]) / (dH[i] - dH[poffset]) * (dQ[i] - dQ[poffset])
                 else
                     Result.im := Set_Result_im(Result.re);
-                    
                 Exit;
             end;
-
-            Result.re := dP[poffset] + (Hr - dH[poffset]) / (dH[i] - dH[poffset]) * (dP[i] - dP[poffset]);
-            if Assigned(dQ) then
-                Result.im := dQ[poffset] + (Hr - dH[poffset]) / (dH[i] - dH[poffset]) * (dQ[i] - dQ[poffset])
-            else
-                Result.im := Set_Result_im(Result.re);
-            Exit;
         end;
     end;
 
@@ -1910,7 +1933,8 @@ end;
 
 function TLoadShapeObj.GetMultAtHourSingle(hr: Double): Complex;
 var
-    i: Integer;
+    i, k: Integer;
+    koffset, 
     offset, // index including stride
     poffset: Int64; // previous index including stride
     
@@ -1994,14 +2018,35 @@ begin
         
         if sH[offset] > Hr then      // Interpolate for multiplier
         begin
-            LastValueAccessed := i - 1;
-            poffset := offset - Stride;
-            Result.re := sP[poffset] + (Hr - sH[poffset]) / (sH[offset] - sH[poffset]) * (sP[offset] - sP[poffset]);
-            if Assigned(sQ) then
-                Result.im := sQ[poffset] + (Hr - sH[poffset]) / (sH[offset] - sH[poffset]) * (sQ[offset] - sQ[poffset])
+            if Interpolation = TLoadShapeInterp.Edge then
+            begin
+                // Use the edge values
+                Result := 0;
+                //TODO: after we have more tests, rewrite this to walk back from i instead of this loop
+                for k := 1 to NumPoints do
+                begin
+                    koffset := Stride * (k - 1);
+                    if sH[koffset] <= Hr then
+                    begin
+                        Result.re := sP[koffset];
+                        if dQ <> NIL then
+                            Result.im := sQ[koffset];
+                    end
+                    else
+                        Exit;
+                end;
+            end
             else
-                Result.im := Set_Result_im(Result.re);
-            Exit;
+            begin
+                LastValueAccessed := i - 1;
+                poffset := offset - Stride;
+                Result.re := sP[poffset] + (Hr - sH[poffset]) / (sH[offset] - sH[poffset]) * (sP[offset] - sP[poffset]);
+                if Assigned(sQ) then
+                    Result.im := sQ[poffset] + (Hr - sH[poffset]) / (sH[offset] - sH[poffset]) * (sQ[offset] - sQ[poffset])
+                else
+                    Result.im := Set_Result_im(Result.re);
+                Exit;
+            end;
         end;
     end;
 

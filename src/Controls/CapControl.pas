@@ -32,7 +32,8 @@ uses
     UComplex, DSSUcomplex,
     Capacitor,
     utilities,
-    CapUserControl;
+    CapUserControl,
+    LoadShape;
 
 type
 {$SCOPEDENUMS ON}
@@ -59,7 +60,8 @@ type
         UserModel = 19,
         UserData = 20,
         pctMinkvar = 21,
-        Reset = 22
+        Reset = 22,
+        ControlSignal
     );
 {$SCOPEDENUMS OFF}
 
@@ -69,6 +71,7 @@ type
         KVARCONTROL,
         TIMECONTROL,
         PFCONTROL,
+        FOLLOWCONTROL,
         USERCONTROL
     );
 
@@ -139,6 +142,7 @@ type
         UserModelNameStr, UserModelEditStr: String;
 
         FpctMinkvar: Double;
+        ctrlSignalShape: TLoadShapeObj;        
 
         function Get_Capacitor: TCapacitorObj;
         function NormalizeToTOD(h: Integer; sec: Double): Double;
@@ -212,8 +216,8 @@ begin
     begin
         PropInfo := TypeInfo(TProp);
         TypeEnum := TDSSEnum.Create('CapControl: Type', True, 1, 1, 
-            ['Current', 'Voltage', 'kvar', 'Time', 'PowerFactor'{'UserControl'}], 
-            [ord(CURRENTCONTROL), ord(VOLTAGECONTROL), ord(KVARCONTROL), ord(TIMECONTROL), ord(PFCONTROL) {, ord(USERCONTROL)}]);
+            ['Current', 'Voltage', 'kvar', 'Time', 'PowerFactor', 'Follow'{'UserControl'}], 
+            [ord(CURRENTCONTROL), ord(VOLTAGECONTROL), ord(KVARCONTROL), ord(TIMECONTROL), ord(PFCONTROL), ord(FOLLOWCONTROL){, ord(USERCONTROL)}]);
     end;
     inherited Create(dssContext, CAP_CONTROL, 'CapControl');
 end;
@@ -251,6 +255,11 @@ begin
     PropertyWriteFunction[ord(TProp.element)] := @SetMonitoredElement;
     PropertyFlags[ord(TProp.element)] := [TPropertyFlag.WriteByFunction];
     //PropertyFlags[ord(TProp.element)] := [TPropertyFlag.CheckForVar]; // not required for general cktelements
+
+    PropertyType[ord(TProp.ControlSignal)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyOffset[ord(TProp.ControlSignal)] := ptruint(@obj.ctrlSignalShape);
+    PropertyOffset2[ord(TProp.ControlSignal)] := ptruint(DSS.LoadShapeClass);
+    //PropertyFlags[ord(TProp.ControlSignal)] := [TPropertyFlag.CheckForVar];
 
     // enum properties
     PropertyType[ord(TProp.typ)] := TPropertyType.MappedStringEnumProperty;
@@ -447,8 +456,9 @@ begin
 
     FNPhases := 3;  // Directly set conds and phases
     Fnconds := 3;
-    Nterms := 1;  // this forces allocation of terminals and conductors
-                         // in base class
+    Nterms := 1;  // this forces allocation of terminals and conductors in base class
+    ctrlSignalShape := NIL;
+
     with ControlVars do
     begin
         FCTPhase := 1;
@@ -777,6 +787,7 @@ var
     CurrTest,
     Vtest,
     NormalizedTime,
+    nextState,
     Q: Double;
     S: Complex;
     PF: Double;
@@ -1079,6 +1090,25 @@ begin
 
                 end;
 
+                FOLLOWCONTROL:
+                begin
+                    if ctrlSignalShape = NIL then
+                    begin
+                        DoSimpleMsg('%s: Type is set to "Follow", but not "ControlSignal" was provided. Aborting solution.', [self.FullName], 10362);
+                        DSS.SolutionAbort := true;
+                        Exit;
+                    end;
+
+                    nextState := ctrlSignalShape.GetMultAtHour(ActiveCircuit.Solution.DynaVars.dblHour).re;
+                    if not ((nextState <> 0) xor (PresentState = CTRL_OPEN)) then
+                    begin
+                        if PresentState = CTRL_OPEN then
+                            PendingChange := CTRL_CLOSE
+                        else
+                            PendingChange := CTRL_OPEN;
+                        ShouldSwitch := TRUE;
+                    end;
+                end;                
             end;
     end;
     with ActiveCircuit, ControlVars do
