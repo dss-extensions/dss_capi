@@ -1,7 +1,7 @@
-@echo off
+@echo on
 @SETLOCAL
 
-mkdir lib\win_x86
+if not exist lib\win_x86 ( mkdir lib\win_x86 )
 python src\classic_to_ctx.py
 
 where /q fpc
