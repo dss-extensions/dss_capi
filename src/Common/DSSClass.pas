@@ -94,11 +94,13 @@ type
         ArrayMaxSize, // for arrays
         ValueOffset, // only implemented for integers
         FullNameAsArray, // special case for LineGeometry, when reading wire as an array of strings through the Obj_* API
+        FullNameAsJSONArray, // special case for Line, when exporting wires property as JSON
         Redundant,
         Util, // things like X and Y from XYcurve that don't have value as data
         Unused,
         PDElement, // if obj reference, must be a PDElement
         InverseValue, // e.g. for G if exposed as R
+        SuppressJSON,
         Deprecated
     );
 
@@ -116,12 +118,12 @@ type
         // For (double,string,integer)-on-array, 
         // offset is the offset pointer to the pointer/array
         // offset2 is the offset pointer to the element index (Integer)
-        DoubleOnArrayProperty, //1-based
+        DoubleOnArrayProperty, //1-based -- TODO: remove, used only on LineGeometry
         // For (double,string,integer)-on-array, 
         // offset is the offset pointer to the pointer/array
         // offset2 is the offset pointer to the element index (Integer)
         // step is the size of the step used in offset2 (direct integer)
-        DoubleOnStructArrayProperty,
+        DoubleOnStructArrayProperty, // AutoTrans, Transformer, XfmrCode
         
         StringSilentROFunctionProperty, //TODO: SilentRO=ignore writes. We might want to change this in the future to error out instead of ignoring
 
@@ -132,8 +134,8 @@ type
         ComplexPartSymMatrixProperty,
         DoubleSymMatrixProperty,
 
-        IntegerArrayProperty,
-        StringListProperty,
+        IntegerArrayProperty, // Capacitor
+        StringListProperty, //TODO: maybe replace later with DSSObjectReferenceArrayProperty in lots of instances
 
         // A string with a name of an object
         // offset is the offset pointer to the pointer to the object
@@ -143,9 +145,9 @@ type
         // List of strings with names of objects
         // offset is the offset pointer to the pointer to the object
         // offset2 is the pointer to the TDSSClass; if NIL, assumes any CktElement
-        DSSObjectReferenceArrayProperty,
+        DSSObjectReferenceArrayProperty, // Line, LineGeometry
 
-        DoubleArrayOnStructArrayProperty,
+        DoubleArrayOnStructArrayProperty, // AutoTrans, Transformer, XfmrCode
 
         IntegerProperty,
         StringProperty,
@@ -154,11 +156,11 @@ type
         BusProperty,
         ComplexPartsProperty,
 
-        MappedStringEnumProperty,
-        MappedIntEnumProperty,
-        MappedStringEnumArrayProperty,
-        MappedStringEnumOnStructArrayProperty,
-        MappedStringEnumArrayOnStructArrayProperty,
+        MappedStringEnumProperty, // Lots of classes
+        MappedIntEnumProperty, // Load, InvControl
+        MappedStringEnumArrayProperty, // Fuse
+        MappedStringEnumOnStructArrayProperty, // AutoTrans, Transformer, XfmrCode
+        MappedStringEnumArrayOnStructArrayProperty, // AutoTrans, Transformer, XfmrCode
 
         // For (double,string,integer)-on-array, 
         // offset is the offset pointer to the pointer/array
@@ -169,10 +171,10 @@ type
         // offset is the offset pointer to the pointer/array
         // offset2 is the offset pointer to the element index (Integer)
         // step is the size of the step used in offset2 (direct integer)
-        IntegerOnStructArrayProperty,
-        StringOnStructArrayProperty,
+        IntegerOnStructArrayProperty, // AutoTrans, Transformer, XfmrCode
+        // StringOnStructArrayProperty,
 
-        BusOnStructArrayProperty,
+        BusOnStructArrayProperty, // AutoTrans, Transformer
         BusesOnStructArrayProperty, // AutoTrans, Transformer
 
         DeprecatedAndRemoved
@@ -286,6 +288,7 @@ type
         // TODO: move to array of records
         PropertyName: pStringArray;
         PropertyRedundantWith: pIntegerArray;
+        PropertyArrayAlternative: pIntegerArray;
         PropertySource: pStringArray;
         PropertyScale, PropertyValueOffset: pDoubleArray;
         PropertyTrapZero: pDoubleArray;
@@ -1030,6 +1033,7 @@ BEGIN
     ElementList := TDSSPointerList.Create(20);  // Init size and increment
     PropertyName := nil;
     PropertyRedundantWith := nil;
+    PropertyArrayAlternative := nil;
     PropertySource := nil;
     PropertyScale := nil;
     PropertyValueOffset := nil;
@@ -1076,6 +1080,7 @@ begin
     end;
 
     Reallocmem(PropertyRedundantWith, 0);
+    Reallocmem(PropertyArrayAlternative, 0);
     Reallocmem(PropertyName, 0);
     Reallocmem(PropertySource, 0);
     Reallocmem(PropertyScale, 0);
@@ -1336,6 +1341,7 @@ begin
 
     PropertyName := Allocmem(SizeOf(String) * NumProperties);
     PropertyRedundantWith := Allocmem(SizeOf(Integer) * NumProperties);
+    PropertyArrayAlternative := Allocmem(SizeOf(Integer) * NumProperties);
     PropertySource := Allocmem(SizeOf(String) * NumProperties);
     PropertyScale := Allocmem(SizeOf(Double) * NumProperties);
     PropertyValueOffset := Allocmem(SizeOf(Double) * NumProperties);
@@ -1365,6 +1371,7 @@ begin
         // PropertyStep[i] := -1;
         PropertyReadFunction[i] := NIL;
         PropertyWriteFunction[i] := NIL;
+        PropertyArrayAlternative[i] := 0;
     end;
 
     ActiveProperty := 0;    // initialize for AddPropert

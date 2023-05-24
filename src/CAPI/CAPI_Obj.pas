@@ -211,9 +211,11 @@ begin
     if TPropertyFlag.Unused in flags then Result.Add('Unused');
     if TPropertyFlag.ConditionalValue in flags then Result.Add('ConditionalValue');
     if TPropertyFlag.FullNameAsArray in flags then Result.Add('FullNameAsArray');
+    if TPropertyFlag.FullNameAsJSONArray in flags then Result.Add('FullNameAsJSONArray');
     if TPropertyFlag.Util in flags then Result.Add('Util');
     if TPropertyFlag.Deprecated in flags then Result.Add('Deprecated');
     if TPropertyFlag.InverseValue in flags then Result.Add('InverseValue');
+    if TPropertyFlag.SuppressJSON in flags then Result.Add('SuppressJSON');
 end;
 
 function prepareEnum(e: TDSSEnum; enumIds: TClassNamesHashListType): TJSONObject;
@@ -324,6 +326,8 @@ begin
                 prop.Add('description', GetPropertyHelp(i));
             if TPropertyFlag.Redundant in PropertyFlags[i] then
                 prop.Add('redundantWith', PropertyRedundantWith[i]);
+            if PropertyArrayAlternative[i] <> 0 then
+                prop.Add('arrayAlternative', PropertyArrayAlternative[i]);
             if (PropertyType[i] = TPropertyType.DeprecatedAndRemoved) or (TPropertyFlag.Deprecated in PropertyFlags[i]) then
                 prop.Add('deprecationMessage', PropertyDeprecatedMessage[i]);
 
@@ -694,44 +698,102 @@ end;
 
 function Obj_ToJSONData(obj: TDSSObject; joptions: Integer): TJSONData;
 var 
-    iprop: Integer;
+    iProp, iPropNext: Integer;
     jvalue: TJSONData = NIL;
     cls: TDSSClass;
+    done: array of Boolean;
+    resObj: TJSONObject;
 begin
     Result := NIL;
     if obj = NIL then
         Exit;
 
     cls := obj.ParentClass;
-    with obj, cls do
+    if (joptions and Integer(DSSJSONOptions.SkipDSSClass)) = 0 then
+        Result := TJSONObject.Create(['DSSClass', cls.Name, 'name', obj.Name])
+    else
+        Result := TJSONObject.Create(['name', obj.Name]);
+
+    SetLength(done, cls.NumProperties);
+
+    resObj := Result as TJSONObject;
+
+    if (joptions and Integer(DSSJSONOptions.Full)) = 0 then
     begin
-        Result := TJSONObject.Create(['DSSClass', cls.Name, 'name', obj.Name]);
-        with Result as TJSONObject do
+        // Clear done status
+        SetLength(done, 0);
+        SetLength(done, cls.NumProperties);
+
+        // Return only filled properties, but adjust some odd ones
+        iPropNext := obj.GetNextPropertySet(-9999999);
+        while iPropNext > 0 do
         begin
-            if (joptions and Integer(DSSJSONOptions.Full)) = 0 then
-            begin
-                // Return only filled properties
-                iProp := GetNextPropertySet(-9999999);
-                while iProp > 0 do
-                begin
-                    if GetObjPropertyJSONValue(Pointer(obj), iProp, joptions, jvalue) then
-                        Add(PropertyName[iProp], jvalue);
+            iProp := iPropNext;
+            iPropNext := obj.GetNextPropertySet(iProp);
 
-                    iProp := GetNextPropertySet(iProp);
-                end;
-            end
-            else
-            begin
-                // Return all properties
-                for iprop := 1 to NumProperties do
-                begin
-                    if ((Integer(DSSJSONOptions.SkipRedundant) and joptions) <> 0) and (TPropertyFlag.Redundant in PropertyFlags[iprop]) then
-                        continue;
+            if done[iProp] then
+                continue;
 
-                    if GetObjPropertyJSONValue(Pointer(obj), iProp, joptions, jvalue) then
-                        Add(PropertyName[iProp], jvalue);
-                end;
+            done[iProp] := True;
+
+            // skip substructure (winding, wire) index or suppressed props
+            if (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) or 
+                (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or 
+                (TPropertyFlag.IntegerStructIndex in cls.PropertyFlags[iProp]) then
+                continue;
+
+            // If redundant and array-related, prefer the original property.
+            // We use the singular-named property (e.g. kV instead of kVs) since not
+            // all plural forms are exposed by OpenDSS properties that implement
+            // array-valued quantities.
+            // These don't expose array versions (they're either DoubleOnStructArrayProperty or IntegerOnStructArrayProperty):
+            // - Transformer: MaxTap, MinTap, RdcOhms, NumTaps, Rneut, Xneut
+            // - AutoTrans: MaxTap, MinTap, RdcOhms, NumTaps
+            // - XfmrCode: MaxTap, MinTap, RdcOhms, NumTaps, Rneut, Xneut
+            //TODO: validate Line in JSON
+            if (TPropertyFlag.Redundant in cls.PropertyFlags[iProp]) and
+                (cls.PropertyRedundantWith[iProp] <> 0) and (
+                    (TPropertyFlag.OnArray in cls.PropertyFlags[iProp]) or
+                    (cls.PropertyType[iProp] in [
+                        TPropertyType.BusesOnStructArrayProperty,
+                        TPropertyType.MappedStringEnumArrayOnStructArrayProperty,
+                        TPropertyType.MappedStringEnumArrayProperty,
+                        TPropertyType.DoubleArrayOnStructArrayProperty,
+                        TPropertyType.DSSObjectReferenceArrayProperty,
+                        TPropertyType.IntegerArrayProperty,
+                        TPropertyType.DoubleFArrayProperty,
+                        TPropertyType.DoubleVArrayProperty,
+                        TPropertyType.DoubleDArrayProperty,
+                        TPropertyType.DoubleArrayProperty
+                    ])
+                ) then
+            begin
+                iProp := cls.PropertyRedundantWith[iProp];
+                if done[iProp] then
+                    continue;
+
+                done[iProp] := True;
             end;
+
+            if cls.GetObjPropertyJSONValue(Pointer(obj), iProp, joptions, jvalue, True) then
+                resObj.Add(cls.PropertyName[iProp], jvalue);
+        end;
+    end
+    else
+    begin
+        // Return all properties
+        for iProp := 1 to cls.NumProperties do
+        begin
+            if ((Integer(DSSJSONOptions.SkipRedundant) and joptions) <> 0) and (TPropertyFlag.Redundant in cls.PropertyFlags[iProp]) then
+                continue;
+            // skip substructure (winding, wire) index or suppressed props
+            if (TPropertyFlag.SuppressJSON in cls.PropertyFlags[iProp]) or 
+                (TPropertyFlag.AltIndex in cls.PropertyFlags[iProp]) or 
+                (TPropertyFlag.IntegerStructIndex in cls.PropertyFlags[iProp]) then
+                continue;
+
+            if cls.GetObjPropertyJSONValue(Pointer(obj), iProp, joptions, jvalue, True) then
+                resObj.Add(cls.PropertyName[iProp], jvalue);
         end;
     end;
 end;
@@ -1201,7 +1263,7 @@ begin
         TPropertyType.StringProperty,
         TPropertyType.BusProperty,
         // TPropertyType.StringOnArrayProperty,
-        TPropertyType.StringOnStructArrayProperty,
+        // TPropertyType.StringOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.DSSObjectReferenceProperty
@@ -1468,7 +1530,7 @@ begin
         TPropertyType.BusProperty,
         TPropertyType.MappedStringEnumProperty,
         // TPropertyType.StringOnArrayProperty,
-        TPropertyType.StringOnStructArrayProperty,
+        // TPropertyType.StringOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.DSSObjectReferenceProperty
     ]) then
@@ -1660,7 +1722,7 @@ begin
         TPropertyType.BusProperty,
         TPropertyType.MappedStringEnumProperty,
         // TPropertyType.StringOnArrayProperty,
-        TPropertyType.StringOnStructArrayProperty,
+        // TPropertyType.StringOnStructArrayProperty,
         TPropertyType.BusOnStructArrayProperty,
         TPropertyType.DSSObjectReferenceProperty
     ]) then

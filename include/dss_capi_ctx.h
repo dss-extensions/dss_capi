@@ -6857,6 +6857,7 @@ extern "C" {
     - `EnumAsInt`: enumerated properties are returned as integer values instead of strings.
     - `FullNames`: any element reference will use the full name (`{class name}.{element name}`) even if not required.
     - `Pretty`: more whitespace is used in the output for a "prettier" format.
+    - `SkipDSSClass`: do not add the "DSSClass" property to the JSON objects.
 
     **NOT IMPLEMENTED YET**:
     - `State`: include run-time state information

@@ -232,21 +232,24 @@ begin
     PropertyType[ord(TProp.tscables)] := TPropertyType.DSSObjectReferenceArrayProperty;
     PropertyOffset[ord(TProp.tscables)] := ptruint(@obj.FWireData);
     PropertyOffset2[ord(TProp.tscables)] := ptruint(DSS.TSDataClass);
-    PropertyFlags[ord(TProp.tscables)] := [TPropertyFlag.AltIndex, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.tscables)] := [TPropertyFlag.AltIndex, TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON];
     PropertyRedundantWith[ord(TProp.tscables)] := ord(TProp.tscable);
+    PropertyArrayAlternative[ord(TProp.tscable)] := ord(TProp.tscables);
     
     PropertyType[ord(TProp.cncables)] := TPropertyType.DSSObjectReferenceArrayProperty;
     PropertyOffset[ord(TProp.cncables)] := ptruint(@obj.FWireData);
     PropertyOffset2[ord(TProp.cncables)] := ptruint(DSS.CNDataClass);
-    PropertyFlags[ord(TProp.cncables)] := [TPropertyFlag.AltIndex, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.cncables)] := [TPropertyFlag.AltIndex, TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON];
     PropertyRedundantWith[ord(TProp.cncables)] := ord(TProp.cncable);
+    PropertyArrayAlternative[ord(TProp.cncable)] := ord(TProp.cncables);
 
     PropertyType[ord(TProp.wires)] := TPropertyType.DSSObjectReferenceArrayProperty;
     PropertyOffset[ord(TProp.wires)] := ptruint(@obj.FWireData);
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
-    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Redundant, TPropertyFlag.FullNameAsArray, TPropertyFlag.SuppressJSON];
     PropertyRedundantWith[ord(TProp.wires)] := ord(TProp.wire);
+    // PropertyArrayAlternative[ord(TProp.wire)] := ord(TProp.wires);
 
     // enums
     PropertyType[ord(TProp.units)] := TPropertyType.MappedStringEnumProperty;
@@ -295,13 +298,13 @@ begin
     PropertyOffset2[ord(TProp.tscable)] := ptruint(DSS.TSDataClass);
 
     PropertyFlags[ord(TProp.wire)] := [TPropertyFlag.OnArray, TPropertyFlag.FullNameAsArray];
-    PropertyFlags[ord(TProp.cncable)] := [TPropertyFlag.Redundant, TPropertyFlag.OnArray];
-    PropertyFlags[ord(TProp.tscable)] := [TPropertyFlag.Redundant, TPropertyFlag.OnArray];
+    PropertyFlags[ord(TProp.cncable)] := [TPropertyFlag.Redundant, TPropertyFlag.OnArray, TPropertyFlag.SuppressJSON];
+    PropertyFlags[ord(TProp.tscable)] := [TPropertyFlag.Redundant, TPropertyFlag.OnArray, TPropertyFlag.SuppressJSON];
     PropertyRedundantWith[ord(TProp.cncable)] := ord(TProp.wire);
     PropertyRedundantWith[ord(TProp.tscable)] := ord(TProp.wire);
 
-    PropertyType[ord(TProp.x)] := TPropertyType.DoubleOnArrayProperty;
-    PropertyType[ord(TProp.h)] := TPropertyType.DoubleOnArrayProperty;
+    PropertyType[ord(TProp.x)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
+    PropertyType[ord(TProp.h)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
     PropertyOffset[ord(TProp.x)] := ptruint(@obj.FX); PropertyOffset2[ord(TProp.x)] := ptruint(@obj.FActiveCond);
     PropertyOffset[ord(TProp.h)] := ptruint(@obj.FY); PropertyOffset2[ord(TProp.h)] := ptruint(@obj.FActiveCond);
 

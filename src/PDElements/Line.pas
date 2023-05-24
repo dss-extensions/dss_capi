@@ -265,20 +265,20 @@ begin
     PropertyType[ord(TProp.tscables)] := TPropertyType.DSSObjectReferenceArrayProperty;
     PropertyOffset[ord(TProp.tscables)] := ptruint(@obj.LineWireData);
     PropertyOffset2[ord(TProp.tscables)] := ptruint(DSS.TSDataClass);
-    PropertyFlags[ord(TProp.tscables)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.tscables)] := [TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON];
     PropertyRedundantWith[ord(TProp.tscables)] := ord(TProp.wires);
 
     PropertyType[ord(TProp.cncables)] := TPropertyType.DSSObjectReferenceArrayProperty;
     PropertyOffset[ord(TProp.cncables)] := ptruint(@obj.LineWireData);
     PropertyOffset2[ord(TProp.cncables)] := ptruint(DSS.CNDataClass);
-    PropertyFlags[ord(TProp.cncables)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.cncables)] := [TPropertyFlag.Redundant, TPropertyFlag.SuppressJSON];
     PropertyRedundantWith[ord(TProp.cncables)] := ord(TProp.wires);
 
     PropertyType[ord(TProp.wires)] := TPropertyType.DSSObjectReferenceArrayProperty;
     PropertyOffset[ord(TProp.wires)] := ptruint(@obj.LineWireData);
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
-    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray];
+    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsJSONArray];
 
     // matrices
     PropertyType[ord(TProp.rmatrix)] := TPropertyType.ComplexPartSymMatrixProperty;

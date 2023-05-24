@@ -180,14 +180,15 @@ extern "C" {
     };
 
     enum DSSJSONFlags {
-        DSSJSONFlags_Full = 0x00000001, // 1 << 0,
-        DSSJSONFlags_SkipRedundant = 0x00000002, // 1 << 1;
-        DSSJSONFlags_EnumAsInt = 0x00000004, // 1 << 2,
-        DSSJSONFlags_FullNames = 0x00000008, // 1 << 3,
-        DSSJSONFlags_Pretty = 0x00000010, // 1 << 4, 
-        DSSJSONFlags_ExcludeDisabled = 0x00000020, // 1 << 5,
-        DSSJSONFlags_State = 0x00000040, // 1 << 6, // NOT IMPLEMENTED
-        DSSJSONFlags_Debug = 0x00000080 // 1 << 7 // NOT IMPLEMENTED
+        DSSJSONFlags_Full = 0x00000001, //< Return all properties, regardless of order or if the property was filled by the user
+        DSSJSONFlags_SkipRedundant = 0x00000002, //< Skip redundant properties
+        DSSJSONFlags_EnumAsInt = 0x00000004, //< Return enums as integers instead of strings
+        DSSJSONFlags_FullNames = 0x00000008, //< Use full names for the elements, including the class name
+        DSSJSONFlags_Pretty = 0x00000010, //< Try to "pretty" format the JSON output
+        DSSJSONFlags_ExcludeDisabled = 0x00000020, //< Exclude disabled elements (only valid when exporting a collection)
+        DSSJSONFlags_SkipDSSClass = 0x00000040, //< Do not add the "DSSClass" property to the output
+        DSSJSONFlags_State = 0x00000080, //< NOT IMPLEMENTED, avoid using until it's implemented.
+        DSSJSONFlags_Debug = 0x00000100 //< NOT IMPLEMENTED, avoid using until it's implemented.
     };
 
     enum BatchOperation {
@@ -7062,6 +7063,7 @@ extern "C" {
     - `EnumAsInt`: enumerated properties are returned as integer values instead of strings.
     - `FullNames`: any element reference will use the full name (`{class name}.{element name}`) even if not required.
     - `Pretty`: more whitespace is used in the output for a "prettier" format.
+    - `SkipDSSClass`: do not add the "DSSClass" property to the JSON objects.
 
     **NOT IMPLEMENTED YET**:
     - `State`: include run-time state information

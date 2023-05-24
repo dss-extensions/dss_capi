@@ -383,6 +383,7 @@ begin
     PropertyOffset[ord(TProp.buses)] := ptruint(@obj.NumWindings);
     PropertyFlags[ord(TProp.buses)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.buses)] := ord(TProp.bus);
+    PropertyArrayAlternative[ord(TProp.bus)] := ord(TProp.buses);
 
     // enum on array of structs
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumOnStructArrayProperty;
@@ -395,6 +396,7 @@ begin
     PropertyOffset2[ord(TProp.conns)] := PtrInt(AutoTransConnectionEnum);
     PropertyFlags[ord(TProp.conns)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.conns)] := ord(TProp.conn);
+    PropertyArrayAlternative[ord(TProp.conn)] := ord(TProp.conns);
 
     // integer on struct array
     PropertyType[ord(TProp.NumTaps)] := TPropertyType.IntegerOnStructArrayProperty;
@@ -459,25 +461,28 @@ begin
     PropertyScale[ord(TProp.pctRs)] := 0.01;
     PropertyFlags[ord(TProp.pctRs)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.pctRs)] := ord(TProp.pctR);
+    PropertyArrayAlternative[ord(TProp.pctR)] := ord(TProp.pctRs);
 
     PropertyType[ord(TProp.kVs)] := TPropertyType.DoubleArrayOnStructArrayProperty;
     PropertyOffset[ord(TProp.kVs)] := ptruint(@TAutoWinding(nil^).kVLL); 
     PropertyOffset2[ord(TProp.kVs)] := ptruint(@obj.NumWindings);
     PropertyFlags[ord(TProp.kVs)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.kVs)] := ord(TProp.kV);
+    PropertyArrayAlternative[ord(TProp.kV)] := ord(TProp.kVs);
 
     PropertyType[ord(TProp.kVAs)] := TPropertyType.DoubleArrayOnStructArrayProperty;
     PropertyOffset[ord(TProp.kVAs)] := ptruint(@TAutoWinding(nil^).kVA); 
     PropertyOffset2[ord(TProp.kVAs)] := ptruint(@obj.NumWindings);
     PropertyFlags[ord(TProp.kVAs)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.kVAs)] := ord(TProp.kVA);
+    PropertyArrayAlternative[ord(TProp.kVA)] := ord(TProp.kVAs);
 
     PropertyType[ord(TProp.taps)] := TPropertyType.DoubleArrayOnStructArrayProperty;
     PropertyOffset[ord(TProp.taps)] := ptruint(@TAutoWinding(nil^).puTap); 
     PropertyOffset2[ord(TProp.taps)] := ptruint(@obj.NumWindings);
     PropertyFlags[ord(TProp.taps)] := [TPropertyFlag.Redundant];
     PropertyRedundantWith[ord(TProp.taps)] := ord(TProp.tap);
-
+    PropertyArrayAlternative[ord(TProp.tap)] := ord(TProp.taps);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
