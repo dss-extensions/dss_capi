@@ -7103,7 +7103,7 @@ extern "C" {
 
 
     DSS_CAPI_DLL int32_t Obj_GetIdx(void *obj);
-    DSS_CAPI_DLL char* Obj_GetClassIdx(void *obj);
+    DSS_CAPI_DLL int32_t Obj_GetClassIdx(void *obj);
 
     /*! 
     Activates an object. The object is set as the current

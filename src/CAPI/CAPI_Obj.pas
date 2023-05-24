@@ -593,7 +593,7 @@ end;
 
 function Obj_GetClassIdx(Handle: Pointer): Integer; CDECL;
 begin
-    Result := TDSSObject(Handle).ParentClass.DSSClassType;
+    Result := TDSSObject(Handle).ParentClass.DSSClassIndex;
 end;
 
 function Obj_PropertySideEffects(Handle: Pointer; Index: Integer; PreviousInt: Integer): TAPIBoolean; CDECL;

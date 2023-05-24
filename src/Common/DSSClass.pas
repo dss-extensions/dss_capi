@@ -306,7 +306,7 @@ type
 
         PropertyFlags: Array of TPropertyFlags; //TODO: 0 is unused until things are migrated later
 
-        DSSClassType: Integer;
+        DSSClassType, DSSClassIndex: Integer;
 
         ElementList: TDSSPointerList;
         ElementNamesOutOfSynch: Boolean;     // When device gets renamed
@@ -1014,6 +1014,7 @@ end;
 procedure TDSSContext.NewDSSClass(Value:Pointer);
 begin
     DSSClassList.Add(Value); // Add to pointer list
+    TDSSClass(Value).DSSClassIndex := DSSClassList.Count;
     ActiveDSSClass := Value;   // Declare to be active
     ClassNames.Add(ActiveDSSClass.Name); // Add to classname list
 end;
@@ -1026,6 +1027,7 @@ BEGIN
     Inherited Create;
 
     DSSClassType := DSSClsType;
+    DSSClassIndex := -1; // Not initialized, will be filled  by NewDSSClass
     ClassParents := TStringList.Create(); // for easier property help with inheritance
     Class_Name := DSSClsName;
     ClassParents.Add('DSSClass');
