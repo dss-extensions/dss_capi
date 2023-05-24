@@ -33,7 +33,7 @@ jobs:
           ./build/build_linux_x64.sh
           ls -lR lib
       - name: 'Upload artifacts'
-        uses: "actions/upload-artifact@v2"
+        uses: "actions/upload-artifact@v3"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'development-build'
@@ -67,7 +67,7 @@ jobs:
           docker run -e DSS_CAPI_VERSION -v "${PWD}/..:/build" $DOCKER_IMAGE bash -c 'cd /build/dss_capi; PATH=/opt/python/cp38-cp38/bin/:$PATH bash build/build_linux_x86.sh'
           ls -lR lib
       - name: 'Upload artifacts'
-        uses: "actions/upload-artifact@v2"
+        uses: "actions/upload-artifact@v3"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'development-build'
@@ -108,7 +108,7 @@ jobs:
           ./build/build_macos_arm64.sh
           ls -lR lib
       - name: 'Upload artifacts'
-        uses: "actions/upload-artifact@v2"
+        uses: "actions/upload-artifact@v3"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'development-build'
@@ -148,7 +148,7 @@ jobs:
           call build/generated/set_version.bat
           call build/build_win_x64.bat
       - name: 'Upload artifacts'
-        uses: "actions/upload-artifact@v2"
+        uses: "actions/upload-artifact@v3"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'development-build'
@@ -186,7 +186,7 @@ jobs:
           call build/generated/set_version.bat
           call build/build_win_x86.bat
       - name: 'Upload artifacts'
-        uses: "actions/upload-artifact@v2"
+        uses: "actions/upload-artifact@v3"
         #if: github.event_name == 'release' && github.event.action == 'created'
         with:
           name: 'development-build'
