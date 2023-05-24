@@ -286,7 +286,7 @@ type
         NumProperties: Integer;
 
         // TODO: move to array of records
-        PropertyName: pStringArray;
+        PropertyName, PropertyNameLowercase: pStringArray;
         PropertyRedundantWith: pIntegerArray;
         PropertyArrayAlternative: pIntegerArray;
         PropertySource: pStringArray;
@@ -1034,6 +1034,7 @@ BEGIN
     DSS := dssContext;
     ElementList := TDSSPointerList.Create(20);  // Init size and increment
     PropertyName := nil;
+    PropertyNameLowercase := nil;
     PropertyRedundantWith := nil;
     PropertyArrayAlternative := nil;
     PropertySource := nil;
@@ -1078,12 +1079,14 @@ begin
     for i := 1 to NumProperties do
     begin
         PropertyName[i] := '';
+        PropertyNameLowercase[i] := '';
         PropertySource[i] := '';
     end;
 
     Reallocmem(PropertyRedundantWith, 0);
     Reallocmem(PropertyArrayAlternative, 0);
     Reallocmem(PropertyName, 0);
+    Reallocmem(PropertyNameLowercase, 0);
     Reallocmem(PropertySource, 0);
     Reallocmem(PropertyScale, 0);
     Reallocmem(PropertyValueOffset, 0);
@@ -1342,6 +1345,7 @@ begin
     NumProperties := NumProperties + 1;
 
     PropertyName := Allocmem(SizeOf(String) * NumProperties);
+    PropertyNameLowercase := Allocmem(SizeOf(String) * NumProperties);
     PropertyRedundantWith := Allocmem(SizeOf(Integer) * NumProperties);
     PropertyArrayAlternative := Allocmem(SizeOf(Integer) * NumProperties);
     PropertySource := Allocmem(SizeOf(String) * NumProperties);
@@ -1380,6 +1384,8 @@ begin
 End;
 
 Procedure TDSSClass.DefineProperties;
+var
+    i: Integer;
 Begin
     PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'DSSClass');
 
@@ -1389,6 +1395,11 @@ Begin
     ActiveProperty := ActiveProperty + NumPropsThisClass;
 
     CommandList := TCommandList.Create(SliceProps(PropertyName, NumProperties), True);
+
+    for i := 1 to NumProperties do
+    begin
+        PropertyNameLowercase[i] := AnsiLowerCase(PropertyName[i]);
+    end;
 End;
 
 function TDSSClass.Get_ElementCount: Integer;

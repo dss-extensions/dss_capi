@@ -163,7 +163,8 @@ uses
     DSSClassDefs,
     DSSHelper,
     DSSObjectHelper,
-    TypInfo;
+    TypInfo,
+    ArrayDef;
 
 const
     // TODO: enum?
@@ -703,14 +704,30 @@ var
     cls: TDSSClass;
     done: array of Boolean;
     resObj: TJSONObject;
+    pnames: pStringArray;
 begin
     Result := NIL;
     if obj = NIL then
         Exit;
 
     cls := obj.ParentClass;
+
+    if (joptions and Integer(DSSJSONOptions.LowercaseKeys)) = 0 then
+    begin
+        pnames := cls.PropertyName;
+    end
+    else
+    begin
+        pnames := cls.PropertyNameLowercase;
+    end;
+
     if (joptions and Integer(DSSJSONOptions.SkipDSSClass)) = 0 then
-        Result := TJSONObject.Create(['DSSClass', cls.Name, 'name', obj.Name])
+    begin
+        if (joptions and Integer(DSSJSONOptions.LowercaseKeys)) = 0 then
+            Result := TJSONObject.Create(['DSSClass', cls.Name, 'name', obj.Name])
+        else
+            Result := TJSONObject.Create(['dssclass', cls.Name, 'name', obj.Name]);
+    end
     else
         Result := TJSONObject.Create(['name', obj.Name]);
 
@@ -776,7 +793,7 @@ begin
             end;
 
             if cls.GetObjPropertyJSONValue(Pointer(obj), iProp, joptions, jvalue, True) then
-                resObj.Add(cls.PropertyName[iProp], jvalue);
+                resObj.Add(pnames[iProp], jvalue);
         end;
     end
     else
@@ -793,7 +810,7 @@ begin
                 continue;
 
             if cls.GetObjPropertyJSONValue(Pointer(obj), iProp, joptions, jvalue, True) then
-                resObj.Add(cls.PropertyName[iProp], jvalue);
+                resObj.Add(pnames[iProp], jvalue);
         end;
     end;
 end;

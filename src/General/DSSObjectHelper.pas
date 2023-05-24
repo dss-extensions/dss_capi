@@ -21,8 +21,9 @@ type
         Pretty = 1 shl 4, 
         ExcludeDisabled = 1 shl 5,
         SkipDSSClass = 1 shl 6,
-        State = 1 shl 7, //TODO: power flow state, state variables for the given element, if applies
-        Debug = 1 shl 8 // TODO
+        LowercaseKeys = 1 shl 7,
+        State = 1 shl 8, //TODO: power flow state, state variables for the given element, if applies
+        Debug = 1 shl 9 // TODO
     );
 {$SCOPEDENUMS OFF}
     
