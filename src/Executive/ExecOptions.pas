@@ -256,9 +256,9 @@ begin
             73:
                 DSS.DefaultBaseFreq := DSS.Parser.DblValue;
             102:
-                DoSimpleMsg(DSS, _('This is not supported in DSS Extensions.'), 302);
+                DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 302);
             111:
-                DoSimpleMsg(DSS, _('This is not supported in DSS Extensions.'), 302);
+                DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 302);
 {$IFDEF DSS_CAPI_PM}
             ord(Opt.ActiveActor):
                 if DSS.Parser.StrValue = '*' then
@@ -613,7 +613,7 @@ begin
             101:
                 DSS.ActiveCircuit.RecloserMarkerSize := DSS.Parser.IntValue;
             102:
-                DoSimpleMsg(DSS, _('This is not supported in DSS Extensions.'), 309);
+                DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 309);
             103:
                 DSS.ActiveCircuit.MarkRelays := InterpretYesNo(Param);
             104:
@@ -627,7 +627,7 @@ begin
             110:
                 DSS.ActiveCircuit.solution.MinIterations := DSS.Parser.IntValue;
             111:
-                DoSimpleMsg(DSS, _('This is not supported in DSS Extensions.'), 303);
+                DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 303);
             112:
                 DSS.ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
             113:
@@ -1026,7 +1026,7 @@ begin
                 ord(Opt.ConcatenateReports):
                     AppendGlobalResult(DSS, PMParent.ConcatenateReports);
                 ord(Opt.NUMANodes):
-                    DoSimpleMsg(DSS, _('This is not supported in DSS Extensions.'), 303); //TODO: looks like the official version has this hardcoded
+                    DoSimpleMsg(DSS, _('This is not supported in DSS-Extensions.'), 303); //TODO: looks like the official version has this hardcoded
                 ord(Opt.LineTypes):
                     DSS.GlobalResult := DSS.LineTypeEnum.Joined();
                 ord(Opt.EventLogDefault):

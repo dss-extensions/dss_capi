@@ -284,7 +284,7 @@ begin
                 ;
                 // if not IsDLL then ExitControlPanel;  // Quit in Stand alone version
             ord(Cmd.Panel):
-                DoSimpleMsg(DSS, _('Command "panel" supported in DSS Extensions.'), 999);
+                DoSimpleMsg(DSS, _('Command "panel" supported in DSS-Extensions.'), 999);
             ord(Cmd.Clear):
                 DSS.DSSExecutive.DoClearCmd;
             ord(Cmd.About):
@@ -355,7 +355,7 @@ begin
 {$ENDIF}
             ord(Cmd.COMHelp):
             begin
-                DoSimpleMsg(DSS, _('COMHelp is not available on DSS Extensions. You can download "OpenDSS_COM.chm" at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/x64/OpenDSS_COM.chm?format=raw as well as other example and documentation files from the official OpenDSS distribution at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/ and subfolders. Please see https://dss-extensions.org/ for further links.'), 999);
+                DoSimpleMsg(DSS, _('COMHelp is not available on DSS-Extensions. You can download "OpenDSS_COM.chm" at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/x64/OpenDSS_COM.chm?format=raw as well as other example and documentation files from the official OpenDSS distribution at https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/ and subfolders. Please see https://dss-extensions.org/ for further links.'), 999);
                 DSS.CmdResult := 0;
             end;
         else
@@ -468,7 +468,7 @@ begin
             ord(Cmd.Next):
                 DSS.CmdResult := DSS.DSSExecutive.DoNextCmd;  // Advances time
             ord(Cmd.Panel):
-                DoSimpleMsg(DSS, _('Command supported in DSS Extensions.'), 999);
+                DoSimpleMsg(DSS, _('Command supported in DSS-Extensions.'), 999);
             ord(Cmd.Sample):
                 DSS.CmdResult := DSS.DSSExecutive.DoSampleCmd;
             // ord(Cmd.Clear): Begin ClearAllCircuits; DisposeDSSClasses; CreateDSSClasses; End;
@@ -542,7 +542,7 @@ begin
                 DSS.CmdResult := DSS.DSSExecutive.DoInterpolateCmd;
             ord(Cmd.TOP):
             begin
-                DoSimpleMsg(DSS, _('TOP is not supported in DSS Extensions.'), 999);
+                DoSimpleMsg(DSS, _('TOP is not supported in DSS-Extensions.'), 999);
                 DSS.CmdResult := 0;
             end;
             ord(Cmd.Rotate):
@@ -621,17 +621,17 @@ begin
             ord(Cmd.GISCoords):
                 ; // Do nothing here on DSS C-API. Just ignore it silently so files 
                   // saved with EPRI's version can be loaded more easily.
-                  // OpenDSS-GIS is out of the scope proposed by DSS Extensions,
+                  // OpenDSS-GIS is out of the scope proposed by DSS-Extensions,
                   // but we could provide compatibility when/if OpenDSS-GIS becomes
                   // at least available to users outside of EPRI.
             ord(Cmd.Connect):
             begin
-                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in DSS Extensions'), 999);
+                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in DSS-Extensions'), 999);
                 DSS.CmdResult := 0;
             end;
             ord(Cmd.Disconnect):
             begin
-                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in DSS Extensions'), 999);
+                DoSimpleMsg(DSS, _('Winsock TCP/IP connection is not supported in DSS-Extensions'), 999);
                 DSS.CmdResult := 0;
             end;
             ord(Cmd.Remove):

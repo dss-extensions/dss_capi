@@ -213,7 +213,7 @@ extern "C" {
             If enabled, don't check for NaNs in the inner solution loop. 
             This can lead to various errors. 
             This flag is useful for legacy applications that don't handle OpenDSS API errors properly.
-            Through the development of DSS Extensions, we noticed this is actually a quite common issue.
+            Through the development of DSS-Extensions, we noticed this is actually a quite common issue.
         */
 
         DSSCompatFlags_BadPrecision = 0x00000002, /*!< 
@@ -1610,7 +1610,7 @@ extern "C" {
     /*! 
     Runs potential initialization of internal structures of the DSS engine.
     
-    For DSS Extensions, users are required to call this function at least
+    For DSS-Extensions, users are required to call this function at least
     once per process, especially in multi-threaded applications.
 
     Returns 0/false on failure. A failure might indicate an incompatibility between
@@ -1693,7 +1693,7 @@ extern "C" {
     /*! 
     If enabled, the DOScmd command is allowed. Otherwise, an error is reported if the user tries to use it.
     
-    Defaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS Extensions.
+    Defaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS-Extensions.
     
     This can also be set through the environment variable DSS_CAPI_ALLOW_DOSCMD. Setting it to 1 enables
     the command.
@@ -1745,7 +1745,7 @@ extern "C" {
 
         - 0x1 (bit 0): If enabled, don't check for NaNs in the inner solution loop. This can lead to various errors.
             This flag is useful for legacy applications that don't handle OpenDSS API errors properly. Through the 
-            development of DSS Extensions, we noticed this is actually a quite common issue.
+            development of DSS-Extensions, we noticed this is actually a quite common issue.
         - 0x2 (bit 1): Toggle worse precision for certain aspects of the engine. For example, the sequence-to-phase 
             (`As2p`) and sequence-to-phase (`Ap2s`) transform matrices. On DSS C-API, we fill the matrix explicitly
             using higher precision, while numerical inversion of an initially worse precision matrix is used in the 

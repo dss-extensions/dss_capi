@@ -9,7 +9,7 @@ We will keep the original version here for a short while, but note it hasn't bee
 ---
 
 
-# DSS Extensions: OpenDSS Commands and Properties
+# DSS-Extensions: OpenDSS Commands and Properties
 
 
 **This document was generated from:** `DSS C-API Library version 0.10.7 revision 47422ccbb833c89de64d8941c520d106c9e7d0d4 based on OpenDSS SVN 2963 (v7/classic variation) MVMULT [FPC 3.2.0] (64-bit build)`
@@ -20,11 +20,11 @@ We will keep the original version here for a short while, but note it hasn't bee
 
 ## About this
 
-This is a document automatically generated from the commands, options and properties for the DSS language (script level) exposed in the DSS Extensions version of the OpenDSS engine. A separate document will be developed in the future to detail **API** functions and general usage recommendations for the projects under DSS Extensions.
+This is a document automatically generated from the commands, options and properties for the DSS language (script level) exposed in the DSS-Extensions version of the OpenDSS engine. A separate document will be developed in the future to detail **API** functions and general usage recommendations for the projects under DSS-Extensions.
 
-Since the extensive majority of properties and elements are compatible, this document can be useful when using either the official OpenDSS implementation or the DSS Extensions version (DSS C-API engine), consumed through the projects DSS Python (`dss_python`), OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp (`dss_sharp`), and DSS MATLAB (`dss_matlab`).  If you are using the official OpenDSS, when in doubt check the official documentation and/or source code.
+Since the extensive majority of properties and elements are compatible, this document can be useful when using either the official OpenDSS implementation or the DSS-Extensions version (DSS C-API engine), consumed through the projects DSS-Python (`dss_python`), OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp (`dss_sharp`), and DSS MATLAB (`dss_matlab`).  If you are using the official OpenDSS, when in doubt check the official documentation and/or source code.
 
-As a final note, keep in mind that not all commands are implemented in the DSS Extensions engine, interactive commands like plots are missing (on purpose).
+As a final note, keep in mind that not all commands are implemented in the DSS-Extensions engine, interactive commands like plots are missing (on purpose).
 
 ---
 ## Commands

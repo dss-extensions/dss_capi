@@ -1,6 +1,6 @@
 unit DynamicExp;
 // ----------------------------------------------------------
-// Copyright (c) 2022-2023, Paulo Meira, DSS Extensions contributors
+// Copyright (c) 2022-2023, Paulo Meira, DSS-Extensions contributors
 // Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------

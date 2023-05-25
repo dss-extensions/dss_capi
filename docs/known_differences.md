@@ -5,16 +5,16 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 ## Important notes
 
 - **This library is not supported by the original authors of OpenDSS**. If you find issues or have features specific to the library, please open [an issue ticket on GitHub](https://github.com/dss-extensions/dss_capi/issues/) or send an email (pmeira at ieee.org). For general OpenDSS issues, be sure to test with the official distribution before posting in the official forum at SourceForge.
-- Several projects that use DSS C-API, such as DSS Python, OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp and DSS MATLAB are hosted at [DSS Extensions](http://github.com/dss-extensions/). These projects provide user-friendly programming interfaces for different languages.
+- Several projects that use DSS C-API, such as DSS-Python, OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp and DSS MATLAB are hosted at [DSS-Extensions](http://github.com/dss-extensions/). These projects provide user-friendly programming interfaces for different languages.
 - DSS C-API is based on the open-source Free Pascal compiler instead of Delphi. If you find a system where the results are different between the two distributions, please share a sample with us to help identify it, allowing us to fix the issue for all users.
 - Bits and pieces of the API code, as well as some small specific changes of the main OpenDSS code, have been modified for better multi-platform compatibility and, sometimes, performance. Most of these are not explicitly listed here since they do not affect the library behavior.
 - The API is compatible with languages which support C calls and is mostly self-documented in the header files (`dss_capi.h` in the `include` folder). See also [the usage document](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md) to get understand the memory model and advanced usage -- including the Global Result interface, which can drastically reduce memory (re)allocations in some use-cases.
 - Most of the COM documentation can be applied to the usage of DSS C-API.
-- At the moment, there is no executable program. If you have a use-case that would benefit from an executable, please open a feature request ticket. Some other features are been slowly added to DSS Python to complement this library.
+- At the moment, there is no executable program. If you have a use-case that would benefit from an executable, please open a feature request ticket. Some other features are been slowly added to DSS-Python to complement this library.
 
 ## Differences
 
-- There is no direct support for plots from the DSS language or general GUI elements. As a library, DSS C-API can, of course, be integrate with GUI environments. Optional integration with plotting system is being implemented. For example, DSS Python provides optional plotting capabilities based on matplotlib.
+- There is no direct support for plots from the DSS language or general GUI elements. As a library, DSS C-API can, of course, be integrate with GUI environments. Optional integration with plotting system is being implemented. For example, DSS-Python provides optional plotting capabilities based on matplotlib.
 - The TCP connection options are disabled as well as GIS features (which require proprietary software)
 - This library contains fixes for user-written DLLs ("UserModels" and "UserControls" for elements like Generators and CapUserControls) which include truncated pointers and correct support for the DSS language `Edit` command.
 - Free Pascal hashlists are used for tracking elements. This means that accessing elements by name is usually faster in DSS C-API and present a linear behavior.
@@ -33,7 +33,7 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
     
 - DSS C-API allow multiple OpenDSS instances in the same process. The instances are each one thread-safe, so multiple user threads can be used to coordinate them.
 
-- The DSS property system in DSS C-API was completely reworked/rewritten. This allowed us to add the `Obj_*` and `Batch_*` API extensions. See DSS Python's `DSS.Obj` implementation and the `dss_hpp` C++ header-only library for examples of the capabilities of these exclusive features. All JSON-based exports are also based on this new system.
+- The DSS property system in DSS C-API was completely reworked/rewritten. This allowed us to add the `Obj_*` and `Batch_*` API extensions. See DSS-Python's `DSS.Obj` implementation and the `dss_hpp` C++ header-only library for examples of the capabilities of these exclusive features. All JSON-based exports are also based on this new system.
 
 - The symmetric component transformation matrix uses more decimal places (a bit more precise) and its inverse is also more precise. This might explain some small differences in systems that use sequence values.
 
@@ -46,7 +46,7 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
     - For consistency between the Monitor and the rest of the methods/APIs, when DynamicExp is used, the CktElement API and reports use the same variables as used in the Monitor.
     - For now, writing to a CktElement variable is disabled when using DynamicExp.
 
-- Other API extensions include (see also the table at [DSS Extensions — OpenDSS: Overview of Python APIs](https://github.com/dss-extensions/dss-extensions/blob/main/python_apis.md)):
+- Other API extensions include (see also the table at [DSS-Extensions — OpenDSS: Overview of Python APIs](https://github.com/dss-extensions/dss-extensions/blob/main/python_apis.md)):
     - Many `PDElements` functions: `AllNames`, `AllMaxCurrents`, `AllPctNorm`, `AllPctEmerg`, `AllCurrents`, `AllCurrentsMagAng`, `AllCplxSeqCurrents`, `AllSeqCurrents`, `AllPowers`, `AllSeqPowers`, `AllNumPhases`, `AllNumConductors`, `AllNumTerminals`.
     - Access by `idx` for many more DSS elements (21 new function pairs).
     - Experimental access to the following classes: `WireData`, `TSData`, `Reactors`, `LineSpacings`, `LineGeometries`, `CNData`.
@@ -62,6 +62,6 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
     - `WindGen` is also not ported yet, waiting for it to mature.
     - The Diakoptics features are currently disabled. The implementation will be slightly different here since we use a completely different multi-circuit organization.
 
-- Monitor headers: In the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS Extensions, we took the opportunity to rewrite the related code. As such, the implementation in DSS Extensions deviate from the official one. Extra spaces are not included and should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough.
+- Monitor headers: In the official OpenDSS, since May 2021, the monitor binary stream doesn't include the header anymore. When porting the change to DSS-Extensions, we took the opportunity to rewrite the related code. As such, the implementation in DSS-Extensions deviate from the official one. Extra spaces are not included and should be more consistent. As a recommendation, if your code needs to be compatible with both implementations, trimming the fields should be enough.
 
 👉 Besides the omissions and caveats listed here, our general policy on commits/features from official OpenDSS is to port them in a matter of hours/days, if possible. If we find that a SVN commit/feature in the official OpenDSS introduces issues/bugs, we may postpone porting and/or report the issues in the official OpenDSS forum. Our releases are not coordinated with the official version.

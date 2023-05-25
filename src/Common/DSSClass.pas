@@ -1,7 +1,7 @@
 
 unit DSSClass;
 // ----------------------------------------------------------
-// Copyright (c) 2018-2022, Paulo Meira, DSS Extensions contributors
+// Copyright (c) 2018-2022, Paulo Meira, DSS-Extensions contributors
 // Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------

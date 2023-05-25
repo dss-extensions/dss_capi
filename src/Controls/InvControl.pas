@@ -1,7 +1,7 @@
 unit InvControl;
 
 // ----------------------------------------------------------
-// Copyright (c) 2018-2023, Paulo Meira, DSS Extensions contributors
+// Copyright (c) 2018-2023, Paulo Meira, DSS-Extensions contributors
 // Copyright (c) 2008-2022,  Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------

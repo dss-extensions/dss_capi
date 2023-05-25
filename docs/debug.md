@@ -1,6 +1,6 @@
 # Debugging the engine
 
-For debugging the Pascal side of the DSS Extensions, you need to load the debug version of DSS C-API. Starting on DSS C-API version 0.10.6, this debug version is included side-by-side with the optimized version. You can, of course, build it yourself if you prefer. Most users have no interest in Pascal, hence the decision to include the debug binary in some of the projects. As a reminder, **the debug version is slower since the optimizations are disabled**. Remember to toggle back the usage of the release/normal version after you are done debugging.
+For debugging the Pascal side of the DSS-Extensions, you need to load the debug version of DSS C-API. Starting on DSS C-API version 0.10.6, this debug version is included side-by-side with the optimized version. You can, of course, build it yourself if you prefer. Most users have no interest in Pascal, hence the decision to include the debug binary in some of the projects. As a reminder, **the debug version is slower since the optimizations are disabled**. Remember to toggle back the usage of the release/normal version after you are done debugging.
 
 If you are using DSS_Python, OpenDSSDirect.py or DSS_MATLAB, set the environment variable `DSS_EXTENSIONS_DEBUG=1` before starting Python/MATLAB and loading the module. This will instruct the modules to load the debug version. With that version loaded, you typically can use a debugger of your preference. Some examples are listed in this document.
 

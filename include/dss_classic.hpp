@@ -1,8 +1,8 @@
 /*!
 
-dss_classic.hpp: a C++ layer for the DSS Extensions/C-API, classic API
+dss_classic.hpp: a C++ layer for the DSS-Extensions/C-API, classic API
 Copyright (c) 2021-2022 Paulo Meira
-Copyright (c) 2021-2022 DSS Extensions contributors
+Copyright (c) 2021-2022 DSS-Extensions contributors
 
 Version: 0.5.0 (2022-07)
 
@@ -13237,7 +13237,7 @@ using namespace dss::capi;
         /// 
         /// If enabled, the `DOScmd` command is allowed. Otherwise, an error is reported if the user tries to use it.
         /// 
-        /// Defaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS Extensions.
+        /// Defaults to False/0 (disabled state). Users should consider DOScmd deprecated on DSS-Extensions.
         /// 
         /// This can also be set through the environment variable DSS_CAPI_ALLOW_DOSCMD. Setting it to 1 enables
         /// the command.

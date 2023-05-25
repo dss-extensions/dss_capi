@@ -7,7 +7,7 @@ unit Monitor;
   ----------------------------------------------------------
 }
 
-// **For DSS Extensions:**
+// **For DSS-Extensions:**
 // Note that the header implementation is now different from the 
 // official one. Compatibility could be added if required later,
 // adding extra spaces before most fields.

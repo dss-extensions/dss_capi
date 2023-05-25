@@ -3,13 +3,13 @@
 
 *For an English version of this file, see [README.md](https://github.com/dss-extensions/dss_capi/blob/master/README.md).*
 
-# DSS C-API: Uma biblioteca com interface C para uma implementação customizada do OpenDSS
+# DSS C-API: Uma biblioteca com interface C para uma implementação alternativa do OpenDSS
 
 Veja [FAQ](https://github.com/dss-extensions/dss-extensions#faq) (em inglês) para algumas notas.
 
-Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v9+) através de uma interface C plana, que tenta reproduzir a maioria dos métodos COM, além de adicionar diversas funcionalidades. De fato, a maior parte do código foi inicialmente derivado dos arquivos da implementação COM, com um conjunto crescente de modificações e extensões. O DLL resultante pode ser usado diretamente ou através de módulos de interface, como o módulo `DSS Python`. DSS Python representa um módulo para linguagem Python que imita a mesma estrutura do módulo COM (como exposto via `win32com` ou `comtypes`), efetivamente nos permitindo alcançar compatibilidade multi-plataforma a nível de Python. 
+Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v9+) através de uma interface C plana, que tenta reproduzir a maioria dos métodos COM, além de adicionar diversas funcionalidades. De fato, a maior parte do código foi inicialmente derivado dos arquivos da implementação COM, com um conjunto crescente de modificações e extensões. O DLL resultante pode ser usado diretamente ou através de módulos de interface, como o módulo `DSS-Python`. DSS-Python representa um módulo para linguagem Python que imita a mesma estrutura do módulo COM (como exposto via `win32com` ou `comtypes`), efetivamente nos permitindo alcançar compatibilidade multi-plataforma a nível de Python. 
 
-Através dos outros projetos hospedados como DSS Extensions, a biblioteca DSS C-API torna possível usar o motor do OpenDSS en múltiplos sistemas operacionais (Windows, Linux, macOS) e múltiplas arquiteturas (Intel x86, x86-64, ARM32, e ARM64, incluindo os processadores M1 e M2 da Apple). A grande maioria das funcionalidades adicionadas nesta biblioteca são compartilhadas com todos os outros projetos. Caso tenha interesse numa linguagem não suportada pelos projetos abaixo, abra um novo "issue" aqui ou em https://github.com/dss-extensions/dss-extensions/issues
+Através dos outros projetos hospedados como DSS-Extensions, a biblioteca DSS C-API torna possível usar o motor do OpenDSS en múltiplos sistemas operacionais (Windows, Linux, macOS) e múltiplas arquiteturas (Intel x86, x86-64, ARM32, e ARM64, incluindo os processadores M1 e M2 da Apple). A grande maioria das funcionalidades adicionadas nesta biblioteca são compartilhadas com todos os outros projetos. Caso tenha interesse numa linguagem não suportada pelos projetos abaixo, abra um novo "issue" aqui ou em https://github.com/dss-extensions/dss-extensions/issues
 
 <p align="center">
     <img alt="Visão geral dos repositórios relacionados" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap_pt.png" width=600>
@@ -17,7 +17,7 @@ Através dos outros projetos hospedados como DSS Extensions, a biblioteca DSS C-
 
 Caso procure integração com outras linguagens de programação:
 
-- [DSS Python](http://github.com/dss-extensions/dss_python/) é o módulo Python multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM. Veja também [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) caso não precise de compatibilidade com COM, ou deseje empregar as funcionalidades extras do módulo (inclusive em conjunto).
+- [DSS-Python](http://github.com/dss-extensions/dss_python/) é o módulo Python multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM. Veja também [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) caso não precise de compatibilidade com COM, ou deseje empregar as funcionalidades extras do módulo (inclusive em conjunto).
 - [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) é um módulo em Julia, criado por Tom Short (@tshort), que recentemente passou a empregar DSS C-API no lugar do DLL direto com a ajuda de Dheepak Krishnamurthy (@kdheepak).
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) para .NET/C#, disponível também [como pacote NuGet](https://www.nuget.org/packages/dss_sharp/). Versões mais recentes são multi-plataforma! Em breve também será possível usá-lo via COM.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) permite integração multi-plataforma (Windows, Linux, MacOS) bastante compatível com a API do módulo COM oficial, de fato contorna algumas dificuldades de COM.
@@ -40,25 +40,26 @@ Com exceção de detalhes de baixo nível como gerenciamento de memória, a maio
 
 **A partir da versão 0.9.8, desabilitamos a criação do `opendsscmd.ini`, visto que causava estranheza entre os usuários. O usuário pode configurar a frequência de base padrão usando a variável de ambiente `DSS_BASE_FREQUENCY`, ou simplesmente através de scripts DSS (opção recomendada por nós). Isto também significa que o `datapath` inicial é configurado automaticamente para o diretório de trabalho corrente.**
 
-A partir de 2019-03-05, este repositório contém todo o código fonte em linguagem Pascal necessário para compilar a DSS C-API. O código da API é mantido na pasta `src/`, enquanto o código principal do OpenDSS (com modificações) é mantido em `Version7/` e `Version8/`. O código fonte da versão oficial é mantido no branch `opendss-official-svn` e é integrado periodicamente -- veja o documento [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) (em inglês) para mais informações.
+A partir de 2019-03-05, este repositório contém todo o código fonte em linguagem Pascal necessário para compilar a DSS C-API. O código da API é mantido na pasta `src/`, enquanto o código principal do OpenDSS (com modificações) é mantido em `Version7/` e `Version8/`. O código fonte da versão oficial é mantido no branch `opendss-official-svn` e é integrado periodicamente — veja o documento [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) (em inglês) para mais informações.
 
 ## Mudanças recentes
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
-- **2023-04-01 / version 0.13.1: Traz apenas algumas potenciais correções relacionadas a 3 propriedades de PVSystem**
-- 2023-03-29 / version 0.13.0: Várias melhorias, incluindo correção de bugs e portes de várias modificações do OpenDSS oficial; a referência para esta versão é o OpenDSS v9.6.1.1.
-- 2022-07-16 / version 0.12.1: Versão incremental, corrigindo um bug encontrado logo após o lançamento da versão 0.12.0.
-- 2022-07-13 / version 0.12.0: Grande atualização, inclui funções do mecanismo paralelo, um novo sistema de propriedades, novas extensões de API, melhor desempenho, além de outras novidades.
+- **2023-05-24 / versão 0.13.2: Melhorias para exportação JSON, verificação de erros, refatoração do código interno, e port de algumas mudanças menores do OpenDSS oficial.**
+- 2023-04-01 / versão 0.13.1: Traz apenas algumas potenciais correções relacionadas a 3 propriedades de PVSystem
+- 2023-03-29 / versão 0.13.0: Várias melhorias, incluindo correção de bugs e portes de várias modificações do OpenDSS oficial; a referência para esta versão é o OpenDSS v9.6.1.1.
+- 2022-07-16 / versão 0.12.1: Versão incremental, corrigindo um bug encontrado logo após o lançamento da versão 0.12.0.
+- 2022-07-13 / versão 0.12.0: Grande atualização, inclui funções do mecanismo paralelo, um novo sistema de propriedades, novas extensões de API, melhor desempenho, além de outras novidades.
 - 2020-12-28 / versão 0.10.7: Versão de manutenção, baseado no OpenDSS r2963. Inclui correções importantes e algumas novas funções do OpenDSS oficial.
 - 2020-07-31 / versão 0.10.6: Novas extensões para a API e alterações do OpenDSS oficial portadas. Inclui algumas correções de bugs, um novo mecanismo de mensagens de erro de validação, além de novos flags de compatibilidade.
-- 2020-03-03 / versão 0.10.5: Principalmente manutenção, com correção de algumas falhas. Inclui alterações portadas da versão COM e do código do OpenDSS oficial. Binários da variação da versão 8 excluidos desta versão.
+- 2020-03-03 / versão 0.10.5: Principalmente manutenção, com correção de algumas falhas. Inclui alterações portadas da versão COM e do código do OpenDSS oficial. Binários da variação da versão 8 excluídos desta versão.
 - 2019-11-16 / versão 0.10.4: Apenas manutenção: Corrige acesso a arquivos com caminho longo no Linux, e inclui alterações portadas da versão COM e do código do OpenDSS oficial.
 - 2019-05-22 / versão 0.10.3: Algumas correções importantes, desempenho geral bastante melhorado, novas funções estendidas, e novas funcionalidades portadas do módulo COM e da versão atual do OpenDSS.
 - 2019-03-05: o repositório Git `electricdss-src` foi integrado diretamente em `dss_capi`.
 - 2019-02-28 / versão 0.10.2: Implementa a função `CtrlQueue_Push` (faltante na versão anterior); modificações em `LoadShapes` para melhor desempenho e mais validação; introduz `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` para (desa)ativar chamadas ao editor externo.
 - 2019-02-12 / versão 0.10.1: Verificação de erros mais ampla, introdução da função `Error_Get_NumberPtr`, correções e melhor tratamento em `Meters`.
-- 2018-11-17 / versão 0.10.0: Reduz o número de operações de alocação de memória se os buffers atuais forem reutilizados, introduz o mecanismo de Resultado Global, várias extensões de API (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- veja [o documento de uso](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md)(em inglês) e o [ticket #11](https://github.com/dss-extensions/dss_capi/issues/11).
+- 2018-11-17 / versão 0.10.0: Reduz o número de operações de alocação de memória se os buffers atuais forem reutilizados, introduz o mecanismo de Resultado Global, várias extensões de API (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) — veja [o documento de uso](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md)(em inglês) e o [ticket #11](https://github.com/dss-extensions/dss_capi/issues/11).
 - 2018-08-10 / versão 0.9.8: Grande reorganização do código fonte, várias pequenas correções, e novos scripts de compilação.
 - 2018-04-05 / versão 0.9.5: Novas funções `Circuit_SetCktElement*` para definir o elemento de circuito ativo.
 - 2018-03-06 / versão 0.9.4: Correções para DSSProperty, inclui os textos de ajuda originais no header C, integra modificações oficiais até a revisão 2152. Esta versão introduz a primeira versão de bindings de .NET para o DLL nativo.
@@ -69,7 +70,7 @@ Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions
 ## Funcionalidades faltantes e limitações
 
 - Ainda não implementados:
-    - Gráficos em geral: mecanismo de callbacks adicionado na v0.12. Para exemplos, veja DSS Python.
+    - Gráficos em geral: mecanismo de callbacks adicionado na v0.12. Para exemplos, veja DSS-Python.
     - Diakoptics e `AggregateProfiles`: veja [#46](https://github.com/dss-extensions/dss_capi/issues/46). Planejado.
     
 ## Funcionalides extras
@@ -105,7 +106,7 @@ Caso deseje compilar o DLL:
 Se você precisa apenas do arquivo DLL, lembre-se que ele pode ser baixado na página de "Releases" no GitHub. Pode ser necessário instalar o pacote de [runtime do Microsoft Visual Studio 2017](https://go.microsoft.com/fwlink/?LinkId=746572). Versões de teste durante o desenvolvimento podem ser baixadas dos artefatos da compilação do GitHub Actions.
 Caso precisa compilar:
 
-- Caso pretenda utilizar a DLL no Visual Studio, você precisa gerar uma biblioteca de importação. Isto pode ser feito iniciando a próxima etapa em um prompt do Visual Studio, como o "x64 Native Tools Command Prompt for VS 2017" (ou equivalente para sua versão) -- você precisa apenas dos utilitários  `dumpbin.exe` e `lib.exe`.
+- Caso pretenda utilizar a DLL no Visual Studio, você precisa gerar uma biblioteca de importação. Isto pode ser feito iniciando a próxima etapa em um prompt do Visual Studio, como o "x64 Native Tools Command Prompt for VS 2017" (ou equivalente para sua versão) — você precisa apenas dos utilitários  `dumpbin.exe` e `lib.exe`.
 
 - Abra um prompt de comando na pasta `dss_capi` que você clonou anteriormente e execute `build/build_win_x64.bat`
 
@@ -133,7 +134,7 @@ Para entender os principais conceitos da DSS C-API e como ela gerencia memória,
 
 Dois exemplos mínimos (sem scripts DSS, use um dos seus) estão disponíveis em [examples](examples). Após compilar a DSS C-API, adicione aos parâmetros de compilação a subpasta da pasta `include` apropriada (`include/v7` ou `include/v8`), e a biblioteca da pasta `lib` para seu sistema. O código dos exemplos, com seus comentários traduzidos para português, também estão disponíveis abaixo.
 
-O código fonte da DSS Python e da OpenDSSDirect.py são exemplos de uso mais completos e avançados.
+O código fonte da DSS-Python e da OpenDSSDirect.py são exemplos de uso mais completos e avançados.
 
 
 ```c
@@ -254,15 +255,16 @@ int main(void)
 
 ## Testes
 
-Atualmente, todos os testes e validação são baseados no [DSS Python](http://github.com/dss-extensions/dss_python/). Outros projetos como [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) e [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) contêm testes que foram importantes para encontrar e corrigir bugs.
+Atualmente, todos os testes e validação são baseados no [DSS-Python](http://github.com/dss-extensions/dss_python/). Outros projetos como [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) e [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) contêm testes que foram importantes para encontrar e corrigir bugs.
 
 ## Planos
 
 (Ainda sendo atualizados para versão 0.12.x)
 
 Além de correções de problemas, a funcionalidade principal desta biblioteca está pronta. Alguns pontos que pretendemos trabalhar envolvem:
-- Expor os principais métodos e propriedades faltantes (não presentes nem mesmo na interface COM), assim como classes.
-- Documentação melhor e mais completa. As strings de ajuda dos arquivos de definição IDL/COM já estão reproduzidos nos headers (pasta `include`), mas apenas em inglês.
+
+- Gráficos em geral: a implementação em Python está quase completa. Veja: [DSS-Extensions — Integrated plotting in Python](https://github.com/dss-extensions/dss_python/blob/master/docs/examples/Plotting.ipynb).
+- Documentação melhor e mais completa. As strings de ajuda dos arquivos de definição IDL/COM já estão reproduzidas (e adaptadas) nos headers (pasta `include`), mas apenas em inglês.
 - Validação automatizada dos binários no Linux (comparação das saídas com a versão Windows e oficial). Atualmente a validação é rodada manualmente.
 - C++: Expor a API em C++ usando namespaces para organização, métodos com overload, etc.
 

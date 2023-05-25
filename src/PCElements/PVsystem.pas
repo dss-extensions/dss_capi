@@ -1,7 +1,7 @@
 unit PVsystem;
 
 // ----------------------------------------------------------
-// Copyright (c) 2018-2023, Paulo Meira, DSS Extensions contributors
+// Copyright (c) 2018-2023, Paulo Meira, DSS-Extensions contributors
 // Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------

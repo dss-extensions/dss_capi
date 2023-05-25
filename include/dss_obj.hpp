@@ -1,6 +1,6 @@
 /*!
 
-dss_obj.hpp: a C++ layer for DSS Extensions/C-API, Obj interface
+dss_obj.hpp: a C++ layer for DSS-Extensions/C-API, Obj interface
 Copyright (c) 2021-2022 Paulo Meira
 
 Version: 0.5.0 (2022-07)

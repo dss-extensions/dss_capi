@@ -5,7 +5,7 @@ DSS C-API C headers (as a reminder, DSS C-API is written in Pascal -- some autog
 The `dss_capi.h` header is also processed in this documentation site. It targets C++17.
 
 `dss.hpp` is part of a larger effort to address the limitations imposed by using the Pascal language in a modern environment. While the wonderful Free Pascal compiler
-has been able to support the DSS Extensions project for several years, better integration with C++ is required to allow us to use other existing and nascent libraries
+has been able to support the DSS-Extensions project for several years, better integration with C++ is required to allow us to use other existing and nascent libraries
 in C++, and hopefully other languages.
 
 While the more classic API based on the original organization of the official OpenDSS COM implementation is available in the `dss::classic` namespace,

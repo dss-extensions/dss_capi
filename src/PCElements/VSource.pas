@@ -1,7 +1,7 @@
 unit VSource;
 
 // ----------------------------------------------------------
-// Copyright (c) 2017-2023, Paulo Meira, DSS Extensions contributors
+// Copyright (c) 2017-2023, Paulo Meira, DSS-Extensions contributors
 // Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------

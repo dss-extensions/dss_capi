@@ -208,7 +208,7 @@ begin
     begin
         Result := 1;
         // If there is no callback active, just ignore the command like we did before.
-        // DoSimpleMsg(DSS, 'Plotting not supported in the DSS Extensions engine. Provide a callback that implements it version', 308);
+        // DoSimpleMsg(DSS, 'Plotting not supported in the DSS-Extensions engine. Provide a callback that implements it version', 308);
         Exit;
     end;
     

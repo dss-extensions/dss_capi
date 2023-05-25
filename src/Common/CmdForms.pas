@@ -142,7 +142,7 @@ begin
         'OpenDSS is EPRI''s Electric Power Distribution System Simulator' + CRLF +
         'Copyright (c) 2008-2022, Electric Power Research Institute, Inc.' + CRLF +
         'Copyright (c) 2016-2021, Battelle Memorial Institute' + CRLF +
-        'Copyright (c) 2017-2022, Paulo Meira, DSS Extensions contributors' + CRLF +
+        'Copyright (c) 2017-2022, Paulo Meira, DSS-Extensions contributors' + CRLF +
         'All rights reserved.' + CRLF +
         'Please check the repository commit history and specific files for detailed credits.', 
         DSSMessageType.Info
@@ -415,7 +415,7 @@ end;
 
 procedure ShowAllHelpMD(DSS: TDSSContext); // TODO: use plain HTML for everything instead?
 begin
-    WriteLnCB(_('# DSS Extensions: OpenDSS Commands and Properties'), DSSMessageType.Help);
+    WriteLnCB(_('# DSS-Extensions: OpenDSS Commands and Properties'), DSSMessageType.Help);
     WriteLnCB('', DSSMessageType.Help);
     WriteLnCB('---', DSSMessageType.Help);
     WriteLnCB('', DSSMessageType.Help);
@@ -427,11 +427,11 @@ begin
     WriteLnCB('', DSSMessageType.Help);
     WriteLnCB(_('## About this'), DSSMessageType.Help);
     WriteLnCB('', DSSMessageType.Help);
-    WriteLnCB(_('This is a document automatically generated from the commands, options and properties for the DSS language (script level) exposed in the DSS Extensions version of the OpenDSS engine. A separate document will be developed in the future to detail **API** functions and general usage recommendations for the projects under DSS Extensions.'), DSSMessageType.Help);
+    WriteLnCB(_('This is a document automatically generated from the commands, options and properties for the DSS language (script level) exposed in the DSS-Extensions version of the OpenDSS engine. A separate document will be developed in the future to detail **API** functions and general usage recommendations for the projects under DSS-Extensions.'), DSSMessageType.Help);
     WriteLnCB('', DSSMessageType.Help);
-    WriteLnCB(_('Since the extensive majority of properties and elements are compatible, this document can be useful when using either the official OpenDSS implementation or the DSS Extensions version (DSS C-API engine), consumed through the projects DSS Python (`dss_python`), OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp (`dss_sharp`), and DSS MATLAB (`dss_matlab`).  If you are using the official OpenDSS, when in doubt check the official documentation and/or source code.'), DSSMessageType.Help);
+    WriteLnCB(_('Since the extensive majority of properties and elements are compatible, this document can be useful when using either the official OpenDSS implementation or the DSS-Extensions version (DSS C-API engine), consumed through the projects DSS-Python (`dss_python`), OpenDSSDirect.py, OpenDSSDirect.jl, DSS Sharp (`dss_sharp`), and DSS MATLAB (`dss_matlab`).  If you are using the official OpenDSS, when in doubt check the official documentation and/or source code.'), DSSMessageType.Help);
     WriteLnCB('', DSSMessageType.Help);
-    WriteLnCB(_('As a final note, keep in mind that not all commands are implemented in the DSS Extensions engine, interactive commands like plots are missing (on purpose).'), DSSMessageType.Help);
+    WriteLnCB(_('As a final note, keep in mind that not all commands are implemented in the DSS-Extensions engine, interactive commands like plots are missing (on purpose).'), DSSMessageType.Help);
     WriteLnCB('', DSSMessageType.Help);
     
     WriteLnCB('---', DSSMessageType.Help);
