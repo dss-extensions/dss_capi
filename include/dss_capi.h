@@ -450,7 +450,7 @@ extern "C" {
     DSS_CAPI_DLL void Bus_Get_YscMatrix_GR(void);
 
     /*! 
-    False=0 else True. Indicates whether a coordinate has been defined for this bus
+    Indicates whether a coordinate has been defined for this bus
     */
     DSS_CAPI_DLL uint16_t Bus_Get_Coorddefined(void);
 
