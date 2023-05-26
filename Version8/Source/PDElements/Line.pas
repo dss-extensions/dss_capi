@@ -1377,7 +1377,7 @@ begin
            33:Result := Format('%-g', [FaultRate]);
            34:Result := Format('%-g', [PctPerm]);
            35:Result := Format('%-g', [HrsToRepair]);
-
+           36:Result := Format('%-g', [BaseFrequency]);
 
         ELSE
            Result := Inherited GetPropertyValue(index);
