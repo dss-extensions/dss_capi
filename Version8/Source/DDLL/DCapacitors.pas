@@ -274,7 +274,7 @@ begin
             ReAllocmem(myIntArray, sizeof(myIntArray^[1])*elem.Numsteps);
             k:=0;
             for i:= 1 to elem.Numsteps DO Begin
-                myIntArray[k] := elem.States[i,ActiveActor];
+                myIntArray^[k] := elem.States[i,ActiveActor];
                 Inc(k);
             End;
           End;
