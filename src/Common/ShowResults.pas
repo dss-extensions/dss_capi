@@ -2819,11 +2819,11 @@ begin
         begin
             if pcElem.Enabled and (pcElem.Numvariables > 0) then
             begin
-                FSWriteln(F, ['ELEMENT: ', pcElem.ParentClass.Name, '.', pcElem.Name]);
+                FSWriteln(F, 'ELEMENT: ' + pcElem.FullName);
                 FSWriteln(F, 'No. of variables: ', IntToStr(pcElem.Numvariables));
                 for  i := 1 to pcElem.Numvariables do
                 begin
-                    FSWriteln(F, ['  ', pcElem.VariableName(i), ' = ', Format('%-.6g', [pcElem.Variable[i]])]);
+                    FSWriteln(F, Format('  %s = %-.6g', [pcElem.VariableName(i), pcElem.Variable[i]]));
                 end;
                 FSWriteln(F);
             end;
