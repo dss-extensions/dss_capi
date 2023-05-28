@@ -132,6 +132,7 @@ type
         procedure Set_Mean(const Value: Double);
         procedure Set_StdDev(const Value: Double);  // Normalize the curve presently in memory
         function GetMultAtHourSingle(hr: Double): Complex;
+        function HasData(): Boolean;
     PUBLIC
         NumPoints: Integer;  // Number of points in curve -- TODO: int64
         Interval: Double;  //=0.0 then random interval     (hr)
@@ -1368,6 +1369,19 @@ begin
         Result.im := Set_Result_im(Result.re);
 end;
 
+function TLoadShapeObj.HasData(): Boolean;
+begin
+    Result := True;
+    if (sP <> NIL) or (dP <> NIL) then
+        Exit;
+
+    // "Silently" ignore if there's an error message pending already
+    if (DSS.ErrorNumber = 0) then
+        DoSimpleMsg(_('LoadShape has no data to be normalized. Check for previous errors.'), 61107);
+
+    Result := False;
+end;
+
 procedure TLoadShapeObj.Normalize;
 // normalize this load shape
 var
@@ -1417,6 +1431,8 @@ begin
         DoSimpleMsg(_('Data cannot be changed for LoadShapes with external memory or memory-mapped files! Reset the data first.'), 61102);
         Exit;
     end;
+    if not HasData() then
+        Exit;
 
     MaxMult := BaseP;
     if Assigned(dP) then
@@ -1428,7 +1444,7 @@ begin
             DoNormalize(dQ);
         end;
     end
-    else
+    else if Assigned(sP) then
     begin
         DoNormalizeSingle(sP);
         if Assigned(sQ) then
@@ -1443,6 +1459,9 @@ end;
 procedure TLoadShapeObj.CalcMeanandStdDev;
 begin
     if UseMMF or ExternalMemory then
+        Exit;
+
+    if not HasData() then
         Exit;
 
     if NumPoints > 0 then
@@ -1735,6 +1754,9 @@ var
     iMaxP: Integer;
 begin
     if UseMMF or ExternalMemory then
+        Exit;
+
+    if not HasData() then
         Exit;
 
     if Assigned(dP) then
