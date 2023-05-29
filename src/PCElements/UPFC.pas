@@ -718,7 +718,7 @@ end;
 //         |           |
 function TUPFCObj.GetinputCurr(Cond: Integer): Complex;
 var
-    CurrIn: complex;
+    Ctemp, CurrIn: complex;
     S: Double;
 begin
     try
@@ -733,16 +733,15 @@ begin
                         UPFC_Power := 0;
                     end;
                     1:
-                    begin                     // Voltage regulation mode
+                    begin // Voltage regulation mode
                         CurrIn := 0;
-                        // Ctemp := cong(cmul(cdiv(Vbout, Vbin), cong(SR0^[Cond]))); //Balancing powers
+                        Ctemp := cong((Vbout / Vbin) * cong(SR0^[Cond])); //Balancing powers
                         Losses := CalcUPFCLosses(Cabs(Vbin) / (VRef * 1000));
-                        // CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
-                        CurrIn := -cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im);
+                        CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
                         SR1^[Cond] := CurrIn;
                     end;
                     2:
-                    begin                    // Reactive compensation mode
+                    begin // Reactive compensation mode
                         UPFC_Power := CalcUPFCPowers(2, 0);
                         S := abs(UPFC_Power.re) / pf;
                         QIdeal := UPFC_Power.im - sqrt(1 - pf * pf) * S;   //This is the expected compensating reactive power
@@ -751,23 +750,22 @@ begin
                         CurrIn := cong(cmplx(0, QIdeal) / Vbin); //Q in terms of current  *** cong
                     end;
                     3:
-                    begin                    // Dual mode
+                    begin // Dual mode
                         CurrIn := 0;
-                        // Ctemp := cong(cmul(cdiv(Vbout, Vbin), cong(SR0^[Cond]))); //Balancing powers
+                        Ctemp := cong((Vbout / Vbin) * cong(SR0^[Cond])); //Balancing powers
                         Losses := CalcUPFCLosses(Cabs(Vbin) / (VRef * 1000));
-                        // CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
-                        CurrIn := -cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im);
+                        CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
                         SR1^[Cond] := CurrIn;
                         if SyncFlag then
                         begin
-                    // Starts Power Calculations to copensate the reactive power
+                            // Starts Power Calculations to copensate the reactive power
                             UPFC_Power := CalcUPFCPowers(1, Cond);
                             S := abs(UPFC_Power.re) / pf;
                             QIdeal := UPFC_Power.im - sqrt(1 - pf * pf) * S;   //This is the expected compensating reactive power
                             if (QIdeal > (kvarLim * 1000)) then
                                 QIdeal := kvarLim * 1000;
                             CurrIn := cong(cmplx(0, QIdeal) / Vbin) + SR1^[Cond]; //Q in terms of current  *** cong
-                    // This partial result is added to the one obtained previously to balance the control loop
+                            // This partial result is added to the one obtained previously to balance the control loop
                         end;
                     end;
                     4:
@@ -775,10 +773,9 @@ begin
                         if SF2 then
                         begin    // Normal control routine considering the dynamic reference
                             CurrIn := 0;
-                            // Ctemp := cong(cmul(cdiv(Vbout, Vbin), cong(SR0^[Cond]))); //Balancing powers
+                            Ctemp := cong((Vbout / Vbin) * cong(SR0^[Cond])); //Balancing powers
                             Losses := CalcUPFCLosses(Cabs(Vbin) / (VRefD * 1000));
-                            // CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
-                            CurrIn := -cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im);
+                            CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
                             SR1^[Cond] := CurrIn;
                         end
                         else
@@ -793,10 +790,9 @@ begin
                         if SF2 then
                         begin
                             CurrIn := 0;
-                            // Ctemp := cong(cmul(cdiv(Vbout, Vbin), cong(SR0^[Cond]))); //Balancing powers
+                            Ctemp := cong((Vbout / Vbin) * cong(SR0^[Cond])); //Balancing powers
                             Losses := CalcUPFCLosses(Cabs(Vbin) / (VRefD * 1000));
-                            // CurrIn := -cmplx((Ctemp.re * Losses), SR0^[Cond].im);
-                            CurrIn := -cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im);
+                            CurrIn := -cmplx(Ctemp.re * Losses, SR0^[Cond].im);
                             SR1^[Cond] := CurrIn;
                         end
                         else
