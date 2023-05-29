@@ -819,8 +819,8 @@ Begin
                   CurrIn      :=  CZERO;
                   Ctemp       :=  conjg(cmul(cdiv(Vbout,Vbin),conjg(SR0^[Cond]))); //Balancing powers
                   Losses      :=  CalcUPFCLosses(Cabs(Vbin)/(VRef*1000));
-//                  CurrIn      :=  cnegate(cmplx((Ctemp.re*Losses),SR0^[Cond].im));
-                  CurrIn      :=  cnegate(cmplx(Losses*SR0^[Cond].re,SR0^[Cond].im));
+                  CurrIn      :=  cnegate(cmplx((Ctemp.re*Losses),SR0^[Cond].im));
+//                  CurrIn      :=  cnegate(cmplx(Losses*SR0^[Cond].re,SR0^[Cond].im));   // This change removes power balance, dangerous
                   SR1^[Cond]  :=  CurrIn;
               end;
           2:  Begin                    // Reactive compensation mode
@@ -834,8 +834,8 @@ Begin
                   CurrIn      :=  CZERO;
                   Ctemp       :=  conjg(cmul(cdiv(Vbout,Vbin),conjg(SR0^[Cond]))); //Balancing powers
                   Losses      :=  CalcUPFCLosses(Cabs(Vbin)/(VRef*1000));
-//                  CurrIn      :=  cnegate(cmplx((Ctemp.re*Losses),SR0^[Cond].im));
-                  CurrIn      :=  cnegate(cmplx(Losses*SR0^[Cond].re,SR0^[Cond].im));
+                  CurrIn      :=  cnegate(cmplx((Ctemp.re*Losses),SR0^[Cond].im));
+//                  CurrIn      :=  cnegate(cmplx(Losses*SR0^[Cond].re,SR0^[Cond].im));   // This change removes power balance, dangerous
                   SR1^[Cond]  :=  CurrIn;
                   if SyncFlag then
                   Begin
@@ -854,8 +854,8 @@ Begin
                     CurrIn    :=  CZERO;
                     Ctemp     :=  conjg(cmul(cdiv(Vbout,Vbin),conjg(SR0^[Cond]))); //Balancing powers
                     Losses    :=  CalcUPFCLosses(Cabs(Vbin)/(VRefD*1000));
-//                  CurrIn      :=  cnegate(cmplx((Ctemp.re*Losses),SR0^[Cond].im));
-                    CurrIn      :=  cnegate(cmplx(Losses*SR0^[Cond].re,SR0^[Cond].im));
+                    CurrIn      :=  cnegate(cmplx((Ctemp.re*Losses),SR0^[Cond].im));
+//                    CurrIn      :=  cnegate(cmplx(Losses*SR0^[Cond].re,SR0^[Cond].im));    // This change removes power balance, dangerous
                     SR1^[Cond]:=CurrIn;
                   end
                   else
@@ -871,8 +871,8 @@ Begin
                     CurrIn    :=  CZERO;
                     Ctemp     :=  conjg(cmul(cdiv(Vbout,Vbin),conjg(SR0^[Cond]))); //Balancing powers
                     Losses    :=  CalcUPFCLosses(Cabs(Vbin)/(VRefD*1000));
-//                  CurrIn      :=  cnegate(cmplx((Ctemp.re*Losses),SR0^[Cond].im));
-                    CurrIn      :=  cnegate(cmplx(Losses*SR0^[Cond].re,SR0^[Cond].im));
+                    CurrIn      :=  cnegate(cmplx((Ctemp.re*Losses),SR0^[Cond].im));
+//                    CurrIn      :=  cnegate(cmplx(Losses*SR0^[Cond].re,SR0^[Cond].im));   // This change removes power balance, dangerous
                     SR1^[Cond]:=  CurrIn;
                   End
                   else

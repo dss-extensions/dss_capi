@@ -7,6 +7,8 @@ Version 9.6.1.1
 
 Changes this version
 ====================
+- Variant-like interfaces updated to pointers to faciltiate its adoption cross platform and to match the Cpp version.
+- Fixes losses in UPFC model, there was a bug introduced several years ago when trying to redefine losses based on residual currents.
 - CapControl updated with control mode Follow, in this mode the capacitor activation depends on the value of a given loadshape (ControlSignal).
 - New flag added to avoid displaying reports automatically when generated (ShowReports).
 - New color themes added to the GUI. Go to Set -> Color Themes and check if you like it (Just added 2 as an experiment).
