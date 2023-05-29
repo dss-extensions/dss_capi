@@ -2917,12 +2917,12 @@ begin
                             TestBranch := SubArea.First;
                             while TestBranch <> NIL do
                             begin
-                                WriteStr(sout, '(', SubArea.Level: 0, ') ', TestBranch.ParentClass.Name, '.', TestBranch.Name);
+                                WriteStr(sout, '(', SubArea.Level: 0, ') ', TestBranch.FullName);
                                 FSWriteln(F, sout);
                                 pElem := SubArea.FirstObject;
                                 while pElem <> NIL do
                                 begin
-                                    FSWriteln(F, ['[SHUNT], ', pElem.ParentClass.Name, '.', pElem.Name]);
+                                    FSWriteln(F, '[SHUNT], ', pElem.FullName);
                                     pElem := Subarea.NextObject
                                 end;
                                 TestBranch := SubArea.GoForward;
@@ -2985,11 +2985,11 @@ begin
         TestBranch := Branch_List.First;
         while TestBranch <> NIL do
         begin
-            FSWriteln(F, ['(', IntToStr(Branch_List.Level), ') ', TestBranch.ParentClass.Name, '.', TestBranch.Name]);
+            FSWriteln(F, '(' + IntToStr(Branch_List.Level) + ') ' + TestBranch.FullName);
             TestElement := Branch_List.FirstObject;
             while TestElement <> NIL do
             begin
-                FSWriteln(F, ['[SHUNT], ', TestElement.ParentClass.Name, '.', TestElement.Name]);
+                FSWriteln(F, '[SHUNT], ' + TestElement.FullName);
                 TestElement := Branch_List.NextObject
             end;
             TestBranch := Branch_List.GoForward;
@@ -3064,9 +3064,9 @@ begin
                     with pMtr.BranchList.PresentBranch do
                     begin
                         if IsParallel then
-                            FSWriteln(F, ['(', pMtr.Name, ') ', PDElem.ParentClass.Name, '.', AnsiUpperCase(PDelem.Name), ': PARALLEL WITH ', TDSSCktElement(LoopLineObj).Parentclass.Name, '.', TDSSCktElement(LoopLineObj).Name]);
+                            FSWriteln(F, Format('(%s) %s.%s: PARALLEL WITH %s', [pMtr.Name, PDElem.ParentClass.Name, AnsiUpperCase(PDelem.Name), TDSSCktElement(LoopLineObj).FullName]));
                         if IsLoopedHere then
-                            FSWriteln(F, ['(', pMtr.Name, ') ', PDElem.ParentClass.Name, '.', AnsiUpperCase(PDelem.Name), ': LOOPED TO     ', TDSSCktElement(LoopLineObj).parentclass.Name, '.', TDSSCktElement(LoopLineObj).Name]);
+                            FSWriteln(F, Format('(%s) %s.%s: LOOPED TO     %s', [pMtr.Name, PDElem.ParentClass.Name, AnsiUpperCase(PDelem.Name), TDSSCktElement(LoopLineObj).FullName]));
                     end;
                     PDElem := pMtr.BranchList.GoForward;
                 end;
