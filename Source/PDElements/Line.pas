@@ -883,7 +883,7 @@ Begin
         // Apply the long-line correction to obtain Zm and Ym
         // Rearrange things to express as in Arrillaga's book. no difference to original DoLongLine.
         GammaL  := Csqrt (Cmul(Zs, Ys));
-        Zc  := Csqrt (Cdiv(Zs, Ys));
+        Zc      := Csqrt (Cdiv(Zs, Ys));
         ExpP    := CmulReal (cmplx(cos(GammaL.im), sin(GammaL.im)), exp(GammaL.re));
         ExpM    := Cinv(ExpP);
 

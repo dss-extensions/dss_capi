@@ -250,7 +250,7 @@ Begin
      PropertyHelp[21] :=  'For PF control option, min percent of total bank kvar at which control will close capacitor switch. Default = 50.';
      PropertyHelp[22] :=  '{Yes | No} If Yes, forces Reset of this CapControl.' ;
      PropertyHelp[23] :=  'Is the name of the load shape used for controlling the connection/disconnection of the capacitor to the grid, '+
-                          'when the load shape is DIFFERENT than ZERO (0) the capacitor will be ON and conencted to the grid.' +
+                          'when the load shape is DIFFERENT than ZERO (0) the capacitor will be ON and connected to the grid.' +
                           'Otherwise, if the load shape value is EQUAL to ZERO (0) the capacitor bank will be OFF and disconnected from the grid.';
 
      ActiveProperty  := NumPropsThisClass;
