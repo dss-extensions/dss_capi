@@ -220,8 +220,8 @@ Begin
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
-     PropertyHelp[NumPropsThisClass + 1] := PropertyHelp[NumPropsThisClass + 1] + ' Defaults to 135% of per-phase rated current.';
-     PropertyHelp[NumPropsThisClass + 2] := PropertyHelp[NumPropsThisClass + 2] + ' Defaults to 180% of per-phase rated current.';
+     PropertyHelp^[NumPropsThisClass + 1] := PropertyHelp^[NumPropsThisClass + 1] + ' Defaults to 135% of per-phase rated current.';
+     PropertyHelp^[NumPropsThisClass + 2] := PropertyHelp^[NumPropsThisClass + 2] + ' Defaults to 180% of per-phase rated current.';
 
 End;
 
