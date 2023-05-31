@@ -83,6 +83,8 @@ TYPE
 
         DoHarmonicRecalc:Boolean;
         Bus2Defined     :Boolean;
+        FNormAmpsSpecified  :Boolean;
+        FEmergAmpsSpecified :Boolean;
 
         SpecType        :Integer;
         NumTerm         : Integer;   // Flag used to indicate The number of terminals
@@ -218,6 +220,9 @@ Begin
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
+     PropertyHelp[NumPropsThisClass + 1] := PropertyHelp[NumPropsThisClass + 1] + ' Defaults to 135% of per-phase rated current.';
+     PropertyHelp[NumPropsThisClass + 2] := PropertyHelp[NumPropsThisClass + 2] + ' Defaults to 180% of per-phase rated current.';
+
 End;
 
 
@@ -275,11 +280,29 @@ BEGIN
                END;
 
         END;
-      CASE Connection of
-        1: Nterms := 1;  // Force reallocation of terminals
-        0: IF Fnterms<>2 THEN Nterms := 2;
-      END;
+
+        CASE Connection of
+          1:
+          Begin
+              Nterms := 1;  // Force reallocation of terminals
+
+              CASE Fnphases OF
+                1,2: Nconds := Fnphases + 1;
+              ELSE
+                Nconds := Fnphases
+              END;
+          End;
+
+          0:
+          Begin
+            IF Fnterms<>2 THEN Nterms := 2;
+            Nconds := Fnphases
+          End;
+
+        END;
+
     END;
+
 END;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -377,7 +400,10 @@ BEGIN
           3: IF Fnphases <> Parser[ActorID].IntValue
              THEN BEGIN
                Nphases := Parser[ActorID].IntValue ;
-               NConds := Fnphases;  // Force Reallocation of terminal info
+
+               if Connection = 1 then NConds := Fnphases + 1
+               else NConds := Fnphases; // Force Reallocation of terminal info
+
                Yorder := Fnterms*Fnconds;
              END;
           4: SpecType := 1;
@@ -387,6 +413,8 @@ BEGIN
                 For i := 1 to Fnumsteps Do If FXL^[i] <> 0.0 Then If FR^[i] = 0.0 Then FR^[i] := Abs(FXL^[i]) / 1000.0;  // put in something so it doesn't fail
                 DoHarmonicRecalc := FALSE;  // XL is specified
               End;
+          14: FNormAmpsSpecified := True;
+          15: FEmergAmpsSpecified := True;
          ELSE
          END;
 
@@ -522,6 +550,8 @@ BEGIN
 
      NormAmps := FkvarRating^[1]*SQRT3/kvrating * 1.35;   // 135%
      EmergAmps := NormAmps * 1.8/1.35;   //180%
+     FNormAmpsSpecified := FALSE;
+     FEmergAmpsSpecified := FALSE;
      FaultRate := 0.0005;
      PctPerm:=   100.0;
      HrsToRepair := 3.0;
@@ -610,12 +640,10 @@ BEGIN
      End;
 
 
-
-
     kvarPerPhase := Ftotalkvar/Fnphases;
-    NormAmps := kvarPerPhase/PhasekV * 1.35;
-    EmergAmps := NormAmps * 1.8/1.35;
 
+    if not FNormAmpsSpecified then NormAmps := kvarPerPhase/PhasekV * 1.35;
+    if not FEmergAmpsSpecified then EmergAmps := kvarPerPhase/PhasekV  * 1.8;
 
 END;
 
@@ -743,8 +771,7 @@ begin
 
      inherited  InitPropertyValues(NumPropsThisClass);
 
-       // Override Inherited properties
-       //  Override Inherited properties
+     // Override Inherited properties
      PropertyValue[NumPropsThisClass + 1] := Format('%g',[Normamps]  );
      PropertyValue[NumPropsThisClass + 2] := Format('%g',[Emergamps]  );
      PropertyValue[NumPropsThisClass + 3] := Str_Real(FaultRate, 0    );
@@ -980,12 +1007,15 @@ begin
            Value := Cmplx(0.0, FC^[iSTep] * w);
            CASE Connection of
            1: BEGIN   // Line-Line
-                Value2 := CmulReal(Value, 2.0);
-                Value := cnegate(Value);
+
                 FOR i := 1 to Fnphases Do  BEGIN
-                    SetElement(i, i, Value2);
-                    FOR j := 1 to i-1 DO
-                             SetElemSym(i, j, Value);
+
+                    j := i + 1;
+                    if j>Fnconds Then j := 1;  // wrap around for closed connections
+
+                    AddElement(i, i, Value);
+                    AddElement(j, j, Value);
+                    AddElemSym(i, j, cnegate(Value));
                 END;
                 // Remainder of the matrix is all zero
               END;
