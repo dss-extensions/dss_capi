@@ -559,7 +559,8 @@ End;
 PROCEDURE TCapControlObj.RecalcElementData(ActorID : Integer);
 
 VAR
-   DevIndex :Integer;
+   DevIndex : Integer;
+   ElmReq   : Boolean;  // To signal if the property element is required according to the control type
 
 Begin
 
@@ -567,68 +568,75 @@ Begin
 
 // 5-21-01 RCD moved this section ahead of monitored element so Nphases gets defined first
 
-         Devindex := GetCktElementIndex(ControlVars.CapacitorName); // Global function
-         IF   DevIndex>0
-         THEN
-           Begin  // Both capacitor and monitored element must already exist
-                 ControlledElement   := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
-                 ControlledCapacitor := This_Capacitor;
-                 Nphases := ControlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
-                 Nconds  := FNphases;
-                 ControlledElement.ActiveTerminalIdx := 1;  // Make the 1 st terminal active
-                 // Get control synched up with capacitor
-                 With ControlledCapacitor Do
-                   If ControlVars.AvailableSteps = Numsteps
-                     Then ControlledElement.Closed[0,ActorID] := FALSE
-                     Else ControlledElement.Closed[0,ActorID] := TRUE;
-                   IF ControlledElement.Closed [0,ActorID]      // Check state of phases of active terminal
-                     THEN ControlVars.PresentState := CTRL_CLOSE
-                     ELSE ControlVars.PresentState := CTRL_OPEN;
-           End
-         ELSE
-           Begin
-                ControlledElement := nil;   // element not found
-                DoErrorMsg('CapControl: "' + Self.Name + '"', 'Capacitor Element "'+ ControlVars.CapacitorName + '" Not Found.',
-                              ' Element must be defined previously.', 361);
-           End;
+  Devindex := GetCktElementIndex(ControlVars.CapacitorName); // Global function
+  IF   DevIndex>0
+  THEN
+   Begin  // Both capacitor and monitored element must already exist
+         ControlledElement   := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+         ControlledCapacitor := This_Capacitor;
+         Nphases := ControlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
+         Nconds  := FNphases;
+         ControlledElement.ActiveTerminalIdx := 1;  // Make the 1 st terminal active
+         // Get control synched up with capacitor
+         With ControlledCapacitor Do
+           If ControlVars.AvailableSteps = Numsteps
+             Then ControlledElement.Closed[0,ActorID] := FALSE
+             Else ControlledElement.Closed[0,ActorID] := TRUE;
+           IF ControlledElement.Closed [0,ActorID]      // Check state of phases of active terminal
+             THEN ControlVars.PresentState := CTRL_CLOSE
+             ELSE ControlVars.PresentState := CTRL_OPEN;
+   End
+  ELSE
+   Begin
+        ControlledElement := nil;   // element not found
+        DoErrorMsg('CapControl: "' + Self.Name + '"', 'Capacitor Element "'+ ControlVars.CapacitorName + '" Not Found.',
+                      ' Element must be defined previously.', 361);
+   End;
 
-         ControlVars.InitialState := ControlVars.PresentState;
+  ControlVars.InitialState := ControlVars.PresentState;
 
-{Check for existence of monitored element}
+  {Check for existence of monitored element- if needed}
+  ElmReq :=  True;
+  ElmReq :=  ElmReq and (ControlType <> TIMECONTROL) and (ControlType <> FOLLOWCONTROL);
+  if ElmReq then
+  Begin
+    Devindex := GetCktElementIndex(ElementName); // Global function
+    IF   DevIndex>0  THEN
+    Begin
+      MonitoredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+      IF ElementTerminal > MonitoredElement.Nterms
+      THEN
+      Begin
+        DoErrorMsg('CapControl.' + Name + ':',
+                         'Terminal no. "' +'" does not exist.',
+                         'Re-specify terminal no.', 362);
+      End
+      ELSE
+      Begin
+        // Sets name of i-th terminal's connected bus in CapControl's buslist
+        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        // Allocate a buffer bigenough to hold everything from the monitored element
+        ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder );
+        ControlVars.CondOffset := (ElementTerminal-1) * MonitoredElement.NConds; // for speedy sampling
+      End;
+    End
+    ELSE DoSimpleMsg('Monitored Element in CapControl.'+Name+ ' does not exist:"'+ElementName+'"', 363);
+  End;
 
-         Devindex := GetCktElementIndex(ElementName); // Global function
-         IF   DevIndex>0  THEN Begin
-             MonitoredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
-             IF ElementTerminal > MonitoredElement.Nterms
-             THEN Begin
-                 DoErrorMsg('CapControl.' + Name + ':',
-                                 'Terminal no. "' +'" does not exist.',
-                                 'Re-specify terminal no.', 362);
-             End
-             ELSE Begin
-               // Sets name of i-th terminal's connected bus in CapControl's buslist
-                 Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-               // Allocate a buffer bigenough to hold everything from the monitored element
-                 ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * MonitoredElement.Yorder );
-                 ControlVars.CondOffset := (ElementTerminal-1) * MonitoredElement.NConds; // for speedy sampling
-             End;
-         End
-         ELSE DoSimpleMsg('Monitored Element in CapControl.'+Name+ ' does not exist:"'+ElementName+'"', 363);
+  {Alternative override bus}
+  If ControlVars.VoverrideBusSpecified Then
+  With ControlVars Do
+  Begin
+      VOverrideBusIndex := ActiveCircuit[ActorID].BusList.Find(VOverrideBusName);
+      If VOverrideBusIndex=0 Then Begin
+          DoSimpleMsg(Format('CapControl.%s: Voltage override Bus "%s" not found. Did you wait until buses were defined? Reverting to default.', [Name, VOverrideBusName]), 10361);
+          VoverrideBusSpecified := FALSE;
+      End;
 
-         {Alternative override bus}
-         If ControlVars.VoverrideBusSpecified Then
-         With ControlVars Do
-         Begin
-              VOverrideBusIndex := ActiveCircuit[ActorID].BusList.Find(VOverrideBusName);
-              If VOverrideBusIndex=0 Then Begin
-                  DoSimpleMsg(Format('CapControl.%s: Voltage override Bus "%s" not found. Did you wait until buses were defined? Reverting to default.', [Name, VOverrideBusName]), 10361);
-                  VoverrideBusSpecified := FALSE;
-              End;
+  End;
 
-         End;
-
-         // User model property update, if necessary
-         If Usermodel.Exists  Then UserModel.UpdateModel;  // Checks for existence and Selects
+  // User model property update, if necessary
+  If Usermodel.Exists  Then UserModel.UpdateModel;  // Checks for existence and Selects
 
 End;
 
