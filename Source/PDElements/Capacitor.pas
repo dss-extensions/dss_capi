@@ -413,8 +413,8 @@ BEGIN
                 For i := 1 to Fnumsteps Do If FXL^[i] <> 0.0 Then If FR^[i] = 0.0 Then FR^[i] := Abs(FXL^[i]) / 1000.0;  // put in something so it doesn't fail
                 DoHarmonicRecalc := FALSE;  // XL is specified
               End;
-          14: FNormAmpsSpecified := True;
-          15: FEmergAmpsSpecified := True;
+          NumPropsThisClass + 1: FNormAmpsSpecified := True;  // Normamps
+          NumPropsThisClass + 2: FEmergAmpsSpecified := True; // Emergamps
          ELSE
          END;
 
@@ -1105,8 +1105,8 @@ begin
        10: Result := GetDSSArray_Real(FNumSteps, FXL);
        11: Result := GetDSSArray_Real(FNumSteps, Fharm);
        13: Result  := GetDSSArray_Integer(FNumSteps, FStates);
-       14: Result := Format('%g',[Normamps]  );
-       15: Result := Format('%g',[Emergamps]  );
+       NumPropsThisClass + 1: Result := Format('%g',[Normamps]  );
+       NumPropsThisClass + 2: Result := Format('%g',[Emergamps]  );
     ELSE
        Result := Inherited GetPropertyValue(index);
     END;
