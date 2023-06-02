@@ -270,9 +270,19 @@ begin
     Result := obj.Mean;
 end;
 
+procedure SetMean(obj: TObj; value: Double);
+begin
+    obj.Mean := value;
+end;
+
 function GetStdDev(obj: TObj): Double;
 begin
     Result := obj.StdDev;
+end;
+
+procedure SetStdDev(obj: TObj; value: Double);
+begin
+    obj.StdDev := value;
 end;
 
 procedure DoAction(Obj: TObj; action: TLoadShapeAction);
@@ -333,11 +343,13 @@ begin
 
     PropertyOffset[ord(TProp.mean)] := ptruint(@obj.FMean);
     PropertyReadFunction[ord(TProp.mean)] := @GetMean;
-    PropertyFlags[ord(TProp.mean)] := [TPropertyFlag.ReadByFunction];
+    PropertyWriteFunction[ord(TProp.mean)] := @SetMean;
+    PropertyFlags[ord(TProp.mean)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.WriteByFunction];
     
     PropertyOffset[ord(TProp.stddev)] := ptruint(@obj.FStdDev);
     PropertyReadFunction[ord(TProp.stddev)] := @GetStdDev;
-    PropertyFlags[ord(TProp.stddev)] := [TPropertyFlag.ReadByFunction];
+    PropertyWriteFunction[ord(TProp.stddev)] := @SetStdDev;
+    PropertyFlags[ord(TProp.stddev)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.WriteByFunction];
 
     // double arrays, special
     PropertyType[ord(TProp.hour)] := TPropertyType.DoubleArrayProperty;
