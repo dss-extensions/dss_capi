@@ -252,7 +252,7 @@ begin
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.element)] := ptruint(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.element)] := 0;
-    PropertyWriteFunction[ord(TProp.element)] := @SetMonitoredElement;
+    PropertyWriteFunction[ord(TProp.element)] := @SetMonitoredElement; // TODO: move to side-effect instead?
     PropertyFlags[ord(TProp.element)] := [TPropertyFlag.WriteByFunction];
     //PropertyFlags[ord(TProp.element)] := [TPropertyFlag.CheckForVar]; // not required for general cktelements
 
@@ -537,9 +537,6 @@ begin
     if ControlledElement = NIL then
         raise Exception.Create(Format(_('CapControl "%s": Capacitor is not set, aborting.'), [Name]));
 
-    if MonitoredElement = NIL then
-        raise Exception.Create(Format(_('CapControl "%s": Element is not set, aborting.'), [Name]));
-
     // Both capacitor and monitored element must already exist
     ControlledCapacitor := This_Capacitor;
     FNphases := ControlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
@@ -561,19 +558,25 @@ begin
     ControlVars.InitialState := ControlVars.PresentState;
 
 
-    if ElementTerminal > MonitoredElement.Nterms then
+    if (ControlType <> TIMECONTROL) and (ControlType <> FOLLOWCONTROL) then
     begin
-        DoErrorMsg(FullName,
-            Format(_('Terminal no. "%s" does not exist.'), [ElementTerminal]),
-            _('Re-specify terminal no.'), 362);
-    end
-    else
-    begin
-        // Sets name of i-th terminal's connected bus in CapControl's buslist
-        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-        // Allocate a buffer bigenough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
-        ControlVars.CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+        if MonitoredElement = NIL then
+            raise Exception.Create(Format(_('%s: Element is not set, aborting.'), [FullName]));
+
+        if ElementTerminal > MonitoredElement.Nterms then
+        begin
+            DoErrorMsg(FullName,
+                Format(_('Terminal number %d does not exist.'), [ElementTerminal]),
+                _('Re-specify terminal number.'), 362);
+        end
+        else
+        begin
+            // Sets name of i-th terminal's connected bus in CapControl's buslist
+            Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+            // Allocate a buffer bigenough to hold everything from the monitored element
+            ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
+            ControlVars.CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+        end;
     end;
 
     // Alternative override bus
