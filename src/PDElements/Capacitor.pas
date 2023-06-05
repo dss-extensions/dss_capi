@@ -292,7 +292,7 @@ begin
                     if Fnterms <> 2 then
                         Nterms := 2;
             end;
-        2:
+        ord(TProp.bus2):
         begin
             NumTerm := 2;    // Specifies that the capacitor is not connected to ground
             if AnsiCompareText(StripExtension(GetBus(1)), StripExtension(GetBus(2))) <> 0 then
@@ -304,14 +304,26 @@ begin
         ord(TProp.phases):
             if Fnphases <> previousIntVal then
             begin
-                NConds := Fnphases;  // Force Reallocation of terminal info
+                // Force Reallocation of terminal info
+                if (Connection = TCapacitorConnection.Delta) then
+                    NConds := Fnphases + 1
+                else
+                    NConds := Fnphases;
+
+                Yorder := Fnterms * Fnconds;
+            end
+            else
+            // Probably don't need to check this, but just to be sure...
+            if (Connection = TCapacitorConnection.Delta) and (NConds <> (Fnphases + 1)) then 
+            begin
+                NConds := Fnphases + 1;
                 Yorder := Fnterms * Fnconds;
             end;
-        4:
+        ord(TProp.kvar):
             SpecType := 1;
-        7:
+        ord(TProp.cmatrix):
             SpecType := 3;
-        8:
+        ord(TProp.cuf):
             SpecType := 2;
         ord(TProp.Numsteps):
         begin
@@ -396,17 +408,23 @@ begin
                         FR^[i] := Abs(FXL^[i]) / 1000.0;  // put in something so it doesn't fail
             DoHarmonicRecalc := FALSE;  // XL is specified
         end;
-        11:
+        ord(TProp.Harm):
             DoHarmonicRecalc := TRUE;
-        13:
-            FindLastStepInService;
+        ord(TProp.states):
+            FindLastStepInService();
     end;
 
     //YPrim invalidation on anything that changes impedance values
     case Idx of
-        3..8:
+        ord(TProp.phases), 
+        ord(TProp.kvar),
+        ord(TProp.kv),
+        ord(TProp.conn),
+        ord(TProp.cmatrix),
+        ord(TProp.cuf):
             YprimInvalid := TRUE;
-        12, 13:
+        ord(TProp.Numsteps),
+        ord(TProp.states):
         // Numsteps, states:
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
             // For changes in NumSteps and States, try to handle it incrementally
@@ -605,8 +623,14 @@ begin
         end;
 
     kvarPerPhase := Ftotalkvar / Fnphases;
-    NormAmps := kvarPerPhase / PhasekV * 1.35;
-    EmergAmps := NormAmps * 1.8 / 1.35;
+
+    if not normAmpsSpecified then 
+        NormAmps := kvarPerPhase / PhasekV * 1.35;
+    if not emergAmpsSpecified then 
+        //NOTE: I think the original code was better if we have a value in NormAmps: 
+        // EmergAmps := NormAmps * 1.8 / 1.35;
+        // (same for Reactor)
+        EmergAmps := kvarPerPhase / PhasekV * 1.8; 
 end;
 
 procedure TCapacitorObj.CalcYPrim;
@@ -849,18 +873,18 @@ begin
             case Connection of
                 TCapacitorConnection.Delta:
                 begin   // Line-Line
-                    Value2 := Value * 2.0;
-                    Value := -Value;
+                    Value2 := -Value;
                     for i := 1 to Fnphases do
                     begin
-                        YprimWork[i, i] := Value2;
+                        YprimWork[i, i] := Value;
+                        YprimWork[j, j] := Value;
                         for j := 1 to i - 1 do
                         begin
-                            YprimWork[i, j] := Value;
-                            YprimWork[j, i] := Value;
+                            YprimWork[i, j] := Value2;
+                            YprimWork[j, i] := Value2;
                         end;
                     end;
-            // Remainder of the matrix is all zero
+                    // Remainder of the matrix is all zero
                 end;
             else
             begin // Wye

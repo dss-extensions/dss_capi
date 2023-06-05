@@ -40,6 +40,8 @@ type
         FromTerminal,
         ToTerminal: Integer;  // Set by Meter zone for radial feeder
         IsShunt: Boolean;
+        normAmpsSpecified: Boolean;
+        emergAmpsSpecified: Boolean;
 
         BranchNumCustomers: Integer;
         BranchTotalCustomers: Integer;
@@ -61,7 +63,8 @@ type
         constructor Create(ParClass: TDSSClass);
         destructor Destroy; OVERRIDE;
         procedure MakeLike(OtherObj: Pointer); override;
-        
+        procedure PropertySideEffects(Idx: Integer; previousIntVal: Integer = 0); override;
+
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
 
         procedure CalcFltRate; VIRTUAL;  // Calc failure rates for section and buses
@@ -186,6 +189,8 @@ begin
     inherited Create(ParClass);
 
     IsShunt := FALSE;
+    normAmpsSpecified := False;
+    emergAmpsSpecified := False;
 
     FromTerminal := 1;
     BranchNumCustomers := 0;
@@ -306,6 +311,17 @@ begin
     FaultRate := Other.FaultRate;
     PctPerm := Other.PctPerm;
     HrsToRepair := Other.HrsToRepair;
+end;
+
+procedure TPDElement.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
+begin
+    case (Idx - (ParentClass as TPDClass).PropertyOffset_PDClass)  of
+        ord(TPDElementProp.normamps):
+            normAmpsSpecified := True;
+        ord(TPDElementProp.emergamps):
+            emergAmpsSpecified := True;
+    end;
+    inherited PropertySideEffects(Idx, previousIntVal);
 end;
 
 end.
