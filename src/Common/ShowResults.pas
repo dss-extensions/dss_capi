@@ -1876,7 +1876,7 @@ begin
                     // Bus Norton Equivalent Current, Isc has been previously computed
                     with Buses^[iBus] do
                     begin
-                        WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))) + ',', MaxBusNameLength + 2));
+                        WriteStr(sout, Pad(EncloseQuotes(AnsiUpperCase(BusList.NameOfIndex(iBus))) + ' ', MaxBusNameLength + 2));
                         FSWrite(F, sout);
                         for i := 1 to NumNodesThisBus do
                         begin
@@ -1890,7 +1890,7 @@ begin
                             if Currmag > 0.0 then
                             begin
                                 Zbus := VBus[i] / BusCurrent^[i];
-                                WriteStr(sout, ', ', GetXR(Zbus): 5: 1);
+                                WriteStr(sout, ' ', GetXR(Zbus): 5: 1);
                                 FSWrite(F, sout)
                             end
                             else
