@@ -287,12 +287,24 @@ begin
         ord(TProp.conn):
             case Connection of
                 TCapacitorConnection.Delta:
+                begin
                     Nterms := 1;  // Force reallocation of terminals
+                    if (Fnphases = 1) or (Fnphases = 2) then
+                        NConds := Fnphases + 1
+                    else
+                        NConds := Fnphases;
+                end;
                 TCapacitorConnection.Wye:
+                begin
                     if Fnterms <> 2 then
+                    begin
                         Nterms := 2;
+                        // Yorder := Fnterms * Fnconds;
+                    end;
+                    NConds := Fnphases;
+                end;
             end;
-        2:
+        ord(TProp.bus2):
         begin
             NumTerm := 2;    // Specifies that the capacitor is not connected to ground
             if AnsiCompareText(StripExtension(GetBus(1)), StripExtension(GetBus(2))) <> 0 then
@@ -304,14 +316,31 @@ begin
         ord(TProp.phases):
             if Fnphases <> previousIntVal then
             begin
-                NConds := Fnphases;  // Force Reallocation of terminal info
+                // Force Reallocation of terminal info
+                if (Connection = TCapacitorConnection.Delta) then
+                begin
+                    if (Fnphases = 1) or (Fnphases = 2) then
+                        NConds := Fnphases + 1
+                    else
+                        NConds := Fnphases;
+                end
+                else
+                    NConds := Fnphases;
+
+                Yorder := Fnterms * Fnconds;
+            end
+            else
+            // Probably don't need to check this, but just to be sure...
+            if (Connection = TCapacitorConnection.Delta) and (NConds <> (Fnphases + 1)) then 
+            begin
+                NConds := Fnphases + 1;
                 Yorder := Fnterms * Fnconds;
             end;
-        4:
+        ord(TProp.kvar):
             SpecType := 1;
-        7:
+        ord(TProp.cmatrix):
             SpecType := 3;
-        8:
+        ord(TProp.cuf):
             SpecType := 2;
         ord(TProp.Numsteps):
         begin
@@ -396,17 +425,23 @@ begin
                         FR^[i] := Abs(FXL^[i]) / 1000.0;  // put in something so it doesn't fail
             DoHarmonicRecalc := FALSE;  // XL is specified
         end;
-        11:
+        ord(TProp.Harm):
             DoHarmonicRecalc := TRUE;
-        13:
-            FindLastStepInService;
+        ord(TProp.states):
+            FindLastStepInService();
     end;
 
     //YPrim invalidation on anything that changes impedance values
     case Idx of
-        3..8:
+        ord(TProp.phases), 
+        ord(TProp.kvar),
+        ord(TProp.kv),
+        ord(TProp.conn),
+        ord(TProp.cmatrix),
+        ord(TProp.cuf):
             YprimInvalid := TRUE;
-        12, 13:
+        ord(TProp.Numsteps),
+        ord(TProp.states):
         // Numsteps, states:
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
             // For changes in NumSteps and States, try to handle it incrementally
@@ -605,8 +640,14 @@ begin
         end;
 
     kvarPerPhase := Ftotalkvar / Fnphases;
-    NormAmps := kvarPerPhase / PhasekV * 1.35;
-    EmergAmps := NormAmps * 1.8 / 1.35;
+
+    if not normAmpsSpecified then 
+        NormAmps := kvarPerPhase / PhasekV * 1.35;
+    if not emergAmpsSpecified then 
+        //NOTE: I think the original code was better if we have a value in NormAmps: 
+        // EmergAmps := NormAmps * 1.8 / 1.35;
+        // (same for Reactor)
+        EmergAmps := kvarPerPhase / PhasekV * 1.8; 
 end;
 
 procedure TCapacitorObj.CalcYPrim;
@@ -641,7 +682,6 @@ begin
         YPrimTemp := Yprim_Series;
 
     YPrimWork := TcMatrix.CreateMatrix(Yorder);
-
     for i := 1 to FNumSteps do
         if FStates^[i] = 1 then
         begin
@@ -849,18 +889,19 @@ begin
             case Connection of
                 TCapacitorConnection.Delta:
                 begin   // Line-Line
-                    Value2 := Value * 2.0;
-                    Value := -Value;
+                    Value2 := -Value;
                     for i := 1 to Fnphases do
                     begin
-                        YprimWork[i, i] := Value2;
-                        for j := 1 to i - 1 do
-                        begin
-                            YprimWork[i, j] := Value;
-                            YprimWork[j, i] := Value;
-                        end;
+                        j := i + 1;
+                        if j > Fnconds then
+                            j := 1;
+
+                        YprimWork.AddElement(i, i, Value);
+                        YprimWork.AddElement(j, j, Value);
+                        YprimWork.AddElement(i, j, Value2);
+                        YprimWork.AddElement(j, i, Value2);
                     end;
-            // Remainder of the matrix is all zero
+                    // Remainder of the matrix is all zero
                 end;
             else
             begin // Wye
@@ -869,10 +910,11 @@ begin
                 Value2 := -Value;
                 for i := 1 to Fnphases do
                 begin
-                    YprimWork[i, i] := Value;     // Elements are only on the diagonals
-                    YprimWork[i + Fnphases, i + Fnphases] := Value;
-                    YprimWork[i, i + Fnphases] := Value2;
-                    YprimWork[i + Fnphases, i] := Value2;
+                    j := i + Fnphases;
+                    YprimWork[i, i] := Value;
+                    YprimWork[j, j] := Value;
+                    YprimWork[i, j] := Value2;
+                    YprimWork[j, i] := Value2;
                 end;
             end;
             end;

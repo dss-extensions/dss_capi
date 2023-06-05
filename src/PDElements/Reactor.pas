@@ -43,7 +43,7 @@ unit Reactor;
 //         If conn=wye then 2-terminal through device
 //         If conn=delta then 1-terminal.
 //         Ohms at base frequency
-//         Note that Rmatix may be in parallel with Xmatric (set parallel = Yes)
+//         Note that Rmatrix may be in parallel with Xmatrix (set parallel = Yes)
 //     4.  As symmetrical component values using Z1, Z2, and Z0 complex array properties.
 //         Z2 defaults to Z1, but can be set to a different value.
 
@@ -128,7 +128,7 @@ type
 
         procedure MakePosSequence(); OVERRIDE;  // Make a positive Sequence Model
 
-        procedure RecalcElementData; OVERRIDE;
+        procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
         procedure DumpProperties(F: TFileStream; Complete: Boolean; Leaf: Boolean = False); OVERRIDE;
     end;
@@ -261,7 +261,7 @@ var
     i, dotpos: Integer;
 begin
     case Idx of
-        1:
+        ord(TProp.bus1):
         begin
             // Default Bus2 to zero node of Bus1 if not already defined. (Wye Grounded connection)
             if (not Bus2Defined) and (Nterms > 1) then
@@ -281,35 +281,65 @@ begin
             end;
             PrpSequence^[2] := 0;       // Reset this for save function
         end;
-        2:
+        ord(TProp.bus2):
             if AnsiCompareText(StripExtension(GetBus(1)), StripExtension(GetBus(2))) <> 0 then
             begin
                 IsShunt := FALSE;
                 Bus2Defined := TRUE;
             end;
-        3:
+        ord(TProp.phases):
             if Fnphases <> previousIntVal then
             begin
-                NConds := Fnphases;  // Force Reallocation of terminal info
+                // Force Reallocation of terminal info
+                if (Connection = TReactorConnection.Delta) then
+                begin
+                    if (Fnphases = 1) or (Fnphases = 2) then
+                        NConds := Fnphases + 1
+                    else
+                        NConds := Fnphases;
+                end
+                else
+                    NConds := Fnphases;
+
+                Yorder := Fnterms * Fnconds;
+            end
+            else
+            // Probably don't need to check this, but just to be sure...
+            if (Connection = TReactorConnection.Delta) and (NConds <> (Fnphases + 1)) then 
+            begin
+                NConds := Fnphases + 1;
                 Yorder := Fnterms * Fnconds;
             end;
-        4:
+        ord(TProp.kvar):
             SpecType := 1;   // X specified by kvar, kV
         ord(TProp.conn):
             case Connection of
                 TReactorConnection.Delta:
+                begin
                     Nterms := 1;  // Force reallocation of terminals
+                    if (Fnphases = 1) or (Fnphases = 2) then
+                        NConds := Fnphases + 1
+                    else
+                        NConds := Fnphases;
+                end;
                 TReactorConnection.Wye:
+                begin
                     if Fnterms <> 2 then
+                    begin
                         Nterms := 2;
+                        // Yorder := Fnterms * Fnconds;
+                    end;
+                    NConds := Fnphases;
+                end;
             end;
-        7, 8:
+        ord(TProp.Rmatrix),
+        ord(TProp.Xmatrix):
             SpecType := 3;
-        11:
+        ord(TProp.X):
             SpecType := 2;   // X specified directly rather than computed from kvar
-        12:
+        ord(TProp.Rp):
             RpSpecified := TRUE;
-        13:
+        ord(TProp.Z1):
         begin
             SpecType := 4;    // have to set Z1 to get this mode
             if not Z2Specified then
@@ -317,17 +347,17 @@ begin
             if not Z0Specified then
                 Z0 := Z1;
         end;
-        14:
+        ord(TProp.Z2):
             Z2Specified := TRUE;
-        15:
+        ord(TProp.Z0):
             Z0Specified := TRUE;
-        16:
+        ord(TProp.Z):
         begin
             R := Z.re;
             X := Z.im;
             SpecType := 2;
         end;
-        19:
+        ord(TProp.LmH):
         begin
             SpecType := 2;
             X := L * TwoPi * BaseFrequency;
@@ -336,9 +366,21 @@ begin
 
     //YPrim invalidation on anything that changes impedance values
     case Idx of
-        3..16:
-            YprimInvalid := TRUE;
-        19:
+        ord(TProp.phases),
+        ord(TProp.kvar),
+        ord(TProp.kv),
+        ord(TProp.conn),
+        ord(TProp.Rmatrix),
+        ord(TProp.Xmatrix),
+        ord(TProp.Parallel),
+        ord(TProp.R),
+        ord(TProp.X),
+        ord(TProp.Rp),
+        ord(TProp.Z1),
+        ord(TProp.Z2),
+        ord(TProp.Z0),
+        ord(TProp.Z),
+        ord(TProp.LmH):
             YprimInvalid := TRUE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);
@@ -443,7 +485,7 @@ begin
     RCurveObj := NIL;
     LCurveObj := NIL;
 
-    RecalcElementData;
+    RecalcElementData();
 end;
 
 destructor TReactorObj.Destroy;
@@ -455,7 +497,7 @@ begin
     inherited destroy;
 end;
 
-procedure TReactorObj.RecalcElementData;
+procedure TReactorObj.RecalcElementData();
 var
     KvarPerPhase, PhasekV: Double;
     i, CheckError: Integer;
@@ -482,8 +524,10 @@ begin
             X := SQR(PhasekV) * 1000.0 / kvarPerPhase;
             L := X / twopi / BaseFrequency;
             // Leave R as specified
-            NormAmps := kvarPerPhase / PhasekV;
-            EmergAmps := NormAmps * 1.35;
+            if not normAmpsSpecified then 
+                NormAmps := kvarPerPhase / PhasekV;
+            if not emergAmpsSpecified then 
+                EmergAmps := kvarPerPhase / PhasekV * 1.35;
         end;
         2:
         begin // R + j X
@@ -604,18 +648,19 @@ begin
             if RpSpecified then
                 Value += Gp;
 
+            Value2 := -Value;
             if Connection = TReactorConnection.Delta then
             begin   // Line-Line
-                Value2 := Value * 2.0;
-                Value := -Value;
                 for i := 1 to Fnphases do
                 begin
-                    YPrimTemp[i, i] := Value2;
-                    for j := 1 to i - 1 do
-                    begin
-                        YPrimTemp[i, j] := Value;
-                        YPrimTemp[j, i] := Value;
-                    end;
+                    j := i + 1;
+                    if j > Fnconds then
+                        j := 1;
+
+                    YPrimTemp.AddElement(i, i, Value);
+                    YPrimTemp.AddElement(j, j, Value);
+                    YPrimTemp.AddElement(i, j, Value2);
+                    YPrimTemp.AddElement(j, i, Value2);                
                 end;
                 // Remainder of the matrix is all zero
             end
@@ -623,10 +668,11 @@ begin
             begin // Wye
                 for i := 1 to Fnphases do
                 begin
+                    j := i + Fnphases;
                     YPrimTemp[i, i] := Value;     // Elements are only on the diagonals
-                    YPrimTemp[i + Fnphases, i + Fnphases] := Value;
-                    YPrimTemp[i, i + Fnphases] := -Value;
-                    YPrimTemp[i + Fnphases, i] := -Value;
+                    YPrimTemp[j, j] := Value;
+                    YPrimTemp[i, j] := Value2;
+                    YPrimTemp[j, i] := Value2;
                 end;
             end;
 

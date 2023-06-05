@@ -38,7 +38,6 @@ end;
 //------------------------------------------------------------------------------
 procedure Text_CommandBlock(const Value: PAnsiChar); CDECL;
 var
-    i: Integer;
     strs: TStringList;
 begin
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside

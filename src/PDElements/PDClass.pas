@@ -30,6 +30,8 @@ type
         procedure CountPropertiesAndAllocate; override;
         procedure DefineProperties; override;
     PUBLIC
+        PropertyOffset_PDClass: Integer;
+
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
     end;
@@ -81,6 +83,8 @@ var
     obj: TObj = NIL; // NIL (0) on purpose
 begin
     PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'PDClass');
+
+    PropertyOffset_PDClass := ActiveProperty;
 
     PropertyOffset[ActiveProperty + ord(TProp.normamps)] := ptruint(@obj.NormAmps);
     PropertyOffset[ActiveProperty + ord(TProp.emergamps)] := ptruint(@obj.EmergAmps);
