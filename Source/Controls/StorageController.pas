@@ -111,14 +111,15 @@ TYPE
             FMonPhase,
             CondOffset               :Integer;
 
-            YearlyShape              :String;  // ='fixed' means no variation  on all the time
+            YearlyShape              :String;         // ='fixed' means no variation  on all the time
             YearlyShapeObj           :TLoadShapeObj;  // Shape for this Storage element
-            DailyShape               :String;  // Daily (24 HR) Storage element shape
+            DailyShape               :String;         // Daily (24 HR) Storage element shape
             DailyShapeObj            :TLoadShapeObj;  // Daily Storage element Shape for this load
-            DutyShape                :String;  // Duty cycle load shape for changes typically less than one hour
+            DutyShape                :String;         // Duty cycle load shape for changes typically less than one hour
             DutyShapeObj             :TLoadShapeObj;  // Shape for this Storage element
 
             LoadShapeMult            :Complex;
+            pctVpu                   : double;        // The voltage level for the storage to start discharging in local control mode
 
            // PROCEDURE SetPctReserve;
             PROCEDURE SetAllFleetValues;
@@ -345,7 +346,8 @@ Begin
 
     PropertyHelp[propELEMENT]             :=
       'Full object name of the circuit element, typically a line or transformer, '+
-      'which the control is monitoring. There is no default; Must be specified.';
+      'which the control is monitoring. There is no default; Must be specified.' +
+      'In "Local" control mode, is the name of the load that will be managed by the storage device, which should be installed at the same bus.';
     PropertyHelp[propTERMINAL]            :=
       'Number of the terminal of the circuit element to which the StorageController control is connected. '+
       '1 or 2, typically.  Default is 1. Make sure to select the proper direction on the power for the respective dispatch mode.';
@@ -386,7 +388,7 @@ Begin
      'The needed kW or kvar to get back to center band is dispatched to each Storage element according to these weights. ' +
      'Default is to set all weights to 1.0.';
     PropertyHelp[propMODEDISCHARGE]       :=
-     '{PeakShave* | Follow | Support | Loadshape | Time | Schedule | I-PeakShave} Mode of operation for the DISCHARGE FUNCTION of this controller. ' +
+     '{PeakShave* | Follow | Support | Loadshape | Time | Schedule | I-PeakShave } Mode of operation for the DISCHARGE FUNCTION of this controller. ' +
      CRLF+CRLF+'In PeakShave mode (Default), the control attempts to discharge Storage to keep power in the monitored element below the kWTarget. ' +
      CRLF+CRLF+'In Follow mode, the control is triggered by time and resets the kWTarget value to the present monitored element power. ' +
      'It then attempts to discharge Storage to keep power in the monitored element below the new kWTarget. See TimeDischargeTrigger.' +
@@ -479,7 +481,6 @@ Begin
                                         ' only if SeasonRating=true. The number of targets cannot exceed the number of seasons defined at the SeasonSignal.' +
                                         'The difference between the targets defined at SeasonTargets and SeasonTargetsLow is that SeasonTargets' +
                                         ' applies to discharging modes, while SeasonTargetsLow applies to charging modes.';
-
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -596,8 +597,7 @@ Begin
                                 Seasons := InterpretDblArray(Param, Seasons, Pointer(SeasonTargetsLow));
                               End;
                             End;
-
-         ELSE
+          ELSE
            // Inherited parameters
            ClassEdit(ActiveStorageController2Obj, ParamPointer - NumPropsthisClass)
          End;
@@ -888,7 +888,7 @@ Begin
      SeasonTargets[0]         := FkWTarget;
      setlength(SeasonTargetsLow,1);
      SeasonTargetsLow[0]      := FkWTargetLow;
-
+     pctVpu                   :=  0.8;
 
      InitPropertyValues(0);
 
@@ -1793,6 +1793,7 @@ Begin
 
 
 End;
+
 
 {--------------------------------------------------------------------------}
 PROCEDURE TStorageControllerObj.DoPeakShaveModeLow(ActorID: Integer);
