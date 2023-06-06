@@ -12,7 +12,6 @@ object SplashScreen: TSplashScreen
   Font.Name = 'Tahoma'
   Font.Style = []
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object logo: TImage
     Left = 0
