@@ -6128,6 +6128,9 @@ extern "C" {
 
     /*! 
     Complex array of voltages for active winding
+
+    WARNING: If the transformer has open terminal(s), results may be wrong, i.e. avoid using this
+    in those situations. For more information, see https://github.com/dss-extensions/dss-extensions/issues/24
     */
     DSS_CAPI_DLL void Transformers_Get_WdgVoltages(double** ResultPtr, int32_t* ResultCount);
 
@@ -6138,6 +6141,9 @@ extern "C" {
 
     /*! 
     All Winding currents (ph1, wdg1, wdg2,... ph2, wdg1, wdg2 ...)
+
+    WARNING: If the transformer has open terminal(s), results may be wrong, i.e. avoid using this
+    in those situations. For more information, see https://github.com/dss-extensions/dss-extensions/issues/24
     */
     DSS_CAPI_DLL void Transformers_Get_WdgCurrents(double** ResultPtr, int32_t* ResultCount);
 
@@ -6148,6 +6154,9 @@ extern "C" {
 
     /*! 
     All winding currents in CSV string form like the WdgCurrents property
+
+    WARNING: If the transformer has open terminal(s), results may be wrong, i.e. avoid using this
+    in those situations. For more information, see https://github.com/dss-extensions/dss-extensions/issues/24
     */
     DSS_CAPI_DLL char* Transformers_Get_strWdgCurrents(void);
 
@@ -7149,6 +7158,9 @@ extern "C" {
     DSS_CAPI_DLL void Obj_SetInt32Array(void *obj, int32_t Index, int32_t* Value, int32_t ValueCount);
     DSS_CAPI_DLL void Obj_SetStringArray(void *obj, int32_t Index, const char** Value, int32_t ValueCount);
     DSS_CAPI_DLL void Obj_SetObjectArray(void *obj, int32_t Index, void **Value, int32_t ValueCount);
+
+    DSS_CAPI_DLL double Obj_CktElement_MaxCurrent(void *obj, int32_t terminalIdx);
+    DSS_CAPI_DLL void Obj_Circuit_Set_ActiveCktElement(void *obj);
 
     DSS_CAPI_DLL void Batch_Dispose(void **batch);
     DSS_CAPI_DLL void Batch_BeginEdit(void **batch, int32_t batchSize);

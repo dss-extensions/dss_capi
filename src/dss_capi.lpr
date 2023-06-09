@@ -2037,6 +2037,8 @@ exports
     Obj_GetNumProperties,
     Obj_GetCount,
     Obj_ToJSON,
+    Obj_CktElement_MaxCurrent,
+    Obj_Circuit_Set_ActiveCktElement,
 
     Batch_CreateFromNew,
     Batch_CreateByRegExp,
