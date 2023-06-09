@@ -117,7 +117,7 @@ begin
     if PropInfo = NIL then
     begin
         PropInfo := TypeInfo(TProp);
-        TypeEnum := TDSSEnum.Create('GICTransformer: Type', True, 0, 0, ['GSU', 'Auto', 'YY'], [SPEC_GSU, SPEC_AUTO, SPEC_YY]);
+        TypeEnum := TDSSEnum.Create('GICTransformer: Type', True, 1, 1, ['GSU', 'Auto', 'YY'], [SPEC_GSU, SPEC_AUTO, SPEC_YY]);
     end;
 
     inherited Create(dssContext, GIC_TRANSFORMER, 'GICTransformer');
@@ -126,6 +126,18 @@ end;
 destructor TGICTransformer.Destroy;
 begin
     inherited Destroy;
+end;
+
+procedure SetBusX(obj: TObj; busDef: String);
+begin
+    // Make sure we have enough terminals defined
+    // Set Bus2 = Bus1.0.0.0
+    if obj.Nterms <> 4 then   // have to have 4 terminals to set this property
+    begin
+        obj.Nterms := 4;
+        obj.NConds := obj.Fnphases; // force reallocation of terminals and conductors
+    end;
+    obj.SetBus(3, busDef);
 end;
 
 procedure TGICTransformer.DefineProperties;
@@ -159,6 +171,9 @@ begin
     PropertyOffset[ord(TProp.BusNH)] := 2;
     PropertyOffset[ord(TProp.BusX)] := 3;
     PropertyOffset[ord(TProp.BusNX)] := 4;
+
+    PropertyFlags[ord(TProp.BusX)] := [TPropertyFlag.WriteByFunction];
+    PropertyWriteFunction[ord(TProp.BusX)] := @SetBusX;
 
     // object properties
     PropertyType[ord(TProp.VarCurve)] := TPropertyType.DSSObjectReferenceProperty;
@@ -221,13 +236,6 @@ begin
         ord(TProp.BusX):
         begin
             // Special handling for Bus X
-            // Make sure we have enough terminals defined
-            // Set Bus2 = Bus1.0.0.0
-            if Nterms <> 4 then   // have to have 4 terminals to set this property
-            begin
-                Nterms := 4;
-                NConds := Fnphases; // force reallocation of terminals and conductors
-            end;
 
             // Strip node designations from S
             S := GetBus(3);
@@ -253,7 +261,7 @@ begin
                 NConds := Fnphases;  // Force Reallocation of terminal info if different size
                 ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
             end;
-        6:
+        ord(TProp.Typ):
             case Spectype of
                 SPEC_AUTO:
                 begin
@@ -265,32 +273,39 @@ begin
                     SetBus(2, GetBus(3));
                 end;
             end;
-        7:
+        ord(TProp.R1):
         begin
             if G1 = 0.0 then
                 G1 := 10000.0;  // Default to a low resistance
             FpctRSpecified := FALSE;
         end;
-        8:
+        ord(TProp.R2):
         begin
             if G2 = 0.0 then
                 G2 := 10000.0;  // Default to a low resistance
             FpctRSpecified := FALSE;
         end;
-        9..10:
+        ord(TProp.kVLL1),
+        ord(TProp.kVLL2):
             FkVSpecified := TRUE;
-        12:
+        ord(TProp.VarCurve):
             if FVarCurveObj <> NIL then
                 Kspecified := FALSE;
-        13..14:
+        ord(TProp.pctR1),
+        ord(TProp.pctR2):
             FpctRSpecified := TRUE;
-        15:
+        ord(TProp.K):
             KSpecified := TRUE;
     end;
 
-        //YPrim invalidation on anything that changes impedance values or no. of terminals
+    //YPrim invalidation on anything that changes impedance values or no. of terminals
     case Idx of
-        3..8:
+        ord(TProp.BusX),
+        ord(TProp.BusNX),
+        ord(TProp.phases),
+        ord(TProp.Typ),
+        ord(TProp.R1),
+        ord(TProp.R2):
             YprimInvalid := TRUE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);
@@ -539,5 +554,6 @@ begin
     inherited;
 end;
 
-finalization    TypeEnum.Free;
+finalization
+    TypeEnum.Free;
 end.

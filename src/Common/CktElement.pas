@@ -525,7 +525,7 @@ begin
         ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
     end
     else
-        DoSimpleMsg('Attempt to set bus name for non-existent circuit element terminal(%d): "%s"', [i, s], 7541);
+        DoSimpleMsg('Attempt to set bus name for non-existent circuit element terminal (%d): "%s"', [i, s], 7541);
 end;
 
 procedure TDSSCktElement.Set_Freq(Value: Double);

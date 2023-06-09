@@ -1936,7 +1936,14 @@ begin
         //     stringPtr^ := Value;
         // end;
         TPropertyType.BusProperty:
+        begin
+            if TPropertyFlag.WriteByFunction in flags then
+                TWriteStringPropertyFunction(Pointer(PropertyWriteFunction[Index]))(obj, Value)
+            else
+            begin
             TDSSCktElement(obj).SetBus(PropertyOffset[Index], Value);
+            end;
+        end;
         TPropertyType.BusOnStructArrayProperty:
             TDSSCktElement(obj).SetBus(PInteger(PByte(obj) + PropertyStructArrayIndexOffset)^, Value);
         TPropertyType.MappedStringEnumProperty:
