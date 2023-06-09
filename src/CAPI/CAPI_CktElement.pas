@@ -4,6 +4,7 @@ interface
 
 uses
     CAPI_Utils,
+    CktElement,
     CAPI_Types;
 
 procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
@@ -98,6 +99,10 @@ function CktElement_Get_IsIsolated(): TAPIBoolean; CDECL;
 procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PAPISize); CDECL;
 procedure CktElement_Get_NodeRef_GR(); CDECL;
 
+// API Extensions -- Obj API
+function Obj_CktElement_MaxCurrent(obj: TDSSCktElement; terminalIdx: Integer): Double;
+procedure Obj_Circuit_Set_ActiveCktElement(obj: TDSSCktElement);
+
 implementation
 
 uses
@@ -109,7 +114,6 @@ uses
     PDElement,
     PCElement,
     MathUtil,
-    CktElement,
     Utilities,
     DSSClass,
     DSSHelper;
@@ -1603,6 +1607,16 @@ begin
         Exit;
     end;
     DSSPrime.API_VarIdx := Value;
+end;
+//------------------------------------------------------------------------------
+function Obj_CktElement_MaxCurrent(obj: TDSSCktElement; terminalIdx: Integer): Double;
+begin
+    Result := obj.MaxCurrent[terminalIdx];
+end;
+//------------------------------------------------------------------------------
+procedure Obj_Circuit_Set_ActiveCktElement(obj: TDSSCktElement);
+begin
+    obj.DSS.ActiveCircuit.ActiveCktElement := obj;
 end;
 //------------------------------------------------------------------------------
 end.

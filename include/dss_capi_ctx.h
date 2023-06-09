@@ -5932,6 +5932,9 @@ extern "C" {
 
     /*! 
     Complex array of voltages for active winding
+
+    WARNING: If the transformer has open terminal(s), results may be wrong, i.e. avoid using this
+    in those situations. For more information, see https://github.com/dss-extensions/dss-extensions/issues/24
     */
     DSS_CAPI_DLL void ctx_Transformers_Get_WdgVoltages(void* ctx, double** ResultPtr, int32_t* ResultCount);
 
@@ -5942,6 +5945,9 @@ extern "C" {
 
     /*! 
     All Winding currents (ph1, wdg1, wdg2,... ph2, wdg1, wdg2 ...)
+
+    WARNING: If the transformer has open terminal(s), results may be wrong, i.e. avoid using this
+    in those situations. For more information, see https://github.com/dss-extensions/dss-extensions/issues/24
     */
     DSS_CAPI_DLL void ctx_Transformers_Get_WdgCurrents(void* ctx, double** ResultPtr, int32_t* ResultCount);
 
@@ -5952,6 +5958,9 @@ extern "C" {
 
     /*! 
     All winding currents in CSV string form like the WdgCurrents property
+
+    WARNING: If the transformer has open terminal(s), results may be wrong, i.e. avoid using this
+    in those situations. For more information, see https://github.com/dss-extensions/dss-extensions/issues/24
     */
     DSS_CAPI_DLL char* ctx_Transformers_Get_strWdgCurrents(void* ctx);
 
@@ -6915,6 +6924,7 @@ extern "C" {
 
 
     
+
 
 
 
