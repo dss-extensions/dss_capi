@@ -348,6 +348,7 @@ var
     s: String;
     gotError: Boolean;
     msg: String;
+    proc: TProcess = NIL;
 begin
     if not DSS_CAPI_ALLOW_EDITOR then
         Exit; // just ignore if Show is not allowed
@@ -356,6 +357,33 @@ begin
         if 0 = DSSPrime.DSSMessageCallback(DSSPrime, PChar(FileNm), ord(DSSMessageType.FireOffEditor)) then
             Exit;
 
+    gotError := FALSE;
+    try
+        proc := TProcess.Create(NIL);
+        if DefaultEditor = 'open -t' then
+            proc.Executable := 'open'
+        else
+            proc.Executable := DefaultEditor;
+
+        with proc.Parameters do
+        begin
+            if DefaultEditor = 'open -t' then
+                Add('-t');
+            Add(FileNm);
+        end;
+        proc.Active := True;
+        proc.WaitOnExit();
+    except
+        On E: Exception do
+        begin
+            gotError := TRUE;
+        end;
+    end;
+    FreeAndNil(proc);
+    if not gotError then
+        Exit; // We're done!
+
+    // Try the previous implementation too
     gotError := FALSE;
     msg := 'Unknown error in process.';
     try

@@ -767,7 +767,7 @@ initialization
     DefaultEditor := SysUtils.GetEnvironmentVariable('EDITOR');
     // If there is no EDITOR environment variable, keep the old behavior
     if (DefaultEditor = '') then
-    DefaultEditor   := 'open -t';
+        DefaultEditor   := 'open -t';
     DefaultFontSize := 12;
     DefaultFontName := 'Geneva';
 {$ENDIF}
@@ -775,7 +775,7 @@ initialization
     DefaultEditor := SysUtils.GetEnvironmentVariable('EDITOR');
     // If there is no EDITOR environment variable, keep the old behavior
     if (DefaultEditor = '') then
-    DefaultEditor := 'xdg-open';
+        DefaultEditor := 'xdg-open';
     DefaultFontSize := 10;
     DefaultFontName := 'Arial';
 {$ENDIF}
