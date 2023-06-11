@@ -2662,7 +2662,15 @@ begin
         F := TBufferedFileStream.Create(DSS.CurrentDSSDir + 'BusVoltageBases.dss', fmCreate);
         DSS.DssExecutive.Command := 'get voltagebases';
         VBases := DSS.GlobalResult;
-        FSWriteln(F, 'Set Voltagebases=' + VBases);
+        FSWriteln(F, 'Set VoltageBases=' + VBases);
+{$IFDEF DSS_CAPI_NOCOMPATFLAGS}
+        FSWriteln(F, '! CalcVoltageBases');
+{$ELSE}
+        if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.SaveCalcVoltageBases)) = 0 then
+            FSWriteln(F, '! CalcVoltageBases')
+        else
+            FSWriteln(F, 'CalcVoltageBases');
+{$ENDIF}
         FreeAndNil(F);
         Result := TRUE;
     except

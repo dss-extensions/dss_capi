@@ -29,7 +29,8 @@ type
     TDSSCompatFlags = (
         NoSolverFloatChecks = 1,
         BadPrecision = 2,
-        InvControl9611 = 4
+        InvControl9611 = 4,
+        SaveCalcVoltageBases = 8
     );
 
     TDSSObjectFlag = (
