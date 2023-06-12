@@ -3,7 +3,7 @@
 **not released**
 
 - **Done**:
-    - drop the GR API for strings (bytes, ints and floats will continue)
+    - drop the GR API for strings (bytes, ints and floats will continue); we might introduce an alternative API for strings if there are benefits
     - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using `int32_t` instead — this was an artifact to ensure initial compatibility with the COM code.
     - extend the API to work with 64-bit integers where appropriate
     - extend the API to allow 32-bit floats
@@ -17,7 +17,29 @@
 
 # Versions 0.13.x
 
-## Version 0.13.2
+## Version 0.13.3 (2023-06-11)
+
+Bugfix release for some components. No other major changes.
+
+Fixes ported from the official OpenDSS v9.6.1.2 (SVN r3619) released on 2023-06-06, plus our custom changes (including new tests). Test circuits cross-validated as usual.
+
+- `LoadShape`: check if there's any allocated pointer before normalizing. Since we provide more ways to fill the LoadShape data besides the official alternatives, we needed to add a few more checks in case of misuse to avoid using invalid pointers. Includes a minor fix to how manual values (set by the user) for `mean` and `stddev` are handled.
+- `show` command: adjust formatting for `show variables`, `show isolated`, `show loops`, `show faults`.
+- `GICTransformer`: clean-up the code and add a minor fix for `BusX`.
+- Editor: tweak how the process is started; works better on Linux for terminal-based editors (GUI editors are recommended for a better experience though).
+- Obj/API and headers: new functions and add a few warnings in the docs.
+- New compatibility flag in `DSSCompatFlags`: add `SaveCalcVoltageBases`. On recent versions, running a `save circuit` doesn't include a `CalcVoltageBases` anymore since that causes issues for some users. We added the new flag `SaveCalcVoltageBases` to restore the old/original behavior. More options are planned for a future version in a dedicated function in the API.
+
+- Ported (and complemented) from the official OpenDSS SVN code:
+    - `UPFC`, r3610: "Fixing losses in UPFC model, there was a bug introduced several years ago when trying to redefine losses based on residual currents (bad idea)." (by davismont)
+    - `CapControl`, r3615: "Fixing property requirement (element) for capcontrol in Time and Follow control modes", by davismont
+    - `Capacitor`/`Reactor`: fixes related to 1- or 2-phase LL objects and Yprim; NormAmps/EmergAmps.
+        - r3613: "Fixing bug in Yprim formation for 1-ph and 2-ph delta-connected capacitors. Fix to user-specified NormAmps and EmergAmps for capacitors, which were always being overridden with default values. Pending to check for same issues on Reactors." (by celsorocha)
+        - r3616: "Fixing bug in Yprim formation for 1-ph and 2-ph delta-connected reactors. Fix to user-specified NormAmps and EmergAmps for reactors, which were always being overridden with default values." (by celsorocha)
+        - Also includes an extra fix for a corner-case issue detected with our tests on DSS-Extensions.
+    - `PVSystem`/`Storage`/`InvControl`, r3597/r3598: "Adding current limiting capabilities to IBR in QSTS and dynamics modes. Examples also available." (by davismont). Also refactored more common code to InvBasedPCE on the DSS-Extensions version.
+
+## Version 0.13.2 (2023-05-23)
 
 Minor release. 
 
@@ -31,11 +53,11 @@ Minor release.
 - Build scripts updated. The version in the header is automatically updated on release.
 - JSON exports: new flags implemented, and whole behavior adjusted to better exporting all classes, including some problematic cases See [DSS-Extensions — JSON exports](https://github.com/dss-extensions/dss_python/blob/master/docs/examples/JSON.ipynb) for notes and examples.
 
-## Version 0.13.1
+## Version 0.13.1 (2023-04-01)
 
 Very minor release to address a potential issue we noticed with three of the PVSystem properties.
 
-## Version 0.13.0
+## Version 0.13.0  (2023-03-28)
 
 Version 0.13.0 was expected to be version 0.12.2. Due to some more large changes from the upstream/official OpenDSS, we decided to increment to 0.13 instead.
 Although only officially released on March 2023, most of the changes below were already available in an alpha version release on December 2022.

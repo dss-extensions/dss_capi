@@ -3,7 +3,7 @@
 
 *Para uma versão em português deste arquivo, veja [README.pt-BR.md](https://github.com/dss-extensions/dss_capi/blob/master/README.pt-BR.md).*
 
-# DSS C-API: a library with a C API for an alternative implementation of EPRI's OpenDSS
+# DSS C-API: a library with a C API for an Alternative implementation of EPRI's OpenDSS
 
 Please see [FAQ](https://github.com/dss-extensions/dss-extensions#faq) for a couple of notes.
 
@@ -23,9 +23,9 @@ If you are looking for the bindings to other languages:
 - [DSS MATLAB](http://github.com/dss-extensions/dss_matlab/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible with the API of the official OpenDSS COM classes.
 - [dss.hpp](https://dss-extensions.org/dss_capi/): header-only library for C++, also hosped in this repository (`include/` directory). Allows using DSS C-API more comfortably from C++, abstract away memory management and low-level details such as API conventions of the DSS C-API library. Currently uses Eigen and fmt.
 
-Version 0.13.x is based on OpenDSS revision 3595 (plus a few cherry-picked revisions), with many extra/custom features.
+Version 0.13.x is based on OpenDSS revision 3619 (exactly OpenDSS v9.6.1.2), with many extra/custom features.
 
-**For the source-code of a specific version, check the Git tags.**
+**For the source-code of a specific version, check the Git tags or the Releases page.**
 
 While the main objective of COM compatibility has been reached, this is still a work-in-progress and is subject to changes. Especially, there are planned changes targeting version 0.14, which will become v1.0 when we consider it ready.
 
@@ -44,9 +44,10 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 ## Recent changes
 
-See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.12.x/docs/changelog.md) for a detailed list.
+See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
-- **2023-05-24 / version 0.13.2: Minor release, includes updates to JSON exports, some more error-checking, internal code refactoring, header updates, and minor ports from the official OpenDSS.**
+- **2023-06-11 / version 0.13.3: Bugfix release for some components (notably Capacitor, Reactor, UPFC). See the changelog or release page for details.**
+- 2023-05-24 / version 0.13.2: Minor release, includes updates to JSON exports, some more error-checking, internal code refactoring, header updates, and minor ports from the official OpenDSS.
 - 2023-04-01 / version 0.13.1: Minor release to address a few PVSystem properties
 - 2023-03-29 / version 0.13.0: Various updates, including bugfixes and several OpenDSS feature ports; the reference is now OpenDSS v9.6.1.1.
 - 2022-07-16 / version 0.12.1: Incremental release to fix address a bug found just after 0.12.0 was released.
