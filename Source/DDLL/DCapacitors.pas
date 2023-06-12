@@ -249,12 +249,18 @@ begin
           elem := lst.First;
           WHILE elem<>Nil DO Begin
             S             := elem.Name;
-            for i := 0 to High(S) do
+            for i := 1 to High(S) do
             Begin
               setlength(myStrArray,length(myStrArray) + 1);
               myStrArray[High(myStrArray)]  :=  Byte(S[i]);
             End;
             elem := lst.Next;
+            if elem <> Nil then
+            Begin
+              setlength(myStrArray,length(myStrArray) + 1);
+              myStrArray[High(myStrArray)]  :=  Byte(0);
+            End;
+
           End;
         End;
       End;
