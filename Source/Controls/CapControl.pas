@@ -621,6 +621,14 @@ Begin
       End;
     End
     ELSE DoSimpleMsg('Monitored Element in CapControl.'+Name+ ' does not exist:"'+ElementName+'"', 363);
+  End
+  else
+  Begin
+    // Sets name of i-th terminal's connected bus in CapControl's buslist
+    Setbus(1, ControlledElement.GetBus(1));
+    // Allocate a buffer bigenough to hold everything from the monitored element
+    ReAllocMem(cBuffer, SizeOF(cbuffer^[1]) * ControlledElement.Yorder );
+    ControlVars.CondOffset := (ElementTerminal-1) * ControlledElement.NConds; // for speedy sampling
   End;
 
   {Alternative override bus}
@@ -898,7 +906,7 @@ begin
      THEN ControlVars.PresentState := CTRL_CLOSE
      ELSE ControlVars.PresentState := CTRL_OPEN;
 
-     WITH   MonitoredElement, ControlVars Do
+     WITH ControlVars Do
      Begin
          ShouldSwitch := FALSE;
 
