@@ -3,10 +3,11 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.6.1.2
+Version 9.6.1.3
 
 Changes this version
 ====================
+- Solves a bug introduced in version 9.6.1.2 when using CapControl in time or follow control modes. 
 - Bug in Yprim formation for 1-ph and 2-ph delta-connected capacitors fixed. Fix to user-specified NormAmps and EmergAmps for capacitors, which were always being overridden with default values. Pending to check for same issues on Reactors.
 - Variant-like interfaces updated to pointers to faciltiate its adoption cross platform and to match the Cpp version.
 - Fixes losses in UPFC model, there was a bug introduced several years ago when trying to redefine losses based on residual currents.
