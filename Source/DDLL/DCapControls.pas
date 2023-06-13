@@ -5,7 +5,11 @@ interface
 function CapControlsI(mode:longint; arg:longint):longint;cdecl;
 function CapControlsF(mode:longint; arg:double):double;cdecl;
 function CapControlsS(mode:longint; arg:pAnsiChar):pAnsiChar;cdecl;
-procedure CapControlsV(mode:longint; out arg:Variant);cdecl;
+procedure CapControlsV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
+
+var
+
+  myStrArray  : Array of Byte;
 
 implementation
 
@@ -16,6 +20,17 @@ begin
   Result := nil;
   if ActiveCircuit[ActiveActor] <> Nil then Result := ActiveCircuit[ActiveActor].CapControls.Active;
 end;
+
+procedure WriteStr2Array(myStr  : string);
+var
+  i : Integer;
+Begin
+  for i := 1 to High(myStr) do
+  Begin
+    setlength(myStrArray, Length(myStrArray) + 1);
+    myStrArray[High(myStrArray)]  :=  Byte(myStr[i]);
+  End;
+End;
 
 procedure Set_Parameter(const parm: string; const val: string);
 var
@@ -271,35 +286,45 @@ begin
 end;
 
 //******************************Variant type properties****************************
-procedure CapControlsV(mode:longint; out arg:Variant);cdecl;
+procedure CapControlsV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 Var
-  elem: TCapControlObj;
-  lst: TPointerList;
-  k: Integer;
+  elem  : TCapControlObj;
+  lst   : TPointerList;
+  i,
+  k     : Integer;
+  S     : String;
 
 begin
   case mode of
   0: begin  // Capcontrols.AllNames
-      arg := VarArrayCreate([0, 0], varOleStr);
-      arg[0] := 'NONE';
-      IF ActiveCircuit[ActiveActor] <> Nil THEN WITH ActiveCircuit[ActiveActor] DO
+    myType  :=  4;          //String
+    setlength(myStrArray, 0);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
       If CapControls.ListSize > 0 Then
       Begin
         lst := CapControls;
-        VarArrayRedim(arg, lst.ListSize-1);
+        setlength(myStrArray, 0);
         k:=0;
         elem := lst.First;
-        WHILE elem<>Nil DO Begin
-          arg[k] := elem.Name;
-          Inc(k);
+        WHILE elem<>Nil DO
+        Begin
+          WriteStr2Array(elem.Name);
+          WriteStr2Array(Char(0));
           elem := lst.Next;
         End;
-      End;
+      End
+      else
+        WriteStr2Array('None');
+    End;
   end
   else
-      arg[0]:='Error, parameter not valid;'
+      WriteStr2Array('Error, parameter not valid;');
   end;
+  myPointer :=  @(myStrArray[0]);
+  mySize    :=  Length(myStrArray);
 end;
 
 end.
