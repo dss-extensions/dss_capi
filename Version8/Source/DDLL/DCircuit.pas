@@ -2,13 +2,6 @@ unit DCircuit;
 
 interface
 
-function CircuitI(mode:longint; arg: longint):longint;cdecl;
-function CircuitF(mode:longint; arg1, arg2: double):double;cdecl;
-function CircuitS(mode:longint; arg: pAnsiChar):pAnsiChar;cdecl;
-procedure CircuitV(mode:longint; out arg: Variant; arg2: longint);cdecl;
-
-implementation
-
 uses DSSClassDefs,
      DSSGlobals,
      Line,
@@ -29,6 +22,30 @@ uses DSSClassDefs,
      Utilities,
      SolutionAlgs,
      KLUSolve;
+
+function CircuitI(mode:longint; arg: longint):longint;cdecl;
+function CircuitF(mode:longint; arg1, arg2: double):double;cdecl;
+function CircuitS(mode:longint; arg: pAnsiChar):pAnsiChar;cdecl;
+procedure CircuitV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
+
+var
+  myStrArray  : Array of Byte;
+  myCmplxArray: Array of complex;
+  myDBLArray  : Array of double;
+
+implementation
+
+
+procedure WriteStr2Array(myStr  : string);
+var
+  i : Integer;
+Begin
+  for i := 1 to High(myStr) do
+  Begin
+    setlength(myStrArray, Length(myStrArray) + 1);
+    myStrArray[High(myStrArray)]  :=  Byte(myStr[i]);
+  End;
+End;
 
 function CircuitI(mode:longint; arg: longint):longint;cdecl;
 
@@ -271,60 +288,76 @@ begin
   end;
 end;
 //**************************Variant type properties*****************************
-procedure CircuitV(mode:longint; out arg: Variant; arg2: longint);cdecl;
+procedure CircuitV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 var
-   LossValue :complex;
-   pLine :TLineObj;
-   Loss :Complex;
-   pTransf:TTransfObj;
-   pCktElem:TDSSCktElement;
-   cPower, cLoss, Volts, Curr:Complex;
-   i,j,k,NodeIdx, Phase:Integer;
-   BaseFactor, VoltsD: double;
-   BusName:String;
-   iV, p               :LongWord;
-   NValues          :LongWord;
-   nBus, nNZ        :LongWord;
-   hY               :NativeUInt;
-   ColPtr, RowIdx   :array of LongWord;
-   cVals            :array of Complex;
-   Temp:pDoubleArray;
-   Temp2:pStringArray;
+   LossValue        : complex;
+   pLine            : TLineObj;
+   Loss             : Complex;
+   pTransf          : TTransfObj;
+   pCktElem         : TDSSCktElement;
+   cPower,
+   cLoss,
+   Volts,
+   Curr             : Complex;
+   i,j,k,
+   NodeIdx,
+   Phase            :Integer;
+   BaseFactor,
+   VoltsD           : double;
+   BusName          : String;
+   iV, p,
+   NValues,
+   nBus, nNZ        : LongWord;
+   hY               : NativeUInt;
+   ColPtr, RowIdx   : array of LongWord;
+   cVals            : array of Complex;
+   Temp             : pDoubleArray;
+   Temp2            : pStringArray;
+   Pint             : ^Integer;
 
 begin
   case mode of
   0: begin                                             // Circuit.Losses
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
-      Begin
-         arg := VarArrayCreate([0, 1], varDouble);
-         LossValue := ActiveCircuit[ActiveActor].Losses[ActiveActor];
-         arg[0] := LossValue.re;
-         arg[1] := LossValue.im;
-      End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+    myType  :=  3;          // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+       myCmplxArray[0] := ActiveCircuit[ActiveActor].Losses[ActiveActor]
+    else
+      myCmplxArray[0] := cmplx( 0, 0 );
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+
   end;
   1: begin                                             // Circuit.LineLosses
-        arg := VarArrayCreate([0, 1], varDouble);
-        IF ActiveCircuit[ActiveActor] <> NIL THEN
-        WITH ActiveCircuit[ActiveActor] DO
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] <> NIL THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        pLine := Lines.First;
+        Loss := Cmplx(0.0,0.0);
+        WHILE pLine<>nil DO
         Begin
-          pLine := Lines.First;
-          Loss := Cmplx(0.0,0.0);
-          WHILE pLine<>nil DO
-          Begin
-             CAccum(Loss, pLine.Losses[ActiveActor]);
-             pLine := Lines.Next;
-          End;
-          arg[0] := Loss.re * 0.001;
-          arg[1] := Loss.im * 0.001;
+           CAccum(Loss, pLine.Losses[ActiveActor]);
+           pLine := Lines.Next;
         End;
+        myCmplxArray[0] := cmulreal(Loss, 0.001);
+      End;
+    End
+    else
+      myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   2: begin                                             // Circuit.SubstationLosses
-    arg := VarArrayCreate([0, 1], varDouble);
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
     IF ActiveCircuit[ActiveActor] <> nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
        pTransf := Transformers.First;
        Loss := Cmplx(0.0,0.0);
        WHILE pTransf<>nil DO
@@ -332,18 +365,19 @@ begin
           IF pTransf.Issubstation THEN Caccum(Loss, pTransf.Losses[ActiveActor]);
           pTransf := Transformers.Next;
        End;
-       arg[0] := Loss.re * 0.001;
-       arg[1] := Loss.im * 0.001;
-     End
-    ELSE
-     Begin
-       arg[0] := 0.0;
-       arg[1] := 0.0;
-     End;
+        myCmplxArray[0] := cmulreal(Loss, 0.001);
+      End
+    End
+    else
+      myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   3: begin                                             // Circuit.TotalPower
-    arg := VarArrayCreate([0, 1], varDouble);
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
     IF ActiveCircuit[ActiveActor] <> nil THEN
+    Begin
       WITH ActiveCircuit[ActiveActor] DO Begin
         pCktElem := Sources.First;
         cPower := Cmplx(0.0, 0.0);
@@ -351,356 +385,432 @@ begin
            CAccum(cPower, pcktElem.Power[1,ActiveActor]);
            pCktElem := Sources.Next;
         End;
-        arg[0] := cPower.re * 0.001;
-        arg[1] := cPower.im * 0.001;
+        myCmplxArray[0] := cmulreal(cPower, 0.001);
       End
-    ELSE
-      Begin
-        arg[0] := 0.0;
-        arg[1] := 0.0;
-      End;
+    end
+    else
+      myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   4: begin                                             // Circuit.AllBusVolts
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       arg := VarArrayCreate([0, 2*NumNodes-1], varDouble);
+       setlength(myCmplxArray, NumNodes);
        k:=0;
        FOR i := 1 to NumBuses DO
        Begin
          For j := 1 to Buses^[i].NumNodesThisBus DO
          Begin
-           Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(j)];
-             arg[k] := Volts.re;
-             Inc(k);
-             arg[k] := Volts.im;
-             Inc(k);
+           myCmplxArray[k] := ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(j)];
+           Inc(k);
          End;
        End;
      End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+    End
+    ELSE myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   5: begin                                             // Circuit.AllBusVMag
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       arg := VarArrayCreate([0, NumNodes-1], varDouble);
-       k:=0;
-       FOR i := 1 to NumBuses DO
-       Begin
-          If Buses^[i].kVBase >0.0 then BaseFactor :=  1000.0* Buses^[i].kVBase  Else BaseFactor := 1.0;
-           For j := 1 to Buses^[i].NumNodesThisBus  DO
-           Begin
-             VoltsD := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(j)]);
-             arg[k] := VoltsD;
-             Inc(k);
-           End;
-       End;
-     End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
-  end;
-  6: begin                                             // Circuit.AllElementNames
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       Begin
-         arg := VarArrayCreate([0, NumDevices-1], varOleStr);
-         FOR i := 1 to NumDevices DO
-         Begin
-              WITH  TDSSCktElement(CktElements.Get(i)) DO
-               arg[i-1] := ParentClass.Name + '.' + Name;
-         End;
-       End
-      ELSE arg := VarArrayCreate([0, 0], varOleStr);
-  end;
-  7: begin                                             // Circuit.AllBusNames
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       Begin
-         arg := VarArrayCreate([0, NumBuses-1], varOleStr);
-         FOR i := 0 to NumBuses-1 DO
-         Begin
-             arg[i] := BusList.Get(i+1);
-         End;
-       End
-      ELSE arg := VarArrayCreate([0, 0], varOleStr);
-  end;
-  8: begin                                             // Circuit.AllElementLosses
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       Begin
-         arg := VarArrayCreate([0, 2*NumDevices-1], varDouble);
-         k:=0;
-         pCktElem := CktElements.First;
-         WHILE pCktElem<>Nil DO
-         Begin
-            cLoss := pCktElem.Losses[ActiveActor];
-            arg[k] := cLoss.re * 0.001;
-            Inc(k);
-            arg[k] := cLoss.im * 0.001;
-            Inc(k);
-            pCktElem := CktElements.Next;
-         End;
-       End
-      ELSE arg := VarArrayCreate([0, 0], varDouble);
-  end;
-  9: begin                                             // Circuit.AllBusMagPu
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
       WITH ActiveCircuit[ActiveActor] DO
       Begin
-        arg := VarArrayCreate([0, NumNodes-1], varDouble);
+        setlength(myDBLArray, NumNodes);
+        k:=0;
+        FOR i := 1 to NumBuses DO
+        Begin
+          If Buses^[i].kVBase >0.0 then BaseFactor :=  1000.0* Buses^[i].kVBase  Else BaseFactor := 1.0;
+          For j := 1 to Buses^[i].NumNodesThisBus  DO
+          Begin
+           myDBLArray[k] := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(j)]);
+           Inc(k);
+          End;
+        End;
+      End
+    End
+    ELSE myDBLArray[0] := 0;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
+  end;
+  6: begin                                             // Circuit.AllElementNames
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        FOR i := 1 to NumDevices DO
+        Begin
+          WITH  TDSSCktElement(CktElements.Get(i)) DO
+            WriteStr2Array(ParentClass.Name + '.' + Name);
+          WriteStr2Array(Char(0));
+        End;
+      End
+    End
+    ELSE WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
+  end;
+  7: begin                                             // Circuit.AllBusNames
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        FOR i := 0 to NumBuses-1 DO
+        Begin
+          WriteStr2Array(BusList.Get(i + 1));
+          WriteStr2Array(Char(0));
+        End;
+      End
+    End
+    ELSE WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
+  end;
+  8: begin                                             // Circuit.AllElementLosses
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        setlength(myCmplxArray, 2 * NumDevices);
+        k:=0;
+        pCktElem := CktElements.First;
+        WHILE pCktElem <> Nil DO
+        Begin
+          myCmplxArray[k] := cmulreal(pCktElem.Losses[ActiveActor], 0.001);
+          Inc(k);
+          pCktElem := CktElements.Next;
+        End;
+      End
+    End
+    ELSE myCmplxArray[0]  :=  cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+  end;
+  9: begin                                             // Circuit.AllBusMagPu
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        setlength(myDBLArray, NumNodes);
         k:=0;
         FOR i := 1 to NumBuses DO
         Begin
            If Buses^[i].kVBase >0.0 then BaseFactor :=  1000.0* Buses^[i].kVBase  Else BaseFactor := 1.0;
             For j := 1 to Buses^[i].NumNodesThisBus  DO
              Begin
-              VoltsD := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(j)]);
-              arg[k] := VoltsD/BaseFactor;
+              myDBLArray[k] := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(j)]) / BaseFactor;
               Inc(k);
             End;
         End;
       End
-     ELSE arg := VarArrayCreate([0, 0], varDouble);
+    End
+    ELSE myDBLArray[0] := 0;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   10: begin                                            // Circuit.AllNodeNames
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       arg := VarArrayCreate([0, NumNodes-1], varOleStr);
-       k:=0;
-       FOR i := 1 to NumBuses DO
-       Begin
-           BusName := BusList.Get(i);
-           FOR j := 1 to Buses^[i].NumNodesThisBus DO
-           Begin
-                arg[k] := BusName + '.' + IntToStr(Buses^[i].GetNum(j));
-                Inc(k);
-           End;
-       End;
-     End
-    ELSE arg := VarArrayCreate([0, 0], varOleStr);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        FOR i := 1 to NumBuses DO
+        Begin
+          BusName := BusList.Get(i);
+          FOR j := 1 to Buses^[i].NumNodesThisBus DO
+          Begin
+            WriteStr2Array(BusName + '.' + IntToStr(Buses^[i].GetNum(j)));
+            WriteStr2Array(Char(0));
+          End;
+        End;
+      End
+    End
+    ELSE WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   11: begin                                            // Circuit.SystemY
     { Return zero length Array if no circuit or no Y matrix}
-   IF ActiveCircuit[ActiveActor] = nil                Then arg := VarArrayCreate([0, 0], varDouble)
-   ELSE If ActiveCircuit[ActiveActor].Solution.hY = 0 Then arg := VarArrayCreate([0, 0], varDouble)
-   ELSE
-   With ActiveCircuit[ActiveActor] Do Begin
-      hY := ActiveCircuit[ActiveActor].Solution.hY;
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] = nil                Then myCmplxArray[0] :=  cmplx(0,0)
+    ELSE If ActiveCircuit[ActiveActor].Solution.hY = 0 Then myCmplxArray[0] :=  cmplx(0,0)
+    ELSE
+    Begin
+      With ActiveCircuit[ActiveActor] Do
+      Begin
+        hY := ActiveCircuit[ActiveActor].Solution.hY;
+        // get the compressed columns out of KLU
+        FactorSparseMatrix(hY); // no extra work if already done
+        GetNNZ (hY, @nNZ);
+        GetSize (hY, @nBus);
+        SetLength (ColPtr, nBus + 1);
+        SetLength (RowIdx, nNZ);
+        SetLength (cVals, nNZ);
+        GetCompressedMatrix (hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
 
-      // get the compressed columns out of KLU
-      FactorSparseMatrix(hY); // no extra work if already done
-      GetNNZ (hY, @nNZ);
-      GetSize (hY, @nBus);
-      SetLength (ColPtr, nBus + 1);
-      SetLength (RowIdx, nNZ);
-      SetLength (cVals, nNZ);
-      GetCompressedMatrix (hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
+        // allocate a square matrix
+        NValues := SQR(NumNodes);
+        setlength(myCmplxArray, NValues);  // Make variant array for complex
 
-      // allocate a square matrix
-      NValues := SQR(NumNodes);
-      arg := VarArrayCreate( [0, 2*NValues -1], varDouble);  // Make variant array for complex
-
-      // the new way, first set all elements to zero
-      for iV := 0 to 2*NValues - 1 do arg[iV] := 0.0;
-      // then back-fill the non-zero values
-      for j := 0 to nBus - 1 do begin /// the zero-based column
-        for p := ColPtr[j] to ColPtr[j+1] - 1 do begin
-          i := RowIdx[p];  // the zero-based row
-          iV := i * nBus + j; // the zero-based, row-wise, complex result index
-          arg[iV*2] := cVals[p].re;
-          arg[iV*2+1] := cVals[p].im;
-        end;
-      end;
-   END;
+        // the new way, first set all elements to zero
+        for iV := 0 to (NValues - 1) do myCmplxArray[iV] := cmplx(0,0);
+        // then back-fill the non-zero values
+        for j := 0 to nBus - 1 do begin /// the zero-based column
+          for p := ColPtr[j] to ( ColPtr[j + 1] - 1 ) do begin
+            i := RowIdx[p];  // the zero-based row
+            iV := i * nBus + j; // the zero-based, row-wise, complex result index
+            myCmplxArray[iV] := cVals[p];
+          End;
+        End;
+      END;
+    End;
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   12: begin                                            // Circuit.AllBusDistances
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       arg := VarArrayCreate([0, NumBuses-1], varDouble);
-       FOR i := 0 to NumBuses-1 DO
-       Begin
-           arg[i] := Buses^[i+1].DistFromMeter;
-       End;
-     End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        setlength(myDBLArray, NumBuses);
+        FOR i := 0 to NumBuses-1 DO
+          myDBLArray[i] := Buses^[i + 1].DistFromMeter;
+      End
+    End
+    ELSE myDBLArray[0] := 0;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   13: begin                                            // Circuit.AllNodeDistances
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       arg := VarArrayCreate([0, NumNodes-1], varDouble);
-       k:=0;
-       FOR i := 1 to NumBuses DO
-       Begin
-           FOR j := 1 to Buses^[i].NumNodesThisBus DO
-           Begin
-                arg[k] := Buses^[i].DistFromMeter;
-                Inc(k);
-           End;
-       End;
-     End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        setlength(myDBLArray, NumNodes);
+        k:=0;
+        FOR i := 1 to NumBuses DO
+        Begin
+          FOR j := 1 to Buses^[i].NumNodesThisBus DO
+          Begin
+              myDBLArray[k] := Buses^[i].DistFromMeter;
+              Inc(k);
+          End;
+        End;
+      End;
+    End
+    ELSE myDBLArray[0]  := 0;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   14: begin                                            // Circuit.AllNodeVmagByPhase
-    Phase :=  integer(arg2);
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
+    PInt  :=  myPointer;
+    Phase :=  integer(PInt^);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       // Make a Temporary Array big enough to hold all nodes
-       Temp := AllocMem(SizeOF(Temp^[1]) * NumNodes);
-
-       // Find nodes connected to specified phase
-       k:=0;
-       FOR i := 1 to NumBuses DO
-       Begin
-           NodeIdx := Buses^[i].FindIdx(Phase);
-           If NodeIdx > 0 then   // Node found with this phase number
-           Begin
-                Inc(k);
-                Temp^[k] := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]);
-           End;
-       End;
-
-       // Assign to result and free temp array
-       arg := VarArrayCreate([0, k-1], varDouble);
-       For i := 0 to k-1 do  arg[i] := Temp^[i+1];
-
-       Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
-     End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        // Make a Temporary Array big enough to hold all nodes
+        Temp := AllocMem(SizeOF(Temp^[1]) * NumNodes);
+        // Find nodes connected to specified phase
+        k:=0;
+        FOR i := 1 to NumBuses DO
+        Begin
+          NodeIdx := Buses^[i].FindIdx(Phase);
+          If NodeIdx > 0 then   // Node found with this phase number
+          Begin
+              Inc(k);
+              Temp^[k] := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]);
+          End;
+        End;
+        // Assign to result and free temp array
+        setlength(myDBLArray, k - 1);
+        For i := 0 to (k - 1) do  myDBLArray[i] := Temp^[i + 1];
+        Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
+      End
+    End
+    ELSE myDBLArray[0] := 0;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   15: begin                                            // Circuit.AllNodeVmagPUByPhase
-    Phase :=  integer(arg2);
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
+    PInt  :=  myPointer;
+    Phase :=  integer(PInt^);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       // Make a Temporary Array big enough to hold all nodes
-       Temp := AllocMem(SizeOF(Temp^[1]) * NumNodes);
-       // Find nodes connected to specified phase
-       k:=0;
-       FOR i := 1 to NumBuses DO  Begin
-           NodeIdx := Buses^[i].FindIdx(Phase);
-           If NodeIdx > 0 then   // Node found with this phase number
-           Begin
-                If Buses^[i].kVBase >0.0 then BaseFactor :=  1000.0* Buses^[i].kVBase  Else BaseFactor := 1.0;
-                Inc(k);
-                Temp^[k] := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(NodeIdx)])/BaseFactor;
-           End;
-       End;
-       // Assign to result and free temp array
-       arg := VarArrayCreate([0, k-1], varDouble);
-       For i := 0 to k-1 do  arg[i] := Temp^[i+1];
-       Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
-     End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        // Make a Temporary Array big enough to hold all nodes
+        Temp := AllocMem(SizeOF(Temp^[1]) * NumNodes);
+        // Find nodes connected to specified phase
+        k:=0;
+        FOR i := 1 to NumBuses DO  Begin
+          NodeIdx := Buses^[i].FindIdx(Phase);
+          If NodeIdx > 0 then   // Node found with this phase number
+          Begin
+            If Buses^[i].kVBase >0.0 then BaseFactor :=  1000.0* Buses^[i].kVBase  Else BaseFactor := 1.0;
+            Inc(k);
+            Temp^[k] := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(NodeIdx)])/BaseFactor;
+          End;
+        End;
+        // Assign to result and free temp array
+        setlength(myDBLArray, k);
+        For i := 0 to (k - 1) do  myDBLArray[i] := Temp^[i+1];
+        Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
+      End;
+    End
+    ELSE myDBLArray[0]  :=  0;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   16: begin                                            // Circuit.AllNodeDistancesByPhase
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
+    PInt  :=  myPointer;
+    Phase :=  integer(PInt^);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       // Make a Temporary Array big enough to hold all nodes
-       Temp := AllocMem(SizeOF(Temp^[1]) * NumNodes);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        // Make a Temporary Array big enough to hold all nodes
+        Temp := AllocMem(SizeOF(Temp^[1]) * NumNodes);
 
-       // Find nodes connected to specified phase
-       k:=0;
-       FOR i := 1 to NumBuses DO
-       Begin
-           NodeIdx := Buses^[i].FindIdx(integer(arg2));
-           If NodeIdx > 0 then   // Node found with this phase number
-           Begin
-                Inc(k);
-                Temp^[k] := Buses^[i].DistFromMeter;
-           End;
-       End;
+        // Find nodes connected to specified phase
+        k:=0;
+        FOR i := 1 to NumBuses DO
+        Begin
+          NodeIdx := Buses^[i].FindIdx(Phase);
+          If NodeIdx > 0 then   // Node found with this phase number
+          Begin
+              Inc(k);
+              Temp^[k] := Buses^[i].DistFromMeter;
+          End;
+        End;
 
-       // Assign to result and free temp array
-       arg := VarArrayCreate([0, k-1], varDouble);
-       For i := 0 to k-1 do
-          arg[i] := Temp^[i+1];
+        // Assign to result and free temp array
+        setlength(myDBLArray, k);
+        For i := 0 to k-1 do
+          myDBLArray[i] := Temp^[i + 1];
 
-       Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
-     End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+        Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
+      End;
+    End
+    ELSE myDBLArray[0]  :=  0;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   17: begin                                            // Circuit.AllNodeNamesByPhase
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    PInt  :=  myPointer;
+    Phase :=  integer(PInt^);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       // Make a Temporary Array big enough to hold all nodes
-       Temp2 := AllocStringArray(NumNodes);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        // Make a Temporary Array big enough to hold all nodes
+        Temp2 := AllocStringArray(NumNodes);
 
-       // Find nodes connected to specified phase
-       k:=0;
-       FOR i := 1 to NumBuses DO  Begin
-           NodeIdx := Buses^[i].FindIdx(integer(arg2));
-           If NodeIdx > 0 then   // Node found with this phase number
-           Begin
-                Inc(k);
-                Temp2^[k] := Format('%s.%d',[BusList.Get(i), integer(arg)]);
-           End;
-       End;
+        // Find nodes connected to specified phase
+        k:=0;
+        FOR i := 1 to NumBuses DO  Begin
+          NodeIdx := Buses^[i].FindIdx(Phase);
+          If NodeIdx > 0 then   // Node found with this phase number
+          Begin
+            Inc(k);
+            Temp2^[k] := Format('%s.%d',[BusList.Get(i), Phase]);
+          End;
+        End;
 
-       // Assign to result and free temp array
-       arg := VarArrayCreate([0, k-1], varOleStr);
-       For i := 0 to k-1 do  arg[i] := Temp2^[i+1];
+        // Assign to result and free temp array
+        For i := 0 to k-1 do
+        Begin
+          WriteStr2Array(Temp2^[i + 1]);
+          WriteStr2Array(Char(0));
+        End;
 
-       FreeStringArray(Temp2, NumNodes);
-     End
-    ELSE arg := VarArrayCreate([0, 0], varOleStr);
+        FreeStringArray(Temp2, NumNodes);
+      End;
+    End
+    ELSE WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   18: begin                                            // Circuit.YNodeVArray
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    myPointer :=  @(myCmplxArray[0]);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       arg := VarArrayCreate([0, 2*NumNodes-1], varDouble);
-       k:=0;
-       FOR i := 1 to NumNodes DO
-       Begin
-             Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[i];
-             arg[k] := Volts.re;
-             Inc(k);
-             arg[k] := Volts.im;
-             Inc(k);
-       End;
-     End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+          myPointer := @(ActiveCircuit[ActiveActor].Solution.NodeV^[1]);
+      End;
+    End
+    ELSE  myCmplxArray[0] := cmplx(0,0);
+    mySize    :=  SizeOf(ActiveCircuit[ActiveActor].Solution.NodeV^[1]) * ActiveCircuit[ActiveActor].NumNodes;
   end;
   19: begin                                            // Circuit.YNodeOrder
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       arg := VarArrayCreate([0, NumNodes-1], varOleStr);
-       k:=0;
-       FOR i := 1 to NumNodes DO
-       Begin
-             With MapNodeToBus^[i] do
-             arg[k] := Format('%s.%-d',[Uppercase(BusList.Get(Busref)), NodeNum]);
-             Inc(k);
-       End;
-     End
-    ELSE arg := VarArrayCreate([0, 0], varOleStr);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        FOR i := 1 to NumNodes DO
+        Begin
+          With MapNodeToBus^[i] do
+            WriteStr2Array(Format('%s.%-d',[Uppercase(BusList.Get(Busref)), NodeNum]));
+            WriteStr2Array(Char(0));
+        End;
+      End;
+    End
+    ELSE WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   20: begin                                            // Circuit.YCurrents
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    myPointer :=  @(myCmplxArray[0]);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       arg := VarArrayCreate([0, 2*NumNodes-1], varDouble);
-       k:=0;
-       FOR i := 1 to NumNodes DO
-       Begin
-             Curr := ActiveCircuit[ActiveActor].Solution.Currents^[i];
-             arg[k] := Curr.re;
-             Inc(k);
-             arg[k] := Curr.im;
-             Inc(k);
-       End;
-     End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+          myPointer := @(ActiveCircuit[ActiveActor].Solution.Currents^[1]);
+    End
+    ELSE myCmplxArray[k] := cmplx(0,0);
+    mySize    :=  SizeOf(ActiveCircuit[ActiveActor].Solution.Currents^[1]) * ActiveCircuit[ActiveActor].NumNodes;
   end
   else
-     arg[0] := 'Error, parameter not recognized';
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    WriteStr2Array('Error, parameter not recognized');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
 end;
 end.
