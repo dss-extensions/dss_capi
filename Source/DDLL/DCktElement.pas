@@ -2,15 +2,17 @@ unit DCktElement;
 
 interface
 
+uses DSSClassDefs, DSSGlobals, UComplex, Sysutils,
+     PDElement, PCElement, MathUtil, Variants, CktElement, Utilities;
+
 function CktElementI(mode:longint; arg:longint):longint;cdecl;
 function CktElementF(mode:longint; arg:double):double;cdecl;
 function CktElementS(mode:longint; arg:pAnsiChar):pAnsiChar;cdecl;
-procedure CktElementV(mode:longint; out arg:variant);cdecl;
+procedure CktElementV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
+
 
 implementation
 
-uses DSSClassDefs, DSSGlobals, UComplex, Sysutils,
-     PDElement, PCElement, MathUtil, Variants, CktElement, Utilities;
 var
   ctrl          : TDSSCktElement;
   pPCElem       : TPCElement;
@@ -491,7 +493,7 @@ begin
   end;
 end;
 //**************************Variant commands****************************************
-procedure CktElementV(mode:longint; out arg:variant);cdecl;
+procedure CktElementV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 var
   VPh,
@@ -507,519 +509,620 @@ var
   cValues     : pComplexArray;
   CMagAng     : polar;
   myBuffer    : Array of Complex;
+  S           : String;
 
 begin
   case mode of
   0: begin                                          // CktElement.BusNames - read
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
-       With ActiveCircuit[ActiveActor] Do Begin
-         arg := VarArrayCreate([0, ActiveCktElement.Nterms-1], varOleStr);
-         For i := 1 to  ActiveCktElement.Nterms Do Begin
-             arg[i-1] := ActiveCktElement.GetBus(i);
-         End;
-       End;
-     End
-     Else
-         arg := VarArrayCreate([0, 0], varOleStr);
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    If ActiveCircuit[ActiveActor] <> Nil Then
+    Begin
+      With ActiveCircuit[ActiveActor] Do
+      Begin
+        For i := 1 to  ActiveCktElement.Nterms Do
+        Begin
+           WriteStr2Array(ActiveCktElement.GetBus(i));
+           WriteStr2Array(Char(0));
+        End;
+      End;
+    End
+    Else
+      WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   1: begin                                          // CktElement.BusNames - Write
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
-       With ActiveCircuit[ActiveActor] Do Begin
-         Low := VarArrayLowBound(widestring(arg), 1);
-         Count := VarArrayHighBound(widestring(arg), 1) - Low + 1;
-         If Count >  ActiveCktElement.NTerms Then Count := ActiveCktElement.NTerms;
-         For i := 1 to Count Do Begin
-             ActiveCktElement.SetBus(i, widestring(arg[i-1 + Low]));
-         End;
-       End;
-     End;
+    myType  :=  4;          // String
+    If ActiveCircuit[ActiveActor] <> Nil Then
+    Begin
+      With ActiveCircuit[ActiveActor] Do Begin
+        Count := ActiveCktElement.NTerms;
+        j     :=  0;
+        For i := 1 to Count Do
+        Begin
+          S := BArray2Str(myPointer, j);
+          if S = '' then
+            break
+          else
+            ActiveCktElement.SetBus(i, S);
+        End;
+      End;
+    End;
+    mySize  :=  j;
   end;
   2: begin                                          // CktElement.Voltages
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
       WITH ActiveCircuit[ActiveActor] DO
       Begin
         If ActiveCktElement<>Nil THEN
         WITH ActiveCktElement DO
         Begin
-         numcond := NConds*Nterms;
-         arg := VarArrayCreate([0, 2*numcond-1], varDouble);
-         // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
-         iV :=0;
-         FOR i := 1 to  numcond DO
-         Begin
+          numcond := NConds*Nterms;
+          setlength(myCmplxArray, numcond);
+          // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
+          iV :=0;
+          FOR i := 1 to  numcond DO
+          Begin
             n := ActiveCktElement.NodeRef^[i];
-            Volts := Solution.NodeV^[n]; // ok if =0
-            arg[iV] := Volts.re;
+            myCmplxArray[iV] := Solution.NodeV^[n]; // ok if =0
             Inc(iV);
-            arg[iV] := Volts.im;
-            Inc(iV);
-         End;
+          End;
         End;
-      End
-    ELSE arg := VarArrayCreate([0, 0], varDouble);
+      End;
+    End
+    ELSE myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   3: begin                                          // CktElement.Currents
-     If ActiveCircuit[ActiveActor] <> Nil Then
-         WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    If ActiveCircuit[ActiveActor] <> Nil Then
+    Begin
+      WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+      Begin
+         numcond := NConds*NTerms;
+         setlength(myCmplxArray, numcond);
+         cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
+         GetCurrents(cBuffer,ActiveActor);
+         iV :=0;
+         For i := 1 to  numcond DO
          Begin
-             numcond := NConds*NTerms;
-             arg := VarArrayCreate([0, 2*numcond-1], varDouble);
-             cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-             GetCurrents(cBuffer,ActiveActor);
-             iV :=0;
-             For i := 1 to  numcond DO
-             Begin
-                arg[iV] := cBuffer^[i].re;
-                Inc(iV);
-                arg[iV] := cBuffer^[i].im;
-                Inc(iV);
-             End;
-             Reallocmem(cBuffer,0);
-         End
-      Else
-         arg := VarArrayCreate([0, 0], varDouble);
+            myCmplxArray[iV] := cBuffer^[i];
+            Inc(iV);
+         End;
+         Reallocmem(cBuffer,0);
+      End
+    End
+    Else  myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   4: begin                                          // CktElement.Powers
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
       Begin
-          numcond := NConds*Nterms;
-          arg := VarArrayCreate([0, 2*numcond-1], varDouble);
-          cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-          GetPhasePower(cBuffer, ActiveActor);
-          iV :=0;
-          For i := 1 to  numcond DO Begin
-               arg[iV] := cBuffer^[i].re*0.001;
-               Inc(iV);
-               arg[iV] := cBuffer^[i].im*0.001;
-               Inc(iV);
-          End;
-          Reallocmem(cBuffer,0);
+        numcond := NConds*Nterms;
+        setlength(myCmplxArray,numcond);
+        cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
+        GetPhasePower(cBuffer, ActiveActor);
+        iV :=0;
+        For i := 1 to  numcond DO Begin
+         myCmplxArray[iV] := cmulreal(cBuffer^[i], 0.001);
+         Inc(iV);
+        End;
+        Reallocmem(cBuffer,0);
       End
-      ELSE arg := VarArrayCreate([0, 0], varDouble);
+    End
+    ELSE myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   5: begin                                          // CktElement.Losses
-         IF ActiveCircuit[ActiveActor] <> Nil THEN
-          WITH ActiveCircuit[ActiveActor] DO
-          Begin
-            If ActiveCktElement<>Nil THEN
-            Begin
-             arg    := VarArrayCreate([0, 1], varDouble);
-             Volts := ActiveCktElement.Losses[ActiveActor];
-             arg[0] := Volts.re;
-             arg[1] := Volts.im;
-            End;
-          End
-        ELSE arg := VarArrayCreate([0, 0], varDouble);
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement<>Nil THEN
+        Begin
+         myCmplxArray[0] := ActiveCktElement.Losses[ActiveActor];
+        End;
+      End
+    End
+    ELSE myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   6: begin                                          // CktElement.Phaselosses
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
       Begin
-          numcond := NPhases;
-          arg := VarArrayCreate([0, 2*numcond-1], varDouble);
-          cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-          GetPhaseLosses(numcond, cBuffer, ActiveActor);
-          iV :=0;
-          For i := 1 to  numcond DO Begin
-               arg[iV] := cBuffer^[i].re*0.001;
-               Inc(iV);
-               arg[iV] := cBuffer^[i].im*0.001;
-               Inc(iV);
-          End;
-          Reallocmem(cBuffer,0);
+        numcond := NPhases;
+        setlength(myCmplxArray, numcond);
+        cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
+        GetPhaseLosses(numcond, cBuffer, ActiveActor);
+        iV :=0;
+        For i := 1 to  numcond DO Begin
+          myCmplxArray[iV] := cmulreal(cBuffer^[i], 0.001);
+          Inc(iV);
+        End;
+        Reallocmem(cBuffer,0);
       End
-     ELSE arg := VarArrayCreate([0, 0], varDouble);
+    End
+    ELSE myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   7: begin                                          // CktElement.SeqVoltages
-      IF   ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       Begin
-         If ActiveCktElement <> Nil THEN
-         WITH ActiveCktElement DO
-         If Enabled Then
-         Begin
-             TRY
-                arg := VarArrayCreate([0, 3*NTerms-1], varDouble);
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
+    myDBLArray[0] := 0;
+    IF   ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement <> Nil THEN
+        Begin
+          WITH ActiveCktElement DO
+          If Enabled Then
+          Begin
+            TRY
+              setlength(myDBLArray, 3 * NTerms);
 
-                cbuffer := Allocmem(Sizeof(cbuffer^[1]) * 3 * Nterms);
-                // get complex seq voltages
-                CalcSeqVoltages(ActiveCktElement, cbuffer);
-                // return 0 based array
-                For i := 1 to 3*Nterms do arg[i-1] := Cabs(cbuffer^[i]);  // return mag only
-                Reallocmem(cbuffer, 0);  // throw away temp memory
-              EXCEPT
-                 On E:Exception Do
-                 Begin
-                    S:= E.message + CRLF +
-                        'Element='+ ActiveCktElement.Name + CRLF+
-                        'Nphases=' + IntToStr(Nphases) + CRLF +
-                        'NTerms=' + IntToStr(NTerms) + CRLF +
-                        'NConds =' + IntToStr(NConds);
-                    DoSimpleMsg(S, 5012);
-                  End;
-              END;
-         End
-         Else
-             arg := VarArrayCreate([0, 0], varDouble);  // Disabled
-       End
-      ELSE arg := VarArrayCreate([0, 0], varDouble);
+              cbuffer := Allocmem(Sizeof(cbuffer^[1]) * 3 * Nterms);
+              // get complex seq voltages
+              CalcSeqVoltages(ActiveCktElement, cbuffer);
+              // return 0 based array
+              For i := 1 to (3 * Nterms) do myDBLArray[i-1] := Cabs(cbuffer^[i]);  // return mag only
+              Reallocmem(cbuffer, 0);  // throw away temp memory
+            EXCEPT
+              On E:Exception Do
+              Begin
+                S:= E.message + CRLF +
+                    'Element='+ ActiveCktElement.Name + CRLF+
+                    'Nphases=' + IntToStr(Nphases) + CRLF +
+                    'NTerms=' + IntToStr(NTerms) + CRLF +
+                    'NConds =' + IntToStr(NConds);
+                DoSimpleMsg(S, 5012);
+              End;
+            END;
+          End
+        End
+      End;
+    End;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   8: begin                                          // CktElement.SeqCurrents
-     IF   ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       Begin
-         If ActiveCktElement <> Nil THEN
-         WITH ActiveCktElement DO
-         If Enabled Then
-         Begin
-             TRY
-                arg := VarArrayCreate([0, 3*NTerms-1], varDouble);
-                cbuffer := Allocmem(Sizeof(cbuffer^[1]) * 3 * Nterms);
-                // get complex seq voltages
-                CalcSeqCurrents(ActiveCktElement, cbuffer);
-                // return 0 based array
-                For i := 1 to 3*Nterms do arg[i-1] := Cabs(cbuffer^[i]);  // return mag only
-                   Reallocmem(cbuffer, 0);  // throw away temp memory
-              EXCEPT
-                 On E:Exception Do
-                 Begin
-                    S:= E.message + CRLF +
-                        'Element='+ ActiveCktElement.Name + CRLF+
-                        'Nphases=' + IntToStr(Nphases) + CRLF +
-                        'NTerms=' + IntToStr(NTerms) + CRLF +
-                        'NConds =' + IntToStr(NConds);
-                    DoSimpleMsg(S, 5012);
-                  End;
-              END;
-         End
-         Else
-             arg := VarArrayCreate([0, 0], varDouble);  // Disabled
-       End
-      ELSE arg := VarArrayCreate([0, 0], varDouble);
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
+    myDBLArray[0] := 0;
+    IF   ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement <> Nil THEN
+        Begin
+          WITH ActiveCktElement DO
+          If Enabled Then
+          Begin
+            TRY
+              setlength(myDBLArray, (3 * NTerms));
+              cbuffer := Allocmem(Sizeof(cbuffer^[1]) * 3 * Nterms);
+              // get complex seq voltages
+              CalcSeqCurrents(ActiveCktElement, cbuffer);
+              // return 0 based array
+              For i := 1 to (3 * Nterms) do myDBLArray[i-1] := Cabs(cbuffer^[i]);  // return mag only
+                 Reallocmem(cbuffer, 0);  // throw away temp memory
+            EXCEPT
+              On E:Exception Do
+              Begin
+                S:= E.message + CRLF +
+                    'Element='+ ActiveCktElement.Name + CRLF+
+                    'Nphases=' + IntToStr(Nphases) + CRLF +
+                    'NTerms=' + IntToStr(NTerms) + CRLF +
+                    'NConds =' + IntToStr(NConds);
+                DoSimpleMsg(S, 5012);
+              End;
+            END;
+          End
+        End
+      End
+    End;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   9: begin                                          // CktElement.Seqpowers
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO Begin
-         If ActiveCktElement<>Nil THEN
-         WITH ActiveCktElement DO Begin
-          arg := VarArrayCreate([0, 2*3*NTerms-1], varDouble); // allocate for kW and kvar
-          IF NPhases <> 3 THEN
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement<>Nil THEN
+        Begin
+          WITH ActiveCktElement DO
           Begin
-               IF (Nphases = 1) and PositiveSequence THEN
-               Begin
-                    numcond := NConds*NTerms;
-                    cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-                    GetCurrents(cBuffer, ActiveActor);
-                    For i := 0 to  2*3*NTerms-1 DO arg[i] := 0.0;   // Initialize Result
-                    Count := 2;  // Start with kW1
-                    {Put only phase 1 quantities in Pos seq}
-                    FOR j := 1 to NTerms Do
-                    Begin
-                        k := (j-1)*NConds;
-                        n := NodeRef^[k+1];
-                        Vph[1] := Solution.NodeV^[n];  // Get voltage at node
-                        Volts := Cmul(Vph[1], conjg(cBuffer^[k+1]));   // Compute power per phase
-                        arg[count] := Volts.re*0.003; // 3-phase kW conversion
-                        inc(count);
-                        arg[count] := Volts.im*0.003; // 3-phase kvar conversion
-                        inc(count, 6);
-                    End;
-                    Reallocmem(cBuffer,0);
-               END
-               ELSE  For i := 0 to  2*3*NTerms-1 DO arg[i] := -1.0;  // Signify n/A
-          END
-          ELSE Begin
+            setlength(myCmplxArray, (3 * NTerms)); // allocate for kW and kvar
+            IF NPhases <> 3 THEN
+            Begin
+              IF (Nphases = 1) and PositiveSequence THEN
+              Begin
+                numcond := NConds*NTerms;
+                cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
+                GetCurrents(cBuffer, ActiveActor);
+                For i := 0 to  ((3 * NTerms) - 1) DO myCmplxArray[i] := cmplx(0,0);   // Initialize Result
+                Count := 2;  // Start with kW1
+                {Put only phase 1 quantities in Pos seq}
+                FOR j := 1 to NTerms Do
+                Begin
+                    k := (j-1)*NConds;
+                    n := NodeRef^[k+1];
+                    Vph[1] := Solution.NodeV^[n];  // Get voltage at node
+                    myCmplxArray[count] := cmulreal(Cmul(Vph[1], conjg(cBuffer^[k+1])), 0.003);   // Compute power per phase
+                    inc(count);
+                End;
+                Reallocmem(cBuffer,0);
+              END
+              ELSE  For i := 0 to  ((3 * NTerms) - 1) DO myCmplxArray[i] := cmplx(-1.0, 0);  // Signify n/A
+            END
+            ELSE
+            Begin
               numcond := NConds*NTerms;
               cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
               GetCurrents(cBuffer,ActiveActor);
               count := 0;
-              FOR j := 1 to NTerms Do Begin
-                 k :=(j-1)*NConds;
-                 FOR i := 1 to  3 DO Vph[i] := Solution.NodeV^[NodeRef^[i+k]];
-                 For i := 1 to  3 DO Iph[i] := cBuffer^[k+i];
-                 Phase2SymComp(@Iph, @I012);
-                 Phase2SymComp(@Vph, @V012);
-                 For i := 1 to 3 DO  Begin
-                     Volts := Cmul(V012[i], conjg(I012[i]));
-                     arg[count] := Volts.re*0.003; // 3-phase kW conversion
-                     inc(count);
-                     arg[count] := Volts.im*0.003; // 3-phase kW conversion
-                     inc(count);
-                 End;
+              FOR j := 1 to NTerms Do
+              Begin
+                k :=(j-1)*NConds;
+                FOR i := 1 to  3 DO Vph[i] := Solution.NodeV^[NodeRef^[i+k]];
+                For i := 1 to  3 DO Iph[i] := cBuffer^[k+i];
+                Phase2SymComp(@Iph, @I012);
+                Phase2SymComp(@Vph, @V012);
+                For i := 1 to 3 DO  Begin
+                  myCmplxArray[count] := cmulreal(Cmul(V012[i], conjg(I012[i])), 0.003);
+                  inc(count);
+                End;
               End;
               Reallocmem(cBuffer,0);
+            End;
           End;
-         End;
-       End
-     ELSE arg := VarArrayCreate([0, 0], varDouble);
+        End;
+      End
+    End
+    Else myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   10: begin                                         // CktElement.AllpropertyNames
-    arg := VarArrayCreate([0, 0], varOleStr);
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       If ActiveCktElement<>Nil THEN
-       WITH ActiveCktElement DO
-       Begin
-            WITH ParentClass Do
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement<>Nil THEN
+        WITH ActiveCktElement DO
+        Begin
+          WITH ParentClass Do
+          Begin
+            For k := 1 to NumProperties DO
             Begin
-                arg := VarArrayCreate([0, NumProperties-1], varOleStr);
-                For k := 1 to NumProperties DO Begin
-                    arg[k-1] := PropertyName^[k];
-                End;
+                WriteStr2Array(PropertyName^[k]);
+                WriteStr2Array(Char(0));
             End;
-       End
-     End;
+          End;
+        End
+      End;
+    End
+    ELSE WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   11: begin                                         // CktElement.Residuals
-      If ActiveCircuit[ActiveActor] <> Nil Then
-         WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-         Begin
-             arg := VarArrayCreate([0, 2*NTerms-1], varDouble);    // 2 values per terminal
-             cBuffer := Allocmem(sizeof(cBuffer^[1])*Yorder);
-             GetCurrents(cBuffer,ActiveActor);
-             iV :=0;
-             For i := 1 to  NTerms DO
-             Begin
-                cResid := CZERO;
-                k :=(i-1)*Nconds;
-                For j := 1 to Nconds Do Begin
-                    inc(k);
-                    Caccum(cResid, CBuffer^[k]);
-                End;
-                arg[iV] := Cabs(cResid);
-                Inc(iV);
-                arg[iV] := CDang(cResid);
-                Inc(iV);
-             End;
-             Reallocmem(cBuffer,0);
-         End
-      Else
-         arg := VarArrayCreate([0, 0], varDouble);
+    myType  :=  3;        // Complex
+    setlength(myPolarArray, 1);
+    If ActiveCircuit[ActiveActor] <> Nil Then
+    Begin
+      WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+      Begin
+        setlength(myPolarArray, NTerms);    // 2 values per terminal
+        cBuffer := Allocmem(sizeof(cBuffer^[1])*Yorder);
+        GetCurrents(cBuffer,ActiveActor);
+        iV :=0;
+        For i := 1 to  NTerms DO
+        Begin
+          cResid := CZERO;
+          k :=(i-1)*Nconds;
+          For j := 1 to Nconds Do Begin
+            inc(k);
+            Caccum(cResid, CBuffer^[k]);
+          End;
+          myPolarArray[iV] := Ctopolardeg(cResid);
+          Inc(iV);
+        End;
+        Reallocmem(cBuffer,0);
+      End
+    End
+    Else myPolarArray[0] := ctopolar(cmplx(0,0));
+    myPointer :=  @(myPolarArray[0]);
+    mySize    :=  SizeOf(myPolarArray[0]) * Length(myPolarArray);
   end;
   12: begin                                         // CktElement.YPrim
-       IF ActiveCircuit[ActiveActor] = nil Then Begin
-            arg := VarArrayCreate([0, 0], varDouble);
-       End
-       ELSE With ActiveCircuit[ActiveActor] Do
-          If ActiveCktElement<>Nil THEN
-          WITH ActiveCktElement Do  Begin
-              NValues := SQR(Yorder);
-              cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
-              If cValues=Nil Then Begin   // check for unassigned array
-                                arg := VarArrayCreate([0, 0], varDouble);  // just return null array
-                                Exit;  // Get outta here
-                             End;
-              arg := VarArrayCreate( [0, 2*NValues -1], varDouble);  // Make variant array
-              iV := 0;
-              FOR i := 1 to  NValues DO  Begin    // Plunk the values in the variant array
-                  arg[iV] := cValues^[i].re;
-                  Inc(iV);
-                  arg[iV] := cValues^[i].im;
-                  Inc(iV);
-              End;
-          End
-          ELSE arg := VarArrayCreate([0, 0], varDouble);  // just return null array
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    IF ActiveCircuit[ActiveActor] <> nil Then
+    Begin
+      With ActiveCircuit[ActiveActor] Do
+      If ActiveCktElement<>Nil THEN
+      Begin
+        WITH ActiveCktElement Do
+        Begin
+          NValues := SQR(Yorder);
+          cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
+          If cValues=Nil Then
+          Begin   // check for unassigned array
+            Exit;  // Get outta here
+          End;
+          setlength(myCmplxArray, NValues);  // Make  array
+          iV := 0;
+          FOR i := 1 to  NValues DO  Begin    // Plunk the values in the variant array
+            myCmplxArray[iV] := cValues^[i];
+            Inc(iV);
+          End;
+        End;
+      End
+    End
+    ELSE myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   13: begin                                         // CktElement.CplxSeqVoltages
-      IF   ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       Begin
-         If ActiveCktElement <> Nil THEN
-         WITH ActiveCktElement DO
-         If Enabled Then
-         Begin
-             TRY
-                arg := VarArrayCreate([0, 2*3*NTerms-1], varDouble);
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    myCmplxArray[0] := cmplx(0,0);
+    IF   ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement <> Nil THEN
+        Begin
+          WITH ActiveCktElement DO
+          Begin
+            If Enabled Then
+            Begin
+              TRY
+                setlength(myCmplxArray,  (3 * NTerms));
                 cValues := Allocmem(Sizeof(cValues^[1]) * 3 * Nterms);
                 // get complex seq voltages
                 CalcSeqVoltages(ActiveCktElement, cValues);
                 // return 0 based array
                 iV := 0;
-                For i := 1 to 3*Nterms do Begin
-                    arg[iV] := cValues^[i].re;
-                    inc(iV);
-                    arg[iV] := cValues^[i].im;
-                    inc(iV);
-                End;
-                Reallocmem(cValues, 0);  // throw away temp memory
-             EXCEPT
-                 On E:Exception Do
-                 Begin
-                    S:= E.message + CRLF +
-                        'Element='+ ActiveCktElement.Name + CRLF+
-                        'Nphases=' + IntToStr(Nphases) + CRLF +
-                        'NTerms=' + IntToStr(NTerms) + CRLF +
-                        'NConds =' + IntToStr(NConds);
-                    DoSimpleMsg(S, 5012);
-                  End;
-              END;
-         End
-         Else
-             arg := VarArrayCreate([0, 0], varDouble);  // Disabled
-       End
-      ELSE arg := VarArrayCreate([0, 0], varDouble);
-  end;
-  14: begin                                         // CktElement.CplxSeqCurrents
-      IF   ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       Begin
-         If ActiveCktElement <> Nil THEN
-         WITH ActiveCktElement DO
-         If Enabled Then
-         Begin
-             TRY
-                arg := VarArrayCreate([0, 2*3*NTerms-1], varDouble);
-               cValues := Allocmem(Sizeof(cValues^[1]) * 3 * Nterms);
-                // get complex seq voltages
-                CalcSeqCurrents(ActiveCktElement, cValues);
-                // return 0 based array
-                iV := 0;
-                For i := 1 to 3*Nterms do Begin
-                    arg[iV] := cValues^[i].re;
-                    inc(iV);
-                    arg[iV] := cValues^[i].im;
+                For i := 1 to (3  *Nterms) do
+                Begin
+                    myCmplxArray[iV] := cValues^[i];
                     inc(iV);
                 End;
                 Reallocmem(cValues, 0);  // throw away temp memory
               EXCEPT
-                 On E:Exception Do
-                 Begin
-                    S:= E.message + CRLF +
-                        'Element='+ ActiveCktElement.Name + CRLF+
-                        'Nphases=' + IntToStr(Nphases) + CRLF +
-                        'NTerms=' + IntToStr(NTerms) + CRLF +
-                        'NConds =' + IntToStr(NConds);
-                    DoSimpleMsg(S, 5012);
-                  End;
+                On E:Exception Do
+                Begin
+                  S:= E.message + CRLF +
+                      'Element='+ ActiveCktElement.Name + CRLF+
+                      'Nphases=' + IntToStr(Nphases) + CRLF +
+                      'NTerms=' + IntToStr(NTerms) + CRLF +
+                      'NConds =' + IntToStr(NConds);
+                  DoSimpleMsg(S, 5012);
+                End;
               END;
-         End
-         Else
-             arg := VarArrayCreate([0, 0], varDouble);  // Disabled
-       End
-      ELSE arg := VarArrayCreate([0, 0], varDouble);
+            End
+          End;
+        End;
+      End;
+    End;
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
+  end;
+  14: begin                                         // CktElement.CplxSeqCurrents
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
+    myCmplxArray[0] := cmplx(0,0);
+    IF   ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement <> Nil THEN
+        Begin
+          WITH ActiveCktElement DO
+          Begin
+            If Enabled Then
+            Begin
+              TRY
+                setlength(myCmplxArray, (3 * NTerms));
+                cValues := Allocmem(Sizeof(cValues^[1]) * 3 * Nterms);
+                // get complex seq voltages
+                CalcSeqCurrents(ActiveCktElement, cValues);
+                // return 0 based array
+                iV := 0;
+                For i := 1 to 3*Nterms do
+                Begin
+                    myCmplxArray[iV] := cValues^[i];
+                    inc(iV);
+                End;
+                Reallocmem(cValues, 0);  // throw away temp memory
+              EXCEPT
+                On E:Exception Do
+                Begin
+                  S:= E.message + CRLF +
+                      'Element='+ ActiveCktElement.Name + CRLF+
+                      'Nphases=' + IntToStr(Nphases) + CRLF +
+                      'NTerms=' + IntToStr(NTerms) + CRLF +
+                      'NConds =' + IntToStr(NConds);
+                  DoSimpleMsg(S, 5012);
+                End;
+              END;
+            End;
+          End;
+        End;
+      End;
+    End;
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end;
   15: begin                                         // CktElement.AllVariableNames
-      arg := VarArrayCreate([0, 0], varOleStr);
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       Begin
-         If ActiveCktElement<>Nil THEN
-         WITH ActiveCktElement DO
-         Begin
-             If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
-              Begin
-                  pPCElem := (ActiveCktElement as TPCElement);
-                  arg := VarArrayCreate([0, pPCElem.NumVariables-1], varOleStr);
-                  For k := 1 to pPCElem.NumVariables DO
-                  Begin
-                      arg[k-1] := pPCElem.VariableName(k);
-                  End;
-              End;
-             {Else zero-length array null string}
-         End
-       End;
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement<>Nil THEN
+        WITH ActiveCktElement DO
+        Begin
+          If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
+          Begin
+            pPCElem := (ActiveCktElement as TPCElement);
+            For k := 1 to pPCElem.NumVariables DO
+            Begin
+                WriteStr2Array(pPCElem.VariableName(k));
+                WriteStr2Array(Char(0));
+            End;
+          End;
+          {Else zero-length array null string}
+        End
+      End;
+    End
+    ELSE WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   16: begin                                         // CktElement.AllVariableValues
-      arg := VarArrayCreate([0, 0], varDouble);
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       Begin
-         If ActiveCktElement<>Nil THEN
-         WITH ActiveCktElement DO
-         Begin
-             If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
-              Begin
-                  pPCElem := (ActiveCktElement as TPCElement);
-                  arg := VarArrayCreate([0, pPCElem.NumVariables-1], varDouble);
-                  For k := 1 to pPCElem.NumVariables DO
-                  Begin
-                      arg[k-1] := pPCElem.Variable[k];
-                  End;
-              End;
-             {Else zero-length array null string}
-         End
-       End;
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
+    myDBLArray[0] :=  0;
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement<>Nil THEN
+        WITH ActiveCktElement DO
+        Begin
+          If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
+          Begin
+            pPCElem := (ActiveCktElement as TPCElement);
+            setlength(myDBLArray, pPCElem.NumVariables);
+            For k := 1 to pPCElem.NumVariables DO
+            Begin
+                myDBLArray[k - 1] := pPCElem.Variable[k];
+            End;
+          End;
+         {Else zero-length array null string}
+        End
+      End;
+    End;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end;
   17: begin                                         // CktElement.Nodeorder
-      arg := VarArrayCreate([0, 0], varInteger);
-      If ActiveCircuit[ActiveActor] <> Nil Then With ActiveCircuit[ActiveActor] Do
+    myType  :=  1;        // Integer
+    setlength(myIntArray, 1);
+    myIntArray[0] :=  0;
+    If ActiveCircuit[ActiveActor] <> Nil Then With ActiveCircuit[ActiveActor] Do
+    Begin
+      If ActiveCktElement<>Nil THEN
       Begin
-
-         If ActiveCktElement<>Nil THEN
-         WITH ActiveCktElement DO
-         Begin
-              k := 0;
-              arg := VarArrayCreate([0, NTerms*Nconds-1], varInteger);
-
-              for i := 1 to Nterms do
-              Begin
-                  for j := (i-1)*NConds+1 to i*Nconds do
-                  Begin
-                       arg[k] := GetNodeNum(NodeRef^[j]);
-                       inc(k);
-                  End;
-              End;
-         End
+        WITH ActiveCktElement DO
+        Begin
+          k := 0;
+          setlength(myIntArray, NTerms*Nconds);
+          for i := 1 to Nterms do
+          Begin
+            for j := (i-1)*NConds+1 to i*Nconds do
+            Begin
+                 myIntArray[k] := GetNodeNum(NodeRef^[j]);
+                 inc(k);
+            End;
+          End;
+        End;
       End;
+    End;
+    myPointer :=  @(myIntArray[0]);
+    mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
   end;
   18: begin                                         // CktElement.CurrentsMagAng
-      If ActiveCircuit[ActiveActor] <> Nil Then
-         WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+    myType  :=  3;        // Complex
+    setlength(myPolarArray, 1);
+    If ActiveCircuit[ActiveActor] <> Nil Then
+    Begin
+       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+       Begin
+         NValues := NConds*NTerms;
+         setlength(myPolarArray, NValues);
+         cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+         GetCurrents(cBuffer,ActiveActor);
+         iV :=0;
+         For i := 1 to  NValues DO
          Begin
-             NValues := NConds*NTerms;
-             arg := VarArrayCreate([0, 2*NValues-1], varDouble);
-             cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
-             GetCurrents(cBuffer,ActiveActor);
-             iV :=0;
-             For i := 1 to  NValues DO
-             Begin
-                CMagAng := ctopolardeg(cBuffer^[i]); // convert to mag/angle
-                arg[iV] := CMagAng.mag ;
-                Inc(iV);
-                arg[iV] := CMagAng.ang ;
-                Inc(iV);
-             End;
-             Reallocmem(cBuffer,0);
-         End
-      Else
-         arg := VarArrayCreate([0, 0], varDouble);
+            myPolarArray[iV] := ctopolardeg(cBuffer^[i]); // convert to mag/angle
+            Inc(iV);
+         End;
+         Reallocmem(cBuffer,0);
+       End
+    End
+    Else  myPolarArray[0] := ctopolar(cmplx(0,0));
+    myPointer :=  @(myPolarArray[0]);
+    mySize    :=  SizeOf(myPolarArray[0]) * Length(myPolarArray);
   end;
   19: begin
 // Return voltages for all terminals
-         IF ActiveCircuit[ActiveActor] <> Nil THEN
-          WITH ActiveCircuit[ActiveActor] DO
+    myType  :=  3;        // Complex
+    setlength(myPolarArray, 1);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveCktElement<>Nil THEN
+        WITH ActiveCktElement DO
+        Begin
+          numcond := NConds*Nterms;
+          setlength(myPolarArray,numcond);
+          // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
+          iV :=0;
+          FOR i := 1 to  numcond DO
           Begin
-            If ActiveCktElement<>Nil THEN
-            WITH ActiveCktElement DO
-            Begin
-             numcond := NConds*Nterms;
-             arg := VarArrayCreate([0, 2*numcond-1], varDouble);
-             // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
-             iV :=0;
-             FOR i := 1 to  numcond DO
-             Begin
-                n := ActiveCktElement.NodeRef^[i];
-                CMagAng := ctopolardeg(Solution.NodeV^[n]); // ok if =0
-                arg[iV] := CMagAng.mag;
-                Inc(iV);
-                arg[iV] := CMagAng.ang;
-                Inc(iV);
-             End;
-            End;
-          End
-        ELSE arg := VarArrayCreate([0, 0], varDouble);
+            n := ActiveCktElement.NodeRef^[i];
+            myPolarArray[iV] := ctopolardeg(Solution.NodeV^[n]); // ok if =0
+            Inc(iV);
+          End;
+        End;
+      End;
+    End
+    ELSE myPolarArray[0] := ctopolar(cmplx(0,0));
+    myPointer :=  @(myPolarArray[0]);
+    mySize    :=  SizeOf(myPolarArray[0]) * Length(myPolarArray);
   end;
   20: begin
 // Return total powers for the active element at all terminals
+    myType  :=  3;        // Complex
+    setlength(myCmplxArray, 1);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
       Begin
         NValues := NConds*Nterms;
-        arg := VarArrayCreate([0, 2*Nterms-1], varDouble);
+        setlength(myCmplxArray, Nterms);
         cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
         GetPhasePower(cBuffer, Activeactor);
         iV :=0;
@@ -1033,17 +1136,22 @@ begin
           Begin
             myBuffer[j - 1] :=  cadd(myBuffer[j - 1], cBuffer^[i]);
           End;
-          arg[iV]  :=  myBuffer[j - 1].re*0.001;
-          inc(iV);
-          arg[iV]  :=  myBuffer[j - 1].im*0.001;
+          myCmplxArray[iV]  :=  cmulreal(myBuffer[j - 1], 0.001);
           inc(iV);
         End;
         Reallocmem(cBuffer,0);
-      End
-      ELSE arg := VarArrayCreate([0, 0], varDouble);
+      End;
+    End
+    ELSE myCmplxArray[0] := cmplx(0,0);
+    myPointer :=  @(myCmplxArray[0]);
+    mySize    :=  SizeOf(myCmplxArray[0]) * Length(myCmplxArray);
   end
   else
-      arg := VarArrayCreate([0, 0], varOleStr);
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    WriteStr2Array('Error, parameter not recognized');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
 end;
 
