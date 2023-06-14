@@ -6,8 +6,6 @@ function ActiveClassI(mode:longint; arg: longint):longint; cdecl;
 function ActiveClassS(mode:longint; arg: pAnsiChar):pAnsiChar; cdecl;
 procedure ActiveClassV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
-var
-  myStrArray  : Array of Byte;
 
 implementation
 

@@ -7,10 +7,6 @@ function CapControlsF(mode:longint; arg:double):double;cdecl;
 function CapControlsS(mode:longint; arg:pAnsiChar):pAnsiChar;cdecl;
 procedure CapControlsV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
-var
-
-  myStrArray  : Array of Byte;
-
 implementation
 
 uses DSSGlobals, Executive, ControlElem, CapControl, CapControlVars, Variants, SysUtils, PointerList;
@@ -20,17 +16,6 @@ begin
   Result := nil;
   if ActiveCircuit[ActiveActor] <> Nil then Result := ActiveCircuit[ActiveActor].CapControls.Active;
 end;
-
-procedure WriteStr2Array(myStr  : string);
-var
-  i : Integer;
-Begin
-  for i := 1 to High(myStr) do
-  Begin
-    setlength(myStrArray, Length(myStrArray) + 1);
-    myStrArray[High(myStrArray)]  :=  Byte(myStr[i]);
-  End;
-End;
 
 procedure Set_Parameter(const parm: string; const val: string);
 var
