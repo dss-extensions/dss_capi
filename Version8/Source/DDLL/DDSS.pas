@@ -4,7 +4,7 @@ interface
 
 function DSSI(mode:longint;arg:longint):longint;cdecl;
 function DSSS(mode:longint;arg:pAnsiChar):pAnsiChar;cdecl;
-procedure DSSV(mode:longint;out arg:Variant);cdecl;
+procedure DSSV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -93,38 +93,45 @@ begin
 end;
 
 //********************************Variant Type properties***************************
-procedure DSSV(mode:longint;out arg:Variant);cdecl;
+procedure DSSV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 Var
-  i,k:Integer;
+  i   : Integer;
 
 begin
   case mode of
   0: begin  // DSS.Classes
-    arg := VarArrayCreate([0, NumIntrinsicClasses-1], varOleStr);
-     k:=0;
-     For i := 1 to NumIntrinsicClasses Do
-     Begin
-        arg[k] := TDSSClass(DssClassList[ActiveActor].Get(i)).Name;
-        Inc(k);
-     End;
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    For i := 1 to NumIntrinsicClasses Do
+    Begin
+      WriteStr2Array(TDSSClass(DssClassList[ActiveActor].Get(i)).Name);
+      WriteStr2Array(Char(0));
+    End;
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   1: begin  // DSS.UserClasses
-     If NumUserClasses > 0 Then
-     Begin
-         arg := VarArrayCreate([0, NumUserClasses-1], varOleStr);
-         k:=0;
-         For i := NumIntrinsicClasses+1 To DSSClassList[ActiveActor].ListSize   Do
-         Begin
-            arg[k] := TDSSClass(DssClassList[ActiveActor].Get(i)).Name;
-            Inc(k);
-         End;
-     End
-     Else
-     arg := VarArrayCreate([0, 0], varOleStr);
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    If NumUserClasses > 0 Then
+    Begin
+      For i := NumIntrinsicClasses+1 To DSSClassList[ActiveActor].ListSize   Do
+      Begin
+        WriteStr2Array(TDSSClass(DssClassList[ActiveActor].Get(i)).Name);
+        WriteStr2Array(Char(0));
+      End;
+    End
+    Else WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end
   else
-      arg[0]:='Error, parameter not valid';
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    WriteStr2Array('Error, parameter not recognized');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
 end;
 
