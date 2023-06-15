@@ -4,7 +4,7 @@ interface
 
 function DSSElementI(mode:longint; arg: longint):longint;cdecl;
 function DSSElementS(mode:longint; arg: pAnsiChar):pAnsiChar;cdecl;
-procedure DSSElementV(mode: longint; out arg: Variant);cdecl;
+procedure DSSElementV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -54,7 +54,7 @@ begin
 end;
 
 //*****************************Variant type properties**************************
-procedure DSSElementV(mode: longint; out arg: Variant);cdecl;
+procedure DSSElementV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 VAR
    k:Integer;
@@ -62,25 +62,33 @@ VAR
 begin
   case mode of
   0: begin  // DSSElement.AllPropertyNames
-    arg := VarArrayCreate([0, 0], varOleStr);
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       If ActiveDSSObject[ActiveActor]<>Nil THEN
-       WITH ActiveDSSObject[ActiveActor] DO
-       Begin
-            WITH ParentClass Do
-            Begin
-                arg := VarArrayCreate([0, NumProperties-1], varOleStr);
-                For k := 1 to NumProperties DO Begin
-                    arg[k-1] := PropertyName^[k];
-                End;
-            End;
-       End
-     End;
+    WITH ActiveCircuit[ActiveActor] DO
+    Begin
+      If ActiveDSSObject[ActiveActor]<>Nil THEN
+      WITH ActiveDSSObject[ActiveActor] DO
+      Begin
+        WITH ParentClass Do
+        Begin
+          For k := 1 to NumProperties DO
+          Begin
+            WriteStr2Array(PropertyName^[k]);
+            WriteStr2Array(Char(0));
+          End;
+        End;
+      End
+    End;
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end
   else
-      arg[0]:='Error, parameter not recognized';
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    WriteStr2Array('Error, parameter not recognized');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
 end;
 

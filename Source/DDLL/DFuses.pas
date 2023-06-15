@@ -5,7 +5,7 @@ interface
 function FusesI(mode:longint;arg:longint):longint;cdecl;
 function FusesF(mode:longint;arg:double):double;cdecl;
 function FusesS(mode:longint;arg:pAnsiChar):pAnsiChar;cdecl;
-procedure FusesV(mode:longint;out arg:Variant);cdecl;
+procedure FusesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -226,110 +226,132 @@ begin
 end;
 
 //******************************Variant type properties********************
-procedure FusesV(mode:longint;out arg: variant);cdecl;
+procedure FusesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 Var
-  elem: TFuseObj;
-  pList: TPointerList;
-  k, i, LoopLimit: Integer;
+  elem        : TFuseObj;
+  pList       : TPointerList;
+  k,
+  i,
+  LoopLimit   : Integer;
+  S           : String;
 
 begin
   case mode of
   0: begin  // Fuses.AllName
-    arg := VarArrayCreate([0, 0], varOleStr);
-    arg[0] := 'NONE';
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
-        If FuseClass.ElementList.ListSize > 0 then
-        Begin
-          pList := FuseClass.ElementList;
-          VarArrayRedim(arg, pList.ListSize -1);
-          k:=0;
-          elem := pList.First;
-          WHILE elem<>Nil DO Begin
-              arg[k] := elem.Name;
-              Inc(k);
-              elem := pList.next        ;
-          End;
+      If FuseClass.ElementList.ListSize > 0 then
+      Begin
+        pList := FuseClass.ElementList;
+        elem := pList.First;
+        WHILE elem<>Nil DO Begin
+            WriteStr2Array(elem.Name);
+            WriteStr2Array(Char(0));
+            elem := pList.next;
         End;
-    End;
+      End;
+    End
+    Else  WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   1: begin  // Fuses.States read
-      arg := VarArrayCreate([0, 0], varOleStr);
-      arg[0] := 'NONE';     // error code
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      Elem := FuseClass.GetActiveObj;
+      If Elem <> nil Then
       Begin
-          Elem := FuseClass.GetActiveObj;
-          If Elem <> nil Then
-          Begin
-            VarArrayRedim(arg, elem.ControlledElement.Nphases  -1);
-            k:=0;
-            for i:= 1 to elem.ControlledElement.Nphases DO Begin
-
-               if elem.States[i] = CTRL_CLOSE then arg[k] := 'closed' else arg[k] := 'open';
-               Inc(k);
-            End;
-          End;
+        for i:= 1 to elem.ControlledElement.Nphases DO
+        Begin
+          if elem.States[i] = CTRL_CLOSE then
+            WriteStr2Array('closed')
+          else
+            WriteStr2Array('open');
+          WriteStr2Array(Char(0));
+        End;
       End;
+    End
+    Else  WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   2: begin  // Fuses.States write
+    myType  :=  4;          // String
+    k := 0;
     elem := FuseClass.GetActiveObj;
     If elem <> nil Then
     Begin
-         // allocate space based on number of phases of controlled device
-         LoopLimit := VarArrayHighBound(widestring(arg),1);
-         If (LoopLimit - VarArrayLowBound(arg,1) + 1) > elem.ControlledElement.NPhases  Then   LoopLimit :=  VarArrayLowBound(arg,1) + elem.ControlledElement.NPhases -1;
-         k := 1;
-         for i := VarArrayLowBound(arg,1) to LoopLimit do
-         Begin
 
-              case LowerCase(arg[i])[1] of
-                'o': elem.States[k] := CTRL_OPEN;
-                'c': elem.States[k] := CTRL_CLOSE;
-              end;
-             inc(k);
-         End;
+      for i := 1 to elem.ControlledElement.NPhases do
+      Begin
+        S := BArray2Str(myPointer, k);
+        if S = '' then
+          break
+        else
+        Begin
+           case LowerCase(S)[1] of
+            'o': elem.States[i] := CTRL_OPEN;
+            'c': elem.States[i] := CTRL_CLOSE;
+          end;
+        End;
+      End;
     End;
+    mySize  :=  k;
   end;
   3: begin  // Fuses.NormalStates read
-      arg := VarArrayCreate([0, 0], varOleStr);
-      arg[0] := 'NONE';     // error code
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      Elem := FuseClass.GetActiveObj;
+      If Elem <> nil Then
       Begin
-          Elem := FuseClass.GetActiveObj;
-          If Elem <> nil Then
-          Begin
-            VarArrayRedim(arg, elem.ControlledElement.Nphases  -1);
-            k:=0;
-            for i:= 1 to elem.ControlledElement.Nphases DO Begin
-
-               if elem.NormalStates[i] = CTRL_CLOSE then arg[k] := 'closed' else arg[k] := 'open';
-               Inc(k);
-            End;
-          End;
+        for i:= 1 to elem.ControlledElement.Nphases DO Begin
+          if elem.NormalStates[i] = CTRL_CLOSE then
+            WriteStr2Array('closed')
+          else
+            WriteStr2Array('open');
+          WriteStr2Array(Char(0));
+        End;
       End;
+    End
+    Else  WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   4: begin  // Fuses.NormalStates write
     elem := FuseClass.GetActiveObj;
+    k := 0;
     If elem <> nil Then
     Begin
-         // allocate space based on number of phases of controlled device
-         LoopLimit := VarArrayHighBound(widestring(arg),1);
-         If (LoopLimit - VarArrayLowBound(arg,1) + 1) > elem.ControlledElement.NPhases  Then   LoopLimit :=  VarArrayLowBound(arg,1) + elem.ControlledElement.NPhases -1;
-         k := 1;
-         for i := VarArrayLowBound(arg,1) to LoopLimit do
-         Begin
-
-              case LowerCase(arg[i])[1] of
-                'o': elem.NormalStates[k] := CTRL_OPEN;
-                'c': elem.NormalStates[k] := CTRL_CLOSE;
-              end;
-             inc(k);
-         End;
+      // allocate space based on number of phases of controlled device
+      for i := 1 to elem.ControlledElement.NPhases do
+      Begin
+        S := BArray2Str(myPointer, k);
+        if S = '' then
+          break
+        else
+        Begin
+          case LowerCase(S)[1] of
+          'o': elem.NormalStates[i] := CTRL_OPEN;
+          'c': elem.NormalStates[i] := CTRL_CLOSE;
+          end;
+        End;
+      End;
     End;
+    mySize  :=  k;
   end
   else
-      arg[0]:='Error, parameter not valid';
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    WriteStr2Array('Error, parameter not recognized');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
 end;
 

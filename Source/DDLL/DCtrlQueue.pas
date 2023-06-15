@@ -6,7 +6,7 @@ uses
   Windows, ActiveX, Classes, ComObj;
 
 function CtrlQueueI(mode: longint; arg: longint):longint;cdecl;
-procedure CtrlQueueV(mode:longint; var arg: Variant);cdecl;
+procedure CtrlQueueV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -151,58 +151,68 @@ begin
   end;
 end;
 
-procedure CtrlQueueV(mode:longint; var arg: Variant);cdecl;
+procedure CtrlQueueV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 Var
   Hour,
   ActionCode,
   DeviceHandle,
   Seconds   : Double;
+  pDbl      : ^Double;
   i,
   Qsize     : integer;
 Begin
   case mode of
   0: begin  // CtrlQueue.ClearQueue
-      arg  := VarArrayCreate([0, 0], varOleStr);
-      QSize   := ActiveCircuit[ActiveActor].ControlQueue.QueueSize;
-      if QSize > 0 then
-      begin
-        VarArrayRedim(arg, QSize);
-        arg[0]:='Handle, Hour, Sec, ActionCode, ProxyDevRef, Device';
-        For i := 0 to QSize-1 do
-          Begin
-            arg[i+1]:= ActiveCircuit[ActiveActor].ControlQueue.QueueItem(i);
-          End;
-      end
-      else arg[0]:='No events';
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    QSize   := ActiveCircuit[ActiveActor].ControlQueue.QueueSize;
+    if QSize > 0 then
+    begin
+      WriteStr2Array('Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
+      WriteStr2Array(Char(0));
+      For i := 0 to QSize-1 do
+        Begin
+          WriteStr2Array(ActiveCircuit[ActiveActor].ControlQueue.QueueItem(i));
+          WriteStr2Array(Char(0));
+        End;
+    end
+    else WriteStr2Array('No events');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   1: begin  // CtrlQueue.Push
-     i := 0;
-     If ActiveCircuit[ActiveActor] <> Nil then
-     Begin
-        if not VarIsEmpty(arg) then
-        Begin
-          try
-          Begin
-            Hour        :=  arg[0];
-            Seconds     :=  arg[1];
-            ActionCode  :=  arg[2];
-            DeviceHandle:=  arg[3];
-
-            i           := ActiveCircuit[ActiveActor].ControlQueue.push(trunc(Hour), Seconds, trunc(ActionCode), trunc(DeviceHandle), COMControlProxyObj, ActiveActor);
-          End;
-          Except
-            i           :=  -10001;              // Something went wrong;
-          end;
-        End
-        else
-          i             :=  -10000;    // The variant array is empty
-     End;
-     VarClear(arg);
-     arg            :=  i;
+    myType  :=  2;        // Double
+    pDbl    :=  myPointer;
+    QSize   :=  0;
+    If ActiveCircuit[ActiveActor] <> Nil then
+    Begin
+      try
+      Begin
+        Hour        :=  pDBL^;
+        inc(pByte(pDBL), 8);
+        inc(QSize);
+        Seconds     :=  pDBL^;
+        inc(pByte(pDBL), 8);
+        inc(QSize);
+        ActionCode  :=  pDBL^;
+        inc(pByte(pDBL), 8);
+        inc(QSize);
+        DeviceHandle:=  pDBL^;
+        inc(QSize);
+        QSize       := ActiveCircuit[ActiveActor].ControlQueue.push(trunc(Hour), Seconds, trunc(ActionCode), trunc(DeviceHandle), COMControlProxyObj, ActiveActor);
+      End;
+      Except
+        Qsize       :=  -10001;              // Something went wrong;
+      end;
+    End;
+    mySize  :=  QSize;
   end
   else
-    arg   := VarArrayCreate([0, 0], varOleStr);
-    arg[0]:='Mode not recognized';
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    WriteStr2Array('Error, parameter not recognized');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
 End;
 

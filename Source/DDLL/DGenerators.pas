@@ -5,7 +5,7 @@ interface
 function GeneratorsI(mode: longint; arg: longint): longint; cdecl;
 function GeneratorsF(mode: longint; arg: double): double; cdecl;
 function GeneratorsS(mode: longint; arg: pAnsiChar): pAnsiChar; cdecl;
-procedure GeneratorsV(mode: longint; out arg: Variant); cdecl;
+procedure GeneratorsV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -359,7 +359,7 @@ begin
 end;
 
 //*******************************Variant type properties************************
-procedure GeneratorsV(mode: longint; out arg: Variant); cdecl;
+procedure GeneratorsV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 Var
   GenElem:TGeneratorObj;
@@ -369,50 +369,65 @@ Var
 begin
   case mode of
   0: begin  // Generators.AllNames
-      arg := VarArrayCreate([0, 0], varOleStr);
-      arg[0] := 'NONE';
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       If Generators.ListSize>0 Then
-       Begin
-         VarArrayRedim(arg, Generators.ListSize-1);
-         k:=0;
-         GenElem := Generators.First;
-         WHILE GenElem<>Nil DO  Begin
-            arg[k] := GenElem.Name;
-            Inc(k);
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If Generators.ListSize>0 Then
+        Begin
+          GenElem := Generators.First;
+          WHILE GenElem<>Nil DO
+          Begin
+            WriteStr2Array(GenElem.Name);
+            WriteStr2Array(Char(0));
             GenElem := Generators.Next;
-         End;
-       End;
+          End;
+        End;
+      End;
+    End
+    Else  WriteStr2Array('');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   1: begin  // Generators.RegisterNames
-      GeneratorClass := DssClassList[ActiveActor].Get(Classnames[ActiveActor].Find('Generator'));
-      arg := VarArrayCreate([0, NumGenRegisters - 1], varOleStr);
-      For k := 0 to  NumGenRegisters - 1  Do Begin
-         arg[k] := GeneratorClass.RegisterNames[k + 1];
-      End;
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    GeneratorClass := DssClassList[ActiveActor].Get(Classnames[ActiveActor].Find('Generator'));
+    For k := 0 to  NumGenRegisters - 1  Do
+    Begin
+       WriteStr2Array(GeneratorClass.RegisterNames[k + 1]);
+       WriteStr2Array(Char(0));
+    End;
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
   2: begin // Generators.RegisterValues
-     IF ActiveCircuit[ActiveActor] <> Nil THEN
-     Begin
-          GenElem :=  TGeneratorObj(ActiveCircuit[ActiveActor].Generators.Active);
-          If GenElem <> Nil Then
-          Begin
-              arg := VarArrayCreate([0, numGenRegisters-1], varDouble);
-              FOR k := 0 to numGenRegisters-1 DO
-              Begin
-                  arg[k] := GenElem.Registers[k+1];
-              End;
-          End
-          Else
-              arg := VarArrayCreate([0, 0], varDouble);
-     End
-     ELSE Begin
-          arg := VarArrayCreate([0, 0], varDouble);
-     End;
+    myType  :=  2;        // Double
+    setlength(myDBLArray, 1);
+    myDBLArray[0] :=  0;
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+    Begin
+      GenElem :=  TGeneratorObj(ActiveCircuit[ActiveActor].Generators.Active);
+      If GenElem <> Nil Then
+      Begin
+        setlength(myDBLArray, numGenRegisters);
+        FOR k := 0 to (numGenRegisters - 1) DO
+        Begin
+          myDBLArray[k] := GenElem.Registers[k + 1];
+        End;
+      End
+    End;
+    myPointer :=  @(myDBLArray[0]);
+    mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
   end
   else
-      arg[0]:='Error, parameter not recognized'
+    myType  :=  4;        // String
+    setlength(myStrArray, 0);
+    WriteStr2Array('Error, parameter not recognized');
+    myPointer :=  @(myStrArray[0]);
+    mySize    :=  Length(myStrArray);
   end;
 end;
 

@@ -534,11 +534,11 @@ begin
   end;
   1: begin                                          // CktElement.BusNames - Write
     myType  :=  4;          // String
+    j     :=  0;
     If ActiveCircuit[ActiveActor] <> Nil Then
     Begin
       With ActiveCircuit[ActiveActor] Do Begin
         Count := ActiveCktElement.NTerms;
-        j     :=  0;
         For i := 1 to Count Do
         Begin
           S := BArray2Str(myPointer, j);
