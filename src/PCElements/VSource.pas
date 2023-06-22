@@ -620,6 +620,13 @@ begin
                 X0 := puZ0.im * Zbase;
             end;
 
+            if (R1 = 0) and (X1 = 0) then
+            begin
+                DoSimpleMsg('%s: Z1 (R1 + jX1) cannot be zero.', [self.FullName], 7340);
+                DSS.SolutionAbort := True;
+                Exit;
+            end;
+
             // Compute equivalent Isc3, Isc1, MVAsc3, MVAsc1 values;
             Isc3 := kVBase * 1000.0 / SQRT3 / Cabs(cmplx(R1, X1));
 

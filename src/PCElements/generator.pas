@@ -1725,6 +1725,13 @@ begin
             0:
             begin
                 VLN := Vterminal[i];   // VTerminal is LN for this connection
+                // if (VLN = 0) then //TODO
+                // begin
+                //     DoSimpleMsg('%s: VLN is zero, aborting.', [self.FullName], 7340);
+                //     DSS.SolutionAbort := True;
+                //     Exit;
+                // end;
+
                 VMagLN := Cabs(VLN);
                 with Genvars do
                     PhaseCurr := cong(Cmplx(Pnominalperphase, Qnominalperphase) / VLN);
@@ -1738,6 +1745,13 @@ begin
             1:
             begin
                 VLL := Vterminal[i];     // VTerminal is LL for this connection
+                // if (VLL = 0) then //TODO
+                // begin
+                //     DoSimpleMsg('%s: VLL is zero, aborting.', [self.FullName], 7340);
+                //     DSS.SolutionAbort := True;
+                //     Exit;
+                // end;
+
                 VMagLL := Cabs(VLL);
                 case Fnphases of
                     2, 3:   // 2 or 3 phase generator model 7
