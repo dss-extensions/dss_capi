@@ -1026,6 +1026,9 @@ begin
             end;
         end;
 
+        if DSS.SolutionAbort then
+            Exit;
+
         // The above resets the active sparse set to hY
         SolutionInitialized := TRUE;
     end;
@@ -1297,7 +1300,14 @@ begin
 {$ENDIF}
                     BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
             end;
+
+            if DSS.SolutionAbort then
+                Exit;
+
             DoPFLOWsolution;
+
+            if DSS.SolutionAbort then
+                Exit;
         except
             ON E: EEsolv32Problem do
             begin
@@ -1312,6 +1322,13 @@ procedure TSolutionObj.ZeroInjCurr;
 var
     I: Integer;
 begin
+    if Currents = NIL then
+    begin
+        DoSimpleMsg(DSS, _('General error: internal Currents vector is NIL. Please check your input data and retry.'), 11002);
+        DSS.SolutionAbort := True;
+        Exit;
+    end;
+
     for i := 0 to DSS.ActiveCircuit.NumNodes do
         Currents[i] := 0;
 end;

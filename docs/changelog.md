@@ -17,6 +17,13 @@
 
 # Versions 0.13.x
 
+## Version 0.13.4 (2023-06-xx)
+
+Bugfix release (upcoming)
+
+- Handle better how the internal `SolutionAbort` is used. Some invalid states where not being handled on absence of float-point exceptions, leading to potential useless results (NaN) and even crashes.
+- `VSource`: Abort the solution if Z1 is zero.
+
 ## Version 0.13.3 (2023-06-11)
 
 Bugfix release for some components. No other major changes.

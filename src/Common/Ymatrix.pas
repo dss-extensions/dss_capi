@@ -132,6 +132,13 @@ var
     i: Integer;
 
 begin
+    if DSS.ActiveCircuit.Solution.NodeVbase = NIL then
+    begin
+        DoSimpleMsg(DSS, _('General error: internal NodeVbase is NIL. Please check your input data and retry.'), 11002);
+        DSS.SolutionAbort := True;
+        Exit;
+    end;
+
     with DSS.ActiveCircuit, Solution do
     begin
         for i := 1 to NumNodes do
@@ -368,13 +375,11 @@ begin
                 ReCalcInvalidYPrims(DSS.ActiveCircuit);
         end;
         
-
         if DSS.SolutionAbort then
         begin
             DoSimpleMsg(DSS, _('Y matrix build aborted due to error in primitive Y calculations.'), 11001);
             Exit;  // Some problem occured building Yprims
         end;
-
 
         FrequencyChanged := FALSE;
 
