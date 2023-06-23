@@ -529,26 +529,23 @@ begin
 end;
 
 procedure TCapControlObj.RecalcElementData;
+var
+    effElement: TDSSCktElement = NIL;
 begin
     // Check for existence of capacitor
 
     // 5-21-01 RCD moved this section ahead of monitored element so Nphases gets defined first
 
     if ControlledElement = NIL then
-        raise Exception.Create(Format(_('CapControl "%s": Capacitor is not set, aborting.'), [Name]));
+        raise Exception.Create(Format(_('"%s": Capacitor is not set, aborting.'), [FullName]));
 
     // Both capacitor and monitored element must already exist
     ControlledCapacitor := This_Capacitor;
     FNphases := ControlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
     Nconds := FNphases;
     ControlledElement.ActiveTerminalIdx := 1;  // Make the 1 st terminal active
-                // Get control synched up with capacitor
-    with ControlledCapacitor do
-        if ControlVars.AvailableSteps = Numsteps then
-            ControlledElement.Closed[0] := FALSE
-        else
-            ControlledElement.Closed[0] := TRUE;
-    
+    // Get control synched up with capacitor
+    ControlledElement.Closed[0] := ControlVars.AvailableSteps <> ControlledCapacitor.Numsteps;
     if ControlledElement.Closed[0]      // Check state of phases of active terminal
     then
         ControlVars.PresentState := CTRL_CLOSE
@@ -557,27 +554,32 @@ begin
 
     ControlVars.InitialState := ControlVars.PresentState;
 
-
     if (ControlType <> TIMECONTROL) and (ControlType <> FOLLOWCONTROL) then
     begin
         if MonitoredElement = NIL then
             raise Exception.Create(Format(_('%s: Element is not set, aborting.'), [FullName]));
-
-        if ElementTerminal > MonitoredElement.Nterms then
-        begin
-            DoErrorMsg(FullName,
-                Format(_('Terminal number %d does not exist.'), [ElementTerminal]),
-                _('Re-specify terminal number.'), 362);
-        end
-        else
-        begin
-            // Sets name of i-th terminal's connected bus in CapControl's buslist
-            Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-            // Allocate a buffer bigenough to hold everything from the monitored element
-            ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
-            ControlVars.CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
-        end;
+        effElement := MonitoredElement;
+    end
+    else
+    begin
+        effElement := ControlledElement;
+        // force terminal to 1 if no monitored element is provided
+        ElementTerminal := 1;
     end;
+
+    if ElementTerminal > effElement.Nterms then
+    begin
+        DoErrorMsg(FullName,
+            Format(_('Terminal number %d does not exist in "%s".'), [ElementTerminal, effElement.FullName]),
+            _('Re-specify terminal number.'), 362);
+        Exit;
+    end;
+
+    // Sets name of i-th terminal's connected bus in CapControl's buslist
+    Setbus(1, effElement.GetBus(ElementTerminal));
+    // Allocate a buffer big enough to hold everything from the monitored element
+    ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * effElement.Yorder);
+    ControlVars.CondOffset := (ElementTerminal - 1) * effElement.NConds; // for speedy sampling
 
     // Alternative override bus
     if ControlVars.VoverrideBusSpecified then
@@ -595,11 +597,14 @@ begin
     // User model property update, if necessary
     if Usermodel.Exists then
         UserModel.UpdateModel;  // Checks for existence and Selects
-
 end;
 
 procedure TCapControlObj.MakePosSequence();
+var
+    effElement: TDSSCktElement = NIL;
 begin
+    // NOTE: Calling RecalcElementData would achieved what's done here and more
+
     if ControlledElement <> NIL then
     begin
         Enabled := ControlledElement.Enabled;
@@ -608,11 +613,24 @@ begin
     end;
     if MonitoredElement <> NIL then
     begin
-        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-        // Allocate a buffer bigenough to hold everything from the monitored element
-        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * MonitoredElement.Yorder);
-        ControlVars.CondOffset := (ElementTerminal - 1) * MonitoredElement.NConds; // for speedy sampling
+        effElement := MonitoredElement;
+    end
+    else
+    begin
+        effElement := ControlledElement;
+        // force terminal to 1 if no monitored element is provided
+        ElementTerminal := 1;
     end;
+
+    if effElement <> NIL then
+    begin
+        // Sets name of i-th terminal's connected bus in CapControl's buslist
+        Setbus(1, effElement.GetBus(ElementTerminal));
+        // Allocate a buffer big enough to hold everything from the monitored element
+        ReAllocMem(cBuffer, SizeOF(cbuffer[1]) * effElement.Yorder);
+        ControlVars.CondOffset := (ElementTerminal - 1) * effElement.NConds; // for speedy sampling
+    end;
+
     inherited;
 end;
 
@@ -815,7 +833,7 @@ begin
     else
         ControlVars.PresentState := CTRL_OPEN;
 
-    with MonitoredElement, ControlVars do
+    with ControlVars do
     begin
         ShouldSwitch := FALSE;
 
@@ -1111,7 +1129,7 @@ begin
                             PendingChange := CTRL_OPEN;
                         ShouldSwitch := TRUE;
                     end;
-                end;                
+                end;
             end;
     end;
     with ActiveCircuit, ControlVars do
@@ -1203,5 +1221,6 @@ begin
     FEnabled := Value;
 end;
 
-finalization    TypeEnum.Free;
+finalization
+    TypeEnum.Free;
 end.
