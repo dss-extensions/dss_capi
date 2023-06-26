@@ -29,6 +29,15 @@ function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
 function DSS_Get_AllowForms(): TAPIBoolean; CDECL;
 procedure DSS_Set_AllowForms(Value: TAPIBoolean); CDECL;
 
+// These were originally implemented (very differently) in the DSSEvents interface, 
+// but they are simple functions here.
+function DSSEvents_RegisterInitControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+function DSSEvents_RegisterCheckControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+function DSSEvents_RegisterStepControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+function DSSEvents_UnregisterInitControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+function DSSEvents_UnregisterCheckControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+function DSSEvents_UnregisterStepControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+
 // Extensions
 function DSS_Get_AllowEditor(): TAPIBoolean; CDECL;
 procedure DSS_Set_AllowEditor(Value: TAPIBoolean); CDECL;
@@ -309,6 +318,67 @@ procedure DSS_Set_CompatFlags(Value: LongWord); CDECL;
 begin
     DSS_EXTENSIONS_COMPAT := Value;
     SelectAs2pVersion((DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.BadPrecision)) <> 0);
+end;
+//------------------------------------------------------------------------------
+function removeFromArray(var cbs: dss_callbacks_solution_t; target: dss_callback_solution_t): Boolean;
+var
+    i, j: Integer;
+begin
+    Result := False;
+    for i := 0 to High(cbs) do
+    begin
+        if @cbs[i] = @target then
+        begin
+            // Move any other callbacks back and resize
+            for j := i + 1 to High(cbs) do
+            begin
+                cbs[j - 1] := @cbs[j];
+            end;
+            SetLength(cbs, Length(cbs) - 1);
+            Result := True;
+            Exit;
+        end;
+    end;
+end;
+
+function appendToArray(var cbs: dss_callbacks_solution_t; target: dss_callback_solution_t): Boolean;
+var
+    cb: dss_callback_solution_t;
+begin
+    Result := False;
+    for cb in cbs do
+    begin
+        if @cb = @target then
+            Exit; // already added, ignore
+    end;
+    SetLength(cbs, Length(cbs) + 1);
+    cbs[High(cbs)] := @target;
+    Result := True;
+end;
+
+function DSSEvents_RegisterInitControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+begin
+    Result := appendToArray(DSSPrime.DSSInitControlsCallbacks, @cb);
+end;
+function DSSEvents_RegisterCheckControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+begin
+    Result := appendToArray(DSSPrime.DSSCheckControlsCallbacks, @cb);
+end;
+function DSSEvents_RegisterStepControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+begin
+    Result := appendToArray(DSSPrime.DSSStepControlsCallbacks, @cb);
+end;
+function DSSEvents_UnregisterInitControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+begin
+    Result := removeFromArray(DSSPrime.DSSInitControlsCallbacks, @cb);
+end;
+function DSSEvents_UnregisterCheckControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+begin
+    Result := removeFromArray(DSSPrime.DSSCheckControlsCallbacks, @cb);
+end;
+function DSSEvents_UnregisterStepControls(cb: dss_callback_solution_t): TAPIBoolean; CDECL;
+begin
+    Result := removeFromArray(DSSPrime.DSSStepControlsCallbacks, @cb);
 end;
 //------------------------------------------------------------------------------
 end.

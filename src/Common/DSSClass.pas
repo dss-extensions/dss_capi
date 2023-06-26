@@ -1,7 +1,7 @@
 
 unit DSSClass;
 // ----------------------------------------------------------
-// Copyright (c) 2018-2022, Paulo Meira, DSS-Extensions contributors
+// Copyright (c) 2018-2023, Paulo Meira, DSS-Extensions contributors
 // Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
 // All rights reserved.
 // ----------------------------------------------------------
@@ -241,6 +241,8 @@ type
 
     dss_callback_plot_t = function (DSS: TDSSContext; jsonParams: PChar): Integer; CDECL;
     dss_callback_message_t = function (DSS: TDSSContext; messageStr: PChar; messageType: Integer): Integer; CDECL;
+    dss_callback_solution_t = procedure (DSS: TDSSContext); CDECL;
+    dss_callbacks_solution_t = Array of dss_callback_solution_t;
 
     // Base for all collection classes
     TDSSClass = class;
@@ -487,6 +489,9 @@ type
     
         DSSPlotCallback: dss_callback_plot_t;
         DSSMessageCallback: dss_callback_message_t;
+        DSSInitControlsCallbacks: dss_callbacks_solution_t;
+        DSSCheckControlsCallbacks: dss_callbacks_solution_t;
+        DSSStepControlsCallbacks: dss_callbacks_solution_t;
     
         // Parallel Machine state
 {$IFDEF DSS_CAPI_PM}
@@ -615,6 +620,11 @@ type
         property SolutionAbort: Boolean READ get_SolutionAbort WRITE set_SolutionAbort;
         function GetROFileStream(fn: String): TStream;
         procedure NewDSSClass(Value: Pointer);
+
+        // For the DSSEvents interface
+        procedure Fire_InitControls();
+        procedure Fire_CheckControls();
+        procedure Fire_StepControls();
     End;
 
 VAR
@@ -836,6 +846,9 @@ begin
     
     DSSPlotCallback := nil;
     DSSMessageCallback := nil;
+    DSSInitControlsCallbacks := nil;
+    DSSCheckControlsCallbacks := nil;
+    DSSStepControlsCallbacks := nil;
 
     ClassNames := NIL;
     DSSClassList := NIL;
@@ -982,6 +995,52 @@ begin
     ConcatenateReportsLock.Free();
 {$ENDIF}
     inherited Destroy;
+end;
+
+
+procedure TDSSContext.Fire_InitControls();
+var 
+    cb: dss_callback_solution_t;
+begin
+    if Length(DSSInitControlsCallbacks) = 0 then
+        Exit;
+
+    for cb in DSSInitControlsCallbacks do
+    begin
+        if (@cb) = NIL then
+            continue;
+        cb(self);
+    end;
+end;
+
+procedure TDSSContext.Fire_CheckControls();
+var 
+    cb: dss_callback_solution_t;
+begin
+    if Length(DSSCheckControlsCallbacks) = 0 then
+        Exit;
+
+    for cb in DSSCheckControlsCallbacks do
+    begin
+        if (@cb) = NIL then
+            continue;
+        cb(self);
+    end;
+end;
+
+procedure TDSSContext.Fire_StepControls();
+var 
+    cb: dss_callback_solution_t;
+begin
+    if Length(DSSStepControlsCallbacks) = 0 then
+        Exit;
+
+    for cb in DSSStepControlsCallbacks do
+    begin
+        if (@cb) = NIL then
+            continue;
+        cb(self);
+    end;
 end;
 
 function TDSSContext.CurrentDSSDir(): String;

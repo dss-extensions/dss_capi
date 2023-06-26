@@ -244,6 +244,7 @@ extern "C" {
     */
     typedef int32_t (*dss_callback_plot_t)(void* ctx, char* jsonParams);
     typedef int32_t (*dss_callback_message_t)(void* ctx, char* messageStr, int32_t messageType);
+    typedef void (*dss_callback_solution_t)(void* ctx);
 
     /* Functions start here */
 
@@ -287,6 +288,14 @@ extern "C" {
 
     DSS_CAPI_DLL void DSS_RegisterPlotCallback(dss_callback_plot_t cb);
     DSS_CAPI_DLL void DSS_RegisterMessageCallback(dss_callback_message_t cb);
+
+    /*! Functions to register and unregister callbacks for the solution events (DSSEvents in COM) */
+    DSS_CAPI_DLL uint16_t DSSEvents_RegisterInitControls(dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t DSSEvents_RegisterCheckControls(dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t DSSEvents_RegisterStepControls(dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t DSSEvents_UnregisterInitControls(dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t DSSEvents_UnregisterCheckControls(dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t DSSEvents_UnregisterStepControls(dss_callback_solution_t cb);
 
     DSS_CAPI_DLL void DSS_NewCircuit(const char* Value);
 

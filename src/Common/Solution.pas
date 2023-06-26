@@ -584,9 +584,8 @@ begin
             else
                 DefaultGrowthFactor := IntPower(DefaultGrowthRate, (year - 1));
         end;
-{$IFDEF DLL_ENGINE}
-        Fire_InitControls;
-{$ENDIF}
+        DSS.Fire_InitControls();
+
         // CheckFaultStatus;  ???? needed here??
 
 {$IFDEF DSS_CAPI_PM}
@@ -1183,9 +1182,7 @@ begin
 
         Result := SolveCircuit;  // Do circuit solution w/o checking controls
        {Now Check controls}
-{$IFDEF DLL_ENGINE}
-        Fire_CheckControls;
-{$ENDIF}
+        DSS.Fire_CheckControls();
         CheckControls;
 
        {For reporting max iterations per control iteration}
@@ -1205,9 +1202,7 @@ begin
     if DSS.ActiveCircuit.LogEvents then
         LogThisEvent(DSS, 'Solution Done');
 
-    {$IFDEF DLL_ENGINE}
-    Fire_StepControls;
-    {$ENDIF}
+    DSS.Fire_StepControls();
 
     {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(SolveEndTime);

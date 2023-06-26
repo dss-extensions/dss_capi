@@ -2000,6 +2000,12 @@ exports
 
     DSS_RegisterPlotCallback,
     DSS_RegisterMessageCallback,
+    DSSEvents_RegisterInitControls,
+    DSSEvents_RegisterCheckControls,
+    DSSEvents_RegisterStepControls,
+    DSSEvents_UnregisterInitControls,
+    DSSEvents_UnregisterCheckControls,
+    DSSEvents_UnregisterStepControls,
 
     DSS_ExtractSchema,
     DSS_Dispose_String,

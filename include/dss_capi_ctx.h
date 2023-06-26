@@ -86,6 +86,14 @@ extern "C" {
     DSS_CAPI_DLL void ctx_DSS_RegisterPlotCallback(void* ctx, dss_callback_plot_t cb);
     DSS_CAPI_DLL void ctx_DSS_RegisterMessageCallback(void* ctx, dss_callback_message_t cb);
 
+    /*! Functions to register and unregister callbacks for the solution events (DSSEvents in COM) */
+    DSS_CAPI_DLL uint16_t ctx_DSSEvents_RegisterInitControls(void* ctx, dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t ctx_DSSEvents_RegisterCheckControls(void* ctx, dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t ctx_DSSEvents_RegisterStepControls(void* ctx, dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t ctx_DSSEvents_UnregisterInitControls(void* ctx, dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t ctx_DSSEvents_UnregisterCheckControls(void* ctx, dss_callback_solution_t cb);
+    DSS_CAPI_DLL uint16_t ctx_DSSEvents_UnregisterStepControls(void* ctx, dss_callback_solution_t cb);
+
     DSS_CAPI_DLL void ctx_DSS_NewCircuit(void* ctx, const char* Value);
 
     /*! 

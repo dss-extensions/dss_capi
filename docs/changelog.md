@@ -17,10 +17,16 @@
 
 # Versions 0.13.x
 
-## Version 0.13.4 (2023-06-xx)
+## Version 0.13.4 (2023-06-26)
 
-Bugfix release (upcoming)
+Bugfix release for `CapControl`, couple with some incremental improvements.
 
+This version should match OpenDSS v9.6.1.3 (SVN r3623).
+
+- Ported from the official OpenDSS SVN code:
+    - `CapControl`, port SVN 3622: "Solves a bug introduced in version 9.6.1.2 when using CapControl in time or follow control modes." (by davismont).
+
+- Added `DSSEvents`: Implement an initial set of functions analog to the COM interface. This was added for historical compatibility since use of `DSSEvents` is rarely seen. [This document from EPRI (2011)](https://restservice.epri.com/publicdownload/000000000001020090/0/Product) presents the equivalent in the COM interface. Examples will be added in our downstream projects when time allows (feel free to request one to signal interest in this feature).
 - Handle better how the internal `SolutionAbort` is used. Some invalid states where not being handled on absence of float-point exceptions, leading to potential useless results (NaN) and even crashes.
 - `VSource`: Abort the solution if Z1 is zero.
 
