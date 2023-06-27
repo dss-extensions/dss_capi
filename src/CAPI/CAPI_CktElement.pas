@@ -528,7 +528,7 @@ begin
     with DSSPrime.ActiveCircuit.ActiveCktElement do
     begin
         NValues := NConds * Nterms;
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues, NConds, NTerms);
         GetPhasePower(pComplexArray(ResultPtr));
         for i := 0 to (2 * NValues - 1) do
             Result[i] *= 0.001;
@@ -1276,7 +1276,7 @@ begin
             Exit;
         end;
 
-        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NTerms * Nconds, Nconds, NTerms);
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NTerms * Nconds, NTerms, Nconds);
         k := 0;
         for i := 1 to Nterms do
         begin

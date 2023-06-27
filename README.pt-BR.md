@@ -46,7 +46,8 @@ A partir de 2019-03-05, este repositório contém todo o código fonte em lingua
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
-- **2023-06-11 / version 0.13.3: Correção de bugs em alguns dos componentes (em especial Capacitor, Reactor, UPFC). Veja o changelog para mais informações.**
+- **2023-06-27 / version 0.13.4: Correção de bugs (CapControl), melhorias incrementais.**
+- 2023-06-11 / version 0.13.3: Correção de bugs em alguns dos componentes (em especial Capacitor, Reactor, UPFC).
 - 2023-05-24 / versão 0.13.2: Melhorias para exportação JSON, verificação de erros, refatoração do código interno, e port de algumas mudanças menores do OpenDSS oficial.
 - 2023-04-01 / versão 0.13.1: Traz apenas algumas potenciais correções relacionadas a 3 propriedades de PVSystem
 - 2023-03-29 / versão 0.13.0: Várias melhorias, incluindo correção de bugs e portes de várias modificações do OpenDSS oficial; a referência para esta versão é o OpenDSS v9.6.1.1.

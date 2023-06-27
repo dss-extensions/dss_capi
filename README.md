@@ -46,8 +46,8 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
-- **2023-06-26 / version 0.13.4: Bugfix release (CapControl), incremental improvements. See the changelog or release page for details.**
-- 2023-06-11 / version 0.13.3: Bugfix release for some components (notably Capacitor, Reactor, UPFC). See the changelog or release page for details.
+- **2023-06-27 / version 0.13.4: Bugfix release (CapControl), incremental improvements. See the changelog or release page for details.**
+- 2023-06-11 / version 0.13.3: Bugfix release for some components (notably Capacitor, Reactor, UPFC).
 - 2023-05-24 / version 0.13.2: Minor release, includes updates to JSON exports, some more error-checking, internal code refactoring, header updates, and minor ports from the official OpenDSS.
 - 2023-04-01 / version 0.13.1: Minor release to address a few PVSystem properties
 - 2023-03-29 / version 0.13.0: Various updates, including bugfixes and several OpenDSS feature ports; the reference is now OpenDSS v9.6.1.1.
