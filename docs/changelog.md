@@ -17,6 +17,10 @@
 
 # Versions 0.13.x
 
+## Version 0.13.5 (WIP)
+
+- New compatibility flag in `DSSCompatFlags`: add `ActiveLine` (0x00000010). In the official OpenDSS implementation, the Lines API use the active circuit element instead of the active line. This can lead to unexpected behavior if the user is not aware of this detail. For example, if the user accidentally enables any other circuit element, the next time they use the Lines API, the line object that was previously enabled is overwritten with another unrelated object. This flag enables this behavior above if compatibility at this level is required. On DSS-Extensions, we changed the behavior to follow what most of the other APIs do: use the active object in the internal list on v0.13.5.
+
 ## Version 0.13.4 (2023-06-27)
 
 Bugfix release for `CapControl`, couple with some incremental improvements.

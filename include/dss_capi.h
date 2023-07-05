@@ -234,6 +234,17 @@ extern "C" {
             saved script. We found that it is not always a good idea, so we removed the command (leaving it commented).
             Use this flag to enable the command in the saved script.
         */
+
+       DSSCompatFlags_ActiveLine = 0x00000010 /*!< 
+            In the official OpenDSS implementation, the Lines API use the active circuit element instead of the
+            active line. This can lead to unexpected behavior if the user is not aware of this detail.
+            For example, if the user accidentally enables any other circuit element, the next time they use
+            the Lines API, the line object that was previously enabled is overwritten with another unrelated
+            object.
+            This flag enables this behavior above if compatibility at this level is required. On DSS-Extensions,
+            we changed the behavior to follow what most of the other APIs do: use the active object in the internal
+            list. This change was done for DSS C-API v0.13.5, as well as the introduction of this flag.
+        */
     };
 
     /*!  
@@ -1756,20 +1767,9 @@ extern "C" {
 
     /*! 
     Controls some compatibility flags introduced to toggle some behavior from the official OpenDSS.
-    The current bit flags are:
+    The current bit flags are listed in the enum description.
 
-        - 0x1 (bit 0): If enabled, don't check for NaNs in the inner solution loop. This can lead to various errors.
-            This flag is useful for legacy applications that don't handle OpenDSS API errors properly. Through the 
-            development of DSS-Extensions, we noticed this is actually a quite common issue.
-        - 0x2 (bit 1): Toggle worse precision for certain aspects of the engine. For example, the sequence-to-phase 
-            (`As2p`) and sequence-to-phase (`Ap2s`) transform matrices. On DSS C-API, we fill the matrix explicitly
-            using higher precision, while numerical inversion of an initially worse precision matrix is used in the 
-            official OpenDSS. We will introduce better precision for other aspects of the engine in the future, 
-            so this flag can be used to toggle the old/bad values where feasible.
-        - 0x4 (bit 2): Toggle some InvControl behavior introduced in OpenDSS 9.6.1.1. It could be a regression 
-            but needs further investigation, so we added this flag in the time being.
-
-    These flags may change for each version of DSS C-API, but the same value will not be reused. That is,
+    The flags may change for each version of DSS C-API, but the same value will not be reused. That is,
     when we remove a compatibility flag, it will have no effect but will also not affect anything else
     besides raising an error if the user tries to toggle a flag that was available in a previous version.
 

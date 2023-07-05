@@ -104,28 +104,42 @@ begin
     if InvalidCircuit(DSS) then
         Exit;
 
-    //TODO: use the active line instead?
-    
-    CktElem := DSS.ActiveCircuit.ActiveCktElement;
-    if CktElem = NIL then
+    // If the compatibility flag is set, use the active circuit element instead
+    // of the active line in the line list
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) = 1 then
     begin
-        if DSS_CAPI_EXT_ERRORS then
+        CktElem := DSS.ActiveCircuit.ActiveCktElement;
+        if CktElem = NIL then
         begin
-            DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Line'], 8989);
+            if DSS_CAPI_EXT_ERRORS then
+            begin
+                DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Line'], 8989);
+            end;
+            Exit;
         end;
-        Exit;
-    end;
-    
-    if CktElem is TLineObj then
-        obj := CktElem as TLineObj;
         
-    if obj = NIL {((CktElem.DssObjtype and CLASSMASK) <> LINE_ELEMENT)} then
+        if CktElem is TLineObj then
+            obj := CktElem as TLineObj;
+            
+        if obj = NIL {((CktElem.DssObjtype and CLASSMASK) <> LINE_ELEMENT)} then
+        begin
+            DoSimpleMsg(DSS, 'Line Type Expected, but another found. DSS Class=%s, Element Name="%s"', 
+                [CktElem.DSSClassName, CktElem.Name], 5007);
+            Exit;
+        end;
+    end
+    else
     begin
-        DoSimpleMsg(DSS, 'Line Type Expected, but another found. DSS Class=%s, Element Name="%s"', 
-            [CktElem.DSSClassName, CktElem.Name], 5007);
-        Exit;
+        obj := DSS.ActiveCircuit.Lines.Active;
+        if obj = NIL then
+        begin
+            if DSS_CAPI_EXT_ERRORS then
+            begin
+                DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Line'], 8989);
+            end;
+            Exit;
+        end;
     end;
-
     Result := True;
 end;
 //------------------------------------------------------------------------------

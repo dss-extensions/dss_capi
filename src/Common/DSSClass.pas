@@ -30,7 +30,8 @@ type
         NoSolverFloatChecks = 1,
         BadPrecision = 2,
         InvControl9611 = 4,
-        SaveCalcVoltageBases = 8
+        SaveCalcVoltageBases = 8,
+        ActiveLine = 16
     );
 
     TDSSObjectFlag = (
