@@ -8,7 +8,7 @@ uses
 function LineCodesI(mode: longint; arg: longint): longint; cdecl;
 function LineCodesF(mode: longint; arg: double): double; cdecl;
 function LineCodesS(mode: longint; arg: pAnsiChar): pAnsiChar; cdecl;
-procedure LineCodesV(mode: longint; var arg:variant);cdecl;
+procedure LineCodesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -275,140 +275,195 @@ end;
 
 //*****************************Variants interface***************************************
 
-procedure LineCodesV(mode: longint; var arg:variant);cdecl;
+procedure LineCodesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 Var
-   pLineCode:TLineCodeObj;
-   i,j, k:Integer;
-   Ztemp:complex;
-   Factor:Double;
+   pLineCode: TLineCodeObj;
+   i,
+   j,
+   k        : Integer;
+   Ztemp    : Complex;
+   Factor   : Double;
+   Pint     : ^Integer;
+   PDouble  : ^Double;
 
 begin
   case mode of
-  0:  begin  // LineCodes.Rmatrix Read
-        arg := VarArrayCreate([0, 0], varDouble);
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN
+    0:  begin  // LineCodes.Rmatrix Read
+          myType  :=  2;        // Double
+          setlength(myDBLArray, 1);
+          IF ActiveCircuit[ActiveActor] <> NIL THEN
           Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO
+            pLineCode := LineCodeClass.GetActiveObj ;
+            WITH pLineCode DO
+            Begin
+              setlength(myDBLArray, Sqr(FNphases));
+              k := 0;
+              FOR i := 1 to FNPhases DO
               Begin
-                arg := VarArrayCreate([0, Sqr(FNphases) - 1], varDouble);
-                k := 0;
-                FOR i := 1 to FNPhases DO
                 FOR j := 1 to FNphases DO
                 Begin
-                   arg[k] :=  Z.GetElement(i,j).re;
+                   myDBLArray[k] :=  Z.GetElement(i,j).re;
                    Inc(k);
                 End;
               End;
+            End;
+          End
+          else myDBLArray[0] := 0;
+          myPointer :=  @(myDBLArray[0]);
+          mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
+        end;
+    1:  begin  // LineCodes.Rmatrix Write
+          myType  :=  2;        // Double
+          k :=  0;
+          IF ActiveCircuit[ActiveActor] <> NIL
+          THEN
+          Begin
+            pLineCode := LineCodeClass.GetActiveObj ;
+            WITH pLineCode DO
+            Begin
+              FOR i := 1 to FNPhases DO
+              Begin
+                FOR j := 1 to FNphases DO
+                Begin
+                 PDouble  :=  myPointer;
+                 ZTemp := Z.GetElement(i,j);
+                 Z.SetElement(i,j, Cmplx( PDouble^, ZTemp.im));
+                 Inc(k);
+                 inc(PByte(myPointer),8);
+                End;
+              End;
+            End;
           End;
-      end;
-  1:  begin  // LineCodes.Rmatrix Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               k := VarArrayLowBound(arg, 1);
-               FOR i := 1 to FNPhases DO
+          mySize  :=  k;
+        end;
+    2:  begin  // LineCodes.Xmatrix Read
+          myType  :=  2;        // Double
+          setlength(myDBLArray, 1);
+          IF ActiveCircuit[ActiveActor] <> NIL THEN
+          Begin
+            pLineCode := LineCodeClass.GetActiveObj ;
+            WITH pLineCode DO
+            Begin
+              setlength(myDBLArray, Sqr(FNphases));
+              k := 0;
+              FOR i := 1 to FNPhases DO
+              Begin
                 FOR j := 1 to FNphases DO
                 Begin
-                   ZTemp := Z.GetElement(i,j);
-                   Z.SetElement(i,j, Cmplx( arg[k], ZTemp.im));
-                   Inc(k);
+                  myDBLArray[k] :=  Z.GetElement(i,j).im;
+                  Inc(k);
                 End;
-             End;
-        End;
-      end;
-  2:  begin  // LineCodes.Xmatrix Read
-        arg := VarArrayCreate([0, 0], varDouble);
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               arg := VarArrayCreate([0, Sqr(FNphases) - 1], varDouble);
-               k := 0;
-               FOR i := 1 to FNPhases DO
+              End;
+            End;
+          End
+          else myDBLArray[0] := 0;
+          myPointer :=  @(myDBLArray[0]);
+          mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
+        end;
+    3:  begin  // LineCodes.Xmatrix Write
+          myType  :=  2;        // Double
+          k :=  0;
+          IF ActiveCircuit[ActiveActor] <> NIL THEN
+          Begin
+            pLineCode := LineCodeClass.GetActiveObj ;
+            WITH pLineCode DO
+            Begin
+              FOR i := 1 to FNPhases DO
+              Begin
                 FOR j := 1 to FNphases DO
                 Begin
-                   arg[k] :=  Z.GetElement(i,j).im;
-                   Inc(k);
+                  PDouble  :=  myPointer;
+                  ZTemp := Z.GetElement(i,j);
+                  Z.SetElement(i,j, Cmplx( ZTemp.re, PDouble^ ));
+                  Inc(k);
+                  inc(PByte(myPointer),8);
                 End;
-             End;
-        End;
-      end;
-  3:  begin  // LineCodes.Xmatrix Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               k := VarArrayLowBound(arg, 1);
-               FOR i := 1 to FNPhases DO
+              End;
+            End;
+          End;
+          mySize  :=  k;
+        end;
+    4:  begin  // LineCodes.Cmatrix Read
+          myType  :=  2;        // Double
+          setlength(myDBLArray, 1);
+          IF ActiveCircuit[ActiveActor] <> NIL
+          THEN
+          Begin
+            pLineCode := LineCodeClass.GetActiveObj ;
+            WITH pLineCode DO
+            Begin
+              Factor := (TwoPi * BaseFrequency  * 1.0e-9);
+              setlength(myDBLArray, Sqr(FNphases));
+              k := 0;
+              FOR i := 1 to FNPhases DO
+              Begin
                 FOR j := 1 to FNphases DO
                 Begin
-                   ZTemp := Z.GetElement(i,j);
-                   Z.SetElement(i,j, Cmplx( ZTemp.re, arg[k] ));
-                   Inc(k);
+                 myDBLArray[k] :=  YC.GetElement(i,j).im/Factor;
+                 Inc(k);
                 End;
-             End;
-        End;
-      end;
-  4:  begin  // LineCodes.Cmatrix Read
-        arg := VarArrayCreate([0, 0], varDouble);
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               Factor := (TwoPi * BaseFrequency  * 1.0e-9);
-               arg := VarArrayCreate([0, Sqr(FNphases) - 1], varDouble);
-               k := 0;
-               FOR i := 1 to FNPhases DO
+              End;
+            End;
+          End
+          else myDBLArray[0] := 0;
+          myPointer :=  @(myDBLArray[0]);
+          mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
+        end;
+    5:  begin  // LineCodes.Cmatrix Write
+          myType  :=  2;        // Double
+          k :=  0;
+          IF ActiveCircuit[ActiveActor] <> NIL THEN
+          Begin
+            pLineCode := LineCodeClass.GetActiveObj ;
+            WITH pLineCode DO
+            Begin
+              Factor  := TwoPi * BaseFrequency  * 1.0e-9;
+              FOR i := 1 to FNPhases DO
+              Begin
                 FOR j := 1 to FNphases DO
                 Begin
-                   arg[k] :=  YC.GetElement(i,j).im/Factor;
-                   Inc(k);
+                  PDouble :=  myPointer;
+                  Yc.SetElement(i,j, Cmplx(0.0, (PDouble^)*Factor));
+                  Inc(k);
+                  inc(PByte(myPointer),8);
                 End;
-             End;
-        End;
-      end;
-  5:  begin  // LineCodes.Cmatrix Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               Factor  := TwoPi * BaseFrequency  * 1.0e-9;
-               k := VarArrayLowBound(arg, 1);
-               FOR i := 1 to FNPhases DO
-                FOR j := 1 to FNphases DO
+              End;
+            End;
+          End;
+          mySize  :=  k;
+        end;
+    6:  begin  // LineCodes.AllNames
+          setlength(myStrArray,0);
+          mySize        :=  0;
+          IF ActiveCircuit[ActiveActor] <> Nil THEN
+          Begin
+            WITH ActiveCircuit[ActiveActor] DO
+            Begin
+              If LineCodeClass.ElementList.ListSize  >0 Then
+              Begin
+                k:=0;
+                pLineCode := LineCodeClass.ElementList.First;
+                WHILE pLineCode<>Nil DO
                 Begin
-                   Yc.SetElement(i,j, Cmplx(0.0, arg[k]*Factor));
-                   Inc(k);
+                  WriteStr2Array(pLineCode.Name);
+                  WriteStr2Array(Char(0)); ;
+                  pLineCode := LineCodeClass.ElementList.Next;
                 End;
-             End;
-        End;
-      end;
-  6:  begin  // LineCodes.AllNames
-        arg := VarArrayCreate([0, 0], varOleStr);
-        arg[0] := 'NONE';
-        IF ActiveCircuit[ActiveActor] <> Nil THEN
-         WITH ActiveCircuit[ActiveActor] DO
-         If LineCodeClass.ElementList.ListSize  >0 Then
-         Begin
-           VarArrayRedim(arg, LineCodeClass.ElementList.ListSize-1);
-           k:=0;
-           pLineCode := LineCodeClass.ElementList.First;
-           WHILE pLineCode<>Nil DO
-           Begin
-              arg[k] := pLineCode.Name;
-              Inc(k);
-              pLineCode := LineCodeClass.ElementList.Next;
-           End;
-         End;
-      end
-  else
-      begin
-        arg := VarArrayCreate([0, 0], varOleStr);
-        arg[0] := 'Parameter not identified';
-      end;
+              End;
+            End;
+          end
+          Else  WriteStr2Array('');
+          myPointer :=  @(myStrArray[0]);
+          mySize    :=  Length(myStrArray);
+        end
+    else
+    begin
+      myType  :=  4;        // String
+      setlength(myStrArray, 0);
+      WriteStr2Array('Error, parameter not recognized');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    end;
 
   end;
 end;
