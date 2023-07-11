@@ -5,7 +5,7 @@ interface
 function LinesI(mode: longint; arg: longint): longint; cdecl;
 function LinesF(mode: longint; arg: double): double; cdecl;
 function LinesS(mode: longint; arg: pAnsiChar): pAnsiChar; cdecl;
-procedure LinesV(mode: longint; out arg: Variant);cdecl;
+procedure LinesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -551,174 +551,252 @@ begin
 end;
 
 //************************Variant type properties*******************************
-procedure LinesV(mode: longint; out arg: Variant);cdecl;
+procedure LinesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 Var
-  LineElem:TLineObj;
-  i, j, k:Integer;
-  Ztemp:complex;
-  Factor :Double;
-  iV      : Integer;
-  NValues : Integer;
-  cValues : pComplexArray;
+  LineElem  : TLineObj;
+  Ztemp     : complex;
+  Factor    : Double;
+  i,
+  j,
+  k,
+  iV,
+  NValues   : Integer;
+  cValues   : pComplexArray;
+  PDouble   : ^Double;
 
 begin
   case mode of
-  0: begin  // Lines/AllNames
-      arg := VarArrayCreate([0, 0], varOleStr);
-      arg[0] := 'NONE';
-      IF ActiveCircuit[ActiveActor] <> Nil THEN
-       WITH ActiveCircuit[ActiveActor] DO
-       If Lines.ListSize>0 Then
-       Begin
-         VarArrayRedim(arg, Lines.ListSize-1);
-         k:=0;
-         LineElem := Lines.First;
-         WHILE LineElem<>Nil DO
-         Begin
-            arg[k] := LineElem.Name;
-            Inc(k);
-            LineElem := Lines.Next;
-         End;
-       End;
-  end;
-  1: begin  // Lines.RMatrix read
-      arg := VarArrayCreate([0, 0], varDouble);
-      IF ActiveCircuit[ActiveActor] <> NIL
-      THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-             arg := VarArrayCreate([0, Sqr(Nphases) - 1], varDouble);
-             k := 0;
-             FOR i := 1 to NPhases DO
-              FOR j := 1 to Nphases DO
+  0:  begin  // Lines/AllNames
+        myType  :=  4;        // String
+        setlength(myStrArray,0);
+        mySize        :=  0;
+        IF ActiveCircuit[ActiveActor] <> Nil THEN
+        Begin
+          WITH ActiveCircuit[ActiveActor] DO
+          Begin
+            If Lines.ListSize>0 Then
+            Begin
+              LineElem := Lines.First;
+              WHILE LineElem<>Nil DO
               Begin
-                If GeometrySpecified Or SpacingSpecified then  arg[k] :=  Z.GetElement(i,j).Re/Len
-                else arg[k] :=  Z.GetElement(i,j).Re/UnitsConvert;
-                Inc(k);
+                WriteStr2Array(LineElem.Name);
+                WriteStr2Array(Char(0));
+                LineElem := Lines.Next;
               End;
-           End;
-      End;
-  end;
-  2: begin  // Lines.RMatrix write
-      IF ActiveCircuit[ActiveActor] <> NIL
-      THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-             k := VarArrayLowBound(arg, 1);
-             FOR i := 1 to NPhases DO
-              FOR j := 1 to Nphases DO
+            End;
+          End;
+        End
+        Else  WriteStr2Array('');
+        myPointer :=  @(myStrArray[0]);
+        mySize    :=  Length(myStrArray);
+      end;
+  1:  begin  // Lines.RMatrix read
+        myType  :=  2;        // Double
+        setlength(myDBLArray, 1);
+        IF ActiveCircuit[ActiveActor] <> NIL THEN
+        Begin
+          If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
+          Begin
+            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO
+            Begin
+              setlength(myDBLArray, Sqr(Nphases));
+              k := 0;
+              FOR i := 1 to NPhases DO
               Begin
-                 ZTemp := Z.GetElement(i,j);
-                 Z.SetElement(i,j, Cmplx( arg[k], ZTemp.im));
-                 Inc(k);
+                FOR j := 1 to Nphases DO
+                Begin
+                  If GeometrySpecified Or SpacingSpecified then  myDBLArray[k] :=  Z.GetElement(i,j).Re/Len
+                  else myDBLArray[k] :=  Z.GetElement(i,j).Re/UnitsConvert;
+                  Inc(k);
+                End;
+              End;
+            End;
+          End;
+        End
+        else myDBLArray[0] := 0;
+        myPointer :=  @(myDBLArray[0]);
+        mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
+      end;
+  2:  begin  // Lines.RMatrix write
+        myType  :=  2;        // Double
+        k :=  0;
+        IF ActiveCircuit[ActiveActor] <> NIL THEN
+        Begin
+          If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
+          Begin
+            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO
+            Begin
+              FOR i := 1 to NPhases DO
+              Begin
+                FOR j := 1 to Nphases DO
+                Begin
+                  PDouble  :=  myPointer;
+                  ZTemp := Z.GetElement(i,j);
+                  Z.SetElement(i,j, Cmplx( PDouble^, ZTemp.im));
+                  Inc(k);
+                  inc(PByte(myPointer),8);
+                End;
               End;
              YprimInvalid[ActiveActor] := True;
-           End;
-      End;
-  end;
-  3: begin  // Lines.Xmatrix read
-      arg := VarArrayCreate([0, 0], varDouble);
-      IF ActiveCircuit[ActiveActor] <> NIL
-      THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-             arg := VarArrayCreate([0, Sqr(Nphases) - 1], varDouble);
-             k := 0;
-             FOR i := 1 to NPhases DO
-              FOR j := 1 to Nphases DO
+            End;
+          End;
+        End;
+        mySize  :=  k;
+      end;
+  3:  begin  // Lines.Xmatrix read
+        myType  :=  2;        // Double
+        setlength(myDBLArray, 1);
+        IF ActiveCircuit[ActiveActor] <> NIL THEN
+        Begin
+          If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
+          Begin
+            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO
+            Begin
+              setlength(myDBLArray, Sqr(Nphases));
+              k := 0;
+              FOR i := 1 to NPhases DO
               Begin
-                 If GeometrySpecified Or SpacingSpecified then  arg[k] :=  Z.GetElement(i,j).im/Len
-                 else arg[k] :=  Z.GetElement(i,j).im/UnitsConvert;
-                 Inc(k);
+                FOR j := 1 to Nphases DO
+                Begin
+                   If GeometrySpecified Or SpacingSpecified then  myDBLArray[k] :=  Z.GetElement(i,j).im/Len
+                   else myDBLArray[k] :=  Z.GetElement(i,j).im/UnitsConvert;
+                   Inc(k);
+                End;
               End;
-           End;
-      End;
-  end;
-  4: begin  // Lines.XMatrix write
-      IF ActiveCircuit[ActiveActor] <> NIL
-      THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-             k := VarArrayLowBound(arg, 1);
-             FOR i := 1 to NPhases DO
-              FOR j := 1 to Nphases DO
+            End;
+          End;
+        End
+        else myDBLArray[0] := 0;
+        myPointer :=  @(myDBLArray[0]);
+        mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
+      end;
+  4:  begin  // Lines.XMatrix write
+        myType  :=  2;        // Double
+        k :=  0;
+        IF ActiveCircuit[ActiveActor] <> NIL THEN
+        Begin
+          If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
+          Begin
+            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO
+            Begin
+              FOR i := 1 to NPhases DO
               Begin
-                 ZTemp := Z.GetElement(i,j);
-                 Z.SetElement(i,j, Cmplx(Ztemp.re, arg[k]));
-                 Inc(k);
+                FOR j := 1 to Nphases DO
+                Begin
+                  PDouble  :=  myPointer;
+                  ZTemp := Z.GetElement(i,j);
+                  Z.SetElement(i,j, Cmplx(Ztemp.re, PDouble^));
+                  Inc(k);
+                  inc(PByte(myPointer),8);
+                End;
               End;
               YprimInvalid[ActiveActor] := True;
-           End;
-      End;
-  end;
-  5: begin  // Lines.CMatrix read
-      arg := VarArrayCreate([0, 0], varDouble);
-      IF ActiveCircuit[ActiveActor] <> NIL
-      THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-             Factor  := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;
-             arg := VarArrayCreate([0, Sqr(Nphases) - 1], varDouble);
-             k := 0;
-             FOR i := 1 to NPhases DO
-              FOR j := 1 to Nphases DO
-              Begin
-                 If GeometrySpecified Or SpacingSpecified then  arg[k] :=  Yc.GetElement(i,j).im  / Factor / Len
-                 else arg[k] :=  Yc.GetElement(i,j).im / Factor;
-                 Inc(k);
-              End;
-           End;
-      End;
-  end;
-  6: begin  // Lines.CMatrix write
-      IF ActiveCircuit[ActiveActor] <> NIL
-      THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-             Factor  := TwoPi * BaseFrequency  * 1.0e-9;
-             k := VarArrayLowBound(arg, 1);
-             FOR i := 1 to NPhases DO
-              FOR j := 1 to Nphases DO
-              Begin
-                 Yc.SetElement(i,j, Cmplx(0.0, arg[k]*Factor));
-                 Inc(k);
-              End;
-             YprimInvalid[ActiveActor] := True;
-           End;
-      End;
-  end;
-  7: begin  // Lines.Yprim read
-       IF ActiveCircuit[ActiveActor] = nil Then Begin
-            arg := VarArrayCreate([0, 0], varDouble);
-       End
-       ELSE With ActiveCircuit[ActiveActor] Do
+            End;
+          End;
+        End;
+        mySize  :=  k;
+      end;
+  5:  begin  // Lines.CMatrix read
+        myType  :=  2;        // Double
+        setlength(myDBLArray, 1);
+        IF ActiveCircuit[ActiveActor] <> NIL THEN
+        Begin
           If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
-          WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do  Begin
+          Begin
+            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO
+            Begin
+              Factor  := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;
+              setlength(myDBLArray, Sqr(Nphases));
+              k := 0;
+              FOR i := 1 to NPhases DO
+              Begin
+                FOR j := 1 to Nphases DO
+                Begin
+                  If GeometrySpecified Or SpacingSpecified then  myDBLArray[k] :=  Yc.GetElement(i,j).im  / Factor / Len
+                  else myDBLArray[k] :=  Yc.GetElement(i,j).im / Factor;
+                  Inc(k);
+                End;
+              End;
+            End;
+          End;
+        End
+        else myDBLArray[0] := 0;
+        myPointer :=  @(myDBLArray[0]);
+        mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
+      end;
+  6:  begin  // Lines.CMatrix write
+        myType  :=  2;        // Double
+        k :=  0;
+        IF ActiveCircuit[ActiveActor] <> NIL THEN
+        Begin
+          If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
+          Begin
+            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO
+            Begin
+              Factor  := TwoPi * BaseFrequency  * 1.0e-9;
+              FOR i := 1 to NPhases DO
+              Begin
+                FOR j := 1 to Nphases DO
+                Begin
+                  PDouble  :=  myPointer;
+                  Yc.SetElement(i,j, Cmplx(0.0, (PDouble^)*Factor));
+                  Inc(k);
+                  inc(PByte(myPointer),8);
+                End;
+              End;
+              YprimInvalid[ActiveActor] := True;
+            End;
+          End;
+        End;
+        mySize  :=  k;
+      end;
+  7:  begin  // Lines.Yprim read
+        myType  :=  3;        // Complex
+        setlength(myCmplxArray, 1);
+        IF ActiveCircuit[ActiveActor] <> nil Then
+        Begin
+          With ActiveCircuit[ActiveActor] Do
+          If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
+          Begin
+            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do
+            Begin
               NValues := SQR(Yorder);
               cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
-              If cValues=Nil Then Begin   // check for unassigned array
-                                arg := VarArrayCreate([0, 0], varDouble);  // just return null array
-                                Exit;  // Get outta here
-                             End;
-              arg := VarArrayCreate( [0, 2*NValues -1], varDouble);  // Make variant array
-              iV := 0;
-              FOR i := 1 to  NValues DO  Begin    // Plunk the values in the variant array
-                  arg[iV] := cValues^[i].re;
-                  Inc(iV);
-                  arg[iV] := cValues^[i].im;
-                  Inc(iV);
+              If cValues=Nil Then
+              Begin   // check for unassigned array
+                myCmplxArray[0] :=  cmplx(0,0);  // just return null array
+                Exit;  // Get outta here
+              End
+              else
+              Begin
+                setlength(myCmplxArray,NValues);  // Make variant array
+                FOR i := 1 to  NValues DO
+                Begin    // Plunk the values in the complex array
+                  myCmplxArray[i - 1] := cValues^[i];
+                End;
               End;
+            End
           End
-          ELSE arg := VarArrayCreate([0, 0], varDouble);  // just return null array
-  end;
-  8: begin  // Lines.Yprim write
-     IF ActiveCircuit[ActiveActor] <> NIL Then  Begin
-       {Do Nothing for now}
-     End;
-  end
+          ELSE myCmplxArray[k] := cmplx(0,0);
+          myPointer :=  @(myCmplxArray[0]);
+          mySize    :=  SizeOf(myCmplxArray[0]) * length(myCmplxArray);
+        End;
+      end;
+  8:  begin  // Lines.Yprim write
+        IF ActiveCircuit[ActiveActor] <> NIL Then
+        Begin
+         {Do Nothing for now}
+        End;
+      end
   else
-      arg[0]:='Error, parameter not recognized';
+    begin
+      myType  :=  4;        // String
+      setlength(myStrArray, 0);
+      WriteStr2Array('Error, parameter not recognized');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    end;
   end;
 end;
 

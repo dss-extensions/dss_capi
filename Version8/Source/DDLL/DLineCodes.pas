@@ -433,6 +433,7 @@ begin
           mySize  :=  k;
         end;
     6:  begin  // LineCodes.AllNames
+          myType  :=  4;        // String
           setlength(myStrArray,0);
           mySize        :=  0;
           IF ActiveCircuit[ActiveActor] <> Nil THEN
