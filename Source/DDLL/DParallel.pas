@@ -5,7 +5,7 @@ interface
 Uses Arraydef, UComplex, Solution;
 
 function ParallelI(mode:longint; arg:longint):longint;cdecl;
-procedure ParallelV(mode:longint; out arg:Variant);cdecl;
+procedure ParallelV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -74,27 +74,36 @@ begin
 end;
 
 
-procedure ParallelV(mode:longint; out arg:Variant);cdecl;
+procedure ParallelV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 var
   i : Integer;
 
 Begin
-  arg:=VarArrayCreate([1, NumOfActors], varInteger);;             // Default return value
   case mode of
-  0: begin  // Parallel.ActorProgress Read
-    for i := 1 to NumOfActors do
-    Begin
-      arg[i] :=  ActorPctProgress[i];
-    End;
-  end;
-  1: begin  // Parallel.AxtorState Read
-    for i := 1 to NumOfActors do
-    Begin
-      arg[i] := ActorStatus[i];
-    End;
-  end
+  0:begin  // Parallel.ActorProgress Read
+      myType  :=  1;        // Integer
+      setlength(myIntArray, NumOfActors);
+      for i := 1 to NumOfActors do
+        myIntArray[i - 1] :=  ActorPctProgress[i];
+      myPointer :=  @(myIntArray[0]);
+      mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
+    end;
+  1:begin  // Parallel.AxtorState Read
+      myType  :=  1;        // Integer
+      setlength(myIntArray, NumOfActors);
+      for i := 1 to NumOfActors do
+        myIntArray[i - 1] := ActorStatus[i];
+      myPointer :=  @(myIntArray[0]);
+      mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
+    end
   else
-      arg[1]:=-1;
+    Begin
+      myType  :=  4;        // String
+      setlength(myStrArray, 0);
+      WriteStr2Array('Error, parameter not recognized');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    End;
   end;
 
 End;

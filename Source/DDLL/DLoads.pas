@@ -519,7 +519,7 @@ begin
         myPointer :=  @(myStrArray[0]);
         mySize    :=  Length(myStrArray);
       end;
-  1:  begin                                   // Loads.ZIPV - read
+  1:  begin                   // Loads.ZIPV - read
         myType  :=  2;        // Double
         setlength(myDBLArray, 1);
         pLoad := ActiveLoad;
@@ -533,8 +533,9 @@ begin
         myPointer :=  @(myDBLArray[0]);
         mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
       end;
-  2:  begin
+  2:  begin                   // Loads.ZIPV - write
         pLoad := ActiveLoad;
+        myType  :=  2;        // Double
         k := 1;
         If pLoad <> nil Then
         Begin
