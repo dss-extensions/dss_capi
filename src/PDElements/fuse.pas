@@ -481,11 +481,10 @@ begin
                 if TripTime > 0.0 then
                 begin
                     if not ReadyToBlow[i] then
-                        with ActiveCircuit do
-                        begin  // Then arm for an open operation
-                            hAction[i] := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Delaytime, i, 0, Self);
-                            ReadyToBlow[i] := TRUE;
-                        end;
+                    begin  // Then arm for an open operation
+                        hAction[i] := ActiveCircuit.ControlQueue.Push(TripTime + Delaytime, i, 0, Self);
+                        ReadyToBlow[i] := TRUE;
+                    end;
                 end
                 else
                 begin

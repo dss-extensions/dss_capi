@@ -338,13 +338,12 @@ begin
         end;
 
         if GenkWChanged or Genkvarchanged then  // Only push onto controlqueue if there has been a change
-            with ActiveCircuit, ActiveCircuit.Solution do
-            begin
-                LoadsNeedUpdating := TRUE; // Force recalc of power parms
+        begin
+            ActiveCircuit.Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
             // Push present time onto control queue to force re solve at new dispatch value
-                ControlQueue.Push(DynaVars.intHour, DynaVars.t, 0, 0, Self);
-            end;
-       {Else just continue}
+            ActiveCircuit.ControlQueue.Push(0, 0, 0, Self);
+        end;
+       // Else just continue
     end;
 end;
 

@@ -767,73 +767,70 @@ begin
                 with TTransfObj(ControlledElement) do
                 begin
                     // Transformer PresentTap property automatically limits tap
-                    with ActiveCircuit, ActiveCircuit.Solution do
-                    begin
-                        case ControlMode of
-                            CTRLSTATIC:
-                            begin
-                                TapChangeToMake := AtLeastOneTap(PendingTapChange, TapIncrement[TapWinding]);
-                                if (DebugTrace) then
-                                    RegWriteTraceRecord(TapChangeToMake);
-                                PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
-                                if ShowEventLog then
-                                    AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d taps to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
-                                PendingTapChange := 0.0;  // Reset to no change.  Program will determine if another needed.
-                                Armed := FALSE;
-                            end;
-
-                            EVENTDRIVEN:
-                            begin
-                                TapChangeToMake := OneInDirectionOf(Self, FPendingTapChange, TapIncrement[TapWinding]);
-                                if (DebugTrace) then
-                                    RegWriteTraceRecord(TapChangeToMake);
-                                PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
-                                if ShowEventLog then 
-                                    AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.',[Lastchange, PresentTap[TapWinding]]));
-                                if DebugTrace then
-                                    RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, PresentTap[TapWinding]]));
-
-                                if PendingTapChange <> 0.0 then
-                                    ControlQueue.Push(DynaVars.intHour, Dynavars.t + TapDelay, 0, 0, Self)
-                                else
-                                    Armed := FALSE;
-                            end;
-
-                            TIMEDRIVEN:
-                            begin
-                                TapChangeToMake := OneInDirectionOf(Self, FPendingTapChange, TapIncrement[TapWinding]);
-                                if (DebugTrace) then
-                                    RegWriteTraceRecord(TapChangeToMake);
-                                PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
-                                if ShowEventLog then
-                                    AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
-                                if (DebugTrace) then
-                                    RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, PresentTap[TapWinding]]));
-
-                                if PendingTapChange <> 0.0 then
-                                    ControlQueue.Push(DynaVars.intHour, DynaVars.t + TapDelay, 0, 0, Self)
-                                else
-                                    Armed := FALSE;
-                            end;
-
-                            MULTIRATE:
-                            begin
-                                TapChangeToMake := OneInDirectionOf(Self, FPendingTapChange, TapIncrement[TapWinding]);
-                                if (DebugTrace) then
-                                    RegWriteTraceRecord(TapChangeToMake);
-                                PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
-                                if ShowEventLog then
-                                    AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
-                                if (DebugTrace) then
-                                    RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, PresentTap[TapWinding]]));
-
-                                if PendingTapChange <> 0.0 then
-                                    ControlQueue.Push(DynaVars.intHour, DynaVars.t + TapDelay, 0, 0, Self)
-                                else
-                                    Armed := FALSE;
-                            end;
-
+                    case ActiveCircuit.Solution.ControlMode of
+                        CTRLSTATIC:
+                        begin
+                            TapChangeToMake := AtLeastOneTap(PendingTapChange, TapIncrement[TapWinding]);
+                            if (DebugTrace) then
+                                RegWriteTraceRecord(TapChangeToMake);
+                            PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
+                            if ShowEventLog then
+                                AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d taps to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
+                            PendingTapChange := 0.0;  // Reset to no change.  Program will determine if another needed.
+                            Armed := FALSE;
                         end;
+
+                        EVENTDRIVEN:
+                        begin
+                            TapChangeToMake := OneInDirectionOf(Self, FPendingTapChange, TapIncrement[TapWinding]);
+                            if (DebugTrace) then
+                                RegWriteTraceRecord(TapChangeToMake);
+                            PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
+                            if ShowEventLog then 
+                                AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.',[Lastchange, PresentTap[TapWinding]]));
+                            if DebugTrace then
+                                RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, PresentTap[TapWinding]]));
+
+                            if PendingTapChange <> 0.0 then
+                                ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
+                            else
+                                Armed := FALSE;
+                        end;
+
+                        TIMEDRIVEN:
+                        begin
+                            TapChangeToMake := OneInDirectionOf(Self, FPendingTapChange, TapIncrement[TapWinding]);
+                            if (DebugTrace) then
+                                RegWriteTraceRecord(TapChangeToMake);
+                            PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
+                            if ShowEventLog then
+                                AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
+                            if (DebugTrace) then
+                                RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, PresentTap[TapWinding]]));
+
+                            if PendingTapChange <> 0.0 then
+                                ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
+                            else
+                                Armed := FALSE;
+                        end;
+
+                        MULTIRATE:
+                        begin
+                            TapChangeToMake := OneInDirectionOf(Self, FPendingTapChange, TapIncrement[TapWinding]);
+                            if (DebugTrace) then
+                                RegWriteTraceRecord(TapChangeToMake);
+                            PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
+                            if ShowEventLog then
+                                AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
+                            if (DebugTrace) then
+                                RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, PresentTap[TapWinding]]));
+
+                            if PendingTapChange <> 0.0 then
+                                ActiveCircuit.ControlQueue.Push(TapDelay, 0, 0, Self)
+                            else
+                                Armed := FALSE;
+                        end;
+
                     end;
                 end;
         end;  // ACTION_TAPCHANGE
@@ -914,8 +911,7 @@ begin
                     if (FwdPower < -RevPowerThreshold) then
                     begin
                         ReversePending := TRUE;
-                        with ActiveCircuit do
-                            RevHandle := ControlQueue.Push(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVars.t + RevDelay, ACTION_REVERSE, 0, Self);
+                        RevHandle := ActiveCircuit.ControlQueue.Push(RevDelay, ACTION_REVERSE, 0, Self);
                         if (DebugTrace) then
                             RegWriteDebugRecord(Format('%-.6g, 1- Pushed Reverse Action, Handle=%d, FwdPower=%.8g', 
                                 [ActiveCircuit.Solution.DynaVars.dblHour, RevHandle, FwdPower]
@@ -950,8 +946,7 @@ begin
                     if (FwdPower > RevPowerThreshold) then
                     begin
                         ReversePending := TRUE;
-                        with ActiveCircuit do
-                            RevBackHandle := ControlQueue.Push(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVars.t + RevDelay, ACTION_REVERSE, 0, Self);
+                        RevBackHandle := ActiveCircuit.ControlQueue.Push(RevDelay, ACTION_REVERSE, 0, Self);
                         if (DebugTrace) then
                             RegWriteDebugRecord(Format('Pushed ReverseBack Action to switch back, Handle=%d, FwdPower=%.8g', [RevBackHandle, FwdPower]));
                     end
@@ -981,13 +976,12 @@ begin
                                 Increment := TapIncrement[TapWinding];
                                 PendingTapChange := Round((1.0 - PresentTap[Tapwinding]) / Increment) * Increment;
                                 if (PendingTapChange <> 0.0) and not Armed then
-                                    with ActiveCircuit do
-                                    begin
-                                        if (DebugTrace) then
-                                            RegWriteDebugRecord(Format('*** %.6g s: Pushing TapChange = %.8g, delay= %.8g', [ActiveCircuit.Solution.DynaVars.t, PendingTapChange, TapDelay]));
-                                        ControlQueue.Push(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVars.t + TapDelay, ACTION_TAPCHANGE, 0, Self);
-                                        Armed := TRUE;
-                                    end;
+                                begin
+                                    if (DebugTrace) then
+                                        RegWriteDebugRecord(Format('*** %.6g s: Pushing TapChange = %.8g, delay= %.8g', [ActiveCircuit.Solution.DynaVars.t, PendingTapChange, TapDelay]));
+                                    ActiveCircuit.ControlQueue.Push(TapDelay, ACTION_TAPCHANGE, 0, Self);
+                                    Armed := TRUE;
+                                end;
                             end;
                         end;
                         Exit;  // We're done here in any case if Reverse neutral specified
@@ -1119,20 +1113,18 @@ begin
                 if PendingTapChange > 0.0 then
                 begin
                     if PresentTap[TapWinding] < MaxTap[TapWinding] then
-                        with ActiveCircuit do
-                        begin
-                            ControlActionHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
-                            Armed := TRUE;  // Armed to change taps
-                        end;
+                    begin
+                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
+                        Armed := TRUE;  // Armed to change taps
+                    end;
                 end
                 else
                 begin
                     if PresentTap[TapWinding] > MinTap[TapWinding] then
-                        with ActiveCircuit do
-                        begin
-                            ControlActionHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
-                            Armed := TRUE;  // Armed to change taps
-                        end;
+                    begin
+                        ControlActionHandle := ActiveCircuit.ControlQueue.Push(ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
+                        Armed := TRUE;  // Armed to change taps
+                    end;
                 end;
             end;
         end {If TapChangeIsNeeded}

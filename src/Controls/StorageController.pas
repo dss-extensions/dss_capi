@@ -999,19 +999,16 @@ begin
                         SetFleetDesiredState(STORE_CHARGING);
                         if not (FleetState = STORE_CHARGING) and (RemainingkWh < TotalRatingkWh) then
                         begin
-                          {Time is within 1 time step of the trigger time}
+                            // Time is within 1 time step of the trigger time
                             if ShowEventLog then
                                 AppendToEventLog(Self.FullName, 'Fleet Set to Charging by Time Trigger');
                             SetFleetToCharge;
                             DischargeInhibited := TRUE;
                             OutOfOomph := FALSE;
                             PushTimeOntoControlQueue(STORE_CHARGING);   // force re-solve at this time step
-                          // Push message onto control queue to release inhibit at a later time
-                            with ActiveCircuit do
-                            begin
-                                Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
-                                ControlQueue.Push(DynaVars.intHour + InhibitHrs, Dynavars.t, RELEASE_INHIBIT, 0, Self);
-                            end;
+                            // Push message onto control queue to release inhibit at a later time
+                            ActiveCircuit.Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
+                            ActiveCircuit.ControlQueue.Push(ActiveCircuit.Solution.DynaVars.intHour + InhibitHrs, ActiveCircuit.Solution.DynaVars.t, RELEASE_INHIBIT, 0, Self);
                         end;
                     end;
                 end;
@@ -1040,15 +1037,10 @@ end;
 
 
 procedure TStorageControllerObj.PushTimeOntoControlQueue(Code: Integer);
-{
-   Push present time onto control queue to force re solve at new dispatch value
-}
+// Push present time onto control queue to force re solve at new dispatch value
 begin
-    with ActiveCircuit, ActiveCircuit.Solution do
-    begin
-        LoadsNeedUpdating := TRUE; // Force recalc of power parms
-        ControlQueue.Push(DynaVars.intHour, DynaVars.t, Code, 0, Self);
-    end;
+    ActiveCircuit.Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
+    ActiveCircuit.ControlQueue.Push(0, Code, 0, Self);
 end;
 
 function TStorageControllerObj.Get_DynamicTarget(THigh: Integer): Double;

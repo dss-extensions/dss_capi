@@ -1,11 +1,9 @@
 unit Recloser;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 uses
@@ -644,27 +642,25 @@ begin
 
             if TripTime > 0.0 then
             begin
-                if not ArmedForOpen then
-                    with ActiveCircuit do   // Then arm for an open operation
-                    begin
-                        ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Delaytime, CTRL_OPEN, 0, Self);
-                        if OperationCount <= NumReclose then
-                            ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + DelayTime + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
-                        ArmedForOpen := TRUE;
-                        ArmedForClose := TRUE;
-                    end;
+                if not ArmedForOpen then // Then arm for an open operation
+                begin
+                    ActiveCircuit.ControlQueue.Push(TripTime + Delaytime, CTRL_OPEN, 0, Self);
+                    if OperationCount <= NumReclose then
+                        ActiveCircuit.ControlQueue.Push(TripTime + DelayTime + RecloseIntervals[OperationCount], CTRL_CLOSE, 0, Self);
+                    ArmedForOpen := TRUE;
+                    ArmedForClose := TRUE;
+                end;
             end
             else
             begin
-                if ArmedForOpen then
-                    with ActiveCircuit do    // If current dropped below pickup, disarm trip and set for reset
-                    begin
-                        ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
-                        ArmedForOpen := FALSE;
-                        ArmedForClose := FALSE;
-                        GroundTarget := FALSE;
-                        PhaseTarget := FALSE;
-                    end;
+                if ArmedForOpen then // If current dropped below pickup, disarm trip and set for reset
+                begin
+                    ActiveCircuit.ControlQueue.Push(ResetTime, CTRL_RESET, 0, Self);
+                    ArmedForOpen := FALSE;
+                    ArmedForClose := FALSE;
+                    GroundTarget := FALSE;
+                    PhaseTarget := FALSE;
+                end;
             end;
         end;  // IF PresentState=CLOSE
     end; // With

@@ -445,7 +445,7 @@ begin
     Buses := Allocmem(Sizeof(Buses[1]) * Maxbuses);
     MapNodeToBus := Allocmem(Sizeof(MapNodeToBus[1]) * MaxNodes);
 
-    ControlQueue := TControlQueue.Create(DSS);
+    ControlQueue.Init(DSS);
 
     SetLength(LegalVoltageBases, 7);
      // Default Voltage Bases
@@ -652,7 +652,7 @@ begin
     Fuses.Free;
     AutoTransformers.Free;
 
-    ControlQueue.Free;
+    ControlQueue.Dispose();
 
     ClearBusMarkers;
     BusMarkerList.Free;

@@ -1165,20 +1165,20 @@ begin
                 end;
             end;
     end;
-    with ActiveCircuit, ControlVars do
+    with ControlVars do
     begin
         if ShouldSwitch and not Armed then
         begin
             if PendingChange = CTRL_CLOSE then
             begin
-                if (Solution.DynaVars.t + Solution.DynaVars.intHour * 3600.0 - LastOpenTime) < DeadTime then // delay the close operation
-                    TimeDelay := Max(ONDelay, (Deadtime + ONDelay) - (Solution.DynaVars.t + Solution.DynaVars.intHour * 3600.0 - LastOpenTime))
+                if (ActiveCircuit.Solution.DynaVars.t + ActiveCircuit.Solution.DynaVars.intHour * 3600.0 - LastOpenTime) < DeadTime then // delay the close operation
+                    TimeDelay := Max(ONDelay, (Deadtime + ONDelay) - (ActiveCircuit.Solution.DynaVars.t + ActiveCircuit.Solution.DynaVars.intHour * 3600.0 - LastOpenTime))
                 else
                     TimeDelay := ONDelay;
             end
             else
                 TimeDelay := OFFDelay;
-            ControlActionHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TimeDelay, PendingChange, 0, Self);
+            ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange, 0, Self);
             Armed := TRUE;
             if ShowEventLog then
                 AppendtoEventLog('Capacitor.' + ControlledElement.Name, Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
@@ -1186,12 +1186,12 @@ begin
 
         if Armed and (PendingChange = CTRL_NONE) then
         begin
-            ControlQueue.Delete(ControlActionHandle);
+            ActiveCircuit.ControlQueue.Delete(ControlActionHandle);
             Armed := FALSE;
             if ShowEventLog then
                 AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Reset**');
         end;
-    end;  {With}
+    end;  // With
 end;
 
 function TCapControlObj.Get_Capacitor: TCapacitorObj;

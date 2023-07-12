@@ -232,8 +232,7 @@ begin
     // Checks if at least one UPFC needs to be updated
     if Update then
     begin
-        with ActiveCircuit, ActiveCircuit.Solution do
-            ControlQueue.Push(DynaVars.intHour, DynaVars.t, 0, 0, Self);
+        ActiveCircuit.ControlQueue.Push(0, 0, 0, Self);
     end;
 end;
 

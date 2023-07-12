@@ -1,11 +1,9 @@
 unit ControlQueue;
 
-{
-   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -32,7 +30,7 @@ type
         ControlElement: TControlElem;
     end;
 
-    TControlQueue = class(Tobject)
+    TControlQueue = record
     PRIVATE
         DSS: TDSSContext;
         ActionList: TList;
@@ -51,15 +49,17 @@ type
         procedure Set_Trace(const Value: Boolean);
         procedure WriteTraceRecord(const ElementName: String; const Code: Integer; TraceParameter: Double; const s: String);
         function Get_QueueSize: Integer;
-        procedure Recalc_Time_Step;
-        procedure Restore_Time_Step;
+        procedure Recalc_Time_Step();
+        procedure Restore_Time_Step();
 
     PUBLIC
-        constructor Create(dssContext: TDSSContext);
-        destructor Destroy; OVERRIDE;
+        procedure Init(dssContext: TDSSContext);
+        procedure Dispose();
 
         function Push(const Hour: Integer; const Sec: Double; const Code, ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
         function Push(const Hour: Integer; const Sec: Double; const Code: EControlAction; const ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
+        function Push(const Delay: Double; const Code: EControlAction; const ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
+        function Push(const Delay: Double; const Code, ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
         procedure Clear;
         procedure DoAllActions;
         function DoNearestActions(var Hour: Integer; var Sec: Double): Boolean;  // Do only actions with lowest time
@@ -88,17 +88,27 @@ uses
     YMatrix,
     DSSHelper;
 
-{ TControlQueue }
+//  TControlQueue 
 
 function TControlQueue.Push(const Hour: Integer; const Sec: Double; const code: EControlAction; const ProxyHdl: Integer; const Owner: TControlElem): Integer;
 begin
     Result := Push(Hour, Sec, Integer(code), ProxyHdl, Owner);
 end;
 
+function TControlQueue.Push(const Delay: Double; const Code: EControlAction; const ProxyHdl: Integer; const Owner: TControlElem): Integer;
+begin
+    Result := DSS.ActiveCircuit.ControlQueue.Push(DSS.ActiveCircuit.solution.DynaVars.intHour, DSS.ActiveCircuit.solution.DynaVars.t + Delay, Code, ProxyHdl, Owner);
+end;
+
+function TControlQueue.Push(const Delay: Double; const Code, ProxyHdl: Integer; const Owner: TControlElem): Integer;
+begin
+    Result := DSS.ActiveCircuit.ControlQueue.Push(DSS.ActiveCircuit.solution.DynaVars.intHour, DSS.ActiveCircuit.solution.DynaVars.t + Delay, Code, ProxyHdl, Owner);
+end;
+
 function TControlQueue.Push(const Hour: Integer; const Sec: Double; const code, ProxyHdl: Integer; const Owner: TControlElem): Integer;
 
-{Add a control action to the queue, sorted by lowest time first}
-{Returns handle to the action}
+// Add a control action to the queue, sorted by lowest time first
+// Returns handle to the action
 
 var
     i,
@@ -113,7 +123,7 @@ begin
 
     Inc(ctrlHandle); // just a serial number
 
-     {Normalize the time }
+     // Normalize the time 
     Hr := Hour;
     S := Sec;
     if S > 3600.0 then
@@ -128,7 +138,7 @@ begin
     ThisActionTime := TimeRecToTime(Trec);
     pAction := Allocmem(Sizeof(TActionRecord));  // Make a new Action
 
-     {Insert the action in the list in order of time}
+     // Insert the action in the list in order of time
     ActionInserted := FALSE;
     for i := 0 to ActionList.Count - 1 do
     begin
@@ -143,14 +153,11 @@ begin
     if not ActionInserted then
         ActionList.Add(pAction);
 
-    with pAction^ do
-    begin
-        ActionTime := Trec;
-        ActionCode := Code;
-        ActionHandle := ctrlHandle;
-        ProxyHandle := ProxyHdl;
-        ControlElement := Owner;
-    end;
+    pAction^.ActionTime := Trec;
+    pAction^.ActionCode := Code;
+    pAction^.ActionHandle := ctrlHandle;
+    pAction^.ProxyHandle := ProxyHdl;
+    pAction^.ControlElement := Owner;
 
     Result := ctrlHandle;
 
@@ -164,16 +171,15 @@ procedure TControlQueue.Clear;
 var
     i: Integer;
 begin
-    with ActionList do  {Free Allocated memory}
-        for i := 0 to Count - 1 do
-            Freemem(ActionList.Items[i], Sizeof(TActionRecord));
+    // Free Allocated memory
+    for i := 0 to ActionList.Count - 1 do
+        Freemem(ActionList.Items[i], Sizeof(TActionRecord));
 
     ActionList.Clear;
 end;
 
-constructor TControlQueue.Create(dssContext: TDSSContext);
+procedure TControlQueue.Init(dssContext: TDSSContext);
 begin
-    inherited Create;
     TraceFile := nil;
     DSS := dssContext;
 
@@ -185,57 +191,50 @@ begin
     DebugTrace := FALSE;
 end;
 
-destructor TControlQueue.Destroy;
+procedure TControlQueue.Dispose;
 begin
     Clear;
     ActionList.Free;
     FreeAndNil(TraceFile);
-    inherited Destroy;
 end;
 
 procedure TControlQueue.DoAllActions;
 
 var
-    i: Integer;
-
+    actionRec: PActionRecord;
 begin
-    with ActionList do
-        for i := 0 to Count - 1 do
-            with pActionRecord(Items[i])^ do
-                ControlElement.DoPendingAction(ActionCode, ProxyHandle);
+    for actionRec in ActionList do
+        actionRec^.ControlElement.DoPendingAction(actionRec^.ActionCode, actionRec^.ProxyHandle);
+
     Clear;
 end;
 
 function TControlQueue.DoNearestActions(var Hour: Integer; var Sec: Double): Boolean;
-
 // Do only those actions with the same delay time as the first action time
 // Return time
-
 var
     pElem: TControlElem;
     t: TTimeRec;
     Code,
     hdl,
     ProxyHdl: Integer;
-
 begin
     Result := FALSE;
-    with ActionList do
-        if Count > 0 then
+    if ActionList.Count > 0 then
+    begin
+        t := pActionRecord(ActionList.Items[0])^.ActionTime;
+        Hour := t.Hour;
+        Sec := t.Sec;
+        pElem := Pop(t, Code, ProxyHdl, hdl);
+        while pElem <> NIL do
         begin
-            t := pActionRecord(Items[0])^.ActionTime;
-            Hour := t.Hour;
-            Sec := t.Sec;
+            if DebugTrace then
+                WriteTraceRecord(pElem.Name, Code, pElem.DblTraceParameter, Format('Pop Handle %d Do Nearest Action', [hdl]));
+            pElem.DoPendingAction(Code, ProxyHdl);
+            Result := TRUE;
             pElem := Pop(t, Code, ProxyHdl, hdl);
-            while pElem <> NIL do
-            begin
-                if DebugTrace then
-                    WriteTraceRecord(pElem.Name, Code, pElem.DblTraceParameter, Format('Pop Handle %d Do Nearest Action', [hdl]));
-                pElem.DoPendingAction(Code, ProxyHdl);
-                Result := TRUE;
-                pElem := Pop(t, Code, ProxyHdl, hdl);
-            end;
         end;
+    end;
 end;
 
 function TControlQueue.IsEmpty: Boolean;
@@ -254,24 +253,24 @@ var
     i: Integer;
     t: Double;
 
+    actionRec: PActionRecord;
 begin
     Result := NIL;
     t := TimeRecToTime(ActionTime);
 
-    with ActionList do
-        for i := 0 to Count - 1 do
+    for i := 0 to ActionList.Count - 1 do
+    begin
+        actionRec := ActionList.Items[i];
+        if TimeRecToTime(actionRec^.ActionTime) <= t then
         begin
-            with pActionRecord(Items[i])^ do
-                if TimeRecToTime(ActionTime) <= t then
-                begin
-                    Result := ControlElement;
-                    Code := ActionCode;
-                    ProxyHdl := ProxyHandle;
-                    Hdl := ActionHandle;
-                    DeleteFromQueue(i, TRUE);
-                    Break;
-                end;
+            Result := actionRec^.ControlElement;
+            Code := actionRec^.ActionCode;
+            ProxyHdl := actionRec^.ProxyHandle;
+            Hdl := actionRec^.ActionHandle;
+            DeleteFromQueue(i, TRUE);
+            Break;
         end;
+    end;
 end;
 
 function TControlQueue.Pop_Time(const ActionTime: TTimeRec; var Code, ProxyHdl, Hdl: Integer; var ATime: Double; keepIn: Boolean): TControlElem;  // Pop action from queue <= given time
@@ -281,26 +280,27 @@ var
     i: Integer;
     t: Double;
 
+    actionRec: PActionRecord;
 begin
     Result := NIL;
     t := TimeRecToTime(ActionTime);
 
-    with ActionList do
-        for i := 0 to Count - 1 do
+    for i := 0 to ActionList.Count - 1 do
+    begin
+        actionRec := pActionRecord(ActionList.Items[i]);
+    
+        if TimeRecToTime(actionRec^.ActionTime) <= t then
         begin
-            with pActionRecord(Items[i])^ do
-                if TimeRecToTime(ActionTime) <= t then
-                begin
-                    Result := ControlElement;
-                    Code := ActionCode;
-                    ProxyHdl := ProxyHandle;
-                    Hdl := ActionHandle;
-                    ATime := TimeRecToTime(ActionTime);
-                    if not keepIn then
-                        DeleteFromQueue(i, TRUE);
-                    Break;
-                end;
+            Result := actionRec^.ControlElement;
+            Code := actionRec^.ActionCode;
+            ProxyHdl := actionRec^.ProxyHandle;
+            Hdl := actionRec^.ActionHandle;
+            ATime := TimeRecToTime(actionRec^.ActionTime);
+            if not keepIn then
+                DeleteFromQueue(i, TRUE);
+            Break;
         end;
+    end;
 end;
 
 procedure TControlQueue.DeleteFromQueue(i: Integer; popped: Boolean);
@@ -309,19 +309,18 @@ var
     pElem: TControlElem;
     S: String;
 
+    actionRec: PActionRecord;
 begin
-    with pActionRecord(ActionList.Items[i])^ do
+    actionRec := PActionRecord(ActionList.Items[i]);
+    pElem := actionRec^.ControlElement;
+    if (DebugTrace) then
     begin
-        pElem := ControlElement;
-        if (DebugTrace) then
-        begin
-            if Popped then
-                S := 'by Pop function'
-            else
-                S := 'by control device';
-            WriteTraceRecord(pElem.Name, ActionCode, pelem.dbltraceParameter,
-                Format('Handle %d deleted from Queue %s', [ActionHandle, S]));
-        end;
+        if popped then
+            S := 'by Pop function'
+        else
+            S := 'by control device';
+        WriteTraceRecord(pElem.Name, actionRec^.ActionCode, pelem.dbltraceParameter,
+            Format('Handle %d deleted from Queue %s', [actionRec^.ActionHandle, S]));
     end;
 
     Freemem(ActionList.Items[i], Sizeof(TActionRecord));
@@ -374,101 +373,98 @@ begin
         Temp_Int[Idx] := 0;    // Temporary register for hour
     for Idx := 0 to 3 do
         Temp_dbl[Idx] := 0.0;
-{  Temp_dbl[0]  Temporary register for the secs
-   Temp_dbl[1]  Temporary register for Time accumulator
-   Temp_dbl[2]  Temporary register for Time upper boundary
-   Temp_dbl[3]  Temporary register for the control action time }
-    if ActionList.Count > 0 then
+    // Temp_dbl[0]  Temporary register for the secs
+    // Temp_dbl[1]  Temporary register for Time accumulator
+    // Temp_dbl[2]  Temporary register for Time upper boundary
+    // Temp_dbl[3]  Temporary register for the control action time
+    if ActionList.Count = 0 then
+        exit;
+
+    Ltimer.Hour := Hour;
+    Ltimer.Sec := Sec;
+    Temp_dbl[4] := DSS.ActiveCircuit.solution.DynaVars.h; // Simulation step time (Time window size)
+    Temp_dbl[6] := TimeRecToTime(Ltimer); // Simulation step time incremental
+    pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], FALSE);
+    while pElem <> NIL do
     begin
-        Ltimer.Hour := Hour;
-        Ltimer.Sec := Sec;
-        Temp_dbl[4] := DSS.ActiveCircuit.solution.DynaVars.h;                        // Simulation step time (Time window size)
-        Temp_dbl[6] := TimeRecToTime(Ltimer);                                    // Simulation step time incremental
+        if (DebugTrace) then
+            WriteTraceRecord(pElem.Name, Code, pelem.dbltraceParameter, Format('Pop Handle %d Do Action', [Hdl]));
+        pElem.DoPendingAction(code, ProxyHdl);
+        Result := TRUE;
         pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], FALSE);
-        while pElem <> NIL do
+    end;
+//**************After this point, the additional control actions are performed************
+    Temp_dbl[7] := DSS.ActiveCircuit.solution.DynaVars.t; // Saving the current time (secs)
+    Temp_Int[2] := DSS.ActiveCircuit.solution.DynaVars.intHour; // Saving the current time (hour)
+    Temp_dbl[2] := Temp_dbl[6];
+//*************** Simulation time is recalculated considering the next control action event ************
+    Recalc_Time_Step();
+    // Downloads the next CtrlAction without removing it from the Queue
+    pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], TRUE);
+    while pElem <> NIL do
+    begin
+        while Temp_Dbl[3] >= 3600.0 do
+            Temp_dbl[3] := Temp_dbl[3] - 3600.0; // CtrlAction Time is adjusted
+        Temp_dbl[5] := (Temp_dbl[3] - Temp_dbl[6]) + Temp_dbl[1]; // Recalculates the CtrlAction occurrence time
+        if Temp_dbl[5] < Temp_dbl[4] then // Checks if the CtrlAction is within the time window
         begin
+            pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], FALSE); // Removes the CtrlAction from The Queue
             if (DebugTrace) then
                 WriteTraceRecord(pElem.Name, Code, pelem.dbltraceParameter, Format('Pop Handle %d Do Action', [Hdl]));
             pElem.DoPendingAction(code, ProxyHdl);
-            Result := TRUE;
-            pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], FALSE);
-        end;
-//**************After this point, the additional control actions are performed************
-        Temp_dbl[7] := DSS.ActiveCircuit.solution.DynaVars.t;                        // Saving the current time (secs)
-        with DSS.ActiveCircuit.solution.DynaVars do
-            Temp_Int[2] := intHour;          // Saving the current time (hour)
-        Temp_dbl[2] := Temp_dbl[6];
-//*************** Simulation time is recalculated considering the next control action event ************
-        Recalc_Time_Step;
-        pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], TRUE);         // Downloads the next CtrlAction without
-        while pElem <> NIL do                                                      // removing it from the Queue
+            // Downloads the next CtrlAction without removing it from the Queue
+            pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], TRUE);   
+        end
+        else
         begin
-            while Temp_Dbl[3] >= 3600.0 do
-                Temp_dbl[3] := Temp_dbl[3] - 3600.0;    // CtrlAction Time is adjusted
-            Temp_dbl[5] := (Temp_dbl[3] - Temp_dbl[6]) + Temp_dbl[1];              // Recalculates the CtrlAction occurrence time
-            if Temp_dbl[5] < Temp_dbl[4] then                                       // Checks if the CtrlAction is within the
-            begin                                                                   // time window
-                pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], FALSE);  // Removes the CtrlAction from The Queue
-                if (DebugTrace) then
-                    WriteTraceRecord(pElem.Name, Code, pelem.dbltraceParameter, Format('Pop Handle %d Do Action', [Hdl]));
-                pElem.DoPendingAction(code, ProxyHdl);
-                pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], TRUE);   // Downloads the next CtrlAction without
-            end                                                                     // removing it from the Queue
-            else
-            begin
-                pElem.DoPendingAction(code, ProxyHdl);                               // Executes the CtrlAction
-                pElem := NIL;                                                  // The next CtrlAction is outside the time window
-                Temp_Int[1] := 1;                                                    // Preparing everything to exit
-            end;
-            if (pElem = NIL) and (Temp_Int[1] = 0) then                             // The last CtrlAction was within the time
-            begin                                                                   // Time window, keep scanning
-                with DSS.ActiveCircuit.Solution do
-                begin
-                    Temp_dbl[1] := Temp_dbl[1] + (Temp_dbl[3] - Temp_dbl[6]);         // The Accumulated time is calculated
-                    Temp_dbl[6] := Temp_dbl[6] + Temp_dbl[4];                         // Time reference moves forward
-                    while Temp_Dbl[6] >= 3600.0 do
-                        Temp_dbl[6] := Temp_dbl[6] - 3600.0;// Time reference is adjusted
-//******************** Updates the circuit after applying the control actions **************************
-                    SolveCircuit;
-                    Restore_Time_Step;                                                  // Restores Time for sampling devices
-                    SampleControlDevices;
-                    Recalc_Time_Step;                                                   // Recalculating Time for next iteration
-                    pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], TRUE);  // Downloads the next CtrlAction without
-                end;                                                                  // removing it from the Queue
-            end;
+            pElem.DoPendingAction(code, ProxyHdl); // Executes the CtrlAction
+            pElem := NIL; // The next CtrlAction is outside the time window
+            Temp_Int[1] := 1; // Preparing everything to exit
         end;
-        Restore_Time_Step;                                                         // Restores Time to keep going with the simulation
+        if (pElem = NIL) and (Temp_Int[1] = 0) then // The last CtrlAction was within the time
+        begin
+            // Time window, keep scanning
+            Temp_dbl[1] := Temp_dbl[1] + (Temp_dbl[3] - Temp_dbl[6]); // The Accumulated time is calculated
+            Temp_dbl[6] := Temp_dbl[6] + Temp_dbl[4];// Time reference moves forward
+            while Temp_Dbl[6] >= 3600.0 do
+                Temp_dbl[6] := Temp_dbl[6] - 3600.0;// Time reference is adjusted
+//******************** Updates the circuit after applying the control actions **************************
+            DSS.ActiveCircuit.Solution.SolveCircuit();
+            Restore_Time_Step(); // Restores Time for sampling devices
+            DSS.ActiveCircuit.Solution.SampleControlDevices();
+            Recalc_Time_Step(); // Recalculating Time for next iteration
+            // Downloads the next CtrlAction without removing it from the Queue
+            pElem := Pop_Time(Ltimer, Code, ProxyHdl, hdl, Temp_dbl[3], TRUE);  
+        end;
     end;
+    Restore_Time_Step(); // Restores Time to keep going with the simulation
 end;
 
 procedure TControlQueue.Recalc_Time_Step;
 begin
-    Temp_dbl[2] := Temp_dbl[2] + Temp_dbl[4];                                     // Time window moves forward
-    while Temp_Dbl[2] >= 3600.0 do                                                  // Adjusts the window
+    Temp_dbl[2] := Temp_dbl[2] + Temp_dbl[4]; // Time window moves forward
+    while Temp_Dbl[2] >= 3600.0 do // Adjusts the window
     begin
         Inc(Temp_Int[0]);
         Temp_dbl[2] := Temp_dbl[2] - 3600.0;
     end;
     Ltimer.Hour := Temp_Int[0];
     Ltimer.sec := Temp_dbl[2];
-    with DSS.ActiveCircuit.solution.DynaVars do
-        intHour := Temp_Int[0];               // Sets the simulation time
+    DSS.ActiveCircuit.solution.DynaVars.intHour := Temp_Int[0];               // Sets the simulation time
     DSS.ActiveCircuit.solution.DynaVars.t := Temp_dbl[2];
-    DSS.ActiveCircuit.solution.Update_dblHour;
+    DSS.ActiveCircuit.solution.Update_dblHour();
 end;
 
 procedure TControlQueue.Restore_Time_Step;
 begin
-    with DSS.ActiveCircuit.solution.DynaVars do
-        intHour := Temp_Int[2];
+    DSS.ActiveCircuit.solution.DynaVars.intHour := Temp_Int[2];
     DSS.ActiveCircuit.solution.DynaVars.t := Temp_dbl[7];
-    DSS.ActiveCircuit.solution.Update_dblHour;
+    DSS.ActiveCircuit.solution.Update_dblHour();
 end;
 
 function TControlQueue.TimeRecToTime(Trec: TTimeRec): Double;
 begin
-    with Trec do
-        Result := Hour * 3600.0 + Sec
+    Result := Trec.Hour * 3600.0 + Trec.Sec
 end;
 
 procedure TControlQueue.Set_Trace(const Value: Boolean);
@@ -512,21 +508,20 @@ begin
 end;
 
 procedure TControlQueue.WriteTraceRecord(const ElementName: String; const Code: Integer; TraceParameter: Double; const s: String);
-
 begin
+    if DSS.InShowResults then
+        Exit;
+
     try
-        if (not DSS.InShowResults) then
-        begin
-            FSWriteLn(TraceFile, Format('%d, %.6g, %d, %s, %d, %-.g, %s', [
-                DSS.ActiveCircuit.Solution.DynaVars.intHour,
-                DSS.ActiveCircuit.Solution.DynaVars.t,
-                DSS.ActiveCircuit.Solution.ControlIteration,
-                ElementName,
-                Code,
-                TraceParameter,
-                S]
-            ));
-        end;
+        FSWriteLn(TraceFile, Format('%d, %.6g, %d, %s, %d, %-.g, %s', [
+            DSS.ActiveCircuit.Solution.DynaVars.intHour,
+            DSS.ActiveCircuit.Solution.DynaVars.t,
+            DSS.ActiveCircuit.Solution.ControlIteration,
+            ElementName,
+            Code,
+            TraceParameter,
+            S]
+        ));
 
     except
         On E: Exception do
@@ -538,20 +533,19 @@ end;
 
 procedure TControlQueue.Delete(Hdl: Integer);
 
-{Delete an item by its Handle reference}
+// Delete an item by its Handle reference
 
 var
     i: Integer;
 begin
-    with ActionList do
-        for i := 0 to Count - 1 do
+    for i := 0 to ActionList.Count - 1 do
+    begin
+        if pActionRecord(ActionList.Items[i])^.ActionHandle = Hdl then
         begin
-            if pActionRecord(Items[i])^.ActionHandle = Hdl then
-            begin
-                DeleteFromQueue(i, FALSE);
-                Exit;
-            end;
+            DeleteFromQueue(i, FALSE);
+            Exit;
         end;
+    end;
 end;
 
 function TControlQueue.Get_QueueSize: Integer;
@@ -565,11 +559,12 @@ var
 begin
     pAction := ActionList.Items[Qidx];
     if pAction <> NIL then
-        with Paction^ do
-        begin
-            Result := Format('%d, %d, %.9g, %d, %d, %s ',
-                [ActionHandle, ActionTime.Hour, ActionTime.sec, ActionCode, ProxyHandle, ControlElement.Name]);
-        end
+    begin
+        Result := Format('%d, %d, %.9g, %d, %d, %s ', [
+            Paction^.ActionHandle, Paction^.ActionTime.Hour, Paction^.ActionTime.sec,
+            Paction^.ActionCode, Paction^.ProxyHandle, Paction^.ControlElement.Name
+        ]);
+    end
     else
         Result := '';
 end;

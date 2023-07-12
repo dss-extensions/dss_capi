@@ -349,18 +349,16 @@ procedure TSwtControlObj.Sample;
 begin
     // push on the Lock command if any at the present time delay
     if LockCommand <> CTRL_NONE then
-        with ActiveCircuit, ActiveCircuit.Solution do
-        begin
-            ControlQueue.Push(DynaVars.intHour, Dynavars.t + TimeDelay, LockCommand, 0, Self);
-            LockCommand := CTRL_NONE;  // reset the lock command for next time
-        end;
+    begin
+        ActiveCircuit.ControlQueue.Push(TimeDelay, LockCommand, 0, Self);
+        LockCommand := CTRL_NONE;  // reset the lock command for next time
+    end;
 
     if (CurrentAction <> PresentState) and not Armed then   // we need to operate this switch
-        with ActiveCircuit, ActiveCircuit.Solution do
-        begin
-            ControlQueue.Push(DynaVars.intHour, Dynavars.t + TimeDelay, CurrentAction, 0, Self);
-            Armed := TRUE;
-        end;
+    begin
+        ActiveCircuit.ControlQueue.Push(TimeDelay, CurrentAction, 0, Self);
+        Armed := TRUE;
+    end;
 end;
 
 procedure TSwtControlObj.Reset;

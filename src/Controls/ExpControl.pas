@@ -586,8 +586,7 @@ begin
             begin
                 FWithinTol[i] := FALSE;
                 Set_PendingChange(CHANGEVARLEVEL, i);
-                with ActiveCircuit.Solution.DynaVars do
-                    ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
+                ControlActionHandle := ActiveCircuit.ControlQueue.Push(TimeDelay, PendingChange[i], 0, Self);
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ' ' + PVSys.Name, Format(' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr, Qerr]));
             end
@@ -597,8 +596,8 @@ begin
                 if ShowEventLog then
                     AppendtoEventLog(Self.FullName + ' ' + PVSys.Name, Format(' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr, Qerr]));
             end;
-        end;  {For}
-    end; {If FlistSize}
+        end;  // For
+    end; // If FlistSize
 end;
 
 function TExpControlObj.MakePVSystemList(doRecalc: Boolean): Boolean;
