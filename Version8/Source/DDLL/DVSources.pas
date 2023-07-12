@@ -5,7 +5,7 @@ interface
 function VsourcesI(mode:longint;arg:longint):Longint;cdecl;
 function VsourcesF(mode:longint;arg:double):double;cdecl;
 function VsourcesS(mode:longint;arg:pAnsiChar):pAnsiChar;cdecl;
-procedure VsourcesV(mode:longint;out arg:Variant);cdecl;
+procedure VsourcesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -151,36 +151,43 @@ begin
 end;
 
 //***************************Variant type properties*******************************
-procedure VsourcesV(mode:longint;out arg:Variant);cdecl;
+procedure VsourcesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 Var
-  elem: TVsourceObj;
-  pList: TPointerList;
-  k: Integer;
+  elem  : TVsourceObj;
+  pList : TPointerList;
+  k     : Integer;
 
 begin
   case mode of
-  0: begin  // VSources.AllNames
-    arg := VarArrayCreate([0, 0], varOleStr);
-    arg[0] := 'NONE';
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
+  0:begin  // VSources.AllNames
+      myType  :=  4;        // String
+      setlength(myStrArray,0);
+      IF ActiveCircuit[ActiveActor] <> Nil THEN
+      Begin
         If VsourceClass[ActiveActor].ElementList.ListSize > 0 then
         Begin
           pList := VsourceClass[ActiveActor].ElementList;
-          VarArrayRedim(arg, pList.ListSize -1);
-          k:=0;
           elem := pList.First;
           WHILE elem<>Nil DO Begin
-              arg[k] := elem.Name;
-              Inc(k);
-              elem := pList.next ;
+            WriteStr2Array(elem.Name);
+            WriteStr2Array(Char(0));
+            elem := pList.next ;
           End;
         End;
-    End;
-  end
+      End
+      Else  WriteStr2Array('');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    end
   else
-      arg[0]:='Error, parameter not valid';
+    Begin
+      myType  :=  4;        // String
+      setlength(myStrArray, 0);
+      WriteStr2Array('Error, parameter not recognized');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    End;
   end;
 end;
 

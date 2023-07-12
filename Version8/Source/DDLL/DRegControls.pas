@@ -5,7 +5,7 @@ interface
 function RegControlsI(mode: longint; arg: longint):longint ;cdecl;
 function RegControlsF(mode: longint; arg: double):double ;cdecl;
 function RegControlsS(mode: longint; arg: pAnsiChar):pAnsiChar ;cdecl;
-procedure RegControlsV(mode: longint; out arg: Variant) ;cdecl;
+procedure RegControlsV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -313,7 +313,7 @@ begin
 end;
 
 //*******************Variant type properties**************************************
-procedure RegControlsV(mode: longint; out arg: Variant) ;cdecl;
+procedure RegControlsV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 Var
   elem: TRegControlObj;
@@ -322,25 +322,37 @@ Var
 
 begin
   case mode of
-  0: begin  // RegControl.AllNames
-      arg := VarArrayCreate([0, 0], varOleStr);
-      arg[0] := 'NONE';
-      IF ActiveCircuit[ActiveActor] <> Nil THEN WITH ActiveCircuit[ActiveActor] DO Begin
-        lst := RegControls;
-        If lst.ListSize > 0 Then Begin
-          VarArrayRedim(arg, lst.ListSize-1);
-          k:=0;
-          elem := lst.First;
-          WHILE elem<>Nil DO Begin
-            arg[k] := elem.Name;
-            Inc(k);
-            elem := lst.Next;
+  0:begin  // RegControl.AllNames
+      myType  :=  4;        // String
+      setlength(myStrArray,0);
+      IF ActiveCircuit[ActiveActor] <> Nil THEN
+      Begin
+        WITH ActiveCircuit[ActiveActor] DO
+        Begin
+          lst := RegControls;
+          If lst.ListSize > 0 Then
+          Begin
+            elem := lst.First;
+            WHILE elem<>Nil DO Begin
+              WriteStr2Array(elem.Name);
+              WriteStr2Array(Char(0));
+              elem := lst.Next;
+            End;
           End;
         End;
-      End;
-  end
+      End
+      Else  WriteStr2Array('');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    end
   else
-      arg[0]:='Error, parameter not valid';
+    Begin
+      myType  :=  4;        // String
+      setlength(myStrArray, 0);
+      WriteStr2Array('Error, parameter not recognized');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    End;
   end;
 end;
 
