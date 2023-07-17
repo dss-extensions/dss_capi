@@ -1207,7 +1207,7 @@ begin
         else
             FSWriteln(F, '~ ' + PropertyName[3] + '=' + '');
 
-        FSWriteln(F, Format('~ %s=%d', [PropertyName[4], len]));
+        FSWriteln(F, Format('~ %s=%g', [PropertyName[4], len]));
         FSWriteln(F, Format('~ %s=%d', [PropertyName[5], Fnphases]));
         if SymComponentsModel then
             rslt := Format('%-.7g', [R1 / FUnitsConvert])
