@@ -534,7 +534,7 @@ begin
         for  k := 1 to NumAmpRatings do
             TempStr := TempStr + floattoStrf(AmpRatings[k - 1], ffGeneral, 8, 4) + ',';
         TempStr := TempStr + ']';
-        FSWriteln(F, Format('~ %s=%s', [PropertyName[26]]) + TempStr);
+        FSWriteln(F, Format('~ %s=%s', [PropertyName[26], TempStr]));
         FSWriteln(F, Format('~ %s=%s', [PropertyName[27], PropertyValue[27]]));
     end;
 end;
