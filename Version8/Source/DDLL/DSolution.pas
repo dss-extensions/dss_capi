@@ -5,7 +5,7 @@ interface
 function SolutionI(mode:longint; arg: longint):longint; cdecl;
 function SolutionF(mode:longint; arg: double):double; cdecl;
 function SolutionS(mode:longint; arg: pAnsiChar):pAnsiChar; cdecl;
-procedure SolutionV(mode:longint; out arg: Variant); cdecl;
+procedure SolutionV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -476,7 +476,7 @@ begin
 end;
 
 //**********************************Variant type properties*******************************
-procedure SolutionV(mode:longint; out arg: Variant); cdecl;
+procedure SolutionV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 Var
   Counter,
   i,
@@ -485,113 +485,150 @@ Var
   ArrSize : Integer;
 begin
   case mode of
-  0: begin  // Solution.EventLog
-     If ActiveCircuit[ActiveActor] <> Nil Then Begin
-       arg := VarArrayCreate([0, EventStrings[ActiveActor].Count-1], varOleStr);
-       For i := 0 to EventStrings[ActiveActor].Count-1 Do Begin
-          arg[i] := EventStrings[ActiveActor].Strings[i];
-       End;
-    END
-    Else arg := VarArrayCreate([0,0], varOleStr);;
-  end;
-  1: begin  // Solution.IncMatrix
-      if (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.IncMat <> Nil) Then Begin
+  0:begin  // Solution.EventLog
+      myType  :=  4;        // String
+      setlength(myStrArray,0);
+      If ActiveCircuit[ActiveActor] <> Nil Then
+      Begin
+        For i := 0 to EventStrings[ActiveActor].Count-1 Do
+        Begin
+          WriteStr2Array(EventStrings[ActiveActor].Strings[i]);
+          WriteStr2Array(Char(0));
+        End;
+      END
+      Else  WriteStr2Array('');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    end;
+  1:begin  // Solution.IncMatrix
+      myType  :=  1;        // Integer
+      setlength(myIntArray, 1);
+      myIntArray[0] := 0;
+      if (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.IncMat <> Nil) Then
+      Begin
         with ActiveCircuit[ActiveActor].Solution do
         begin
-          ArrSize    :=  IncMat.NZero*3;
-          arg     :=  VarArrayCreate([0, ArrSize], varInteger);
+          ArrSize    :=  IncMat.NZero * 3;
+          setlength(myIntArray, ArrSize);
           Counter    :=  0;
           IMIdx      :=  0;
           while IMIdx  < ArrSize Do
           Begin
             for i := 0 to 2 do
             Begin
-              arg[IMIdx] := IncMat.data[Counter][i];
+              myIntArray[IMIdx] := IncMat.data[Counter][i];
               inc(IMIdx)
             End;
             inc(Counter)
           End;
         end;
-      END
-      Else arg := VarArrayCreate([0,0], varInteger);
+      END;
+      myPointer :=  @(myIntArray[0]);
+      mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
      end;
-  2: begin  // Solution.BusLevels
-      If ActiveCircuit[ActiveActor] <> Nil Then Begin
+  2:begin  // Solution.BusLevels
+      myType  :=  1;        // Integer
+      setlength(myIntArray, 1);
+      myIntArray[0] := 0;
+      If ActiveCircuit[ActiveActor] <> Nil Then
+      Begin
         with ACtiveCircuit[ActiveActor].Solution do
         begin
            ArrSize    :=  length(Inc_Mat_Levels)-1;    // Removes the 3 initial zeros and the extra index
-                                                  // Since it starts on 0
-           arg     :=  VarArrayCreate([0, ArrSize], varInteger);
+                                                        // Since it starts on 0
+           setlength(myIntArray, ArrSize);
            for IMIdx  :=  0 to ArrSize Do
            Begin
-              arg[IMIdx] := Inc_Mat_levels[IMIdx];
+              myIntArray[IMIdx] := Inc_Mat_levels[IMIdx];
            End;
         end;
-      END
-      Else arg := VarArrayCreate([0,0], varInteger);
+      END;
+      myPointer :=  @(myIntArray[0]);
+      mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
     end;
-  3: begin  // Solution.IncMatrixRows
-      If ActiveCircuit[ActiveActor] <> Nil Then Begin
+  3:begin  // Solution.IncMatrixRows
+      myType  :=  4;        // String
+      setlength(myStrArray,0);
+      If ActiveCircuit[ActiveActor] <> Nil Then
+      Begin
         with ACtiveCircuit[ActiveActor].Solution do
         begin
           ArrSize    :=  length(Inc_Mat_Rows)-1;
-          arg     :=  VarArrayCreate([0, ArrSize], varOleStr);
           for IMIdx  :=  0 to ArrSize Do
           Begin
-             arg[IMIdx] := Inc_Mat_Rows[IMIdx];
+             WriteStr2Array(Inc_Mat_Rows[IMIdx]);
+             WriteStr2Array(Char(0));
           End;
         end;
       END
-      Else arg := VarArrayCreate([0,0], varInteger);
+      Else  WriteStr2Array('');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
     end;
-  4: begin  // Solution.IncMatrixCols
-     If ActiveCircuit[ActiveActor] <> Nil Then Begin
-       with ActiveCircuit[ActiveActor].Solution,ActiveCircuit[ActiveActor]  do
-       begin
-        if IncMat_Ordered then
+  4:begin  // Solution.IncMatrixCols
+      myType  :=  4;        // String
+      setlength(myStrArray,0);
+      If ActiveCircuit[ActiveActor] <> Nil Then
+      Begin
+        with ActiveCircuit[ActiveActor].Solution,ActiveCircuit[ActiveActor]  do
         begin
-          ArrSize    :=  length(Inc_Mat_Cols)-1;
-          arg     :=  VarArrayCreate([0, ArrSize], varOleStr);
-          for IMIdx  :=  0 to ArrSize Do
-          Begin
-             arg[IMIdx] := Inc_Mat_Cols[IMIdx];
-          End;
-        end
-        else
-        begin
-             arg := VarArrayCreate([0, NumBuses-1], varOleStr);
-             FOR i := 0 to NumBuses-1 DO
-             Begin
-                 arg[i] := BusList.Get(i+1);
-             End;
+          if IncMat_Ordered then
+          begin
+            ArrSize    :=  length(Inc_Mat_Cols)-1;
+            for IMIdx  :=  0 to ArrSize Do
+            Begin
+               WriteStr2Array(Inc_Mat_Cols[IMIdx]);
+               WriteStr2Array(Char(0));
+            End;
+          end
+          else
+          begin
+            FOR i := 0 to NumBuses-1 DO
+            Begin
+               WriteStr2Array(BusList.Get(i + 1));
+               WriteStr2Array(Char(0));
+            End;
+          end;
         end;
-       end;
-     End
-     Else arg := VarArrayCreate([0,0], varInteger);
+      End
+      Else  WriteStr2Array('');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
     end;
-  5: begin  // Solution.Laplacian
-      if (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.Laplacian <> Nil) Then Begin
+  5:begin  // Solution.Laplacian
+      myType  :=  1;        // Integer
+      setlength(myIntArray, 1);
+      myIntArray[0] := 0;
+      if (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.Laplacian <> Nil) Then
+      Begin
         with ActiveCircuit[ActiveActor].Solution do
         begin
-          ArrSize     :=  Laplacian.NZero*3;
-          arg         :=  VarArrayCreate([0, ArrSize], varInteger);
+          ArrSize     :=  Laplacian.NZero * 3;
+          setlength(myIntArray, ArrSize);
           Counter     :=  0;
           IMIdx       :=  0;
           while IMIdx  < ArrSize Do
           Begin
             for i := 0 to 2 do
             Begin
-              arg[IMIdx] := Laplacian.data[Counter][i];
+              myIntArray[IMIdx] := Laplacian.data[Counter][i];
               inc(IMIdx)
             End;
             inc(Counter)
           End;
         end;
-      END
-      Else arg := VarArrayCreate([0,0], varInteger);
-     end
+      END;
+      myPointer :=  @(myIntArray[0]);
+      mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
+    end
     else
-      arg[0] := 'Error, paratemer not recognized';
+      Begin
+        myType  :=  4;        // String
+        setlength(myStrArray, 0);
+        WriteStr2Array('Error, parameter not recognized');
+        myPointer :=  @(myStrArray[0]);
+        mySize    :=  Length(myStrArray);
+      End;
   end;
 
 end;

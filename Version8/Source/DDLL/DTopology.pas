@@ -4,7 +4,7 @@ interface
 
 function TopologyI(mode:longint; arg:longint):longint;cdecl;
 function TopologyS(mode:longint; arg:pAnsiChar):pAnsiChar;cdecl;
-procedure TopologyV(mode:longint; out arg:Variant);cdecl;
+procedure TopologyV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -263,82 +263,135 @@ begin
 end;
 
 //****************************Variant type properties*****************************
-procedure TopologyV(mode:longint; out arg:Variant);cdecl;
+procedure TopologyV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 var
-  topo: TCktTree;
-  pdElem, pdLoop: TPDElement;
-  k, i: integer;
-  found: boolean;
-  elm: TPDElement;
+  topo      : TCktTree;
+  pdElem,
+  pdLoop    : TPDElement;
+  k,
+  i         : integer;
+  found     : boolean;
+  elm       : TPDElement;
+  TStr      : Array of String;
 
 begin
   case mode of
-  0: begin  // Topology.AllLoopedPairs
-      arg := VarArrayCreate([0, 0], varOleStr);
-      arg[0] := 'NONE';
-      k := -1;  // because we always increment by 2!
-      topo := ActiveTree;
-      if topo <> nil then begin
+  0:begin  // Topology.AllLoopedPairs
+      myType  :=  4;        // String
+      setlength(myStrArray,0);
+      setlength(TStr,0);
+      k       := -1;  // because we always increment by 2!
+      topo    := ActiveTree;
+      if topo <> nil then
+      begin
         PDElem := topo.First;
         While Assigned (PDElem) do begin
-          if topo.PresentBranch.IsLoopedHere then begin
+          if topo.PresentBranch.IsLoopedHere then
+          begin
             pdLoop := topo.PresentBranch.LoopLineObj;
             // see if we already found this pair
             found := False;
             i := 1;
-            while (i <= k) and (not found) do begin
-              if (arg[i-1] = pdElem.QualifiedName) and (arg[i] = pdLoop.QualifiedName) then found := True;
-              if (arg[i-1] = pdLoop.QualifiedName) and (arg[i] = pdElem.QualifiedName) then found := True;
+            while (i <= k) and (not found) do
+            begin
+              if (TStr[i-1] = pdElem.QualifiedName) and (TStr[i] = pdLoop.QualifiedName) then found := True;
+              if (TStr[i-1] = pdLoop.QualifiedName) and (TStr[i] = pdElem.QualifiedName) then found := True;
               i := i + 1;
-           end;
-            if not found then begin
+            end;
+            if not found then
+            begin
               k := k + 2;
-              varArrayRedim(arg, k);
-              arg[k-1] := pdElem.QualifiedName;
-              arg[k] := pdLoop.QualifiedName;
+              setlength(TStr, k);
+              TStr[k-1] := pdElem.QualifiedName;
+              TStr[k] := pdLoop.QualifiedName;
             end;
           end;
           PDElem := topo.GoForward;
         end;
       end;
-  end;
-  1: begin  // Topology.AllIsolatedBranches
-      arg := VarArrayCreate([0, 0], varOleStr);
-      arg[0] := 'NONE';
-      k := 0;
-      topo := ActiveTree;
-      if Assigned(topo) then begin
+      if (length(TStr) > 0) then
+      Begin
+        for i := 0 to High(TStr) do
+        Begin
+          WriteStr2Array(TStr[i]);
+          WriteStr2Array(Char(0));
+        End;
+      End
+      Else  WriteStr2Array('');
+      myPointer :=  @(myIntArray[0]);
+      mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
+    end;
+  1:begin  // Topology.AllIsolatedBranches
+      myType  :=  4;        // String
+      setlength(myStrArray,0);
+      setlength(TStr,0);
+      k       := 0;
+      topo    := ActiveTree;
+      if Assigned(topo) then
+      begin
         elm := ActiveCircuit[ActiveActor].PDElements.First;
         while assigned (elm) do begin
           if elm.IsIsolated then begin
-            arg[k] := elm.QualifiedName;
+            TStr[k] := elm.QualifiedName;
             Inc(k);
-            if k > 0 then VarArrayRedim (arg, k);
+            if k > 0 then setlength(TStr, k);
           end;
           elm := ActiveCircuit[ActiveActor].PDElements.Next;
         end;
       end;
-  end;
-  2: begin  // Topology.AllIsolatedLoads
-      arg := VarArrayCreate([0, 0], varOleStr);
-      arg[0] := 'NONE';
-      k := 0;
-      topo := ActiveTree;
-      if Assigned(topo) then begin
+      if (length(TStr) > 0) then
+      Begin
+        for i := 0 to High(TStr) do
+        Begin
+          WriteStr2Array(TStr[i]);
+          WriteStr2Array(Char(0));
+        End;
+      End
+      Else  WriteStr2Array('');
+      myPointer :=  @(myIntArray[0]);
+      mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
+    end;
+  2:begin  // Topology.AllIsolatedLoads
+      myType  :=  4;        // String
+      setlength(myStrArray,0);
+      setlength(TStr,0);
+      k       := 0;
+      topo    := ActiveTree;
+      if Assigned(topo) then
+      begin
         elm := ActiveCircuit[ActiveActor].PCElements.First;
-        while assigned (elm) do begin
-          if elm.IsIsolated then begin
-            arg[k] := elm.QualifiedName;
+        while assigned (elm) do
+        begin
+          if elm.IsIsolated then
+          begin
+            TStr[k] := elm.QualifiedName;
             Inc(k);
-            if k > 0 then VarArrayRedim (arg, k);
+            if k > 0 then setlength(TStr, k);
           end;
           elm := ActiveCircuit[ActiveActor].PCElements.Next;
         end;
-    end;
-  end
+      end;
+      if (length(TStr) > 0) then
+      Begin
+        for i := 0 to High(TStr) do
+        Begin
+          WriteStr2Array(TStr[i]);
+          WriteStr2Array(Char(0));
+        End;
+      End
+      Else  WriteStr2Array('');
+      myPointer :=  @(myIntArray[0]);
+      mySize    :=  SizeOf(myIntArray[0]) * Length(myIntArray);
+    end
   else
-      arg[0]:='Error, parameter not valid';
+    Begin
+      myType  :=  4;        // String
+      setlength(myStrArray, 0);
+      WriteStr2Array('Error, parameter not recognized');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    End;
   end;
 end;
 
