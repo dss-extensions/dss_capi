@@ -8,7 +8,7 @@ uses
 function XYCurvesI(mode:longint;arg:longint):longint;cdecl;
 function XYCurvesF(mode:longint;arg:double):double;cdecl;
 function XYCurvesS(mode:longint;arg:pAnsiChar):pAnsiChar;cdecl;
-procedure XYCurvesV(mode:longint; var arg:Variant);cdecl;
+procedure XYCurvesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
@@ -251,92 +251,112 @@ begin
 end;
 
 //************************Variant type properties********************************
-procedure XYCurvesV(mode:longint; var arg:Variant);cdecl;
-
+procedure XYCurvesV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 Var
-   pXYCurve:TXYCurveObj;
-   k:Integer;
-   i, LoopLimit: Integer;
+   pXYCurve     :TXYCurveObj;
+   k,
+   i,
+   LoopLimit    : Integer;
+   PDouble      : ^Double;
 
 begin
   case mode of
-  0: begin  // XYCurve.XArray read
-        arg := VarArrayCreate([0, 0], varDouble);
-        arg[0] := 0.0;  // error condition: one element array=0
-        If ActiveCircuit[ActiveActor] <> Nil Then
+  0:begin  // XYCurve.XArray read
+      myType  :=  2;        // Double
+      setlength(myDBLArray, 1);
+      myDBLArray[0] := 0;
+      If ActiveCircuit[ActiveActor] <> Nil Then
+      Begin
+        pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
+        If pXYCurve <> Nil Then Begin
+           setlength(myDBLArray, pXYCurve.NumPoints);
+           For k:=0 to pXYCurve.NumPoints-1 Do
+                myDBLArray[k] := pXYCurve.XValue_pt[k+1];
+        End
+        Else
+        Begin
+           DoSimpleMsg('No active XYCurve Object found.',51013);
+        End;
+      End;
+      myPointer :=  @(myDBLArray[0]);
+      mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
+    end;
+  1:begin  // XYCurve.XArray write
+      myType  :=  2;        // Double
+      k   := 1;
+      If ActiveCircuit[ActiveActor] <> Nil Then
+      Begin
+        pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
+        If pXYCurve <> Nil Then
+        Begin
+        // Only put in as many points as we have allocated
+          LoopLimit := pXYCurve.NumPoints;
+          for i := 1 to LoopLimit do
+          Begin
+            PDouble               :=  myPointer;
+            pXYCurve.XValue_pt[k] :=  PDouble^;
+            inc(PByte(myPointer),8);
+            inc(k);
+          End;
+         End
+         Else
          Begin
-            pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-            If pXYCurve <> Nil Then Begin
-                 VarArrayRedim(arg, pXYCurve.NumPoints-1);
-                 For k:=0 to pXYCurve.NumPoints-1 Do
-                      arg[k] := pXYCurve.XValue_pt[k+1];
-            End Else Begin
-               DoSimpleMsg('No active XYCurve Object found.',51013);
-            End;
-         End;
-  end;
-  1: begin  // XYCurve.XArray write
- //     arg := VarArrayCreate([0, 0], varDouble);
+           DoSimpleMsg('No active XYCurve Object found.',51015);
+        End;
+      End;
+      mySize    :=  k - 1;
+    end;
+  2:begin  // XYCurve.YArray read
+      myType  :=  2;        // Double
+      setlength(myDBLArray, 1);
+      myDBLArray[0] := 0;
       If ActiveCircuit[ActiveActor] <> Nil Then
        Begin
           pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-          If pXYCurve <> Nil Then Begin
-
-          // Only put in as many points as we have allocated
-           LoopLimit := VarArrayHighBound(arg,1);
-           If (LoopLimit - VarArrayLowBound(arg,1) + 1) > pXYCurve.NumPoints  Then   LoopLimit :=  VarArrayLowBound(arg,1) + pXYCurve.NumPoints - 1;
-//             DoSimpleMsg('We are in',0);
-             k := 1;
-             for i := VarArrayLowBound(arg,1) to LoopLimit do
-             Begin
-                 pXYCurve.XValue_pt[k] := arg[i];
-                 inc(k);
-             End;
-           End Else Begin
-             DoSimpleMsg('No active XYCurve Object found.',51015);
+          If pXYCurve <> Nil Then
+          Begin
+               setlength(myDBLArray, pXYCurve.NumPoints);
+               For k:=0 to (pXYCurve.NumPoints - 1) Do
+                    myDBLArray[k] := pXYCurve.YValue_pt[k+1];
+          End Else Begin
+             DoSimpleMsg('No active XYCurve Object found.',51013);
           End;
        End;
-  end;
-  2: begin  // XYCurve.YArray read
-        arg := VarArrayCreate([0, 0], varDouble);
-        arg[0] := 0.0;  // error condition: one element array=0
-        If ActiveCircuit[ActiveActor] <> Nil Then
-         Begin
-            pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-            If pXYCurve <> Nil Then Begin
-                 VarArrayRedim(arg, pXYCurve.NumPoints-1);
-                 For k:=0 to pXYCurve.NumPoints-1 Do
-                      arg[k] := pXYCurve.YValue_pt[k+1];
-            End Else Begin
-               DoSimpleMsg('No active XYCurve Object found.',51013);
-            End;
-         End;
-  end;
-  3: begin  // XYCurve.YArray write
-//     arg := VarArrayCreate([0, 0], varDouble);
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+      myPointer :=  @(myDBLArray[0]);
+      mySize    :=  SizeOf(myDBLArray[0]) * Length(myDBLArray);
+    end;
+  3:begin  // XYCurve.YArray write
+      myType  :=  2;        // Double
+      k   := 1;
+      If ActiveCircuit[ActiveActor] <> Nil Then
+      Begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        If pXYCurve <> Nil Then
+        Begin
 
-        // Only put in as many points as we have allocated
-         LoopLimit := VarArrayHighBound(arg,1);
-         If (LoopLimit - VarArrayLowBound(arg,1) + 1) > pXYCurve.NumPoints  Then   LoopLimit :=  VarArrayLowBound(arg,1) + pXYCurve.NumPoints - 1;
-
-         k := 1;
-         for i := VarArrayLowBound(arg,1) to LoopLimit do
-         Begin
-             pXYCurve.YValue_pt[k] := arg[i];
-             inc(k);
-         End;
+          // Only put in as many points as we have allocated
+          LoopLimit := pXYCurve.NumPoints;
+          for i := 1 to LoopLimit do
+          Begin
+            PDouble               := myPointer;
+            pXYCurve.YValue_pt[k] := PDouble^;
+            inc(PByte(myPointer),8);
+            inc(k);
+          End;
 
         End Else Begin
            DoSimpleMsg('No active XYCurve Object found.',51016);
         End;
-     End;
-  end
+      End;
+    end
   else
-      arg[0]:='Error, parameter not valid';
+    Begin
+      myType  :=  4;        // String
+      setlength(myStrArray, 0);
+      WriteStr2Array('Error, parameter not recognized');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
+    End;
   end;
 end;
 
