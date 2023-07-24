@@ -1047,30 +1047,32 @@ Begin
           LineElem := Lines.First;
           WHILE LineElem <> Nil DO
           Begin
-            TxtRow := '';
-            Add2file := True;
-            for k := 1 to 2 do
+            if LineElem.Enabled then
             Begin
-              myBus := StripExtension(LineElem.GetBus(k));
-              DSSGlobals.SetActiveBus(myBus);
-              IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex]
-                .GISCoorddefined) Then
+              TxtRow := '';
+              Add2file := True;
+              for k := 1 to 2 do
               Begin
-                TxtRow := TxtRow +
-                  floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex]
-                  .long) + ',' +
-                  floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex]
-                  .lat) + ',';
+                myBus := StripExtension(LineElem.GetBus(k));
+                DSSGlobals.SetActiveBus(myBus);
+                IF (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex]
+                  .GISCoorddefined) Then
+                Begin
+                  TxtRow := TxtRow +
+                    floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex]
+                    .long) + ',' +
+                    floattostr(Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex]
+                    .lat) + ',';
+                End;
+                Add2file := Add2file and
+                  (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].long <> 0)
+                  and (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex]
+                  .lat <> 0);
               End;
-              Add2file := Add2file and
-                (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex].long <> 0)
-                and (Buses^[ActiveCircuit[ActiveActor].ActiveBusIndex]
-                .lat <> 0);
+              if Add2file then
+                Writeln(F, TxtRow);
             End;
-            if Add2file then
-              Writeln(F, TxtRow);
             LineElem := Lines.Next;
-
           End;
           CloseFile(F);
           JSONCmd := '{"command":"plotcircuit","path":"' + OutputDirectory
