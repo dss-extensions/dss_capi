@@ -1071,6 +1071,7 @@ var
     propOffset: PtrUint;
     i: Integer;
     propFlags: TPropertyFlags;
+    ptype: TPropertyType;
 begin
     if DSS = NIL then DSS := DSSPrime;
     cls := DSS.DSSClassList.At(clsIdx);
@@ -1079,15 +1080,21 @@ begin
         Exit;
     end;
     
-    if not (cls.PropertyType[propidx] in [
+    ptype := cls.PropertyType[propidx];
+    if not (ptype in [
         TPropertyType.IntegerProperty,
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
         TPropertyType.BooleanProperty,
-        TPropertyType.IntegerOnStructArrayProperty
+        TPropertyType.IntegerOnStructArrayProperty,
+        TPropertyType.EnabledProperty
     ]) then
     begin
         Exit;
+    end;
+    if (ptype = TPropertyType.BooleanProperty) or (ptype = TPropertyType.EnabledProperty) then
+    begin
+        value := Integer(LongBool(value <> 0));
     end;
 
     propFlags := cls.PropertyFlags[propIdx];
@@ -1095,7 +1102,7 @@ begin
     objlist := TDSSObjectPtr(cls.ElementList.InternalPointer);
     ensureBatchSize(cls.ElementList.Count, ResultPtr, ResultCount);
     outptr := ResultPtr;
-    if (cls.PropertyType[propidx] in [
+    if (ptype in [
         TPropertyType.IntegerProperty,
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
@@ -1465,6 +1472,7 @@ var
     // prev: Integer;
     // intptr: PInteger;
     // propFlags: TPropertyFlags;
+    ptype: TPropertyType;
 begin
     if (batch = NIL) or (batch^ = NIL) then
         Exit;
@@ -1473,7 +1481,8 @@ begin
     // propFlags := cls.PropertyFlags[Index];
     // propOffset := cls.PropertyOffset[Index];
 
-    if not (cls.PropertyType[Index] in [
+    ptype := cls.PropertyType[Index];
+    if not (ptype in [
         TPropertyType.IntegerProperty,
         TPropertyType.MappedIntEnumProperty,
         TPropertyType.MappedStringEnumProperty,
@@ -1482,6 +1491,11 @@ begin
         TPropertyType.IntegerOnStructArrayProperty
     ]) then
         Exit;
+
+    if (ptype = TPropertyType.BooleanProperty) and not (Operation in [Batch_Increment]) then
+    begin
+        Value := Integer(LongBool(value <> 0));
+    end;
 
     // if (cls.PropertyType[Index] in [
     //     TPropertyType.IntegerProperty,

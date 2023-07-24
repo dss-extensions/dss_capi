@@ -2076,6 +2076,11 @@ begin
     if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
         Exit;
 
+    if ptype = TPropertyType.BooleanProperty then
+    begin
+        Value := Integer(LongBool(value <> 0));
+    end;
+
     if flags = [] then
     begin
         // Most properties don't have any flags set, just skip the checks
@@ -3306,7 +3311,7 @@ begin
         end;
 
         TPropertyType.EnabledProperty:
-            Result := Integer(TDSSCktElement(obj).Enabled);
+            Result := Integer(LongBool(TDSSCktElement(obj).Enabled));
 
         TPropertyType.BooleanProperty:
             Result := Integer(PLongBool(PByte(obj) + PropertyOffset[Index])^);
