@@ -404,7 +404,10 @@ begin
             AuxParser[ActiveActor].Whitespace := SaveWhiteSpace;
           End;
         End;
-      End;
+      End
+      Else  WriteStr2Array('');
+      myPointer :=  @(myStrArray[0]);
+      mySize    :=  Length(myStrArray);
     end;
   3:begin  // Monitors.dblHour
       myType  :=  2;        // Double
