@@ -371,7 +371,7 @@ begin
       Begin
       if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumberOfWindings) Then
         Begin
-          setlength(myCmplxArray, ( 2 * elem.nphases ));
+          setlength(myCmplxArray, elem.nphases);
           TempVoltageBuffer := AllocMem(Sizeof(Complex)*elem.nphases );
           elem.GetWindingVoltages( elem.ActiveWinding, TempVoltageBuffer, ActiveActor);
           iV :=0;
@@ -394,7 +394,7 @@ begin
       if elem <> nil then
       Begin
         NumCurrents := 2*elem.NPhases*elem.NumberOfWindings; // 2 currents per winding
-        setlength(myCmplxArray, ( 2 * NumCurrents ));
+        setlength(myCmplxArray, NumCurrents);
         TempCurrentBuffer := AllocMem(Sizeof(Complex) * NumCurrents );;
         elem.GetAllWindingCurrents(TempCurrentBuffer, ActiveActor);
         iV :=0;
