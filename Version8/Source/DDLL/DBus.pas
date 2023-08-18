@@ -311,7 +311,7 @@ begin
           Phase2SymComp(@Vph, @V012);   // Compute Symmetrical components
           For i := 1 to 3 DO  // Stuff it in the result
           Begin
-             myDBLArray[iV - 1] := Cabs(V012[i]);
+             myDBLArray[iV] := Cabs(V012[i]);
              Inc(iV);
           End;
         End;
@@ -557,7 +557,7 @@ begin
         If Nvalues > 1 Then
         Begin
             If Nvalues = 2 Then  Nvalues := 1;  // only one L-L voltage if 2 phase
-            setlength(myCmplxArray, ( 2 * NValues ) - 1);
+            setlength(myCmplxArray, NValues);
             iV := 0;
             WITH pBus DO
             Begin
@@ -612,7 +612,7 @@ begin
         If Nvalues > 1 Then
         Begin
             If Nvalues = 2 Then  Nvalues := 1;  // only one L-L voltage if 2 phase
-            setlength(myCmplxArray, ( 2 * NValues ) - 1);
+            setlength(myCmplxArray, NValues);
             iV := 0;
             WITH pBus DO
             Begin
@@ -693,7 +693,7 @@ begin
       Begin
         pBus    := Buses^[ActiveBusIndex];
         Nvalues := pBus.NumNodesThisBus;
-        setlength( myPolarArray, ( 2 * NValues ) - 1 );
+        setlength( myPolarArray, NValues);
         iV := 0;
         jj := 1;
         WITH pBus DO Begin
