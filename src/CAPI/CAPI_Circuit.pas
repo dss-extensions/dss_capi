@@ -24,8 +24,8 @@ procedure Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PAPI
 procedure Circuit_Get_SubstationLosses_GR(); CDECL;
 procedure Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Circuit_Get_TotalPower_GR(); CDECL;
-procedure Circuit_Disable(const Name: PAnsiChar); CDECL;
-procedure Circuit_Enable(const Name: PAnsiChar); CDECL;
+procedure Circuit_Disable(const ElementName: PAnsiChar); CDECL;
+procedure Circuit_Enable(const ElementName: PAnsiChar); CDECL;
 function Circuit_FirstPCElement(): Integer; CDECL;
 function Circuit_FirstPDElement(): Integer; CDECL;
 function Circuit_NextPCElement(): Integer; CDECL;
@@ -339,27 +339,27 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure Circuit_Disable(const Name: PAnsiChar); CDECL;
+procedure Circuit_Disable(const ElementName: PAnsiChar); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
         
     with DSSPrime.ActiveCircuit do
     begin
-        SetElementActive(Name);
+        SetElementActive(ElementName);
         if ActiveCktElement <> NIL then
             ActiveCktElement.Enabled := FALSE;
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Circuit_Enable(const Name: PAnsiChar); CDECL;
+procedure Circuit_Enable(const ElementName: PAnsiChar); CDECL;
 begin
     if InvalidCircuit(DSSPrime) then
         Exit;
 
     with DSSPrime.ActiveCircuit do
     begin
-        SetElementActive(Name);
+        SetElementActive(ElementName);
         if ActiveCktElement <> NIL then
             ActiveCktElement.Enabled := TRUE;
     end;
