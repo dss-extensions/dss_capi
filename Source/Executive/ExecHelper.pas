@@ -2831,7 +2831,7 @@ Begin
               metobj := ActiveCircuit[ActiveActor].EnergyMeters.First;
               While metobj <> nil Do
               Begin
-                MetObj.InterpolateCoordinates;
+                if metobj.Enabled then MetObj.InterpolateCoordinates;
                 MetObj := ActiveCircuit[ActiveActor].EnergyMeters.Next;
               End;
           End;
