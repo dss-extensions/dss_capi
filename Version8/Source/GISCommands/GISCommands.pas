@@ -255,7 +255,7 @@ Begin
     '- StreetsNight' + CRLF + '- Satellite' + CRLF + '- SatelliteLabels' + CRLF
     + '- SatelliteLabelsVector' + CRLF + '- DarkGrayCanvas' + CRLF +
     '- LightGrayCanvas' + CRLF + '- LightGrayCanvasVector' + CRLF +
-    '- Navigation' + CRLF + '- OpenStreetMap' + CRLF + CRLF +
+    '- Navigation' + CRLF + '- OpenStreetMap' + CRLF + '- ClearMap' + CRLF + CRLF +
     'The following conditions need to be fulfilled:' + CRLF + CRLF +
     '1. OpenDSS-GIS must be installed' + CRLF +
     '2. OpenDSS-GIS must be initialized (use GIS Start command)' + CRLF +
