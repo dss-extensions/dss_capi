@@ -3,10 +3,15 @@ The Open Distribution System Simulator, OpenDSS
 Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
 All rights reserved.
 
-Version 9.6.1.3
+Version 9.7.1.1
 
 Changes this version
 ====================
+- Grid Forming Capabilities for PV/Storage.
+- CapControlMode Follow added for helping to represent deterministic capacitor behavior.
+- Load shape EDGE and Averaging (linear) interpolation for facilitating the description of loadshapes in time.
+- DirectDLL methods for accessing structures updated to reflect the structures in other versions.
+- solves bug found in the Circuit interface (COM), preventing users from enabling/disabling elements through it.
 - Solves a bug introduced in version 9.6.1.2 when using CapControl in time or follow control modes. 
 - Bug in Yprim formation for 1-ph and 2-ph delta-connected capacitors fixed. Fix to user-specified NormAmps and EmergAmps for capacitors, which were always being overridden with default values. Pending to check for same issues on Reactors.
 - Variant-like interfaces updated to pointers to faciltiate its adoption cross platform and to match the Cpp version.
