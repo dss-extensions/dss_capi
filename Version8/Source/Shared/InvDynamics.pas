@@ -208,6 +208,8 @@ uses DSSGlobals;
     R1,
     R2,
     X2,
+    X1R1,
+    X0R0,
     Isc1,
     Xs,
     Rs,
@@ -222,13 +224,17 @@ uses DSSGlobals;
     R1    := X1 /4; // Uses defaults
     R2    := R1;     // default Z2 = Z1
     X2    := X1;
+    R0    := 1.9;
+    X0    := 5.7;
+    X1R1  := X1/R1;
+    X0R0  := X0/R0;
     Isc1  := ( mKVARating * 1000.0 / ( sqrt(3) * RatedkVLL ) ) / NPhases;
   //  Compute R0, X0
     a     :=  10;
-    b     :=  ( 4.0*( R1 + X1 * 3 ) );
+    b     :=  ( 4.0*( R1 + (X1 * X0R0) ) );
     c     :=  ( 4.0 * ( R1*R1 + X1*X1 )- SQR( ( sqrt(3) * RatedkVLL * 1000.0 ) / Isc1));
     R0    := QuadSolver( a, b, c );
-    X0    := R0 * 3;
+    X0    := R0 * X0R0;
     // for Z matrix
     Xs    := ( 2.0 * X1 + X0 ) / 3.0;
     Rs    := ( 2.0 * R1 + R0 ) / 3.0;

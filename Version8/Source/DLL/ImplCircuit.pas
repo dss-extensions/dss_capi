@@ -34,8 +34,8 @@ type
     function Get_AllElementNames: OleVariant; safecall;
     function Get_SubstationLosses: OleVariant; safecall;
     function Get_TotalPower: OleVariant; safecall;
-    procedure Disable(const Name: WideString); safecall;
-    procedure Enable(const Name: WideString); safecall;
+    procedure Disable(const myName: WideString); safecall;
+    procedure Enable(const myName: WideString); safecall;
     function Get_Solution: ISolution; safecall;
     function Get_ActiveBus: IBus; safecall;
     function FirstPCElement: Integer; safecall;
@@ -389,23 +389,23 @@ Begin
       End;
 end;
 
-procedure TCircuit.Disable(const Name: WideString);
+procedure TCircuit.Disable(const myName: WideString);
 begin
 
    IF ActiveCircuit[ActiveActor] <> Nil THEN
    WITH ActiveCircuit[ActiveActor] DO
    Begin
-      SetElementActive(Name);
+      SetElementActive(myName);
       If ActiveCktElement<>nil THEN ActiveCktElement.Enabled := FALSE;
    End;
 
 end;
 
-procedure TCircuit.Enable(const Name: WideString);
+procedure TCircuit.Enable(const myName: WideString);
 begin
 
    WITH ActiveCircuit[ActiveActor] DO Begin
-      SetElementActive(Name);
+      SetElementActive(myName);
       If ActiveCktElement<>nil THEN ActiveCktElement.Enabled := TRUE;
    End;
 
