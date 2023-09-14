@@ -2076,7 +2076,7 @@ begin
     if (TPropertyFlag.ConditionalReadOnly in flags) and (PLongBool(PByte(obj) + PropertyOffset3[Index])^) then
         Exit;
 
-    if ptype = TPropertyType.BooleanProperty then
+    if ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty, TPropertyType.BooleanActionProperty] then
     begin
         Value := Integer(LongBool(value <> 0));
     end;

@@ -1092,7 +1092,7 @@ begin
     begin
         Exit;
     end;
-    if (ptype = TPropertyType.BooleanProperty) or (ptype = TPropertyType.EnabledProperty) then
+    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty]) or (ptype = TPropertyType.EnabledProperty) then
     begin
         value := Integer(LongBool(value <> 0));
     end;
@@ -1492,7 +1492,7 @@ begin
     ]) then
         Exit;
 
-    if (ptype = TPropertyType.BooleanProperty) and not (Operation in [Batch_Increment]) then
+    if (ptype in [TPropertyType.BooleanProperty, TPropertyType.EnabledProperty, TPropertyType.BooleanActionProperty]) and not (Operation in [Batch_Increment]) then
     begin
         Value := Integer(LongBool(value <> 0));
     end;
