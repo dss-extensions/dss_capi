@@ -251,12 +251,12 @@ begin
     PropertyOffset[ord(TProp.X12)] := ptruint(@obj.XHL);
     PropertyOffset[ord(TProp.X13)] := ptruint(@obj.XHT);
     PropertyOffset[ord(TProp.X23)] := ptruint(@obj.XLT);
-    PropertyFlags[ord(TProp.X12)] := [TPropertyFlag.Redundant];
-    PropertyFlags[ord(TProp.X13)] := [TPropertyFlag.Redundant];
-    PropertyFlags[ord(TProp.X23)] := [TPropertyFlag.Redundant];
-    PropertyRedundantWith[ord(TProp.X12)] := ord(TProp.XHL);
-    PropertyRedundantWith[ord(TProp.X13)] := ord(TProp.XHT);
-    PropertyRedundantWith[ord(TProp.X23)] := ord(TProp.XLT);
+    PropertyFlags[ord(TProp.XHL)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XHT)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XLT)] := [TPropertyFlag.Redundant];
+    PropertyRedundantWith[ord(TProp.XHL)] := ord(TProp.X12);
+    PropertyRedundantWith[ord(TProp.XHT)] := ord(TProp.X13);
+    PropertyRedundantWith[ord(TProp.XLT)] := ord(TProp.X23);
 
     // scaled double
     PropertyOffset[ord(TProp.ppm_antifloat)] := ptruint(@obj.ppm_FloatFactor);

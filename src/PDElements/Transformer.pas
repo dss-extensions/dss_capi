@@ -504,12 +504,12 @@ begin
     PropertyTrapZero[ord(TProp.X12)] := 7.0;
     PropertyTrapZero[ord(TProp.X13)] := 35.0;
     PropertyTrapZero[ord(TProp.X23)] := 30.0;
-    PropertyFlags[ord(TProp.X12)] := [TPropertyFlag.Redundant];
-    PropertyFlags[ord(TProp.X13)] := [TPropertyFlag.Redundant];
-    PropertyFlags[ord(TProp.X23)] := [TPropertyFlag.Redundant];
-    PropertyRedundantWith[ord(TProp.X12)] := ord(TProp.XHL);
-    PropertyRedundantWith[ord(TProp.X13)] := ord(TProp.XHT);
-    PropertyRedundantWith[ord(TProp.X23)] := ord(TProp.XLT);
+    PropertyFlags[ord(TProp.XHL)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XHT)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.XLT)] := [TPropertyFlag.Redundant];
+    PropertyRedundantWith[ord(TProp.XHL)] := ord(TProp.X12);
+    PropertyRedundantWith[ord(TProp.XHT)] := ord(TProp.X13);
+    PropertyRedundantWith[ord(TProp.XLT)] := ord(TProp.X23);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
