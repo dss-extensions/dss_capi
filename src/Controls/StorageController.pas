@@ -645,7 +645,6 @@ begin
     pctChargeRate := 20.0;
     pctFleetReserve := 25.0;
 
-    ShowEventLog := FALSE;
 //     DispatchVars             := FALSE;
     DischargeTriggeredByTime := FALSE;
     DischargeInhibited := FALSE;
