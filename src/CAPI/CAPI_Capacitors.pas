@@ -33,6 +33,7 @@ procedure Capacitors_Close(); CDECL;
 // API Extensions
 function Capacitors_Get_idx(): Integer; CDECL;
 procedure Capacitors_Set_idx(Value: Integer); CDECL;
+function Capacitors_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -373,6 +374,14 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pCapacitor;
+end;
+//------------------------------------------------------------------------------
+function Capacitors_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.ShuntCapacitors.Active
 end;
 //------------------------------------------------------------------------------
 end.

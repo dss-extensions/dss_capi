@@ -71,7 +71,7 @@ procedure Meters_Get_ZonePCE(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); 
 // API extensions
 function Meters_Get_idx(): Integer; CDECL;
 procedure Meters_Set_idx(Value: Integer); CDECL;
-
+function Meters_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -934,6 +934,14 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, length(pMeter.ZonePCE));
     for k := 0 to High(pMeter.ZonePCE) do
         Result[k] := DSS_CopyStringAsPChar(pMeter.ZonePCE[k]);
+end;
+//------------------------------------------------------------------------------
+function Meters_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.EnergyMeters.Active
 end;
 //------------------------------------------------------------------------------
 end.

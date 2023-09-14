@@ -47,6 +47,7 @@ procedure LineCodes_Get_AllNames_GR(); CDECL;
 
 function LineCodes_Get_idx(): Integer; CDECL;
 procedure LineCodes_Set_idx(Value: Integer); CDECL;
+function LineCodes_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -68,7 +69,7 @@ begin
     if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSS.LineCodeClass.GetActiveObj;
+    obj := DSS.LineCodeClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
@@ -586,6 +587,14 @@ procedure LineCodes_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.LineCodeClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['LineCode', Value], 656565);
+end;
+//------------------------------------------------------------------------------
+function LineCodes_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.LineCodeClass.GetActiveObj();
 end;
 //------------------------------------------------------------------------------
 end.

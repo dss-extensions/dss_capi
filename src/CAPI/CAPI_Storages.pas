@@ -22,6 +22,8 @@ procedure Storages_Set_puSOC(Value: Double); CDECL;
 function Storages_Get_State(): Integer; CDECL;
 procedure Storages_Set_State(Value: Integer); CDECL;
 
+function Storages_Get_Pointer(): Pointer; CDECL;
+
 implementation
 
 uses
@@ -219,6 +221,14 @@ begin
         DoSimpleMsg(DSSPrime, 'Invalid Storage state: "%d".', [Value], 656568);
     end;
     elem.StorageState := Value;
+end;
+//------------------------------------------------------------------------------
+function Storages_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.StorageElements.Active
 end;
 //------------------------------------------------------------------------------
 end.

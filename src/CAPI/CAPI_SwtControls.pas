@@ -32,6 +32,7 @@ procedure SwtControls_Reset(); CDECL;
 // API extensions
 function SwtControls_Get_idx(): Integer; CDECL;
 procedure SwtControls_Set_idx(Value: Integer); CDECL;
+function SwtControls_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -344,6 +345,14 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pSwtControl;
+end;
+//------------------------------------------------------------------------------
+function SwtControls_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.SwtControls.Active
 end;
 //------------------------------------------------------------------------------
 end.

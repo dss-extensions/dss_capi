@@ -11,6 +11,7 @@ procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
 function DSSElement_Get_Name(): PAnsiChar; CDECL;
 function DSSElement_Get_NumProperties(): Integer; CDECL;
 function DSSElement_ToJSON(Options: Integer): PAnsiChar; CDECL;
+function DSSElement_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -77,6 +78,15 @@ begin
         Exit;
 
     Result := DSS_GetAsPAnsiChar(DSSPrime, Obj_ToJSON_(DSSPrime.ActiveDSSObject, options));
+end;
+//------------------------------------------------------------------------------
+function DSSElement_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if (InvalidCircuit(DSSPrime)) then
+        Exit;
+
+    Result := DSSPrime.ActiveDSSObject
 end;
 //------------------------------------------------------------------------------
 end.

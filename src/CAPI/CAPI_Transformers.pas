@@ -62,7 +62,7 @@ procedure Transformers_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PAP
 procedure Transformers_Get_LossesByType_GR(); CDECL;
 procedure Transformers_Get_AllLossesByType(var ResultPtr: PDouble; ResultCount: PAPISize); CDECL;
 procedure Transformers_Get_AllLossesByType_GR(); CDECL;
-
+function Transformers_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -668,6 +668,14 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pTransformer;
+end;
+//------------------------------------------------------------------------------
+function Transformers_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Transformers.Active
 end;
 //------------------------------------------------------------------------------
 end.

@@ -29,6 +29,7 @@ procedure LineSpacings_Get_AllNames_GR(); CDECL;
 
 function LineSpacings_Get_idx(): Integer; CDECL;
 procedure LineSpacings_Set_idx(Value: Integer); CDECL;
+function LineSpacings_Get_Pointer(): Pointer; CDECL;
 
 
 implementation
@@ -52,7 +53,7 @@ begin
     if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSS.LineSpacingClass.GetActiveObj;
+    obj := DSS.LineSpacingClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
@@ -296,6 +297,14 @@ procedure LineSpacings_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.LineSpacingClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['LineSpacing', Value], 656565);
+end;
+//------------------------------------------------------------------------------
+function LineSpacings_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.LineSpacingClass.GetActiveObj();
 end;
 //------------------------------------------------------------------------------
 end.

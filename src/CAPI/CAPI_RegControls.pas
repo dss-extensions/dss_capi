@@ -60,6 +60,7 @@ procedure RegControls_Reset(); CDECL;
 // API extensions
 function RegControls_Get_idx(): Integer; CDECL;
 procedure RegControls_Set_idx(Value: Integer); CDECL;
+function RegControls_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -540,6 +541,14 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pRegControl;
+end;
+//------------------------------------------------------------------------------
+function RegControls_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.RegControls.Active
 end;
 //------------------------------------------------------------------------------
 end.

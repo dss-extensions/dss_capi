@@ -23,6 +23,7 @@ procedure ISources_Set_Frequency(Value: Double); CDECL;
 // API Extensions
 function ISources_Get_idx(): Integer; CDECL;
 procedure ISources_Set_idx(Value: Integer); CDECL;
+function ISources_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -203,6 +204,14 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pISource;
+end;
+//------------------------------------------------------------------------------
+function ISources_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.IsourceClass.GetActiveObj();
 end;
 //------------------------------------------------------------------------------
 end.

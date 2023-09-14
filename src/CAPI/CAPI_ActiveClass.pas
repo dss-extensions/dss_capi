@@ -19,6 +19,7 @@ function ActiveClass_Get_ActiveClassParent(): PAnsiChar; CDECL;
 
 // API extensions
 function ActiveClass_ToJSON(joptions: Integer): PAnsiChar; CDECL;
+function ActiveClass_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -204,6 +205,11 @@ begin
     finally
         FreeAndNil(json);
     end;
+end;
+//------------------------------------------------------------------------------
+function ActiveClass_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := DSSPrime.ActiveDSSObject
 end;
 //------------------------------------------------------------------------------
 end.

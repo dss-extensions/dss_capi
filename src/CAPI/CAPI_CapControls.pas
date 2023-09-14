@@ -46,6 +46,7 @@ procedure CapControls_Reset(); CDECL;
 // API Extensions
 function CapControls_Get_idx(): Integer; CDECL;
 procedure CapControls_Set_idx(Value: Integer); CDECL;
+function CapControls_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -450,6 +451,14 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pCapControl;
+end;
+//------------------------------------------------------------------------------
+function CapControls_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.CapControls.Active
 end;
 //------------------------------------------------------------------------------
 end.

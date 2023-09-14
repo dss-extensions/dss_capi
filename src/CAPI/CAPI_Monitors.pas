@@ -47,7 +47,7 @@ procedure Monitors_Set_Terminal(Value: Integer); CDECL;
 // API extensions
 function Monitors_Get_idx(): Integer; CDECL;
 procedure Monitors_Set_idx(Value: Integer); CDECL;
-
+function Monitors_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -575,6 +575,14 @@ begin
     end;
 
     DSSPrime.ActiveCircuit.ActiveCktElement := pMonitor;
+end;
+//------------------------------------------------------------------------------
+function Monitors_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Monitors.Active
 end;
 //------------------------------------------------------------------------------
 end.

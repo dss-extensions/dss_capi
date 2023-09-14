@@ -47,7 +47,7 @@ procedure Sensors_Get_AllocationFactor_GR(); CDECL;
 // API extensions
 function Sensors_Get_idx(): Integer; CDECL;
 procedure Sensors_Set_idx(Value: Integer); CDECL;
-
+function Sensors_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -493,5 +493,13 @@ begin
     Sensors_Get_AllocationFactor(DSSPrime.GR_DataPtr_PDouble, @DSSPrime.GR_Counts_PDouble[0])
 end;
 
+//------------------------------------------------------------------------------
+function Sensors_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Sensors.Active
+end;
 //------------------------------------------------------------------------------
 end.

@@ -103,6 +103,8 @@ procedure CktElement_Get_NodeRef_GR(); CDECL;
 function Obj_CktElement_MaxCurrent(obj: TDSSCktElement; terminalIdx: Integer): Double; CDECL;
 procedure Obj_Circuit_Set_ActiveCktElement(obj: TDSSCktElement); CDECL;
 
+function CktElement_Get_Pointer(): Pointer; CDECL;
+
 implementation
 
 uses
@@ -1617,6 +1619,14 @@ end;
 procedure Obj_Circuit_Set_ActiveCktElement(obj: TDSSCktElement); CDECL;
 begin
     obj.DSS.ActiveCircuit.ActiveCktElement := obj;
+end;
+//------------------------------------------------------------------------------
+function CktElement_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement
 end;
 //------------------------------------------------------------------------------
 end.

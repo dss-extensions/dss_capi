@@ -48,7 +48,7 @@ procedure LineGeometries_Get_AllNames_GR(); CDECL;
 
 function LineGeometries_Get_idx(): Integer; CDECL;
 procedure LineGeometries_Set_idx(Value: Integer); CDECL;
-
+function LineGeometries_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -72,7 +72,7 @@ begin
     if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSS.LineGeometryClass.GetActiveObj;
+    obj := DSS.LineGeometryClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
@@ -570,6 +570,14 @@ begin
         Exit;
     if DSSPrime.LineGeometryClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['LineGeometry', Value], 656565);
+end;
+//------------------------------------------------------------------------------
+function LineGeometries_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.LineGeometryClass.GetActiveObj();
 end;
 //------------------------------------------------------------------------------
 end.

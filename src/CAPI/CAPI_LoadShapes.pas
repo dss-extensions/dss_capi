@@ -49,6 +49,7 @@ procedure LoadShapes_Set_MaxP(Value: Double); CDECL;
 function LoadShapes_Get_MaxP(): Double; CDECL;
 procedure LoadShapes_Set_MaxQ(Value: Double); CDECL;
 function LoadShapes_Get_MaxQ(): Double; CDECL;
+function LoadShapes_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -71,7 +72,7 @@ begin
     if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSS.LoadshapeClass.GetActiveObj;
+    obj := DSS.LoadshapeClass.GetActiveObj();
     if obj = NIL then
     begin
         DoSimpleMsg(DSS, 'No active %s object found! Activate one and retry.', ['Loadshape'], 61001);
@@ -599,6 +600,14 @@ begin
 	if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.MaxQ;
+end;
+//------------------------------------------------------------------------------
+function LoadShapes_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.LoadshapeClass.GetActiveObj();
 end;
 //------------------------------------------------------------------------------
 end.

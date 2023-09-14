@@ -59,6 +59,8 @@ procedure TSData_Set_TapeLayer(Value: Double); CDECL;
 function TSData_Get_TapeLap(): Double; CDECL;
 procedure TSData_Set_TapeLap(Value: Double); CDECL;
 
+function TSData_Get_Pointer(): Pointer; CDECL;
+
 implementation
 
 uses
@@ -84,7 +86,7 @@ begin
     if InvalidCircuit(DSS) then
         Exit;
     
-    obj := DSS.TSDataClass.GetActiveObj;
+    obj := DSS.TSDataClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
@@ -515,6 +517,14 @@ procedure TSData_Set_idx(Value: Integer); CDECL;
 begin
     if (DSSPrime.TSDataClass = NIL) or (DSSPrime.TSDataClass.ElementList.Get(Value) = NIL) then
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['TSData', Value], 656565);
+end;
+//------------------------------------------------------------------------------
+function TSData_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.TSDataClass.GetActiveObj()
 end;
 //------------------------------------------------------------------------------
 end.

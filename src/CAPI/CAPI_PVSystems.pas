@@ -47,6 +47,8 @@ procedure PVSystems_Set_Tduty(const Value: PAnsiChar); CDECL;
 function PVSystems_Get_Tyearly(): PAnsiChar; CDECL;
 procedure PVSystems_Set_Tyearly(const Value: PAnsiChar); CDECL;
 
+function PVSystems_Get_Pointer(): Pointer; CDECL;
+
 implementation
 
 uses
@@ -480,6 +482,14 @@ begin
 
     if (elem.SensorObj <> NIL) and (elem.SensorObj.MeteredElement <> NIL) then
         Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(elem.SensorObj.MeteredElement.FullName));
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.PVSystems.Active
 end;
 //------------------------------------------------------------------------------
 end.

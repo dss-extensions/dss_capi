@@ -34,6 +34,8 @@ procedure GICSources_Set_Volts(Value: Double); CDECL;
 function GICSources_Get_idx(): Integer; CDECL;
 procedure GICSources_Set_idx(Value: Integer); CDECL;
 
+function GICSources_Get_Pointer(): Pointer; CDECL;
+
 implementation
 
 uses
@@ -353,6 +355,14 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+end;
+//------------------------------------------------------------------------------
+function GICSources_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.GICsourceClass.ElementList.Active
 end;
 //------------------------------------------------------------------------------
 end.

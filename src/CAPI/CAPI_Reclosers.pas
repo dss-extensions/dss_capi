@@ -44,6 +44,7 @@ function Reclosers_Get_NormalState(): Integer; CDECL;
 procedure Reclosers_Set_NormalState(Value: Integer); CDECL;
 function Reclosers_Get_State(): Integer; CDECL;
 procedure Reclosers_Set_State(Value: Integer); CDECL;
+function Reclosers_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -458,6 +459,14 @@ begin
     begin
         DoSimpleMsg(DSSPrime, 'Invalid Recloser state: "%d".', [Value], 656567);
     end;
+end;
+//------------------------------------------------------------------------------
+function Reclosers_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Reclosers.Active
 end;
 //------------------------------------------------------------------------------
 end.

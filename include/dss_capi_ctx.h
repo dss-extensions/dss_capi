@@ -6838,6 +6838,43 @@ extern "C" {
     Functions for the new API
     */
 
+    /*!
+    Return the pointer to the active element for each of the classic API classes
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void* ctx_ActiveClass_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Capacitors_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_CapControls_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_CktElement_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_CNData_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_DSSElement_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Fuses_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Generators_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_GICSources_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_ISources_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_LineCodes_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_LineGeometries_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_LineSpacings_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Lines_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_LoadShapes_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Loads_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Meters_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Monitors_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_PVSystems_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Reactors_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Reclosers_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_RegControls_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Relays_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Sensors_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Storages_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_SwtControls_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Transformers_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_TSData_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_Vsources_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_WireData_Get_Pointer(void* ctx);
+    DSS_CAPI_DLL void* ctx_XYCurves_Get_Pointer(void* ctx);
+
     /*! 
     Extract the current properties as a JSON encoded string.
     WARNING: this is unstable and subject to change.

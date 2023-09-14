@@ -30,6 +30,7 @@ function Relays_Get_NormalState(): Integer; CDECL;
 procedure Relays_Set_NormalState(Value: Integer); CDECL;
 function Relays_Get_State(): Integer; CDECL;
 procedure Relays_Set_State(Value: Integer); CDECL;
+function Relays_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -334,6 +335,14 @@ begin
     begin
         DoSimpleMsg(DSSPrime, 'Invalid Relay state: "%d".', [Value], 656568);
     end;
+end;
+//------------------------------------------------------------------------------
+function Relays_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Relays.Active
 end;
 //------------------------------------------------------------------------------
 end.

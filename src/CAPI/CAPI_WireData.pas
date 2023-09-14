@@ -39,6 +39,7 @@ function WireData_Get_CapRadius(): Double; CDECL;
 procedure WireData_Set_CapRadius(Value: Double); CDECL;
 function WireData_Get_idx(): Integer; CDECL;
 procedure WireData_Set_idx(Value: Integer); CDECL;
+function WireData_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -377,6 +378,14 @@ procedure WireData_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.WireDataClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['WireData', Value], 656565);
+end;
+//------------------------------------------------------------------------------
+function WireData_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.WireDataClass.GetActiveObj()
 end;
 //------------------------------------------------------------------------------
 end.

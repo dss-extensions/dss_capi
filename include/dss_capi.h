@@ -7036,6 +7036,43 @@ extern "C" {
     Functions for the new API
     */
 
+    /*!
+    Return the pointer to the active element for each of the classic API classes
+
+    (API Extension)
+    */
+    DSS_CAPI_DLL void* ActiveClass_Get_Pointer(void);
+    DSS_CAPI_DLL void* Capacitors_Get_Pointer(void);
+    DSS_CAPI_DLL void* CapControls_Get_Pointer(void);
+    DSS_CAPI_DLL void* CktElement_Get_Pointer(void);
+    DSS_CAPI_DLL void* CNData_Get_Pointer(void);
+    DSS_CAPI_DLL void* DSSElement_Get_Pointer(void);
+    DSS_CAPI_DLL void* Fuses_Get_Pointer(void);
+    DSS_CAPI_DLL void* Generators_Get_Pointer(void);
+    DSS_CAPI_DLL void* GICSources_Get_Pointer(void);
+    DSS_CAPI_DLL void* ISources_Get_Pointer(void);
+    DSS_CAPI_DLL void* LineCodes_Get_Pointer(void);
+    DSS_CAPI_DLL void* LineGeometries_Get_Pointer(void);
+    DSS_CAPI_DLL void* LineSpacings_Get_Pointer(void);
+    DSS_CAPI_DLL void* Lines_Get_Pointer(void);
+    DSS_CAPI_DLL void* LoadShapes_Get_Pointer(void);
+    DSS_CAPI_DLL void* Loads_Get_Pointer(void);
+    DSS_CAPI_DLL void* Meters_Get_Pointer(void);
+    DSS_CAPI_DLL void* Monitors_Get_Pointer(void);
+    DSS_CAPI_DLL void* PVSystems_Get_Pointer(void);
+    DSS_CAPI_DLL void* Reactors_Get_Pointer(void);
+    DSS_CAPI_DLL void* Reclosers_Get_Pointer(void);
+    DSS_CAPI_DLL void* RegControls_Get_Pointer(void);
+    DSS_CAPI_DLL void* Relays_Get_Pointer(void);
+    DSS_CAPI_DLL void* Sensors_Get_Pointer(void);
+    DSS_CAPI_DLL void* Storages_Get_Pointer(void);
+    DSS_CAPI_DLL void* SwtControls_Get_Pointer(void);
+    DSS_CAPI_DLL void* Transformers_Get_Pointer(void);
+    DSS_CAPI_DLL void* TSData_Get_Pointer(void);
+    DSS_CAPI_DLL void* Vsources_Get_Pointer(void);
+    DSS_CAPI_DLL void* WireData_Get_Pointer(void);
+    DSS_CAPI_DLL void* XYCurves_Get_Pointer(void);
+
     /*! 
     Extract the current properties as a JSON encoded string.
     WARNING: this is unstable and subject to change.

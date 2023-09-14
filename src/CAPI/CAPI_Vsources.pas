@@ -26,7 +26,7 @@ procedure Vsources_Set_Phases(Value: Integer); CDECL;
 
 function Vsources_Get_idx(): Integer; CDECL;
 procedure Vsources_Set_idx(Value: Integer); CDECL;
-
+function Vsources_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -249,6 +249,14 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pVsource;
+end;
+//------------------------------------------------------------------------------
+function Vsources_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.VsourceClass.ElementList.Active;
 end;
 //------------------------------------------------------------------------------
 end.

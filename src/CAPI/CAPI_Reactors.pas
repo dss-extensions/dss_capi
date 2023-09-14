@@ -60,7 +60,7 @@ procedure Reactors_Get_Z0_GR(); CDECL;
 procedure Reactors_Set_Z0(ValuePtr: PDouble; ValueCount: TAPISize); CDECL;
 function Reactors_Get_idx(): Integer; CDECL;
 procedure Reactors_Set_idx(Value: Integer); CDECL;
-
+function Reactors_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -733,6 +733,14 @@ begin
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pReactor;
+end;
+//------------------------------------------------------------------------------
+function Reactors_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Reactors.Active
 end;
 //------------------------------------------------------------------------------
 end.

@@ -38,6 +38,7 @@ procedure Fuses_Get_NormalState(var ResultPtr: PPAnsiChar; ResultCount: PAPISize
 procedure Fuses_Set_NormalState(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
 procedure Fuses_Get_State(var ResultPtr: PPAnsiChar; ResultCount: PAPISize); CDECL;
 procedure Fuses_Set_State(ValuePtr: PPAnsiChar; ValueCount: TAPISize); CDECL;
+function Fuses_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -526,6 +527,14 @@ begin
             end;
     end;
     elem.NormalStateSet := True;
+end;
+//------------------------------------------------------------------------------
+function Fuses_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Fuses.Active
 end;
 //------------------------------------------------------------------------------
 end.

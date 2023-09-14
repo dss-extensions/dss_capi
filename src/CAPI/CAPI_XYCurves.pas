@@ -39,7 +39,7 @@ procedure XYCurves_Get_AllNames_GR(); CDECL;
 // API Extensions
 function XYCurves_Get_idx(): Integer; CDECL;
 procedure XYCurves_Set_idx(Value: Integer); CDECL;
-
+function XYCurves_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -57,7 +57,7 @@ begin
     if InvalidCircuit(DSS) then
         Exit;
         
-    obj := DSS.XYCurveClass.GetActiveObj;
+    obj := DSS.XYCurveClass.GetActiveObj();
     if obj = NIL then
     begin
         if DSS_CAPI_EXT_ERRORS then
@@ -441,6 +441,14 @@ procedure XYCurves_Get_AllNames_GR(); CDECL;
 // Same as XYCurves_Get_AllNames but uses global result (GR) pointers
 begin
     XYCurves_Get_AllNames(DSSPrime.GR_DataPtr_PPAnsiChar, @DSSPrime.GR_Counts_PPAnsiChar[0])
+end;
+//------------------------------------------------------------------------------
+function XYCurves_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.XYCurveClass.GetActiveObj()
 end;
 //------------------------------------------------------------------------------
 end.

@@ -91,7 +91,7 @@ function Loads_Get_Phases(): Integer; CDECL;
 procedure Loads_Set_Phases(Value: Integer); CDECL;
 function Loads_Get_Bus1(): PAnsiChar; CDECL;
 procedure Loads_Set_Bus1(const Value: PAnsiChar); CDECL;
-
+function Loads_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -970,6 +970,14 @@ begin
 
     if (pLoad.SensorObj <> NIL) and (pLoad.SensorObj.MeteredElement <> NIL) then
         Result := DSS_GetAsPAnsiChar(DSSPrime, AnsiLowerCase(pLoad.SensorObj.MeteredElement.FullName));
+end;
+//------------------------------------------------------------------------------
+function Loads_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Loads.Active
 end;
 //------------------------------------------------------------------------------
 end.

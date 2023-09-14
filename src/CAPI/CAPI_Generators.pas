@@ -57,6 +57,7 @@ procedure Generators_Set_Status(Value: Integer); CDECL;
 procedure Generators_Set_IsDelta(Value: TAPIBoolean); CDECL;
 procedure Generators_Set_kva(Value: Double); CDECL;
 procedure Generators_Set_Bus1(const Value: PAnsiChar); CDECL;
+function Generators_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -620,6 +621,14 @@ begin
         Exit;
     elem.YearlyShapeObj := DSSPrime.LoadShapeClass.Find(Value);
     elem.PropertySideEffects(ord(TGeneratorProp.yearly));
+end;
+//------------------------------------------------------------------------------
+function Generators_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.ActiveCircuit.Generators.Active
 end;
 //------------------------------------------------------------------------------
 end.

@@ -62,6 +62,8 @@ procedure CNData_Set_GmrStrand(Value: Double); CDECL;
 function CNData_Get_RStrand(): Double; CDECL;
 procedure CNData_Set_RStrand(Value: Double); CDECL;
 
+function CNData_Get_Pointer(): Pointer; CDECL;
+
 implementation
 
 uses
@@ -573,6 +575,14 @@ procedure CNData_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.CNDataClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg(DSSPrime, 'Invalid %s index: "%d".', ['CNData', Value], 656565);
+end;
+//------------------------------------------------------------------------------
+function CNData_Get_Pointer(): Pointer; CDECL;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    Result := DSSPrime.CNDataClass.GetActiveObj();
 end;
 //------------------------------------------------------------------------------
 end.

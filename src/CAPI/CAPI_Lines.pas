@@ -74,6 +74,7 @@ function Lines_Get_idx(): Integer; CDECL;
 procedure Lines_Set_idx(Value: Integer); CDECL;
 function Lines_Get_IsSwitch(): TAPIBoolean; CDECL;
 procedure Lines_Set_IsSwitch(Value: TAPIBoolean); CDECL;
+function Lines_Get_Pointer(): Pointer; CDECL;
 
 implementation
 
@@ -1006,6 +1007,41 @@ begin
     if not _activeObj(DSSPrime, elem) then
         Exit;
     Result := elem.IsSwitch;
+end;
+//------------------------------------------------------------------------------
+function Lines_Get_Pointer(): Pointer; CDECL;
+var
+    CktElem: TDSSCktElement;
+begin
+    Result := NIL;
+    if InvalidCircuit(DSSPrime) then
+        Exit;
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) = 1 then
+    begin
+        CktElem := DSSPrime.ActiveCircuit.ActiveCktElement;
+        if CktElem = NIL then
+        begin
+            if DSS_CAPI_EXT_ERRORS then
+            begin
+                DoSimpleMsg(DSSPrime, 'No active %s object found! Activate one and retry.', ['Line'], 8989);
+            end;
+            Exit;
+        end;
+        
+        if CktElem is TLineObj then
+            Result := CktElem as TLineObj;
+            
+        if (CktElem <> NIL) and (Result = NIL) {((CktElem.DssObjtype and CLASSMASK) <> LINE_ELEMENT)} then
+        begin
+            DoSimpleMsg(DSSPrime, 'Line Type Expected, but another found. DSS Class=%s, Element Name="%s"', 
+                [CktElem.DSSClassName, CktElem.Name], 5007);
+            Exit;
+        end;
+    end
+    else
+    begin
+        Result := DSSPrime.ActiveCircuit.Lines.Active;
+    end;
 end;
 //------------------------------------------------------------------------------
 end.
