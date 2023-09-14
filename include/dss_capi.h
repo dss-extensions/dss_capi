@@ -1453,6 +1453,8 @@ extern "C" {
     /*! 
     Returns true if the current active element is isolated.
     Note that this only fetches the current value. See also the Topology interface.
+
+    (API Extension)
     */
     DSS_CAPI_DLL uint16_t CktElement_Get_IsIsolated(void);
 
