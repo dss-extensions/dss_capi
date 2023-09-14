@@ -2908,7 +2908,8 @@ begin
         begin
             for metobj in DSS.ActiveCircuit.EnergyMeters do
             begin
-                MetObj.InterpolateCoordinates;
+                if MetObj.Enabled then
+                    MetObj.InterpolateCoordinates;
             end;
         end;
 
@@ -2921,7 +2922,10 @@ begin
             if MeterClass.SetActive(Param) then   // Try to set it active
             begin
                 MetObj := MeterClass.GetActiveObj;
-                MetObj.InterpolateCoordinates;
+                if MetObj.Enabled then
+                    MetObj.InterpolateCoordinates
+                else
+                    DoSimpleMsg(DSS, 'EnergyMeter "%s" is disabled.', [Param], 283);
             end
             else
                 DoSimpleMsg(DSS, 'EnergyMeter "%s" not found.', [Param], 277);
