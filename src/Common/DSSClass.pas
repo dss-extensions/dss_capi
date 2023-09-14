@@ -276,8 +276,6 @@ type
         ElementNameList: THashListType;
 
         Function AddObjectToList(Obj:Pointer; Activate: Boolean = True):Integer;  // Used by NewObject
-        Function Get_FirstPropertyName:String;
-        Function Get_NextPropertyName:String;
         Procedure CountPropertiesAndAllocate;virtual;
         procedure DefineProperties;virtual;
 
@@ -336,8 +334,6 @@ type
         Function Find(const ObjName:String; const ChangeActive: Boolean=True): Pointer; virtual;  // Find an obj of this class by name
 
         Function PropertyIndex(Const Prop:String):Integer;
-        Property FirstPropertyName:String read Get_FirstPropertyName;
-        Property NextPropertyName:String read Get_NextPropertyName;
         function GetPropertyHelp(idx: Integer): String;
 
         Property Active:Integer read ActiveElement write Set_Active;
@@ -1366,21 +1362,6 @@ Function TDSSClass.GetActiveObj:Pointer; // Get address of active obj of this cl
 BEGIN
     ActiveElement := ElementList.ActiveIndex;
     Result := ElementList.Active;
-END;
-
-Function TDSSClass.Get_FirstPropertyName:String;
-BEGIN
-    ActiveProperty := 0;
-    Result := Get_NextPropertyName;
-END;
-
-Function TDSSClass.Get_NextPropertyName:String;
-BEGIN
-    Inc(ActiveProperty);
-    IF ActiveProperty<=NumProperties THEN
-        Result := PropertyName[ActiveProperty]
-    ELSE 
-        Result := '';
 END;
 
 Function TDSSClass.PropertyIndex(Const Prop:String):Integer;
