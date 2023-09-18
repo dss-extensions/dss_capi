@@ -133,6 +133,8 @@ function GISGetPolyline(): string;begin Result:='GIS not implemented for FPC';en
 function GISGetAddress(): string;begin Result:='GIS not implemented for FPC';end;
 function GISText(myText: string): string;begin Result:='GIS not implemented for FPC';end;
 function GISTextFromFile(myPath: string): string;begin Result:='GIS not implemented for FPC';end;
+function GISShowLayer(myLayer: string): string;begin Result:='GIS not implemented for FPC';end;
+function GISRemoveLayer(myLayer: string): string;begin Result:='GIS not implemented for FPC';end;
 {$ELSE}
 PROCEDURE DefineOptions;
 
