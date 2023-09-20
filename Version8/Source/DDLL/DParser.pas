@@ -9,7 +9,7 @@ procedure ParserV(mode:longint; var myPointer: Pointer; var myType, mySize: long
 
 implementation
 
-uses ComServ, ParserDel, Variants, ArrayDef, DSSGlobals, sysutils, Dialogs;
+uses {$IFNDEF FPC}ComServ, {$ENDIF}ParserDel, Variants, ArrayDef, DSSGlobals, sysutils, Dialogs;
 
 Var ComParser : ParserDel.TParser;
 
