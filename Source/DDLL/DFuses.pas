@@ -9,7 +9,7 @@ procedure FusesV(mode:longint; var myPointer: Pointer; var myType, mySize: longi
 
 implementation
 
-uses ComServ, Executive, Sysutils, ControlElem, Fuse, Pointerlist, DSSGlobals, Variants;
+uses {$IFNDEF FPC}ComServ, {$ENDIF}Executive, Sysutils, ControlElem, Fuse, Pointerlist, DSSGlobals, Variants;
 
 procedure Set_Parameter(const parm: string; const val: string);
 var

@@ -9,7 +9,7 @@ procedure PVsystemsV(mode:longint; var myPointer: Pointer; var myType, mySize: l
 
 implementation
 
-uses ComServ, DSSGlobals, PVSystem, Variants, SysUtils;
+uses {$IFNDEF FPC}ComServ, {$ENDIF}DSSGlobals, PVSystem, Variants, SysUtils;
 
 function PVsystemsI(mode:longint;arg:longint):longint;cdecl;
 
