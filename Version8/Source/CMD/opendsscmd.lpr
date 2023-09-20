@@ -6,7 +6,7 @@ program opendsscmd;
 {$ENDIF}
 
 { ----------------------------------------------------------
-  Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -177,6 +177,11 @@ uses
   XfmrCode in '..\General\XfmrCode.pas',
   XYcurve in '..\General\XYcurve.pas',
   Ymatrix in '..\Common\Ymatrix.pas',
+  GenController in '..\Controls\GenController.pas',
+  WindGen in '..\PCElements\WindGen.pas',
+  WindGenUserModel in '..\PCElements\WindGenUserModel.pas',
+  WindGenVars in '..\PCElements\WindGenVars.pas',
+  InvDynamics in '..\Shared\InvDynamics.pas',
   FNCS in 'fncs.pas',
   HELICS in 'helics.pas',
   epiktimer in '..\epiktimer\epiktimer.pas',
