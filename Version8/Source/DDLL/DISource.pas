@@ -119,12 +119,12 @@ begin
   1: begin  // Isoruces.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If IsourceClass[ActiveActor].SetActive(widestring(arg)) Then
+          If IsourceClass[ActiveActor].SetActive(arg) Then
           Begin
                ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass[ActiveActor].ElementList.Active ;
           End
           Else Begin
-              DoSimpleMsg('Isource "'+ widestring(arg) +'" Not Found in Active Circuit.', 77003);
+              DoSimpleMsg('Isource "'+ arg +'" Not Found in Active Circuit.', 77003);
           End;
      End;
   end

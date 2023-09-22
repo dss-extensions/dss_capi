@@ -204,7 +204,7 @@ begin
   1: begin  // Topology.BranchName write
       Found := FALSE;
       elem := nil;
-      S := widestring(arg);  // Convert to Pascal String
+      S := arg;  // Convert to Pascal String
       topo := ActiveTree;
       if assigned(topo) then begin
         elem := ActiveCircuit[ActiveActor].ActiveCktElement;
@@ -234,7 +234,7 @@ begin
   3: begin  // Topology.BusName write
       Found := FALSE;
       elem := nil;
-      S := widestring(arg);  // Convert to Pascal String
+      S := arg;  // Convert to Pascal String
       topo := ActiveTree;
       if assigned(topo) then begin
         elem := ActiveCircuit[ActiveActor].ActiveCktElement;

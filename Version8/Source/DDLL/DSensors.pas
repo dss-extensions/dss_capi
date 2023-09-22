@@ -173,7 +173,7 @@ begin
   1: begin  // Sensors.Name write
       IF ActiveCircuit[ActiveActor] <> NIL THEN Begin
         lst := ActiveCircuit[ActiveActor].Sensors;
-        S := widestring(arg);  // Convert to Pascal String
+        S := arg;  // Convert to Pascal String
         Found := FALSE;
         ActiveSave := lst.ActiveIndex;
         elem := lst.First;
@@ -198,7 +198,7 @@ begin
       If elem <> Nil Then Result := pAnsiChar(AnsiString(elem.ElementName));
   end;
   3: begin  // Sensors.MeteredElement write
-      Set_Parameter ('element', widestring(arg));
+      Set_Parameter ('element', arg);
   end
   else
       Result:=pAnsiChar(AnsiString('Error, parameter not valid'));

@@ -56,7 +56,7 @@ begin
   end;
   1: begin  // ActiveClass.Name write
      If  Assigned(ActiveDSSClass[ActiveActor]) Then  Begin
-         pelem := ActiveDSSClass[ActiveActor].Find(widestring(arg));
+         pelem := ActiveDSSClass[ActiveActor].Find(arg);
          if pelem <> Nil then Begin
             if pelem is TDSSCktElement then
              ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject

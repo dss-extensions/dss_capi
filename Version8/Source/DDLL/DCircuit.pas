@@ -233,13 +233,13 @@ begin
        IF ActiveCircuit[ActiveActor] <> Nil THEN
        WITH ActiveCircuit[ActiveActor] DO
        Begin
-          SetElementActive(widestring(arg));
+          SetElementActive(arg);
           If ActiveCktElement<>nil THEN ActiveCktElement.Enabled := FALSE;
        End;
   end;
   2: begin                                             // Circuit.Enable
        WITH ActiveCircuit[ActiveActor] DO Begin
-          SetElementActive(widestring(arg));
+          SetElementActive(arg);
           If ActiveCktElement<>nil THEN ActiveCktElement.Enabled := TRUE;
        End;
   end;
@@ -247,19 +247,19 @@ begin
       Result := pAnsiChar(AnsiString('-1'));
        IF ActiveCircuit[ActiveActor] <> NIL
        THEN Begin
-           Result := pAnsiChar(AnsiString(Inttostr(ActiveCircuit[ActiveActor].SetElementActive(widestring(arg)) - 1)));   // make zero based to be compatible with collections and variant arrays
+           Result := pAnsiChar(AnsiString(Inttostr(ActiveCircuit[ActiveActor].SetElementActive(arg) - 1)));   // make zero based to be compatible with collections and variant arrays
        End
        ELSE DoSimpleMsg('Create a circuit before trying to set an element active!', 5015);
   end;
   4: begin                                             // Circuit.SetActiveBus
-     DSSGlobals.SetActiveBus(StripExtension(widestring(arg)));
+     DSSGlobals.SetActiveBus(StripExtension(arg));
      If Assigned(ActiveCircuit[ActiveActor]) then Result := pAnsiChar(AnsiString(InttoStr(ActiveCircuit[ActiveActor].ActiveBusIndex - 1))) Else Result := pAnsiChar(AnsiString('-1'));
   end;
   5: begin                                             // Circuit.SetActiveClass
      Result := pAnsiChar(AnsiString('0'));
-     DevClassIndex := ClassNames[ActiveActor].Find(widestring(arg));
+     DevClassIndex := ClassNames[ActiveActor].Find(arg);
      If DevClassIndex = 0 Then  Begin
-        DoSimplemsg('Error: Class ' + widestring(arg) + ' not found.' , 5016);
+        DoSimplemsg('Error: Class ' + arg + ' not found.' , 5016);
         Exit;
      End;
 

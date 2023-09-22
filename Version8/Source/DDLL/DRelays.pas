@@ -128,12 +128,12 @@ begin
   1: begin   // Relays.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If RelayClass.SetActive(widestring(arg)) Then
+          If RelayClass.SetActive(arg) Then
           Begin
                ActiveCircuit[ActiveActor].ActiveCktElement := RelayClass.ElementList.Active ;
           End
           Else Begin
-              DoSimpleMsg('Relay "'+ widestring(arg) +'" Not Found in Active Circuit.', 77003);
+              DoSimpleMsg('Relay "'+ arg +'" Not Found in Active Circuit.', 77003);
           End;
      End;
   end;
@@ -144,7 +144,7 @@ begin
   end;
   3: begin   // Relays.MonitoredObj write
       elem := RelayClass.GetActiveObj ;
-      if elem <> nil then Set_parameter('monitoredObj', widestring(arg));
+      if elem <> nil then Set_parameter('monitoredObj', arg);
   end;
   4: begin   // Relays.SwitchedObj read
       Result := pAnsiChar(AnsiString(''));
@@ -153,7 +153,7 @@ begin
   end;
   5: begin   // Relays.SwitchedObj write
       elem := RelayClass.GetActiveObj ;
-      if elem <> nil then Set_parameter('SwitchedObj', widestring(arg));
+      if elem <> nil then Set_parameter('SwitchedObj', arg);
   end;
   6: begin  // Relays.State read
       Result := pAnsiChar(AnsiString(''));
@@ -167,7 +167,7 @@ begin
   7: begin  // Relays.State write
       elem := RelayClass.GetActiveObj;
       if elem <> nil then Begin
-        if LowerCase(widestring(arg))[1] = 'c' then elem.PresentState := CTRL_CLOSE
+        if LowerCase(arg)[1] = 'c' then elem.PresentState := CTRL_CLOSE
         else elem.PresentState := CTRL_OPEN;
       End;
   end;
@@ -182,7 +182,7 @@ begin
   9: begin  // Relays.Normal write
       elem := RelayClass.GetActiveObj;
       if elem <> nil then Begin
-        if LowerCase(widestring(arg))[1] = 'c' then elem.NormalState := CTRL_CLOSE
+        if LowerCase(arg)[1] = 'c' then elem.NormalState := CTRL_CLOSE
         else elem.NormalState := CTRL_OPEN;
       End;
   end;
