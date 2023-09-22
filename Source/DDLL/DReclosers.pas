@@ -196,12 +196,12 @@ begin
   1: begin  // Reclosers.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If RecloserClass.SetActive(widestring(arg)) Then
+          If RecloserClass.SetActive(arg) Then
           Begin
                ActiveCircuit[ActiveActor].ActiveCktElement := RecloserClass.ElementList.Active ;
           End
           Else Begin
-              DoSimpleMsg('Recloser "'+ widestring(arg) +'" Not Found in Active Circuit.', 77003);
+              DoSimpleMsg('Recloser "'+ arg +'" Not Found in Active Circuit.', 77003);
           End;
      End;
   end;
@@ -212,7 +212,7 @@ begin
   end;
   3: begin  // Reclosers.MonitoredObj write
       elem := RecloserClass.GetActiveObj ;
-      if elem <> nil then Set_parameter('monitoredObj', widestring(arg));
+      if elem <> nil then Set_parameter('monitoredObj', arg);
   end;
   4: begin  // Reclosers.SwitchedObj read
       Result := pAnsiChar(AnsiString(''));
@@ -221,7 +221,7 @@ begin
   end;
   5: begin  // Reclosers.SwitchedObj write
       elem := RecloserClass.GetActiveObj ;
-      if elem <> nil then Set_parameter('SwitchedObj', widestring(arg));
+      if elem <> nil then Set_parameter('SwitchedObj', arg);
   end;
   6: begin  // Reclosers.State read                                          // TODO
       Result := pAnsiChar(AnsiString(''));
@@ -235,7 +235,7 @@ begin
   7: begin  // Reclosers.State write                                         // TODO
       elem := RecloserClass.GetActiveObj ;
       if elem <> nil then Begin
-        if LowerCase(widestring(arg))[1] = 'c' then elem.PresentState := CTRL_CLOSE
+        if LowerCase(arg)[1] = 'c' then elem.PresentState := CTRL_CLOSE
         else elem.PresentState := CTRL_OPEN;
       End;
   end;
@@ -250,7 +250,7 @@ begin
   9: begin  // Reclosers.Normal write                                        // TODO
       elem := RecloserClass.GetActiveObj ;
       if elem <> nil then Begin
-        if LowerCase(widestring(arg))[1] = 'c' then elem.NormalState := CTRL_CLOSE
+        if LowerCase(arg)[1] = 'c' then elem.NormalState := CTRL_CLOSE
         else elem.NormalState := CTRL_OPEN;
       End;
   end;

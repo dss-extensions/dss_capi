@@ -406,7 +406,7 @@ begin
       THEN Begin      // Search list of Loads in active circuit for name
          WITH ActiveCircuit[ActiveActor].Loads DO
          Begin
-               S := WideString(arg);  // Convert to Pascal String
+               S := arg;  // Convert to Pascal String
                Found := FALSE;
                ActiveSave := ActiveIndex;
                pLoad := First;
@@ -435,7 +435,7 @@ begin
       Result := pAnsiChar(AnsiString(ActiveLoad.CVRshape));
   end;
   3: begin                                     // Loads.CVRCurve - Write
-      Set_Parameter ('CVRcurve', widestring(arg));
+      Set_Parameter ('CVRcurve', arg);
       Result:=pAnsiChar(AnsiString(''));
   end;
   4: begin                                     // Loads.Daily - Read
@@ -443,7 +443,7 @@ begin
       Result := pAnsiChar(AnsiString(ActiveLoad.DailyShape));
   end;
   5: begin                                     // Loads.Daily - Write
-      Set_Parameter ('Daily', widestring(arg));
+      Set_Parameter ('Daily', arg);
       Result:=pAnsiChar(AnsiString(''));
   end;
   6: begin                                     // Loads.Duty - read
@@ -451,7 +451,7 @@ begin
       Result := pAnsiChar(AnsiString(ActiveLoad.DailyShape));
   end;
   7: begin                                     // Loads.Duty - Write
-      Set_Parameter ('Duty', widestring(arg));
+      Set_Parameter ('Duty', arg);
       Result:=pAnsiChar(AnsiString(''));
   end;
   8: begin                                     // Loads.Spectrum - Read
@@ -459,7 +459,7 @@ begin
       Result := pAnsiChar(AnsiString(ActiveLoad.Spectrum));
   end;
   9: begin                                     // Loads.Spectrum - Write
-      Set_Parameter ('Spectrum', widestring(arg));
+      Set_Parameter ('Spectrum', arg);
       Result:=pAnsiChar(AnsiString(''));
   end;
   10: begin                                    // Loads.Yearly - Read
@@ -467,7 +467,7 @@ begin
       Result := pAnsiChar(AnsiString(ActiveLoad.YearlyShape));
   end;
   11: begin                                    // Loads.Yearly - Write
-      Set_Parameter ('Yearly', widestring(arg));
+      Set_Parameter ('Yearly', arg);
       Result:=pAnsiChar(AnsiString(''));
   end;
   12: begin                                    // Loads.Growth - read
@@ -475,7 +475,7 @@ begin
       Result := pAnsiChar(AnsiString(ActiveLoad.GrowthShape));
   end;
   13: begin                                    // Loads.Growth - Write
-      Set_Parameter ('Growth', Widestring(arg));
+      Set_Parameter ('Growth', arg);
       Result:=pAnsiChar(AnsiString(''));
   end;
   14: begin                                    // Loads.Sensor - read

@@ -179,7 +179,7 @@ Begin
     3: begin  // GICSources.Name write
       IF ActiveCircuit[ActiveActor] <> NIL
       THEN Begin
-        S   :=  widestring(arg);
+        S   :=  arg;
         If GICsourceClass.SetActive(S) Then
         Begin
              ActiveCircuit[ActiveActor].ActiveCktElement := GICsourceClass.ElementList.Active ;

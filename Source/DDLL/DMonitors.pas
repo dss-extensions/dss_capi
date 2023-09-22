@@ -195,6 +195,7 @@ begin
   end;
   15: begin  // Monitor.FileVersion
       If ActiveCircuit[ActiveActor] <> Nil Then Begin
+         ReadMonitorHeader(Header, TRUE);
          Result := Header.Version;
       End;
   end;
@@ -265,7 +266,7 @@ begin
       THEN Begin      // Search list of monitors in active circuit for name
            WITH ActiveCircuit[ActiveActor].Monitors DO
            Begin
-             S := widestring(arg);  // Convert to Pascal String
+             S := arg;  // Convert to Pascal String
              Found := FALSE;
              ActiveSave := ActiveIndex;
              pMon := First;
@@ -295,8 +296,8 @@ begin
      if ActiveCircuit[ActiveActor] <> Nil then begin
         pMon := ActiveCircuit[ActiveActor].Monitors.Active;
         if PMon <> Nil then Begin
-           pMon.ElementName := widestring(arg) ;
-           pMon.PropertyValue [1] := widestring(arg);
+           pMon.ElementName := arg ;
+           pMon.PropertyValue [1] := arg;
            pMon.RecalcElementData(ActiveActor) ;
         End;
      end;

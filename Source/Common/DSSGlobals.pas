@@ -1107,6 +1107,7 @@ Function BArray2Str(myPtr: Pointer; var idx: integer): String;
 Begin
 // Returns the first string found in the pointed Byte array (until a NULL char is found)
   Result  :=  '';
+  S := '';
   pChar   :=  myPtr;
   inc(PByte(pChar), idx);
   while pChar^ <> 0 do

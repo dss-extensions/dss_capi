@@ -190,7 +190,7 @@ begin
   1: begin  // Capacitors.Name write
       IF ActiveCircuit[ActiveActor] <> NIL THEN Begin
         lst := ActiveCircuit[ActiveActor].ShuntCapacitors;
-        S := widestring(arg);  // Convert to Pascal String
+        S := arg;  // Convert to Pascal String
         Found := FALSE;
         ActiveSave := lst.ActiveIndex;
         elem := lst.First;

@@ -136,12 +136,12 @@ begin
   1: begin  // Vsources.Name write
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If VsourceClass[ActiveActor].SetActive(widestring(arg)) Then
+          If VsourceClass[ActiveActor].SetActive(arg) Then
           Begin
                ActiveCircuit[ActiveActor].ActiveCktElement := VsourceClass[ActiveActor].ElementList.Active ;
           End
           Else Begin
-              DoSimpleMsg('Vsource "'+ widestring(arg) +'" Not Found in Active Circuit.', 77003);
+              DoSimpleMsg('Vsource "'+ arg +'" Not Found in Active Circuit.', 77003);
           End;
      End;
   end

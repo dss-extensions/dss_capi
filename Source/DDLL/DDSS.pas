@@ -80,7 +80,7 @@ begin
   Result:=pAnsiChar(AnsiString('0')); // Default return value
   case mode of
   0: begin  // DSS.NewCircuit
-     MakeNewCircuit(widestring(arg));
+     MakeNewCircuit(arg);
      Result := pAnsiChar(AnsiString('New Circuit'));
   end;
   1: begin  // DSS.Version
@@ -90,7 +90,7 @@ begin
      Result := pAnsiChar(AnsiString(DataDirectory[ActiveActor]));
   end;
   3: begin  // DSS.DataPath write
-     SetDataPath(widestring(arg));
+     SetDataPath(arg);
   end;
   4: begin  // DSS.DefaultEditor
      Result := pAnsiChar(AnsiString(DSSGlobals.DefaultEditor));

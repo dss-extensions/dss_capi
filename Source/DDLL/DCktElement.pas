@@ -437,7 +437,7 @@ begin
   end;
   2: begin                                          // CktElement.Display - Write
      If ActiveCircuit[ActiveActor] <> Nil Then
-        ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName := widestring(arg);
+        ActiveCircuit[ActiveActor].ActiveCktElement.DisplayName := arg;
      Result := pAnsiChar(AnsiString(''));
   end;
   3: begin                                          // CktElement.GUID

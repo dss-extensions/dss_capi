@@ -139,23 +139,23 @@ begin
         Result := pAnsiChar(ReduceEditString);
      end;
   1: begin  // ReduceCkt.EditString - Write
-        ReduceEditString := widestring(arg);
+        ReduceEditString := arg;
      end;
   2: begin  // ReduceCkt.EnergyMeter - Read
         Result := pAnsiChar(EnergyMeterName);
      end;
   3: begin  // ReduceCkt.EnergyMeter - Write
-        EnergyMeterName := widestring(arg);
+        EnergyMeterName := arg;
      end;
   4: begin  // ReduceCkt.SaveCircuit
-        DSSExecutive[ActiveActor].Command := 'Save Circuit Dir=' + widestring(arg);
+        DSSExecutive[ActiveActor].Command := 'Save Circuit Dir=' + arg;
         // Master file name is returned in DSSText.Result
      end;
   5: begin  // ReduceCkt.StartPDElement - Read
         Result := pAnsiChar(FirstPDelement);
      end;
   6: begin  // ReduceCkt.StartPDElement - Write
-        FirstPDelement := widestring(arg);
+        FirstPDelement := arg;
      end
   end;
 

@@ -432,7 +432,7 @@ begin
       THEN Begin      // Search list of Lines in active circuit for name
            WITH ActiveCircuit[ActiveActor].Lines DO
              Begin
-                 S := widestring(arg);  // Convert to Pascal String
+                 S := arg;  // Convert to Pascal String
                  Found := FALSE;
                  ActiveSave := ActiveIndex;
                  pLine := First;
@@ -468,7 +468,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-             SetBus(1, widestring(arg));
+             SetBus(1, arg);
            END;
       End;
   end;
@@ -485,7 +485,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-             SetBus(2, widestring(arg));
+             SetBus(2, arg);
            END;
       End;
   end;
@@ -502,7 +502,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-             FetchLineCode(widestring(arg));
+             FetchLineCode(arg);
              YprimInvalid[ActiveActor] := True;
            End;
       End;
@@ -520,7 +520,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-             Parser[ActiveActor].CmdString := 'geometry='+widestring(arg);
+             Parser[ActiveActor].CmdString := 'geometry='+arg;
              Edit(ActiveActor);
              YprimInvalid[ActiveActor] := True;
            END;
@@ -539,7 +539,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-             Parser[ActiveActor].CmdString := 'spacing='+widestring(arg);
+             Parser[ActiveActor].CmdString := 'spacing='+arg;
              Edit(ActiveActor);
              YprimInvalid[ActiveActor] := True;
            END;

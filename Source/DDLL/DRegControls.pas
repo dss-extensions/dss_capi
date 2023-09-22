@@ -272,7 +272,7 @@ begin
   1: begin  // RegControls.Name write
       IF ActiveCircuit[ActiveActor] <> NIL THEN Begin
         lst := ActiveCircuit[ActiveActor].RegControls;
-        S := widestring(arg);  // Convert to Pascal String
+        S := arg;  // Convert to Pascal String
         Found := FALSE;
         ActiveSave := lst.ActiveIndex;
         elem := lst.First;
@@ -297,7 +297,7 @@ begin
       if elem <> nil then Result := pAnsiChar(AnsiString(elem.RegulatedBusName));
   end;
   3: begin  // RegControls.MonitoredBus write
-      Set_Parameter ('Bus', widestring(arg));
+      Set_Parameter ('Bus', arg);
   end;
   4: begin  // RegControls.Transformer read
       Result:=pAnsiChar(AnsiString(''));

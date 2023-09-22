@@ -167,7 +167,7 @@ begin
    1: begin  // SwtControls.Name write
       IF ActiveCircuit[ActiveActor] <> NIL THEN Begin
         lst := ActiveCircuit[ActiveActor].SwtControls;
-        S := widestring(arg);  // Convert to Pascal String
+        S := arg;  // Convert to Pascal String
         Found := FALSE;
         ActiveSave := lst.ActiveIndex;
         elem := lst.First;
