@@ -123,6 +123,12 @@ function GetState(Obj: TObj): Integer;
 begin
     with Obj do
     begin
+        if ControlledElement = NIL then
+        begin
+            // If no element is attached, return CTRL_NONE to indicate we cannot tell the state            
+            Result := ord(CTRL_NONE);
+            Exit;
+        end;
         ControlledElement.ActiveTerminalIdx := ElementTerminal;
         if ControlledElement.Closed[0] then
             Result := ord(CTRL_CLOSE)
