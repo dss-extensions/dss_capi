@@ -860,7 +860,7 @@ begin
         w0 := TwoPi * Basefrequency;
         Speed := 0.0;
         dSpeed := 0.0;
-        D := 1.0;
+        Dpu := 1.0;
         XRdp := 20.0;
     end;
 
