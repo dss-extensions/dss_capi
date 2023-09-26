@@ -990,8 +990,8 @@ begin
     FpctCutIn := 0.0;
     FpctCutOut := 0.0;
 
-    FpctPminNoVars := -1.0; // Deactivated by default
-    FpctPminkvarLimit := -1.0; // Deactivated by default
+    FpctPminNoVars := 0.0; // Deactivated by default
+    FpctPminkvarLimit := 0.0; // Deactivated by default
 
     pf_wp_nominal := 1.0;
 

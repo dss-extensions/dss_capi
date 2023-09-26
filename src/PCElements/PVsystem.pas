@@ -815,8 +815,8 @@ begin
     FpctCutIn := 20.0;
     FpctCutOut := 20.0;
 
-    FpctPminNoVars := -1.0;
-    FpctPminkvarLimit := -1.0;
+    FpctPminNoVars := 0.0;
+    FpctPminkvarLimit := 0.0;
 
     pf_wp_nominal := 1.0;
 

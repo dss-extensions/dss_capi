@@ -281,7 +281,7 @@ begin
     FkW := 1.0;
 
     Fmode := VSC_FIXED;
-    FRac := EPSILON;
+    FRac := 0.0;
     FXac := 0.0;
     Fm := 0.5;
     Fd := 0.0;
