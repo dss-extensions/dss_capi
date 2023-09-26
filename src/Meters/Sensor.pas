@@ -72,7 +72,6 @@ type
         Pspecified,
         Qspecified: Boolean;
 
-        ClearSpecified: LongBool;
         FDeltaDirection: Integer;
 
         //procedure Set_Action(const Value: String);
@@ -159,6 +158,19 @@ begin
     inherited Destroy;
 end;
 
+procedure DoClearSensor(Obj: TObj);
+begin
+    Obj.Vspecified := FALSE;
+    Obj.Ispecified := FALSE;
+    Obj.Pspecified := FALSE;
+    Obj.Qspecified := FALSE;
+end;
+
+procedure TSensorObj.ClearSensor;
+begin
+    DoClearSensor(self);
+end;
+
 procedure TSensor.DefineProperties;
 var 
     obj: TObj = NIL; // NIL (0) on purpose
@@ -203,8 +215,8 @@ begin
     PropertyOffset[ord(TProp.DeltaDirection)] := ptruint(@obj.FDeltaDirection);
 
     // boolean properties
-    PropertyType[ord(TProp.clear)] := TPropertyType.BooleanProperty;
-    PropertyOffset[ord(TProp.clear)] := ptruint(@obj.ClearSpecified);
+    PropertyType[ord(TProp.clear)] := TPropertyType.BooleanActionProperty;
+    PropertyOffset[ord(TProp.clear)] := ptruint(@DoClearSensor);
 
     // double properties (default type)
     PropertyOffset[ord(TProp.kvbase)] := ptruint(@obj.kVBase);
@@ -238,9 +250,6 @@ begin
             Include(Flags, Flg.NeedsRecalc);
 
         // Do not recalc element data for setting of sensor quantities
-        4:
-            if ClearSpecified then
-                ClearSensor;
         5:
             Vspecified := TRUE;
         6:
@@ -376,6 +385,8 @@ begin
     kVBase := 12.47; // default 3-phase voltage
     Weight := 1.0;
     pctError := 1.0;
+
+    FDeltaDirection := 1;
 
     FConn := 0;  // Wye
     RecalcVbase();
@@ -604,15 +615,6 @@ begin
             Result := Result + SQR(CalculatedVoltage^[i].re) + SQR(CalculatedVoltage^[i].im) - SQR(SensorVoltage^[i]);
     end;
     Result := Result * Weight;
-end;
-
-procedure TSensorObj.ClearSensor;
-begin
-    Vspecified := FALSE;
-    Ispecified := FALSE;
-    Pspecified := FALSE;
-    Qspecified := FALSE;
-    ClearSpecified := FALSE;
 end;
 
 procedure TSensorObj.AllocateSensorObjArrays;
