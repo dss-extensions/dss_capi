@@ -202,7 +202,7 @@ begin
     PropertyFlags[ord(TProp.Slope)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     PropertyOffset[ord(TProp.VregTau)] := ptruint(@obj.VregTau);
-    PropertyFlags[ord(TProp.VregTau)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative];
+    PropertyFlags[ord(TProp.VregTau)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative, TPropertyFlag.Units_s];
 
     PropertyOffset[ord(TProp.VregMin)] := ptruint(@obj.VregMin);
     PropertyFlags[ord(TProp.VregMin)] := [TPropertyFlag.IgnoreInvalid, TPropertyFlag.NonNegative];

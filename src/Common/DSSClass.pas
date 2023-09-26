@@ -22,7 +22,8 @@ USES
     UComplex, DSSUcomplex, 
     contnrs,
     CAPI_Types,
-    gettext;
+    gettext,
+    fpjson;
 
 type
 {$SCOPEDENUMS ON}
@@ -103,7 +104,45 @@ type
         PDElement, // if obj reference, must be a PDElement
         InverseValue, // e.g. for G if exposed as R
         SuppressJSON,
-        Deprecated
+        Deprecated,
+        Required,
+        RequiredInSpecSet,
+        NoDefault,
+        DynamicDefault,
+
+        Ordering_First,
+        IndirectCount,
+        GlobalCount, //TODO: use this more, replacing older constructs
+
+        Units_Hz,
+        Units_pu_Voltage,
+        Units_pu_Current,
+        Units_pu_Power,
+        Units_pu_Impedance,
+        Units_ohmMeter,
+        Units_ohm,
+        Units_ohm_per_length,
+        Units_nF_per_length,
+        Units_uF,
+        Units_mH,
+        Units_uS_per_length,
+        Units_s,
+        Units_hour,
+        Units_ToD_hour,
+        Units_minute,
+        Units_V,
+        Units_W,
+        Units_kW,
+        Units_kvar,
+        Units_kVA,
+        Units_MVA,
+        Units_kWh,
+        Units_V_per_km,
+        Units_deg,
+        Units_degC,
+        Units_A,
+        Units_kV
+        // TODO add ArrayFromFile???
     );
 
     TPropertyFlags = set of TPropertyFlag;
@@ -211,21 +250,38 @@ type
 
     TDSSEnum = class(TObject)
     public
+        AltNamesValid: Boolean;
         Sequential: Boolean; // are the main ordinals (without aliases) sequential/contiguous?
         MinOrdinal: Integer;
         MaxOrdinal: Integer;
         MinChars, MaxChars: Integer; // minimum and maximum number of chars that are required to disambiguate strings
-        Names, LowerNames: Array of String;
+        Names, LowerNames, AltNames: Array of String;
         Ordinals: Array of Integer;
-        Name: String;
+        JSONName, Name: String;
+        JSONUseNumbers: Boolean;
     //public
         DefaultValue: Integer;
         UseFirstFound, AllowLonger, TryExactFirst: Boolean;
         Hybrid: Boolean;
 
-        constructor Create(EnumName: String; IsSequential: Boolean; MinCh, MaxCh: Integer; EnumNames: Array of String; EnumOrds: Array of Integer);
+        constructor Create(
+            EnumName: String; 
+            IsSequential: Boolean; 
+            MinCh, MaxCh: Integer; 
+            EnumNames: Array of String; 
+            EnumOrds: Array of Integer
+        ); overload;
+        constructor Create(
+            EnumName: String; 
+            IsSequential: Boolean; 
+            MinCh, MaxCh: Integer; 
+            EnumNames: Array of String; 
+            EnumOrds: Array of Integer;
+            EnumAltNames: Array of String
+        ); overload;
         destructor Destroy; override;
         function OrdinalToString(Value: Integer): String;
+        function OrdinalToJSONValue(Value: Integer): TJSONData;
         function StringToOrdinal(Value: String): Integer;
         function IsOrdinalValid(Value: Integer): Boolean;
         function Joined(): String;
@@ -257,6 +313,9 @@ type
         function MoveNext(): Boolean;
         property Current: Pointer READ Get_Current;
     end;
+    
+    TSpecSet = Array of Integer;
+    TSpecSets = Array of TSpecSet;
 
     TDSSClass = class(TObject)
     type 
@@ -288,18 +347,22 @@ type
         NumProperties: Integer;
 
         // TODO: move to array of records
-        PropertyName, PropertyNameLowercase: pStringArray;
+        PropertyName, PropertyNameLowercase, PropertyNameJSON: pStringArray;
         PropertyRedundantWith: pIntegerArray;
         PropertyArrayAlternative: pIntegerArray;
         PropertySource: pStringArray;
         PropertyScale, PropertyValueOffset: pDoubleArray;
         PropertyTrapZero: pDoubleArray;
+        // PropertyMinimum: pDoubleArray;
         PropertyType: pPropertyTypeArray;
         PropertyWriteFunction, PropertyReadFunction: PPointerArray;
         PropertyOffset: pPtrIntArray; // For most simple properties
         PropertyOffset2: pPtrIntArray; // For separate complex quantities, double-on-array, ...
         PropertyOffset3: pPtrIntArray; // For setters in e.g. object refs
         PropertyDeprecatedMessage: Array of String; // For deprecated properties
+
+        SpecSets: TSpecSets; // For listing alternative sets of properties that define different specifications
+        SpecSetNames: ArrayOfString; // Used for attaching some name to the above sets
 
         PropertyStructArrayIndexOffset, PropertyStructArrayIndexOffset2,
         PropertyStructArrayOffset, 
@@ -738,9 +801,10 @@ begin
     LineTypeEnum.DefaultValue := 1;
     Enums.Add(LineTypeEnum);
 
-    UnitsEnum := TDSSEnum.Create('Dimension Units', True, 1, 2, 
+    UnitsEnum := TDSSEnum.Create('Length Unit', True, 1, 2, 
         ['none', 'mi', 'kft', 'km', 'm', 'ft', 'in', 'cm', 'mm', 'meter', 'miles'],
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 4, 1]);
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 4, 1],
+        ['none', 'mi', 'kft', 'km', 'm', 'ft', 'in', 'cm', 'mm', '', '']);
     UnitsEnum.DefaultValue := 0;
     Enums.Add(UnitsEnum);
 
@@ -752,18 +816,22 @@ begin
 
     ConnectionEnum := TDSSEnum.Create('Connection', True, 1, 2,
         ['wye', 'delta', 'y', 'ln', 'll'],
-        [0, 1, 0, 0, 1]);
+        [0, 1, 0, 0, 1],
+        ['Wye', 'Delta', '', '', '']);
     Enums.Add(ConnectionEnum);
 
     CoreTypeEnum := TDSSEnum.Create('Core Type', False, 1, 1,
         ['shell', '1-phase', '3-leg', '4-leg', '5-leg', 'core-1-phase'],
-        [0, 1, 3, 4, 5, 9]);
+        [0, 1, 3, 4, 5, 9],
+        ['Shell', 'OnePhase', 'ThreeLeg', 'FourLeg', 'FiveLeg', 'CoreOnePhase']);
+    CoreTypeEnum.AltNamesValid := false;
     CoreTypeEnum.DefaultValue := 0;
     Enums.Add(CoreTypeEnum);
 
     LeadLagEnum := TDSSEnum.Create('Phase Sequence', True, 1, 1,
         ['Lag', 'Lead', 'ANSI', 'Euro'],
-        [0, 1, 0, 1]);
+        [0, 1, 0, 1],
+        ['Lag', 'Lead', '', '']);
     Enums.Add(LeadLagEnum);
 
     DefaultLoadModelEnum := TDSSEnum.Create('Load Solution Model', True, 1, 1,
@@ -786,7 +854,7 @@ begin
 
     InvControlModeEnum := TDSSEnum.Create('Inverter Control Mode', True, 1, 1,
         ['GFL', 'GFM'],
-        [Integer(False), Integer(True)]);
+        [Integer(False), Integer(True)], []);
     InvControlModeEnum.DefaultValue := Integer(False);
     Enums.Add(InvControlModeEnum);
 
@@ -800,7 +868,10 @@ begin
         ],
         [Ord(TSolveMode.SNAPSHOT), Ord(TSolveMode.DAILYMODE), Ord(TSolveMode.YEARLYMODE), Ord(TSolveMode.MONTECARLO1), Ord(TSolveMode.LOADDURATION1), Ord(TSolveMode.PEAKDAY), Ord(TSolveMode.DUTYCYCLE), Ord(TSolveMode.DIRECT), Ord(TSolveMode.MONTEFAULT), Ord(TSolveMode.FAULTSTUDY), Ord(TSolveMode.MONTECARLO2), Ord(TSolveMode.MONTECARLO3), Ord(TSolveMode.LOADDURATION2), Ord(TSolveMode.AUTOADDFLAG), Ord(TSolveMode.DYNAMICMODE), Ord(TSolveMode.HARMONICMODE), Ord(TSolveMode.GENERALTIME), Ord(TSolveMode.HARMONICMODET), Ord(TSolveMode.SNAPSHOT),
          Ord(TSolveMode.DYNAMICMODE), Ord(TSolveMode.HARMONICMODE),
-         Ord(TSolveMode.SNAPSHOT), Ord(TSolveMode.YEARLYMODE), Ord(TSolveMode.HARMONICMODE), Ord(TSolveMode.GENERALTIME), Ord(TSolveMode.FAULTSTUDY)]);
+         Ord(TSolveMode.SNAPSHOT), Ord(TSolveMode.YEARLYMODE), Ord(TSolveMode.HARMONICMODE), Ord(TSolveMode.GENERALTIME), Ord(TSolveMode.FAULTSTUDY)],
+        ['Snapshot', 'Daily', 'Yearly', 'M1', 'LD1', 'PeakDay', 'DutyCycle', 'Direct', 'MF', 'FaultStudy', 'M2', 'M3', 'LD2', 'AutoAdd', 'Dynamic', 'Harmonic', 'Time', 'HarmonicT', 
+        '', '', '', '', '', '', '', '']
+    );
     SolveModeEnum.DefaultValue := Ord(TSolveMode.SNAPSHOT);
     SolveModeEnum.UseFirstFound := True; // Some example/test files use just "Harm", which is ambiguous
     SolveModeEnum.TryExactFirst := True;
@@ -1092,6 +1163,7 @@ BEGIN
     ElementList := TDSSPointerList.Create(20);  // Init size and increment
     PropertyName := nil;
     PropertyNameLowercase := nil;
+    PropertyNameJSON := nil;
     PropertyRedundantWith := nil;
     PropertyArrayAlternative := nil;
     PropertySource := nil;
@@ -1138,12 +1210,14 @@ begin
         PropertyName[i] := '';
         PropertyNameLowercase[i] := '';
         PropertySource[i] := '';
+        PropertyNameJSON[i] := '';
     end;
 
     Reallocmem(PropertyRedundantWith, 0);
     Reallocmem(PropertyArrayAlternative, 0);
     Reallocmem(PropertyName, 0);
     Reallocmem(PropertyNameLowercase, 0);
+    Reallocmem(PropertyNameJSON, 0);
     Reallocmem(PropertySource, 0);
     Reallocmem(PropertyScale, 0);
     Reallocmem(PropertyValueOffset, 0);
@@ -1388,6 +1462,7 @@ begin
 
     PropertyName := Allocmem(SizeOf(String) * NumProperties);
     PropertyNameLowercase := Allocmem(SizeOf(String) * NumProperties);
+    PropertyNameJSON := Allocmem(SizeOf(String) * NumProperties);
     PropertyRedundantWith := Allocmem(SizeOf(Integer) * NumProperties);
     PropertyArrayAlternative := Allocmem(SizeOf(Integer) * NumProperties);
     PropertySource := Allocmem(SizeOf(String) * NumProperties);
@@ -1503,13 +1578,22 @@ end;
 procedure TDSSClass.PopulatePropertyNames(PropOffset: Integer; NumProps: Integer; EnumInfo: Pointer; ReplacePct: Boolean = True; PropSource: String = '');
 var
     i: Integer;
-    propName: String;
+    propName, propNameJSON: String;
 begin
     if Length(PropSource) = 0 then
         PropSource := Class_Name;
     for i := 1 to NumProps do
     begin
         propName := GetEnumName(EnumInfo, i);
+        if propName = 'cls' then
+            propName := 'class'
+        else if AnsiLowerCase(propName) = 'typ' then
+            propName := propName + 'e'
+        else if propName = 'vr' then
+            propName := 'var';
+
+        propNameJSON := propName;
+
         if LeftStr(propName, 2) = '__' then
             propName := Copy(propName, 3, Length(propName));
 
@@ -1517,15 +1601,8 @@ begin
             propName := ReplaceStr(propName, 'pct', '%');
 
         propName := ReplaceStr(propName, '__', '-');
-
-        if propName = 'cls' then
-            propName := 'class'
-        else if AnsiLowerCase(propName) = 'typ' then
-            propName := propName + 'e'
-        else if propName = 'vr' then
-            propName := 'var';
-            
         PropertyName[PropOffset + i] := propName;
+        PropertyNameJSON[PropOffset + i] := propNameJSON;
         PropertySource[PropOffset + i] := PropSource;
     end;
 end;
@@ -1586,21 +1663,98 @@ constructor TDSSEnum.Create(EnumName: String; IsSequential: Boolean; MinCh, MaxC
 var
     i: Integer;
     n: Integer;
+    EnumAltNames: Array of String;
 begin
     inherited Create;
 
+    AltNamesValid := true;
+    SetLength(EnumAltNames, 0);
     n := Length(EnumNames);
     Name := EnumName;
+
+    JSONUseNumbers := false;
+
+    JSONName := EnumName;
+    JSONName := StringReplace(JSONName, ' ', '', [rfReplaceAll]);
+    JSONName := StringReplace(JSONName, '-', '', [rfReplaceAll]);
+    JSONName := StringReplace(JSONName, ':', '', [rfReplaceAll]);
     Names := NIL;
     LowerNames := NIL;
     Ordinals := NIL;
    
     SetLength(Names, n);
     SetLength(LowerNames, n);
+    SetLength(AltNames, n);
     for i := 0 to n - 1 do
     begin
         Names[i] := EnumNames[i];
         LowerNames[i] := AnsiLowerCase(EnumNames[i]);
+        if (Length(EnumAltNames) = n) then
+            AltNames[i] := EnumAltNames[i] // an empty JSONName will remove the option in the JSON Schema
+        else
+            AltNames[i] := Names[i];
+    end;
+
+    if High(EnumNames) <> High(EnumOrds) then
+        raise Exception.Create(Format('Could not initialize enum ("%s").', [EnumName]));
+
+    SetLength(Ordinals, n);
+    for i := 0 to n - 1 do
+        Ordinals[i] := EnumOrds[i];
+
+    Sequential := IsSequential;
+
+    //TODO: fill these automatically
+    MinChars := MinCh;
+    MaxChars := MaxCh;
+
+    DefaultValue := -9999999;
+    AllowLonger := False;
+    UseFirstFound := False;
+    TryExactFirst := False;
+    Hybrid := False;
+
+    MinOrdinal := 9999999;
+    MaxOrdinal := -9999999;
+    for i := 0 to High(Ordinals) do
+    begin
+        MinOrdinal := Min(MinOrdinal, Ordinals[i]);
+        MaxOrdinal := Max(MaxOrdinal, Ordinals[i]);
+    end;
+end;
+
+constructor TDSSEnum.Create(EnumName: String; IsSequential: Boolean; MinCh, MaxCh: Integer; EnumNames: Array of String; EnumOrds: Array of Integer; EnumAltNames: Array of String);
+var
+    i: Integer;
+    n: Integer;
+begin
+    inherited Create;
+
+    AltNamesValid := true;
+    n := Length(EnumNames);
+    Name := EnumName;
+
+    JSONUseNumbers := false;
+
+    JSONName := EnumName;
+    JSONName := StringReplace(JSONName, ' ', '', [rfReplaceAll]);
+    JSONName := StringReplace(JSONName, '-', '', [rfReplaceAll]);
+    JSONName := StringReplace(JSONName, ':', '', [rfReplaceAll]);
+    Names := NIL;
+    LowerNames := NIL;
+    Ordinals := NIL;
+   
+    SetLength(Names, n);
+    SetLength(LowerNames, n);
+    SetLength(AltNames, n);
+    for i := 0 to n - 1 do
+    begin
+        Names[i] := EnumNames[i];
+        LowerNames[i] := AnsiLowerCase(EnumNames[i]);
+        if (Length(EnumAltNames) = n) then
+            AltNames[i] := EnumAltNames[i] // an empty JSONName will remove the option in the JSON Schema
+        else
+            AltNames[i] := Names[i];
     end;
 
     if High(EnumNames) <> High(EnumOrds) then
@@ -1672,6 +1826,44 @@ begin
     end;
 
     Result := IntToStr(Value);
+end;
+
+function TDSSEnum.OrdinalToJSONValue(Value: Integer): TJSONData;
+var
+    i: Integer;
+begin
+    if (Value < MinOrdinal) or (Value > MaxOrdinal) then
+    begin
+        if Hybrid then
+            Result := TJSONIntegerNumber.Create(Value)
+        else            
+            Result := TJSONNull.Create(); //TODO: error? Usually on purpose though, may need a flag
+        Exit;
+    end;
+
+    if Sequential then
+    begin
+        if High(AltNames) >= (Value - MinOrdinal) then
+            Result := TJSONString.Create(AltNames[Value - MinOrdinal])
+        else
+            Result := TJSONNull.Create();
+        Exit;
+    end;
+
+    for i := 0 to High(AltNames) do
+        if Ordinals[i] = Value then
+        begin
+            Result := TJSONString.Create(Names[i]);
+            Exit;
+        end;
+
+    if not Hybrid then
+    begin
+        Result := TJSONNull.Create(); //TODO: error?
+        Exit;
+    end;
+
+    Result := TJSONIntegerNumber.Create(Value);
 end;
 
 function TDSSEnum.IsOrdinalValid(Value: Integer): Boolean;

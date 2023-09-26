@@ -145,10 +145,20 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    SpecSetNames := ArrayOfString.Create(
+        'r',
+        'Gmatrix'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.r)),
+        TSpecSet.Create(ord(TProp.Gmatrix))
+    );
+
     // real matrix
     PropertyType[ord(TProp.Gmatrix)] := TPropertyType.DoubleSymMatrixProperty;
     PropertyOffset[ord(TProp.Gmatrix)] := ptruint(@obj.Gmatrix);
     PropertyOffset2[ord(TProp.Gmatrix)] := ptruint(@obj.Fnphases);
+    PropertyFlags[ord(TProp.Gmatrix)] := [TPropertyFlag.RequiredInSpecSet];
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
@@ -157,8 +167,10 @@ begin
 
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
-    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
+
+    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus2)] := 2;
 
     // boolean properties
@@ -171,13 +183,22 @@ begin
 
     // double properties (default type)
     PropertyOffset[ord(TProp.ONtime)] := ptruint(@obj.ON_Time);
+    PropertyFlags[ord(TProp.ONtime)] := [TPropertyFlag.Units_s];
+    
     PropertyOffset[ord(TProp.MinAmps)] := ptruint(@obj.MinAmps);
+    PropertyFlags[ord(TProp.MinAmps)] := [TPropertyFlag.Units_A];
 
     PropertyOffset[ord(TProp.r)] := ptruint(@obj.G);
-    PropertyFlags[ord(TProp.r)] := [TPropertyFlag.InverseValue];
+    PropertyFlags[ord(TProp.r)] := [TPropertyFlag.InverseValue, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm];
 
     ActiveProperty := NumPropsThisClass;
+
     inherited DefineProperties;
+
+    //TODO: fully remove some inherited properties like normamps/emergamps?
+    // Currently, this just suppresses them from the JSON output/schema
+    PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.normamps)] := [TPropertyFlag.SuppressJSON];
+    PropertyFlags[PropertyOffset_PDClass + ord(TPDElementProp.emergamps)] := [TPropertyFlag.SuppressJSON];
 end;
 
 function TFault.NewObject(const ObjName: String; Activate: Boolean): Pointer;

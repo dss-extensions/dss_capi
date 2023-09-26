@@ -188,13 +188,14 @@ begin
     PropertyType[ord(TProp.Normal)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.Normal)] := ptruint(@obj.NormalState);
     PropertyOffset2[ord(TProp.Normal)] := PtrInt(StateEnum);
+    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.DynamicDefault];
 
     // double arrays/vectors
     PropertyType[ord(TProp.RecloseIntervals)] := TPropertyType.DoubleVArrayProperty;
     PropertyOffset[ord(TProp.RecloseIntervals)] := ptruint(@obj.RecloseIntervals);
     PropertyOffset2[ord(TProp.RecloseIntervals)] := ptruint(@obj.NumReclose);
     PropertyOffset3[ord(TProp.RecloseIntervals)] := 4;
-    PropertyFlags[ord(TProp.RecloseIntervals)] := [TPropertyFlag.ArrayMaxSize];
+    PropertyFlags[ord(TProp.RecloseIntervals)] := [TPropertyFlag.ArrayMaxSize, TPropertyFlag.NonNegative];
 
     // object properties
     PropertyType[ord(TProp.PhaseFast)] := TPropertyType.DSSObjectReferenceProperty;
@@ -217,7 +218,7 @@ begin
     PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.MonitoredObj)] := 0;
     PropertyWriteFunction[ord(TProp.MonitoredObj)] := @SetMonitoredElement;
-    PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.WriteByFunction];
+    PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];
     //[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
@@ -245,8 +246,13 @@ begin
     PropertyOffset[ord(TProp.GroundTrip)] := ptruint(@obj.GroundTrip);
     PropertyOffset[ord(TProp.PhaseInst)] := ptruint(@obj.PhaseInst);
     PropertyOffset[ord(TProp.GroundInst)] := ptruint(@obj.GroundInst);
+    
     PropertyOffset[ord(TProp.Reset)] := ptruint(@obj.Resettime);
+    PropertyFlags[ord(TProp.Reset)] := [TPropertyFlag.Units_s];
+
     PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.DelayTime);
+    PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.Units_s];
+
     PropertyOffset[ord(TProp.TDPhFast)] := ptruint(@obj.TDPhFast);
     PropertyOffset[ord(TProp.TDGrFast)] := ptruint(@obj.TDGrFast);
     PropertyOffset[ord(TProp.TDPhDelayed)] := ptruint(@obj.TDPhDelayed);

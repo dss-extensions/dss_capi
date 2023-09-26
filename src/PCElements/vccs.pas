@@ -189,6 +189,7 @@ begin
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
 
     // boolean properties
     PropertyType[ord(TProp.rmsmode)] := TPropertyType.BooleanProperty;
@@ -209,9 +210,16 @@ begin
 
     // double properties (default type)
     PropertyOffset[ord(TProp.prated)] := ptruint(@obj.Prated);
+    PropertyFlags[ord(TProp.prated)] := [TPropertyFlag.Units_kW];
+    
     PropertyOffset[ord(TProp.vrated)] := ptruint(@obj.Vrated);
+    PropertyFlags[ord(TProp.vrated)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_V];
+
     PropertyOffset[ord(TProp.ppct)] := ptruint(@obj.Ppct);
+    
     PropertyOffset[ord(TProp.fsample)] := ptruint(@obj.FsampleFreq);
+    PropertyFlags[ord(TProp.fsample)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
+
     PropertyOffset[ord(TProp.imaxpu)] := ptruint(@obj.FmaxIpu);
     PropertyOffset[ord(TProp.vrmstau)] := ptruint(@obj.FvrmsTau);
     PropertyOffset[ord(TProp.irmstau)] := ptruint(@obj.FirmsTau);

@@ -26,6 +26,8 @@ type
         procedure CountPropertiesAndAllocate; override;
         procedure DefineProperties; override;
     PUBLIC
+        PropertyOffset_CktElementClass: Integer;
+
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
         function BeginEdit(ptr: Pointer; SetActive_: Boolean=True): Pointer; override;
@@ -70,12 +72,15 @@ var
 begin
     PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'CktElement');
 
+    PropertyOffset_CktElementClass := ActiveProperty;
+
     // Special boolean property
     PropertyType[ActiveProperty + ord(TProp.enabled)] := TPropertyType.EnabledProperty;
     PropertyOffset[ActiveProperty + ord(TProp.enabled)] := 1; // dummy value
 
     // double properties (default type)
     PropertyOffset[ActiveProperty + ord(TProp.basefreq)] := ptruint(@obj.BaseFrequency);
+    PropertyFlags[ActiveProperty + ord(TProp.basefreq)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties;

@@ -186,16 +186,29 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    SpecSetNames := ArrayOfString.Create(
+        'kvar',
+        'cmatrix',
+        'cuf'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.kvar)),
+        TSpecSet.Create(ord(TProp.cmatrix)),
+        TSpecSet.Create(ord(TProp.cuf))
+    );
+
     // real matrix
     PropertyType[ord(TProp.cmatrix)] := TPropertyType.DoubleSymMatrixProperty;
     PropertyOffset[ord(TProp.cmatrix)] := ptruint(@obj.Cmatrix);
     PropertyOffset2[ord(TProp.cmatrix)] := ptruint(@obj.Fnphases);
     PropertyScale[ord(TProp.cmatrix)] := 1.0e-6;
+    PropertyFlags[ord(TProp.cmatrix)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_uF];
 
     // array of doubles
     PropertyType[ord(TProp.kvar)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.FkvarRating);
     PropertyOffset2[ord(TProp.kvar)] := ptruint(@obj.FNumSteps);
+    PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.R)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.R)] := ptruint(@obj.FR);
@@ -209,6 +222,7 @@ begin
     PropertyOffset[ord(TProp.cuf)] := ptruint(@obj.FC);
     PropertyOffset2[ord(TProp.cuf)] := ptruint(@obj.FNumSteps);
     PropertyScale[ord(TProp.cuf)] := 1.0e-6;
+    PropertyFlags[ord(TProp.cuf)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault, TPropertyFlag.Units_uF];
 
     PropertyType[ord(TProp.Harm)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Harm)] := ptruint(@obj.FHarm);
@@ -226,12 +240,15 @@ begin
 
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
-    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
+
+    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus2)] := 2;
 
     // double properties (default type)
     PropertyOffset[ord(TProp.kv)] := ptruint(@obj.kvrating);
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     // integer properties
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
@@ -240,7 +257,7 @@ begin
 
     PropertyType[ord(TProp.NumSteps)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.NumSteps)] := ptruint(@obj.FNumSteps);
-    PropertyFlags[ord(TProp.NumSteps)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
+    PropertyFlags[ord(TProp.NumSteps)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.SuppressJSON];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;

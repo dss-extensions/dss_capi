@@ -129,7 +129,9 @@ uses
     Command,
     DSSHelper,
     DSSObjectHelper,
-    TypInfo;
+    TypInfo,
+    ArrayDef,
+    CktElementClass;
 
 type
     TObj = TGICLineObj;
@@ -160,32 +162,71 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    SpecSetNames := ArrayOfString.Create(
+        'Volts, Angle',
+        'EN, EE, Lat1, Lon1, Lat2, Lon2'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.Volts), ord(TProp.Angle)),
+        TSpecSet.Create(ord(TProp.EN), ord(TProp.EE), ord(TProp.Lat1), ord(TProp.Lon1), ord(TProp.Lat2), ord(TProp.Lon2))
+    );
+
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
-    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
+
+    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus2)] := 2;
+    // PropertyFlags[ord(TProp.bus2)] := [TPropertyFlag.Required]; -- not really, since it can be filled based on Bus1 too...
 
     // double properties (default type)
     PropertyOffset[ord(TProp.Volts)] := ptruint(@obj.Volts);
+    PropertyFlags[ord(TProp.Volts)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_V];
+
     PropertyOffset[ord(TProp.Angle)] := ptruint(@obj.Angle);
+    
     PropertyOffset[ord(TProp.R)] := ptruint(@obj.R);
+    PropertyFlags[ord(TProp.R)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm];
+
     PropertyOffset[ord(TProp.X)] := ptruint(@obj.X);
+    PropertyFlags[ord(TProp.X)] := [TPropertyFlag.Units_ohm];
+    
     PropertyOffset[ord(TProp.C)] := ptruint(@obj.C);
+    PropertyFlags[ord(TProp.C)] := [TPropertyFlag.Units_uF];
+    
     PropertyOffset[ord(TProp.Lat1)] := ptruint(@obj.Lat1);
+    PropertyFlags[ord(TProp.Lat1)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
+
     PropertyOffset[ord(TProp.Lon1)] := ptruint(@obj.Lon1);
+    PropertyFlags[ord(TProp.Lon1)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
+
     PropertyOffset[ord(TProp.Lat2)] := ptruint(@obj.Lat2);
+    PropertyFlags[ord(TProp.Lat2)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
+
     PropertyOffset[ord(TProp.Lon2)] := ptruint(@obj.Lon2);
+    PropertyFlags[ord(TProp.Lon2)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
+    
     PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.SrcFrequency);
+    PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
+
     PropertyOffset[ord(TProp.EN)] := ptruint(@obj.ENorth);
+    PropertyFlags[ord(TProp.EN)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_V_per_km];
+
     PropertyOffset[ord(TProp.EE)] := ptruint(@obj.EEast);
+    PropertyFlags[ord(TProp.EE)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_V_per_km];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
+
+    //TODO: fully remove some inherited properties like normamps/emergamps?
+    // Currently, this just suppresses them from the JSON output/schema
+    PropertyFlags[PropertyOffset_PCClass + ord(TPCElementProp.spectrum)] := [TPropertyFlag.SuppressJSON];
+    PropertyFlags[PropertyOffset_CktElementClass + ord(TCktElementProp.basefreq)] := [TPropertyFlag.SuppressJSON];
 end;
 
 function TGICLine.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -205,7 +246,7 @@ var
     dotpos: Integer;
 begin
     case Idx of
-        1:
+        ord(TProp.bus1):
         // Special handling for Bus 1
         // Set Bus2 = Bus1.0.0.0
         begin
@@ -221,9 +262,16 @@ begin
         end;
         ord(TProp.phases):
             NConds := Fnphases;  // Force Reallocation of terminal info
-        3, 4:
+        ord(TProp.Volts),
+        ord(TProp.Angle):
             VoltsSpecified := TRUE;
-        10..15:
+
+        ord(TProp.EN),
+        ord(TProp.EE),
+        ord(TProp.Lat1),
+        ord(TProp.Lon1),
+        ord(TProp.Lat2),
+        ord(TProp.Lon2):
             VoltsSpecified := FALSE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);

@@ -305,13 +305,22 @@ type
 const
     NumPropsThisClass = Ord(High(TProp));
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    PVSystemModelEnum: TDSSEnum;
+
 
 constructor TPVsystem.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
 
+        PVSystemModelEnum := TDSSEnum.Create('PVSystem: Model', True, 0, 0, [
+            'Constant P, PF', 'Constant Y', 'User model'],
+            [1, 2, 3],
+            ['ConstantP_PF', 'ConstantY', 'UserModel']);
+        PVSystemModelEnum.JSONUseNumbers := true;
+    end;
     inherited Create(dssContext, PVSYSTEM_ELEMENT, 'PVSystem');
 
     // Set Register names
@@ -350,10 +359,22 @@ begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PropertyNameJSON[ord(TProp.P__TCurve)] := 'PTCurve';
+
+    SpecSetNames := ArrayOfString.Create(
+        'PF',
+        'kvar'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.PF)),
+        TSpecSet.Create(ord(TProp.kvar))
+    );
 
     // strings
     PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
+    PropertyFlags[ord(TProp.UserModel)] := [TPropertyFlag.IsFilename];
+
     PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
 
@@ -375,6 +396,7 @@ begin
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
 
     // object properties
     PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
@@ -432,12 +454,17 @@ begin
 
     PropertyType[ord(TProp.cls)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.cls)] := ptruint(@obj.FClass);
-    PropertyType[ord(TProp.model)] := TPropertyType.IntegerProperty;
-    PropertyOffset[ord(TProp.model)] := ptruint(@obj.VoltageModel); // TODO: enum?
+    
+    PropertyType[ord(TProp.model)] := TPropertyType.MappedIntEnumProperty;
+    PropertyOffset[ord(TProp.model)] := ptruint(@obj.VoltageModel);
+    PropertyOffset2[ord(TProp.model)] := PtrInt(PVSystemModelEnum);
 
     // double properties
     PropertyOffset[ord(TProp.irradiance)] := ptruint(@obj.PVSystemVars.FIrradiance);
+    
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFnominal);
+    PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet];
+
     PropertyOffset[ord(TProp.pctR)] := ptruint(@obj.pctR);
     PropertyOffset[ord(TProp.pctX)] := ptruint(@obj.pctX);
     PropertyOffset[ord(TProp.Temperature)] := ptruint(@obj.PVSystemVars.FTemperature);
@@ -447,12 +474,16 @@ begin
     PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.PVSystemVars.FkVArating);
-    PropertyOffset[ord(TProp.DutyStart)] := ptruint(@obj.DutyStart);
-    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.PVSystemVars.kVPVSystemBase);
     
+    PropertyOffset[ord(TProp.DutyStart)] := ptruint(@obj.DutyStart);
+    PropertyFlags[ord(TProp.DutyStart)] := [TPropertyFlag.NonNegative, TPropertyFlag.Units_hour];
+
+    PropertyOffset[ord(TProp.kv)] := ptruint(@obj.PVSystemVars.kVPVSystemBase);
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
+
     PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarRequested);
     PropertyReadFunction[ord(TProp.kvar)] := @Getkvar;
-    PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.ReadByFunction];
+    PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault];
 
     // double percent
     PropertyScale[ord(TProp.pctPmpp)] := 0.01;
@@ -466,10 +497,10 @@ begin
     PropertyFlags[ord(TProp.pctPminkvarMax)] := [TPropertyFlag.Transform_Abs];
 
     PropertyOffset[ord(TProp.kvarMax)] := ptruint(@obj.PVSystemVars.Fkvarlimit);
-    PropertyFlags[ord(TProp.kvarMax)] := [TPropertyFlag.Transform_Abs];
+    PropertyFlags[ord(TProp.kvarMax)] := [TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
 
     PropertyOffset[ord(TProp.kvarMaxAbs)] := ptruint(@obj.PVSystemVars.Fkvarlimitneg);
-    PropertyFlags[ord(TProp.kvarMaxAbs)] := [TPropertyFlag.Transform_Abs];
+    PropertyFlags[ord(TProp.kvarMaxAbs)] := [TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
 
     PropertyOffset[ord(TProp.kVDC)] := ptruint(@obj.dynVars.RatedVDC);
     PropertyScale[ord(TProp.kVDC)] := 1000;
@@ -481,7 +512,10 @@ begin
     PropertyScale[ord(TProp.PITol)] := 1.0 / 100.0;
 
     PropertyOffset[ord(TProp.SafeVoltage)] := ptruint(@obj.dynVars.SMThreshold);
+    
     PropertyOffset[ord(TProp.AmpLimit)] := ptruint(@obj.dynVars.ILimit);
+    PropertyFlags[ord(TProp.AmpLimit)] := [TPropertyFlag.NoDefault];
+
     PropertyOffset[ord(TProp.AmpLimitGain)] := ptruint(@obj.dynVars.VError);
 
 
@@ -2648,4 +2682,6 @@ begin
     PVSystemVars.PF_Priority := value;
 end;
 
+finalization
+    PVSystemModelEnum.Free;
 end.

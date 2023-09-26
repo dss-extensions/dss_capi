@@ -168,7 +168,7 @@ begin
     PropertyOffset[ord(TProp.element)] := ptruint(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.element)] := 0;
     PropertyWriteFunction[ord(TProp.element)] := @SetMonitoredElement;
-    PropertyFlags[ord(TProp.element)] := [TPropertyFlag.WriteByFunction];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
+    PropertyFlags[ord(TProp.element)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // enum properties
     PropertyType[ord(TProp.typ)] := TPropertyType.MappedStringEnumProperty;
@@ -189,14 +189,20 @@ begin
     PropertyType[ord(TProp.LocalControlWeights)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.LocalControlWeights)] := ptruint(@obj.FLocalControlWeights);
     PropertyOffset2[ord(TProp.LocalControlWeights)] := ptruint(@obj.FLocalControlListSize); // FLocalControlNameList.count
+    PropertyFlags[ord(TProp.LocalControlWeights)] := [TPropertyFlag.IndirectCount];
+    PropertyOffset3[ord(TProp.LocalControlWeights)] := ptruint(@obj.FLocalControlNameList);
 
     PropertyType[ord(TProp.PVSystemWeights)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.PVSystemWeights)] := ptruint(@obj.FPVSystemWeights);
     PropertyOffset2[ord(TProp.PVSystemWeights)] := ptruint(@obj.FPVSystemListSize);
+    PropertyFlags[ord(TProp.PVSystemWeights)] := [TPropertyFlag.IndirectCount];
+    PropertyOffset3[ord(TProp.PVSystemWeights)] := ptruint(@obj.FPVSystemNameList);
 
     PropertyType[ord(TProp.StorageWeights)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.StorageWeights)] := ptruint(@obj.FStorageWeights);
     PropertyOffset2[ord(TProp.StorageWeights)] := ptruint(@obj.FStorageListSize);
+    PropertyFlags[ord(TProp.StorageWeights)] := [TPropertyFlag.IndirectCount];
+    PropertyOffset3[ord(TProp.StorageWeights)] := ptruint(@obj.FStorageNameList);
 
     // integer properties
     PropertyType[ord(TProp.Terminal)] := TPropertyType.IntegerProperty;

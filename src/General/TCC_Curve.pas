@@ -120,6 +120,7 @@ begin
     // integer
     PropertyType[ord(TProp.npts)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.npts)] := ptruint(@obj.Npts);
+    PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;

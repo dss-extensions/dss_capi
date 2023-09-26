@@ -145,9 +145,12 @@ begin
 
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
-    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
+
+    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus2)] := 2;
+    PropertyFlags[ord(TProp.bus2)] := [TPropertyFlag.DynamicDefault];
 
     // enum properties
     PropertyType[ord(TProp.ScanType)] := TPropertyType.MappedStringEnumProperty;
@@ -160,21 +163,28 @@ begin
 
     // object properties
     PropertyType[ord(TProp.yearly)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
-    
-    PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
-    PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyShapeObj);
-    PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
-
     PropertyOffset2[ord(TProp.yearly)] := ptruint(DSS.LoadShapeClass);
+    PropertyOffset[ord(TProp.yearly)] := ptruint(@obj.YearlyShapeObj);
+    PropertyFlags[ord(TProp.yearly)] := [TPropertyFlag.DynamicDefault];
+
+    PropertyType[ord(TProp.daily)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyOffset[ord(TProp.daily)] := ptruint(@obj.DailyShapeObj);
     PropertyOffset2[ord(TProp.daily)] := ptruint(DSS.LoadShapeClass);
+
+    PropertyType[ord(TProp.duty)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyOffset[ord(TProp.duty)] := ptruint(@obj.DutyShapeObj);
     PropertyOffset2[ord(TProp.duty)] := ptruint(DSS.LoadShapeClass);
+    PropertyFlags[ord(TProp.duty)] := [TPropertyFlag.DynamicDefault];
 
     // double properties
     PropertyOffset[ord(TProp.amps)] := ptruint(@obj.Amps);
+    PropertyFlags[ord(TProp.amps)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_A];
+
     PropertyOffset[ord(TProp.angle)] := ptruint(@obj.Angle);
+    PropertyFlags[ord(TProp.angle)] := [TPropertyFlag.Units_deg];
+    
     PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.SrcFrequency);
+    PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;

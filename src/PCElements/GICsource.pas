@@ -101,7 +101,8 @@ uses
     dynamics,
     DSSHelper,
     DSSObjectHelper,
-    TypInfo;
+    TypInfo,
+    ArrayDef;
 
 type
     TObj = TGICSourceObj;
@@ -132,23 +133,51 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    SpecSetNames := ArrayOfString.Create(
+        'Volts, Angle',
+        'EN, EE, Lat1, Lon1, Lat2, Lon2'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.Volts), ord(TProp.Angle)),
+        TSpecSet.Create(ord(TProp.EN), ord(TProp.EE), ord(TProp.Lat1), ord(TProp.Lon1), ord(TProp.Lat2), ord(TProp.Lon2))
+    );
+
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     // double properties (default type)
     PropertyOffset[ord(TProp.Volts)] := ptruint(@obj.Volts);
+    PropertyFlags[ord(TProp.Volts)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet];
+    
     PropertyOffset[ord(TProp.angle)] := ptruint(@obj.Angle);
+    PropertyFlags[ord(TProp.angle)] := [TPropertyFlag.Units_deg];
+    
     PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.SrcFrequency);
+    PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
+
     PropertyOffset[ord(TProp.EN)] := ptruint(@obj.ENorth);
+    PropertyFlags[ord(TProp.EN)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_V_per_km];
+    
     PropertyOffset[ord(TProp.EE)] := ptruint(@obj.EEast);
+    PropertyFlags[ord(TProp.EE)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_V_per_km];
+    
     PropertyOffset[ord(TProp.Lat1)] := ptruint(@obj.Lat1);
+    PropertyFlags[ord(TProp.Lat1)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
+    
     PropertyOffset[ord(TProp.Lon1)] := ptruint(@obj.Lon1);
+    PropertyFlags[ord(TProp.Lon1)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
+    
     PropertyOffset[ord(TProp.Lat2)] := ptruint(@obj.Lat2);
+    PropertyFlags[ord(TProp.Lat2)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
+    
     PropertyOffset[ord(TProp.Lon2)] := ptruint(@obj.Lon2);
+    PropertyFlags[ord(TProp.Lon2)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_deg];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
+
+
 end;
 
 function TGICsource.NewObject(const ObjName: String; Activate: Boolean): Pointer;
@@ -165,14 +194,20 @@ end;
 procedure TGICsourceObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
 begin
     case Idx of
-        1, 2:
+        ord(TProp.Volts),
+        ord(TProp.Angle):
             VoltsSpecified := TRUE;
         ord(TProp.Phases):
         begin
             FphaseShift := 0.0;     // Zero Sequence
             NConds := Fnphases;  // Force Reallocation of terminal info
         end;
-        5..10:
+        ord(TProp.EN),
+        ord(TProp.EE),
+        ord(TProp.Lat1),
+        ord(TProp.Lon1),
+        ord(TProp.Lat2),
+        ord(TProp.Lon2):
             VoltsSpecified := FALSE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);

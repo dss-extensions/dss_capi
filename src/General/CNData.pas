@@ -101,11 +101,17 @@ begin
     // integer properties
     PropertyType[ActiveProperty + ord(TProp.k)] := TPropertyType.IntegerProperty;
     PropertyOffset[ActiveProperty + ord(TProp.k)] := ptruint(@obj.FkStrand);
+    // PropertyMinimum[ActiveProperty + ord(TProp.k)] := 2; //TODO: add support for minimum value
 
     // double properties (default type)
     PropertyOffset[ActiveProperty + ord(TProp.DiaStrand)] := ptruint(@obj.FDiaStrand);
+    PropertyFlags[ActiveProperty + ord(TProp.DiaStrand)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
+
     PropertyOffset[ActiveProperty + ord(TProp.GmrStrand)] := ptruint(@obj.FGmrStrand);
+    PropertyFlags[ActiveProperty + ord(TProp.GmrStrand)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.DynamicDefault];
+
     PropertyOffset[ActiveProperty + ord(TProp.Rstrand)] := ptruint(@obj.FRStrand);
+    PropertyFlags[ActiveProperty + ord(TProp.Rstrand)] := [TPropertyFlag.NoDefault, TPropertyFlag.Units_ohm_per_length];//, TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
@@ -126,19 +132,19 @@ procedure TCNDataObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
 begin
     // Set defaults
     case Idx of
-        2:
+        ord(TProp.DiaStrand):
             if FGmrStrand <= 0.0 then
                 FGmrStrand := 0.7788 * 0.5 * FDiaStrand;
     end;
     // Check for critical errors
     case Idx of
-        1:
+        ord(TProp.k):
             if (FkStrand < 2) then
                 DoSimpleMsg('Error: Must have at least 2 concentric neutral strands for CNData %s', [Name], 999);
-        2:
+        ord(TProp.DiaStrand):
             if (FDiaStrand <= 0.0) then
                 DoSimpleMsg('Error: Neutral strand diameter must be positive for CNData %s', [Name], 999);
-        3:
+        ord(TProp.GmrStrand):
             if (FGmrStrand <= 0.0) then
                 DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData %s', [Name], 999);
     end;

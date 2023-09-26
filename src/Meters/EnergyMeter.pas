@@ -592,6 +592,7 @@ begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PropertyNameJSON[ord(TProp.__3PhaseLosses)] := 'ThreePhaseLosses';
 
     PropertyType[ord(TProp.peakcurrent)] := TPropertyType.DoubleVArrayProperty;
     PropertyOffset[ord(TProp.peakcurrent)] := ptruint(@obj.SensorCurrent);
@@ -623,7 +624,7 @@ begin
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.element)] := ptruint(@obj.MeteredElement);
     PropertyOffset2[ord(TProp.element)] := 0;
-    //PropertyFlags[ord(TProp.element)] := [TPropertyFlag.CheckForVar]; // not required for general cktelements
+    PropertyFlags[ord(TProp.element)] := [TPropertyFlag.DynamicDefault];//, TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // integer properties
     PropertyType[ord(TProp.terminal)] := TPropertyType.IntegerProperty;
@@ -652,6 +653,7 @@ begin
     PropertyOffset[ord(TProp.Zonelist)] := ptruint(@obj.DefinedZoneList);
 
     // custom list
+    //TODO: could it be represented an array of stringEnum values?
     PropertyType[ord(TProp.option)] := TPropertyType.StringListProperty;
     PropertyOffset[ord(TProp.option)] := 1; // dummy value
     PropertyWriteFunction[ord(TProp.option)] := @SetOptions;

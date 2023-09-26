@@ -27,6 +27,8 @@ type
         procedure DefineProperties; override;
 
     PUBLIC
+        PropertyOffset_PCClass: Integer;
+
         constructor Create(dssContext: TDSSContext; DSSClsType: Integer; DSSClsName: String);
         destructor Destroy; OVERRIDE;
     end;
@@ -81,6 +83,9 @@ var
     obj: TObj = NIL; // NIL (0) on purpose
 begin
     PopulatePropertyNames(ActiveProperty, NumPropsThisClass, PropInfo, False, 'PCClass');
+
+    PropertyOffset_PCClass := ActiveProperty;
+
     PropertyType[ActiveProperty + ord(TProp.Spectrum)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ActiveProperty + ord(TProp.Spectrum)] := ptruint(@obj.SpectrumObj);
     PropertyOffset2[ActiveProperty + ord(TProp.Spectrum)] := ptruint(DSS.SpectrumClass);

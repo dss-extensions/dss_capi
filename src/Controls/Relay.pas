@@ -291,8 +291,10 @@ begin
         PropInfo := TypeInfo(TProp);
         RelayTypeEnum := TDSSEnum.Create('Relay: Type', False, 1, 2, 
             ['Current', 'Voltage', 'ReversePower', '46', '47', 'Generic', 'Distance', 'TD21', 'DOC'], 
-            [0, 1, 3, 4, 5, 6, 7, 8, 9]
+            [0, 1, 3, 4, 5, 6, 7, 8, 9],
+            ['Current', 'Voltage', 'ReversePower', 'F46', 'F47', 'Generic', 'Distance', 'TD21', 'DOC'] 
         );
+        RelayTypeEnum.AltNamesValid := false;
         RelayTypeEnum.DefaultValue := 0;
         ActionEnum := TDSSEnum.Create('Relay: Action', False, 1, 1, 
             ['close', 'open', 'trip'], 
@@ -319,6 +321,10 @@ begin
     Numproperties := NumPropsThisClass;
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
+    PropertyNameJSON[ord(TProp.__47pctPickup)] := 'F47pctPickup'; // F for "function"
+    PropertyNameJSON[ord(TProp.__46BaseAmps)] := 'F46BaseAmps';
+    PropertyNameJSON[ord(TProp.__46pctPickup)] := 'F46pctPickup';
+    PropertyNameJSON[ord(TProp.__46isqt)] := 'F46isqt';
 
     // enums
     PropertyType[ord(TProp.typ)] := TPropertyType.MappedStringEnumProperty;
@@ -334,6 +340,7 @@ begin
     PropertyType[ord(TProp.Normal)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.Normal)] := ptruint(@obj.NormalState);
     PropertyOffset2[ord(TProp.Normal)] := PtrInt(StateEnum);
+    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.State)] := ptruint(@obj.FPresentState);
@@ -345,7 +352,7 @@ begin
     PropertyOffset[ord(TProp.RecloseIntervals)] := ptruint(@obj.RecloseIntervals);
     PropertyOffset2[ord(TProp.RecloseIntervals)] := ptruint(@obj.NumReclose);
     PropertyOffset3[ord(TProp.RecloseIntervals)] := 4;
-    PropertyFlags[ord(TProp.RecloseIntervals)] := [TPropertyFlag.AllowNone, TPropertyFlag.ArrayMaxSize];
+    PropertyFlags[ord(TProp.RecloseIntervals)] := [TPropertyFlag.AllowNone, TPropertyFlag.ArrayMaxSize, TPropertyFlag.NonNegative];
 
     // object properties
     PropertyType[ord(TProp.PhaseCurve)] := TPropertyType.DSSObjectReferenceProperty;
@@ -368,12 +375,11 @@ begin
     PropertyOffset[ord(TProp.DOC_PhaseCurveInner)] := ptruint(@obj.DOC_PhaseCurveInner);
     PropertyOffset2[ord(TProp.DOC_PhaseCurveInner)] := ptruint(TCC_CurveClass);
 
-
     PropertyType[ord(TProp.MonitoredObj)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.MonitoredObj)] := 0;
     PropertyWriteFunction[ord(TProp.MonitoredObj)] := @SetMonitoredElement;
-    PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.WriteByFunction];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
+    PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.FControlledElement);
@@ -410,14 +416,22 @@ begin
     PropertyOffset[ord(TProp.PhaseTrip)] := ptruint(@obj.PhaseTrip);
     PropertyOffset[ord(TProp.GroundTrip)] := ptruint(@obj.GroundTrip);
     PropertyOffset[ord(TProp.PhaseInst)] := ptruint(@obj.PhaseInst);
+    
     PropertyOffset[ord(TProp.GroundInst)] := ptruint(@obj.GroundInst);
+    PropertyFlags[ord(TProp.GroundInst)] := [TPropertyFlag.Units_A];
+    
     PropertyOffset[ord(TProp.Reset)] := ptruint(@obj.ResetTime);
+    PropertyFlags[ord(TProp.Reset)] := [TPropertyFlag.Units_s];
+
     PropertyOffset[ord(TProp.kvbase)] := ptruint(@obj.kVBase);
     PropertyOffset[ord(TProp.Breakertime)] := ptruint(@obj.Breaker_time);
     PropertyOffset[ord(TProp.__46pctPickup)] := ptruint(@obj.PctPickup46);
     PropertyOffset[ord(TProp.__46isqt)] := ptruint(@obj.Isqt46);
     PropertyOffset[ord(TProp.__46BaseAmps)] := ptruint(@obj.BaseAmps46);
+    
     PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.Delay_Time);
+    PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.DynamicDefault];
+
     PropertyOffset[ord(TProp.__47pctPickup)] := ptruint(@obj.PctPickup47);
     PropertyOffset[ord(TProp.overtrip)] := ptruint(@obj.Overtrip);
     PropertyOffset[ord(TProp.undertrip)] := ptruint(@obj.Undertrip);

@@ -224,6 +224,15 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    SpecSetNames := ArrayOfString.Create(
+        'LineSpacing',
+        'x, h'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.spacing)),
+        TSpecSet.Create(ord(TProp.x), ord(TProp.h))
+    );
+
     PropertyStructArrayCountOffset := ptruint(@obj.FNconds);
     PropertyStructArrayIndexOffset := ptruint(@obj.FActiveCond);
     PropertyStructArrayIndexOffset2 := ptruint(@obj.FNPhases);
@@ -247,8 +256,11 @@ begin
     PropertyOffset[ord(TProp.wires)] := ptruint(@obj.FWireData);
     PropertyOffset2[ord(TProp.wires)] := ptruint(DSS.WireDataClass);
     PropertyWriteFunction[ord(TProp.wires)] := @SetWires;
-    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Redundant, TPropertyFlag.FullNameAsArray, TPropertyFlag.SuppressJSON];
-    PropertyRedundantWith[ord(TProp.wires)] := ord(TProp.wire);
+    PropertyFlags[ord(TProp.wires)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.FullNameAsArray, TPropertyFlag.FullNameAsJSONArray];
+    // PropertyRedundantWith[ord(TProp.wires)] := ord(TProp.wire);
+    PropertyNameJSON[ord(TProp.wires)] := 'conductors';
+
+
     // PropertyArrayAlternative[ord(TProp.wire)] := ord(TProp.wires);
 
     // enums
@@ -265,6 +277,7 @@ begin
     PropertyType[ord(TProp.spacing)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.spacing)] := ptruint(@obj.LineSpacingObj);
     PropertyOffset2[ord(TProp.spacing)] := ptruint(DSS.LineSpacingClass);
+    PropertyFlags[ord(TProp.spacing)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.Ratings)] := TPropertyType.DoubleDArrayProperty;
     PropertyOffset[ord(TProp.Ratings)] := ptruint(@obj.AmpRatings);
@@ -274,16 +287,18 @@ begin
     PropertyOffset[ord(TProp.reduce)] := ptruint(@obj.Freduce);
 
     PropertyType[ord(TProp.nphases)] := TPropertyType.IntegerProperty;
-    PropertyType[ord(TProp.Seasons)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.nconds)] := TPropertyType.IntegerProperty;
     PropertyType[ord(TProp.cond)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.nphases)] := ptruint(@obj.FNphases);
-    PropertyOffset[ord(TProp.Seasons)] := ptruint(@obj.NumAmpRatings);
     PropertyOffset[ord(TProp.nconds)] := ptruint(@obj.FNconds);
     PropertyOffset[ord(TProp.cond)] := ptruint(@obj.FActiveCond);
     PropertyFlags[ord(TProp.nphases)] := [TPropertyFlag.NonNegative]; // phases can be zero (e.g. only neutral cables)
     PropertyFlags[ord(TProp.nconds)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
     PropertyFlags[ord(TProp.cond)] := [TPropertyFlag.IntegerStructIndex];
+
+    PropertyType[ord(TProp.Seasons)] := TPropertyType.IntegerProperty;
+    PropertyOffset[ord(TProp.Seasons)] := ptruint(@obj.NumAmpRatings);
+    PropertyFlags[ord(TProp.Seasons)] := [TPropertyFlag.SuppressJSON]; // can be derived trivially from length(Ratings)
 
     PropertyType[ord(TProp.wire)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyType[ord(TProp.cncable)] := TPropertyType.DSSObjectReferenceProperty;
@@ -297,16 +312,20 @@ begin
     PropertyOffset2[ord(TProp.cncable)] := ptruint(DSS.CNDataClass);
     PropertyOffset2[ord(TProp.tscable)] := ptruint(DSS.TSDataClass);
 
-    PropertyFlags[ord(TProp.wire)] := [TPropertyFlag.OnArray, TPropertyFlag.FullNameAsArray];
+    PropertyFlags[ord(TProp.wire)] := [TPropertyFlag.Redundant, TPropertyFlag.OnArray, TPropertyFlag.FullNameAsArray];
     PropertyFlags[ord(TProp.cncable)] := [TPropertyFlag.Redundant, TPropertyFlag.OnArray, TPropertyFlag.SuppressJSON];
     PropertyFlags[ord(TProp.tscable)] := [TPropertyFlag.Redundant, TPropertyFlag.OnArray, TPropertyFlag.SuppressJSON];
-    PropertyRedundantWith[ord(TProp.cncable)] := ord(TProp.wire);
-    PropertyRedundantWith[ord(TProp.tscable)] := ord(TProp.wire);
+    PropertyRedundantWith[ord(TProp.cncable)] := ord(TProp.wires);
+    PropertyRedundantWith[ord(TProp.tscable)] := ord(TProp.wires);
+    PropertyRedundantWith[ord(TProp.wire)] := ord(TProp.wires);
 
     PropertyType[ord(TProp.x)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
-    PropertyType[ord(TProp.h)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
     PropertyOffset[ord(TProp.x)] := ptruint(@obj.FX); PropertyOffset2[ord(TProp.x)] := ptruint(@obj.FActiveCond);
+    PropertyFlags[ord(TProp.x)] := [TPropertyFlag.RequiredInSpecSet];
+
+    PropertyType[ord(TProp.h)] := TPropertyType.DoubleOnArrayProperty; //TODO: use TPropertyFlag.OnArray instead
     PropertyOffset[ord(TProp.h)] := ptruint(@obj.FY); PropertyOffset2[ord(TProp.h)] := ptruint(@obj.FActiveCond);
+    PropertyFlags[ord(TProp.h)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyOffset[ord(TProp.NormAmps)] := ptruint(@obj.NormAmps);
     PropertyOffset[ord(TProp.EmergAmps)] := ptruint(@obj.EmergAmps);
@@ -798,6 +817,7 @@ end;
 
 procedure TLineGeometryObj.set_Nphases(const Value: Integer);
 begin
+    // TODO: remove/comment this block if using only neutrals is acceptable
     if Value < 1 then
     begin
         DoSimpleMsg(_('Invalid number of phases sent via DSS command. Please enter a value within range.'), 186);

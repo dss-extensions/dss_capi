@@ -149,6 +149,7 @@ begin
     // strings
     PropertyType[ord(TProp.Expression)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.Expression)] := ptruint(@obj.Expression);
+    PropertyFlags[ord(TProp.Expression)] := [TPropertyFlag.Required];
 
     PropertyType[ord(TProp.vr)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.vr)] := ptruint(@obj.ActiveVar);

@@ -155,6 +155,7 @@ begin
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
 
     // integer properties
     PropertyType[ord(TProp.Ndc)] := TPropertyType.IntegerProperty;
@@ -168,8 +169,13 @@ begin
     PropertyOffset[ord(TProp.kVac)] := ptruint(@obj.FkVac);
     PropertyOffset[ord(TProp.kVdc)] := ptruint(@obj.FkVdc);
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.FkW);
+    
     PropertyOffset[ord(TProp.Rac)] := ptruint(@obj.FRac);
+    PropertyFlags[ord(TProp.Rac)] := [TPropertyFlag.Units_ohm];
+
     PropertyOffset[ord(TProp.Xac)] := ptruint(@obj.FXac);
+    PropertyFlags[ord(TProp.Xac)] := [TPropertyFlag.Units_ohm];
+
     PropertyOffset[ord(TProp.m0)] := ptruint(@obj.Fm);
     PropertyOffset[ord(TProp.d0)] := ptruint(@obj.Fd);
     PropertyOffset[ord(TProp.Mmin)] := ptruint(@obj.FMinM);

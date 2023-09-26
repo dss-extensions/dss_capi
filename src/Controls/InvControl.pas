@@ -394,14 +394,16 @@ begin
             ['VV_VW', 'VV_DRC'], [ord(VV_VW), ord(VV_DRC)]);
         VoltageCurveXRefEnum := TDSSEnum.Create('InvControl: Voltage Curve X Ref', True, 1, 2,
             ['Rated', 'Avg', 'RAvg'], [0, 1, 2]);
-        VoltWattYAxisEnum := TDSSEnum.Create('InvControl: Volt-watt Y-Axis', True, 1, 2,
+        VoltWattYAxisEnum := TDSSEnum.Create('InvControl: Volt-Watt Y-Axis', True, 1, 2,
             ['PAvailablePU', 'PMPPPU', 'PctPMPPPU', 'KVARatingPU'], [0, 1, 2, 3]);
         RoCEnum := TDSSEnum.Create('InvControl: Rate-of-change Mode', True, 3, 3,
             ['Inactive', 'LPF', 'RiseFall'], [ord(INACTIVE), ord(LPF), ord(RISEFALL)]);
+        RoCEnum.JSONName := 'InvControlRateOfChangeMode';
         RefQEnum := TDSSEnum.Create('InvControl: Reactive Power Reference', True, 4, 4,
             ['VARAVAL', 'VARMAX'], [0, 1]);
         ControlModelEnum := TDSSEnum.Create('InvControl: Control Model', True, 1, 1,
             ['Linear', 'Exponential'], [0, 1]);
+        ControlModelEnum.JSONUseNumbers := true;
         RefQEnum.AllowLonger := True;
     end;
 
@@ -453,10 +455,12 @@ begin
     PropertyType[ord(TProp.Mode)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.Mode)] := ptruint(@obj.ControlMode);
     PropertyOffset2[ord(TProp.Mode)] := PtrInt(ModeEnum);
+    PropertyFlags[ord(TProp.Mode)] := [TPropertyFlag.NoDefault];
 
     PropertyType[ord(TProp.CombiMode)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.CombiMode)] := ptruint(@obj.CombiMode);
     PropertyOffset2[ord(TProp.CombiMode)] := PtrInt(CombiModeEnum);
+    PropertyFlags[ord(TProp.CombiMode)] := [TPropertyFlag.NoDefault];
 
     PropertyType[ord(TProp.voltage_curvex_ref)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.voltage_curvex_ref)] := ptruint(@obj.FVoltage_CurveX_ref);
@@ -519,7 +523,10 @@ begin
     PropertyOffset[ord(TProp.deltaP_Factor)] := ptruint(@obj.FdeltaP_factor);
     PropertyOffset[ord(TProp.ActivePChangeTolerance)] := ptruint(@obj.FActivePChangeTolerance);
     PropertyOffset[ord(TProp.Vsetpoint)] := ptruint(@obj.Fv_setpoint);
+    
     PropertyOffset[ord(TProp.LPFTau)] := ptruint(@obj.LPFTau);
+    PropertyFlags[ord(TProp.LPFTau)] := [TPropertyFlag.Units_s];
+    
     PropertyOffset[ord(TProp.RiseFallLimit)] := ptruint(@obj.FRiseFallLimit);
 
     // advanced doubles
@@ -759,7 +766,7 @@ begin
     FNPhases := 3;  // Directly set conds and phases
     Fnconds := 3;
     Nterms := 1;  // this forces allocation of terminals and conductors in base class
-    ControlMode := NONE_MODE;
+    ControlMode := NONE_MODE; // TODO: The docs say the default is "VoltVar"
     CombiMode := NONE_COMBMODE;
     ControlledElement := NIL;
 
@@ -786,8 +793,8 @@ begin
 
     // Variables for LPF and RF options
     RateofChangeMode := INACTIVE;
-    LPFTau := 0.001;
-    FRiseFallLimit := 0.001;
+    LPFTau := 0.001; //TODO: documentation lists this as 0
+    FRiseFallLimit := 0.001; //TODO: documentation lists this as -1 (disabled)
 
     // Variables of the smart inverter functions
     FVoltage_CurveX_ref := 0;
@@ -797,7 +804,7 @@ begin
     // volt-var
     Fvvc_curve := NIL;
     Fvvc_curveOffset := 0.0;
-    FRollAvgWindowLength := 1;
+    FRollAvgWindowLength := 1; //TODO: documentation lists this as 0
 
     // watt-pf
     Fwattpf_curve := NIL;

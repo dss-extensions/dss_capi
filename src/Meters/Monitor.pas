@@ -318,7 +318,7 @@ begin
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.element)] := ptruint(@obj.MeteredElement);
     PropertyOffset2[ord(TProp.element)] := 0;
-    //PropertyFlags[ord(TProp.element)] := [TPropertyFlag.CheckForVar]; // not required for general cktelements
+    PropertyFlags[ord(TProp.element)] := [TPropertyFlag.DynamicDefault]; // TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;

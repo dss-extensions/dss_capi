@@ -163,17 +163,25 @@ begin
 
     // double properties (default type)
     PropertyOffset[ActiveProperty + ord(TProp.Rdc)] := ptruint(@obj.FRDC);
+    PropertyFlags[ActiveProperty + ord(TProp.Rdc)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_ohm_per_length];
+    
     PropertyOffset[ActiveProperty + ord(TProp.Rac)] := ptruint(@obj.FR60);
+    PropertyFlags[ActiveProperty + ord(TProp.Rac)] := [TPropertyFlag.DynamicDefault];
+
     PropertyOffset[ActiveProperty + ord(TProp.normamps)] := ptruint(@obj.NormAmps);
+    PropertyFlags[ActiveProperty + ord(TProp.normamps)] := [TPropertyFlag.DynamicDefault];
+
     PropertyOffset[ActiveProperty + ord(TProp.emergamps)] := ptruint(@obj.EmergAmps); 
+    PropertyFlags[ActiveProperty + ord(TProp.emergamps)] := [TPropertyFlag.DynamicDefault];
 
     PropertyOffset[ActiveProperty + ord(TProp.GMRac)] := ptruint(@obj.FGMR60);
+    PropertyFlags[ActiveProperty + ord(TProp.GMRac)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.DynamicDefault];
+    
     PropertyOffset[ActiveProperty + ord(TProp.radius)] := ptruint(@obj.Fradius);
+    PropertyFlags[ActiveProperty + ord(TProp.radius)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.DynamicDefault];
+    
     PropertyOffset[ActiveProperty + ord(TProp.Capradius)] := ptruint(@obj.Fcapradius60);
-
-    PropertyFlags[ActiveProperty + ord(TProp.GMRac)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
-    PropertyFlags[ActiveProperty + ord(TProp.radius)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
-    PropertyFlags[ActiveProperty + ord(TProp.Capradius)] := [TPropertyFlag.NonZero];
+    PropertyFlags[ActiveProperty + ord(TProp.Capradius)] := [TPropertyFlag.NonZero, TPropertyFlag.DynamicDefault];
 
     // scaled double
     PropertyOffset[ActiveProperty + ord(TProp.diam)] := ptruint(@obj.Fradius);
@@ -184,6 +192,7 @@ begin
     // integer properties
     PropertyType[ActiveProperty + ord(TProp.Seasons)] := TPropertyType.IntegerProperty;
     PropertyOffset[ActiveProperty + ord(TProp.Seasons)] := ptruint(@obj.NumAmpRatings);
+    PropertyFlags[ActiveProperty + ord(TProp.Seasons)] := [TPropertyFlag.SuppressJSON]; // can be derived trivially from length(Ratings)
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties;

@@ -297,7 +297,9 @@ begin
         LoadModelEnum := TDSSEnum.Create('Load: Model', True, 0, 0, [
             'Constant PQ', 'Constant Z', 'Motor (constant P, quadratic Q)', 'CVR (linear P, quadratic Q)', 
             'Constant I', 'Constant P, fixed Q', 'Constant P, fixed X', 'ZIPV'], 
-            [1, 2, 3, 4, 5, 6, 7, 8]);
+            [1, 2, 3, 4, 5, 6, 7, 8],
+            ['ConstantPQ', 'ConstantZ', 'Motor', 'CVR', 'ConstantI', 'ConstantP_FixedQ', 'ConstantP_FixedX', 'ZIPV']);
+        LoadModelEnum.JSONUseNumbers := true;
         LoadStatusEnum := TDSSEnum.Create('Load: Status', True, 1, 1, 
             ['Variable', 'Fixed', 'Exempt'], [0, 1, 2]);
         LoadStatusEnum.DefaultValue := 0;
@@ -321,6 +323,21 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    SpecSetNames := ArrayOfString.Create(
+        'kW, PF',
+        'kW, kvar',
+        'kVA, PF',
+        'xfkVA, Allocationfactor, PF',
+        'kWh, kWhdays, Cfactor, PF'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.kW), ord(TProp.PF)),
+        TSpecSet.Create(ord(TProp.kW), ord(TProp.kvar)),
+        TSpecSet.Create(ord(TProp.kVA), ord(TProp.PF)),
+        TSpecSet.Create(ord(TProp.xfkVA), ord(TProp.AllocationFactor), ord(TProp.PF)),
+        TSpecSet.Create(ord(TProp.kWh), ord(TProp.PF), ord(TProp.kWhdays), ord(TProp.Cfactor))
+    );
+
     // enum properties
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
@@ -338,10 +355,12 @@ begin
     PropertyType[ord(TProp.ZIPV)] := TPropertyType.DoubleFArrayProperty;
     PropertyOffset[ord(TProp.ZIPV)] := ptruint(@obj.ZIPV[1]);
     PropertyOffset2[ord(TProp.ZIPV)] := 7;
+    PropertyFlags[ord(TProp.ZIPV)] := [TPropertyFlag.NoDefault];
 
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
 
     // pct properties
     PropertyScale[ord(TProp.pctmean)] := 0.01;
@@ -367,6 +386,10 @@ begin
         [@obj.YearlyShapeObj, @obj.DailyShapeObj, @obj.DutyShapeObj, @obj.CVRShapeObj, @obj.GrowthShapeObj],
         [DSS.LoadShapeClass, DSS.LoadShapeClass, DSS.LoadShapeClass, DSS.LoadShapeClass, DSS.GrowthShapeClass]
     );
+
+    PropertyFlags[ord(TProp.duty)] := [TPropertyFlag.DynamicDefault];
+    PropertyFlags[ord(TProp.yearly)] := [TPropertyFlag.DynamicDefault];
+
     
     // double properties (default type)
     AddProperties_Double(
@@ -379,6 +402,22 @@ begin
         @obj.VminEmerg, @obj.CVRwattFactor, @obj.CVRvarFactor, @obj.kWh, @obj.ConnectedkVA, @obj.kWhdays,
         @obj.FCFactor, @obj.FkVAAllocationFactor]
     );
+
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
+
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault];
+    PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.RequiredInSpecSet];
+
+    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault];
+    PropertyFlags[ord(TProp.xfkVA)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kVA];
+    
+    PropertyFlags[ord(TProp.kWh)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kWh];
+
+    PropertyFlags[ord(TProp.puXharm)] := [TPropertyFlag.NoDefault];
+
+    PropertyFlags[ord(TProp.Rneut)] := [TPropertyFlag.Units_ohm];
+    PropertyFlags[ord(TProp.Xneut)] := [TPropertyFlag.Units_ohm];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;

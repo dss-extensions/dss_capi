@@ -65,7 +65,7 @@ type
         FpctR2: Double;
         FZbase1,
         FZbase2: Double;
-        FkVSpecified: Boolean;
+        // FkVSpecified: Boolean;
         FpctRSpecified: Boolean;
         KSpecified: Boolean;
         FKFactor: Double;
@@ -148,6 +148,15 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    SpecSetNames := ArrayOfString.Create(
+        'R1, R2',
+        'pctR1, pctR2'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.R1), ord(TProp.R2)),
+        TSpecSet.Create(ord(TProp.pctR1), ord(TProp.pctR2))
+    );
+
     // enum properties
     // PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
     // PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
@@ -182,18 +191,28 @@ begin
 
     // double properties
     PropertyOffset[ord(TProp.KVLL1)] := ptruint(@obj.FkV1);
+    PropertyFlags[ord(TProp.KVLL1)] := [TPropertyFlag.Units_kV];
+
     PropertyOffset[ord(TProp.KVLL2)] := ptruint(@obj.FkV2);
+    PropertyFlags[ord(TProp.KVLL2)] := [TPropertyFlag.Units_kV];
+
     PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.FMVArating);
+    PropertyFlags[ord(TProp.MVA)] := [TPropertyFlag.Units_MVA];
+
     PropertyOffset[ord(TProp.pctR1)] := ptruint(@obj.FpctR1);
+    PropertyFlags[ord(TProp.pctR1)] := [TPropertyFlag.RequiredInSpecSet, TPropertyFlag.NoDefault];
+    
     PropertyOffset[ord(TProp.pctR2)] := ptruint(@obj.FpctR2);
+    PropertyFlags[ord(TProp.pctR2)] := [TPropertyFlag.NoDefault];
+
     PropertyOffset[ord(TProp.k)] := ptruint(@obj.FKFactor);
 
     // adv doubles
     PropertyOffset[ord(TProp.R1)] := ptruint(@obj.G1);
-    PropertyFlags[ord(TProp.R1)] := [TPropertyFlag.InverseValue];
+    PropertyFlags[ord(TProp.R1)] := [TPropertyFlag.InverseValue, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_ohm];
 
     PropertyOffset[ord(TProp.R2)] := ptruint(@obj.G2);
-    PropertyFlags[ord(TProp.R2)] := [TPropertyFlag.InverseValue];
+    PropertyFlags[ord(TProp.R2)] := [TPropertyFlag.InverseValue, TPropertyFlag.Units_ohm];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
@@ -285,9 +304,9 @@ begin
                 G2 := 10000.0;  // Default to a low resistance
             FpctRSpecified := FALSE;
         end;
-        ord(TProp.kVLL1),
-        ord(TProp.kVLL2):
-            FkVSpecified := TRUE;
+        // ord(TProp.kVLL1),
+        // ord(TProp.kVLL2):
+        //     FkVSpecified := TRUE;
         ord(TProp.VarCurve):
             if FVarCurveObj <> NIL then
                 Kspecified := FALSE;
@@ -338,7 +357,7 @@ begin
     FpctR1 := Other.FpctR1;
     FpctR2 := Other.FpctR2;
     FpctRSpecified := Other.FpctRSpecified;
-    FkVSpecified := Other.FkVSpecified;
+    // FkVSpecified := Other.FkVSpecified;
     FZBase1 := Other.FZBase1;
     FZBase2 := Other.FZBase2;
     FKfactor := Other.FKfactor;
@@ -365,7 +384,7 @@ begin
     FMVARating := 100.0;
     FVarCurveObj := NIL;
 
-    FkVSpecified := FALSE;
+    // FkVSpecified := FALSE;
     FkV1 := 500.0;
     FkV2 := 138.0;
     FpctR1 := 0.2;

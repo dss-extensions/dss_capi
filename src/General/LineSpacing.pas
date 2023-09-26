@@ -117,8 +117,10 @@ begin
     // integers
     PropertyType[ord(TProp.nphases)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.nphases)] := ptruint(@obj.Nphases);
+    
     PropertyType[ord(TProp.nconds)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.nconds)] := ptruint(@obj.FNconds);
+    PropertyFlags[ord(TProp.nconds)] := [TPropertyFlag.SuppressJSON];
 
     // arrays
     PropertyType[ord(TProp.X)] := TPropertyType.DoubleVArrayProperty;
@@ -179,6 +181,8 @@ begin
 end;
 
 constructor TLineSpacingObj.Create(ParClass: TDSSClass; const LineSpacingName: String);
+var
+    i: Integer;
 begin
     inherited Create(ParClass);
     Name := AnsiLowerCase(LineSpacingName);
@@ -190,6 +194,12 @@ begin
     units := UNITS_FT;
     FNConds := 3;
     PropertySideEffects(ord(TProp.NConds), 0);
+    // TODO: consider using NaN to indicate that the user left invalid data
+    for i := 1 to FNConds do
+    begin
+        FX[i] := 0;
+        FY[i] := 0;
+    end;
     NPhases := 3;
 end;
 

@@ -9,7 +9,8 @@ uses
     Circuit,
     ArrayDef,
     CAPI_Types,
-    fpjson;
+    fpjson,
+    UComplex, DSSUcomplex;
 
 type
 {$SCOPEDENUMS ON}
@@ -98,6 +99,8 @@ type
         procedure GetStrings(Index: Integer; var ResultPtr: PPAnsiChar; ResultCount: PAPISize);
         procedure GetObjects(Index: Integer; var ResultPtr: PPointer; ResultCount: PAPISize);
 
+        function GetComplex(Index: Integer): Complex; // wraps GetDoubles
+
         procedure BeginEdit(Activate: Boolean);
         procedure EndEdit(NumChanges: Integer);
     end;
@@ -111,7 +114,6 @@ uses
     PDElement,
     Utilities,
     SysUtils,
-    UComplex, DSSUcomplex,
     UcMatrix,
     ParserDel,
     Math,
@@ -2456,6 +2458,27 @@ begin
     ParentClass.GetObjDoubles(self, Index, ResultPtr, ResultCount);
 end;
 
+function TDSSObjectHelper.GetComplex(Index: Integer): Complex;
+var
+    resultPtr: PDouble = NIL;
+    resultCount: Array[0..3] of TAPISize;
+begin
+    resultCount[0] := 0;
+    resultCount[1] := 0;
+    resultCount[2] := 0;
+    resultCount[3] := 0;
+    GetDoubles(Index, resultPtr, PAPISize(@resultCount));
+    if resultCount[0] <> 2 then
+    begin
+        Result := NaN;
+    end
+    else
+    begin
+        Result := PComplex(resultPtr)^;
+    end;
+    DSS_Dispose_PDouble(resultPtr);
+end;
+
 procedure TDSSObjectHelper.GetIntegers(Index: Integer; var ResultPtr: PInteger; ResultCount: PAPISize);
 begin
     ParentClass.GetObjIntegers(self, Index, ResultPtr, ResultCount);
@@ -3338,6 +3361,8 @@ begin
             else // if TPropertyFlag.OnArray in flags then
             begin
                 otherObjPtr := TDSSObjectPtr(PPByte(PtrUint(obj) + PropertyOffset[Index])^); // start of array
+                if otherObjPtr = NIL then
+                    Exit;
                 posPtr := PInteger(PtrUint(obj) + PropertyStructArrayIndexOffset);
                 inc(otherObjPtr, posPtr^ - 1);
                 Result := otherObjPtr^;
@@ -3550,7 +3575,7 @@ begin
         end;
         TPropertyType.MappedStringEnumArrayProperty:
         begin
-            if not (TPropertyFlag.SizeIsFunction in PropertyFlags[Index]) then
+            if (TPropertyFlag.SizeIsFunction in PropertyFlags[Index]) then
                 count := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
             else
                 count := PropertyOffset3[Index];
@@ -3773,7 +3798,7 @@ begin
         end;
         TPropertyType.MappedStringEnumArrayProperty:
         begin
-            if not (TPropertyFlag.SizeIsFunction in PropertyFlags[Index]) then
+            if (TPropertyFlag.SizeIsFunction in PropertyFlags[Index]) then
                 count := TIntegerPropertyFunction(Pointer(PropertyOffset3[Index]))(obj)
             else
                 count := PropertyOffset3[Index];
@@ -3782,12 +3807,16 @@ begin
                 Exit;
 
             integerPtr := PPInteger(PByte(obj) + PropertyOffset[Index])^;
-
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, count);
-            for i := 1 to count do
+            if integerPtr = NIL then
+                Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 0)
+            else
             begin
-                Result[i - 1] := DSS_CopyStringAsPChar(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
-                Inc(integerPtr);
+                Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, count);
+                for i := 1 to count do
+                begin
+                    Result[i - 1] := DSS_CopyStringAsPChar(TDSSEnum(Pointer(PropertyOffset2[Index])).OrdinalToString(integerPtr^));
+                    Inc(integerPtr);
+                end;
             end;
         end;
         //TPropertyType.StringOnStructArrayProperty: // shortcut

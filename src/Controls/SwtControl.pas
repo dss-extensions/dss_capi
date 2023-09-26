@@ -157,14 +157,14 @@ begin
     PropertyOffset[ord(TProp.Normal)] := ptruint(@obj.CurrentAction);
     PropertyOffset2[ord(TProp.Normal)] := PtrInt(StateEnum);
     PropertyOffset3[ord(TProp.Normal)] := ptruint(@obj.Locked);
-    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.ConditionalReadOnly];
+    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.ConditionalReadOnly, TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.State)] := ptruint(@obj.CurrentAction);
     PropertyOffset2[ord(TProp.State)] := PtrInt(StateEnum);
     PropertyOffset3[ord(TProp.State)] := ptruint(@obj.Locked);
     PropertyReadFunction[ord(TProp.State)] := @GetState;
-    PropertyFlags[ord(TProp.State)] := [TPropertyFlag.ConditionalReadOnly, TPropertyFlag.ReadByFunction];
+    PropertyFlags[ord(TProp.State)] := [TPropertyFlag.ConditionalReadOnly, TPropertyFlag.ReadByFunction, TPropertyFlag.NoDefault];
 
     // boolean
     PropertyType[ord(TProp.Lock)] := TPropertyType.BooleanProperty;
@@ -183,6 +183,7 @@ begin
 
     // double properties (default type)
     PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.TimeDelay);
+    PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.Units_s];
 
     // boolean action
     PropertyType[ord(TProp.Reset)] := TPropertyType.BooleanActionProperty;

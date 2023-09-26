@@ -201,22 +201,40 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    PropertyStructArrayCountOffset := ptruint(@obj.FNumPoints);
+
+    SpecSetNames := ArrayOfString.Create(
+        'Price, Hour',
+        'Price, Interval',
+        'CSVFile',
+        'SngFile',
+        'DblFile'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.Price), ord(TProp.Hour)),
+        TSpecSet.Create(ord(TProp.Price), ord(TProp.Interval)),
+        TSpecSet.Create(ord(TProp.CSVFile)),
+        TSpecSet.Create(ord(TProp.SngFile)),
+        TSpecSet.Create(ord(TProp.DblFile))
+    );
+
     // strings
     PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
-    PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename];
+    PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.dblfile)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.dblfile)] := ptruint(@obj.dblfile);
-    PropertyFlags[ord(TProp.dblfile)] := [TPropertyFlag.IsFilename];
+    PropertyFlags[ord(TProp.dblfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     PropertyType[ord(TProp.sngfile)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.sngfile)] := ptruint(@obj.sngfile);
-    PropertyFlags[ord(TProp.sngfile)] := [TPropertyFlag.IsFilename];
+    PropertyFlags[ord(TProp.sngfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     // integer properties
     PropertyType[ord(TProp.Npts)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.Npts)] := ptruint(@obj.FNumPoints);
+    PropertyFlags[ord(TProp.Npts)] := [TPropertyFlag.SuppressJSON];
 
     // advanced doubles
     PropertyOffset[ord(TProp.sinterval)] := ptruint(@obj.Interval);
@@ -231,25 +249,28 @@ begin
 
     // double properties
     PropertyOffset[ord(TProp.Interval)] := ptruint(@obj.Interval);
+    PropertyFlags[ord(TProp.Interval)] := [TPropertyFlag.RequiredInSpecSet];
     
     PropertyOffset[ord(TProp.mean)] := ptruint(@obj.FMean);
     PropertyReadFunction[ord(TProp.mean)] := @GetMean;
     PropertyWriteFunction[ord(TProp.mean)] := @SetMean;
-    PropertyFlags[ord(TProp.mean)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.WriteByFunction];
+    PropertyFlags[ord(TProp.mean)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.DynamicDefault, TPropertyFlag.WriteByFunction];
     
     PropertyOffset[ord(TProp.stddev)] := ptruint(@obj.FStdDev);
     PropertyReadFunction[ord(TProp.stddev)] := @GetStdDev;
     PropertyWriteFunction[ord(TProp.stddev)] := @SetStdDev;
-    PropertyFlags[ord(TProp.stddev)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.WriteByFunction];
+    PropertyFlags[ord(TProp.stddev)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.DynamicDefault, TPropertyFlag.WriteByFunction];
 
     // double arrays
     PropertyType[ord(TProp.price)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.price)] := ptruint(@obj.PriceValues);
     PropertyOffset2[ord(TProp.price)] := ptruint(@obj.FNumPoints);
+    PropertyFlags[ord(TProp.price)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.hour)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.hour)] := ptruint(@obj.Hours);
     PropertyOffset2[ord(TProp.hour)] := ptruint(@obj.FNumPoints);
+    PropertyFlags[ord(TProp.hour)] := [TPropertyFlag.RequiredInSpecSet];
 
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;

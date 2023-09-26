@@ -125,28 +125,43 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    PropertyStructArrayCountOffset := ptruint(@obj.NumHarm);
+
+    SpecSetNames := ArrayOfString.Create(
+        'Harmonic, Angle, pctMag',
+        'CSVFile'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.Harmonic), ord(TProp.Angle), ord(TProp.pctMag)),
+        TSpecSet.Create(ord(TProp.CSVFile))
+    );
+
     // strings
     PropertyType[ord(TProp.csvfile)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.csvfile)] := ptruint(@obj.csvfile);
-    PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename];
+    PropertyFlags[ord(TProp.csvfile)] := [TPropertyFlag.IsFilename, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.GlobalCount];
 
     // integer properties
     PropertyType[ord(TProp.NumHarm)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.NumHarm)] := ptruint(@obj.NumHarm);
+    PropertyFlags[ord(TProp.NumHarm)] := [TPropertyFlag.SuppressJSON];
 
     // double arrays
     PropertyType[ord(TProp.harmonic)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.harmonic)] := ptruint(@obj.HarmArray);
     PropertyOffset2[ord(TProp.harmonic)] := ptruint(@obj.NumHarm);
+    PropertyFlags[ord(TProp.harmonic)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.angle)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.angle)] := ptruint(@obj.AngleArray);
     PropertyOffset2[ord(TProp.angle)] := ptruint(@obj.NumHarm);
+    PropertyFlags[ord(TProp.angle)] := [TPropertyFlag.RequiredInSpecSet];
 
     PropertyType[ord(TProp.pctmag)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.pctmag)] := ptruint(@obj.puMagArray);
     PropertyOffset2[ord(TProp.pctmag)] := ptruint(@obj.NumHarm);
     PropertyScale[ord(TProp.pctmag)] := 0.01;
+    PropertyFlags[ord(TProp.pctmag)] := [TPropertyFlag.RequiredInSpecSet];
 
     ActiveProperty := NumPropsThisClass;
     inherited;

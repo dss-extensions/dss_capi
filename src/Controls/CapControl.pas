@@ -247,14 +247,13 @@ begin
     PropertyOffset[ord(TProp.capacitor)] := ptruint(@obj.FControlledElement);
     PropertyOffset2[ord(TProp.capacitor)] := ptruint(DSS.CapacitorClass);
     PropertyWriteFunction[ord(TProp.capacitor)] := @SetControlledElement;
-    PropertyFlags[ord(TProp.capacitor)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.CheckForVar]; // will automatically substitute @var value
+    PropertyFlags[ord(TProp.capacitor)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.CheckForVar, TPropertyFlag.Required]; // will automatically substitute @var value
 
     PropertyType[ord(TProp.element)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.element)] := ptruint(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.element)] := 0;
     PropertyWriteFunction[ord(TProp.element)] := @SetMonitoredElement; // TODO: move to side-effect instead?
-    PropertyFlags[ord(TProp.element)] := [TPropertyFlag.WriteByFunction];
-    //PropertyFlags[ord(TProp.element)] := [TPropertyFlag.CheckForVar]; // not required for general cktelements
+    PropertyFlags[ord(TProp.element)] := [TPropertyFlag.WriteByFunction];// [TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.ControlSignal)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.ControlSignal)] := ptruint(@obj.ctrlSignalShape);
@@ -279,8 +278,10 @@ begin
     PropertyOffset[ord(TProp.VBus)] := ptruint(@obj.ControlVars.VOverrideBusName);
 
     PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
-    PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
+    PropertyFlags[ord(TProp.UserModel)] := [TPropertyFlag.IsFilename];
+
+    PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
 
     // boolean properties
@@ -299,10 +300,19 @@ begin
     PropertyOffset[ord(TProp.ONsetting)] := ptruint(@obj.ControlVars.ON_Value);
     PropertyOffset[ord(TProp.OFFsetting)] := ptruint(@obj.ControlVars.OFF_Value);
     PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.ControlVars.ONDelay);
+    
     PropertyOffset[ord(TProp.Vmax)] := ptruint(@obj.ControlVars.Vmax);
+    PropertyFlags[ord(TProp.Vmax)] := [TPropertyFlag.Units_V];
+
     PropertyOffset[ord(TProp.Vmin)] := ptruint(@obj.ControlVars.Vmin);
+    PropertyFlags[ord(TProp.Vmin)] := [TPropertyFlag.Units_V];
+
     PropertyOffset[ord(TProp.DelayOFF)] := ptruint(@obj.ControlVars.OFFDelay);
+    PropertyFlags[ord(TProp.DelayOFF)] := [TPropertyFlag.Units_s];
+
     PropertyOffset[ord(TProp.DeadTime)] := ptruint(@obj.ControlVars.DeadTime);
+    PropertyFlags[ord(TProp.DeadTime)] := [TPropertyFlag.Units_s];
+
     PropertyOffset[ord(TProp.pctMinkvar)] := ptruint(@obj.FpctMinKvar);
 
     // boolean action

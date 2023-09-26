@@ -80,11 +80,14 @@ type
         WdgCurrents
     );
 
+{$PUSH}
+{$Z4} // keep enums as int32 values
     TAutoTransConnection = (
         Wye = 0,
         Delta = 1,
         Series = 2
     );
+{$POP}
 {$SCOPEDENUMS OFF}
 
 
@@ -266,7 +269,8 @@ begin
         PropInfo := TypeInfo(TProp);
         AutoTransConnectionEnum := TDSSEnum.Create('AutoTrans: Connection', True, 1, 2,
             ['wye', 'delta', 'series', 'y', 'ln', 'll'],
-            [0, 1, 2, 0, 0, 1]);
+            [0, 1, 2, 0, 0, 1],
+            ['Wye', 'Delta', 'Series', '', '', '']);
     end;
 
     inherited Create(dssContext, AUTOTRANS_ELEMENT, 'AutoTrans');
@@ -320,6 +324,15 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    SpecSetNames := ArrayOfString.Create(
+        'XHX, XHT, XXT',
+        'XscArray'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.XHX), ord(TProp.XHT), ord(TProp.XXT)),
+        TSpecSet.Create(ord(TProp.XscArray))
+    );
+
     PropertyStructArrayOffset := ptruint(@obj.Winding);
     PropertyStructArrayStep := SizeOf(TAutoWinding);
     PropertyStructArrayIndexOffset := ptruint(@obj.ActiveWinding);
@@ -333,7 +346,7 @@ begin
     PropertyType[ord(TProp.Xscarray)] := TPropertyType.DoubleVArrayProperty;
     PropertyOffset[ord(TProp.Xscarray)] := ptruint(@obj.puXSC);
     PropertyOffset3[ord(TProp.Xscarray)] := ptruint(@XscSize);
-    PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction];
+    PropertyFlags[ord(TProp.Xscarray)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.RequiredInSpecSet];
     PropertyScale[ord(TProp.Xscarray)] := 0.01;
 
     // enums
@@ -354,6 +367,7 @@ begin
     // double-on-struct array properties
     PropertyType[ord(TProp.kV)] := TPropertyType.DoubleOnStructArrayProperty;
     PropertyOffset[ord(TProp.kV)] := ptruint(@TAutoWinding(nil^).kVLL);
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     PropertyType[ord(TProp.kVA)] := TPropertyType.DoubleOnStructArrayProperty;
     PropertyOffset[ord(TProp.kVA)] := ptruint(@TAutoWinding(nil^).kVA);
@@ -377,10 +391,11 @@ begin
     // bus, indirect
     PropertyType[ord(TProp.bus)] := TPropertyType.BusOnStructArrayProperty;
     PropertyOffset[ord(TProp.bus)] := 1; // dummy value, just to mark the property as handled
-    
+    PropertyFlags[ord(TProp.bus)] := [TPropertyFlag.Required];
+
     PropertyType[ord(TProp.buses)] := TPropertyType.BusesOnStructArrayProperty;
     PropertyOffset[ord(TProp.buses)] := ptruint(@obj.NumWindings);
-    PropertyFlags[ord(TProp.buses)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.buses)] := [TPropertyFlag.Redundant, TPropertyFlag.Required, TPropertyFlag.DynamicDefault];
     PropertyRedundantWith[ord(TProp.buses)] := ord(TProp.bus);
     PropertyArrayAlternative[ord(TProp.bus)] := ord(TProp.buses);
 
@@ -408,7 +423,7 @@ begin
 
     PropertyType[ord(TProp.windings)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.windings)] := ptruint(@obj.NumWindings);
-    PropertyFlags[ord(TProp.windings)] := [TPropertyFlag.NonZero, TPropertyFlag.NonNegative];
+    PropertyFlags[ord(TProp.windings)] := [TPropertyFlag.NonZero, TPropertyFlag.NonNegative, TPropertyFlag.SuppressJSON];
 
     PropertyType[ord(TProp.wdg)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.wdg)] := ptruint(@obj.ActiveWinding);
@@ -417,27 +432,33 @@ begin
     // string properties
     PropertyType[ord(TProp.subname)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.subname)] := ptruint(@obj.SubstationName);
-
+    
     PropertyType[ord(TProp.Bank)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.Bank)] := ptruint(@obj.XfmrBank);
     PropertyFlags[ord(TProp.Bank)] := [TPropertyFlag.Unused];
 
     // double properties
     PropertyOffset[ord(TProp.thermal)] := ptruint(@obj.ThermalTimeConst);
+    PropertyFlags[ord(TProp.thermal)] := [TPropertyFlag.Units_hour, TPropertyFlag.Unused];
+
     PropertyOffset[ord(TProp.n)] := ptruint(@obj.n_thermal);
     PropertyOffset[ord(TProp.m)] := ptruint(@obj.m_thermal);
     PropertyOffset[ord(TProp.flrise)] := ptruint(@obj.FLrise);
     PropertyOffset[ord(TProp.hsrise)] := ptruint(@obj.HSRise);
-    PropertyFlags[ord(TProp.thermal)] := [TPropertyFlag.Unused];
     PropertyFlags[ord(TProp.n)] := [TPropertyFlag.Unused];
     PropertyFlags[ord(TProp.m)] := [TPropertyFlag.Unused];
-    PropertyFlags[ord(TProp.flrise)] := [TPropertyFlag.Unused];
-    PropertyFlags[ord(TProp.hsrise)] := [TPropertyFlag.Unused];
+    PropertyFlags[ord(TProp.flrise)] := [TPropertyFlag.Unused, TPropertyFlag.Units_degC];
+    PropertyFlags[ord(TProp.hsrise)] := [TPropertyFlag.Unused, TPropertyFlag.Units_degC];
 
     PropertyOffset[ord(TProp.pctloadloss)] := ptruint(@obj.pctLoadLoss);
     PropertyOffset[ord(TProp.pctnoloadloss)] := ptruint(@obj.pctNoLoadLoss);
+    
     PropertyOffset[ord(TProp.normhkVA)] := ptruint(@obj.NormMaxHkVA);
+    PropertyFlags[ord(TProp.normhkVA)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kVA];
+    
     PropertyOffset[ord(TProp.emerghkVA)] := ptruint(@obj.EmergMaxHkVA);
+    PropertyFlags[ord(TProp.emerghkVA)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.Units_kVA];
+    
     PropertyOffset[ord(TProp.pctimag)] := ptruint(@obj.pctImag);
 
     // scaled double
@@ -457,6 +478,8 @@ begin
     PropertyTrapZero[ord(TProp.XHT)] := 35.0;
     PropertyTrapZero[ord(TProp.XXT)] := 30.0;
 
+    PropertyFlags[ord(TProp.XHX)] := [TPropertyFlag.RequiredInSpecSet];
+
     // double arrays via struct array
     PropertyType[ord(TProp.pctRs)] := TPropertyType.DoubleArrayOnStructArrayProperty;
     PropertyOffset[ord(TProp.pctRs)] := ptruint(@TAutoWinding(nil^).Rpu); 
@@ -469,7 +492,7 @@ begin
     PropertyType[ord(TProp.kVs)] := TPropertyType.DoubleArrayOnStructArrayProperty;
     PropertyOffset[ord(TProp.kVs)] := ptruint(@TAutoWinding(nil^).kVLL); 
     PropertyOffset2[ord(TProp.kVs)] := ptruint(@obj.NumWindings);
-    PropertyFlags[ord(TProp.kVs)] := [TPropertyFlag.Redundant];
+    PropertyFlags[ord(TProp.kVs)] := [TPropertyFlag.Redundant, TPropertyFlag.Required];
     PropertyRedundantWith[ord(TProp.kVs)] := ord(TProp.kV);
     PropertyArrayAlternative[ord(TProp.kV)] := ord(TProp.kVs);
 
@@ -604,28 +627,45 @@ begin
             NormMaxHkVA := 1.1 * Winding[1].kVA;    // Defaults for new winding rating.
             EmergMaxHkVA := 1.5 * Winding[1].kVA;
         end;
-        17..19:
+        ord(TProp.XHX),
+        ord(TProp.XHT),
+        ord(TProp.XXT):
             XHXChanged := TRUE;
-        26:
+        ord(TProp.pctloadloss):
         begin    // Assume load loss is split evenly  between windings 1 and 2
             Winding[1].Rpu := pctLoadLoss / 2.0 / 100.0;
             Winding[2].Rpu := Winding[1].Rpu;
         end;
-        37:
+        ord(TProp.pctRs):
             pctLoadLoss := (Winding[1].Rpu + Winding[2].Rpu) * 100.0;  // Update
-        // 38:
-        //     DoSimpleMsg('Bank Property not used with AutoTrans object.', 100130);
         // 39:
         //     DoSimpleMsg('XFmrCode Property not used with AutoTrans object.', 100131);
     end;
 
     //YPrim invalidation on anything that changes impedance values
     case Idx of
-        5..19:
+        ord(TProp.conn),
+        ord(TProp.kV),
+        ord(TProp.kVA),
+        ord(TProp.tap),
+        ord(TProp.pctR),
+        ord(TProp.Rdcohms),
+        ord(TProp.Core),
+        ord(TProp.buses),
+        ord(TProp.conns),
+        ord(TProp.kVs),
+        ord(TProp.kVAs),
+        ord(TProp.taps),
+        ord(TProp.XHX),
+        ord(TProp.XHT),
+        ord(TProp.XXT),
+        ord(TProp.pctloadloss),
+        ord(TProp.pctnoloadloss),
+        ord(TProp.pctimag),
+        ord(TProp.ppm_antifloat),
+        ord(TProp.pctRs):
             YprimInvalid := TRUE;
-        26..27:
-            YprimInvalid := TRUE;
-        35..37:
+        ord(TProp.XSCarray):
             YprimInvalid := TRUE;
     end;
     inherited PropertySideEffects(Idx, previousIntVal);
@@ -1920,5 +1960,6 @@ begin
     Y_Terminal_FreqMult := Freqmult;
 end;
 
-finalization    AutoTransConnectionEnum.Free;
+finalization
+    AutoTransConnectionEnum.Free;
 end.

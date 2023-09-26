@@ -157,7 +157,7 @@ end;
 
 function GetFuseStateSize(Obj: TObj): Integer;
 begin
-    Result := FUSEMAXDIM;
+    Result := Min(FUSEMAXDIM, Obj.FNPhases); // NOTE: DSS-Extensions: changed from FUSEMAXDIM to avoid invalid access
     if Obj.ControlledElement <> NIL then
         Result := Obj.ControlledElement.NPhases;
 end;
@@ -178,7 +178,7 @@ begin
     PropertyType[ord(TProp.MonitoredObj)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.MonitoredObj)] := ptruint(@obj.MonitoredElement);
     //PropertyWriteFunction[ord(TProp.MonitoredObj)] := @SetMonitoredElement;
-    //PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.WriteByFunction];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
+    PropertyFlags[ord(TProp.MonitoredObj)] := [TPropertyFlag.Required];//TPropertyFlag.WriteByFunction];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     PropertyType[ord(TProp.SwitchedObj)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.SwitchedObj)] := ptruint(@obj.FControlledElement);
@@ -194,17 +194,20 @@ begin
     // double properties
     PropertyOffset[ord(TProp.RatedCurrent)] := ptruint(@obj.RatedCurrent);
     PropertyOffset[ord(TProp.Delay)] := ptruint(@obj.DelayTime);
+    PropertyFlags[ord(TProp.Delay)] := [TPropertyFlag.Units_s];
 
     // enum action
     PropertyType[ord(TProp.Action)] := TPropertyType.StringEnumActionProperty;
     PropertyOffset[ord(TProp.Action)] := ptruint(@DoAction); 
     PropertyOffset2[ord(TProp.Action)] := PtrInt(ActionEnum);
+    PropertyFlags[ord(TProp.Action)] := [TPropertyFlag.Deprecated];
+    PropertyDeprecatedMessage[ord(TProp.Action)] := 'Use "State" property instead.';
 
     PropertyType[ord(TProp.Normal)] := TPropertyType.MappedStringEnumArrayProperty;
     PropertyOffset[ord(TProp.Normal)] := ptrint(@obj.FNormalState); 
     PropertyOffset2[ord(TProp.Normal)] := ptrint(StateEnum); 
     PropertyOffset3[ord(TProp.Normal)] := ptrint(@GetFuseStateSize);
-    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.SizeIsFunction]; // FControlledElement.NPhases
+    PropertyFlags[ord(TProp.Normal)] := [TPropertyFlag.SizeIsFunction, TPropertyFlag.DynamicDefault]; // FControlledElement.NPhases
 
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumArrayProperty;
     PropertyOffset[ord(TProp.State)] := ptrint(@obj.FPresentState); //TODO: why GetPropertyValue doesn't use get_State(x) in the original codebase?
@@ -518,6 +521,7 @@ end;
 
 function TFuseObj.get_States(Idx: Integer): EControlAction;
 begin
+    //TODO: do we need to validate Idx?
     if ControlledElement <> NIL then
     begin
         ControlledElement.ActiveTerminalIdx := ElementTerminal; 

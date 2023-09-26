@@ -390,7 +390,7 @@ const
     PRICEMODE = 2;
 var
     PropInfo: Pointer = NIL;
-    GenStatusEnum, GenDispModeEnum: TDSSEnum;
+    GenStatusEnum, GenDispModeEnum, GenModelEnum: TDSSEnum;
 
 constructor TGenerator.Create(dssContext: TDSSContext);
 begin
@@ -404,6 +404,13 @@ begin
         GenStatusEnum := TDSSEnum.Create('Generator: Status', True, 1, 1, 
             ['Variable', 'Fixed'], [0, Integer(True)]);
         GenStatusEnum.DefaultValue := 0;
+
+        GenModelEnum := TDSSEnum.Create('Generator: Model', True, 0, 0, [
+            'Constant PQ', 'Constant Z', 'Constant P|V|', 'Constant P, fixed Q', 
+            'Constant P, fixed X', 'User model', 'Approximate inverter model'],
+            [1, 2, 3, 4, 5, 6, 7],
+            ['ConstantPQ', 'ConstantZ', 'ConstantPV', 'ConstantP_FixedQ', 'ConstantP_FixedX', 'UserModel', 'ApproxInverter']);
+        GenModelEnum.JSONUseNumbers := true;
     end;
 
     inherited Create(dssContext, GEN_ELEMENT, 'Generator');
@@ -446,6 +453,17 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    //TODO: SpecSelector := ord(TProp.model);
+
+    SpecSetNames := ArrayOfString.Create(
+        'kW, pf',
+        'kW, kvar'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.kW), ord(TProp.pf)),
+        TSpecSet.Create(ord(TProp.kW), ord(TProp.kvar))
+    );
+
     // enum properties
     PropertyType[ord(TProp.conn)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.conn)] := ptruint(@obj.Connection);
@@ -461,12 +479,17 @@ begin
 
     // string properties
     PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
-    PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
-    PropertyType[ord(TProp.ShaftModel)] := TPropertyType.StringProperty;
-    PropertyType[ord(TProp.ShaftData)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
-    PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
+    PropertyFlags[ord(TProp.UserModel)] := [TPropertyFlag.IsFilename];
+
+    PropertyType[ord(TProp.ShaftModel)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.ShaftModel)] := ptruint(@obj.ShaftModelNameStr);
+    PropertyFlags[ord(TProp.ShaftModel)] := [TPropertyFlag.IsFilename];
+
+
+    PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
+    PropertyType[ord(TProp.ShaftData)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
     PropertyOffset[ord(TProp.ShaftData)] := ptruint(@obj.ShaftModelEditStr);
 
     PropertyType[ord(TProp.DynOut)] := TPropertyType.StringProperty;
@@ -478,6 +501,7 @@ begin
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
 
     // boolean properties
     PropertyType[ord(TProp.debugtrace)] := TPropertyType.BooleanProperty;
@@ -491,9 +515,12 @@ begin
 
     // integer properties
     PropertyType[ord(TProp.cls)] := TPropertyType.IntegerProperty;
-    PropertyType[ord(TProp.model)] := TPropertyType.IntegerProperty; //TODO: enum
     PropertyOffset[ord(TProp.cls)] := ptruint(@obj.GenClass);
+
+    PropertyType[ord(TProp.model)] := TPropertyType.MappedIntEnumProperty;
     PropertyOffset[ord(TProp.model)] := ptruint(@obj.GenModel);
+    PropertyOffset2[ord(TProp.model)] := PtrInt(GenModelEnum);
+    // PropertyFlags[ord(TProp.model)] := [TPropertyFlag.Required];
 
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
@@ -519,18 +546,28 @@ begin
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kWBase);
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFNominal);
     PropertyOffset[ord(TProp.Vpu)] := ptruint(@obj.Vpu);
+
     PropertyOffset[ord(TProp.maxkvar)] := ptruint(@obj.kvarMax);
+    PropertyFlags[ord(TProp.maxkvar)] := [TPropertyFlag.DynamicDefault];
+
     PropertyOffset[ord(TProp.minkvar)] := ptruint(@obj.kvarMin);
+    PropertyFlags[ord(TProp.minkvar)] := [TPropertyFlag.DynamicDefault];
+    
     PropertyOffset[ord(TProp.pvfactor)] := ptruint(@obj.PVFactor);
     PropertyOffset[ord(TProp.dispvalue)] := ptruint(@obj.DispatchValue);
     PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
+    
     PropertyOffset[ord(TProp.DutyStart)] := ptruint(@obj.DutyStart);
+    PropertyFlags[ord(TProp.DutyStart)] := [TPropertyFlag.Units_hour];
+
     PropertyOffset[ord(TProp.FuelkWh)] := ptruint(@obj.FuelkWh);
     PropertyOffset[ord(TProp.pctFuel)] := ptruint(@obj.pctFuel);
     PropertyOffset[ord(TProp.pctReserve)] := ptruint(@obj.pctReserve);
 
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.GenVars.kVArating);
+    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.DynamicDefault];
+    
     PropertyOffset[ord(TProp.Xd)] := ptruint(@obj.GenVars.puXd);
     PropertyOffset[ord(TProp.Xdp)] := ptruint(@obj.GenVars.puXdp);
     PropertyOffset[ord(TProp.Xdpp)] := ptruint(@obj.GenVars.puXdpp);
@@ -539,7 +576,13 @@ begin
     PropertyOffset[ord(TProp.XRdp)] := ptruint(@obj.Genvars.XRdp);// X/R for dynamics model
 
     PropertyOffset[ord(TProp.kv)] := ptruint(@obj.Genvars.kVGeneratorBase);
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
+
     PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarBase);
+    PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.NoDefault, TPropertyFlag.RequiredInSpecSet];
+
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.RequiredInSpecSet];
+    PropertyFlags[ord(TProp.PF)] := [TPropertyFlag.RequiredInSpecSet];
 
     // adv doubles
     PropertyOffset[ord(TProp.MVA)] := ptruint(@obj.GenVars.kVArating);
@@ -2811,4 +2854,5 @@ end;
 finalization
     GenStatusEnum.Free;
     GenDispModeEnum.Free;
+    GenModelEnum.Free;
 end.

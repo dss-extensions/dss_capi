@@ -460,14 +460,27 @@ begin
     CountPropertiesAndAllocate();
     PopulatePropertyNames(0, NumPropsThisClass, PropInfo);
 
+    SpecSetNames := ArrayOfString.Create(
+        'kW, PF',
+        'kW, kvar'
+    );
+    SpecSets := TSpecSets.Create(
+        TSpecSet.Create(ord(TProp.kW), ord(TProp.PF)),
+        TSpecSet.Create(ord(TProp.kW), ord(TProp.kvar))
+    );
+
     // strings
     PropertyType[ord(TProp.UserModel)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.UserModel)] := ptruint(@obj.UserModelNameStr);
+    PropertyFlags[ord(TProp.UserModel)] := [TPropertyFlag.IsFilename];
+
     PropertyType[ord(TProp.UserData)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.UserData)] := ptruint(@obj.UserModelEditStr);
 
     PropertyType[ord(TProp.DynaDLL)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.DynaDLL)] := ptruint(@obj.DynaModelNameStr);
+    PropertyFlags[ord(TProp.DynaDLL)] := [TPropertyFlag.IsFilename];
+
     PropertyType[ord(TProp.DynaData)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.DynaData)] := ptruint(@obj.DynaModelEditStr);
 
@@ -485,6 +498,7 @@ begin
     PropertyType[ord(TProp.State)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.State)] := ptruint(@obj.FState);
     PropertyOffset2[ord(TProp.State)] := PtrInt(StateEnum);
+    PropertyFlags[ord(TProp.State)] := [TPropertyFlag.NoDefault];
 
     PropertyType[ord(TProp.DispMode)] := TPropertyType.MappedStringEnumProperty;
     PropertyOffset[ord(TProp.DispMode)] := ptruint(@obj.DispatchMode);
@@ -497,6 +511,7 @@ begin
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
 
     // boolean properties
     PropertyType[ord(TProp.debugtrace)] := TPropertyType.BooleanProperty;
@@ -552,8 +567,8 @@ begin
     // adv doubles
     PropertyOffset[ord(TProp.kvarMax)] := ptruint(@obj.StorageVars.Fkvarlimit);
     PropertyOffset[ord(TProp.kvarMaxAbs)] := ptruint(@obj.StorageVars.Fkvarlimitneg);
-    PropertyFlags[ord(TProp.kvarMax)] := [TPropertyFlag.Transform_Abs];
-    PropertyFlags[ord(TProp.kvarMaxAbs)] := [TPropertyFlag.Transform_Abs];
+    PropertyFlags[ord(TProp.kvarMax)] := [TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
+    PropertyFlags[ord(TProp.kvarMaxAbs)] := [TPropertyFlag.Transform_Abs, TPropertyFlag.DynamicDefault];
 
     PropertyType[ord(TProp.pctIdlingkvar)] := TPropertyType.DeprecatedAndRemoved; //TODO: fully remove
     PropertyDeprecatedMessage[ord(TProp.pctIdlingkvar)] := '"%Idlingkvar" was deprecated in 2020. It does nothing since then; please update your scripts.';
@@ -572,20 +587,35 @@ begin
     PropertyOffset[ord(TProp.pctCutout)] := ptruint(@obj.FpctCutOut);
     PropertyOffset[ord(TProp.Vminpu)] := ptruint(@obj.VMinPu);
     PropertyOffset[ord(TProp.Vmaxpu)] := ptruint(@obj.VMaxPu);
+    
     PropertyOffset[ord(TProp.kWrated)] := ptruint(@obj.StorageVars.kWrating);
+    PropertyFlags[ord(TProp.kWrated)] := [TPropertyFlag.Units_kW];
+    
     PropertyOffset[ord(TProp.kWhrated)] := ptruint(@obj.StorageVars.kWhrating);
+    PropertyFlags[ord(TProp.kWhrated)] := [TPropertyFlag.Units_kWh];
+    
     PropertyOffset[ord(TProp.kWhstored)] := ptruint(@obj.StorageVars.kWhstored);
+    PropertyFlags[ord(TProp.kWhstored)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.Units_kWh];
+
     PropertyOffset[ord(TProp.pctreserve)] := ptruint(@obj.pctReserve);
     PropertyOffset[ord(TProp.pctPminNoVars)] := ptruint(@obj.FpctPminNoVars);
     PropertyOffset[ord(TProp.pctPminkvarMax)] := ptruint(@obj.FpctPminkvarLimit);
+    
     PropertyOffset[ord(TProp.TimeChargeTrig)] := ptruint(@obj.ChargeTime);
+    PropertyFlags[ord(TProp.TimeChargeTrig)] := [TPropertyFlag.Units_ToD_hour];
+    
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.PFnominal);
+    PropertyFlags[ord(TProp.pf)] := [TPropertyFlag.RequiredInSpecSet];
+
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.StorageVars.FkVArating);
+    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.Units_kVA];
+    
     PropertyOffset[ord(TProp.kV)] := ptruint(@obj.StorageVars.kVStorageBase);
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     PropertyOffset[ord(TProp.kvar)] := ptruint(@obj.kvarRequested);
     PropertyReadFunction[ord(TProp.kvar)] := @Getkvar;
-    PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.ReadByFunction];
+    PropertyFlags[ord(TProp.kvar)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kvar];
 
     PropertyType[ord(TProp.pctstored)] := TPropertyType.DoubleProperty;
     PropertyOffset[ord(TProp.pctstored)] := 1;
@@ -596,10 +626,11 @@ begin
     PropertyType[ord(TProp.kW)] := TPropertyType.DoubleProperty;
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kW_out);
     PropertyWriteFunction[ord(TProp.kW)] := @SetkW;
-    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.WriteByFunction];
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.RequiredInSpecSet, TPropertyFlag.Units_kW];
 
     PropertyOffset[ord(TProp.kVDC)] := ptruint(@obj.dynVars.RatedVDC);
     PropertyScale[ord(TProp.kVDC)] := 1000;
+    PropertyFlags[ord(TProp.kVDC)] := [TPropertyFlag.Units_kV];
 
     PropertyOffset[ord(TProp.kP)] := ptruint(@obj.dynVars.kP);
     PropertyScale[ord(TProp.kP)] := 1.0 / 1000.0;
@@ -608,7 +639,10 @@ begin
     PropertyScale[ord(TProp.PITol)] := 1.0 / 100.0;
 
     PropertyOffset[ord(TProp.SafeVoltage)] := ptruint(@obj.dynVars.SMThreshold);
+    
     PropertyOffset[ord(TProp.AmpLimit)] := ptruint(@obj.dynVars.ILimit);
+    PropertyFlags[ord(TProp.AmpLimit)] := [TPropertyFlag.NoDefault];
+
     PropertyOffset[ord(TProp.AmpLimitGain)] := ptruint(@obj.dynVars.VError);
 
     ActiveProperty := NumPropsThisClass;

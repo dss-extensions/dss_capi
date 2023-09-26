@@ -274,6 +274,7 @@ begin
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
 
     // boolean properties
     PropertyType[ord(TProp.Debugtrace)] := TPropertyType.BooleanProperty;
@@ -294,6 +295,8 @@ begin
 
     // double properties (default type)
     PropertyOffset[ord(TProp.kW)] := ptruint(@obj.kWBase);
+    PropertyFlags[ord(TProp.kW)] := [TPropertyFlag.required];
+
     PropertyOffset[ord(TProp.puRs)] := ptruint(@obj.puRs);
     PropertyOffset[ord(TProp.puXs)] := ptruint(@obj.puXs);
     PropertyOffset[ord(TProp.puRr)] := ptruint(@obj.puRr);
@@ -302,8 +305,12 @@ begin
     PropertyOffset[ord(TProp.MaxSlip)] := ptruint(@obj.MaxSlip);
     PropertyOffset[ord(TProp.H)] := ptruint(@obj.MachineData.Hmass);
     PropertyOffset[ord(TProp.D)] := ptruint(@obj.MachineData.D);
+    
     PropertyOffset[ord(TProp.kVA)] := ptruint(@obj.MachineData.kVArating);
+    PropertyFlags[ord(TProp.kVA)] := [TPropertyFlag.required];
+    
     PropertyOffset[ord(TProp.kV)] := ptruint(@obj.MachineData.kVGeneratorBase);
+    PropertyFlags[ord(TProp.kV)] := [TPropertyFlag.Required, TPropertyFlag.Units_kV, TPropertyFlag.NonNegative];
 
     // advanced double
     PropertyOffset[ord(TProp.slip)] := ptruint(@obj.S1);

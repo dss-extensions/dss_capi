@@ -154,12 +154,21 @@ const
     NumPropsThisClass = Ord(High(TProp));
     NumUPFCVariables = 14;
 var
-    PropInfo: Pointer = NIL;    
+    PropInfo: Pointer = NIL;
+    UPFCModeEnum: TDSSEnum;
 
 constructor TUPFC.Create(dssContext: TDSSContext);
 begin
     if PropInfo = NIL then
+    begin
         PropInfo := TypeInfo(TProp);
+        UPFCModeEnum := TDSSEnum.Create('UPFC: Mode', True, 0, 0, [
+            'Off', 'Voltage Regulator', 'Phase Angle Regulator', 'Dual Regulator',  'Double Reference (Voltage)', 'Double Reference (Dual)'], 
+            [0, 1, 2, 3, 4, 5],
+            ['Off', 'VoltageRegulator', 'PhaseAngleRegulator', 'DualRegulator',  'DoubleReference_Voltage', 'DoubleReference_Dual']
+        );
+        UPFCModeEnum.JSONUseNumbers := true;
+    end;
 
     inherited Create(dssContext, UPFC_ELEMENT, 'UPFC');
 end;
@@ -179,9 +188,12 @@ begin
 
     // bus properties
     PropertyType[ord(TProp.bus1)] := TPropertyType.BusProperty;
-    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus1)] := 1;
+    PropertyFlags[ord(TProp.bus1)] := [TPropertyFlag.Required];
+
+    PropertyType[ord(TProp.bus2)] := TPropertyType.BusProperty;
     PropertyOffset[ord(TProp.bus2)] := 2;
+    PropertyFlags[ord(TProp.bus2)] := [TPropertyFlag.Required];
 
     // object properties
     PropertyType[ord(TProp.LossCurve)] := TPropertyType.DSSObjectReferenceProperty;
@@ -194,8 +206,10 @@ begin
     PropertyFlags[ord(TProp.Element)] := [TPropertyFlag.PDElement];
 
     // integer properties
-    PropertyType[ord(TProp.Mode)] := TPropertyType.IntegerProperty;
+    PropertyType[ord(TProp.Mode)] := TPropertyType.MappedIntEnumProperty;
     PropertyOffset[ord(TProp.Mode)] := ptruint(@obj.ModeUPFC);
+    PropertyOffset2[ord(TProp.Mode)] := PtrInt(UPFCModeEnum);
+
     PropertyType[ord(TProp.phases)] := TPropertyType.IntegerProperty;
     PropertyOffset[ord(TProp.phases)] := ptruint(@obj.FNPhases);
     PropertyFlags[ord(TProp.phases)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero];
@@ -203,7 +217,10 @@ begin
     // double properties (default type)
     PropertyOffset[ord(TProp.refkv)] := ptruint(@obj.VRef);
     PropertyOffset[ord(TProp.pf)] := ptruint(@obj.pf);
+    
     PropertyOffset[ord(TProp.frequency)] := ptruint(@obj.Freq);
+    PropertyFlags[ord(TProp.frequency)] := [TPropertyFlag.DynamicDefault, TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.Units_Hz];
+
     PropertyOffset[ord(TProp.Xs)] := ptruint(@obj.Xs);
     PropertyOffset[ord(TProp.Tol1)] := ptruint(@obj.Tol1);
     PropertyOffset[ord(TProp.VpqMax)] := ptruint(@obj.VpqMax);
@@ -211,7 +228,9 @@ begin
     PropertyOffset[ord(TProp.VLLimit)] := ptruint(@obj.VLLimit);
     PropertyOffset[ord(TProp.CLimit)] := ptruint(@obj.CLimit);
     PropertyOffset[ord(TProp.refkv2)] := ptruint(@obj.VRef2);
+
     PropertyOffset[ord(TProp.kvarLimit)] := ptruint(@obj.kvarLim);
+    PropertyFlags[ord(TProp.kvarLimit)] := [TPropertyFlag.Units_kvar];
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
@@ -532,7 +551,7 @@ begin
         end
         else                                                       // Limits OK
         begin
-            case ModeUPFC of
+            case ModeUPFC of //TODO: use enum
                 0:
                     CurrOut := 0; //UPFC off
                 1:
@@ -1144,4 +1163,6 @@ begin
     end;
 end;
 
+finalization
+    UPFCModeEnum.Free;
 end.

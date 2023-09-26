@@ -133,13 +133,15 @@ begin
     PropertyType[ord(TProp.Weights)] := TPropertyType.DoubleArrayProperty;
     PropertyOffset[ord(TProp.Weights)] := ptruint(@obj.FWeights);
     PropertyOffset2[ord(TProp.Weights)] := ptruint(@obj.FListSize);
+    PropertyFlags[ord(TProp.Weights)] := [TPropertyFlag.IndirectCount];
+    PropertyOffset3[ord(TProp.Weights)] := ptruint(@obj.FGeneratorNameList);
 
     // object reference
     PropertyType[ord(TProp.Element)] := TPropertyType.DSSObjectReferenceProperty;
     PropertyOffset[ord(TProp.Element)] := ptruint(@obj.FMonitoredElement);
     PropertyOffset2[ord(TProp.Element)] := 0;
     PropertyWriteFunction[ord(TProp.Element)] := @SetMonitoredElement;
-    PropertyFlags[ord(TProp.Element)] := [TPropertyFlag.WriteByFunction];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
+    PropertyFlags[ord(TProp.Element)] := [TPropertyFlag.WriteByFunction, TPropertyFlag.Required];//[TPropertyFlag.CheckForVar]; // not required for general cktelements
 
     // integer properties
     PropertyType[ord(TProp.Terminal)] := TPropertyType.IntegerProperty;

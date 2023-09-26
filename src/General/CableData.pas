@@ -108,9 +108,16 @@ begin
 
     // double properties (default type)
     PropertyOffset[ActiveProperty + ord(TProp.EpsR)] := ptruint(@obj.FEpsR);
+    // PropertyMinimum[ActiveProperty + ord(TProp.EpsR)] := 1.0; //TODO: add support for minimum value
+    
     PropertyOffset[ActiveProperty + ord(TProp.InsLayer)] := ptruint(@obj.FInsLayer);
+    PropertyFlags[ActiveProperty + ord(TProp.InsLayer)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
+
     PropertyOffset[ActiveProperty + ord(TProp.DiaIns)] := ptruint(@obj.FDiaIns);
+    PropertyFlags[ActiveProperty + ord(TProp.DiaIns)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
+
     PropertyOffset[ActiveProperty + ord(TProp.DiaCable)] := ptruint(@obj.FDiaCable);
+    PropertyFlags[ActiveProperty + ord(TProp.DiaCable)] := [TPropertyFlag.NonNegative, TPropertyFlag.NonZero, TPropertyFlag.NoDefault];
 
     ActiveProperty := ActiveProperty + NumPropsThisClass;
     inherited DefineProperties;
