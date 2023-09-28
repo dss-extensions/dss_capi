@@ -176,9 +176,21 @@ begin
     Result := obj.Mean;
 end;
 
+procedure SetMean(obj: TObj; value: Double);
+begin
+    obj.FStdDevCalculated := true;
+    obj.FMean := value;
+end;
+
 function GetStdDev(obj: TObj): Double;
 begin
     Result := obj.StdDev;
+end;
+
+procedure SetStdDev(obj: TObj; value: Double);
+begin
+    obj.FStdDevCalculated := true;
+    obj.FStdDev := value;
 end;
 
 procedure TPriceShape.DefineProperties;
@@ -222,11 +234,13 @@ begin
     
     PropertyOffset[ord(TProp.mean)] := ptruint(@obj.FMean);
     PropertyReadFunction[ord(TProp.mean)] := @GetMean;
-    PropertyFlags[ord(TProp.mean)] := [TPropertyFlag.ReadByFunction];
+    PropertyWriteFunction[ord(TProp.mean)] := @SetMean;
+    PropertyFlags[ord(TProp.mean)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.WriteByFunction];
     
     PropertyOffset[ord(TProp.stddev)] := ptruint(@obj.FStdDev);
     PropertyReadFunction[ord(TProp.stddev)] := @GetStdDev;
-    PropertyFlags[ord(TProp.stddev)] := [TPropertyFlag.ReadByFunction];
+    PropertyWriteFunction[ord(TProp.stddev)] := @SetStdDev;
+    PropertyFlags[ord(TProp.stddev)] := [TPropertyFlag.ReadByFunction, TPropertyFlag.WriteByFunction];
 
     // double arrays
     PropertyType[ord(TProp.price)] := TPropertyType.DoubleArrayProperty;
