@@ -47,8 +47,6 @@ uses
   {$ENDIF}
   SysUtils,
   Classes,
-  CustApp,
-//	KeyEvents, // or a linkframework Carbon statement above?
   Arraydef in '..\Shared\Arraydef.pas',
   AutoAdd in '..\Common\AutoAdd.pas',
   AutoTrans in '..\PDElements\AutoTrans.pas',
@@ -173,10 +171,6 @@ uses
   XfmrCode in '..\General\XfmrCode.pas',
   XYcurve in '..\General\XYcurve.pas',
   Ymatrix in '..\Common\Ymatrix.pas',
-//  FNCS in 'fncs.pas',
-//  HELICS in 'helics.pas',
-//  epiktimer in '..\epiktimer\epiktimer.pas',
-//  linenoise in 'linenoise.pas';
   DText in '..\DDLL\DText.pas',
   DLoads in '..\DDLL\DLoads.pas',
   DIDSSProperty in '..\DDLL\DIDSSProperty.pas',
@@ -268,10 +262,14 @@ exports
 // {$R *.res}
 
 begin
+  Writeln ('Begin OpenDSSDirect');
   IsDLL := TRUE;
   IsMultiThread := True;
-{Create one instance of DSS executive whenever the DSS Engine is init'd}
-  DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
-  DSSExecutive[ActiveActor].CreateDefaultDSSItems;
-  //WriteDLLDebugFile(DSSDirectory);
+///{Create one instance of DSS executive whenever the DSS Engine is init'd}
+///  Writeln ('Active Actor = ', ActiveActor);
+///  DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
+///  Writeln ('Created Executive');
+///  DSSExecutive[ActiveActor].CreateDefaultDSSItems;
+///  Writeln ('Created Default DSS Items');
+///  //WriteDLLDebugFile(DSSDirectory);
 end.
