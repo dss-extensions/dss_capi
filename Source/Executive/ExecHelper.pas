@@ -163,12 +163,13 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  ExportCIMXML, NamedObject,
      {$IFNDEF FPC}RegularExpressionsCore,{$ELSE}RegExpr,{$ENDIF} PstCalc,
-     PDELement, ReduceAlgs{$IFDEF FPC}, Fncs, Helics{$ENDIF}, Ucmatrix;
+     PDELement, ReduceAlgs
+     {$IFDEF FPC_HELICS}, Fncs, Helics{$ENDIF}, Ucmatrix;
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
    ReconductorCommands, RephaseCommands, AddMarkerCommands,
-   SetBusXYCommands, PstCalcCommands, RemoveCommands, 
+   SetBusXYCommands, PstCalcCommands, RemoveCommands,
    FNCSPubCommands, HELICSPubCommands :TCommandList;
 
 //----------------------------------------------------------------------------
@@ -3913,7 +3914,7 @@ End;
 
 
 FUNCTION DoFNCSPubCmd:Integer;
-{$IFDEF FPC}
+{$IFDEF FPC_HELICS}
 Var
   Param          :String;
   ParamName      :String;
@@ -3949,7 +3950,7 @@ Begin
 End;
 
 FUNCTION DoHELICSPubCmd:Integer;
-{$IFDEF FPC}
+{$IFDEF FPC_HELICS}
 Var
   Param          :String;
   ParamName      :String;
