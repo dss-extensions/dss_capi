@@ -32,53 +32,52 @@ type
 {$SCOPEDENUMS ON}
     TAutoTransProp = (
         INVALID = 0,
-        phases=1,
-        windings=2,
+        phases,
+        windings,
 
         // Winding Definition
-        wdg=3,
-        bus=4,
-        conn=5,
-        kV=6,
-        kVA=7,
-        tap=8,
-        pctR=9,
-        Rdcohms=10,
-        Core=11,
+        wdg,
+        bus,
+        conn,
+        kV,
+        kVA,
+        tap,
+        pctR,
+        Rdcohms,
+        Core,
 
         // General Data
-        buses=12,
-        conns=13,
-        kVs=14,
-        kVAs=15,
-        taps=16,
-        XHX=17,
-        XHT=18,
-        XXT=19,
-        XSCarray=20,
-        thermal=21,
-        n=22,
-        m=23,
-        flrise=24,
-        hsrise=25,
-        pctloadloss=26,
-        pctnoloadloss=27,
-        normhkVA=28,
-        emerghkVA=29,
-        sub=30,
-        MaxTap=31,
-        MinTap=32,
-        NumTaps=33,
-        subname=34,
-        pctimag=35,
-        ppm_antifloat=36,
-        pctRs=37,
-
-        //bank=38, // removed, unused
-        //XfmrCode=39, // removed, unused
-        XRConst=38, //- was 40
-        LeadLag=39, // was 41
-        WdgCurrents=40 // was 42
+        buses,
+        conns,
+        kVs,
+        kVAs,
+        taps,
+        XHX,
+        XHT,
+        XXT,
+        XSCarray,
+        thermal,
+        n,
+        m,
+        flrise,
+        hsrise,
+        pctloadloss,
+        pctnoloadloss,
+        normhkVA,
+        emerghkVA,
+        sub,
+        MaxTap,
+        MinTap,
+        NumTaps,
+        subname,
+        pctimag,
+        ppm_antifloat,
+        pctRs,
+        bank,
+        //XfmrCode, // removed, unused
+        XRConst,
+        LeadLag,
+        WdgCurrents
     );
 
     TAutoTransConnection = (
@@ -192,7 +191,7 @@ type
         SubstationName: String;
         Winding: pAutoWindingArray;
         XfmrBank: String;
-        XfmrCode: String;
+        // XfmrCode: String;
         CoreType: Integer;
         pctImag: Double;
         pctLoadLoss: Double;
@@ -246,7 +245,7 @@ uses
     DSSGlobals,
     Sysutils,
     Utilities,
-    XfmrCode,
+    // XfmrCode,
     DSSHelper,
     DSSObjectHelper,
     TypInfo;
@@ -418,6 +417,10 @@ begin
     // string properties
     PropertyType[ord(TProp.subname)] := TPropertyType.StringProperty;
     PropertyOffset[ord(TProp.subname)] := ptruint(@obj.SubstationName);
+
+    PropertyType[ord(TProp.Bank)] := TPropertyType.StringProperty;
+    PropertyOffset[ord(TProp.Bank)] := ptruint(@obj.XfmrBank);
+    PropertyFlags[ord(TProp.Bank)] := [TPropertyFlag.Unused];
 
     // double properties
     PropertyOffset[ord(TProp.thermal)] := ptruint(@obj.ThermalTimeConst);
@@ -724,7 +727,7 @@ begin
     XRConst := Other.XRConst;
 
     XfmrBank := Other.XfmrBank;
-    XfmrCode := Other.XfmrCode;
+    // XfmrCode := Other.XfmrCode;
 end;
 
 constructor TAutoTransObj.Create(ParClass: TDSSClass; const TransfName: String);
@@ -750,7 +753,7 @@ begin
     DeltaDirection := 1;
     SubstationName := '';
     XfmrBank := '';
-    XfmrCode := '';
+    // XfmrCode := '';
 
     VABase := Winding[1].kVA * 1000.0;
     ThermalTimeconst := 2.0;
@@ -1148,9 +1151,9 @@ begin
         end;
     end;
 
-    FSWriteln(F, Format('~ XHL=%.3f', [puXHX * 100.0]));
+    FSWriteln(F, Format('~ XHX=%.3f', [puXHX * 100.0]));
     FSWriteln(F, Format('~ XHT=%.3f', [puXHT * 100.0]));
-    FSWriteln(F, Format('~ XLT=%.3f', [puXXT * 100.0]));
+    FSWriteln(F, Format('~ XXT=%.3f', [puXXT * 100.0]));
     // FSWriteln(F, Format('~ X12=%.3f', [puXHX * 100.0]));
     // FSWriteln(F, Format('~ X13=%.3f', [puXHT * 100.0]));
     // FSWriteln(F, Format('~ X23=%.3f', [puXXT * 100.0]));
