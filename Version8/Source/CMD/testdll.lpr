@@ -77,15 +77,19 @@ var
   dll_name: string;
 begin
   inherited Create(TheOwner);
-  // StopOnException:=True;
+  StopOnException:=True;
   dll_name := './test/libsample.' + SharedSuffix;
   dll_name := './test/libopendssdirect.' + SharedSuffix;
   writeln ('Try to load:', dll_name);
 {$IFDEF Windows}
   FLibHandle := SafeLoadLibrary (dll_name);
 {$ELSE} // Darwin and Unix
-  FLibHandle := SafeLoadLibrary (dll_name);
-  writeln ('Return from SafeLoadLibrary with FLibHandle = ', FLibHandle);
+  try
+    FLibHandle := SafeLoadLibrary (dll_name);
+    writeln ('Return from SafeLoadLibrary with FLibHandle = ', FLibHandle);
+  except
+    writeln ('exception trying to load the dynamic library.');
+  end;
 {$ENDIF}
   if FLibHandle <> DynLibs.NilHandle then begin
     FuncError := False;
