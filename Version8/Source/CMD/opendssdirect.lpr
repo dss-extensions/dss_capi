@@ -262,14 +262,11 @@ exports
 // {$R *.res}
 
 begin
-  Writeln ('Begin OpenDSSDirect');
+//  Writeln ('Begin OpenDSSDirect');
   IsDLL := TRUE;
   IsMultiThread := True;
 ///{Create one instance of DSS executive whenever the DSS Engine is init'd}
-///  Writeln ('Active Actor = ', ActiveActor);
-///  DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
-///  Writeln ('Created Executive');
-///  DSSExecutive[ActiveActor].CreateDefaultDSSItems;
-///  Writeln ('Created Default DSS Items');
+  DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
+  DSSExecutive[ActiveActor].CreateDefaultDSSItems;
 ///  //WriteDLLDebugFile(DSSDirectory);
 end.
