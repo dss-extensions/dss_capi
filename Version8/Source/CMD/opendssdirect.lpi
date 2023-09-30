@@ -295,6 +295,7 @@
       <Unit>
         <Filename Value="../Shared/mathutil.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="Mathutil"/>
       </Unit>
       <Unit>
         <Filename Value="../Meters/MemoryMap_lib.pas"/>
@@ -730,7 +731,11 @@
       <WriteFPCLogo Value="False"/>
       <CustomOptions Value="-CF64
 -vm5025,5027,5029,9001,6058
--dFPC_DLL"/>
+-dFPC_DLL
+-WM10.11"/>
+      <OtherDefines Count="1">
+        <Define0 Value="FPC_DLL"/>
+      </OtherDefines>
     </Other>
   </CompilerOptions>
   <Debugging>

@@ -262,7 +262,7 @@ exports
 // {$R *.res}
 
 begin
-//  Writeln ('Begin OpenDSSDirect');
+  Writeln ('Begin OpenDSSDirect');
   IsDLL := TRUE;
   IsMultiThread := True;
 ///{Create one instance of DSS executive whenever the DSS Engine is init'd}

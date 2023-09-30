@@ -45,11 +45,21 @@
         <SyntaxMode Value="Delphi"/>
       </SyntaxOptions>
     </Parsing>
+    <CodeGeneration>
+      <Optimizations>
+        <OptimizationLevel Value="2"/>
+      </Optimizations>
+    </CodeGeneration>
     <Linking>
       <Debugging>
         <DebugInfoType Value="dsDwarf3"/>
       </Debugging>
     </Linking>
+    <Other>
+      <ExecuteAfter>
+        <Command Value="install_name_tool -add_rpath @loader_path/./test testdll"/>
+      </ExecuteAfter>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions>

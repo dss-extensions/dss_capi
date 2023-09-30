@@ -79,7 +79,7 @@ begin
   inherited Create(TheOwner);
   StopOnException:=True;
   dll_name := './test/libsample.' + SharedSuffix;
-  dll_name := './test/libopendssdirect.' + SharedSuffix;
+  dll_name := 'libopendssdirect.' + SharedSuffix;
   writeln ('Try to load:', dll_name);
 {$IFDEF Windows}
   FLibHandle := SafeLoadLibrary (dll_name);
@@ -98,6 +98,8 @@ begin
       UnloadLibrary(FlibHandle);
       FLibHandle := DynLibs.NilHandle;
     end;
+  end else begin
+    WriteLn('GetLastOSError1 = ', SysErrorMessage(GetLastOSError));
   end;
 end;
 
