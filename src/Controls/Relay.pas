@@ -364,9 +364,9 @@ begin
     PropertyOffset[ord(TProp.Undervoltcurve)] := ptruint(@obj.UVCurve);
     PropertyOffset2[ord(TProp.Undervoltcurve)] := ptruint(TCC_CurveClass);
 
-    PropertyType[ord(TProp.DOC_TDPhaseInner)] := TPropertyType.DSSObjectReferenceProperty;
-    PropertyOffset[ord(TProp.DOC_TDPhaseInner)] := ptruint(@obj.DOC_PhaseCurveInner);
-    PropertyOffset2[ord(TProp.DOC_TDPhaseInner)] := ptruint(TCC_CurveClass);
+    PropertyType[ord(TProp.DOC_PhaseCurveInner)] := TPropertyType.DSSObjectReferenceProperty;
+    PropertyOffset[ord(TProp.DOC_PhaseCurveInner)] := ptruint(@obj.DOC_PhaseCurveInner);
+    PropertyOffset2[ord(TProp.DOC_PhaseCurveInner)] := ptruint(TCC_CurveClass);
 
 
     PropertyType[ord(TProp.MonitoredObj)] := TPropertyType.DSSObjectReferenceProperty;
@@ -435,8 +435,8 @@ begin
     PropertyOffset[ord(TProp.DOC_TripSettingHigh)] := ptruint(@obj.DOC_TripSetHigh);
     PropertyOffset[ord(TProp.DOC_TripSettingMag)] := ptruint(@obj.DOC_TripSetMag);
     PropertyOffset[ord(TProp.DOC_DelayInner)] := ptruint(@obj.DOC_DelayInner);
-    PropertyOffset[ord(TProp.DOC_PhaseCurveInner)] := ptruint(@obj.DOC_PhaseTripInner);
-    PropertyOffset[ord(TProp.DOC_PhaseTripInner)] := ptruint(@obj.DOC_TDPhaseInner);
+    PropertyOffset[ord(TProp.DOC_PhaseTripInner)] := ptruint(@obj.DOC_PhaseTripInner);
+    PropertyOffset[ord(TProp.DOC_TDPhaseInner)] := ptruint(@obj.DOC_TDPhaseInner);
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;
