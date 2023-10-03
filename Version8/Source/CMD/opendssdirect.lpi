@@ -704,18 +704,25 @@
     <Parsing>
       <SyntaxOptions>
         <SyntaxMode Value="Delphi"/>
+        <IncludeAssertionCode Value="True"/>
       </SyntaxOptions>
     </Parsing>
     <CodeGeneration>
       <RelocatableUnit Value="True"/>
       <Checks>
+        <IOChecks Value="True"/>
+        <RangeChecks Value="True"/>
+        <OverflowChecks Value="True"/>
         <StackChecks Value="True"/>
       </Checks>
+      <VerifyObjMethodCallValidity Value="True"/>
       <TargetCPU Value="x86_64"/>
     </CodeGeneration>
     <Linking>
       <Debugging>
         <DebugInfoType Value="dsDwarf3"/>
+        <TrashVariables Value="True"/>
+        <UseValgrind Value="True"/>
       </Debugging>
       <Options>
         <PassLinkerOptions Value="True"/>

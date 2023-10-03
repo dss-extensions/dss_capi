@@ -1,10 +1,5 @@
 library opendssdirect;
 
-{$IFDEF Darwin}
-{$linkframework CoreFoundation}
-{$linkframework Carbon}
-{$ENDIF}
-
 { ----------------------------------------------------------
   Copyright (c) 2008-2023, Electric Power Research Institute, Inc.
   All rights reserved.
