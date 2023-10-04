@@ -8,7 +8,7 @@ procedure TopologyV(mode:longint; var myPointer: Pointer; var myType, mySize: lo
 
 implementation
 
-uses CktTree, DSSGlobals, CktElement, PDElement, PCElement, Variants, SysUtils, Dialogs;
+uses CktTree, DSSGlobals, CktElement, PDElement, PCElement, Variants, SysUtils{$IFNDEF FPC_DLL}, Dialogs{$ENDIF};
 
 function ActiveTree: TCktTree;
 begin

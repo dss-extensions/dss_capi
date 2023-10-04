@@ -3,7 +3,7 @@ unit DLineCodes;
 interface
 
 uses
-  {$IFNDEF FPC}ComObj, ActiveX, OpenDSSengine_TLB, StdVcl,{$ENDIF} LineCode;
+  {$IFNDEF FPC_DLL}ComObj, ActiveX, OpenDSSengine_TLB, StdVcl,{$ENDIF} LineCode;
 
 function LineCodesI(mode: longint; arg: longint): longint; cdecl;
 function LineCodesF(mode: longint; arg: double): double; cdecl;
@@ -12,9 +12,9 @@ procedure LineCodesV(mode:longint; var myPointer: Pointer; var myType, mySize: l
 
 implementation
 
-uses {$IFNDEF FPC}ComServ, {$ENDIF}sysutils, DSSGlobals, LineUnits, ParserDel, Variants, Ucomplex;
+uses {$IFNDEF FPC_DLL}ComServ, {$ENDIF}sysutils, DSSGlobals, LineUnits, ParserDel, Variants, Ucomplex;
 
-{$IFDEF FPC}
+{$IFDEF FPC_DLL}
 const
   dssLineUnitsMaxnum = $00000009;  // from OpenDSSEngine_TLB.pas
 {$ENDIF}

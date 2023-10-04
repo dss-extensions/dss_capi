@@ -3,14 +3,14 @@ unit DCtrlQueue;
 interface
 
 uses
-  {$IFNDEF FPC}Windows, ActiveX, ComObj, {$ENDIF}Classes;
+  {$IFNDEF FPC_DLL}Windows, ActiveX, ComObj, {$ENDIF}Classes;
 
 function CtrlQueueI(mode: longint; arg: longint):longint;cdecl;
 procedure CtrlQueueV(mode:longint; var myPointer: Pointer; var myType, mySize: longint);cdecl;
 
 implementation
 
-uses {$IFNDEF FPC}ComServ, {$ENDIF}DSSGlobals, ControlQueue, ControlElem, DSSClass,Variants;
+uses {$IFNDEF FPC_DLL}ComServ, {$ENDIF}DSSGlobals, ControlQueue, ControlElem, DSSClass,Variants;
 
 Type
   pAction = ^Taction;

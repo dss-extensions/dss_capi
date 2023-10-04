@@ -15,7 +15,7 @@ uses DSSClassDefs,
      PDElement,
      Monitor,
      EnergyMeter,
-     dialogs,
+     {$IFNDEF FPC_DLL}dialogs,{$ENDIF}
      YMatrix,
      Variants,
      arrayDef,

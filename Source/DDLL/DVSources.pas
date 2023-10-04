@@ -9,7 +9,7 @@ procedure VsourcesV(mode:longint; var myPointer: Pointer; var myType, mySize: lo
 
 implementation
 
-uses {$IFNDEF FPC}ComServ, {$ENDIF}Vsource, Variants, PointerList, DSSGlobals, CktElement;
+uses {$IFNDEF FPC_DLL}ComServ, {$ENDIF}Vsource, Variants, PointerList, DSSGlobals, CktElement;
 
 function VsourcesI(mode:longint;arg:longint):Longint;cdecl;
 
