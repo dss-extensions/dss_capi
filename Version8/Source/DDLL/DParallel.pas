@@ -9,8 +9,8 @@ procedure ParallelV(mode:longint; var myPointer: Pointer; var myType, mySize: lo
 
 implementation
 
-uses DSSGlobals, Executive, Dialogs, SysUtils, Variants,CktElement,
-  ParserDel,KLUSolve, {$IFDEF FPC}Classes{$ELSE}System.Classes{$ENDIF};
+uses DSSGlobals, Executive, SysUtils, Variants,CktElement,
+  ParserDel,KLUSolve, {$IFDEF FPC_DLL}Classes{$ELSE}Dialogs, System.Classes{$ENDIF};
 
 function ParallelI(mode:longint; arg:longint):longint;cdecl;
 var

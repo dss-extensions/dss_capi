@@ -10,7 +10,7 @@ procedure LinesV(mode:longint; var myPointer: Pointer; var myType, mySize: longi
 implementation
 
 uses Line, DSSClassDefs, DSSGlobals, CktElement, XYCurve,
-  uComplex, ExecHelper, dialogs, Sysutils, ParserDel, Variants, Math, LineUnits;
+  uComplex, ExecHelper, {$IFNDEF FPC_DLL}dialogs,{$ENDIF} Sysutils, ParserDel, Variants, Math, LineUnits;
 
 Function IsLine(Const CktElem:TDSSCktElement):Boolean;
 

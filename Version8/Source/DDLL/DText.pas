@@ -6,7 +6,7 @@ function DSSPut_Command(a:PAnsiChar):PAnsiChar;cdecl;
 
 implementation
 
-uses DSSGlobals, Executive, Dialogs, SysUtils;
+uses DSSGlobals, Executive, {$IFNDEF FPC_DLL}Dialogs,{$ENDIF} SysUtils;
 
 function DSSPut_Command(a:PAnsiChar):PAnsiChar;cdecl;
 begin
