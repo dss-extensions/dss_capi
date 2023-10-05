@@ -38,6 +38,7 @@ VAR
     cBuffer:pComplexArray;
 
 BEGIN
+    {$IFDEF FPC_DLL}initialize(cBuffer);{$ENDIF}
     With pActiveElement, ActiveCircuit[ActiveActor] Do BEGIN
       Nvalues := NPhases;
       IF Nvalues <> 3 THEN Begin

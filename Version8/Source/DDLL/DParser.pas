@@ -108,6 +108,7 @@ Var   i,
       MatrixBuffer    : pDoubleArray;
 
 begin
+  {$IFDEF FPC_DLL}initialize(VectorBuffer);initialize(MatrixBuffer);{$ENDIF}
   case mode of
   0:begin  // Parser.Vector
       myType        :=  2;        // Double
