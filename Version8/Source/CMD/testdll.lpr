@@ -79,7 +79,7 @@ begin
   inherited Create(TheOwner);
   StopOnException:=True;
   dll_name := 'libproject1.' + SharedSuffix;
-//  dll_name := 'libopendssdirect.' + SharedSuffix;
+  dll_name := 'libopendssdirect.' + SharedSuffix;
   writeln ('Try to load:', dll_name);
 {$IFDEF Windows}
   FLibHandle := SafeLoadLibrary (dll_name);
