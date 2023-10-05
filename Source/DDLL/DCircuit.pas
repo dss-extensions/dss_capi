@@ -301,6 +301,7 @@ var
    Pint             : ^Integer;
 
 begin
+  {$IFDEF FPC_DLL}initialize(Temp);{$ENDIF}
   case mode of
   0: begin                                             // Circuit.Losses
     myType  :=  3;          // Complex
