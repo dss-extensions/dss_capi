@@ -219,7 +219,7 @@ extern "C" {
             Use this flag to enable the command in the saved script.
         */
 
-       DSSCompatFlags_ActiveLine = 0x00000010 /*!< 
+       DSSCompatFlags_ActiveLine = 0x00000010, /*!< 
             In the official OpenDSS implementation, the Lines API use the active circuit element instead of the
             active line. This can lead to unexpected behavior if the user is not aware of this detail.
             For example, if the user accidentally enables any other circuit element, the next time they use
@@ -228,6 +228,15 @@ extern "C" {
             This flag enables this behavior above if compatibility at this level is required. On DSS-Extensions,
             we changed the behavior to follow what most of the other APIs do: use the active object in the internal
             list. This change was done for DSS C-API v0.13.5, as well as the introduction of this flag.
+        */
+
+       DSSCompatFlags_NoPropertyTracking = 0x00000020 /*!< 
+            On DSS-Extensions/AltDSS, when setting a property invalidates a previous input value, the engine
+            will try to mark the invalidated data as unset. This allows for better exports and tracking of 
+            the current state of DSS objects.
+            Set this flag to disable this behavior, following the original OpenDSS implementation for potential
+            compatibility with older software that may require the original behavior; note that may lead to
+            errorneous interpretation of the data in the DSS properties. Introduced in DSS C-API v0.14.0.
         */
     };
 

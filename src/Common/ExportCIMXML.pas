@@ -4353,7 +4353,7 @@ begin
                     StartInstance(FunPrf, 'ACLineSegment', pLine);
                     CircuitNode(FunPrf, ActiveCircuit);
                     VbaseNode(FunPrf, pLine);
-                    if LineCodeSpecified then
+                    if LineCodeObj <> NIL then
                     begin
                         if (UserLengthUnits = UNITS_NONE) then
                             v1 := To_Meters(FLineCodeUnits);
@@ -4361,7 +4361,7 @@ begin
                         LineCodeRefNode(EpPrf, clsLnCd, pLine.LineCodeObj);
                     end
                     else
-                    if GeometrySpecified then
+                    if (LineGeometryObj <> NIL) then
                     begin
                         DoubleNode(FunPrf, 'Conductor.length', Len * v1);
                         LineSpacingRefNode(CatPrf, pLine.LineGeometryObj);

@@ -103,6 +103,8 @@ type
 
         procedure BeginEdit(Activate: Boolean);
         procedure EndEdit(NumChanges: Integer);
+
+        function PrpSpecified(idx: Integer): Boolean; inline;
     end;
 
 implementation
@@ -2492,6 +2494,11 @@ end;
 procedure TDSSObjectHelper.GetObjects(Index: Integer; var ResultPtr: PPointer; ResultCount: PAPISize);
 begin
     ParentClass.GetObjObjects(self, Index, ResultPtr, ResultCount);
+end;
+
+function TDSSObjectHelper.PrpSpecified(idx: Integer): Boolean; inline;
+begin
+    Result := PrpSequence[idx] <> 0;
 end;
 
 procedure TDSSClassHelper.SetObjIntegers(ptr: Pointer; Index: Integer; Value: PInteger; ValueCount: Integer);

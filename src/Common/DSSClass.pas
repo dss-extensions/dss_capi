@@ -32,7 +32,8 @@ type
         BadPrecision = 2,
         InvControl9611 = 4,
         SaveCalcVoltageBases = 8,
-        ActiveLine = 16
+        ActiveLine = 16,
+        NoPropertyTracking = 32
     );
 
     TDSSObjectFlag = (

@@ -107,7 +107,7 @@ begin
 
     // If the compatibility flag is set, use the active circuit element instead
     // of the active line in the line list
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) = 1 then
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) <> 0 then
     begin
         CktElem := DSS.ActiveCircuit.ActiveCktElement;
         if CktElem = NIL then
@@ -149,7 +149,9 @@ begin
     DefaultResult(ResultPtr, ResultCount);
     if InvalidCircuit(DSSPrime) then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Lines, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Lines, 
+        (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) = 0
+    );
 end;
 
 procedure Lines_Get_AllNames_GR(); CDECL;
@@ -302,6 +304,10 @@ begin
         DoSimpleMsg(DSSPrime, 'LineCode "%s" not found.', [Value], 5009);
         Exit;
     end;
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.NoPropertyTracking)) = 0 then
+    begin
+        elem.SetAsNextSeq(ord(TLineProp.LineCode));
+    end;
     elem.FetchLineCode(); // Note: original didn't reproduce all side-effects from parser
     elem.YprimInvalid := TRUE;
 end;
@@ -398,7 +404,7 @@ begin
         for i := 1 to NPhases do
             for j := 1 to Nphases do
             begin
-                if GeometrySpecified Or SpacingSpecified then  
+                if (LineGeometryObj <> NIL) Or SpacingSpecified then  
                     Result[k] := Yc[i, j].im / Factor / Len
                 else 
                     Result[k] := Yc[i, j].im / Factor;
@@ -443,7 +449,7 @@ begin
         for i := 1 to NPhases do
             for j := 1 to Nphases do
             begin
-                if GeometrySpecified Or SpacingSpecified then
+                if (LineGeometryObj <> NIL) Or SpacingSpecified then
                     Result[k] := Z[i, j].Re / Len
                 else 
                     Result[k] := Z[i, j].Re / UnitsConvert;
@@ -488,7 +494,7 @@ begin
         for i := 1 to NPhases do
             for j := 1 to Nphases do
             begin
-                if GeometrySpecified Or SpacingSpecified then
+                if (LineGeometryObj <> NIL) Or SpacingSpecified then
                     Result[k] := Z[i, j].im / Len
                 else
                     Result[k] := Z[i, j].im / UnitsConvert;
@@ -1016,7 +1022,7 @@ begin
     Result := NIL;
     if InvalidCircuit(DSSPrime) then
         Exit;
-    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) = 1 then
+    if (DSS_EXTENSIONS_COMPAT and ord(TDSSCompatFlags.ActiveLine)) <> 0 then
     begin
         CktElem := DSSPrime.ActiveCircuit.ActiveCktElement;
         if CktElem = NIL then
