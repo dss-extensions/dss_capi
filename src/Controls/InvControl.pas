@@ -606,7 +606,6 @@ end;
 
 procedure TInvControlObj.PropertySideEffects(Idx: Integer; previousIntVal: Integer);
 var
-    CharPos: Integer;
     NodeBuffer: array[1..10] of Integer;
     i,
     j,
@@ -652,10 +651,10 @@ begin
         end;
         ord(TProp.PVSystemList):
         begin
-            // Because is using this command from the previous version of InvControl, we assume that the list includes only
-            // PVSystems, so the list is updated
-            for CharPos := 0 to (DERNameList.Count - 1) do
-                DERNameList[CharPos] := 'PVSystem.' + DERNameList[CharPos];
+            // If using this property from the previous version of InvControl, we assume that the list includes only
+            // PVSystems. The list is updated to prepend the names with "PVSystem.".
+            for i := 0 to (DERNameList.Count - 1) do
+                DERNameList[i] := 'PVSystem.' + DERNameList[i];
 
             PropertySideEffects(ord(TProp.DERList), previousIntVal);
         end;
