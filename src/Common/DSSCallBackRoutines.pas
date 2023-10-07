@@ -1,11 +1,9 @@
 unit DSSCallBackRoutines;
 
-{
-    ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -17,15 +15,15 @@ TYPE
 
   // NOTE: Maxlen argument is to better accommodate Fortran strings.  VB also
   //       Caller must allocate space for pchar values       
-    pDSSCallBacks = ^TDSSCallBacks;  {Pointer to callback structure}
+    pDSSCallBacks = ^TDSSCallBacks;  // Pointer to callback structure
     TDSSCallBacks = {$IFNDEF DSS_CAPI_NO_PACKED_RECORDS}Packed{$ENDIF} Record
 
-        MsgCallBack: Procedure (S : pAnsiChar; Maxlen:UInt32);Stdcall; {Make use of DSS Message handling}
+        MsgCallBack: Procedure (S : pAnsiChar; Maxlen:UInt32);Stdcall; // Make use of DSS Message handling
 
         // Routines for using DSS Parser.  This allows you to write models that accept
         // syntax like other DSS scripts.
-        GetIntValue: Procedure(var i : Int32);Stdcall; {Get next param as an Int32}
-        GetDblValue: Procedure(var x : Double); Stdcall;  {Get next param as a double}
+        GetIntValue: Procedure(var i : Int32);Stdcall; // Get next param as an Int32
+        GetDblValue: Procedure(var x : Double); Stdcall;  // Get next param as a double
         GetStrValue: Procedure(s : pAnsiChar; maxlen : UInt32); Stdcall;
         //Get next param as a string <= maxlen characters  (UInt32 = 32-bit unsigned)
         //caller must allocate space for s (Maxlen chars)
@@ -84,14 +82,15 @@ uses
     Math,
     PDElement,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    Bus,
+    Circuit;
 
 var
     CallBackParser: TDSSParser;
     CB_ParamName,
     CB_Param: String;
 
-{====================================================================================================================}
 
 procedure DoSimpleMsgCallback(S: pAnsiChar; maxlen: Cardinal); STDCALL; // Call back for user-written models
 
@@ -99,9 +98,7 @@ begin
     DoSimpleMsg(DSSPrime, String(s), 9000);
 end;
 
-   {These routines should work well with Fortran as well as C and VB}
-
-{====================================================================================================================}
+// These routines should work well with Fortran as well as C and VB
 
 procedure ParserLoad(S: pAnsiChar; Maxlen: Cardinal); STDCALL;
 
@@ -110,62 +107,45 @@ begin
     CallBackParser.CmdString := String(S);
 end;
 
-{====================================================================================================================}
 
 procedure ParserIntValue(var i: Integer); STDCALL;
 
 begin
     CallBackParser.DSSCtx := DSSPrime;
-    with CallBackParser do
-    begin
-        i := IntValue;
-    end;
+    i := CallBackParser.IntValue;
 end;
 
 
-{====================================================================================================================}
 
 procedure ParserDblValue(var x: Double); STDCALL;
 
 begin
     CallBackParser.DSSCtx := DSSPrime;
-    with CallBackParser do
-    begin
-        x := DblValue;
-    end;
+    x := CallBackParser.DblValue;
 end;
 
-{====================================================================================================================}
 
 procedure ParserStrValue(s: pAnsiChar; Maxlen: Cardinal); STDCALL;
 
-{Copies null-terminated string into location pointed to by S up to the max chars specified}
+// Copies null-terminated string into location pointed to by S up to the max chars specified
 
 begin
     CallBackParser.DSSCtx := DSSPrime;
-    with CallBackParser do
-    begin
-        SetLength(CB_Param, Maxlen);
-        StrlCopy(s, pAnsiChar(Ansistring(CB_Param)), Maxlen);
-    end;
+    SetLength(CB_Param, Maxlen);
+    StrlCopy(s, pAnsiChar(Ansistring(CB_Param)), Maxlen);
 end;
 
 
-{====================================================================================================================}
 
 function ParserNextParam(ParamName: pAnsiChar; Maxlen: Cardinal): Integer; STDCALL;
 begin
     CallBackParser.DSSCtx := DSSPrime;
-    with CallBackParser do
-    begin
-        CB_ParamName := NextParam;
-        CB_Param := StrValue;
-    end;
+    CB_ParamName := CallBackParser.NextParam;
+    CB_Param := CallBackParser.StrValue;
     StrlCopy(ParamName, pAnsiChar(Ansistring(CB_ParamName)), Maxlen); // Copies up to Maxlen
     Result := Length(CB_Param);
 end;
 
-{====================================================================================================================}
 
 procedure DoDSSCommandCallBack(S: pAnsiChar; Maxlen: Cardinal); STDCALL;
 begin
@@ -173,102 +153,96 @@ begin
     DSSPrime.DSSExecutive.Command := String(S);
 end;
 
-{====================================================================================================================}
 
 procedure GetActiveElementBusNamesCallBack(Name1: pAnsiChar; Len1: Cardinal; Name2: pAnsiChar; Len2: Cardinal); STDCALL;
-  {Get first two bus names of active Circuit Element for labeling graphs, etc.}
-  {Coordinate must be defined else returns null string}
+  // Get first two bus names of active Circuit Element for labeling graphs, etc.
+  // Coordinate must be defined else returns null string
 var
     CktElement: TDSSCktElement;
     BusIdx: Integer;
+    bus: TDSSBus;
 begin
     StrlCopy(Name1, pAnsiChar(''), Len1);  // Initialize to null
     StrlCopy(Name2, pAnsiChar(''), Len2);
-    if DSSPrime.ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit = NIL then
+        Exit;
+
+    CktElement := DSSPrime.ActiveCircuit.Activecktelement;
+    if CktElement = NIL then
+        Exit;
+
+    // First bus
+    BusIdx := CktElement.Terminals[0].busref;
+    if BusIdx > 0 then
     begin
-        CktElement := DSSPrime.ActiveCircuit.Activecktelement;
-        if CktElement <> NIL then
-        begin
-     {First bus}
-            BusIdx := CktElement.Terminals[0].busref;
-            if BusIdx > 0 then
-                with DSSPrime.ActiveCircuit.Buses[BusIdx] do
-                    if CoordDefined then
-                        StrlCopy(Name1, pAnsiChar(Ansistring(DSSPrime.ActiveCircuit.BusList.NameOfIndex(Busidx))), Len1);
-      {Second bus}
-            BusIdx := CktElement.Terminals[1].busref;
-            if BusIdx > 0 then
-                with DSSPrime.ActiveCircuit.Buses[BusIdx] do
-                    if CoordDefined then
-                        StrlCopy(Name2, pAnsiChar(Ansistring(DSSPrime.ActiveCircuit.BusList.NameOfIndex(Busidx))), Len2);
-        end; {If CktElement}
-    end;  {If ActiveCircuit}
+        bus := DSSPrime.ActiveCircuit.Buses[BusIdx];
+        if bus.CoordDefined then
+            StrlCopy(Name1, pAnsiChar(Ansistring(DSSPrime.ActiveCircuit.BusList.NameOfIndex(Busidx))), Len1);
+    end;
+    // Second bus
+    BusIdx := CktElement.Terminals[1].busref;
+    if BusIdx > 0 then
+    begin
+        bus := DSSPrime.ActiveCircuit.Buses[BusIdx];
+        if bus.CoordDefined then
+            StrlCopy(Name2, pAnsiChar(Ansistring(DSSPrime.ActiveCircuit.BusList.NameOfIndex(Busidx))), Len2);
+    end;
 end;
 
-{====================================================================================================================}
 
 procedure GetActiveElementVoltagesCallBack(var NumVoltages: Integer; V: pComplexArray); STDCALL;
-{NumVoltages is size of the V buffer}
+// NumVoltages is size of the V buffer
 var
     i: Integer;
+    elem: TDSSCktElement;
+    circ: TDSSCircuit;
 begin
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-                NumVoltages := Min(Yorder, NumVoltages);  // reset buffer size
-                for i := 1 to NumVoltages do
-                    V[i] := Solution.NodeV[NodeRef[i]];
-            end;
+    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+        Exit;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    circ := DSSPrime.ActiveCircuit;
+    NumVoltages := Min(elem.Yorder, NumVoltages);  // reset buffer size
+    for i := 1 to NumVoltages do
+        V[i] := circ.Solution.NodeV[elem.NodeRef[i]];
 end;
 
-{====================================================================================================================}
 
 procedure GetActiveElementCurrentsCallBack(var NumCurrents: Integer; Curr: pComplexArray); STDCALL;
 var
     i: Integer;
+    elem: TDSSCktElement;
 begin
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-                ComputeIterminal;
-                NumCurrents := Min(Yorder, NumCurrents); // Reset to actual number of elements returned
-                for i := 1 to NumCurrents do
-                    Curr[i] := ITerminal[i];
-            end;
+    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+        Exit;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    elem.ComputeIterminal();
+    NumCurrents := Min(elem.Yorder, NumCurrents); // Reset to actual number of elements returned
+    for i := 1 to NumCurrents do
+        Curr[i] := elem.ITerminal[i];
 end;
 
-{====================================================================================================================}
 
 procedure GetActiveElementLossesCallBack(var TotalLosses, LoadLosses, NoLoadLosses: Complex); STDCALL;
 begin
     TotalLosses := 0;
     LoadLosses := 0;
     NoLoadLosses := 0;
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-                GetLosses(TotalLosses, LoadLosses, NoLoadLosses);
-            end;
+    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+        Exit;
+
+    DSSPrime.ActiveCircuit.ActiveCktElement.GetLosses(TotalLosses, LoadLosses, NoLoadLosses);
 end;
 
-{====================================================================================================================}
 
 procedure GetActiveElementPowerCallBack(Terminal: Integer; var TotalPower: Complex); STDCALL;
 begin
     TotalPower := 0;
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-             //----ActiveTerminalIdx := Terminal;
-                TotalPower := Power[Terminal];
-            end;
+    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+        Exit;
+    //----ActiveTerminalIdx := Terminal;
+    TotalPower := DSSPrime.ActiveCircuit.ActiveCktElement.Power[Terminal];
 end;
 
-{====================================================================================================================}
 
 procedure GetActiveElementNumCustCallBack(var Numcust, TotalCust: Integer); STDCALL;
 
@@ -278,94 +252,91 @@ var
 begin
     NumCust := 0;
     TotalCust := 0;
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        if DSSPrime.ActiveCircuit.ActiveCktElement is TPDElement then
-        begin
-            pDElem := DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement;
-            NumCust := pDElem.BranchNumCustomers;
-            TotalCust := pDElem.BranchTotalCustomers;
-        end;
+    if DSSPrime.ActiveCircuit.ActiveCktElement = NIL then
+        Exit;
+
+    if DSSPrime.ActiveCircuit.ActiveCktElement is TPDElement then
+    begin
+        pDElem := DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement;
+        NumCust := pDElem.BranchNumCustomers;
+        TotalCust := pDElem.BranchTotalCustomers;
+    end;
 end;
 
-{====================================================================================================================}
 
 procedure GetActiveElementNodeRefCallBack(Maxsize: Integer; NodeReferenceArray: pIntegerArray); STDCALL;// calling program must allocate
 var
     i: Integer;
+    elem: TDSSCktElement;
 begin
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-                for i := 1 to Min(Yorder, Maxsize) do
-                    NodeReferenceArray[i] := NodeRef[i];
-            end;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    if elem = NIL then
+        Exit;
+
+    for i := 1 to Min(elem.Yorder, Maxsize) do
+        NodeReferenceArray[i] := elem.NodeRef[i];
 end;
 
-{====================================================================================================================}
 
 function GetActiveElementBusRefCallBack(Terminal: Integer): Integer; STDCALL;
+var
+    elem: TDSSCktElement;
 begin
     Result := 0;
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-                Result := Terminals[Terminal - 1].BusRef;
-            end;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    if elem = NIL then
+        Exit;
+    Result := elem.Terminals[Terminal - 1].BusRef;
 end;
 
-{====================================================================================================================}
 
 procedure GetActiveElementTerminalInfoCallBack(var NumTerminals, NumConds, NumPhases: Integer); STDCALL;
+var
+    elem: TDSSCktElement;
 begin
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-                NumTerminals := Nterms;
-                NumConds := Nconds;
-                NumPhases := NPhases;
-            end;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    if elem = NIL then
+        Exit;
+
+    NumTerminals := elem.Nterms;
+    NumConds := elem.Nconds;
+    NumPhases := elem.NPhases;
 end;
 
-{====================================================================================================================}
 
 procedure GetPtrToSystemVarrayCallBack(var V: Pointer; var iNumNodes: Integer); STDCALL; // Returns pointer to Solution.V and size
 begin
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-                V := Solution.NodeV;  // Return Pointer to Node Voltage array
-                iNumNodes := NumNodes;
-            end;
+    V := DSSPrime.ActiveCircuit.Solution.NodeV;  // Return Pointer to Node Voltage array
+    iNumNodes := DSSPrime.ActiveCircuit.NumNodes;
 end;
 
 
-{====================================================================================================================}
 
 function GetActiveElementIndexCallBack: Integer; STDCALL;
-    {Usually just checking to see if this result >0}
+// Usually just checking to see if this result >0
+var
+    elem: TDSSCktElement;
 begin
     Result := 0;
-    if Assigned(DSSPrime.ActiveCircuit) then
-        if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-            Result := DSSPrime.ActiveCircuit.ActiveCktElement.ClassIndex;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    if elem = NIL then
+        Exit;
+    Result := elem.ClassIndex;
 end;
 
-{====================================================================================================================}
 
 function IsActiveElementEnabledCallBack: Boolean; STDCALL;
 
+var
+    elem: TDSSCktElement;
 begin
     Result := FALSE;
-    if Assigned(DSSPrime.ActiveCircuit) then
-        if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-            Result := DSSPrime.ActiveCircuit.ActiveCktElement.Enabled;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    if elem = NIL then
+        Exit;
+    Result := elem.Enabled;
 end;
 
-{====================================================================================================================}
 
 function IsBusCoordinateDefinedCallback(BusRef: Integer): Boolean; STDCALL;
 begin
@@ -374,7 +345,6 @@ begin
         Result := DSSPrime.ActiveCircuit.Buses[BusRef].CoordDefined;
 end;
 
-{====================================================================================================================}
 procedure GetBusCoordinateCallback(BusRef: Integer; var X, Y: Double); STDCALL;
 begin
     X := 0.0;
@@ -386,7 +356,6 @@ begin
     end;
 end;
 
-{====================================================================================================================}
 function GetBuskVBaseCallback(BusRef: Integer): Double; STDCALL;
 begin
     Result := 0.0;
@@ -396,7 +365,6 @@ begin
     end;
 end;
 
-{====================================================================================================================}
 function GetBusDistFromMeterCallback(BusRef: Integer): Double; STDCALL;
 begin
     Result := 0.0;
@@ -406,7 +374,6 @@ begin
     end;
 end;
 
-{====================================================================================================================}
 procedure GetDynamicsStructCallBack(var DynamicsStruct: Pointer); STDCALL;
 begin
     if Assigned(DSSPrime.ActiveCircuit) then
@@ -415,7 +382,6 @@ begin
     end;
 end;
 
-{====================================================================================================================}
 function GetStepSizeCallBack: Double; STDCALL;
 begin
     Result := 0.0;
@@ -425,54 +391,49 @@ begin
     end;
 end;
 
-{====================================================================================================================}
 function GetTimeSecCallBack: Double; STDCALL;
 begin
     Result := 0.0;
-    if Assigned(DSSPrime.ActiveCircuit) then
-    begin
-        Result := DSSPrime.ActiveCircuit.Solution.DynaVars.t;
-    end;
+    if DSSPrime.ActiveCircuit = NIL then
+        Exit; //TODO: This isn't checked in the other functions :|
+    Result := DSSPrime.ActiveCircuit.Solution.DynaVars.t;
 end;
 
-{====================================================================================================================}
 function GetTimeHrCallBack: Double; STDCALL;
 begin
     Result := 0.0;
-    if Assigned(DSSPrime.ActiveCircuit) then
-    begin
-        Result := DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour;
-    end;
+    if DSSPrime.ActiveCircuit = NIL then
+        Exit; //TODO: This isn't checked in the other functions :|
+    Result := DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour;
 end;
 
-{====================================================================================================================}
 
 procedure GetPublicDataPtrCallBack(var pPublicData: Pointer; var PublicDataBytes: Integer); STDCALL;
-
+var
+    elem: TDSSCktElement;
 begin
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-                pPublicData := PublicDataStruct;
-                PublicDataBytes := PublicDataSize;
-            end;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    if elem = NIL then
+        Exit;
+
+    pPublicData := elem.PublicDataStruct;
+    PublicDataBytes := elem.PublicDataSize;
 end;
 
 function GetActiveElementNameCallBack(ElFullName: pAnsiChar; Maxlen: Cardinal): Integer; STDCALL;
 // Maxlen is num of chars the calling program allocates for the string
 var
     S: String;
+    elem: TDSSCktElement;
 begin
     Result := 0;
-    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
-        with DSSPrime.ActiveCircuit do
-            with ActiveCktElement do
-            begin
-                S := FullName;
-                StrlCopy(ElFullName, pAnsiChar(Ansistring(S)), Maxlen);
-                Result := Length(ElFullName);
-            end;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
+    if elem = NIL then
+        Exit;
+
+    S := elem.FullName;
+    StrlCopy(ElFullName, pAnsiChar(Ansistring(S)), Maxlen);
+    Result := Length(ElFullName);
 end;
 
 function GetActiveElementPtrCallBack(): Pointer; STDCALL;  // Returns pointer to active circuit element
@@ -490,54 +451,47 @@ begin
     StrlCopy(S, pAnsiChar(Ansistring(DSSPrime.GlobalResult)), Maxlen);
 end;
 
-{====================================================================================================================}
 
 initialization
+    // Initialize Function Interface variables for user-Written Callbacks
+    CallBackRoutines.MsgCallBack := DoSimpleMsgCallback; // for user-written callbacks
+    CallBackRoutines.GetIntValue := ParserIntValue;
+    CallBackRoutines.GetDblValue := ParserDblValue;
+    CallBackRoutines.GetStrValue := ParserStrValue;
+    CallBackRoutines.LoadParser := ParserLoad;
+    CallBackRoutines.NextParam := ParserNextParam;
+    CallBackRoutines.DoDSSCommand := DoDSSCommandCallBack;
+    CallBackRoutines.GetActiveElementBusNames := GetActiveElementBusNamesCallBack;
+    CallBackRoutines.GetActiveElementVoltages := GetActiveElementVoltagesCallBack;
+    CallBackRoutines.GetActiveElementCurrents := GetActiveElementCurrentsCallBack;
+    CallBackRoutines.GetActiveElementLosses := GetActiveElementLossesCallBack;
+    CallBackRoutines.GetActiveElementPower := GetActiveElementPowerCallBack;
+    CallBackRoutines.GetActiveElementNumCust := GetActiveElementNumCustCallBack;
+    CallBackRoutines.GetActiveElementNodeRef := GetActiveElementNodeRefCallBack;
+    CallBackRoutines.GetActiveElementBusRef := GetActiveElementBusRefCallBack;
+    CallBackRoutines.GetActiveElementTerminalInfo := GetActiveElementTerminalInfoCallBack;
+    CallBackRoutines.GetPtrToSystemVarray := GetPtrToSystemVarrayCallBack;
+    CallBackRoutines.GetActiveElementIndex := GetActiveElementIndexCallBack;
+    CallBackRoutines.IsActiveElementEnabled := IsActiveElementEnabledCallBack;
+    CallBackRoutines.IsBusCoordinateDefined := IsBusCoordinateDefinedCallBack;
+    CallBackRoutines.GetBusCoordinate := GetBusCoordinateCallBack;
+    CallBackRoutines.GetBuskVBase := GetBuskVBaseCallBack;
+    CallBackRoutines.GetBusDistFromMeter := GetBusDistFromMeterCallback;
 
-{Initialize Function Interface variables for user-Written Callbacks}
+        // Added 4-9-2012
+    CallBackRoutines.GetDynamicsStruct := GetDynamicsStructCallBack;
+    CallBackRoutines.GetStepSize := GetStepSizeCallBack;
+    CallBackRoutines.GetTimeSec := GetTimeSecCallBack;
+    CallBackRoutines.GetTimeHr := GetTimeHrCallBack;
 
-    with CallBackRoutines do
-    begin
-        MsgCallBack := DoSimpleMsgCallback; // for user-written callbacks
-        GetIntValue := ParserIntValue;
-        GetDblValue := ParserDblValue;
-        GetStrValue := ParserStrValue;
-        LoadParser := ParserLoad;
-        NextParam := ParserNextParam;
-        DoDSSCommand := DoDSSCommandCallBack;
-        GetActiveElementBusNames := GetActiveElementBusNamesCallBack;
-        GetActiveElementVoltages := GetActiveElementVoltagesCallBack;
-        GetActiveElementCurrents := GetActiveElementCurrentsCallBack;
-        GetActiveElementLosses := GetActiveElementLossesCallBack;
-        GetActiveElementPower := GetActiveElementPowerCallBack;
-        GetActiveElementNumCust := GetActiveElementNumCustCallBack;
-        GetActiveElementNodeRef := GetActiveElementNodeRefCallBack;
-        GetActiveElementBusRef := GetActiveElementBusRefCallBack;
-        GetActiveElementTerminalInfo := GetActiveElementTerminalInfoCallBack;
-        GetPtrToSystemVarray := GetPtrToSystemVarrayCallBack;
-        GetActiveElementIndex := GetActiveElementIndexCallBack;
-        IsActiveElementEnabled := IsActiveElementEnabledCallBack;
-        IsBusCoordinateDefined := IsBusCoordinateDefinedCallBack;
-        GetBusCoordinate := GetBusCoordinateCallBack;
-        GetBuskVBase := GetBuskVBaseCallBack;
-        GetBusDistFromMeter := GetBusDistFromMeterCallback;
-
-         // Added 4-9-2012
-        GetDynamicsStruct := GetDynamicsStructCallBack;
-        GetStepSize := GetStepSizeCallBack;
-        GetTimeSec := GetTimeSecCallBack;
-        GetTimeHr := GetTimeHrCallBack;
-
-        GetPublicDataPtr := GetPublicDataPtrCallBack;
-        GetActiveElementName := GetActiveElementNameCallBack;
-        GetActiveElementPtr := GetActiveElementPtrCallBack;
-        ControlQueuePush := ControlQueuePushCallBack;
-        GetResultStr := GetResultStrCallBack;
-    end;
+    CallBackRoutines.GetPublicDataPtr := GetPublicDataPtrCallBack;
+    CallBackRoutines.GetActiveElementName := GetActiveElementNameCallBack;
+    CallBackRoutines.GetActiveElementPtr := GetActiveElementPtrCallBack;
+    CallBackRoutines.ControlQueuePush := ControlQueuePushCallBack;
+    CallBackRoutines.GetResultStr := GetResultStrCallBack;
 
     CallBackParser := TDSSParser.Create(NIL); //TODO: this is bad. Maybe we should restrict user-models.
 
-{====================================================================================================================}
 
 finalization
 
