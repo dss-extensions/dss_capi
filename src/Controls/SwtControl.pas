@@ -1,10 +1,9 @@
 unit SwtControl;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2016, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2016, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -121,20 +120,17 @@ end;
 
 function GetState(Obj: TObj): Integer;
 begin
-    with Obj do
+    if Obj.ControlledElement = NIL then
     begin
-        if ControlledElement = NIL then
-        begin
-            // If no element is attached, return CTRL_NONE to indicate we cannot tell the state            
-            Result := ord(CTRL_NONE);
-            Exit;
-        end;
-        ControlledElement.ActiveTerminalIdx := ElementTerminal;
-        if ControlledElement.Closed[0] then
-            Result := ord(CTRL_CLOSE)
-        else
-            Result := ord(CTRL_OPEN);
+        // If no element is attached, return CTRL_NONE to indicate we cannot tell the state            
+        Result := ord(CTRL_NONE);
+        Exit;
     end;
+    Obj.ControlledElement.ActiveTerminalIdx := Obj.ElementTerminal;
+    if Obj.ControlledElement.Closed[0] then
+        Result := ord(CTRL_CLOSE)
+    else
+        Result := ord(CTRL_OPEN);
 end;
 
 procedure TSwtControl.DefineProperties;
@@ -377,7 +373,8 @@ begin
                 CTRL_OPEN:
                     ControlledElement.Closed[0] := FALSE;
             else
-            {CTRL_CLOSE:} ControlledElement.Closed[0] := TRUE;  // Close all phases of active terminal
+            //CTRL_CLOSE:
+                ControlledElement.Closed[0] := TRUE;  // Close all phases of active terminal
             end;
         end;
     end;
@@ -390,6 +387,7 @@ begin
     FEnabled := Value;
 end;
 
-finalization    ActionEnum.Free;
+finalization
+    ActionEnum.Free;
     StateEnum.Free;
 end.

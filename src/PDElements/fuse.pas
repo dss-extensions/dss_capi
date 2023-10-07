@@ -1,11 +1,9 @@
 unit Fuse;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 //  A Fuse is a control element that is connected to a terminal of a
 //  circuit element and controls the switches in the same or another terminal.
 //

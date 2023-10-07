@@ -1,11 +1,9 @@
 unit CNData;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 uses
@@ -22,8 +20,8 @@ type
         INVALID = 0,
         k = 1,
         DiaStrand = 2,
-        GmrStrand = 3,
-        Rstrand = 4
+        GMRStrand = 3,
+        RStrand = 4
     );
 {$SCOPEDENUMS OFF}
 

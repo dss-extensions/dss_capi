@@ -46,30 +46,30 @@ type
 {$SCOPEDENUMS ON}
     TStorageProp = (
         INVALID = 0,
-        phases,
-        bus1,
-        kv, // propKV
-        conn, // propCONNECTION
+        Phases,
+        Bus1,
+        kV, // propKV
+        Conn, // propCONNECTION
         kW, // propKW
         kvar, // propKVAR
-        pf, // propPF
+        PF, // propPF
         kVA, // propKVA
-        pctCutin, // propCutin
-        pctCutout, // propCutout
+        pctCutIn, // propCutin
+        pctCutOut, // propCutout
         EffCurve, // propInvEffCurve
         VarFollowInverter, // propVarFollowInverter
         kvarMax, // propkvarLimit
         kvarMaxAbs, // propkvarLimitneg
         WattPriority, // propPpriority
         PFPriority, // propPFPriority
-        pctPminNoVars, // propPminNoVars
-        pctPminkvarMax, // propPminkvarLimit
-        kWrated, // propKWRATED
-        pctkWrated, // proppctkWrated
-        kWhrated, // propKWHRATED
-        kWhstored, // propKWHSTORED
-        pctstored, // propPCTSTORED
-        pctreserve, // propPCTRESERVE
+        pctPMinNoVars, // propPminNoVars
+        pctPMinkvarMax, // propPminkvarLimit
+        kWRated, // propKWRATED
+        pctkWRated, // proppctkWrated
+        kWhRated, // propKWHRATED
+        kWhStored, // propKWHSTORED
+        pctStored, // propPCTSTORED
+        pctReserve, // propPCTRESERVE
         State, // propSTATE
         pctDischarge, // propPCTKWOUT
         pctCharge, // propPCTKWIN
@@ -81,14 +81,14 @@ type
         
         pctR, // propPCTR
         pctX, // propPCTX
-        model, // propMODEL
-        Vminpu, // propVMINPU
-        Vmaxpu, // propVMAXPU
+        Model, // propMODEL
+        VMinpu, // propVMINPU
+        VMaxpu, // propVMAXPU
         Balanced, // propBalanced
         LimitCurrent, // propLimited
-        yearly, // propYEARLY
-        daily, // propDAILY
-        duty, // propDUTY
+        Yearly, // propYEARLY
+        Daily, // propDAILY
+        Duty, // propDUTY
         DispMode, // propDISPMODE
         DischargeTrigger, // propDISPOUTTRIG
         ChargeTrigger, // propDISPINTRIG
@@ -98,7 +98,7 @@ type
         DynaData, // propDynaData
         UserModel, // propUSERMODEL
         UserData, // propUSERDATA
-        debugtrace, // propDEBUGTRACE
+        DebugTrace, // propDEBUGTRACE
 
         kVDC, // propkVDC
         Kp, // propkp

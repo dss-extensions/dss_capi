@@ -1,11 +1,9 @@
 unit GICTransformer;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Special resistance-only model of transformers for geomagnetically-induced current (GIC) studies
 
@@ -30,12 +28,12 @@ type
         BusNH=2,
         BusX=3,
         BusNX=4,
-        phases=5,
+        Phases=5,
         Typ=6,
         R1=7,
         R2=8,
-        KVLL1=9,
-        KVLL2=10,
+        kVLL1=9,
+        kVLL2=10,
         MVA=11,
         VarCurve=12,
         pctR1=13,

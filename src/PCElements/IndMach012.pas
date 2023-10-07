@@ -4,12 +4,10 @@ unit IndMach012;
 
 //    ************  DRAFT Version 2 ******************************
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2017, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2017, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //   Change Log
 //
@@ -40,12 +38,12 @@ type
 {$SCOPEDENUMS ON}    
     TIndMach012Prop = (
         INVALID = 0,
-        phases = 1,
-        bus1 = 2,
-        kv = 3,
+        Phases = 1,
+        Bus1 = 2,
+        kV = 3,
         kW = 4,
-        pf = 5, 
-        conn = 6, 
+        PF = 5, 
+        Conn = 6, 
         kVA = 7,
         H = 8,
         D = 9,
@@ -60,7 +58,7 @@ type
         Yearly = 18,
         Daily = 19,
         Duty = 20,
-        Debugtrace = 21
+        DebugTrace = 21
     );
 {$SCOPEDENUMS OFF}
 
@@ -81,8 +79,8 @@ type
 
     TIndMach012Obj = class(TPCElement)
     PRIVATE
-        {Private variables of this class}
-        Connection: Integer;  {0 = line-neutral; 1=Delta}
+        // Private variables of this class
+        Connection: Integer;  // 0 = line-neutral; 1=Delta
         Yeq: Complex;   // Y at nominal voltage
 
         puRs, puXs, puRr, puXr, puXm,
@@ -91,7 +89,7 @@ type
         MaxSlip,  // limit for slip to prevent solution blowing up
         dSdP,  // for power flow
 
-        {Dynamics variables}
+        // Dynamics variables
         Xopen,
         Xp,
         T0p // Rotor time constant
@@ -103,7 +101,7 @@ type
         Is1, Ir1, V1,    // Keep the last computed voltages and currents
         Is2, Ir2, V2: Complex;
 
-        {Complex variables for dynamics}
+        // Complex variables for dynamics
         E1, E1n, dE1dt, dE1dtn,
         E2, E2n, dE2dt, dE2dtn,
         Zsp: Complex;
@@ -363,21 +361,15 @@ begin
                 end;
         ord(TProp.slip):
             MachineData.Speed := MachineData.w0 * (-S1); // make motor speed agree
-        18:
-            if Assigned(YearlyShapeObj) then
-                with YearlyShapeObj do
-                    if UseActual then
-                        SetPowerkW(MaxP);
-        19:
-            if Assigned(DailyDispShapeObj) then
-                with DailyDispShapeObj do
-                    if UseActual then
-                        SetPowerkW(MaxP);
-        20:
-            if Assigned(DutyShapeObj) then
-                with DutyShapeObj do
-                    if UseActual then
-                        SetPowerkW(MaxP);
+        ord(TProp.Yearly):
+            if (YearlyShapeObj <> NIL) and YearlyShapeObj.UseActual then
+                SetPowerkW(YearlyShapeObj.MaxP);
+        ord(TProp.Daily):
+            if (DailyDispShapeObj <> NIL) and DailyDispShapeObj.UseActual then
+                SetPowerkW(DailyDispShapeObj.MaxP);
+        ord(TProp.Duty):
+            if (DutyShapeObj <> NIL) and  DutyShapeObj.UseActual then
+                SetPowerkW(DutyShapeObj.MaxP);
     end;
     inherited PropertySideEffects(Idx, previousIntVal);
 end;
@@ -466,7 +458,7 @@ begin
         NumConductors := Fnconds;
     end;
 
-    {Typical machine impedance data}
+    // Typical machine impedance data
     puRs := 0.0053;
     puXs := 0.106;
     puRr := 0.007;
@@ -1517,5 +1509,6 @@ begin
     FSFlush(TraceFile);
 end;
 
-finalization    SlipOptionEnum.Free;
+finalization
+    SlipOptionEnum.Free;
 end.

@@ -1,11 +1,9 @@
 unit generator;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2022, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //    Change Log
 //    8-28-13 Forced re-initializing solution if Model 3 generator added.
@@ -80,28 +78,28 @@ type
 {$SCOPEDENUMS ON}
     TGeneratorProp = (
         INVALID = 0,
-        phases,
-        bus1,
-        kv,
+        Phases,
+        Bus1,
+        kV,
         kW,
-        pf,
+        PF,
         kvar, // 13
-        model, // 6
-        Vminpu, // 23
-        Vmaxpu, // 24
-        yearly, // 7
-        daily, // 8
-        duty, // 9
-        dispmode, // 10
-        dispvalue, // 11
-        conn, // 12
-        status, // 16
+        Model, // 6
+        VMinpu, // 23
+        VMaxpu, // 24
+        Yearly, // 7
+        Daily, // 8
+        Duty, // 9
+        DispMode, // 10
+        DispValue, // 11
+        Conn, // 12
+        Status, // 16
         cls, // 17
         Vpu, // 18
-        maxkvar, // 19
-        minkvar, // 20
-        pvfactor, // 21
-        forceon, // 25
+        Maxkvar, // 19
+        Minkvar, // 20
+        PVFactor, // 21
+        ForceOn, // 25
         kVA, // 26
         MVA, // 27
         Xd, // 28
@@ -114,7 +112,7 @@ type
         ShaftModel, // 35
         ShaftData, // 36
         DutyStart, // 37
-        debugtrace, // 22
+        DebugTrace, // 22
         Balanced,
         XRdp,
         UseFuel,

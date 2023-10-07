@@ -1,11 +1,9 @@
 unit TCC_Curve;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Nominally, a time-current curve, but also used for volt-time curves.
 //
@@ -26,9 +24,9 @@ type
 {$SCOPEDENUMS ON}
     TTCC_CurveProp = (
         INVALID = 0,
-        npts = 1, // Number of points to expect
-        C_array = 2, // vector of multiplier values
-        T_array = 3 // vector of time values , Sec
+        NPts = 1, // Number of points to expect
+        C_Array = 2, // vector of multiplier values
+        T_Array = 3 // vector of time values , Sec
     );
 {$SCOPEDENUMS OFF}
 

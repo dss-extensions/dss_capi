@@ -726,7 +726,7 @@ Begin
         ArmedForClose := FALSE;
     end
     else 
-    {if Value = CTRL_CLOSE then} 
+    // if Value = CTRL_CLOSE then
     begin
         ControlledElement.Closed[0] := TRUE;
         LockedOut := FALSE;

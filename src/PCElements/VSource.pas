@@ -22,16 +22,16 @@ type
 {$SCOPEDENUMS ON}
     TVsourceProp = (
         INVALID = 0,
-        bus1 = 1,
-        basekv = 2,
+        Bus1 = 1,
+        BasekV = 2,
         pu = 3,
-        angle = 4,
-        frequency = 5,
-        phases = 6,
-        MVAsc3 = 7,
-        MVAsc1 = 8,
-        x1r1 = 9,
-        x0r0 = 10,
+        Angle = 4,
+        Frequency = 5,
+        Phases = 6,
+        MVASC3 = 7,
+        MVASC1 = 8,
+        X1R1 = 9,
+        X0R0 = 10,
         Isc3 = 11,
         Isc1 = 12,
         R1 = 13,
@@ -40,19 +40,19 @@ type
         X0 = 16,
         ScanType = 17,
         Sequence = 18,
-        bus2 = 19,
+        Bus2 = 19,
         Z1 = 20,
         Z0 = 21,
         Z2 = 22,
         puZ1 = 23,
         puZ0 = 24,
         puZ2 = 25,
-        baseMVA = 26,
+        BaseMVA = 26,
         Yearly = 27,
         Daily = 28,
         Duty = 29,
         Model = 30,
-        puZideal = 31
+        puZIdeal = 31
     );
 {$SCOPEDENUMS OFF}
     TVsource = class(TPCClass)

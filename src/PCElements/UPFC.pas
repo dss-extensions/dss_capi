@@ -22,9 +22,9 @@ type
 {$SCOPEDENUMS ON}
     TUPFCProp = (
         INVALID = 0,
-        bus1,
-        bus2,
-        refkV,
+        Bus1,
+        Bus2,
+        RefkV,
         PF,
         Frequency,
         Phases,

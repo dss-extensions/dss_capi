@@ -1,11 +1,9 @@
 unit Capacitor;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //  Basic  capacitor
 //
@@ -53,19 +51,19 @@ type
 {$SCOPEDENUMS ON}
     TCapacitorProp = (
         INVALID = 0,
-        bus1 = 1,
-        bus2 = 2,
-        phases = 3,
+        Bus1 = 1,
+        Bus2 = 2,
+        Phases = 3,
         kvar = 4,
-        kv = 5,
-        conn = 6,
-        cmatrix = 7,
-        cuf = 8,
+        kV = 5,
+        Conn = 6,
+        CMatrix = 7,
+        Cuf = 8,
         R = 9,
         XL = 10,
         Harm = 11,
-        Numsteps = 12,
-        states = 13
+        NumSteps = 12,
+        States = 13
     );
     
     TCapacitorConnection = TGeneralConnection;
@@ -797,14 +795,14 @@ end;
 
 function TCapacitorObj.get_States(Idx: Integer): Integer;
 begin
-    Result := FStates^[Idx];
+    Result := FStates[Idx];
 end;
 
 procedure TCapacitorObj.set_States(Idx: Integer; const Value: Integer);
 begin
-    if FStates^[Idx] <> Value then
+    if FStates[Idx] <> Value then
     begin
-        FStates^[Idx] := Value;
+        FStates[Idx] := Value;
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
         if ((ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
@@ -843,7 +841,7 @@ begin
 
     for i := FNumsteps downto 1 do
     begin
-        if Fstates^[i] = 1 then
+        if Fstates[i] = 1 then
         begin
             FLastStepInService := i;
             Break;
@@ -902,7 +900,7 @@ begin
     case SpecType of
         1, 2:
         begin
-            Value := Cmplx(0.0, FC^[iSTep] * w);
+            Value := Cmplx(0.0, FC[iSTep] * w);
             case Connection of
                 TCapacitorConnection.Delta:
                 begin   // Line-Line

@@ -1,11 +1,9 @@
 unit XYcurve;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -38,19 +36,19 @@ type
 {$SCOPEDENUMS ON}
     TXYcurveProp = (
         INVALID = 0,
-        npts = 1, // Number of points to expect
+        NPts = 1, // Number of points to expect
         Points = 2,
-        Yarray = 3, // vector of Y values
-        Xarray = 4, // vector of X values corresponding to Y values
-        csvfile = 5, // Switch input to a csvfile
-        sngfile = 6, // switch input to a binary file of singles
-        dblfile = 7, // switch input to a binary file of singles
-        x = 8,
-        y = 9,
-        Xshift = 10,
-        Yshift = 11,
-        Xscale = 12,
-        Yscale = 13 
+        YArray = 3, // vector of Y values
+        XArray = 4, // vector of X values corresponding to Y values
+        CSVFile = 5, // Switch input to a csvfile
+        SngFile = 6, // switch input to a binary file of singles
+        DblFile = 7, // switch input to a binary file of singles
+        X = 8,
+        Y = 9,
+        XShift = 10,
+        YShift = 11,
+        XScale = 12,
+        YScale = 13 
     );
 {$SCOPEDENUMS OFF}
 

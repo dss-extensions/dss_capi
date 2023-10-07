@@ -1,11 +1,9 @@
 unit TempShape;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -50,18 +48,18 @@ type
 {$SCOPEDENUMS ON}
     TTShapeProp = (
         INVALID = 0,
-        npts = 1, // Number of points to expect
-        interval = 2, // default = 1.0;
-        temp = 3, // vector of temperature values
-        hour = 4, // vector of hour values
-        mean = 5, // set the mean temp (otherwise computed)
-        stddev = 6, // set the std dev of the temp (otherwise computed)
-        csvfile = 7, // Switch input to a csvfile
-        sngfile = 8, // switch input to a binary file of singles
-        dblfile = 9, // switch input to a binary file of singles
-        sinterval = 10, // Interval in seconds
-        minterval = 11, // Interval in minutes
-        action = 12 // Interval in minutes
+        NPts = 1, // Number of points to expect
+        Interval = 2, // default = 1.0;
+        Temp = 3, // vector of temperature values
+        Hour = 4, // vector of hour values
+        Mean = 5, // set the mean temp (otherwise computed)
+        StdDev = 6, // set the std dev of the temp (otherwise computed)
+        CSVFile = 7, // Switch input to a csvfile
+        SngFile = 8, // switch input to a binary file of singles
+        DblFile = 9, // switch input to a binary file of singles
+        SInterval = 10, // Interval in seconds
+        MInterval = 11, // Interval in minutes
+        Action = 12 // Interval in minutes
     );
 {$SCOPEDENUMS OFF}
 
@@ -567,5 +565,6 @@ begin
     FStdDev := Value;
 end;
 
-finalization    ActionEnum.Free;        
+finalization
+    ActionEnum.Free;        
 end.

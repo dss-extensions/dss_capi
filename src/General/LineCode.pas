@@ -1,11 +1,9 @@
 unit LineCode;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -31,28 +29,28 @@ type
 {$SCOPEDENUMS ON}
     TLineCodeProp = (
         INVALID = 0,
-        nphases = 1,
-        r1 = 2,
-        x1 = 3,
-        r0 = 4,
-        x0 = 5,
+        NPhases = 1,
+        R1 = 2,
+        X1 = 3,
+        R0 = 4,
+        X0 = 5,
         C1 = 6,
         C0 = 7,
-        units = 8,
-        rmatrix = 9,
-        xmatrix = 10,
-        cmatrix = 11,
-        baseFreq = 12,
-        normamps = 13,
-        emergamps = 14,
-        faultrate = 15,
-        pctperm = 16,
-        repair = 17,
+        Units = 8,
+        RMatrix = 9,
+        XMatrix = 10,
+        CMatrix = 11,
+        BaseFreq = 12,
+        NormAmps = 13,
+        EmergAmps = 14,
+        FaultRate = 15,
+        PctPerm = 16,
+        Repair = 17,
         Kron = 18,
         Rg = 19,
         Xg = 20,
         rho = 21,
-        neutral = 22,
+        Neutral = 22,
         B1 = 23,
         B0 = 24,
         Seasons = 25,

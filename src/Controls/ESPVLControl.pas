@@ -1,24 +1,21 @@
 unit ESPVLControl;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2016, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
-{
-  An ESPVLControl is a control element that is connected to a terminal of another
-  circuit element (a PVSystem) and sends dispatch kW signals to a set of Storage Elements it controls
+// ----------------------------------------------------------
+// Copyright (c) 2008-2016, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
-  An ESPVLControl is either a System Controller or a Local Controller, set by the "Type" property.
-  A System Controller controls one or more Local Controllers
-  A Local Controller controls one or more PVSystem elements and one or more Storage elements.
 
-  An ESPVLControl is defined by a New command:
-
-  New ESPVLControl.Name=myname Element=devclass.name terminal=[ 1|2|...] StorageList = (gen1  gen2 ...)
-
-}
+//  An ESPVLControl is a control element that is connected to a terminal of another
+//  circuit element (a PVSystem) and sends dispatch kW signals to a set of Storage Elements it controls
+//
+//  An ESPVLControl is either a System Controller or a Local Controller, set by the "Type" property.
+//  A System Controller controls one or more Local Controllers
+//  A Local Controller controls one or more PVSystem elements and one or more Storage elements.
+//
+//  An ESPVLControl is defined by a New command:
+//
+//  New ESPVLControl.Name=myname Element=devclass.name terminal=[ 1|2|...] StorageList = (gen1  gen2 ...)
 
 interface
 
@@ -43,7 +40,7 @@ type
         Terminal = 2,
         Typ = 3,
         kWBand = 4,
-        kvarlimit = 5,
+        kvarLimit = 5,
         LocalControlList = 6,
         LocalControlWeights = 7,
         PVSystemList = 8,
@@ -67,9 +64,9 @@ type
     TESPVLControlObj = class(TControlElem)
     PRIVATE
 
-        Ftype: Integer;   {1=System controller; 2=Local controller}
+        Ftype: Integer; // 1=System controller; 2=Local controller
 
-        {System Controller Variables}
+        // System Controller Variables
 
         // Local Controllers under supervision of System Controller
         FLocalControlListSize: Integer;
@@ -77,7 +74,7 @@ type
         FLocalControlPointerList: TDSSPointerList;
         FLocalControlWeights: pDoubleArray;
 
-        {Local Controller Variables}
+        // Local Controller Variables
 
         // PVSystems under supervision of this Local Controller
         FPVsystemListSize: Integer;
@@ -248,9 +245,9 @@ begin
         begin   // levelize the list
             FLocalControlPointerList.Clear;  // clear this for resetting on first sample
             FLocalControlListSize := FLocalControlNameList.count;
-            Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1]) * FLocalControlListSize);
+            Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights[1]) * FLocalControlListSize);
             for i := 1 to FLocalControlListSize do
-                FLocalControlWeights^[i] := 1.0;
+                FLocalControlWeights[i] := 1.0;
         end;
     end;
 
@@ -319,7 +316,7 @@ end;
 
 procedure TESPVLControlObj.RecalcElementData;
 begin
-    {Check for existence of monitored element}
+    // Check for existence of monitored element
     if MonitoredElement = NIL then
     begin
         DoSimpleMsg('Monitored Element in "%s" is not set', [FullName], 372);
@@ -352,7 +349,7 @@ end;
 
 procedure TESPVLControlObj.DoPendingAction;
 begin
-    {Do Nothing}
+    // Do Nothing
 end;
 
 procedure TESPVLControlObj.Sample;
@@ -380,14 +377,14 @@ begin
             begin
                 Gen := FLocalControlPointerList.Get(i);
               // compute new dispatch value for this generator ...
-                GenkW := Max(1.0, (Gen.kWBase + PDiff * (FLocalControlWeights^[i] / TotalWeight)));
+                GenkW := Max(1.0, (Gen.kWBase + PDiff * (FLocalControlWeights[i] / TotalWeight)));
                 if GenkW <> Gen.kWBase then
                 begin
                     Gen.kWBase := GenkW;
                 end;
             end;
         end;
-       {Else just continue}
+       // Else just continue
     end;
 end;
 
@@ -418,18 +415,18 @@ begin
                     FLocalControlPointerList.Add(pESPVLControl);
             end;
 
-            {Allocate uniform weights}
+            // Allocate uniform weights
             FLocalControlListSize := FLocalControlPointerList.Count;
-            Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1]) * FLocalControlListSize);
+            Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights[1]) * FLocalControlListSize);
             for i := 1 to FLocalControlListSize do
-                FLocalControlWeights^[i] := 1.0;
+                FLocalControlWeights[i] := 1.0;
 
         end;
 
         // Add up total weights    ??????
         TotalWeight := 0.0;
         for i := 1 to FLocalControlListSize do
-            TotalWeight := TotalWeight + FLocalControlWeights^[i];
+            TotalWeight := TotalWeight + FLocalControlWeights[i];
 
         if FLocalControlPointerList.Count > 0 then
             Result := TRUE;

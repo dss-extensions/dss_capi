@@ -1,11 +1,9 @@
 unit PCClass;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -17,7 +15,7 @@ type
 {$SCOPEDENUMS ON}
     TPCElementProp = (
         INVALID = 0,
-        spectrum = 1
+        Spectrum = 1
     );
 {$SCOPEDENUMS OFF}
 

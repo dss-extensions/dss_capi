@@ -1,12 +1,10 @@
 unit VCCS;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2016, University of Pittsburgh
-  Copyright (c) 2019-2021, Battelle Memorial Institute
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2016, University of Pittsburgh
+// Copyright (c) 2019-2021, Battelle Memorial Institute
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -24,19 +22,19 @@ type
 {$SCOPEDENUMS ON}
     TVCCSProp = (
         INVALID = 0,
-        bus1 = 1,
-        phases = 2,
-        prated = 3,
-        vrated = 4,
-        ppct = 5,
-        bp1 = 6,
-        bp2 = 7,
-        filter = 8,
-        fsample = 9,
-        rmsmode = 10,
-        imaxpu = 11,
-        vrmstau = 12,
-        irmstau = 13
+        Bus1 = 1,
+        Phases = 2,
+        PRated = 3,
+        VRated = 4,
+        Ppct = 5,
+        BP1 = 6,
+        BP2 = 7,
+        Filter = 8,
+        FSample = 9,
+        RMSMode = 10,
+        IMaxpu = 11,
+        VRMSTau = 12,
+        IRMSTau = 13
     );
 {$SCOPEDENUMS OFF}
 

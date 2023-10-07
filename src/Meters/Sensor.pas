@@ -1,11 +1,9 @@
 unit Sensor;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Sensor compares voltages and currents. Power quantities are converted to current quantities
 // based on rated kVBase, or actual voltage if voltage measurement specified.
@@ -26,16 +24,16 @@ type
 {$SCOPEDENUMS ON}
     TSensorProp = (
         INVALID = 0,
-        element = 1,
-        terminal = 2,
-        kvbase = 3,
-        clear = 4,
+        Element = 1,
+        Terminal = 2,
+        kVBase = 3,
+        Clear = 4,
         kVs = 5,
-        currents = 6,
+        Currents = 6,
         kWs = 7,
         kvars = 8,
-        conn = 9,  //  Sensor connection
-        Deltadirection = 10,  //  +/- 1
+        Conn = 9,  //  Sensor connection
+        DeltaDirection = 10,  //  +/- 1
         pctError = 11,  //  %Error of sensor
         Weight = 12  // for WLS calc
         // action = 13  // unused

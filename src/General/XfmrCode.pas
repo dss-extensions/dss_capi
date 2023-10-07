@@ -1,11 +1,9 @@
 unit XfmrCode;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2009-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2009-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -23,47 +21,47 @@ type
     TXfmrCodeProp = (
         INVALID = 0,
     
-        phases = 1,
-        windings = 2,
+        Phases = 1,
+        Windings = 2,
 
         // Winding Definition
-        wdg = 3,
-        conn = 4,
+        Wdg = 3,
+        Conn = 4,
         kV = 5, // FOR 2-and 3- always kVLL ELSE actual winding KV
         kVA = 6,
-        tap = 7,
+        Tap = 7,
         pctR = 8,
-        Rneut = 9,
-        Xneut = 10,
+        RNeut = 9,
+        XNeut = 10,
 
         // General Data
-        conns = 11,
+        Conns = 11,
         kVs = 12,
         kVAs = 13,
-        taps = 14,
-        Xhl = 15,
-        Xht = 16,
-        Xlt = 17,
-        Xscarray = 18, // x12 13 14... 23 24.. 34 ..
-        thermal = 19,
+        Taps = 14,
+        XHL = 15,
+        XHT = 16,
+        XLT = 17,
+        XSCArray = 18, // x12 13 14... 23 24.. 34 ..
+        Thermal = 19,
         n = 20,
         m = 21,
-        flrise = 22,
-        hsrise = 23,
-        pctloadloss = 24,
-        pctnoloadloss = 25,
-        normhkVA = 26,
-        emerghkVA = 27,
+        FLRise = 22,
+        HSRise = 23,
+        pctLoadLoss = 24,
+        pctNoLoadLoss = 25,
+        NormHkVA = 26,
+        EmergHkVA = 27,
         MaxTap = 28,
         MinTap = 29,
         NumTaps = 30,
-        pctimag = 31,
-        ppm_antifloat = 32,
+        pctIMag = 31,
+        ppm_Antifloat = 32,
         pctRs = 33,
         X12 = 34,
         X13 = 35,
         X23 = 36,
-        RdcOhms = 37,
+        RDCOhms = 37,
         Seasons = 38,
         Ratings = 39
     );

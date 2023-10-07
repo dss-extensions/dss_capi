@@ -1,11 +1,9 @@
 unit CapControl;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //  A CapControl is a control element that is connected to a terminal of another
 //  circuit element and controls a capacitor.  The control is usually placed in the
@@ -39,19 +37,19 @@ type
 {$SCOPEDENUMS ON}
     TCapControlProp = (
         INVALID = 0,
-        element = 1,
-        terminal = 2,
-        capacitor = 3,
+        Element = 1,
+        Terminal = 2,
+        Capacitor = 3,
         typ = 4,
-        PTratio = 5,
-        CTratio = 6,
-        ONsetting = 7,
-        OFFsetting = 8,
+        PTRatio = 5,
+        CTRatio = 6,
+        OnSetting = 7,
+        OffSetting = 8,
         Delay = 9,
         VoltOverride = 10,
-        Vmax = 11,
-        Vmin = 12,
-        DelayOFF = 13,
+        VMax = 11,
+        VMin = 12,
+        DelayOff = 13,
         DeadTime = 14,
         CTPhase = 15,
         PTPhase = 16,
@@ -717,8 +715,7 @@ begin
                             if ShowEventLog then
                                 AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Opened**');
                             PresentState := CTRL_OPEN;
-                            with ActiveCircuit.Solution do
-                                LastOpenTime := DynaVars.t + 3600.0 * DynaVars.intHour;
+                            LastOpenTime := ActiveCircuit.Solution.DynaVars.t + 3600.0 * ActiveCircuit.Solution.DynaVars.intHour;
                         end;
                     end;
                 else
@@ -1012,10 +1009,7 @@ begin
                     end;
                 TIMECONTROL:
                 begin
-                    with ActiveCircuit.Solution do
-                    begin
-                        NormalizedTime := NormalizeToTOD(DynaVars.intHour, DynaVars.t);
-                    end;
+                    NormalizedTime := NormalizeToTOD(ActiveCircuit.Solution.DynaVars.intHour, ActiveCircuit.Solution.DynaVars.t);
                     case PresentState of
                         CTRL_OPEN:
                             if OFF_Value > ON_Value then
@@ -1081,7 +1075,7 @@ begin
                     end;
                 end;
 
-                PFCONTROL: {PF}
+                PFCONTROL: // PF
                 begin
                       //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
                     S := MonitoredElement.Power[ElementTerminal];

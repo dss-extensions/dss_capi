@@ -1,11 +1,9 @@
 unit RegControl;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //   12/4/2018  Added autotransformer control
 
@@ -36,37 +34,37 @@ type
 {$SCOPEDENUMS ON}
     TRegControlProp = (
         INVALID = 0,
-        transformer = 1,
-        winding = 2,
-        vreg = 3,
-        band = 4,
-        ptratio = 5,
-        CTprim = 6,
+        Transformer = 1,
+        Winding = 2,
+        VReg = 3,
+        Band = 4,
+        PTRatio = 5,
+        CTPrim = 6,
         R = 7,
         X = 8,
-        bus = 9,
-        delay = 10,
-        reversible = 11,
-        revvreg = 12,
-        revband = 13,
-        revR = 14,
-        revX = 15,
-        tapdelay = 16,
-        debugtrace = 17,
-        maxtapchange = 18,
-        inversetime = 19,
-        tapwinding = 20,
-        vlimit = 21,
-        PTphase = 22,
-        revThreshold = 23,
-        revDelay = 24,
-        revNeutral = 25,
+        Bus = 9,
+        Delay = 10,
+        Reversible = 11,
+        RevVReg = 12,
+        RevBand = 13,
+        RevR = 14,
+        RevX = 15,
+        TapDelay = 16,
+        DebugTrace = 17,
+        MaxTapChange = 18,
+        InverseTime = 19,
+        TapWinding = 20,
+        VLimit = 21,
+        PTPhase = 22,
+        RevThreshold = 23,
+        RevDelay = 24,
+        RevNeutral = 25,
         EventLog = 26,
         RemotePTRatio = 27,
         TapNum = 28,
         Reset = 29,
         LDC_Z = 30,
-        rev_Z = 31,
+        Rev_Z = 31,
         Cogen = 32 
     );
 {$SCOPEDENUMS OFF}
@@ -190,6 +188,7 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Circuit,
+    Solution,
     CktElement,
     Sysutils,
     uCmatrix,
@@ -480,7 +479,7 @@ begin
     DebugTrace := FALSE;
     Armed := FALSE;
 
-    {Reverse mode variables}
+    // Reverse mode variables
     revVreg := 120.0;
     revBandwidth := 3.0;
     revR := 0.0;
@@ -586,8 +585,8 @@ begin
                 Setbus(1, RegulatedBus)   // hopefully this will actually exist
             else
                 Setbus(1, ControlledElement.GetBus(ElementTerminal));
-            ReAllocMem(VBuffer, SizeOF(Vbuffer[1]) * ControlledElement.NPhases);  // buffer to hold regulator voltages
-            ReAllocMem(CBuffer, SizeOF(CBuffer[1]) * ControlledElement.Yorder);
+            ReAllocMem(VBuffer, SizeOf(Complex) * ControlledElement.NPhases);  // buffer to hold regulator voltages
+            ReAllocMem(CBuffer, SizeOf(Complex) * ControlledElement.Yorder);
         end;
     end
     else
@@ -638,7 +637,7 @@ begin
             Result := VBuffer[ControlledPhase] / PTRatio;
         end;
     else
-    {Just use one phase because that's what most controls do.}
+    // Just use one phase because that's what most controls do.
         Result := VBuffer[FPTPhase] / PTRatio;
         ControlledPhase := FPTPhase;
     end;
@@ -650,11 +649,10 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
-        for i := 1 to NumProperties do
-        begin
-            FSWriteln(F, '~ ' + PropertyName[i] + '=' + PropertyValue[i]);
-        end;
+    for i := 1 to ParentClass.NumProperties do
+    begin
+        FSWriteln(F, '~ ' + ParentClass.PropertyName[i] + '=' + PropertyValue[i]);
+    end;
 
     if Complete then
     begin
@@ -715,7 +713,9 @@ procedure TRegControlObj.DoPendingAction(const Code, ProxyHdl: Integer);
 // 2-23-00 Modified to change one tap at a time
 var
     TapChangeToMake: Double;
+    solution: TSolutionObj;
 begin
+    solution := ActiveCircuit.Solution;
     case Code of
         ACTION_TAPCHANGE:
         begin
@@ -798,13 +798,13 @@ begin
                         end;
                     end;
                 end;
-        end;  {ACTION_TAPCHANGE}
+        end;  // ACTION_TAPCHANGE
 
         ACTION_REVERSE:
         begin  // Toggle reverse mode or Cogen mode flag
             if (DebugTrace) then
                 RegWriteDebugRecord(Format('%-.6g, Handling Reverse Action, ReversePending=%s, InReverseMode=%s',
-                    [ActiveCircuit.Solution.dynavars.dblHour, BoolToStr(ReversePending, TRUE), BoolToStr(InReverseMode, TRUE)]));
+                    [solution.dynavars.dblHour, BoolToStr(ReversePending, TRUE), BoolToStr(InReverseMode, TRUE)]));
             if ReversePending then        // check to see if action has reset
             begin
                 if CogenEnabled then
@@ -821,13 +821,13 @@ begin
                     InReverseMode := TRUE;
                 ReversePending := FALSE;
             end;
-        end;  {ACTION_REVERSE}
+        end;  // ACTION_REVERSE
 
     end;
 end;
 
 procedure TRegControlObj.Sample;
-{This is where it all happens ...}
+// This is where it all happens ...
 var
     BoostNeeded,
     Increment,
@@ -856,12 +856,11 @@ begin
 
     LookingForward := (not InReverseMode) or InCogenMode; // Always looking forward in cogen mode
 
-     {First, check the direction of power flow to see if we need to reverse direction}
-     {Don't do this if using regulated bus logic}
+     // First, check the direction of power flow to see if we need to reverse direction
+     // Don't do this if using regulated bus logic
     if not UsingRegulatedBus then
     begin
         if (DebugTrace) then 
-        with ActiveCircuit do
             RegWriteDebugRecord(Format(
                 '%-.6g, 2-Looking forward= %s *** Incogenmode=%s',
                 [ActiveCircuit.Solution.DynaVars.dblHour, BoolToStr(LookingForward, TRUE), BoolToStr(InCogenMode, TRUE)]
@@ -902,11 +901,10 @@ begin
 
             begin   // If reversed look to see if power is back in forward direction
                 if (DebugTrace) then 
-                    with ActiveCircuit do
-                        RegWriteDebugRecord(Format(
-                            '%-.6g, 3-Looking Forward=%s *** Incogenmode=%s',
-                            [ActiveCircuit.Solution.DynaVars.dblHour, BoolToStr(Lookingforward, TRUE), BoolToStr(InCogenMode, TRUE)]
-                        ));
+                    RegWriteDebugRecord(Format(
+                        '%-.6g, 3-Looking Forward=%s *** Incogenmode=%s',
+                        [ActiveCircuit.Solution.DynaVars.dblHour, BoolToStr(Lookingforward, TRUE), BoolToStr(InCogenMode, TRUE)]
+                    ));
 
                 FwdPower := -ControlledTransformer.Power[ElementTerminal].re;  // watts
                 if not ReversePending then
@@ -1162,12 +1160,11 @@ end;
 procedure TRegControlObj.RegWriteDebugRecord(S: String);
 // write a general debug string
 begin
+    if DSS.InShowResults then
+        Exit;
     try
-        if (not DSS.InShowResults) then
-        begin
-            FSWriteln(TraceFile, S);
-            FSFlush(TraceFile);
-        end;
+        FSWriteln(TraceFile, S);
+        FSFlush(TraceFile);
     except
         On E: Exception do
         begin
@@ -1180,32 +1177,29 @@ var
     Separator: String;
     sout: String;
 begin
+    if DSS.InShowResults then
+        Exit;
     try
-        if (not DSS.InShowResults) then
-        begin
-            Separator := ', ';
-            with TTransfObj(ControlledElement) do
-            begin
-                WriteStr(sout,
-                    ActiveCircuit.Solution.DynaVars.intHour: 0, Separator,
-                    ActiveCircuit.Solution.DynaVars.t: 0: 3, Separator,
-                    ActiveCircuit.Solution.ControlIteration: 0, Separator,
-                    ActiveCircuit.Solution.Iteration: 0, Separator,
-                    ActiveCircuit.LoadMultiplier: 6: 2, Separator,
-                    PresentTap[ElementTerminal]: 8: 5, Separator,
-                    PendingTapChange: 8: 5, Separator,
-                    TapChangeMade: 8: 5, Separator,
-                    TapIncrement[ElementTerminal]: 8: 5, Separator,
-                    MinTap[ElementTerminal]: 8: 5, Separator,
-                    MaxTap[ElementTerminal]: 8: 5);
+        Separator := ', ';
+        with TTransfObj(ControlledElement) do
+            WriteStr(sout,
+                ActiveCircuit.Solution.DynaVars.intHour: 0, Separator,
+                ActiveCircuit.Solution.DynaVars.t: 0: 3, Separator,
+                ActiveCircuit.Solution.ControlIteration: 0, Separator,
+                ActiveCircuit.Solution.Iteration: 0, Separator,
+                ActiveCircuit.LoadMultiplier: 6: 2, Separator,
+                PresentTap[ElementTerminal]: 8: 5, Separator,
+                PendingTapChange: 8: 5, Separator,
+                TapChangeMade: 8: 5, Separator,
+                TapIncrement[ElementTerminal]: 8: 5, Separator,
+                MinTap[ElementTerminal]: 8: 5, Separator,
+                MaxTap[ElementTerminal]: 8: 5);
 
-                FSWriteln(TraceFile, sout);
-            end;
-            FSFlush(TraceFile);
-        end;
+        FSWriteln(TraceFile, sout);
+        FSFlush(TraceFile);
     except
         On E: Exception do
-        begin {Do Nothing}
+        begin // Do Nothing
         end;
     end;
 end;
@@ -1231,16 +1225,16 @@ begin
     if not Assigned(ControlledElement) then
         RecalcElementData;
 
-    if ControlledElement <> NIL then
-    begin
-        ctrldTransformer := TTransfObj(ControlledElement);
-        ictrldWinding := TRWinding;
-        with ctrldTransformer do
-            PresentTap[ictrldWinding] := Value * TapIncrement[ictrldWinding] + ((MaxTap[ictrldWinding] + MinTap[ictrldWinding]) / 2.0);
+    if ControlledElement = NIL then
+        Exit;
 
-        // Tap range checking is done in PresentTap
-        // You can attempt to set the tap at an illegal value but it won't do anything
-    end;
+    ctrldTransformer := TTransfObj(ControlledElement);
+    ictrldWinding := TRWinding;
+    with ctrldTransformer do
+        PresentTap[ictrldWinding] := Value * TapIncrement[ictrldWinding] + ((MaxTap[ictrldWinding] + MinTap[ictrldWinding]) / 2.0);
+
+    // Tap range checking is done in PresentTap
+    // You can attempt to set the tap at an illegal value but it won't do anything
 end;
 
 
@@ -1263,8 +1257,8 @@ begin
                 Setbus(1, RegulatedBus)   // hopefully this will actually exist
             else
                 Setbus(1, ControlledElement.GetBus(ElementTerminal));
-            ReAllocMem(VBuffer, SizeOF(Vbuffer^[1]) * ControlledElement.NPhases);  // buffer to hold regulator voltages
-            ReAllocMem(CBuffer, SizeOF(CBuffer[1]) * ControlledElement.Yorder);
+            ReAllocMem(VBuffer, SizeOF(Complex) * ControlledElement.NPhases);  // buffer to hold regulator voltages
+            ReAllocMem(CBuffer, SizeOF(Complex) * ControlledElement.Yorder);
         end;
     end;
     inherited;

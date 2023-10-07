@@ -1,11 +1,9 @@
 unit ConductorData;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2020, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2020, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -30,19 +28,19 @@ type
 {$SCOPEDENUMS ON}
     TConductorDataProp = (
         INVALID = 0,
-        Rdc = 1,
-        Rac = 2,
-        Runits = 3,
-        GMRac = 4,
-        GMRunits = 5,
-        radius = 6,
-        radunits = 7,
-        normamps = 8,
-        emergamps = 9,
-        diam = 10,
+        RDC = 1,
+        RAC = 2,
+        RUnits = 3,
+        GMRAC = 4,
+        GMRUnits = 5,
+        Radius = 6,
+        RadUnits = 7,
+        NormAmps = 8,
+        EmergAmps = 9,
+        Diam = 10,
         Seasons = 11,
         Ratings = 12,
-        Capradius = 13
+        CapRadius = 13
     );
 {$SCOPEDENUMS OFF}
 

@@ -1,11 +1,9 @@
 unit PDClass;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -17,11 +15,11 @@ type
 {$SCOPEDENUMS ON}
     TPDElementProp = (
         INVALID = 0,
-        normamps=1,
-        emergamps=2,
-        faultrate=3,
-        pctperm=4,
-        repair=5
+        NormAmps=1,
+        EmergAmps=2,
+        FaultRate=3,
+        pctPerm=4,
+        Repair=5
     );
 {$SCOPEDENUMS OFF}
 

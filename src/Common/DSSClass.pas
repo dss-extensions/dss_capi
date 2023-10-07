@@ -62,9 +62,13 @@ type
         Busy = 0,
         Idle = 1
     );
-    TDSSObjectProp = (
+    TDSSObjectPropLegacy = (
         INVALID = 0,
         like = 1
+    );
+    TDSSObjectProp = (
+        INVALID = 0,
+        Like = 1
     );
     
     TPropertyFlag = (
@@ -1586,12 +1590,12 @@ begin
     for i := 1 to NumProps do
     begin
         propName := GetEnumName(EnumInfo, i);
-        if propName = 'cls' then
-            propName := 'class'
+        if AnsiLowerCase(propName) = 'cls' then
+            propName := 'Class'
         else if AnsiLowerCase(propName) = 'typ' then
-            propName := propName + 'e'
+            propName := 'Type'
         else if propName = 'vr' then
-            propName := 'var';
+            propName := 'Var';
 
         propNameJSON := propName;
 
@@ -1634,7 +1638,7 @@ begin
         Exit;
     end;
 
-    key := Class_Name + '.' + PropertyName[idx];
+    key := Class_Name + '.' + PropertyNameLowercase[idx];
 
     if DSSPropertyHelp = NIL then
     begin
@@ -1650,7 +1654,7 @@ begin
     // Try parents
     for i := ClassParents.Count downto 1 do
     begin
-        altkey := ClassParents.Strings[i - 1] + '.' + PropertyName[idx];
+        altkey := ClassParents.Strings[i - 1] + '.' + PropertyNameLowercase[idx];
         Result := DSSHelp(altkey);
         if Result <> altkey then
             Exit; // Found a string

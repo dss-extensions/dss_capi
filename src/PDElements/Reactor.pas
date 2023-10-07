@@ -1,11 +1,9 @@
 unit Reactor;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //Basic  Reactor
 //
@@ -64,14 +62,14 @@ type
 {$SCOPEDENUMS ON}
     TReactorProp = (
         INVALID = 0,   
-        bus1 = 1,
-        bus2 = 2,
-        phases = 3,
+        Bus1 = 1,
+        Bus2 = 2,
+        Phases = 3,
         kvar = 4,
-        kv = 5,
-        conn = 6,
-        Rmatrix = 7,
-        Xmatrix = 8,
+        kV = 5,
+        Conn = 6,
+        RMatrix = 7,
+        XMatrix = 8,
         Parallel = 9,
         R = 10,
         X = 11,
@@ -321,7 +319,7 @@ begin
                 SetBus(2, S2);
                 IsShunt := TRUE;
             end;
-            PrpSequence^[2] := 0;       // Reset this for save function
+            PrpSequence[2] := 0;       // Reset this for save function
         end;
         ord(TProp.bus2):
             if AnsiCompareText(StripExtension(GetBus(1)), StripExtension(GetBus(2))) <> 0 then
@@ -887,55 +885,55 @@ var
 begin
     inherited DumpProperties(F, Complete);
 
-    with ParentClass do
-        for k := 1 to NumProperties do
-        begin
-            case k of  // was 'CASE i of' - good example of reason to remove all warnings 
-                7:
-                    if Rmatrix <> NIL then
+    for k := 1 to ParentClass.NumProperties do
+    begin
+        case k of  // was 'CASE i of' - good example of reason to remove all warnings 
+            ord(TProp.RMatrix):
+                if Rmatrix <> NIL then
+                begin
+                    FSWrite(F, ParentClass.PropertyName[k] + '= (');
+                    for i := 1 to Fnphases do
                     begin
-                        FSWrite(F, PropertyName[k] + '= (');
-                        for i := 1 to Fnphases do
-                        begin
-                            for j := 1 to Fnphases do
-                                FSWrite(F, Format('%-.5g ', [RMatrix[(i - 1) * Fnphases + j]]));
-                            if i <> Fnphases then
-                                FSWrite(F, '|');
-                        end;
-                        FSWriteln(F, ')');
+                        for j := 1 to Fnphases do
+                            FSWrite(F, Format('%-.5g ', [RMatrix[(i - 1) * Fnphases + j]]));
+                        if i <> Fnphases then
+                            FSWrite(F, '|');
                     end;
-                8:
-                    if Xmatrix <> NIL then
+                    FSWriteln(F, ')');
+                end;
+            ord(TProp.XMatrix):
+                if Xmatrix <> NIL then
+                begin
+                    FSWrite(F, ParentClass.PropertyName[k] + '= (');
+                    for i := 1 to Fnphases do
                     begin
-                        FSWrite(F, PropertyName[k] + '= (');
-                        for i := 1 to Fnphases do
-                        begin
-                            for j := 1 to Fnphases do
-                                FSWrite(F, Format('%-.5g ', [XMatrix[(i - 1) * Fnphases + j]]));
-                            if i <> Fnphases then
-                                FSWrite(F, '|');
-                        end;
-                        FSWriteln(F, ')');
+                        for j := 1 to Fnphases do
+                            FSWrite(F, Format('%-.5g ', [XMatrix[(i - 1) * Fnphases + j]]));
+                        if i <> Fnphases then
+                            FSWrite(F, '|');
                     end;
-                13:
-                    FSWriteln(F, Format('~ Z1=[%-.8g, %-.8g]', [Z1.re, Z1.im]));
-                14:
-                    FSWriteln(F, Format('~ Z2=[%-.8g, %-.8g]', [Z2.re, Z2.im]));
-                15:
-                    FSWriteln(F, Format('~ Z0=[%-.8g, %-.8g]', [Z0.re, Z0.im]));
-                16:
-                    FSWriteln(F, Format('~ Z =[%-.8g, %-.8g]', [R, X]));
-                19:
-                    FSWriteln(F, Format('~ LmH=%-.8g', [L * 1000.0]));
-            else
-                FSWriteln(F, '~ ' + PropertyName[k] + '=' + PropertyValue[k]);
-            end;
+                    FSWriteln(F, ')');
+                end;
+            ord(TProp.Z1):
+                FSWriteln(F, Format('~ Z1=[%-.8g, %-.8g]', [Z1.re, Z1.im]));
+            ord(TProp.Z2):
+                FSWriteln(F, Format('~ Z2=[%-.8g, %-.8g]', [Z2.re, Z2.im]));
+            ord(TProp.Z0):
+                FSWriteln(F, Format('~ Z0=[%-.8g, %-.8g]', [Z0.re, Z0.im]));
+            ord(TProp.Z):
+                FSWriteln(F, Format('~ Z =[%-.8g, %-.8g]', [R, X]));
+            ord(TProp.LmH):
+                FSWriteln(F, Format('~ LmH=%-.8g', [L * 1000.0]));
+        else
+            FSWriteln(F, '~ ' + ParentClass.PropertyName[k] + '=' + PropertyValue[k]);
         end;
+    end;
 end;
 
 procedure TReactorObj.GetLosses(var TotalLosses, LoadLosses, NoLoadLosses: Complex);
 var
     i: Integer;
+    v: Complex;
 begin
     // Only report No Load Losses if Rp defined and Reactor is a shunt device;
     // Else do default behavior.
@@ -944,10 +942,11 @@ begin
         TotalLosses := Losses;  // Side effect: computes Iterminal and Vterminal
         // Compute losses in Rp Branch from voltages across shunt element -- node to ground
         NoLoadLosses := 0;
-        with ActiveCircuit.Solution do
-            for i := 1 to FNphases do
-                with NodeV[NodeRef[i]] do
-                    NoLoadLosses += (re * re + im * im) / Rp;  // V^2/Rp
+        for i := 1 to FNphases do
+        begin
+            v := ActiveCircuit.Solution.NodeV[NodeRef[i]];
+            NoLoadLosses += (v.re * v.re + v.im * v.im) / Rp;  // V^2/Rp
+        end;
 
         if ActiveCircuit.PositiveSequence then
             NoLoadLosses := NoLoadLosses * 3.0;

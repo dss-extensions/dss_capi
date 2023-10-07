@@ -1,11 +1,9 @@
 unit Fault;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Fault object:
 //
@@ -44,14 +42,14 @@ type
 {$SCOPEDENUMS ON}
     TFaultProp = (
         INVALID = 0,
-        bus1 = 1,
-        bus2 = 2,
-        phases = 3,
-        r = 4,
-        pctstddev = 5,
-        Gmatrix = 6,
-        ONtime = 7,
-        temporary = 8,
+        Bus1 = 1,
+        Bus2 = 2,
+        Phases = 3,
+        R = 4,
+        pctStdDev = 5,
+        GMatrix = 6,
+        OnTime = 7,
+        Temporary = 8,
         MinAmps = 9
     );
 {$SCOPEDENUMS OFF}
@@ -309,9 +307,9 @@ begin
         Reallocmem(Gmatrix, 0)
     else
     begin
-        Reallocmem(Gmatrix, SizeOf(Gmatrix^[1]) * Fnphases * Fnphases);
+        Reallocmem(Gmatrix, SizeOf(Gmatrix[1]) * Fnphases * Fnphases);
         for i := 1 to Fnphases * Fnphases do
-            Gmatrix^[i] := Other.Gmatrix^[i];
+            Gmatrix[i] := Other.Gmatrix[i];
     end;
 end;
 
@@ -366,18 +364,15 @@ end;
 procedure TFaultObj.Randomize;
 // called from solveMontefault Procedure
 begin
-    with activeCircuit.Solution do
-    begin
-        case RandomType of
-            GAUSSIAN:
-                RandomMult := Gauss(1.0, StdDev);
-            UNIFORM:
-                RandomMult := Random;
-            LOGNORMAL:
-                RandomMult := QuasiLogNormal(1.0);
-        else
-            RandomMult := 1.0;
-        end;
+    case ActiveCircuit.Solution.RandomType of
+        GAUSSIAN:
+            RandomMult := Gauss(1.0, StdDev);
+        UNIFORM:
+            RandomMult := Random;
+        LOGNORMAL:
+            RandomMult := QuasiLogNormal(1.0);
+    else
+        RandomMult := 1.0;
     end;
 
      // Give the multiplier some skew to approximate more uniform/Gaussian current distributions
@@ -527,7 +522,7 @@ end;
 procedure TFaultObj.CheckStatus(ControlMode: Integer);
 begin
     case ControlMode of
-        CTRLSTATIC:   {Leave it however it is defined by other processes}
+        CTRLSTATIC:   // Leave it however it is defined by other processes
         begin
         end;
         EVENTDRIVEN,
@@ -535,7 +530,7 @@ begin
         TIMEDRIVEN:
         begin
             if not Is_ON then
-            begin   {Turn it on unless it has been previously cleared}
+            begin   // Turn it on unless it has been previously cleared
                 if (PresentTimeInSec(DSS) > On_Time) and not Cleared then
                 begin
                     Is_ON := TRUE;

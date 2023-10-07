@@ -1,11 +1,9 @@
 unit EnergyMeter;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 //     This class of device accumulates the energy of the voltage and current in the
 //     terminal of the device to which it is connected.
 //
@@ -100,22 +98,22 @@ type
 {$SCOPEDENUMS ON}
     TEnergyMeterProp = (
         INVALID = 0,
-        element = 1,
-        terminal = 2,
-        action = 3,
-        option = 4,
-        kVAnormal = 5,
-        kVAemerg = 6,
-        peakcurrent = 7,
-        Zonelist = 8,
+        Element = 1,
+        Terminal = 2,
+        Action = 3,
+        Option = 4,
+        kVANormal = 5,
+        kVAEmerg = 6,
+        PeakCurrent = 7,
+        ZoneList = 8,
         LocalOnly = 9,
         Mask = 10,
         Losses = 11,
         LineLosses = 12,
         XfmrLosses = 13,
         SeqLosses = 14,
-        __3phaseLosses = 15,
-        VbaseLosses = 16, // segregate losses by voltage base
+        __3PhaseLosses = 15,
+        VBaseLosses = 16, // segregate losses by voltage base
         PhaseVoltageReport = 17, // Compute Avg phase voltages in zone
         Int_Rate = 18,
         Int_Duration = 19,

@@ -1,11 +1,9 @@
 unit LineGeometry;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -37,22 +35,22 @@ type
 {$SCOPEDENUMS ON}
     TLineGeometryProp = (
         INVALID = 0,
-        nconds = 1,
-        nphases = 2,
-        cond = 3,
-        wire = 4,
-        x = 5,
-        h = 6,
-        units = 7,
-        normamps = 8,
-        emergamps = 9,
-        reduce = 10,
-        spacing = 11,
-        wires = 12,
-        cncable = 13,
-        tscable = 14,
-        cncables = 15,
-        tscables = 16,
+        NConds = 1,
+        NPhases = 2,
+        Cond = 3,
+        Wire = 4,
+        X = 5,
+        H = 6,
+        Units = 7,
+        NormAmps = 8,
+        EmergAmps = 9,
+        Reduce = 10,
+        Spacing = 11,
+        Wires = 12,
+        CNCable = 13,
+        TSCable = 14,
+        CNCables = 15,
+        TSCables = 16,
         Seasons = 17,
         Ratings = 18,
         LineType = 19

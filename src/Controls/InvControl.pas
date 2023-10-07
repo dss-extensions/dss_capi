@@ -37,38 +37,38 @@ type
         DERList,
         Mode,
         CombiMode,
-        vvc_curve1,
-        hysteresis_offset,
-        voltage_curvex_ref,
-        avgwindowlen,
+        VVC_Curve1,
+        Hysteresis_Offset,
+        Voltage_CurveX_Ref,
+        AvgWindowLen,
 
-        voltwatt_curve,
+        VoltWatt_Curve,
 
         DbVMin,
         DbVMax,
         ArGraLowV,
         ArGraHiV,
-        DynReacavgwindowlen,
-        deltaQ_Factor,
+        DynReacAvgWindowLen,
+        DeltaQ_Factor,
         VoltageChangeTolerance,
         VarChangeTolerance,
-        VoltwattYAxis,
-        RateofChangeMode,
-        LPFTau, // weird double: in the original version, value was not set
-        RiseFallLimit, // weird double: in the original version, value was not set
-        deltaP_Factor,
+        VoltWattYAxis,
+        RateOfChangeMode,
+        LPFTau,
+        RiseFallLimit,
+        DeltaP_Factor,
         EventLog,
         RefReactivePower,
         ActivePChangeTolerance,
-        monVoltageCalc,
-        monBus,
-        MonBusesVbase,
-        voltwattCH_curve,
-        wattpf_curve,
-        wattvar_curve,
+        MonVoltageCalc,
+        MonBus,
+        MonBusesVBase,
+        VoltWattCH_Curve,
+        WattPF_Curve,
+        WattVar_Curve,
         VV_RefReactivePower, // was deprecated, reintroduced for v0.12.2; TODO: TO BE REMOVED AGAIN LATER
         PVSystemList, // was 32 -- TODO: TO BE MARKED AS REMOVED
-        Vsetpoint, // was 33
+        VSetPoint, // was 33
         ControlModel
     );
 {$SCOPEDENUMS OFF}
@@ -182,12 +182,12 @@ type
         FPriorQDesireOptionpu: Double;
         kW_out_desiredpu: Double;
         kW_out_desired: Double;
-        {Variables of functions that CONTROL reactive power}
+        // Variables of functions that CONTROL reactive power
         FPriorvarspu: Double;
         FPriorvars: Double;
         // Active power
         FFlagVWOperates: Boolean;  // Flag enabled when volt-watt Pdesired is less than 1. So volt-watt algorithm starts to work
-        {Flags used to record function states. They are interval variables of DER}
+        // Flags used to record function states. They are interval variables of DER
         FVVOperation: Double;
         FVWOperation: Double;
         FDRCOperation: Double;
@@ -195,8 +195,8 @@ type
         FWPOperation: Double;
         FWVOperation: Double;
         FAVROperation: Double;
-        {Variables of functions that LIMIT active power}
-        {Variables of DER element}
+        // Variables of functions that LIMIT active power
+        // Variables of DER element
         FVBase: Double;
         FVarFollowInverter: Boolean;
         FInverterON: Boolean;
@@ -907,8 +907,8 @@ begin
     Setbus(1, MonitoredElement.GetBus(ElementTerminal));
 
     if FDERPointerList.Count > 0 then
-    {Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element}
-    { This sets it to a realistic value to avoid crashes later }
+    // Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element
+    //  This sets it to a realistic value to avoid crashes later 
     begin
         MonitoredElement := TInvBasedPCE(FDERPointerList.Get(1));   // Set MonitoredElement to 1st PVSystem/Storage in list
         Setbus(1, MonitoredElement.Firstbus);
@@ -1756,7 +1756,7 @@ begin
             kW_out_desired := FpresentkW; // necessary to update kW_out_desired at every control iteration for Storage with SC
 
             // Help says that it must be used just for vv and vw
-            // convert to per-unit on bus' kvbase, or
+            // convert to per-unit on bus' kVBase, or
             // if using averaging window values, then set prior voltage to averaging window
             if (FVoltage_CurveX_ref = 1) and (FRollAvgWindow.AvgVal <> 0.0) then
                 FPresentVpu := Vpresent / (FRollAvgWindow.AvgVal)

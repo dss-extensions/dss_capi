@@ -1,14 +1,12 @@
 unit ExpControl;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2015-2016, University of Pittsburgh
-  Copyright (c) 2019-2020, Battelle Memorial Institute
-  All rights reserved.
-  ----------------------------------------------------------
+// ----------------------------------------------------------
+// Copyright (c) 2015-2016, University of Pittsburgh
+// Copyright (c) 2019-2020, Battelle Memorial Institute
+// All rights reserved.
+// ----------------------------------------------------------
 
-  Notes: adapted and simplified from InvControl for adaptive controller research
-}
+// Notes: adapted and simplified from InvControl for adaptive controller research
 
 interface
 
@@ -34,18 +32,18 @@ type
     TExpControlProp = (
         INVALID = 0,
         PVSystemList = 1,
-        Vreg = 2,
+        VReg = 2,
         Slope = 3,
-        VregTau = 4,
-        Qbias = 5,
-        VregMin = 6,
-        VregMax = 7,
-        QmaxLead = 8,
-        QmaxLag = 9,
+        VRegTau = 4,
+        QBias = 5,
+        VRegMin = 6,
+        VRegMax = 7,
+        QMaxLead = 8,
+        QMaxLag = 9,
         EventLog = 10,
-        DeltaQ_factor = 11,
+        DeltaQ_Factor = 11,
         PreferQ = 12,
-        Tresponse = 13,
+        TResponse = 13,
         DERList = 14
         );
 {$SCOPEDENUMS OFF}
@@ -375,7 +373,7 @@ begin
 
     if FPVSystemPointerList.Count > 0 then
     begin
-    {Setting the terminal of the ExpControl device to same as the 1st PVSystem element}
+    // Setting the terminal of the ExpControl device to same as the 1st PVSystem element
         MonitoredElement := TDSSCktElement(FPVSystemPointerList.Get(1));   // Set MonitoredElement to 1st PVSystem in lise
         Setbus(1, MonitoredElement.Firstbus);
     end;
@@ -636,7 +634,7 @@ begin
         SetLength(FTargetQ, FListSize + 1);
         SetLength(FWithinTol, FListSize + 1);
         SetLength(FVregs, FListSize + 1);
-    end;  {Else}
+    end;  // Else
 
   //Initialize arrays
     for i := 1 to FlistSize do
@@ -717,11 +715,14 @@ end;
 procedure TExpControl.UpdateAll;
 var
     i: Integer;
+    obj: TExpControlObj;
 begin
     for i := 1 to ElementList.Count do
-        with TExpControlObj(ElementList.Get(i)) do
-            if Enabled then
-                UpdateExpControl(i);
+    begin
+        obj := ElementList.Get(i);
+        if obj.Enabled then
+            obj.UpdateExpControl(i);
+    end;
 end;
 
 end.

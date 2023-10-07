@@ -1,8 +1,8 @@
 unit Line;
-//  ----------------------------------------------------------
-//  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-//  All rights reserved.
-//  ----------------------------------------------------------
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -26,31 +26,31 @@ type
 {$SCOPEDENUMS ON}
     TLineProp = (
         INVALID = 0,
-        bus1 = 1,
-        bus2 = 2,
-        linecode = 3,
-        length = 4,
-        phases = 5,
-        r1 = 6,
-        x1 = 7,
-        r0 = 8,
-        x0 = 9,
+        Bus1 = 1,
+        Bus2 = 2,
+        LineCode = 3,
+        Length = 4,
+        Phases = 5,
+        R1 = 6,
+        X1 = 7,
+        R0 = 8,
+        X0 = 9,
         C1 = 10,
         C0 = 11,
-        rmatrix = 12,
-        xmatrix = 13,
-        cmatrix = 14,
+        RMatrix = 12,
+        XMatrix = 13,
+        CMatrix = 14,
         Switch = 15,
         Rg = 16,
         Xg = 17,
         rho = 18,
-        geometry = 19,
-        units = 20,
-        spacing = 21,
-        wires = 22,
+        Geometry = 19,
+        Units = 20,
+        Spacing = 21,
+        Wires = 22,
         EarthModel = 23,
-        cncables = 24,
-        tscables = 25,
+        CNCables = 24,
+        TSCables = 25,
         B1 = 26,
         B0 = 27,
         Seasons = 28,

@@ -1,12 +1,10 @@
 unit LoadShape;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
-  Copyright (c) 2019-2021, Paulo Meira
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+// Copyright (c) 2019-2022, Paulo Meira, DSS-Extensions contributors
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -62,25 +60,25 @@ type
 {$SCOPEDENUMS ON}
     TLoadShapeProp = (
         INVALID = 0,
-        npts = 1,     // Number of points to expect
-        interval = 2, // default = 1.0
-        mult = 3,     // vector of power multiplier values
-        hour = 4,     // vector of hour values
-        mean = 5,     // set the mean (otherwise computed)
-        stddev = 6,   // set the std dev (otherwise computed)
-        csvfile = 7,  // Switch input to a csvfile
-        sngfile = 8,  // switch input to a binary file of singles
-        dblfile = 9,  // switch input to a binary file of singles
-        action = 10,  // actions  Normalize
-        qmult = 11,   // Q multiplier
+        NPts = 1,     // Number of points to expect
+        Interval = 2, // default = 1.0
+        Mult = 3,     // vector of power multiplier values
+        Hour = 4,     // vector of hour values
+        Mean = 5,     // set the mean (otherwise computed)
+        StdDev = 6,   // set the std dev (otherwise computed)
+        CSVFile = 7,  // Switch input to a csvfile
+        SngFile = 8,  // switch input to a binary file of singles
+        DblFile = 9,  // switch input to a binary file of singles
+        Action = 10,  // actions  Normalize
+        QMult = 11,   // Q multiplier
         UseActual = 12, // Flag to signify to use actual value
-        Pmax = 13,    // MaxP value
-        Qmax = 14,    // MaxQ
-        sinterval = 15, // Interval in seconds
-        minterval = 16, // Interval in minutes
-        Pbase = 17,   // for normalization, use peak if 0
-        Qbase = 18,   // for normalization, use peak if 0
-        Pmult = 19,   // synonym for Mult
+        PMax = 13,    // MaxP value
+        QMax = 14,    // MaxQ
+        SInterval = 15, // Interval in seconds
+        MInterval = 16, // Interval in minutes
+        PBase = 17,   // for normalization, use peak if 0
+        QBase = 18,   // for normalization, use peak if 0
+        PMult = 19,   // synonym for Mult
         PQCSVFile = 20, // Redirect to a file with p, q pairs
         MemoryMapping = 21, // Enable/disable using Memory mapping for this shape
         Interpolation = 22

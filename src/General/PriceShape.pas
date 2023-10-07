@@ -1,11 +1,9 @@
 unit PriceShape;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 // The PriceShape object is a general DSS object used by all circuits
@@ -49,18 +47,18 @@ type
 {$SCOPEDENUMS ON}
     TPriceShapeProp = (
         INVALID = 0,
-        npts = 1, // Number of points to expect
-        interval = 2, // default = 1.0;
-        price = 3, // vector of price values
-        hour = 4, // vector of hour values
-        mean = 5, // set the mean Price (otherwise computed)
-        stddev = 6, // set the std dev of the Price (otherwise computed)
-        csvfile = 7, // Switch input to a csvfile
-        sngfile = 8, // switch input to a binary file of singles
-        dblfile = 9, // switch input to a binary file of doubles
-        sinterval = 10, // Interval in seconds
-        minterval = 11, // Interval in minutes
-        action = 12
+        NPts = 1, // Number of points to expect
+        Interval = 2, // default = 1.0;
+        Price = 3, // vector of price values
+        Hour = 4, // vector of hour values
+        Mean = 5, // set the mean Price (otherwise computed)
+        StdDev = 6, // set the std dev of the Price (otherwise computed)
+        CSVFile = 7, // Switch input to a csvfile
+        SngFile = 8, // switch input to a binary file of singles
+        DblFile = 9, // switch input to a binary file of doubles
+        SInterval = 10, // Interval in seconds
+        MInterval = 11, // Interval in minutes
+        Action = 12
     );
 {$SCOPEDENUMS OFF}
 

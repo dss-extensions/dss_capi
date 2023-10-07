@@ -1,11 +1,9 @@
 unit Relay;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //  A Relay is a control element that is connected to a terminal of a
 //  circuit element and controls the switches in the same or another terminal.
@@ -57,8 +55,8 @@ type
         SwitchedObj = 3,
         SwitchedTerm = 4,
         typ = 5,
-        Phasecurve = 6,
-        Groundcurve = 7,
+        PhaseCurve = 6,
+        GroundCurve = 7,
         PhaseTrip = 8,
         GroundTrip = 9,
         TDPhase = 10, // 28
@@ -69,24 +67,24 @@ type
         Shots = 15, // 13
         RecloseIntervals = 16, // 14
         Delay = 17, // 24
-        Overvoltcurve = 18, // 15
-        Undervoltcurve = 19, // 16
-        kvbase = 20, // 17
+        OvervoltCurve = 18, // 15
+        UndervoltCurve = 19, // 16
+        kVBase = 20, // 17
         __47pctPickup = 21, // 25
         __46BaseAmps = 22, // 23
         __46pctPickup = 23, // 21
         __46isqt = 24, // 22
         Variable = 25, // 20
-        overtrip = 26,
-        undertrip = 27,
-        Breakertime = 28, // 18
-        action = 29, // 19
-        Z1mag = 30,
-        Z1ang = 31,
-        Z0mag = 32,
-        Z0ang = 33,
-        Mphase = 34,
-        Mground = 35,
+        Overtrip = 26,
+        Undertrip = 27,
+        BreakerTime = 28, // 18
+        Action = 29, // 19
+        Z1Mag = 30,
+        Z1Ang = 31,
+        Z0Mag = 32,
+        Z0Ang = 33,
+        MPhase = 34,
+        MGround = 35,
         EventLog = 36,
         DebugTrace = 37,
         DistReverse = 38,
@@ -268,12 +266,12 @@ type
 const
     NumPropsThisClass = Ord(High(TProp));
 
-    CURRENT = 0;  {Default}
+    CURRENT = 0;  // Default
     VOLTAGE = 1;
     REVPOWER = 3;
     NEGCURRENT = 4;
     NEGVOLTAGE = 5;
-    GENERIC = 6; {Use this for frequency, etc.  Generic over/under relay}
+    GENERIC = 6; // Use this for frequency, etc.  Generic over/under relay
     DISTANCE = 7;
     TD21 = 8;
     DOC = 9;
@@ -792,7 +790,7 @@ begin
         end;
     end;
 
-    {Check for existence of Controlled Element}
+    // Check for existence of Controlled Element
 
     // If previously assigned, reset HasOCPDevice flag in case this is a move
     if (PreviousControlledElement <> NIL) then
@@ -2343,7 +2341,8 @@ begin
     end;
 end;
 
-finalization    ActionEnum.Free;
+finalization
+    ActionEnum.Free;
     StateEnum.Free;
     RelayTypeEnum.Free;
 end.

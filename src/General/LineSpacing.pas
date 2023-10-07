@@ -1,11 +1,9 @@
 unit LineSpacing;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -21,11 +19,11 @@ type
 {$SCOPEDENUMS ON}
     TLineSpacingProp = (
         INVALID = 0,
-        nconds = 1,
-        nphases = 2,
-        x = 3,
-        h = 4,
-        units = 5
+        NConds = 1,
+        NPhases = 2,
+        X = 3,
+        H = 4,
+        Units = 5
     );
 {$SCOPEDENUMS OFF}
 

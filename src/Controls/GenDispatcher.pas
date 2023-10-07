@@ -1,17 +1,11 @@
 unit GenDispatcher;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 //  A GenDispatcher is a control element that is connected to a terminal of another
 //  circuit element and sends dispatch kW signals to a set of generators it controls
-//
-//  A GenDispatcher is defined by a New command:
-//
-//  New GenDispatcher.Name=myname Element=devclass.name terminal=[ 1|2|...] CapacitorList = (gen1  gen2 ...)
 
 interface
 
@@ -35,15 +29,13 @@ type
         Terminal = 2,
         kWLimit = 3,
         kWBand = 4,
-        kvarlimit = 5,
+        kvarLimit = 5,
         GenList = 6,
         Weights = 7
      );
 {$SCOPEDENUMS OFF}
 
     TGenDispatcher = class(TControlClass)
-    PRIVATE
-
     PROTECTED
         procedure DefineProperties; override;
     PUBLIC
@@ -62,7 +54,7 @@ type
         TotalWeight: Double;
         FListSize: Integer;
         FGeneratorNameList: TStringList;
-        FGenPointerList: DSSPointerList.TDSSPointerList;
+        FGenPointerList: TDSSPointerList;
         FWeights: pDoubleArray;
 
     PUBLIC
@@ -234,7 +226,7 @@ end;
 
 procedure TGenDispatcherObj.RecalcElementData;
 begin
-    {Check for existence of monitored element}
+    // Check for existence of monitored element
     if MonitoredElement <> NIL then
     begin
         if ElementTerminal > MonitoredElement.Nterms then
@@ -266,7 +258,7 @@ end;
 
 procedure TGenDispatcherObj.DoPendingAction;
 begin
-        {Do Nothing}
+    // Do Nothing
 end;
 
 procedure TGenDispatcherObj.Sample;

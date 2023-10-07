@@ -1,11 +1,9 @@
 unit Transformer;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -26,51 +24,51 @@ type
 {$SCOPEDENUMS ON}
     TTransfProp = (
         INVALID = 0,
-        phases=1,
-        windings=2,
+        Phases=1,
+        Windings=2,
 
         // Winding Definition
-        wdg=3,
-        bus=4,
-        conn=5,
+        Wdg=3,
+        Bus=4,
+        Conn=5,
         kV=6,
         kVA=7,
-        tap=8,
+        Tap=8,
         pctR=9,
-        Rneut=10,
-        Xneut=11,
+        RNeut=10,
+        XNeut=11,
 
         // General Data
-        buses=12,
-        conns=13,
+        Buses=12,
+        Conns=13,
         kVs=14,
         kVAs=15,
-        taps=16,
+        Taps=16,
         XHL=17,
         XHT=18,
         XLT=19,
-        Xscarray=20,
+        XSCArray=20,
 
-        thermal=21,
+        Thermal=21,
         n=22,
         m=23,
-        flrise=24,
-        hsrise=25,
-        pctloadloss=26,
-        pctnoloadloss=27,
-        normhkVA=28,
-        emerghkVA=29,
-        sub=30,
+        FLRise=24,
+        HSRise=25,
+        pctLoadLoss=26,
+        pctNoLoadLoss=27,
+        NormHkVA=28,
+        EmergHkVA=29,
+        Sub=30,
         MaxTap=31,
         MinTap=32,
         NumTaps=33,
-        subname=34,
-        pctimag=35,
-        ppm_antifloat=36,
+        SubName=34,
+        pctIMag=35,
+        ppm_Antifloat=36,
 
         pctRs=37,
 
-        bank=38,
+        Bank=38,
 
         XfmrCode=39,
 
@@ -81,7 +79,7 @@ type
         LeadLag=44,
         WdgCurrents=45,
         Core=46,
-        RdcOhms=47,
+        RDCOhms=47,
 
         Seasons=48,
         Ratings=49

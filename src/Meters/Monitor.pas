@@ -1,11 +1,9 @@
 unit Monitor;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2021, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // **For DSS-Extensions:**
 // Note that the header implementation is now different from the 
@@ -96,11 +94,11 @@ type
 {$SCOPEDENUMS ON}
     TMonitorProp = (
         INVALID = 0,
-        element = 1, // TODO: has specific type according to the current mode
-        terminal = 2,
-        mode = 3,
-        action = 4, // buffer=clear|save
-        residual = 5, // buffer=clear|save
+        Element = 1, // TODO: has specific type according to the current mode
+        Terminal = 2,
+        Mode = 3,
+        Action = 4, // buffer=clear|save
+        Residual = 5, // buffer=clear|save
         VIPolar = 6, // V I in mag and angle rather then re and im
         PPolar = 7 // Power in power PF rather then power and vars
     );

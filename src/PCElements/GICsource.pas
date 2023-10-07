@@ -1,11 +1,9 @@
 unit GICsource;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Developed from Isource and GICLine May 2018
 
@@ -25,9 +23,9 @@ type
     TGICsourceProp = (
         INVALID = 0,
         Volts = 1,
-        angle = 2,
-        frequency = 3,
-        phases = 4,
+        Angle = 2,
+        Frequency = 3,
+        Phases = 4,
         EN = 5,
         EE = 6,
         Lat1 = 7,

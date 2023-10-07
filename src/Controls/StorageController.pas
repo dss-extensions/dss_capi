@@ -1,11 +1,9 @@
 unit StorageController;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //  A StorageController is a control element that is connected to a terminal of another
 //  circuit element and sends dispatch  signals to a fleet of energy storage elements it controls
@@ -29,7 +27,8 @@ uses
     CktElement,
     DSSClass,
     Arraydef,
-    UComplex, DSSUcomplex,
+    UComplex,
+    DSSUcomplex,
     utilities,
     DSSPointerList,
     Classes,
@@ -66,15 +65,15 @@ type
         kWTotal = 20,
         kWhActual = 21,
         kWActual = 22,
-        kWneed = 23,
+        kWNeed = 23,
         Yearly = 24,
         Daily = 25,
         Duty = 26,
         EventLog = 27,
         InhibitTime = 28,
-        Tup = 29,
+        TUp = 29,
         TFlat = 30,
-        Tdn = 31,
+        TDn = 31,
         kWThreshold = 32,
         DispFactor = 33,
         ResetLevel = 34,
@@ -278,29 +277,23 @@ end;
 function GetkWhTotal(Obj: TObj): Double;
 var
     pStorage: TStorageObj;
-    i: Integer;
 begin
     Result := 0.0;
-    with obj do
-        for i := 1 to FleetPointerList.Count do
-        begin
-            pStorage := FleetPointerList.Get(i);
-            Result := Result + pStorage.StorageVars.kWhRating;
-        end;
+    for pStorage in obj.FleetPointerList do
+    begin
+        Result += pStorage.StorageVars.kWhRating;
+    end;
 end;
 
 function GetkWTotal(Obj: TObj): Double;
 var
     pStorage: TStorageObj;
-    i: Integer;
 begin
     Result := 0.0;
-    with obj do
-        for i := 1 to FleetPointerList.Count do
-        begin
-            pStorage := FleetPointerList.Get(i);
-            Result := Result + pStorage.StorageVars.kWRating;
-        end;
+    for pStorage in obj.FleetPointerList do
+    begin
+        Result += pStorage.StorageVars.kWRating;
+    end;
 end;
 
 procedure TStorageController.DefineProperties;
@@ -753,7 +746,7 @@ end;
 procedure TStorageControllerObj.RecalcElementData();
 // Recalculate critical element values after changes have been made
 begin
-    {Check for existence of monitored element}
+    // Check for existence of monitored element
 
     if MonitoredElement <> NIL then
     begin
@@ -820,13 +813,11 @@ begin
 end;
 
 procedure TStorageControllerObj.DoScheduleMode();
-{
-  In SCHEDULE mode we ramp up the storage from zero to the specified pctkWRate.
-  This value is held for the flattime or until they  turn themselves
-  off when they are either fully discharged, or ramped down
-
-  The discharge trigger time must be greater than 0
-}
+//  In SCHEDULE mode we ramp up the storage from zero to the specified pctkWRate.
+//  This value is held for the flattime or until they  turn themselves
+//  off when they are either fully discharged, or ramped down
+//
+//  The discharge trigger time must be greater than 0
 
 var
     TDiff: Double;
@@ -1119,25 +1110,25 @@ begin
                     SetFleetDesiredState(STORE_IDLING);
                 end;
                 PDiff := S.re * 0.001 - FkWTarget;  // Assume S.re is normally positive
-//                                  PFDiff        := ConvertPFToPFRange2(PowerFactor(S)) - FPFTarget;  // for peak shaving
+                // PFDiff := ConvertPFToPFRange2(PowerFactor(S)) - FPFTarget;  // for peak shaving
             end;
              // supporting DG; Try to keep load above kW target
             MODESUPPORT:
             begin
                 PDiff := S.re * 0.001 + FkWTarget;  // assume S.re is normally negative
-//                                  PFDiff        := ConvertPFToPFRange2(PowerFactor(S)) - FPFTarget;  // for generator
+                // PFDiff := ConvertPFToPFRange2(PowerFactor(S)) - FPFTarget;  // for generator
             end;
 
             MODEPEAKSHAVE:
             begin
                 PDiff := S.re * 0.001 - CtrlTarget;  // Assume S.re is normally positive
-//                                  PFDiff        := ConvertPFToPFRange2(PowerFactor(S)) - FPFTarget;  // for peak shaving
+                //  PFDiff := ConvertPFToPFRange2(PowerFactor(S)) - FPFTarget;  // for peak shaving
             end;
 
             CURRENTPEAKSHAVE:
             begin
                 PDiff := Amps - CtrlTarget * 1000;  // Gets the difference in terms of amps
-//                                  DispatchVars  :=  False;
+                // DispatchVars  :=  False;
             end;
         else
             PDiff := 0.0;
@@ -1156,7 +1147,7 @@ begin
 //         kWNeeded := Pdiff + FleetkW;
             kWNeeded := Pdiff;
 
-       {  kW dispatch  }
+       //   kW dispatch  
 
        // Check if Fleet is Idling (FleetState is updated only if entire fleet is idling)
         if not (FleetState = STORE_IDLING) then
@@ -1251,8 +1242,8 @@ begin
                 begin // Attempt to change storage dispatch
                     if not (FleetState = STORE_DISCHARGING) then
                     begin
-                        SetFleetToDischarge;
-//                    StorekWChanged:= TRUE;  // if not already discharging, force new power flow.
+                        SetFleetToDischarge();
+                        // StorekWChanged:= TRUE;  // if not already discharging, force new power flow.
                     end;
                     if ShowEventLog then
                         AppendToEventLog(Self.FullName, Format('Attempting to dispatch %-.6g kW with %-.6g kWh remaining and %-.6g kWh reserve.', [kWNeeded, RemainingkWh, ReservekWh]));
@@ -1265,7 +1256,7 @@ begin
                             if StorageObj.NPhases = 1 then
                                 kWNeeded := StorageObj.PresentkV * AmpsDiff
                             else
-//                          kWNeeded :=  StorageObj.PresentkV * InvSQRT3 * AmpsDiff;
+                                // kWNeeded :=  StorageObj.PresentkV * InvSQRT3 * AmpsDiff;
                                 kWNeeded := StorageObj.PresentkV * SQRT3 * AmpsDiff;
                         end;
 
@@ -1352,7 +1343,7 @@ begin
             begin
                 if not FleetState = STORE_IDLING then
                 begin
-                    SetFleetToIdle;
+                    SetFleetToIdle();
                     PushTimeOntoControlQueue(STORE_IDLING);  // force a new power flow solution
                 end;
                 ChargingAllowed := TRUE;
@@ -1366,7 +1357,7 @@ begin
         if StorekWChanged or StorekvarChanged then  // Only push onto controlqueue If there has been a change
             PushTimeOntoControlQueue(STORE_DISCHARGING);
 
-       {Else just continue}
+       // Else just continue
     end;
 end;
 
@@ -1534,13 +1525,13 @@ begin
                                 if StorageObj.NPhases = 1 then
                                     kWNeeded := StorageObj.PresentkV * AmpsDiff
                                 else
-//                           kWNeeded :=  StorageObj.PresentkV * InvSQRT3 * AmpsDiff;
+                                    // kWNeeded :=  StorageObj.PresentkV * InvSQRT3 * AmpsDiff;
                                     kWNeeded := StorageObj.PresentkV * SQRT3 * AmpsDiff;
                             end;
 
 
-                       // compute new charging value for this storage element ...
-  //                                ChargekW := -1 * Min(StorageVars.kWrating, abs(PresentkW + Pdiff *(FWeights[i]/TotalWeight)));  // old approach
+                            // compute new charging value for this storage element ...
+                            // ChargekW := -1 * Min(StorageVars.kWrating, abs(PresentkW + Pdiff *(FWeights[i]/TotalWeight)));  // old approach
 
                             ChargekW := PresentkW + kWNeeded * (FWeights[i] / TotalWeight) * DispFactor; // may be positive or negative
                             if ChargekW < 0 then
@@ -1637,7 +1628,7 @@ begin
 
         if StorekWChanged then  // Only push onto controlqueue If there has been a change
             PushTimeOntoControlQueue(STORE_CHARGING);
-       {Else just continue}
+       // Else just continue
     end;
 end;
 
@@ -1646,9 +1637,7 @@ procedure TStorageControllerObj.Sample();
 begin
     ChargingAllowed := FALSE;
 //       UpdateFleetState;
-{
-  Check discharge mode first. Then if not discharging, we can check for charging
-}
+//  Check discharge mode first. Then if not discharging, we can check for charging
     Wait4Step := FALSE;        // Initializes the variable for the new control step
     case DischargeMode of
         MODEFOLLOW:
@@ -1734,19 +1723,18 @@ begin
 
     // Get multiplier
 
-    with ActiveCircuit.Solution do
-        case Mode of
-            TSolveMode.DAILYMODE:
-                CalcDailyMult(DynaVars.dblHour); // Daily dispatch curve
-            TSolveMode.YEARLYMODE:
-                CalcYearlyMult(DynaVars.dblHour);
-            TSolveMode.LOADDURATION2:
-                CalcDailyMult(DynaVars.dblHour);
-            TSolveMode.PEAKDAY:
-                CalcDailyMult(DynaVars.dblHour);
-            TSolveMode.DUTYCYCLE:
-                CalcDutyMult(DynaVars.dblHour);
-        end;
+    case ActiveCircuit.Solution.Mode of
+        TSolveMode.DAILYMODE:
+            CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour); // Daily dispatch curve
+        TSolveMode.YEARLYMODE:
+            CalcYearlyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+        TSolveMode.LOADDURATION2:
+            CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+        TSolveMode.PEAKDAY:
+            CalcDailyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+        TSolveMode.DUTYCYCLE:
+            CalcDutyMult(ActiveCircuit.Solution.DynaVars.dblHour);
+    end;
 
     if LoadShapeMult.re < 0.0 then
     begin
@@ -1787,23 +1775,22 @@ begin
         end;
     end;
 
-    {Force a new power flow solution if fleet state has changed}
+    // Force a new power flow solution if fleet state has changed
     if (FleetState <> FleetStateSaved) or RateChanged then
         PushTimeOntoControlQueue(0);
 end;
 
 procedure TStorageControllerObj.SetAllFleetValues;
 var
-    i: Integer;
+    obj: TStorageObj;
 begin
-    for i := 1 to FleetPointerList.Count do
-        with TStorageObj(FleetPointerList.Get(i)) do
-        begin
-            pctkWin := pctChargeRate;
+    for obj in FleetPointerList do
+    begin
+        obj.pctkWin := pctChargeRate;
 //              Fpctkvarout := pctkvarRate;  CR
-            pctkWout := pctkWRate;
-            pctReserve := pctFleetReserve;
-        end;
+        obj.pctkWout := pctkWRate;
+        obj.pctReserve := pctFleetReserve;
+    end;
 end;
 
 procedure TStorageControllerObj.SetFleetChargeRate;
@@ -1818,52 +1805,50 @@ end;
 //VAR
 //      i   :Integer;
 //Begin
-//    {For side effects see pctkvarout property of Storage element}
+//    // For side effects see pctkvarout property of Storage element
 ////      For i := 1 to FleetPointerList.Count Do
 ////            TStorageObj(FleetPointerList.Get(i)).pctkvarout := pctkvarRate;
 //End;
 
 procedure TStorageControllerObj.SetFleetkWRate(pctkw: Double);
 var
-    i: Integer;
+    obj: TStorageObj;
 begin
-    for i := 1 to FleetPointerList.Count do
-        TStorageObj(FleetPointerList.Get(i)).pctkWout := pctkw;
+    for obj in FleetPointerList do
+        obj.pctkWout := pctkw;
 end;
 
 procedure TStorageControllerObj.SetFleetToCharge;
 var
-    i: Integer;
+    obj: TStorageObj;
 begin
-    for i := 1 to FleetPointerList.Count do
-        TStorageObj(FleetPointerList.Get(i)).StorageState := STORE_CHARGING;
+    for obj in FleetPointerList do
+        obj.StorageState := STORE_CHARGING;
     FleetState := STORE_CHARGING;
 end;
 
 procedure TStorageControllerObj.SetFleetToDisCharge;
 var
-    i: Integer;
+    obj: TStorageObj;
 begin
-    for i := 1 to FleetPointerList.Count do
-        TStorageObj(FleetPointerList.Get(i)).StorageState := STORE_DISCHARGING;
+    for obj in FleetPointerList do
+        obj.StorageState := STORE_DISCHARGING;
     FleetState := STORE_DISCHARGING;
 end;
 
 procedure TStorageControllerObj.SetFleetToIdle;
 var
-    i: Integer;
+    obj: TStorageObj;
 begin
-    for i := 1 to FleetPointerList.Count do
-        with TStorageObj(FleetPointerList.Get(i)) do
-        begin
-            StorageState := STORE_IDLING;
-//                  PresentkW := 0.0;
-            kW := 0.0;
-        end;
+    for obj in FleetPointerList do
+    begin
+        obj.StorageState := STORE_IDLING;
+        // obj.PresentkW := 0.0;
+        obj.kW := 0.0;
+    end;
     FleetState := STORE_IDLING;
 end;
 
-//-----------------------------------------------------------------------------
 
 procedure TStorageControllerObj.SetFleetDesiredState(state: Integer);
 var
@@ -1947,10 +1932,10 @@ end;
 
 procedure TStorageControllerObj.Reset;
 begin
-  // inherited;
+    // inherited;
     SetFleetToIdle;
 
- // do we want to set fleet to 100% charged storage?
+    // do we want to set fleet to 100% charged storage?
 end;
 
 procedure TStorageControllerObj.GetControlPower(var ControlPower: Complex);
@@ -1986,7 +1971,7 @@ begin
                         ControlPower := cBuffer[i];
                     // ControlPowerPhase := i;
                 end;
-                          // Compute equivalent total power of all phases assuming equal to max power in all phases
+                // Compute equivalent total power of all phases assuming equal to max power in all phases
                 ControlPower := ControlPower * Fnphases;
             end;
             MINPHASE:
@@ -1999,7 +1984,7 @@ begin
                         ControlPower := cBuffer[i];
                     // ControlPowerPhase := i;
                 end;
-                          // Compute equivalent total power of all phases assuming equal to min power in all phases
+                // Compute equivalent total power of all phases assuming equal to min power in all phases
                 ControlPower := ControlPower * Fnphases;  // sign according to phase with min abs value
             end;
         else
@@ -2008,8 +1993,8 @@ begin
         end;
     end;
 
-    {If this is a positive sequence circuit (Fnphases=1),
-    then we need to multiply by 3 to get the 3-phase power}
+    // If this is a positive sequence circuit (Fnphases=1),
+    // then we need to multiply by 3 to get the 3-phase power
     if ActiveCircuit.PositiveSequence then
         ControlPower := ControlPower * 3.0;
 end;
@@ -2042,11 +2027,12 @@ begin
             ControlCurrent := ControlCurrent;
         end;
     else
-    {Just use one phase because that's what most controls do.}
+    // Just use one phase because that's what most controls do.
         ControlCurrent := Cabs(cBuffer[FMonPhase]);  // monitored phase only
     end;
 end;
 
-finalization    ChargeModeEnum.Free;
+finalization
+    ChargeModeEnum.Free;
     DischargeModeEnum.Free;
 end.

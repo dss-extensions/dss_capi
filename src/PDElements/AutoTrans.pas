@@ -1,11 +1,9 @@
 unit AutoTrans;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 //   Change log
 //   7-14-2018  Created from Transformer
@@ -32,52 +30,52 @@ type
 {$SCOPEDENUMS ON}
     TAutoTransProp = (
         INVALID = 0,
-        phases,
-        windings,
+        Phases,
+        Windings,
 
         // Winding Definition
-        wdg,
-        bus,
-        conn,
+        Wdg,
+        Bus,
+        Conn,
         kV,
         kVA,
-        tap,
+        Tap,
         pctR,
-        Rdcohms,
+        RDCOhms,
         Core,
 
         // General Data
-        buses,
-        conns,
+        Buses,
+        Conns,
         kVs,
         kVAs,
-        taps,
+        Taps,
         XHX,
         XHT,
         XXT,
-        XSCarray,
-        thermal,
+        XSCArray,
+        Thermal,
         n,
         m,
-        flrise,
-        hsrise,
-        pctloadloss,
-        pctnoloadloss,
-        normhkVA,
-        emerghkVA,
-        sub,
+        FLRise,
+        HSRise,
+        pctLoadLoss,
+        pctNoLoadLoss,
+        NormHkVA,
+        EmergHkVA,
+        Sub,
         MaxTap,
         MinTap,
         NumTaps,
-        subname,
-        pctimag,
-        ppm_antifloat,
+        SubName,
+        pctIMag,
+        ppm_Antifloat,
         pctRs,
-        bank,
-        //XfmrCode, // removed, unused
-        XRConst,
-        LeadLag,
-        WdgCurrents
+        Bank,
+        //XfmrCode=39, // removed, unused
+        XRConst, //- was 40
+        LeadLag, // was 41
+        WdgCurrents // was 42
     );
 
 {$PUSH}
@@ -115,7 +113,7 @@ type
 
         Y_PPM: Double;  // Anti Float reactance adder
 
-        {Tap Changer Data}
+        // Tap Changer Data
         TapIncrement,
         MinTap,
         MaxTap: Double;

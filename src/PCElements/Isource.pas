@@ -1,11 +1,9 @@
 unit Isource;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // Ideal current source
 // 
@@ -30,13 +28,13 @@ type
 {$SCOPEDENUMS ON}
     TIsourceProp = (
         INVALID = 0,
-        bus1 = 1,
-        amps = 2,
-        angle = 3,
-        frequency = 4,
-        phases = 5,
-        scantype = 6,
-        sequence = 7,
+        Bus1 = 1,
+        Amps = 2,
+        Angle = 3,
+        Frequency = 4,
+        Phases = 5,
+        ScanType = 6,
+        Sequence = 7,
         Yearly = 8,
         Daily = 9,
         Duty = 10,
@@ -326,7 +324,7 @@ end;
 procedure TIsourceObj.CalcYPrim;
 begin
      // Build only YPrim Series
-    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) {YPrimInvalid} then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) then // YPrimInvalid
     begin
         if YPrim_Series <> NIL then
             YPrim_Series.Free;

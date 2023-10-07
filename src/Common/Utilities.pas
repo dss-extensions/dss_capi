@@ -1098,7 +1098,7 @@ begin
     with DSS.DSSExecutive do
         for i := 1 to NumExecCommands do
         begin
-            WriteStr(sout, i: 0, ', "', Execcommand[i - 1], '", "', ReplaceCRLF(DSSHelp('Command.' + ExecCommand[i - 1])), '"');
+            WriteStr(sout, i: 0, ', "', Execcommand[i - 1], '", "', ReplaceCRLF(DSSHelp('Command.' + AnsiLowerCase(ExecCommand[i - 1]))), '"');
             FSWriteln(F, sout);
         end;
 
@@ -1107,7 +1107,7 @@ begin
     with DSS.DSSExecutive do
         for i := 1 to NumExecOptions do
         begin
-            WriteStr(sout, i: 0, ', "', ExecOption[i - 1], '", "', ReplaceCRLF(DSSHelp('Executive.' + ExecOption[i - 1])), '"');
+            WriteStr(sout, i: 0, ', "', ExecOption[i - 1], '", "', ReplaceCRLF(DSSHelp('Executive.' + AnsiLowerCase(ExecOption[i - 1]))), '"');
             FSWriteln(F, sout);
         end;
 

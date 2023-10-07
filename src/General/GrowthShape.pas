@@ -1,11 +1,9 @@
 unit GrowthShape;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 interface
 
@@ -52,12 +50,12 @@ type
 {$SCOPEDENUMS ON}
     TGrowthShapeProp = (
         INVALID = 0,
-        npts = 1, // Number of points to expect
-        year = 2, // vector of year values
-        mult = 3, // vector of multiplier values corresponding to years
-        csvfile = 4, // Switch input to a csvfile (year, mult)
-        sngfile = 5, // switch input to a binary file of singles  (year, mult)
-        dblfile = 6 // switch input to a binary file of doubles (year, mult)
+        NPts = 1, // Number of points to expect
+        Year = 2, // vector of year values
+        Mult = 3, // vector of multiplier values corresponding to years
+        CSVFile = 4, // Switch input to a csvfile (year, mult)
+        SngFile = 5, // switch input to a binary file of singles  (year, mult)
+        DblFile = 6 // switch input to a binary file of doubles (year, mult)
     );
 {$SCOPEDENUMS OFF}
 

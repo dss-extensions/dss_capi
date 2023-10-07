@@ -1,11 +1,9 @@
 unit GICLine;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2011-2015, Electric Power Research Institute, Inc.
+// All rights reserved.
+// ----------------------------------------------------------
 
 // 6-23-2011 Created from VSource object
 //
@@ -43,12 +41,12 @@ type
 {$SCOPEDENUMS ON}
     TGICLineProp = (
         INVALID = 0,
-        bus1 = 1, 
-        bus2 = 2, 
+        Bus1 = 1, 
+        Bus2 = 2, 
         Volts = 3,
         Angle = 4,
-        frequency = 5,
-        phases = 6,
+        Frequency = 5,
+        Phases = 6,
         R = 7,
         X = 8,
         C = 9,

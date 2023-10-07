@@ -23,7 +23,8 @@ uses
     ExecOptions,
     Executive,
     DSSClass,
-    DSSHelper;
+    DSSHelper,
+    SysUtils;
 
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_Command(i: Integer): PAnsiChar; CDECL;
@@ -55,7 +56,7 @@ end;
 function DSS_Executive_Get_CommandHelp(i: Integer): PAnsiChar; CDECL;
 begin
     if (i >= 1) and (i <= NumExecCommands) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Command.' + DSSPrime.DSSExecutive.ExecCommand[i - 1]))
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Command.' + AnsiLowerCase(DSSPrime.DSSExecutive.ExecCommand[i - 1])))
     else
         Result := NIL;
 end;
@@ -63,7 +64,7 @@ end;
 function DSS_Executive_Get_OptionHelp(i: Integer): PAnsiChar; CDECL;
 begin
     if (i >= 1) and (i <= NumExecOptions) then
-        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Executive.' + DSSPrime.DSSExecutive.ExecOption[i - 1]))
+        Result := DSS_GetAsPAnsiChar(DSSPrime, DSSHelp('Executive.' + AnsiLowerCase(DSSPrime.DSSExecutive.ExecOption[i - 1])))
     else
         Result := NIL;
 end;

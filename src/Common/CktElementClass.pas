@@ -16,8 +16,8 @@ type
 {$SCOPEDENUMS ON}
     TCktElementProp = (
         INVALID = 0,
-        basefreq = 1, 
-        enabled = 2
+        BaseFreq = 1, 
+        Enabled = 2
     );
 {$SCOPEDENUMS OFF}
 

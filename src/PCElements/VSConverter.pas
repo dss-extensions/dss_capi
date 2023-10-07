@@ -1,11 +1,9 @@
 unit VSConverter;
 
-{
-  ----------------------------------------------------------
-  Copyright (c) 2013-2015, University of Pittsburgh
-  All rights reserved.
-  ----------------------------------------------------------
-}
+// ----------------------------------------------------------
+// Copyright (c) 2013-2015, University of Pittsburgh
+// All rights reserved.
+// ----------------------------------------------------------
 interface
 
 uses
@@ -24,25 +22,25 @@ type
 {$SCOPEDENUMS ON}
     TVSConverterProp = (
         INVALID = 0,
-        phases = 1,
+        Phases = 1,
         Bus1 = 2,
-        kVac = 3,
-        kVdc = 4,
+        kVAC = 3,
+        kVDC = 4,
         kW = 5,
-        Ndc = 6,
-        Rac = 7,
-        Xac = 8,
-        m0 = 9,
+        NDC = 6,
+        RAC = 7,
+        XAC = 8,
+        M0 = 9,
         d0 = 10,
-        Mmin = 11,
-        Mmax = 12,
-        Iacmax = 13,
-        Idcmax = 14,
-        Vacref = 15,
-        Pacref = 16,
-        Qacref = 17,
-        Vdcref = 18,
-        VscMode = 19
+        MMin = 11,
+        MMax = 12,
+        IACMax = 13,
+        IDCMax = 14,
+        VACRef = 15,
+        PACRef = 16,
+        QACRef = 17,
+        VDCRef = 18,
+        VSCMode = 19
     );
 {$SCOPEDENUMS OFF}
 

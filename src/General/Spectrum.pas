@@ -25,9 +25,9 @@ type
     TSpectrumProp = (
         INVALID = 0,
         NumHarm = 1,
-        harmonic = 2,
-        pctmag = 3,
-        angle = 4,
+        Harmonic = 2,
+        pctMag = 3,
+        Angle = 4,
         CSVFile = 5
     );
 {$SCOPEDENUMS OFF}
